@@ -5,11 +5,11 @@
 module Lexer;
 
 /// ASCII character properties table.
-static const int ptable[256];
+static const int ptable[256] = [];
 
 enum CProperty
 {
-       Octal = 1
+       Octal = 1,
        Digit = 1<<1,
          Hex = 1<<2,
        Alpha = 1<<3,
@@ -36,7 +36,7 @@ static this()
     if ('a' <= i && i <= 'z' || 'A' <= i && i <= 'Z')
       ptable[i] |= CProperty.Alpha;
     if (isalnum(i) || i == '_')
-      ptable[i] |= Property.Identifier;
+      ptable[i] |= CProperty.Identifier;
   }
 }
 
