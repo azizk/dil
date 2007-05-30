@@ -3,9 +3,19 @@
   License: GPL2
 +/
 module Lexer;
+import std.stdio;
 
 /// ASCII character properties table.
-static const int ptable[256] = [];
+static const int ptable[256] = [
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,23,23,23,23,23,23,23,23,22,22, 0, 0, 0, 0, 0, 0,
+ 0,28,28,28,28,28,28,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24, 0, 0, 0, 0,16,
+ 0,28,28,28,28,28,28,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24,24, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+];
 
 enum CProperty
 {
@@ -22,9 +32,10 @@ int ishexad(char c) { return ptable[c] & CProperty.Hex; }
 int isalpha(char c) { return ptable[c] & CProperty.Alpha; }
 int isalnum(char c) { return ptable[c] & (CProperty.Alpha | CProperty.Digit); }
 int isident(char c) { return ptable[c] & CProperty.Identifier; }
-
+/+
 static this()
 {
+  // Initialize character properties table.
   for (int i; i < ptable.length; ++i)
   {
     if ('0' <= i && i <= '7')
@@ -38,7 +49,18 @@ static this()
     if (isalnum(i) || i == '_')
       ptable[i] |= CProperty.Identifier;
   }
+  // Print a formatted array literal.
+  char[] array = "[\n";
+  for (int i; i < ptable.length; ++i)
+  {
+    char c = ptable[i];
+    array ~= std.string.format("%2d,", c, ((i+1) % 32) ? "":"\n");
+  }
+  array.length = array.length - 2; // remove ",\n"
+  array ~= "\n]";
+  writefln(array);
 }
++/
 
 class Lexer
 {
