@@ -10,14 +10,16 @@ struct Position
   size_t col;
 }
 
+enum TOK
+{
+  Identifier,
+  Whitespace,
+  Comment
+}
+
 struct Token
 {
-  enum Type
-  {
-
-  }
-
-  Type type;
+  TOK type;
   Position pos;
 
   union

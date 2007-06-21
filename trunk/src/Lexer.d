@@ -3,6 +3,7 @@
   License: GPL2
 +/
 module Lexer;
+import Token;
 import std.stdio;
 
 /// ASCII character properties table.
@@ -64,5 +65,13 @@ static this()
 
 class Lexer
 {
+  Token t;
+  public void scan(ref Token t)
+  {
 
+  }
+  public TOK nextToken()
+  {
+    return TOK.max;
+  }
 }
