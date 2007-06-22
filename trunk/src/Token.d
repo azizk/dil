@@ -14,13 +14,17 @@ enum TOK
 {
   Identifier,
   Whitespace,
-  Comment
+  Comment,
+  EOF
 }
 
 struct Token
 {
   TOK type;
   Position pos;
+
+  char* start;
+  char* end;
 
   union
   {

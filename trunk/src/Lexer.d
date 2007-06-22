@@ -5,6 +5,8 @@
 module Lexer;
 import Token;
 import std.stdio;
+import std.utf;
+import std.uni;
 
 /// ASCII character properties table.
 static const int ptable[256] = [
@@ -65,13 +67,68 @@ static this()
 
 class Lexer
 {
-  Token t;
-  public void scan(ref Token t)
-  {
+  Token token;
+  char[] text;
+  char* p;
+  char* end;
 
+  this(char[] text)
+  {
+    this.text = text;
+    this.text.length = this.text.length + 1;
+    this.text[$-1] = 0;
+
+    this.p = this.text.ptr;
+    this.end = this.p + this.text.length;
   }
+
+  public void scan(out Token t)
+  {
+    assert(p < end);
+    t.start = p;
+
+    char c = *p;
+
+    if (c == '\0')
+    {
+      t.type = TOK.EOF;
+      t.end = p+1;
+      return;
+    }
+
+    if (!isident(c) || isdigit(c))
+    {
+      do
+        c = *++p;
+      while ((!isident(c) || isdigit(c)) && c != '\0')
+      t.type = TOK.Whitespace;
+      t.end = p;
+      return;
+    }
+
+    if (isident(c) && !isdigit(c))
+    {
+      do
+      { c = *++p; }
+      while (isident(c))
+      t.type = TOK.Identifier;
+      t.end = p;
+      return;
+    }
+  }
+
   public TOK nextToken()
   {
-    return TOK.max;
+    scan(this.token);
+    return this.token.type;
+  }
+
+  Token[] getTokens()
+  {
+    Token[] tokens;
+    while (nextToken() != TOK.EOF)
+      tokens ~= this.token;
+    tokens ~= this.token;
+    return tokens;
   }
 }
