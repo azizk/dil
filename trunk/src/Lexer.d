@@ -85,35 +85,45 @@ class Lexer
   public void scan(out Token t)
   {
     assert(p < end);
-    t.start = p;
 
     char c = *p;
 
-    if (c == '\0')
+    while(1)
     {
-      t.type = TOK.EOF;
-      t.end = p+1;
-      return;
-    }
+      t.start = p;
+      if (c == 0)
+      {
+        t.type = TOK.EOF;
+        t.end = p+1;
+        return;
+      }
 
-    if (!isident(c) || isdigit(c))
-    {
-      do
-        c = *++p;
-      while ((!isident(c) || isdigit(c)) && c != '\0')
-      t.type = TOK.Whitespace;
-      t.end = p;
-      return;
-    }
+      if (isident(c) && !isdigit(c))
+      {
+        do
+        { c = *++p; }
+        while (isident(c))
+        t.type = TOK.Identifier;
+        t.end = p;
+        return;
+      }
 
-    if (isident(c) && !isdigit(c))
-    {
-      do
-      { c = *++p; }
-      while (isident(c))
-      t.type = TOK.Identifier;
-      t.end = p;
-      return;
+      if (c == '/' && p[1] == '+')
+      {
+        ++p;
+        do
+        {
+          c = *++p;
+          if (c == 0)
+            throw new Error("unterminated /+ +/ comment.");
+        } while (c != '+' || p[1] != '/')
+        p += 2;
+        t.type = TOK.Comment;
+        t.end = p;
+        return;
+      }
+
+      c = *++p;
     }
   }
 
