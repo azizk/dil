@@ -110,13 +110,25 @@ class Lexer
 
       if (c == '/' && p[1] == '+')
       {
+        uint level = 1;
         ++p;
         do
         {
           c = *++p;
           if (c == 0)
-            throw new Error("unterminated /+ +/ comment.");
-        } while (c != '+' || p[1] != '/')
+            throw new Error("unterminated /+/+ +/+/ comment.");
+          else if (c == '/' && p[1] == '+')
+          {
+            ++p;
+            ++level;
+          }
+          else if (c == '+' && p[1] == '/')
+          {
+            ++p;
+            if (--level == 0)
+              break;
+          }
+        } while (1)
         p += 2;
         t.type = TOK.Comment;
         t.end = p;
