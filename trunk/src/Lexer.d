@@ -10,9 +10,9 @@ import std.uni;
 
 /// ASCII character properties table.
 static const int ptable[256] = [
+ 0, 0, 0, 0, 0, 0, 0, 0, 0,32, 0,32,32, 0, 0, 0,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  7, 7, 7, 7, 7, 7, 7, 7, 6, 6, 0, 0, 0, 0, 0, 0,
  0,12,12,12,12,12,12, 8, 8, 8, 8, 8, 8, 8, 8, 8,
  8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 0, 0, 0, 0,16,
@@ -35,6 +35,7 @@ enum CProperty
          Hex = 1<<2,
        Alpha = 1<<3,
   Underscore = 1<<4,
+  Whitespace = 1<<5
 }
 
 private alias CProperty CP;
@@ -45,6 +46,7 @@ int isalpha(char c) { return ptable[c] & CP.Alpha; }
 int isalnum(char c) { return ptable[c] & (CP.Alpha | CP.Digit); }
 int isidbeg(char c) { return ptable[c] & (CP.Alpha | CP.Underscore); }
 int isident(char c) { return ptable[c] & (CP.Alpha | CP.Underscore | CP.Digit); }
+int isspace(char c) { return ptable[c] & CP.Whitespace; }
 
 version(gen_ptable)
 static this()
@@ -63,6 +65,8 @@ static this()
       ptable[i] |= CP.Alpha;
     if (i == '_')
       ptable[i] |= CP.Underscore;
+    if (i == ' ' || i == '\t' || i == '\v'|| i == '\f')
+      ptable[i] |= CP.Whitespace;
   }
   // Print a formatted array literal.
   char[] array = "[\n";
@@ -104,6 +108,7 @@ class Lexer
     while(1)
     {
       t.start = p;
+
       if (c == 0)
       {
         t.type = TOK.EOF;
