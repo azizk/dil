@@ -82,6 +82,41 @@ static this()
 const char[3] LS = \u2028;
 const char[3] PS = \u2029;
 
+const dchar LSd = 0x2028;
+const dchar PSd = 0x2029;
+
+/// Index into table of error messages.
+enum MID
+{
+  UnterminatedCharacterLiteral,
+  EmptyCharacterLiteral
+}
+
+string[] Messages = [
+  "unterminated character literal."
+  "empty character literal."
+];
+
+class Problem
+{
+  enum Type
+  {
+    Lexer,
+    Parser,
+    Semantic
+  }
+
+  MID id;
+  Type type;
+  uint loc;
+  this(Type type, MID id, uint loc)
+  {
+    this.id = id;
+    this.type = type;
+    this.loc = loc;
+  }
+}
+
 class Lexer
 {
   Token token;
@@ -90,6 +125,8 @@ class Lexer
   char* end;
 
   uint loc = 1; /// line of code
+
+  Problem[] errors;
 
   this(char[] text)
   {
@@ -152,12 +189,12 @@ class Lexer
         c = *++p;
         switch(c)
         {
-          case '=':
+        case '=':
           ++p;
           t.type = TOK.DivisionAssign;
           t.end = p;
           return;
-          case '+':
+        case '+':
           uint level = 1;
           do
           {
@@ -180,7 +217,7 @@ class Lexer
           t.type = TOK.Comment;
           t.end = p;
           return;
-          case '*':
+        case '*':
           do
           {
             c = *++p;
@@ -191,7 +228,7 @@ class Lexer
           t.type = TOK.Comment;
           t.end = p;
           return;
-          case '/':
+        case '/':
           do
           {
             c = *++p;
@@ -220,24 +257,47 @@ class Lexer
       }
 
       if (c == '\'')
-      {
-        do {
-          c = *++p;
-          if (c == 0)
-            throw new Error("unterminated character literal.");
-          if (c == '\\')
-            ++p;
-        } while (c != '\'')
-        ++p;
-        t.type = TOK.Character;
-        t.end = p;
-        return;
-      }
+        return scanCharacterLiteral(t);
 
       if (c & 128 && isUniAlpha(decodeUTF()))
         goto Lidentifier;
       c = *++p;
     }
+  }
+
+  void scanCharacterLiteral(ref Token t)
+  {
+    assert(*p == '\'');
+    MID id = MID.UnterminatedCharacterLiteral;
+    uint c = *++p;
+    switch(c)
+    {
+    case '\\':
+      ++p;
+      if (*p != '\'')
+        goto Lerr;
+      break;
+    case 0, 161, '\n', '\r':
+      goto Lerr;
+    case '\'':
+      id = MID.EmptyCharacterLiteral;
+      goto Lerr;
+    default:
+      if (c & 128)
+      {
+        c = decodeUTF();
+        if (c == LSd || c == PSd)
+          goto Lerr;
+        t.chr = c;
+      }
+    }
+
+    if (*p != '\'')
+    Lerr:
+      error(id);
+    ++p;
+    t.type = TOK.Character;
+    t.end = p;
   }
 
   void scanNumber(ref Token t)
@@ -255,6 +315,11 @@ class Lexer
     d = std.utf.decode(p[0 .. end-p], idx);
     p += idx -1;
     return d;
+  }
+
+  void error(MID id)
+  {
+    errors ~= new Problem(Problem.Type.Lexer, id, loc);
   }
 
   public TOK nextToken()

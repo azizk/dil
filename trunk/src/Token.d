@@ -32,6 +32,7 @@ struct Token
   union
   {
     char[] str;
+    dchar chr;
     float f;
     double d;
   }
