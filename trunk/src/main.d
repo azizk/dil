@@ -58,6 +58,10 @@ void main(char[][] args)
       case TOK.Number:
         writef("<n>%s</n>", span);
       break;
+      case TOK.LParen, TOK.RParen, TOK.LBracket,
+           TOK.RBracket, TOK.LBrace, TOK.RBrace:
+        writef("<br>%s</br>", span);
+      break;
       default:
     }
     end = token.end;

@@ -18,6 +18,13 @@ enum TOK
   Character,
   DivisionAssign,
   Number,
+/* Braces */
+  LParen,
+  RParen,
+  LBracket,
+  RBracket,
+  LBrace,
+  RBrace,
   EOF
 }
 

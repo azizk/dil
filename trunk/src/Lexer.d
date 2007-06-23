@@ -259,6 +259,32 @@ class Lexer
       if (c == '\'')
         return scanCharacterLiteral(t);
 
+      switch(c)
+      {
+      case '(':
+        t.type = TOK.LParen;
+        goto Lcommon;
+      case ')':
+        t.type = TOK.RParen;
+        goto Lcommon;
+      case '[':
+        t.type = TOK.LBracket;
+        goto Lcommon;
+      case ']':
+        t.type = TOK.RBracket;
+        goto Lcommon;
+      case '{':
+        t.type = TOK.LBrace;
+        goto Lcommon;
+      case '}':
+        t.type = TOK.RBrace;
+      Lcommon:
+        ++p;
+        t.end = p;
+        return;
+      default:
+      }
+
       if (c & 128 && isUniAlpha(decodeUTF()))
         goto Lidentifier;
       c = *++p;
