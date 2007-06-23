@@ -103,9 +103,10 @@ class Lexer
 
       if (isident(c) && !isdigit(c))
       {
+      Lidentifier:
         do
         { c = *++p; }
-        while (isident(c))
+        while (isident(c) || c & 128 && isUniAlpha(decodeUTF()))
         t.type = TOK.Identifier;
         t.end = p;
         return;
@@ -195,8 +196,21 @@ class Lexer
         t.end = p;
         return;
       }
+
+      if (c & 128 && isUniAlpha(decodeUTF()))
+        goto Lidentifier;
       c = *++p;
     }
+  }
+
+  uint decodeUTF()
+  {
+    assert(*p & 128);
+    size_t idx;
+    uint d;
+    d = std.utf.decode(p[0 .. end-p], idx);
+    p += idx -1;
+    return d;
   }
 
   public TOK nextToken()
