@@ -49,6 +49,12 @@ void main(char[][] args)
       case TOK.Comment:
         writef("<c>%s</c>", span);
       break;
+      case TOK.String:
+        writef("<sl>%s</sl>", span);
+      break;
+      case TOK.Character:
+        writef("<cl>%s</cl>", span);
+      break;
       default:
     }
     end = token.end;

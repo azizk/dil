@@ -151,6 +151,35 @@ class Lexer
         }
       }
 
+      if (c == '"')
+      {
+        do {
+          c = *++p;
+          if (c == 0)
+            throw new Error("unterminated string literal.");
+          if (c == '\\')
+            ++p;
+        } while (c != '"')
+        ++p;
+        t.type = TOK.String;
+        t.end = p;
+        return;
+      }
+
+      if (c == '\'')
+      {
+        do {
+          c = *++p;
+          if (c == 0)
+            throw new Error("unterminated character literal.");
+          if (c == '\\')
+            ++p;
+        } while (c != '\'')
+        ++p;
+        t.type = TOK.Character;
+        t.end = p;
+        return;
+      }
       c = *++p;
     }
   }

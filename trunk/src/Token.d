@@ -15,6 +15,8 @@ enum TOK
   Identifier,
   Whitespace,
   Comment,
+  String,
+  Character,
   EOF
 }
 
