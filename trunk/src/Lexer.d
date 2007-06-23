@@ -278,6 +278,22 @@ class Lexer
         goto Lcommon;
       case '}':
         t.type = TOK.RBrace;
+        goto Lcommon;
+      case ':':
+        t.type = TOK.Colon;
+        goto Lcommon;
+      case ';':
+        t.type = TOK.Semicolon;
+        goto Lcommon;
+      case '?':
+        t.type = TOK.Question;
+        goto Lcommon;
+      case ',':
+        t.type = TOK.Comma;
+        goto Lcommon;
+      case '$':
+        t.type = TOK.Dollar;
+        goto Lcommon;
       Lcommon:
         ++p;
         t.end = p;

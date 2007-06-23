@@ -25,6 +25,13 @@ enum TOK
   RBracket,
   LBrace,
   RBrace,
+
+  Colon,
+  Semicolon,
+  Question,
+  Comma,
+  Dollar,
+
   EOF
 }
 

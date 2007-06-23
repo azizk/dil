@@ -63,6 +63,7 @@ void main(char[][] args)
         writef("<br>%s</br>", span);
       break;
       default:
+        writef("%s", span);
     }
     end = token.end;
   }
