@@ -65,6 +65,9 @@ static this()
 }
 +/
 
+const char[3] LS = \u2028;
+const char[3] PS = \u2029;
+
 class Lexer
 {
   Token token;
@@ -154,6 +157,8 @@ class Lexer
           do
           {
             c = *++p;
+            if (c == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+              break;
           } while (c != '\n' && c != 0)
           t.type = TOK.Comment;
           t.end = p;
