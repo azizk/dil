@@ -55,6 +55,9 @@ void main(char[][] args)
       case TOK.Character:
         writef("<cl>%s</cl>", span);
       break;
+      case TOK.DivisionAssign:
+        writef("<op>%s</op>", span);
+      break;
       default:
     }
     end = token.end;

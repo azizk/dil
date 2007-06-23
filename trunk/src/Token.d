@@ -17,6 +17,7 @@ enum TOK
   Comment,
   String,
   Character,
+  DivisionAssign,
   EOF
 }
 

@@ -125,8 +125,14 @@ class Lexer
       if (c == '/')
       {
         c = *++p;
-        if (c == '+')
+        switch(c)
         {
+          case '=':
+          ++p;
+          t.type = TOK.DivisionAssign;
+          t.end = p;
+          return;
+          case '+':
           uint level = 1;
           do
           {
@@ -149,9 +155,7 @@ class Lexer
           t.type = TOK.Comment;
           t.end = p;
           return;
-        }
-        else if (c == '*')
-        {
+          case '*':
           do
           {
             c = *++p;
@@ -162,9 +166,7 @@ class Lexer
           t.type = TOK.Comment;
           t.end = p;
           return;
-        }
-        else if (c == '/')
-        {
+          case '/':
           do
           {
             c = *++p;
