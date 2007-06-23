@@ -18,6 +18,7 @@ enum TOK
   String,
   Character,
   DivisionAssign,
+  Number,
   EOF
 }
 

@@ -122,6 +122,9 @@ class Lexer
         return;
       }
 
+      if (isdigit(c))
+        return scanNumber(t);
+
       if (c == '/')
       {
         c = *++p;
@@ -213,6 +216,13 @@ class Lexer
         goto Lidentifier;
       c = *++p;
     }
+  }
+
+  void scanNumber(ref Token t)
+  {
+    while (isdigit(*++p)) {}
+    t.type = TOK.Number;
+    t.end = p;
   }
 
   uint decodeUTF()
