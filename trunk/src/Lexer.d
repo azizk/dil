@@ -274,8 +274,6 @@ class Lexer
     {
     case '\\':
       ++p;
-      if (*p != '\'')
-        goto Lerr;
       break;
     case 0, 161, '\n', '\r':
       goto Lerr;
@@ -292,6 +290,7 @@ class Lexer
       }
     }
 
+    ++p;
     if (*p != '\'')
     Lerr:
       error(id);
