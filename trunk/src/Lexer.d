@@ -86,7 +86,7 @@ class Lexer
   {
     assert(p < end);
 
-    char c = *p;
+    uint c = *p;
 
     while(1)
     {
@@ -145,6 +145,16 @@ class Lexer
               throw new Error("unterminated /* */ comment.");
           } while (c != '*' || p[1] != '/')
           p += 2;
+          t.type = TOK.Comment;
+          t.end = p;
+          return;
+        }
+        else if (c == '/')
+        {
+          do
+          {
+            c = *++p;
+          } while (c != '\n' && c != 0)
           t.type = TOK.Comment;
           t.end = p;
           return;

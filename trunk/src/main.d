@@ -59,5 +59,5 @@ void main(char[][] args)
     }
     end = token.end;
   }
-  writef("</sourcetext>");
+  writef("\n</sourcetext>");
 }
