@@ -13,7 +13,6 @@ struct Position
 enum TOK
 {
   Identifier,
-  Whitespace,
   Comment,
   String,
   Character,

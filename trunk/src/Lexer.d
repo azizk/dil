@@ -89,6 +89,8 @@ class Lexer
   char* p;
   char* end;
 
+  uint loc = 1; /// line of code
+
   this(char[] text)
   {
     this.text = text;
@@ -111,9 +113,24 @@ class Lexer
 
       if (c == 0)
       {
+        ++p;
         t.type = TOK.EOF;
-        t.end = p+1;
+        t.end = p;
         return;
+      }
+
+      if (c == '\n')
+      {
+        c = *++p;
+        ++loc;
+        continue;
+      }
+      else if (c == '\r')
+      {
+        c = *++p;
+        if (c != '\n')
+          ++loc;
+        continue;
       }
 
       if (isidbeg(c))

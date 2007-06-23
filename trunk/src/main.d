@@ -43,9 +43,6 @@ void main(char[][] args)
       case TOK.Identifier:
         writef("<i>%s</i>", span);
       break;
-      case TOK.Whitespace:
-        writef(span);
-      break;
       case TOK.Comment:
         writef("<c>%s</c>", span);
       break;
