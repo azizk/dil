@@ -284,6 +284,15 @@ class Lexer
         else
           t.type = TOK.OrBinary;
         goto Lcommon;
+      case '&':
+        c = *++p;
+        if (c == '=')
+          t.type = TOK.AndAssign;
+        else if (c == '&')
+          t.type = TOK.AndLogical;
+        else
+          t.type = TOK.AndBinary;
+        goto Lcommon;
       case '(':
         t.type = TOK.LParen;
         goto Lcommon;
