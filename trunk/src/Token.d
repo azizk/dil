@@ -28,6 +28,8 @@ enum TOK
 
   Dot, Slice, Ellipses,
 
+  OrAssign, OrLogical, OrBinary,
+
   Colon,
   Semicolon,
   Question,

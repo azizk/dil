@@ -275,6 +275,15 @@ class Lexer
         else
           t.type = TOK.Dot;
         goto Lcommon;
+      case '|':
+        c = *++p;
+        if (c == '=')
+          t.type = TOK.OrAssign;
+        else if (c == '|')
+          t.type = TOK.OrLogical;
+        else
+          t.type = TOK.OrBinary;
+        goto Lcommon;
       case '(':
         t.type = TOK.LParen;
         goto Lcommon;
