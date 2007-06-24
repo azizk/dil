@@ -33,6 +33,9 @@ enum TOK
   AndAssign, AndLogical, AndBinary,
   PlusAssign, PlusPlus, Plus,
   MinusAssign, MinusMinus, Minus,
+  MulAssign, Mul,
+  ModAssign, Mod,
+  XorAssign, Xor,
   CatAssign, Catenate,
 
   Tilde,

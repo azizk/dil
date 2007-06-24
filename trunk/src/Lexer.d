@@ -352,7 +352,31 @@ class Lexer
          else
            t.type = TOK.Tilde;
          goto Lcommon;
-      // Single character tokens
+      case '*':
+         if (p[1] == '=') {
+           ++p;
+           t.type = TOK.MulAssign;
+         }
+         else
+           t.type = TOK.Mul;
+         goto Lcommon;
+      case '^':
+         if (p[1] == '=') {
+           ++p;
+           t.type = TOK.XorAssign;
+         }
+         else
+           t.type = TOK.Xor;
+         goto Lcommon;
+      case '%':
+         if (p[1] == '=') {
+           ++p;
+           t.type = TOK.ModAssign;
+         }
+         else
+           t.type = TOK.Mod;
+         goto Lcommon;
+      // Single character tokens:
       case '(':
         t.type = TOK.LParen;
         goto Lcommon;
