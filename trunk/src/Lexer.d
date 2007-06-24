@@ -293,6 +293,24 @@ class Lexer
         else
           t.type = TOK.AndBinary;
         goto Lcommon;
+      case '+':
+        c = *++p;
+        if (c == '=')
+          t.type = TOK.PlusAssign;
+        else if (c == '+')
+          t.type = TOK.PlusPlus;
+        else
+          t.type = TOK.Plus;
+        goto Lcommon;
+      case '-':
+        c = *++p;
+        if (c == '=')
+          t.type = TOK.MinusAssign;
+        else if (c == '-')
+          t.type = TOK.MinusMinus;
+        else
+          t.type = TOK.Minus;
+        goto Lcommon;
       case '(':
         t.type = TOK.LParen;
         goto Lcommon;

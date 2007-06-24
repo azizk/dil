@@ -30,6 +30,8 @@ enum TOK
 
   OrAssign, OrLogical, OrBinary,
   AndAssign, AndLogical, AndBinary,
+  PlusAssign, PlusPlus, Plus,
+  MinusAssign, MinusMinus, Minus,
 
   Colon,
   Semicolon,
