@@ -281,8 +281,10 @@ class Lexer
           t.type = TOK.OrAssign;
         else if (c == '|')
           t.type = TOK.OrLogical;
-        else
+        else {
           t.type = TOK.OrBinary;
+          goto Lcommon2;
+        }
         goto Lcommon;
       case '&':
         c = *++p;
@@ -290,8 +292,10 @@ class Lexer
           t.type = TOK.AndAssign;
         else if (c == '&')
           t.type = TOK.AndLogical;
-        else
+        else {
           t.type = TOK.AndBinary;
+          goto Lcommon2;
+        }
         goto Lcommon;
       case '+':
         c = *++p;
@@ -299,8 +303,10 @@ class Lexer
           t.type = TOK.PlusAssign;
         else if (c == '+')
           t.type = TOK.PlusPlus;
-        else
+        else {
           t.type = TOK.Plus;
+          goto Lcommon2;
+        }
         goto Lcommon;
       case '-':
         c = *++p;
@@ -308,8 +314,18 @@ class Lexer
           t.type = TOK.MinusAssign;
         else if (c == '-')
           t.type = TOK.MinusMinus;
-        else
+        else {
           t.type = TOK.Minus;
+          goto Lcommon2;
+        }
+        goto Lcommon;
+      case '=':
+        if (p[1] == '=') {
+          ++p;
+          t.type = TOK.Equal;
+        }
+        else
+          t.type = TOK.Assign;
         goto Lcommon;
       case '(':
         t.type = TOK.LParen;
@@ -343,9 +359,9 @@ class Lexer
         goto Lcommon;
       case '$':
         t.type = TOK.Dollar;
-        goto Lcommon;
       Lcommon:
         ++p;
+      Lcommon2:
         t.end = p;
         return;
       default:
