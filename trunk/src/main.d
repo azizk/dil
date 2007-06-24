@@ -62,6 +62,7 @@ void main(char[][] args)
            TOK.RBracket, TOK.LBrace, TOK.RBrace:
         writef("<br>%s</br>", span);
       break;
+      case TOK.EOF: break;
       default:
         writef("%s", span);
     }

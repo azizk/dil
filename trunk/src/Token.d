@@ -26,6 +26,8 @@ enum TOK
   LBrace,
   RBrace,
 
+  Dot, Slice, Ellipses,
+
   Colon,
   Semicolon,
   Question,

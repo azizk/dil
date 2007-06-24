@@ -261,6 +261,20 @@ class Lexer
 
       switch(c)
       {
+      case '.':
+        if (p[1] == '.')
+        {
+          ++p;
+          if (p[1] == '.') {
+            ++p;
+            t.type = TOK.Ellipses;
+          }
+          else
+            t.type = TOK.Slice;
+        }
+        else
+          t.type = TOK.Dot;
+        goto Lcommon;
       case '(':
         t.type = TOK.LParen;
         goto Lcommon;
