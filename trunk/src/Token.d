@@ -33,7 +33,9 @@ enum TOK
   AndAssign, AndLogical, AndBinary,
   PlusAssign, PlusPlus, Plus,
   MinusAssign, MinusMinus, Minus,
+  CatAssign, Catenate,
 
+  Tilde,
   Colon,
   Semicolon,
   Question,
