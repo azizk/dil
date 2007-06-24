@@ -37,7 +37,7 @@ void main(char[][] args)
   {
     if (end != token.start)
       writef("%s", xmlescape(end[0 .. token.start - end]));
-    char[] span = xmlescape(token.start[0 .. token.end-token.start]);
+    string span = xmlescape(token.span);
     switch(token.type)
     {
       case TOK.Identifier:
@@ -64,7 +64,10 @@ void main(char[][] args)
       break;
       case TOK.EOF: break;
       default:
-        writef("%s", span);
+        if (token.isKeyword())
+          writef("<k>%s</k>", span);
+        else
+          writef("%s", span);
     }
     end = token.end;
   }

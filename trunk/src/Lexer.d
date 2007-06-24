@@ -4,6 +4,8 @@
 +/
 module Lexer;
 import Token;
+import Keywords;
+import Identifier;
 import std.stdio;
 import std.utf;
 import std.uni;
@@ -128,6 +130,8 @@ class Lexer
 
   Problem[] errors;
 
+  Identifier[string] idtable;
+
   this(char[] text)
   {
     this.text = text;
@@ -136,6 +140,8 @@ class Lexer
 
     this.p = this.text.ptr;
     this.end = this.p + this.text.length;
+
+    loadKeywords();
   }
 
   public void scan(out Token t)
@@ -176,8 +182,19 @@ class Lexer
         do
         { c = *++p; }
         while (isident(c) || c & 128 && isUniAlpha(decodeUTF()))
-        t.type = TOK.Identifier;
+
         t.end = p;
+
+        string str = t.span;
+        Identifier* id = str in idtable;
+
+        if (!id)
+        {
+          idtable[str] = Identifier.Identifier(TOK.Identifier, str);
+          id = str in idtable;
+        }
+        assert(id);
+        t.type = id.type;
         return;
       }
 
@@ -431,6 +448,12 @@ class Lexer
     d = std.utf.decode(p[0 .. end-p], idx);
     p += idx -1;
     return d;
+  }
+
+  void loadKeywords()
+  {
+    foreach(k; keywords)
+      idtable[k.str] = k;
   }
 
   void error(MID id)

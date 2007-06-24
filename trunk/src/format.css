@@ -4,8 +4,10 @@ sourcetext {
   font-family: Monospace;
   font-size: 0.8em;
 }
+k { color: darkblue; font-weight: bold; }
 c { color: green; }
 i { color: darkblue; }
 sl { color: red; }
 cl { color: purple; }
 op { color: orange; }
+br { color: orange; }
