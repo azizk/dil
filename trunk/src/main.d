@@ -25,7 +25,7 @@ char[] xmlescape(char[] text)
 void main(char[][] args)
 {
   auto srctext = cast(char[]) std.file.read(args[1]);
-  auto lx = new Lexer(srctext);
+  auto lx = new Lexer(srctext, args[1]);
 
   auto tokens = lx.getTokens();
   char* end = lx.text.ptr;

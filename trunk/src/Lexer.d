@@ -9,6 +9,7 @@ import Identifier;
 import std.stdio;
 import std.utf;
 import std.uni;
+import std.conv;
 
 /// ASCII character properties table.
 static const int ptable[256] = [
@@ -91,12 +92,18 @@ const dchar PSd = 0x2029;
 enum MID
 {
   UnterminatedCharacterLiteral,
-  EmptyCharacterLiteral
+  EmptyCharacterLiteral,
+  ExpectedIdentifierLine,
+  NewlineInSpecialToken,
+  UnterminatedSpecialToken
 }
 
 string[] Messages = [
   "unterminated character literal."
-  "empty character literal."
+  "empty character literal.",
+  "expected 'line' after '#'."
+  "newline not allowed inside special token."
+  "expected newline after special token."
 ];
 
 class Problem
@@ -122,18 +129,22 @@ class Problem
 class Lexer
 {
   Token token;
-  char[] text;
+  string text;
   char* p;
   char* end;
 
   uint loc = 1; /// line of code
 
+  char[] fileName;
+
   Problem[] errors;
 
   Identifier[string] idtable;
 
-  this(char[] text)
+  this(string text, string fileName)
   {
+    this.fileName = fileName;
+
     this.text = text;
     this.text.length = this.text.length + 1;
     this.text[$-1] = 0;
@@ -414,6 +425,10 @@ class Lexer
       Lcommon2:
         t.end = p;
         return;
+      case '#':
+        ++p;
+        scanSpecialToken();
+        break;
       default:
       }
 
@@ -421,6 +436,13 @@ class Lexer
         goto Lidentifier;
       c = *++p;
     }
+  }
+
+  void peek(ref Token t)
+  {
+    char* tmp = p;
+    scan(t);
+    p = tmp;
   }
 
   void scanCharacterLiteral(ref Token t)
@@ -462,6 +484,79 @@ class Lexer
     while (isdigit(*++p)) {}
     t.type = TOK.Number;
     t.end = p;
+    t._uint = toInt(t.span);
+  }
+
+  /// Scan special token: #line Integer [Filespec] EndOfLine
+  void scanSpecialToken()
+  {
+    MID mid;
+    Token t;
+
+    scan(t);
+    if (!(t.type == TOK.Identifier && t.span == "line")) {
+      mid = MID.ExpectedIdentifierLine;
+      goto Lerr;
+    }
+
+    scan(t);
+    if (t.type == TOK.Number)
+      loc = t._uint - 1;
+
+    uint loc = this.loc;
+
+    char* wsstart = t.end;
+
+    bool hasNewline(char* end)
+    {
+      alias wsstart p;
+      uint c;
+      for(; p != end; c = *++p)
+        if (c == '\n' || c == '\r' || c == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])) {
+          mid = MID.NewlineInSpecialToken;
+          return true;
+        }
+      return false;
+    }
+
+    peek(t);
+
+    if (t.type == TOK.String)
+    {
+      // Check whole token with preceding whitespace for newline.
+      if (hasNewline(t.end))
+        goto Lerr;
+      fileName = t.span[1..$-1]; // contents of "..."
+      p = t.end;
+    }
+    else if (t.type == TOK.Identifier && t.span == "__FILE__")
+    {
+      // Check preceding whitespace for newline.
+      if (hasNewline(t.start))
+        goto Lerr;
+      p = t.end;
+    }
+
+    uint c;
+    while (1)
+    {
+      c = *p++;
+      if (isspace(c))
+        continue;
+
+      if (c == '\n' || c == '\r' || c == 0 ||
+          c == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+        break;
+      else {
+        mid = MID.UnterminatedSpecialToken;
+        goto Lerr;
+      }
+    }
+
+    this.loc = loc;
+    return;
+  Lerr:
+    error(mid);
   }
 
   uint decodeUTF()

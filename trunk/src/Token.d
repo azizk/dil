@@ -81,12 +81,14 @@ struct Token
   {
     char[] str;
     dchar chr;
+    uint _uint;
     float f;
     double d;
   }
 
   string span()
   {
+    assert(start && end);
     return start[0 .. end - start];
   }
 
