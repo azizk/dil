@@ -88,6 +88,8 @@ const char[3] PS = \u2029;
 const dchar LSd = 0x2028;
 const dchar PSd = 0x2029;
 
+const uint _Z_ = 26; /// Control+Z
+
 /// Index into table of error messages.
 enum MID
 {
@@ -100,20 +102,28 @@ enum MID
   // x""
   NonHexCharInHexString,
   OddNumberOfDigitsInHexString,
-  UnterminatedHexString
+  UnterminatedHexString,
+  // /* */ /+ +/
+  UnterminatedBlockComment,
+  UnterminatedNestedComment
+
 }
 
 string[] messages = [
-  "unterminated character literal."
+  "unterminated character literal.",
   "empty character literal.",
   // #line
-  "expected 'line' after '#'."
-  "newline not allowed inside special token."
+  "expected 'line' after '#'.",
+  "newline not allowed inside special token.",
   "expected newline after special token.",
   // x""
   "non-hex character '{1}' found in hex string.",
   "odd number of hex digits in hex string.",
-  "unterminated hex string."
+  "unterminated hex string.",
+  // /* */ /+ +/
+  "unterminated block comment (/* */).",
+  "unterminated nested comment (/+ +/)."
+
 ];
 
 class Problem
@@ -196,6 +206,12 @@ class Lexer
           ++loc;
         continue;
       }
+      else if (c == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+      {
+        p += 3;
+        c = *p;
+        continue;
+      }
 
       if (isidbeg(c))
       {
@@ -233,51 +249,115 @@ class Lexer
         {
         case '=':
           ++p;
-          t.type = TOK.DivisionAssign;
+          t.type = TOK.DivAssign;
           t.end = p;
           return;
         case '+':
           uint level = 1;
-          do
+          while (1)
           {
             c = *++p;
-            if (c == 0)
-              throw new Error("unterminated /+ +/ comment.");
-            else if (c == '/' && p[1] == '+')
+            switch (c)
             {
-              ++p;
-              ++level;
+            case '\r':
+              if (p[1] == '\n')
+                ++p;
+            case '\n':
+              ++loc;
+              continue;
+            case '/':
+              if (p[1] == '+')
+              {
+                ++p;
+                ++level;
+              }
+              continue;
+            case '+':
+              if (p[1] == '/')
+              {
+                ++p;
+                if (--level == 0)
+                {
+                  ++p;
+                LreturnNC:
+                  t.type = TOK.Comment;
+                  t.end = p;
+                  return;
+                }
+              }
+              continue;
+            case 0, _Z_:
+              error(MID.UnterminatedNestedComment);
+              goto LreturnNC;
+            case LS[0]:
+              if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])) {
+                p += 2;
+                ++loc;
+              }
+              continue;
+            default:
             }
-            else if (c == '+' && p[1] == '/')
-            {
-              ++p;
-              if (--level == 0)
-                break;
-            }
-          } while (1)
-          p += 2;
-          t.type = TOK.Comment;
-          t.end = p;
-          return;
+          }
         case '*':
-          do
+          while (1)
           {
             c = *++p;
-            if (c == 0)
-              throw new Error("unterminated /* */ comment.");
-          } while (c != '*' || p[1] != '/')
-          p += 2;
-          t.type = TOK.Comment;
-          t.end = p;
-          return;
-        case '/':
-          do
-          {
-            c = *++p;
-            if (c == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+            switch (c)
+            {
+            case '\r':
+              if (p[1] == '\n')
+                ++p;
+            case '\n':
+              ++loc;
+              continue;
+            case '*':
+              if (p[1] == '/')
+              {
+                p += 2;
+            LreturnBC:
+                t.type = TOK.Comment;
+                t.end = p;
+                return;
+              }
               break;
-          } while (c != '\n' && c != 0)
-          t.type = TOK.Comment;
+            case LS[0]:
+              if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])) {
+                p += 2;
+                ++loc;
+              }
+              break;
+            case 0, _Z_:
+              error(MID.UnterminatedBlockComment);
+              goto LreturnBC;
+            default:
+            }
+          }
+          assert(0);
+        case '/':
+          while (1)
+          {
+            c = *++p;
+            switch (c)
+            {
+            case '\r':
+              if (p[1] == '\n')
+                ++p;
+            case '\n':
+            case 0, _Z_:
+              break;
+            case LS[0]:
+              if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+                break;
+              continue;
+            default:
+              continue;
+            }
+            t.type = TOK.Comment;
+            t.end = p;
+            return;
+          }
+        default:
+          t.type = TOK.Div;
           t.end = p;
           return;
         }
@@ -469,7 +549,7 @@ class Lexer
     case '\\':
       ++p;
       break;
-    case 0, 26, '\n', '\r':
+    case 0, _Z_, '\n', '\r':
       goto Lerr;
     case '\'':
       id = MID.EmptyCharacterLiteral;
@@ -550,7 +630,7 @@ class Lexer
           ++loc;
         }
         continue;
-      case 0, 26:
+      case 0, _Z_:
         mid = MID.UnterminatedHexString;
         goto Lerr;
       default:

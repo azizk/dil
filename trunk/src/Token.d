@@ -16,7 +16,6 @@ enum TOK
   Comment,
   String,
   Character,
-  DivisionAssign,
   Number,
 /* Braces */
   LParen,
@@ -33,6 +32,7 @@ enum TOK
   AndAssign, AndLogical, AndBinary,
   PlusAssign, PlusPlus, Plus,
   MinusAssign, MinusMinus, Minus,
+  DivAssign, Div,
   MulAssign, Mul,
   ModAssign, Mod,
   XorAssign, Xor,

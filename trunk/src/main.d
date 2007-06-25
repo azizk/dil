@@ -52,7 +52,7 @@ void main(char[][] args)
       case TOK.Character:
         writef("<cl>%s</cl>", span);
       break;
-      case TOK.DivisionAssign:
+      case TOK.DivAssign:
         writef("<op>%s</op>", span);
       break;
       case TOK.AndLogical:
