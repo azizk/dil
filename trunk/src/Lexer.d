@@ -93,17 +93,27 @@ enum MID
 {
   UnterminatedCharacterLiteral,
   EmptyCharacterLiteral,
+  // #line
   ExpectedIdentifierLine,
   NewlineInSpecialToken,
-  UnterminatedSpecialToken
+  UnterminatedSpecialToken,
+  // x""
+  NonHexCharInHexString,
+  OddNumberOfDigitsInHexString,
+  UnterminatedHexString
 }
 
-string[] Messages = [
+string[] messages = [
   "unterminated character literal."
   "empty character literal.",
+  // #line
   "expected 'line' after '#'."
   "newline not allowed inside special token."
-  "expected newline after special token."
+  "expected newline after special token.",
+  // x""
+  "non-hex character '{1}' found in hex string.",
+  "odd number of hex digits in hex string.",
+  "unterminated hex string."
 ];
 
 class Problem
@@ -189,6 +199,10 @@ class Lexer
 
       if (isidbeg(c))
       {
+        if (c == 'r' && p[1] == '"')
+          return scanRawStringLiteral(t);
+        if (c == 'x' && p[1] == '"')
+          return scanHexStringLiteral(t);
       Lidentifier:
         do
         { c = *++p; }
@@ -455,7 +469,7 @@ class Lexer
     case '\\':
       ++p;
       break;
-    case 0, 161, '\n', '\r':
+    case 0, 26, '\n', '\r':
       goto Lerr;
     case '\'':
       id = MID.EmptyCharacterLiteral;
@@ -476,6 +490,101 @@ class Lexer
       error(id);
     ++p;
     t.type = TOK.Character;
+    t.end = p;
+  }
+
+  char scanPostFix()
+  {
+    switch (*p)
+    {
+    case 'c':
+    case 'w':
+    case 'd':
+      return *p++;
+    default:
+      return 0;
+    }
+  }
+
+  void scanRawStringLiteral(ref Token t)
+  {
+
+  }
+
+  void scanHexStringLiteral(ref Token t)
+  {
+    assert(p[0] == 'x' && p[1] == '"');
+    p+=2;
+    t.type = TOK.String;
+
+    uint c;
+    ubyte[] buffer;
+    ubyte h; // hex number
+    uint n; // number of hex digits
+    MID mid;
+
+    while (1)
+    {
+      c = *p++;
+      switch (c)
+      {
+      case '"':
+        if (n & 1)
+        {
+          mid = MID.OddNumberOfDigitsInHexString;
+          error(mid);
+        }
+        t.str = cast(string) buffer;
+        t.pf = scanPostFix();
+        t.end = p;
+        return;
+      case '\r':
+        if (*p == '\n')
+          ++p;
+      case '\n':
+        ++loc;
+        continue;
+      case LS[0]:
+        if (*p == LS[1] && (p[1] == LS[2] || p[1] == PS[2])) {
+          p += 2;
+          ++loc;
+        }
+        continue;
+      case 0, 26:
+        mid = MID.UnterminatedHexString;
+        goto Lerr;
+      default:
+        if (ishexad(c))
+        {
+          if (c <= '9')
+            c -= '0';
+          else if (c <= 'F')
+            c -= 'A' - 10;
+          else
+            c -= 'a' - 10;
+
+          if (n & 1)
+          {
+            h <<= 4;
+            h |= c;
+            buffer ~= h;
+          }
+          else
+            h = c;
+          ++n;
+          continue;
+        }
+        else if (isspace(c))
+          continue;
+        mid = MID.NonHexCharInHexString;
+        goto Lerr;
+      }
+    }
+
+    return;
+  Lerr:
+    error(mid);
+    t.pf = 0;
     t.end = p;
   }
 

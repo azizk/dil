@@ -55,6 +55,15 @@ void main(char[][] args)
       case TOK.DivisionAssign:
         writef("<op>%s</op>", span);
       break;
+      case TOK.AndLogical:
+        writef("<op>∧</op>");
+      break;
+      case TOK.OrLogical:
+        writef("<op>∨</op>");
+      break;
+//       case TOK.NotEqual:
+//         writef("<op>≠</op>");
+//       break;
       case TOK.Number:
         writef("<n>%s</n>", span);
       break;

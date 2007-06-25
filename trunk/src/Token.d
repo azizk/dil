@@ -79,7 +79,11 @@ struct Token
 
   union
   {
-    char[] str;
+    struct
+    {
+      string str;
+      char pf;
+    }
     dchar chr;
     uint _uint;
     float f;
