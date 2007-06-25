@@ -105,8 +105,10 @@ enum MID
   UnterminatedHexString,
   // /* */ /+ +/
   UnterminatedBlockComment,
-  UnterminatedNestedComment
-
+  UnterminatedNestedComment,
+  // `` r""
+  UnterminatedRawString,
+  UnterminatedBackQuoteString,
 }
 
 string[] messages = [
@@ -122,8 +124,10 @@ string[] messages = [
   "unterminated hex string.",
   // /* */ /+ +/
   "unterminated block comment (/* */).",
-  "unterminated nested comment (/+ +/)."
-
+  "unterminated nested comment (/+ +/).",
+  // `` r""
+  "unterminated raw string.",
+  "unterminated back quote string.",
 ];
 
 class Problem
@@ -215,7 +219,7 @@ class Lexer
 
       if (isidbeg(c))
       {
-        if (c == 'r' && p[1] == '"')
+        if (c == 'r' && p[1] == '"' && ++p)
           return scanRawStringLiteral(t);
         if (c == 'x' && p[1] == '"')
           return scanHexStringLiteral(t);
@@ -380,6 +384,9 @@ class Lexer
 
       if (c == '\'')
         return scanCharacterLiteral(t);
+
+      if (c == '`')
+        return scanRawStringLiteral(t);
 
       switch(c)
       {
@@ -573,7 +580,7 @@ class Lexer
     t.end = p;
   }
 
-  char scanPostFix()
+  char scanPostfix()
   {
     switch (*p)
     {
@@ -588,7 +595,56 @@ class Lexer
 
   void scanRawStringLiteral(ref Token t)
   {
-
+    uint delim = *p;
+    assert(delim == '`' || delim == '"' && p[-1] == 'r');
+    t.type = TOK.String;
+    char[] buffer;
+    uint c;
+    while (1)
+    {
+      c = *++p;
+      switch (c)
+      {
+      case '\r':
+        if (p[1] == '\n')
+          ++p;
+        c = '\n'; // Convert '\r' and '\r\n' to '\n'
+      case '\n':
+        ++loc;
+        continue;
+      case '`':
+      case '"':
+        if (c == delim)
+        {
+          ++p;
+          t.pf = scanPostfix();
+        Lreturn:
+          t.str = buffer ~ '\0';
+          t.end = p;
+          return;
+        }
+        break;
+      case LS[0]:
+        if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+        {
+          // TODO: convert LS or PS to \n?
+          buffer ~= p[0..3];
+          p += 2;
+          ++loc;
+          continue;
+        }
+        break;
+      case 0, _Z_:
+        if (delim == 'r')
+          error(MID.UnterminatedRawString);
+        else
+          error(MID.UnterminatedBackQuoteString);
+        goto Lreturn;
+      default:
+      }
+      buffer ~= c; // copy character to buffer
+    }
+    assert(0);
   }
 
   void scanHexStringLiteral(ref Token t)
@@ -615,7 +671,7 @@ class Lexer
           error(mid);
         }
         t.str = cast(string) buffer;
-        t.pf = scanPostFix();
+        t.pf = scanPostfix();
         t.end = p;
         return;
       case '\r':
@@ -784,3 +840,4 @@ class Lexer
     return tokens;
   }
 }
+`fdfdfg

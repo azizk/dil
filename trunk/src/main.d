@@ -52,7 +52,16 @@ void main(char[][] args)
       case TOK.Character:
         writef("<cl>%s</cl>", span);
       break;
-      case TOK.DivAssign:
+      case TOK.Assign, TOK.Equal,
+        TOK.OrAssign, TOK.OrBinary,
+        TOK.AndAssign, TOK.AndBinary,
+        TOK.PlusAssign, TOK.PlusPlus, TOK.Plus,
+        TOK.MinusAssign, TOK.MinusMinus, TOK.Minus,
+        TOK.DivAssign, TOK.Div,
+        TOK.MulAssign, TOK.Mul,
+        TOK.ModAssign, TOK.Mod,
+        TOK.XorAssign, TOK.Xor,
+        TOK.CatAssign, TOK.Catenate:
         writef("<op>%s</op>", span);
       break;
       case TOK.AndLogical:
