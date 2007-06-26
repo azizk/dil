@@ -306,9 +306,9 @@ class Lexer
             }
           }
         case '*':
+          c = *++p;
           while (1)
           {
-            c = *++p;
             switch (c)
             {
             case '\r':
@@ -316,27 +316,34 @@ class Lexer
                 ++p;
             case '\n':
               ++loc;
+              c = *++p;
               continue;
-            case '*':
-              if (p[1] == '/')
-              {
-                p += 2;
-            LreturnBC:
-                t.type = TOK.Comment;
-                t.end = p;
-                return;
-              }
-              break;
-            case LS[0]:
-              if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])) {
-                p += 2;
-                ++loc;
-              }
-              break;
             case 0, _Z_:
               error(MID.UnterminatedBlockComment);
               goto LreturnBC;
             default:
+            }
+
+            c <<= 8;
+            c |= *++p;
+            switch (c)
+            {
+            case 0x2A2F: // */
+              ++p;
+            LreturnBC:
+              t.type = TOK.Comment;
+              t.end = p;
+              return;
+            case 0xE280: // LS[0..1] || PS[0..1]
+              if (p[1] == LS[2] || p[1] == PS[2])
+              {
+                ++loc;
+                c = *(p += 2);
+                continue;
+              }
+            default:
+              c &= char.max;
+              continue;
             }
           }
           assert(0);
