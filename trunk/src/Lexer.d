@@ -691,32 +691,35 @@ class Lexer
   {
     assert(*p == '\'');
     MID id = MID.UnterminatedCharacterLiteral;
-    uint c = *++p;
-    switch(c)
+    ++p;
+    switch (*p)
     {
     case '\\':
       ++p;
+      t.dchar_ = scanEscapeSequence();
       break;
-    case 0, _Z_, '\n', '\r':
-      goto Lerr;
     case '\'':
+      ++p;
       id = MID.EmptyCharacterLiteral;
+    case '\n', '\r', 0, _Z_:
       goto Lerr;
     default:
+      uint c = *p;
       if (c & 128)
       {
         c = decodeUTF();
         if (c == LSd || c == PSd)
           goto Lerr;
-        t.chr = c;
       }
+      t.dchar_ = c;
+      ++p;
     }
 
-    ++p;
-    if (*p != '\'')
-    Lerr:
+    if (*p == '\'')
+      ++p;
+    else
+  Lerr:
       error(id);
-    ++p;
     t.type = TOK.Character;
     t.end = p;
   }
@@ -868,8 +871,10 @@ class Lexer
   dchar scanEscapeSequence()
   {
     uint c = char2ev(*p);
-    if (c)
+    if (c) {
+      ++p;
       return c;
+    }
     uint digits = 2;
 
     switch (*p)
@@ -930,8 +935,10 @@ class Lexer
         {
           if (isalnum(*++p))
             continue;
-          if (*p == ';')
+          if (*p == ';') {
+            ++p;
             break;
+          }
           else {
             error(MID.UnterminatedHTMLEntity);
             break;

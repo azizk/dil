@@ -101,7 +101,7 @@ struct Token
       string str;
       char pf;
     }
-    dchar chr;
+    dchar dchar_;
     uint _uint;
     float f;
     double d;
