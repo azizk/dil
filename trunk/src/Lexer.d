@@ -68,7 +68,7 @@ static this()
       ptable[i] |= CP.Alpha;
     if (i == '_')
       ptable[i] |= CP.Underscore;
-    if (i == ' ' || i == '\t' || i == '\v'|| i == '\f')
+    if (i == ' ' || i == '\t' || i == '\v' || i == '\f')
       ptable[i] |= CP.Whitespace;
   }
   // Print a formatted array literal.

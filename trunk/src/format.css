@@ -1,3 +1,4 @@
+@charset "utf-8";
 sourcetext {
   display: block;
   white-space: pre;
@@ -5,9 +6,17 @@ sourcetext {
   font-size: 0.8em;
 }
 k { color: darkblue; font-weight: bold; }
-c { color: green; }
-i { color: darkblue; }
+c[c=lc], c[c=bc] { color: green; }
+c[c=nc] { color: darkgreen; }
+i { color: black; }
 sl { color: red; }
 cl { color: purple; }
 op { color: royalblue; }
 br { color: orange; }
+op[c=aa] { content: "and"; } /*&& ∧*/
+op[c=oo] { content: "or"; } /*|| ∨*/
+op[c=n] { content: "¬"; } /*!*/
+op[c=ne] { content: "≠"; } /*!=*/
+op[c=le] { content: "≤"; } /*<=*/
+op[c=ge] { content: "≥"; } /*>=*/
+op[c=lg] { content: "≶"; } /*<>*/

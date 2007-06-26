@@ -44,7 +44,14 @@ void main(char[][] args)
         writef("<i>%s</i>", span);
       break;
       case TOK.Comment:
-        writef("<c>%s</c>", span);
+        string c;
+        switch (token.start[1])
+        {
+        case '/': c = "lc"; break;
+        case '*': c = "bc"; break;
+        case '+': c = "nc"; break;
+        }
+        writef(`<c c="%s">%s</c>`, c, span);
       break;
       case TOK.String:
         writef("<sl>%s</sl>", span);
@@ -52,7 +59,7 @@ void main(char[][] args)
       case TOK.Character:
         writef("<cl>%s</cl>", span);
       break;
-      case TOK.Assign, TOK.Equal, TOK.Not,
+      case TOK.Assign, TOK.Equal,
         TOK.Less, TOK.Greater,
         TOK.LShiftAssign, TOK.LShift,
         TOK.RShiftAssign, TOK.RShift,
@@ -77,22 +84,25 @@ void main(char[][] args)
         writef("<op>%s</op>", span);
       break;
       case TOK.LorG:
-        writef("<op>≶</op>");
+        writef(`<op c="lg">&lt;&gt;</op>`);
       break;
       case TOK.LessEqual:
-        writef("<op>≤</op>");
+        writef(`<op c="le">&lt;=</op>`);
       break;
       case TOK.GreaterEqual:
-        writef("<op>≥</op>");
+        writef(`<op c="ge">&gt;=</op>`);
       break;
       case TOK.AndLogical:
-        writef("<op>∧</op>");
+        writef(`<op c="aa">&amp;&amp;</op>`);
       break;
       case TOK.OrLogical:
-        writef("<op>∨</op>");
+        writef(`<op c="oo">||</op>`);
       break;
       case TOK.NotEqual:
-        writef("<op>≠</op>");
+        writef(`<op c="ne">!=</op>`);
+      break;
+      case TOK.Not:
+        writef(`<op c="n">!</op>`);
       break;
       case TOK.Number:
         writef("<n>%s</n>", span);
