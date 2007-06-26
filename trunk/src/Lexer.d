@@ -417,7 +417,7 @@ class Lexer
           goto Lcommon2;
         }
         assert(0);
-      case '!':
+      case '!': /* !  !<  !>  !<=  !>=  !<>  !<>= */
         c = *++p;
         switch (c)
         {
