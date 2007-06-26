@@ -40,8 +40,11 @@ enum TOK
 
   // Normal operators
   Assign, Equal, NotEqual, Not,
-  LessEqual, LessThan,
+  LessEqual, Less,
+  GreaterEqual, Greater,
   LShiftAssign, LShift,
+  RShiftAssign,RShift,
+  URShiftAssign, URShift,
   OrAssign, OrLogical, OrBinary,
   AndAssign, AndLogical, AndBinary,
   PlusAssign, PlusPlus, Plus,

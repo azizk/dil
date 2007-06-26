@@ -389,6 +389,37 @@ class Lexer
         return scanRawStringLiteral(t);
       switch (c)
       {
+      case '>': /* >  >=  >>  >>=  >>>  >>>= */
+        c = *++p;
+        switch (c)
+        {
+        case '=':
+          t.type = TOK.GreaterEqual;
+          goto Lcommon;
+        case '>':
+          if (p[1] == '>')
+          {
+            ++p;
+            if (p[1] == '=')
+            { ++p;
+              t.type = TOK.URShiftAssign;
+            }
+            else
+              t.type = TOK.URShift;
+          }
+          else if (p[1] == '=')
+          {
+            ++p;
+            t.type = TOK.RShiftAssign;
+          }
+          else
+            t.type = TOK.RShift;
+          goto Lcommon;
+        default:
+          t.type = TOK.Greater;
+          goto Lcommon2;
+        }
+        assert(0);
       case '<': /* <  <=  <>  <>=  <<  <<= */
         c = *++p;
         switch (c)
@@ -413,7 +444,7 @@ class Lexer
             t.type = TOK.LorG;
           goto Lcommon;
         default:
-          t.type = TOK.LessThan;
+          t.type = TOK.Less;
           goto Lcommon2;
         }
         assert(0);
