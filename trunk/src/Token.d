@@ -27,7 +27,14 @@ enum TOK
 
   Dot, Slice, Ellipses,
 
-  Assign, Equal,
+  Unordered,
+  UorE,
+  UorG,
+  UorGorE,
+  UorL,
+  UorLorE,
+
+  Assign, Equal, NotEqual, Not,
   OrAssign, OrLogical, OrBinary,
   AndAssign, AndLogical, AndBinary,
   PlusAssign, PlusPlus, Plus,

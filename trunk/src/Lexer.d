@@ -390,6 +390,47 @@ class Lexer
 
       switch(c)
       {
+      case '!':
+        c = *++p;
+        switch (c)
+        {
+        case '<':
+          c = *++p;
+          if (c == '>')
+          {
+            if (p[1] == '=') {
+              ++p;
+              t.type = TOK.Unordered;
+            }
+            else
+              t.type = TOK.UorE;
+          }
+          else if (c == '=')
+          {
+            t.type = TOK.UorG;
+          }
+          else {
+            t.type = TOK.UorGorE;
+            goto Lcommon2;
+          }
+          goto Lcommon;
+        case '>':
+          if (p[1] == '=')
+          {
+            ++p;
+            t.type = TOK.UorL;
+          }
+          else
+            t.type = TOK.UorLorE;
+          goto Lcommon;
+        case '=':
+          t.type = TOK.NotEqual;
+          goto Lcommon;
+        default:
+          t.type = TOK.Not;
+          goto Lcommon2;
+        }
+        assert(0);
       case '.':
         if (p[1] == '.')
         {

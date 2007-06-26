@@ -52,7 +52,7 @@ void main(char[][] args)
       case TOK.Character:
         writef("<cl>%s</cl>", span);
       break;
-      case TOK.Assign, TOK.Equal,
+      case TOK.Assign, TOK.Equal, TOK.Not,
         TOK.OrAssign, TOK.OrBinary,
         TOK.AndAssign, TOK.AndBinary,
         TOK.PlusAssign, TOK.PlusPlus, TOK.Plus,
@@ -61,7 +61,13 @@ void main(char[][] args)
         TOK.MulAssign, TOK.Mul,
         TOK.ModAssign, TOK.Mod,
         TOK.XorAssign, TOK.Xor,
-        TOK.CatAssign, TOK.Catenate:
+        TOK.CatAssign, TOK.Catenate,
+        TOK.Unordered,
+        TOK.UorE,
+        TOK.UorG,
+        TOK.UorGorE,
+        TOK.UorL,
+        TOK.UorLorE:
         writef("<op>%s</op>", span);
       break;
       case TOK.AndLogical:
@@ -70,9 +76,9 @@ void main(char[][] args)
       case TOK.OrLogical:
         writef("<op>∨</op>");
       break;
-//       case TOK.NotEqual:
-//         writef("<op>≠</op>");
-//       break;
+      case TOK.NotEqual:
+        writef("<op>≠</op>");
+      break;
       case TOK.Number:
         writef("<n>%s</n>", span);
       break;
