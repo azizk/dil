@@ -301,17 +301,18 @@ class Lexer
               {
                 ++loc;
                 ++p;
-                continue;
               }
+              continue;
             default:
               c &= char.max;
               goto LswitchNC;
             }
           }
         case '*':
-          c = *++p;
           while (1)
           {
+            c = *++p;
+          LswitchBC: // only jumped to from default case of next switch(c)
             switch (c)
             {
             case '\r':
@@ -319,7 +320,6 @@ class Lexer
                 ++p;
             case '\n':
               ++loc;
-              c = *++p;
               continue;
             case 0, _Z_:
               error(MID.UnterminatedBlockComment);
@@ -341,12 +341,12 @@ class Lexer
               if (p[1] == LS[2] || p[1] == PS[2])
               {
                 ++loc;
-                c = *(p += 2);
-                continue;
+                ++p;
               }
+              continue;
             default:
               c &= char.max;
-              continue;
+              goto LswitchBC;
             }
           }
           assert(0);
