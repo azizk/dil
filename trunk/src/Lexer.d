@@ -387,9 +387,36 @@ class Lexer
 
       if (c == '`')
         return scanRawStringLiteral(t);
-
-      switch(c)
+      switch (c)
       {
+      case '<': /* <  <=  <>  <>=  <<  <<= */
+        c = *++p;
+        switch (c)
+        {
+        case '=':
+          t.type = TOK.LessEqual;
+          goto Lcommon;
+        case '<':
+          if (p[1] == '=') {
+            ++p;
+            t.type = TOK.LShiftAssign;
+          }
+          else
+            t.type = TOK.LShift;
+          goto Lcommon;
+        case '>':
+          if (p[1] == '=') {
+            ++p;
+            t.type = TOK.LorEorG;
+          }
+          else
+            t.type = TOK.LorG;
+          goto Lcommon;
+        default:
+          t.type = TOK.LessThan;
+          goto Lcommon2;
+        }
+        assert(0);
       case '!':
         c = *++p;
         switch (c)
@@ -431,7 +458,7 @@ class Lexer
           goto Lcommon2;
         }
         assert(0);
-      case '.':
+      case '.': /* .  ..  ... */
         if (p[1] == '.')
         {
           ++p;
@@ -445,7 +472,7 @@ class Lexer
         else
           t.type = TOK.Dot;
         goto Lcommon;
-      case '|':
+      case '|': /* |  ||  |= */
         c = *++p;
         if (c == '=')
           t.type = TOK.OrAssign;
@@ -456,7 +483,7 @@ class Lexer
           goto Lcommon2;
         }
         goto Lcommon;
-      case '&':
+      case '&': /* &  &&  &= */
         c = *++p;
         if (c == '=')
           t.type = TOK.AndAssign;
@@ -467,7 +494,7 @@ class Lexer
           goto Lcommon2;
         }
         goto Lcommon;
-      case '+':
+      case '+': /* +  ++  += */
         c = *++p;
         if (c == '=')
           t.type = TOK.PlusAssign;
@@ -478,7 +505,7 @@ class Lexer
           goto Lcommon2;
         }
         goto Lcommon;
-      case '-':
+      case '-': /* -  --  -= */
         c = *++p;
         if (c == '=')
           t.type = TOK.MinusAssign;
@@ -489,7 +516,7 @@ class Lexer
           goto Lcommon2;
         }
         goto Lcommon;
-      case '=':
+      case '=': /* =  == */
         if (p[1] == '=') {
           ++p;
           t.type = TOK.Equal;
@@ -497,7 +524,7 @@ class Lexer
         else
           t.type = TOK.Assign;
         goto Lcommon;
-      case '~':
+      case '~': /* ~  ~= */
          if (p[1] == '=') {
            ++p;
            t.type = TOK.CatAssign;
@@ -505,7 +532,7 @@ class Lexer
          else
            t.type = TOK.Tilde;
          goto Lcommon;
-      case '*':
+      case '*': /* *  *= */
          if (p[1] == '=') {
            ++p;
            t.type = TOK.MulAssign;
@@ -513,7 +540,7 @@ class Lexer
          else
            t.type = TOK.Mul;
          goto Lcommon;
-      case '^':
+      case '^': /* ^  ^= */
          if (p[1] == '=') {
            ++p;
            t.type = TOK.XorAssign;
@@ -521,7 +548,7 @@ class Lexer
          else
            t.type = TOK.Xor;
          goto Lcommon;
-      case '%':
+      case '%': /* %  %= */
          if (p[1] == '=') {
            ++p;
            t.type = TOK.ModAssign;

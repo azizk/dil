@@ -17,7 +17,8 @@ enum TOK
   String,
   Character,
   Number,
-/* Braces */
+
+  // Brackets
   LParen,
   RParen,
   LBracket,
@@ -27,14 +28,20 @@ enum TOK
 
   Dot, Slice, Ellipses,
 
+  // Floating point operators
   Unordered,
   UorE,
   UorG,
   UorGorE,
   UorL,
   UorLorE,
+  LorEorG,
+  LorG,
 
+  // Normal operators
   Assign, Equal, NotEqual, Not,
+  LessEqual, LessThan,
+  LShiftAssign, LShift,
   OrAssign, OrLogical, OrBinary,
   AndAssign, AndLogical, AndBinary,
   PlusAssign, PlusPlus, Plus,
