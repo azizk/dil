@@ -13,14 +13,14 @@ import std.conv;
 
 /// ASCII character properties table.
 static const int ptable[256] = [
- 0, 0, 0, 0, 0, 0, 0, 0, 0,32, 0,32,32, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 7, 7, 7, 7, 7, 7, 7, 7, 6, 6, 0, 0, 0, 0, 0, 0,
+ 0x5c00, 0, 0, 0, 0, 0, 0, 0, 0,32, 0,32,32, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x5c00, 0, 0, 0, 0, 0,
+32, 0, 0x2200, 0, 0, 0, 0, 0x2700, 0, 0, 0, 0, 0, 0, 0, 0,
+ 7, 7, 7, 7, 7, 7, 7, 7, 6, 6, 0, 0, 0, 0, 0, 0x3f00,
  0,12,12,12,12,12,12, 8, 8, 8, 8, 8, 8, 8, 8, 8,
- 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 0, 0, 0, 0,16,
- 0,12,12,12,12,12,12, 8, 8, 8, 8, 8, 8, 8, 8, 8,
- 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0,
+ 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 0, 0x5c00, 0, 0,16,
+ 0, 0x70c, 0x80c,12,12,12, 0xc0c, 8, 8, 8, 8, 8, 8, 8, 0xa08, 8,
+ 8, 8, 0xd08, 8, 0x908, 8, 0xb08, 8, 8, 8, 8, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -41,6 +41,8 @@ enum CProperty
   Whitespace = 1<<5
 }
 
+const uint EVMask = 0xFF00; // Bit mask for escape value
+
 private alias CProperty CP;
 int isoctal(char c) { return ptable[c] & CP.Octal; }
 int isdigit(char c) { return ptable[c] & CP.Digit; }
@@ -50,33 +52,48 @@ int isalnum(char c) { return ptable[c] & (CP.Alpha | CP.Digit); }
 int isidbeg(char c) { return ptable[c] & (CP.Alpha | CP.Underscore); }
 int isident(char c) { return ptable[c] & (CP.Alpha | CP.Underscore | CP.Digit); }
 int isspace(char c) { return ptable[c] & CP.Whitespace; }
+int char2ev(char c) { return ptable[c] >> 8; /*(ptable[c] & EVMask) >> 8;*/ }
 
 version(gen_ptable)
 static this()
 {
+  alias ptable p;
   // Initialize character properties table.
-  for (int i; i < ptable.length; ++i)
+  for (int i; i < p.length; ++i)
   {
-    ptable[i] = 0;
+    p[i] = 0;
     if ('0' <= i && i <= '7')
-      ptable[i] |= CP.Octal;
+      p[i] |= CP.Octal;
     if ('0' <= i && i <= '9')
-      ptable[i] |= CP.Digit;
+      p[i] |= CP.Digit;
     if (isdigit(i) || 'a' <= i && i <= 'f' || 'A' <= i && i <= 'F')
-      ptable[i] |= CP.Hex;
+      p[i] |= CP.Hex;
     if ('a' <= i && i <= 'z' || 'A' <= i && i <= 'Z')
-      ptable[i] |= CP.Alpha;
+      p[i] |= CP.Alpha;
     if (i == '_')
-      ptable[i] |= CP.Underscore;
+      p[i] |= CP.Underscore;
     if (i == ' ' || i == '\t' || i == '\v' || i == '\f')
-      ptable[i] |= CP.Whitespace;
+      p[i] |= CP.Whitespace;
   }
+  // Store escape sequence values in second byte.
+  assert(CProperty.max <= ubyte.max, "character property flags and escape value byte overlap.");
+  p['\''] |= 39 << 8;
+  p['"'] |= 34 << 8;
+  p['?'] |= 63 << 8;
+  p['\\'] |= p[0] = p[26] = 92 << 8;
+  p['a'] |= 7 << 8;
+  p['b'] |= 8 << 8;
+  p['f'] |= 12 << 8;
+  p['n'] |= 10 << 8;
+  p['r'] |= 13 << 8;
+  p['t'] |= 9 << 8;
+  p['v'] |= 11 << 8;
   // Print a formatted array literal.
   char[] array = "[\n";
-  for (int i; i < ptable.length; ++i)
+  for (int i; i < p.length; ++i)
   {
-    int c = ptable[i];
-    array ~= std.string.format("%2d,", c, ((i+1) % 16) ? "":"\n");
+    int c = p[i];
+    array ~= std.string.format(c>255?" 0x%x,":"%2d,", c, ((i+1) % 16) ? "":"\n");
   }
   array[$-2..$] = "\n]";
   writefln(array);
@@ -109,6 +126,12 @@ enum MID
   // `` r""
   UnterminatedRawString,
   UnterminatedBackQuoteString,
+  // \x \u \U
+  UndefinedEscapeSequence,
+  InsufficientHexDigits,
+  // \&[a-zA-Z][a-zA-Z0-9]+;
+  UnterminatedHTMLEntity,
+  InvalidBeginHTMLEntity,
 }
 
 string[] messages = [
@@ -128,6 +151,12 @@ string[] messages = [
   // `` r""
   "unterminated raw string.",
   "unterminated back quote string.",
+  // \x \u \U
+  "found undefined escape sequence.",
+  "insufficient number of hex digits in escape sequence.",
+  // \&[a-zA-Z][a-zA-Z0-9]+;
+  "unterminated html entity.",
+  "html entities must begin with a letter.",
 ];
 
 class Problem
@@ -834,6 +863,88 @@ class Lexer
     error(mid);
     t.pf = 0;
     t.end = p;
+  }
+
+  dchar scanEscapeSequence()
+  {
+    uint c = char2ev(*p);
+    if (c)
+      return c;
+    uint digits = 2;
+
+    switch (*p)
+    {
+    case 'x':
+      c = 0;
+      while (1)
+      {
+        ++p;
+        if (ishexad(*p))
+        {
+          c *= 16;
+          if (*p <= '9')
+            c = *p - '0';
+          else if (*p <= 'F')
+            c = *p - 'A' - 10;
+          else
+            c = *p - 'a' - 10;
+          if (!--digits)
+            break;
+        }
+        else
+        {
+          error(MID.InsufficientHexDigits);
+          break;
+        }
+      }
+      break;
+    case 'u':
+      digits = 4;
+      goto case 'x';
+    case 'U':
+      digits = 8;
+      goto case 'x';
+    default:
+    }
+    if (isoctal(*p))
+    {
+      c = 0;
+      c += *p - '0';
+      ++p;
+      if (!isoctal(*p))
+        return c;
+      c *= 8;
+      c += *p - '0';
+      ++p;
+      if (!isoctal(*p))
+        return c;
+      c *= 8;
+      c += *p - '0';
+      ++p;
+    }
+    else if(*p == '&')
+    {
+      if (isalpha(*++p))
+      {
+        while (1)
+        {
+          if (isalnum(*++p))
+            continue;
+          if (*p == ';')
+            break;
+          else {
+            error(MID.UnterminatedHTMLEntity);
+            break;
+          }
+        }
+      }
+      else
+        error(MID.InvalidBeginHTMLEntity);
+    }
+    else
+      error(MID.UndefinedEscapeSequence);
+
+    return c;
   }
 
   void scanNumber(ref Token t)
