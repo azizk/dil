@@ -264,6 +264,7 @@ class Lexer
           while (1)
           {
             c = *++p;
+          LswitchNC: // only jumped to from default case of next switch(c)
             switch (c)
             {
             case '\r':
@@ -272,37 +273,39 @@ class Lexer
             case '\n':
               ++loc;
               continue;
-            case '/':
-              if (p[1] == '+')
-              {
-                ++p;
-                ++level;
-              }
-              continue;
-            case '+':
-              if (p[1] == '/')
-              {
-                ++p;
-                if (--level == 0)
-                {
-                  ++p;
-                LreturnNC:
-                  t.type = TOK.Comment;
-                  t.end = p;
-                  return;
-                }
-              }
-              continue;
             case 0, _Z_:
               error(MID.UnterminatedNestedComment);
               goto LreturnNC;
-            case LS[0]:
-              if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])) {
-                p += 2;
-                ++loc;
+            default:
+            }
+
+            c <<= 8;
+            c |= *++p;
+            switch (c)
+            {
+            case 0x2F2B: // /+
+              ++level;
+              continue;
+            case 0x2B2F: // +/
+              if (--level == 0)
+              {
+                ++p;
+              LreturnNC:
+                t.type = TOK.Comment;
+                t.end = p;
+                return;
               }
               continue;
+            case 0xE280: // LS[0..1] || PS[0..1]
+              if (p[1] == LS[2] || p[1] == PS[2])
+              {
+                ++loc;
+                ++p;
+                continue;
+              }
             default:
+              c &= char.max;
+              goto LswitchNC;
             }
           }
         case '*':
