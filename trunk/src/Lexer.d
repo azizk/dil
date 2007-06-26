@@ -170,8 +170,11 @@ class Lexer
     this.fileName = fileName;
 
     this.text = text;
-    this.text.length = this.text.length + 1;
-    this.text[$-1] = 0;
+    if (text[$-1] != 0)
+    {
+      this.text.length = this.text.length + 1;
+      this.text[$-1] = 0;
+    }
 
     this.p = this.text.ptr;
     this.end = this.p + this.text.length;
@@ -938,4 +941,24 @@ class Lexer
     tokens ~= this.token;
     return tokens;
   }
+}
+
+unittest
+{
+  string[] ops = [">", ">=", ">>", ">>=", ">>>", ">>>=", "<", "<=", "<>", "<>=", "<<", "<<=", "!", "!<", "!>", "!<=", "!>=", "!<>", "!<>=", ".", "..", "...", "&", "&&", "&=", "+", "++", "+=", "-", "--", "-=", "=", "==", "~", "~=", "*", "*=", "^", "^=", "%", "%="];
+
+  char[] src;
+
+  foreach (op; ops)
+    src ~= op ~ " ";
+
+  auto lx = new Lexer(src, "");
+  auto tokens = lx.getTokens();
+
+  tokens = tokens[0..$-1]; // exclude TOK.EOF
+
+  assert(tokens.length == 41 );
+
+  foreach (i, t; tokens)
+    assert(t.span == ops[i], std.string.format("Lexed '%s' but expected '%s'", t.span, ops[i]));
 }

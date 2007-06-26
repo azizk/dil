@@ -54,8 +54,8 @@ enum TOK
   ModAssign, Mod,
   XorAssign, Xor,
   CatAssign, Catenate,
-
   Tilde,
+
   Colon,
   Semicolon,
   Question,
