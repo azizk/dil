@@ -945,11 +945,18 @@ class Lexer
 
 unittest
 {
-  string[] ops = [">", ">=", ">>", ">>=", ">>>", ">>>=", "<", "<=", "<>", "<>=", "<<", "<<=", "!", "!<", "!>", "!<=", "!>=", "!<>", "!<>=", ".", "..", "...", "&", "&&", "&=", "+", "++", "+=", "-", "--", "-=", "=", "==", "~", "~=", "*", "*=", "^", "^=", "%", "%="];
+  string[] toks = [
+    ">",    ">=", ">>",  ">>=", ">>>", ">>>=", "<",   "<=",  "<>",
+    "<>=",  "<<", "<<=", "!",   "!<",  "!>",   "!<=", "!>=", "!<>",
+    "!<>=", ".",  "..",  "...", "&",   "&&",   "&=",  "+",   "++",
+    "+=",   "-",  "--",  "-=",  "=",   "==",   "~",   "~=",  "*",
+    "*=",   "/",  "/=",  "^",   "^=",  "%",    "%=",  "(",   ")",
+    "[",    "]",  "{",   "}",   ":",   ";",    "?",   ",",   "$"
+  ];
 
   char[] src;
 
-  foreach (op; ops)
+  foreach (op; toks)
     src ~= op ~ " ";
 
   auto lx = new Lexer(src, "");
@@ -957,8 +964,8 @@ unittest
 
   tokens = tokens[0..$-1]; // exclude TOK.EOF
 
-  assert(tokens.length == 41 );
+  assert(tokens.length == toks.length );
 
   foreach (i, t; tokens)
-    assert(t.span == ops[i], std.string.format("Lexed '%s' but expected '%s'", t.span, ops[i]));
+    assert(t.span == toks[i], std.string.format("Lexed '%s' but expected '%s'", t.span, toks[i]));
 }
