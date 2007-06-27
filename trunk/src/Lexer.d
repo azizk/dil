@@ -111,6 +111,7 @@ const uint _Z_ = 26; /// Control+Z
 enum MID
 {
   InvalidUnicodeCharacter,
+  InvalidUTF8Sequence,
   // ''
   UnterminatedCharacterLiteral,
   EmptyCharacterLiteral,
@@ -140,6 +141,7 @@ enum MID
 
 string[] messages = [
   "invalid Unicode character.",
+  "invalid UTF-8 sequence.",
   // ''
   "unterminated character literal.",
   "empty character literal.",
@@ -266,7 +268,7 @@ class Lexer
       Lidentifier:
         do
         { c = *++p; }
-        while (isident(c) || c & 128 && isUniAlpha(decodeUTF()))
+        while (isident(c) || c & 128 && isUniAlpha(decodeUTF8()))
 
         t.end = p;
 
@@ -683,7 +685,7 @@ class Lexer
       default:
       }
 
-      if (c & 128 && isUniAlpha(decodeUTF()))
+      if (c & 128 && isUniAlpha(decodeUTF8()))
         goto Lidentifier;
       c = *++p;
     }
@@ -710,16 +712,17 @@ class Lexer
         ++p;
       Lreturn:
         buffer ~= 0;
+        t.str = buffer;
         t.pf = scanPostfix();
         t.end = p;
         return;
       case '\\':
         ++p;
-        t.dchar_ = scanEscapeSequence();
-        if (t.dchar_ < 128)
-          buffer ~= t.dchar_;
+        dchar d = scanEscapeSequence();
+        if (d < 128)
+          buffer ~= d;
         else
-          encodeUTF8(buffer, t.dchar_);
+          encodeUTF8(buffer, d);
         continue;
       case '\r':
         if (p[1] == '\n')
@@ -735,12 +738,16 @@ class Lexer
       default:
         if (*p & 128)
         {
-          if (*p == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])) {
-            ++p; ++p;
+          char* begin = p;
+          dchar d = decodeUTF8();
+          if (d == LSd || d == PSd)
             goto case '\n';
+
+          if (d != 0xFFFF)
+          {
+            ++p;
+            buffer ~= begin[0 .. p - begin];
           }
-          buffer ~= p[0 .. UTF8stride[*p]];
-          p += UTF8stride[*p];
           continue;
         }
         buffer ~= *p++;
@@ -768,7 +775,7 @@ class Lexer
       uint c = *p;
       if (c & 128)
       {
-        c = decodeUTF();
+        c = decodeUTF8();
         if (c == LSd || c == PSd)
           goto Lerr;
       }
@@ -1100,13 +1107,22 @@ class Lexer
     error(mid);
   }
 
-  uint decodeUTF()
+  uint decodeUTF8()
   {
-    assert(*p & 128);
+    assert(*p & 128, "check for ASCII char before calling decodeUTF8().");
     size_t idx;
-    uint d;
-    d = std.utf.decode(p[0 .. end-p], idx);
-    p += idx -1;
+    uint d = 0xFFFF;
+    try
+    {
+      d = std.utf.decode(p[0 .. end-p], idx);
+      p += idx -1;
+    }
+    catch (UtfException e)
+    {
+      error(MID.InvalidUTF8Sequence);
+      // Skip to next valid utf-8 sequence
+      while (UTF8stride[*++p] != 0xFF) {}
+    }
     return d;
   }
 
