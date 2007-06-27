@@ -116,6 +116,8 @@ enum MID
   ExpectedIdentifierLine,
   NewlineInSpecialToken,
   UnterminatedSpecialToken,
+  // ""
+  UnterminatedString,
   // x""
   NonHexCharInHexString,
   OddNumberOfDigitsInHexString,
@@ -141,6 +143,8 @@ string[] messages = [
   "expected 'line' after '#'.",
   "newline not allowed inside special token.",
   "expected newline after special token.",
+  // ""
+  "unterminated string literal.",
   // x""
   "non-hex character '{1}' found in hex string.",
   "odd number of hex digits in hex string.",
@@ -409,26 +413,15 @@ class Lexer
         }
       }
 
-      if (c == '"')
-      {
-        do {
-          c = *++p;
-          if (c == 0)
-            throw new Error("unterminated string literal.");
-          if (c == '\\')
-            ++p;
-        } while (c != '"')
-        ++p;
-        t.type = TOK.String;
-        t.end = p;
-        return;
-      }
-
       if (c == '\'')
         return scanCharacterLiteral(t);
 
       if (c == '`')
         return scanRawStringLiteral(t);
+
+      if (c == '"')
+        return scanNormalStringLiteral(t);
+
       switch (c)
       {
       case '>': /* >  >=  >>  >>=  >>>  >>>= */
@@ -668,7 +661,6 @@ class Lexer
         t.end = p;
         return;
       case '#':
-        ++p;
         scanSpecialToken();
         break;
       default:
@@ -685,6 +677,58 @@ class Lexer
     char* tmp = p;
     scan(t);
     p = tmp;
+  }
+
+  void scanNormalStringLiteral(ref Token t)
+  {
+    assert(*p == '"');
+    ++p;
+    char[] buffer;
+    t.type = TOK.String;
+    while (1)
+    {
+      switch (*p)
+      {
+      case '"':
+        ++p;
+      Lreturn:
+        buffer ~= 0;
+        t.pf = scanPostfix();
+        t.end = p;
+        return;
+      case '\\':
+        ++p;
+        t.dchar_ = scanEscapeSequence();
+        if (t.dchar_ < 128)
+          buffer ~= t.dchar_;
+        else
+          encode(buffer, t.dchar_);
+        continue;
+      case '\r':
+        if (p[1] == '\n')
+          ++p;
+      case '\n':
+        ++p;
+        ++loc;
+        buffer ~= '\n';
+        continue;
+      case 0, _Z_:
+        error(MID.UnterminatedString);
+        goto Lreturn;
+      default:
+        if (*p & 128)
+        {
+          if (*p == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])) {
+            ++p; ++p;
+            goto case '\n';
+          }
+          buffer ~= p[0 .. UTF8stride[*p]];
+          p += UTF8stride[*p];
+          continue;
+        }
+        buffer ~= *p++;
+      }
+    }
   }
 
   void scanCharacterLiteral(ref Token t)
@@ -936,6 +980,7 @@ class Lexer
           if (isalnum(*++p))
             continue;
           if (*p == ';') {
+            // TODO: convert entity to unicode codepoint.
             ++p;
             break;
           }
@@ -965,6 +1010,8 @@ class Lexer
   /// Scan special token: #line Integer [Filespec] EndOfLine
   void scanSpecialToken()
   {
+    assert(*p == '#');
+    ++p;
     MID mid;
     Token t;
 
