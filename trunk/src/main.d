@@ -5,6 +5,7 @@
 module dparser;
 import Lexer;
 import Token;
+import Messages;
 import std.stdio;
 import std.file;
 
