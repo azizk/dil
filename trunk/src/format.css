@@ -1,10 +1,12 @@
 @charset "utf-8";
-sourcetext {
+compilerinfo, sourcetext {
   display: block;
   white-space: pre;
   font-family: Monospace;
   font-size: 0.8em;
 }
+compilerinfo { white-space: normal; border: 1px solid #A22; padding: 0.5em; margin: 1em;}
+compilerinfo error { display: block; }
 k { color: darkblue; font-weight: bold; }
 c[c=lc], c[c=bc] { color: green; }
 c[c=nc] { color: darkgreen; }

@@ -116,7 +116,9 @@ enum MID
   UnterminatedCharacterLiteral,
   EmptyCharacterLiteral,
   // #line
-  ExpectedIdentifierLine,
+  ExpectedIdentifierSTLine,
+  ExpectedNormalStringLiteral,
+  ExpectedNumberAfterSTLine,
   NewlineInSpecialToken,
   UnterminatedSpecialToken,
   // ""
@@ -147,8 +149,10 @@ string[] messages = [
   "empty character literal.",
   // #line
   "expected 'line' after '#'.",
+  `the filespec must be defined in a double quote string literal (e.g. "filespec".)`,
+  "positive integer expected after #line",
   "newline not allowed inside special token.",
-  "expected newline after special token.",
+  "expected a terminating newline after special token.",
   // ""
   "unterminated string literal.",
   // x""
@@ -233,7 +237,9 @@ class Lexer
 
       if (c == 0)
       {
+        assert(*p == 0);
         ++p;
+        assert(p == end);
         t.type = TOK.EOF;
         t.end = p;
         return;
@@ -683,7 +689,8 @@ class Lexer
         return;
       case '#':
         scanSpecialToken();
-        break;
+        c = *p;
+        continue;
       default:
       }
 
@@ -696,8 +703,11 @@ class Lexer
   void peek(ref Token t)
   {
     char* tmp = p;
+    uint len = errors.length;
     scan(t);
     p = tmp;
+    if (errors.length != len)
+      errors = errors[0..len];
   }
 
   void scanNormalStringLiteral(ref Token t)
@@ -1040,74 +1050,97 @@ class Lexer
   }
 
   /// Scan special token: #line Integer [Filespec] EndOfLine
+  // TODO: Handle case like: #line 0 #line 2
   void scanSpecialToken()
   {
     assert(*p == '#');
+
     ++p;
     MID mid;
     Token t;
+    uint oldloc = this.loc, newloc;
 
-    scan(t);
-    if (!(t.type == TOK.Identifier && t.span == "line")) {
-      mid = MID.ExpectedIdentifierLine;
+    peek(t);
+    if (!(this.loc == oldloc && p == t.start && t.type == TOK.Identifier && t.span == "line"))
+    {
+      this.loc = oldloc; // reset this.loc because we took a peek at the next token
+      mid = MID.ExpectedIdentifierSTLine;
+      goto Lerr;
+    }
+    p = t.end; // consume token
+
+    peek(t);
+    if (this.loc == oldloc && t.type == TOK.Number)
+    {
+      newloc = t._uint - 1;
+      p = t.end;
+    }
+    else
+    {
+      this.loc = oldloc;
+      mid = MID.ExpectedNumberAfterSTLine;
       goto Lerr;
     }
 
-    scan(t);
-    if (t.type == TOK.Number)
-      loc = t._uint - 1;
-
-    uint loc = this.loc;
-
-    char* wsstart = t.end;
-
-    bool hasNewline(char* end)
-    {
-      alias wsstart p;
-      uint c;
-      for(; p != end; c = *++p)
-        if (c == '\n' || c == '\r' || c == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])) {
-          mid = MID.NewlineInSpecialToken;
-          return true;
-        }
-      return false;
-    }
-
     peek(t);
-
+    if (this.loc != oldloc)
+    {
+      this.loc = oldloc;
+      mid = MID.NewlineInSpecialToken;
+      goto Lerr;
+    }
     if (t.type == TOK.String)
     {
-      // Check whole token with preceding whitespace for newline.
-      if (hasNewline(t.end))
+      if (*t.start != '"')
+      {
+        mid = MID.ExpectedNormalStringLiteral;
         goto Lerr;
+      }
       fileName = t.span[1..$-1]; // contents of "..."
       p = t.end;
     }
     else if (t.type == TOK.Identifier && t.span == "__FILE__")
     {
-      // Check preceding whitespace for newline.
-      if (hasNewline(t.start))
-        goto Lerr;
       p = t.end;
     }
-
-    uint c;
+/+
+    peek(t);
+    if (this.loc == oldloc && t.type != TOK.EOF)
+    {
+      mid = MID.UnterminatedSpecialToken;
+      goto Lerr;
+    }
++/
     while (1)
     {
-      c = *p++;
-      if (isspace(c))
-        continue;
-
-      if (c == '\n' || c == '\r' || c == 0 ||
-          c == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+      switch (*p)
+      {
+      case '\r':
+        if (p[1] == '\n')
+          ++p;
+      case '\n':
+        ++p;
         break;
-      else {
+      case LS[0]:
+        if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+        {
+          p += 2;
+          break;
+        }
+      case 0, _Z_:
+        break;
+      default:
+        if (isspace(*p)) {
+          ++p;
+          continue;
+        }
         mid = MID.UnterminatedSpecialToken;
         goto Lerr;
       }
+      break;
     }
 
-    this.loc = loc;
+    this.loc = newloc;
     return;
   Lerr:
     error(mid);

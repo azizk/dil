@@ -32,8 +32,15 @@ void main(char[][] args)
 
   writef(`<?xml version="1.0"?>
 <?xml-stylesheet href="format.css" type="text/css"?>
+<root>
+<compilerinfo>`\n);
+  foreach (error; lx.errors)
+  {
+    writefln(`<error t="%s">%s(%d): %s</error>`, "l", lx.fileName, error.loc, messages[error.id]);
+  }
+  writef(`</compilerinfo>
 <sourcetext>`);
-  foreach(ref token; tokens)
+  foreach (ref token; tokens)
   {
     if (end != token.start)
       writef("%s", xmlescape(end[0 .. token.start - end]));
@@ -120,5 +127,5 @@ void main(char[][] args)
     }
     end = token.end;
   }
-  writef("\n</sourcetext>");
+  writef("\n</sourcetext>\n</root>");
 }
