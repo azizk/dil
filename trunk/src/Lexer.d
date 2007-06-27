@@ -110,6 +110,8 @@ const uint _Z_ = 26; /// Control+Z
 /// Index into table of error messages.
 enum MID
 {
+  InvalidUnicodeCharacter,
+  // ''
   UnterminatedCharacterLiteral,
   EmptyCharacterLiteral,
   // #line
@@ -137,6 +139,8 @@ enum MID
 }
 
 string[] messages = [
+  "invalid Unicode character.",
+  // ''
   "unterminated character literal.",
   "empty character literal.",
   // #line
@@ -413,17 +417,30 @@ class Lexer
         }
       }
 
-      if (c == '\'')
-        return scanCharacterLiteral(t);
-
-      if (c == '`')
-        return scanRawStringLiteral(t);
-
-      if (c == '"')
-        return scanNormalStringLiteral(t);
-
       switch (c)
       {
+      case '\'':
+        return scanCharacterLiteral(t);
+      case '`':
+        return scanRawStringLiteral(t);
+      case '"':
+        return scanNormalStringLiteral(t);
+      case '\\':
+        char[] buffer;
+        do
+        {
+          ++p;
+          c = scanEscapeSequence();
+          if (c < 128)
+            buffer ~= c;
+          else
+            encodeUTF8(buffer, c);
+        } while (*p == '\\')
+        buffer ~= 0;
+        t.type = TOK.String;
+        t.str = buffer;
+        t.end = p;
+        return;
       case '>': /* >  >=  >>  >>=  >>>  >>>= */
         c = *++p;
         switch (c)
@@ -702,7 +719,7 @@ class Lexer
         if (t.dchar_ < 128)
           buffer ~= t.dchar_;
         else
-          encode(buffer, t.dchar_);
+          encodeUTF8(buffer, t.dchar_);
         continue;
       case '\r':
         if (p[1] == '\n')
@@ -932,13 +949,15 @@ class Lexer
         {
           c *= 16;
           if (*p <= '9')
-            c = *p - '0';
+            c += *p - '0';
           else if (*p <= 'F')
-            c = *p - 'A' - 10;
+            c += *p - 'A' + 10;
           else
-            c = *p - 'a' - 10;
-          if (!--digits)
+            c += *p - 'a' + 10;
+          if (!--digits) {
+            ++p;
             break;
+          }
         }
         else
         {
@@ -954,47 +973,47 @@ class Lexer
       digits = 8;
       goto case 'x';
     default:
-    }
-    if (isoctal(*p))
-    {
-      c = 0;
-      c += *p - '0';
-      ++p;
-      if (!isoctal(*p))
-        return c;
-      c *= 8;
-      c += *p - '0';
-      ++p;
-      if (!isoctal(*p))
-        return c;
-      c *= 8;
-      c += *p - '0';
-      ++p;
-    }
-    else if(*p == '&')
-    {
-      if (isalpha(*++p))
+      if (isoctal(*p))
       {
-        while (1)
+        c = 0;
+        c += *p - '0';
+        ++p;
+        if (!isoctal(*p))
+          return c;
+        c *= 8;
+        c += *p - '0';
+        ++p;
+        if (!isoctal(*p))
+          return c;
+        c *= 8;
+        c += *p - '0';
+        ++p;
+      }
+      else if(*p == '&')
+      {
+        if (isalpha(*++p))
         {
-          if (isalnum(*++p))
-            continue;
-          if (*p == ';') {
-            // TODO: convert entity to unicode codepoint.
-            ++p;
-            break;
-          }
-          else {
-            error(MID.UnterminatedHTMLEntity);
-            break;
+          while (1)
+          {
+            if (isalnum(*++p))
+              continue;
+            if (*p == ';') {
+              // TODO: convert entity to unicode codepoint.
+              ++p;
+              break;
+            }
+            else {
+              error(MID.UnterminatedHTMLEntity);
+              break;
+            }
           }
         }
+        else
+          error(MID.InvalidBeginHTMLEntity);
       }
       else
-        error(MID.InvalidBeginHTMLEntity);
+        error(MID.UndefinedEscapeSequence);
     }
-    else
-      error(MID.UndefinedEscapeSequence);
 
     return c;
   }
@@ -1115,6 +1134,54 @@ class Lexer
       tokens ~= this.token;
     tokens ~= this.token;
     return tokens;
+  }
+
+  private void encodeUTF8(inout char[] str, dchar d)
+  {
+    char[6] b;
+    assert(d > 0x7F, "check for ASCII char before calling encodeUTF8().");
+    if (d < 0x800)
+    {
+      b[0] = 0xC0 | (d >> 6);
+      b[1] = 0x80 | (d & 0x3F);
+      str ~= b[0..2];
+    }
+    else if (d < 0x10000)
+    {
+      b[0] = 0xE0 | (d >> 12);
+      b[1] = 0x80 | ((d >> 6) & 0x3F);
+      b[2] = 0x80 | (d & 0x3F);
+      str ~= b[0..3];
+    }
+    else if (d < 0x200000)
+    {
+      b[0] = 0xF0 | (d >> 18);
+      b[1] = 0x80 | ((d >> 12) & 0x3F);
+      b[2] = 0x80 | ((d >> 6) & 0x3F);
+      b[3] = 0x80 | (d & 0x3F);
+      str ~= b[0..4];
+    }
+    else if (d < 0x4000000)
+    {
+      b[0] = 0xF8 | (d >> 24);
+      b[1] = 0x80 | ((d >> 18) & 0x3F);
+      b[2] = 0x80 | ((d >> 12) & 0x3F);
+      b[3] = 0x80 | ((d >> 6) & 0x3F);
+      b[4] = 0x80 | (d & 0x3F);
+      str ~= b[0..5];
+    }
+    else if (d < 0x80000000)
+    {
+      b[0] = 0xFC | (d >> 30);
+      b[1] = 0x80 | ((d >> 24) & 0x3F);
+      b[2] = 0x80 | ((d >> 18) & 0x3F);
+      b[3] = 0x80 | ((d >> 12) & 0x3F);
+      b[4] = 0x80 | ((d >> 6) & 0x3F);
+      b[5] = 0x80 | (d & 0x3F);
+      str ~= b[0..6];
+    }
+    else
+      error(MID.InvalidUnicodeCharacter);
   }
 }
 
