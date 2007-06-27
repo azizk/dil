@@ -433,6 +433,8 @@ class Lexer
         {
           ++p;
           c = scanEscapeSequence();
+          if (c == 0xFFFF)
+            break;
           if (c < 128)
             buffer ~= c;
           else
@@ -719,6 +721,8 @@ class Lexer
       case '\\':
         ++p;
         dchar d = scanEscapeSequence();
+        if (d == 0xFFFF)
+          continue;
         if (d < 128)
           buffer ~= d;
         else
@@ -943,6 +947,7 @@ class Lexer
       ++p;
       return c;
     }
+    c = 0xFFFF;
     uint digits = 2;
 
     switch (*p)
@@ -969,6 +974,7 @@ class Lexer
         else
         {
           error(MID.InsufficientHexDigits);
+          c = 0xFFFF;
           break;
         }
       }
