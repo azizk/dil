@@ -874,45 +874,35 @@ class Lexer
   void scanHexStringLiteral(ref Token t)
   {
     assert(p[0] == 'x' && p[1] == '"');
-    p+=2;
     t.type = TOK.String;
 
     uint c;
     ubyte[] buffer;
     ubyte h; // hex number
     uint n; // number of hex digits
-    MID mid;
 
+    ++p;
     while (1)
     {
-      c = *p++;
+      c = *++p;
       switch (c)
       {
       case '"':
+        ++p;
         if (n & 1)
-        {
-          mid = MID.OddNumberOfDigitsInHexString;
-          error(mid);
-        }
-        t.str = cast(string) buffer;
+          error(MID.OddNumberOfDigitsInHexString);
         t.pf = scanPostfix();
+      Lreturn:
+        buffer ~= 0;
+        t.str = cast(string) buffer;
         t.end = p;
         return;
       case '\r':
-        if (*p == '\n')
+        if (p[1] == '\n')
           ++p;
       case '\n':
         ++loc;
         continue;
-      case LS[0]:
-        if (*p == LS[1] && (p[1] == LS[2] || p[1] == PS[2])) {
-          p += 2;
-          ++loc;
-        }
-        continue;
-      case 0, _Z_:
-        mid = MID.UnterminatedHexString;
-        goto Lerr;
       default:
         if (ishexad(c))
         {
@@ -936,16 +926,22 @@ class Lexer
         }
         else if (isspace(c))
           continue;
-        mid = MID.NonHexCharInHexString;
-        goto Lerr;
+        else if (c == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+        {
+          ++p; ++p;
+          ++loc;
+          continue;
+        }
+        else if (c == 0 || c == _Z_)
+        {
+          error(MID.UnterminatedHexString);
+          t.pf = 0;
+          goto Lreturn;
+        }
+        error(MID.NonHexCharInHexString);
       }
     }
-
-    return;
-  Lerr:
-    error(mid);
-    t.pf = 0;
-    t.end = p;
+    assert(0);
   }
 
   dchar scanEscapeSequence()
