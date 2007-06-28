@@ -911,6 +911,7 @@ class Lexer
 
     ulong ulong_;
     bool overflow;
+    size_t digits;
 
     if (*p != '0')
       goto LscanInteger;
@@ -974,12 +975,29 @@ class Lexer
     goto Lfinalize;
 
   LscanHex:
+    digits = 16;
     while (ishexad(*++p))
     {
       if (*p == '_')
         continue;
-      // todo
+
+      if (--digits == 0)
+      {
+        // Overflow: skip following digits.
+        overflow = true;
+        while (ishexad(*++p)) {}
+        break;
+      }
+
+      ulong_ *= 16;
+      if (*p <= '9')
+        ulong_ += *p - '0';
+      else if (*p <= 'F')
+        ulong_ += *p - 'A' + 10;
+      else
+        ulong_ += *p - 'a' + 10;
     }
+
     switch (*p)
     {
     case '.':
@@ -995,7 +1013,7 @@ class Lexer
     goto Lfinalize;
 
   LscanBin:
-    size_t digits;
+    assert(digits == 0);
     while (1)
     {
       if (*++p == '0')
