@@ -36,6 +36,11 @@ enum MID
   // \&[a-zA-Z][a-zA-Z0-9]+;
   UnterminatedHTMLEntity,
   InvalidBeginHTMLEntity,
+  // integer overflows
+  OverflowDecimalNumber,
+  OverflowHexNumber,
+  OverflowBinaryNumber,
+  OverflowOctalNumber,
 }
 
 string[] messages = [
@@ -68,4 +73,9 @@ string[] messages = [
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "unterminated html entity.",
   "html entities must begin with a letter.",
+  // integer overflows
+  "overflow in decimal number.",
+  "overflow in hexadecimal number.",
+  "overflow in binary number.",
+  "overflow in octal number.",
 ];

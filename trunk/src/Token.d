@@ -102,7 +102,10 @@ struct Token
       char pf;
     }
     dchar dchar_;
-    uint _uint;
+    long  long_;
+    ulong ulong_;
+    int   int_;
+    uint  uint_;
     float f;
     double d;
   }

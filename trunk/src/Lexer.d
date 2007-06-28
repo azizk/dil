@@ -882,12 +882,207 @@ class Lexer
     return c;
   }
 
+  /*
+    IntegerLiteral:= (Dec|Hex|Bin|Oct)Suffix?
+    Dec:= (0|[1-9][0-9_]*)
+    Hex:= 0[xX] HexDigits
+    Bin:= 0[bB][01_]+
+    Oct:= 0[0-7_]+
+    Suffix:= (L|[uU]|L[uU]|[uU]L)?
+    HexDigits:= [0-9a-zA-Z_]+
+
+    FloatLiteral:= Float([fFL]|i|[fFL]i)?
+    Float:= DecFloat | HexFloat
+    DecFloat:= ([0-9][0-9_]*[.]([0-9_]*DecExponent?)?) | [.][0-9][0-9_]*DecExponent? | [0-9][0-9_]*DecExponent
+    DecExponent:= [eE][+-]?[0-9_]+
+    HexFloat:= 0[xX](HexDigits[.]HexDigits | [.][0-9a-zA-Z]HexDigits? | HexDigits)HexExponent
+    HexExponent:= [pP][+-]?[0-9_]+
+
+    Invalid: "0b_", "0x_", "._"
+  */
   void scanNumber(ref Token t)
   {
-    while (isdigit(*++p)) {}
+    enum Suffix
+    {
+      None     = 0,
+      Unsigned = 1,
+      Long     = 1<<1
+    }
+
+    ulong ulong_;
+    bool overflow;
+
+    if (*p != '0')
+      goto LscanInteger;
+    ++p; // skip zero
+    // check for xX bB ...
+    switch (*p)
+    {
+    case 'x','X':
+      goto LscanHex;
+    case 'b','B':
+      goto LscanBin;
+    case 'L':
+      if (p[1] == 'i')
+        goto LscanReal;
+    case '.':
+      if (p[1] == '.')
+        break;
+    case 'i','f','F': // Imaginary and float literal suffix
+      goto LscanReal;
+    case '_':
+      ++p;
+      goto LscanOct;
+    default:
+      if (isoctal(*p))
+        goto LscanOct;
+    }
+
+  LscanInteger:
+    while (isdigit(*++p))
+    {
+      if (*p == '_')
+        continue;
+      if (ulong_ < ulong.max/10 || (ulong_ == ulong.max/10 && *p <= '5'))
+      {
+        ulong_ *= 10;
+        ulong_ += *p - '0';
+      }
+      // Overflow: skip following digits.
+      overflow = true;
+      while (isdigit(*++p)) {}
+      break;
+    }
+
+    switch (*p)
+    {
+    case '.':
+      if (p[1] != '.')
+        goto LscanReal;
+      break;
+    case 'L':
+      if (p[1] != 'i')
+        break;
+    case 'i', 'f', 'F', 'e', 'E':
+      goto LscanReal;
+    }
+    if (overflow)
+      error(MID.OverflowDecimalNumber);
     t.type = TOK.Number;
+//     ulong_ = toInt(t.span);
+    assert((isdigit(p[-1]) || p[-1] == '_') && !isdigit(*p) && *p != '_');
+    goto Lfinalize;
+
+  LscanHex:
+    while (ishexad(*++p))
+    {
+      if (*p == '_')
+        continue;
+      // todo
+    }
+    switch (*p)
+    {
+    case '.':
+      if (p[1] != '.')
+        goto LscanReal;
+      break;
+    case 'L':
+      if (p[1] != 'i')
+        break;
+    case 'i', 'p', 'P':
+      goto LscanReal;
+    }
+    goto Lfinalize;
+
+  LscanBin:
+    size_t digits;
+    while (1)
+    {
+      if (*++p == '0')
+      {
+        ++digits;
+        ulong_ *= 2;
+      }
+      if (*p == '1')
+      {
+        ++digits;
+        ulong_ *= 2;
+        ulong_ += *p - '0';
+      }
+      if (*p == '_')
+        continue;
+      break;
+    }
+
+    if (digits > 64)
+      error(MID.OverflowBinaryNumber);
+    assert((p[-1] == '0' || p[-1] == '1' || p[-1] == '_') && !(*p == '0' || *p == '1' || *p == '_'));
+    goto Lfinalize;
+
+  LscanOct:
+    while (isoctal(*++p))
+    {
+      if (*p == '_')
+        continue;
+      if (ulong_ < ulong.max/2 || (ulong_ == ulong.max/2 && *p <= '1'))
+      {
+        ulong_ *= 8;
+        ulong_ += *p - '0';
+        ++p;
+        continue;
+      }
+      // Overflow: skip following digits.
+      overflow = true;
+      while (isoctal(*++p)) {}
+      break;
+    }
+
+    switch (*p)
+    {
+    case '.':
+      if (p[1] != '.')
+        goto LscanReal;
+      break;
+    case 'L':
+      if (p[1] != 'i')
+        break;
+    case 'i', 'f', 'F', 'e', 'E':
+      goto LscanReal;
+    }
+    if (overflow)
+      error(MID.OverflowOctalNumber);
+//     goto Lfinalize;
+
+  Lfinalize:
+    Suffix s;
+    while (1)
+    {
+      switch (*p)
+      {
+      case 'L':
+        if (s & Suffix.Long)
+          break;
+        s = Suffix.Long;
+        continue;
+      case 'u', 'U':
+        if (s & Suffix.Unsigned)
+          break;
+        s = Suffix.Unsigned;
+      }
+      break;
+    }
+    t.ulong_ = ulong_;
     t.end = p;
-    t._uint = toInt(t.span);
+    return;
+  LscanReal:
+    p = t.start;
+    scanReal(t);
+    return;
+  }
+
+  void scanReal(ref Token t)
+  {
+    assert(*p == '.' || isdigit(*p));
   }
 
   /// Scan special token: #line Integer [Filespec] EndOfLine
@@ -913,7 +1108,7 @@ class Lexer
     peek(t);
     if (this.loc == oldloc && t.type == TOK.Number)
     {
-      newloc = t._uint - 1;
+      newloc = t.uint_ - 1;
       p = t.end;
     }
     else
