@@ -42,6 +42,8 @@ enum MID
   OverflowHexNumber,
   OverflowBinaryNumber,
   OverflowOctalNumber,
+  NoDigitsInHexNumber,
+  NoDigitsInBinNumber,
 }
 
 string[] messages = [
@@ -80,4 +82,6 @@ string[] messages = [
   "overflow in hexadecimal number.",
   "overflow in binary number.",
   "overflow in octal number.",
+  "invalid hex number; at least one hex digit expected.",
+  "invalid binary number; at least one binary digit expected.",
 ];

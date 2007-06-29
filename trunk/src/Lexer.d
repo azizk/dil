@@ -999,6 +999,9 @@ class Lexer
         ulong_ += *p - 'a' + 10;
     }
 
+    if (digits == 16)
+      error(MID.NoDigitsInHexNumber);
+
     switch (*p)
     {
     case '.':
@@ -1033,6 +1036,9 @@ class Lexer
         continue;
       break;
     }
+
+    if (digits == 0)
+      error(MID.NoDigitsInBinNumber);
 
     if (digits > 64)
       error(MID.OverflowBinaryNumber);
