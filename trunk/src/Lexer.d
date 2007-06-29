@@ -1206,7 +1206,7 @@ class Lexer
       if (!isdigit(*p))
         error(MID.FloatExponentDigitExpected);
       else
-        while (isdigit(*p) || *p == '_') { ++p; }
+        while (isdigit(*++p) || *p == '_') {}
     }
 
     // Copy string to buffer ignoring underscores.
