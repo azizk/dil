@@ -891,7 +891,7 @@ class Lexer
     Suffix:= (L|[uU]|L[uU]|[uU]L)?
     HexDigits:= [0-9a-zA-Z_]+
 
-    FloatLiteral:= Float([fFL]|i|[fFL]i)?
+    FloatLiteral:= Float[fFL]?i?
     Float:= DecFloat | HexFloat
     DecFloat:= ([0-9][0-9_]*[.]([0-9_]*DecExponent?)?) | [.][0-9][0-9_]*DecExponent? | [0-9][0-9_]*DecExponent
     DecExponent:= [eE][+-]?[0-9_]+
@@ -955,6 +955,7 @@ class Lexer
       break;
     }
 
+    // The number could be a float, so check overflow below.
     switch (*p)
     {
     case '.':
@@ -976,20 +977,12 @@ class Lexer
     goto Lfinalize;
 
   LscanHex:
-    digits = 16;
+    assert(digits == 0);
     while (ishexad(*++p))
     {
       if (*p == '_')
         continue;
-
-      if (--digits == 0)
-      {
-        // Overflow: skip following digits.
-        overflow = true;
-        while (ishexad(*++p)) {}
-        break;
-      }
-
+      ++digits;
       ulong_ *= 16;
       if (*p <= '9')
         ulong_ += *p - '0';
@@ -999,8 +992,15 @@ class Lexer
         ulong_ += *p - 'a' + 10;
     }
 
-    if (digits == 16)
+    if (digits == 0)
       error(MID.NoDigitsInHexNumber);
+
+    if (digits > 16)
+    {
+      // Overflow: skip following digits.
+      error(MID.OverflowHexNumber);
+      while (ishexad(*++p)) {}
+    }
 
     switch (*p)
     {
