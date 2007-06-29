@@ -118,7 +118,7 @@ struct Token
     real   real_;
   }
 
-  string span()
+  string srcText()
   {
     assert(start && end);
     return start[0 .. end - start];

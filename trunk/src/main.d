@@ -45,11 +45,11 @@ void main(char[][] args)
   {
     if (end != token.start)
       writef("%s", xmlescape(end[0 .. token.start - end]));
-    string span = xmlescape(token.span);
+    string srcText = xmlescape(token.srcText);
     switch(token.type)
     {
       case TOK.Identifier:
-        writef("<i>%s</i>", span);
+        writef("<i>%s</i>", srcText);
       break;
       case TOK.Comment:
         string c;
@@ -59,13 +59,13 @@ void main(char[][] args)
         case '*': c = "bc"; break;
         case '+': c = "nc"; break;
         }
-        writef(`<c c="%s">%s</c>`, c, span);
+        writef(`<c c="%s">%s</c>`, c, srcText);
       break;
       case TOK.String:
-        writef("<sl>%s</sl>", span);
+        writef("<sl>%s</sl>", srcText);
       break;
       case TOK.Character:
-        writef("<cl>%s</cl>", span);
+        writef("<cl>%s</cl>", srcText);
       break;
       case TOK.Assign, TOK.Equal,
         TOK.Less, TOK.Greater,
@@ -89,7 +89,7 @@ void main(char[][] args)
         TOK.UorL,
         TOK.UorLorE,
         TOK.LorEorG:
-        writef("<op>%s</op>", span);
+        writef("<op>%s</op>", srcText);
       break;
       case TOK.LorG:
         writef(`<op c="lg">&lt;&gt;</op>`);
@@ -115,18 +115,18 @@ void main(char[][] args)
       case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
            TOK.Float32, TOK.Float64, TOK.Float80,
            TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
-        writef("<n>%s</n>", span);
+        writef("<n>%s</n>", srcText);
       break;
       case TOK.LParen, TOK.RParen, TOK.LBracket,
            TOK.RBracket, TOK.LBrace, TOK.RBrace:
-        writef("<br>%s</br>", span);
+        writef("<br>%s</br>", srcText);
       break;
       case TOK.EOF: break;
       default:
         if (token.isKeyword())
-          writef("<k>%s</k>", span);
+          writef("<k>%s</k>", srcText);
         else
-          writef("%s", span);
+          writef("%s", srcText);
     }
     end = token.end;
   }

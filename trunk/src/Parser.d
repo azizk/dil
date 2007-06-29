@@ -3,3 +3,8 @@
   License: GPL2
 +/
 module Parser;
+
+class Parser
+{
+
+}

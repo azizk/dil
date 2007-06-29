@@ -125,7 +125,7 @@ class Lexer
 
         t.end = p;
 
-        string str = t.span;
+        string str = t.srcText;
         Identifier* id = str in idtable;
 
         if (!id)
@@ -1322,7 +1322,7 @@ class Lexer
     uint oldloc = this.loc, newloc;
 
     peek(t);
-    if (!(this.loc == oldloc && p == t.start && t.type == TOK.Identifier && t.span == "line"))
+    if (!(this.loc == oldloc && p == t.start && t.type == TOK.Identifier && t.srcText == "line"))
     {
       this.loc = oldloc; // reset this.loc because we took a peek at the next token
       mid = MID.ExpectedIdentifierSTLine;
@@ -1357,10 +1357,10 @@ class Lexer
         mid = MID.ExpectedNormalStringLiteral;
         goto Lerr;
       }
-      fileName = t.span[1..$-1]; // contents of "..."
+      fileName = t.srcText[1..$-1]; // contents of "..."
       p = t.end;
     }
-    else if (t.type == TOK.Identifier && t.span == "__FILE__")
+    else if (t.type == TOK.Identifier && t.srcText == "__FILE__")
     {
       p = t.end;
     }
