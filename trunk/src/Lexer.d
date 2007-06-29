@@ -398,7 +398,7 @@ class Lexer
           goto Lcommon2;
         }
         assert(0);
-      case '.': /* .  ..  ... */
+      case '.': /* .  .[0-9]  ..  ... */
         if (p[1] == '.')
         {
           ++p;
@@ -408,6 +408,10 @@ class Lexer
           }
           else
             t.type = TOK.Slice;
+        }
+        else if (isdigit(p[1]))
+        {
+          return scanReal(t);
         }
         else
           t.type = TOK.Dot;
@@ -891,13 +895,6 @@ class Lexer
     Suffix:= (L|[uU]|L[uU]|[uU]L)?
     HexDigits:= [0-9a-zA-Z_]+
 
-    FloatLiteral:= Float[fFL]?i?
-    Float:= DecFloat | HexFloat
-    DecFloat:= ([0-9][0-9_]*[.]([0-9_]*DecExponent?)?) | [.][0-9][0-9_]*DecExponent? | [0-9][0-9_]*DecExponent
-    DecExponent:= [eE][+-]?[0-9_]+
-    HexFloat:= 0[xX](HexDigits[.]HexDigits | [.][0-9a-zA-Z]HexDigits? | HexDigits)HexExponent
-    HexExponent:= [pP][+-]?[0-9_]+
-
     Invalid: "0b_", "0x_", "._"
   */
   void scanNumber(ref Token t)
@@ -939,10 +936,12 @@ class Lexer
 
   LscanInteger:
     isDecimal = true;
-    while (isdigit(*++p))
+    while (1)
     {
-      if (*p == '_')
+      if (*++p == '_')
         continue;
+      if (!isdigit(*p))
+        break;
       if (ulong_ < ulong.max/10 || (ulong_ == ulong.max/10 && *p <= '5'))
       {
         ulong_ *= 10;
@@ -1063,11 +1062,18 @@ class Lexer
       }
       // Overflow: skip following digits.
       overflow = true;
-      while (isoctal(*++p)) {}
+      while (isdigit(*++p)) {}
       break;
     }
 
-    // The number could be a float, so check overflow below.
+    bool hasDecimalDigits;
+    if (isdigit(*p))
+    {
+      hasDecimalDigits = true;
+      while (isdigit(*++p)) {}
+    }
+
+    // The number could be a float, so check errors below.
     switch (*p)
     {
     case '.':
@@ -1079,8 +1085,11 @@ class Lexer
         break;
     case 'i', 'f', 'F', 'e', 'E':
       goto LscanReal;
+    default:
     }
 
+    if (hasDecimalDigits)
+      error(MID.OctalNumberHasDecimals);
     if (overflow)
       error(MID.OverflowOctalNumber);
 //     goto Lfinalize;
@@ -1158,14 +1167,64 @@ class Lexer
     t.end = p;
     return;
   LscanReal:
-    p = t.start;
     scanReal(t);
     return;
   }
 
+  /*
+    FloatLiteral:= Float[fFL]?i?
+    Float:= DecFloat | HexFloat
+    DecFloat:= ([0-9][0-9_]*[.]([0-9_]*DecExponent?)?) | [.][0-9][0-9_]*DecExponent? | [0-9][0-9_]*DecExponent
+    DecExponent:= [eE][+-]?[0-9][0-9_]*
+    HexFloat:= 0[xX](HexDigits[.]HexDigits | [.][0-9a-zA-Z]HexDigits? | HexDigits)HexExponent
+    HexExponent:= [pP][+-]?[0-9][0-9_]*
+  */
   void scanReal(ref Token t)
   {
-    assert(*p == '.' || isdigit(*p));
+    if (*p == '.')
+      // This function was called by scan() or scanNumber().
+      while (isdigit(*++p) || *p == '_') {}
+    else
+    {
+      // This function was called by scanNumber().
+      debug switch (*p)
+      {
+      case 'L':
+        if (p[1] != 'i')
+          assert(0);
+      case 'i', 'f', 'F', 'e', 'E': break;
+      default: assert(0);
+      }
+    }
+
+    // Scan exponent.
+    if (*p == 'e' || *p == 'E')
+    {
+      ++p;
+      if (*p == '-' || *p == '+')
+        ++p;
+      if (!isdigit(*p))
+        error(MID.FloatExponentDigitExpected);
+      else
+        while (isdigit(*p) || *p == '_') { ++p; }
+    }
+
+    // Copy string to buffer ignoring underscores.
+    char[] buffer;
+    char* end = p;
+    p = t.start;
+    do
+    {
+      if (*p == '_')
+      {
+        ++p;
+        continue;
+      }
+      buffer ~= *p;
+      ++p;
+    } while (p != end)
+    buffer ~= 0;
+    finalizeFloat(t, buffer);
   }
 
   void scanHexReal(ref Token t)
@@ -1186,9 +1245,11 @@ class Lexer
     do
     {
       if (*p == '_')
+      {
+        ++p;
         continue;
-      else
-        buffer ~= *p;
+      }
+      buffer ~= *p;
       ++p;
     } while (p != end)
 
@@ -1211,6 +1272,16 @@ class Lexer
       goto Lerr;
     }
     buffer ~= 0; // Terminate for C functions.
+    finalizeFloat(t, buffer);
+    return;
+  Lerr:
+    t.type = TOK.Float32;
+    t.end = p;
+    error(mid);
+  }
+
+  void finalizeFloat(ref Token t, string buffer)
+  {
     // Float number is well-formed. Check suffixes and do conversion.
     switch (*p)
     {
@@ -1232,19 +1303,11 @@ class Lexer
     if (*p == 'i')
     {
       ++p;
-      t.type += 3; // Switch to imaginary version.
+      t.type += 3; // Switch to imaginary counterpart.
     }
     if (getErrno == ERANGE)
-    {
-      mid = MID.OverflowHexFloatNumber;
-      goto Lerr;
-    }
+      error(MID.OverflowFloatNumber);
     t.end = p;
-    return;
-  Lerr:
-    t.type = TOK.Float32;
-    t.end = p;
-    error(mid);
   }
 
   /// Scan special token: #line Integer [Filespec] EndOfLine

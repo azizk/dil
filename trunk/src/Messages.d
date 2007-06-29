@@ -42,11 +42,13 @@ enum MID
   OverflowHexNumber,
   OverflowBinaryNumber,
   OverflowOctalNumber,
-  OverflowHexFloatNumber,
+  OverflowFloatNumber,
+  OctalNumberHasDecimals,
   NoDigitsInHexNumber,
   NoDigitsInBinNumber,
   HexFloatExponentRequired,
   HexFloatMissingExpDigits,
+  FloatExponentDigitExpected,
 }
 
 string[] messages = [
@@ -85,9 +87,11 @@ string[] messages = [
   "overflow in hexadecimal number.",
   "overflow in binary number.",
   "overflow in octal number.",
-  "overflow in hexadecimal float number.",
+  "overflow in float number.",
+  "decimal digits are not allowed in octal numbers.",
   "invalid hex number; at least one hex digit expected.",
   "invalid binary number; at least one binary digit expected.",
   "the exponent of a hexadecimal float number is required.",
   "missing decimal digits in hexadecimal float exponent.",
+  "exponents have to start with a digit.",
 ];
