@@ -20,6 +20,9 @@ enum TOK
   // Numbers
   Number,
   Int32, Int64, Uint32, Uint64,
+  // Floating point scanner relies on this order. (FloatXY + 3 == ImaginaryXY)
+  Float32, Float64, Float80,
+  Imaginary32, Imaginary64, Imaginary80,
 
 
   // Brackets
@@ -105,13 +108,14 @@ struct Token
       string str;
       char pf;
     }
-    dchar dchar_;
-    long  long_;
-    ulong ulong_;
-    int   int_;
-    uint  uint_;
-    float f;
-    double d;
+    dchar  dchar_;
+    long   long_;
+    ulong  ulong_;
+    int    int_;
+    uint   uint_;
+    float  float_;
+    double double_;
+    real   real_;
   }
 
   string span()

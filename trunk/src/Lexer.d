@@ -10,7 +10,7 @@ import Messages;
 import std.stdio;
 import std.utf;
 import std.uni;
-import std.conv;
+import std.c.stdlib;
 
 const char[3] LS = \u2028;
 const char[3] PS = \u2029;
@@ -78,7 +78,7 @@ class Lexer
 
     uint c = *p;
 
-    while(1)
+    while (1)
     {
       t.start = p;
 
@@ -978,10 +978,12 @@ class Lexer
 
   LscanHex:
     assert(digits == 0);
-    while (ishexad(*++p))
+    while (1)
     {
-      if (*p == '_')
+      if (*++p == '_')
         continue;
+      if (!ishexad(*p))
+        break;
       ++digits;
       ulong_ *= 16;
       if (*p <= '9')
@@ -992,30 +994,30 @@ class Lexer
         ulong_ += *p - 'a' + 10;
     }
 
-    if (digits == 0)
-      error(MID.NoDigitsInHexNumber);
-
-    if (digits > 16)
-    {
-      // Overflow: skip following digits.
-      error(MID.OverflowHexNumber);
-      while (ishexad(*++p)) {}
-    }
-
     switch (*p)
     {
     case '.':
       if (p[1] != '.')
-        goto LscanReal;
+        goto LscanHexReal;
       break;
     case 'L':
       if (p[1] != 'i')
         break;
     case 'i', 'p', 'P':
-      goto LscanReal;
+      goto LscanHexReal;
     default:
     }
+    if (digits == 0)
+      error(MID.NoDigitsInHexNumber);
+    else if (digits > 16)
+    {
+      // Overflow: skip following digits.
+      error(MID.OverflowHexNumber);
+      while (ishexad(*++p)) {}
+    }
     goto Lfinalize;
+  LscanHexReal:
+    return scanHexReal(t);
 
   LscanBin:
     assert(digits == 0);
@@ -1046,10 +1048,12 @@ class Lexer
     goto Lfinalize;
 
   LscanOct:
-    while (isoctal(*++p))
+    while (1)
     {
-      if (*p == '_')
+      if (*++p == '_')
         continue;
+      if (!isoctal(*p))
+        break;
       if (ulong_ < ulong.max/2 || (ulong_ == ulong.max/2 && *p <= '1'))
       {
         ulong_ *= 8;
@@ -1063,6 +1067,7 @@ class Lexer
       break;
     }
 
+    // The number could be a float, so check overflow below.
     switch (*p)
     {
     case '.':
@@ -1075,6 +1080,7 @@ class Lexer
     case 'i', 'f', 'F', 'e', 'E':
       goto LscanReal;
     }
+
     if (overflow)
       error(MID.OverflowOctalNumber);
 //     goto Lfinalize;
@@ -1160,6 +1166,85 @@ class Lexer
   void scanReal(ref Token t)
   {
     assert(*p == '.' || isdigit(*p));
+  }
+
+  void scanHexReal(ref Token t)
+  {
+    assert(*p == '.' || *p == 'i' || *p == 'p' || *p == 'P' || (*p == 'L' && p[1] == 'i'));
+    MID mid;
+    if (*p == '.')
+      while (ishexad(*++p) || *p == '_') {}
+    if (*p != 'p' && *p != 'P')
+    {
+      mid = MID.HexFloatExponentRequired;
+      goto Lerr;
+    }
+    // Copy mantissa to a buffer ignoring underscores.
+    char* end = p;
+    p = t.start;
+    char[] buffer;
+    do
+    {
+      if (*p == '_')
+        continue;
+      else
+        buffer ~= *p;
+      ++p;
+    } while (p != end)
+
+    assert(p == end && (*p == 'p' || *p == 'P'));
+    // Scan and copy the exponent.
+    buffer ~= 'p';
+    size_t bufflen = buffer.length;
+    while (1)
+    {
+      if (*++p == '_')
+        continue;
+      if (isdigit(*p))
+        buffer ~= *p;
+      else
+        break;
+    }
+    // When the buffer length hasn't changed, no digits were copied.
+    if (bufflen == buffer.length) {
+      mid = MID.HexFloatMissingExpDigits;
+      goto Lerr;
+    }
+    buffer ~= 0; // Terminate for C functions.
+    // Float number is well-formed. Check suffixes and do conversion.
+    switch (*p)
+    {
+    case 'f', 'F':
+      t.type = TOK.Float32;
+      t.float_ = strtof(buffer.ptr, null);
+      ++p;
+      break;
+    case 'L':
+      t.type = TOK.Float80;
+      t.real_ = strtold(buffer.ptr, null);
+      ++p;
+      break;
+    default:
+      t.type = TOK.Float64;
+      t.double_ = strtod(buffer.ptr, null);
+      break;
+    }
+    if (*p == 'i')
+    {
+      ++p;
+      t.type += 3; // Switch to imaginary version.
+    }
+    if (getErrno == ERANGE)
+    {
+      mid = MID.OverflowHexFloatNumber;
+      goto Lerr;
+    }
+    t.end = p;
+    return;
+  Lerr:
+    t.type = TOK.Float32;
+    t.end = p;
+    error(mid);
   }
 
   /// Scan special token: #line Integer [Filespec] EndOfLine
