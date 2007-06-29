@@ -112,7 +112,7 @@ void main(char[][] args)
       case TOK.Not:
         writef(`<op c="n">!</op>`);
       break;
-      case TOK.Number:
+      case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64:
         writef("<n>%s</n>", span);
       break;
       case TOK.LParen, TOK.RParen, TOK.LBracket,

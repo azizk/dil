@@ -902,15 +902,9 @@ class Lexer
   */
   void scanNumber(ref Token t)
   {
-    enum Suffix
-    {
-      None     = 0,
-      Unsigned = 1,
-      Long     = 1<<1
-    }
-
     ulong ulong_;
     bool overflow;
+    bool isDecimal;
     size_t digits;
 
     if (*p != '0')
@@ -929,7 +923,7 @@ class Lexer
     case '.':
       if (p[1] == '.')
         break;
-    case 'i','f','F': // Imaginary and float literal suffix
+    case 'i','f','F', 'e', 'E': // Imaginary and float literal suffix
       goto LscanReal;
     case '_':
       ++p;
@@ -939,7 +933,12 @@ class Lexer
         goto LscanOct;
     }
 
+    ulong_ = p[-1];
+    isDecimal = true;
+    goto Lfinalize;
+
   LscanInteger:
+    isDecimal = true;
     while (isdigit(*++p))
     {
       if (*p == '_')
@@ -948,6 +947,7 @@ class Lexer
       {
         ulong_ *= 10;
         ulong_ += *p - '0';
+        continue;
       }
       // Overflow: skip following digits.
       overflow = true;
@@ -966,11 +966,12 @@ class Lexer
         break;
     case 'i', 'f', 'F', 'e', 'E':
       goto LscanReal;
+    default:
     }
+
     if (overflow)
       error(MID.OverflowDecimalNumber);
-    t.type = TOK.Number;
-//     ulong_ = toInt(t.span);
+
     assert((isdigit(p[-1]) || p[-1] == '_') && !isdigit(*p) && *p != '_');
     goto Lfinalize;
 
@@ -1009,6 +1010,7 @@ class Lexer
         break;
     case 'i', 'p', 'P':
       goto LscanReal;
+    default:
     }
     goto Lfinalize;
 
@@ -1072,22 +1074,69 @@ class Lexer
 //     goto Lfinalize;
 
   Lfinalize:
-    Suffix s;
+    enum Suffix
+    {
+      None     = 0,
+      Unsigned = 1,
+      Long     = 1<<1
+    }
+    Suffix suffix;
     while (1)
     {
       switch (*p)
       {
       case 'L':
-        if (s & Suffix.Long)
+        if (suffix & Suffix.Long)
           break;
-        s = Suffix.Long;
+        suffix = Suffix.Long;
         continue;
       case 'u', 'U':
-        if (s & Suffix.Unsigned)
+        if (suffix & Suffix.Unsigned)
           break;
-        s = Suffix.Unsigned;
+        suffix = Suffix.Unsigned;
+      default:
+        break;
       }
       break;
+    }
+
+    switch (suffix)
+    {
+    case Suffix.None:
+      if (ulong_ & 0x8000000000000000)
+      {
+        if (isDecimal)
+          error(MID.OverflowDecimalSign);
+        t.type = TOK.Uint64;
+      }
+      else if (ulong_ & 0xFFFFFFFF00000000)
+        t.type = TOK.Int64;
+      else if (ulong_ & 0x80000000)
+        t.type = isDecimal ? TOK.Int64 : TOK.Uint32;
+      else
+        t.type = TOK.Int32;
+      break;
+    case Suffix.Unsigned:
+      if (ulong_ & 0xFFFFFFFF00000000)
+        t.type = TOK.Uint64;
+      else
+        t.type = TOK.Uint32;
+      break;
+    case Suffix.Long:
+      if (ulong_ & 0x8000000000000000)
+      {
+        if (isDecimal)
+          error(MID.OverflowDecimalSign);
+        t.type = TOK.Uint64;
+      }
+      else
+        t.type = TOK.Int64;
+      break;
+    case Suffix.Unsigned | Suffix.Long:
+      t.type = TOK.Uint64;
+      break;
+    default:
+      assert(0);
     }
     t.ulong_ = ulong_;
     t.end = p;
