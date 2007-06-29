@@ -1084,8 +1084,9 @@ class Lexer
     {
       None     = 0,
       Unsigned = 1,
-      Long     = 1<<1
+      Long     = 2
     }
+
     Suffix suffix;
     while (1)
     {
@@ -1094,12 +1095,15 @@ class Lexer
       case 'L':
         if (suffix & Suffix.Long)
           break;
-        suffix = Suffix.Long;
+        suffix |= Suffix.Long;
+        ++p;
         continue;
       case 'u', 'U':
         if (suffix & Suffix.Unsigned)
           break;
-        suffix = Suffix.Unsigned;
+        suffix |= Suffix.Unsigned;
+        ++p;
+        continue;
       default:
         break;
       }
