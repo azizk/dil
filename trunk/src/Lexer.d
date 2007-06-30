@@ -11,6 +11,8 @@ import std.stdio;
 import std.utf;
 import std.uni;
 import std.c.stdlib;
+import std.c.stdarg;
+import std.string;
 
 const char[3] LS = \u2028;
 const char[3] PS = \u2029;
@@ -32,11 +34,48 @@ class Problem
   MID id;
   Type type;
   uint loc;
+  TypeInfo[] tinfos;
+  void* argptr;
+
   this(Type type, MID id, uint loc)
   {
     this.id = id;
     this.type = type;
     this.loc = loc;
+  }
+
+  this(Type type, MID id, uint loc, TypeInfo[] ti, void* argptr)
+  {
+    this(type, id, loc);
+    this.tinfos = ti;
+    this.argptr = argptr;
+  }
+
+  string getMsg()
+  {
+    char[] msg = messages[id];
+
+    if (tinfos.length == 0)
+      return msg;
+
+    foreach (i, arg; arguments)
+      msg = replace(msg, format("{%s}", i), arg);
+  }
+
+  private char[][] arguments()
+  {
+    char[][] args;
+    void* argptr = this.argptr;
+    foreach (ti; tinfos)
+    {
+      if (ti == typeid(char[]))
+        args ~= format(va_arg!(char[])(argptr));
+      else if (ti == typeid(int))
+        args ~= format(va_arg!(int)(argptr));
+      else
+        assert(0, "argument type not supported yet.");
+    }
+    return args;
   }
 }
 
@@ -1432,9 +1471,9 @@ class Lexer
       idtable[k.str] = k;
   }
 
-  void error(MID id)
+  void error(MID id, ...)
   {
-    errors ~= new Problem(Problem.Type.Lexer, id, loc);
+    errors ~= new Problem(Problem.Type.Lexer, id, loc, _arguments, _argptr);
   }
 
   public TOK nextToken()

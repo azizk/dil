@@ -37,7 +37,7 @@ void main(char[][] args)
 <compilerinfo>`\n);
   foreach (error; lx.errors)
   {
-    writefln(`<error t="%s">%s(%d): %s</error>`, "l", lx.fileName, error.loc, messages[error.id]);
+    writefln(`<error t="%s">%s(%d): %s</error>`, "l", lx.fileName, error.loc, error.getMsg);
   }
   writef(`</compilerinfo>
 <sourcetext>`);
