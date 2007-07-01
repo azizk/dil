@@ -39,56 +39,84 @@ class Parser
     nT = &lx.nextToken;
   }
 
+  Expression parseExpression()
+  {
+    auto e = parseAssignExpression();
+    while (lx.token.type == TOK.Comma)
+      e = new CommaExpression(e, parseExpression());
+    return e;
+  }
+
   Expression parseAssignExpression()
   {
     auto e = parseCondExpression();
-    switch (lx.token.type)
+    while (1)
     {
-    case T.Assign:
-      nT(); e = new AssignExpression(e, parseAssignExpression());
-      break;
-    case T.LShiftAssign:
-      nT(); e = new LShiftAssignExpression(e, parseAssignExpression());
-      break;
-    case T.RShiftAssign:
-      nT(); e = new RShiftAssignExpression(e, parseAssignExpression());
-      break;
-    case T.URShiftAssign:
-      nT(); e = new URShiftAssignExpression(e, parseAssignExpression());
-      break;
-    case T.OrAssign:
-      nT(); e = new OrAssignExpression(e, parseAssignExpression());
-      break;
-    case T.AndAssign:
-      nT(); e = new AndAssignExpression(e, parseAssignExpression());
-      break;
-    case T.PlusAssign:
-      nT(); e = new PlusAssignExpression(e, parseAssignExpression());
-      break;
-    case T.MinusAssign:
-      nT(); e = new MinusAssignExpression(e, parseAssignExpression());
-      break;
-    case T.DivAssign:
-      nT(); e = new DivAssignExpression(e, parseAssignExpression());
-      break;
-    case T.MulAssign:
-      nT(); e = new MulAssignExpression(e, parseAssignExpression());
-      break;
-    case T.ModAssign:
-      nT(); e = new ModAssignExpression(e, parseAssignExpression());
-      break;
-    case T.XorAssign:
-      nT(); e = new XorAssignExpression(e, parseAssignExpression());
-      break;
-    case T.CatAssign:
-      nT(); e = new CatAssignExpression(e, parseAssignExpression());
-      break;
-    default:
+      switch (lx.token.type)
+      {
+      case T.Assign:
+        nT(); e = new AssignExpression(e, parseAssignExpression());
+        break;
+      case T.LShiftAssign:
+        nT(); e = new LShiftAssignExpression(e, parseAssignExpression());
+        break;
+      case T.RShiftAssign:
+        nT(); e = new RShiftAssignExpression(e, parseAssignExpression());
+        break;
+      case T.URShiftAssign:
+        nT(); e = new URShiftAssignExpression(e, parseAssignExpression());
+        break;
+      case T.OrAssign:
+        nT(); e = new OrAssignExpression(e, parseAssignExpression());
+        break;
+      case T.AndAssign:
+        nT(); e = new AndAssignExpression(e, parseAssignExpression());
+        break;
+      case T.PlusAssign:
+        nT(); e = new PlusAssignExpression(e, parseAssignExpression());
+        break;
+      case T.MinusAssign:
+        nT(); e = new MinusAssignExpression(e, parseAssignExpression());
+        break;
+      case T.DivAssign:
+        nT(); e = new DivAssignExpression(e, parseAssignExpression());
+        break;
+      case T.MulAssign:
+        nT(); e = new MulAssignExpression(e, parseAssignExpression());
+        break;
+      case T.ModAssign:
+        nT(); e = new ModAssignExpression(e, parseAssignExpression());
+        break;
+      case T.XorAssign:
+        nT(); e = new XorAssignExpression(e, parseAssignExpression());
+        break;
+      case T.CatAssign:
+        nT(); e = new CatAssignExpression(e, parseAssignExpression());
+        break;
+      default:
+        break;
+      }
       break;
     }
     return e;
   }
+
   Expression parseCondExpression()
+  {
+    auto e = parseOrOrExpression();
+    if (lx.token.type == TOK.Question)
+    {
+      nT();
+      auto iftrue = parseExpression();
+//       if (lx.toke.type != TOK.Colon)
+//         error();
+      auto iffalse = parseCondExpression();
+      e = new CondExpression(e, iftrue, iffalse);
+    }
+    return e;
+  }
+
+  Expression parseOrOrExpression()
   {
     return new Expression();
   }

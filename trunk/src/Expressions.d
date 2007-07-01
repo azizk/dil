@@ -27,9 +27,20 @@ class BinaryExpression : Expression
   }
 }
 
-class CondExpression : Expression
+class CondExpression : BinaryExpression
 {
+  Expression condition;
+  this(Expression condition, Expression left, Expression right)
+  {
+    this.condition = condition;
+    super(left, right, TOK.Comma);
+  }
+}
 
+class CommaExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.Comma); }
 }
 
 class OrOrExpression : BinaryExpression
