@@ -121,10 +121,16 @@ class URShiftExpression : BinaryExpression
   { super(left, right, TOK.URShiftAssign); }
 }
 
-class AddExpression : BinaryExpression
+class PlusExpression : BinaryExpression
 {
-  this(Expression left, Expression right, TOK tok)
-  { super(left, right, tok); }
+  this(Expression left, Expression right)
+  { super(left, right, TOK.Plus); }
+}
+
+class MinusExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.Minus); }
 }
 
 class MulExpression : BinaryExpression
@@ -135,7 +141,7 @@ class MulExpression : BinaryExpression
 
 class CatExpression : BinaryExpression
 {
-  this(Expression left, Expression right, TOK tok)
+  this(Expression left, Expression right)
   { super(left, right, TOK.Catenate); }
 }
 

@@ -236,7 +236,23 @@ class Parser
 
   Expression parseAddExpression()
   {
-//     auto e = parseMulExpression()
+    auto e = parseMulExpression();
+    while (1)
+    {
+      switch (lx.token.type)
+      {
+      case T.Plus:  nT(); e = new PlusExpression(e, parseMulExpression()); break;
+      case T.Minus: nT(); e = new MinusExpression(e, parseMulExpression()); break;
+      case T.Tilde: nT(); e = new CatExpression(e, parseMulExpression()); break;
+      default: break;
+      }
+      break;
+    }
+    return new Expression();
+  }
+
+  Expression parseMulExpression()
+  {
     return new Expression();
   }
 
