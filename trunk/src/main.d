@@ -3,6 +3,7 @@
   License: GPL2
 +/
 module dparser;
+import Parser;
 import Lexer;
 import Token;
 import Messages;

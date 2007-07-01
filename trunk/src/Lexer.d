@@ -4,6 +4,7 @@
 +/
 module Lexer;
 import Token;
+import Information;
 import Keywords;
 import Identifier;
 import Messages;
@@ -22,49 +23,6 @@ const dchar PSd = 0x2029;
 
 const uint _Z_ = 26; /// Control+Z
 
-class Problem
-{
-  enum Type
-  {
-    Lexer,
-    Parser,
-    Semantic
-  }
-
-  MID id;
-  Type type;
-  uint loc;
-  string[] arguments;
-/*
-  this(Type type, MID id, uint loc)
-  {
-    this.id = id;
-    this.type = type;
-    this.loc = loc;
-  }
-*/
-  this(Type type, MID id, uint loc, string[] arguments)
-  {
-    this.id = id;
-    this.type = type;
-    this.loc = loc;
-    this.arguments = arguments;
-  }
-
-  string getMsg()
-  {
-    char[] msg = messages[id];
-
-    if (arguments.length == 0)
-      return msg;
-
-    foreach (i, arg; arguments)
-      msg = replace(msg, format("{%s}", i+1), arg);
-
-    return msg;
-  }
-}
-
 class Lexer
 {
   Token token;
@@ -76,7 +34,7 @@ class Lexer
 
   char[] fileName;
 
-  Problem[] errors;
+  Information[] errors;
 
   Identifier[string] idtable;
 
@@ -1482,7 +1440,7 @@ class Lexer
       return args;
     }
 
-    errors ~= new Problem(Problem.Type.Lexer, id, loc, arguments(_arguments, _argptr));
+    errors ~= new Information(Information.Type.Lexer, id, loc, arguments(_arguments, _argptr));
   }
 
   public TOK nextToken()

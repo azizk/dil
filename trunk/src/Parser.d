@@ -3,6 +3,7 @@
   License: GPL2
 +/
 module Parser;
+import Lexer;
 
 enum STC
 {
@@ -21,5 +22,6 @@ enum STC
 
 class Parser
 {
-
+  private Lexer lx;
+  alias lx.nextToken nextToken;
 }
