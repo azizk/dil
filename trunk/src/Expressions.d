@@ -103,6 +103,24 @@ class InExpression : BinaryExpression
   { super(left, right, TOK.In); }
 }
 
+class LShiftExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.LShiftAssign); }
+}
+
+class RShiftExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.RShiftAssign); }
+}
+
+class URShiftExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.URShiftAssign); }
+}
+
 class AddExpression : BinaryExpression
 {
   this(Expression left, Expression right, TOK tok)

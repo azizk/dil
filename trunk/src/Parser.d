@@ -219,6 +219,24 @@ class Parser
 
   Expression parseShiftExpression()
   {
+    auto e = parseAddExpression();
+    while (1)
+    {
+      switch (lx.token.type)
+      {
+      case T.LShift:  nT(); e = new LShiftExpression(e, parseAddExpression()); break;
+      case T.RShift:  nT(); e = new RShiftExpression(e, parseAddExpression()); break;
+      case T.URShift: nT(); e = new URShiftExpression(e, parseAddExpression()); break;
+      default: break;
+      }
+      break;
+    }
+    return e;
+  }
+
+  Expression parseAddExpression()
+  {
+//     auto e = parseMulExpression()
     return new Expression();
   }
 
