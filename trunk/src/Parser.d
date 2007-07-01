@@ -178,7 +178,48 @@ class Parser
 
   Expression parseCmpExpression()
   {
-    return new Expression;
+    TOK operator = lx.token.type;
+
+    auto e = parseShiftExpression();
+
+    switch (operator)
+    {
+    case T.Equal, T.NotEqual:
+      nT();
+      e = new EqualExpression(e, parseShiftExpression(), operator);
+      break;
+    case T.Not:
+      Token t;
+      lx.peek(t);
+      if (t.type != T.Is)
+        break;
+      nT();
+      operator = T.NotIdentity;
+      goto LNotIdentity;
+    case T.Identity:
+      operator = T.Identity;
+    LNotIdentity:
+      nT();
+      e = new IsExpression(e, parseShiftExpression(), operator);
+      break;
+    case T.LessEqual, T.Less, T.GreaterEqual, T.Greater,
+         T.Unordered, T.UorE, T.UorG, T.UorGorE,
+         T.UorL, T.UorLorE, T.LorEorG, T.LorG:
+      nT();
+      e = new RelExpression(e, parseShiftExpression(), operator);
+      break;
+    case T.In:
+      nT();
+      e = new InExpression(e, parseShiftExpression(), operator);
+      break;
+    default:
+    }
+    return e;
+  }
+
+  Expression parseShiftExpression()
+  {
+    return new Expression();
   }
 
   void error(MID id, ...)

@@ -252,7 +252,8 @@ class TypeIdExpression
 
 }
 
-class IsExpression
+class IsExpression : CmpExpression
 {
-
+  this(Expression left, Expression right, TOK tok)
+  { super(left, right, tok); }
 }
