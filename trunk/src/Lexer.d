@@ -11,7 +11,7 @@ import std.stdio;
 import std.utf;
 import std.uni;
 import std.c.stdlib;
-import std.c.stdarg;
+import std.stdarg;
 import std.string;
 
 const char[3] LS = \u2028;
@@ -34,48 +34,34 @@ class Problem
   MID id;
   Type type;
   uint loc;
-  TypeInfo[] tinfos;
-  void* argptr;
-
+  string[] arguments;
+/*
   this(Type type, MID id, uint loc)
   {
     this.id = id;
     this.type = type;
     this.loc = loc;
   }
-
-  this(Type type, MID id, uint loc, TypeInfo[] ti, void* argptr)
+*/
+  this(Type type, MID id, uint loc, string[] arguments)
   {
-    this(type, id, loc);
-    this.tinfos = ti;
-    this.argptr = argptr;
+    this.id = id;
+    this.type = type;
+    this.loc = loc;
+    this.arguments = arguments;
   }
 
   string getMsg()
   {
     char[] msg = messages[id];
 
-    if (tinfos.length == 0)
+    if (arguments.length == 0)
       return msg;
 
     foreach (i, arg; arguments)
-      msg = replace(msg, format("{%s}", i), arg);
-  }
+      msg = replace(msg, format("{%s}", i+1), arg);
 
-  private char[][] arguments()
-  {
-    char[][] args;
-    void* argptr = this.argptr;
-    foreach (ti; tinfos)
-    {
-      if (ti == typeid(char[]))
-        args ~= format(va_arg!(char[])(argptr));
-      else if (ti == typeid(int))
-        args ~= format(va_arg!(int)(argptr));
-      else
-        assert(0, "argument type not supported yet.");
-    }
-    return args;
+    return msg;
   }
 }
 
@@ -657,6 +643,7 @@ class Lexer
         buffer ~= *p++;
       }
     }
+    assert(0);
   }
 
   void scanCharacterLiteral(ref Token t)
@@ -816,11 +803,16 @@ class Lexer
         }
         else if (isspace(c))
           continue;
-        else if (c == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+
+        if (c >= 128)
         {
-          ++p; ++p;
-          ++loc;
-          continue;
+          c = decodeUTF8();
+          if (c == LSd || c == PSd)
+          {
+            ++p; ++p;
+            ++loc;
+            continue;
+          }
         }
         else if (c == 0 || c == _Z_)
         {
@@ -828,7 +820,7 @@ class Lexer
           t.pf = 0;
           goto Lreturn;
         }
-        error(MID.NonHexCharInHexString);
+        error(MID.NonHexCharInHexString, cast(dchar)c);
       }
     }
     assert(0);
@@ -1213,7 +1205,7 @@ class Lexer
   /*
     FloatLiteral:= Float[fFL]?i?
     Float:= DecFloat | HexFloat
-    DecFloat:= ([0-9][0-9_]*[.]([0-9_]*DecExponent?)?) | [.][0-9][0-9_]*DecExponent? | [0-9][0-9_]*DecExponent
+    DecFloat:= ([0-9][0-9_]*[.][0-9_]*DecExponent?) | [.][0-9][0-9_]*DecExponent? | [0-9][0-9_]*DecExponent
     DecExponent:= [eE][+-]?[0-9][0-9_]*
     HexFloat:= 0[xX](HexDigits[.]HexDigits | [.][0-9a-zA-Z]HexDigits? | HexDigits)HexExponent
     HexExponent:= [pP][+-]?[0-9][0-9_]*
@@ -1446,7 +1438,7 @@ class Lexer
     error(mid);
   }
 
-  uint decodeUTF8()
+  dchar decodeUTF8()
   {
     assert(*p & 128, "check for ASCII char before calling decodeUTF8().");
     size_t idx;
@@ -1473,7 +1465,24 @@ class Lexer
 
   void error(MID id, ...)
   {
-    errors ~= new Problem(Problem.Type.Lexer, id, loc, _arguments, _argptr);
+    char[][] arguments(TypeInfo[] tinfos, void* argptr)
+    {
+      char[][] args;
+      foreach (ti; tinfos)
+      {
+        if (ti == typeid(char[]))
+          args ~= format(va_arg!(char[])(argptr));
+        else if (ti == typeid(int))
+          args ~= format(va_arg!(int)(argptr));
+        else if (ti == typeid(dchar))
+          args ~= format(va_arg!(dchar)(argptr));
+        else
+          assert(0, "argument type not supported yet.");
+      }
+      return args;
+    }
+
+    errors ~= new Problem(Problem.Type.Lexer, id, loc, arguments(_arguments, _argptr));
   }
 
   public TOK nextToken()
@@ -1565,6 +1574,12 @@ unittest
 
   foreach (i, t; tokens)
     assert(t.span == toks[i], std.string.format("Lexed '%s' but expected '%s'", t.span, toks[i]));
+}
+
+unittest
+{
+  // Numbers unittest
+  // 0L 0ULi 0_L 0_UL 0_Fi 0_e2 0_F 0_i 0x0U 0x0p2
 }
 
 /// ASCII character properties table.
