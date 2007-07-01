@@ -104,7 +104,7 @@ class Parser
   Expression parseCondExpression()
   {
     auto e = parseOrOrExpression();
-    if (lx.token.type == TOK.Question)
+    if (lx.token.type == T.Question)
     {
       nT();
       auto iftrue = parseExpression();
@@ -118,7 +118,67 @@ class Parser
 
   Expression parseOrOrExpression()
   {
-    return new Expression();
+    alias parseAndAndExpression parseNext;
+    auto e = parseNext();
+    if (lx.token.type == T.OrLogical)
+    {
+      nT();
+      e = new OrOrExpression(e, parseNext());
+    }
+    return e;
+  }
+
+  Expression parseAndAndExpression()
+  {
+    alias parseOrExpression parseNext;
+    auto e = parseNext();
+    if (lx.token.type == T.AndLogical)
+    {
+      nT();
+      e = new AndAndExpression(e, parseNext());
+    }
+    return e;
+  }
+
+  Expression parseOrExpression()
+  {
+    alias parseXorExpression parseNext;
+    auto e = parseNext();
+    if (lx.token.type == T.OrBinary)
+    {
+      nT();
+      e = new OrExpression(e, parseNext());
+    }
+    return e;
+  }
+
+  Expression parseXorExpression()
+  {
+    alias parseAndExpression parseNext;
+    auto e = parseNext();
+    if (lx.token.type == T.Xor)
+    {
+      nT();
+      e = new XorExpression(e, parseNext());
+    }
+    return e;
+  }
+
+  Expression parseAndExpression()
+  {
+    alias parseCmpExpression parseNext;
+    auto e = parseNext();
+    if (lx.token.type == T.AndBinary)
+    {
+      nT();
+      e = new AndExpression(e, parseNext());
+    }
+    return e;
+  }
+
+  Expression parseCmpExpression()
+  {
+    return new Expression;
   }
 
   void error(MID id, ...)
