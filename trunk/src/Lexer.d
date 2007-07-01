@@ -12,7 +12,6 @@ import std.stdio;
 import std.utf;
 import std.uni;
 import std.c.stdlib;
-import std.stdarg;
 import std.string;
 
 const char[3] LS = \u2028;
@@ -1423,23 +1422,6 @@ class Lexer
 
   void error(MID id, ...)
   {
-    char[][] arguments(TypeInfo[] tinfos, void* argptr)
-    {
-      char[][] args;
-      foreach (ti; tinfos)
-      {
-        if (ti == typeid(char[]))
-          args ~= format(va_arg!(char[])(argptr));
-        else if (ti == typeid(int))
-          args ~= format(va_arg!(int)(argptr));
-        else if (ti == typeid(dchar))
-          args ~= format(va_arg!(dchar)(argptr));
-        else
-          assert(0, "argument type not supported yet.");
-      }
-      return args;
-    }
-
     errors ~= new Information(Information.Type.Lexer, id, loc, arguments(_arguments, _argptr));
   }
 

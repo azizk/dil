@@ -62,6 +62,7 @@ enum TOK
   XorAssign, Xor,
   CatAssign, Catenate,
   Tilde,
+  Identity, NotIdentity,
 
   Colon,
   Semicolon,

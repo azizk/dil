@@ -5,6 +5,7 @@
 module Information;
 import Messages;
 import std.string;
+import std.stdarg;
 
 enum Type
 {
@@ -42,3 +43,19 @@ class Information
   }
 }
 
+char[][] arguments(TypeInfo[] tinfos, void* argptr)
+{
+  char[][] args;
+  foreach (ti; tinfos)
+  {
+    if (ti == typeid(char[]))
+      args ~= format(va_arg!(char[])(argptr));
+    else if (ti == typeid(int))
+      args ~= format(va_arg!(int)(argptr));
+    else if (ti == typeid(dchar))
+      args ~= format(va_arg!(dchar)(argptr));
+    else
+      assert(0, "argument type not supported yet.");
+  }
+  return args;
+}

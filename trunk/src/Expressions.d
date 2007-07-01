@@ -3,6 +3,7 @@
   License: GPL2
 +/
 module Expressions;
+import Token;
 
 class Expression
 {
@@ -16,12 +17,14 @@ class UnaryExpression : Expression
 
 class BinaryExpression : Expression
 {
-
-}
-
-class AssignExpression : Expression
-{
-
+  Expression left, right;
+  TOK tok;
+  this(Expression left, Expression right, TOK tok)
+  {
+    this.left = left;
+    this.right = right;
+    this.tok = tok;
+  }
 }
 
 class CondExpression : Expression
@@ -31,72 +34,146 @@ class CondExpression : Expression
 
 class OrOrExpression : BinaryExpression
 {
-
+  this(Expression left, Expression right)
+  { super(left, right, TOK.OrLogical); }
 }
 
 class AndAndExpression : BinaryExpression
 {
-
+  this(Expression left, Expression right)
+  { super(left, right, TOK.AndLogical); }
 }
 
 class OrExpression : BinaryExpression
 {
-
+  this(Expression left, Expression right)
+  { super(left, right, TOK.OrBinary); }
 }
 
 class XorExpression : BinaryExpression
 {
-
+  this(Expression left, Expression right)
+  { super(left, right, TOK.Xor); }
 }
 
 class AndExpression : BinaryExpression
 {
-
+  this(Expression left, Expression right)
+  { super(left, right, TOK.AndBinary); }
 }
 
 class CmpExpression : BinaryExpression
 {
-
+  this(Expression left, Expression right, TOK tok)
+  { super(left, right, tok); }
 }
 
-class EqualExpression : BinaryExpression
+class EqualExpression : CmpExpression
 {
-
+  this(Expression left, Expression right, TOK tok)
+  { super(left, right, TOK.Equal); }
 }
 
-class IdentExpression
+class IdentExpression : CmpExpression
 {
-
+  this(Expression left, Expression right, TOK tok)
+  { super(left, right, tok); }
 }
 
-class RelExpression : BinaryExpression
+class RelExpression : CmpExpression
 {
-
+  this(Expression left, Expression right, TOK tok)
+  { super(left, right, tok); }
 }
 
 class InExpression : BinaryExpression
 {
-
-}
-
-class ShiftExpression : BinaryExpression
-{
-
+  this(Expression left, Expression right, TOK tok)
+  { super(left, right, TOK.In); }
 }
 
 class AddExpression : BinaryExpression
 {
-
+  this(Expression left, Expression right, TOK tok)
+  { super(left, right, tok); }
 }
 
 class MulExpression : BinaryExpression
 {
-
+  this(Expression left, Expression right, TOK tok)
+  { super(left, right, tok); }
 }
 
 class CatExpression : BinaryExpression
 {
+  this(Expression left, Expression right, TOK tok)
+  { super(left, right, TOK.Catenate); }
+}
 
+class AssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.Assign); }
+}
+class LShiftAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.LShiftAssign); }
+}
+class RShiftAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.RShiftAssign); }
+}
+class URShiftAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.URShiftAssign); }
+}
+class OrAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.OrAssign); }
+}
+class AndAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.AndAssign); }
+}
+class PlusAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.PlusAssign); }
+}
+class MinusAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.MinusAssign); }
+}
+class DivAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.DivAssign); }
+}
+class MulAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.MulAssign); }
+}
+class ModAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.ModAssign); }
+}
+class XorAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.XorAssign); }
+}
+class CatAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.CatAssign); }
 }
 
 class PostfixExpression : UnaryExpression
