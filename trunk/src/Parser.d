@@ -253,7 +253,24 @@ class Parser
 
   Expression parseMulExpression()
   {
+    auto e = parseUnaryExpression();
+    while (1)
+    {
+      switch (lx.token.type)
+      {
+      case T.Mul: nT(); e = new MulExpression(e, parseUnaryExpression()); break;
+      case T.Div: nT(); e = new DivExpression(e, parseUnaryExpression()); break;
+      case T.Mod: nT(); e = new ModExpression(e, parseUnaryExpression()); break;
+      default: break;
+      }
+      break;
+    }
     return new Expression();
+  }
+
+  Expression parseUnaryExpression()
+  {
+    return new Expression;
   }
 
   void error(MID id, ...)

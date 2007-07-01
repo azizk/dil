@@ -135,8 +135,20 @@ class MinusExpression : BinaryExpression
 
 class MulExpression : BinaryExpression
 {
-  this(Expression left, Expression right, TOK tok)
-  { super(left, right, tok); }
+  this(Expression left, Expression right)
+  { super(left, right, TOK.Mul); }
+}
+
+class DivExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.Div); }
+}
+
+class ModExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  { super(left, right, TOK.Mod); }
 }
 
 class CatExpression : BinaryExpression
