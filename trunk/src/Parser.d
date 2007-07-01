@@ -270,7 +270,50 @@ class Parser
 
   Expression parseUnaryExpression()
   {
-    return new Expression;
+    Expression e;
+    switch (lx.token.type)
+    {
+    case T.AndBinary:
+      nT(); e = new AddressExpression(parseUnaryExpression());
+      break;
+    case T.PlusPlus:
+      nT(); e = new PreIncrExpression(parseUnaryExpression());
+      break;
+    case T.MinusMinus:
+      nT(); e = new PreDecrExpression(parseUnaryExpression());
+      break;
+    case T.Mul:
+      nT(); e = new DerefExpression(parseUnaryExpression());
+      break;
+    case T.Minus:
+    case T.Plus:
+      nT(); e = new SignExpression(parseUnaryExpression(), lx.token.type);
+      break;
+    case T.Not:
+      nT(); e = new NotExpression(parseUnaryExpression());
+      break;
+    case T.Tilde:
+      nT(); e = new CompExpression(parseUnaryExpression());
+      break;
+    case T.New:
+      // parseNewExpression();
+      break;
+    case T.Delete:
+      // parseDeleteExpression();
+      break;
+    case T.Cast:
+      // parseDeleteExpression();
+      break;
+    case T.LParen:
+      // parse ( Type ) . Identifier
+      break;
+    }
+    return e;
+  }
+
+  Expression parsePostExpression()
+  {
+    return null;
   }
 
   void error(MID id, ...)

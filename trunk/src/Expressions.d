@@ -10,11 +10,6 @@ class Expression
 
 }
 
-class UnaryExpression : Expression
-{
-
-}
-
 class BinaryExpression : Expression
 {
   Expression left, right;
@@ -223,34 +218,93 @@ class CatAssignExpression : BinaryExpression
   { super(left, right, TOK.CatAssign); }
 }
 
+class UnaryExpression : Expression
+{
+  Expression e;
+  this(Expression e)
+  { this.e = e; }
+}
+
+class AddressExpression : UnaryExpression
+{
+  this(Expression e)
+  { super(e); }
+}
+
+class PreIncrExpression : UnaryExpression
+{
+  this(Expression e)
+  { super(e); }
+}
+
+class PreDecrExpression : UnaryExpression
+{
+  this(Expression e)
+  { super(e); }
+}
+
+class DerefExpression : UnaryExpression
+{
+  this(Expression e)
+  { super(e); }
+}
+
+class SignExpression : UnaryExpression
+{
+  TOK sign;
+  this(Expression e, TOK sign)
+  {
+    super(e);
+    this.sign = sign;
+  }
+}
+
+class NotExpression : UnaryExpression
+{
+  this(Expression e)
+  { super(e); }
+}
+
+class CompExpression : UnaryExpression
+{
+  this(Expression e)
+  { super(e); }
+}
+
 class PostfixExpression : UnaryExpression
 {
-
+  this(Expression e)
+  { super(e); }
 }
 
 class DotExpression : UnaryExpression
 {
-
+  this(Expression e)
+  { super(e); }
 }
 
 class NewExpression : UnaryExpression
 {
-
+  this(Expression e)
+  { super(e); }
 }
 
 class DeleteExpression : UnaryExpression
 {
-
+  this(Expression e)
+  { super(e); }
 }
 
 class CastExpression : UnaryExpression
 {
-
+  this(Expression e)
+  { super(e); }
 }
 
 class AnonClassExpression : UnaryExpression
 {
-
+  this(Expression e)
+  { super(e); }
 }
 
 class PrimaryExpression
