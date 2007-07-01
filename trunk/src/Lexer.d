@@ -923,7 +923,7 @@ class Lexer
     Hex:= 0[xX] HexDigits
     Bin:= 0[bB][01_]+
     Oct:= 0[0-7_]+
-    Suffix:= (L|[uU]|L[uU]|[uU]L)?
+    Suffix:= (L[uU]?|[uU]L?)
     HexDigits:= [0-9a-zA-Z_]+
 
     Invalid: "0b_", "0x_", "._"
@@ -1579,7 +1579,11 @@ unittest
 unittest
 {
   // Numbers unittest
-  // 0L 0ULi 0_L 0_UL 0_Fi 0_e2 0_F 0_i 0x0U 0x0p2
+  // 0L 0ULi 0_L 0_UL 0x0U 0x0p2 0_Fi 0_e2 0_F 0_i
+  // 0u 0U 0uL 0UL 0L 0LU 0Lu
+  // 0Li 0f 0F 0fi 0Fi 0i
+  // 0b_1_LU 0b1000u
+  // 0x232Lu
 }
 
 /// ASCII character properties table.
