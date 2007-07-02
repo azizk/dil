@@ -270,6 +270,47 @@ class Parser
 
   Expression parseUnaryExpression()
   {
+    return parsePostExpression();
+  }
+
+  Expression parsePostExpression()
+  {
+    auto e = parsePreExpression();
+    while (1)
+    {
+      switch (lx.token.type)
+      {
+      case T.Dot:
+        nT();
+        Token t;
+        peek(t);
+//         if (t.type == T.Identifier)
+//
+//         else if (t.type == T.New)
+//           e = parseNewExpression(e);
+        break;
+      case T.PlusPlus:
+        nT();
+        e = new PostIncrExpression(e);
+        break;
+      case T.MinusMinus:
+        nT();
+        e = new PostDecrExpression(e);
+        break;
+      case T.LParen:
+        nT();
+//         e = parseCallExpression(e);
+        break;
+      case T.LBracket:
+        // parse Slice- and IndexExpression
+        break;
+      }
+    }
+    return e;
+  }
+
+  Expression parsePreExpression()
+  {
     Expression e;
     switch (lx.token.type)
     {
@@ -307,11 +348,14 @@ class Parser
     case T.LParen:
       // parse ( Type ) . Identifier
       break;
+    default:
+      e = parsePrimaryExpression();
+      break;
     }
     return e;
   }
 
-  Expression parsePostExpression()
+  Expression parsePrimaryExpression()
   {
     return null;
   }

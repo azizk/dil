@@ -243,6 +243,18 @@ class PreDecrExpression : UnaryExpression
   { super(e); }
 }
 
+class PostIncrExpression : UnaryExpression
+{
+  this(Expression e)
+  { super(e); }
+}
+
+class PostDecrExpression : UnaryExpression
+{
+  this(Expression e)
+  { super(e); }
+}
+
 class DerefExpression : UnaryExpression
 {
   this(Expression e)
