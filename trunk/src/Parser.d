@@ -283,7 +283,7 @@ class Parser
       case T.Dot:
         nT();
         Token t;
-        peek(t);
+        lx.peek(t);
 //         if (t.type == T.Identifier)
 //
 //         else if (t.type == T.New)
@@ -340,10 +340,13 @@ class Parser
       // parseNewExpression();
       break;
     case T.Delete:
-      // parseDeleteExpression();
+      nT();
+      e = new DeleteExpression(parseUnaryExpression());
       break;
     case T.Cast:
-      // parseDeleteExpression();
+      nT();
+      // Type type = parseType();
+      e = new CastExpression(parseUnaryExpression() /*, type*/);
       break;
     case T.LParen:
       // parse ( Type ) . Identifier
