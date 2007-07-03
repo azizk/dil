@@ -43,7 +43,7 @@ class Parser
   {
     auto e = parseAssignExpression();
     while (lx.token.type == TOK.Comma)
-      e = new CommaExpression(e, parseExpression());
+      e = new CommaExpression(e, parseAssignExpression());
     return e;
   }
 
@@ -282,12 +282,10 @@ class Parser
       {
       case T.Dot:
         nT();
-        Token t;
-        lx.peek(t);
-//         if (t.type == T.Identifier)
-//
-//         else if (t.type == T.New)
-//           e = parseNewExpression(e);
+        if (lx.token.type == T.Identifier)
+          e = new DotIdExpression(e);
+        else if (lx.token.type == T.New)
+          e = parseNewExpression(e);
         break;
       case T.PlusPlus:
         nT();
@@ -299,7 +297,7 @@ class Parser
         break;
       case T.LParen:
         nT();
-//         e = parseCallExpression(e);
+        e = new CallExpression(e, parseArgumentList(T.LParen));
         break;
       case T.LBracket:
         // parse Slice- and IndexExpression
@@ -355,12 +353,43 @@ class Parser
       e = parsePrimaryExpression();
       break;
     }
+    assert(e !is null);
     return e;
   }
 
   Expression parsePrimaryExpression()
   {
     return null;
+  }
+
+  Expression parseNewExpression(Expression e)
+  {
+    return null;
+  }
+
+  Expression[] parseArgumentList(TOK terminator)
+  {
+    Expression[] es;
+
+    nT();
+    if (lx.token.type == terminator)
+    {
+      nT();
+      return null;
+    }
+
+    while (1)
+    {
+      es ~= parseAssignExpression();
+      if (lx.token.type == terminator)
+        break;
+//       if (lx.token.type != T.Comma)
+//         error();
+    }
+//     if (lx.token.type != terminator)
+//       error();
+    nT();
+    return es;
   }
 
   void error(MID id, ...)

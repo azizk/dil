@@ -283,16 +283,26 @@ class CompExpression : UnaryExpression
   { super(e); }
 }
 
-class PostfixExpression : UnaryExpression
+class DotExpression : UnaryExpression
 {
   this(Expression e)
   { super(e); }
 }
 
-class DotExpression : UnaryExpression
+class DotIdExpression : UnaryExpression
 {
   this(Expression e)
   { super(e); }
+}
+
+class CallExpression : UnaryExpression
+{
+  Expression[] args;
+  this(Expression e, Expression[] args)
+  {
+    super(e);
+    this.args = args;
+  }
 }
 
 class NewExpression : UnaryExpression
