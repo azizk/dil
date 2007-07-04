@@ -268,8 +268,6 @@ class Lexer
         {
           ++p;
           c = scanEscapeSequence();
-          if (c == 0xFFFF)
-            break;
           if (c < 128)
             buffer ~= c;
           else
@@ -564,8 +562,6 @@ class Lexer
       case '\\':
         ++p;
         dchar d = scanEscapeSequence();
-        if (d == 0xFFFF)
-          continue;
         if (d < 128)
           buffer ~= d;
         else
@@ -585,16 +581,17 @@ class Lexer
       default:
         if (*p & 128)
         {
-          char* begin = p;
+//           char* begin = p;
           dchar d = decodeUTF8();
+
           if (d == LSd || d == PSd)
             goto case '\n';
 
-          if (d != 0xFFFF)
-          {
-            ++p;
-            buffer ~= begin[0 .. p - begin];
-          }
+          // We don't copy per pointer because we might include
+          // invalid, skipped utf-8 sequences. See decodeUTF8().
+//           ++p;
+//           buffer ~= begin[0 .. p - begin];
+          encodeUTF8(buffer, d);
           continue;
         }
         buffer ~= *p++;
@@ -608,10 +605,19 @@ class Lexer
     assert(*p == '\'');
     MID id = MID.UnterminatedCharacterLiteral;
     ++p;
+    TOK type = TOK.CharLiteral;
     switch (*p)
     {
     case '\\':
       ++p;
+      switch (*p)
+      {
+      case 'u':
+        type = TOK.WCharLiteral; break;
+      case 'U':
+        type = TOK.DCharLiteral; break;
+      default:
+      }
       t.dchar_ = scanEscapeSequence();
       break;
     case '\'':
@@ -626,6 +632,10 @@ class Lexer
         c = decodeUTF8();
         if (c == LSd || c == PSd)
           goto Lerr;
+        if (c <= 0xFFFF)
+          type = TOK.WCharLiteral;
+        else
+          type = TOK.DCharLiteral;
       }
       t.dchar_ = c;
       ++p;
@@ -634,9 +644,9 @@ class Lexer
     if (*p == '\'')
       ++p;
     else
-  Lerr:
+    Lerr:
       error(id);
-    t.type = TOK.Character;
+    t.type = type;
     t.end = p;
   }
 
@@ -786,11 +796,11 @@ class Lexer
   dchar scanEscapeSequence()
   {
     uint c = char2ev(*p);
-    if (c) {
+    if (c)
+    {
       ++p;
       return c;
     }
-    c = 0xFFFF;
     uint digits = 2;
 
     switch (*p)
@@ -809,7 +819,9 @@ class Lexer
             c += *p - 'A' + 10;
           else
             c += *p - 'a' + 10;
-          if (!--digits) {
+
+          if (!--digits)
+          {
             ++p;
             break;
           }
@@ -817,10 +829,11 @@ class Lexer
         else
         {
           error(MID.InsufficientHexDigits);
-          c = 0xFFFF;
           break;
         }
       }
+      if (!isValidDchar(c))
+        error(MID.InvalidUnicodeCharacter);
       break;
     case 'u':
       digits = 4;
@@ -1399,7 +1412,7 @@ class Lexer
   {
     assert(*p & 128, "check for ASCII char before calling decodeUTF8().");
     size_t idx;
-    uint d = 0xFFFF;
+    dchar d;
     try
     {
       d = std.utf.decode(p[0 .. end-p], idx);
@@ -1410,6 +1423,7 @@ class Lexer
       error(MID.InvalidUTF8Sequence);
       // Skip to next valid utf-8 sequence
       while (UTF8stride[*++p] != 0xFF) {}
+      --p;
     }
     return d;
   }

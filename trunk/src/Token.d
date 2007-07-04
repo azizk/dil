@@ -15,7 +15,7 @@ enum TOK
   Identifier,
   Comment,
   String,
-  Character,
+  CharLiteral, WCharLiteral, DCharLiteral,
 
   // Numbers
   Number,

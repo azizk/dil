@@ -65,7 +65,7 @@ void main(char[][] args)
       case TOK.String:
         writef("<sl>%s</sl>", srcText);
       break;
-      case TOK.Character:
+      case TOK.CharLiteral, TOK.WCharLiteral, TOK.DCharLiteral:
         writef("<cl>%s</cl>", srcText);
       break;
       case TOK.Assign, TOK.Equal,
