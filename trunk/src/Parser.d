@@ -200,7 +200,7 @@ class Parser
       operator = T.Identity;
     LNotIdentity:
       nT();
-      e = new IsExpression(e, parseShiftExpression(), operator);
+      e = new IdentityExpression(e, parseShiftExpression(), operator);
       break;
     case T.LessEqual, T.Less, T.GreaterEqual, T.Greater,
          T.Unordered, T.UorE, T.UorG, T.UorGorE,
@@ -301,6 +301,31 @@ class Parser
         break;
       case T.LBracket:
         // parse Slice- and IndexExpression
+        nT();
+        if (lx.token.type == T.RBracket)
+        {
+          e = new SliceExpression(e, null, null);
+          nT();
+          break;
+        }
+        Expression[] es = [parseAssignExpression()];
+        if (lx.token.type == T.Slice)
+        {
+          nT();
+          e = new SliceExpression(e, es[0], parseAssignExpression());
+//           if (lx.token.type != T.RBracket)
+//             error()
+          nT();
+          break;
+        }
+        else if (lx.token.type == T.Comma)
+        {
+           es ~= parseArgumentList(T.RBracket);
+        }
+        e = new IndexExpression(e, es);
+//         if (lx.token.type != T.RBracket)
+//           error();
+        nT();
         break;
       }
     }
@@ -359,7 +384,13 @@ class Parser
 
   Expression parsePrimaryExpression()
   {
-    return null;
+    Expression e;
+    switch (lx.token.type)
+    {
+    case T.Identifier:
+      
+    }
+    return e;
   }
 
   Expression parseNewExpression(Expression e)

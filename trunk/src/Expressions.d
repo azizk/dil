@@ -80,7 +80,7 @@ class EqualExpression : CmpExpression
   { super(left, right, TOK.Equal); }
 }
 
-class IdentExpression : CmpExpression
+class IdentityExpression : CmpExpression
 {
   this(Expression left, Expression right, TOK tok)
   { super(left, right, tok); }
@@ -334,14 +334,25 @@ class PrimaryExpression
 
 }
 
-class IndexExpression
+class IndexExpression : UnaryExpression
 {
-
+  Expression[] args;
+  this(Expression e, Expression[] args)
+  {
+    super(e);
+    this.args = args;
+  }
 }
 
-class SliceExpression
+class SliceExpression : UnaryExpression
 {
-
+  Expression left, right;
+  this(Expression e, Expression left, Expression right)
+  {
+    super(e);
+    this.left = left;
+    this.right = right;
+  }
 }
 
 class AssertExpression
