@@ -357,6 +357,15 @@ class PrimaryExpression
 }
 */
 
+class IdentifierExpression : Expression
+{
+  string identifier;
+  this(string identifier)
+  {
+    this.identifier = identifier;
+  }
+}
+
 class GlobalIdExpression : Expression
 {
   string identifier;
@@ -473,8 +482,8 @@ class TypeidExpression : Expression
   {}
 }
 
-class IsExpression : CmpExpression
+class IsExpression : Expression
 {
-  this(Expression left, Expression right, TOK tok)
-  { super(left, right, tok); }
+  this()
+  {}
 }

@@ -391,6 +391,8 @@ class Parser
     switch (token.type)
     {
     case T.Identifier:
+      e = new IdentifierExpression(token.srcText);
+      nT();
       break;
     case T.Dot:
       requireNext(T.Identifier);
@@ -524,6 +526,7 @@ class Parser
       e = new TypeidExpression();
       break;
     case T.Is:
+//       e = new IsExpression();
       break;
     case T.LParen:
       break;
