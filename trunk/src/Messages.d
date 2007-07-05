@@ -49,6 +49,9 @@ enum MID
   HexFloatExponentRequired,
   HexFloatMissingExpDigits,
   FloatExponentDigitExpected,
+
+  // Parser messages
+  ExpectedButFound,
 }
 
 string[] messages = [
@@ -94,4 +97,7 @@ string[] messages = [
   "the exponent of a hexadecimal float number is required.",
   "missing decimal digits in hexadecimal float exponent.",
   "exponents have to start with a digit.",
+
+  // Parser messages
+  "expected '{1}', but found '{2}'.",
 ];

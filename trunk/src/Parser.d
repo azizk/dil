@@ -423,10 +423,13 @@ class Parser
       break;
     case T.String:
       char[] buffer = lx.token.str;
+      char postfix = lx.token.pf;
       nT();
       while (lx.token.type == T.String)
       {
         string tmp = lx.token.str;
+//         if (postfix != lx.token.pf)
+//           error();
         if (tmp.length > 1)
         {
           buffer[$-1] = tmp[0]; // replace '\0'
@@ -490,19 +493,55 @@ class Parser
     case T.Function, T.Delegate:
       break;
     case T.Assert:
+      Expression msg;
+      requireNext(T.LParen);
+      e = parseAssignExpression();
+      if (lx.token.type == T.Comma)
+      {
+        nT();
+        msg = parseAssignExpression();
+      }
+      require(T.RParen);
+      e = new AssertExpression(e, msg);
       break;
     case T.Mixin:
+      requireNext(T.LParen);
+      e = parseAssignExpression();
+      require(T.RParen);
+      e = new MixinExpression(e);
       break;
     case T.Import:
+      requireNext(T.LParen);
+      e = parseAssignExpression();
+      require(T.RParen);
+      e = new ImportExpression(e);
       break;
     case T.Typeid:
+      requireNext(T.LParen);
+      e = new TypeidExpression();
       break;
     case T.Is:
       break;
     case T.LParen:
       break;
+    // BasicType . Identifier
+    case T.Void, T.Char, T.Wchar, T.Dchar, T.Bool, T.Byte, T.Ubyte,
+         T.Short, T.Ushort, T.Int, T.Uint, T.Long, T.Ulong,
+         T.Float, T.Double, T.Real, T.Ifloat, T.Idouble, T.Ireal,
+         T.Cfloat, T.Cdouble, T.Creal:
+    TOK type = lx.token.type;
+    requireNext(T.Dot);
+
+    string ident;
+    errorIfNot(T.Identifier);
+    if (lx.token.type == T.Identifier)
+    {
+      ident = lx.token.srcText;
+      nT();
+    }
+
+    e = new TypeDotIdExpression(type, ident);
     default:
-      // BasicType . Identifier
     }
     return e;
   }
@@ -535,6 +574,29 @@ class Parser
 //       error();
     nT();
     return es;
+  }
+
+  void errorIfNot(TOK tok)
+  {
+    if (lx.token.type != tok)
+      error(MID.ExpectedButFound, tok, lx.token.srcText);
+  }
+
+  void require(TOK tok)
+  {
+    if (lx.token.type == tok)
+      nT();
+    else
+      error(MID.ExpectedButFound, tok, lx.token.srcText);
+  }
+
+  void requireNext(TOK tok)
+  {
+    nT();
+    if (lx.token.type == tok)
+      nT();
+    else
+      error(MID.ExpectedButFound, tok, lx.token.srcText);
   }
 
   void error(MID id, ...)

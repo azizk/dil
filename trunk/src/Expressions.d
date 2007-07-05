@@ -428,24 +428,49 @@ class AssocArrayLiteralExpression : Expression
   }
 }
 
-class AssertExpression
+class AssertExpression : Expression
 {
-
+  Expression expr, msg;
+  this(Expression expr, Expression msg)
+  {
+    this.expr = expr;
+    this.msg = msg;
+  }
 }
 
-class MixinExpression
+class MixinExpression : Expression
 {
-
+  Expression expr;
+  this(Expression expr)
+  {
+    this.expr = expr;
+  }
 }
 
-class ImportExpression
+class ImportExpression : Expression
 {
-
+  Expression expr;
+  this(Expression expr)
+  {
+    this.expr = expr;
+  }
 }
 
-class TypeIdExpression
+class TypeDotIdExpression : Expression
 {
+  TOK type;
+  string ident;
+  this(TOK type, string ident)
+  {
+    this.type = type;
+    this.ident = ident;
+  }
+}
 
+class TypeidExpression : Expression
+{
+  this()
+  {}
 }
 
 class IsExpression : CmpExpression
