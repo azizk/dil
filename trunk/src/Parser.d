@@ -466,6 +466,8 @@ class Parser
       values ~= parseAssignExpression();
 
       if (token.type != T.RBracket)
+      {
+        require(T.Comma);
         while (1)
         {
           keys ~= parseAssignExpression();
@@ -482,8 +484,9 @@ class Parser
           values ~= parseAssignExpression();
           if (token.type == T.RBracket)
             break;
-          errorIfNot(T.Comma);
+          require(T.Comma);
         }
+      }
       assert(token.type == T.RBracket);
       nT();
       e = new AssocArrayLiteralExpression(keys, values);
@@ -530,15 +533,17 @@ class Parser
          T.Float, T.Double, T.Real, T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal:
     TOK type = token.type;
+
     requireNext(T.Dot);
 
     string ident;
-    errorIfNot(T.Identifier);
     if (token.type == T.Identifier)
     {
       ident = token.srcText;
       nT();
     }
+    else
+      errorIfNot(T.Identifier);
 
     e = new TypeDotIdExpression(type, ident);
     default:
@@ -567,7 +572,7 @@ class Parser
       es ~= parseAssignExpression();
       if (token.type == terminator)
         break;
-      errorIfNot(T.Comma);
+      require(T.Comma);
     }
     nT();
     return es;
