@@ -272,6 +272,56 @@ class Parser
     return new Expression();
   }
 
+  Expression parseUnaryExpression()
+  {
+    Expression e;
+    switch (token.type)
+    {
+    case T.AndBinary:
+      nT(); e = new AddressExpression(parseUnaryExpression());
+      break;
+    case T.PlusPlus:
+      nT(); e = new PreIncrExpression(parseUnaryExpression());
+      break;
+    case T.MinusMinus:
+      nT(); e = new PreDecrExpression(parseUnaryExpression());
+      break;
+    case T.Mul:
+      nT(); e = new DerefExpression(parseUnaryExpression());
+      break;
+    case T.Minus:
+    case T.Plus:
+      nT(); e = new SignExpression(parseUnaryExpression(), token.type);
+      break;
+    case T.Not:
+      nT(); e = new NotExpression(parseUnaryExpression());
+      break;
+    case T.Tilde:
+      nT(); e = new CompExpression(parseUnaryExpression());
+      break;
+    case T.New:
+      // parseNewExpression();
+      break;
+    case T.Delete:
+      nT();
+      e = new DeleteExpression(parseUnaryExpression());
+      break;
+    case T.Cast:
+      nT();
+      // Type type = parseType();
+      e = new CastExpression(parseUnaryExpression() /*, type*/);
+      break;
+    case T.LParen:
+      // parse ( Type ) . Identifier
+      break;
+    default:
+      e = parsePostExpression(parsePrimaryExpression());
+      break;
+    }
+    assert(e !is null);
+    return e;
+  }
+
   Expression parsePostExpression(Expression e)
   {
     while (1)
@@ -326,56 +376,6 @@ class Parser
         break;
       }
     }
-    return e;
-  }
-
-  Expression parseUnaryExpression()
-  {
-    Expression e;
-    switch (token.type)
-    {
-    case T.AndBinary:
-      nT(); e = new AddressExpression(parseUnaryExpression());
-      break;
-    case T.PlusPlus:
-      nT(); e = new PreIncrExpression(parseUnaryExpression());
-      break;
-    case T.MinusMinus:
-      nT(); e = new PreDecrExpression(parseUnaryExpression());
-      break;
-    case T.Mul:
-      nT(); e = new DerefExpression(parseUnaryExpression());
-      break;
-    case T.Minus:
-    case T.Plus:
-      nT(); e = new SignExpression(parseUnaryExpression(), token.type);
-      break;
-    case T.Not:
-      nT(); e = new NotExpression(parseUnaryExpression());
-      break;
-    case T.Tilde:
-      nT(); e = new CompExpression(parseUnaryExpression());
-      break;
-    case T.New:
-      // parseNewExpression();
-      break;
-    case T.Delete:
-      nT();
-      e = new DeleteExpression(parseUnaryExpression());
-      break;
-    case T.Cast:
-      nT();
-      // Type type = parseType();
-      e = new CastExpression(parseUnaryExpression() /*, type*/);
-      break;
-    case T.LParen:
-      // parse ( Type ) . Identifier
-      break;
-    default:
-      e = parsePostExpression(parsePrimaryExpression());
-      break;
-    }
-    assert(e !is null);
     return e;
   }
 
