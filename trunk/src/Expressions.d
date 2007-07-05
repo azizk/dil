@@ -411,6 +411,23 @@ class StringLiteralExpression : Expression
   { this.str = str; }
 }
 
+class ArrayLiteralExpression : Expression
+{
+  Expression[] values;
+  this(Expression[] values)
+  { this.values = values; }
+}
+
+class AssocArrayLiteralExpression : Expression
+{
+  Expression[] keys, values;
+  this(Expression[] keys, Expression[] values)
+  {
+    this.keys = keys;
+    this.values = values;
+  }
+}
+
 class AssertExpression
 {
 

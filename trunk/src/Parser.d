@@ -296,7 +296,6 @@ class Parser
         e = new PostDecrExpression(e);
         break;
       case T.LParen:
-        nT();
         e = new CallExpression(e, parseArgumentList(T.LParen));
         break;
       case T.LBracket:
@@ -322,10 +321,11 @@ class Parser
         {
            es ~= parseArgumentList(T.RBracket);
         }
-        e = new IndexExpression(e, es);
-//         if (lx.token.type != T.RBracket)
+//         else if (lx.token.type != T.RBracket)
 //           error();
-        nT();
+        else
+          nT();
+        e = new IndexExpression(e, es);
         break;
       }
     }
@@ -437,6 +437,53 @@ class Parser
       e = new StringLiteralExpression(buffer);
       break;
     case T.LBracket:
+      Expression[] values;
+
+      nT();
+      if (lx.token.type != T.RBracket)
+      {
+        e = parseAssignExpression();
+        if (lx.token.type == T.Colon)
+          goto LparseAssocArray;
+        else if (lx.token.type == T.Comma)
+          values = [e] ~ parseArgumentList(T.RBracket);
+//         else if (lx.token.type != T.RBracket)
+//           error();
+      }
+
+      e = new ArrayLiteralExpression(values);
+      break;
+
+    LparseAssocArray:
+      Expression[] keys;
+
+      keys ~= e;
+      nT(); // Skip colon.
+      values ~= parseAssignExpression();
+
+      if (lx.token.type != T.RBracket)
+        while (1)
+        {
+          keys ~= parseAssignExpression();
+          if (lx.token.type != T.Colon)
+          {
+//             error();
+            values ~= null;
+            if (lx.token.type == T.RBracket)
+              break;
+            else
+              continue;
+          }
+          nT();
+          values ~= parseAssignExpression();
+          if (lx.token.type == T.RBracket)
+            break;
+//           if (lx.token.type != T.Comma)
+//             error();
+        }
+      assert(lx.token.type == T.RBracket);
+      nT();
+      e = new AssocArrayLiteralExpression(keys, values);
       break;
     case T.LBrace:
       break;
