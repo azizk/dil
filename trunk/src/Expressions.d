@@ -329,11 +329,6 @@ class AnonClassExpression : UnaryExpression
   { super(e); }
 }
 
-class PrimaryExpression
-{
-
-}
-
 class IndexExpression : UnaryExpression
 {
   Expression[] args;
@@ -353,6 +348,67 @@ class SliceExpression : UnaryExpression
     this.left = left;
     this.right = right;
   }
+}
+
+/*
+class PrimaryExpression
+{
+
+}
+*/
+
+class GlobalIdExpression : Expression
+{
+  string identifier;
+  this(string identifier)
+  {
+    this.identifier = identifier;
+  }
+}
+
+class ThisExpression : Expression
+{
+  this()
+  {}
+}
+
+class SuperExpression : Expression
+{
+  this()
+  {}
+}
+
+class NullExpression : Expression
+{
+  this()
+  {}
+}
+
+class DollarExpression : Expression
+{
+  this()
+  {}
+}
+
+class BoolExpression : Expression
+{
+  bool value;
+  this(bool value)
+  { this.value = value; }
+}
+
+class CharLiteralExpression : Expression
+{
+  TOK tok;
+  this(TOK tok)
+  { this.tok = tok; }
+}
+
+class StringLiteralExpression : Expression
+{
+  string str;
+  this(string str)
+  { this.str = str; }
 }
 
 class AssertExpression

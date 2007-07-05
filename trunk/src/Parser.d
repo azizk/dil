@@ -388,7 +388,74 @@ class Parser
     switch (lx.token.type)
     {
     case T.Identifier:
-      
+      break;
+    case T.Dot:
+      nT();
+//       if (lx.token.type != T.Identifier)
+//         error();
+      e = new GlobalIdExpression(lx.token.srcText);
+      break;
+    case T.This:
+      nT();
+      e = new ThisExpression();
+      break;
+    case T.Super:
+      nT();
+      e = new SuperExpression();
+      break;
+    case T.Null:
+      nT();
+      e = new NullExpression();
+      break;
+    case T.True, T.False:
+      nT();
+      e = new BoolExpression(lx.token.type == T.True ? true : false);
+      break;
+    case T.Dollar:
+      nT();
+      e = new DollarExpression();
+      break;
+    case T.Int32/*, ...*/: // Number literals
+      break;
+    case T.CharLiteral, T.WCharLiteral, T.DCharLiteral:
+      nT();
+      e = new CharLiteralExpression(lx.token.type);
+      break;
+    case T.String:
+      char[] buffer = lx.token.str;
+      nT();
+      while (lx.token.type == T.String)
+      {
+        string tmp = lx.token.str;
+        if (tmp.length > 1)
+        {
+          buffer[$-1] = tmp[0]; // replace '\0'
+          buffer ~= tmp[1..$]; // append the rest
+        }
+        nT();
+      }
+      e = new StringLiteralExpression(buffer);
+      break;
+    case T.LBracket:
+      break;
+    case T.LBrace:
+      break;
+    case T.Function, T.Delegate:
+      break;
+    case T.Assert:
+      break;
+    case T.Mixin:
+      break;
+    case T.Import:
+      break;
+    case T.Typeid:
+      break;
+    case T.Is:
+      break;
+    case T.LParen:
+      break;
+    default:
+      // BasicType . Identifier
     }
     return e;
   }

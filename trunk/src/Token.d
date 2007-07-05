@@ -97,7 +97,7 @@ alias TOK.With KeywordsEnd;
 struct Token
 {
   TOK type;
-  Position pos;
+//   Position pos;
 
   char* start;
   char* end;
