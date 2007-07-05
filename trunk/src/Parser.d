@@ -29,20 +29,25 @@ private alias TOK T;
 class Parser
 {
   Lexer lx;
-  TOK delegate() nT;
+  Token* token;
 
   Information[] errors;
 
   this(char[] srcText, string fileName)
   {
     lx = new Lexer(srcText, fileName);
-    nT = &lx.nextToken;
+  }
+
+  void nT()
+  {
+    lx.nextToken();
+    token = &lx.token;
   }
 
   Expression parseExpression()
   {
     auto e = parseAssignExpression();
-    while (lx.token.type == TOK.Comma)
+    while (token.type == TOK.Comma)
       e = new CommaExpression(e, parseAssignExpression());
     return e;
   }
@@ -52,7 +57,7 @@ class Parser
     auto e = parseCondExpression();
     while (1)
     {
-      switch (lx.token.type)
+      switch (token.type)
       {
       case T.Assign:
         nT(); e = new AssignExpression(e, parseAssignExpression());
@@ -104,12 +109,11 @@ class Parser
   Expression parseCondExpression()
   {
     auto e = parseOrOrExpression();
-    if (lx.token.type == T.Question)
+    if (token.type == T.Question)
     {
       nT();
       auto iftrue = parseExpression();
-//       if (lx.toke.type != TOK.Colon)
-//         error();
+      require(T.Colon);
       auto iffalse = parseCondExpression();
       e = new CondExpression(e, iftrue, iffalse);
     }
@@ -120,7 +124,7 @@ class Parser
   {
     alias parseAndAndExpression parseNext;
     auto e = parseNext();
-    if (lx.token.type == T.OrLogical)
+    if (token.type == T.OrLogical)
     {
       nT();
       e = new OrOrExpression(e, parseNext());
@@ -132,7 +136,7 @@ class Parser
   {
     alias parseOrExpression parseNext;
     auto e = parseNext();
-    if (lx.token.type == T.AndLogical)
+    if (token.type == T.AndLogical)
     {
       nT();
       e = new AndAndExpression(e, parseNext());
@@ -144,7 +148,7 @@ class Parser
   {
     alias parseXorExpression parseNext;
     auto e = parseNext();
-    if (lx.token.type == T.OrBinary)
+    if (token.type == T.OrBinary)
     {
       nT();
       e = new OrExpression(e, parseNext());
@@ -156,7 +160,7 @@ class Parser
   {
     alias parseAndExpression parseNext;
     auto e = parseNext();
-    if (lx.token.type == T.Xor)
+    if (token.type == T.Xor)
     {
       nT();
       e = new XorExpression(e, parseNext());
@@ -168,7 +172,7 @@ class Parser
   {
     alias parseCmpExpression parseNext;
     auto e = parseNext();
-    if (lx.token.type == T.AndBinary)
+    if (token.type == T.AndBinary)
     {
       nT();
       e = new AndExpression(e, parseNext());
@@ -178,7 +182,7 @@ class Parser
 
   Expression parseCmpExpression()
   {
-    TOK operator = lx.token.type;
+    TOK operator = token.type;
 
     auto e = parseShiftExpression();
 
@@ -222,7 +226,7 @@ class Parser
     auto e = parseAddExpression();
     while (1)
     {
-      switch (lx.token.type)
+      switch (token.type)
       {
       case T.LShift:  nT(); e = new LShiftExpression(e, parseAddExpression()); break;
       case T.RShift:  nT(); e = new RShiftExpression(e, parseAddExpression()); break;
@@ -239,7 +243,7 @@ class Parser
     auto e = parseMulExpression();
     while (1)
     {
-      switch (lx.token.type)
+      switch (token.type)
       {
       case T.Plus:  nT(); e = new PlusExpression(e, parseMulExpression()); break;
       case T.Minus: nT(); e = new MinusExpression(e, parseMulExpression()); break;
@@ -256,7 +260,7 @@ class Parser
     auto e = parseUnaryExpression();
     while (1)
     {
-      switch (lx.token.type)
+      switch (token.type)
       {
       case T.Mul: nT(); e = new MulExpression(e, parseUnaryExpression()); break;
       case T.Div: nT(); e = new DivExpression(e, parseUnaryExpression()); break;
@@ -278,13 +282,13 @@ class Parser
     auto e = parsePreExpression();
     while (1)
     {
-      switch (lx.token.type)
+      switch (token.type)
       {
       case T.Dot:
         nT();
-        if (lx.token.type == T.Identifier)
+        if (token.type == T.Identifier)
           e = new DotIdExpression(e);
-        else if (lx.token.type == T.New)
+        else if (token.type == T.New)
           e = parseNewExpression(e);
         break;
       case T.PlusPlus:
@@ -301,30 +305,29 @@ class Parser
       case T.LBracket:
         // parse Slice- and IndexExpression
         nT();
-        if (lx.token.type == T.RBracket)
+        if (token.type == T.RBracket)
         {
           e = new SliceExpression(e, null, null);
           nT();
           break;
         }
+
         Expression[] es = [parseAssignExpression()];
-        if (lx.token.type == T.Slice)
+
+        if (token.type == T.Slice)
         {
           nT();
           e = new SliceExpression(e, es[0], parseAssignExpression());
-//           if (lx.token.type != T.RBracket)
-//             error()
-          nT();
+          require(T.RBracket);
           break;
         }
-        else if (lx.token.type == T.Comma)
+        else if (token.type == T.Comma)
         {
            es ~= parseArgumentList(T.RBracket);
         }
-//         else if (lx.token.type != T.RBracket)
-//           error();
         else
-          nT();
+          require(T.RBracket);
+
         e = new IndexExpression(e, es);
         break;
       }
@@ -335,7 +338,7 @@ class Parser
   Expression parsePreExpression()
   {
     Expression e;
-    switch (lx.token.type)
+    switch (token.type)
     {
     case T.AndBinary:
       nT(); e = new AddressExpression(parseUnaryExpression());
@@ -351,7 +354,7 @@ class Parser
       break;
     case T.Minus:
     case T.Plus:
-      nT(); e = new SignExpression(parseUnaryExpression(), lx.token.type);
+      nT(); e = new SignExpression(parseUnaryExpression(), token.type);
       break;
     case T.Not:
       nT(); e = new NotExpression(parseUnaryExpression());
@@ -385,15 +388,13 @@ class Parser
   Expression parsePrimaryExpression()
   {
     Expression e;
-    switch (lx.token.type)
+    switch (token.type)
     {
     case T.Identifier:
       break;
     case T.Dot:
-      nT();
-//       if (lx.token.type != T.Identifier)
-//         error();
-      e = new GlobalIdExpression(lx.token.srcText);
+      requireNext(T.Identifier);
+      e = new GlobalIdExpression(token.srcText);
       break;
     case T.This:
       nT();
@@ -409,7 +410,7 @@ class Parser
       break;
     case T.True, T.False:
       nT();
-      e = new BoolExpression(lx.token.type == T.True ? true : false);
+      e = new BoolExpression(token.type == T.True ? true : false);
       break;
     case T.Dollar:
       nT();
@@ -419,16 +420,16 @@ class Parser
       break;
     case T.CharLiteral, T.WCharLiteral, T.DCharLiteral:
       nT();
-      e = new CharLiteralExpression(lx.token.type);
+      e = new CharLiteralExpression(token.type);
       break;
     case T.String:
-      char[] buffer = lx.token.str;
-      char postfix = lx.token.pf;
+      char[] buffer = token.str;
+      char postfix = token.pf;
       nT();
-      while (lx.token.type == T.String)
+      while (token.type == T.String)
       {
-        string tmp = lx.token.str;
-//         if (postfix != lx.token.pf)
+        string tmp = token.str;
+//         if (postfix != token.pf)
 //           error();
         if (tmp.length > 1)
         {
@@ -443,15 +444,15 @@ class Parser
       Expression[] values;
 
       nT();
-      if (lx.token.type != T.RBracket)
+      if (token.type != T.RBracket)
       {
         e = parseAssignExpression();
-        if (lx.token.type == T.Colon)
+        if (token.type == T.Colon)
           goto LparseAssocArray;
-        else if (lx.token.type == T.Comma)
+        else if (token.type == T.Comma)
           values = [e] ~ parseArgumentList(T.RBracket);
-//         else if (lx.token.type != T.RBracket)
-//           error();
+        else
+          require(T.RBracket);
       }
 
       e = new ArrayLiteralExpression(values);
@@ -464,27 +465,26 @@ class Parser
       nT(); // Skip colon.
       values ~= parseAssignExpression();
 
-      if (lx.token.type != T.RBracket)
+      if (token.type != T.RBracket)
         while (1)
         {
           keys ~= parseAssignExpression();
-          if (lx.token.type != T.Colon)
+          if (token.type != T.Colon)
           {
-//             error();
+            errorIfNot(T.Colon);
             values ~= null;
-            if (lx.token.type == T.RBracket)
+            if (token.type == T.RBracket)
               break;
             else
               continue;
           }
           nT();
           values ~= parseAssignExpression();
-          if (lx.token.type == T.RBracket)
+          if (token.type == T.RBracket)
             break;
-//           if (lx.token.type != T.Comma)
-//             error();
+          errorIfNot(T.Comma);
         }
-      assert(lx.token.type == T.RBracket);
+      assert(token.type == T.RBracket);
       nT();
       e = new AssocArrayLiteralExpression(keys, values);
       break;
@@ -496,7 +496,7 @@ class Parser
       Expression msg;
       requireNext(T.LParen);
       e = parseAssignExpression();
-      if (lx.token.type == T.Comma)
+      if (token.type == T.Comma)
       {
         nT();
         msg = parseAssignExpression();
@@ -529,14 +529,14 @@ class Parser
          T.Short, T.Ushort, T.Int, T.Uint, T.Long, T.Ulong,
          T.Float, T.Double, T.Real, T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal:
-    TOK type = lx.token.type;
+    TOK type = token.type;
     requireNext(T.Dot);
 
     string ident;
     errorIfNot(T.Identifier);
-    if (lx.token.type == T.Identifier)
+    if (token.type == T.Identifier)
     {
-      ident = lx.token.srcText;
+      ident = token.srcText;
       nT();
     }
 
@@ -556,7 +556,7 @@ class Parser
     Expression[] es;
 
     nT();
-    if (lx.token.type == terminator)
+    if (token.type == terminator)
     {
       nT();
       return null;
@@ -565,38 +565,35 @@ class Parser
     while (1)
     {
       es ~= parseAssignExpression();
-      if (lx.token.type == terminator)
+      if (token.type == terminator)
         break;
-//       if (lx.token.type != T.Comma)
-//         error();
+      errorIfNot(T.Comma);
     }
-//     if (lx.token.type != terminator)
-//       error();
     nT();
     return es;
   }
 
   void errorIfNot(TOK tok)
   {
-    if (lx.token.type != tok)
-      error(MID.ExpectedButFound, tok, lx.token.srcText);
+    if (token.type != tok)
+      error(MID.ExpectedButFound, tok, token.srcText);
   }
 
   void require(TOK tok)
   {
-    if (lx.token.type == tok)
+    if (token.type == tok)
       nT();
     else
-      error(MID.ExpectedButFound, tok, lx.token.srcText);
+      error(MID.ExpectedButFound, tok, token.srcText);
   }
 
   void requireNext(TOK tok)
   {
     nT();
-    if (lx.token.type == tok)
+    if (token.type == tok)
       nT();
     else
-      error(MID.ExpectedButFound, tok, lx.token.srcText);
+      error(MID.ExpectedButFound, tok, token.srcText);
   }
 
   void error(MID id, ...)
