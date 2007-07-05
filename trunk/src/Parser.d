@@ -272,14 +272,8 @@ class Parser
     return new Expression();
   }
 
-  Expression parseUnaryExpression()
+  Expression parsePostExpression(Expression e)
   {
-    return parsePostExpression();
-  }
-
-  Expression parsePostExpression()
-  {
-    auto e = parsePreExpression();
     while (1)
     {
       switch (token.type)
@@ -335,7 +329,7 @@ class Parser
     return e;
   }
 
-  Expression parsePreExpression()
+  Expression parseUnaryExpression()
   {
     Expression e;
     switch (token.type)
@@ -378,7 +372,7 @@ class Parser
       // parse ( Type ) . Identifier
       break;
     default:
-      e = parsePrimaryExpression();
+      e = parsePostExpression(parsePrimaryExpression());
       break;
     }
     assert(e !is null);
@@ -550,6 +544,7 @@ class Parser
 
     e = new TypeDotIdExpression(type, ident);
     default:
+//       error();
     }
     return e;
   }
