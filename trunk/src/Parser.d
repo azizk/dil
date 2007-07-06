@@ -331,9 +331,14 @@ class Parser
       case T.Dot:
         nT();
         if (token.type == T.Identifier)
+        {
+          nT();
           e = new DotIdExpression(e);
+        }
         else if (token.type == T.New)
           e = parseNewExpression(e);
+        else
+          errorIfNot(T.Identifier);
         break;
       case T.PlusPlus:
         nT();
@@ -374,7 +379,10 @@ class Parser
 
         e = new IndexExpression(e, es);
         break;
+      default:
+        break;
       }
+      break;
     }
     return e;
   }
