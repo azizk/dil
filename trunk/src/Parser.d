@@ -683,6 +683,16 @@ class Parser
   }
 
   Argument[] parseParameters()
+  out(args)
+  {
+    if (args.length > 1)
+      foreach (arg; args[0..$-1])
+      {
+        if (arg.isVariadic())
+          assert(0, "variadic arguments can only appear at the end of the parameter list.");
+      }
+  }
+  body
   {
     require(T.LParen);
 
