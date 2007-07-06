@@ -332,32 +332,29 @@ class Parser
         nT();
         if (token.type == T.Identifier)
         {
-          nT();
           e = new DotIdExpression(e);
+          break;
         }
         else if (token.type == T.New)
           e = parseNewExpression(e);
         else
           errorIfNot(T.Identifier);
-        break;
+        continue;
       case T.PlusPlus:
-        nT();
         e = new PostIncrExpression(e);
         break;
       case T.MinusMinus:
-        nT();
         e = new PostDecrExpression(e);
         break;
       case T.LParen:
         e = new CallExpression(e, parseArgumentList(T.LParen));
-        break;
+        continue;
       case T.LBracket:
         // parse Slice- and IndexExpression
         nT();
         if (token.type == T.RBracket)
         {
           e = new SliceExpression(e, null, null);
-          nT();
           break;
         }
 
@@ -368,7 +365,7 @@ class Parser
           nT();
           e = new SliceExpression(e, es[0], parseAssignExpression());
           require(T.RBracket);
-          break;
+          continue;
         }
         else if (token.type == T.Comma)
         {
@@ -378,13 +375,13 @@ class Parser
           require(T.RBracket);
 
         e = new IndexExpression(e, es);
-        break;
+        continue;
       default:
-        break;
+        return e;
       }
-      break;
+      nT();
     }
-    return e;
+    assert(0);
   }
 
   Expression parsePrimaryExpression()
