@@ -7,7 +7,7 @@ import Messages;
 import std.string;
 import std.stdarg;
 
-enum Type
+enum InfoType
 {
   Lexer,
   Parser,
@@ -17,11 +17,11 @@ enum Type
 class Information
 {
   MID id;
-  Type type;
+  InfoType type;
   uint loc;
   string[] arguments;
 
-  this(Type type, MID id, uint loc, string[] arguments)
+  this(InfoType type, MID id, uint loc, string[] arguments)
   {
     this.id = id;
     this.type = type;

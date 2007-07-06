@@ -8,6 +8,7 @@ import Token;
 import Messages;
 import Information;
 import Expressions;
+import Types;
 
 enum STC
 {
@@ -530,24 +531,26 @@ class Parser
     case T.LParen:
       break;
     // BasicType . Identifier
-    case T.Void, T.Char, T.Wchar, T.Dchar, T.Bool, T.Byte, T.Ubyte,
-         T.Short, T.Ushort, T.Int, T.Uint, T.Long, T.Ulong,
-         T.Float, T.Double, T.Real, T.Ifloat, T.Idouble, T.Ireal,
+    case T.Void,   T.Char,    T.Wchar,  T.Dchar, T.Bool,
+         T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
+         T.Int,    T.Uint,    T.Long,   T.Ulong,
+         T.Float,  T.Double,  T.Real,
+         T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal:
-    TOK type = token.type;
+      auto type = new Type(token.type);
 
-    requireNext(T.Dot);
+      requireNext(T.Dot);
 
-    string ident;
-    if (token.type == T.Identifier)
-    {
-      ident = token.srcText;
-      nT();
-    }
-    else
-      errorIfNot(T.Identifier);
+      string ident;
+      if (token.type == T.Identifier)
+      {
+        ident = token.srcText;
+        nT();
+      }
+      else
+        errorIfNot(T.Identifier);
 
-    e = new TypeDotIdExpression(type, ident);
+      e = new TypeDotIdExpression(type, ident);
     default:
 //       error();
     }
@@ -581,6 +584,54 @@ class Parser
     return es;
   }
 
+  Type parseBasicType()
+  {
+    Type t;
+    IdentifierType tident;
+
+    switch (token.type)
+    {
+    case T.Void,   T.Char,    T.Wchar,  T.Dchar, T.Bool,
+         T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
+         T.Int,    T.Uint,    T.Long,   T.Ulong,
+         T.Float,  T.Double,  T.Real,
+         T.Ifloat, T.Idouble, T.Ireal,
+         T.Cfloat, T.Cdouble, T.Creal:
+      t = new Type(token.type);
+      nT();
+      break;
+    case T.Identifier, T.Dot:
+      tident = new IdentifierType([token.srcText]);
+      nT();
+//       if (token.type == T.Not)
+//         parse template instance
+    Lident:
+      while (token.type == T.Dot)
+      {
+        nT();
+        if (token.type == T.Identifier)
+        {
+          tident ~= token.srcText;
+        }
+        else
+          errorIfNot(T.Identifier);
+        nT();
+//       if (token.type == T.Not)
+//         parse template instance
+      }
+      t = tident;
+      break;
+    case T.Typeof:
+      requireNext(T.LParen);
+      tident = new TypeofType(parseExpression());
+      require(T.RParen);
+      goto Lident;
+    default:
+//       error();
+    }
+    return t;
+  }
+
   void errorIfNot(TOK tok)
   {
     if (token.type != tok)
@@ -606,6 +657,6 @@ class Parser
 
   void error(MID id, ...)
   {
-    errors ~= new Information(Information.Type.Parser, id, lx.loc, arguments(_arguments, _argptr));
+    errors ~= new Information(InfoType.Parser, id, lx.loc, arguments(_arguments, _argptr));
   }
 }

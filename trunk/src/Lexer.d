@@ -1436,7 +1436,7 @@ class Lexer
 
   void error(MID id, ...)
   {
-    errors ~= new Information(Information.Type.Lexer, id, loc, arguments(_arguments, _argptr));
+    errors ~= new Information(InfoType.Lexer, id, loc, arguments(_arguments, _argptr));
   }
 
   public TOK nextToken()

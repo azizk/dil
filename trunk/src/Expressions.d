@@ -4,6 +4,7 @@
 +/
 module Expressions;
 import Token;
+import Types;
 
 class Expression
 {
@@ -467,9 +468,9 @@ class ImportExpression : Expression
 
 class TypeDotIdExpression : Expression
 {
-  TOK type;
+  Type type;
   string ident;
-  this(TOK type, string ident)
+  this(Type type, string ident)
   {
     this.type = type;
     this.ident = ident;
