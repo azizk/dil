@@ -12,6 +12,8 @@ struct Position
 
 enum TOK
 {
+  Invalid,
+
   Identifier,
   Comment,
   String,

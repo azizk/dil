@@ -10,19 +10,31 @@ import Information;
 import Expressions;
 import Types;
 
-enum STC
+
+class Argument
 {
-  Abstract,
-  Auto,
-  Const,
-  Deprecated,
-  Extern,
-  Final,
-  Invariant,
-  Override,
-  Scope,
-  Static,
-  Synchronized
+  StorageClass stc;
+  Type type;
+  string ident;
+  Expression assignExpr;
+
+  this(StorageClass stc, Type type, string ident, Expression assignExpr)
+  {
+    this.stc = stc;
+    this.type = type;
+    this.ident = ident;
+    this.assignExpr = assignExpr;
+  }
+
+  bool isVariadic()
+  {
+    return !!(stc & StorageClass.Variadic);
+  }
+
+  bool isOnlyVariadic()
+  {
+    return stc == StorageClass.Variadic;
+  }
 }
 
 private alias TOK T;
@@ -630,6 +642,102 @@ class Parser
 //       error();
     }
     return t;
+  }
+
+  Type parseBasicType2(Type t)
+  {
+    while (1)
+    {
+      switch (token.type)
+      {
+      case T.Mul:
+        t = new PointerType(t);
+        break;
+      case T.LBracket:
+        nT();
+        if (token.type == T.RBracket)
+        {
+          t = new ArrayType(t, null);
+          nT();
+        }
+        else
+        {
+          t = new ArrayType(t, parseExpression());
+          require(T.RBracket);
+        }
+        continue;
+      case T.Function, T.Delegate:
+        TOK tok = token.type;
+        nT();
+        auto args = parseParameters();
+//         if (tok == T.Function)
+//           t = new FunctionType();
+//         else
+//           t = new DelegateType();
+      default:
+        return t;
+      }
+      nT();
+    }
+    assert(0);
+  }
+
+  Argument[] parseParameters()
+  {
+    require(T.LParen);
+
+    if (token.type == T.RParen)
+    {
+      nT();
+      return null;
+    }
+
+    Argument[] args;
+    StorageClass stc;
+
+    while (1)
+    {
+      stc = StorageClass.In;
+      switch (token.type)
+      {
+      case T.In:   stc = StorageClass.In;   nT(); goto default;
+      case T.Out:  stc = StorageClass.Out;  nT(); goto default;
+      case T.Ref:  stc = StorageClass.Ref;  nT(); goto default;
+      case T.Lazy: stc = StorageClass.Lazy; nT(); goto default;
+      case T.Ellipses:
+        args ~= new Argument(StorageClass.Variadic, null, null, null);
+        break;
+      default:
+        Type type = parseBasicType();
+        string ident;
+        // parseDeclarator()
+        Expression assignExpr;
+        if (token.type == T.Assign)
+        {
+          nT();
+          assignExpr = parseAssignExpression();
+        }
+
+        if (token.type == T.Ellipses)
+        {
+          stc |= StorageClass.Variadic;
+          args ~= new Argument(stc, type, ident, assignExpr);
+          nT();
+          break;
+        }
+
+        args ~= new Argument(stc, type, ident, assignExpr);
+        if (token.type == T.Comma)
+        {
+          nT();
+          continue;
+        }
+        break;
+      }
+      break;
+    }
+    require(T.RParen);
+    return args;
   }
 
   void errorIfNot(TOK tok)
