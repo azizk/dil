@@ -407,6 +407,28 @@ class BoolExpression : Expression
   { this.value = value; }
 }
 
+class IntNumberExpression : Expression
+{
+  TOK type;
+  ulong number;
+  this(TOK type, ulong number)
+  {
+    this.number = number;
+    this.type = type;
+  }
+}
+
+class RealNumberExpression : Expression
+{
+  TOK type;
+  real number;
+  this(TOK type, real number)
+  {
+    this.number = number;
+    this.type = type;
+  }
+}
+
 class CharLiteralExpression : Expression
 {
   TOK tok;

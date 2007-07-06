@@ -22,7 +22,7 @@ enum TOK
   // Numbers
   Number,
   Int32, Int64, Uint32, Uint64,
-  // Floating point scanner relies on this order. (FloatXY + 3 == ImaginaryXY)
+  // Floating point number scanner relies on this order. (FloatXY + 3 == ImaginaryXY)
   Float32, Float64, Float80,
   Imaginary32, Imaginary64, Imaginary80,
 

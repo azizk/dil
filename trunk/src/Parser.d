@@ -430,7 +430,14 @@ class Parser
       nT();
       e = new DollarExpression();
       break;
-    case T.Int32/*, ...*/: // Number literals
+    case T.Int32, T.Int64, T.Uint32, T.Uint64:
+      nT();
+      e = new IntNumberExpression(token.type, token.ulong_);
+      break;
+    case T.Float32, T.Float64, T.Float80,
+         T.Imaginary32, T.Imaginary64, T.Imaginary80:
+      nT();
+      e = new RealNumberExpression(token.type, token.real_);
       break;
     case T.CharLiteral, T.WCharLiteral, T.DCharLiteral:
       nT();
