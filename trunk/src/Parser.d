@@ -7,6 +7,8 @@ import Lexer;
 import Token;
 import Messages;
 import Information;
+import Declarations;
+import Statements;
 import Expressions;
 import Types;
 
@@ -56,6 +58,65 @@ class Parser
     lx.nextToken();
     token = &lx.token;
   }
+
+  void skipToOnePast(TOK tok)
+  {
+    for (; token.type != tok && token.type != T.EOF; nT())
+    {}
+    nT();
+  }
+
+  /++++++++++++++++++++++++++++++
+  + Declaration parsing methods +
+  ++++++++++++++++++++++++++++++/
+
+  Declaration[] parseModule()
+  {
+    Declaration[] decls;
+
+    if (token.type == T.Module)
+    {
+      nT();
+      string[] idents;
+      do
+      {
+        nT();
+        if (token.type == T.Identifier)
+        {
+          nT();
+          idents ~= token.srcText;
+        }
+        else
+        {
+          errorIfNot(T.Identifier);
+          skipToOnePast(T.Semicolon);
+          goto Lreturn;
+        }
+      } while (token.type == T.Dot)
+      require(T.Semicolon);
+      decls ~= new ModuleDeclaration(idents);
+    }
+    decls ~= parseDeclarations();
+  Lreturn:
+    return decls;
+  }
+
+  Declaration[] parseDeclarations()
+  {
+    Declaration[] decls;
+    while (token.type != T.EOF)
+      decls ~= parseDeclaration();
+    return decls;
+  }
+
+  Declaration parseDeclaration()
+  {
+    return null;
+  }
+
+  /+++++++++++++++++++++++++++++
+  + Expression parsing methods +
+  +++++++++++++++++++++++++++++/
 
   Expression parseExpression()
   {
@@ -313,7 +374,7 @@ class Parser
       nT(); e = new CompExpression(parseUnaryExpression());
       break;
     case T.New:
-      // parseNewExpression();
+      // TODO: parseNewExpression();
       break;
     case T.Delete:
       nT();
@@ -326,14 +387,15 @@ class Parser
       e = new CastExpression(parseUnaryExpression(), type);
       break;
     case T.LParen:
-      // parse ( Type ) . Identifier
+      // ( Type ) . Identifier
       auto type = parseType();
       require(T.RParen);
       require(T.Dot);
       string ident;
-      if (token.type != T.Identifier)
+      if (token.type == T.Identifier)
       {
         ident = token.srcText;
+        nT();
       }
       else
         errorIfNot(T.Identifier);
@@ -525,8 +587,14 @@ class Parser
       e = new AssocArrayLiteralExpression(keys, values);
       break;
     case T.LBrace:
+      // TODO: parse delegate literals: FunctionBody
       break;
     case T.Function, T.Delegate:
+      // TODO: parse delegate/function literals:
+      // function Type? ( ArgumentList ) FunctionBody
+      // function FunctionBody
+      // delegate Type? ( ArgumentList ) FunctionBody
+      // delegate FunctionBody
       break;
     case T.Assert:
       Expression msg;
@@ -569,6 +637,7 @@ class Parser
         if (token.type == T.Identifier)
         {
           ident = token.srcText;
+          nT();
         }
         else
           errorIfNot(T.Identifier);
@@ -603,6 +672,7 @@ class Parser
              T.Delegate,
              T.Super,
              T.Return:
+          nT();
           specType = new SpecializationType(specTok, token.type);
           break;
         default:
@@ -610,10 +680,11 @@ class Parser
         }
       default:
       }
-
+      require(T.RParen);
       e = new IsExpression(type, ident, specType);
       break;
     case T.LParen:
+      // TODO: parse ( ArgumentList ) FunctionBody type delegates
       nT();
       e = parseExpression();
       require(T.RParen);
@@ -641,13 +712,14 @@ class Parser
       e = new TypeDotIdExpression(type, ident);
       break;
     default:
-//       error();
+      // TODO: issue error msg and decide what to return.
     }
     return e;
   }
 
   Expression parseNewExpression(Expression e)
   {
+    // TODO: implement this method.
     return null;
   }
 
@@ -697,6 +769,7 @@ class Parser
     case T.Identifier, T.Dot:
       tident = new IdentifierType([token.srcText]);
       nT();
+      // TODO: parse template instance
 //       if (token.type == T.Not)
 //         parse template instance
     Lident:
@@ -710,6 +783,7 @@ class Parser
         else
           errorIfNot(T.Identifier);
         nT();
+      // TODO: parse template instance
 //       if (token.type == T.Not)
 //         parse template instance
       }
@@ -721,7 +795,7 @@ class Parser
       require(T.RParen);
       goto Lident;
     default:
-//       error();
+      // TODO: issue error msg and return UndefinedType.
     }
     return t;
   }
@@ -745,6 +819,7 @@ class Parser
         }
         else
         {
+          // TODO: try parsing as Type for assoc arrays and then as Expression.
           t = new ArrayType(t, parseExpression());
           require(T.RBracket);
         }
@@ -753,6 +828,7 @@ class Parser
         TOK tok = token.type;
         nT();
         auto args = parseParameters();
+        // TODO: create appropriate Type.
 //         if (tok == T.Function)
 //           t = new FunctionType();
 //         else
@@ -780,12 +856,14 @@ class Parser
         }
         else
         {
+          // TODO: try parsing as Type for assoc arrays and then as Expression.
           t = new ArrayType(t, parseExpression());
           require(T.RBracket);
         }
         continue;
       case T.LParen:
         auto params = parseParameters();
+        // TODO: create FunctionType.
         // new FunctionType(params);
         break;
       default:
