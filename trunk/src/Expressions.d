@@ -492,6 +492,15 @@ class ImportExpression : Expression
   }
 }
 
+class TypeofExpression : Expression
+{
+  Type type;
+  this(Type type)
+  {
+    this.type = type;
+  }
+}
+
 class TypeDotIdExpression : Expression
 {
   Type type;

@@ -558,6 +558,25 @@ class Parser
       require(T.RParen);
       e = new TypeidExpression(type);
       break;
+    case T.Typeof:
+      requireNext(T.LParen);
+      auto type = new TypeofType(parseExpression());
+      require(T.RParen);
+      if (token.type == T.Dot)
+      {
+        nT();
+        string ident;
+        if (token.type == T.Identifier)
+        {
+          ident = token.srcText;
+        }
+        else
+          errorIfNot(T.Identifier);
+        e = new TypeDotIdExpression(type, ident);
+      }
+      else
+        e = new TypeofExpression(type);
+      break;
     case T.Is:
       requireNext(T.LParen);
 
@@ -789,8 +808,7 @@ class Parser
     else if (!identOptional)
       errorIfNot(T.Identifier);
 
-    t = parseDeclaratorSuffix(t);
-    return t;
+    return parseDeclaratorSuffix(t);
   }
 
   Argument[] parseParameters()
