@@ -514,6 +514,13 @@ class TypeidExpression : Expression
 
 class IsExpression : Expression
 {
-  this()
-  {}
+  Type type;
+  string ident;
+  SpecializationType specType;
+  this(Type type, string ident, SpecializationType specType)
+  {
+    this.type = type;
+    this.ident = ident;
+    this.specType = specType;
+  }
 }

@@ -90,3 +90,25 @@ class ArrayType : Type
     this.e = e;
   }
 }
+
+class SpecializationType : Type
+{
+  TOK specTok; // T.Colon|T.Equal
+  Type type;
+  TOK tokType; // T.Typedef|T.Struct|T.Union|T.Class|T.Interface|
+               // T.Enum| T.Function|T.Delegate|T.Super|T.Return
+
+  this(TOK specTok, TOK tokType)
+  {
+    super(TOK.Invalid, null);
+    this.specTok = specTok;
+    this.tokType = tokType;
+  }
+
+  this(TOK specTok, Type type)
+  {
+    super(TOK.Invalid, null);
+    this.specTok = specTok;
+    this.type = type;
+  }
+}

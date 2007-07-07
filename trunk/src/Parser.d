@@ -559,7 +559,40 @@ class Parser
       e = new TypeidExpression(type);
       break;
     case T.Is:
-//       e = new IsExpression();
+      requireNext(T.LParen);
+
+      Type type;
+      SpecializationType specType;
+      string ident; // optional Identifier
+
+      type = parseDeclarator(ident, true);
+
+      switch (token.type)
+      {
+      case T.Colon, T.Equal:
+        TOK specTok = token.type;
+        nT();
+        switch (token.type)
+        {
+        case T.Typedef,
+             T.Struct,
+             T.Union,
+             T.Class,
+             T.Interface,
+             T.Enum,
+             T.Function,
+             T.Delegate,
+             T.Super,
+             T.Return:
+          specType = new SpecializationType(specTok, token.type);
+          break;
+        default:
+          specType = new SpecializationType(specTok, parseType());
+        }
+      default:
+      }
+
+      e = new IsExpression(type, ident, specType);
       break;
     case T.LParen:
       nT();
@@ -736,13 +769,15 @@ class Parser
         auto params = parseParameters();
         // new FunctionType(params);
         break;
+      default:
+        break;
       }
       break;
     }
     return t;
   }
 
-  Type parseDeclarator(ref string ident)
+  Type parseDeclarator(ref string ident, bool identOptional = false)
   {
     auto t = parseBasicType2(parseBasicType());
 
@@ -751,7 +786,7 @@ class Parser
       ident = token.srcText;
       nT();
     }
-    else
+    else if (!identOptional)
       errorIfNot(T.Identifier);
 
     t = parseDeclaratorSuffix(t);
