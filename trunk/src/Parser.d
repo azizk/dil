@@ -548,6 +548,9 @@ class Parser
 //       e = new IsExpression();
       break;
     case T.LParen:
+      nT();
+      e = parseExpression();
+      require(T.RParen);
       break;
     // BasicType . Identifier
     case T.Void,   T.Char,    T.Wchar,  T.Dchar, T.Bool,
@@ -570,6 +573,7 @@ class Parser
         errorIfNot(T.Identifier);
 
       e = new TypeDotIdExpression(type, ident);
+      break;
     default:
 //       error();
     }
@@ -601,6 +605,11 @@ class Parser
     }
     nT();
     return es;
+  }
+
+  Type parseType()
+  {
+    return parseDeclaratorSuffix(parseBasicType2(parseBasicType()));
   }
 
   Type parseBasicType()
@@ -659,6 +668,7 @@ class Parser
       {
       case T.Mul:
         t = new PointerType(t);
+        nT();
         break;
       case T.LBracket:
         nT();
@@ -672,7 +682,7 @@ class Parser
           t = new ArrayType(t, parseExpression());
           require(T.RBracket);
         }
-        continue;
+        break;
       case T.Function, T.Delegate:
         TOK tok = token.type;
         nT();
@@ -681,12 +691,57 @@ class Parser
 //           t = new FunctionType();
 //         else
 //           t = new DelegateType();
+        break;
       default:
         return t;
       }
-      nT();
     }
     assert(0);
+  }
+
+  Type parseDeclaratorSuffix(Type t)
+  {
+    while (1)
+    {
+      switch (token.type)
+      {
+      case T.LBracket:
+        nT();
+        if (token.type == T.RBracket)
+        {
+          t = new ArrayType(t, null);
+          nT();
+        }
+        else
+        {
+          t = new ArrayType(t, parseExpression());
+          require(T.RBracket);
+        }
+        continue;
+      case T.LParen:
+        auto params = parseParameters();
+        // new FunctionType(params);
+        break;
+      }
+      break;
+    }
+    return t;
+  }
+
+  Type parseDeclarator(ref string ident)
+  {
+    auto t = parseBasicType2(parseBasicType());
+
+    if (token.type == T.Identifier)
+    {
+      ident = token.srcText;
+      nT();
+    }
+    else
+      errorIfNot(T.Identifier);
+
+    t = parseDeclaratorSuffix(t);
+    return t;
   }
 
   Argument[] parseParameters()
