@@ -320,8 +320,12 @@ class DeleteExpression : UnaryExpression
 
 class CastExpression : UnaryExpression
 {
-  this(Expression e)
-  { super(e); }
+  Type type;
+  this(Expression e, Type type)
+  {
+    super(e);
+    this.type = type;
+  }
 }
 
 class AnonClassExpression : UnaryExpression
@@ -501,8 +505,11 @@ class TypeDotIdExpression : Expression
 
 class TypeidExpression : Expression
 {
-  this()
-  {}
+  Type type;
+  this(Type type)
+  {
+    this.type = type;
+  }
 }
 
 class IsExpression : Expression

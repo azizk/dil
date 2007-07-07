@@ -320,12 +320,24 @@ class Parser
       e = new DeleteExpression(parseUnaryExpression());
       break;
     case T.Cast:
-      nT();
-      // Type type = parseType();
-      e = new CastExpression(parseUnaryExpression() /*, type*/);
+      requireNext(T.LParen);
+      auto type = parseType();
+      require(T.RParen);
+      e = new CastExpression(parseUnaryExpression(), type);
       break;
     case T.LParen:
       // parse ( Type ) . Identifier
+      auto type = parseType();
+      require(T.RParen);
+      require(T.Dot);
+      string ident;
+      if (token.type != T.Identifier)
+      {
+        ident = token.srcText;
+      }
+      else
+        errorIfNot(T.Identifier);
+      e = new TypeDotIdExpression(type, ident);
       break;
     default:
       e = parsePostExpression(parsePrimaryExpression());
@@ -542,7 +554,9 @@ class Parser
       break;
     case T.Typeid:
       requireNext(T.LParen);
-      e = new TypeidExpression();
+      auto type = parseType();
+      require(T.RParen);
+      e = new TypeidExpression(type);
       break;
     case T.Is:
 //       e = new IsExpression();
@@ -780,9 +794,9 @@ class Parser
         args ~= new Argument(StorageClass.Variadic, null, null, null);
         break;
       default:
-        Type type = parseBasicType();
         string ident;
-        // parseDeclarator()
+        auto type = parseDeclarator(ident);
+
         Expression assignExpr;
         if (token.type == T.Assign)
         {
