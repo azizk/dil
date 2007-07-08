@@ -65,22 +65,22 @@ class Parser
     {}
     nT();
   }
-/*
+
   ReturnType try_(ReturnType)(lazy ReturnType parseMethod, out failed)
   {
     auto len = errors.length;
-    // lx.saveCheckPoint();
+    auto lexerState = lx.getState();
     auto result = parseMethod();
+    // If the length of the array changed we know an error occurred.
     if (errors.length != len)
     {
-      // lx.revertCheckPoint();
-      errors = errors[0..len];
+      lexerState.restore(); // Restore state of the Lexer object.
+      errors = errors[0..len]; // Remove errors that were added when parseMethod() was called.
       failed = true;
     }
-    // lx.removeCheckPoint();
     return result;
   }
-*/
+
   /++++++++++++++++++++++++++++++
   + Declaration parsing methods +
   ++++++++++++++++++++++++++++++/

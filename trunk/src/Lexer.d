@@ -1426,6 +1426,31 @@ class Lexer
       idtable[k.str] = k;
   }
 
+  struct State
+  {
+    Lexer lexer;
+    char* scanPointer;
+    size_t errorLen;
+    static State opCall(Lexer lexer, char* p, size_t len)
+    {
+      State s;
+      s.lexer = lexer;
+      s.scanPointer = p;
+      s.errorLen = len;
+      return s;
+    }
+    void restore()
+    {
+      lexer.p = scanPointer;
+      lexer.errors = lexer.errors[0..errorLen];
+    }
+  }
+
+  State getState()
+  {
+    return State(this, p, errors.length);
+  }
+
   void peek(ref Token t)
   {
     // Because peeked tokens are not stored in a linked
