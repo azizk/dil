@@ -80,3 +80,25 @@ class InterfaceDeclaration : Declaration
     this.decls = decls;
   }
 }
+
+class StructDeclaration : Declaration
+{
+  string name;
+  Declaration[] decls;
+  this(string name, Declaration[] decls)
+  {
+    this.name = name;
+    this.decls = decls;
+  }
+}
+
+class UnionDeclaration : Declaration
+{
+  string name;
+  Declaration[] decls;
+  this(string name, Declaration[] decls)
+  {
+    this.name = name;
+    this.decls = decls;
+  }
+}

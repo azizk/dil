@@ -165,6 +165,9 @@ class Parser
     case T.Interface:
       decl = parseInterfaceDeclaration();
       break;
+    case T.Struct, T.Union:
+      decl = parseAggregateDeclaration();
+      break;
     case T.Module:
       // Error: module is optional and can only appear once at the top of the source file.
       break;
@@ -292,6 +295,8 @@ class Parser
     else
       errorIfNot(T.LBrace); // TODO: better error msg
 
+    // TODO: error if decls.length == 0
+
     return new ClassDeclaration(className, bases, decls);
   }
 
@@ -375,7 +380,49 @@ class Parser
     else
       errorIfNot(T.LBrace); // TODO: better error msg
 
+    // TODO: error if decls.length == 0
+
     return new InterfaceDeclaration(name, bases, decls);
+  }
+
+  Declaration parseAggregateDeclaration()
+  {
+    assert(token.type == T.Struct || token.type == T.Union);
+
+    TOK tok = token.type;
+
+    string name;
+    Declaration[] decls;
+
+    nT();
+    if (token.type == T.Identifier)
+    {
+      name = token.identifier;
+      nT();
+    }
+
+    if (token.type == T.LParen)
+    {
+      // TODO: parse template parameters
+    }
+
+    if (token.type == T.Semicolon)
+      nT();
+    else if (token.type == T.LBrace)
+    {
+      nT();
+      decls = parseDeclarationDefinitions();
+      require(T.RBrace);
+    }
+    else
+      errorIfNot(T.LBrace); // TODO: better error msg
+
+    // TODO: error if decls.length == 0
+
+    if (tok == T.Struct)
+      return new StructDeclaration(name, decls);
+    else
+      return new UnionDeclaration(name, decls);
   }
 
   /+++++++++++++++++++++++++++++
