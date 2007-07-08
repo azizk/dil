@@ -12,7 +12,6 @@ import Statements;
 import Expressions;
 import Types;
 
-
 class Parameter
 {
   StorageClass stc;
@@ -162,6 +161,9 @@ class Parser
       break;
     case T.Class:
       decl = parseClassDeclaration();
+      break;
+    case T.Interface:
+      decl = parseInterfaceDeclaration();
       break;
     case T.Module:
       // Error: module is optional and can only appear once at the top of the source file.
@@ -324,12 +326,56 @@ class Parser
       LisIdentifier:
         ident = token.identifier;
         nT();
+        // TODO: handle template instantiations: class Foo : Bar!(int)
       }
       bases ~= new BaseClass(prot, ident);
       if (token.type != T.Comma)
         break;
     }
     return bases;
+  }
+
+  Declaration parseInterfaceDeclaration()
+  {
+    assert(token.type == T.Interface);
+
+    string name;
+    BaseClass[] bases;
+    Declaration[] decls;
+
+    nT();
+    if (token.type == T.Identifier)
+    {
+      name = token.identifier;
+      nT();
+    }
+    else
+      errorIfNot(T.Identifier);
+
+    if (token.type == T.LParen)
+    {
+      // TODO: parse template parameters
+    }
+
+    if (token.type == T.Colon)
+      bases = parseBaseClasses();
+
+    if (token.type == T.Semicolon)
+    {
+      //if (bases.length != 0)
+        // error: bases classes are not allowed in forward declarations.
+      nT();
+    }
+    else if (token.type == T.LBrace)
+    {
+      nT();
+      decls = parseDeclarationDefinitions();
+      require(T.RBrace);
+    }
+    else
+      errorIfNot(T.LBrace); // TODO: better error msg
+
+    return new InterfaceDeclaration(name, bases, decls);
   }
 
   /+++++++++++++++++++++++++++++

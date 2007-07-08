@@ -57,12 +57,25 @@ class BaseClass
 
 class ClassDeclaration : Declaration
 {
-  string className;
+  string name;
   BaseClass[] bases;
   Declaration[] decls;
-  this(string className, BaseClass[] bases, Declaration[] decls)
+  this(string name, BaseClass[] bases, Declaration[] decls)
   {
-    this.className = className;
+    this.name = name;
+    this.bases = bases;
+    this.decls = decls;
+  }
+}
+
+class InterfaceDeclaration : Declaration
+{
+  string name;
+  BaseClass[] bases;
+  Declaration[] decls;
+  this(string name, BaseClass[] bases, Declaration[] decls)
+  {
+    this.name = name;
     this.bases = bases;
     this.decls = decls;
   }

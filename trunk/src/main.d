@@ -59,6 +59,8 @@ void main(char[][] args)
         case '/': c = "lc"; break;
         case '*': c = "bc"; break;
         case '+': c = "nc"; break;
+        default:
+          assert(0);
         }
         writef(`<c c="%s">%s</c>`, c, srcText);
       break;

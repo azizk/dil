@@ -653,6 +653,7 @@ class Lexer
     default:
       return 0;
     }
+    assert(0);
   }
 
   void scanRawStringLiteral(ref Token t)
@@ -756,7 +757,7 @@ class Lexer
             buffer ~= h;
           }
           else
-            h = c;
+            h = cast(ubyte)c;
           ++n;
           continue;
         }
