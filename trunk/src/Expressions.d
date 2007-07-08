@@ -292,8 +292,12 @@ class DotExpression : UnaryExpression
 
 class DotIdExpression : UnaryExpression
 {
-  this(Expression e)
-  { super(e); }
+  string ident;
+  this(Expression e, string ident)
+  {
+    super(e);
+    this.ident = ident;
+  }
 }
 
 class CallExpression : UnaryExpression

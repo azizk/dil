@@ -98,8 +98,8 @@ class Parser
         nT();
         if (token.type == T.Identifier)
         {
+          idents ~= token.identifier;
           nT();
-          idents ~= token.srcText;
         }
         else
         {
@@ -200,7 +200,7 @@ class Parser
     nT();
     if (token.type == T.Identifier)
     {
-      enumName = token.srcText;
+      enumName = token.identifier;
       nT();
     }
 
@@ -547,7 +547,7 @@ class Parser
         nT();
         if (token.type == T.Identifier)
         {
-          e = new DotIdExpression(e);
+          e = new DotIdExpression(e, token.identifier);
           break;
         }
         else if (token.type == T.New)
@@ -907,10 +907,10 @@ class Parser
         if (token.type == T.Identifier)
         {
           tident ~= token.identifier;
+          nT();
         }
         else
           errorIfNot(T.Identifier);
-        nT();
       // TODO: parse template instance
 //       if (token.type == T.Not)
 //         parse template instance
