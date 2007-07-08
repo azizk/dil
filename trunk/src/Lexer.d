@@ -35,6 +35,8 @@ class Lexer
 
   Information[] errors;
 
+  bool reportErrors;
+
   Identifier[string] idtable;
 
   this(string text, string fileName)
@@ -50,7 +52,7 @@ class Lexer
 
     this.p = this.text.ptr;
     this.end = this.p + this.text.length;
-
+    this.reportErrors = true;
     loadKeywords();
   }
 
@@ -529,16 +531,6 @@ class Lexer
         goto Lidentifier;
       c = *++p;
     }
-  }
-
-  void peek(ref Token t)
-  {
-    char* tmp = p;
-    uint len = errors.length;
-    scan(t);
-    p = tmp;
-    if (errors.length != len)
-      errors = errors[0..len];
   }
 
   void scanNormalStringLiteral(ref Token t)
@@ -1434,9 +1426,27 @@ class Lexer
       idtable[k.str] = k;
   }
 
+  void peek(ref Token t)
+  {
+    // Because peeked tokens are not stored in a linked
+    // list we need to switch off error reporting
+    // so as to avoid getting the same error more than once.
+    reportErrors = false;
+    char* save = p;
+    if (t.end) // For successive peeks.
+    {
+      p = t.end;
+      assert(text.ptr <= p && p < end);
+    }
+    scan(t);
+    p = save;
+    reportErrors = true;
+  }
+
   void error(MID id, ...)
   {
-    errors ~= new Information(InfoType.Lexer, id, loc, arguments(_arguments, _argptr));
+    if (reportErrors)
+      errors ~= new Information(InfoType.Lexer, id, loc, arguments(_arguments, _argptr));
   }
 
   public TOK nextToken()

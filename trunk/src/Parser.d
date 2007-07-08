@@ -65,7 +65,22 @@ class Parser
     {}
     nT();
   }
-
+/*
+  ReturnType try_(ReturnType)(lazy ReturnType parseMethod, out failed)
+  {
+    auto len = errors.length;
+    // lx.saveCheckPoint();
+    auto result = parseMethod();
+    if (errors.length != len)
+    {
+      // lx.revertCheckPoint();
+      errors = errors[0..len];
+      failed = true;
+    }
+    // lx.removeCheckPoint();
+    return result;
+  }
+*/
   /++++++++++++++++++++++++++++++
   + Declaration parsing methods +
   ++++++++++++++++++++++++++++++/
@@ -111,7 +126,62 @@ class Parser
 
   Declaration parseDeclaration()
   {
+    Declaration decl;
+    switch (token.type)
+    {
+    case T.Extern,
+         T.Align,
+         T.Pragma,
+         T.Deprecated,
+         T.Private,
+         T.Package,
+         T.Protected,
+         T.Public,
+         T.Export,
+         //T.Static,
+         T.Final,
+         T.Override,
+         T.Abstract,
+         T.Const,
+         T.Auto,
+         T.Scope:
+    case_AttributeSpecifier:
+      decl = parseAttributeSpecifier();
+      break;
+    case T.Static:
+      Token t;
+      lx.peek(t);
+      if (t.type != T.Import)
+        goto case_AttributeSpecifier;
+      //goto case T.Import;
+    case T.Import:
+      parseImportDeclaration();
+    case T.Module:
+      // Error: module is optional and can only appear once at the top of the source file.
+    default:
+    }
     return null;
+  }
+
+  Declaration parseAttributeSpecifier()
+  {
+    // Attribute :
+    // Attribute DeclarationBlock
+    return null;
+  }
+
+  Declaration parseImportDeclaration()
+  {
+    Declaration decl;
+    bool isStatic;
+
+    if (token.type == T.Static)
+    {
+      isStatic = true;
+      nT();
+    }
+
+    return decl;
   }
 
   /+++++++++++++++++++++++++++++
