@@ -13,7 +13,7 @@ import Expressions;
 import Types;
 
 
-class Argument
+class Parameter
 {
   StorageClass stc;
   Type type;
@@ -1116,7 +1116,7 @@ class Parser
     return t;
   }
 
-  Argument[] parseParameters()
+  Parameter[] parseParameters()
   out(args)
   {
     if (args.length > 1)
@@ -1136,7 +1136,7 @@ class Parser
       return null;
     }
 
-    Argument[] args;
+    Parameter[] args;
     StorageClass stc;
 
     while (1)
@@ -1149,7 +1149,7 @@ class Parser
       case T.Ref:  stc = StorageClass.Ref;  nT(); goto default;
       case T.Lazy: stc = StorageClass.Lazy; nT(); goto default;
       case T.Ellipses:
-        args ~= new Argument(StorageClass.Variadic, null, null, null);
+        args ~= new Parameter(StorageClass.Variadic, null, null, null);
         break;
       default:
         string ident;
@@ -1165,12 +1165,12 @@ class Parser
         if (token.type == T.Ellipses)
         {
           stc |= StorageClass.Variadic;
-          args ~= new Argument(stc, type, ident, assignExpr);
+          args ~= new Parameter(stc, type, ident, assignExpr);
           nT();
           break;
         }
 
-        args ~= new Argument(stc, type, ident, assignExpr);
+        args ~= new Parameter(stc, type, ident, assignExpr);
         if (token.type == T.Comma)
         {
           nT();
