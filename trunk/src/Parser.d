@@ -817,7 +817,7 @@ class Parser
 
   Type parseType()
   {
-    return parseDeclaratorSuffix(parseBasicType2(parseBasicType()));
+    return parseBasicType2(parseBasicType());
   }
 
   Type parseBasicType()
@@ -946,17 +946,18 @@ class Parser
 
   Type parseDeclarator(ref string ident, bool identOptional = false)
   {
-    auto t = parseBasicType2(parseBasicType());
+    auto t = parseType();
 
     if (token.type == T.Identifier)
     {
       ident = token.srcText;
       nT();
+      t = parseDeclaratorSuffix(t);
     }
     else if (!identOptional)
       errorIfNot(T.Identifier);
 
-    return parseDeclaratorSuffix(t);
+    return t;
   }
 
   Argument[] parseParameters()
