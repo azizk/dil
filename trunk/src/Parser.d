@@ -66,7 +66,7 @@ class Parser
     nT();
   }
 
-  ReturnType try_(ReturnType)(lazy ReturnType parseMethod, out failed)
+  ReturnType try_(ReturnType)(lazy ReturnType parseMethod, out bool failed)
   {
     auto len = errors.length;
     auto lexerState = lx.getState();
@@ -881,18 +881,7 @@ class Parser
         nT();
         break;
       case T.LBracket:
-        nT();
-        if (token.type == T.RBracket)
-        {
-          t = new ArrayType(t, null);
-          nT();
-        }
-        else
-        {
-          // TODO: try parsing as Type for assoc arrays and then as Expression.
-          t = new ArrayType(t, parseExpression());
-          require(T.RBracket);
-        }
+        t = parseArrayType(t);
         break;
       case T.Function, T.Delegate:
         TOK tok = token.type;
@@ -918,18 +907,7 @@ class Parser
       switch (token.type)
       {
       case T.LBracket:
-        nT();
-        if (token.type == T.RBracket)
-        {
-          t = new ArrayType(t, null);
-          nT();
-        }
-        else
-        {
-          // TODO: try parsing as Type for assoc arrays and then as Expression.
-          t = new ArrayType(t, parseExpression());
-          require(T.RBracket);
-        }
+        t = parseArrayType(t);
         continue;
       case T.LParen:
         auto params = parseParameters();
@@ -940,6 +918,36 @@ class Parser
         break;
       }
       break;
+    }
+    return t;
+  }
+
+  Type parseArrayType(Type t)
+  {
+    assert(token.type == T.LBracket);
+    nT();
+    if (token.type == T.RBracket)
+    {
+      t = new ArrayType(t);
+      nT();
+    }
+    else
+    {
+      bool failed;
+      auto assocType = try_(parseType(), failed);
+      if (!failed)
+        t = new ArrayType(t, assocType);
+      else
+      {
+        Expression e = parseExpression(), e2;
+        if (token.type == T.Slice)
+        {
+          nT();
+          e2 = parseExpression();
+        }
+        t = new ArrayType(t, e, e2);
+      }
+      require(T.RBracket);
     }
     return t;
   }

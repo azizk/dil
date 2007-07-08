@@ -83,20 +83,31 @@ class PointerType : Type
 
 class ArrayType : Type
 {
-  Expression e;
-  this(Type t, Expression e)
+  Expression e, e2;
+  Type assocType;
+  this(Type t)
   {
     super(TOK.Invalid, t);
+  }
+  this(Type t, Expression e, Expression e2)
+  {
+    this(t);
     this.e = e;
+    this.e2 = e2;
+  }
+  this(Type t, Type assocType)
+  {
+    this(t);
+    this.assocType = assocType;
   }
 }
 
 class SpecializationType : Type
 {
-  TOK specTok; // T.Colon|T.Equal
+  TOK specTok; // Colon|Equal
   Type type;
-  TOK tokType; // T.Typedef|T.Struct|T.Union|T.Class|T.Interface|
-               // T.Enum| T.Function|T.Delegate|T.Super|T.Return
+  TOK tokType; // Typedef|Struct|Union|Class|Interface|
+               // Enum|Function|Delegate|Super|Return
 
   this(TOK specTok, TOK tokType)
   {
