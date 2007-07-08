@@ -155,7 +155,9 @@ class Parser
         goto case_AttributeSpecifier;
       //goto case T.Import;
     case T.Import:
-      parseImportDeclaration();
+      decl = parseImportDeclaration();
+    case T.Enum:
+      decl = parseEnumDeclaration();
     case T.Module:
       // Error: module is optional and can only appear once at the top of the source file.
     default:
@@ -172,6 +174,8 @@ class Parser
 
   Declaration parseImportDeclaration()
   {
+    assert(token.type == T.Import || token.type == T.Static);
+
     Declaration decl;
     bool isStatic;
 
@@ -182,6 +186,60 @@ class Parser
     }
 
     return decl;
+  }
+
+  Declaration parseEnumDeclaration()
+  {
+    assert(token.type == T.Enum);
+
+    string enumName;
+    Type baseType;
+    string[] members;
+    Expression[] values;
+
+    nT();
+    if (token.type == T.Identifier)
+    {
+      enumName = token.srcText;
+      nT();
+    }
+
+    if (token.type == T.Colon)
+    {
+      nT();
+      baseType = parseBasicType();
+    }
+
+    if (token.type == T.LBrace)
+    {
+      nT();
+      do
+      {
+        if (token.type == T.Identifier)
+        {
+          members ~= token.identifier;
+          nT();
+        }
+        else
+          errorIfNot(T.Identifier);
+
+        if (token.type == T.Assign)
+        {
+          values ~= parseAssignExpression();
+          nT();
+        }
+        else
+          values ~= null;
+
+        if (token.type == T.Comma)
+          nT();
+        else if (token.type != T.RBrace)
+          errorIfNot(T.RBrace);
+      } while (token.type != T.RBrace)
+      nT();
+    }
+
+    return new EnumDeclaration(enumName, baseType, members, values);
   }
 
   /+++++++++++++++++++++++++++++
@@ -464,7 +522,7 @@ class Parser
       string ident;
       if (token.type == T.Identifier)
       {
-        ident = token.srcText;
+        ident = token.identifier;
         nT();
       }
       else
@@ -547,12 +605,12 @@ class Parser
     switch (token.type)
     {
     case T.Identifier:
-      e = new IdentifierExpression(token.srcText);
+      e = new IdentifierExpression(token.identifier);
       nT();
       break;
     case T.Dot:
       requireNext(T.Identifier);
-      e = new GlobalIdExpression(token.srcText);
+      e = new GlobalIdExpression(token.identifier);
       break;
     case T.This:
       nT();
@@ -706,7 +764,7 @@ class Parser
         string ident;
         if (token.type == T.Identifier)
         {
-          ident = token.srcText;
+          ident = token.identifier;
           nT();
         }
         else
@@ -773,7 +831,7 @@ class Parser
       string ident;
       if (token.type == T.Identifier)
       {
-        ident = token.srcText;
+        ident = token.identifier;
         nT();
       }
       else
@@ -837,7 +895,7 @@ class Parser
       nT();
       break;
     case T.Identifier, T.Dot:
-      tident = new IdentifierType([token.srcText]);
+      tident = new IdentifierType([token.identifier]);
       nT();
       // TODO: parse template instance
 //       if (token.type == T.Not)
@@ -848,7 +906,7 @@ class Parser
         nT();
         if (token.type == T.Identifier)
         {
-          tident ~= token.srcText;
+          tident ~= token.identifier;
         }
         else
           errorIfNot(T.Identifier);
@@ -958,7 +1016,7 @@ class Parser
 
     if (token.type == T.Identifier)
     {
-      ident = token.srcText;
+      ident = token.identifier;
       nT();
       t = parseDeclaratorSuffix(t);
     }

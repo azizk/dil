@@ -121,6 +121,8 @@ struct Token
     real   real_;
   }
 
+  alias srcText identifier;
+
   string srcText()
   {
     assert(start && end);
