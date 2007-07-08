@@ -34,3 +34,36 @@ class EnumDeclaration : Declaration
     this.values = values;
   }
 }
+
+enum Protection
+{
+  None,
+  Private   = 1,
+  Protected = 1<<1,
+  Package   = 1<<2,
+  Public    = 1<<3
+}
+
+class BaseClass
+{
+  Protection prot;
+  string ident;
+  this(Protection prot, string ident)
+  {
+    this.prot = prot;
+    this.ident = ident;
+  }
+}
+
+class ClassDeclaration : Declaration
+{
+  string className;
+  BaseClass[] bases;
+  Declaration[] decls;
+  this(string className, BaseClass[] bases, Declaration[] decls)
+  {
+    this.className = className;
+    this.bases = bases;
+    this.decls = decls;
+  }
+}

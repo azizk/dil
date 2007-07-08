@@ -156,10 +156,16 @@ class Parser
       //goto case T.Import;
     case T.Import:
       decl = parseImportDeclaration();
+      break;
     case T.Enum:
       decl = parseEnumDeclaration();
+      break;
+    case T.Class:
+      decl = parseClassDeclaration();
+      break;
     case T.Module:
       // Error: module is optional and can only appear once at the top of the source file.
+      break;
     default:
     }
     return null;
@@ -210,6 +216,8 @@ class Parser
       baseType = parseBasicType();
     }
 
+//     if (token.type == T.Semicolon && ident.length == 0)
+      // error
     if (token.type == T.LBrace)
     {
       nT();
@@ -240,6 +248,88 @@ class Parser
     }
 
     return new EnumDeclaration(enumName, baseType, members, values);
+  }
+
+  Declaration parseClassDeclaration()
+  {
+    assert(token.type == T.Class);
+
+    string className;
+    BaseClass[] bases;
+    Declaration[] decls;
+
+    nT();
+    if (token.type == T.Identifier)
+    {
+      className = token.identifier;
+      nT();
+    }
+    else
+      errorIfNot(T.Identifier);
+
+    if (token.type == T.LParen)
+    {
+      // TODO: parse template parameters
+    }
+
+    if (token.type == T.Colon)
+      bases = parseBaseClasses();
+
+    if (token.type == T.Semicolon)
+    {
+      //if (bases.length != 0)
+        // error: bases classes are not allowed in forward declarations.
+      nT();
+    }
+    else if (token.type == T.LBrace)
+    {
+      nT();
+      decls = parseDeclarations();
+      require(T.RBrace);
+    }
+    else
+      errorIfNot(T.LBrace); // TODO: better error msg
+
+    return new ClassDeclaration(className, bases, decls);
+  }
+
+  BaseClass[] parseBaseClasses()
+  {
+    assert(token.type == T.Colon);
+
+    BaseClass[] bases;
+    Protection prot;
+
+    nT();
+
+    while (1)
+    {
+      prot = Protection.Public;
+      switch (token.type)
+      {
+      case T.Identifier: goto LisIdentifier;
+      case T.Private:   prot = Protection.Private;   break;
+      case T.Protected: prot = Protection.Protected; break;
+      case T.Package:   prot = Protection.Package;   break;
+      case T.Public:  /*prot = Protection.Public;*/  break;
+      //case T.Dot: // What about "class Foo : .Bar"?
+      default:
+        // TODO: issue error msg
+        return bases;
+      }
+      nT();
+      string ident;
+      if (token.type == T.Identifier)
+      {
+      LisIdentifier:
+        ident = token.identifier;
+        nT();
+      }
+      bases ~= new BaseClass(prot, ident);
+      if (token.type != T.Comma)
+        break;
+    }
+    return bases;
   }
 
   /+++++++++++++++++++++++++++++
