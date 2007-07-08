@@ -111,20 +111,20 @@ class Parser
       require(T.Semicolon);
       decls ~= new ModuleDeclaration(idents);
     }
-    decls ~= parseDeclarations();
+    decls ~= parseDeclarationDefinitions();
   Lreturn:
     return decls;
   }
 
-  Declaration[] parseDeclarations()
+  Declaration[] parseDeclarationDefinitions()
   {
     Declaration[] decls;
     while (token.type != T.EOF)
-      decls ~= parseDeclaration();
+      decls ~= parseDeclarationDefinitions();
     return decls;
   }
 
-  Declaration parseDeclaration()
+  Declaration parseDeclarationDefinition()
   {
     Declaration decl;
     switch (token.type)
@@ -284,7 +284,7 @@ class Parser
     else if (token.type == T.LBrace)
     {
       nT();
-      decls = parseDeclarations();
+      decls = parseDeclarationDefinitions();
       require(T.RBrace);
     }
     else
