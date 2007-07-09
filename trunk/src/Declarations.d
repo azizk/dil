@@ -11,12 +11,29 @@ class Declaration
 
 }
 
+alias string[] ModuleName; // Identifier(.Identifier)*
+
 class ModuleDeclaration : Declaration
 {
-  string[] idents; // module name sits at end of array
-  this(string[] idents)
+  ModuleName moduleName; // module name sits at end of array
+  this(ModuleName moduleName)
   {
-    this.idents = idents;
+    this.moduleName = moduleName;
+  }
+}
+
+class ImportDeclaration : Declaration
+{
+  ModuleName[] moduleNames;
+  string[] moduleAliases;
+  string[] bindNames;
+  string[] bindAliases;
+  this(ModuleName[] moduleNames, string[] moduleAliases, string[] bindNames, string[] bindAliases)
+  {
+    this.moduleNames = moduleNames;
+    this.moduleAliases = moduleAliases;
+    this.bindNames = bindNames;
+    this.bindAliases = bindAliases;
   }
 }
 

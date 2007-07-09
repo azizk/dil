@@ -196,7 +196,104 @@ class Parser
       nT();
     }
 
-    return decl;
+    ModuleName[] moduleNames;
+    string[] moduleAliases;
+    string[] bindNames;
+    string[] bindAliases;
+
+    do
+    {
+      ModuleName moduleName;
+      string moduleAlias;
+
+      if (token.type == T.Identifier)
+      {
+        moduleAlias = token.identifier;
+        nT();
+      }
+      else
+        errorIfNot(T.Identifier); // TODO: better error msg
+
+      // import Identifier [^=]
+      if (token.type != T.Assign)
+      {
+        moduleName ~= moduleAlias;
+        moduleAlias = null;
+      }
+      else
+      {
+        nT();
+        // AliasName = ModuleName
+        if (token.type == T.Identifier)
+        {
+          moduleName ~= token.identifier;
+          nT();
+        }
+        else
+          errorIfNot(T.Identifier);
+      }
+
+      // parse Identifier(.Identifier)*
+      while (token.type == T.Dot)
+      {
+        nT();
+        if (token.type == T.Identifier)
+        {
+          moduleName ~= token.identifier;
+          nT();
+        }
+        else
+          errorIfNot(T.Identifier);
+      }
+
+      // Push identifiers.
+      moduleNames ~= moduleName;
+      moduleAliases ~= moduleAlias;
+
+      // parse : BindAlias = BindName(, BindAlias = BindName)*;
+      //       : BindName(, BindName)*;
+      if (token.type == T.Colon)
+      {
+        string bindName, bindAlias;
+        do
+        {
+          nT();
+          if (token.type == T.Identifier)
+          {
+            bindAlias = token.identifier;
+            nT();
+          }
+          else
+            errorIfNot(T.Identifier);
+
+          if (token.type == T.Assign)
+          {
+            nT();
+            if (token.type == T.Identifier)
+            {
+              bindName = token.identifier;
+              nT();
+            }
+            else
+              errorIfNot(T.Identifier);
+          }
+          else
+          {
+            bindName = bindAlias;
+            bindAlias = null;
+          }
+
+          // Push identifiers.
+          bindNames ~= bindName;
+          bindAliases ~= bindAlias;
+
+        } while (token.type == T.Comma)
+        break;
+      }
+    } while (token.type == T.Comma)
+    require(T.Semicolon);
+
+    return new ImportDeclaration(moduleNames, moduleAliases, bindNames, bindAliases);
   }
 
   Declaration parseEnumDeclaration()
