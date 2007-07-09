@@ -90,28 +90,16 @@ class Parser
 
     if (token.type == T.Module)
     {
-      nT();
-      string[] idents;
+      ModuleName moduleName;
       do
       {
         nT();
-        if (token.type == T.Identifier)
-        {
-          idents ~= token.identifier;
-          nT();
-        }
-        else
-        {
-          errorIfNot(T.Identifier);
-          skipToOnePast(T.Semicolon);
-          goto Lreturn;
-        }
+        moduleName ~= requireIdentifier();
       } while (token.type == T.Dot)
       require(T.Semicolon);
-      decls ~= new ModuleDeclaration(idents);
+      decls ~= new ModuleDeclaration(moduleName);
     }
     decls ~= parseDeclarationDefinitions();
-  Lreturn:
     return decls;
   }
 
@@ -201,49 +189,32 @@ class Parser
     string[] bindNames;
     string[] bindAliases;
 
+    nT(); // Skip import keyword.
     do
     {
       ModuleName moduleName;
       string moduleAlias;
 
-      if (token.type == T.Identifier)
-      {
-        moduleAlias = token.identifier;
-        nT();
-      }
-      else
-        errorIfNot(T.Identifier); // TODO: better error msg
+      moduleAlias = requireIdentifier();
 
-      // import Identifier [^=]
-      if (token.type != T.Assign)
+      // AliasName = ModuleName
+      if (token.type == T.Assign)
+      {
+        nT();
+        moduleName ~= requireIdentifier();
+      }
+      else // import Identifier [^=]
       {
         moduleName ~= moduleAlias;
         moduleAlias = null;
       }
-      else
-      {
-        nT();
-        // AliasName = ModuleName
-        if (token.type == T.Identifier)
-        {
-          moduleName ~= token.identifier;
-          nT();
-        }
-        else
-          errorIfNot(T.Identifier);
-      }
+
 
       // parse Identifier(.Identifier)*
       while (token.type == T.Dot)
       {
         nT();
-        if (token.type == T.Identifier)
-        {
-          moduleName ~= token.identifier;
-          nT();
-        }
-        else
-          errorIfNot(T.Identifier);
+        moduleName ~= requireIdentifier();
       }
 
       // Push identifiers.
@@ -258,24 +229,12 @@ class Parser
         do
         {
           nT();
-          if (token.type == T.Identifier)
-          {
-            bindAlias = token.identifier;
-            nT();
-          }
-          else
-            errorIfNot(T.Identifier);
+          bindAlias = requireIdentifier();
 
           if (token.type == T.Assign)
           {
             nT();
-            if (token.type == T.Identifier)
-            {
-              bindName = token.identifier;
-              nT();
-            }
-            else
-              errorIfNot(T.Identifier);
+            bindName = requireIdentifier();
           }
           else
           {
@@ -305,12 +264,8 @@ class Parser
     string[] members;
     Expression[] values;
 
-    nT();
-    if (token.type == T.Identifier)
-    {
-      enumName = token.identifier;
-      nT();
-    }
+    nT(); // Skip enum keyword.
+    enumName = requireIdentifier();
 
     if (token.type == T.Colon)
     {
@@ -318,25 +273,23 @@ class Parser
       baseType = parseBasicType();
     }
 
-//     if (token.type == T.Semicolon && ident.length == 0)
-      // error
-    if (token.type == T.LBrace)
+    if (token.type == T.Semicolon)
+    {
+      //if (ident.length == 0)
+        // TODO: issue error msg
+      nT();
+    }
+    else if (token.type == T.LBrace)
     {
       nT();
       do
       {
-        if (token.type == T.Identifier)
-        {
-          members ~= token.identifier;
-          nT();
-        }
-        else
-          errorIfNot(T.Identifier);
+        members ~= requireIdentifier();
 
         if (token.type == T.Assign)
         {
-          values ~= parseAssignExpression();
           nT();
+          values ~= parseAssignExpression();
         }
         else
           values ~= null;
@@ -344,7 +297,10 @@ class Parser
         if (token.type == T.Comma)
           nT();
         else if (token.type != T.RBrace)
+        {
           errorIfNot(T.RBrace);
+          break;
+        }
       } while (token.type != T.RBrace)
       nT();
     }
@@ -360,14 +316,8 @@ class Parser
     BaseClass[] bases;
     Declaration[] decls;
 
-    nT();
-    if (token.type == T.Identifier)
-    {
-      className = token.identifier;
-      nT();
-    }
-    else
-      errorIfNot(T.Identifier);
+    nT(); // Skip class keyword.
+    className = requireIdentifier();
 
     if (token.type == T.LParen)
     {
@@ -386,6 +336,7 @@ class Parser
     else if (token.type == T.LBrace)
     {
       nT();
+      // TODO: think about setting a member status variable to a flag InClassBody... this way we can check for DeclDefs that are illegal in class bodies in the parsing phase.
       decls = parseDeclarationDefinitions();
       require(T.RBrace);
     }
@@ -430,6 +381,8 @@ class Parser
         nT();
         // TODO: handle template instantiations: class Foo : Bar!(int)
       }
+      else
+        errorIfNot(T.Identifier);
       bases ~= new BaseClass(prot, ident);
       if (token.type != T.Comma)
         break;
@@ -445,14 +398,8 @@ class Parser
     BaseClass[] bases;
     Declaration[] decls;
 
-    nT();
-    if (token.type == T.Identifier)
-    {
-      name = token.identifier;
-      nT();
-    }
-    else
-      errorIfNot(T.Identifier);
+    nT(); // Skip interface keyword.
+    name = requireIdentifier();
 
     if (token.type == T.LParen)
     {
@@ -465,7 +412,7 @@ class Parser
     if (token.type == T.Semicolon)
     {
       //if (bases.length != 0)
-        // error: bases classes are not allowed in forward declarations.
+        // TODO: error: base classes are not allowed in forward declarations.
       nT();
     }
     else if (token.type == T.LBrace)
@@ -491,20 +438,24 @@ class Parser
     string name;
     Declaration[] decls;
 
-    nT();
+    nT(); // Skip struct or union keyword.
+    // name is optional.
     if (token.type == T.Identifier)
     {
       name = token.identifier;
       nT();
-    }
-
-    if (token.type == T.LParen)
-    {
-      // TODO: parse template parameters
+      if (token.type == T.LParen)
+      {
+        // TODO: parse template parameters
+      }
     }
 
     if (token.type == T.Semicolon)
+    {
+      //if (name.length == 0)
+        // TODO: error: forward declarations must have a name.
       nT();
+    }
     else if (token.type == T.LBrace)
     {
       nT();
@@ -799,14 +750,7 @@ class Parser
       auto type = parseType();
       require(T.RParen);
       require(T.Dot);
-      string ident;
-      if (token.type == T.Identifier)
-      {
-        ident = token.identifier;
-        nT();
-      }
-      else
-        errorIfNot(T.Identifier);
+      string ident = requireIdentifier();
       e = new TypeDotIdExpression(type, ident);
       break;
     default:
@@ -1039,19 +983,12 @@ class Parser
       auto type = new TypeofType(parseExpression());
       require(T.RParen);
       if (token.type == T.Dot)
-      {
+      { // typeof ( Expression ) . Identifier
         nT();
-        string ident;
-        if (token.type == T.Identifier)
-        {
-          ident = token.identifier;
-          nT();
-        }
-        else
-          errorIfNot(T.Identifier);
+        string ident = requireIdentifier;
         e = new TypeDotIdExpression(type, ident);
       }
-      else
+      else // typeof ( Expression )
         e = new TypeofExpression(type);
       break;
     case T.Is:
@@ -1105,17 +1042,8 @@ class Parser
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal:
       auto type = new Type(token.type);
-
       requireNext(T.Dot);
-
-      string ident;
-      if (token.type == T.Identifier)
-      {
-        ident = token.identifier;
-        nT();
-      }
-      else
-        errorIfNot(T.Identifier);
+      auto ident = requireIdentifier();
 
       e = new TypeDotIdExpression(type, ident);
       break;
@@ -1184,13 +1112,7 @@ class Parser
       while (token.type == T.Dot)
       {
         nT();
-        if (token.type == T.Identifier)
-        {
-          tident ~= token.identifier;
-          nT();
-        }
-        else
-          errorIfNot(T.Identifier);
+        tident ~= requireIdentifier();
       // TODO: parse template instance
 //       if (token.type == T.Not)
 //         parse template instance
@@ -1395,6 +1317,19 @@ class Parser
       nT();
     else
       error(MID.ExpectedButFound, tok, token.srcText);
+  }
+
+  string requireIdentifier()
+  {
+    string identifier;
+    if (token.type == T.Identifier)
+    {
+      identifier = token.identifier;
+      nT();
+    }
+    else
+      error(MID.ExpectedButFound, "Identifier", token.srcText);
+    return identifier;
   }
 
   void error(MID id, ...)
