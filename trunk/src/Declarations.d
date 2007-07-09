@@ -183,3 +183,13 @@ class InvariantDeclaration : Declaration
     this.statements = statements;
   }
 }
+
+class UnittestDeclaration : Declaration
+{
+  Statement[] statements;
+  this(Statement[] statements)
+  {
+    super(true);
+    this.statements = statements;
+  }
+}

@@ -146,6 +146,9 @@ class Parser
     case T.Invariant:
       decl = parseInvariantDeclaration();
       break;
+    case T.Unittest:
+      decl = parseUnittestDeclaration();
+      break;
     case T.Module:
       // Error: module is optional and can only appear once at the top of the source file.
       break;
@@ -540,6 +543,17 @@ class Parser
     auto statements = parseStatements();
     require(T.RBrace);
     return new InvariantDeclaration(statements);
+  }
+
+  Declaration parseUnittestDeclaration()
+  {
+    assert(token.type == T.Unittest);
+
+    nT();
+    require(T.LBrace);
+    auto statements = parseStatements();
+    require(T.RBrace);
+    return new UnittestDeclaration(statements);
   }
 
   /+++++++++++++++++++++++++++++
