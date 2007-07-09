@@ -8,7 +8,11 @@ import Types;
 
 class Declaration
 {
-
+  bool hasDefinition;
+  this(bool hasDefinition)
+  {
+    this.hasDefinition = hasDefinition;
+  }
 }
 
 alias string[] ModuleName; // Identifier(.Identifier)*
@@ -18,6 +22,7 @@ class ModuleDeclaration : Declaration
   ModuleName moduleName; // module name sits at end of array
   this(ModuleName moduleName)
   {
+    super(false);
     this.moduleName = moduleName;
   }
 }
@@ -30,6 +35,7 @@ class ImportDeclaration : Declaration
   string[] bindAliases;
   this(ModuleName[] moduleNames, string[] moduleAliases, string[] bindNames, string[] bindAliases)
   {
+    super(false);
     this.moduleNames = moduleNames;
     this.moduleAliases = moduleAliases;
     this.bindNames = bindNames;
@@ -43,8 +49,9 @@ class EnumDeclaration : Declaration
   Type baseType;
   string[] members;
   Expression[] values;
-  this(string name, Type baseType, string[] members, Expression[] values)
+  this(string name, Type baseType, string[] members, Expression[] values, bool hasDefinition)
   {
+    super(hasDefinition);
     this.name = name;
     this.baseType = baseType;
     this.members = members;
@@ -64,11 +71,11 @@ enum Protection
 class BaseClass
 {
   Protection prot;
-  string ident;
-  this(Protection prot, string ident)
+  string name;
+  this(Protection prot, string name)
   {
     this.prot = prot;
-    this.ident = ident;
+    this.name = name;
   }
 }
 
@@ -77,8 +84,9 @@ class ClassDeclaration : Declaration
   string name;
   BaseClass[] bases;
   Declaration[] decls;
-  this(string name, BaseClass[] bases, Declaration[] decls)
+  this(string name, BaseClass[] bases, Declaration[] decls, bool hasDefinition)
   {
+    super(hasDefinition);
     this.name = name;
     this.bases = bases;
     this.decls = decls;
@@ -90,8 +98,9 @@ class InterfaceDeclaration : Declaration
   string name;
   BaseClass[] bases;
   Declaration[] decls;
-  this(string name, BaseClass[] bases, Declaration[] decls)
+  this(string name, BaseClass[] bases, Declaration[] decls, bool hasDefinition)
   {
+    super(hasDefinition);
     this.name = name;
     this.bases = bases;
     this.decls = decls;
@@ -102,8 +111,9 @@ class StructDeclaration : Declaration
 {
   string name;
   Declaration[] decls;
-  this(string name, Declaration[] decls)
+  this(string name, Declaration[] decls, bool hasDefinition)
   {
+    super(hasDefinition);
     this.name = name;
     this.decls = decls;
   }
@@ -113,8 +123,9 @@ class UnionDeclaration : Declaration
 {
   string name;
   Declaration[] decls;
-  this(string name, Declaration[] decls)
+  this(string name, Declaration[] decls, bool hasDefinition)
   {
+    super(hasDefinition);
     this.name = name;
     this.decls = decls;
   }
