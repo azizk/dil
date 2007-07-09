@@ -766,6 +766,7 @@ class Parser
     }
 
     require(T.RParen);
+    require(T.Semicolon);
 
     return new StaticAssertDeclaration(condition, message);
   }
