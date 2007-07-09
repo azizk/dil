@@ -12,32 +12,6 @@ import Statements;
 import Expressions;
 import Types;
 
-class Parameter
-{
-  StorageClass stc;
-  Type type;
-  string ident;
-  Expression assignExpr;
-
-  this(StorageClass stc, Type type, string ident, Expression assignExpr)
-  {
-    this.stc = stc;
-    this.type = type;
-    this.ident = ident;
-    this.assignExpr = assignExpr;
-  }
-
-  bool isVariadic()
-  {
-    return !!(stc & StorageClass.Variadic);
-  }
-
-  bool isOnlyVariadic()
-  {
-    return stc == StorageClass.Variadic;
-  }
-}
-
 private alias TOK T;
 
 class Parser
@@ -156,11 +130,19 @@ class Parser
     case T.Struct, T.Union:
       decl = parseAggregateDeclaration();
       break;
+    case T.This:
+      decl = parseConstructorDeclaration();
+      break;
     case T.Module:
       // Error: module is optional and can only appear once at the top of the source file.
       break;
     default:
     }
+    return null;
+  }
+
+  Statement[] parseStatements()
+  {
     return null;
   }
 
@@ -357,13 +339,13 @@ class Parser
     assert(token.type == T.Colon);
 
     BaseClass[] bases;
-    Protection prot;
 
-    nT();
+    nT(); // Skip colon
 
     while (1)
     {
-      prot = Protection.Public;
+      Protection prot = Protection.Public;
+      string name;
       switch (token.type)
       {
       case T.Identifier: goto LisIdentifier;
@@ -377,17 +359,16 @@ class Parser
         return bases;
       }
       nT();
-      string ident;
       if (token.type == T.Identifier)
       {
       LisIdentifier:
-        ident = token.identifier;
+        name = token.identifier;
         nT();
         // TODO: handle template instantiations: class Foo : Bar!(int)
       }
       else
         errorIfNot(T.Identifier);
-      bases ~= new BaseClass(prot, ident);
+      bases ~= new BaseClass(prot, name);
       if (token.type != T.Comma)
         break;
     }
@@ -479,6 +460,17 @@ class Parser
       return new StructDeclaration(name, decls, hasDefinition);
     else
       return new UnionDeclaration(name, decls, hasDefinition);
+  }
+
+  Declaration parseConstructorDeclaration()
+  {
+    assert(token.type == T.This);
+    nT(); // Skip 'this' keyword.
+    auto parameters = parseParameters();
+    require(T.LBrace);
+    auto statements = parseStatements();
+    require(T.RBrace);
+    return new ConstructorDeclaration(parameters, statements);
   }
 
   /+++++++++++++++++++++++++++++
@@ -1236,13 +1228,13 @@ class Parser
     return t;
   }
 
-  Parameter[] parseParameters()
-  out(args)
+  Parameters parseParameters()
+  out(params)
   {
-    if (args.length > 1)
-      foreach (arg; args[0..$-1])
+    if (params.length > 1)
+      foreach (param; params.items[0..$-1])
       {
-        if (arg.isVariadic())
+        if (param.isVariadic())
           assert(0, "variadic arguments can only appear at the end of the parameter list.");
       }
   }
@@ -1253,10 +1245,10 @@ class Parser
     if (token.type == T.RParen)
     {
       nT();
-      return null;
+      return Parameters.init;
     }
 
-    Parameter[] args;
+    Parameters params;
     StorageClass stc;
 
     while (1)
@@ -1269,7 +1261,7 @@ class Parser
       case T.Ref:  stc = StorageClass.Ref;  nT(); goto default;
       case T.Lazy: stc = StorageClass.Lazy; nT(); goto default;
       case T.Ellipses:
-        args ~= new Parameter(StorageClass.Variadic, null, null, null);
+        params ~= new Parameter(StorageClass.Variadic, null, null, null);
         break;
       default:
         string ident;
@@ -1285,12 +1277,12 @@ class Parser
         if (token.type == T.Ellipses)
         {
           stc |= StorageClass.Variadic;
-          args ~= new Parameter(stc, type, ident, assignExpr);
+          params ~= new Parameter(stc, type, ident, assignExpr);
           nT();
           break;
         }
 
-        args ~= new Parameter(stc, type, ident, assignExpr);
+        params ~= new Parameter(stc, type, ident, assignExpr);
         if (token.type == T.Comma)
         {
           nT();
@@ -1301,7 +1293,7 @@ class Parser
       break;
     }
     require(T.RParen);
-    return args;
+    return params;
   }
 
   void errorIfNot(TOK tok)

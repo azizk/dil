@@ -5,6 +5,7 @@
 module Declarations;
 import Expressions;
 import Types;
+import Statements;
 
 class Declaration
 {
@@ -128,5 +129,17 @@ class UnionDeclaration : Declaration
     super(hasDefinition);
     this.name = name;
     this.decls = decls;
+  }
+}
+
+class ConstructorDeclaration : Declaration
+{
+  Parameters parameters;
+  Statement[] statements;
+  this(Parameters parameters, Statement[] statements)
+  {
+    super(true);
+    this.parameters = parameters;
+    this.statements = statements;
   }
 }

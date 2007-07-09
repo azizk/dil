@@ -27,6 +27,50 @@ enum StorageClass
   Variadic     = 1<<16,
 }
 
+class Parameter
+{
+  StorageClass stc;
+  Type type;
+  string ident;
+  Expression assignExpr;
+
+  this(StorageClass stc, Type type, string ident, Expression assignExpr)
+  {
+    this.stc = stc;
+    this.type = type;
+    this.ident = ident;
+    this.assignExpr = assignExpr;
+  }
+
+  bool isVariadic()
+  {
+    return !!(stc & StorageClass.Variadic);
+  }
+
+  bool isOnlyVariadic()
+  {
+    return stc == StorageClass.Variadic;
+  }
+}
+
+struct Parameters
+{
+  Parameter[] items;
+
+  bool hasVariadic()
+  {
+    if (items.length != 0)
+      return items[$-1].isVariadic();
+    return false;
+  }
+
+  void opCatAssign(Parameter param)
+  { items ~= param; }
+
+  size_t length()
+  { return items.length; }
+}
+
 class Type
 {
   TOK type;
