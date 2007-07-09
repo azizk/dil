@@ -143,3 +143,13 @@ class ConstructorDeclaration : Declaration
     this.statements = statements;
   }
 }
+
+class DestructorDeclaration : Declaration
+{
+  Statement[] statements;
+  this(Statement[] statements)
+  {
+    super(true);
+    this.statements = statements;
+  }
+}

@@ -133,6 +133,9 @@ class Parser
     case T.This:
       decl = parseConstructorDeclaration();
       break;
+    case T.Tilde:
+      decl = parseDestructorDeclaration();
+      break;
     case T.Module:
       // Error: module is optional and can only appear once at the top of the source file.
       break;
@@ -471,6 +474,19 @@ class Parser
     auto statements = parseStatements();
     require(T.RBrace);
     return new ConstructorDeclaration(parameters, statements);
+  }
+
+  Declaration parseDestructorDeclaration()
+  {
+    assert(token.type == T.Tilde);
+    nT(); // Skip ~
+    require(T.This);
+    require(T.LParen);
+    require(T.RParen);
+    require(T.LBrace);
+    auto statements = parseStatements();
+    require(T.RBrace);
+    return new DestructorDeclaration(statements);
   }
 
   /+++++++++++++++++++++++++++++
