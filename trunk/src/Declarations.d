@@ -233,3 +233,16 @@ class VersionDeclaration : Declaration
     this.elseDecls = elseDecls;
   }
 }
+
+class StaticIfDeclaration : Declaration
+{
+  Expression condition;
+  Declaration[] ifDecls, elseDecls;
+  this(Expression condition, Declaration[] ifDecls, Declaration[] elseDecls)
+  {
+    super(true);
+    this.condition = condition;
+    this.ifDecls = ifDecls;
+    this.elseDecls = elseDecls;
+  }
+}

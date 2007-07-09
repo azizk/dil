@@ -113,14 +113,22 @@ class Parser
       Token t;
       lx.peek(t);
 
-      if (t.type == T.Import)
+      switch (t.type)
+      {
+      case T.Import:
         goto case T.Import;
-      else if (t.type == T.This)
+      case T.This:
         decl = parseStaticConstructorDeclaration();
-      else if (t.type == T.Tilde)
+        break;
+      case T.Tilde:
         decl = parseStaticDestructorDeclaration();
-      else
+        break;
+      case T.If:
+        decl = parseStaticIfDeclaration();
+        break;
+      default:
         goto case_AttributeSpecifier;
+      }
       break;
     case T.Import:
       decl = parseImportDeclaration();
@@ -702,6 +710,37 @@ class Parser
     }
 
     return new VersionDeclaration(levelSpec, identSpec, levelCond, identCond, decls, elseDecls);
+  }
+
+  Declaration parseStaticIfDeclaration()
+  {
+    assert(token.type == T.Static);
+
+    nT(); // Skip static keyword.
+    nT(); // Skip if keyword.
+
+    Expression condition;
+    Declaration[] ifDecls, elseDecls;
+
+    require(T.LParen);
+    condition = parseAssignExpression();
+    require(T.RParen);
+
+    if (token.type != T.Colon)
+      ifDecls = parseDeclarationsBlock();
+    else
+      expected(T.LBrace); // TODO: better error msg
+
+    if (token.type == T.Else)
+    {
+      nT();
+      if (token.type != T.Colon)
+        elseDecls = parseDeclarationsBlock();
+      else
+        expected(T.LBrace); // TODO: better error msg
+    }
+
+    return new StaticIfDeclaration(condition, ifDecls, elseDecls);
   }
 
   /+++++++++++++++++++++++++++++
