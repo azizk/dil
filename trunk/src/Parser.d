@@ -184,6 +184,7 @@ class Parser
     case T.Colon:
       nT();
       decls = parseDeclarationDefinitions();
+      assert(token.type == T.RBrace || token.type == T.EOF);
       break;
     default:
       decls ~= parseDeclarationDefinition();
@@ -599,60 +600,108 @@ class Parser
     string identCond;   // debug ( Identifier )
     Declaration[] decls, elseDecls;
 
-    if (token.type == T.Assign)
+    void parseIdentOrInt(ref string ident, ref int level)
     {
       nT();
       if (token.type == T.Int32)
-        levelSpec = token.int_;
+        level = token.int_;
       else if (token.type == T.Identifier)
-        identSpec = token.identifier;
+        ident = token.identifier;
       else
         errorIfNot(T.Identifier); // TODO: better error msg
       nT();
+    }
+
+    if (token.type == T.Assign)
+    {
+      parseIdentOrInt(identSpec, levelSpec);
       require(T.Semicolon);
     }
     else
     {
-      // '(' (Identifier | Integer) ')'
+      // Condition:
+      //     Integer
+      //     Identifier
+      // ( Condition )
       if (token.type == T.LParen)
       {
-        nT();
-        if (token.type == T.Int32)
-          levelCond = token.int_;
-        else if (token.type == T.Identifier)
-          identCond = token.identifier;
-        else
-          errorIfNot(T.Identifier); // TODO: better error msg
-        nT();
+        parseIdentOrInt(identCond, levelCond);
         require(T.RParen);
       }
 
-      if (token.type == T.Colon)
-      {
-        // debug:
-        // "debug" '(' (Identifier | Integer) ')':
-        nT();
-        decls = parseDeclarationDefinitions();
-      }
-      else
-      {
-        // debug DeclarationsBlock
-        // "debug" '(' (Identifier | Integer) ')' DeclarationsBlock
-        decls = parseDeclarationsBlock();
+      // debug DeclarationsBlock
+      // debug ( Condition ) DeclarationsBlock
+      decls = parseDeclarationsBlock();
 
-        // else DeclarationsBlock
-        // debug without condition and else statement makes no sense
-        if (token.type == T.Else && (levelCond != -1 || identCond.length != 0))
-        {
-          nT();
-          //if (token.type == T.Colon)
-            // TODO: avoid "else:"?
-          elseDecls = parseDeclarationsBlock();
-        }
+      // else DeclarationsBlock
+      // debug without condition and else statement makes no sense
+      if (token.type == T.Else && (levelCond != -1 || identCond.length != 0))
+      {
+        nT();
+        //if (token.type == T.Colon)
+          // TODO: avoid "else:"?
+        elseDecls = parseDeclarationsBlock();
       }
+//       else
+        // TODO: issue error msg
     }
 
     return new DebugDeclaration(levelSpec, identSpec, levelCond, identCond, decls, elseDecls);
+  }
+
+  Declaration parseVersionDeclaration()
+  {
+    assert(token.type == T.Debug);
+
+    nT(); // Skip debug keyword.
+
+    int levelSpec = -1; // version = Integer ;
+    string identSpec;   // version = Identifier ;
+    int levelCond = -1; // version ( Integer )
+    string identCond;   // version ( Identifier )
+    Declaration[] decls, elseDecls;
+
+    void parseIdentOrInt(ref string ident, ref int level)
+    {
+      nT();
+      if (token.type == T.Int32)
+        level = token.int_;
+      else if (token.type == T.Identifier)
+        ident = token.identifier;
+      else
+        errorIfNot(T.Identifier); // TODO: better error msg
+      nT();
+    }
+
+    if (token.type == T.Assign)
+    {
+      parseIdentOrInt(identSpec, levelSpec);
+      require(T.Semicolon);
+    }
+    else
+    {
+      // Condition:
+      //     Integer
+      //     Identifier
+      // ( Condition )
+      require(T.LParen);
+      parseIdentOrInt(identCond, levelCond);
+      require(T.RParen);
+
+      // version ( Condition ) DeclarationsBlock
+      decls = parseDeclarationsBlock();
+
+      // else DeclarationsBlock
+      if (token.type == T.Else)
+      {
+        nT();
+        //if (token.type == T.Colon)
+          // TODO: avoid "else:"?
+        elseDecls = parseDeclarationsBlock();
+      }
+    }
+
+    return new VersionDeclaration(levelSpec, identSpec, levelCond, identCond, decls, elseDecls);
   }
 
   /+++++++++++++++++++++++++++++
