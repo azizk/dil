@@ -9,10 +9,10 @@ import Statements;
 
 class Declaration
 {
-  bool hasDefinition;
-  this(bool hasDefinition)
+  bool hasBody;
+  this(bool hasBody)
   {
-    this.hasDefinition = hasDefinition;
+    this.hasBody = hasBody;
   }
 }
 
@@ -50,9 +50,9 @@ class EnumDeclaration : Declaration
   Type baseType;
   string[] members;
   Expression[] values;
-  this(string name, Type baseType, string[] members, Expression[] values, bool hasDefinition)
+  this(string name, Type baseType, string[] members, Expression[] values, bool hasBody)
   {
-    super(hasDefinition);
+    super(hasBody);
     this.name = name;
     this.baseType = baseType;
     this.members = members;
@@ -85,9 +85,9 @@ class ClassDeclaration : Declaration
   string name;
   BaseClass[] bases;
   Declaration[] decls;
-  this(string name, BaseClass[] bases, Declaration[] decls, bool hasDefinition)
+  this(string name, BaseClass[] bases, Declaration[] decls, bool hasBody)
   {
-    super(hasDefinition);
+    super(hasBody);
     this.name = name;
     this.bases = bases;
     this.decls = decls;
@@ -99,9 +99,9 @@ class InterfaceDeclaration : Declaration
   string name;
   BaseClass[] bases;
   Declaration[] decls;
-  this(string name, BaseClass[] bases, Declaration[] decls, bool hasDefinition)
+  this(string name, BaseClass[] bases, Declaration[] decls, bool hasBody)
   {
-    super(hasDefinition);
+    super(hasBody);
     this.name = name;
     this.bases = bases;
     this.decls = decls;
@@ -112,9 +112,9 @@ class StructDeclaration : Declaration
 {
   string name;
   Declaration[] decls;
-  this(string name, Declaration[] decls, bool hasDefinition)
+  this(string name, Declaration[] decls, bool hasBody)
   {
-    super(hasDefinition);
+    super(hasBody);
     this.name = name;
     this.decls = decls;
   }
@@ -124,9 +124,9 @@ class UnionDeclaration : Declaration
 {
   string name;
   Declaration[] decls;
-  this(string name, Declaration[] decls, bool hasDefinition)
+  this(string name, Declaration[] decls, bool hasBody)
   {
-    super(hasDefinition);
+    super(hasBody);
     this.name = name;
     this.decls = decls;
   }

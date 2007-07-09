@@ -304,7 +304,7 @@ class Parser
     Type baseType;
     string[] members;
     Expression[] values;
-    bool hasDefinition;
+    bool hasBody;
 
     nT(); // Skip enum keyword.
     enumName = requireIdentifier();
@@ -323,7 +323,7 @@ class Parser
     }
     else if (token.type == T.LBrace)
     {
-      hasDefinition = true;
+      hasBody = true;
       nT();
       do
       {
@@ -348,7 +348,7 @@ class Parser
       nT();
     }
 
-    return new EnumDeclaration(enumName, baseType, members, values, hasDefinition);
+    return new EnumDeclaration(enumName, baseType, members, values, hasBody);
   }
 
   Declaration parseClassDeclaration()
@@ -358,7 +358,7 @@ class Parser
     string className;
     BaseClass[] bases;
     Declaration[] decls;
-    bool hasDefinition;
+    bool hasBody;
 
     nT(); // Skip class keyword.
     className = requireIdentifier();
@@ -379,7 +379,7 @@ class Parser
     }
     else if (token.type == T.LBrace)
     {
-      hasDefinition = true;
+      hasBody = true;
       nT();
       // TODO: think about setting a member status variable to a flag InClassBody... this way we can check for DeclDefs that are illegal in class bodies in the parsing phase.
       decls = parseDeclarationDefinitions();
@@ -390,7 +390,7 @@ class Parser
 
     // TODO: error if decls.length == 0
 
-    return new ClassDeclaration(className, bases, decls, hasDefinition);
+    return new ClassDeclaration(className, bases, decls, hasBody);
   }
 
   BaseClass[] parseBaseClasses()
@@ -441,7 +441,7 @@ class Parser
     string name;
     BaseClass[] bases;
     Declaration[] decls;
-    bool hasDefinition;
+    bool hasBody;
 
     nT(); // Skip interface keyword.
     name = requireIdentifier();
@@ -462,7 +462,7 @@ class Parser
     }
     else if (token.type == T.LBrace)
     {
-      hasDefinition = true;
+      hasBody = true;
       nT();
       decls = parseDeclarationDefinitions();
       require(T.RBrace);
@@ -472,7 +472,7 @@ class Parser
 
     // TODO: error if decls.length == 0
 
-    return new InterfaceDeclaration(name, bases, decls, hasDefinition);
+    return new InterfaceDeclaration(name, bases, decls, hasBody);
   }
 
   Declaration parseAggregateDeclaration()
@@ -483,7 +483,7 @@ class Parser
 
     string name;
     Declaration[] decls;
-    bool hasDefinition;
+    bool hasBody;
 
     nT(); // Skip struct or union keyword.
     // name is optional.
@@ -505,7 +505,7 @@ class Parser
     }
     else if (token.type == T.LBrace)
     {
-      hasDefinition = true;
+      hasBody = true;
       nT();
       decls = parseDeclarationDefinitions();
       require(T.RBrace);
@@ -516,9 +516,9 @@ class Parser
     // TODO: error if decls.length == 0
 
     if (tok == T.Struct)
-      return new StructDeclaration(name, decls, hasDefinition);
+      return new StructDeclaration(name, decls, hasBody);
     else
-      return new UnionDeclaration(name, decls, hasDefinition);
+      return new UnionDeclaration(name, decls, hasBody);
   }
 
   Declaration parseConstructorDeclaration()
