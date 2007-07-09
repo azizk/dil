@@ -16,6 +16,14 @@ class Declaration
   }
 }
 
+class EmptyDeclaration : Declaration
+{
+  this()
+  {
+    super(false);
+  }
+}
+
 alias string[] ModuleName; // Identifier(.Identifier)*
 
 class ModuleDeclaration : Declaration

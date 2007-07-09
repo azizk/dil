@@ -162,12 +162,16 @@ class Parser
       break;
     case T.Debug:
       decl = parseDebugDeclaration();
+    case T.Semicolon:
+      nT();
+      decl = new EmptyDeclaration();
+      break;
     case T.Module:
       // Error: module is optional and can only appear once at the top of the source file.
       break;
     default:
     }
-    return null;
+    return decl;
   }
 
   /*
