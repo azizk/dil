@@ -246,3 +246,14 @@ class StaticIfDeclaration : Declaration
     this.elseDecls = elseDecls;
   }
 }
+
+class StaticAssertDeclaration : Declaration
+{
+  Expression condition, message;
+  this(Expression condition, Expression message)
+  {
+    super(true);
+    this.condition = condition;
+    this.message = message;
+  }
+}

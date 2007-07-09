@@ -126,6 +126,9 @@ class Parser
       case T.If:
         decl = parseStaticIfDeclaration();
         break;
+      case T.Assert:
+        decl = parseStaticAssertDeclaration();
+        break;
       default:
         goto case_AttributeSpecifier;
       }
@@ -741,6 +744,30 @@ class Parser
     }
 
     return new StaticIfDeclaration(condition, ifDecls, elseDecls);
+  }
+
+  Declaration parseStaticAssertDeclaration()
+  {
+    assert(token.type == T.Static);
+
+    nT(); // Skip static keyword.
+    nT(); // Skip assert keyword.
+
+    Expression condition, message;
+
+    require(T.LParen);
+
+    condition = parseAssignExpression();
+
+    if (token.type == T.Comma)
+    {
+      nT();
+      message = parseAssignExpression();
+    }
+
+    require(T.RParen);
+
+    return new StaticAssertDeclaration(condition, message);
   }
 
   /+++++++++++++++++++++++++++++
