@@ -144,7 +144,27 @@ class ConstructorDeclaration : Declaration
   }
 }
 
+class StaticConstructorDeclaration : Declaration
+{
+  Statement[] statements;
+  this(Statement[] statements)
+  {
+    super(true);
+    this.statements = statements;
+  }
+}
+
 class DestructorDeclaration : Declaration
+{
+  Statement[] statements;
+  this(Statement[] statements)
+  {
+    super(true);
+    this.statements = statements;
+  }
+}
+
+class StaticDestructorDeclaration : Declaration
 {
   Statement[] statements;
   this(Statement[] statements)

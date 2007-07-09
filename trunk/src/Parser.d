@@ -112,9 +112,16 @@ class Parser
     case T.Static:
       Token t;
       lx.peek(t);
-      if (t.type != T.Import)
+
+      if (t.type == T.Import)
+        goto case T.Import;
+      else if (t.type == T.This)
+        decl = parseStaticConstructorDeclaration();
+      else if (t.type == T.Tilde)
+        decl = parseStaticDestructorDeclaration();
+      else
         goto case_AttributeSpecifier;
-      //goto case T.Import;
+      break;
     case T.Import:
       decl = parseImportDeclaration();
       break;
@@ -487,6 +494,33 @@ class Parser
     auto statements = parseStatements();
     require(T.RBrace);
     return new DestructorDeclaration(statements);
+  }
+
+  Declaration parseStaticConstructorDeclaration()
+  {
+    assert(token.type == T.Static);
+    nT(); // Skip static keyword.
+    nT(); // Skip 'this' keyword.
+    require(T.LParen);
+    require(T.RParen);
+    require(T.LBrace);
+    auto statements = parseStatements();
+    require(T.RBrace);
+    return new StaticConstructorDeclaration(statements);
+  }
+
+  Declaration parseStaticDestructorDeclaration()
+  {
+    assert(token.type == T.Static);
+    nT(); // Skip static keyword.
+    nT(); // Skip ~
+    require(T.This);
+    require(T.LParen);
+    require(T.RParen);
+    require(T.LBrace);
+    auto statements = parseStatements();
+    require(T.RBrace);
+    return new StaticDestructorDeclaration(statements);
   }
 
   /+++++++++++++++++++++++++++++
