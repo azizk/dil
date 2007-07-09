@@ -80,7 +80,7 @@ class Parser
   Declaration[] parseDeclarationDefinitions()
   {
     Declaration[] decls;
-    while (token.type != T.EOF)
+    while (token.type != T.RBrace && token.type != T.EOF)
       decls ~= parseDeclarationDefinitions();
     return decls;
   }
@@ -149,12 +149,46 @@ class Parser
     case T.Unittest:
       decl = parseUnittestDeclaration();
       break;
+    case T.Debug:
+      decl = parseDebugDeclaration();
     case T.Module:
       // Error: module is optional and can only appear once at the top of the source file.
       break;
     default:
     }
     return null;
+  }
+
+  /*
+    DeclarationsBlock:
+        : DeclDefs
+        { }
+        { DeclDefs }
+        DeclDef
+  */
+  Declaration[] parseDeclarationsBlock()
+  {
+    Declaration[] decls;
+    switch (token.type)
+    {
+    case T.LBrace:
+      nT();
+      if (token.type == T.RBrace)
+        nT();
+      else
+      {
+        decls = parseDeclarationDefinitions();
+        require(T.RBrace);
+      }
+      break;
+    case T.Colon:
+      nT();
+      decls = parseDeclarationDefinitions();
+      break;
+    default:
+      decls ~= parseDeclarationDefinition();
+    }
+    return decls;
   }
 
   Statement[] parseStatements()
@@ -535,10 +569,7 @@ class Parser
     nT(); // Skip invariant keyword.
     // Optional () for getting ready porting to D 2.0
     if (token.type == T.LParen)
-    {
-      nT();
-      require(T.RParen);
-    }
+      requireNext(T.RParen);
     require(T.LBrace);
     auto statements = parseStatements();
     require(T.RBrace);
@@ -549,11 +580,79 @@ class Parser
   {
     assert(token.type == T.Unittest);
 
-    nT();
+    nT(); // Skip unittest keyword.
     require(T.LBrace);
     auto statements = parseStatements();
     require(T.RBrace);
     return new UnittestDeclaration(statements);
+  }
+
+  Declaration parseDebugDeclaration()
+  {
+    assert(token.type == T.Debug);
+
+    nT(); // Skip debug keyword.
+
+    int levelSpec = -1; // debug = Integer ;
+    string identSpec;   // debug = Identifier ;
+    int levelCond = -1; // debug ( Integer )
+    string identCond;   // debug ( Identifier )
+    Declaration[] decls, elseDecls;
+
+    if (token.type == T.Assign)
+    {
+      nT();
+      if (token.type == T.Int32)
+        levelSpec = token.int_;
+      else if (token.type == T.Identifier)
+        identSpec = token.identifier;
+      else
+        errorIfNot(T.Identifier); // TODO: better error msg
+      nT();
+      require(T.Semicolon);
+    }
+    else
+    {
+      // '(' (Identifier | Integer) ')'
+      if (token.type == T.LParen)
+      {
+        nT();
+        if (token.type == T.Int32)
+          levelCond = token.int_;
+        else if (token.type == T.Identifier)
+          identCond = token.identifier;
+        else
+          errorIfNot(T.Identifier); // TODO: better error msg
+        nT();
+        require(T.RParen);
+      }
+
+      if (token.type == T.Colon)
+      {
+        // debug:
+        // "debug" '(' (Identifier | Integer) ')':
+        nT();
+        decls = parseDeclarationDefinitions();
+      }
+      else
+      {
+        // debug DeclarationsBlock
+        // "debug" '(' (Identifier | Integer) ')' DeclarationsBlock
+        decls = parseDeclarationsBlock();
+
+        // else DeclarationsBlock
+        // debug without condition and else statement makes no sense
+        if (token.type == T.Else && (levelCond != -1 || identCond.length != 0))
+        {
+          nT();
+          //if (token.type == T.Colon)
+            // TODO: avoid "else:"?
+          elseDecls = parseDeclarationsBlock();
+        }
+      }
+    }
+
+    return new DebugDeclaration(levelSpec, identSpec, levelCond, identCond, decls, elseDecls);
   }
 
   /+++++++++++++++++++++++++++++
@@ -563,7 +662,7 @@ class Parser
   Expression parseExpression()
   {
     auto e = parseAssignExpression();
-    while (token.type == TOK.Comma)
+    while (token.type == T.Comma)
       e = new CommaExpression(e, parseAssignExpression());
     return e;
   }

@@ -193,3 +193,23 @@ class UnittestDeclaration : Declaration
     this.statements = statements;
   }
 }
+
+class DebugDeclaration : Declaration
+{
+  int levelSpec;
+  string identSpec;
+  int levelCond;
+  string identCond;
+  Declaration[] decls, elseDecls;
+
+  this(int levelSpec, string identSpec, int levelCond, string identCond, Declaration[] decls, Declaration[] elseDecls)
+  {
+    super(decls.length != 0);
+    this.levelSpec = levelSpec;
+    this.identSpec = identSpec;
+    this.levelCond = levelCond;
+    this.identCond = identCond;
+    this.decls = decls;
+    this.elseDecls = elseDecls;
+  }
+}
