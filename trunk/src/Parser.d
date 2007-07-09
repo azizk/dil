@@ -333,7 +333,7 @@ class Parser
           nT();
         else if (token.type != T.RBrace)
         {
-          errorIfNot(T.RBrace);
+          expected(T.RBrace);
           break;
         }
       } while (token.type != T.RBrace)
@@ -378,7 +378,7 @@ class Parser
       require(T.RBrace);
     }
     else
-      errorIfNot(T.LBrace); // TODO: better error msg
+      expected(T.LBrace); // TODO: better error msg
 
     // TODO: error if decls.length == 0
 
@@ -418,7 +418,7 @@ class Parser
         // TODO: handle template instantiations: class Foo : Bar!(int)
       }
       else
-        errorIfNot(T.Identifier);
+        expected(T.Identifier);
       bases ~= new BaseClass(prot, name);
       if (token.type != T.Comma)
         break;
@@ -460,7 +460,7 @@ class Parser
       require(T.RBrace);
     }
     else
-      errorIfNot(T.LBrace); // TODO: better error msg
+      expected(T.LBrace); // TODO: better error msg
 
     // TODO: error if decls.length == 0
 
@@ -503,7 +503,7 @@ class Parser
       require(T.RBrace);
     }
     else
-      errorIfNot(T.LBrace); // TODO: better error msg
+      expected(T.LBrace); // TODO: better error msg
 
     // TODO: error if decls.length == 0
 
@@ -608,7 +608,7 @@ class Parser
       else if (token.type == T.Identifier)
         ident = token.identifier;
       else
-        errorIfNot(T.Identifier); // TODO: better error msg
+        expected(T.Identifier); // TODO: better error msg
       nT();
     }
 
@@ -669,7 +669,7 @@ class Parser
       else if (token.type == T.Identifier)
         ident = token.identifier;
       else
-        errorIfNot(T.Identifier); // TODO: better error msg
+        expected(T.Identifier); // TODO: better error msg
       nT();
     }
 
@@ -1008,7 +1008,7 @@ class Parser
         else if (token.type == T.New)
           e = parseNewExpression(e);
         else
-          errorIfNot(T.Identifier);
+          expected(T.Identifier);
         continue;
       case T.PlusPlus:
         e = new PostIncrExpression(e);
@@ -1151,7 +1151,7 @@ class Parser
           keys ~= parseAssignExpression();
           if (token.type != T.Colon)
           {
-            errorIfNot(T.Colon);
+            expected(T.Colon);
             values ~= null;
             if (token.type == T.RBracket)
               break;
@@ -1454,7 +1454,7 @@ class Parser
       t = parseDeclaratorSuffix(t);
     }
     else if (!identOptional)
-      errorIfNot(T.Identifier);
+      expected(T.Identifier);
 
     return t;
   }
@@ -1527,7 +1527,7 @@ class Parser
     return params;
   }
 
-  void errorIfNot(TOK tok)
+  void expected(TOK tok)
   {
     if (token.type != tok)
       error(MID.ExpectedButFound, tok, token.srcText);
