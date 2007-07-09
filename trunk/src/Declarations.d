@@ -173,3 +173,13 @@ class StaticDestructorDeclaration : Declaration
     this.statements = statements;
   }
 }
+
+class InvariantDeclaration : Declaration
+{
+  Statement[] statements;
+  this(Statement[] statements)
+  {
+    super(true);
+    this.statements = statements;
+  }
+}

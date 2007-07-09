@@ -143,6 +143,9 @@ class Parser
     case T.Tilde:
       decl = parseDestructorDeclaration();
       break;
+    case T.Invariant:
+      decl = parseInvariantDeclaration();
+      break;
     case T.Module:
       // Error: module is optional and can only appear once at the top of the source file.
       break;
@@ -521,6 +524,22 @@ class Parser
     auto statements = parseStatements();
     require(T.RBrace);
     return new StaticDestructorDeclaration(statements);
+  }
+
+  Declaration parseInvariantDeclaration()
+  {
+    assert(token.type == T.Invariant);
+    nT(); // Skip invariant keyword.
+    // Optional () for getting ready porting to D 2.0
+    if (token.type == T.LParen)
+    {
+      nT();
+      require(T.RParen);
+    }
+    require(T.LBrace);
+    auto statements = parseStatements();
+    require(T.RBrace);
+    return new InvariantDeclaration(statements);
   }
 
   /+++++++++++++++++++++++++++++
