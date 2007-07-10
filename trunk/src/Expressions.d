@@ -12,6 +12,11 @@ class Expression
 
 }
 
+class EmptyExpression : Expression
+{
+
+}
+
 class BinaryExpression : Expression
 {
   Expression left, right;

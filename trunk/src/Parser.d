@@ -1384,7 +1384,8 @@ class Parser
       e = new TypeDotIdExpression(type, ident);
       break;
     default:
-      // TODO: issue error msg and decide what to return.
+      // TODO: issue error msg.
+      e = new EmptyExpression();
     }
     return e;
   }
@@ -1461,7 +1462,7 @@ class Parser
       require(T.RParen);
       goto Lident;
     default:
-      // TODO: issue error msg and return UndefinedType.
+      // TODO: issue error msg.
       t = new UndefinedType();
     }
     return t;
