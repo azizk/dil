@@ -28,8 +28,11 @@ class Parser
 
   void nT()
   {
-    lx.nextToken();
-    token = &lx.token;
+    do
+    {
+      lx.nextToken();
+      token = &lx.token;
+    } while (token.type == T.Comment) // Skip comments
   }
 
   void skipToOnePast(TOK tok)
