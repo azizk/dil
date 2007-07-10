@@ -543,9 +543,12 @@ class FunctionLiteralExpression : Expression
 {
   FunctionType func;
   Declaration[] decls;
-  this(FunctionType func, Declaration[] decls)
+  TOK funcTok;
+
+  this(FunctionType func, Declaration[] decls, TOK funcTok = TOK.Invalid)
   {
     this.func = func;
     this.decls = decls;
+    this.funcTok = funcTok;
   }
 }

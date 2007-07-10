@@ -1244,14 +1244,30 @@ class Parser
       e = new AssocArrayLiteralExpression(keys, values);
       break;
     case T.LBrace:
-      // TODO: parse delegate literals: FunctionBody
+      // DelegateLiteral := { DeclDefs }
+      require(T.LBrace);
+      auto decls = parseDeclarationDefinitions();
+      require(T.RBrace);
+      auto func = new FunctionType(null, Parameters.init);
+      e = new FunctionLiteralExpression(func, decls);
       break;
     case T.Function, T.Delegate:
-      // TODO: parse delegate/function literals:
-      // function Type? ( ArgumentList ) FunctionBody
-      // function FunctionBody
-      // delegate Type? ( ArgumentList ) FunctionBody
-      // delegate FunctionBody
+      // FunctionLiteral := (function|delegate) Type? '(' ArgumentList ')' '{' DeclDefs '}'
+      TOK funcTok = token.type;
+      nT(); // Skip function|delegate token.
+      Type returnType;
+      Parameters parameters;
+      if (token.type != T.LBrace)
+      {
+        if (token.type != T.LParen) // Optional return type
+          returnType = parseType();
+        parameters = parseParameters();
+      }
+      require(T.LBrace);
+      auto decls = parseDeclarationDefinitions();
+      require(T.RBrace);
+      auto func = new FunctionType(returnType, parameters);
+      e = new FunctionLiteralExpression(func, decls, funcTok);
       break;
     case T.Assert:
       Expression msg;
