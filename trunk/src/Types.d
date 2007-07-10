@@ -167,3 +167,15 @@ class SpecializationType : Type
     this.type = type;
   }
 }
+
+class FunctionType : Type
+{
+  Type returnType;
+  Parameters parameters;
+  this(Type returnType, Parameters parameters)
+  {
+    super(TOK.Invalid, null);
+    this.returnType = returnType;
+    this.parameters = parameters;
+  }
+}

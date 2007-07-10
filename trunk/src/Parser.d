@@ -167,7 +167,7 @@ class Parser
       decl = new EmptyDeclaration();
       break;
     case T.Module:
-      // Error: module is optional and can only appear once at the top of the source file.
+      // Error: module is optional and can appear only once at the top of the source file.
       break;
     default:
     }
@@ -1331,10 +1331,24 @@ class Parser
       e = new IsExpression(type, ident, specType);
       break;
     case T.LParen:
-      // TODO: parse ( ArgumentList ) FunctionBody type delegates
-      nT();
-      e = parseExpression();
-      require(T.RParen);
+      Token t;
+      bool failed;
+      auto parameters = try_(parseParameters(), failed);
+      if (!failed)
+      {
+        // ( ArgumentList ) FunctionBody
+        require(T.LBrace);
+        auto decls = parseDeclarationDefinitions();
+        require(T.RBrace);
+        auto func = new FunctionType(null, parameters);
+        e = new FunctionLiteralExpression(func, decls);
+      }
+      else
+      {
+        nT();
+        e = parseExpression();
+        require(T.RParen);
+      }
       break;
     // BasicType . Identifier
     case T.Void,   T.Char,    T.Wchar,  T.Dchar, T.Bool,
@@ -1567,7 +1581,7 @@ class Parser
         break;
       default:
         string ident;
-        auto type = parseDeclarator(ident);
+        auto type = parseDeclarator(ident, true);
 
         Expression assignExpr;
         if (token.type == T.Assign)

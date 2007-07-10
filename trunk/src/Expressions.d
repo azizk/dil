@@ -5,6 +5,7 @@
 module Expressions;
 import Token;
 import Types;
+import Declarations;
 
 class Expression
 {
@@ -535,5 +536,16 @@ class IsExpression : Expression
     this.type = type;
     this.ident = ident;
     this.specType = specType;
+  }
+}
+
+class FunctionLiteralExpression : Expression
+{
+  FunctionType func;
+  Declaration[] decls;
+  this(FunctionType func, Declaration[] decls)
+  {
+    this.func = func;
+    this.decls = decls;
   }
 }
