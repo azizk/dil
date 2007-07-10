@@ -1325,7 +1325,7 @@ class Lexer
     p = t.end; // consume token
 
     peek(t);
-    if (this.loc == oldloc && t.type == TOK.Number)
+    if (this.loc == oldloc && t.type == TOK.Int32)
     {
       newloc = t.uint_ - 1;
       p = t.end;

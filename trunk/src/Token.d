@@ -20,7 +20,6 @@ enum TOK
   CharLiteral, WCharLiteral, DCharLiteral,
 
   // Numbers
-  Number,
   Int32, Int64, Uint32, Uint64,
   // Floating point number scanner relies on this order. (FloatXY + 3 == ImaginaryXY)
   Float32, Float64, Float80,
@@ -37,7 +36,7 @@ enum TOK
 
   Dot, Slice, Ellipses,
 
-  // Floating point operators
+  // Floating point number operators
   Unordered,
   UorE,
   UorG,
@@ -100,6 +99,8 @@ struct Token
 {
   TOK type;
 //   Position pos;
+
+//   Token* next, prev;
 
   char* start;
   char* end;

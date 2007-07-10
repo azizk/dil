@@ -1345,6 +1345,7 @@ class Parser
       }
       else
       {
+        // ( Expression )
         nT();
         e = parseExpression();
         require(T.RParen);
@@ -1483,12 +1484,15 @@ class Parser
       switch (token.type)
       {
       case T.LBracket:
+        // Type Identifier ArrayType
+        // ArrayType := [] or [Type] or [Expression..Expression]
         t = parseArrayType(t);
         continue;
       case T.LParen:
         auto params = parseParameters();
-        // TODO: create FunctionType.
-        // new FunctionType(params);
+        // TODO: handle ( TemplateParameterList ) ( ParameterList )
+        // ReturnType FunctionName ( ParameterList )
+        t = new FunctionType(t, params);
         break;
       default:
         break;
