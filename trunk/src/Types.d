@@ -71,17 +71,57 @@ struct Parameters
   { return items.length; }
 }
 
+enum TID
+{
+  Void    = TOK.Void,
+  Char    = TOK.Char,
+  Wchar   = TOK.Wchar,
+  Dchar   = TOK.Dchar,
+  Bool    = TOK.Bool,
+  Byte    = TOK.Byte,
+  Ubyte   = TOK.Ubyte,
+  Short   = TOK.Short,
+  Ushort  = TOK.Ushort,
+  Int     = TOK.Int,
+  Uint    = TOK.Uint,
+  Long    = TOK.Long,
+  Ulong   = TOK.Ulong,
+  Float   = TOK.Float,
+  Double  = TOK.Double,
+  Real    = TOK.Real,
+  Ifloat  = TOK.Ifloat,
+  Idouble = TOK.Idouble,
+  Ireal   = TOK.Ireal,
+  Cfloat  = TOK.Cfloat,
+  Cdouble = TOK.Cdouble,
+  Creal   = TOK.Creal,
+
+  Undefined,
+  Function,
+  Delegate,
+  Pointer,
+  Array,
+  Identifier,
+  Typeof,
+  Specialization,
+}
+
 class Type
 {
-  TOK type;
+  TID tid;
   Type next;
 
-  this(TOK type)
-  { this(type, null); }
-
-  this(TOK type, Type next)
+  this(TOK tok)
   {
-    this.type = type;
+    this.tid = cast(TID)tok;
+  }
+
+  this(TID tid)
+  { this(tid, null); }
+
+  this(TID tid, Type next)
+  {
+    this.tid = tid;
     this.next = next;
   }
 }
@@ -90,7 +130,7 @@ class UndefinedType : Type
 {
   this()
   {
-    super(TOK.Invalid, null);
+    super(TID.Undefined, null);
   }
 }
 
@@ -100,13 +140,13 @@ class IdentifierType : Type
 
   this(string[] idents)
   {
-    super(TOK.Identifier, null);
+    super(TID.Identifier, null);
     this.idents = idents;
   }
 
-  this(TOK type)
+  this(TID tid)
   {
-    super(type, null);
+    super(tid);
   }
 
   void opCatAssign(string ident)
@@ -120,7 +160,7 @@ class TypeofType : IdentifierType
   Expression e;
   this(Expression e)
   {
-    super(TOK.Typeof);
+    super(TID.Typeof);
     this.e = e;
   }
 }
@@ -129,7 +169,7 @@ class PointerType : Type
 {
   this(Type t)
   {
-    super(TOK.Mul, t);
+    super(TID.Pointer, t);
   }
 }
 
@@ -139,7 +179,7 @@ class ArrayType : Type
   Type assocType;
   this(Type t)
   {
-    super(TOK.Invalid, t);
+    super(TID.Array, t);
   }
   this(Type t, Expression e, Expression e2)
   {
@@ -163,14 +203,14 @@ class SpecializationType : Type
 
   this(TOK specTok, TOK tokType)
   {
-    super(TOK.Invalid, null);
+    super(TID.Specialization, null);
     this.specTok = specTok;
     this.tokType = tokType;
   }
 
   this(TOK specTok, Type type)
   {
-    super(TOK.Invalid, null);
+    super(TID.Specialization, null);
     this.specTok = specTok;
     this.type = type;
   }
@@ -182,8 +222,16 @@ class FunctionType : Type
   Parameters parameters;
   this(Type returnType, Parameters parameters)
   {
-    super(TOK.Invalid, null);
+    super(TID.Function, null);
     this.returnType = returnType;
     this.parameters = parameters;
+  }
+}
+
+class DelegateType : Type
+{
+  this(Type func)
+  {
+    super(TID.Delegate, func);
   }
 }

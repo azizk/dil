@@ -1483,12 +1483,12 @@ class Parser
       case T.Function, T.Delegate:
         TOK tok = token.type;
         nT();
-        auto args = parseParameters();
-        // TODO: create appropriate Type.
-//         if (tok == T.Function)
-//           t = new FunctionType();
-//         else
-//           t = new DelegateType();
+        auto parameters = parseParameters();
+        t = new FunctionType(t, parameters);
+        if (tok == T.Function)
+          t = new PointerType(t);
+        else
+          t = new DelegateType(t);
         break;
       default:
         return t;
