@@ -1462,6 +1462,7 @@ class Parser
       goto Lident;
     default:
       // TODO: issue error msg and return UndefinedType.
+      t = new UndefinedType();
     }
     return t;
   }

@@ -86,6 +86,14 @@ class Type
   }
 }
 
+class UndefinedType : Type
+{
+  this()
+  {
+    super(TOK.Invalid, null);
+  }
+}
+
 class IdentifierType : Type
 {
   string[] idents;
