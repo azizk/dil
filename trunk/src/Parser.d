@@ -1396,28 +1396,6 @@ class Parser
     return null;
   }
 
-  Expression[] parseArgumentList(TOK terminator)
-  {
-    Expression[] es;
-
-    nT();
-    if (token.type == terminator)
-    {
-      nT();
-      return null;
-    }
-
-    while (1)
-    {
-      es ~= parseAssignExpression();
-      if (token.type == terminator)
-        break;
-      require(T.Comma);
-    }
-    nT();
-    return es;
-  }
-
   Type parseType()
   {
     return parseBasicType2(parseBasicType());
@@ -1567,6 +1545,28 @@ class Parser
       expected(T.Identifier);
 
     return t;
+  }
+
+  Expression[] parseArgumentList(TOK terminator)
+  {
+    Expression[] es;
+
+    nT();
+    if (token.type == terminator)
+    {
+      nT();
+      return null;
+    }
+
+    while (1)
+    {
+      es ~= parseAssignExpression();
+      if (token.type == terminator)
+        break;
+      require(T.Comma);
+    }
+    nT();
+    return es;
   }
 
   Parameters parseParameters()
