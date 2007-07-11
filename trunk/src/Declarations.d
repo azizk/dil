@@ -265,3 +265,17 @@ class StaticAssertDeclaration : Declaration
     this.message = message;
   }
 }
+
+class TemplateDeclaration : Declaration
+{
+  string templateName;
+  TemplateParameter[] templateParams;
+  Declaration[] decls;
+  this(string templateName, TemplateParameter[] templateParams, Declaration[] decls)
+  {
+    super(true);
+    this.templateName = templateName;
+    this.templateParams = templateParams;
+    this.decls = decls;
+  }
+}

@@ -165,6 +165,10 @@ class Parser
       break;
     case T.Debug:
       decl = parseDebugDeclaration();
+      break;
+    case T.Template:
+      decl = parseTemplateDeclaration();
+      break;
     case T.Semicolon:
       nT();
       decl = new EmptyDeclaration();
@@ -376,6 +380,7 @@ class Parser
     if (token.type == T.LParen)
     {
       // TODO: parse template parameters
+      // parseTemplateParameters();
     }
 
     if (token.type == T.Colon)
@@ -422,7 +427,7 @@ class Parser
       case T.Protected: prot = Protection.Protected; break;
       case T.Package:   prot = Protection.Package;   break;
       case T.Public:  /*prot = Protection.Public;*/  break;
-      //case T.Dot: // What about "class Foo : .Bar"?
+      //case T.Dot: // TODO: What about "class Foo : .Bar"?
       default:
         // TODO: issue error msg
         return bases;
@@ -776,6 +781,18 @@ class Parser
     require(T.Semicolon);
 
     return new StaticAssertDeclaration(condition, message);
+  }
+
+  Declaration parseTemplateDeclaration()
+  {
+    assert(token.type == T.Template);
+    nT(); // Skip template keyword.
+    auto templateName = requireIdentifier();
+    auto templateParams = parseTemplateParameters();
+    require(T.LBrace);
+    auto decls = parseDeclarationDefinitions();
+    require(T.RBrace);
+    return new TemplateDeclaration(templateName, templateParams, decls);
   }
 
   /+++++++++++++++++++++++++++++
