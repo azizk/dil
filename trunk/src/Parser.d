@@ -546,7 +546,7 @@ class Parser
   {
     assert(token.type == T.This);
     nT(); // Skip 'this' keyword.
-    auto parameters = parseParameters();
+    auto parameters = parseParameterList();
     require(T.LBrace);
     auto statements = parseStatements();
     require(T.RBrace);
@@ -794,7 +794,7 @@ class Parser
     assert(token.type == T.Template);
     nT(); // Skip template keyword.
     auto templateName = requireIdentifier();
-    auto templateParams = parseTemplateParameters();
+    auto templateParams = parseTemplateParameterList();
     require(T.LBrace);
     auto decls = parseDeclarationDefinitions();
     require(T.RBrace);
@@ -805,7 +805,7 @@ class Parser
   {
     assert(token.type == T.New);
     nT(); // Skip new keyword.
-    auto parameters = parseParameters();
+    auto parameters = parseParameterList();
     require(T.LBrace);
     auto decls = parseDeclarationDefinitions();
     require(T.RBrace);
@@ -816,7 +816,7 @@ class Parser
   {
     assert(token.type == T.Delete);
     nT(); // Skip delete keyword.
-    auto parameters = parseParameters();
+    auto parameters = parseParameterList();
     // TODO: only one parameter of type void* allowed.
     require(T.LBrace);
     auto decls = parseDeclarationDefinitions();
@@ -1137,7 +1137,7 @@ class Parser
         e = new PostDecrExpression(e);
         break;
       case T.LParen:
-        e = new CallExpression(e, parseArgumentList(T.LParen));
+        e = new CallExpression(e, parseArguments(T.LParen));
         continue;
       case T.LBracket:
         // parse Slice- and IndexExpression
@@ -1159,7 +1159,7 @@ class Parser
         }
         else if (token.type == T.Comma)
         {
-           es ~= parseArgumentList(T.RBracket);
+           es ~= parseArguments(T.RBracket);
         }
         else
           require(T.RBracket);
@@ -1248,7 +1248,7 @@ class Parser
         if (token.type == T.Colon)
           goto LparseAssocArray;
         else if (token.type == T.Comma)
-          values = [e] ~ parseArgumentList(T.RBracket);
+          values = [e] ~ parseArguments(T.RBracket);
         else
           require(T.RBracket);
       }
@@ -1307,7 +1307,7 @@ class Parser
       {
         if (token.type != T.LParen) // Optional return type
           returnType = parseType();
-        parameters = parseParameters();
+        parameters = parseParameterList();
       }
       require(T.LBrace);
       auto decls = parseDeclarationDefinitions();
@@ -1398,10 +1398,10 @@ class Parser
     case T.LParen:
       Token t;
       bool failed;
-      auto parameters = try_(parseParameters(), failed);
+      auto parameters = try_(parseParameterList(), failed);
       if (!failed)
       {
-        // ( ArgumentList ) FunctionBody
+        // ( ParameterList ) FunctionBody
         require(T.LBrace);
         auto decls = parseDeclarationDefinitions();
         require(T.RBrace);
@@ -1508,7 +1508,7 @@ class Parser
       case T.Function, T.Delegate:
         TOK tok = token.type;
         nT();
-        auto parameters = parseParameters();
+        auto parameters = parseParameterList();
         t = new FunctionType(t, parameters);
         if (tok == T.Function)
           t = new PointerType(t);
@@ -1534,7 +1534,7 @@ class Parser
         t = parseArrayType(t);
         continue;
       case T.LParen:
-        auto params = parseParameters();
+        auto params = parseParameterList();
         // TODO: handle ( TemplateParameterList ) ( ParameterList )
         // ReturnType FunctionName ( ParameterList )
         t = new FunctionType(t, params);
@@ -1593,7 +1593,7 @@ class Parser
     return t;
   }
 
-  Expression[] parseArgumentList(TOK terminator)
+  Expression[] parseArguments(TOK terminator)
   {
     Expression[] args;
 
@@ -1616,7 +1616,7 @@ class Parser
     return args;
   }
 
-  Parameters parseParameters()
+  Parameters parseParameterList()
   out(params)
   {
     if (params.length > 1)
@@ -1684,7 +1684,7 @@ class Parser
     return params;
   }
 
-  Object[] parseTemplateArgumentList()
+  Object[] parseTemplateArguments()
   {
     Object[] args;
 
@@ -1723,7 +1723,7 @@ class Parser
     return args;
   }
 
-  TemplateParameter[] parseTemplateParameters()
+  TemplateParameter[] parseTemplateParameterList()
   {
     require(T.LParen);
     if (token.type == T.RParen)
