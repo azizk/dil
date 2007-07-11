@@ -1637,6 +1637,112 @@ class Parser
     return params;
   }
 
+  TemplateParameter[] parseTemplateParameters()
+  {
+    require(T.LParen);
+    if (token.type == T.RParen)
+      return null;
+
+    TemplateParameter[] tparams;
+    while (1)
+    {
+      TP tp;
+      string ident;
+      Type valueType;
+      Type specType, defType;
+      Expression specValue, defValue;
+
+      switch (token.type)
+      {
+      case T.Alias:
+        // TemplateAliasParameter:
+        //         alias Identifier
+        tp = TP.Alias;
+        nT(); // Skip alias keyword.
+        ident = requireIdentifier();
+        // : SpecializationType
+        if (token.type == T.Colon)
+        {
+          nT();
+          specType = parseType();
+        }
+        // = DefaultType
+        if (token.type == T.Assign)
+        {
+          nT();
+          defType = parseType();
+        }
+        break;
+      case T.Identifier:
+        ident = token.identifier;
+        Token peeked;
+        lx.peek(peeked);
+        switch (peeked.type)
+        {
+        case T.Ellipses:
+          // TemplateTupleParameter:
+          //         Identifier ...
+          tp = TP.Tuple;
+          nT(); // Skip Identifier.
+          nT(); // Skip Ellipses.
+          // if (token.type == T.Comma)
+          //  error(); // TODO: issue error msg for variadic param not being last.
+          break;
+        case T.Comma, T.RParen, T.Colon, T.Assign:
+          // TemplateTypeParameter:
+          //         Identifier
+          tp = TP.Type;
+          nT(); // Skip Identifier.
+          // : SpecializationType
+          if (token.type == T.Colon)
+          {
+            nT();
+            specType = parseType();
+          }
+          // = DefaultType
+          if (token.type == T.Assign)
+          {
+            nT();
+            defType = parseType();
+          }
+          break;
+        default:
+          // TemplateValueParameter:
+          //         Declarator
+          ident = null;
+          goto LTemplateValueParameter;
+        }
+        break;
+      default:
+      LTemplateValueParameter:
+        // TemplateValueParameter:
+        //         Declarator
+        tp = TP.Value;
+        valueType = parseDeclarator(ident);
+        // : SpecializationValue
+        if (token.type == T.Colon)
+        {
+          nT();
+          specValue = parseCondExpression();
+        }
+        // = DefaultValue
+        if (token.type == T.Assign)
+        {
+          nT();
+          defValue = parseCondExpression();
+        }
+      }
+
+      tparams ~= new TemplateParameter(tp, valueType, specType, defType, specValue, defValue);
+
+      if (token.type != T.Comma)
+        break;
+      nT();
+    }
+    require(T.RParen);
+    return tparams;
+  }
+
   void expected(TOK tok)
   {
     if (token.type != tok)

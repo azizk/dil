@@ -71,6 +71,31 @@ struct Parameters
   { return items.length; }
 }
 
+enum TP
+{
+  Type,
+  Value,
+  Alias,
+  Tuple
+}
+
+class TemplateParameter
+{
+  TP tp;
+  Type valueType;
+  Type specType, defType;
+  Expression specValue, defValue;
+  this(TP tp, Type valueType, Type specType, Type defType, Expression specValue, Expression defValue)
+  {
+    this.tp = tp;
+    this.valueType = valueType;
+    this.specType = specType;
+    this.defType = defType;
+    this.specValue = specValue;
+    this.defValue = defValue;
+  }
+}
+
 enum TID
 {
   Void    = TOK.Void,
