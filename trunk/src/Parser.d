@@ -1549,7 +1549,7 @@ class Parser
 
   Expression[] parseArgumentList(TOK terminator)
   {
-    Expression[] es;
+    Expression[] args;
 
     nT();
     if (token.type == terminator)
@@ -1558,15 +1558,16 @@ class Parser
       return null;
     }
 
-    while (1)
+    goto LenterLoop;
+    do
     {
-      es ~= parseAssignExpression();
-      if (token.type == terminator)
-        break;
-      require(T.Comma);
-    }
-    nT();
-    return es;
+      nT();
+    LenterLoop:
+      args ~= parseAssignExpression();
+    } while (token.type == T.Comma)
+
+    require(terminator);
+    return args;
   }
 
   Parameters parseParameters()
@@ -1635,6 +1636,45 @@ class Parser
     }
     require(T.RParen);
     return params;
+  }
+
+  Object[] parseTemplateArgumentList()
+  {
+    Object[] args;
+
+    require(T.LParen);
+    if (token.type == T.RParen)
+    {
+      nT();
+      return null;
+    }
+
+    goto LenterLoop;
+    do
+    {
+      nT(); // Skip comma.
+    LenterLoop:
+
+      bool failed;
+      auto typeArgument = try_(parseType(), failed);
+
+      if (!failed)
+      {
+        // TemplateArgument:
+        //         Type
+        //         Symbol
+        args ~= typeArgument;
+      }
+      else
+      {
+        // TemplateArgument:
+        //         AssignExpression
+        args ~= parseAssignExpression();
+      }
+    } while (token.type == T.Comma)
+
+    require(T.RParen);
+    return args;
   }
 
   TemplateParameter[] parseTemplateParameters()
