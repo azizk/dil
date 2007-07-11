@@ -169,6 +169,12 @@ class Parser
     case T.Template:
       decl = parseTemplateDeclaration();
       break;
+    case T.New:
+      decl = parseNewDeclaration();
+      break;
+    case T.Delete:
+      decl = parseDeleteDeclaration();
+      break;
     case T.Semicolon:
       nT();
       decl = new EmptyDeclaration();
@@ -793,6 +799,29 @@ class Parser
     auto decls = parseDeclarationDefinitions();
     require(T.RBrace);
     return new TemplateDeclaration(templateName, templateParams, decls);
+  }
+
+  Declaration parseNewDeclaration()
+  {
+    assert(token.type == T.New);
+    nT(); // Skip new keyword.
+    auto parameters = parseParameters();
+    require(T.LBrace);
+    auto decls = parseDeclarationDefinitions();
+    require(T.RBrace);
+    return new NewDeclaration(parameters, decls);
+  }
+
+  Declaration parseDeleteDeclaration()
+  {
+    assert(token.type == T.Delete);
+    nT(); // Skip delete keyword.
+    auto parameters = parseParameters();
+    // TODO: only one parameter of type void* allowed.
+    require(T.LBrace);
+    auto decls = parseDeclarationDefinitions();
+    require(T.RBrace);
+    return new DeleteDeclaration(parameters, decls);
   }
 
   /+++++++++++++++++++++++++++++

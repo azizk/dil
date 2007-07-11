@@ -279,3 +279,27 @@ class TemplateDeclaration : Declaration
     this.decls = decls;
   }
 }
+
+class NewDeclaration : Declaration
+{
+  Parameters parameters;
+  Declaration[] decls;
+  this(Parameters parameters, Declaration[] decls)
+  {
+    super(true);
+    this.parameters = parameters;
+    this.decls = decls;
+  }
+}
+
+class DeleteDeclaration : Declaration
+{
+  Parameters parameters;
+  Declaration[] decls;
+  this(Parameters parameters, Declaration[] decls)
+  {
+    super(true);
+    this.parameters = parameters;
+    this.decls = decls;
+  }
+}
