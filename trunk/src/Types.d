@@ -130,8 +130,10 @@ enum TID
   Delegate,
   Pointer,
   Array,
+  IdentifierList,
   Identifier,
   Typeof,
+  TemplateInstance,
   Specialization,
 }
 
@@ -163,6 +165,15 @@ class UndefinedType : Type
   }
 }
 
+class IdentifierListType : Type
+{
+  Type[] identList;
+  this(Type[] identList)
+  {
+    super(TID.IdentifierList, null);
+  }
+}
+
 class IdentifierType : Type
 {
   string[] idents;
@@ -171,6 +182,11 @@ class IdentifierType : Type
   {
     super(TID.Identifier, null);
     this.idents = idents;
+  }
+
+  this(string ident)
+  {
+    super(TID.Identifier, null);
   }
 
   this(TID tid)
@@ -191,6 +207,18 @@ class TypeofType : IdentifierType
   {
     super(TID.Typeof);
     this.e = e;
+  }
+}
+
+class TemplateInstanceType : Type
+{
+  string ident;
+  TemplateArguments targs;
+  this(string ident, TemplateArguments targs)
+  {
+    super(TID.TemplateInstance, null);
+    this.ident = ident;
+    this.targs = targs;
   }
 }
 

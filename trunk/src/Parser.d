@@ -913,15 +913,15 @@ class Parser
   }
 
   // IdentifierListExpression:
-  //     .IdentifierList
-  //     IdentifierList
-  //     Typeof
-  //     Typeof . IdentifierList
+  //         .IdentifierList
+  //         IdentifierList
+  //         Typeof
+  //         Typeof . IdentifierList
   // IdentifierList:
-  //     Identifier
-  //     Identifier . IdentifierList
-  //     TemplateInstance
-  //     TemplateInstance . IdentifierList
+  //         Identifier
+  //         Identifier . IdentifierList
+  //         TemplateInstance
+  //         TemplateInstance . IdentifierList
   // TemplateInstance:
   //         Identifier !( TemplateArgumentList )
   IdentifierListExpression parseIdentifierListExpression()
@@ -962,6 +962,45 @@ class Parser
     }
 
     return new IdentifierListExpression(identList);
+  }
+
+  IdentifierListType parseIdentifierListType()
+  {
+    Type[] identList;
+    if (token.type == T.Dot)
+    {
+      nT();
+      identList ~= new IdentifierType(".");
+    }
+    else if (token.type == T.Typeof)
+    {
+      requireNext(T.LParen);
+      identList ~= new TypeofType(parseExpression());
+      require(T.RParen);
+      if (token.type != T.Dot)
+        return new IdentifierListType(identList);
+      nT();
+    }
+
+    while (1)
+    {
+      string ident = requireIdentifier();
+      Token next;
+      lx.peek(next);
+      if (token.type == T.Not && next.type == T.LParen) // Identifier !( TemplateArguments )
+      {
+        nT(); // Skip !.
+        identList ~= new TemplateInstanceType(ident, parseTemplateArguments());
+      }
+      else // Identifier
+        identList ~= new IdentifierType(ident);
+
+      if (token.type != T.Dot)
+        break;
+      nT();
+    }
+
+    return new IdentifierListType(identList);
   }
 
   /*
@@ -1322,8 +1361,20 @@ class Parser
         nT();
         if (token.type == T.Identifier)
         {
-          e = new DotIdExpression(e, token.identifier);
-          break;
+          string ident = token.identifier;
+          nT();
+          Token next;
+          lx.peek(next);
+          if (token.type == T.Not && next.type == T.LParen) // Identifier !( TemplateArguments )
+          {
+            nT(); // Skip !.
+            e = new DotTemplateInstanceExpression(e, ident, parseTemplateArguments());
+          }
+          else
+          {
+            e = new DotIdExpression(e, ident);
+            nT();
+          }
         }
         else if (token.type == T.New)
           e = parseNewExpression(e);
@@ -1380,8 +1431,17 @@ class Parser
     switch (token.type)
     {
     case T.Identifier:
-      e = new IdentifierExpression(token.identifier);
+      string ident = token.identifier;
       nT();
+      Token next;
+      lx.peek(next);
+      if (token.type == T.Not && next.type == T.LParen) // Identifier !( TemplateArguments )
+      {
+        nT(); // Skip !.
+        e = new TemplateInstanceExpression(ident, parseTemplateArguments());
+      }
+      else
+        e = new IdentifierExpression(ident);
       break;
     case T.Dot:
       nT();
@@ -1697,6 +1757,7 @@ class Parser
       t = new Type(token.type);
       nT();
       break;
+/+
     case T.Identifier, T.Dot:
       tident = new IdentifierType([token.identifier]);
       nT();
@@ -1719,6 +1780,10 @@ class Parser
       tident = new TypeofType(parseExpression());
       require(T.RParen);
       goto Lident;
++/
+    case T.Identifier, T.Typeof, T.Dot:
+      t = parseIdentifierListType();
+      break;
     default:
       // TODO: issue error msg.
       t = new UndefinedType();

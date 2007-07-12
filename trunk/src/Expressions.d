@@ -306,6 +306,18 @@ class DotIdExpression : UnaryExpression
   }
 }
 
+class DotTemplateInstanceExpression : UnaryExpression
+{
+  string ident;
+  TemplateArguments targs;
+  this(Expression e, string ident, TemplateArguments targs)
+  {
+    super(e);
+    this.ident = ident;
+    this.targs = targs;
+  }
+}
+
 class CallExpression : UnaryExpression
 {
   Expression[] args;
