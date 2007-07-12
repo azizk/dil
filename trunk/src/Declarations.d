@@ -6,6 +6,7 @@ module Declarations;
 import Expressions;
 import Types;
 import Statements;
+import Token;
 
 class Declaration
 {
@@ -338,6 +339,18 @@ class PragmaDeclaration : Declaration
     super(true);
     this.ident = ident;
     this.args = args;
+    this.decls = decls;
+  }
+}
+
+class ProtectionDeclaration : Declaration
+{
+  TOK protection;
+  Declaration[] decls;
+  this(TOK protection, Declaration[] decls)
+  {
+    super(true);
+    this.protection = protection;
     this.decls = decls;
   }
 }

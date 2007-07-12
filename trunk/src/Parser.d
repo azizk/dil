@@ -296,8 +296,9 @@ class Parser
     case T.Package:
     case T.Protected:
     case T.Public:
-      break;
     case T.Export:
+      decl = new ProtectionDeclaration(token.type, parseDeclarationsBlock());
+      break;
     case T.Override:
     case T.Deprecated:
     case T.Abstract:
