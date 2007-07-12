@@ -399,12 +399,14 @@ class IdentifierExpression : Expression
   }
 }
 
-class GlobalIdExpression : Expression
+class TemplateInstanceExpression : Expression
 {
-  string identifier;
-  this(string identifier)
+  string ident;
+  TemplateArguments targs;
+  this(string ident, TemplateArguments targs)
   {
-    this.identifier = identifier;
+    this.ident = ident;
+    this.targs = targs;
   }
 }
 

@@ -83,18 +83,22 @@ class TemplateParameter
 {
   TP tp;
   Type valueType;
+  string ident;
   Type specType, defType;
   Expression specValue, defValue;
-  this(TP tp, Type valueType, Type specType, Type defType, Expression specValue, Expression defValue)
+  this(TP tp, Type valueType, string ident, Type specType, Type defType, Expression specValue, Expression defValue)
   {
     this.tp = tp;
     this.valueType = valueType;
+    this.ident = ident;
     this.specType = specType;
     this.defType = defType;
     this.specValue = specValue;
     this.defValue = defValue;
   }
 }
+
+typedef Object[] TemplateArguments;
 
 enum TID
 {

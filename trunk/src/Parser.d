@@ -179,16 +179,17 @@ class Parser
       decl = parseDeleteDeclaration();
       break;
     case T.Mixin:
-      // TODO: parse TemplateMixin
+      decl = parseMixinDeclaration();
       break;
     case T.Semicolon:
       nT();
       decl = new EmptyDeclaration();
       break;
     case T.Module:
-      // Error: module is optional and can appear only once at the top of the source file.
+      // TODO: Error: module is optional and can appear only once at the top of the source file.
       break;
     default:
+      // TODO: issue error msg.
     }
     return decl;
   }
@@ -307,6 +308,7 @@ class Parser
     case T.Const:
     case T.Auto:
     case T.Scope:
+      nT();
       decl = new AttributeDeclaration(token.type, parseDeclarationsBlock());
       break;
     default:
@@ -910,6 +912,55 @@ class Parser
     return new DeleteDeclaration(parameters, decls);
   }
 
+  /*
+    TemplateMixin:
+            mixin TemplateIdentifier ;
+            mixin TemplateIdentifier MixinIdentifier ;
+            mixin TemplateIdentifier !( TemplateArgumentList ) ;
+            mixin TemplateIdentifier !( TemplateArgumentList ) MixinIdentifier ;
+  */
+  Declaration parseMixinDeclaration()
+  {
+    assert(token.type == T.Mixin);
+    nT(); // Skip mixin keyword.
+
+    Expression[] templateIdent;
+    string mixinIdent;
+
+    if (token.type == T.Dot)
+    {
+      nT();
+      templateIdent ~= new IdentifierExpression(".");
+    }
+
+    while (1)
+    {
+      string ident = requireIdentifier();
+      if (token.type == T.Not) // Identifier !( TemplateArguments )
+      {
+        // No need to peek for T.RParen. This must be a template instance.
+        nT();
+        templateIdent ~= new TemplateInstanceExpression(ident, parseTemplateArguments());
+      }
+      else // Identifier
+        templateIdent ~= new IdentifierExpression(ident);
+
+      if (token.type != T.Dot)
+        break;
+      nT();
+    }
+
+    if (token.type == T.Identifier)
+    {
+      mixinIdent = token.identifier;
+      nT();
+    }
+
+    require(T.Semicolon);
+
+    return new MixinDeclaration(templateIdent, mixinIdent);
+  }
+
   /+++++++++++++++++++++++++++++
   + Expression parsing methods +
   +++++++++++++++++++++++++++++/
@@ -1270,8 +1321,8 @@ class Parser
       nT();
       break;
     case T.Dot:
-      requireNext(T.Identifier);
-      e = new GlobalIdExpression(token.identifier);
+      nT();
+      e = new IdentifierExpression(".");
       break;
     case T.This:
       nT();
@@ -1804,9 +1855,9 @@ class Parser
     return params;
   }
 
-  Object[] parseTemplateArguments()
+  TemplateArguments parseTemplateArguments()
   {
-    Object[] args;
+    TemplateArguments args;
 
     require(T.LParen);
     if (token.type == T.RParen)
@@ -1939,7 +1990,7 @@ class Parser
         }
       }
 
-      tparams ~= new TemplateParameter(tp, valueType, specType, defType, specValue, defValue);
+      tparams ~= new TemplateParameter(tp, valueType, ident, specType, defType, specValue, defValue);
 
       if (token.type != T.Comma)
         break;

@@ -348,3 +348,15 @@ class PragmaDeclaration : AttributeDeclaration
     this.args = args;
   }
 }
+
+class MixinDeclaration : Declaration
+{
+  Expression[] templateIdent;
+  string mixinIdent;
+  this(Expression[] templateIdent, string mixinIdent)
+  {
+    super(false);
+    this.templateIdent = templateIdent;
+    this.mixinIdent = mixinIdent;
+  }
+}
