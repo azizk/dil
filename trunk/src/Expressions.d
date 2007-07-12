@@ -399,6 +399,15 @@ class IdentifierExpression : Expression
   }
 }
 
+class IdentifierListExpression : Expression
+{
+  Expression[] identList;
+  this(Expression[] identList)
+  {
+    this.identList = identList;
+  }
+}
+
 class TemplateInstanceExpression : Expression
 {
   string ident;

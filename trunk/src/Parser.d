@@ -912,6 +912,58 @@ class Parser
     return new DeleteDeclaration(parameters, decls);
   }
 
+  // IdentifierListExpression:
+  //     .IdentifierList
+  //     IdentifierList
+  //     Typeof
+  //     Typeof . IdentifierList
+  // IdentifierList:
+  //     Identifier
+  //     Identifier . IdentifierList
+  //     TemplateInstance
+  //     TemplateInstance . IdentifierList
+  // TemplateInstance:
+  //         Identifier !( TemplateArgumentList )
+  IdentifierListExpression parseIdentifierListExpression()
+  {
+    Expression[] identList;
+    if (token.type == T.Dot)
+    {
+      nT();
+      identList ~= new IdentifierExpression(".");
+    }
+    else if (token.type == T.Typeof)
+    {
+      requireNext(T.LParen);
+      auto type = new TypeofType(parseExpression());
+      require(T.RParen);
+      identList ~= new TypeofExpression(type);
+      if (token.type != T.Dot)
+        return new IdentifierListExpression(identList);
+      nT();
+    }
+
+    while (1)
+    {
+      string ident = requireIdentifier();
+      Token next;
+      lx.peek(next);
+      if (token.type == T.Not && next.type == T.LParen) // Identifier !( TemplateArguments )
+      {
+        nT(); // Skip !.
+        identList ~= new TemplateInstanceExpression(ident, parseTemplateArguments());
+      }
+      else // Identifier
+        identList ~= new IdentifierExpression(ident);
+
+      if (token.type != T.Dot)
+        break;
+      nT();
+    }
+
+    return new IdentifierListExpression(identList);
+  }
+
   /*
     TemplateMixin:
             mixin ( AssignExpression ) ;
