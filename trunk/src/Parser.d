@@ -166,6 +166,9 @@ class Parser
     case T.Debug:
       decl = parseDebugDeclaration();
       break;
+    case T.Version:
+      decl = parseVersionDeclaration();
+      break;
     case T.Template:
       decl = parseTemplateDeclaration();
       break;
@@ -174,6 +177,9 @@ class Parser
       break;
     case T.Delete:
       decl = parseDeleteDeclaration();
+      break;
+    case T.Mixin:
+      // TODO: parse TemplateMixin
       break;
     case T.Semicolon:
       nT();
@@ -227,9 +233,56 @@ class Parser
 
   Declaration parseAttributeSpecifier()
   {
-    // Attribute :
-    // Attribute DeclarationBlock
-    return null;
+    Declaration decl;
+
+    switch (token.type)
+    {
+    case T.Extern:
+      nT();
+      string linkage;
+      if (token.type == T.LParen)
+      {
+        nT();
+        linkage = requireIdentifier();
+        require(T.RParen);
+      }
+      decl = new ExternDeclaration(linkage, parseDeclarationsBlock());
+      break;
+    case T.Align:
+      nT();
+      int size = -1;
+      if (token.type == T.LParen)
+      {
+        nT();
+        if (token.type == T.Int32)
+        {
+          size = token.int_;
+          nT();
+        }
+        else
+          expected(T.Int32);
+        require(T.RParen);
+      }
+      decl = new AlignDeclaration(size, parseDeclarationsBlock());
+      break;
+    case T.Pragma:
+    case T.Private:
+    case T.Package:
+    case T.Protected:
+    case T.Public:
+    case T.Export:
+    case T.Override:
+    case T.Deprecated:
+    case T.Abstract:
+    case T.Static:
+    case T.Final:
+    case T.Const:
+    case T.Auto:
+    case T.Scope:
+    default:
+      assert(0);
+    }
+    return decl;
   }
 
   Declaration parseImportDeclaration()
@@ -682,9 +735,9 @@ class Parser
 
   Declaration parseVersionDeclaration()
   {
-    assert(token.type == T.Debug);
+    assert(token.type == T.Version);
 
-    nT(); // Skip debug keyword.
+    nT(); // Skip version keyword.
 
     int levelSpec = -1; // version = Integer ;
     string identSpec;   // version = Identifier ;
@@ -714,6 +767,7 @@ class Parser
       // Condition:
       //     Integer
       //     Identifier
+
       // ( Condition )
       require(T.LParen);
       parseIdentOrInt(identCond, levelCond);

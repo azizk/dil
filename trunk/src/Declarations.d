@@ -303,3 +303,27 @@ class DeleteDeclaration : Declaration
     this.decls = decls;
   }
 }
+
+class ExternDeclaration : Declaration
+{
+  string linkage;
+  Declaration[] decls;
+  this(string linkage, Declaration[] decls)
+  {
+    super(true);
+    this.linkage = linkage;
+    this.decls = decls;
+  }
+}
+
+class AlignDeclaration : Declaration
+{
+  int size;
+  Declaration[] decls;
+  this(int size, Declaration[] decls)
+  {
+    super(true);
+    this.size = size;
+    this.decls = decls;
+  }
+}
