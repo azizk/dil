@@ -292,13 +292,13 @@ class Parser
 
       decl = new PragmaDeclaration(ident, args, decls);
       break;
+    // Protection attributes
     case T.Private:
     case T.Package:
     case T.Protected:
     case T.Public:
     case T.Export:
-      decl = new ProtectionDeclaration(token.type, parseDeclarationsBlock());
-      break;
+    // StorageClass attributes
     case T.Override:
     case T.Deprecated:
     case T.Abstract:
@@ -307,6 +307,8 @@ class Parser
     case T.Const:
     case T.Auto:
     case T.Scope:
+      decl = new AttributeDeclaration(token.type, parseDeclarationsBlock());
+      break;
     default:
       assert(0);
     }

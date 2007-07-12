@@ -305,52 +305,46 @@ class DeleteDeclaration : Declaration
   }
 }
 
-class ExternDeclaration : Declaration
+class AttributeDeclaration : Declaration
+{
+  TOK attribute;
+  Declaration[] decls;
+  this(TOK attribute, Declaration[] decls)
+  {
+    super(true);
+    this.attribute = attribute;
+    this.decls = decls;
+  }
+}
+
+class ExternDeclaration : AttributeDeclaration
 {
   string linkage;
-  Declaration[] decls;
   this(string linkage, Declaration[] decls)
   {
-    super(true);
+    super(TOK.Extern, decls);
     this.linkage = linkage;
-    this.decls = decls;
   }
 }
 
-class AlignDeclaration : Declaration
+class AlignDeclaration : AttributeDeclaration
 {
   int size;
-  Declaration[] decls;
   this(int size, Declaration[] decls)
   {
-    super(true);
+    super(TOK.Align, decls);
     this.size = size;
-    this.decls = decls;
   }
 }
 
-class PragmaDeclaration : Declaration
+class PragmaDeclaration : AttributeDeclaration
 {
   string ident;
   Expression[] args;
-  Declaration[] decls;
   this(string ident, Expression[] args, Declaration[] decls)
   {
-    super(true);
+    super(TOK.Pragma, decls);
     this.ident = ident;
     this.args = args;
-    this.decls = decls;
-  }
-}
-
-class ProtectionDeclaration : Declaration
-{
-  TOK protection;
-  Declaration[] decls;
-  this(TOK protection, Declaration[] decls)
-  {
-    super(true);
-    this.protection = protection;
-    this.decls = decls;
   }
 }
