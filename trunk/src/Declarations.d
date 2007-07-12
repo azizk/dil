@@ -353,10 +353,16 @@ class MixinDeclaration : Declaration
 {
   Expression[] templateIdent;
   string mixinIdent;
+  Expression assignExpr; // mixin ( AssignExpression )
   this(Expression[] templateIdent, string mixinIdent)
   {
     super(false);
     this.templateIdent = templateIdent;
     this.mixinIdent = mixinIdent;
+  }
+  this(Expression assignExpr)
+  {
+    super(false);
+    this.assignExpr = assignExpr;
   }
 }

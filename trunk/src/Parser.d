@@ -914,6 +914,7 @@ class Parser
 
   /*
     TemplateMixin:
+            mixin ( AssignExpression ) ;
             mixin TemplateIdentifier ;
             mixin TemplateIdentifier MixinIdentifier ;
             mixin TemplateIdentifier !( TemplateArgumentList ) ;
@@ -923,6 +924,16 @@ class Parser
   {
     assert(token.type == T.Mixin);
     nT(); // Skip mixin keyword.
+
+    if (token.type == T.LParen)
+    {
+      // TODO: What about mixin(...).ident;?
+      nT();
+      auto e = parseAssignExpression();
+      require(T.RParen);
+      require(T.Semicolon);
+      return new MixinDeclaration(e);
+    }
 
     Expression[] templateIdent;
     string mixinIdent;
@@ -938,7 +949,7 @@ class Parser
       string ident = requireIdentifier();
       if (token.type == T.Not) // Identifier !( TemplateArguments )
       {
-        // No need to peek for T.RParen. This must be a template instance.
+        // No need to peek for T.LParen. This must be a template instance.
         nT();
         templateIdent ~= new TemplateInstanceExpression(ident, parseTemplateArguments());
       }
