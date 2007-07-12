@@ -1086,7 +1086,7 @@ class Parser
       nT(); e = new CompExpression(parseUnaryExpression());
       break;
     case T.New:
-      // TODO: parseNewExpression();
+      e = parseNewExpression(null);
       break;
     case T.Delete:
       nT();
