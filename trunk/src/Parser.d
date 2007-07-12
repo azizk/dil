@@ -414,13 +414,15 @@ class Parser
     return new ClassDeclaration(className, bases, decls, hasBody);
   }
 
-  BaseClass[] parseBaseClasses()
+  BaseClass[] parseBaseClasses(bool colonLeadsOff = true)
   {
-    assert(token.type == T.Colon);
+    if (colonLeadsOff)
+    {
+      assert(token.type == T.Colon);
+      nT(); // Skip colon
+    }
 
     BaseClass[] bases;
-
-    nT(); // Skip colon
 
     while (1)
     {
@@ -1438,8 +1440,42 @@ class Parser
 
   Expression parseNewExpression(Expression e)
   {
-    // TODO: implement this method.
-    return null;
+    assert(token.type == T.New);
+    nT(); // Skip new keyword.
+
+    Expression[] newArguments;
+    Expression[] ctorArguments;
+
+    if (token.type == T.LParen)
+      newArguments = parseArguments(T.RParen);
+
+    // NewAnonClassExpression:
+    //         new (ArgumentList)opt class (ArgumentList)opt SuperClassopt InterfaceClassesopt ClassBody
+    if (token.type == T.Class)
+    {
+      nT();
+      if (token.type == T.LParen)
+        ctorArguments = parseArguments(T.RParen);
+
+      BaseClass[] bases = token.type != T.LBrace ? parseBaseClasses(false) : null ;
+
+      require(T.LBrace);
+      auto decls = parseDeclarationDefinitions();
+      require(T.RBrace);
+      return new NewAnonClassExpression(e, newArguments, bases, ctorArguments, decls);
+    }
+
+    // NewExpression:
+    //         NewArguments Type [ AssignExpression ]
+    //         NewArguments Type ( ArgumentList )
+    //         NewArguments Type
+    auto type = parseType();
+    // TODO: consider "new Foo!(int)(1,2,3)"
+    if (type.tid == TID.Identifier)
+    {
+      ctorArguments = parseArguments(T.RParen);
+    }
+    return new NewExpression(e, newArguments, type, ctorArguments);
   }
 
   Type parseType()

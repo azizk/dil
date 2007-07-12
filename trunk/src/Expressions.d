@@ -318,8 +318,32 @@ class CallExpression : UnaryExpression
 
 class NewExpression : UnaryExpression
 {
-  this(Expression e)
-  { super(e); }
+  Expression[] newArgs;
+  Type type;
+  Expression[] ctorArgs;
+  this(Expression e, Expression[] newArgs, Type type, Expression[] ctorArgs)
+  {
+    super(e);
+    this.newArgs = newArgs;
+    this.type = type;
+    this.ctorArgs = ctorArgs;
+  }
+}
+
+class NewAnonClassExpression : UnaryExpression
+{
+  Expression[] newArgs;
+  BaseClass[] bases;
+  Expression[] ctorArgs;
+  Declaration[] decls;
+  this(Expression e, Expression[] newArgs, BaseClass[] bases, Expression[] ctorArgs, Declaration[] decls)
+  {
+    super(e);
+    this.newArgs = newArgs;
+    this.bases = bases;
+    this.ctorArgs = ctorArgs;
+    this.decls = decls;
+  }
 }
 
 class DeleteExpression : UnaryExpression
@@ -336,12 +360,6 @@ class CastExpression : UnaryExpression
     super(e);
     this.type = type;
   }
-}
-
-class AnonClassExpression : UnaryExpression
-{
-  this(Expression e)
-  { super(e); }
 }
 
 class IndexExpression : UnaryExpression
