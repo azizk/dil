@@ -266,10 +266,37 @@ class Parser
       decl = new AlignDeclaration(size, parseDeclarationsBlock());
       break;
     case T.Pragma:
+      // Pragma:
+      //     pragma ( Identifier )
+      //     pragma ( Identifier , ExpressionList )
+      // ExpressionList:
+      //     AssignExpression
+      //     AssignExpression , ExpressionList
+      nT();
+      string ident;
+      Expression[] args;
+      Declaration[] decls;
+
+      require(T.LParen);
+      ident = requireIdentifier();
+
+      if (token.type == T.Comma)
+        args = parseArguments(T.RParen);
+      else
+        require(T.RParen);
+
+      if (token.type == T.Semicolon)
+        nT();
+      else
+        decls = parseDeclarationsBlock();
+
+      decl = new PragmaDeclaration(ident, args, decls);
+      break;
     case T.Private:
     case T.Package:
     case T.Protected:
     case T.Public:
+      break;
     case T.Export:
     case T.Override:
     case T.Deprecated:

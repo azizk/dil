@@ -327,3 +327,17 @@ class AlignDeclaration : Declaration
     this.decls = decls;
   }
 }
+
+class PragmaDeclaration : Declaration
+{
+  string ident;
+  Expression[] args;
+  Declaration[] decls;
+  this(string ident, Expression[] args, Declaration[] decls)
+  {
+    super(true);
+    this.ident = ident;
+    this.args = args;
+    this.decls = decls;
+  }
+}
