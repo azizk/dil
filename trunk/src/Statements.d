@@ -83,9 +83,15 @@ class WhileStatement : Statement
   }
 }
 
-class DoStatement : Statement
+class DoWhileStatement : Statement
 {
-
+  Expression condition;
+  Statement doBody;
+  this(Expression condition, Statement doBody)
+  {
+    this.condition = condition;
+    this.doBody = doBody;
+  }
 }
 
 class ForStatement : Statement

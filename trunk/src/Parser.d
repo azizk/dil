@@ -1142,6 +1142,9 @@ class Parser
     case T.While:
       s = parseWhileStatement();
       break;
+    case T.Do:
+      s = parseDoWhileStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1225,6 +1228,18 @@ class Parser
     auto condition = parseExpression();
     require(T.LParen);
     return new WhileStatement(condition, parseScopeStatement());
+  }
+
+  Statement parseDoWhileStatement()
+  {
+    assert(token.type == T.Do);
+    nT();
+    auto doBody = parseScopeStatement();
+    require(T.While);
+    require(T.RParen);
+    auto condition = parseExpression();
+    require(T.LParen);
+    return new DoWhileStatement(condition, doBody);
   }
 
   /+++++++++++++++++++++++++++++
