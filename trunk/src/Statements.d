@@ -3,6 +3,8 @@
   License: GPL2
 +/
 module Statements;
+import Expressions;
+import Types;
 
 class Statement
 {
@@ -15,6 +17,15 @@ class Statements : Statement
   void opCatAssign(Statement s)
   {
     this.ss ~= s;
+  }
+}
+
+class ScopeStatement : Statement
+{
+  Statement s;
+  this(Statement s)
+  {
+    this.s = s;
   }
 }
 
@@ -41,7 +52,19 @@ class DeclarationStatement : Statement
 
 class IfStatement : Statement
 {
-
+  Type type;
+  string ident;
+  Expression condition;
+  Statement ifBody;
+  Statement elseBody;
+  this(Type type, string ident, Expression condition, Statement ifBody, Statement elseBody)
+  {
+    this.type = type;
+    this.ident = ident;
+    this.condition = condition;
+    this.ifBody = ifBody;
+    this.elseBody = elseBody;
+  }
 }
 
 class ConditionalStatement : Statement

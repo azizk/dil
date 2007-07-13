@@ -1109,7 +1109,7 @@ class Parser
 
   Statements parseStatements()
   {
-    Statements statements;
+    auto statements = new Statements();
     while (token.type != T.RBrace && token.type != T.EOF)
       statements ~= parseStatement();
     return statements;
@@ -1136,9 +1136,76 @@ class Parser
     case_Declaration:
       // TODO: parse Declaration
       break;
+    case T.If:
+      s = parseIfStatement();
+      break;
     default:
     }
     return s;
+  }
+
+  /+
+    ScopeStatement:
+        NonEmptyStatement
+        BlockStatement
+    BlockStatement:
+        { }
+        { StatementList }
+  +/
+  Statement parseScopeBlockStatement()
+  {
+    Statement s;
+    if (token.type == T.LBrace)
+    {
+      nT();
+      auto ss = new Statements();
+      while (token.type != T.RBrace && token.type != T.EOF)
+        ss ~= parseStatement();
+      require(T.RBrace);
+      s = ss;
+    }
+    else
+      s = parseStatement();
+    return new ScopeStatement(s);
+  }
+
+  Statement parseIfStatement()
+  {
+    assert(token.type == T.If);
+    nT();
+
+    Type type;
+    string ident;
+    Expression condition;
+    Statement ifBody, elseBody;
+
+    require(T.LParen);
+    // auto Identifier = Expression
+    if (token.type == T.Auto)
+    {
+      nT();
+      ident = requireIdentifier();
+      require(T.Assign);
+    }
+    else
+    {
+      // Declarator = Expression
+      bool failed;
+      type = try_(parseDeclarator(ident), failed);
+      if (!failed)
+      {
+        require(T.Assign);
+      }
+    }
+    condition = parseExpression();
+    require(T.RParen);
+    ifBody = parseScopeBlockStatement();
+    if (token.type == T.Else)
+    {
+      nT();
+      elseBody = parseScopeBlockStatement();
+    }
+    return new IfStatement(type, ident, condition, ifBody, elseBody);
   }
 
   /+++++++++++++++++++++++++++++
