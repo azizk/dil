@@ -1139,7 +1139,11 @@ class Parser
     case T.If:
       s = parseIfStatement();
       break;
+    case T.While:
+      s = parseWhileStatement();
+      break;
     default:
+      // TODO: issue error msg and return IllegalStatement.
     }
     return s;
   }
@@ -1152,7 +1156,7 @@ class Parser
         { }
         { StatementList }
   +/
-  Statement parseScopeBlockStatement()
+  Statement parseScopeStatement()
   {
     Statement s;
     if (token.type == T.LBrace)
@@ -1204,13 +1208,23 @@ class Parser
     }
     condition = parseExpression();
     require(T.RParen);
-    ifBody = parseScopeBlockStatement();
+    ifBody = parseScopeStatement();
     if (token.type == T.Else)
     {
       nT();
-      elseBody = parseScopeBlockStatement();
+      elseBody = parseScopeStatement();
     }
     return new IfStatement(type, ident, condition, ifBody, elseBody);
+  }
+
+  Statement parseWhileStatement()
+  {
+    assert(token.type == T.While);
+    nT();
+    require(T.RParen);
+    auto condition = parseExpression();
+    require(T.LParen);
+    return new WhileStatement(condition, parseScopeStatement());
   }
 
   /+++++++++++++++++++++++++++++

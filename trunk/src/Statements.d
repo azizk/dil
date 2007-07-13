@@ -74,7 +74,13 @@ class ConditionalStatement : Statement
 
 class WhileStatement : Statement
 {
-
+  Expression condition;
+  Statement whileBody;
+  this(Expression condition, Statement whileBody)
+  {
+    this.condition = condition;
+    this.whileBody = whileBody;
+  }
 }
 
 class DoStatement : Statement
