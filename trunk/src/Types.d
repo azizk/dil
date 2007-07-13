@@ -6,6 +6,16 @@ module Types;
 import Token;
 import Expressions;
 
+enum Linkage
+{
+  Invalid,
+  C,
+  Cpp,
+  D,
+  Windows,
+  Pascal
+}
+
 enum StorageClass
 {
   None         = 0,

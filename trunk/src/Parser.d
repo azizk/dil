@@ -240,11 +240,34 @@ class Parser
     {
     case T.Extern:
       nT();
-      string linkage;
+      Linkage linkage;
       if (token.type == T.LParen)
       {
         nT();
-        linkage = requireIdentifier();
+        auto ident = requireIdentifier();
+        switch (ident)
+        {
+        case "C":
+          if (token.type == T.PlusPlus)
+          {
+            nT();
+            linkage = Linkage.Cpp;
+            break;
+          }
+          linkage = Linkage.C;
+          break;
+        case "D":
+          linkage = Linkage.D;
+          break;
+        case "Windows":
+          linkage = Linkage.Windows;
+          break;
+        case "Pascal":
+          linkage = Linkage.Pascal;
+          break;
+        default:
+          // TODO: issue error msg. Unrecognized LinkageType.
+        }
         require(T.RParen);
       }
       decl = new ExternDeclaration(linkage, parseDeclarationsBlock());
@@ -1050,6 +1073,7 @@ class Parser
     Expression[] templateIdent;
     string mixinIdent;
 
+    // This code is similar to parseDotListType().
     if (token.type == T.Dot)
     {
       nT();

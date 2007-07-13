@@ -299,8 +299,8 @@ class AttributeDeclaration : Declaration
 
 class ExternDeclaration : AttributeDeclaration
 {
-  string linkage;
-  this(string linkage, Declaration[] decls)
+  Linkage linkage;
+  this(Linkage linkage, Declaration[] decls)
   {
     super(TOK.Extern, decls);
     this.linkage = linkage;
