@@ -1297,6 +1297,7 @@ class Parser
     }
     else
       nT();
+    forBody = parseScopeStatement();
     return new ForStatement(init, condition, increment, forBody);
   }
 
