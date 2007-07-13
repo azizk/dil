@@ -1176,6 +1176,31 @@ class Parser
     return new ScopeStatement(s);
   }
 
+  /+
+    NoScopeStatement:
+        NonEmptyStatement
+        BlockStatement
+    BlockStatement:
+        { }
+        { StatementList }
+  +/
+  Statement parseNoScopeStatement()
+  {
+    Statement s;
+    if (token.type == T.LBrace)
+    {
+      nT();
+      auto ss = new Statements();
+      while (token.type != T.RBrace && token.type != T.EOF)
+        ss ~= parseStatement();
+      require(T.RBrace);
+      s = ss;
+    }
+    else
+      s = parseStatement();
+    return s;
+  }
+
   Statement parseIfStatement()
   {
     assert(token.type == T.If);
@@ -1224,9 +1249,9 @@ class Parser
   {
     assert(token.type == T.While);
     nT();
-    require(T.RParen);
-    auto condition = parseExpression();
     require(T.LParen);
+    auto condition = parseExpression();
+    require(T.RParen);
     return new WhileStatement(condition, parseScopeStatement());
   }
 
@@ -1236,10 +1261,43 @@ class Parser
     nT();
     auto doBody = parseScopeStatement();
     require(T.While);
-    require(T.RParen);
-    auto condition = parseExpression();
     require(T.LParen);
+    auto condition = parseExpression();
+    require(T.RParen);
     return new DoWhileStatement(condition, doBody);
+  }
+
+  Statement parseForStatement()
+  {
+    assert(token.type == T.For);
+    nT();
+    require(T.LParen);
+
+    Statement init, forBody;
+    Expression condition, increment;
+
+    if (token.type != T.Semicolon)
+    {
+      init = parseNoScopeStatement();
+      require(T.Semicolon);
+    }
+    else
+      nT();
+    if (token.type != T.Semicolon)
+    {
+      condition = parseExpression();
+      require(T.Semicolon);
+    }
+    else
+      nT();
+    if (token.type != T.RParen)
+    {
+      increment = parseExpression();
+      require(T.RParen);
+    }
+    else
+      nT();
+    return new ForStatement(init, condition, increment, forBody);
   }
 
   /+++++++++++++++++++++++++++++

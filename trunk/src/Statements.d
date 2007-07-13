@@ -96,7 +96,16 @@ class DoWhileStatement : Statement
 
 class ForStatement : Statement
 {
-
+  Statement init;
+  Expression condition, increment;
+  Statement forBody;
+  this(Statement init, Expression condition, Expression increment, Statement forBody)
+  {
+    this.init = init;
+    this.condition = condition;
+    this.increment = increment;
+    this.forBody = forBody;
+  }
 }
 
 class ForeachStatement : Statement
