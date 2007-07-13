@@ -1933,6 +1933,8 @@ class Parser
 
   Expression[] parseArguments(TOK terminator)
   {
+    assert(token.type == T.LParen || token.type == T.LBracket || token.type == T.Comma);
+    assert(terminator == T.RParen || terminator == T.RBracket);
     Expression[] args;
 
     nT();
