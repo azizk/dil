@@ -290,12 +290,6 @@ class CompExpression : UnaryExpression
   { super(e); }
 }
 
-class DotExpression : UnaryExpression
-{
-  this(Expression e)
-  { super(e); }
-}
-
 class DotIdExpression : UnaryExpression
 {
   string ident;
@@ -328,29 +322,29 @@ class CallExpression : UnaryExpression
   }
 }
 
-class NewExpression : UnaryExpression
+class NewExpression : /*Unary*/Expression
 {
   Expression[] newArgs;
   Type type;
   Expression[] ctorArgs;
-  this(Expression e, Expression[] newArgs, Type type, Expression[] ctorArgs)
+  this(/*Expression e, */Expression[] newArgs, Type type, Expression[] ctorArgs)
   {
-    super(e);
+    /*super(e);*/
     this.newArgs = newArgs;
     this.type = type;
     this.ctorArgs = ctorArgs;
   }
 }
 
-class NewAnonClassExpression : UnaryExpression
+class NewAnonClassExpression : /*Unary*/Expression
 {
   Expression[] newArgs;
   BaseClass[] bases;
   Expression[] ctorArgs;
   Declaration[] decls;
-  this(Expression e, Expression[] newArgs, BaseClass[] bases, Expression[] ctorArgs, Declaration[] decls)
+  this(/*Expression e, */Expression[] newArgs, BaseClass[] bases, Expression[] ctorArgs, Declaration[] decls)
   {
-    super(e);
+    /*super(e);*/
     this.newArgs = newArgs;
     this.bases = bases;
     this.ctorArgs = ctorArgs;
@@ -410,8 +404,17 @@ class IdentifierExpression : Expression
     this.identifier = identifier;
   }
 }
-
+/*
 class IdentifierListExpression : Expression
+{
+  Expression[] identList;
+  this(Expression[] identList)
+  {
+    this.identList = identList;
+  }
+}
+*/
+class DotListExpression : Expression
 {
   Expression[] identList;
   this(Expression[] identList)

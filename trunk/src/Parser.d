@@ -912,19 +912,23 @@ class Parser
     return new DeleteDeclaration(parameters, decls);
   }
 
-  // IdentifierListExpression:
-  //         .IdentifierList
-  //         IdentifierList
-  //         Typeof
-  //         Typeof . IdentifierList
-  // IdentifierList:
-  //         Identifier
-  //         Identifier . IdentifierList
-  //         TemplateInstance
-  //         TemplateInstance . IdentifierList
-  // TemplateInstance:
-  //         Identifier !( TemplateArgumentList )
-  IdentifierListExpression parseIdentifierListExpression()
+  /+
+    DotListExpression:
+            . DotListItems
+            DotListItems
+            Typeof
+            Typeof . DotListItems
+    DotListItems:
+            DotListItem
+            DotListItem . DotListItems
+    DotListItem:
+            Identifier
+            TemplateInstance
+            NewExpression
+    TemplateInstance:
+            Identifier !( TemplateArgumentList )
+  +/
+  DotListExpression parseDotListExpression()
   {
     Expression[] identList;
     if (token.type == T.Dot)
@@ -939,7 +943,7 @@ class Parser
       require(T.RParen);
       identList ~= new TypeofExpression(type);
       if (token.type != T.Dot)
-        return new IdentifierListExpression(identList);
+        goto Lreturn;
       nT();
     }
 
@@ -956,15 +960,37 @@ class Parser
       else // Identifier
         identList ~= new IdentifierExpression(ident);
 
+    LnewExpressionLoop:
       if (token.type != T.Dot)
         break;
-      nT();
-    }
+      nT(); // Skip dot.
 
-    return new IdentifierListExpression(identList);
+      if (token.type == T.New)
+      {
+        identList ~= parseNewExpression();
+        goto LnewExpressionLoop;
+      }
+    }
+  Lreturn:
+    return new DotListExpression(identList);
   }
 
-  IdentifierListType parseIdentifierListType()
+  /+
+    DotListType:
+            . TypeItems
+            TypeItems
+            Typeof
+            Typeof . TypeItems
+    TypeItems:
+            TypeItem
+            TypeItem . TypeItems
+    TypeItem:
+            Identifier
+            TemplateInstance
+    TemplateInstance:
+            Identifier !( TemplateArgumentList )
+  +/
+  DotListType parseDotListType()
   {
     Type[] identList;
     if (token.type == T.Dot)
@@ -978,16 +1004,17 @@ class Parser
       identList ~= new TypeofType(parseExpression());
       require(T.RParen);
       if (token.type != T.Dot)
-        return new IdentifierListType(identList);
+        goto Lreturn;
       nT();
     }
 
     while (1)
     {
       string ident = requireIdentifier();
-      Token next;
-      lx.peek(next);
-      if (token.type == T.Not && next.type == T.LParen) // Identifier !( TemplateArguments )
+      // NB.: Currently Types can't be followed by "!=" so we don't need to peek for "(" when parsing TemplateInstances.
+      /+Token next;
+      lx.peek(next);+/
+      if (token.type == T.Not/+ && next.type == T.LParen+/) // Identifier !( TemplateArguments )
       {
         nT(); // Skip !.
         identList ~= new TemplateInstanceType(ident, parseTemplateArguments());
@@ -999,8 +1026,8 @@ class Parser
         break;
       nT();
     }
-
-    return new IdentifierListType(identList);
+  Lreturn:
+    return new DotListType(identList);
   }
 
   /*
@@ -1323,7 +1350,7 @@ class Parser
       nT(); e = new CompExpression(parseUnaryExpression());
       break;
     case T.New:
-      e = parseNewExpression(null);
+      e = parseNewExpression();
       break;
     case T.Delete:
       nT();
@@ -1357,6 +1384,8 @@ class Parser
     {
       switch (token.type)
       {
+/*
+// Commented out because parseDotListExpression() handles this.
       case T.Dot:
         nT();
         if (token.type == T.Identifier)
@@ -1381,6 +1410,7 @@ class Parser
         else
           expected(T.Identifier);
         continue;
+*/
       case T.PlusPlus:
         e = new PostIncrExpression(e);
         break;
@@ -1388,7 +1418,7 @@ class Parser
         e = new PostDecrExpression(e);
         break;
       case T.LParen:
-        e = new CallExpression(e, parseArguments(T.LParen));
+        e = new CallExpression(e, parseArguments(T.RParen));
         continue;
       case T.LBracket:
         // parse Slice- and IndexExpression
@@ -1430,6 +1460,8 @@ class Parser
     Expression e;
     switch (token.type)
     {
+/*
+// Commented out because parseDotListExpression() handles this.
     case T.Identifier:
       string ident = token.identifier;
       nT();
@@ -1446,6 +1478,10 @@ class Parser
     case T.Dot:
       nT();
       e = new IdentifierExpression(".");
+      break;
+*/
+    case T.Identifier, T.Dot, T.Typeof:
+      e = parseDotListExpression();
       break;
     case T.This:
       nT();
@@ -1605,6 +1641,8 @@ class Parser
       require(T.RParen);
       e = new TypeidExpression(type);
       break;
+/*
+// Commented out because parseDotListExpression() handles this.
     case T.Typeof:
       requireNext(T.LParen);
       auto type = new TypeofType(parseExpression());
@@ -1618,6 +1656,7 @@ class Parser
       else // typeof ( Expression )
         e = new TypeofExpression(type);
       break;
+*/
     case T.Is:
       requireNext(T.LParen);
 
@@ -1696,7 +1735,7 @@ class Parser
     return e;
   }
 
-  Expression parseNewExpression(Expression e)
+  Expression parseNewExpression(/*Expression e*/)
   {
     assert(token.type == T.New);
     nT(); // Skip new keyword.
@@ -1720,7 +1759,7 @@ class Parser
       require(T.LBrace);
       auto decls = parseDeclarationDefinitions();
       require(T.RBrace);
-      return new NewAnonClassExpression(e, newArguments, bases, ctorArguments, decls);
+      return new NewAnonClassExpression(/*e, */newArguments, bases, ctorArguments, decls);
     }
 
     // NewExpression:
@@ -1733,7 +1772,7 @@ class Parser
     {
       ctorArguments = parseArguments(T.RParen);
     }
-    return new NewExpression(e, newArguments, type, ctorArguments);
+    return new NewExpression(/*e, */newArguments, type, ctorArguments);
   }
 
   Type parseType()
@@ -1782,7 +1821,7 @@ class Parser
       goto Lident;
 +/
     case T.Identifier, T.Typeof, T.Dot:
-      t = parseIdentifierListType();
+      t = parseDotListType();
       break;
     default:
       // TODO: issue error msg.

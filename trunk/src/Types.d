@@ -130,7 +130,7 @@ enum TID
   Delegate,
   Pointer,
   Array,
-  IdentifierList,
+  DotList,
   Identifier,
   Typeof,
   TemplateInstance,
@@ -165,15 +165,17 @@ class UndefinedType : Type
   }
 }
 
-class IdentifierListType : Type
+class DotListType : Type
 {
-  Type[] identList;
-  this(Type[] identList)
+  Type[] dotList;
+  this(Type[] dotList)
   {
-    super(TID.IdentifierList, null);
+    super(TID.DotList, null);
+    this.dotList = dotList;
   }
 }
 
+/+
 class IdentifierType : Type
 {
   string[] idents;
@@ -199,13 +201,35 @@ class IdentifierType : Type
     this.idents ~= ident;
   }
 }
++/
 
+class IdentifierType : Type
+{
+  string ident;
+  this(string ident)
+  {
+    super(TID.Identifier, null);
+    this.ident = ident;
+  }
+}
+/+
 class TypeofType : IdentifierType
 {
   Expression e;
   this(Expression e)
   {
     super(TID.Typeof);
+    this.e = e;
+  }
+}
++/
+
+class TypeofType : Type
+{
+  Expression e;
+  this(Expression e)
+  {
+    super(TID.Typeof, null);
     this.e = e;
   }
 }
