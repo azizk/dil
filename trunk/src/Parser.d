@@ -1429,6 +1429,9 @@ class Parser
           expected(T.Identifier);
         continue;
 */
+      case T.Dot:
+        e = new PostDotListExpression(e, parseDotListExpression());
+        break;
       case T.PlusPlus:
         e = new PostIncrExpression(e);
         break;

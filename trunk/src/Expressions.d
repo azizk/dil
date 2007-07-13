@@ -312,6 +312,16 @@ class DotTemplateInstanceExpression : UnaryExpression
   }
 }
 
+class PostDotListExpression : UnaryExpression
+{
+  DotListExpression dotList;
+  this(Expression e, DotListExpression dotList)
+  {
+    super(e);
+    this.dotList = dotList;
+  }
+}
+
 class CallExpression : UnaryExpression
 {
   Expression[] args;
@@ -416,10 +426,10 @@ class IdentifierListExpression : Expression
 */
 class DotListExpression : Expression
 {
-  Expression[] identList;
-  this(Expression[] identList)
+  Expression[] items;
+  this(Expression[] items)
   {
-    this.identList = identList;
+    this.items = items;
   }
 }
 
