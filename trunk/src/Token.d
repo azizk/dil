@@ -132,8 +132,12 @@ struct Token
 
   bool isKeyword()
   {
-    if (KeywordsBegin <= type && type <= KeywordsEnd)
-      return true;
-    return false;
+    return KeywordsBegin <= type && type <= KeywordsEnd;
   }
+/+
+  int opEquals(TOK type2)
+  {
+    return type == type2;
+  }
++/
 }

@@ -1196,6 +1196,11 @@ class Parser
       {
         require(T.Assign);
       }
+      else
+      {
+        type = null;
+        ident = null;
+      }
     }
     condition = parseExpression();
     require(T.RParen);
