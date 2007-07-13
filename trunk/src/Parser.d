@@ -84,7 +84,7 @@ class Parser
   {
     Declaration[] decls;
     while (token.type != T.RBrace && token.type != T.EOF)
-      decls ~= parseDeclarationDefinitions();
+      decls ~= parseDeclarationDefinition();
     return decls;
   }
 
@@ -225,11 +225,6 @@ class Parser
       decls ~= parseDeclarationDefinition();
     }
     return decls;
-  }
-
-  Statement[] parseStatements()
-  {
-    return null;
   }
 
   Declaration parseAttributeSpecifier()
@@ -1106,6 +1101,44 @@ class Parser
     require(T.Semicolon);
 
     return new MixinDeclaration(templateIdent, mixinIdent);
+  }
+
+  /+++++++++++++++++++++++++++++
+  + Statement parsing methods  +
+  +++++++++++++++++++++++++++++/
+
+  Statements parseStatements()
+  {
+    Statements statements;
+    while (token.type != T.RBrace && token.type != T.EOF)
+      statements ~= parseStatement();
+    return statements;
+  }
+
+  Statement parseStatement()
+  {
+    Statement s;
+    switch (token.type)
+    {
+    case T.Identifier:
+      Token next;
+      lx.peek(next);
+      if (next.type == T.Colon)
+      {
+        string ident = token.identifier;
+        nT(); // Skip Identifier
+        nT(); // Skip :
+        s = parseStatements();
+        s = new LabeledStatement(ident, s);
+        break;
+      }
+      goto case_Declaration;
+    case_Declaration:
+      // TODO: parse Declaration
+      break;
+    default:
+    }
+    return s;
   }
 
   /+++++++++++++++++++++++++++++

@@ -124,8 +124,8 @@ class UnionDeclaration : Declaration
 class ConstructorDeclaration : Declaration
 {
   Parameters parameters;
-  Statement[] statements;
-  this(Parameters parameters, Statement[] statements)
+  Statements statements;
+  this(Parameters parameters, Statements statements)
   {
     super(true);
     this.parameters = parameters;
@@ -135,8 +135,8 @@ class ConstructorDeclaration : Declaration
 
 class StaticConstructorDeclaration : Declaration
 {
-  Statement[] statements;
-  this(Statement[] statements)
+  Statements statements;
+  this(Statements statements)
   {
     super(true);
     this.statements = statements;
@@ -145,8 +145,8 @@ class StaticConstructorDeclaration : Declaration
 
 class DestructorDeclaration : Declaration
 {
-  Statement[] statements;
-  this(Statement[] statements)
+  Statements statements;
+  this(Statements statements)
   {
     super(true);
     this.statements = statements;
@@ -155,8 +155,8 @@ class DestructorDeclaration : Declaration
 
 class StaticDestructorDeclaration : Declaration
 {
-  Statement[] statements;
-  this(Statement[] statements)
+  Statements statements;
+  this(Statements statements)
   {
     super(true);
     this.statements = statements;
@@ -165,8 +165,8 @@ class StaticDestructorDeclaration : Declaration
 
 class InvariantDeclaration : Declaration
 {
-  Statement[] statements;
-  this(Statement[] statements)
+  Statements statements;
+  this(Statements statements)
   {
     super(true);
     this.statements = statements;
@@ -175,8 +175,8 @@ class InvariantDeclaration : Declaration
 
 class UnittestDeclaration : Declaration
 {
-  Statement[] statements;
-  this(Statement[] statements)
+  Statements statements;
+  this(Statements statements)
   {
     super(true);
     this.statements = statements;
