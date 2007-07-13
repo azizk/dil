@@ -1767,8 +1767,7 @@ class Parser
     //         NewArguments Type ( ArgumentList )
     //         NewArguments Type
     auto type = parseType();
-    // TODO: consider "new Foo!(int)(1,2,3)"
-    if (type.tid == TID.Identifier)
+    if (type.tid == TID.DotList && token.type == T.LParen)
     {
       ctorArguments = parseArguments(T.RParen);
     }
