@@ -71,6 +71,27 @@ struct Parameters
   { return items.length; }
 }
 
+
+enum Protection
+{
+  None,
+  Private   = 1,
+  Protected = 1<<1,
+  Package   = 1<<2,
+  Public    = 1<<3
+}
+
+class BaseClass
+{
+  Protection prot;
+  Type type;
+  this(Protection prot, Type type)
+  {
+    this.prot = prot;
+    this.type = type;
+  }
+}
+
 enum TP
 {
   Type,

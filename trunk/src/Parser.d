@@ -512,30 +512,24 @@ class Parser
     while (1)
     {
       Protection prot = Protection.Public;
-      string name;
       switch (token.type)
       {
-      case T.Identifier: goto LisIdentifier;
+      // TODO: What about class Foo : typeof(new Bar)?
+      case T.Identifier, T.Dot/+, Typeof+/: goto LparseBasicType;
       case T.Private:   prot = Protection.Private;   break;
       case T.Protected: prot = Protection.Protected; break;
       case T.Package:   prot = Protection.Package;   break;
       case T.Public:  /*prot = Protection.Public;*/  break;
-      //case T.Dot: // TODO: What about "class Foo : .Bar"?
       default:
         // TODO: issue error msg
         return bases;
       }
-      nT();
-      if (token.type == T.Identifier)
-      {
-      LisIdentifier:
-        name = token.identifier;
-        nT();
-        // TODO: handle template instantiations: class Foo : Bar!(int)
-      }
-      else
-        expected(T.Identifier);
-      bases ~= new BaseClass(prot, name);
+      nT(); // Skip protection attribute.
+    LparseBasicType:
+      auto type = parseBasicType();
+      //if (type.tid != TID.DotList)
+        // TODO: issue error msg. base classes can only be one or more identifiers or template instances separated by dots.
+      bases ~= new BaseClass(prot, type);
       if (token.type != T.Comma)
         break;
     }

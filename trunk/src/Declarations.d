@@ -69,26 +69,6 @@ class EnumDeclaration : Declaration
   }
 }
 
-enum Protection
-{
-  None,
-  Private   = 1,
-  Protected = 1<<1,
-  Package   = 1<<2,
-  Public    = 1<<3
-}
-
-class BaseClass
-{
-  Protection prot;
-  string name;
-  this(Protection prot, string name)
-  {
-    this.prot = prot;
-    this.name = name;
-  }
-}
-
 class ClassDeclaration : Declaration
 {
   string name;
