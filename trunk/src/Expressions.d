@@ -494,11 +494,11 @@ class CharLiteralExpression : Expression
   { this.tok = tok; }
 }
 
-class StringLiteralExpression : Expression
+class StringLiteralsExpression : Expression
 {
-  string str;
-  this(string str)
-  { this.str = str; }
+  Token*[] strLiterals;
+  this(Token*[] strLiterals)
+  { this.strLiterals = strLiterals; }
 }
 
 class ArrayLiteralExpression : Expression

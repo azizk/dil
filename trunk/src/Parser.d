@@ -1517,22 +1517,13 @@ class Parser
       e = new CharLiteralExpression(token.type);
       break;
     case T.String:
-      char[] buffer = token.str;
-      char postfix = token.pf;
-      nT();
-      while (token.type == T.String)
+      Token*[] stringLiterals;
+      do
       {
-        string tmp = token.str;
-//         if (postfix != token.pf)
-//           error();
-        if (tmp.length > 1)
-        {
-          buffer[$-1] = tmp[0]; // replace '\0'
-          buffer ~= tmp[1..$]; // append the rest
-        }
+        stringLiterals ~= token;
         nT();
-      }
-      e = new StringLiteralExpression(buffer);
+      } while (token.type == T.String)
+      e = new StringLiteralsExpression(stringLiterals);
       break;
     case T.LBracket:
       Expression[] values;
