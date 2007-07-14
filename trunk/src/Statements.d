@@ -179,7 +179,11 @@ class BreakStatement : Statement
 
 class ReturnStatement : Statement
 {
-
+  Expression expr;
+  this(Expression expr)
+  {
+    this.expr = expr;
+  }
 }
 
 class GotoStatement : Statement

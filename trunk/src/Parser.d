@@ -1163,6 +1163,9 @@ class Parser
     case T.Break:
       s = parseBreakStatement();
       break;
+    case T.Return:
+      s = parseReturnStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1418,6 +1421,15 @@ class Parser
     }
     require(T.Semicolon);
     return new BreakStatement(ident);
+  }
+
+  Statement parseReturnStatement()
+  {
+    assert(token.type == T.Return);
+    nT();
+    auto expr = parseExpression();
+    require(T.Semicolon);
+    return new ReturnStatement(expr);
   }
 
   /+++++++++++++++++++++++++++++
