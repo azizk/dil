@@ -1172,6 +1172,9 @@ class Parser
     case T.With:
       s = parseWithStatement();
       break;
+    case T.Synchronized:
+      s = parseSynchronizedStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1471,6 +1474,21 @@ class Parser
     auto expr = parseExpression();
     require(T.RParen);
     return new WithStatement(expr, parseScopeStatement());
+  }
+
+  Statement parseSynchronizedStatement()
+  {
+    assert(token.type == T.Synchronized);
+    nT();
+    Expression expr;
+
+    if (token.type == T.LParen)
+    {
+      nT();
+      expr = parseExpression();
+      require(T.RParen);
+    }
+    return new SynchronizedStatement(expr, parseScopeStatement());
   }
 
   /+++++++++++++++++++++++++++++

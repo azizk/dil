@@ -210,7 +210,13 @@ class WithStatement : Statement
 
 class SynchronizedStatement : Statement
 {
-
+  Expression expr;
+  Statement syncBody;
+  this(Expression expr, Statement withBody)
+  {
+    this.expr = expr;
+    this.syncBody = syncBody;
+  }
 }
 
 class TryStatement : Statement
