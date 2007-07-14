@@ -199,7 +199,13 @@ class GotoStatement : Statement
 
 class WithStatement : Statement
 {
-
+  Expression expr;
+  Statement withBody;
+  this(Expression expr, Statement withBody)
+  {
+    this.expr = expr;
+    this.withBody = withBody;
+  }
 }
 
 class SynchronizedStatement : Statement

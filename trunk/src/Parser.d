@@ -1169,6 +1169,9 @@ class Parser
     case T.Goto:
       s = parseGotoStatement();
       break;
+    case T.With:
+      s = parseWithStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1458,6 +1461,16 @@ class Parser
     }
     require(T.Semicolon);
     return new GotoStatement(ident, caseExpr);
+  }
+
+  Statement parseWithStatement()
+  {
+    assert(token.type == T.With);
+    nT();
+    require(T.LParen);
+    auto expr = parseExpression();
+    require(T.RParen);
+    return new WithStatement(expr, parseScopeStatement());
   }
 
   /+++++++++++++++++++++++++++++
