@@ -1215,7 +1215,17 @@ class Parser
       }
       assert(0);
     default:
-      // TODO: issue error msg and return IllegalStatement.
+      bool failed;
+      auto expression = try_(parseExpression(), failed);
+      if (!failed)
+      {
+        require(T.Semicolon);
+        s = new ExpressionStatement(expression);
+      }
+      else
+      {
+        // TODO: issue error msg and return IllegalStatement.
+      }
     }
     return s;
   }

@@ -44,7 +44,11 @@ class LabeledStatement : Statement
 
 class ExpressionStatement : Statement
 {
-
+  Expression expression;
+  this(Expression expression)
+  {
+    this.expression = expression;
+  }
 }
 
 class DeclarationStatement : Statement
