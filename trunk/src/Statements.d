@@ -221,7 +221,35 @@ class SynchronizedStatement : Statement
 
 class TryStatement : Statement
 {
+  Statement tryBody;
+  CatchBody[] catchBodies;
+  FinallyBody finallyBody;
+  this(Statement tryBody, CatchBody[] catchBodies, FinallyBody finallyBody)
+  {
+    this.tryBody = tryBody;
+    this.catchBodies = catchBodies;
+    this.finallyBody = finallyBody;
+  }
+}
 
+class CatchBody : Statement
+{
+  Parameter param;
+  Statement catchBody;
+  this(Parameter param, Statement catchBody)
+  {
+    this.param = param;
+    this.catchBody = catchBody;
+  }
+}
+
+class FinallyBody : Statement
+{
+  Statement finallyBody;
+  this(Statement finallyBody)
+  {
+    this.finallyBody = finallyBody;
+  }
 }
 
 class ScopeGuardStatement : Statement

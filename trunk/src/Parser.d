@@ -1175,6 +1175,9 @@ class Parser
     case T.Synchronized:
       s = parseSynchronizedStatement();
       break;
+    case T.Try:
+      s = parseTryStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1489,6 +1492,45 @@ class Parser
       require(T.RParen);
     }
     return new SynchronizedStatement(expr, parseScopeStatement());
+  }
+
+  Statement parseTryStatement()
+  {
+    assert(token.type == T.Try);
+    nT();
+
+    auto tryBody = parseScopeStatement();
+    CatchBody[] catchBodies;
+    FinallyBody finBody;
+
+    while (token.type == T.Catch)
+    {
+      nT();
+      Parameter param;
+      if (token.type == T.LParen)
+      {
+        string ident;
+        auto type = parseDeclarator(ident);
+        param = new Parameter(StorageClass.None, type, ident, null);
+        require(T.RParen);
+      }
+      catchBodies ~= new CatchBody(param, parseNoScopeStatement());
+      if (param is null)
+        break; // This is a LastCatch
+    }
+
+    if (token.type == T.Finally)
+    {
+      nT();
+      finBody = new FinallyBody(parseNoScopeStatement());
+    }
+
+    if (catchBodies.length == 0 || finBody is null)
+    {
+      // TODO: issue error msg.
+    }
+
+    return new TryStatement(tryBody, catchBodies, finBody);
   }
 
   /+++++++++++++++++++++++++++++
