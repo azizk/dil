@@ -170,7 +170,11 @@ class ContinueStatement : Statement
 
 class BreakStatement : Statement
 {
-
+  string ident;
+  this(string ident)
+  {
+    this.ident = ident;
+  }
 }
 
 class ReturnStatement : Statement
