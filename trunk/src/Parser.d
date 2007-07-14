@@ -762,7 +762,7 @@ class Parser
       decls = parseDeclarationsBlock();
 
       // else DeclarationsBlock
-      // debug without condition and else statement makes no sense
+      // debug without condition and else body makes no sense
       if (token.type == T.Else && (levelCond != -1 || identCond.length != 0))
       {
         nT();
@@ -1215,6 +1215,12 @@ class Parser
         goto case_Declaration;
       }
       assert(0);
+    case T.Debug:
+      s = parseDebugStatement();
+      break;
+    case T.Version:
+      s = parseVersionStatement();
+      break;
     case T.Enum:
       d = parseEnumDeclaration();
       goto case_DeclarationStatement;
@@ -1708,6 +1714,119 @@ class Parser
     require(T.RParen);
     require(T.Semicolon);
     return new StaticAssertStatement(condition, message);
+  }
+
+  Statement parseDebugStatement()
+  {
+    assert(token.type == T.Debug);
+    nT(); // Skip debug keyword.
+
+//     int levelSpec = -1; // debug = Integer ;
+//     string identSpec;   // debug = Identifier ;
+    int levelCond = -1; // debug ( Integer )
+    string identCond;   // debug ( Identifier )
+    Statement debugBody, elseBody;
+
+    void parseIdentOrInt(ref string ident, ref int level)
+    {
+      nT();
+      if (token.type == T.Int32)
+        level = token.int_;
+      else if (token.type == T.Identifier)
+        ident = token.identifier;
+      else
+        expected(T.Identifier); // TODO: better error msg
+      nT();
+    }
+
+//     if (token.type == T.Assign)
+//     {
+//       parseIdentOrInt(identSpec, levelSpec);
+//       require(T.Semicolon);
+//     }
+//     else
+    {
+      // Condition:
+      //     Integer
+      //     Identifier
+
+      // ( Condition )
+      if (token.type == T.LParen)
+      {
+        parseIdentOrInt(identCond, levelCond);
+        require(T.RParen);
+      }
+
+      // debug Statement
+      // debug ( Condition ) Statement
+      debugBody = parseNoScopeStatement();
+
+      // else Statement
+      if (token.type == T.Else)
+      {
+        // debug without condition and else body makes no sense
+        //if (levelCond == -1 && identCond.length == 0)
+          // TODO: issue error msg
+        nT();
+        elseBody = parseNoScopeStatement();
+      }
+    }
+
+    return new DebugStatement(/+levelSpec, identSpec,+/ levelCond, identCond, debugBody, elseBody);
+  }
+
+  Statement parseVersionStatement()
+  {
+    assert(token.type == T.Version);
+
+    nT(); // Skip version keyword.
+
+//     int levelSpec = -1; // version = Integer ;
+//     string identSpec;   // version = Identifier ;
+    int levelCond = -1; // version ( Integer )
+    string identCond;   // version ( Identifier )
+    Statement versionBody, elseBody;
+
+    void parseIdentOrInt(ref string ident, ref int level)
+    {
+      nT();
+      if (token.type == T.Int32)
+        level = token.int_;
+      else if (token.type == T.Identifier)
+        ident = token.identifier;
+      else
+        expected(T.Identifier); // TODO: better error msg
+      nT();
+    }
+
+//     if (token.type == T.Assign)
+//     {
+//       parseIdentOrInt(identSpec, levelSpec);
+//       require(T.Semicolon);
+//     }
+//     else
+    {
+      // Condition:
+      //     Integer
+      //     Identifier
+
+      // ( Condition )
+      require(T.LParen);
+      parseIdentOrInt(identCond, levelCond);
+      require(T.RParen);
+
+      // version ( Condition ) Statement
+      versionBody = parseNoScopeStatement();
+
+      // else Statement
+      if (token.type == T.Else)
+      {
+        nT();
+        elseBody = parseNoScopeStatement();
+      }
+    }
+
+    return new VersionStatement(/+levelSpec, identSpec,+/ levelCond, identCond, versionBody, elseBody);
   }
 
   /+++++++++++++++++++++++++++++

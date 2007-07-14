@@ -338,3 +338,31 @@ class StaticAssertStatement : Statement
     this.message = message;
   }
 }
+
+class DebugStatement : Statement
+{
+  int levelCond;
+  string identCond;
+  Statement debugBody, elseBody;
+  this(int levelCond, string identCond, Statement debugBody, Statement elseBody)
+  {
+    this.levelCond = levelCond;
+    this.identCond = identCond;
+    this.debugBody = debugBody;
+    this.elseBody = elseBody;
+  }
+}
+
+class VersionStatement : Statement
+{
+  int levelCond;
+  string identCond;
+  Statement versionBody, elseBody;
+  this(int levelCond, string identCond, Statement versionBody, Statement elseBody)
+  {
+    this.levelCond = levelCond;
+    this.identCond = identCond;
+    this.versionBody = versionBody;
+    this.elseBody = elseBody;
+  }
+}
