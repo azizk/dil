@@ -1277,26 +1277,14 @@ class Parser
     Expression condition, increment;
 
     if (token.type != T.Semicolon)
-    {
       init = parseNoScopeStatement();
-      require(T.Semicolon);
-    }
-    else
-      nT();
+    require(T.Semicolon);
     if (token.type != T.Semicolon)
-    {
       condition = parseExpression();
-      require(T.Semicolon);
-    }
-    else
-      nT();
+    require(T.Semicolon);
     if (token.type != T.RParen)
-    {
       increment = parseExpression();
-      require(T.RParen);
-    }
-    else
-      nT();
+    require(T.RParen);
     forBody = parseScopeStatement();
     return new ForStatement(init, condition, increment, forBody);
   }
