@@ -274,7 +274,11 @@ class ThrowStatement : Statement
 
 class VolatileStatement : Statement
 {
-
+  Statement volatileBody;
+  this(Statement volatileBody)
+  {
+    this.volatileBody = volatileBody;
+  }
 }
 
 class AsmStatement : Statement

@@ -1188,6 +1188,9 @@ class Parser
         goto case_Declaration;
       s = parseScopeGuardStatement();
       break;
+    case T.Volatile:
+      s = parseVolatileStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1577,6 +1580,20 @@ class Parser
     else
       scopeBody = parseNoScopeStatement();
     return new ScopeGuardStatement(condition, scopeBody);
+  }
+
+  Statement parseVolatileStatement()
+  {
+    assert(token.type == T.Volatile);
+    nT();
+    Statement volatileBody;
+    if (token.type == T.Semicolon)
+      nT();
+    else if (token.type == T.LBrace)
+      volatileBody = parseScopeStatement();
+    else
+      volatileBody = parseNoScopeStatement();
+    return new VolatileStatement(volatileBody);
   }
 
   /+++++++++++++++++++++++++++++
