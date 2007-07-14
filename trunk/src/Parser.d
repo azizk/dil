@@ -1118,6 +1118,7 @@ class Parser
   Statement parseStatement()
   {
     Statement s;
+    Declaration d;
     switch (token.type)
     {
     case T.Identifier:
@@ -1214,6 +1215,21 @@ class Parser
         goto case_Declaration;
       }
       assert(0);
+    case T.Enum:
+      d = parseEnumDeclaration();
+      goto case_DeclarationStatement;
+    case T.Class:
+      d = parseClassDeclaration();
+      goto case_DeclarationStatement;
+    case T.Interface:
+      d = parseInterfaceDeclaration();
+      goto case_DeclarationStatement;
+    case T.Struct, T.Union:
+      d = parseAggregateDeclaration();
+      goto case_DeclarationStatement;
+    case_DeclarationStatement:
+      s = new DeclarationStatement(d);
+      break;
     default:
       bool failed;
       auto expression = try_(parseExpression(), failed);

@@ -53,7 +53,11 @@ class ExpressionStatement : Statement
 
 class DeclarationStatement : Statement
 {
-
+  Declaration declaration;
+  this(Declaration declaration)
+  {
+    this.declaration = declaration;
+  }
 }
 
 class IfStatement : Statement
