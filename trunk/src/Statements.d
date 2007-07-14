@@ -254,7 +254,13 @@ class FinallyBody : Statement
 
 class ScopeGuardStatement : Statement
 {
-
+  string condition;
+  Statement scopeBody;
+  this(string condition, Statement scopeBody)
+  {
+    this.condition = condition;
+    this.scopeBody = scopeBody;
+  }
 }
 
 class ThrowStatement : Statement

@@ -1181,6 +1181,13 @@ class Parser
     case T.Throw:
       s = parseThrowStatement();
       break;
+    case T.Scope:
+      Token next;
+      lx.peek(next);
+      if (next.type != T.LParen)
+        goto case_Declaration;
+      s = parseScopeGuardStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1543,6 +1550,33 @@ class Parser
     auto expr = parseExpression();
     require(T.Semicolon);
     return new ThrowStatement(expr);
+  }
+
+  Statement parseScopeGuardStatement()
+  {
+    assert(token.type == T.Scope);
+    nT();
+    assert(token.type == T.LParen);
+    nT();
+
+    string condition = requireIdentifier();
+    if (condition.length)
+      switch (condition)
+      {
+      case "exit":
+      case "success":
+      case "failure":
+        break;
+      default:
+        // TODO: issue error msg.
+      }
+    require(T.RParen);
+    Statement scopeBody;
+    if (token.type == T.LBrace)
+      scopeBody = parseScopeStatement();
+    else
+      scopeBody = parseNoScopeStatement();
+    return new ScopeGuardStatement(condition, scopeBody);
   }
 
   /+++++++++++++++++++++++++++++
