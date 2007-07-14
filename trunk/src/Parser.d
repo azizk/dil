@@ -135,7 +135,7 @@ class Parser
       default:
         goto case_AttributeSpecifier;
       }
-      break;
+      assert(0);
     case T.Import:
       decl = parseImportDeclaration();
       break;
@@ -1128,8 +1128,7 @@ class Parser
         string ident = token.identifier;
         nT(); // Skip Identifier
         nT(); // Skip :
-        s = parseStatements();
-        s = new LabeledStatement(ident, s);
+        s = new LabeledStatement(ident, parseNoScopeStatement());
         break;
       }
       goto case_Declaration;
@@ -1200,6 +1199,21 @@ class Parser
     case T.Mixin:
       s = new MixinStatement(parseMixinDeclaration());
       break;
+    case T.Static:
+      Token next;
+      lx.peek(next);
+      switch (next.type)
+      {
+      case T.If:
+        s = parseStaticIfStatement();
+        break;
+      case T.Assert:
+        s = parseStaticAssertStatement();
+        break;
+      default:
+        goto case_Declaration;
+      }
+      assert(0);
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1628,6 +1642,46 @@ class Parser
       pragmaBody = parseNoScopeStatement();
 
     return new PragmaStatement(ident, args, pragmaBody);
+  }
+
+  Statement parseStaticIfStatement()
+  {
+    assert(token.type == T.Static);
+    nT();
+    assert(token.type == T.If);
+    nT();
+    Expression condition;
+    Statement ifBody, elseBody;
+
+    require(T.LParen);
+    condition = parseExpression();
+    require(T.RParen);
+    ifBody = parseNoScopeStatement();
+    if (token.type == T.Else)
+    {
+      nT();
+      elseBody = parseNoScopeStatement();
+    }
+    return new StaticIfStatement(condition, ifBody, elseBody);
+  }
+
+  Statement parseStaticAssertStatement()
+  {
+    assert(token.type == T.Static);
+    nT();
+    assert(token.type == T.Assert);
+    nT();
+    Expression condition, message;
+    require(T.LParen);
+    condition = parseAssignExpression();
+    if (token.type == T.Comma)
+    {
+      nT();
+      message = parseAssignExpression();
+    }
+    require(T.RParen);
+    require(T.Semicolon);
+    return new StaticAssertStatement(condition, message);
   }
 
   /+++++++++++++++++++++++++++++

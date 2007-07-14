@@ -308,3 +308,25 @@ class MixinStatement : Statement
     this.decl = decl;
   }
 }
+
+class StaticIfStatement : Statement
+{
+  Expression condition;
+  Statement ifBody, elseBody;
+  this(Expression condition, Statement ifBody, Statement elseBody)
+  {
+    this.condition = condition;
+    this.ifBody = ifBody;
+    this.elseBody = elseBody;
+  }
+}
+
+class StaticAssertStatement : Statement
+{
+  Expression condition, message;
+  this(Expression condition, Expression message)
+  {
+    this.condition = condition;
+    this.message = message;
+  }
+}
