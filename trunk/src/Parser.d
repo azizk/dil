@@ -1191,6 +1191,9 @@ class Parser
     case T.Volatile:
       s = parseVolatileStatement();
       break;
+    case T.Asm:
+      s = parseAsmStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1594,6 +1597,17 @@ class Parser
     else
       volatileBody = parseNoScopeStatement();
     return new VolatileStatement(volatileBody);
+  }
+
+  /+++++++++++++++++++++++++++++
+  + Assembler parsing methods  +
+  +++++++++++++++++++++++++++++/
+
+  Statement parseAsmStatement()
+  {
+    assert(token.type == T.Asm);
+    // TODO: implement asm statements parser.
+    return null;
   }
 
   /+++++++++++++++++++++++++++++
