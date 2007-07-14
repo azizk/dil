@@ -1154,6 +1154,9 @@ class Parser
     case T.Case:
       s = parseCaseStatement();
       break;
+    case T.Default:
+      s = parseDefaultStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1373,6 +1376,14 @@ class Parser
 
     auto caseBody = parseScopeStatement();
     return new CaseStatement(values, caseBody);
+  }
+
+  Statement parseDefaultStatement()
+  {
+    assert(token.type == T.Default);
+    nT();
+    require(T.Colon);
+    return new DefaultStatement(parseScopeStatement());
   }
 
   /+++++++++++++++++++++++++++++

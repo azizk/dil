@@ -152,7 +152,11 @@ class CaseStatement : Statement
 
 class DefaultStatement : Statement
 {
-
+  Statement defaultBody;
+  this(Statement defaultBody)
+  {
+    this.defaultBody = defaultBody;
+  }
 }
 
 class ContinueStatement : Statement
