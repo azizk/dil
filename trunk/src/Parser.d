@@ -1178,6 +1178,9 @@ class Parser
     case T.Try:
       s = parseTryStatement();
       break;
+    case T.Throw:
+      s = parseThrowStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1531,6 +1534,15 @@ class Parser
     }
 
     return new TryStatement(tryBody, catchBodies, finBody);
+  }
+
+  Statement parseThrowStatement()
+  {
+    assert(token.type == T.Throw);
+    nT();
+    auto expr = parseExpression();
+    require(T.Semicolon);
+    return new ThrowStatement(expr);
   }
 
   /+++++++++++++++++++++++++++++

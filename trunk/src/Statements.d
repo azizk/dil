@@ -259,7 +259,11 @@ class ScopeGuardStatement : Statement
 
 class ThrowStatement : Statement
 {
-
+  Expression expr;
+  this(Expression expr)
+  {
+    this.expr = expr;
+  }
 }
 
 class VolatileStatement : Statement
