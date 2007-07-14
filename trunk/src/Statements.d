@@ -4,6 +4,7 @@
 +/
 module Statements;
 import Expressions;
+import Declarations;
 import Types;
 import Token;
 
@@ -301,5 +302,9 @@ class PragmaStatement : Statement
 
 class MixinStatement : Statement
 {
-
+  Declaration decl;
+  this(Declaration decl)
+  {
+    this.decl = decl;
+  }
 }

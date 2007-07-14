@@ -1197,6 +1197,9 @@ class Parser
     case T.Pragma:
       s = parsePragmaStatement();
       break;
+    case T.Mixin:
+      s = new MixinStatement(parseMixinDeclaration());
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
