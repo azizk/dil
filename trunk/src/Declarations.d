@@ -53,6 +53,26 @@ class ImportDeclaration : Declaration
   }
 }
 
+class AliasDeclaration : Declaration
+{
+  Declaration decl;
+  this(Declaration decl)
+  {
+    super(false);
+    this.decl = decl;
+  }
+}
+
+class TypedefDeclaration : Declaration
+{
+  Declaration decl;
+  this(Declaration decl)
+  {
+    super(false);
+    this.decl = decl;
+  }
+}
+
 class EnumDeclaration : Declaration
 {
   string name;

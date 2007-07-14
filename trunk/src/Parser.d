@@ -112,6 +112,14 @@ class Parser
     case_AttributeSpecifier:
       decl = parseAttributeSpecifier();
       break;
+    case T.Alias:
+      nT();
+      decl = new AliasDeclaration(parseDeclarationDefinition());
+      break;
+    case T.Typedef:
+      nT();
+      decl = new TypedefDeclaration(parseDeclarationDefinition());
+      break;
     case T.Static:
       Token t;
       lx.peek(t);
@@ -1121,6 +1129,23 @@ class Parser
     Declaration d;
     switch (token.type)
     {
+    case T.Extern,
+         T.Align,
+//          T.Pragma,
+//          T.Deprecated,
+//          T.Private,
+//          T.Package,
+//          T.Protected,
+//          T.Public,
+//          T.Export,
+         //T.Static,
+         T.Final,
+//          T.Override,
+//          T.Abstract,
+         T.Const,
+         T.Auto/+,
+         T.Scope+/:
+      break;
     case T.Identifier:
       Token next;
       lx.peek(next);
