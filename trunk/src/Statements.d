@@ -188,7 +188,13 @@ class ReturnStatement : Statement
 
 class GotoStatement : Statement
 {
-
+  string ident;
+  Expression caseExpr;
+  this(string ident, Expression caseExpr)
+  {
+    this.ident = ident;
+    this.caseExpr = caseExpr;
+  }
 }
 
 class WithStatement : Statement
