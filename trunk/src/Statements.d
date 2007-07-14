@@ -5,6 +5,7 @@
 module Statements;
 import Expressions;
 import Types;
+import Token;
 
 class Statement
 {
@@ -99,6 +100,7 @@ class ForStatement : Statement
   Statement init;
   Expression condition, increment;
   Statement forBody;
+
   this(Statement init, Expression condition, Expression increment, Statement forBody)
   {
     this.init = init;
@@ -110,7 +112,18 @@ class ForStatement : Statement
 
 class ForeachStatement : Statement
 {
+  TOK tok;
+  Parameters params;
+  Expression aggregate;
+  Statement forBody;
 
+  this(TOK tok, Parameters params, Expression aggregate, Statement forBody)
+  {
+    this.tok = tok;
+    this.params = params;
+    this.aggregate = aggregate;
+    this.forBody = forBody;
+  }
 }
 
 class SwitchStatement : Statement

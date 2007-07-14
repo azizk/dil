@@ -1145,6 +1145,9 @@ class Parser
     case T.Do:
       s = parseDoWhileStatement();
       break;
+    case T.Foreach, T.Foreach_reverse:
+      s = parseForeachStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1287,6 +1290,55 @@ class Parser
     require(T.RParen);
     forBody = parseScopeStatement();
     return new ForStatement(init, condition, increment, forBody);
+  }
+
+  Statement parseForeachStatement()
+  {
+    assert(token.type == T.Foreach || token.type == T.Foreach_reverse);
+    TOK tok = token.type;
+    nT();
+
+    Parameters params;
+    Expression aggregate;
+
+    require(T.LParen);
+    while (1)
+    {
+      StorageClass stc;
+      Type type;
+      string ident;
+
+      switch (token.type)
+      {
+      case T.Ref:
+        nT();
+        stc = StorageClass.Ref;
+        break;
+      case T.Identifier:
+        Token next;
+        lx.peek(next);
+        if (next.type == T.Comma || next.type == T.Semicolon || next.type == T.RParen)
+        {
+          ident = token.identifier;
+          nT();
+          break;
+        }
+        // fall through
+      default:
+        type = parseDeclarator(ident);
+      }
+
+      params ~= new Parameter(stc, type, ident, null);
+
+      if (token.type != T.Comma)
+        break;
+      nT();
+    }
+    require(T.Semicolon);
+    aggregate = parseExpression();
+    require(T.RParen);
+    auto forBody = parseScopeStatement();
+    return new ForeachStatement(tok, params, aggregate, forBody);
   }
 
   /+++++++++++++++++++++++++++++
