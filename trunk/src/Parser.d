@@ -1157,6 +1157,9 @@ class Parser
     case T.Default:
       s = parseDefaultStatement();
       break;
+    case T.Continue:
+      s = parseContinueStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1384,6 +1387,20 @@ class Parser
     nT();
     require(T.Colon);
     return new DefaultStatement(parseScopeStatement());
+  }
+
+  Statement parseContinueStatement()
+  {
+    assert(token.type == T.Continue);
+    nT();
+    string ident;
+    if (token.type == T.Identifier)
+    {
+      ident = token.identifier;
+      nT();
+    }
+    require(T.Semicolon);
+    return new ContinueStatement(ident);
   }
 
   /+++++++++++++++++++++++++++++

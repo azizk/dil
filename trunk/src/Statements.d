@@ -161,7 +161,11 @@ class DefaultStatement : Statement
 
 class ContinueStatement : Statement
 {
-
+  string ident;
+  this(string ident)
+  {
+    this.ident = ident;
+  }
 }
 
 class BreakStatement : Statement
