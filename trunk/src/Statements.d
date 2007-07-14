@@ -128,7 +128,14 @@ class ForeachStatement : Statement
 
 class SwitchStatement : Statement
 {
+  Expression condition;
+  Statement switchBody;
 
+  this(Expression condition, Statement switchBody)
+  {
+    this.condition = condition;
+    this.switchBody = switchBody;
+  }
 }
 
 class CaseStatement : Statement

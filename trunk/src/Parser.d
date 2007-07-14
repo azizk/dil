@@ -1148,6 +1148,9 @@ class Parser
     case T.Foreach, T.Foreach_reverse:
       s = parseForeachStatement();
       break;
+    case T.Switch:
+      s = parseSwitchStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1339,6 +1342,18 @@ class Parser
     require(T.RParen);
     auto forBody = parseScopeStatement();
     return new ForeachStatement(tok, params, aggregate, forBody);
+  }
+
+  Statement parseSwitchStatement()
+  {
+    assert(token.type == T.Switch);
+    nT();
+
+    require(T.LParen);
+    auto condition = parseExpression();
+    require(T.RParen);
+    auto switchBody = parseScopeStatement();
+    return new SwitchStatement(condition, switchBody);
   }
 
   /+++++++++++++++++++++++++++++
