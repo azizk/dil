@@ -288,7 +288,15 @@ class AsmStatement : Statement
 
 class PragmaStatement : Statement
 {
-
+  string ident;
+  Expression[] args;
+  Statement pragmaBody;
+  this(string ident, Expression[] args, Statement pragmaBody)
+  {
+    this.ident = ident;
+    this.args = args;
+    this.pragmaBody = pragmaBody;
+  }
 }
 
 class MixinStatement : Statement

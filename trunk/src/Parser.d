@@ -1194,6 +1194,9 @@ class Parser
     case T.Asm:
       s = parseAsmStatement();
       break;
+    case T.Pragma:
+      s = parsePragmaStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1597,6 +1600,31 @@ class Parser
     else
       volatileBody = parseNoScopeStatement();
     return new VolatileStatement(volatileBody);
+  }
+
+  Statement parsePragmaStatement()
+  {
+    assert(token.type == T.Pragma);
+    nT();
+
+    string ident;
+    Expression[] args;
+    Statement pragmaBody;
+
+    require(T.LParen);
+    ident = requireIdentifier();
+
+    if (token.type == T.Comma)
+      args = parseArguments(T.RParen);
+    else
+      require(T.RParen);
+
+    if (token.type == T.Semicolon)
+      nT();
+    else
+      pragmaBody = parseNoScopeStatement();
+
+    return new PragmaStatement(ident, args, pragmaBody);
   }
 
   /+++++++++++++++++++++++++++++
