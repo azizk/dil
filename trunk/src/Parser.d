@@ -1151,6 +1151,9 @@ class Parser
     case T.Switch:
       s = parseSwitchStatement();
       break;
+    case T.Case:
+      s = parseCaseStatement();
+      break;
     default:
       // TODO: issue error msg and return IllegalStatement.
     }
@@ -1354,6 +1357,22 @@ class Parser
     require(T.RParen);
     auto switchBody = parseScopeStatement();
     return new SwitchStatement(condition, switchBody);
+  }
+
+  Statement parseCaseStatement()
+  {
+    assert(token.type == T.Case);
+    // T.Case skipped in do-while.
+    Expression[] values;
+    do
+    {
+      nT();
+      values ~= parseAssignExpression();
+    } while (token.type == T.Comma)
+    require(T.Colon);
+
+    auto caseBody = parseScopeStatement();
+    return new CaseStatement(values, caseBody);
   }
 
   /+++++++++++++++++++++++++++++

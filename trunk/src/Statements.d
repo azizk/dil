@@ -140,7 +140,14 @@ class SwitchStatement : Statement
 
 class CaseStatement : Statement
 {
+  Expression[] values;
+  Statement caseBody;
 
+  this(Expression[] values, Statement caseBody)
+  {
+    this.values = values;
+    this.caseBody = caseBody;
+  }
 }
 
 class DefaultStatement : Statement
