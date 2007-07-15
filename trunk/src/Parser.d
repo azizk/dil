@@ -281,7 +281,99 @@ class Parser
 
   Expression parseInitializer()
   {
-    return null;
+    if (token.type == T.Void)
+    {
+      Token next;
+      lx.peek(next);
+      if (next.type == T.Comma || next.type == T.Semicolon)
+      {
+        nT();
+        return new VoidInitializer();
+      }
+    }
+    return parseNonVoidInitializer();
+  }
+
+  Expression parseNonVoidInitializer()
+  {
+    Expression init;
+    switch (token.type)
+    {
+    case T.LBracket:
+      // ArrayInitializer:
+      //         [ ]
+      //         [ ArrayMemberInitializations ]
+      Expression[] keys;
+      Expression[] values;
+      while (1)
+      {
+        auto e = parseNonVoidInitializer();
+        if (token.type == T.Colon)
+        {
+          nT();
+          keys ~= e;
+          values ~= parseNonVoidInitializer();
+        }
+        else
+        {
+          keys ~= null;
+          values ~= e;
+        }
+
+        if (token.type != T.Comma)
+          break;
+        nT();
+        if (token.type == T.RBracket)
+          break;
+      }
+      require(T.RBracket);
+      init = new ArrayInitializer(keys, values);
+      break;
+    case T.LBrace:
+      // StructInitializer:
+      //         {  }
+      //         { StructMemberInitializers }
+      Expression parseStructInitializer()
+      {
+        string[] idents;
+        Expression[] values;
+        while (1)
+        {
+          if (token.type == T.Identifier)
+          {
+            Token next;
+            lx.peek(next);
+            // Peek for colon to see if this is a member identifier.
+            if (next.type == T.Colon)
+            {
+              idents ~= token.identifier();
+              nT();
+              nT();
+            }
+          }
+          // NonVoidInitializer
+          values ~= parseNonVoidInitializer();
+
+          if (token.type != T.Comma)
+            break;
+          nT();
+          if (token.type == T.RBrace)
+            break;
+        }
+        require(T.RBrace);
+        return new StructInitializer(idents, values);
+      }
+      bool failed;
+      auto si = try_(parseStructInitializer(), failed);
+      if (!failed)
+        init = si;
+      //else
+        // TODO: issue error msg.
+      break;
+    default:
+      init = parseAssignExpression();
+    }
+    return init;
   }
 
   FunctionBody parseFunctionBody(FunctionBody func)

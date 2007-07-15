@@ -612,3 +612,30 @@ class FunctionLiteralExpression : Expression
     this.funcTok = funcTok;
   }
 }
+
+class VoidInitializer : Expression
+{
+
+}
+
+class ArrayInitializer : Expression
+{
+  Expression[] keys;
+  Expression[] values;
+  this(Expression[] keys, Expression[] values)
+  {
+    this.keys = keys;
+    this.values = values;
+  }
+}
+
+class StructInitializer : Expression
+{
+  string[] idents;
+  Expression[] values;
+  this(string[] idents, Expression[] values)
+  {
+    this.idents = idents;
+    this.values = values;
+  }
+}
