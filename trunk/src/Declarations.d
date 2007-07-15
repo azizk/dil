@@ -152,42 +152,42 @@ class UnionDeclaration : Declaration
 class ConstructorDeclaration : Declaration
 {
   Parameters parameters;
-  Statements statements;
-  this(Parameters parameters, Statements statements)
+  FunctionBody funcBody;
+  this(Parameters parameters, FunctionBody funcBody)
   {
     super(true);
     this.parameters = parameters;
-    this.statements = statements;
+    this.funcBody = funcBody;
   }
 }
 
 class StaticConstructorDeclaration : Declaration
 {
-  Statements statements;
-  this(Statements statements)
+  FunctionBody funcBody;
+  this(FunctionBody funcBody)
   {
     super(true);
-    this.statements = statements;
+    this.funcBody = funcBody;
   }
 }
 
 class DestructorDeclaration : Declaration
 {
-  Statements statements;
-  this(Statements statements)
+  FunctionBody funcBody;
+  this(FunctionBody funcBody)
   {
     super(true);
-    this.statements = statements;
+    this.funcBody = funcBody;
   }
 }
 
 class StaticDestructorDeclaration : Declaration
 {
-  Statements statements;
-  this(Statements statements)
+  FunctionBody funcBody;
+  this(FunctionBody funcBody)
   {
     super(true);
-    this.statements = statements;
+    this.funcBody = funcBody;
   }
 }
 
@@ -220,21 +220,21 @@ class VariableDeclaration : Declaration
 
 class InvariantDeclaration : Declaration
 {
-  Statements statements;
-  this(Statements statements)
+  FunctionBody funcBody;
+  this(FunctionBody funcBody)
   {
     super(true);
-    this.statements = statements;
+    this.funcBody = funcBody;
   }
 }
 
 class UnittestDeclaration : Declaration
 {
-  Statements statements;
-  this(Statements statements)
+  FunctionBody funcBody;
+  this(FunctionBody funcBody)
   {
     super(true);
-    this.statements = statements;
+    this.funcBody = funcBody;
   }
 }
 
@@ -319,24 +319,24 @@ class TemplateDeclaration : Declaration
 class NewDeclaration : Declaration
 {
   Parameters parameters;
-  Declaration[] decls;
-  this(Parameters parameters, Declaration[] decls)
+  FunctionBody funcBody;
+  this(Parameters parameters, FunctionBody funcBody)
   {
     super(true);
     this.parameters = parameters;
-    this.decls = decls;
+    this.funcBody = funcBody;
   }
 }
 
 class DeleteDeclaration : Declaration
 {
   Parameters parameters;
-  Declaration[] decls;
-  this(Parameters parameters, Declaration[] decls)
+  FunctionBody funcBody;
+  this(Parameters parameters, FunctionBody funcBody)
   {
     super(true);
     this.parameters = parameters;
-    this.decls = decls;
+    this.funcBody = funcBody;
   }
 }
 

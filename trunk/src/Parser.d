@@ -748,10 +748,8 @@ class Parser
     assert(token.type == T.This);
     nT(); // Skip 'this' keyword.
     auto parameters = parseParameterList();
-    require(T.LBrace);
-    auto statements = parseStatements();
-    require(T.RBrace);
-    return new ConstructorDeclaration(parameters, statements);
+    auto funcBody = parseFunctionBody(new FunctionBody);
+    return new ConstructorDeclaration(parameters, funcBody);
   }
 
   Declaration parseDestructorDeclaration()
@@ -761,10 +759,8 @@ class Parser
     require(T.This);
     require(T.LParen);
     require(T.RParen);
-    require(T.LBrace);
-    auto statements = parseStatements();
-    require(T.RBrace);
-    return new DestructorDeclaration(statements);
+    auto funcBody = parseFunctionBody(new FunctionBody);
+    return new DestructorDeclaration(funcBody);
   }
 
   Declaration parseStaticConstructorDeclaration()
@@ -774,10 +770,8 @@ class Parser
     nT(); // Skip 'this' keyword.
     require(T.LParen);
     require(T.RParen);
-    require(T.LBrace);
-    auto statements = parseStatements();
-    require(T.RBrace);
-    return new StaticConstructorDeclaration(statements);
+    auto funcBody = parseFunctionBody(new FunctionBody);
+    return new StaticConstructorDeclaration(funcBody);
   }
 
   Declaration parseStaticDestructorDeclaration()
@@ -788,10 +782,8 @@ class Parser
     require(T.This);
     require(T.LParen);
     require(T.RParen);
-    require(T.LBrace);
-    auto statements = parseStatements();
-    require(T.RBrace);
-    return new StaticDestructorDeclaration(statements);
+    auto funcBody = parseFunctionBody(new FunctionBody);
+    return new StaticDestructorDeclaration(funcBody);
   }
 
   Declaration parseInvariantDeclaration()
@@ -801,10 +793,8 @@ class Parser
     // Optional () for getting ready porting to D 2.0
     if (token.type == T.LParen)
       requireNext(T.RParen);
-    require(T.LBrace);
-    auto statements = parseStatements();
-    require(T.RBrace);
-    return new InvariantDeclaration(statements);
+    auto funcBody = parseFunctionBody(new FunctionBody);
+    return new InvariantDeclaration(funcBody);
   }
 
   Declaration parseUnittestDeclaration()
@@ -812,10 +802,8 @@ class Parser
     assert(token.type == T.Unittest);
 
     nT(); // Skip unittest keyword.
-    require(T.LBrace);
-    auto statements = parseStatements();
-    require(T.RBrace);
-    return new UnittestDeclaration(statements);
+    auto funcBody = parseFunctionBody(new FunctionBody);
+    return new UnittestDeclaration(funcBody);
   }
 
   Declaration parseDebugDeclaration()
@@ -1008,10 +996,8 @@ class Parser
     assert(token.type == T.New);
     nT(); // Skip new keyword.
     auto parameters = parseParameterList();
-    require(T.LBrace);
-    auto decls = parseDeclarationDefinitions();
-    require(T.RBrace);
-    return new NewDeclaration(parameters, decls);
+    auto funcBody = parseFunctionBody(new FunctionBody);
+    return new NewDeclaration(parameters, funcBody);
   }
 
   Declaration parseDeleteDeclaration()
@@ -1019,11 +1005,9 @@ class Parser
     assert(token.type == T.Delete);
     nT(); // Skip delete keyword.
     auto parameters = parseParameterList();
-    // TODO: only one parameter of type void* allowed.
-    require(T.LBrace);
-    auto decls = parseDeclarationDefinitions();
-    require(T.RBrace);
-    return new DeleteDeclaration(parameters, decls);
+    // TODO: only one parameter of type void* allowed. Check in parsing or semantic phase?
+    auto funcBody = parseFunctionBody(new FunctionBody);
+    return new DeleteDeclaration(parameters, funcBody);
   }
 
   /+
