@@ -332,11 +332,13 @@ class FunctionType : Type
 {
   Type returnType;
   Parameters parameters;
-  this(Type returnType, Parameters parameters)
+  TemplateParameter[] tparams;
+  this(Type returnType, Parameters parameters, TemplateParameter[] tparams = null)
   {
     super(TID.Function, null);
     this.returnType = returnType;
     this.parameters = parameters;
+    this.tparams = tparams;
   }
 }
 

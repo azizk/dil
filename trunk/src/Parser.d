@@ -2716,6 +2716,38 @@ class Parser
     assert(0);
   }
 
+  bool isTemplateParameterList()
+  {
+    // We count nested parentheses tokens because template types may appear inside parameter lists; e.g. (int x, Foo!(int) y).
+    Token t;
+    uint level = 1;
+    while (1)
+    {
+      lx.peek(t);
+      switch (t.type)
+      {
+      case T.RParen:
+        if (--level == 0)
+        { // Closing parentheses found. Return next token.
+          lx.peek(t);
+          break;
+        }
+        continue;
+      case T.LParen:
+        ++level;
+        continue;
+      case T.EOF:
+        break;
+      default:
+        continue;
+      }
+      break;
+    }
+    if (t.type == T.LParen)
+      return true;
+    return false;
+  }
+
   Type parseDeclaratorSuffix(Type t)
   {
     switch (token.type)
@@ -2728,10 +2760,16 @@ class Parser
       while (token.type == T.LBracket)
       break;
     case T.LParen:
+      TemplateParameter[] tparams;
+      if (isTemplateParameterList())
+      {
+        // ( TemplateParameterList ) ( ParameterList )
+        tparams = parseTemplateParameterList();
+      }
+
       auto params = parseParameterList();
-      // TODO: handle ( TemplateParameterList ) ( ParameterList )
       // ReturnType FunctionName ( ParameterList )
-      t = new FunctionType(t, params);
+      t = new FunctionType(t, params, tparams);
       break;
     default:
       break;
