@@ -92,12 +92,14 @@ class EnumDeclaration : Declaration
 class ClassDeclaration : Declaration
 {
   string name;
+  TemplateParameter[] tparams;
   BaseClass[] bases;
   Declaration[] decls;
-  this(string name, BaseClass[] bases, Declaration[] decls, bool hasBody)
+  this(string name, TemplateParameter[] tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
     this.name = name;
+    this.tparams = tparams;
     this.bases = bases;
     this.decls = decls;
   }
@@ -106,12 +108,14 @@ class ClassDeclaration : Declaration
 class InterfaceDeclaration : Declaration
 {
   string name;
+  TemplateParameter[] tparams;
   BaseClass[] bases;
   Declaration[] decls;
-  this(string name, BaseClass[] bases, Declaration[] decls, bool hasBody)
+  this(string name, TemplateParameter[] tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
     this.name = name;
+    this.tparams = tparams;
     this.bases = bases;
     this.decls = decls;
   }
@@ -120,11 +124,13 @@ class InterfaceDeclaration : Declaration
 class StructDeclaration : Declaration
 {
   string name;
+  TemplateParameter[] tparams;
   Declaration[] decls;
-  this(string name, Declaration[] decls, bool hasBody)
+  this(string name, TemplateParameter[] tparams, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
     this.name = name;
+    this.tparams = tparams;
     this.decls = decls;
   }
 }
@@ -132,11 +138,13 @@ class StructDeclaration : Declaration
 class UnionDeclaration : Declaration
 {
   string name;
+  TemplateParameter[] tparams;
   Declaration[] decls;
-  this(string name, Declaration[] decls, bool hasBody)
+  this(string name, TemplateParameter[] tparams, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
     this.name = name;
+    this.tparams = tparams;
     this.decls = decls;
   }
 }

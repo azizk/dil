@@ -581,6 +581,7 @@ class Parser
     assert(token.type == T.Class);
 
     string className;
+    TemplateParameter[] tparams;
     BaseClass[] bases;
     Declaration[] decls;
     bool hasBody;
@@ -590,8 +591,7 @@ class Parser
 
     if (token.type == T.LParen)
     {
-      // TODO: parse template parameters
-      // parseTemplateParameters();
+      tparams = parseTemplateParameterList();
     }
 
     if (token.type == T.Colon)
@@ -600,7 +600,7 @@ class Parser
     if (token.type == T.Semicolon)
     {
       //if (bases.length != 0)
-        // error: bases classes are not allowed in forward declarations.
+        // TODO: Error: bases classes are not allowed in forward declarations.
       nT();
     }
     else if (token.type == T.LBrace)
@@ -614,9 +614,7 @@ class Parser
     else
       expected(T.LBrace); // TODO: better error msg
 
-    // TODO: error if decls.length == 0
-
-    return new ClassDeclaration(className, bases, decls, hasBody);
+    return new ClassDeclaration(className, tparams, bases, decls, hasBody);
   }
 
   BaseClass[] parseBaseClasses(bool colonLeadsOff = true)
@@ -661,6 +659,7 @@ class Parser
     assert(token.type == T.Interface);
 
     string name;
+    TemplateParameter[] tparams;
     BaseClass[] bases;
     Declaration[] decls;
     bool hasBody;
@@ -670,7 +669,7 @@ class Parser
 
     if (token.type == T.LParen)
     {
-      // TODO: parse template parameters
+      tparams = parseTemplateParameterList();
     }
 
     if (token.type == T.Colon)
@@ -694,7 +693,7 @@ class Parser
 
     // TODO: error if decls.length == 0
 
-    return new InterfaceDeclaration(name, bases, decls, hasBody);
+    return new InterfaceDeclaration(name, tparams, bases, decls, hasBody);
   }
 
   Declaration parseAggregateDeclaration()
@@ -704,6 +703,7 @@ class Parser
     TOK tok = token.type;
 
     string name;
+    TemplateParameter[] tparams;
     Declaration[] decls;
     bool hasBody;
 
@@ -715,7 +715,7 @@ class Parser
       nT();
       if (token.type == T.LParen)
       {
-        // TODO: parse template parameters
+        tparams = parseTemplateParameterList();
       }
     }
 
@@ -738,9 +738,9 @@ class Parser
     // TODO: error if decls.length == 0
 
     if (tok == T.Struct)
-      return new StructDeclaration(name, decls, hasBody);
+      return new StructDeclaration(name, tparams, decls, hasBody);
     else
-      return new UnionDeclaration(name, decls, hasBody);
+      return new UnionDeclaration(name, tparams, decls, hasBody);
   }
 
   Declaration parseConstructorDeclaration()
