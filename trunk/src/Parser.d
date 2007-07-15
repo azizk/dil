@@ -262,7 +262,25 @@ class Parser
     }
 
     // It's a variable declaration.
+    string[] idents = [ident];
+    Expression[] values;
+    goto LenterLoop;
+    while (token.type == T.Comma)
+    {
+      idents ~= requireIdentifier();
+    LenterLoop:
+      if (token.type == T.Assign)
+      {
+        nT();
+        values ~= parseInitializer();
+      }
+    }
+    require(T.Semicolon);
+    return new VariableDeclaration(idents, values);
+  }
 
+  Expression parseInitializer()
+  {
     return null;
   }
 

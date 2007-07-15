@@ -191,10 +191,22 @@ class FunctionDeclaration : Declaration
   FunctionBody funcBody;
   this(string funcName, Type funcType, TemplateParameter[] tparams, FunctionBody funcBody)
   {
-    super(hasBody);
+    super(funcBody.funcBody !is null);
     this.funcName = funcName;
     this.funcType = funcType;
     this.funcBody = funcBody;
+  }
+}
+
+class VariableDeclaration : Declaration
+{
+  string[] idents;
+  Expression[] values;
+  this(string[] idents, Expression[] values)
+  {
+    super(false);
+    this.idents = idents;
+    this.values = values;
   }
 }
 
