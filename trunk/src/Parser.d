@@ -109,6 +109,7 @@ class Parser
          T.Const,
          T.Auto,
          T.Scope:
+         // TODO: T.Synchronized
     case_AttributeSpecifier:
       decl = parseAttributeSpecifier();
       break;
@@ -193,6 +194,17 @@ class Parser
       nT();
       decl = new EmptyDeclaration();
       break;
+    // Declaration
+    case T.Identifier, T.Dot, T.Typeof:
+    // BasicType
+    case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
+         T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
+         T.Int,    T.Uint,    T.Long,   T.Ulong,
+         T.Float,  T.Double,  T.Real,
+         T.Ifloat, T.Idouble, T.Ireal,
+         T.Cfloat, T.Cdouble, T.Creal, T.Void:
+      decl = parseDeclaration();
+      break;
     case T.Module:
       // TODO: Error: module is optional and can appear only once at the top of the source file.
       break;
@@ -233,6 +245,70 @@ class Parser
       decls ~= parseDeclarationDefinition();
     }
     return decls;
+  }
+
+  Declaration parseDeclaration()
+  {
+    auto type = parseType();
+    string ident = requireIdentifier();
+
+    // Type FunctionName ( Parameters )
+    if (token.type == T.LParen)
+    {
+      // It's a function declaration
+      type = parseDeclaratorSuffix(type);
+      auto funcBody = new FunctionBody;
+      parseFunctionBody(funcBody);
+      return new FunctionDeclaration(ident, type, null, funcBody);
+    }
+
+    // It's a variable declaration.
+
+    return null;
+  }
+
+  void parseFunctionBody(FunctionBody func)
+  {
+    while (1)
+    {
+      switch (token.type)
+      {
+      case T.LBrace:
+        require(T.LBrace);
+        func.outBody = parseStatements();
+        require(T.RBrace);
+        break;
+      case T.Semicolon:
+        nT();
+        break;
+      case T.In:
+        //if (func.inBody)
+          // TODO: issue error msg.
+        require(T.LBrace);
+        func.inBody = parseStatements();
+        require(T.RBrace);
+        continue;
+      case T.Out:
+        //if (func.outBody)
+          // TODO: issue error msg.
+        nT();
+        if (token.type == T.LParen)
+        {
+          func.outIdent = requireIdentifier();
+          require(T.RParen);
+        }
+        require(T.LBrace);
+        func.outBody = parseStatements();
+        require(T.RBrace);
+        continue;
+      case T.Body:
+        nT();
+        goto case T.LBrace;
+      default:
+        // TODO: issue error msg.
+      }
+      break; // exit while loop
+    }
   }
 
   Declaration parseAttributeSpecifier()
@@ -2485,12 +2561,12 @@ class Parser
       }
       break;
     // BasicType . Identifier
-    case T.Void,   T.Char,    T.Wchar,  T.Dchar, T.Bool,
+    case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
          T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
          T.Int,    T.Uint,    T.Long,   T.Ulong,
          T.Float,  T.Double,  T.Real,
          T.Ifloat, T.Idouble, T.Ireal,
-         T.Cfloat, T.Cdouble, T.Creal:
+         T.Cfloat, T.Cdouble, T.Creal, T.Void:
       auto type = new Type(token.type);
       requireNext(T.Dot);
       auto ident = requireIdentifier();
@@ -2555,12 +2631,12 @@ class Parser
 
     switch (token.type)
     {
-    case T.Void,   T.Char,    T.Wchar,  T.Dchar, T.Bool,
+    case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
          T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
          T.Int,    T.Uint,    T.Long,   T.Ulong,
          T.Float,  T.Double,  T.Real,
          T.Ifloat, T.Idouble, T.Ireal,
-         T.Cfloat, T.Cdouble, T.Creal:
+         T.Cfloat, T.Cdouble, T.Creal, T.Void:
       t = new Type(token.type);
       nT();
       break;
@@ -2630,24 +2706,22 @@ class Parser
 
   Type parseDeclaratorSuffix(Type t)
   {
-    while (1)
+    switch (token.type)
     {
-      switch (token.type)
-      {
-      case T.LBracket:
-        // Type Identifier ArrayType
-        // ArrayType := [] or [Type] or [Expression..Expression]
+    case T.LBracket:
+      // Type Identifier ArrayType
+      // ArrayType := [] or [Type] or [Expression..Expression]
+      do
         t = parseArrayType(t);
-        continue;
-      case T.LParen:
-        auto params = parseParameterList();
-        // TODO: handle ( TemplateParameterList ) ( ParameterList )
-        // ReturnType FunctionName ( ParameterList )
-        t = new FunctionType(t, params);
-        break;
-      default:
-        break;
-      }
+      while (token.type == T.LBracket)
+      break;
+    case T.LParen:
+      auto params = parseParameterList();
+      // TODO: handle ( TemplateParameterList ) ( ParameterList )
+      // ReturnType FunctionName ( ParameterList )
+      t = new FunctionType(t, params);
+      break;
+    default:
       break;
     }
     return t;

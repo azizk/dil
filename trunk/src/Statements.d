@@ -22,6 +22,12 @@ class Statements : Statement
   }
 }
 
+class FunctionBody
+{
+  Statement funcBody, inBody, outBody;
+  string outIdent;
+}
+
 class ScopeStatement : Statement
 {
   Statement s;

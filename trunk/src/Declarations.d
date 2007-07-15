@@ -183,6 +183,21 @@ class StaticDestructorDeclaration : Declaration
   }
 }
 
+class FunctionDeclaration : Declaration
+{
+  string funcName;
+  Type funcType;
+  TemplateParameter[] tparams;
+  FunctionBody funcBody;
+  this(string funcName, Type funcType, TemplateParameter[] tparams, FunctionBody funcBody)
+  {
+    super(hasBody);
+    this.funcName = funcName;
+    this.funcType = funcType;
+    this.funcBody = funcBody;
+  }
+}
+
 class InvariantDeclaration : Declaration
 {
   Statements statements;
