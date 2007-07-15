@@ -257,8 +257,7 @@ class Parser
     {
       // It's a function declaration
       type = parseDeclaratorSuffix(type);
-      auto funcBody = new FunctionBody;
-      parseFunctionBody(funcBody);
+      auto funcBody = parseFunctionBody(new FunctionBody);
       return new FunctionDeclaration(ident, type, null, funcBody);
     }
 
@@ -267,7 +266,7 @@ class Parser
     return null;
   }
 
-  void parseFunctionBody(FunctionBody func)
+  FunctionBody parseFunctionBody(FunctionBody func)
   {
     while (1)
     {
@@ -309,6 +308,7 @@ class Parser
       }
       break; // exit while loop
     }
+    return func;
   }
 
   Declaration parseAttributeSpecifier()
@@ -2431,15 +2431,13 @@ class Parser
       e = new AssocArrayLiteralExpression(keys, values);
       break;
     case T.LBrace:
-      // DelegateLiteral := { DeclDefs }
-      require(T.LBrace);
-      auto decls = parseDeclarationDefinitions();
-      require(T.RBrace);
-      auto func = new FunctionType(null, Parameters.init);
-      e = new FunctionLiteralExpression(func, decls);
+      // DelegateLiteral := { Statements }
+      auto funcType = new FunctionType(null, Parameters.init);
+      auto funcBody = parseFunctionBody(new FunctionBody);
+      e = new FunctionLiteralExpression(funcType, funcBody);
       break;
     case T.Function, T.Delegate:
-      // FunctionLiteral := (function|delegate) Type? '(' ArgumentList ')' '{' DeclDefs '}'
+      // FunctionLiteral := (function|delegate) Type? '(' ArgumentList ')' '{' Statements '}'
       TOK funcTok = token.type;
       nT(); // Skip function|delegate token.
       Type returnType;
@@ -2450,11 +2448,9 @@ class Parser
           returnType = parseType();
         parameters = parseParameterList();
       }
-      require(T.LBrace);
-      auto decls = parseDeclarationDefinitions();
-      require(T.RBrace);
-      auto func = new FunctionType(returnType, parameters);
-      e = new FunctionLiteralExpression(func, decls, funcTok);
+      auto funcType = new FunctionType(returnType, parameters);
+      auto funcBody = parseFunctionBody(new FunctionBody);
+      e = new FunctionLiteralExpression(funcType, funcBody, funcTok);
       break;
     case T.Assert:
       Expression msg;
@@ -2546,11 +2542,9 @@ class Parser
       if (!failed)
       {
         // ( ParameterList ) FunctionBody
-        require(T.LBrace);
-        auto decls = parseDeclarationDefinitions();
-        require(T.RBrace);
-        auto func = new FunctionType(null, parameters);
-        e = new FunctionLiteralExpression(func, decls);
+        auto funcType = new FunctionType(null, parameters);
+        auto funcBody = parseFunctionBody(new FunctionBody);
+        e = new FunctionLiteralExpression(funcType, funcBody);
       }
       else
       {

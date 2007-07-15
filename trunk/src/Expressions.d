@@ -6,6 +6,7 @@ module Expressions;
 import Token;
 import Types;
 import Declarations;
+import Statements;
 
 class Expression
 {
@@ -600,14 +601,14 @@ class IsExpression : Expression
 
 class FunctionLiteralExpression : Expression
 {
-  FunctionType func;
-  Declaration[] decls;
+  FunctionType funcType;
+  FunctionBody funcBody;
   TOK funcTok;
 
-  this(FunctionType func, Declaration[] decls, TOK funcTok = TOK.Invalid)
+  this(FunctionType funcType, FunctionBody funcBody, TOK funcTok = TOK.Invalid)
   {
-    this.func = func;
-    this.decls = decls;
+    this.funcType = funcType;
+    this.funcBody = funcBody;
     this.funcTok = funcTok;
   }
 }
