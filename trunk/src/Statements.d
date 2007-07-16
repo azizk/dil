@@ -372,3 +372,14 @@ class VersionStatement : Statement
     this.elseBody = elseBody;
   }
 }
+
+class AttributeStatement : Statement
+{
+  TOK tok;
+  Statement statement;
+  this(TOK tok, Statement statement)
+  {
+    this.tok = tok;
+    this.statement = statement;
+  }
+}

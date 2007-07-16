@@ -1303,21 +1303,27 @@ class Parser
     switch (token.type)
     {
     case T.Extern,
-         T.Align,
-//          T.Pragma,
+         T.Align:
+      d = parseAttributeSpecifier();
+      goto case_DeclarationStatement;
+/+ Not applicable for statements.
 //          T.Deprecated,
 //          T.Private,
 //          T.Package,
 //          T.Protected,
 //          T.Public,
 //          T.Export,
-         //T.Static,
-         T.Final,
 //          T.Override,
 //          T.Abstract,
++/
+         //T.Pragma,
+         //T.Static,
+    case T.Final,
          T.Const,
          T.Auto/+,
          T.Scope+/:
+    case_parseAttribute:
+      s = parseAttributeStatement();
       break;
     case T.Identifier:
       Token next;
@@ -1330,10 +1336,25 @@ class Parser
         s = new LabeledStatement(ident, parseNoScopeStatement());
         break;
       }
-      goto case_Declaration;
-    case_Declaration:
-      // TODO: parse Declaration
-      break;
+      goto case_parseDeclaration;
+    // Declaration
+    case T.Dot, T.Typeof:
+      bool failed;
+      d = try_(parseDeclaration(), failed);
+      if (!failed)
+        goto case_DeclarationStatement;
+      else
+        goto default; // Expression
+    // BasicType
+    case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
+         T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
+         T.Int,    T.Uint,    T.Long,   T.Ulong,
+         T.Float,  T.Double,  T.Real,
+         T.Ifloat, T.Idouble, T.Ireal,
+         T.Cfloat, T.Cdouble, T.Creal, T.Void:
+    case_parseDeclaration:
+      d = parseDeclaration();
+      goto case_DeclarationStatement;
     case T.If:
       s = parseIfStatement();
       break;
@@ -1383,7 +1404,7 @@ class Parser
       Token next;
       lx.peek(next);
       if (next.type != T.LParen)
-        goto case_Declaration;
+        goto case_parseAttribute;
       s = parseScopeGuardStatement();
       break;
     case T.Volatile:
@@ -1410,7 +1431,7 @@ class Parser
         s = parseStaticAssertStatement();
         break;
       default:
-        goto case_Declaration;
+        goto case_parseAttribute;
       }
       assert(0);
     case T.Debug:
@@ -1498,6 +1519,25 @@ class Parser
     else
       s = parseStatement();
     return s;
+  }
+
+  Statement parseAttributeStatement()
+  {
+    switch (token.type)
+    {
+    case T.Static,
+         T.Final,
+         T.Const,
+         T.Auto,
+         T.Scope:
+      TOK tok = token.type;
+      nT();
+      //if (token.type == T.LBrace)
+        // TODO: issue error msg.
+      return new AttributeStatement(tok, parseStatement());
+    default:
+    }
+    assert(0);
   }
 
   Statement parseIfStatement()
