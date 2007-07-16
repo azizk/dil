@@ -368,10 +368,11 @@ class Parser
       bool failed;
       auto si = try_(parseStructInitializer(), failed);
       if (!failed)
+      {
         init = si;
-      //else
-        // TODO: issue error msg.
-      break;
+        break;
+      }
+      //goto default;
     default:
       init = parseAssignExpression();
     }
