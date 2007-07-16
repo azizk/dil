@@ -96,20 +96,20 @@ class Parser
     case T.Extern,
          T.Align,
          T.Pragma,
-         T.Deprecated,
          T.Private,
          T.Package,
          T.Protected,
          T.Public,
          T.Export,
-         //T.Static,
-         T.Final,
+         T.Deprecated,
          T.Override,
          T.Abstract,
+         T.Synchronized,
+         //T.Static,
+         T.Final,
          T.Const,
          T.Auto,
          T.Scope:
-         // TODO: T.Synchronized
     case_AttributeSpecifier:
       decl = parseAttributeSpecifier();
       break;
@@ -538,6 +538,7 @@ class Parser
     case T.Override:
     case T.Deprecated:
     case T.Abstract:
+    case T.Synchronized:
     case T.Static:
     case T.Final:
     case T.Const:
