@@ -1488,6 +1488,7 @@ class Parser
         // TODO: issue error msg and return IllegalStatement.
       }
     }
+    assert(s !is null);
     return s;
   }
 
