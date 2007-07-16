@@ -26,6 +26,11 @@ class Parser
     lx = new Lexer(srcText, fileName);
   }
 
+  void start()
+  {
+    nT();
+  }
+
   void nT()
   {
     do
@@ -1486,6 +1491,8 @@ class Parser
       else
       {
         // TODO: issue error msg and return IllegalStatement.
+        s = new IllegalStatement(token.type);
+        nT();
       }
     }
     assert(s !is null);
@@ -1553,8 +1560,6 @@ class Parser
          T.Scope:
       TOK tok = token.type;
       nT();
-      //if (token.type == T.LBrace)
-        // TODO: issue error msg.
       return new AttributeStatement(tok, parseStatement());
     default:
     }

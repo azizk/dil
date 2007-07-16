@@ -22,6 +22,15 @@ class Statements : Statement
   }
 }
 
+class IllegalStatement : Statement
+{
+  TOK tok;
+  this(TOK tok)
+  {
+    this.tok = tok;
+  }
+}
+
 class FunctionBody
 {
   Statement funcBody, inBody, outBody;
