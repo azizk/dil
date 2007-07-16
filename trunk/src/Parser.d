@@ -249,16 +249,36 @@ class Parser
 
   Declaration parseDeclaration()
   {
-    auto type = parseType();
-    string ident = requireIdentifier();
+    Type type;
+    string ident;
 
-    // Type FunctionName ( Parameters )
-    if (token.type == T.LParen)
+    // Check for AutoDeclaration
+    if (token.type == T.Identifier)
     {
-      // It's a function declaration
-      type = parseDeclaratorSuffix(type);
-      auto funcBody = parseFunctionBody(new FunctionBody);
-      return new FunctionDeclaration(ident, type, null, funcBody);
+      Token next;
+      lx.peek(next);
+      if (next.type == T.Comma || next.type == T.Assign)
+      {
+        ident = token.identifier;
+        nT();
+      }
+      else
+        goto LnonAutoDeclaration;
+    }
+    else
+    {
+    LnonAutoDeclaration:
+      type = parseType();
+      ident = requireIdentifier();
+
+      // Type FunctionName ( Parameters ) FunctionBody
+      if (token.type == T.LParen)
+      {
+        // It's a function declaration
+        type = parseDeclaratorSuffix(type);
+        auto funcBody = parseFunctionBody(new FunctionBody);
+        return new FunctionDeclaration(ident, type, null, funcBody);
+      }
     }
 
     // It's a variable declaration.
