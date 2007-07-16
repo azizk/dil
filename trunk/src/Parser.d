@@ -748,8 +748,7 @@ class Parser
       Protection prot = Protection.Public;
       switch (token.type)
       {
-      // TODO: What about class Foo : typeof(new Bar)?
-      case T.Identifier, T.Dot/+, Typeof+/: goto LparseBasicType;
+      case T.Identifier, T.Dot, T.Typeof: goto LparseBasicType;
       case T.Private:   prot = Protection.Private;   break;
       case T.Protected: prot = Protection.Protected; break;
       case T.Package:   prot = Protection.Package;   break;
