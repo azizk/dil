@@ -264,7 +264,7 @@ class Parser
     // It's a variable declaration.
     string[] idents = [ident];
     Expression[] values;
-    goto LenterLoop;
+    goto LenterLoop; // We've already parsed an identifier. Jump to if statement and check for initializer.
     while (token.type == T.Comma)
     {
       idents ~= requireIdentifier();
@@ -274,6 +274,8 @@ class Parser
         nT();
         values ~= parseInitializer();
       }
+      else
+        values ~= null;
     }
     require(T.Semicolon);
     return new VariableDeclaration(idents, values);
