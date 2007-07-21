@@ -1438,12 +1438,16 @@ class Lexer
   struct State
   {
     Lexer lexer;
+    Token token;
     char* scanPointer;
+    int loc;
     size_t errorLen;
-    static State opCall(Lexer lexer, char* p, size_t len)
+    static State opCall(Lexer lexer, Token token, char* p, int loc, size_t len)
     {
       State s;
       s.lexer = lexer;
+      s.token = token;
+      s.loc = loc;
       s.scanPointer = p;
       s.errorLen = len;
       return s;
@@ -1451,13 +1455,15 @@ class Lexer
     void restore()
     {
       lexer.p = scanPointer;
+      lexer.token = token;
+      lexer.loc = loc;
       lexer.errors = lexer.errors[0..errorLen];
     }
   }
 
   State getState()
   {
-    return State(this, p, errors.length);
+    return State(this, token, p, loc, errors.length);
   }
 
   void peek(ref Token t)
@@ -1467,6 +1473,7 @@ class Lexer
     // so as to avoid getting the same error more than once.
     reportErrors = false;
     char* save = p;
+    auto saveLoc = loc;
     if (t.end !is null) // For successive peeks.
     {
       p = t.end;
@@ -1474,6 +1481,7 @@ class Lexer
     }
     scan(t);
     p = save;
+    loc = saveLoc;
     reportErrors = true;
   }
 
