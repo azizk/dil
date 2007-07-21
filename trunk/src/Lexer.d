@@ -57,9 +57,17 @@ class Lexer
   }
 
   public void scan(out Token t)
+  in
   {
-    assert(p < end);
-
+    assert(text.ptr <= p && p < end);
+  }
+  out
+  {
+    assert(text.ptr <= t.start && t.start < end);
+    assert(text.ptr < t.end && t.end <= end, std.string.format(t.type));
+  }
+  body
+  {
     uint c = *p;
 
     while (1)
@@ -1459,10 +1467,10 @@ class Lexer
     // so as to avoid getting the same error more than once.
     reportErrors = false;
     char* save = p;
-    if (t.end) // For successive peeks.
+    if (t.end !is null) // For successive peeks.
     {
       p = t.end;
-      assert(text.ptr <= p && p < end);
+      assert(text.ptr < p && p <= end);
     }
     scan(t);
     p = save;
@@ -1473,6 +1481,23 @@ class Lexer
   {
     if (reportErrors)
       errors ~= new Information(InfoType.Lexer, id, loc, arguments(_arguments, _argptr));
+  }
+
+  unittest
+  {
+    string sourceText = "unittest { }";
+    auto lx = new Lexer(sourceText, null);
+
+    Token next;
+    lx.peek(next);
+    assert(next == TOK.Unittest);
+    lx.peek(next);
+    assert(next == TOK.LBrace);
+    lx.peek(next);
+    assert(next == TOK.RBrace);
+    lx.peek(next);
+    assert(next == TOK.EOF);
+    writefln("end of peek() unittest");
   }
 
   public TOK nextToken()
@@ -1563,7 +1588,7 @@ unittest
   assert(tokens.length == toks.length );
 
   foreach (i, t; tokens)
-    assert(t.span == toks[i], std.string.format("Lexed '%s' but expected '%s'", t.span, toks[i]));
+    assert(t.srcText == toks[i], std.string.format("Lexed '%s' but expected '%s'", t.srcText, toks[i]));
 }
 
 unittest
