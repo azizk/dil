@@ -130,14 +130,90 @@ struct Token
     return start[0 .. end - start];
   }
 
+  string toString(TOK tok)
+  {
+    return tokToString[tok];
+  }
+
   bool isKeyword()
   {
     return KeywordsBegin <= type && type <= KeywordsEnd;
   }
-/+
+
   int opEquals(TOK type2)
   {
     return type == type2;
   }
-+/
 }
+
+string[] tokToString = [
+  "Invalid",
+
+  "Identifier",
+  "Comment",
+  "String",
+  "CharLiteral", "WCharLiteral", "DCharLiteral",
+
+  "Int32", "Int64", "Uint32", "Uint64",
+  "Float32", "Float64", "Float80",
+  "Imaginary32", "Imaginary64", "Imaginary80",
+
+  "(",
+  ")",
+  "[",
+  "]",
+  "{",
+  "}",
+
+  ".", "..", "...",
+
+  "Unordered",
+  "UorE",
+  "UorG",
+  "UorGorE",
+  "UorL",
+  "UorLorE",
+  "LorEorG",
+  "LorG",
+
+  "=", "==", "!=", "!",
+  "<=", "<",
+  ">=", ">",
+  "<<=", "<<",
+  ">>=",">>",
+  ">>>=", ">>>",
+  "|=", "||", "|",
+  "&=", "&&", "&",
+  "+=", "++", "+",
+  "-=", "--", "-",
+  "/=", "/",
+  "*=", "*",
+  "%=", "%",
+  "^=", "^",
+  "~=", "~",
+  "~",
+  "is", "!is",
+
+  ":",
+  ";",
+  "?",
+  ",",
+  "$",
+
+  "abstract","alias","align","asm","assert","auto","body",
+  "bool","break","byte","case","cast","catch","cdouble",
+  "cent","cfloat","char","class","const","continue","creal",
+  "dchar","debug","default","delegate","delete","deprecated","do",
+  "double","else","enum","export","extern","false","final",
+  "finally","float","for","foreach","foreach_reverse","function","goto",
+  "idouble","if","ifloat","import","in","inout","int",
+  "interface","invariant","ireal","is","lazy","long","macro",
+  "mixin","module","new","null","out","override","package",
+  "pragma","private","protected","public","real","ref","return",
+  "scope","short","static","struct","super","switch","synchronized",
+  "template","this","throw","true","try","typedef","typeid",
+  "typeof","ubyte","ucent","uint","ulong","union","unittest",
+  "ushort","version","void","volatile","wchar","while","with",
+
+  "EOF"
+];
