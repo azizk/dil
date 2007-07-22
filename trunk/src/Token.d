@@ -130,7 +130,7 @@ struct Token
     return start[0 .. end - start];
   }
 
-  string toString(TOK tok)
+  static string toString(TOK tok)
   {
     return tokToString[tok];
   }
