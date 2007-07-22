@@ -25,6 +25,16 @@ class EmptyDeclaration : Declaration
   }
 }
 
+class IllegalDeclaration : Declaration
+{
+  TOK tok;
+  this(TOK tok)
+  {
+    super(false);
+    this.tok = tok;
+  }
+}
+
 alias string[] ModuleName; // Identifier(.Identifier)*
 
 class ModuleDeclaration : Declaration
