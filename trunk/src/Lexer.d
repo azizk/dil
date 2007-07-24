@@ -74,13 +74,12 @@ class Lexer
     {
       t.start = p;
 
-      if (c == 0)
+      if (c == 0 || c == _Z_)
       {
-        assert(*p == 0);
-        ++p;
-        assert(p == end);
+        assert(*p == 0 || *p == _Z_);
         t.type = TOK.EOF;
         t.end = p;
+        assert(t.start == t.end);
         return;
       }
 
@@ -1441,15 +1440,17 @@ class Lexer
     Token token;
     char* scanPointer;
     int loc;
+    string fileName;
     size_t errorLen;
-    static State opCall(Lexer lexer, Token token, char* p, int loc, size_t len)
+    static State opCall(Lexer lx)
     {
       State s;
-      s.lexer = lexer;
-      s.token = token;
-      s.loc = loc;
-      s.scanPointer = p;
-      s.errorLen = len;
+      s.lexer = lx;
+      s.token = lx.token;
+      s.scanPointer = lx.p;
+      s.loc = lx.loc;
+      s.fileName = lx.fileName;
+      s.errorLen = lx.errors.length;
       return s;
     }
     void restore()
@@ -1457,13 +1458,14 @@ class Lexer
       lexer.p = scanPointer;
       lexer.token = token;
       lexer.loc = loc;
+      lexer.fileName = fileName;
       lexer.errors = lexer.errors[0..errorLen];
     }
   }
 
   State getState()
   {
-    return State(this, token, p, loc, errors.length);
+    return State(this);
   }
 
   void peek(ref Token t)
