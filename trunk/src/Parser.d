@@ -11,6 +11,7 @@ import Declarations;
 import Statements;
 import Expressions;
 import Types;
+import std.stdio;
 
 private alias TOK T;
 
@@ -26,8 +27,11 @@ class Parser
     lx = new Lexer(srcText, fileName);
   }
 
+  char* prev;
+
   void start()
   {
+    prev = lx.text.ptr;
     nT();
   }
 
@@ -37,6 +41,15 @@ class Parser
     {
       lx.nextToken();
       token = &lx.token;
+if (!trying)
+{
+writef("\33[32m%s\33[0m", token.type);
+try
+      writef("%s", prev[0 .. token.end - prev]);
+catch
+{writef("\33[30mø\33[0m");}
+      prev = token.end;
+}
     } while (token.type == T.Comment) // Skip comments
   }
 
@@ -47,18 +60,29 @@ class Parser
     nT();
   }
 
+  int trying;
+  int errorCount;
+
   ReturnType try_(ReturnType)(lazy ReturnType parseMethod, out bool failed)
   {
-    auto len = errors.length;
+writef("\33[31mtry_\33[0m");
+    ++trying;
+//     auto len = errors.length;
+    auto oldToken = token;
+    auto oldCount = errorCount;
     auto lexerState = lx.getState();
     auto result = parseMethod();
     // If the length of the array changed we know an error occurred.
-    if (errors.length != len)
+    if (errorCount != oldCount)
     {
       lexerState.restore(); // Restore state of the Lexer object.
-      errors = errors[0..len]; // Remove errors that were added when parseMethod() was called.
+//       errors = errors[0..len]; // Remove errors that were added when parseMethod() was called.
+      token = oldToken;
+      errorCount = oldCount;
       failed = true;
     }
+    --trying;
+writef("\33[34m%s\33[0m", failed);
     return result;
   }
 
@@ -88,8 +112,23 @@ class Parser
   Declaration[] parseDeclarationDefinitions()
   {
     Declaration[] decls;
+    while (token.type != T.EOF)
+      decls ~= parseDeclarationDefinition();
+    return decls;
+  }
+
+  /*
+    DeclDefsBlock:
+        { }
+        { DeclDefs }
+  */
+  Declaration[] parseDeclarationDefinitionsBlock()
+  {
+    Declaration[] decls;
+    require(T.LBrace);
     while (token.type != T.RBrace && token.type != T.EOF)
       decls ~= parseDeclarationDefinition();
+    require(T.RBrace);
     return decls;
   }
 
@@ -210,12 +249,16 @@ class Parser
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
       decl = parseDeclaration();
       break;
-    case T.Module:
+    /+case T.Module:
       // TODO: Error: module is optional and can appear only once at the top of the source file.
-      break;
+      break;+/
     default:
       // TODO: issue error msg.
+      error(MID.ExpectedButFound, "Declaration", token.srcText);
+      decl = new IllegalDeclaration(token.type);
+      nT();
     }
+//     writef("§%s§", decl.classinfo.name);
     return decl;
   }
 
@@ -232,19 +275,12 @@ class Parser
     switch (token.type)
     {
     case T.LBrace:
-      nT();
-      if (token.type == T.RBrace)
-        nT();
-      else
-      {
-        decls = parseDeclarationDefinitions();
-        require(T.RBrace);
-      }
+      decls = parseDeclarationDefinitionsBlock();
       break;
     case T.Colon:
       nT();
-      decls = parseDeclarationDefinitions();
-      assert(token.type == T.RBrace || token.type == T.EOF);
+      while (token.type != T.RBrace && token.type != T.EOF)
+        decls ~= parseDeclarationDefinition();
       break;
     default:
       decls ~= parseDeclarationDefinition();
@@ -275,12 +311,24 @@ class Parser
     LnonAutoDeclaration:
       type = parseType();
       ident = requireIdentifier();
-
-      // Type FunctionName ( Parameters ) FunctionBody
+// writefln("trying=%s,errorCount=%d", trying, errorCount);
+// writefln("ident=%s", ident);
+      // Type FunctionName ( ParameterList ) FunctionBody
       if (token.type == T.LParen)
       {
+//         writef("°Function°");
         // It's a function declaration
-        type = parseDeclaratorSuffix(type);
+        TemplateParameter[] tparams;
+        if (isTemplateParameterList())
+        {
+          // ( TemplateParameterList ) ( ParameterList )
+          tparams = parseTemplateParameterList();
+        }
+
+        auto params = parseParameterList();
+        // ReturnType FunctionName ( ParameterList )
+        type = new FunctionType(type, params, tparams);
+//         type = parseDeclaratorSuffix(type);
         auto funcBody = parseFunctionBody(new FunctionBody);
         return new FunctionDeclaration(ident, type, null, funcBody);
       }
@@ -332,7 +380,9 @@ class Parser
       //         [ ArrayMemberInitializations ]
       Expression[] keys;
       Expression[] values;
-      while (1)
+
+      nT();
+      while (token.type != T.RBracket)
       {
         auto e = parseNonVoidInitializer();
         if (token.type == T.Colon)
@@ -350,21 +400,21 @@ class Parser
         if (token.type != T.Comma)
           break;
         nT();
-        if (token.type == T.RBracket)
-          break;
       }
       require(T.RBracket);
       init = new ArrayInitializer(keys, values);
       break;
     case T.LBrace:
       // StructInitializer:
-      //         {  }
+      //         { }
       //         { StructMemberInitializers }
       Expression parseStructInitializer()
       {
         string[] idents;
         Expression[] values;
-        while (1)
+
+        nT();
+        while (token.type != T.RBrace)
         {
           if (token.type == T.Identifier)
           {
@@ -384,12 +434,11 @@ class Parser
           if (token.type != T.Comma)
             break;
           nT();
-          if (token.type == T.RBrace)
-            break;
         }
         require(T.RBrace);
         return new StructInitializer(idents, values);
       }
+
       bool failed;
       auto si = try_(parseStructInitializer(), failed);
       if (!failed)
@@ -412,7 +461,7 @@ class Parser
       {
       case T.LBrace:
         require(T.LBrace);
-        func.outBody = parseStatements();
+        func.funcBody = parseStatements();
         require(T.RBrace);
         break;
       case T.Semicolon:
@@ -443,6 +492,7 @@ class Parser
         goto case T.LBrace;
       default:
         // TODO: issue error msg.
+        error(MID.ExpectedButFound, "FunctionBody", token.srcText);
       }
       break; // exit while loop
     }
@@ -521,6 +571,7 @@ class Parser
       require(T.LParen);
       ident = requireIdentifier();
 
+      // TODO: pragma(msg,) shouldn't be allowed
       if (token.type == T.Comma)
         args = parseArguments(T.RParen);
       else
@@ -727,10 +778,8 @@ class Parser
     else if (token.type == T.LBrace)
     {
       hasBody = true;
-      nT();
       // TODO: think about setting a member status variable to a flag InClassBody... this way we can check for DeclDefs that are illegal in class bodies in the parsing phase.
-      decls = parseDeclarationDefinitions();
-      require(T.RBrace);
+      decls = parseDeclarationDefinitionsBlock();
     }
     else
       expected(T.LBrace); // TODO: better error msg
@@ -804,9 +853,7 @@ class Parser
     else if (token.type == T.LBrace)
     {
       hasBody = true;
-      nT();
-      decls = parseDeclarationDefinitions();
-      require(T.RBrace);
+      decls = parseDeclarationDefinitionsBlock();
     }
     else
       expected(T.LBrace); // TODO: better error msg
@@ -848,9 +895,7 @@ class Parser
     else if (token.type == T.LBrace)
     {
       hasBody = true;
-      nT();
-      decls = parseDeclarationDefinitions();
-      require(T.RBrace);
+      decls = parseDeclarationDefinitionsBlock();
     }
     else
       expected(T.LBrace); // TODO: better error msg
@@ -946,7 +991,10 @@ class Parser
       else if (token.type == T.Identifier)
         ident = token.identifier;
       else
+      {
         expected(T.Identifier); // TODO: better error msg
+        return;
+      }
       nT();
     }
 
@@ -1001,18 +1049,21 @@ class Parser
 
     void parseIdentOrInt(ref string ident, ref int level)
     {
-      nT();
       if (token.type == T.Int32)
         level = token.int_;
       else if (token.type == T.Identifier)
         ident = token.identifier;
       else
+      {
         expected(T.Identifier); // TODO: better error msg
+        return;
+      }
       nT();
     }
 
     if (token.type == T.Assign)
     {
+      nT();
       parseIdentOrInt(identSpec, levelSpec);
       require(T.Semicolon);
     }
@@ -1105,9 +1156,7 @@ class Parser
     nT(); // Skip template keyword.
     auto templateName = requireIdentifier();
     auto templateParams = parseTemplateParameterList();
-    require(T.LBrace);
-    auto decls = parseDeclarationDefinitions();
-    require(T.RBrace);
+    auto decls = parseDeclarationDefinitionsBlock();
     return new TemplateDeclaration(templateName, templateParams, decls);
   }
 
@@ -1323,6 +1372,10 @@ class Parser
 
   Statement parseStatement()
   {
+    assert(token.type != T.RBrace && token.type != T.EOF);
+
+// writefln("°parseStatement:(%d)token='%s'°", lx.loc, token.srcText);
+
     Statement s;
     Declaration d;
     switch (token.type)
@@ -1361,13 +1414,13 @@ class Parser
         s = new LabeledStatement(ident, parseNoScopeStatement());
         break;
       }
-      goto case_parseDeclaration;
-    // Declaration
+      goto case T.Dot;
     case T.Dot, T.Typeof:
       bool failed;
       d = try_(parseDeclaration(), failed);
+// writefln("parseDeclaration()=", failed?"failed":"success");
       if (!failed)
-        goto case_DeclarationStatement;
+        goto case_DeclarationStatement; // Declaration
       else
         goto default; // Expression
     // BasicType
@@ -1480,9 +1533,13 @@ class Parser
     case_DeclarationStatement:
       s = new DeclarationStatement(d);
       break;
+    case T.LBrace:
+      s = parseScopeStatement();
+      break;
     default:
       bool failed;
       auto expression = try_(parseExpression(), failed);
+// writefln("parseExpression()=", failed?"failed":"success");
       if (!failed)
       {
         require(T.Semicolon);
@@ -1496,6 +1553,7 @@ class Parser
       }
     }
     assert(s !is null);
+//     writef("§%s§", s.classinfo.name);
     return s;
   }
 
@@ -1771,7 +1829,9 @@ class Parser
   {
     assert(token.type == T.Return);
     nT();
-    auto expr = parseExpression();
+    Expression expr;
+    if (token.type != T.Semicolon)
+      expr = parseExpression();
     require(T.Semicolon);
     return new ReturnStatement(expr);
   }
@@ -2113,6 +2173,8 @@ class Parser
     auto e = parseAssignExpression();
     while (token.type == T.Comma)
       e = new CommaExpression(e, parseAssignExpression());
+// if (!trying)
+// writef("§%s§", e.classinfo.name);
     return e;
   }
 
@@ -2732,6 +2794,7 @@ class Parser
       break;
     default:
       // TODO: issue error msg.
+      error(MID.ExpectedButFound, "Expression", token.srcText);
       e = new EmptyExpression();
     }
     return e;
@@ -2758,9 +2821,7 @@ class Parser
 
       BaseClass[] bases = token.type != T.LBrace ? parseBaseClasses(false) : null ;
 
-      require(T.LBrace);
-      auto decls = parseDeclarationDefinitions();
-      require(T.RBrace);
+      auto decls = parseDeclarationDefinitionsBlock();
       return new NewAnonClassExpression(/*e, */newArguments, bases, ctorArguments, decls);
     }
 
@@ -2784,7 +2845,7 @@ class Parser
   Type parseBasicType()
   {
     Type t;
-    IdentifierType tident;
+//     IdentifierType tident;
 
     switch (token.type)
     {
@@ -2826,6 +2887,7 @@ class Parser
       break;
     default:
       // TODO: issue error msg.
+      error(MID.ExpectedButFound, "BasicType", token.srcText);
       t = new UndefinedType();
     }
     return t;
@@ -2873,7 +2935,7 @@ class Parser
       {
       case T.RParen:
         if (--level == 0)
-        { // Closing parentheses found. Return next token.
+        { // Closing parentheses found.
           lx.peek(t);
           break;
         }
@@ -2904,6 +2966,7 @@ class Parser
         t = parseArrayType(t);
       while (token.type == T.LBracket)
       break;
+/+ // parsed in parseDeclaration()
     case T.LParen:
       TemplateParameter[] tparams;
       if (isTemplateParameterList())
@@ -2916,6 +2979,7 @@ class Parser
       // ReturnType FunctionName ( ParameterList )
       t = new FunctionType(t, params, tparams);
       break;
++/
     default:
       break;
     }
@@ -3209,7 +3273,7 @@ class Parser
   void expected(TOK tok)
   {
     if (token.type != tok)
-      error(MID.ExpectedButFound, tok, token.srcText);
+      error(MID.ExpectedButFound, Token.Token.toString(tok), token.srcText);
   }
 
   void require(TOK tok)
@@ -3217,16 +3281,13 @@ class Parser
     if (token.type == tok)
       nT();
     else
-      error(MID.ExpectedButFound, tok, token.srcText);
+      error(MID.ExpectedButFound, Token.Token.toString(tok), token.srcText);
   }
 
   void requireNext(TOK tok)
   {
     nT();
-    if (token.type == tok)
-      nT();
-    else
-      error(MID.ExpectedButFound, tok, token.srcText);
+    require(tok);
   }
 
   string requireIdentifier()
@@ -3244,6 +3305,15 @@ class Parser
 
   void error(MID id, ...)
   {
+    if (trying)
+    {
+      ++errorCount;
+      return;
+    }
+
+//     if (errors.length == 10)
+//       return;
     errors ~= new Information(InfoType.Parser, id, lx.loc, arguments(_arguments, _argptr));
+//     writefln("(%d)P: ", lx.loc, errors[$-1].getMsg);
   }
 }
