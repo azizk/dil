@@ -582,7 +582,7 @@ class Lexer
         {
 //           char* begin = p;
           dchar d = decodeUTF8();
-
+          ++p;
           if (d == LSd || d == PSd)
             goto case '\n';
 
