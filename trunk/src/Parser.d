@@ -63,7 +63,7 @@ catch
   int trying;
   int errorCount;
 
-  ReturnType try_(ReturnType)(lazy ReturnType parseMethod, out bool failed)
+  ReturnType try_(ReturnType)(lazy ReturnType parseMethod, out bool success)
   {
 writef("\33[31mtry_\33[0m");
     ++trying;
@@ -79,10 +79,12 @@ writef("\33[31mtry_\33[0m");
 //       errors = errors[0..len]; // Remove errors that were added when parseMethod() was called.
       token = oldToken;
       errorCount = oldCount;
-      failed = true;
+      success = false;
     }
+    else
+      success = true;
     --trying;
-writef("\33[34m%s\33[0m", failed);
+writef("\33[34m%s\33[0m", success);
     return result;
   }
 
@@ -439,9 +441,9 @@ writef("\33[34m%s\33[0m", failed);
         return new StructInitializer(idents, values);
       }
 
-      bool failed;
-      auto si = try_(parseStructInitializer(), failed);
-      if (!failed)
+      bool success;
+      auto si = try_(parseStructInitializer(), success);
+      if (success)
       {
         init = si;
         break;
@@ -1416,10 +1418,10 @@ writef("\33[34m%s\33[0m", failed);
       }
       goto case T.Dot;
     case T.Dot, T.Typeof:
-      bool failed;
-      d = try_(parseDeclaration(), failed);
+      bool success;
+      d = try_(parseDeclaration(), success);
 // writefln("parseDeclaration()=", failed?"failed":"success");
-      if (!failed)
+      if (success)
         goto case_DeclarationStatement; // Declaration
       else
         goto default; // Expression
@@ -1537,10 +1539,10 @@ writef("\33[34m%s\33[0m", failed);
       s = parseScopeStatement();
       break;
     default:
-      bool failed;
-      auto expression = try_(parseExpression(), failed);
+      bool success;
+      auto expression = try_(parseExpression(), success);
 // writefln("parseExpression()=", failed?"failed":"success");
-      if (!failed)
+      if (success)
       {
         require(T.Semicolon);
         s = new ExpressionStatement(expression);
@@ -1645,9 +1647,9 @@ writef("\33[34m%s\33[0m", failed);
     else
     {
       // Declarator = Expression
-      bool failed;
-      type = try_(parseDeclarator(ident), failed);
-      if (!failed)
+      bool success;
+      type = try_(parseDeclarator(ident), success);
+      if (success)
       {
         require(T.Assign);
       }
@@ -2762,9 +2764,9 @@ writef("\33[34m%s\33[0m", failed);
       break;
     case T.LParen:
       Token t;
-      bool failed;
-      auto parameters = try_(parseParameterList(), failed);
-      if (!failed)
+      bool success;
+      auto parameters = try_(parseParameterList(), success);
+      if (success)
       {
         // ( ParameterList ) FunctionBody
         auto funcType = new FunctionType(null, parameters);
@@ -2997,9 +2999,9 @@ writef("\33[34m%s\33[0m", failed);
     }
     else
     {
-      bool failed;
-      auto assocType = try_(parseType(), failed);
-      if (!failed)
+      bool success;
+      auto assocType = try_(parseType(), success);
+      if (success)
         t = new ArrayType(t, assocType);
       else
       {
@@ -3142,10 +3144,10 @@ writef("\33[34m%s\33[0m", failed);
       nT(); // Skip comma.
     LenterLoop:
 
-      bool failed;
-      auto typeArgument = try_(parseType(), failed);
+      bool success;
+      auto typeArgument = try_(parseType(), success);
 
-      if (!failed)
+      if (success)
       {
         // TemplateArgument:
         //         Type
