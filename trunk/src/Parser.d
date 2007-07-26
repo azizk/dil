@@ -1566,27 +1566,11 @@ writef("\33[34m%s\33[0m", success);
 
   /+
     ScopeStatement:
-        NonEmptyStatement
-        BlockStatement
-    BlockStatement:
-        { }
-        { StatementList }
+        NoScopeStatement
   +/
   Statement parseScopeStatement()
   {
-    Statement s;
-    if (token.type == T.LBrace)
-    {
-      nT();
-      auto ss = new Statements();
-      while (token.type != T.RBrace && token.type != T.EOF)
-        ss ~= parseStatement();
-      require(T.RBrace);
-      s = ss;
-    }
-    else
-      s = parseStatement();
-    return new ScopeStatement(s);
+    return new ScopeStatement(parseNoScopeStatement());
   }
 
   /+
@@ -1608,6 +1592,12 @@ writef("\33[34m%s\33[0m", success);
         ss ~= parseStatement();
       require(T.RBrace);
       s = ss;
+    }
+    else if (token.type == T.Semicolon)
+    {
+      error(MID.ExpectedButFound, "non-empty statement", ";");
+      s = new EmptyStatement();
+      nT();
     }
     else
       s = parseStatement();
@@ -1978,7 +1968,7 @@ writef("\33[34m%s\33[0m", success);
     else if (token.type == T.LBrace)
       volatileBody = parseScopeStatement();
     else
-      volatileBody = parseNoScopeStatement();
+      volatileBody = parseStatement();
     return new VolatileStatement(volatileBody);
   }
 
@@ -2120,13 +2110,15 @@ writef("\33[34m%s\33[0m", success);
 
     void parseIdentOrInt(ref string ident, ref int level)
     {
-      nT();
       if (token.type == T.Int32)
         level = token.int_;
       else if (token.type == T.Identifier)
         ident = token.identifier;
       else
+      {
         expected(T.Identifier); // TODO: better error msg
+        return;
+      }
       nT();
     }
 
