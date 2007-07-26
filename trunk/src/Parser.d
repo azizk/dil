@@ -25,6 +25,7 @@ class Parser
   this(char[] srcText, string fileName)
   {
     lx = new Lexer(srcText, fileName);
+    token = &lx.token;
   }
 
   char* prev;
@@ -40,7 +41,6 @@ class Parser
     do
     {
       lx.nextToken();
-      token = &lx.token;
 if (!trying)
 {
 writef("\33[32m%s\33[0m", token.type);
@@ -68,7 +68,6 @@ catch
 writef("\33[31mtry_\33[0m");
     ++trying;
 //     auto len = errors.length;
-    auto oldToken = token;
     auto oldCount = errorCount;
     auto lexerState = lx.getState();
     auto result = parseMethod();
@@ -77,7 +76,6 @@ writef("\33[31mtry_\33[0m");
     {
       lexerState.restore(); // Restore state of the Lexer object.
 //       errors = errors[0..len]; // Remove errors that were added when parseMethod() was called.
-      token = oldToken;
       errorCount = oldCount;
       success = false;
     }
@@ -448,6 +446,7 @@ writef("\33[34m%s\33[0m", success);
         init = si;
         break;
       }
+      assert(token.type == T.LBrace);
       //goto default;
     default:
       init = parseAssignExpression();
@@ -1444,6 +1443,9 @@ writef("\33[34m%s\33[0m", success);
     case T.Do:
       s = parseDoWhileStatement();
       break;
+    case T.For:
+      s = parseForStatement();
+      break;
     case T.Foreach, T.Foreach_reverse:
       s = parseForeachStatement();
       break;
@@ -1538,6 +1540,9 @@ writef("\33[34m%s\33[0m", success);
     case T.LBrace:
       s = parseScopeStatement();
       break;
+    case T.Semicolon:
+      s = new EmptyStatement();
+      break;
     default:
       bool success;
       auto expression = try_(parseExpression(), success);
@@ -1549,7 +1554,7 @@ writef("\33[34m%s\33[0m", success);
       }
       else
       {
-        // TODO: issue error msg and return IllegalStatement.
+        error(MID.ExpectedButFound, "Statement", token.srcText);
         s = new IllegalStatement(token.type);
         nT();
       }
@@ -2598,6 +2603,7 @@ writef("\33[34m%s\33[0m", success);
       e = new CharLiteralExpression(token.type);
       break;
     case T.String:
+      // TODO: The Lexer doesn't allocate the tokens on the heap yet. So Token* will not work here.
       Token*[] stringLiterals;
       do
       {

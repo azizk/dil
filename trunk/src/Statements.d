@@ -31,6 +31,13 @@ class IllegalStatement : Statement
   }
 }
 
+class EmptyStatement : Statement
+{
+  this()
+  {
+  }
+}
+
 class FunctionBody
 {
   Statement funcBody, inBody, outBody;
