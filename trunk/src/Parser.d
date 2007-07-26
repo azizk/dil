@@ -2333,7 +2333,7 @@ writef("\33[34m%s\33[0m", success);
       nT();
       operator = T.NotIdentity;
       goto LNotIdentity;
-    case T.Identity:
+    case T.Is:
       operator = T.Identity;
     LNotIdentity:
       nT();
@@ -2447,12 +2447,23 @@ writef("\33[34m%s\33[0m", success);
       break;
     case T.LParen:
       // ( Type ) . Identifier
-      auto type = parseType();
-      require(T.RParen);
-      require(T.Dot);
-      string ident = requireIdentifier();
-      e = new TypeDotIdExpression(type, ident);
-      break;
+      Type parseType_()
+      {
+        nT();
+        auto type = parseType();
+        require(T.RParen);
+        return type;
+      }
+      bool success;
+      auto type = try_(parseType_(), success);
+      if (success)
+      {
+        require(T.Dot);
+        string ident = requireIdentifier();
+        e = new TypeDotIdExpression(type, ident);
+        break;
+      }
+      goto default;
     default:
       e = parsePostExpression(parsePrimaryExpression());
       break;
