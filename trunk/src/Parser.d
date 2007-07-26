@@ -340,6 +340,7 @@ writef("\33[34m%s\33[0m", success);
     goto LenterLoop; // We've already parsed an identifier. Jump to if statement and check for initializer.
     while (token.type == T.Comma)
     {
+      nT();
       idents ~= requireIdentifier();
     LenterLoop:
       if (token.type == T.Assign)
