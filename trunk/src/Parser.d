@@ -1373,8 +1373,6 @@ writef("\33[34m%s\33[0m", success);
 
   Statement parseStatement()
   {
-    assert(token.type != T.RBrace && token.type != T.EOF);
-
 // writefln("°parseStatement:(%d)token='%s'°", lx.loc, token.srcText);
 
     Statement s;
@@ -1770,6 +1768,29 @@ writef("\33[34m%s\33[0m", success);
     return new SwitchStatement(condition, switchBody);
   }
 
+  Statement parseCaseDefaultBody()
+  {
+    // This function is similar to parseNoScopeStatement()
+    Statement s;
+    if (token.type == T.LBrace)
+    {
+      nT();
+      auto ss = new Statements();
+      while (token.type != T.Case &&
+             token.type != T.Default &&
+             token.type != T.RBrace &&
+             token.type != T.EOF)
+        ss ~= parseStatement();
+      require(T.RBrace);
+      s = ss;
+    }
+    else if (token.type == T.RBrace)
+    {}
+    else
+      s = parseStatement();
+    return new ScopeStatement(s);
+  }
+
   Statement parseCaseStatement()
   {
     assert(token.type == T.Case);
@@ -1782,7 +1803,7 @@ writef("\33[34m%s\33[0m", success);
     } while (token.type == T.Comma)
     require(T.Colon);
 
-    auto caseBody = parseScopeStatement();
+    auto caseBody = parseCaseDefaultBody();
     return new CaseStatement(values, caseBody);
   }
 
@@ -1791,7 +1812,7 @@ writef("\33[34m%s\33[0m", success);
     assert(token.type == T.Default);
     nT();
     require(T.Colon);
-    return new DefaultStatement(parseScopeStatement());
+    return new DefaultStatement(parseCaseDefaultBody());
   }
 
   Statement parseContinueStatement()
