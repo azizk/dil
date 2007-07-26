@@ -2232,10 +2232,10 @@ writef("\33[34m%s\33[0m", success);
         nT(); e = new CatAssignExpression(e, parseAssignExpression());
         break;
       default:
-        break;
+        goto LexitLoop;
       }
-      break;
     }
+  LexitLoop:
     return e;
   }
 
@@ -2315,10 +2315,9 @@ writef("\33[34m%s\33[0m", success);
 
   Expression parseCmpExpression()
   {
-    TOK operator = token.type;
-
     auto e = parseShiftExpression();
 
+    TOK operator = token.type;
     switch (operator)
     {
     case T.Equal, T.NotEqual:
