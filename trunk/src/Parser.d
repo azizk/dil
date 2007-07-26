@@ -2270,7 +2270,7 @@ writef("\33[34m%s\33[0m", success);
   {
     alias parseAndAndExpression parseNext;
     auto e = parseNext();
-    if (token.type == T.OrLogical)
+    while (token.type == T.OrLogical)
     {
       nT();
       e = new OrOrExpression(e, parseNext());
@@ -2282,7 +2282,7 @@ writef("\33[34m%s\33[0m", success);
   {
     alias parseOrExpression parseNext;
     auto e = parseNext();
-    if (token.type == T.AndLogical)
+    while (token.type == T.AndLogical)
     {
       nT();
       e = new AndAndExpression(e, parseNext());
@@ -2294,7 +2294,7 @@ writef("\33[34m%s\33[0m", success);
   {
     alias parseXorExpression parseNext;
     auto e = parseNext();
-    if (token.type == T.OrBinary)
+    while (token.type == T.OrBinary)
     {
       nT();
       e = new OrExpression(e, parseNext());
@@ -2306,7 +2306,7 @@ writef("\33[34m%s\33[0m", success);
   {
     alias parseAndExpression parseNext;
     auto e = parseNext();
-    if (token.type == T.Xor)
+    while (token.type == T.Xor)
     {
       nT();
       e = new XorExpression(e, parseNext());
@@ -2318,7 +2318,7 @@ writef("\33[34m%s\33[0m", success);
   {
     alias parseCmpExpression parseNext;
     auto e = parseNext();
-    if (token.type == T.AndBinary)
+    while (token.type == T.AndBinary)
     {
       nT();
       e = new AndExpression(e, parseNext());

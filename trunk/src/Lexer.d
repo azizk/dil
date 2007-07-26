@@ -593,6 +593,7 @@ class Lexer
           encodeUTF8(buffer, d);
           continue;
         }
+        // Copy ASCII character.
         buffer ~= *p++;
       }
     }
