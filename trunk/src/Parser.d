@@ -1772,23 +1772,12 @@ writef("\33[34m%s\33[0m", success);
   Statement parseCaseDefaultBody()
   {
     // This function is similar to parseNoScopeStatement()
-    Statement s;
-    if (token.type == T.LBrace)
-    {
-      nT();
-      auto ss = new Statements();
-      while (token.type != T.Case &&
-             token.type != T.Default &&
-             token.type != T.RBrace &&
-             token.type != T.EOF)
-        ss ~= parseStatement();
-      require(T.RBrace);
-      s = ss;
-    }
-    else if (token.type == T.RBrace)
-    {}
-    else
-      s = parseStatement();
+    auto s = new Statements();
+    while (token.type != T.Case &&
+            token.type != T.Default &&
+            token.type != T.RBrace &&
+            token.type != T.EOF)
+      s ~= parseStatement();
     return new ScopeStatement(s);
   }
 
@@ -1874,7 +1863,6 @@ writef("\33[34m%s\33[0m", success);
       break;
     default:
       ident = requireIdentifier();
-      nT();
     }
     require(T.Semicolon);
     return new GotoStatement(ident, caseExpr);
