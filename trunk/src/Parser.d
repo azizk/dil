@@ -2232,10 +2232,9 @@ writef("\33[34m%s\33[0m", success);
         nT(); e = new CatAssignExpression(e, parseAssignExpression());
         break;
       default:
-        goto LexitLoop;
+        return e;
       }
     }
-  LexitLoop:
     return e;
   }
 
