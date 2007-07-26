@@ -572,7 +572,7 @@ class Lexer
       case '\n':
         ++p;
         ++loc;
-        buffer ~= '\n';
+        buffer ~= '\n'; // Convert EndOfLine to \n.
         continue;
       case 0, _Z_:
         error(MID.UnterminatedString);
@@ -582,7 +582,6 @@ class Lexer
         {
 //           char* begin = p;
           dchar d = decodeUTF8();
-          ++p;
           if (d == LSd || d == PSd)
             goto case '\n';
 
@@ -590,6 +589,7 @@ class Lexer
           // invalid, skipped utf-8 sequences. See decodeUTF8().
 //           ++p;
 //           buffer ~= begin[0 .. p - begin];
+          ++p;
           encodeUTF8(buffer, d);
           continue;
         }
