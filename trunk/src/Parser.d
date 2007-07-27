@@ -159,11 +159,11 @@ writef("\33[34m%s\33[0m", success);
       break;
     case T.Alias:
       nT();
-      decl = new AliasDeclaration(parseDeclarationDefinition());
+      decl = new AliasDeclaration(parseDeclaration());
       break;
     case T.Typedef:
       nT();
-      decl = new TypedefDeclaration(parseDeclarationDefinition());
+      decl = new TypedefDeclaration(parseDeclaration());
       break;
     case T.Static:
       Token t;
@@ -298,7 +298,7 @@ writef("\33[34m%s\33[0m", success);
     {
       Token next;
       lx.peek(next);
-      if (next.type == T.Comma || next.type == T.Assign)
+      if (/+next.type == T.Comma || +/next.type == T.Assign)
       {
         ident = token.identifier;
         nT();
@@ -472,6 +472,7 @@ writef("\33[34m%s\33[0m", success);
       case T.In:
         //if (func.inBody)
           // TODO: issue error msg.
+        nT();
         require(T.LBrace);
         func.inBody = parseStatements();
         require(T.RBrace);
@@ -482,6 +483,7 @@ writef("\33[34m%s\33[0m", success);
         nT();
         if (token.type == T.LParen)
         {
+          nT();
           func.outIdent = requireIdentifier();
           require(T.RParen);
         }
@@ -1521,6 +1523,10 @@ writef("\33[34m%s\33[0m", success);
     case T.Version:
       s = parseVersionStatement();
       break;
+    // DeclDef
+    case T.Alias, T.Typedef:
+      d = parseDeclarationDefinition();
+      goto case_DeclarationStatement;
     case T.Enum:
       d = parseEnumDeclaration();
       goto case_DeclarationStatement;
@@ -3109,6 +3115,7 @@ writef("\33[34m%s\33[0m", success);
       case T.Ref:  stc = StorageClass.Ref;  nT(); goto default;
       case T.Lazy: stc = StorageClass.Lazy; nT(); goto default;
       case T.Ellipses:
+        nT();
         params ~= new Parameter(StorageClass.Variadic, null, null, null);
         break;
       default:
