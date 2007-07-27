@@ -332,6 +332,7 @@ writef("\33[34m%s\33[0m", success);
         auto funcBody = parseFunctionBody(new FunctionBody);
         return new FunctionDeclaration(ident, type, null, funcBody);
       }
+      type = parseDeclaratorSuffix(type);
     }
 
     // It's a variable declaration.
@@ -1703,7 +1704,8 @@ writef("\33[34m%s\33[0m", success);
 
     if (token.type != T.Semicolon)
       init = parseNoScopeStatement();
-    require(T.Semicolon);
+    else
+      nT(); // Skip ;
     if (token.type != T.Semicolon)
       condition = parseExpression();
     require(T.Semicolon);
