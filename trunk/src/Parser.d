@@ -319,7 +319,7 @@ writef("\33[34m%s\33[0m", success);
 //         writef("°Function°");
         // It's a function declaration
         TemplateParameter[] tparams;
-        if (isTemplateParameterList())
+        if (tokenAfterParenIs(T.LParen))
         {
           // ( TemplateParameterList ) ( ParameterList )
           tparams = parseTemplateParameterList();
@@ -2797,11 +2797,9 @@ writef("\33[34m%s\33[0m", success);
       e = new IsExpression(type, ident, specType);
       break;
     case T.LParen:
-      Token t;
-      bool success;
-      auto parameters = try_(parseParameterList(), success);
-      if (success)
+      if (tokenAfterParenIs(T.LBrace))
       {
+        auto parameters = parseParameterList();
         // ( ParameterList ) FunctionBody
         auto funcType = new FunctionType(null, parameters);
         auto funcBody = parseFunctionBody(new FunctionBody);
@@ -2959,20 +2957,21 @@ writef("\33[34m%s\33[0m", success);
     assert(0);
   }
 
-  bool isTemplateParameterList()
+  bool tokenAfterParenIs(TOK tok)
   {
     // We count nested parentheses tokens because template types may appear inside parameter lists; e.g. (int x, Foo!(int) y).
-    Token t;
+    assert(token.type == T.LParen);
+    Token next;
     uint level = 1;
     while (1)
     {
-      lx.peek(t);
-      switch (t.type)
+      lx.peek(next);
+      switch (next.type)
       {
       case T.RParen:
         if (--level == 0)
         { // Closing parentheses found.
-          lx.peek(t);
+          lx.peek(next);
           break;
         }
         continue;
@@ -2986,9 +2985,8 @@ writef("\33[34m%s\33[0m", success);
       }
       break;
     }
-    if (t.type == T.LParen)
-      return true;
-    return false;
+
+    return next.type == tok;
   }
 
   Type parseDeclaratorSuffix(Type t)
@@ -3005,7 +3003,7 @@ writef("\33[34m%s\33[0m", success);
 /+ // parsed in parseDeclaration()
     case T.LParen:
       TemplateParameter[] tparams;
-      if (isTemplateParameterList())
+      if (tokenAfterParenIs(T.LParen))
       {
         // ( TemplateParameterList ) ( ParameterList )
         tparams = parseTemplateParameterList();
