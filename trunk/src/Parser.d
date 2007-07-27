@@ -709,7 +709,12 @@ writef("\33[34m%s\33[0m", success);
     bool hasBody;
 
     nT(); // Skip enum keyword.
-    enumName = requireIdentifier();
+
+    if (token.type == T.Identifier)
+    {
+      enumName = token.identifier;
+      nT();
+    }
 
     if (token.type == T.Colon)
     {
@@ -719,8 +724,8 @@ writef("\33[34m%s\33[0m", success);
 
     if (token.type == T.Semicolon)
     {
-      //if (ident.length == 0)
-        // TODO: issue error msg
+      if (enumName.length == 0)
+        expected(T.Identifier);
       nT();
     }
     else if (token.type == T.LBrace)
@@ -749,6 +754,8 @@ writef("\33[34m%s\33[0m", success);
       } while (token.type != T.RBrace)
       nT();
     }
+    else
+      error(MID.ExpectedButFound, "enum declaration", token.srcText);
 
     return new EnumDeclaration(enumName, baseType, members, values, hasBody);
   }
@@ -1547,6 +1554,7 @@ writef("\33[34m%s\33[0m", success);
       s = parseScopeStatement();
       break;
     case T.Semicolon:
+      nT();
       s = new EmptyStatement();
       break;
     default:
