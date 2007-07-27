@@ -1672,13 +1672,15 @@ writef("\33[34m%s\33[0m", success);
     else
     {
       // Declarator = Expression
-      bool success;
-      type = try_(parseDeclarator(ident), success);
-      if (success)
+      Type parseDeclaratorAssign()
       {
+        auto type = parseDeclarator(ident);
         require(T.Assign);
+        return type;
       }
-      else
+      bool success;
+      type = try_(parseDeclaratorAssign(), success);
+      if (!success)
       {
         type = null;
         ident = null;
