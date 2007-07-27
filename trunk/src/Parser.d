@@ -1758,10 +1758,10 @@ writef("\33[34m%s\33[0m", success);
 
       switch (token.type)
       {
-      case T.Ref:
+      case T.Ref, T.Inout:
         nT();
         stc = StorageClass.Ref;
-        break;
+        // fall through
       case T.Identifier:
         Token next;
         lx.peek(next);
