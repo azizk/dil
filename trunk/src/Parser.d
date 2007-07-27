@@ -1205,10 +1205,11 @@ writef("\33[34m%s\33[0m", success);
             TemplateInstance
             NewExpression
     TemplateInstance:
-            Identifier !( TemplateArgumentList )
+            Identifier !( TemplateArguments )
   +/
   DotListExpression parseDotListExpression()
   {
+    assert(token.type == T.Identifier || token.type == T.Dot || token.type == T.Typeof);
     Expression[] identList;
     if (token.type == T.Dot)
     {
@@ -1250,6 +1251,7 @@ writef("\33[34m%s\33[0m", success);
         goto LnewExpressionLoop;
       }
     }
+
   Lreturn:
     return new DotListExpression(identList);
   }
@@ -1267,7 +1269,7 @@ writef("\33[34m%s\33[0m", success);
             Identifier
             TemplateInstance
     TemplateInstance:
-            Identifier !( TemplateArgumentList )
+            Identifier !( TemplateArguments )
   +/
   DotListType parseDotListType()
   {
@@ -1314,8 +1316,8 @@ writef("\33[34m%s\33[0m", success);
             mixin ( AssignExpression ) ;
             mixin TemplateIdentifier ;
             mixin TemplateIdentifier MixinIdentifier ;
-            mixin TemplateIdentifier !( TemplateArgumentList ) ;
-            mixin TemplateIdentifier !( TemplateArgumentList ) MixinIdentifier ;
+            mixin TemplateIdentifier !( TemplateArguments ) ;
+            mixin TemplateIdentifier !( TemplateArguments ) MixinIdentifier ;
   */
   Declaration parseMixinDeclaration()
   {
@@ -2469,13 +2471,13 @@ writef("\33[34m%s\33[0m", success);
         nT();
         auto type = parseType();
         require(T.RParen);
+        require(T.Dot);
         return type;
       }
       bool success;
       auto type = try_(parseType_(), success);
       if (success)
       {
-        require(T.Dot);
         string ident = requireIdentifier();
         e = new TypeDotIdExpression(type, ident);
         break;
