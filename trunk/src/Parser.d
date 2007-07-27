@@ -166,10 +166,10 @@ writef("\33[34m%s\33[0m", success);
       decl = new TypedefDeclaration(parseDeclaration());
       break;
     case T.Static:
-      Token t;
-      lx.peek(t);
+      Token next;
+      lx.peek(next);
 
-      switch (t.type)
+      switch (next.type)
       {
       case T.Import:
         goto case T.Import;
@@ -188,7 +188,7 @@ writef("\33[34m%s\33[0m", success);
       default:
         goto case_AttributeSpecifier;
       }
-      assert(0);
+      break;
     case T.Import:
       decl = parseImportDeclaration();
       break;
@@ -2370,11 +2370,11 @@ writef("\33[34m%s\33[0m", success);
       case T.LShift:  nT(); e = new LShiftExpression(e, parseAddExpression()); break;
       case T.RShift:  nT(); e = new RShiftExpression(e, parseAddExpression()); break;
       case T.URShift: nT(); e = new URShiftExpression(e, parseAddExpression()); break;
-      default: break;
+      default:
+        return e;
       }
-      break;
     }
-    return e;
+    assert(0);
   }
 
   Expression parseAddExpression()
@@ -2387,11 +2387,11 @@ writef("\33[34m%s\33[0m", success);
       case T.Plus:  nT(); e = new PlusExpression(e, parseMulExpression()); break;
       case T.Minus: nT(); e = new MinusExpression(e, parseMulExpression()); break;
       case T.Tilde: nT(); e = new CatExpression(e, parseMulExpression()); break;
-      default: break;
+      default:
+        return e;
       }
-      break;
     }
-    return e;
+    assert(0);
   }
 
   Expression parseMulExpression()
@@ -2404,11 +2404,11 @@ writef("\33[34m%s\33[0m", success);
       case T.Mul: nT(); e = new MulExpression(e, parseUnaryExpression()); break;
       case T.Div: nT(); e = new DivExpression(e, parseUnaryExpression()); break;
       case T.Mod: nT(); e = new ModExpression(e, parseUnaryExpression()); break;
-      default: break;
+      default:
+        return e;
       }
-      break;
     }
-    return e;
+    assert(0);
   }
 
   Expression parseUnaryExpression()
@@ -2599,25 +2599,25 @@ writef("\33[34m%s\33[0m", success);
       e = new NullExpression();
       break;
     case T.True, T.False:
-      nT();
       e = new BoolExpression(token.type == T.True ? true : false);
+      nT();
       break;
     case T.Dollar:
       nT();
       e = new DollarExpression();
       break;
     case T.Int32, T.Int64, T.Uint32, T.Uint64:
-      nT();
       e = new IntNumberExpression(token.type, token.ulong_);
+      nT();
       break;
     case T.Float32, T.Float64, T.Float80,
          T.Imaginary32, T.Imaginary64, T.Imaginary80:
-      nT();
       e = new RealNumberExpression(token.type, token.real_);
+      nT();
       break;
     case T.CharLiteral, T.WCharLiteral, T.DCharLiteral:
-      nT();
       e = new CharLiteralExpression(token.type);
+      nT();
       break;
     case T.String:
       // TODO: The Lexer doesn't allocate the tokens on the heap yet. So Token* will not work here.
