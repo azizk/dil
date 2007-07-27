@@ -1914,6 +1914,7 @@ writef("\33[34m%s\33[0m", success);
       Parameter param;
       if (token.type == T.LParen)
       {
+        nT();
         string ident;
         auto type = parseDeclarator(ident);
         param = new Parameter(StorageClass.None, type, ident, null);
@@ -3112,6 +3113,7 @@ writef("\33[34m%s\33[0m", success);
       {
       case T.In:   stc = StorageClass.In;   nT(); goto default;
       case T.Out:  stc = StorageClass.Out;  nT(); goto default;
+      case T.Inout:
       case T.Ref:  stc = StorageClass.Ref;  nT(); goto default;
       case T.Lazy: stc = StorageClass.Lazy; nT(); goto default;
       case T.Ellipses:
