@@ -1423,7 +1423,7 @@ writef("\33[34m%s\33[0m", success);
         string ident = token.identifier;
         nT(); // Skip Identifier
         nT(); // Skip :
-        s = new LabeledStatement(ident, parseNoScopeStatement());
+        s = new LabeledStatement(ident, parseNoScopeOrEmptyStatement());
         break;
       }
       goto case T.Dot;
@@ -1618,6 +1618,20 @@ writef("\33[34m%s\33[0m", success);
     else
       s = parseStatement();
     return s;
+  }
+
+  /+
+    NoScopeOrEmptyStatement:
+        ;
+        NoScopeStatement
+  +/
+  Statement parseNoScopeOrEmptyStatement()
+  {
+    if (token.type == T.Semicolon)
+      nT();
+    else
+      return parseNoScopeStatement();
+    return null;
   }
 
   Statement parseAttributeStatement()
@@ -2018,10 +2032,7 @@ writef("\33[34m%s\33[0m", success);
     else
       require(T.RParen);
 
-    if (token.type == T.Semicolon)
-      nT();
-    else
-      pragmaBody = parseNoScopeStatement();
+    pragmaBody = parseNoScopeOrEmptyStatement();
 
     return new PragmaStatement(ident, args, pragmaBody);
   }
