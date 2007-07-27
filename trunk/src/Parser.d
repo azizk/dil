@@ -2211,7 +2211,10 @@ writef("\33[34m%s\33[0m", success);
   {
     auto e = parseAssignExpression();
     while (token.type == T.Comma)
+    {
+      nT();
       e = new CommaExpression(e, parseAssignExpression());
+    }
 // if (!trying)
 // writef("§%s§", e.classinfo.name);
     return e;
