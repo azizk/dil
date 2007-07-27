@@ -2391,7 +2391,7 @@ writef("\33[34m%s\33[0m", success);
       }
       break;
     }
-    return new Expression();
+    return e;
   }
 
   Expression parseMulExpression()
@@ -2408,7 +2408,7 @@ writef("\33[34m%s\33[0m", success);
       }
       break;
     }
-    return new Expression();
+    return e;
   }
 
   Expression parseUnaryExpression()
@@ -2513,7 +2513,7 @@ writef("\33[34m%s\33[0m", success);
 */
       case T.Dot:
         e = new PostDotListExpression(e, parseDotListExpression());
-        break;
+        continue;
       case T.PlusPlus:
         e = new PostIncrExpression(e);
         break;
