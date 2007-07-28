@@ -86,6 +86,13 @@ writef("\33[34m%s\33[0m", success);
     return result;
   }
 
+  TOK peekNext()
+  {
+    Token next;
+    lx.peek(next);
+    return next.type;
+  }
+
   /++++++++++++++++++++++++++++++
   + Declaration parsing methods +
   ++++++++++++++++++++++++++++++/
@@ -137,14 +144,19 @@ writef("\33[34m%s\33[0m", success);
     Declaration decl;
     switch (token.type)
     {
-    case T.Extern,
-         T.Align,
+    case T.Align,
          T.Pragma,
+         // Protection attributes
+         T.Export,
          T.Private,
          T.Package,
          T.Protected,
-         T.Public,
-         T.Export,
+         T.Public:
+      decl = parseAttributeSpecifier();
+      break;
+    // Storage classes
+    //case T.Invariant: // D 2.0
+    case T.Extern,
          T.Deprecated,
          T.Override,
          T.Abstract,
@@ -154,22 +166,21 @@ writef("\33[34m%s\33[0m", success);
          T.Const,
          T.Auto,
          T.Scope:
-    case_AttributeSpecifier:
-      decl = parseAttributeSpecifier();
+    case_StaticAttribute:
+      decl = parseStorageAttribute();
       break;
     case T.Alias:
       nT();
+      // TODO: parse StorageClasses?
       decl = new AliasDeclaration(parseDeclaration());
       break;
     case T.Typedef:
       nT();
+      // TODO: parse StorageClasses?
       decl = new TypedefDeclaration(parseDeclaration());
       break;
     case T.Static:
-      Token next;
-      lx.peek(next);
-
-      switch (next.type)
+      switch (peekNext())
       {
       case T.Import:
         goto case T.Import;
@@ -186,7 +197,7 @@ writef("\33[34m%s\33[0m", success);
         decl = parseStaticAssertDeclaration();
         break;
       default:
-        goto case_AttributeSpecifier;
+        goto case_StaticAttribute;
       }
       break;
     case T.Import:
@@ -288,27 +299,21 @@ writef("\33[34m%s\33[0m", success);
     return decls;
   }
 
-  Declaration parseDeclaration()
+  Declaration parseDeclaration(StorageClass stc = StorageClass.None)
   {
     Type type;
     string ident;
 
     // Check for AutoDeclaration
-    if (token.type == T.Identifier)
+    if (stc != StorageClass.None &&
+        token.type == T.Identifier &&
+        peekNext() == T.Assign)
     {
-      Token next;
-      lx.peek(next);
-      if (/+next.type == T.Comma || +/next.type == T.Assign)
-      {
-        ident = token.identifier;
-        nT();
-      }
-      else
-        goto LnonAutoDeclaration;
+      ident = token.identifier;
+      nT();
     }
     else
     {
-    LnonAutoDeclaration:
       type = parseType();
       ident = requireIdentifier();
 // writefln("trying=%s,errorCount=%d", trying, errorCount);
@@ -360,9 +365,8 @@ writef("\33[34m%s\33[0m", success);
   {
     if (token.type == T.Void)
     {
-      Token next;
-      lx.peek(next);
-      if (next.type == T.Comma || next.type == T.Semicolon)
+      auto next = peekNext();
+      if (next == T.Comma || next == T.Semicolon)
       {
         nT();
         return new VoidInitializer();
@@ -420,10 +424,8 @@ writef("\33[34m%s\33[0m", success);
         {
           if (token.type == T.Identifier)
           {
-            Token next;
-            lx.peek(next);
             // Peek for colon to see if this is a member identifier.
-            if (next.type == T.Colon)
+            if (peekNext() == T.Colon)
             {
               idents ~= token.identifier();
               nT();
@@ -504,46 +506,112 @@ writef("\33[34m%s\33[0m", success);
     return func;
   }
 
+  Declaration parseStorageAttribute()
+  {
+    StorageClass stc, tmp;
+
+    void addStorageClass()
+    {
+      if (stc & tmp)
+      {
+        error(MID.RedundantStorageClass, token.srcText);
+      }
+      else
+        stc |= tmp;
+    }
+
+    Declaration[] parse()
+    {
+      Declaration decl;
+      switch (token.type)
+      {
+      case T.Extern:
+        tmp = StorageClass.Extern;
+        addStorageClass();
+        nT();
+        Linkage linkage;
+        if (token.type == T.LParen)
+        {
+          nT();
+          auto ident = requireIdentifier();
+          switch (ident)
+          {
+          case "C":
+            if (token.type == T.PlusPlus)
+            {
+              nT();
+              linkage = Linkage.Cpp;
+              break;
+            }
+            linkage = Linkage.C;
+            break;
+          case "D":
+            linkage = Linkage.D;
+            break;
+          case "Windows":
+            linkage = Linkage.Windows;
+            break;
+          case "Pascal":
+            linkage = Linkage.Pascal;
+            break;
+          default:
+            // TODO: issue error msg. Unrecognized LinkageType.
+          }
+          require(T.RParen);
+        }
+        decl = new ExternDeclaration(linkage, parse());
+        break;
+      //case T.Invariant: // D 2.0
+      case T.Override:
+        tmp = StorageClass.Override;
+        goto Lcommon;
+      case T.Deprecated:
+        tmp = StorageClass.Deprecated;
+        goto Lcommon;
+      case T.Abstract:
+        tmp = StorageClass.Abstract;
+        goto Lcommon;
+      case T.Synchronized:
+        tmp = StorageClass.Synchronized;
+        goto Lcommon;
+      case T.Static:
+        tmp = StorageClass.Static;
+        goto Lcommon;
+      case T.Final:
+        tmp = StorageClass.Final;
+        goto Lcommon;
+      case T.Const:
+        tmp = StorageClass.Const;
+        goto Lcommon;
+      case T.Auto:
+        tmp = StorageClass.Auto;
+        goto Lcommon;
+      case T.Scope:
+        tmp = StorageClass.Scope;
+        goto Lcommon;
+      Lcommon:
+        addStorageClass();
+        nT();
+        decl = new AttributeDeclaration(token.type, parse());
+        break;
+      case T.Identifier:
+        // This could be a normal Declaration or an AutoDeclaration
+        decl = parseDeclaration(stc);
+        break;
+      default:
+        return parseDeclarationsBlock();
+      }
+      return [decl];
+    }
+    return parse()[0];
+  }
+
   Declaration parseAttributeSpecifier()
   {
     Declaration decl;
 
     switch (token.type)
     {
-    case T.Extern:
-      nT();
-      Linkage linkage;
-      if (token.type == T.LParen)
-      {
-        nT();
-        auto ident = requireIdentifier();
-        switch (ident)
-        {
-        case "C":
-          if (token.type == T.PlusPlus)
-          {
-            nT();
-            linkage = Linkage.Cpp;
-            break;
-          }
-          linkage = Linkage.C;
-          break;
-        case "D":
-          linkage = Linkage.D;
-          break;
-        case "Windows":
-          linkage = Linkage.Windows;
-          break;
-        case "Pascal":
-          linkage = Linkage.Pascal;
-          break;
-        default:
-          // TODO: issue error msg. Unrecognized LinkageType.
-        }
-        require(T.RParen);
-      }
-      decl = new ExternDeclaration(linkage, parseDeclarationsBlock());
-      break;
     case T.Align:
       nT();
       int size = -1;
@@ -595,16 +663,6 @@ writef("\33[34m%s\33[0m", success);
     case T.Protected:
     case T.Public:
     case T.Export:
-    // StorageClass attributes
-    case T.Override:
-    case T.Deprecated:
-    case T.Abstract:
-    case T.Synchronized:
-    case T.Static:
-    case T.Final:
-    case T.Const:
-    case T.Auto:
-    case T.Scope:
       nT();
       decl = new AttributeDeclaration(token.type, parseDeclarationsBlock());
       break;
@@ -1230,9 +1288,7 @@ writef("\33[34m%s\33[0m", success);
     while (1)
     {
       string ident = requireIdentifier();
-      Token next;
-      lx.peek(next);
-      if (token.type == T.Not && next.type == T.LParen) // Identifier !( TemplateArguments )
+      if (token.type == T.Not && peekNext() == T.LParen) // Identifier !( TemplateArguments )
       {
         nT(); // Skip !.
         identList ~= new TemplateInstanceExpression(ident, parseTemplateArguments());
@@ -1293,9 +1349,7 @@ writef("\33[34m%s\33[0m", success);
     {
       string ident = requireIdentifier();
       // NB.: Currently Types can't be followed by "!=" so we don't need to peek for "(" when parsing TemplateInstances.
-      /+Token next;
-      lx.peek(next);+/
-      if (token.type == T.Not/+ && next.type == T.LParen+/) // Identifier !( TemplateArguments )
+      if (token.type == T.Not/+ && peekNext() == T.LParen+/) // Identifier !( TemplateArguments )
       {
         nT(); // Skip !.
         identList ~= new TemplateInstanceType(ident, parseTemplateArguments());
@@ -1392,33 +1446,30 @@ writef("\33[34m%s\33[0m", success);
     Declaration d;
     switch (token.type)
     {
-    case T.Extern,
-         T.Align:
+    case T.Align:
       d = parseAttributeSpecifier();
       goto case_DeclarationStatement;
 /+ Not applicable for statements.
-//          T.Deprecated,
 //          T.Private,
 //          T.Package,
 //          T.Protected,
 //          T.Public,
 //          T.Export,
+//          T.Deprecated,
 //          T.Override,
 //          T.Abstract,
 +/
-         //T.Pragma,
-         //T.Static,
-    case T.Final,
+    case T.Extern,
+         T.Final,
          T.Const,
-         T.Auto/+,
-         T.Scope+/:
+         T.Auto:
+         //T.Scope
+         //T.Static
     case_parseAttribute:
       s = parseAttributeStatement();
       break;
     case T.Identifier:
-      Token next;
-      lx.peek(next);
-      if (next.type == T.Colon)
+      if (peekNext() == T.Colon)
       {
         string ident = token.identifier;
         nT(); // Skip Identifier
@@ -1494,9 +1545,7 @@ writef("\33[34m%s\33[0m", success);
       s = parseThrowStatement();
       break;
     case T.Scope:
-      Token next;
-      lx.peek(next);
-      if (next.type != T.LParen)
+      if (peekNext() != T.LParen)
         goto case_parseAttribute;
       s = parseScopeGuardStatement();
       break;
@@ -1513,9 +1562,7 @@ writef("\33[34m%s\33[0m", success);
       s = new MixinStatement(parseMixinDeclaration());
       break;
     case T.Static:
-      Token next;
-      lx.peek(next);
-      switch (next.type)
+      switch (peekNext())
       {
       case T.If:
         s = parseStaticIfStatement();
@@ -1526,7 +1573,7 @@ writef("\33[34m%s\33[0m", success);
       default:
         goto case_parseAttribute;
       }
-      assert(0);
+      break;
     case T.Debug:
       s = parseDebugStatement();
       break;
@@ -1636,19 +1683,86 @@ writef("\33[34m%s\33[0m", success);
 
   Statement parseAttributeStatement()
   {
-    switch (token.type)
+    StorageClass stc, tmp;
+
+    void addStorageClass()
     {
-    case T.Static,
-         T.Final,
-         T.Const,
-         T.Auto,
-         T.Scope:
-      TOK tok = token.type;
-      nT();
-      return new AttributeStatement(tok, parseStatement());
-    default:
+      if (stc & tmp)
+      {
+        error(MID.RedundantStorageClass, token.srcText);
+      }
+      else
+        stc |= tmp;
     }
-    assert(0);
+
+    Statement parse()
+    {
+      Statement s;
+      switch (token.type)
+      {
+      case T.Extern:
+        tmp = StorageClass.Extern;
+        addStorageClass();
+        nT();
+        Linkage linkage;
+        if (token.type == T.LParen)
+        {
+          nT();
+          auto ident = requireIdentifier();
+          switch (ident)
+          {
+          case "C":
+            if (token.type == T.PlusPlus)
+            {
+              nT();
+              linkage = Linkage.Cpp;
+              break;
+            }
+            linkage = Linkage.C;
+            break;
+          case "D":
+            linkage = Linkage.D;
+            break;
+          case "Windows":
+            linkage = Linkage.Windows;
+            break;
+          case "Pascal":
+            linkage = Linkage.Pascal;
+            break;
+          default:
+            // TODO: issue error msg. Unrecognized LinkageType.
+          }
+          require(T.RParen);
+        }
+        s = new ExternStatement(linkage, parse());
+        break;
+      //case T.Invariant: // D 2.0
+      case T.Static:
+        tmp = StorageClass.Static;
+        goto Lcommon;
+      case T.Final:
+        tmp = StorageClass.Final;
+        goto Lcommon;
+      case T.Const:
+        tmp = StorageClass.Const;
+        goto Lcommon;
+      case T.Auto:
+        tmp = StorageClass.Auto;
+        goto Lcommon;
+      case T.Scope:
+        tmp = StorageClass.Scope;
+        goto Lcommon;
+      Lcommon:
+        addStorageClass();
+        nT();
+        s = new AttributeStatement(token.type, parse());
+        break;
+      default:
+        s = new DeclarationStatement(parseDeclaration(stc));
+      }
+      return s;
+    }
+    return parse();
   }
 
   Statement parseIfStatement()
@@ -1765,9 +1879,8 @@ writef("\33[34m%s\33[0m", success);
         stc = StorageClass.Ref;
         // fall through
       case T.Identifier:
-        Token next;
-        lx.peek(next);
-        if (next.type == T.Comma || next.type == T.Semicolon || next.type == T.RParen)
+        auto next = peekNext();
+        if (next == T.Comma || next == T.Semicolon || next == T.RParen)
         {
           ident = token.identifier;
           nT();
@@ -2361,9 +2474,7 @@ writef("\33[34m%s\33[0m", success);
       e = new EqualExpression(e, parseShiftExpression(), operator);
       break;
     case T.Not:
-      Token t;
-      lx.peek(t);
-      if (t.type != T.Is)
+      if (peekNext() != T.Is)
         break;
       nT();
       operator = T.NotIdentity;
@@ -2521,9 +2632,7 @@ writef("\33[34m%s\33[0m", success);
         {
           string ident = token.identifier;
           nT();
-          Token next;
-          lx.peek(next);
-          if (token.type == T.Not && next.type == T.LParen) // Identifier !( TemplateArguments )
+          if (token.type == T.Not && peekNext() == T.LParen) // Identifier !( TemplateArguments )
           {
             nT(); // Skip !.
             e = new DotTemplateInstanceExpression(e, ident, parseTemplateArguments());
@@ -2597,9 +2706,7 @@ writef("\33[34m%s\33[0m", success);
     case T.Identifier:
       string ident = token.identifier;
       nT();
-      Token next;
-      lx.peek(next);
-      if (token.type == T.Not && next.type == T.LParen) // Identifier !( TemplateArguments )
+      if (token.type == T.Not && peekNext() == T.LParen) // Identifier !( TemplateArguments )
       {
         nT(); // Skip !.
         e = new TemplateInstanceExpression(ident, parseTemplateArguments());
@@ -3256,9 +3363,7 @@ writef("\33[34m%s\33[0m", success);
         break;
       case T.Identifier:
         ident = token.identifier;
-        Token peeked;
-        lx.peek(peeked);
-        switch (peeked.type)
+        switch (peekNext())
         {
         case T.Ellipses:
           // TemplateTupleParameter:

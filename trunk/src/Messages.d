@@ -52,6 +52,7 @@ enum MID
 
   // Parser messages
   ExpectedButFound,
+  RedundantStorageClass,
 }
 
 string[] messages = [
@@ -100,4 +101,5 @@ string[] messages = [
 
   // Parser messages
   "expected '{1}', but found '{2}'.",
+  "'{1}' is redundant",
 ];

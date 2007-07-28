@@ -399,3 +399,13 @@ class AttributeStatement : Statement
     this.statement = statement;
   }
 }
+
+class ExternStatement : AttributeStatement
+{
+  Linkage linkage;
+  this(Linkage linkage, Statement statement)
+  {
+    super(TOK.Extern, statement);
+    this.linkage = linkage;
+  }
+}
