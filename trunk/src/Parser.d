@@ -557,6 +557,9 @@ writef("\33[34m%s\33[0m", success);
           case "Pascal":
             linkage = Linkage.Pascal;
             break;
+          case "System":
+            linkage = Linkage.System;
+            break;
           default:
             // TODO: issue error msg. Unrecognized LinkageType.
           }
@@ -1732,6 +1735,9 @@ writef("\33[34m%s\33[0m", success);
             break;
           case "Pascal":
             linkage = Linkage.Pascal;
+            break;
+          case "System":
+            linkage = Linkage.System;
             break;
           default:
             // TODO: issue error msg. Unrecognized LinkageType.

@@ -3,14 +3,18 @@
   License: GPL2
 +/
 module Expressions;
+import SyntaxTree;
 import Token;
 import Types;
 import Declarations;
 import Statements;
 
-class Expression
+class Expression : Node
 {
-
+  this()
+  {
+    super(NodeType.Expression);
+  }
 }
 
 class EmptyExpression : Expression

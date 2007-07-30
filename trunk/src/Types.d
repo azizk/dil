@@ -3,6 +3,7 @@
   License: GPL2
 +/
 module Types;
+import SyntaxTree;
 import Token;
 import Expressions;
 
@@ -13,7 +14,8 @@ enum Linkage
   Cpp,
   D,
   Windows,
-  Pascal
+  Pascal,
+  System
 }
 
 enum StorageClass
@@ -88,7 +90,8 @@ enum Protection
   Private   = 1,
   Protected = 1<<1,
   Package   = 1<<2,
-  Public    = 1<<3
+  Public    = 1<<3,
+  Export    = 1<<4
 }
 
 class BaseClass
@@ -168,21 +171,24 @@ enum TID
   Specialization,
 }
 
-class Type
+class Type : Node
 {
   TID tid;
   Type next;
 
   this(TOK tok)
   {
-    this.tid = cast(TID)tok;
+    this(cast(TID)tok);
   }
 
   this(TID tid)
-  { this(tid, null); }
+  {
+    this(tid, null);
+  }
 
   this(TID tid, Type next)
   {
+    super(NodeType.Type);
     this.tid = tid;
     this.next = next;
   }

@@ -3,16 +3,18 @@
   License: GPL2
 +/
 module Declarations;
+import SyntaxTree;
 import Expressions;
 import Types;
 import Statements;
 import Token;
 
-class Declaration
+class Declaration : Node
 {
   bool hasBody;
   this(bool hasBody)
   {
+    super(NodeType.Declaration);
     this.hasBody = hasBody;
   }
 }

@@ -3,14 +3,18 @@
   License: GPL2
 +/
 module Statements;
+import SyntaxTree;
 import Expressions;
 import Declarations;
 import Types;
 import Token;
 
-class Statement
+class Statement : Node
 {
-
+  this()
+  {
+    super(NodeType.Expression);
+  }
 }
 
 class Statements : Statement
