@@ -25,7 +25,6 @@ class Parser
   this(char[] srcText, string fileName)
   {
     lx = new Lexer(srcText, fileName);
-    token = &lx.token;
   }
 
   char* prev;
@@ -41,6 +40,7 @@ class Parser
     do
     {
       lx.nextToken();
+      token = lx.token;
 if (!trying)
 {
 writef("\33[32m%s\33[0m", token.type);
@@ -68,14 +68,17 @@ catch
 writef("\33[31mtry_\33[0m");
     ++trying;
 //     auto len = errors.length;
+    auto oldToken = token;
     auto oldCount = errorCount;
-    auto lexerState = lx.getState();
+//     auto lexerState = lx.getState();
     auto result = parseMethod();
     // If the length of the array changed we know an error occurred.
     if (errorCount != oldCount)
     {
-      lexerState.restore(); // Restore state of the Lexer object.
+//       lexerState.restore(); // Restore state of the Lexer object.
 //       errors = errors[0..len]; // Remove errors that were added when parseMethod() was called.
+      token = oldToken;
+      lx.token = oldToken;
       errorCount = oldCount;
       success = false;
     }
@@ -88,7 +91,7 @@ writef("\33[34m%s\33[0m", success);
 
   TOK peekNext()
   {
-    Token next;
+    Token* next = token;
     lx.peek(next);
     return next.type;
   }
@@ -1447,6 +1450,7 @@ writef("\33[34m%s\33[0m", success);
     switch (token.type)
     {
     case T.Align:
+      // TODO: don't call parseAttributeSpecifier().
       d = parseAttributeSpecifier();
       goto case_DeclarationStatement;
 /+ Not applicable for statements.
@@ -1757,6 +1761,8 @@ writef("\33[34m%s\33[0m", success);
         nT();
         s = new AttributeStatement(token.type, parse());
         break;
+      // TODO: allow "scope class", "abstract scope class" in function bodies?
+      //case T.Class:
       default:
         s = new DeclarationStatement(parseDeclaration(stc));
       }
@@ -3086,7 +3092,7 @@ writef("\33[34m%s\33[0m", success);
   {
     // We count nested parentheses tokens because template types may appear inside parameter lists; e.g. (int x, Foo!(int) y).
     assert(token.type == T.LParen);
-    Token next;
+    Token* next = token;
     uint level = 1;
     while (1)
     {

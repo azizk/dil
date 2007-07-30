@@ -3,6 +3,8 @@
   License: GPL2
 +/
 module Token;
+import std.c.stdlib : malloc, free;
+import std.outofmemory;
 
 struct Position
 {
@@ -89,6 +91,7 @@ enum TOK
   Typeof,Ubyte,Ucent,Uint,Ulong,Union,Unittest,
   Ushort,Version,Void,Volatile,Wchar,While,With,
 
+  HEAD, // start of linked list
   EOF
 }
 
@@ -100,7 +103,7 @@ struct Token
   TOK type;
 //   Position pos;
 
-//   Token* next, prev;
+  Token* next, prev;
 
   char* start;
   char* end;
@@ -143,6 +146,20 @@ struct Token
   int opEquals(TOK type2)
   {
     return type == type2;
+  }
+
+  new(size_t size)
+  {
+    void* p = malloc(size);
+    if (p is null)
+      throw new OutOfMemoryException();
+    *cast(Token*)p = Token.init;
+    return p;
+  }
+
+  delete(void* p)
+  {
+    free(p);
   }
 }
 

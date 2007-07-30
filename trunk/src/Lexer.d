@@ -24,10 +24,11 @@ const uint _Z_ = 26; /// Control+Z
 
 class Lexer
 {
-  Token token;
+  Token* head; /// The head of the doubly linked token list.
+  Token* token; /// Points to the current token in the token list.
   string text;
-  char* p;
-  char* end;
+  char* p; /// Points to the current character in the source text.
+  char* end; /// Points one character past the end of the source text.
 
   uint loc = 1; /// line of code
 
@@ -35,7 +36,7 @@ class Lexer
 
   Information[] errors;
 
-  bool reportErrors;
+//   bool reportErrors;
 
   Identifier[string] idtable;
 
@@ -52,8 +53,12 @@ class Lexer
 
     this.p = this.text.ptr;
     this.end = this.p + this.text.length;
-    this.reportErrors = true;
+//     this.reportErrors = true;
     loadKeywords();
+
+    this.head = new Token;
+    this.head.type = TOK.HEAD;
+    this.token = this.head;
   }
 
   public void scan(out Token t)
@@ -1320,7 +1325,7 @@ class Lexer
 
     ++p;
     MID mid;
-    Token t;
+    Token* t;
     uint oldloc = this.loc, newloc;
 
     peek(t);
@@ -1434,7 +1439,7 @@ class Lexer
     foreach(k; keywords)
       idtable[k.str] = k;
   }
-
+/+
   struct State
   {
     Lexer lexer;
@@ -1468,30 +1473,38 @@ class Lexer
   {
     return State(this);
   }
++/
 
-  void peek(ref Token t)
+  private void scanNext(ref Token* t)
   {
-    // Because peeked tokens are not stored in a linked
-    // list we need to switch off error reporting
-    // so as to avoid getting the same error more than once.
-    reportErrors = false;
-    char* save = p;
-    auto saveLoc = loc;
-    if (t.end !is null) // For successive peeks.
+    assert(t !is null);
+    if (t.next)
+      t = t.next;
+    else if (t.type != TOK.EOF)
     {
-      p = t.end;
-      assert(text.ptr < p && p <= end);
+      Token* new_t = new Token;
+      scan(*new_t);
+      new_t.prev = t;
+      t.next = new_t;
+      t = new_t;
     }
-    scan(t);
-    p = save;
-    loc = saveLoc;
-    reportErrors = true;
+  }
+
+  void peek(ref Token* t)
+  {
+    scanNext(t);
+  }
+
+  TOK nextToken()
+  {
+    scanNext(this.token);
+    return this.token.type;
   }
 
   void error(MID id, ...)
   {
-    if (reportErrors)
-      errors ~= new Information(InfoType.Lexer, id, loc, arguments(_arguments, _argptr));
+//     if (reportErrors)
+    errors ~= new Information(InfoType.Lexer, id, loc, arguments(_arguments, _argptr));
   }
 
   unittest
@@ -1511,18 +1524,12 @@ class Lexer
     writefln("end of peek() unittest");
   }
 
-  public TOK nextToken()
-  {
-    scan(this.token);
-    return this.token.type;
-  }
-
   Token[] getTokens()
   {
     Token[] tokens;
-    while (nextToken() != TOK.EOF)
-      tokens ~= this.token;
-    tokens ~= this.token;
+//     while (nextToken() != TOK.EOF)
+//       tokens ~= this.token;
+//     tokens ~= this.token;
     return tokens;
   }
 
