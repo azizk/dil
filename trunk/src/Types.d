@@ -44,10 +44,10 @@ class Parameter : Node
   StorageClass stc;
   Token* stcTok;
   Type type;
-  string ident;
+  Token* ident;
   Expression assignExpr;
 
-  this(Token* stcTok, Type type, string ident, Expression assignExpr)
+  this(Token* stcTok, Type type, Token* ident, Expression assignExpr)
   {
     super(NodeType.Other);
 
@@ -144,10 +144,10 @@ class TemplateParameter
 {
   TP tp;
   Type valueType;
-  string ident;
+  Token* ident;
   Type specType, defType;
   Expression specValue, defValue;
-  this(TP tp, Type valueType, string ident, Type specType, Type defType, Expression specValue, Expression defValue)
+  this(TP tp, Type valueType, Token* ident, Type specType, Type defType, Expression specValue, Expression defValue)
   {
     this.tp = tp;
     this.valueType = valueType;

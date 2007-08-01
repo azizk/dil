@@ -1804,7 +1804,7 @@ writef("\33[34m%s\33[0m", success);
     nT();
 
     Type type;
-    string ident;
+    Token* ident;
     Expression condition;
     Statement ifBody, elseBody;
 
@@ -1813,7 +1813,7 @@ writef("\33[34m%s\33[0m", success);
     if (token.type == T.Auto)
     {
       nT();
-      ident = requireIdentifier();
+      ident = requireId();
       require(T.Assign);
     }
     else
@@ -1904,7 +1904,7 @@ writef("\33[34m%s\33[0m", success);
       auto paramBegin = token;
       Token* stcTok;
       Type type;
-      string ident;
+      Token* ident;
 
       switch (token.type)
       {
@@ -1916,7 +1916,7 @@ writef("\33[34m%s\33[0m", success);
         auto next = peekNext();
         if (next == T.Comma || next == T.Semicolon || next == T.RParen)
         {
-          ident = token.identifier;
+          ident = token;
           nT();
           break;
         }
@@ -2090,7 +2090,7 @@ writef("\33[34m%s\33[0m", success);
       if (token.type == T.LParen)
       {
         nT();
-        string ident;
+        Token* ident;
         auto type = parseDeclarator(ident);
         param = new Parameter(null, type, ident, null);
         require(T.RParen);
@@ -2958,7 +2958,7 @@ writef("\33[34m%s\33[0m", success);
       requireNext(T.LParen);
 
       Type type, specType;
-      string ident; // optional Identifier
+      Token* ident; // optional Identifier
       Token* opTok, specTok;
 
       type = parseDeclarator(ident, true);
@@ -3261,14 +3261,13 @@ writef("\33[34m%s\33[0m", success);
     return t;
   }
 
-  Type parseDeclarator(ref string ident, bool identOptional = false)
+  Type parseDeclarator(ref Token* ident, bool identOptional = false)
   {
     auto t = parseType();
 
-    // TODO: change type of ident to Token*
     if (token.type == T.Identifier)
     {
-      ident = token.identifier;
+      ident = token;
       nT();
       t = parseDeclaratorSuffix(t);
     }
@@ -3349,7 +3348,7 @@ writef("\33[34m%s\33[0m", success);
         params ~= set(new Parameter(stcTok, null, null, null), paramBegin);
         break; // Exit loop.
       default:
-        string ident;
+        Token* ident;
         auto type = parseDeclarator(ident, true);
 
         Expression assignExpr;
@@ -3430,7 +3429,7 @@ writef("\33[34m%s\33[0m", success);
     while (1)
     {
       TP tp;
-      string ident;
+      Token* ident;
       Type valueType;
       Type specType, defType;
       Expression specValue, defValue;
@@ -3442,7 +3441,7 @@ writef("\33[34m%s\33[0m", success);
         //         alias Identifier
         tp = TP.Alias;
         nT(); // Skip alias keyword.
-        ident = requireIdentifier();
+        ident = requireId();
         // : SpecializationType
         if (token.type == T.Colon)
         {
@@ -3457,7 +3456,7 @@ writef("\33[34m%s\33[0m", success);
         }
         break;
       case T.Identifier:
-        ident = token.identifier;
+        ident = token;
         switch (peekNext())
         {
         case T.Ellipses:

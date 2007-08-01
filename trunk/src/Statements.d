@@ -89,11 +89,11 @@ class DeclarationStatement : Statement
 class IfStatement : Statement
 {
   Type type;
-  string ident;
+  Token* ident;
   Expression condition;
   Statement ifBody;
   Statement elseBody;
-  this(Type type, string ident, Expression condition, Statement ifBody, Statement elseBody)
+  this(Type type, Token* ident, Expression condition, Statement ifBody, Statement elseBody)
   {
     this.type = type;
     this.ident = ident;
