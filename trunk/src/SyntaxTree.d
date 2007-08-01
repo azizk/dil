@@ -10,7 +10,8 @@ enum NodeType
   Declaration,
   Statement,
   Expression,
-  Type
+  Type,
+  Other
 }
 
 class Node

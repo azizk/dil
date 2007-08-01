@@ -4,6 +4,7 @@
 +/
 module Parser;
 import Lexer;
+import SyntaxTree;
 import Token;
 import Messages;
 import Information;
@@ -87,6 +88,12 @@ writef("\33[31mtry_\33[0m");
     --trying;
 writef("\33[34m%s\33[0m", success);
     return result;
+  }
+
+  Class set(Class)(Class node, Token* begin)
+  {
+    node.setTokens(begin, this.token);
+    return node;
   }
 
   TOK peekNext()
@@ -1880,15 +1887,16 @@ writef("\33[34m%s\33[0m", success);
     require(T.LParen);
     while (1)
     {
-      StorageClass stc;
+      auto paramBegin = token;
+      Token* stcTok;
       Type type;
       string ident;
 
       switch (token.type)
       {
       case T.Ref, T.Inout:
+        stcTok = token;
         nT();
-        stc = StorageClass.Ref;
         // fall through
       case T.Identifier:
         auto next = peekNext();
@@ -1903,7 +1911,7 @@ writef("\33[34m%s\33[0m", success);
         type = parseDeclarator(ident);
       }
 
-      params ~= new Parameter(stc, type, ident, null);
+      params ~= set(new Parameter(stcTok, type, ident, null), paramBegin);
 
       if (token.type != T.Comma)
         break;
@@ -2070,7 +2078,7 @@ writef("\33[34m%s\33[0m", success);
         nT();
         string ident;
         auto type = parseDeclarator(ident);
-        param = new Parameter(StorageClass.None, type, ident, null);
+        param = new Parameter(null, type, ident, null);
         require(T.RParen);
       }
       catchBodies ~= new CatchBody(param, parseNoScopeStatement());
@@ -2336,11 +2344,13 @@ writef("\33[34m%s\33[0m", success);
 
   Expression parseExpression()
   {
+    auto begin = token;
     auto e = parseAssignExpression();
     while (token.type == T.Comma)
     {
       nT();
       e = new CommaExpression(e, parseAssignExpression());
+      set(e, begin);
     }
 // if (!trying)
 // writef("§%s§", e.classinfo.name);
@@ -2349,9 +2359,11 @@ writef("\33[34m%s\33[0m", success);
 
   Expression parseAssignExpression()
   {
+    typeof(token) begin;
     auto e = parseCondExpression();
     while (1)
     {
+      begin = token;
       switch (token.type)
       {
       case T.Assign:
@@ -2396,12 +2408,14 @@ writef("\33[34m%s\33[0m", success);
       default:
         return e;
       }
+      set(e, begin);
     }
     return e;
   }
 
   Expression parseCondExpression()
   {
+    auto begin = token;
     auto e = parseOrOrExpression();
     if (token.type == T.Question)
     {
@@ -2410,76 +2424,88 @@ writef("\33[34m%s\33[0m", success);
       require(T.Colon);
       auto iffalse = parseCondExpression();
       e = new CondExpression(e, iftrue, iffalse);
+      set(e, begin);
     }
     return e;
   }
 
   Expression parseOrOrExpression()
   {
+    auto begin = token;
     alias parseAndAndExpression parseNext;
     auto e = parseNext();
     while (token.type == T.OrLogical)
     {
       nT();
       e = new OrOrExpression(e, parseNext());
+      set(e, begin);
     }
     return e;
   }
 
   Expression parseAndAndExpression()
   {
+    auto begin = token;
     alias parseOrExpression parseNext;
     auto e = parseNext();
     while (token.type == T.AndLogical)
     {
       nT();
       e = new AndAndExpression(e, parseNext());
+      set(e, begin);
     }
     return e;
   }
 
   Expression parseOrExpression()
   {
+    auto begin = token;
     alias parseXorExpression parseNext;
     auto e = parseNext();
     while (token.type == T.OrBinary)
     {
       nT();
       e = new OrExpression(e, parseNext());
+      set(e, begin);
     }
     return e;
   }
 
   Expression parseXorExpression()
   {
+    auto begin = token;
     alias parseAndExpression parseNext;
     auto e = parseNext();
     while (token.type == T.Xor)
     {
       nT();
       e = new XorExpression(e, parseNext());
+      set(e, begin);
     }
     return e;
   }
 
   Expression parseAndExpression()
   {
+    auto begin = token;
     alias parseCmpExpression parseNext;
     auto e = parseNext();
     while (token.type == T.AndBinary)
     {
       nT();
       e = new AndExpression(e, parseNext());
+      set(e, begin);
     }
     return e;
   }
 
   Expression parseCmpExpression()
   {
+    auto begin = token;
     auto e = parseShiftExpression();
 
-    TOK operator = token.type;
-    switch (operator)
+    auto operator = token;
+    switch (operator.type)
     {
     case T.Equal, T.NotEqual:
       nT();
@@ -2489,11 +2515,8 @@ writef("\33[34m%s\33[0m", success);
       if (peekNext() != T.Is)
         break;
       nT();
-      operator = T.NotIdentity;
-      goto LNotIdentity;
+      // fall through
     case T.Is:
-      operator = T.Identity;
-    LNotIdentity:
       nT();
       e = new IdentityExpression(e, parseShiftExpression(), operator);
       break;
@@ -2508,63 +2531,75 @@ writef("\33[34m%s\33[0m", success);
       e = new InExpression(e, parseShiftExpression(), operator);
       break;
     default:
+      return e;
     }
+    set(e, begin);
     return e;
   }
 
   Expression parseShiftExpression()
   {
+    auto begin = token;
     auto e = parseAddExpression();
     while (1)
     {
-      switch (token.type)
+      auto operator = token;
+      switch (operator.type)
       {
-      case T.LShift:  nT(); e = new LShiftExpression(e, parseAddExpression()); break;
-      case T.RShift:  nT(); e = new RShiftExpression(e, parseAddExpression()); break;
-      case T.URShift: nT(); e = new URShiftExpression(e, parseAddExpression()); break;
+      case T.LShift:  nT(); e = new LShiftExpression(e, parseAddExpression(), operator); break;
+      case T.RShift:  nT(); e = new RShiftExpression(e, parseAddExpression(), operator); break;
+      case T.URShift: nT(); e = new URShiftExpression(e, parseAddExpression(), operator); break;
       default:
         return e;
       }
+      set(e, begin);
     }
     assert(0);
   }
 
   Expression parseAddExpression()
   {
+    auto begin = token;
     auto e = parseMulExpression();
     while (1)
     {
-      switch (token.type)
+      auto operator = token;
+      switch (operator.type)
       {
-      case T.Plus:  nT(); e = new PlusExpression(e, parseMulExpression()); break;
-      case T.Minus: nT(); e = new MinusExpression(e, parseMulExpression()); break;
-      case T.Tilde: nT(); e = new CatExpression(e, parseMulExpression()); break;
+      case T.Plus:  nT(); e = new PlusExpression(e, parseMulExpression(), operator); break;
+      case T.Minus: nT(); e = new MinusExpression(e, parseMulExpression(), operator); break;
+      case T.Tilde: nT(); e = new CatExpression(e, parseMulExpression(), operator); break;
       default:
         return e;
       }
+      set(e, begin);
     }
     assert(0);
   }
 
   Expression parseMulExpression()
   {
+    auto begin = token;
     auto e = parseUnaryExpression();
     while (1)
     {
-      switch (token.type)
+      auto operator = token;
+      switch (operator.type)
       {
-      case T.Mul: nT(); e = new MulExpression(e, parseUnaryExpression()); break;
-      case T.Div: nT(); e = new DivExpression(e, parseUnaryExpression()); break;
-      case T.Mod: nT(); e = new ModExpression(e, parseUnaryExpression()); break;
+      case T.Mul: nT(); e = new MulExpression(e, parseUnaryExpression(), operator); break;
+      case T.Div: nT(); e = new DivExpression(e, parseUnaryExpression(), operator); break;
+      case T.Mod: nT(); e = new ModExpression(e, parseUnaryExpression(), operator); break;
       default:
         return e;
       }
+      set(e, begin);
     }
     assert(0);
   }
 
   Expression parseUnaryExpression()
   {
+    auto begin = token;
     Expression e;
     switch (token.type)
     {
@@ -2582,7 +2617,7 @@ writef("\33[34m%s\33[0m", success);
       break;
     case T.Minus:
     case T.Plus:
-      nT(); e = new SignExpression(parseUnaryExpression(), token.type);
+      nT(); e = new SignExpression(parseUnaryExpression());
       break;
     case T.Not:
       nT(); e = new NotExpression(parseUnaryExpression());
@@ -2592,10 +2627,9 @@ writef("\33[34m%s\33[0m", success);
       break;
     case T.New:
       e = parseNewExpression();
-      break;
+      return e;
     case T.Delete:
-      nT();
-      e = new DeleteExpression(parseUnaryExpression());
+      nT(); e = new DeleteExpression(parseUnaryExpression());
       break;
     case T.Cast:
       requireNext(T.LParen);
@@ -2617,6 +2651,7 @@ writef("\33[34m%s\33[0m", success);
       auto type = try_(parseType_(), success);
       if (success)
       {
+        // TODO: save Token instead of string
         string ident = requireIdentifier();
         e = new TypeDotIdExpression(type, ident);
         break;
@@ -2624,16 +2659,19 @@ writef("\33[34m%s\33[0m", success);
       goto default;
     default:
       e = parsePostExpression(parsePrimaryExpression());
-      break;
+      return e;
     }
     assert(e !is null);
+    set(e, begin);
     return e;
   }
 
   Expression parsePostExpression(Expression e)
   {
+    typeof(token) begin;
     while (1)
     {
+      begin = token;
       switch (token.type)
       {
 /*
@@ -2663,7 +2701,7 @@ writef("\33[34m%s\33[0m", success);
 */
       case T.Dot:
         e = new PostDotListExpression(e, parseDotListExpression());
-        continue;
+        goto Lset;
       case T.PlusPlus:
         e = new PostIncrExpression(e);
         break;
@@ -2672,7 +2710,7 @@ writef("\33[34m%s\33[0m", success);
         break;
       case T.LParen:
         e = new CallExpression(e, parseArguments(T.RParen));
-        continue;
+        goto Lset;
       case T.LBracket:
         // parse Slice- and IndexExpression
         nT();
@@ -2689,7 +2727,7 @@ writef("\33[34m%s\33[0m", success);
           nT();
           e = new SliceExpression(e, es[0], parseAssignExpression());
           require(T.RBracket);
-          continue;
+          goto Lset;
         }
         else if (token.type == T.Comma)
         {
@@ -2699,17 +2737,20 @@ writef("\33[34m%s\33[0m", success);
           require(T.RBracket);
 
         e = new IndexExpression(e, es);
-        continue;
+        goto Lset;
       default:
         return e;
       }
       nT();
+    Lset:
+      set(e, begin);
     }
     assert(0);
   }
 
   Expression parsePrimaryExpression()
   {
+    auto begin = token;
     Expression e;
     switch (token.type)
     {
@@ -2747,8 +2788,8 @@ writef("\33[34m%s\33[0m", success);
       e = new NullExpression();
       break;
     case T.True, T.False:
-      e = new BoolExpression(token.type == T.True ? true : false);
       nT();
+      e = new BoolExpression();
       break;
     case T.Dollar:
       nT();
@@ -2764,11 +2805,10 @@ writef("\33[34m%s\33[0m", success);
       nT();
       break;
     case T.CharLiteral, T.WCharLiteral, T.DCharLiteral:
-      e = new CharLiteralExpression(token.type);
       nT();
+      e = new CharLiteralExpression();
       break;
     case T.String:
-      // TODO: The Lexer doesn't allocate the tokens on the heap yet. So Token* will not work here.
       Token*[] stringLiterals;
       do
       {
@@ -2808,35 +2848,25 @@ writef("\33[34m%s\33[0m", success);
         while (1)
         {
           keys ~= parseAssignExpression();
-          if (token.type != T.Colon)
-          {
-            expected(T.Colon);
-            values ~= null;
-            if (token.type == T.RBracket)
-              break;
-            else
-              continue;
-          }
-          nT();
+          require(T.Colon);
           values ~= parseAssignExpression();
-          if (token.type == T.RBracket)
+          if (token.type != T.Comma)
             break;
-          require(T.Comma);
+          nT();
         }
       }
-      assert(token.type == T.RBracket);
-      nT();
+      require(T.RBracket);
       e = new AssocArrayLiteralExpression(keys, values);
       break;
     case T.LBrace:
       // DelegateLiteral := { Statements }
-      auto funcType = new FunctionType(null, Parameters.init);
+//       auto funcType = new FunctionType(null, Parameters.init);
       auto funcBody = parseFunctionBody(new FunctionBody);
-      e = new FunctionLiteralExpression(funcType, funcBody);
+      e = new FunctionLiteralExpression(null, funcBody);
       break;
     case T.Function, T.Delegate:
       // FunctionLiteral := (function|delegate) Type? '(' ArgumentList ')' '{' Statements '}'
-      TOK funcTok = token.type;
+//       TOK funcTok = token.type;
       nT(); // Skip function|delegate token.
       Type returnType;
       Parameters parameters;
@@ -2848,7 +2878,7 @@ writef("\33[34m%s\33[0m", success);
       }
       auto funcType = new FunctionType(returnType, parameters);
       auto funcBody = parseFunctionBody(new FunctionBody);
-      e = new FunctionLiteralExpression(funcType, funcBody, funcTok);
+      e = new FunctionLiteralExpression(funcType, funcBody/+, funcTok+/);
       break;
     case T.Assert:
       Expression msg;
@@ -2948,6 +2978,7 @@ writef("\33[34m%s\33[0m", success);
         nT();
         e = parseExpression();
         require(T.RParen);
+        // TODO: create ParenExpression?
       }
       break;
     // BasicType . Identifier
@@ -2968,11 +2999,13 @@ writef("\33[34m%s\33[0m", success);
       error(MID.ExpectedButFound, "Expression", token.srcText);
       e = new EmptyExpression();
     }
+    set(e, begin);
     return e;
   }
 
   Expression parseNewExpression(/*Expression e*/)
   {
+    auto begin = token;
     assert(token.type == T.New);
     nT(); // Skip new keyword.
 
@@ -2993,7 +3026,7 @@ writef("\33[34m%s\33[0m", success);
       BaseClass[] bases = token.type != T.LBrace ? parseBaseClasses(false) : null ;
 
       auto decls = parseDeclarationDefinitionsBlock();
-      return new NewAnonClassExpression(/*e, */newArguments, bases, ctorArguments, decls);
+      return set(new NewAnonClassExpression(/*e, */newArguments, bases, ctorArguments, decls), begin);
     }
 
     // NewExpression:
@@ -3005,7 +3038,7 @@ writef("\33[34m%s\33[0m", success);
     {
       ctorArguments = parseArguments(T.RParen);
     }
-    return new NewExpression(/*e, */newArguments, type, ctorArguments);
+    return set(new NewExpression(/*e, */newArguments, type, ctorArguments), begin);
   }
 
   Type parseType()
@@ -3015,6 +3048,7 @@ writef("\33[34m%s\33[0m", success);
 
   Type parseBasicType()
   {
+    auto begin = token;
     Type t;
 //     IdentifierType tident;
 
@@ -3028,6 +3062,7 @@ writef("\33[34m%s\33[0m", success);
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
       t = new Type(token.type);
       nT();
+      set(t, begin);
       break;
 /+
     case T.Identifier, T.Dot:
@@ -3056,18 +3091,24 @@ writef("\33[34m%s\33[0m", success);
     case T.Identifier, T.Typeof, T.Dot:
       t = parseDotListType();
       break;
+    //case T.Const, T.Invariant:
+      // TODO: implement D 2.0 type constructors
+      //break;
     default:
       // TODO: issue error msg.
       error(MID.ExpectedButFound, "BasicType", token.srcText);
       t = new UndefinedType();
+      set(t, begin);
     }
     return t;
   }
 
   Type parseBasicType2(Type t)
   {
+    typeof(token) begin;
     while (1)
     {
+      begin = token;
       switch (token.type)
       {
       case T.Mul:
@@ -3076,7 +3117,7 @@ writef("\33[34m%s\33[0m", success);
         break;
       case T.LBracket:
         t = parseArrayType(t);
-        break;
+        continue;
       case T.Function, T.Delegate:
         TOK tok = token.type;
         nT();
@@ -3090,6 +3131,7 @@ writef("\33[34m%s\33[0m", success);
       default:
         return t;
       }
+      set(t, begin);
     }
     assert(0);
   }
@@ -3160,6 +3202,7 @@ writef("\33[34m%s\33[0m", success);
   Type parseArrayType(Type t)
   {
     assert(token.type == T.LBracket);
+    auto begin = token;
     nT();
     if (token.type == T.RBracket)
     {
@@ -3184,6 +3227,7 @@ writef("\33[34m%s\33[0m", success);
       }
       require(T.RBracket);
     }
+    set(t, begin);
     return t;
   }
 
@@ -3191,6 +3235,7 @@ writef("\33[34m%s\33[0m", success);
   {
     auto t = parseType();
 
+    // TODO: change type of ident to Token*
     if (token.type == T.Identifier)
     {
       ident = token.identifier;
@@ -3240,31 +3285,39 @@ writef("\33[34m%s\33[0m", success);
   }
   body
   {
+    auto begin = token;
     require(T.LParen);
+
+    auto params = new Parameters();
 
     if (token.type == T.RParen)
     {
       nT();
-      return Parameters.init;
+      return set(params, begin);
     }
-
-    Parameters params;
-    StorageClass stc;
+//     StorageClass stc;
 
     while (1)
     {
-      stc = StorageClass.In;
+      auto paramBegin = token;
+//       stc = StorageClass.In;
+      Token* stcTok;
       switch (token.type)
       {
-      case T.In:   stc = StorageClass.In;   nT(); goto default;
+      /+case T.In:   stc = StorageClass.In;   nT(); goto default;
       case T.Out:  stc = StorageClass.Out;  nT(); goto default;
       case T.Inout:
       case T.Ref:  stc = StorageClass.Ref;  nT(); goto default;
-      case T.Lazy: stc = StorageClass.Lazy; nT(); goto default;
+      case T.Lazy: stc = StorageClass.Lazy; nT(); goto default;+/
+      // TODO: D 2.0 invariant/const/final/scope
+      case T.In, T.Out, T.Inout, T.Ref, T.Lazy:
+        stcTok = token;
+        nT();
+        goto default;
       case T.Ellipses:
         nT();
-        params ~= new Parameter(StorageClass.Variadic, null, null, null);
-        break;
+        params ~= set(new Parameter(stcTok, null, null, null), paramBegin);
+        break; // Exit loop.
       default:
         string ident;
         auto type = parseDeclarator(ident, true);
@@ -3278,24 +3331,24 @@ writef("\33[34m%s\33[0m", success);
 
         if (token.type == T.Ellipses)
         {
-          stc |= StorageClass.Variadic;
-          params ~= new Parameter(stc, type, ident, assignExpr);
+          auto p = set(new Parameter(stcTok, type, ident, assignExpr), paramBegin);
+          p.stc |= StorageClass.Variadic;
+          params ~= p;
           nT();
-          break;
+          break; // Exit loop.
         }
 
-        params ~= new Parameter(stc, type, ident, assignExpr);
-        if (token.type == T.Comma)
-        {
-          nT();
-          continue;
-        }
-        break;
+        params ~= set(new Parameter(stcTok, type, ident, assignExpr), paramBegin);
+
+        if (token.type != T.Comma)
+          break; // Exit loop.
+        nT();
+        continue;
       }
-      break;
+      break; // Exit loop.
     }
     require(T.RParen);
-    return params;
+    return set(params, begin);
   }
 
   TemplateArguments parseTemplateArguments()

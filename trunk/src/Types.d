@@ -39,16 +39,38 @@ enum StorageClass
   Variadic     = 1<<16,
 }
 
-class Parameter
+class Parameter : Node
 {
   StorageClass stc;
+  Token* stcTok;
   Type type;
   string ident;
   Expression assignExpr;
 
-  this(StorageClass stc, Type type, string ident, Expression assignExpr)
+  this(Token* stcTok, Type type, string ident, Expression assignExpr)
   {
+    super(NodeType.Other);
+
+    StorageClass stc;
+    if (stcTok !is null)
+    {
+      // NB: In D 2.0 StorageClass.In means final/scope/const
+      switch (stcTok.type)
+      {
+      // TODO: D 2.0 invariant/const/final/scope
+      case TOK.In:   stc = StorageClass.In;   break;
+      case TOK.Out:  stc = StorageClass.Out;  break;
+      case TOK.Inout:
+      case TOK.Ref:  stc = StorageClass.Ref;  break;
+      case TOK.Lazy: stc = StorageClass.Lazy; break;
+      case TOK.Ellipses:
+        stc = StorageClass.Variadic;
+      default:
+      }
+    }
+
     this.stc = stc;
+    this.stcTok = stcTok;
     this.type = type;
     this.ident = ident;
     this.assignExpr = assignExpr;
@@ -65,9 +87,14 @@ class Parameter
   }
 }
 
-struct Parameters
+class Parameters : Node
 {
   Parameter[] items;
+
+  this()
+  {
+    super(NodeType.Other);
+  }
 
   bool hasVariadic()
   {

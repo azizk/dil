@@ -25,8 +25,8 @@ class EmptyExpression : Expression
 class BinaryExpression : Expression
 {
   Expression left, right;
-  TOK tok;
-  this(Expression left, Expression right, TOK tok)
+  Token* tok;
+  this(Expression left, Expression right, Token* tok)
   {
     this.left = left;
     this.right = right;
@@ -40,194 +40,194 @@ class CondExpression : BinaryExpression
   this(Expression condition, Expression left, Expression right)
   {
     this.condition = condition;
-    super(left, right, TOK.Comma);
+    super(left, right, null);
   }
 }
 
 class CommaExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.Comma); }
+  { super(left, right, null); }
 }
 
 class OrOrExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.OrLogical); }
+  { super(left, right, null); }
 }
 
 class AndAndExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.AndLogical); }
+  { super(left, right, null); }
 }
 
 class OrExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.OrBinary); }
+  { super(left, right, null); }
 }
 
 class XorExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.Xor); }
+  { super(left, right, null); }
 }
 
 class AndExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.AndBinary); }
+  { super(left, right, null); }
 }
 
 class CmpExpression : BinaryExpression
 {
-  this(Expression left, Expression right, TOK tok)
+  this(Expression left, Expression right, Token* tok)
   { super(left, right, tok); }
 }
 
 class EqualExpression : CmpExpression
 {
-  this(Expression left, Expression right, TOK tok)
-  { super(left, right, TOK.Equal); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class IdentityExpression : CmpExpression
 {
-  this(Expression left, Expression right, TOK tok)
+  this(Expression left, Expression right, Token* tok)
   { super(left, right, tok); }
 }
 
 class RelExpression : CmpExpression
 {
-  this(Expression left, Expression right, TOK tok)
+  this(Expression left, Expression right, Token* tok)
   { super(left, right, tok); }
 }
 
 class InExpression : BinaryExpression
 {
-  this(Expression left, Expression right, TOK tok)
-  { super(left, right, TOK.In); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class LShiftExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
-  { super(left, right, TOK.LShiftAssign); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class RShiftExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
-  { super(left, right, TOK.RShiftAssign); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class URShiftExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
-  { super(left, right, TOK.URShiftAssign); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class PlusExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
-  { super(left, right, TOK.Plus); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class MinusExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
-  { super(left, right, TOK.Minus); }
-}
-
-class MulExpression : BinaryExpression
-{
-  this(Expression left, Expression right)
-  { super(left, right, TOK.Mul); }
-}
-
-class DivExpression : BinaryExpression
-{
-  this(Expression left, Expression right)
-  { super(left, right, TOK.Div); }
-}
-
-class ModExpression : BinaryExpression
-{
-  this(Expression left, Expression right)
-  { super(left, right, TOK.Mod); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class CatExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
-  { super(left, right, TOK.Catenate); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
+}
+
+class MulExpression : BinaryExpression
+{
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
+}
+
+class DivExpression : BinaryExpression
+{
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
+}
+
+class ModExpression : BinaryExpression
+{
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class AssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.Assign); }
+  { super(left, right, null); }
 }
 class LShiftAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.LShiftAssign); }
+  { super(left, right, null); }
 }
 class RShiftAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.RShiftAssign); }
+  { super(left, right, null); }
 }
 class URShiftAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.URShiftAssign); }
+  { super(left, right, null); }
 }
 class OrAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.OrAssign); }
+  { super(left, right, null); }
 }
 class AndAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.AndAssign); }
+  { super(left, right, null); }
 }
 class PlusAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.PlusAssign); }
+  { super(left, right, null); }
 }
 class MinusAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.MinusAssign); }
+  { super(left, right, null); }
 }
 class DivAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.DivAssign); }
+  { super(left, right, null); }
 }
 class MulAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.MulAssign); }
+  { super(left, right, null); }
 }
 class ModAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.ModAssign); }
+  { super(left, right, null); }
 }
 class XorAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.XorAssign); }
+  { super(left, right, null); }
 }
 class CatAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
-  { super(left, right, TOK.CatAssign); }
+  { super(left, right, null); }
 }
 
 class UnaryExpression : Expression
@@ -275,11 +275,9 @@ class DerefExpression : UnaryExpression
 
 class SignExpression : UnaryExpression
 {
-  TOK sign;
-  this(Expression e, TOK sign)
+  this(Expression e)
   {
     super(e);
-    this.sign = sign;
   }
 }
 
@@ -475,9 +473,8 @@ class DollarExpression : Expression
 
 class BoolExpression : Expression
 {
-  bool value;
-  this(bool value)
-  { this.value = value; }
+  this()
+  {}
 }
 
 class IntNumberExpression : Expression
@@ -504,9 +501,8 @@ class RealNumberExpression : Expression
 
 class CharLiteralExpression : Expression
 {
-  TOK tok;
-  this(TOK tok)
-  { this.tok = tok; }
+  this()
+  {}
 }
 
 class StringLiteralsExpression : Expression
