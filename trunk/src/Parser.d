@@ -3005,7 +3005,9 @@ writef("\33[34m%s\33[0m", success);
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
       auto type = new Type(token.type);
-      requireNext(T.Dot);
+      nT();
+      set(type, begin);
+      require(T.Dot);
       auto ident = requireId();
 
       e = new TypeDotIdExpression(type, ident);
