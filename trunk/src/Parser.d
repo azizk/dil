@@ -1579,6 +1579,8 @@ writef("\33[34m%s\33[0m", success);
       s = parsePragmaStatement();
       break;
     case T.Mixin:
+      if (peekNext() == T.LParen)
+        goto default; // Parse as expression.
       s = new MixinStatement(parseMixinDeclaration());
       break;
     case T.Static:
