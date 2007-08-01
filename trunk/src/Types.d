@@ -140,7 +140,7 @@ enum TP
   Tuple
 }
 
-class TemplateParameter
+class TemplateParameter : Node
 {
   TP tp;
   Type valueType;
@@ -149,6 +149,7 @@ class TemplateParameter
   Expression specValue, defValue;
   this(TP tp, Type valueType, Token* ident, Type specType, Type defType, Expression specValue, Expression defValue)
   {
+    super(NodeType.Other);
     this.tp = tp;
     this.valueType = valueType;
     this.ident = ident;

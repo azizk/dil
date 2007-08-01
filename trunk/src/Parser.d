@@ -3386,36 +3386,30 @@ writef("\33[34m%s\33[0m", success);
     auto args = new TemplateArguments;
 
     require(T.LParen);
-    if (token.type == T.RParen)
+    if (token.type != T.RParen)
     {
-      nT();
-      return null;
+      while (1)
+      {
+        bool success;
+        auto typeArgument = try_(parseType(), success);
+        if (success)
+        {
+          // TemplateArgument:
+          //         Type
+          //         Symbol
+          args ~= typeArgument;
+        }
+        else
+        {
+          // TemplateArgument:
+          //         AssignExpression
+          args ~= parseAssignExpression();
+        }
+        if (token.type != T.Comma)
+          break; // Exit loop.
+        nT();
+      }
     }
-
-    goto LenterLoop;
-    do
-    {
-      nT(); // Skip comma.
-    LenterLoop:
-
-      bool success;
-      auto typeArgument = try_(parseType(), success);
-
-      if (success)
-      {
-        // TemplateArgument:
-        //         Type
-        //         Symbol
-        args ~= typeArgument;
-      }
-      else
-      {
-        // TemplateArgument:
-        //         AssignExpression
-        args ~= parseAssignExpression();
-      }
-    } while (token.type == T.Comma)
-
     require(T.RParen);
     set(args, begin);
     return args;
