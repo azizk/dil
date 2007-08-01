@@ -159,7 +159,20 @@ class TemplateParameter
   }
 }
 
-typedef Object[] TemplateArguments;
+class TemplateArguments : Node
+{
+  Node[] args;
+
+  this()
+  {
+    super(NodeType.Other);
+  }
+
+  void opCatAssign(Node argument)
+  {
+    args ~= argument;
+  }
+}
 
 enum TID
 {

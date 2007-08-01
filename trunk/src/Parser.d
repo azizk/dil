@@ -3382,7 +3382,8 @@ writef("\33[34m%s\33[0m", success);
 
   TemplateArguments parseTemplateArguments()
   {
-    TemplateArguments args;
+    auto begin = token;
+    auto args = new TemplateArguments;
 
     require(T.LParen);
     if (token.type == T.RParen)
@@ -3416,6 +3417,7 @@ writef("\33[34m%s\33[0m", success);
     } while (token.type == T.Comma)
 
     require(T.RParen);
+    set(args, begin);
     return args;
   }
 
