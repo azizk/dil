@@ -160,6 +160,21 @@ class TemplateParameter : Node
   }
 }
 
+class TemplateParameters : Node
+{
+  TemplateParameter[] params;
+
+  this()
+  {
+    super(NodeType.Other);
+  }
+
+  void opCatAssign(TemplateParameter parameter)
+  {
+    params ~= parameter;
+  }
+}
+
 class TemplateArguments : Node
 {
   Node[] args;
@@ -356,8 +371,8 @@ class FunctionType : Type
 {
   Type returnType;
   Parameters parameters;
-  TemplateParameter[] tparams;
-  this(Type returnType, Parameters parameters, TemplateParameter[] tparams = null)
+  TemplateParameters tparams;
+  this(Type returnType, Parameters parameters, TemplateParameters tparams = null)
   {
     super(TID.Function, null);
     this.returnType = returnType;

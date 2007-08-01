@@ -104,10 +104,10 @@ class EnumDeclaration : Declaration
 class ClassDeclaration : Declaration
 {
   string name;
-  TemplateParameter[] tparams;
+  TemplateParameters tparams;
   BaseClass[] bases;
   Declaration[] decls;
-  this(string name, TemplateParameter[] tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
+  this(string name, TemplateParameters tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
     this.name = name;
@@ -120,10 +120,10 @@ class ClassDeclaration : Declaration
 class InterfaceDeclaration : Declaration
 {
   string name;
-  TemplateParameter[] tparams;
+  TemplateParameters tparams;
   BaseClass[] bases;
   Declaration[] decls;
-  this(string name, TemplateParameter[] tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
+  this(string name, TemplateParameters tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
     this.name = name;
@@ -136,9 +136,9 @@ class InterfaceDeclaration : Declaration
 class StructDeclaration : Declaration
 {
   string name;
-  TemplateParameter[] tparams;
+  TemplateParameters tparams;
   Declaration[] decls;
-  this(string name, TemplateParameter[] tparams, Declaration[] decls, bool hasBody)
+  this(string name, TemplateParameters tparams, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
     this.name = name;
@@ -150,9 +150,9 @@ class StructDeclaration : Declaration
 class UnionDeclaration : Declaration
 {
   string name;
-  TemplateParameter[] tparams;
+  TemplateParameters tparams;
   Declaration[] decls;
-  this(string name, TemplateParameter[] tparams, Declaration[] decls, bool hasBody)
+  this(string name, TemplateParameters tparams, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
     this.name = name;
@@ -207,9 +207,9 @@ class FunctionDeclaration : Declaration
 {
   string funcName;
   Type funcType;
-  TemplateParameter[] tparams;
+  TemplateParameters tparams;
   FunctionBody funcBody;
-  this(string funcName, Type funcType, TemplateParameter[] tparams, FunctionBody funcBody)
+  this(string funcName, Type funcType, TemplateParameters tparams, FunctionBody funcBody)
   {
     super(funcBody.funcBody !is null);
     this.funcName = funcName;
@@ -317,9 +317,9 @@ class StaticAssertDeclaration : Declaration
 class TemplateDeclaration : Declaration
 {
   string templateName;
-  TemplateParameter[] templateParams;
+  TemplateParameters templateParams;
   Declaration[] decls;
-  this(string templateName, TemplateParameter[] templateParams, Declaration[] decls)
+  this(string templateName, TemplateParameters templateParams, Declaration[] decls)
   {
     super(true);
     this.templateName = templateName;

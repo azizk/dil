@@ -333,7 +333,7 @@ writef("\33[34m%s\33[0m", success);
       {
 //         writef("°Function°");
         // It's a function declaration
-        TemplateParameter[] tparams;
+        TemplateParameters tparams;
         if (tokenAfterParenIs(T.LParen))
         {
           // ( TemplateParameterList ) ( ParameterList )
@@ -842,7 +842,7 @@ writef("\33[34m%s\33[0m", success);
     assert(token.type == T.Class);
 
     string className;
-    TemplateParameter[] tparams;
+    TemplateParameters tparams;
     BaseClass[] bases;
     Declaration[] decls;
     bool hasBody;
@@ -917,7 +917,7 @@ writef("\33[34m%s\33[0m", success);
     assert(token.type == T.Interface);
 
     string name;
-    TemplateParameter[] tparams;
+    TemplateParameters tparams;
     BaseClass[] bases;
     Declaration[] decls;
     bool hasBody;
@@ -959,7 +959,7 @@ writef("\33[34m%s\33[0m", success);
     TOK tok = token.type;
 
     string name;
-    TemplateParameter[] tparams;
+    TemplateParameters tparams;
     Declaration[] decls;
     bool hasBody;
 
@@ -3219,7 +3219,7 @@ writef("\33[34m%s\33[0m", success);
       break;
 /+ // parsed in parseDeclaration()
     case T.LParen:
-      TemplateParameter[] tparams;
+      TemplateParameters tparams;
       if (tokenAfterParenIs(T.LParen))
       {
         // ( TemplateParameterList ) ( ParameterList )
@@ -3423,15 +3423,17 @@ writef("\33[34m%s\33[0m", success);
     return args;
   }
 
-  TemplateParameter[] parseTemplateParameterList()
+  TemplateParameters parseTemplateParameterList()
   {
+    auto begin = token;
     require(T.LParen);
     if (token.type == T.RParen)
       return null;
 
-    TemplateParameter[] tparams;
+    auto tparams = new TemplateParameters;
     while (1)
     {
+      auto paramBegin = token;
       TP tp;
       Token* ident;
       Type valueType;
@@ -3517,13 +3519,14 @@ writef("\33[34m%s\33[0m", success);
         }
       }
 
-      tparams ~= new TemplateParameter(tp, valueType, ident, specType, defType, specValue, defValue);
+      tparams ~= set(new TemplateParameter(tp, valueType, ident, specType, defType, specValue, defValue), paramBegin);
 
       if (token.type != T.Comma)
         break;
       nT();
     }
     require(T.RParen);
+    set(tparams, begin);
     return tparams;
   }
 
