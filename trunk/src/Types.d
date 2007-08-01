@@ -195,7 +195,6 @@ enum TID
   Identifier,
   Typeof,
   TemplateInstance,
-  Specialization,
 }
 
 class Type : Node
@@ -336,28 +335,6 @@ class ArrayType : Type
   {
     this(t);
     this.assocType = assocType;
-  }
-}
-
-class SpecializationType : Type
-{
-  TOK specTok; // Colon|Equal
-  Type type;
-  TOK tokType; // Typedef|Struct|Union|Class|Interface|
-               // Enum|Function|Delegate|Super|Return
-
-  this(TOK specTok, TOK tokType)
-  {
-    super(TID.Specialization, null);
-    this.specTok = specTok;
-    this.tokType = tokType;
-  }
-
-  this(TOK specTok, Type type)
-  {
-    super(TID.Specialization, null);
-    this.specTok = specTok;
-    this.type = type;
   }
 }
 

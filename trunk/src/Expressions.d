@@ -590,11 +590,14 @@ class IsExpression : Expression
 {
   Type type;
   string ident;
-  SpecializationType specType;
-  this(Type type, string ident, SpecializationType specType)
+  Token* opTok, specTok;
+  Type specType;
+  this(Type type, string ident, Token* opTok, Token* specTok, Type specType)
   {
     this.type = type;
     this.ident = ident;
+    this.opTok = opTok;
+    this.specTok = specTok;
     this.specType = specType;
   }
 }

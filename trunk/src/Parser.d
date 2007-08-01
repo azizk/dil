@@ -2945,16 +2945,16 @@ writef("\33[34m%s\33[0m", success);
     case T.Is:
       requireNext(T.LParen);
 
-      Type type;
-      SpecializationType specType;
+      Type type, specType;
       string ident; // optional Identifier
+      Token* opTok, specTok;
 
       type = parseDeclarator(ident, true);
 
       switch (token.type)
       {
       case T.Colon, T.Equal:
-        TOK specTok = token.type;
+        opTok = token;
         nT();
         switch (token.type)
         {
@@ -2968,16 +2968,16 @@ writef("\33[34m%s\33[0m", success);
              T.Delegate,
              T.Super,
              T.Return:
+          specTok = token;
           nT();
-          specType = new SpecializationType(specTok, token.type);
           break;
         default:
-          specType = new SpecializationType(specTok, parseType());
+          specType = parseType();
         }
       default:
       }
       require(T.RParen);
-      e = new IsExpression(type, ident, specType);
+      e = new IsExpression(type, ident, opTok, specTok, specType);
       break;
     case T.LParen:
       if (tokenAfterParenIs(T.LBrace))
