@@ -1897,7 +1897,7 @@ writef("\33[34m%s\33[0m", success);
     TOK tok = token.type;
     nT();
 
-    Parameters params;
+    auto params = new Parameters;
     Expression aggregate;
 
     require(T.LParen);
@@ -2633,31 +2633,39 @@ writef("\33[34m%s\33[0m", success);
     switch (token.type)
     {
     case T.AndBinary:
+      nT();
       e = new AddressExpression(parseUnaryExpression());
       break;
     case T.PlusPlus:
+      nT();
       e = new PreIncrExpression(parseUnaryExpression());
       break;
     case T.MinusMinus:
+      nT();
       e = new PreDecrExpression(parseUnaryExpression());
       break;
     case T.Mul:
+      nT();
       e = new DerefExpression(parseUnaryExpression());
       break;
     case T.Minus:
     case T.Plus:
+      nT();
       e = new SignExpression(parseUnaryExpression());
       break;
     case T.Not:
+      nT();
       e = new NotExpression(parseUnaryExpression());
       break;
     case T.Tilde:
+      nT();
       e = new CompExpression(parseUnaryExpression());
       break;
     case T.New:
       e = parseNewExpression();
       return e;
     case T.Delete:
+      nT();
       e = new DeleteExpression(parseUnaryExpression());
       break;
     case T.Cast:
@@ -2665,7 +2673,7 @@ writef("\33[34m%s\33[0m", success);
       auto type = parseType();
       require(T.RParen);
       e = new CastExpression(parseUnaryExpression(), type);
-      goto Lset;
+      break;
     case T.LParen:
       // ( Type ) . Identifier
       Type parseType_()
@@ -2682,7 +2690,7 @@ writef("\33[34m%s\33[0m", success);
       {
         auto ident = requireId();
         e = new TypeDotIdExpression(type, ident);
-        goto Lset;
+        break;
       }
       goto default;
     default:
@@ -2690,8 +2698,6 @@ writef("\33[34m%s\33[0m", success);
       return e;
     }
     assert(e !is null);
-    nT();
-  Lset:
     set(e, begin);
     return e;
   }
