@@ -1640,7 +1640,7 @@ writef("\33[34m%s\33[0m", success);
       else
       {
         error(MID.ExpectedButFound, "Statement", token.srcText);
-        s = new IllegalStatement(token.type);
+        s = new IllegalStatement(token);
         nT();
       }
     }

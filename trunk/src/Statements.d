@@ -28,8 +28,8 @@ class Statements : Statement
 
 class IllegalStatement : Statement
 {
-  TOK tok;
-  this(TOK tok)
+  Token* tok;
+  this(Token* tok)
   {
     this.tok = tok;
   }
