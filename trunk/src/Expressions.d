@@ -569,8 +569,8 @@ class TypeofExpression : Expression
 class TypeDotIdExpression : Expression
 {
   Type type;
-  string ident;
-  this(Type type, string ident)
+  Token* ident;
+  this(Type type, Token* ident)
   {
     this.type = type;
     this.ident = ident;

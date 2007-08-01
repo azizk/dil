@@ -2604,39 +2604,39 @@ writef("\33[34m%s\33[0m", success);
     switch (token.type)
     {
     case T.AndBinary:
-      nT(); e = new AddressExpression(parseUnaryExpression());
+      e = new AddressExpression(parseUnaryExpression());
       break;
     case T.PlusPlus:
-      nT(); e = new PreIncrExpression(parseUnaryExpression());
+      e = new PreIncrExpression(parseUnaryExpression());
       break;
     case T.MinusMinus:
-      nT(); e = new PreDecrExpression(parseUnaryExpression());
+      e = new PreDecrExpression(parseUnaryExpression());
       break;
     case T.Mul:
-      nT(); e = new DerefExpression(parseUnaryExpression());
+      e = new DerefExpression(parseUnaryExpression());
       break;
     case T.Minus:
     case T.Plus:
-      nT(); e = new SignExpression(parseUnaryExpression());
+      e = new SignExpression(parseUnaryExpression());
       break;
     case T.Not:
-      nT(); e = new NotExpression(parseUnaryExpression());
+      e = new NotExpression(parseUnaryExpression());
       break;
     case T.Tilde:
-      nT(); e = new CompExpression(parseUnaryExpression());
+      e = new CompExpression(parseUnaryExpression());
       break;
     case T.New:
       e = parseNewExpression();
       return e;
     case T.Delete:
-      nT(); e = new DeleteExpression(parseUnaryExpression());
+      e = new DeleteExpression(parseUnaryExpression());
       break;
     case T.Cast:
       requireNext(T.LParen);
       auto type = parseType();
       require(T.RParen);
       e = new CastExpression(parseUnaryExpression(), type);
-      break;
+      goto Lset;
     case T.LParen:
       // ( Type ) . Identifier
       Type parseType_()
@@ -2651,10 +2651,9 @@ writef("\33[34m%s\33[0m", success);
       auto type = try_(parseType_(), success);
       if (success)
       {
-        // TODO: save Token instead of string
-        string ident = requireIdentifier();
+        auto ident = requireId();
         e = new TypeDotIdExpression(type, ident);
-        break;
+        goto Lset;
       }
       goto default;
     default:
@@ -2662,6 +2661,8 @@ writef("\33[34m%s\33[0m", success);
       return e;
     }
     assert(e !is null);
+    nT();
+  Lset:
     set(e, begin);
     return e;
   }
@@ -2990,7 +2991,7 @@ writef("\33[34m%s\33[0m", success);
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
       auto type = new Type(token.type);
       requireNext(T.Dot);
-      auto ident = requireIdentifier();
+      auto ident = requireId();
 
       e = new TypeDotIdExpression(type, ident);
       break;
@@ -3525,6 +3526,19 @@ writef("\33[34m%s\33[0m", success);
     else
       error(MID.ExpectedButFound, "Identifier", token.srcText);
     return identifier;
+  }
+
+  Token* requireId()
+  {
+    if (token.type == T.Identifier)
+    {
+      auto id = token;
+      nT();
+      return id;
+    }
+    else
+      error(MID.ExpectedButFound, "Identifier", token.srcText);
+    return null;
   }
 
   void error(MID id, ...)
