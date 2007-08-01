@@ -1,6 +1,6 @@
 /++
   Author: Aziz Köksal
-  License: GPL2
+  License: GPL3
 +/
 module Parser;
 import Lexer;
