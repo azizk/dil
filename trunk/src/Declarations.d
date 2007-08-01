@@ -386,9 +386,9 @@ class AlignDeclaration : AttributeDeclaration
 
 class PragmaDeclaration : AttributeDeclaration
 {
-  string ident;
+  Token* ident;
   Expression[] args;
-  this(string ident, Expression[] args, Declaration[] decls)
+  this(Token* ident, Expression[] args, Declaration[] decls)
   {
     super(TOK.Pragma, decls);
     this.ident = ident;

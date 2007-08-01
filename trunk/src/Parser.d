@@ -650,12 +650,12 @@ writef("\33[34m%s\33[0m", success);
       //     AssignExpression
       //     AssignExpression , ExpressionList
       nT();
-      string ident;
+      Token* ident;
       Expression[] args;
       Declaration[] decls;
 
       require(T.LParen);
-      ident = requireIdentifier();
+      ident = requireId();
 
       if (token.type == T.Comma)
       {
@@ -2161,12 +2161,12 @@ writef("\33[34m%s\33[0m", success);
     assert(token.type == T.Pragma);
     nT();
 
-    string ident;
+    Token* ident;
     Expression[] args;
     Statement pragmaBody;
 
     require(T.LParen);
-    ident = requireIdentifier();
+    ident = requireId();
 
     if (token.type == T.Comma)
     {

@@ -323,10 +323,10 @@ class AsmStatement : Statement
 
 class PragmaStatement : Statement
 {
-  string ident;
+  Token* ident;
   Expression[] args;
   Statement pragmaBody;
-  this(string ident, Expression[] args, Statement pragmaBody)
+  this(Token* ident, Expression[] args, Statement pragmaBody)
   {
     this.ident = ident;
     this.args = args;
