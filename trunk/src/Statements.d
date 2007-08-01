@@ -336,10 +336,12 @@ class PragmaStatement : Statement
 
 class MixinStatement : Statement
 {
-  Declaration decl;
-  this(Declaration decl)
+  Expression[] templateIdent;
+  Token* mixinIdent;
+  this(Expression[] templateIdent, Token* mixinIdent)
   {
-    this.decl = decl;
+    this.templateIdent = templateIdent;
+    this.mixinIdent = mixinIdent;
   }
 }
 

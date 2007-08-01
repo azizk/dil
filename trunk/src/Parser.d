@@ -253,7 +253,7 @@ writef("\33[34m%s\33[0m", success);
       decl = parseDeleteDeclaration();
       break;
     case T.Mixin:
-      decl = parseMixinDeclaration();
+      decl = parseMixin!(MixinDeclaration)();
       break;
     case T.Semicolon:
       nT();
@@ -1395,11 +1395,13 @@ writef("\33[34m%s\33[0m", success);
             mixin TemplateIdentifier !( TemplateArguments ) ;
             mixin TemplateIdentifier !( TemplateArguments ) MixinIdentifier ;
   */
-  Declaration parseMixinDeclaration()
+  Class parseMixin(Class)()
   {
     assert(token.type == T.Mixin);
+    auto begin = token;
     nT(); // Skip mixin keyword.
 
+  static if (is(Class == MixinDeclaration))
     if (token.type == T.LParen)
     {
       // TODO: What about mixin(...).ident;?
@@ -1407,7 +1409,7 @@ writef("\33[34m%s\33[0m", success);
       auto e = parseAssignExpression();
       require(T.RParen);
       require(T.Semicolon);
-      return new MixinDeclaration(e);
+      return set(new MixinDeclaration(e), begin);
     }
 
     Expression[] templateIdent;
@@ -1448,7 +1450,7 @@ writef("\33[34m%s\33[0m", success);
 
     require(T.Semicolon);
 
-    return new MixinDeclaration(templateIdent, mixinIdent);
+    return set(new Class(templateIdent, mixinIdent), begin);
   }
 
   /+++++++++++++++++++++++++++++
@@ -1587,7 +1589,7 @@ writef("\33[34m%s\33[0m", success);
     case T.Mixin:
       if (peekNext() == T.LParen)
         goto default; // Parse as expression.
-      s = new MixinStatement(parseMixinDeclaration());
+      s = parseMixin!(MixinStatement)();
       break;
     case T.Static:
       switch (peekNext())
