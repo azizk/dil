@@ -2363,8 +2363,9 @@ writef("\33[34m%s\33[0m", success);
     auto e = parseAssignExpression();
     while (token.type == T.Comma)
     {
+      auto comma = token;
       nT();
-      e = new CommaExpression(e, parseAssignExpression());
+      e = new CommaExpression(e, parseAssignExpression(), comma);
       set(e, begin);
     }
 // if (!trying)
@@ -2451,8 +2452,9 @@ writef("\33[34m%s\33[0m", success);
     auto e = parseNext();
     while (token.type == T.OrLogical)
     {
+      auto tok = token;
       nT();
-      e = new OrOrExpression(e, parseNext());
+      e = new OrOrExpression(e, parseNext(), tok);
       set(e, begin);
     }
     return e;
@@ -2465,8 +2467,9 @@ writef("\33[34m%s\33[0m", success);
     auto e = parseNext();
     while (token.type == T.AndLogical)
     {
+      auto tok = token;
       nT();
-      e = new AndAndExpression(e, parseNext());
+      e = new AndAndExpression(e, parseNext(), tok);
       set(e, begin);
     }
     return e;
@@ -2479,8 +2482,9 @@ writef("\33[34m%s\33[0m", success);
     auto e = parseNext();
     while (token.type == T.OrBinary)
     {
+      auto tok = token;
       nT();
-      e = new OrExpression(e, parseNext());
+      e = new OrExpression(e, parseNext(), tok);
       set(e, begin);
     }
     return e;
@@ -2493,8 +2497,9 @@ writef("\33[34m%s\33[0m", success);
     auto e = parseNext();
     while (token.type == T.Xor)
     {
+      auto tok = token;
       nT();
-      e = new XorExpression(e, parseNext());
+      e = new XorExpression(e, parseNext(), tok);
       set(e, begin);
     }
     return e;
@@ -2507,8 +2512,9 @@ writef("\33[34m%s\33[0m", success);
     auto e = parseNext();
     while (token.type == T.AndBinary)
     {
+      auto tok = token;
       nT();
-      e = new AndExpression(e, parseNext());
+      e = new AndExpression(e, parseNext(), tok);
       set(e, begin);
     }
     return e;

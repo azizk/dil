@@ -46,38 +46,38 @@ class CondExpression : BinaryExpression
 
 class CommaExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
-  { super(left, right, null); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class OrOrExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
-  { super(left, right, null); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class AndAndExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
-  { super(left, right, null); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class OrExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
-  { super(left, right, null); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class XorExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
-  { super(left, right, null); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class AndExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
-  { super(left, right, null); }
+  this(Expression left, Expression right, Token* tok)
+  { super(left, right, tok); }
 }
 
 class CmpExpression : BinaryExpression
