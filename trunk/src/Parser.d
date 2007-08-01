@@ -657,9 +657,15 @@ writef("\33[34m%s\33[0m", success);
       require(T.LParen);
       ident = requireIdentifier();
 
-      // TODO: pragma(msg,) shouldn't be allowed
       if (token.type == T.Comma)
-        args = parseArguments(T.RParen);
+      {
+        // Parse at least one argument.
+        nT();
+        args ~= parseAssignExpression();
+      }
+
+      if (token.type == T.Comma)
+        args ~= parseArguments(T.RParen);
       else
         require(T.RParen);
 
@@ -2163,7 +2169,14 @@ writef("\33[34m%s\33[0m", success);
     ident = requireIdentifier();
 
     if (token.type == T.Comma)
-      args = parseArguments(T.RParen);
+    {
+      // Parse at least one argument.
+      nT();
+      args ~= parseAssignExpression();
+    }
+
+    if (token.type == T.Comma)
+      args ~= parseArguments(T.RParen);
     else
       require(T.RParen);
 
