@@ -399,9 +399,9 @@ class PragmaDeclaration : AttributeDeclaration
 class MixinDeclaration : Declaration
 {
   Expression[] templateIdent;
-  string mixinIdent;
+  Token* mixinIdent;
   Expression assignExpr; // mixin ( AssignExpression )
-  this(Expression[] templateIdent, string mixinIdent)
+  this(Expression[] templateIdent, Token* mixinIdent)
   {
     super(false);
     this.templateIdent = templateIdent;

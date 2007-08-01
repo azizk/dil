@@ -292,7 +292,7 @@ class CompExpression : UnaryExpression
   this(Expression e)
   { super(e); }
 }
-
+/+
 class DotIdExpression : UnaryExpression
 {
   string ident;
@@ -302,7 +302,8 @@ class DotIdExpression : UnaryExpression
     this.ident = ident;
   }
 }
-
++/
+/+
 class DotTemplateInstanceExpression : UnaryExpression
 {
   string ident;
@@ -314,7 +315,7 @@ class DotTemplateInstanceExpression : UnaryExpression
     this.targs = targs;
   }
 }
-
++/
 class PostDotListExpression : UnaryExpression
 {
   DotListExpression dotList;
@@ -411,8 +412,8 @@ class PrimaryExpression
 
 class IdentifierExpression : Expression
 {
-  string identifier;
-  this(string identifier)
+  Token* identifier;
+  this(Token* identifier)
   {
     this.identifier = identifier;
   }
@@ -438,9 +439,9 @@ class DotListExpression : Expression
 
 class TemplateInstanceExpression : Expression
 {
-  string ident;
+  Token* ident;
   TemplateArguments targs;
-  this(string ident, TemplateArguments targs)
+  this(Token* ident, TemplateArguments targs)
   {
     this.ident = ident;
     this.targs = targs;

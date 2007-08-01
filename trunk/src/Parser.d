@@ -1290,8 +1290,8 @@ writef("\33[34m%s\33[0m", success);
     Expression[] identList;
     if (token.type == T.Dot)
     {
+      identList ~= new IdentifierExpression(token);
       nT();
-      identList ~= new IdentifierExpression(".");
     }
     else if (token.type == T.Typeof)
     {
@@ -1306,14 +1306,17 @@ writef("\33[34m%s\33[0m", success);
 
     while (1)
     {
-      string ident = requireIdentifier();
+      auto ident = requireId();
+      Expression e;
       if (token.type == T.Not && peekNext() == T.LParen) // Identifier !( TemplateArguments )
       {
         nT(); // Skip !.
-        identList ~= new TemplateInstanceExpression(ident, parseTemplateArguments());
+        e = new TemplateInstanceExpression(ident, parseTemplateArguments());
       }
       else // Identifier
-        identList ~= new IdentifierExpression(ident);
+        e = new IdentifierExpression(ident);
+
+      identList ~= e;
 
     LnewExpressionLoop:
       if (token.type != T.Dot)
@@ -1408,26 +1411,29 @@ writef("\33[34m%s\33[0m", success);
     }
 
     Expression[] templateIdent;
-    string mixinIdent;
+    Token* mixinIdent;
 
     // This code is similar to parseDotListType().
     if (token.type == T.Dot)
     {
+      templateIdent ~= new IdentifierExpression(token);
       nT();
-      templateIdent ~= new IdentifierExpression(".");
     }
 
     while (1)
     {
-      string ident = requireIdentifier();
+      auto ident = requireId();
+      Expression e;
       if (token.type == T.Not) // Identifier !( TemplateArguments )
       {
         // No need to peek for T.LParen. This must be a template instance.
         nT();
-        templateIdent ~= new TemplateInstanceExpression(ident, parseTemplateArguments());
+        e = new TemplateInstanceExpression(ident, parseTemplateArguments());
       }
       else // Identifier
-        templateIdent ~= new IdentifierExpression(ident);
+        e = new IdentifierExpression(ident);
+
+      templateIdent ~= e;
 
       if (token.type != T.Dot)
         break;
@@ -1436,7 +1442,7 @@ writef("\33[34m%s\33[0m", success);
 
     if (token.type == T.Identifier)
     {
-      mixinIdent = token.identifier;
+      mixinIdent = token;
       nT();
     }
 
