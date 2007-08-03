@@ -604,8 +604,8 @@ writef("\33[34m%s\33[0m", success);
         goto Lcommon;
       Lcommon:
         addStorageClass();
-        nT();
         decl = new AttributeDeclaration(token.type, parse());
+        nT();
         break;
       case T.Identifier:
         // This could be a normal Declaration or an AutoDeclaration
@@ -1787,8 +1787,8 @@ writef("\33[34m%s\33[0m", success);
         goto Lcommon;
       Lcommon:
         addStorageClass();
-        nT();
         s = new AttributeStatement(token.type, parse());
+        nT();
         break;
       // TODO: allow "scope class", "abstract scope class" in function bodies?
       //case T.Class:
@@ -3136,6 +3136,7 @@ writef("\33[34m%s\33[0m", success);
       // TODO: issue error msg.
       error(MID.ExpectedButFound, "BasicType", token.srcText);
       t = new UndefinedType();
+      nT();
       set(t, begin);
     }
     return t;
