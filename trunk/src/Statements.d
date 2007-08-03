@@ -102,12 +102,12 @@ class IfStatement : Statement
     this.elseBody = elseBody;
   }
 }
-
+/+
 class ConditionalStatement : Statement
 {
 
 }
-
++/
 class WhileStatement : Statement
 {
   Expression condition;

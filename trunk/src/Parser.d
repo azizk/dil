@@ -1478,6 +1478,7 @@ writef("\33[34m%s\33[0m", success);
   Statement parseStatement()
   {
 // writefln("°parseStatement:(%d)token='%s'°", lx.loc, token.srcText);
+    auto begin = token;
     Statement s;
     Declaration d;
     switch (token.type)
@@ -1513,7 +1514,7 @@ writef("\33[34m%s\33[0m", success);
          //T.Static
     case_parseAttribute:
       s = parseAttributeStatement();
-      break;
+      return s;
     case T.Identifier:
       if (peekNext() == T.Colon)
       {
@@ -1527,7 +1528,6 @@ writef("\33[34m%s\33[0m", success);
     case T.Dot, T.Typeof:
       bool success;
       d = try_(parseDeclaration(), success);
-// writefln("parseDeclaration()=", failed?"failed":"success");
       if (success)
         goto case_DeclarationStatement; // Declaration
       else
@@ -1645,6 +1645,7 @@ writef("\33[34m%s\33[0m", success);
       d = parseAggregateDeclaration();
       goto case_DeclarationStatement;
     case_DeclarationStatement:
+      set(d, begin);
       s = new DeclarationStatement(d);
       break;
     case T.LBrace:
@@ -1672,6 +1673,7 @@ writef("\33[34m%s\33[0m", success);
     }
     assert(s !is null);
 //     writef("§%s§", s.classinfo.name);
+    set(s, begin);
     return s;
   }
 
@@ -1745,6 +1747,7 @@ writef("\33[34m%s\33[0m", success);
 
     Statement parse()
     {
+      auto begin = token;
       Statement s;
       switch (token.type)
       {
@@ -1813,6 +1816,7 @@ writef("\33[34m%s\33[0m", success);
       default:
         s = new DeclarationStatement(parseDeclaration(stc));
       }
+      set(s, begin);
       return s;
     }
     return parse();
