@@ -635,9 +635,9 @@ class ArrayInitializer : Expression
 
 class StructInitializer : Expression
 {
-  string[] idents;
+  Token*[] idents;
   Expression[] values;
-  this(string[] idents, Expression[] values)
+  this(Token*[] idents, Expression[] values)
   {
     this.idents = idents;
     this.values = values;

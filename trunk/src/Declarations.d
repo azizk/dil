@@ -37,7 +37,7 @@ class IllegalDeclaration : Declaration
   }
 }
 
-alias string[] ModuleName; // Identifier(.Identifier)*
+alias Token*[] ModuleName; // Identifier(.Identifier)*
 
 class ModuleDeclaration : Declaration
 {
@@ -52,10 +52,10 @@ class ModuleDeclaration : Declaration
 class ImportDeclaration : Declaration
 {
   ModuleName[] moduleNames;
-  string[] moduleAliases;
-  string[] bindNames;
-  string[] bindAliases;
-  this(ModuleName[] moduleNames, string[] moduleAliases, string[] bindNames, string[] bindAliases)
+  Token*[] moduleAliases;
+  Token*[] bindNames;
+  Token*[] bindAliases;
+  this(ModuleName[] moduleNames, Token*[] moduleAliases, Token*[] bindNames, Token*[] bindAliases)
   {
     super(false);
     this.moduleNames = moduleNames;

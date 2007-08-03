@@ -118,7 +118,7 @@ writef("\33[34m%s\33[0m", success);
       do
       {
         nT();
-        moduleName ~= requireIdentifier();
+        moduleName ~= requireId();
       } while (token.type == T.Dot)
       require(T.Semicolon);
       decls ~= set(new ModuleDeclaration(moduleName), begin);
@@ -429,7 +429,7 @@ writef("\33[34m%s\33[0m", success);
       //         { StructMemberInitializers }
       Expression parseStructInitializer()
       {
-        string[] idents;
+        Token*[] idents;
         Expression[] values;
 
         nT();
@@ -440,7 +440,7 @@ writef("\33[34m%s\33[0m", success);
             // Peek for colon to see if this is a member identifier.
             if (peekNext() == T.Colon)
             {
-              idents ~= token.identifier();
+              idents ~= token;
               nT();
               nT();
             }
@@ -718,23 +718,23 @@ writef("\33[34m%s\33[0m", success);
     }
 
     ModuleName[] moduleNames;
-    string[] moduleAliases;
-    string[] bindNames;
-    string[] bindAliases;
+    Token*[] moduleAliases;
+    Token*[] bindNames;
+    Token*[] bindAliases;
 
     nT(); // Skip import keyword.
     do
     {
       ModuleName moduleName;
-      string moduleAlias;
+      Token* moduleAlias;
 
-      moduleAlias = requireIdentifier();
+      moduleAlias = requireId();
 
       // AliasName = ModuleName
       if (token.type == T.Assign)
       {
         nT();
-        moduleName ~= requireIdentifier();
+        moduleName ~= requireId();
       }
       else // import Identifier [^=]
       {
@@ -747,7 +747,7 @@ writef("\33[34m%s\33[0m", success);
       while (token.type == T.Dot)
       {
         nT();
-        moduleName ~= requireIdentifier();
+        moduleName ~= requireId();
       }
 
       // Push identifiers.
@@ -758,16 +758,16 @@ writef("\33[34m%s\33[0m", success);
       //       : BindName(, BindName)*;
       if (token.type == T.Colon)
       {
-        string bindName, bindAlias;
+        Token* bindName, bindAlias;
         do
         {
           nT();
-          bindAlias = requireIdentifier();
+          bindAlias = requireId();
 
           if (token.type == T.Assign)
           {
             nT();
-            bindName = requireIdentifier();
+            bindName = requireId();
           }
           else
           {
