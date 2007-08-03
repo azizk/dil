@@ -205,11 +205,11 @@ class StaticDestructorDeclaration : Declaration
 
 class FunctionDeclaration : Declaration
 {
-  string funcName;
+  Token* funcName;
   Type funcType;
   TemplateParameters tparams;
   FunctionBody funcBody;
-  this(string funcName, Type funcType, TemplateParameters tparams, FunctionBody funcBody)
+  this(Token* funcName, Type funcType, TemplateParameters tparams, FunctionBody funcBody)
   {
     super(funcBody.funcBody !is null);
     this.funcName = funcName;
@@ -220,9 +220,9 @@ class FunctionDeclaration : Declaration
 
 class VariableDeclaration : Declaration
 {
-  string[] idents;
+  Token*[] idents;
   Expression[] values;
-  this(string[] idents, Expression[] values)
+  this(Token*[] idents, Expression[] values)
   {
     super(false);
     this.idents = idents;

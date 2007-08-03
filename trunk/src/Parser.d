@@ -113,6 +113,7 @@ writef("\33[34m%s\33[0m", success);
 
     if (token.type == T.Module)
     {
+      auto begin = token;
       ModuleName moduleName;
       do
       {
@@ -120,7 +121,7 @@ writef("\33[34m%s\33[0m", success);
         moduleName ~= requireIdentifier();
       } while (token.type == T.Dot)
       require(T.Semicolon);
-      decls ~= new ModuleDeclaration(moduleName);
+      decls ~= set(new ModuleDeclaration(moduleName), begin);
     }
     decls ~= parseDeclarationDefinitions();
     return decls;
@@ -151,6 +152,7 @@ writef("\33[34m%s\33[0m", success);
 
   Declaration parseDeclarationDefinition()
   {
+    auto begin = token;
     Declaration decl;
     switch (token.type)
     {
@@ -280,6 +282,7 @@ writef("\33[34m%s\33[0m", success);
       nT();
     }
 //     writef("§%s§", decl.classinfo.name);
+    set(decl, begin);
     return decl;
   }
 
@@ -312,20 +315,20 @@ writef("\33[34m%s\33[0m", success);
   Declaration parseDeclaration(StorageClass stc = StorageClass.None)
   {
     Type type;
-    string ident;
+    Token* ident;
 
     // Check for AutoDeclaration
     if (stc != StorageClass.None &&
         token.type == T.Identifier &&
         peekNext() == T.Assign)
     {
-      ident = token.identifier;
+      ident = token;
       nT();
     }
     else
     {
       type = parseType();
-      ident = requireIdentifier();
+      ident = requireId();
 // writefln("trying=%s,errorCount=%d", trying, errorCount);
 // writefln("ident=%s", ident);
       // Type FunctionName ( ParameterList ) FunctionBody
@@ -351,13 +354,13 @@ writef("\33[34m%s\33[0m", success);
     }
 
     // It's a variable declaration.
-    string[] idents = [ident];
+    Token*[] idents = [ident];
     Expression[] values;
     goto LenterLoop; // We've already parsed an identifier. Jump to if statement and check for initializer.
     while (token.type == T.Comma)
     {
       nT();
-      idents ~= requireIdentifier();
+      idents ~= requireId();
     LenterLoop:
       if (token.type == T.Assign)
       {
@@ -1419,7 +1422,7 @@ writef("\33[34m%s\33[0m", success);
       auto e = parseAssignExpression();
       require(T.RParen);
       require(T.Semicolon);
-      return set(new MixinDeclaration(e), begin);
+      return new MixinDeclaration(e);
     }
 
     Expression[] templateIdent;
@@ -1460,7 +1463,7 @@ writef("\33[34m%s\33[0m", success);
 
     require(T.Semicolon);
 
-    return set(new Class(templateIdent, mixinIdent), begin);
+    return new Class(templateIdent, mixinIdent);
   }
 
   /+++++++++++++++++++++++++++++
@@ -1469,10 +1472,11 @@ writef("\33[34m%s\33[0m", success);
 
   Statements parseStatements()
   {
+    auto begin = token;
     auto statements = new Statements();
     while (token.type != T.RBrace && token.type != T.EOF)
       statements ~= parseStatement();
-    return statements;
+    return set(statements, begin);
   }
 
   Statement parseStatement()
