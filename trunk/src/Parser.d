@@ -619,6 +619,26 @@ writef("\33[34m%s\33[0m", success);
     return parse()[0];
   }
 
+  Token* parseAlignAttribute()
+  {
+    assert(token.type == T.Align);
+    nT(); // Skip align keyword.
+    Token* tok;
+    if (token.type == T.LParen)
+    {
+      nT();
+      if (token.type == T.Int32)
+      {
+        tok = token;
+        nT();
+      }
+      else
+        expected(T.Int32);
+      require(T.RParen);
+    }
+    return tok;
+  }
+
   Declaration parseAttributeSpecifier()
   {
     Declaration decl;
@@ -626,20 +646,10 @@ writef("\33[34m%s\33[0m", success);
     switch (token.type)
     {
     case T.Align:
-      nT();
       int size = -1;
-      if (token.type == T.LParen)
-      {
-        nT();
-        if (token.type == T.Int32)
-        {
-          size = token.int_;
-          nT();
-        }
-        else
-          expected(T.Int32);
-        require(T.RParen);
-      }
+      auto intTok = parseAlignAttribute();
+      if (intTok)
+        size = intTok.int_;
       decl = new AlignDeclaration(size, parseDeclarationsBlock());
       break;
     case T.Pragma:
@@ -1468,14 +1478,22 @@ writef("\33[34m%s\33[0m", success);
   Statement parseStatement()
   {
 // writefln("°parseStatement:(%d)token='%s'°", lx.loc, token.srcText);
-
     Statement s;
     Declaration d;
     switch (token.type)
     {
     case T.Align:
-      // TODO: don't call parseAttributeSpecifier().
-      d = parseAttributeSpecifier();
+      int size = -1;
+      auto intTok = parseAlignAttribute();
+      if (intTok)
+        size = intTok.int_;
+      // Restrict align attribute to structs in parsing phase.
+      Declaration structDecl;
+      if (token.type == T.Struct)
+        structDecl = parseAggregateDeclaration();
+      else
+        expected(T.Struct);
+      d = new AlignDeclaration(size, structDecl ? [structDecl] : null);
       goto case_DeclarationStatement;
 /+ Not applicable for statements.
 //          T.Private,
