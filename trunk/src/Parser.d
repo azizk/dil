@@ -546,8 +546,8 @@ writef("\33[34m%s\33[0m", success);
         if (token.type == T.LParen)
         {
           nT();
-          auto ident = requireIdentifier();
-          switch (ident)
+          auto ident = requireId();
+          switch (ident ? ident.identifier : null)
           {
           case "C":
             if (token.type == T.PlusPlus)
@@ -1250,7 +1250,7 @@ writef("\33[34m%s\33[0m", success);
   {
     assert(token.type == T.Template);
     nT(); // Skip template keyword.
-    auto templateName = requireIdentifier();
+    auto templateName = requireId();
     auto templateParams = parseTemplateParameterList();
     auto decls = parseDeclarationDefinitionsBlock();
     return new TemplateDeclaration(templateName, templateParams, decls);
@@ -1757,8 +1757,8 @@ writef("\33[34m%s\33[0m", success);
         if (token.type == T.LParen)
         {
           nT();
-          auto ident = requireIdentifier();
-          switch (ident)
+          auto ident = requireId();
+          switch (ident ? ident.identifier : null)
           {
           case "C":
             if (token.type == T.PlusPlus)

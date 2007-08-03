@@ -308,10 +308,10 @@ class StaticAssertDeclaration : Declaration
 
 class TemplateDeclaration : Declaration
 {
-  string templateName;
+  Token* templateName;
   TemplateParameters templateParams;
   Declaration[] decls;
-  this(string templateName, TemplateParameters templateParams, Declaration[] decls)
+  this(Token* templateName, TemplateParameters templateParams, Declaration[] decls)
   {
     super(true);
     this.templateName = templateName;
