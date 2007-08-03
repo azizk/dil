@@ -297,8 +297,8 @@ class IdentifierType : Type
 
 class IdentifierType : Type
 {
-  string ident;
-  this(string ident)
+  Token* ident;
+  this(Token* ident)
   {
     super(TID.Identifier, null);
     this.ident = ident;
@@ -328,9 +328,9 @@ class TypeofType : Type
 
 class TemplateInstanceType : Type
 {
-  string ident;
+  Token* ident;
   TemplateArguments targs;
-  this(string ident, TemplateArguments targs)
+  this(Token* ident, TemplateArguments targs)
   {
     super(TID.TemplateInstance, null);
     this.ident = ident;

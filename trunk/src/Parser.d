@@ -500,7 +500,7 @@ writef("\33[34m%s\33[0m", success);
         if (token.type == T.LParen)
         {
           nT();
-          func.outIdent = requireIdentifier();
+          func.outIdent = requireId();
           require(T.RParen);
         }
         require(T.LBrace);
@@ -792,9 +792,9 @@ writef("\33[34m%s\33[0m", success);
   {
     assert(token.type == T.Enum);
 
-    string enumName;
+    Token* enumName;
     Type baseType;
-    string[] members;
+    Token*[] members;
     Expression[] values;
     bool hasBody;
 
@@ -802,7 +802,7 @@ writef("\33[34m%s\33[0m", success);
 
     if (token.type == T.Identifier)
     {
-      enumName = token.identifier;
+      enumName = token;
       nT();
     }
 
@@ -814,7 +814,7 @@ writef("\33[34m%s\33[0m", success);
 
     if (token.type == T.Semicolon)
     {
-      if (enumName.length == 0)
+      if (enumName is null)
         expected(T.Identifier);
       nT();
     }
@@ -824,7 +824,7 @@ writef("\33[34m%s\33[0m", success);
       nT();
       do
       {
-        members ~= requireIdentifier();
+        members ~= requireId();
 
         if (token.type == T.Assign)
         {
@@ -854,14 +854,14 @@ writef("\33[34m%s\33[0m", success);
   {
     assert(token.type == T.Class);
 
-    string className;
+    Token* className;
     TemplateParameters tparams;
     BaseClass[] bases;
     Declaration[] decls;
     bool hasBody;
 
     nT(); // Skip class keyword.
-    className = requireIdentifier();
+    className = requireId();
 
     if (token.type == T.LParen)
     {
@@ -929,14 +929,14 @@ writef("\33[34m%s\33[0m", success);
   {
     assert(token.type == T.Interface);
 
-    string name;
+    Token* name;
     TemplateParameters tparams;
     BaseClass[] bases;
     Declaration[] decls;
     bool hasBody;
 
     nT(); // Skip interface keyword.
-    name = requireIdentifier();
+    name = requireId();
 
     if (token.type == T.LParen)
     {
@@ -971,7 +971,7 @@ writef("\33[34m%s\33[0m", success);
 
     TOK tok = token.type;
 
-    string name;
+    Token* name;
     TemplateParameters tparams;
     Declaration[] decls;
     bool hasBody;
@@ -980,7 +980,7 @@ writef("\33[34m%s\33[0m", success);
     // name is optional.
     if (token.type == T.Identifier)
     {
-      name = token.identifier;
+      name = token;
       nT();
       if (token.type == T.LParen)
       {
@@ -1079,30 +1079,28 @@ writef("\33[34m%s\33[0m", success);
 
     nT(); // Skip debug keyword.
 
-    int levelSpec = -1; // debug = Integer ;
-    string identSpec;   // debug = Identifier ;
-    int levelCond = -1; // debug ( Integer )
-    string identCond;   // debug ( Identifier )
+    Token* spec; // debug = Integer ;
+                 // debug = Identifier ;
+    Token* cond; // debug ( Integer )
+                 // debug ( Identifier )
     Declaration[] decls, elseDecls;
 
-    void parseIdentOrInt(ref string ident, ref int level)
+    void parseIdentOrInt(ref Token* tok)
     {
       nT();
-      if (token.type == T.Int32)
-        level = token.int_;
-      else if (token.type == T.Identifier)
-        ident = token.identifier;
-      else
+      if (token.type == T.Int32 ||
+          token.type == T.Identifier)
       {
-        expected(T.Identifier); // TODO: better error msg
-        return;
+        tok = token;
+        nT();
       }
-      nT();
+      else
+        expected(T.Identifier); // TODO: better error msg
     }
 
     if (token.type == T.Assign)
     {
-      parseIdentOrInt(identSpec, levelSpec);
+      parseIdentOrInt(spec);
       require(T.Semicolon);
     }
     else
@@ -1113,7 +1111,7 @@ writef("\33[34m%s\33[0m", success);
       // ( Condition )
       if (token.type == T.LParen)
       {
-        parseIdentOrInt(identCond, levelCond);
+        parseIdentOrInt(cond);
         require(T.RParen);
       }
 
@@ -1122,19 +1120,16 @@ writef("\33[34m%s\33[0m", success);
       decls = parseDeclarationsBlock();
 
       // else DeclarationsBlock
-      // debug without condition and else body makes no sense
-      if (token.type == T.Else && (levelCond != -1 || identCond.length != 0))
+      if (token.type == T.Else)
       {
         nT();
         //if (token.type == T.Colon)
           // TODO: avoid "else:"?
         elseDecls = parseDeclarationsBlock();
       }
-//       else
-        // TODO: issue error msg
     }
 
-    return new DebugDeclaration(levelSpec, identSpec, levelCond, identCond, decls, elseDecls);
+    return new DebugDeclaration(spec, cond, decls, elseDecls);
   }
 
   Declaration parseVersionDeclaration()
@@ -1143,30 +1138,29 @@ writef("\33[34m%s\33[0m", success);
 
     nT(); // Skip version keyword.
 
-    int levelSpec = -1; // version = Integer ;
-    string identSpec;   // version = Identifier ;
-    int levelCond = -1; // version ( Integer )
-    string identCond;   // version ( Identifier )
+    Token* spec; // version = Integer ;
+                 // version = Identifier ;
+    Token* cond; // version ( Integer )
+                 // version ( Identifier )
     Declaration[] decls, elseDecls;
 
-    void parseIdentOrInt(ref string ident, ref int level)
+    void parseIdentOrInt(ref Token* tok)
     {
-      if (token.type == T.Int32)
-        level = token.int_;
-      else if (token.type == T.Identifier)
-        ident = token.identifier;
-      else
-      {
-        expected(T.Identifier); // TODO: better error msg
-        return;
-      }
       nT();
+      if (token.type == T.Int32 ||
+          token.type == T.Identifier)
+      {
+        tok = token;
+        nT();
+      }
+      else
+        expected(T.Identifier); // TODO: better error msg
     }
 
     if (token.type == T.Assign)
     {
       nT();
-      parseIdentOrInt(identSpec, levelSpec);
+      parseIdentOrInt(spec);
       require(T.Semicolon);
     }
     else
@@ -1177,7 +1171,7 @@ writef("\33[34m%s\33[0m", success);
 
       // ( Condition )
       require(T.LParen);
-      parseIdentOrInt(identCond, levelCond);
+      parseIdentOrInt(cond);
       require(T.RParen);
 
       // version ( Condition ) DeclarationsBlock
@@ -1193,7 +1187,7 @@ writef("\33[34m%s\33[0m", success);
       }
     }
 
-    return new VersionDeclaration(levelSpec, identSpec, levelCond, identCond, decls, elseDecls);
+    return new VersionDeclaration(spec, cond, decls, elseDecls);
   }
 
   Declaration parseStaticIfDeclaration()
@@ -1367,8 +1361,8 @@ writef("\33[34m%s\33[0m", success);
     Type[] identList;
     if (token.type == T.Dot)
     {
+      identList ~= new IdentifierType(token);
       nT();
-      identList ~= new IdentifierType(".");
     }
     else if (token.type == T.Typeof)
     {
@@ -1382,7 +1376,7 @@ writef("\33[34m%s\33[0m", success);
 
     while (1)
     {
-      string ident = requireIdentifier();
+      auto ident = requireId();
       // NB.: Currently Types can't be followed by "!=" so we don't need to peek for "(" when parsing TemplateInstances.
       if (token.type == T.Not/+ && peekNext() == T.LParen+/) // Identifier !( TemplateArguments )
       {
@@ -1522,7 +1516,7 @@ writef("\33[34m%s\33[0m", success);
     case T.Identifier:
       if (peekNext() == T.Colon)
       {
-        string ident = token.identifier;
+        auto ident = token;
         nT(); // Skip Identifier
         nT(); // Skip :
         s = new LabeledStatement(ident, parseNoScopeOrEmptyStatement());
@@ -2018,10 +2012,10 @@ writef("\33[34m%s\33[0m", success);
   {
     assert(token.type == T.Continue);
     nT();
-    string ident;
+    Token* ident;
     if (token.type == T.Identifier)
     {
-      ident = token.identifier;
+      ident = token;
       nT();
     }
     require(T.Semicolon);
@@ -2032,10 +2026,10 @@ writef("\33[34m%s\33[0m", success);
   {
     assert(token.type == T.Break);
     nT();
-    string ident;
+    Token* ident;
     if (token.type == T.Identifier)
     {
-      ident = token.identifier;
+      ident = token;
       nT();
     }
     require(T.Semicolon);
@@ -2057,7 +2051,7 @@ writef("\33[34m%s\33[0m", success);
   {
     assert(token.type == T.Goto);
     nT();
-    string ident;
+    Token* ident;
     Expression caseExpr;
     switch (token.type)
     {
@@ -2071,7 +2065,7 @@ writef("\33[34m%s\33[0m", success);
       nT();
       break;
     default:
-      ident = requireIdentifier();
+      ident = requireId();
     }
     require(T.Semicolon);
     return new GotoStatement(ident, caseExpr);
@@ -2158,9 +2152,9 @@ writef("\33[34m%s\33[0m", success);
     assert(token.type == T.LParen);
     nT();
 
-    string condition = requireIdentifier();
-    if (condition.length)
-      switch (condition)
+    Token* condition = requireId();
+    if (condition)
+      switch (condition.identifier)
       {
       case "exit":
       case "success":
@@ -2266,22 +2260,21 @@ writef("\33[34m%s\33[0m", success);
     assert(token.type == T.Debug);
     nT(); // Skip debug keyword.
 
-//     int levelSpec = -1; // debug = Integer ;
-//     string identSpec;   // debug = Identifier ;
-    int levelCond = -1; // debug ( Integer )
-    string identCond;   // debug ( Identifier )
+    Token* cond; // debug ( Integer )
+                 // debug ( Identifier )
     Statement debugBody, elseBody;
 
-    void parseIdentOrInt(ref string ident, ref int level)
+    void parseIdentOrInt(ref Token* tok)
     {
       nT();
-      if (token.type == T.Int32)
-        level = token.int_;
-      else if (token.type == T.Identifier)
-        ident = token.identifier;
+      if (token.type == T.Int32 ||
+          token.type == T.Identifier)
+      {
+        tok = token;
+        nT();
+      }
       else
         expected(T.Identifier); // TODO: better error msg
-      nT();
     }
 
 //     if (token.type == T.Assign)
@@ -2298,7 +2291,7 @@ writef("\33[34m%s\33[0m", success);
       // ( Condition )
       if (token.type == T.LParen)
       {
-        parseIdentOrInt(identCond, levelCond);
+        parseIdentOrInt(cond);
         require(T.RParen);
       }
 
@@ -2317,7 +2310,7 @@ writef("\33[34m%s\33[0m", success);
       }
     }
 
-    return new DebugStatement(/+levelSpec, identSpec,+/ levelCond, identCond, debugBody, elseBody);
+    return new DebugStatement(cond, debugBody, elseBody);
   }
 
   Statement parseVersionStatement()
@@ -2326,24 +2319,21 @@ writef("\33[34m%s\33[0m", success);
 
     nT(); // Skip version keyword.
 
-//     int levelSpec = -1; // version = Integer ;
-//     string identSpec;   // version = Identifier ;
-    int levelCond = -1; // version ( Integer )
-    string identCond;   // version ( Identifier )
+    Token* cond; // version ( Integer )
+                 // version ( Identifier )
     Statement versionBody, elseBody;
 
-    void parseIdentOrInt(ref string ident, ref int level)
+    void parseIdentOrInt(ref Token* tok)
     {
-      if (token.type == T.Int32)
-        level = token.int_;
-      else if (token.type == T.Identifier)
-        ident = token.identifier;
-      else
-      {
-        expected(T.Identifier); // TODO: better error msg
-        return;
-      }
       nT();
+      if (token.type == T.Int32 ||
+          token.type == T.Identifier)
+      {
+        tok = token;
+        nT();
+      }
+      else
+        expected(T.Identifier); // TODO: better error msg
     }
 
 //     if (token.type == T.Assign)
@@ -2359,7 +2349,7 @@ writef("\33[34m%s\33[0m", success);
 
       // ( Condition )
       require(T.LParen);
-      parseIdentOrInt(identCond, levelCond);
+      parseIdentOrInt(cond);
       require(T.RParen);
 
       // version ( Condition ) Statement
@@ -2373,7 +2363,7 @@ writef("\33[34m%s\33[0m", success);
       }
     }
 
-    return new VersionStatement(/+levelSpec, identSpec,+/ levelCond, identCond, versionBody, elseBody);
+    return new VersionStatement(cond, versionBody, elseBody);
   }
 
   /+++++++++++++++++++++++++++++

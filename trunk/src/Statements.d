@@ -45,7 +45,7 @@ class EmptyStatement : Statement
 class FunctionBody
 {
   Statement funcBody, inBody, outBody;
-  string outIdent;
+  Token* outIdent;
 }
 
 class ScopeStatement : Statement
@@ -59,9 +59,9 @@ class ScopeStatement : Statement
 
 class LabeledStatement : Statement
 {
-  string label;
+  Token* label;
   Statement s;
-  this(string label, Statement s)
+  this(Token* label, Statement s)
   {
     this.label = label;
     this.s = s;
@@ -196,8 +196,8 @@ class DefaultStatement : Statement
 
 class ContinueStatement : Statement
 {
-  string ident;
-  this(string ident)
+  Token* ident;
+  this(Token* ident)
   {
     this.ident = ident;
   }
@@ -205,8 +205,8 @@ class ContinueStatement : Statement
 
 class BreakStatement : Statement
 {
-  string ident;
-  this(string ident)
+  Token* ident;
+  this(Token* ident)
   {
     this.ident = ident;
   }
@@ -223,9 +223,9 @@ class ReturnStatement : Statement
 
 class GotoStatement : Statement
 {
-  string ident;
+  Token* ident;
   Expression caseExpr;
-  this(string ident, Expression caseExpr)
+  this(Token* ident, Expression caseExpr)
   {
     this.ident = ident;
     this.caseExpr = caseExpr;
@@ -289,9 +289,9 @@ class FinallyBody : Statement
 
 class ScopeGuardStatement : Statement
 {
-  string condition;
+  Token* condition;
   Statement scopeBody;
-  this(string condition, Statement scopeBody)
+  this(Token* condition, Statement scopeBody)
   {
     this.condition = condition;
     this.scopeBody = scopeBody;
@@ -369,13 +369,11 @@ class StaticAssertStatement : Statement
 
 class DebugStatement : Statement
 {
-  int levelCond;
-  string identCond;
+  Token* cond;
   Statement debugBody, elseBody;
-  this(int levelCond, string identCond, Statement debugBody, Statement elseBody)
+  this(Token* cond, Statement debugBody, Statement elseBody)
   {
-    this.levelCond = levelCond;
-    this.identCond = identCond;
+    this.cond = cond;
     this.debugBody = debugBody;
     this.elseBody = elseBody;
   }
@@ -383,13 +381,11 @@ class DebugStatement : Statement
 
 class VersionStatement : Statement
 {
-  int levelCond;
-  string identCond;
+  Token* cond;
   Statement versionBody, elseBody;
-  this(int levelCond, string identCond, Statement versionBody, Statement elseBody)
+  this(Token* cond, Statement versionBody, Statement elseBody)
   {
-    this.levelCond = levelCond;
-    this.identCond = identCond;
+    this.cond = cond;
     this.versionBody = versionBody;
     this.elseBody = elseBody;
   }

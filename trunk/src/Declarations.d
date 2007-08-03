@@ -87,11 +87,11 @@ class TypedefDeclaration : Declaration
 
 class EnumDeclaration : Declaration
 {
-  string name;
+  Token* name;
   Type baseType;
-  string[] members;
+  Token*[] members;
   Expression[] values;
-  this(string name, Type baseType, string[] members, Expression[] values, bool hasBody)
+  this(Token* name, Type baseType, Token*[] members, Expression[] values, bool hasBody)
   {
     super(hasBody);
     this.name = name;
@@ -103,11 +103,11 @@ class EnumDeclaration : Declaration
 
 class ClassDeclaration : Declaration
 {
-  string name;
+  Token* name;
   TemplateParameters tparams;
   BaseClass[] bases;
   Declaration[] decls;
-  this(string name, TemplateParameters tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
+  this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
     this.name = name;
@@ -119,11 +119,11 @@ class ClassDeclaration : Declaration
 
 class InterfaceDeclaration : Declaration
 {
-  string name;
+  Token* name;
   TemplateParameters tparams;
   BaseClass[] bases;
   Declaration[] decls;
-  this(string name, TemplateParameters tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
+  this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
     this.name = name;
@@ -135,10 +135,10 @@ class InterfaceDeclaration : Declaration
 
 class StructDeclaration : Declaration
 {
-  string name;
+  Token* name;
   TemplateParameters tparams;
   Declaration[] decls;
-  this(string name, TemplateParameters tparams, Declaration[] decls, bool hasBody)
+  this(Token* name, TemplateParameters tparams, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
     this.name = name;
@@ -149,10 +149,10 @@ class StructDeclaration : Declaration
 
 class UnionDeclaration : Declaration
 {
-  string name;
+  Token* name;
   TemplateParameters tparams;
   Declaration[] decls;
-  this(string name, TemplateParameters tparams, Declaration[] decls, bool hasBody)
+  this(Token* name, TemplateParameters tparams, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
     this.name = name;
@@ -252,19 +252,15 @@ class UnittestDeclaration : Declaration
 
 class DebugDeclaration : Declaration
 {
-  int levelSpec;
-  string identSpec;
-  int levelCond;
-  string identCond;
+  Token* spec;
+  Token* cond;
   Declaration[] decls, elseDecls;
 
-  this(int levelSpec, string identSpec, int levelCond, string identCond, Declaration[] decls, Declaration[] elseDecls)
+  this(Token* spec, Token* cond, Declaration[] decls, Declaration[] elseDecls)
   {
     super(decls.length != 0);
-    this.levelSpec = levelSpec;
-    this.identSpec = identSpec;
-    this.levelCond = levelCond;
-    this.identCond = identCond;
+    this.spec = spec;
+    this.cond = cond;
     this.decls = decls;
     this.elseDecls = elseDecls;
   }
@@ -272,19 +268,15 @@ class DebugDeclaration : Declaration
 
 class VersionDeclaration : Declaration
 {
-  int levelSpec;
-  string identSpec;
-  int levelCond;
-  string identCond;
+  Token* spec;
+  Token* cond;
   Declaration[] decls, elseDecls;
 
-  this(int levelSpec, string identSpec, int levelCond, string identCond, Declaration[] decls, Declaration[] elseDecls)
+  this(Token* spec, Token* cond, Declaration[] decls, Declaration[] elseDecls)
   {
     super(decls.length != 0);
-    this.levelSpec = levelSpec;
-    this.identSpec = identSpec;
-    this.levelCond = levelCond;
-    this.identCond = identCond;
+    this.spec = spec;
+    this.cond = cond;
     this.decls = decls;
     this.elseDecls = elseDecls;
   }
