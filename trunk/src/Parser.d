@@ -378,11 +378,12 @@ writef("\33[34m%s\33[0m", success);
   {
     if (token.type == T.Void)
     {
+      auto begin = token;
       auto next = peekNext();
       if (next == T.Comma || next == T.Semicolon)
       {
         nT();
-        return new VoidInitializer();
+        return set(new VoidInitializer(), begin);
       }
     }
     return parseNonVoidInitializer();
@@ -390,6 +391,7 @@ writef("\33[34m%s\33[0m", success);
 
   Expression parseNonVoidInitializer()
   {
+    auto begin = token;
     Expression init;
     switch (token.type)
     {
@@ -468,6 +470,7 @@ writef("\33[34m%s\33[0m", success);
     default:
       init = parseAssignExpression();
     }
+    set(init, begin);
     return init;
   }
 
