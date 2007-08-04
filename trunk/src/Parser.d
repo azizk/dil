@@ -1822,7 +1822,6 @@ writef("\33[34m%s\33[0m", success);
         }
         s = new ExternStatement(linkage, parse());
         break;
-      //case T.Invariant: // D 2.0
       case T.Static:
         tmp = StorageClass.Static;
         goto Lcommon;
@@ -1830,8 +1829,21 @@ writef("\33[34m%s\33[0m", success);
         tmp = StorageClass.Final;
         goto Lcommon;
       case T.Const:
+      version(D2)
+      {
+        if (peekNext() == T.LParen)
+          goto case_Declaration;
+      }
         tmp = StorageClass.Const;
         goto Lcommon;
+      version(D2)
+      {
+      case T.Invariant: // D 2.0
+        if (peekNext() == T.LParen)
+          goto case_Declaration;
+        tmp = StorageClass.Invariant;
+        goto Lcommon;
+      }
       case T.Auto:
         tmp = StorageClass.Auto;
         goto Lcommon;
@@ -1847,6 +1859,7 @@ writef("\33[34m%s\33[0m", success);
       // TODO: allow "scope class", "abstract scope class" in function bodies?
       //case T.Class:
       default:
+      case_Declaration:
         s = new DeclarationStatement(parseDeclaration(stc));
       }
       set(s, begin);
