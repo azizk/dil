@@ -347,7 +347,7 @@ writef("\33[34m%s\33[0m", success);
         // ReturnType FunctionName ( ParameterList )
         type = new FunctionType(type, params, tparams);
 //         type = parseDeclaratorSuffix(type);
-        auto funcBody = parseFunctionBody(new FunctionBody);
+        auto funcBody = parseFunctionBody();
         return new FunctionDeclaration(ident, type, null, funcBody);
       }
       type = parseDeclaratorSuffix(type);
@@ -474,8 +474,9 @@ writef("\33[34m%s\33[0m", success);
     return init;
   }
 
-  FunctionBody parseFunctionBody(FunctionBody func)
+  FunctionBody parseFunctionBody()
   {
+    auto func = new FunctionBody;
     while (1)
     {
       switch (token.type)
@@ -1018,7 +1019,7 @@ writef("\33[34m%s\33[0m", success);
     assert(token.type == T.This);
     nT(); // Skip 'this' keyword.
     auto parameters = parseParameterList();
-    auto funcBody = parseFunctionBody(new FunctionBody);
+    auto funcBody = parseFunctionBody();
     return new ConstructorDeclaration(parameters, funcBody);
   }
 
@@ -1029,7 +1030,7 @@ writef("\33[34m%s\33[0m", success);
     require(T.This);
     require(T.LParen);
     require(T.RParen);
-    auto funcBody = parseFunctionBody(new FunctionBody);
+    auto funcBody = parseFunctionBody();
     return new DestructorDeclaration(funcBody);
   }
 
@@ -1040,7 +1041,7 @@ writef("\33[34m%s\33[0m", success);
     nT(); // Skip 'this' keyword.
     require(T.LParen);
     require(T.RParen);
-    auto funcBody = parseFunctionBody(new FunctionBody);
+    auto funcBody = parseFunctionBody();
     return new StaticConstructorDeclaration(funcBody);
   }
 
@@ -1052,7 +1053,7 @@ writef("\33[34m%s\33[0m", success);
     require(T.This);
     require(T.LParen);
     require(T.RParen);
-    auto funcBody = parseFunctionBody(new FunctionBody);
+    auto funcBody = parseFunctionBody();
     return new StaticDestructorDeclaration(funcBody);
   }
 
@@ -1063,7 +1064,7 @@ writef("\33[34m%s\33[0m", success);
     // Optional () for getting ready porting to D 2.0
     if (token.type == T.LParen)
       requireNext(T.RParen);
-    auto funcBody = parseFunctionBody(new FunctionBody);
+    auto funcBody = parseFunctionBody();
     return new InvariantDeclaration(funcBody);
   }
 
@@ -1072,7 +1073,7 @@ writef("\33[34m%s\33[0m", success);
     assert(token.type == T.Unittest);
 
     nT(); // Skip unittest keyword.
-    auto funcBody = parseFunctionBody(new FunctionBody);
+    auto funcBody = parseFunctionBody();
     return new UnittestDeclaration(funcBody);
   }
 
@@ -1264,7 +1265,7 @@ writef("\33[34m%s\33[0m", success);
     assert(token.type == T.New);
     nT(); // Skip new keyword.
     auto parameters = parseParameterList();
-    auto funcBody = parseFunctionBody(new FunctionBody);
+    auto funcBody = parseFunctionBody();
     return new NewDeclaration(parameters, funcBody);
   }
 
@@ -1274,7 +1275,7 @@ writef("\33[34m%s\33[0m", success);
     nT(); // Skip delete keyword.
     auto parameters = parseParameterList();
     // TODO: only one parameter of type void* allowed. Check in parsing or semantic phase?
-    auto funcBody = parseFunctionBody(new FunctionBody);
+    auto funcBody = parseFunctionBody();
     return new DeleteDeclaration(parameters, funcBody);
   }
 
@@ -2916,7 +2917,7 @@ writef("\33[34m%s\33[0m", success);
     case T.LBrace:
       // DelegateLiteral := { Statements }
 //       auto funcType = new FunctionType(null, Parameters.init);
-      auto funcBody = parseFunctionBody(new FunctionBody);
+      auto funcBody = parseFunctionBody();
       e = new FunctionLiteralExpression(null, funcBody);
       break;
     case T.Function, T.Delegate:
@@ -2932,7 +2933,7 @@ writef("\33[34m%s\33[0m", success);
         parameters = parseParameterList();
       }
       auto funcType = new FunctionType(returnType, parameters);
-      auto funcBody = parseFunctionBody(new FunctionBody);
+      auto funcBody = parseFunctionBody();
       e = new FunctionLiteralExpression(funcType, funcBody/+, funcTok+/);
       break;
     case T.Assert:
@@ -3024,7 +3025,7 @@ writef("\33[34m%s\33[0m", success);
         auto parameters = parseParameterList();
         // ( ParameterList ) FunctionBody
         auto funcType = new FunctionType(null, parameters);
-        auto funcBody = parseFunctionBody(new FunctionBody);
+        auto funcBody = parseFunctionBody();
         e = new FunctionLiteralExpression(funcType, funcBody);
       }
       else
