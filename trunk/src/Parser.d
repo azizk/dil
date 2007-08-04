@@ -2963,6 +2963,8 @@ writef("\33[34m%s\33[0m", success);
         else
           require(T.RBracket);
       }
+      else
+        nT();
 
       e = new ArrayLiteralExpression(values);
       break;
@@ -2972,20 +2974,17 @@ writef("\33[34m%s\33[0m", success);
 
       keys ~= e;
       nT(); // Skip colon.
-      values ~= parseAssignExpression();
+      goto LenterLoop;
 
-      if (token.type != T.RBracket)
+      while (1)
       {
-        require(T.Comma);
-        while (1)
-        {
-          keys ~= parseAssignExpression();
-          require(T.Colon);
-          values ~= parseAssignExpression();
-          if (token.type != T.Comma)
-            break;
-          nT();
-        }
+        keys ~= parseAssignExpression();
+        require(T.Colon);
+      LenterLoop:
+        values ~= parseAssignExpression();
+        if (token.type != T.Comma)
+          break;
+        nT();
       }
       require(T.RBracket);
       e = new AssocArrayLiteralExpression(keys, values);
