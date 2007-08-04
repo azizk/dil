@@ -476,6 +476,7 @@ writef("\33[34m%s\33[0m", success);
 
   FunctionBody parseFunctionBody()
   {
+    auto begin = token;
     auto func = new FunctionBody;
     while (1)
     {
@@ -515,11 +516,11 @@ writef("\33[34m%s\33[0m", success);
         nT();
         goto case T.LBrace;
       default:
-        // TODO: issue error msg.
         error(MID.ExpectedButFound, "FunctionBody", token.srcText);
       }
       break; // exit while loop
     }
+    set(func, begin);
     return func;
   }
 

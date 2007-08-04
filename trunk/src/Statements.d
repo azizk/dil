@@ -42,10 +42,14 @@ class EmptyStatement : Statement
   }
 }
 
-class FunctionBody
+class FunctionBody : Node
 {
   Statement funcBody, inBody, outBody;
   Token* outIdent;
+  this()
+  {
+    super(NodeType.Other);
+  }
 }
 
 class ScopeStatement : Statement
