@@ -165,6 +165,26 @@ class ForeachStatement : Statement
   }
 }
 
+version(D2)
+{
+class ForeachRangeStatement : Statement
+{
+  TOK tok;
+  Parameters params;
+  Expression lower, upper;
+  Statement forBody;
+
+  this(TOK tok, Parameters params, Expression lower, Expression upper, Statement forBody)
+  {
+    this.tok = tok;
+    this.params = params;
+    this.lower = lower;
+    this.upper = upper;
+    this.forBody = forBody;
+  }
+}
+}
+
 class SwitchStatement : Statement
 {
   Expression condition;

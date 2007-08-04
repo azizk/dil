@@ -167,7 +167,6 @@ writef("\33[34m%s\33[0m", success);
       decl = parseAttributeSpecifier();
       break;
     // Storage classes
-    //case T.Invariant: // D 2.0
     case T.Extern,
          T.Deprecated,
          T.Override,
@@ -176,9 +175,11 @@ writef("\33[34m%s\33[0m", success);
          //T.Static,
          T.Final,
          T.Const,
+         //T.Invariant, // D 2.0
          T.Auto,
          T.Scope:
     case_StaticAttribute:
+    case_InvariantAttribute: // D 2.0
       decl = parseStorageAttribute();
       break;
     case T.Alias:
@@ -234,6 +235,19 @@ writef("\33[34m%s\33[0m", success);
       decl = parseDestructorDeclaration();
       break;
     case T.Invariant:
+    version(D2)
+    {
+      auto next = token;
+      lx.peek(next);
+      if (next.type == T.LParen)
+      {
+        lx.peek(next);
+        if (next.type != T.RParen)
+          goto case_Declaration;
+      }
+      else
+        goto case_InvariantAttribute;
+    }
       decl = parseInvariantDeclaration();
       break;
     case T.Unittest:
@@ -270,6 +284,7 @@ writef("\33[34m%s\33[0m", success);
          T.Float,  T.Double,  T.Real,
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
+    case_Declaration:
       decl = parseDeclaration();
       break;
     /+case T.Module:
@@ -582,7 +597,6 @@ writef("\33[34m%s\33[0m", success);
         }
         decl = new ExternDeclaration(linkage, parse());
         break;
-      //case T.Invariant: // D 2.0
       case T.Override:
         tmp = StorageClass.Override;
         goto Lcommon;
@@ -602,8 +616,21 @@ writef("\33[34m%s\33[0m", success);
         tmp = StorageClass.Final;
         goto Lcommon;
       case T.Const:
+      version(D2)
+      {
+        if (peekNext() == T.LParen)
+          goto case_Declaration;
+      }
         tmp = StorageClass.Const;
         goto Lcommon;
+      version(D2)
+      {
+      case T.Invariant: // D 2.0
+        if (peekNext() == T.LParen)
+          goto case_Declaration;
+        tmp = StorageClass.Invariant;
+        goto Lcommon;
+      }
       case T.Auto:
         tmp = StorageClass.Auto;
         goto Lcommon;
@@ -612,10 +639,12 @@ writef("\33[34m%s\33[0m", success);
         goto Lcommon;
       Lcommon:
         addStorageClass();
-        decl = new AttributeDeclaration(token.type, parse());
+        auto tok = token.type;
         nT();
+        decl = new AttributeDeclaration(tok, parse());
         break;
       case T.Identifier:
+      case_Declaration:
         // This could be a normal Declaration or an AutoDeclaration
         decl = parseDeclaration(stc);
         break;
@@ -700,8 +729,9 @@ writef("\33[34m%s\33[0m", success);
     case T.Protected:
     case T.Public:
     case T.Export:
+      auto tok = token.type;
       nT();
-      decl = new AttributeDeclaration(token.type, parseDeclarationsBlock());
+      decl = new AttributeDeclaration(tok, parseDeclarationsBlock());
       break;
     default:
       assert(0);
@@ -1151,7 +1181,6 @@ writef("\33[34m%s\33[0m", success);
 
     void parseIdentOrInt(ref Token* tok)
     {
-      nT();
       if (token.type == T.Int32 ||
           token.type == T.Identifier)
       {
@@ -1811,8 +1840,9 @@ writef("\33[34m%s\33[0m", success);
         goto Lcommon;
       Lcommon:
         addStorageClass();
-        s = new AttributeStatement(token.type, parse());
+        auto tok = token.type;
         nT();
+        s = new AttributeStatement(tok, parse());
         break;
       // TODO: allow "scope class", "abstract scope class" in function bodies?
       //case T.Class:
@@ -1923,7 +1953,7 @@ writef("\33[34m%s\33[0m", success);
     nT();
 
     auto params = new Parameters;
-    Expression aggregate;
+    Expression e; // Aggregate or LwrExpression
 
     require(T.LParen);
     while (1)
@@ -1959,10 +1989,24 @@ writef("\33[34m%s\33[0m", success);
       nT();
     }
     require(T.Semicolon);
-    aggregate = parseExpression();
+    e = parseExpression();
+  version(D2)
+  { //Foreach (ForeachType; LwrExpression .. UprExpression ) ScopeStatement
+    if (token.type == T.Slice)
+    {
+      // if (params.length != 1)
+        // error(MID.XYZ); // TODO: issue error msg
+      nT();
+      auto upper = parseExpression();
+      require(T.RParen);
+      auto forBody = parseScopeStatement();
+      return new ForeachRangeStatement(tok, params, e, upper, forBody);
+    }
+  }
+    // Foreach (ForeachTypeList; Aggregate) ScopeStatement
     require(T.RParen);
     auto forBody = parseScopeStatement();
-    return new ForeachStatement(tok, params, aggregate, forBody);
+    return new ForeachStatement(tok, params, e, forBody);
   }
 
   Statement parseSwitchStatement()
@@ -2691,7 +2735,25 @@ writef("\33[34m%s\33[0m", success);
       break;
     case T.Cast:
       requireNext(T.LParen);
-      auto type = parseType();
+      Type type;
+      switch (token.type)
+      {
+      version(D2)
+      {
+      auto begin2 = token;
+      case T.Const:
+        type = new ConstType(null);
+        goto case_break;
+      case T.Invariant:
+        type = new InvariantType(null);
+      case_break:
+        nT();
+        set(type, begin2);
+        break;
+      }
+      default:
+       type = parseType();
+      }
       require(T.RParen);
       e = new CastExpression(parseUnaryExpression(), type);
       break;
@@ -3053,6 +3115,22 @@ writef("\33[34m%s\33[0m", success);
 
       e = new TypeDotIdExpression(type, ident);
       break;
+    version(D2)
+    {
+    case T.Traits:
+      nT();
+      require(T.LParen);
+      auto id = requireId();
+      TemplateArguments args;
+      if (token.type == T.Comma)
+      {
+        args = parseTemplateArguments2();
+      }
+      else
+        require(T.RParen);
+      e = new TraitsExpression(id, args);
+      break;
+    }
     default:
       // TODO: issue error msg.
       error(MID.ExpectedButFound, "Expression", token.srcText);
@@ -3123,36 +3201,30 @@ writef("\33[34m%s\33[0m", success);
       nT();
       set(t, begin);
       break;
-/+
-    case T.Identifier, T.Dot:
-      tident = new IdentifierType([token.identifier]);
-      nT();
-      // TODO: parse template instance
-//       if (token.type == T.Not)
-//         parse template instance
-    Lident:
-      while (token.type == T.Dot)
-      {
-        nT();
-        tident ~= requireIdentifier();
-      // TODO: parse template instance
-//       if (token.type == T.Not)
-//         parse template instance
-      }
-      t = tident;
-      break;
-    case T.Typeof:
-      requireNext(T.LParen);
-      tident = new TypeofType(parseExpression());
-      require(T.RParen);
-      goto Lident;
-+/
     case T.Identifier, T.Typeof, T.Dot:
       t = parseDotListType();
       break;
-    //case T.Const, T.Invariant:
-      // TODO: implement D 2.0 type constructors
-      //break;
+    version(D2)
+    {
+    case T.Const:
+      // const ( Type )
+      nT();
+      require(T.LParen);
+      t = parseType();
+      require(T.RParen);
+      t = new ConstType(t);
+      set(t, begin);
+      break;
+    case T.Invariant:
+      // invariant ( Type )
+      nT();
+      require(T.LParen);
+      t = parseType();
+      require(T.RParen);
+      t = new InvariantType(t);
+      set(t, begin);
+      break;
+    }
     default:
       // TODO: issue error msg.
       error(MID.ExpectedButFound, "BasicType", token.srcText);
@@ -3354,30 +3426,79 @@ writef("\33[34m%s\33[0m", success);
       nT();
       return set(params, begin);
     }
-//     StorageClass stc;
 
     while (1)
     {
       auto paramBegin = token;
-//       stc = StorageClass.In;
       Token* stcTok;
+      StorageClass stc, tmp;
+
+      if (token.type == T.Ellipses)
+      {
+        nT();
+        params ~= set(new Parameter(null, null, null, null), paramBegin);
+        break; // Exit loop.
+      }
+
+    Lstc_loop:
       switch (token.type)
       {
-      /+case T.In:   stc = StorageClass.In;   nT(); goto default;
-      case T.Out:  stc = StorageClass.Out;  nT(); goto default;
-      case T.Inout:
-      case T.Ref:  stc = StorageClass.Ref;  nT(); goto default;
-      case T.Lazy: stc = StorageClass.Lazy; nT(); goto default;+/
-      // TODO: D 2.0 invariant/const/final/scope
+      version(D2)
+      {
+      case T.Invariant: // D2.0
+        if (peekNext() == T.LParen)
+          goto default;
+        tmp = StorageClass.Invariant;
+        goto Lcommon;
+      case T.Const: // D2.0
+        if (peekNext() == T.LParen)
+          goto default;
+        tmp = StorageClass.Const;
+        goto Lcommon;
+      case T.Final: // D2.0
+        tmp = StorageClass.Final;
+        goto Lcommon;
+      case T.Scope: // D2.0
+        tmp = StorageClass.Scope;
+        goto Lcommon;
+      case T.Static: // D2.0
+        tmp = StorageClass.Static;
+        goto Lcommon;
+      case T.In:
+        tmp = StorageClass.In;
+        goto Lcommon;
+      case T.Out:
+        tmp = StorageClass.In;
+        goto Lcommon;
+      case T.Inout, T.Ref:
+        tmp = StorageClass.Ref;
+        goto Lcommon;
+      case T.Lazy:
+        tmp = StorageClass.Lazy;
+        goto Lcommon;
+      Lcommon:
+        if (stc & tmp)
+        {
+          error(MID.RedundantStorageClass, token.srcText);
+        }
+        else
+          stc |= tmp;
+        nT();
+        goto Lstc_loop;
+      }
+      else // else body of version(D2)
+      {
       case T.In, T.Out, T.Inout, T.Ref, T.Lazy:
         stcTok = token;
         nT();
         goto default;
-      case T.Ellipses:
-        nT();
-        params ~= set(new Parameter(stcTok, null, null, null), paramBegin);
-        break; // Exit loop.
+      }
       default:
+      version(D2)
+      {
+        if (stc != StorageClass.None)
+          stcTok = begin;
+      }
         Token* ident;
         auto type = parseDeclarator(ident, true);
 
@@ -3444,7 +3565,46 @@ writef("\33[34m%s\33[0m", success);
     set(args, begin);
     return args;
   }
+version(D2)
+{
+  TemplateArguments parseTemplateArguments2()
+  {
+    assert(token.type == T.Comma);
+    nT();
+    auto begin = token;
+    auto args = new TemplateArguments;
 
+    if (token.type != T.RParen)
+    {
+      while (1)
+      {
+        bool success;
+        auto typeArgument = try_(parseType(), success);
+        if (success)
+        {
+          // TemplateArgument:
+          //         Type
+          //         Symbol
+          args ~= typeArgument;
+        }
+        else
+        {
+          // TemplateArgument:
+          //         AssignExpression
+          args ~= parseAssignExpression();
+        }
+        if (token.type != T.Comma)
+          break; // Exit loop.
+        nT();
+      }
+    }
+    else
+      error(MID.ExpectedButFound, "Type/Expression", ")");
+    require(T.RParen);
+    set(args, begin);
+    return args;
+  }
+} // version(D2)
   TemplateParameters parseTemplateParameterList()
   {
     auto begin = token;

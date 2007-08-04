@@ -617,6 +617,19 @@ class FunctionLiteralExpression : Expression
   }
 }
 
+version(D2)
+{
+class TraitsExpression : Expression
+{
+  Token* ident;
+  TemplateArguments targs;
+  this(typeof(ident) ident, typeof(targs) targs)
+  {
+    this.ident = ident;
+  }
+}
+}
+
 class VoidInitializer : Expression
 {
 

@@ -224,6 +224,8 @@ enum TID
   Identifier,
   Typeof,
   TemplateInstance,
+  Const, // D2
+  Invariant, // D2
 }
 
 class Type : Node
@@ -267,34 +269,6 @@ class DotListType : Type
   }
 }
 
-/+
-class IdentifierType : Type
-{
-  string[] idents;
-
-  this(string[] idents)
-  {
-    super(TID.Identifier, null);
-    this.idents = idents;
-  }
-
-  this(string ident)
-  {
-    super(TID.Identifier, null);
-  }
-
-  this(TID tid)
-  {
-    super(tid);
-  }
-
-  void opCatAssign(string ident)
-  {
-    this.idents ~= ident;
-  }
-}
-+/
-
 class IdentifierType : Type
 {
   Token* ident;
@@ -304,17 +278,6 @@ class IdentifierType : Type
     this.ident = ident;
   }
 }
-/+
-class TypeofType : IdentifierType
-{
-  Expression e;
-  this(Expression e)
-  {
-    super(TID.Typeof);
-    this.e = e;
-  }
-}
-+/
 
 class TypeofType : Type
 {
@@ -388,3 +351,24 @@ class DelegateType : Type
     super(TID.Delegate, func);
   }
 }
+
+version(D2)
+{
+class ConstType : Type
+{
+  this(Type t)
+  {
+    // If t is null: cast(const)
+    super(TID.Const, t);
+  }
+}
+
+class InvariantType : Type
+{
+  this(Type t)
+  {
+    // If t is null: cast(invariant)
+    super(TID.Invariant, t);
+  }
+}
+} // version(D2)

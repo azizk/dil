@@ -62,7 +62,7 @@ static const Identifier[] keywords = [
   {TOK.Is, "is"},
   {TOK.Lazy, "lazy"},
   {TOK.Long, "long"},
-  {TOK.Macro, "macro"},
+  {TOK.Macro, "macro"}, // D2.0
   {TOK.Mixin, "mixin"},
   {TOK.Module, "module"},
   {TOK.New, "new"},
@@ -87,6 +87,7 @@ static const Identifier[] keywords = [
   {TOK.Template, "template"},
   {TOK.This, "this"},
   {TOK.Throw, "throw"},
+  {TOK.Traits, "__traits"}, // D2.0
   {TOK.True, "true"},
   {TOK.Try, "try"},
   {TOK.Typedef, "typedef"},
