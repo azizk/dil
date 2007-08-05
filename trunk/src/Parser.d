@@ -45,10 +45,7 @@ class Parser
 if (!trying)
 {
 writef("\33[32m%s\33[0m", token.type);
-try
       writef("%s", prev[0 .. token.end - prev]);
-catch
-{writef("\33[30mø\33[0m");}
       prev = token.end;
 }
     } while (token.type == T.Comment) // Skip comments

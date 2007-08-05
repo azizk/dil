@@ -34,6 +34,7 @@ enum MID
   UndefinedEscapeSequence,
   InsufficientHexDigits,
   // \&[a-zA-Z][a-zA-Z0-9]+;
+  UndefinedHTMLEntity,
   UnterminatedHTMLEntity,
   InvalidBeginHTMLEntity,
   // integer overflows
@@ -83,7 +84,8 @@ string[] messages = [
   "found undefined escape sequence.",
   "insufficient number of hex digits in escape sequence.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
-  "unterminated html entity.",
+  "undefined HTML entity '{1}'",
+  "unterminated HTML entity.",
   "html entities must begin with a letter.",
   // integer overflows
   "decimal number overflows sign bit.",

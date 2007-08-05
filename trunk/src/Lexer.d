@@ -8,6 +8,7 @@ import Information;
 import Keywords;
 import Identifier;
 import Messages;
+import HtmlEntities;
 import std.stdio;
 import std.utf;
 import std.uni;
@@ -868,19 +869,22 @@ class Lexer
       {
         if (isalpha(*++p))
         {
-          while (1)
+          auto begin = p;
+          while (isalnum(*++p))
+          {}
+
+          if (*p == ';')
           {
-            if (isalnum(*++p))
-              continue;
-            if (*p == ';') {
-              // TODO: convert entity to unicode codepoint.
-              ++p;
-              break;
-            }
-            else {
-              error(MID.UnterminatedHTMLEntity);
-              break;
-            }
+            c = entity2Unicode(begin[0..p - begin]);
+            ++p;
+            if (c == 0xFFFF)
+              error(MID.UndefinedHTMLEntity, (begin-1)[0..p-(begin-1)]);
+            break;
+          }
+          else
+          {
+            error(MID.UnterminatedHTMLEntity);
+            break;
           }
         }
         else
