@@ -50,6 +50,7 @@ class Parameter : Node
   this(Token* stcTok, Type type, Token* ident, Expression assignExpr)
   {
     super(NodeCategory.Other);
+    mixin(set_kind);
 
     StorageClass stc;
     if (stcTok !is null)
@@ -94,6 +95,7 @@ class Parameters : Node
   this()
   {
     super(NodeCategory.Other);
+    mixin(set_kind);
   }
 
   bool hasVariadic()
@@ -121,12 +123,14 @@ enum Protection
   Export    = 1<<4
 }
 
-class BaseClass
+class BaseClass : Node
 {
   Protection prot;
   Type type;
   this(Protection prot, Type type)
   {
+    super(NodeCategory.Other);
+    mixin(set_kind);
     this.prot = prot;
     this.type = type;
   }
@@ -150,6 +154,7 @@ class TemplateParameter : Node
   this(TP tp, Type valueType, Token* ident, Type specType, Type defType, Expression specValue, Expression defValue)
   {
     super(NodeCategory.Other);
+    mixin(set_kind);
     this.tp = tp;
     this.valueType = valueType;
     this.ident = ident;
@@ -167,6 +172,7 @@ class TemplateParameters : Node
   this()
   {
     super(NodeCategory.Other);
+    mixin(set_kind);
   }
 
   void opCatAssign(TemplateParameter parameter)
@@ -182,6 +188,7 @@ class TemplateArguments : Node
   this()
   {
     super(NodeCategory.Other);
+    mixin(set_kind);
   }
 
   void opCatAssign(Node argument)
@@ -251,6 +258,7 @@ class IntegralType : Type
   this(TOK tok)
   {
     super(cast(TID)tok);
+    mixin(set_kind);
   }
 }
 
@@ -259,6 +267,7 @@ class UndefinedType : Type
   this()
   {
     super(TID.Undefined);
+    mixin(set_kind);
   }
 }
 
@@ -268,6 +277,7 @@ class DotListType : Type
   this(Type[] dotList)
   {
     super(TID.DotList);
+    mixin(set_kind);
     this.dotList = dotList;
   }
 }
@@ -278,6 +288,7 @@ class IdentifierType : Type
   this(Token* ident)
   {
     super(TID.Identifier);
+    mixin(set_kind);
     this.ident = ident;
   }
 }
@@ -288,6 +299,7 @@ class TypeofType : Type
   this(Expression e)
   {
     super(TID.Typeof);
+    mixin(set_kind);
     this.e = e;
   }
 }
@@ -299,6 +311,7 @@ class TemplateInstanceType : Type
   this(Token* ident, TemplateArguments targs)
   {
     super(TID.TemplateInstance);
+    mixin(set_kind);
     this.ident = ident;
     this.targs = targs;
   }
@@ -309,6 +322,7 @@ class PointerType : Type
   this(Type t)
   {
     super(TID.Pointer, t);
+    mixin(set_kind);
   }
 }
 
@@ -319,6 +333,7 @@ class ArrayType : Type
   this(Type t)
   {
     super(TID.Array, t);
+    mixin(set_kind);
   }
   this(Type t, Expression e, Expression e2)
   {
@@ -341,6 +356,7 @@ class FunctionType : Type
   this(Type returnType, Parameters parameters, TemplateParameters tparams = null)
   {
     super(TID.Function);
+    mixin(set_kind);
     this.returnType = returnType;
     this.parameters = parameters;
     this.tparams = tparams;
@@ -352,6 +368,7 @@ class DelegateType : Type
   this(Type func)
   {
     super(TID.Delegate, func);
+    mixin(set_kind);
   }
 }
 
@@ -363,6 +380,7 @@ class ConstType : Type
   {
     // If t is null: cast(const)
     super(TID.Const, t);
+    mixin(set_kind);
   }
 }
 
@@ -372,6 +390,7 @@ class InvariantType : Type
   {
     // If t is null: cast(invariant)
     super(TID.Invariant, t);
+    mixin(set_kind);
   }
 }
 } // version(D2)

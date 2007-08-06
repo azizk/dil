@@ -172,11 +172,31 @@ enum NodeKind
   ArrayInitializer,
   StructInitializer,
 
-  // Miscellaneous:
+  // Types:
+  IntegralType,
+  UndefinedType,
+  DotListType,
+  IdentifierType,
+  TypeofType,
+  TemplateInstanceType,
+  PointerType,
+  ArrayType,
+  FunctionType,
+  DelegateType,
+  ConstType, // D2.0
+  InvariantType, // D2.0
+
+  // Other:
   FunctionBody,
+  Parameter,
+  Parameters,
+  BaseClass,
+  TemplateParameter,
+  TemplateParameters,
+  TemplateArguments,
 }
 
-/// This string is mixed in into the constructor of a class that inherits from Node.
+/// This string is mixed into the constructor of a class that inherits from Node.
 const string set_kind = `this.kind = mixin("NodeKind." ~ typeof(this).stringof);`;
 
 class Node
