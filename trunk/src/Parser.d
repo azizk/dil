@@ -3116,7 +3116,7 @@ writef("\33[34m%s\33[0m", success);
          T.Float,  T.Double,  T.Real,
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
-      auto type = new Type(token.type);
+      auto type = new IntegralType(token.type);
       nT();
       set(type, begin);
       require(T.Dot);
@@ -3206,7 +3206,7 @@ writef("\33[34m%s\33[0m", success);
          T.Float,  T.Double,  T.Real,
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
-      t = new Type(token.type);
+      t = new IntegralType(token.type);
       nT();
       set(t, begin);
       break;

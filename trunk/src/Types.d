@@ -228,15 +228,10 @@ enum TID
   Invariant, // D2
 }
 
-class Type : Node
+abstract class Type : Node
 {
   TID tid;
   Type next;
-
-  this(TOK tok)
-  {
-    this(cast(TID)tok);
-  }
 
   this(TID tid)
   {
@@ -248,6 +243,14 @@ class Type : Node
     super(NodeCategory.Type);
     this.tid = tid;
     this.next = next;
+  }
+}
+
+class IntegralType : Type
+{
+  this(TOK tok)
+  {
+    super(cast(TID)tok);
   }
 }
 
