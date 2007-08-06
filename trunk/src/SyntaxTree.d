@@ -16,7 +16,7 @@ enum NodeCategory
 
 enum NodeKind
 {
-  Expression,
+  // Expressions:
   EmptyExpression,
   BinaryExpression,
   CondExpression,
@@ -98,6 +98,39 @@ enum NodeKind
   VoidInitializer,
   ArrayInitializer,
   StructInitializer,
+
+  // Declarations:
+  EmptyDeclaration,
+  IllegalDeclaration,
+  ModuleDeclaration,
+  ImportDeclaration,
+  AliasDeclaration,
+  TypedefDeclaration,
+  EnumDeclaration,
+  ClassDeclaration,
+  InterfaceDeclaration,
+  StructDeclaration,
+  UnionDeclaration,
+  ConstructorDeclaration,
+  StaticConstructorDeclaration,
+  DestructorDeclaration,
+  StaticDestructorDeclaration,
+  FunctionDeclaration,
+  VariableDeclaration,
+  InvariantDeclaration,
+  UnittestDeclaration,
+  DebugDeclaration,
+  VersionDeclaration,
+  StaticIfDeclaration,
+  StaticAssertDeclaration,
+  TemplateDeclaration,
+  NewDeclaration,
+  DeleteDeclaration,
+  AttributeDeclaration,
+  ExternDeclaration,
+  AlignDeclaration,
+  PragmaDeclaration,
+  MixinDeclaration,
 }
 
 /// This string is mixed in into the constructor of a class that inherits from Node.

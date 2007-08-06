@@ -9,7 +9,7 @@ import Declarations;
 import Types;
 import Token;
 
-class Statement : Node
+abstract class Statement : Node
 {
   this()
   {

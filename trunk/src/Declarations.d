@@ -9,7 +9,7 @@ import Types;
 import Statements;
 import Token;
 
-class Declaration : Node
+abstract class Declaration : Node
 {
   bool hasBody;
   this(bool hasBody)
@@ -24,6 +24,7 @@ class EmptyDeclaration : Declaration
   this()
   {
     super(false);
+    mixin(set_kind);
   }
 }
 
@@ -33,6 +34,7 @@ class IllegalDeclaration : Declaration
   this(TOK tok)
   {
     super(false);
+    mixin(set_kind);
     this.tok = tok;
   }
 }
@@ -45,6 +47,7 @@ class ModuleDeclaration : Declaration
   this(ModuleName moduleName)
   {
     super(false);
+    mixin(set_kind);
     this.moduleName = moduleName;
   }
 }
@@ -58,6 +61,7 @@ class ImportDeclaration : Declaration
   this(ModuleName[] moduleNames, Token*[] moduleAliases, Token*[] bindNames, Token*[] bindAliases)
   {
     super(false);
+    mixin(set_kind);
     this.moduleNames = moduleNames;
     this.moduleAliases = moduleAliases;
     this.bindNames = bindNames;
@@ -71,6 +75,7 @@ class AliasDeclaration : Declaration
   this(Declaration decl)
   {
     super(false);
+    mixin(set_kind);
     this.decl = decl;
   }
 }
@@ -81,6 +86,7 @@ class TypedefDeclaration : Declaration
   this(Declaration decl)
   {
     super(false);
+    mixin(set_kind);
     this.decl = decl;
   }
 }
@@ -94,6 +100,7 @@ class EnumDeclaration : Declaration
   this(Token* name, Type baseType, Token*[] members, Expression[] values, bool hasBody)
   {
     super(hasBody);
+    mixin(set_kind);
     this.name = name;
     this.baseType = baseType;
     this.members = members;
@@ -110,6 +117,7 @@ class ClassDeclaration : Declaration
   this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
+    mixin(set_kind);
     this.name = name;
     this.tparams = tparams;
     this.bases = bases;
@@ -126,6 +134,7 @@ class InterfaceDeclaration : Declaration
   this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
+    mixin(set_kind);
     this.name = name;
     this.tparams = tparams;
     this.bases = bases;
@@ -141,6 +150,7 @@ class StructDeclaration : Declaration
   this(Token* name, TemplateParameters tparams, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
+    mixin(set_kind);
     this.name = name;
     this.tparams = tparams;
     this.decls = decls;
@@ -155,6 +165,7 @@ class UnionDeclaration : Declaration
   this(Token* name, TemplateParameters tparams, Declaration[] decls, bool hasBody)
   {
     super(hasBody);
+    mixin(set_kind);
     this.name = name;
     this.tparams = tparams;
     this.decls = decls;
@@ -168,6 +179,7 @@ class ConstructorDeclaration : Declaration
   this(Parameters parameters, FunctionBody funcBody)
   {
     super(true);
+    mixin(set_kind);
     this.parameters = parameters;
     this.funcBody = funcBody;
   }
@@ -179,6 +191,7 @@ class StaticConstructorDeclaration : Declaration
   this(FunctionBody funcBody)
   {
     super(true);
+    mixin(set_kind);
     this.funcBody = funcBody;
   }
 }
@@ -189,6 +202,7 @@ class DestructorDeclaration : Declaration
   this(FunctionBody funcBody)
   {
     super(true);
+    mixin(set_kind);
     this.funcBody = funcBody;
   }
 }
@@ -199,6 +213,7 @@ class StaticDestructorDeclaration : Declaration
   this(FunctionBody funcBody)
   {
     super(true);
+    mixin(set_kind);
     this.funcBody = funcBody;
   }
 }
@@ -212,6 +227,7 @@ class FunctionDeclaration : Declaration
   this(Token* funcName, Type funcType, TemplateParameters tparams, FunctionBody funcBody)
   {
     super(funcBody.funcBody !is null);
+    mixin(set_kind);
     this.funcName = funcName;
     this.funcType = funcType;
     this.funcBody = funcBody;
@@ -225,6 +241,7 @@ class VariableDeclaration : Declaration
   this(Token*[] idents, Expression[] values)
   {
     super(false);
+    mixin(set_kind);
     this.idents = idents;
     this.values = values;
   }
@@ -236,6 +253,7 @@ class InvariantDeclaration : Declaration
   this(FunctionBody funcBody)
   {
     super(true);
+    mixin(set_kind);
     this.funcBody = funcBody;
   }
 }
@@ -246,6 +264,7 @@ class UnittestDeclaration : Declaration
   this(FunctionBody funcBody)
   {
     super(true);
+    mixin(set_kind);
     this.funcBody = funcBody;
   }
 }
@@ -259,6 +278,7 @@ class DebugDeclaration : Declaration
   this(Token* spec, Token* cond, Declaration[] decls, Declaration[] elseDecls)
   {
     super(decls.length != 0);
+    mixin(set_kind);
     this.spec = spec;
     this.cond = cond;
     this.decls = decls;
@@ -275,6 +295,7 @@ class VersionDeclaration : Declaration
   this(Token* spec, Token* cond, Declaration[] decls, Declaration[] elseDecls)
   {
     super(decls.length != 0);
+    mixin(set_kind);
     this.spec = spec;
     this.cond = cond;
     this.decls = decls;
@@ -289,6 +310,7 @@ class StaticIfDeclaration : Declaration
   this(Expression condition, Declaration[] ifDecls, Declaration[] elseDecls)
   {
     super(true);
+    mixin(set_kind);
     this.condition = condition;
     this.ifDecls = ifDecls;
     this.elseDecls = elseDecls;
@@ -301,6 +323,7 @@ class StaticAssertDeclaration : Declaration
   this(Expression condition, Expression message)
   {
     super(true);
+    mixin(set_kind);
     this.condition = condition;
     this.message = message;
   }
@@ -314,6 +337,7 @@ class TemplateDeclaration : Declaration
   this(Token* templateName, TemplateParameters templateParams, Declaration[] decls)
   {
     super(true);
+    mixin(set_kind);
     this.templateName = templateName;
     this.templateParams = templateParams;
     this.decls = decls;
@@ -327,6 +351,7 @@ class NewDeclaration : Declaration
   this(Parameters parameters, FunctionBody funcBody)
   {
     super(true);
+    mixin(set_kind);
     this.parameters = parameters;
     this.funcBody = funcBody;
   }
@@ -339,6 +364,7 @@ class DeleteDeclaration : Declaration
   this(Parameters parameters, FunctionBody funcBody)
   {
     super(true);
+    mixin(set_kind);
     this.parameters = parameters;
     this.funcBody = funcBody;
   }
@@ -351,6 +377,7 @@ class AttributeDeclaration : Declaration
   this(TOK attribute, Declaration[] decls)
   {
     super(true);
+    mixin(set_kind);
     this.attribute = attribute;
     this.decls = decls;
   }
@@ -362,6 +389,7 @@ class ExternDeclaration : AttributeDeclaration
   this(Linkage linkage, Declaration[] decls)
   {
     super(TOK.Extern, decls);
+    mixin(set_kind);
     this.linkage = linkage;
   }
 }
@@ -372,6 +400,7 @@ class AlignDeclaration : AttributeDeclaration
   this(int size, Declaration[] decls)
   {
     super(TOK.Align, decls);
+    mixin(set_kind);
     this.size = size;
   }
 }
@@ -383,6 +412,7 @@ class PragmaDeclaration : AttributeDeclaration
   this(Token* ident, Expression[] args, Declaration[] decls)
   {
     super(TOK.Pragma, decls);
+    mixin(set_kind);
     this.ident = ident;
     this.args = args;
   }
@@ -396,12 +426,14 @@ class MixinDeclaration : Declaration
   this(Expression[] templateIdent, Token* mixinIdent)
   {
     super(false);
+    mixin(set_kind);
     this.templateIdent = templateIdent;
     this.mixinIdent = mixinIdent;
   }
   this(Expression assignExpr)
   {
     super(false);
+    mixin(set_kind);
     this.assignExpr = assignExpr;
   }
 }

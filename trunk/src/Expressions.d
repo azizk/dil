@@ -9,7 +9,7 @@ import Types;
 import Declarations;
 import Statements;
 
-class Expression : Node
+abstract class Expression : Node
 {
   this()
   {
