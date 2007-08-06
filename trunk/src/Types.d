@@ -255,7 +255,7 @@ class UndefinedType : Type
 {
   this()
   {
-    super(TID.Undefined, null);
+    super(TID.Undefined);
   }
 }
 
@@ -264,7 +264,7 @@ class DotListType : Type
   Type[] dotList;
   this(Type[] dotList)
   {
-    super(TID.DotList, null);
+    super(TID.DotList);
     this.dotList = dotList;
   }
 }
@@ -274,7 +274,7 @@ class IdentifierType : Type
   Token* ident;
   this(Token* ident)
   {
-    super(TID.Identifier, null);
+    super(TID.Identifier);
     this.ident = ident;
   }
 }
@@ -284,7 +284,7 @@ class TypeofType : Type
   Expression e;
   this(Expression e)
   {
-    super(TID.Typeof, null);
+    super(TID.Typeof);
     this.e = e;
   }
 }
@@ -295,7 +295,7 @@ class TemplateInstanceType : Type
   TemplateArguments targs;
   this(Token* ident, TemplateArguments targs)
   {
-    super(TID.TemplateInstance, null);
+    super(TID.TemplateInstance);
     this.ident = ident;
     this.targs = targs;
   }
@@ -337,7 +337,7 @@ class FunctionType : Type
   TemplateParameters tparams;
   this(Type returnType, Parameters parameters, TemplateParameters tparams = null)
   {
-    super(TID.Function, null);
+    super(TID.Function);
     this.returnType = returnType;
     this.parameters = parameters;
     this.tparams = tparams;
