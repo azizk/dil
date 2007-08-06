@@ -13,7 +13,7 @@ class Statement : Node
 {
   this()
   {
-    super(NodeType.Expression);
+    super(NodeCategory.Statement);
   }
 }
 
@@ -48,7 +48,7 @@ class FunctionBody : Node
   Token* outIdent;
   this()
   {
-    super(NodeType.Other);
+    super(NodeCategory.Other);
   }
 }
 

@@ -49,7 +49,7 @@ class Parameter : Node
 
   this(Token* stcTok, Type type, Token* ident, Expression assignExpr)
   {
-    super(NodeType.Other);
+    super(NodeCategory.Other);
 
     StorageClass stc;
     if (stcTok !is null)
@@ -93,7 +93,7 @@ class Parameters : Node
 
   this()
   {
-    super(NodeType.Other);
+    super(NodeCategory.Other);
   }
 
   bool hasVariadic()
@@ -149,7 +149,7 @@ class TemplateParameter : Node
   Expression specValue, defValue;
   this(TP tp, Type valueType, Token* ident, Type specType, Type defType, Expression specValue, Expression defValue)
   {
-    super(NodeType.Other);
+    super(NodeCategory.Other);
     this.tp = tp;
     this.valueType = valueType;
     this.ident = ident;
@@ -166,7 +166,7 @@ class TemplateParameters : Node
 
   this()
   {
-    super(NodeType.Other);
+    super(NodeCategory.Other);
   }
 
   void opCatAssign(TemplateParameter parameter)
@@ -181,7 +181,7 @@ class TemplateArguments : Node
 
   this()
   {
-    super(NodeType.Other);
+    super(NodeCategory.Other);
   }
 
   void opCatAssign(Node argument)
@@ -245,7 +245,7 @@ class Type : Node
 
   this(TID tid, Type next)
   {
-    super(NodeType.Type);
+    super(NodeCategory.Type);
     this.tid = tid;
     this.next = next;
   }

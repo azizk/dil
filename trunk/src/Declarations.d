@@ -14,7 +14,7 @@ class Declaration : Node
   bool hasBody;
   this(bool hasBody)
   {
-    super(NodeType.Declaration);
+    super(NodeCategory.Declaration);
     this.hasBody = hasBody;
   }
 }

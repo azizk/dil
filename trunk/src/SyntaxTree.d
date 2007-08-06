@@ -5,7 +5,7 @@
 module SyntaxTree;
 import Token;
 
-enum NodeType
+enum NodeCategory
 {
   Declaration,
   Statement,
@@ -16,12 +16,12 @@ enum NodeType
 
 class Node
 {
-  NodeType nodeType;
+  NodeCategory category;
   Token* begin, end;
 
-  this(NodeType nodeType)
+  this(NodeCategory category)
   {
-    this.nodeType = nodeType;
+    this.category = category;
   }
 
   void setTokens(Token* begin, Token* end)

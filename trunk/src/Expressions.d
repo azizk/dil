@@ -13,7 +13,7 @@ class Expression : Node
 {
   this()
   {
-    super(NodeType.Expression);
+    super(NodeCategory.Expression);
   }
 }
 
