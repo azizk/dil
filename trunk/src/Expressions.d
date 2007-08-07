@@ -25,13 +25,12 @@ class EmptyExpression : Expression
   }
 }
 
-class BinaryExpression : Expression
+abstract class BinaryExpression : Expression
 {
   Expression left, right;
   Token* tok;
   this(Expression left, Expression right, Token* tok)
   {
-    mixin(set_kind);
     this.left = left;
     this.right = right;
     this.tok = tok;
@@ -103,12 +102,11 @@ class AndExpression : BinaryExpression
   }
 }
 
-class CmpExpression : BinaryExpression
+abstract class CmpExpression : BinaryExpression
 {
   this(Expression left, Expression right, Token* tok)
   {
     super(left, right, tok);
-    mixin(set_kind);
   }
 }
 
@@ -334,13 +332,12 @@ class CatAssignExpression : BinaryExpression
   }
 }
 
-class UnaryExpression : Expression
+abstract class UnaryExpression : Expression
 {
   Expression e;
   this(Expression e)
   {
     this.e = e;
-    mixin(set_kind);
   }
 }
 
