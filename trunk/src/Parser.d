@@ -3477,7 +3477,7 @@ writef("\33[34m%s\33[0m", success);
         tmp = StorageClass.In;
         goto Lcommon;
       case T.Out:
-        tmp = StorageClass.In;
+        tmp = StorageClass.Out;
         goto Lcommon;
       case T.Inout, T.Ref:
         tmp = StorageClass.Ref;
@@ -3487,9 +3487,7 @@ writef("\33[34m%s\33[0m", success);
         goto Lcommon;
       Lcommon:
         if (stc & tmp)
-        {
           error(MID.RedundantStorageClass, token.srcText);
-        }
         else
           stc |= tmp;
         nT();
