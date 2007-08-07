@@ -100,16 +100,14 @@ class DeclarationStatement : Statement
 
 class IfStatement : Statement
 {
-  Type type;
-  Token* ident;
+  Statement variable; // AutoDeclaration or VariableDeclaration
   Expression condition;
   Statement ifBody;
   Statement elseBody;
-  this(Type type, Token* ident, Expression condition, Statement ifBody, Statement elseBody)
+  this(Statement variable, Expression condition, Statement ifBody, Statement elseBody)
   {
     mixin(set_kind);
-    this.type = type;
-    this.ident = ident;
+    this.variable = variable;
     this.condition = condition;
     this.ifBody = ifBody;
     this.elseBody = elseBody;

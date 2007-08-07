@@ -383,7 +383,7 @@ writef("\33[34m%s\33[0m", success);
         values ~= null;
     }
     require(T.Semicolon);
-    return new VariableDeclaration(idents, values);
+    return new VariableDeclaration(type, idents, values);
   }
 
   Expression parseInitializer()
@@ -1870,18 +1870,23 @@ writef("\33[34m%s\33[0m", success);
     assert(token.type == T.If);
     nT();
 
-    Type type;
-    Token* ident;
+    Statement variable;
     Expression condition;
     Statement ifBody, elseBody;
 
     require(T.LParen);
+
+    Token* ident;
     // auto Identifier = Expression
     if (token.type == T.Auto)
     {
+      auto a = new AttributeStatement(token.type, null);
       nT();
       ident = requireId();
       require(T.Assign);
+      auto init = parseExpression();
+      a.statement = new DeclarationStatement(new VariableDeclaration(null, [ident], [init]));
+      variable = a;
     }
     else
     {
@@ -1893,14 +1898,15 @@ writef("\33[34m%s\33[0m", success);
         return type;
       }
       bool success;
-      type = try_(parseDeclaratorAssign(), success);
-      if (!success)
+      auto type = try_(parseDeclaratorAssign(), success);
+      if (success)
       {
-        type = null;
-        ident = null;
+        auto init = parseExpression();
+        variable = new DeclarationStatement(new VariableDeclaration(type, [ident], [init]));
       }
+      else
+        condition = parseExpression();
     }
-    condition = parseExpression();
     require(T.RParen);
     ifBody = parseScopeStatement();
     if (token.type == T.Else)
@@ -1908,7 +1914,7 @@ writef("\33[34m%s\33[0m", success);
       nT();
       elseBody = parseScopeStatement();
     }
-    return new IfStatement(type, ident, condition, ifBody, elseBody);
+    return new IfStatement(variable, condition, ifBody, elseBody);
   }
 
   Statement parseWhileStatement()

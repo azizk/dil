@@ -236,12 +236,14 @@ class FunctionDeclaration : Declaration
 
 class VariableDeclaration : Declaration
 {
+  Type type;
   Token*[] idents;
   Expression[] values;
-  this(Token*[] idents, Expression[] values)
+  this(Type type, Token*[] idents, Expression[] values)
   {
     super(false);
     mixin(set_kind);
+    this.type = type;
     this.idents = idents;
     this.values = values;
   }
