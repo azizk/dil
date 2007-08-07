@@ -80,6 +80,8 @@ enum NodeKind
   ThrowStatement,
   VolatileStatement,
   AsmStatement,
+  AsmInstruction,
+  IllegalAsmInstruction,
   PragmaStatement,
   MixinStatement,
   StaticIfStatement,

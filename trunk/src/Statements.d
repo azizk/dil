@@ -369,8 +369,31 @@ class VolatileStatement : Statement
 
 class AsmStatement : Statement
 {
-  this()
+  Statements statements;
+  this(Statements statements)
   {
+    mixin(set_kind);
+    this.statements = statements;
+  }
+}
+
+class AsmInstruction : Statement
+{
+  Token* ident;
+  Expression[] operands;
+  this(Token* ident, Expression[] operands)
+  {
+    mixin(set_kind);
+    this.ident = ident;
+    this.operands = operands;
+  }
+}
+
+class IllegalAsmInstruction : IllegalStatement
+{
+  this(Token* token)
+  {
+    super(token);
     mixin(set_kind);
   }
 }

@@ -2437,8 +2437,94 @@ writef("\33[34m%s\33[0m", success);
   Statement parseAsmStatement()
   {
     assert(token.type == T.Asm);
-    // TODO: implement asm statements parser.
+    nT(); // Skip asm keyword.
+    require(T.LBrace);
+    auto ss = new Statements;
+    while (token.type != T.RBrace && token.type != T.EOF)
+      ss ~= parseAsmInstruction();
+    require(T.RBrace);
+    return new AsmStatement(ss);
+  }
+
+  Statement parseAsmInstruction()
+  {
+    auto begin = token;
+    Statement s;
+    switch (token.type)
+    {
+    case T.Identifier:
+      auto ident = token;
+      auto next = peekNext();
+      if (next == T.Colon)
+      {
+        // Identifier : AsmInstruction
+        nT(); // Skip Identifier
+        nT(); // Skip :
+        s = new LabeledStatement(ident, parseAsmInstruction());
+        break;
+      }
+
+      // Opcode ;
+      // Opcode Operands ;
+      // Opcode
+      //     Identifier
+      Expression[] es;
+      if (next != T.Semicolon)
+      {
+        while (1)
+        {
+          es ~= parseAsmExpression();
+          if (token.type != T.Comma)
+            break;
+          nT();
+        }
+      }
+      require(T.Semicolon);
+      s = new AsmInstruction(ident, es);
+      break;
+    case T.Semicolon:
+      s = new EmptyStatement();
+      nT();
+      break;
+    default:
+      error(MID.ExpectedButFound, "AsmStatement", token.srcText);
+      s = new IllegalAsmInstruction(token);
+      nT();
+    }
+    set(s, begin);
+    return s;
+  }
+
+  Expression parseAsmExpression()
+  {
     return null;
+  }
+
+  Expression parseAsmPrimaryExpression()
+  {
+    auto begin = token;
+    Expression e;
+    switch (token.type)
+    {
+    case T.Int32, T.Int64, T.Uint32, T.Uint64:
+      e = new IntNumberExpression(token.type, token.ulong_);
+      nT();
+      break;
+    case T.Float32, T.Float64, T.Float80,
+         T.Imaginary32, T.Imaginary64, T.Imaginary80:
+      e = new RealNumberExpression(token.type, token.real_);
+      nT();
+      break;
+    case T.Dollar:
+      e = new DollarExpression();
+      nT();
+      break;
+    default:
+      error(MID.ExpectedButFound, "Expression", token.srcText);
+      e = new EmptyExpression();
+    }
+    set(e, begin);
+    return e;
   }
 
   /+++++++++++++++++++++++++++++
