@@ -2390,7 +2390,6 @@ writef("\33[34m%s\33[0m", success);
 
     void parseIdentOrInt(ref Token* tok)
     {
-      nT();
       if (token.type == T.Int32 ||
           token.type == T.Identifier)
       {
