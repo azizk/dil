@@ -833,3 +833,49 @@ class StructInitializer : Expression
     this.values = values;
   }
 }
+
+class AsmTypeExpression : UnaryExpression
+{
+  this(Expression e)
+  {
+    super(e);
+    mixin(set_kind);
+  }
+}
+
+class AsmOffsetExpression : UnaryExpression
+{
+  this(Expression e)
+  {
+    super(e);
+    mixin(set_kind);
+  }
+}
+
+class AsmSegExpression : UnaryExpression
+{
+  this(Expression e)
+  {
+    super(e);
+    mixin(set_kind);
+  }
+}
+
+class AsmPostBracketExpression : UnaryExpression
+{
+  this(Expression e)
+  {
+    super(e);
+    mixin(set_kind);
+  }
+}
+
+class AsmBracketExpression : Expression
+{
+  Expression e;
+  this(Expression e)
+  {
+    mixin(set_kind);
+    this.e = e;
+  }
+}

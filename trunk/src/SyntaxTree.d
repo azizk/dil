@@ -173,6 +173,11 @@ enum NodeKind
   VoidInitializer,
   ArrayInitializer,
   StructInitializer,
+  AsmTypeExpression,
+  AsmOffsetExpression,
+  AsmSegExpression,
+  AsmPostBracketExpression,
+  AsmBracketExpression,
 
   // Types:
   IntegralType,

@@ -2497,7 +2497,245 @@ writef("\33[34m%s\33[0m", success);
 
   Expression parseAsmExpression()
   {
-    return null;
+    auto begin = token;
+    auto e = parseOrOrExpression();
+    if (token.type == T.Question)
+    {
+      nT();
+      auto iftrue = parseAsmExpression();
+      require(T.Colon);
+      auto iffalse = parseAsmExpression();
+      e = new CondExpression(e, iftrue, iffalse);
+      set(e, begin);
+    }
+    return e;
+  }
+
+  Expression parseAsmOrOrExpression()
+  {
+    auto begin = token;
+    alias parseAsmAndAndExpression parseNext;
+    auto e = parseNext();
+    while (token.type == T.OrLogical)
+    {
+      auto tok = token;
+      nT();
+      e = new OrOrExpression(e, parseNext(), tok);
+      set(e, begin);
+    }
+    return e;
+  }
+
+  Expression parseAsmAndAndExpression()
+  {
+    auto begin = token;
+    alias parseAsmOrExpression parseNext;
+    auto e = parseNext();
+    while (token.type == T.AndLogical)
+    {
+      auto tok = token;
+      nT();
+      e = new AndAndExpression(e, parseNext(), tok);
+      set(e, begin);
+    }
+    return e;
+  }
+
+  Expression parseAsmOrExpression()
+  {
+    auto begin = token;
+    alias parseAsmXorExpression parseNext;
+    auto e = parseNext();
+    while (token.type == T.OrBinary)
+    {
+      auto tok = token;
+      nT();
+      e = new OrExpression(e, parseNext(), tok);
+      set(e, begin);
+    }
+    return e;
+  }
+
+  Expression parseAsmXorExpression()
+  {
+    alias parseAsmAndExpression parseNext;
+    auto begin = token;
+    auto e = parseNext();
+    while (token.type == T.Xor)
+    {
+      auto tok = token;
+      nT();
+      e = new XorExpression(e, parseNext(), tok);
+      set(e, begin);
+    }
+    return e;
+  }
+
+  Expression parseAsmAndExpression()
+  {
+    alias parseAsmCmpExpression parseNext;
+    auto begin = token;
+    auto e = parseNext();
+    while (token.type == T.AndBinary)
+    {
+      auto tok = token;
+      nT();
+      e = new AndExpression(e, parseNext(), tok);
+      set(e, begin);
+    }
+    return e;
+  }
+
+  Expression parseAsmCmpExpression()
+  {
+    alias parseAsmShiftExpression parseNext;
+    auto begin = token;
+    auto e = parseNext();
+
+    auto operator = token;
+    switch (operator.type)
+    {
+    case T.Equal, T.NotEqual:
+      nT();
+      e = new EqualExpression(e, parseNext(), operator);
+      break;
+    case T.LessEqual, T.Less, T.GreaterEqual, T.Greater:
+      nT();
+      e = new RelExpression(e, parseNext(), operator);
+      break;
+    default:
+      return e;
+    }
+    set(e, begin);
+    return e;
+  }
+
+  Expression parseAsmShiftExpression()
+  {
+    alias parseAsmAddExpression parseNext;
+    auto begin = token;
+    auto e = parseNext();
+    while (1)
+    {
+      auto operator = token;
+      switch (operator.type)
+      {
+      case T.LShift:  nT(); e = new LShiftExpression(e, parseNext(), operator); break;
+      case T.RShift:  nT(); e = new RShiftExpression(e, parseNext(), operator); break;
+      case T.URShift: nT(); e = new URShiftExpression(e, parseNext(), operator); break;
+      default:
+        return e;
+      }
+      set(e, begin);
+    }
+    assert(0);
+  }
+
+  Expression parseAsmAddExpression()
+  {
+    alias parseAsmMulExpression parseNext;
+    auto begin = token;
+    auto e = parseNext();
+    while (1)
+    {
+      auto operator = token;
+      switch (operator.type)
+      {
+      case T.Plus:  nT(); e = new PlusExpression(e, parseNext(), operator); break;
+      case T.Minus: nT(); e = new MinusExpression(e, parseNext(), operator); break;
+      // Not allowed in asm
+      //case T.Tilde: nT(); e = new CatExpression(e, parseNext(), operator); break;
+      default:
+        return e;
+      }
+      set(e, begin);
+    }
+    assert(0);
+  }
+
+  Expression parseAsmMulExpression()
+  {
+    alias parseAsmPostExpression parseNext;
+    auto begin = token;
+    auto e = parseNext();
+    while (1)
+    {
+      auto operator = token;
+      switch (operator.type)
+      {
+      case T.Mul: nT(); e = new MulExpression(e, parseNext(), operator); break;
+      case T.Div: nT(); e = new DivExpression(e, parseNext(), operator); break;
+      case T.Mod: nT(); e = new ModExpression(e, parseNext(), operator); break;
+      default:
+        return e;
+      }
+      set(e, begin);
+    }
+    assert(0);
+  }
+
+  Expression parseAsmPostExpression()
+  {
+    auto begin = token;
+    auto e = parseAsmUnaryExpression();
+    while (token.type == T.RBracket)
+    {
+      nT();
+      e = parseAsmExpression();
+      e = new AsmPostBracketExpression(e);
+      require(T.RBracket);
+      set(e, begin);
+    }
+    return e;
+  }
+
+  Expression parseAsmUnaryExpression()
+  {
+    auto begin = token;
+    Expression e;
+    switch (token.type)
+    {
+    case T.Identifier:
+      switch (token.identifier)
+      {
+      case "near", "far",   "byte",  "short",  "int",
+           "word", "dword", "float", "double", "real":
+        nT();
+        if (token.type == T.Identifier && token.identifier == "ptr")
+          nT();
+        else
+          error(MID.ExpectedButFound, "ptr", token.srcText);
+        e = new AsmTypeExpression(parseAsmUnaryExpression());
+        break;
+      case "offset":
+        nT();
+        e = new AsmOffsetExpression(parseAsmUnaryExpression());
+        break;
+      case "seg":
+        nT();
+        e = new AsmSegExpression(parseAsmUnaryExpression());
+        break;
+      default:
+      }
+      goto default;
+    case T.Minus:
+    case T.Plus:
+      nT();
+      e = new SignExpression(parseAsmUnaryExpression());
+      break;
+    case T.Not:
+      nT();
+      e = new NotExpression(parseAsmUnaryExpression());
+      break;
+    case T.Tilde:
+      nT();
+      e = new CompExpression(parseAsmUnaryExpression());
+    default:
+      e = parseAsmPrimaryExpression();
+      return e;
+    }
+    set(e, begin);
+    return e;
   }
 
   Expression parseAsmPrimaryExpression()
@@ -2519,9 +2757,21 @@ writef("\33[34m%s\33[0m", success);
       e = new DollarExpression();
       nT();
       break;
+    case T.LBracket:
+      // [ AsmExpression ]
+      nT();
+      e = parseAsmExpression();
+      require(T.RBracket);
+      e = new AsmBracketExpression(e);
+      break;
+//     __LOCAL_SIZE
+//     $
+//     Register
+//     DotIdentifier
     default:
       error(MID.ExpectedButFound, "Expression", token.srcText);
       e = new EmptyExpression();
+      break;
     }
     set(e, begin);
     return e;
