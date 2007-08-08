@@ -3656,11 +3656,10 @@ writef("\33[34m%s\33[0m", success);
         TOK tok = token.type;
         nT();
         auto parameters = parseParameterList();
-        t = new FunctionType(t, parameters);
         if (tok == T.Function)
-          t = new PointerType(t);
+          t = new FunctionType(t, parameters);
         else
-          t = new DelegateType(t);
+          t = new DelegateType(t, parameters);
         break;
       default:
         return t;

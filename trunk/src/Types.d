@@ -352,23 +352,25 @@ class FunctionType : Type
 {
   Type returnType;
   Parameters parameters;
-  TemplateParameters tparams;
-  this(Type returnType, Parameters parameters, TemplateParameters tparams = null)
+  this(Type returnType, Parameters parameters)
   {
     super(TID.Function);
     mixin(set_kind);
     this.returnType = returnType;
     this.parameters = parameters;
-    this.tparams = tparams;
   }
 }
 
 class DelegateType : Type
 {
-  this(Type func)
+  Type returnType;
+  Parameters parameters;
+  this(Type returnType, Parameters parameters)
   {
-    super(TID.Delegate, func);
+    super(TID.Delegate);
     mixin(set_kind);
+    this.returnType = returnType;
+    this.parameters = parameters;
   }
 }
 
