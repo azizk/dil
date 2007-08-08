@@ -775,16 +775,27 @@ class IsExpression : Expression
 
 class FunctionLiteralExpression : Expression
 {
-  FunctionType funcType;
+  Type returnType;
+  Parameters parameters;
   FunctionBody funcBody;
-  TOK funcTok;
 
-  this(FunctionType funcType, FunctionBody funcBody, TOK funcTok = TOK.Invalid)
+  this()
   {
     mixin(set_kind);
-    this.funcType = funcType;
+  }
+
+  this(Type returnType, Parameters parameters, FunctionBody funcBody)
+  {
+    this();
+    this.returnType = returnType;
+    this.parameters = parameters;
     this.funcBody = funcBody;
-    this.funcTok = funcTok;
+  }
+
+  this(FunctionBody funcBody)
+  {
+    this();
+    this.funcBody = funcBody;
   }
 }
 
@@ -798,6 +809,7 @@ class TraitsExpression : Expression
   {
     mixin(set_kind);
     this.ident = ident;
+    this.targs = targs;
   }
 }
 }

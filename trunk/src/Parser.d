@@ -3390,13 +3390,11 @@ writef("\33[34m%s\33[0m", success);
       break;
     case T.LBrace:
       // DelegateLiteral := { Statements }
-//       auto funcType = new FunctionType(null, Parameters.init);
       auto funcBody = parseFunctionBody();
-      e = new FunctionLiteralExpression(null, funcBody);
+      e = new FunctionLiteralExpression(funcBody);
       break;
     case T.Function, T.Delegate:
       // FunctionLiteral := (function|delegate) Type? '(' ArgumentList ')' '{' Statements '}'
-//       TOK funcTok = token.type;
       nT(); // Skip function|delegate token.
       Type returnType;
       Parameters parameters;
@@ -3406,9 +3404,8 @@ writef("\33[34m%s\33[0m", success);
           returnType = parseType();
         parameters = parseParameterList();
       }
-      auto funcType = new FunctionType(returnType, parameters);
       auto funcBody = parseFunctionBody();
-      e = new FunctionLiteralExpression(funcType, funcBody/+, funcTok+/);
+      e = new FunctionLiteralExpression(returnType, parameters, funcBody);
       break;
     case T.Assert:
       Expression msg;
@@ -3498,9 +3495,8 @@ writef("\33[34m%s\33[0m", success);
       {
         auto parameters = parseParameterList();
         // ( ParameterList ) FunctionBody
-        auto funcType = new FunctionType(null, parameters);
         auto funcBody = parseFunctionBody();
-        e = new FunctionLiteralExpression(funcType, funcBody);
+        e = new FunctionLiteralExpression(null, parameters, funcBody);
       }
       else
       {
