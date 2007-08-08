@@ -178,6 +178,8 @@ enum NodeKind
   AsmSegExpression,
   AsmPostBracketExpression,
   AsmBracketExpression,
+  AsmLocalSizeExpression,
+  AsmRegisterExpression,
 
   // Types:
   IntegralType,

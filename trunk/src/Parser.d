@@ -2508,6 +2508,7 @@ writef("\33[34m%s\33[0m", success);
       e = new CondExpression(e, iftrue, iffalse);
       set(e, begin);
     }
+    // TODO: create AsmExpression that contains e?
     return e;
   }
 
@@ -2764,10 +2765,70 @@ writef("\33[34m%s\33[0m", success);
       require(T.RBracket);
       e = new AsmBracketExpression(e);
       break;
-//     __LOCAL_SIZE
-//     $
-//     Register
-//     DotIdentifier
+    case T.Identifier:
+      switch (token.identifier)
+      {
+      // __LOCAL_SIZE
+      case "__LOCAL_SIZE":
+        e = new AsmLocalSizeExpression();
+        nT();
+        break;
+      // Register
+      case "ST":
+        auto register = token;
+        nT();
+        // (1) - (7)
+        Token* number;
+        if (token.type == T.LParen)
+        {
+          nT();
+          if (token.type == T.Int32)
+          {
+            number = token;
+            nT();
+          }
+          else
+            expected(T.Int32);
+          require(T.RParen);
+        }
+        e = new AsmRegisterExpression(register, number);
+        break;
+      case "AL", "AH", "AX", "EAX",
+           "BL", "BH", "BX", "EBX",
+           "CL", "CH", "CX", "ECX",
+           "DL", "DH", "DX", "EDX",
+           "BP", "EBP",
+           "SP", "ESP",
+           "DI", "EDI",
+           "SI", "ESI",
+           "ES", "CS", "SS", "DS", "GS", "FS",
+           "CR0", "CR2", "CR3", "CR4",
+           "DR0", "DR1", "DR2", "DR3", "DR6", "DR7",
+           "TR3", "TR4", "TR5", "TR6", "TR7",
+           "MM0", "MM1", "MM2", "MM3", "MM4", "MM5", "MM6", "MM7",
+           "XMM0", "XMM1", "XMM2", "XMM3", "XMM4", "XMM5", "XMM6", "XMM7":
+          e = new AsmRegisterExpression(token);
+          nT();
+        break;
+      default:
+        // DotIdentifier
+        auto begin2 = token;
+        Expression[] identList;
+        goto LenterLoop;
+        while (token.type == T.Dot)
+        {
+          nT();
+          begin2 = token;
+          auto ident = requireId();
+        LenterLoop:
+          e = new IdentifierExpression(token);
+          nT();
+          set(e, begin2);
+          identList ~= e;
+        }
+        e = new DotListExpression(identList);
+      }
+      break;
     default:
       error(MID.ExpectedButFound, "Expression", token.srcText);
       e = new EmptyExpression();

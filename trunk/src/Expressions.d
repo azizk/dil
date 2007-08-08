@@ -879,3 +879,23 @@ class AsmBracketExpression : Expression
     this.e = e;
   }
 }
+
+class AsmLocalSizeExpression : Expression
+{
+  this()
+  {
+    mixin(set_kind);
+  }
+}
+
+class AsmRegisterExpression : Expression
+{
+  Token* register;
+  Token* number; // ST(0) - ST(7)
+  this(Token* register, Token* number = null)
+  {
+    mixin(set_kind);
+    this.register = register;
+    this.number = number;
+  }
+}
