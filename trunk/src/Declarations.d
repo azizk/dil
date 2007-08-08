@@ -220,16 +220,19 @@ class StaticDestructorDeclaration : Declaration
 
 class FunctionDeclaration : Declaration
 {
+  Type returnType;
   Token* funcName;
-  Type funcType;
   TemplateParameters tparams;
+  Parameters params;
   FunctionBody funcBody;
-  this(Token* funcName, Type funcType, TemplateParameters tparams, FunctionBody funcBody)
+  this(Type returnType, Token* funcName, TemplateParameters tparams, Parameters params, FunctionBody funcBody)
   {
     super(funcBody.funcBody !is null);
     mixin(set_kind);
+    this.returnType = returnType;
     this.funcName = funcName;
-    this.funcType = funcType;
+    this.tparams = tparams;
+    this.params = params;
     this.funcBody = funcBody;
   }
 }

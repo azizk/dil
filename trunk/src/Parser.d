@@ -341,12 +341,9 @@ writef("\33[34m%s\33[0m", success);
     {
       type = parseType();
       ident = requireId();
-// writefln("trying=%s,errorCount=%d", trying, errorCount);
-// writefln("ident=%s", ident);
       // Type FunctionName ( ParameterList ) FunctionBody
       if (token.type == T.LParen)
       {
-//         writef("°Function°");
         // It's a function declaration
         TemplateParameters tparams;
         if (tokenAfterParenIs(T.LParen))
@@ -357,10 +354,8 @@ writef("\33[34m%s\33[0m", success);
 
         auto params = parseParameterList();
         // ReturnType FunctionName ( ParameterList )
-        type = new FunctionType(type, params, tparams);
-//         type = parseDeclaratorSuffix(type);
         auto funcBody = parseFunctionBody();
-        return new FunctionDeclaration(ident, type, null, funcBody);
+        return new FunctionDeclaration(type, ident, tparams, params, funcBody);
       }
       type = parseDeclaratorSuffix(type);
     }
