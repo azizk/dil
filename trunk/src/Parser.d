@@ -290,7 +290,6 @@ writef("\33[34m%s\33[0m", success);
       // TODO: Error: module is optional and can appear only once at the top of the source file.
       break;+/
     default:
-      // TODO: issue error msg.
       error(MID.ExpectedButFound, "Declaration", token.srcText);
       decl = new IllegalDeclaration(token);
       nT();
@@ -737,7 +736,6 @@ writef("\33[34m%s\33[0m", success);
   {
     assert(token.type == T.Import || token.type == T.Static);
 
-    Declaration decl;
     bool isStatic;
 
     if (token.type == T.Static)
@@ -752,7 +750,7 @@ writef("\33[34m%s\33[0m", success);
     Token*[] bindAliases;
 
     nT(); // Skip import keyword.
-    do
+    while (1)
     {
       ModuleName moduleName;
       Token* moduleAlias;
@@ -771,8 +769,7 @@ writef("\33[34m%s\33[0m", success);
         moduleAlias = null;
       }
 
-
-      // parse Identifier(.Identifier)*
+      // Identifier(.Identifier)*
       while (token.type == T.Dot)
       {
         nT();
@@ -783,35 +780,44 @@ writef("\33[34m%s\33[0m", success);
       moduleNames ~= moduleName;
       moduleAliases ~= moduleAlias;
 
-      // parse : BindAlias = BindName(, BindAlias = BindName)*;
-      //       : BindName(, BindName)*;
       if (token.type == T.Colon)
+        break;
+      if (token.type != T.Comma)
+        break;
+      nT();
+    }
+
+    if (token.type == T.Colon)
+    {
+      // BindAlias = BindName(, BindAlias = BindName)*;
+      // BindName(, BindName)*;
+      Token* bindName, bindAlias;
+      while (1)
       {
-        Token* bindName, bindAlias;
-        do
+        nT();
+        bindAlias = requireId();
+
+        if (token.type == T.Assign)
         {
           nT();
-          bindAlias = requireId();
+          bindName = requireId();
+        }
+        else
+        {
+          bindName = bindAlias;
+          bindAlias = null;
+        }
 
-          if (token.type == T.Assign)
-          {
-            nT();
-            bindName = requireId();
-          }
-          else
-          {
-            bindName = bindAlias;
-            bindAlias = null;
-          }
+        // Push identifiers.
+        bindNames ~= bindName;
+        bindAliases ~= bindAlias;
 
-          // Push identifiers.
-          bindNames ~= bindName;
-          bindAliases ~= bindAlias;
-
-        } while (token.type == T.Comma)
-        break;
+        if (token.type != T.Comma)
+          break;
+        nT();
       }
-    } while (token.type == T.Comma)
+    }
+
     require(T.Semicolon);
 
     return new ImportDeclaration(moduleNames, moduleAliases, bindNames, bindAliases);
@@ -989,8 +995,6 @@ writef("\33[34m%s\33[0m", success);
     else
       expected(T.LBrace); // TODO: better error msg
 
-    // TODO: error if decls.length == 0
-
     return new InterfaceDeclaration(name, tparams, bases, decls, hasBody);
   }
 
@@ -1030,8 +1034,6 @@ writef("\33[34m%s\33[0m", success);
     }
     else
       expected(T.LBrace); // TODO: better error msg
-
-    // TODO: error if decls.length == 0
 
     if (tok == T.Struct)
       return new StructDeclaration(name, tparams, decls, hasBody);
