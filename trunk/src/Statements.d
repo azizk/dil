@@ -19,11 +19,13 @@ abstract class Statement : Node
 
 class Statements : Statement
 {
-  Statement[] ss;
-  void opCatAssign(Statement s)
+  this()
   {
     mixin(set_kind);
-    this.ss ~= s;
+  }
+  void opCatAssign(Statement s)
+  {
+    this.children ~= s;
   }
 }
 
@@ -52,6 +54,11 @@ class FunctionBody : Node
   this()
   {
     super(NodeCategory.Other);
+    this.children = [funcBody];
+    if (inBody)
+      this.children ~= inBody;
+    if (outBody)
+      this.children ~= outBody;
     mixin(set_kind);
   }
 }
@@ -62,6 +69,7 @@ class ScopeStatement : Statement
   this(Statement s)
   {
     mixin(set_kind);
+    this.children = [s];
     this.s = s;
   }
 }
@@ -73,6 +81,7 @@ class LabeledStatement : Statement
   this(Token* label, Statement s)
   {
     mixin(set_kind);
+    this.children = [s];
     this.label = label;
     this.s = s;
   }
@@ -84,6 +93,7 @@ class ExpressionStatement : Statement
   this(Expression expression)
   {
     mixin(set_kind);
+    this.children = [expression];
     this.expression = expression;
   }
 }
@@ -94,6 +104,7 @@ class DeclarationStatement : Statement
   this(Declaration declaration)
   {
     mixin(set_kind);
+    this.children = [declaration];
     this.declaration = declaration;
   }
 }
@@ -107,18 +118,20 @@ class IfStatement : Statement
   this(Statement variable, Expression condition, Statement ifBody, Statement elseBody)
   {
     mixin(set_kind);
+    if (variable)
+      this.children ~= variable;
+    else
+      this.children ~= condition;
+    this.children ~= ifBody;
+    if (elseBody)
+      this.children ~= elseBody;
     this.variable = variable;
     this.condition = condition;
     this.ifBody = ifBody;
     this.elseBody = elseBody;
   }
 }
-/+
-class ConditionalStatement : Statement
-{
 
-}
-+/
 class WhileStatement : Statement
 {
   Expression condition;
@@ -126,6 +139,7 @@ class WhileStatement : Statement
   this(Expression condition, Statement whileBody)
   {
     mixin(set_kind);
+    this.children = [cast(Node)condition, whileBody];
     this.condition = condition;
     this.whileBody = whileBody;
   }
@@ -138,6 +152,7 @@ class DoWhileStatement : Statement
   this(Expression condition, Statement doBody)
   {
     mixin(set_kind);
+    this.children = [cast(Node)condition, doBody];
     this.condition = condition;
     this.doBody = doBody;
   }
@@ -152,6 +167,13 @@ class ForStatement : Statement
   this(Statement init, Expression condition, Expression increment, Statement forBody)
   {
     mixin(set_kind);
+    if (init)
+      this.children ~= init;
+    if (condition)
+      this.children ~= condition;
+    if (increment)
+      this.children ~= increment;
+    this.children ~= forBody;
     this.init = init;
     this.condition = condition;
     this.increment = increment;
@@ -169,6 +191,7 @@ class ForeachStatement : Statement
   this(TOK tok, Parameters params, Expression aggregate, Statement forBody)
   {
     mixin(set_kind);
+    this.children = [cast(Node)params, aggregate, forBody];
     this.tok = tok;
     this.params = params;
     this.aggregate = aggregate;
@@ -188,6 +211,7 @@ class ForeachRangeStatement : Statement
   this(TOK tok, Parameters params, Expression lower, Expression upper, Statement forBody)
   {
     mixin(set_kind);
+    this.children = [cast(Node)params, lower, upper, forBody];
     this.tok = tok;
     this.params = params;
     this.lower = lower;
@@ -205,6 +229,7 @@ class SwitchStatement : Statement
   this(Expression condition, Statement switchBody)
   {
     mixin(set_kind);
+    this.children = [cast(Node)condition, switchBody];
     this.condition = condition;
     this.switchBody = switchBody;
   }
@@ -218,6 +243,7 @@ class CaseStatement : Statement
   this(Expression[] values, Statement caseBody)
   {
     mixin(set_kind);
+    this.children = cast(Node[])values ~ [caseBody];
     this.values = values;
     this.caseBody = caseBody;
   }
@@ -229,6 +255,7 @@ class DefaultStatement : Statement
   this(Statement defaultBody)
   {
     mixin(set_kind);
+    this.children = [defaultBody];
     this.defaultBody = defaultBody;
   }
 }
@@ -259,6 +286,7 @@ class ReturnStatement : Statement
   this(Expression expr)
   {
     mixin(set_kind);
+    this.children = [expr];
     this.expr = expr;
   }
 }
@@ -270,6 +298,7 @@ class GotoStatement : Statement
   this(Token* ident, Expression caseExpr)
   {
     mixin(set_kind);
+    this.children = [caseExpr];
     this.ident = ident;
     this.caseExpr = caseExpr;
   }
@@ -282,6 +311,7 @@ class WithStatement : Statement
   this(Expression expr, Statement withBody)
   {
     mixin(set_kind);
+    this.children = [cast(Node)expr, withBody];
     this.expr = expr;
     this.withBody = withBody;
   }
@@ -294,6 +324,7 @@ class SynchronizedStatement : Statement
   this(Expression expr, Statement withBody)
   {
     mixin(set_kind);
+    this.children = [cast(Node)expr, syncBody];
     this.expr = expr;
     this.syncBody = syncBody;
   }
@@ -307,6 +338,11 @@ class TryStatement : Statement
   this(Statement tryBody, CatchBody[] catchBodies, FinallyBody finallyBody)
   {
     mixin(set_kind);
+    this.children = [tryBody];
+    if (catchBodies.length)
+      this.children ~= catchBodies;
+    if (finallyBody)
+      this.children ~= finallyBody;
     this.tryBody = tryBody;
     this.catchBodies = catchBodies;
     this.finallyBody = finallyBody;
@@ -320,6 +356,7 @@ class CatchBody : Statement
   this(Parameter param, Statement catchBody)
   {
     mixin(set_kind);
+    this.children = [cast(Node)param, catchBody];
     this.param = param;
     this.catchBody = catchBody;
   }
@@ -331,6 +368,7 @@ class FinallyBody : Statement
   this(Statement finallyBody)
   {
     mixin(set_kind);
+    this.children = [finallyBody];
     this.finallyBody = finallyBody;
   }
 }
@@ -342,6 +380,7 @@ class ScopeGuardStatement : Statement
   this(Token* condition, Statement scopeBody)
   {
     mixin(set_kind);
+    this.children = [scopeBody];
     this.condition = condition;
     this.scopeBody = scopeBody;
   }
@@ -353,6 +392,7 @@ class ThrowStatement : Statement
   this(Expression expr)
   {
     mixin(set_kind);
+    this.children = [expr];
     this.expr = expr;
   }
 }
@@ -363,6 +403,8 @@ class VolatileStatement : Statement
   this(Statement volatileBody)
   {
     mixin(set_kind);
+    if (volatileBody)
+      this.children = [volatileBody];
     this.volatileBody = volatileBody;
   }
 }
@@ -373,6 +415,7 @@ class AsmStatement : Statement
   this(Statements statements)
   {
     mixin(set_kind);
+    this.children = [statements];
     this.statements = statements;
   }
 }
@@ -384,6 +427,7 @@ class AsmInstruction : Statement
   this(Token* ident, Expression[] operands)
   {
     mixin(set_kind);
+    this.children = operands;
     this.ident = ident;
     this.operands = operands;
   }
@@ -406,6 +450,9 @@ class PragmaStatement : Statement
   this(Token* ident, Expression[] args, Statement pragmaBody)
   {
     mixin(set_kind);
+    if (args.length)
+      this.children = args;
+    this.children ~= pragmaBody;
     this.ident = ident;
     this.args = args;
     this.pragmaBody = pragmaBody;
@@ -414,12 +461,13 @@ class PragmaStatement : Statement
 
 class MixinStatement : Statement
 {
-  Expression[] templateIdent;
+  Expression[] templateIdents;
   Token* mixinIdent;
-  this(Expression[] templateIdent, Token* mixinIdent)
+  this(Expression[] templateIdents, Token* mixinIdent)
   {
     mixin(set_kind);
-    this.templateIdent = templateIdent;
+    this.children = templateIdents;
+    this.templateIdents = templateIdents;
     this.mixinIdent = mixinIdent;
   }
 }
@@ -431,6 +479,9 @@ class StaticIfStatement : Statement
   this(Expression condition, Statement ifBody, Statement elseBody)
   {
     mixin(set_kind);
+    this.children = [cast(Node)condition, ifBody];
+    if (elseBody)
+      this.children ~= elseBody;
     this.condition = condition;
     this.ifBody = ifBody;
     this.elseBody = elseBody;
@@ -443,6 +494,9 @@ class StaticAssertStatement : Statement
   this(Expression condition, Expression message)
   {
     mixin(set_kind);
+    this.children = [condition];
+    if (message)
+      this.children ~= message;
     this.condition = condition;
     this.message = message;
   }
@@ -455,6 +509,9 @@ class DebugStatement : Statement
   this(Token* cond, Statement debugBody, Statement elseBody)
   {
     mixin(set_kind);
+    this.children = [debugBody];
+    if (elseBody)
+      this.children ~= elseBody;
     this.cond = cond;
     this.debugBody = debugBody;
     this.elseBody = elseBody;
@@ -468,6 +525,9 @@ class VersionStatement : Statement
   this(Token* cond, Statement versionBody, Statement elseBody)
   {
     mixin(set_kind);
+    this.children = [versionBody];
+    if (elseBody)
+      this.children ~= [elseBody];
     this.cond = cond;
     this.versionBody = versionBody;
     this.elseBody = elseBody;
@@ -481,6 +541,7 @@ class AttributeStatement : Statement
   this(TOK tok, Statement statement)
   {
     mixin(set_kind);
+    this.children = [statement];
     this.tok = tok;
     this.statement = statement;
   }
@@ -491,8 +552,8 @@ class ExternStatement : AttributeStatement
   Linkage linkage;
   this(Linkage linkage, Statement statement)
   {
-    mixin(set_kind);
     super(TOK.Extern, statement);
+    mixin(set_kind);
     this.linkage = linkage;
   }
 }
