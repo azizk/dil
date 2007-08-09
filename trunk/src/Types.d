@@ -51,6 +51,9 @@ class Parameter : Node
   {
     super(NodeCategory.Other);
     mixin(set_kind);
+    this.children = [type];
+    if (assignExpr)
+      this.children ~= assignExpr;
 
     StorageClass stc;
     if (stcTok !is null)
@@ -90,8 +93,6 @@ class Parameter : Node
 
 class Parameters : Node
 {
-  Parameter[] items;
-
   this()
   {
     super(NodeCategory.Other);
@@ -100,16 +101,19 @@ class Parameters : Node
 
   bool hasVariadic()
   {
-    if (items.length != 0)
+    if (children.length != 0)
       return items[$-1].isVariadic();
     return false;
   }
 
   void opCatAssign(Parameter param)
-  { items ~= param; }
+  { children ~= param; }
+
+  Parameter[] items()
+  { return cast(Parameter[])children; }
 
   size_t length()
-  { return items.length; }
+  { return children.length; }
 }
 
 
@@ -131,6 +135,7 @@ class BaseClass : Node
   {
     super(NodeCategory.Other);
     mixin(set_kind);
+    this.children = [type];
     this.prot = prot;
     this.type = type;
   }
@@ -155,6 +160,16 @@ class TemplateParameter : Node
   {
     super(NodeCategory.Other);
     mixin(set_kind);
+    if (valueType)
+      this.children ~= valueType;
+    if (specType)
+      this.children ~= specType;
+    if (defType)
+      this.children ~= defType;
+    if (specValue)
+      this.children ~= specValue;
+    if (defValue)
+      this.children ~= defValue;
     this.tp = tp;
     this.valueType = valueType;
     this.ident = ident;
@@ -167,8 +182,6 @@ class TemplateParameter : Node
 
 class TemplateParameters : Node
 {
-  TemplateParameter[] params;
-
   this()
   {
     super(NodeCategory.Other);
@@ -177,14 +190,17 @@ class TemplateParameters : Node
 
   void opCatAssign(TemplateParameter parameter)
   {
-    params ~= parameter;
+    this.children ~= parameter;
+  }
+
+  TemplateParameter[] items()
+  {
+    return cast(TemplateParameter[])children;
   }
 }
 
 class TemplateArguments : Node
 {
-  Node[] args;
-
   this()
   {
     super(NodeCategory.Other);
@@ -193,7 +209,7 @@ class TemplateArguments : Node
 
   void opCatAssign(Node argument)
   {
-    args ~= argument;
+    this.children ~= argument;
   }
 }
 
@@ -248,6 +264,8 @@ abstract class Type : Node
   this(TID tid, Type next)
   {
     super(NodeCategory.Type);
+    if (next)
+      this.children ~= next;
     this.tid = tid;
     this.next = next;
   }
@@ -278,6 +296,7 @@ class DotListType : Type
   {
     super(TID.DotList);
     mixin(set_kind);
+    this.children ~= dotList;
     this.dotList = dotList;
   }
 }
@@ -300,6 +319,7 @@ class TypeofType : Type
   {
     super(TID.Typeof);
     mixin(set_kind);
+    this.children ~= e;
     this.e = e;
   }
 }
@@ -312,6 +332,7 @@ class TemplateInstanceType : Type
   {
     super(TID.TemplateInstance);
     mixin(set_kind);
+    this.children ~= targs;
     this.ident = ident;
     this.targs = targs;
   }
@@ -337,14 +358,16 @@ class ArrayType : Type
   }
   this(Type t, Expression e, Expression e2)
   {
-    this(t);
+    this.children = [e, e2];
     this.e = e;
     this.e2 = e2;
+    this(t);
   }
   this(Type t, Type assocType)
   {
-    this(t);
+    this.children = [assocType];
     this.assocType = assocType;
+    this(t);
   }
 }
 
@@ -356,6 +379,7 @@ class FunctionType : Type
   {
     super(TID.Function);
     mixin(set_kind);
+    this.children = [cast(Node)returnType, parameters];
     this.returnType = returnType;
     this.parameters = parameters;
   }
@@ -369,6 +393,7 @@ class DelegateType : Type
   {
     super(TID.Delegate);
     mixin(set_kind);
+    this.children = [cast(Node)returnType, parameters];
     this.returnType = returnType;
     this.parameters = parameters;
   }

@@ -4009,11 +4009,12 @@ version(D2)
   TemplateParameters parseTemplateParameterList()
   {
     auto begin = token;
+    auto tparams = new TemplateParameters;
+
     require(T.LParen);
     if (token.type == T.RParen)
-      return null;
+      return tparams;
 
-    auto tparams = new TemplateParameters;
     while (1)
     {
       auto paramBegin = token;
