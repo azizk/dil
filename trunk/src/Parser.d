@@ -96,7 +96,9 @@ writef("\33[34m%s\33[0m", success);
   TOK peekNext()
   {
     Token* next = token;
-    lx.peek(next);
+    do
+      lx.peek(next);
+    while (next.type != T.Comment)
     return next.type;
   }
 
