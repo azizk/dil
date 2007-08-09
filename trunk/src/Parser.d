@@ -2496,11 +2496,12 @@ writef("\33[34m%s\33[0m", success);
     auto e = parseOrOrExpression();
     if (token.type == T.Question)
     {
+      auto tok = token;
       nT();
       auto iftrue = parseAsmExpression();
       require(T.Colon);
       auto iffalse = parseAsmExpression();
-      e = new CondExpression(e, iftrue, iffalse);
+      e = new CondExpression(e, iftrue, iffalse, tok);
       set(e, begin);
     }
     // TODO: create AsmExpression that contains e?
@@ -2915,11 +2916,12 @@ writef("\33[34m%s\33[0m", success);
     auto e = parseOrOrExpression();
     if (token.type == T.Question)
     {
+      auto tok = token;
       nT();
       auto iftrue = parseExpression();
       require(T.Colon);
       auto iffalse = parseCondExpression();
-      e = new CondExpression(e, iftrue, iffalse);
+      e = new CondExpression(e, iftrue, iffalse, tok);
       set(e, begin);
     }
     return e;
