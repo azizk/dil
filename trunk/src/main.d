@@ -23,13 +23,24 @@ char[] xmlescape(char[] text)
     }
   return result;
 }
-
+import Declarations, SyntaxTree;
 void main(char[][] args)
 {
   auto srctext = cast(char[]) std.file.read(args[1]);
   auto parser = new Parser(srctext, args[1]);
   parser.start();
   auto decls = parser.parseModule();
+
+void print(Node[] decls, char[] indent)
+{
+  foreach(decl; decls)
+  {
+    assert(decl !is null);
+    writefln(indent, decl.classinfo.name, ":", decl.children.length);
+    print(decl.children, indent ~ "  ");
+  }
+}
+print(decls, "");
 foreach (error; parser.errors)
 {
   writefln(`%s(%d)P: %s`, parser.lx.fileName, error.loc, error.getMsg);

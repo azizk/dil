@@ -529,6 +529,7 @@ writef("\33[34m%s\33[0m", success);
       break; // exit while loop
     }
     set(func, begin);
+    func.finishConstruction();
     return func;
   }
 
@@ -3579,6 +3580,7 @@ writef("\33[34m%s\33[0m", success);
     //         NewArguments Type ( ArgumentList )
     //         NewArguments Type
     auto type = parseType();
+// FIXME: TID.DotList doesn't cover all valid types.
     if (type.tid == TID.DotList && token.type == T.LParen)
     {
       ctorArguments = parseArguments(T.RParen);

@@ -51,7 +51,8 @@ class Parameter : Node
   {
     super(NodeCategory.Other);
     mixin(set_kind);
-    this.children = [type];
+    if (type) // type can be null when param in foreach statement
+      this.children = [type];
     if (assignExpr)
       this.children ~= assignExpr;
 

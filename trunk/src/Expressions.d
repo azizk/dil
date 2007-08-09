@@ -726,7 +726,9 @@ class AssertExpression : Expression
   this(Expression expr, Expression msg)
   {
     mixin(set_kind);
-    this.children = [expr, msg];
+    this.children = [expr];
+    if (msg)
+      this.children ~= msg;
     this.expr = expr;
     this.msg = msg;
   }
@@ -873,7 +875,12 @@ class ArrayInitializer : Expression
     assert(keys.length == values.length);
     mixin(set_kind);
     foreach (i, key; keys)
-      this.children ~= [key, values[i]];
+    {
+      if (key)
+        this.children ~= key;
+      if (values[i])
+        this.children ~= values[i];
+    }
     this.keys = keys;
     this.values = values;
   }

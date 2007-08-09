@@ -121,7 +121,12 @@ class ClassDeclaration : Declaration
   {
     super(hasBody);
     mixin(set_kind);
-    this.children = [tparams] ~ cast(Node[])bases ~ decls;
+    if (tparams)
+      this.children = [tparams];
+    if (bases.length)
+      this.children ~= bases;
+    if (decls.length)
+      this.children ~= decls;
     this.name = name;
     this.tparams = tparams;
     this.bases = bases;
@@ -240,7 +245,10 @@ class FunctionDeclaration : Declaration
   {
     super(funcBody.funcBody !is null);
     mixin(set_kind);
-    this.children = [cast(Node)returnType, tparams, params, funcBody];
+    this.children = [returnType];
+    if (tparams)
+      this.children ~= tparams;
+    this.children ~= [cast(Node)params, funcBody];
     this.returnType = returnType;
     this.funcName = funcName;
     this.tparams = tparams;
@@ -258,7 +266,11 @@ class VariableDeclaration : Declaration
   {
     super(false);
     mixin(set_kind);
-    this.children = [type] ~ cast(Node[])values;
+    if (type)
+      this.children = [type];
+    foreach(value; values)
+      if (value)
+        this.children ~= value;
     this.type = type;
     this.idents = idents;
     this.values = values;

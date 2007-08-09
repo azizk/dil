@@ -23,6 +23,7 @@ class Statements : Statement
   {
     mixin(set_kind);
   }
+
   void opCatAssign(Statement s)
   {
     this.children ~= s;
@@ -54,12 +55,17 @@ class FunctionBody : Node
   this()
   {
     super(NodeCategory.Other);
-    this.children = [funcBody];
+    mixin(set_kind);
+  }
+
+  void finishConstruction()
+  {
+    if (funcBody)
+      this.children ~= funcBody;
     if (inBody)
       this.children ~= inBody;
     if (outBody)
       this.children ~= outBody;
-    mixin(set_kind);
   }
 }
 
@@ -286,7 +292,8 @@ class ReturnStatement : Statement
   this(Expression expr)
   {
     mixin(set_kind);
-    this.children = [expr];
+    if (expr)
+      this.children = [expr];
     this.expr = expr;
   }
 }
@@ -298,7 +305,8 @@ class GotoStatement : Statement
   this(Token* ident, Expression caseExpr)
   {
     mixin(set_kind);
-    this.children = [caseExpr];
+    if (caseExpr)
+      this.children = [caseExpr];
     this.ident = ident;
     this.caseExpr = caseExpr;
   }
