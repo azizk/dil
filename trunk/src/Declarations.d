@@ -30,12 +30,12 @@ class EmptyDeclaration : Declaration
 
 class IllegalDeclaration : Declaration
 {
-  TOK tok;
-  this(TOK tok)
+  Token* token;
+  this(Token* token)
   {
     super(false);
     mixin(set_kind);
-    this.tok = tok;
+    this.token = token;
   }
 }
 
@@ -76,6 +76,7 @@ class AliasDeclaration : Declaration
   {
     super(false);
     mixin(set_kind);
+    this.children = [decl];
     this.decl = decl;
   }
 }
@@ -87,6 +88,7 @@ class TypedefDeclaration : Declaration
   {
     super(false);
     mixin(set_kind);
+    this.children = [decl];
     this.decl = decl;
   }
 }
@@ -101,6 +103,7 @@ class EnumDeclaration : Declaration
   {
     super(hasBody);
     mixin(set_kind);
+    this.children = values;
     this.name = name;
     this.baseType = baseType;
     this.members = members;
@@ -118,6 +121,7 @@ class ClassDeclaration : Declaration
   {
     super(hasBody);
     mixin(set_kind);
+    this.children = [tparams] ~ cast(Node[])bases ~ decls;
     this.name = name;
     this.tparams = tparams;
     this.bases = bases;
@@ -135,6 +139,7 @@ class InterfaceDeclaration : Declaration
   {
     super(hasBody);
     mixin(set_kind);
+    this.children = [tparams] ~ cast(Node[])bases ~ decls;
     this.name = name;
     this.tparams = tparams;
     this.bases = bases;
@@ -151,6 +156,7 @@ class StructDeclaration : Declaration
   {
     super(hasBody);
     mixin(set_kind);
+    this.children = [tparams] ~ cast(Node[])decls;
     this.name = name;
     this.tparams = tparams;
     this.decls = decls;
@@ -166,6 +172,7 @@ class UnionDeclaration : Declaration
   {
     super(hasBody);
     mixin(set_kind);
+    this.children = [tparams] ~ cast(Node[])decls;
     this.name = name;
     this.tparams = tparams;
     this.decls = decls;
@@ -180,6 +187,7 @@ class ConstructorDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
+    this.children = [cast(Node)parameters, funcBody];
     this.parameters = parameters;
     this.funcBody = funcBody;
   }
@@ -192,6 +200,7 @@ class StaticConstructorDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
+    this.children = [funcBody];
     this.funcBody = funcBody;
   }
 }
@@ -203,6 +212,7 @@ class DestructorDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
+    this.children = [funcBody];
     this.funcBody = funcBody;
   }
 }
@@ -214,6 +224,7 @@ class StaticDestructorDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
+    this.children = [funcBody];
     this.funcBody = funcBody;
   }
 }
@@ -229,6 +240,7 @@ class FunctionDeclaration : Declaration
   {
     super(funcBody.funcBody !is null);
     mixin(set_kind);
+    this.children = [cast(Node)returnType, tparams, params, funcBody];
     this.returnType = returnType;
     this.funcName = funcName;
     this.tparams = tparams;
@@ -246,6 +258,7 @@ class VariableDeclaration : Declaration
   {
     super(false);
     mixin(set_kind);
+    this.children = [type] ~ cast(Node[])values;
     this.type = type;
     this.idents = idents;
     this.values = values;
@@ -259,6 +272,7 @@ class InvariantDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
+    this.children = [funcBody];
     this.funcBody = funcBody;
   }
 }
@@ -270,6 +284,7 @@ class UnittestDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
+    this.children = [funcBody];
     this.funcBody = funcBody;
   }
 }
@@ -284,6 +299,7 @@ class DebugDeclaration : Declaration
   {
     super(decls.length != 0);
     mixin(set_kind);
+    this.children = decls ~ elseDecls;
     this.spec = spec;
     this.cond = cond;
     this.decls = decls;
@@ -301,6 +317,7 @@ class VersionDeclaration : Declaration
   {
     super(decls.length != 0);
     mixin(set_kind);
+    this.children = decls ~ elseDecls;
     this.spec = spec;
     this.cond = cond;
     this.decls = decls;
@@ -316,6 +333,7 @@ class StaticIfDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
+    this.children = [condition] ~ cast(Node[])(ifDecls ~ elseDecls);
     this.condition = condition;
     this.ifDecls = ifDecls;
     this.elseDecls = elseDecls;
@@ -329,6 +347,7 @@ class StaticAssertDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
+    this.children = [condition, message];
     this.condition = condition;
     this.message = message;
   }
@@ -336,15 +355,16 @@ class StaticAssertDeclaration : Declaration
 
 class TemplateDeclaration : Declaration
 {
-  Token* templateName;
-  TemplateParameters templateParams;
+  Token* name;
+  TemplateParameters tparams;
   Declaration[] decls;
-  this(Token* templateName, TemplateParameters templateParams, Declaration[] decls)
+  this(Token* name, TemplateParameters tparams, Declaration[] decls)
   {
     super(true);
     mixin(set_kind);
-    this.templateName = templateName;
-    this.templateParams = templateParams;
+    this.children = [tparams] ~ cast(Node[])decls;
+    this.name = name;
+    this.tparams = tparams;
     this.decls = decls;
   }
 }
@@ -357,6 +377,7 @@ class NewDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
+    this.children = [cast(Node)parameters, funcBody];
     this.parameters = parameters;
     this.funcBody = funcBody;
   }
@@ -370,6 +391,7 @@ class DeleteDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
+    this.children = [cast(Node)parameters, funcBody];
     this.parameters = parameters;
     this.funcBody = funcBody;
   }
@@ -383,6 +405,7 @@ class AttributeDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
+    this.children = decls;
     this.attribute = attribute;
     this.decls = decls;
   }
@@ -418,6 +441,7 @@ class PragmaDeclaration : AttributeDeclaration
   {
     super(TOK.Pragma, decls);
     mixin(set_kind);
+    this.children ~= args;
     this.ident = ident;
     this.args = args;
   }
@@ -425,20 +449,22 @@ class PragmaDeclaration : AttributeDeclaration
 
 class MixinDeclaration : Declaration
 {
-  Expression[] templateIdent;
+  Expression[] templateIdents;
   Token* mixinIdent;
-  Expression assignExpr; // mixin ( AssignExpression )
-  this(Expression[] templateIdent, Token* mixinIdent)
+  Expression argument; // mixin ( AssignExpression )
+  this(Expression[] templateIdents, Token* mixinIdent)
   {
     super(false);
     mixin(set_kind);
-    this.templateIdent = templateIdent;
+    this.children = templateIdents;
+    this.templateIdents = templateIdents;
     this.mixinIdent = mixinIdent;
   }
-  this(Expression assignExpr)
+  this(Expression argument)
   {
     super(false);
     mixin(set_kind);
-    this.assignExpr = assignExpr;
+    this.children = [argument];
+    this.argument = argument;
   }
 }

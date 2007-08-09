@@ -212,6 +212,7 @@ class Node
 {
   NodeCategory category;
   NodeKind kind;
+  Node[] children;
   Token* begin, end;
 
   this(NodeCategory category)

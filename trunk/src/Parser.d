@@ -290,7 +290,7 @@ writef("\33[34m%s\33[0m", success);
     default:
       // TODO: issue error msg.
       error(MID.ExpectedButFound, "Declaration", token.srcText);
-      decl = new IllegalDeclaration(token.type);
+      decl = new IllegalDeclaration(token);
       nT();
     }
 //     writef("§%s§", decl.classinfo.name);
