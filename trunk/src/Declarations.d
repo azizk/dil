@@ -103,7 +103,11 @@ class EnumDeclaration : Declaration
   {
     super(hasBody);
     mixin(set_kind);
-    this.children = values;
+    if (baseType)
+      this.children = [baseType];
+    foreach(value; values)
+      if (value)
+        this.children ~= value;
     this.name = name;
     this.baseType = baseType;
     this.members = members;
