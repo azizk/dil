@@ -1440,6 +1440,7 @@ writef("\33[34m%s\33[0m", success);
     nT(); // Skip mixin keyword.
 
   static if (is(Class == MixinDeclaration))
+  {
     if (token.type == T.LParen)
     {
       // TODO: What about mixin(...).ident;?
@@ -1449,6 +1450,7 @@ writef("\33[34m%s\33[0m", success);
       require(T.Semicolon);
       return new MixinDeclaration(e);
     }
+  }
 
     Expression[] templateIdent;
     Token* mixinIdent;

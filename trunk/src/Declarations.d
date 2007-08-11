@@ -148,7 +148,12 @@ class InterfaceDeclaration : Declaration
   {
     super(hasBody);
     mixin(set_kind);
-    this.children = [tparams] ~ cast(Node[])bases ~ decls;
+    if (tparams)
+      this.children = [tparams];
+    if (bases.length)
+      this.children ~= bases;
+    if (decls.length)
+      this.children ~= decls;
     this.name = name;
     this.tparams = tparams;
     this.bases = bases;
@@ -165,7 +170,10 @@ class StructDeclaration : Declaration
   {
     super(hasBody);
     mixin(set_kind);
-    this.children = [tparams] ~ cast(Node[])decls;
+    if (tparams)
+      this.children = [tparams];
+    if (decls.length)
+      this.children ~= decls;
     this.name = name;
     this.tparams = tparams;
     this.decls = decls;
@@ -181,7 +189,10 @@ class UnionDeclaration : Declaration
   {
     super(hasBody);
     mixin(set_kind);
-    this.children = [tparams] ~ cast(Node[])decls;
+    if (tparams)
+      this.children = [tparams];
+    if (decls.length)
+      this.children ~= decls;
     this.name = name;
     this.tparams = tparams;
     this.decls = decls;
@@ -247,6 +258,7 @@ class FunctionDeclaration : Declaration
   FunctionBody funcBody;
   this(Type returnType, Token* funcName, TemplateParameters tparams, Parameters params, FunctionBody funcBody)
   {
+    assert(returnType !is null);
     super(funcBody.funcBody !is null);
     mixin(set_kind);
     this.children = [returnType];
@@ -363,7 +375,9 @@ class StaticAssertDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
-    this.children = [condition, message];
+    this.children = [condition];
+    if (message)
+      this.children ~= message;
     this.condition = condition;
     this.message = message;
   }
@@ -457,7 +471,8 @@ class PragmaDeclaration : AttributeDeclaration
   {
     super(TOK.Pragma, decls);
     mixin(set_kind);
-    this.children ~= args;
+    if (args.length)
+      this.children ~= args;
     this.ident = ident;
     this.args = args;
   }

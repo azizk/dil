@@ -359,7 +359,9 @@ class ArrayType : Type
   }
   this(Type t, Expression e, Expression e2)
   {
-    this.children = [e, e2];
+    this.children = [e];
+    if (e2)
+      this.children ~= e2;
     this.e = e;
     this.e2 = e2;
     this(t);
