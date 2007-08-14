@@ -19,6 +19,25 @@ abstract class Declaration : Node
   }
 }
 
+class Declarations : Declaration
+{
+  this()
+  {
+    super(true);
+    mixin(set_kind);
+  }
+
+  void opCatAssign(Declaration d)
+  {
+    this.children ~= d;
+  }
+
+  void opCatAssign(Declarations ds)
+  {
+    this.children ~= ds.children;
+  }
+}
+
 class EmptyDeclaration : Declaration
 {
   this()
@@ -120,8 +139,8 @@ class ClassDeclaration : Declaration
   Token* name;
   TemplateParameters tparams;
   BaseClass[] bases;
-  Declaration[] decls;
-  this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
+  Declarations decls;
+  this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls, bool hasBody)
   {
     super(hasBody);
     mixin(set_kind);
@@ -129,8 +148,8 @@ class ClassDeclaration : Declaration
       this.children = [tparams];
     if (bases.length)
       this.children ~= bases;
-    if (decls.length)
-      this.children ~= decls;
+    this.children ~= decls;
+
     this.name = name;
     this.tparams = tparams;
     this.bases = bases;
@@ -143,8 +162,8 @@ class InterfaceDeclaration : Declaration
   Token* name;
   TemplateParameters tparams;
   BaseClass[] bases;
-  Declaration[] decls;
-  this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declaration[] decls, bool hasBody)
+  Declarations decls;
+  this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls, bool hasBody)
   {
     super(hasBody);
     mixin(set_kind);
@@ -152,8 +171,8 @@ class InterfaceDeclaration : Declaration
       this.children = [tparams];
     if (bases.length)
       this.children ~= bases;
-    if (decls.length)
-      this.children ~= decls;
+    this.children ~= decls;
+
     this.name = name;
     this.tparams = tparams;
     this.bases = bases;
@@ -165,15 +184,15 @@ class StructDeclaration : Declaration
 {
   Token* name;
   TemplateParameters tparams;
-  Declaration[] decls;
-  this(Token* name, TemplateParameters tparams, Declaration[] decls, bool hasBody)
+  Declarations decls;
+  this(Token* name, TemplateParameters tparams, Declarations decls, bool hasBody)
   {
     super(hasBody);
     mixin(set_kind);
     if (tparams)
       this.children = [tparams];
-    if (decls.length)
-      this.children ~= decls;
+    this.children ~= decls;
+
     this.name = name;
     this.tparams = tparams;
     this.decls = decls;
@@ -184,15 +203,15 @@ class UnionDeclaration : Declaration
 {
   Token* name;
   TemplateParameters tparams;
-  Declaration[] decls;
-  this(Token* name, TemplateParameters tparams, Declaration[] decls, bool hasBody)
+  Declarations decls;
+  this(Token* name, TemplateParameters tparams, Declarations decls, bool hasBody)
   {
     super(hasBody);
     mixin(set_kind);
     if (tparams)
       this.children = [tparams];
-    if (decls.length)
-      this.children ~= decls;
+    this.children ~= decls;
+
     this.name = name;
     this.tparams = tparams;
     this.decls = decls;
@@ -321,13 +340,13 @@ class DebugDeclaration : Declaration
 {
   Token* spec;
   Token* cond;
-  Declaration[] decls, elseDecls;
+  Declaration decls, elseDecls;
 
-  this(Token* spec, Token* cond, Declaration[] decls, Declaration[] elseDecls)
+  this(Token* spec, Token* cond, Declaration decls, Declaration elseDecls)
   {
-    super(decls.length != 0);
+    super(true /+decls.length != 0+/);
     mixin(set_kind);
-    this.children = decls ~ elseDecls;
+    this.children = [decls, elseDecls];
     this.spec = spec;
     this.cond = cond;
     this.decls = decls;
@@ -339,13 +358,13 @@ class VersionDeclaration : Declaration
 {
   Token* spec;
   Token* cond;
-  Declaration[] decls, elseDecls;
+  Declaration decls, elseDecls;
 
-  this(Token* spec, Token* cond, Declaration[] decls, Declaration[] elseDecls)
+  this(Token* spec, Token* cond, Declaration decls, Declaration elseDecls)
   {
-    super(decls.length != 0);
+    super(true /+decls.length != 0+/);
     mixin(set_kind);
-    this.children = decls ~ elseDecls;
+    this.children = [decls, elseDecls];
     this.spec = spec;
     this.cond = cond;
     this.decls = decls;
@@ -356,12 +375,12 @@ class VersionDeclaration : Declaration
 class StaticIfDeclaration : Declaration
 {
   Expression condition;
-  Declaration[] ifDecls, elseDecls;
-  this(Expression condition, Declaration[] ifDecls, Declaration[] elseDecls)
+  Declaration ifDecls, elseDecls;
+  this(Expression condition, Declaration ifDecls, Declaration elseDecls)
   {
     super(true);
     mixin(set_kind);
-    this.children = [condition] ~ cast(Node[])(ifDecls ~ elseDecls);
+    this.children = [cast(Node)condition, ifDecls, elseDecls];
     this.condition = condition;
     this.ifDecls = ifDecls;
     this.elseDecls = elseDecls;
@@ -387,12 +406,12 @@ class TemplateDeclaration : Declaration
 {
   Token* name;
   TemplateParameters tparams;
-  Declaration[] decls;
-  this(Token* name, TemplateParameters tparams, Declaration[] decls)
+  Declarations decls;
+  this(Token* name, TemplateParameters tparams, Declarations decls)
   {
     super(true);
     mixin(set_kind);
-    this.children = [tparams] ~ cast(Node[])decls;
+    this.children = [cast(Node)tparams, decls];
     this.name = name;
     this.tparams = tparams;
     this.decls = decls;
@@ -430,12 +449,12 @@ class DeleteDeclaration : Declaration
 class AttributeDeclaration : Declaration
 {
   TOK attribute;
-  Declaration[] decls;
-  this(TOK attribute, Declaration[] decls)
+  Declaration decls;
+  this(TOK attribute, Declaration decls)
   {
     super(true);
     mixin(set_kind);
-    this.children = decls;
+    this.children = [decls];
     this.attribute = attribute;
     this.decls = decls;
   }
@@ -444,7 +463,7 @@ class AttributeDeclaration : Declaration
 class ExternDeclaration : AttributeDeclaration
 {
   Linkage linkage;
-  this(Linkage linkage, Declaration[] decls)
+  this(Linkage linkage, Declaration decls)
   {
     super(TOK.Extern, decls);
     mixin(set_kind);
@@ -455,7 +474,7 @@ class ExternDeclaration : AttributeDeclaration
 class AlignDeclaration : AttributeDeclaration
 {
   int size;
-  this(int size, Declaration[] decls)
+  this(int size, Declaration decls)
   {
     super(TOK.Align, decls);
     mixin(set_kind);
@@ -467,7 +486,7 @@ class PragmaDeclaration : AttributeDeclaration
 {
   Token* ident;
   Expression[] args;
-  this(Token* ident, Expression[] args, Declaration[] decls)
+  this(Token* ident, Expression[] args, Declaration decls)
   {
     super(TOK.Pragma, decls);
     mixin(set_kind);

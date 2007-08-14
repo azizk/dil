@@ -17,6 +17,7 @@ enum NodeCategory
 enum NodeKind
 {
   // Declarations:
+  Declarations,
   EmptyDeclaration,
   IllegalDeclaration,
   ModuleDeclaration,

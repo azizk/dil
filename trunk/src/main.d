@@ -29,7 +29,7 @@ void main(char[][] args)
   auto srctext = cast(char[]) std.file.read(args[1]);
   auto parser = new Parser(srctext, args[1]);
   parser.start();
-  auto decls = parser.parseModule();
+  auto root = parser.parseModule();
 
 void print(Node[] decls, char[] indent)
 {
@@ -40,7 +40,7 @@ void print(Node[] decls, char[] indent)
     print(decl.children, indent ~ "  ");
   }
 }
-print(decls, "");
+print(root.children, "");
 foreach (error; parser.errors)
 {
   writefln(`%s(%d)P: %s`, parser.lx.fileName, error.loc, error.getMsg);

@@ -497,8 +497,8 @@ class NewAnonClassExpression : /*Unary*/Expression
   Expression[] newArgs;
   BaseClass[] bases;
   Expression[] ctorArgs;
-  Declaration[] decls;
-  this(/*Expression e, */Expression[] newArgs, BaseClass[] bases, Expression[] ctorArgs, Declaration[] decls)
+  Declarations decls;
+  this(/*Expression e, */Expression[] newArgs, BaseClass[] bases, Expression[] ctorArgs, Declarations decls)
   {
     /*super(e);*/
     mixin(set_kind);
@@ -508,8 +508,8 @@ class NewAnonClassExpression : /*Unary*/Expression
       this.children ~= bases;
     if (ctorArgs.length)
       this.children ~= ctorArgs;
-    if (decls.length)
-      this.children ~= decls;
+    this.children ~= decls;
+
     this.newArgs = newArgs;
     this.bases = bases;
     this.ctorArgs = ctorArgs;

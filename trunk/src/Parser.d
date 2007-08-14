@@ -107,9 +107,9 @@ debug writef("\33[34m%s\33[0m", success);
   + Declaration parsing methods +
   ++++++++++++++++++++++++++++++/
 
-  Declaration[] parseModule()
+  Declarations parseModule()
   {
-    Declaration[] decls;
+    auto decls = new Declarations;
 
     if (token.type == T.Module)
     {
@@ -127,9 +127,9 @@ debug writef("\33[34m%s\33[0m", success);
     return decls;
   }
 
-  Declaration[] parseDeclarationDefinitions()
+  Declarations parseDeclarationDefinitions()
   {
-    Declaration[] decls;
+    auto decls = new Declarations;
     while (token.type != T.EOF)
       decls ~= parseDeclarationDefinition();
     return decls;
@@ -140,9 +140,9 @@ debug writef("\33[34m%s\33[0m", success);
         { }
         { DeclDefs }
   */
-  Declaration[] parseDeclarationDefinitionsBlock()
+  Declarations parseDeclarationDefinitionsBlock()
   {
-    Declaration[] decls;
+    auto decls = new Declarations;
     require(T.LBrace);
     while (token.type != T.RBrace && token.type != T.EOF)
       decls ~= parseDeclarationDefinition();
@@ -307,23 +307,25 @@ debug writef("\33[34m%s\33[0m", success);
         { DeclDefs }
         DeclDef
   */
-  Declaration[] parseDeclarationsBlock()
+  Declaration parseDeclarationsBlock()
   {
-    Declaration[] decls;
+    Declaration d;
     switch (token.type)
     {
     case T.LBrace:
-      decls = parseDeclarationDefinitionsBlock();
+      d = parseDeclarationDefinitionsBlock();
       break;
     case T.Colon:
       nT();
+      auto decls = new Declarations;
       while (token.type != T.RBrace && token.type != T.EOF)
         decls ~= parseDeclarationDefinition();
+      d = decls;
       break;
     default:
-      decls ~= parseDeclarationDefinition();
+      d = parseDeclarationDefinition();
     }
-    return decls;
+    return d;
   }
 
   Declaration parseDeclaration(StorageClass stc = StorageClass.None)
@@ -548,7 +550,7 @@ debug writef("\33[34m%s\33[0m", success);
         stc |= tmp;
     }
 
-    Declaration[] parse()
+    Declaration parse()
     {
       Declaration decl;
       switch (token.type)
@@ -644,11 +646,11 @@ debug writef("\33[34m%s\33[0m", success);
         decl = parseDeclaration(stc);
         break;
       default:
-        return parseDeclarationsBlock();
+        decl = parseDeclarationsBlock();
       }
-      return [decl];
+      return decl;
     }
-    return parse()[0];
+    return parse();
   }
 
   Token* parseAlignAttribute()
@@ -694,7 +696,7 @@ debug writef("\33[34m%s\33[0m", success);
       nT();
       Token* ident;
       Expression[] args;
-      Declaration[] decls;
+      Declaration decls;
 
       require(T.LParen);
       ident = requireId();
@@ -894,7 +896,7 @@ debug writef("\33[34m%s\33[0m", success);
     Token* className;
     TemplateParameters tparams;
     BaseClass[] bases;
-    Declaration[] decls;
+    Declarations decls;
     bool hasBody;
 
     nT(); // Skip class keyword.
@@ -969,7 +971,7 @@ debug writef("\33[34m%s\33[0m", success);
     Token* name;
     TemplateParameters tparams;
     BaseClass[] bases;
-    Declaration[] decls;
+    Declarations decls;
     bool hasBody;
 
     nT(); // Skip interface keyword.
@@ -1008,7 +1010,7 @@ debug writef("\33[34m%s\33[0m", success);
 
     Token* name;
     TemplateParameters tparams;
-    Declaration[] decls;
+    Declarations decls;
     bool hasBody;
 
     nT(); // Skip struct or union keyword.
@@ -1116,7 +1118,7 @@ debug writef("\33[34m%s\33[0m", success);
                  // debug = Identifier ;
     Token* cond; // debug ( Integer )
                  // debug ( Identifier )
-    Declaration[] decls, elseDecls;
+    Declaration decls, elseDecls;
 
     void parseIdentOrInt(ref Token* tok)
     {
@@ -1175,7 +1177,7 @@ debug writef("\33[34m%s\33[0m", success);
                  // version = Identifier ;
     Token* cond; // version ( Integer )
                  // version ( Identifier )
-    Declaration[] decls, elseDecls;
+    Declaration decls, elseDecls;
 
     void parseIdentOrInt(ref Token* tok)
     {
@@ -1230,7 +1232,7 @@ debug writef("\33[34m%s\33[0m", success);
     nT(); // Skip if keyword.
 
     Expression condition;
-    Declaration[] ifDecls, elseDecls;
+    Declaration ifDecls, elseDecls;
 
     require(T.LParen);
     condition = parseAssignExpression();
@@ -1526,7 +1528,7 @@ debug writef("\33[34m%s\33[0m", success);
         structDecl = parseAggregateDeclaration();
       else
         expected(T.Struct);
-      d = new AlignDeclaration(size, structDecl ? [structDecl] : null);
+      d = new AlignDeclaration(size, structDecl ? structDecl : new Declarations);
       goto case_DeclarationStatement;
 /+ Not applicable for statements.
 //          T.Private,
