@@ -14,8 +14,8 @@ compilerinfo {
 compilerinfo error { display: block; }
 n { color: teal; }
 k { color: darkblue; font-weight: bold; }
-c[c=lc], c[c=bc] { color: green; }
-c[c=nc] { color: darkgreen; }
+c[c=l], c[c=b] { color: green; }
+c[c=n] { color: darkgreen; }
 i { color: black; }
 sl { color: red; }
 cl { color: purple; }

@@ -1528,13 +1528,11 @@ class Lexer
     writefln("end of peek() unittest");
   }
 
-  Token[] getTokens()
+  Token* getTokens()
   {
-    Token[] tokens;
-//     while (nextToken() != TOK.EOF)
-//       tokens ~= this.token;
-//     tokens ~= this.token;
-    return tokens;
+    while (nextToken() != TOK.EOF)
+    {}
+    return head;
   }
 
   private void encodeUTF8(inout char[] str, dchar d)
