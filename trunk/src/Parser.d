@@ -44,8 +44,8 @@ class Parser
       token = lx.token;
 if (!trying)
 {
-writef("\33[32m%s\33[0m", token.type);
-      writef("%s", prev[0 .. token.end - prev]);
+debug writef("\33[32m%s\33[0m", token.type);
+debug writef("%s", prev[0 .. token.end - prev]);
       prev = token.end;
 }
     } while (token.type == T.Comment) // Skip comments
@@ -63,7 +63,7 @@ writef("\33[32m%s\33[0m", token.type);
 
   ReturnType try_(ReturnType)(lazy ReturnType parseMethod, out bool success)
   {
-writef("\33[31mtry_\33[0m");
+debug writef("\33[31mtry_\33[0m");
     ++trying;
 //     auto len = errors.length;
     auto oldToken = token;
@@ -83,7 +83,7 @@ writef("\33[31mtry_\33[0m");
     else
       success = true;
     --trying;
-writef("\33[34m%s\33[0m", success);
+debug writef("\33[34m%s\33[0m", success);
     return result;
   }
 
