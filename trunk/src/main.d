@@ -189,6 +189,10 @@ void highlightTokens(string fileName)
       writef(`<op c="ne">!=</op>`);
       break;
     case TOK.Not:
+      // Check if this is part of a template instantiation.
+      // TODO: comments aren't skipped.
+      if (token.prev.type == TOK.Identifier && token.next.type == TOK.LParen)
+        goto default;
       writef(`<op c="n">!</op>`);
       break;
     case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
