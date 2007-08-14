@@ -28,11 +28,11 @@ class Parser
     lx = new Lexer(srcText, fileName);
   }
 
-  char* prev;
+  debug char* prev;
 
   void start()
   {
-    prev = lx.text.ptr;
+    debug prev = lx.text.ptr;
     nT();
   }
 
@@ -42,10 +42,11 @@ class Parser
     {
       lx.nextToken();
       token = lx.token;
-if (!trying)
+
+debug if (!trying)
 {
-debug writef("\33[32m%s\33[0m", token.type);
-debug writef("%s", prev[0 .. token.end - prev]);
+      writef("\33[32m%s\33[0m", token.type);
+      writef("%s", prev[0 .. token.end - prev]);
       prev = token.end;
 }
     } while (token.type == T.Comment) // Skip comments
