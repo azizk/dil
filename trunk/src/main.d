@@ -146,20 +146,20 @@ void highlightTokens(string fileName)
     case TOK.CharLiteral, TOK.WCharLiteral, TOK.DCharLiteral:
       writef("<cl>%s</cl>", srcText);
       break;
-    case TOK.Assign, TOK.Equal,
-         TOK.Less, TOK.Greater,
-         TOK.LShiftAssign, TOK.LShift,
-         TOK.RShiftAssign, TOK.RShift,
+    case TOK.Assign,        TOK.Equal,
+         TOK.Less,          TOK.Greater,
+         TOK.LShiftAssign,  TOK.LShift,
+         TOK.RShiftAssign,  TOK.RShift,
          TOK.URShiftAssign, TOK.URShift,
-         TOK.OrAssign, TOK.OrBinary,
-         TOK.AndAssign, TOK.AndBinary,
-         TOK.PlusAssign, TOK.PlusPlus, TOK.Plus,
-         TOK.MinusAssign, TOK.MinusMinus, TOK.Minus,
-         TOK.DivAssign, TOK.Div,
-         TOK.MulAssign, TOK.Mul,
-         TOK.ModAssign, TOK.Mod,
-         TOK.XorAssign, TOK.Xor,
-         TOK.CatAssign, TOK.Catenate,
+         TOK.OrAssign,      TOK.OrBinary,
+         TOK.AndAssign,     TOK.AndBinary,
+         TOK.PlusAssign,    TOK.PlusPlus,   TOK.Plus,
+         TOK.MinusAssign,   TOK.MinusMinus, TOK.Minus,
+         TOK.DivAssign,     TOK.Div,
+         TOK.MulAssign,     TOK.Mul,
+         TOK.ModAssign,     TOK.Mod,
+         TOK.XorAssign,     TOK.Xor,
+         TOK.CatAssign,
          TOK.Tilde,
          TOK.Unordered,
          TOK.UorE,
@@ -196,12 +196,12 @@ void highlightTokens(string fileName)
       writef(`<op c="n">!</op>`);
       break;
     case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
-          TOK.Float32, TOK.Float64, TOK.Float80,
-          TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
+         TOK.Float32, TOK.Float64, TOK.Float80,
+         TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
       writef("<n>%s</n>", srcText);
       break;
     case TOK.LParen, TOK.RParen, TOK.LBracket,
-          TOK.RBracket, TOK.LBrace, TOK.RBrace:
+         TOK.RBracket, TOK.LBrace, TOK.RBrace:
       writef("<br>%s</br>", srcText);
       break;
     default:
