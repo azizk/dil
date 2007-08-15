@@ -49,7 +49,7 @@ debug if (!trying)
       writef("%s", prev[0 .. token.end - prev]);
       prev = token.end;
 }
-    } while (token.type == T.Comment) // Skip comments
+    } while (token.isWhitespace) // Skip whitespace
   }
 
   void skipToOnePast(TOK tok)
@@ -99,7 +99,7 @@ debug writef("\33[34m%s\33[0m", success);
     Token* next = token;
     do
       lx.peek(next);
-    while (next.type == T.Comment)
+    while (next.isWhitespace) // Skip whitespace
     return next.type;
   }
 

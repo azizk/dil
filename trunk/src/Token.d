@@ -12,12 +12,17 @@ struct Position
   size_t col;
 }
 
-enum TOK
+enum TOK : ushort
 {
   Invalid,
 
-  Identifier,
-  Comment,
+  /// Flag for whitespace tokens that must be ignored in the parsing phase.
+  Whitespace = 0x8000,
+  Comment = 1 | Whitespace,
+  Shebang = 2 | Whitespace,
+  HashLine = 3 | Whitespace,
+
+  Identifier = 4,
   String,
   Special,
   CharLiteral, WCharLiteral, DCharLiteral,
@@ -144,6 +149,11 @@ struct Token
     return KeywordsBegin <= type && type <= KeywordsEnd;
   }
 
+  bool isWhitespace()
+  {
+    return !!(type & TOK.Whitespace);
+  }
+
   int opEquals(TOK type2)
   {
     return type == type2;
@@ -167,8 +177,11 @@ struct Token
 string[] tokToString = [
   "Invalid",
 
-  "Identifier",
   "Comment",
+  "#! /shebang/",
+  "#line",
+
+  "Identifier",
   "String",
   "Special",
   "CharLiteral", "WCharLiteral", "DCharLiteral",
