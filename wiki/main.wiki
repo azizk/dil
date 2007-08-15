@@ -1,10 +1,21 @@
 =Purpose=
 dil is a hand-crafted compiler implementation for the D programming language. Currently the Lexer and the Parser are fully implemented (except for very minor things.) No semantic analysis is done at the moment. The backend will most probably be gcc.
 
+What dil can do at the moment:
+  * dil is fully internationalized and can output compiler messages in English and in German. You can determine which language to use with a setting in config.d.
+  * Using the lexer an XML file can be generated, where almost every token is wrapped in an XML-tag (doing all is not an issue.) The whitespace of the original source file is preserved. These XML files can be viewed in W3C-standards compatible browsers(`*`) in combination with a CSS document. (`*`Note: Internet Explorer is the only browser that spectacularly fails at this job.)
+
+  * dil can parse D 2.0 additions:
+    * [http://www.digitalmars.com/d/statement.html#ForeachRangeStatement ForeachRangeStatement].
+    * Cast expressions: cast(const) and cast(invariant).
+    * Type constructors: const(Type) and invariant(Type).
+    * Traits expressions: `__`traits(Identifier) and `__`traits(Identifier, !TemplateArguments).
+    * const/invariant/final/scope/static as storage classes in parameter lists (e.g. void func(final scope Foo f);).
+    * invariant as storage class for declarations (e.g. invariant Foo f;).
+
 Features you will or might see in dil:
-  * Output localized error messages (dil is already internationalized.)
   * Documentation generation ala doxygen (keeping ddoc in mind.)
-  * Generate syntax-highlighted D source files (token-highlighting is already possible.)
+  * Generate syntax-highlighted D source files.
   * Refactoring (renaming symbols, modules; changing the type of a symbol etc.)
   * Coding rules enforcement.
   * Code search.
@@ -14,15 +25,8 @@ Features you will or might see in dil:
   * Translate D code to other languages.
   * Port D 1.0 code to D 2.0.
 
-dil can parse D 2.0 additions:
-  * [http://www.digitalmars.com/d/statement.html#ForeachRangeStatement ForeachRangeStatement].
-  * Cast expressions: cast(const) and cast(invariant).
-  * Type constructors: const(Type) and invariant(Type).
-  * Traits expressions: `__`traits(Identifier) and `__`traits(Identifier, !TemplateArguments).
-  * const/invariant/final/scope/static as storage classes in parameter lists (e.g. void func(final scope Foo f);).
-  * invariant as storage class for declarations (e.g. invariant Foo f;).
-
 *Meaning:*
+
 The word dil comes from the Turkish language and means among other things a) tongue or b) language. It is a very fitting name for this project because of its meaning and because it starts with the letter d and for the reason that the project owner has Turkish origins.
 
 ==Download==
