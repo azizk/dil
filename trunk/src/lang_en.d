@@ -4,6 +4,7 @@
 +/
 
 string[] messages = [
+  // Lexer messages:
   "invalid Unicode character.",
   "invalid UTF-8 sequence.",
   // ''
@@ -33,7 +34,7 @@ string[] messages = [
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "undefined HTML entity '{1}'",
   "unterminated HTML entity.",
-  "html entities must begin with a letter.",
+  "HTML entities must begin with a letter.",
   // integer overflows
   "decimal number overflows sign bit.",
   "overflow in decimal number.",
@@ -52,8 +53,9 @@ string[] messages = [
   "expected '{1}', but found '{2}'.",
   "'{1}' is redundant.",
 
+  // Help messages:
   `dil v{1}
-Copyright (c) 2007 by Aziz Köksal. All rights reserved. Licensed under GPL3.
+Copyright (c) 2007 by Aziz Köksal. Licensed under the GPL3.
 
 Subcommands:
   {2}
