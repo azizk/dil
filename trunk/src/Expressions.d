@@ -579,6 +579,17 @@ class IdentifierExpression : Expression
     this.identifier = identifier;
   }
 }
+
+class SpecialTokenExpression : Expression
+{
+  Token* special;
+  this(Token* special)
+  {
+    mixin(set_kind);
+    this.special = special;
+  }
+}
+
 /*
 class IdentifierListExpression : Expression
 {

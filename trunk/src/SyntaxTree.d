@@ -149,6 +149,7 @@ enum NodeKind
   SliceExpression,
   PrimaryExpressio,
   IdentifierExpression,
+  SpecialTokenExpression,
   DotListExpression,
   TemplateInstanceExpression,
   ThisExpression,

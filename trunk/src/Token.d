@@ -19,6 +19,7 @@ enum TOK
   Identifier,
   Comment,
   String,
+  Special,
   CharLiteral, WCharLiteral, DCharLiteral,
 
   // Numbers
@@ -169,6 +170,7 @@ string[] tokToString = [
   "Identifier",
   "Comment",
   "String",
+  "Special",
   "CharLiteral", "WCharLiteral", "DCharLiteral",
 
   "Int32", "Int64", "Uint32", "Uint64",

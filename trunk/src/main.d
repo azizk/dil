@@ -26,6 +26,10 @@ void main(char[][] args)
     if (args.length == 3)
       tokensToXML(args[2]);
     break;
+  case "parse":
+    if (args.length == 3)
+      parse(args[2]);
+    break;
   default:
   }
 }
@@ -180,6 +184,9 @@ void tokensToXML(string fileName)
     case TOK.LParen, TOK.RParen, TOK.LBracket,
          TOK.RBracket, TOK.LBrace, TOK.RBrace:
       writef("<br>%s</br>", srcText);
+      break;
+    case TOK.Special:
+      writef("<st>%s</st>", srcText);
       break;
     default:
       if (token.isKeyword())

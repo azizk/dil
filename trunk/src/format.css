@@ -12,15 +12,27 @@ compilerinfo {
   margin: 1em;
 }
 compilerinfo error { display: block; }
+/* Number */
 n { color: teal; }
+/* Keyword */
 k { color: darkblue; font-weight: bold; }
+/* Line and block comments */
 c[c=l], c[c=b] { color: green; }
+/* Nested comments */
 c[c=n] { color: darkgreen; }
+/* Identifier */
 i { color: black; }
+/* String literal */
 sl { color: red; }
+/* Character literal */
 cl { color: purple; }
+/* Operator */
 op { color: royalblue; }
+/* All bracket types */
 br { color: orange; }
+/* Special tokens */
+st { color: green; font-weight: bold; }
+/* Particular operators */
 op[c=aa] { content: "and"; } /*&& ∧*/
 op[c=oo] { content: "or"; } /*|| ∨*/
 op[c=n] { content: "¬"; } /*!*/

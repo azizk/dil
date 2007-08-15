@@ -1759,10 +1759,12 @@ debug writef("\33[34m%s\33[0m", success);
   Statement parseNoScopeOrEmptyStatement()
   {
     if (token.type == T.Semicolon)
+    {
       nT();
+      return new EmptyStatement();
+    }
     else
       return parseNoScopeStatement();
-    return null;
   }
 
   Statement parseAttributeStatement()
@@ -3545,6 +3547,10 @@ debug writef("\33[34m%s\33[0m", success);
       e = new TraitsExpression(id, args);
       break;
     }
+    case T.Special:
+      e = new SpecialTokenExpression(token);
+      nT();
+      break;
     default:
       // TODO: issue error msg.
       error(MID.ExpectedButFound, "Expression", token.srcText);
