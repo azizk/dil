@@ -9,45 +9,22 @@ import Token;
 import Messages;
 import std.stdio;
 import std.file;
-import std.metastrings;
-
-import Declarations, SyntaxTree;
-
-version(D2)
-{
-  const VERSION_MAJOR = 2;
-  const VERSION_MINOR = 0;
-}
-else
-{
-  const VERSION_MAJOR = 1;
-  const VERSION_MINOR = 0;
-}
-const string VERSION = Format!("%s.%s", VERSION_MAJOR, VERSION_MINOR);
-
-const char[] usageHighlight = "highlight (hl) file.d";
-const string helpMain = `dil v`~VERSION~`
-Copyright (c) 2007 by Aziz Köksal
-
-Subcommands:
-  `~usageHighlight~`
-
-Type 'dil help <subcommand>' for more help on a particular subcommand.
-
-Compiled with `~__VENDOR__~` `~Format!("v%s.%s", __VERSION__/1000, __VERSION__%1000)~` on `~__TIMESTAMP__~`.
-`;
+import Settings;
+import Declarations, Expressions, SyntaxTree;
 
 void main(char[][] args)
 {
+  GlobalSettings.load();
+
   if (args.length <= 1)
-    return writefln(helpMain);
+    return writefln(format(MID.HelpMain, VERSION, usageHighlight, COMPILED_WITH, COMPILED_VERSION, COMPILED_DATE));
 
   string command = args[1];
   switch (command)
   {
   case "hl", "highlight":
     if (args.length == 3)
-      highlightTokens(args[2]);
+      tokensToXML(args[2]);
     break;
   default:
   }
@@ -90,7 +67,7 @@ char[] xml_escape(char[] text)
   return result;
 }
 
-void highlightTokens(string fileName)
+void tokensToXML(string fileName)
 {
   auto sourceText = cast(char[]) std.file.read(fileName);
   auto lx = new Lexer(sourceText, fileName);

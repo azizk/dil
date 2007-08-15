@@ -693,6 +693,16 @@ class StringLiteralsExpression : Expression
     mixin(set_kind);
     this.strings = strings;
   }
+
+  string getString()
+  {
+    char[] buffer;
+    foreach (strTok; strings)
+    {
+      buffer ~= strTok.str[0..$-1];
+    }
+    return buffer;
+  }
 }
 
 class ArrayLiteralExpression : Expression

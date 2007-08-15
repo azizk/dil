@@ -209,6 +209,14 @@ enum NodeKind
 /// This string is mixed into the constructor of a class that inherits from Node.
 const string set_kind = `this.kind = mixin("NodeKind." ~ typeof(this).stringof);`;
 
+Class Cast(Class)(Node n)
+{
+  assert(n !is null);
+  if (n.kind == mixin("NodeKind." ~ typeof(Class).stringof))
+    return cast(Class)cast(void*)n;
+  return null;
+}
+
 class Node
 {
   NodeCategory category;

@@ -879,13 +879,9 @@ class Lexer
             ++p;
             if (c == 0xFFFF)
               error(MID.UndefinedHTMLEntity, (begin-1)[0..p-(begin-1)]);
-            break;
           }
           else
-          {
             error(MID.UnterminatedHTMLEntity);
-            break;
-          }
         }
         else
           error(MID.InvalidBeginHTMLEntity);
