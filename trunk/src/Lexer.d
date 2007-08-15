@@ -60,6 +60,50 @@ class Lexer
     this.head = new Token;
     this.head.type = TOK.HEAD;
     this.token = this.head;
+    scanShebang();
+  }
+
+  void scanShebang()
+  {
+    if (*p == '#' && p[1] == '!')
+    {
+      Token* t = new Token;
+      t.start = p;
+      t.type = TOK.Shebang;
+      ++p;
+      while (1)
+      {
+        switch (*++p)
+        {
+        case '\r':
+          if (p[1] == '\n')
+            ++p;
+        case '\n':
+          ++loc;
+          if (p[-1] == '\r')
+            t.end = p-1;
+          else
+            t.end = p;
+          break;
+        case LS[0]:
+          t.end = p;
+          if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+          {
+            ++p; ++p;
+            ++loc;
+          }
+          break;
+        case 0, _Z_:
+          t.end = p;
+          break;
+        default:
+          continue;
+        }
+        break; // Exit loop.
+      }
+      this.head.next = t;
+      t.prev = this.head;
+    }
   }
 
   public void scan(out Token t)

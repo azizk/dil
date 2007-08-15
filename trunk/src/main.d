@@ -79,8 +79,8 @@ void tokensToXML(string fileName)
   auto token = lx.getTokens();
   char* end = lx.text.ptr;
 
-  writef(`<?xml version="1.0"?>`
-         `<?xml-stylesheet href="format.css" type="text/css"?>`
+  writefln(`<?xml version="1.0"?>`\n
+         `<?xml-stylesheet href="format.css" type="text/css"?>`\n
          `<root>`);
   if (lx.errors.length)
   {
@@ -187,6 +187,9 @@ void tokensToXML(string fileName)
       break;
     case TOK.Special:
       writef("<st>%s</st>", srcText);
+      break;
+    case TOK.Shebang:
+      writef("<shebang>%s</shebang>", srcText);
       break;
     default:
       if (token.isKeyword())

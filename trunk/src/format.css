@@ -32,6 +32,8 @@ op { color: royalblue; }
 br { color: orange; }
 /* Special tokens */
 st { color: green; font-weight: bold; }
+/* When the first line starts with #! it's a "shebang" */
+shebang { color: gray; }
 /* Particular operators */
 op[c=aa] { content: "and"; } /*&& ∧*/
 op[c=oo] { content: "or"; } /*|| ∨*/
