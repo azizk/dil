@@ -3,6 +3,7 @@
   License: GPL3
 +/
 module Settings;
+import Messages;
 import Parser, SyntaxTree, Declarations, Expressions;
 import std.metastrings;
 
@@ -94,6 +95,8 @@ static:
             throw new Exception("messages variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");
         }
       }
+      if (messages.length != MID.max+1)
+        throw new Exception(std.string.format("messages table in %s must exactly have %d entries, but %s were found.", fileName, MID.max, messages.length));
       GlobalSettings.messages = messages;
     }
   }
