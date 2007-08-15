@@ -346,7 +346,10 @@ class DebugDeclaration : Declaration
   {
     super(true /+decls.length != 0+/);
     mixin(set_kind);
-    this.children = [decls, elseDecls];
+    if (decls)
+      this.children = [decls];
+    if (elseDecls)
+      this.children ~= elseDecls;
     this.spec = spec;
     this.cond = cond;
     this.decls = decls;
@@ -364,7 +367,10 @@ class VersionDeclaration : Declaration
   {
     super(true /+decls.length != 0+/);
     mixin(set_kind);
-    this.children = [decls, elseDecls];
+    if (decls)
+      this.children = [decls];
+    if (elseDecls)
+      this.children ~= elseDecls;
     this.spec = spec;
     this.cond = cond;
     this.decls = decls;

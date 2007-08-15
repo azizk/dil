@@ -714,7 +714,10 @@ debug writef("\33[34m%s\33[0m", success);
         require(T.RParen);
 
       if (token.type == T.Semicolon)
+      {
         nT();
+        decls = new EmptyDeclaration();
+      }
       else
         decls = parseDeclarationsBlock();
 
