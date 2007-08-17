@@ -19,7 +19,8 @@ private alias TOK T;
 class Parser
 {
   Lexer lx;
-  Token* token;
+  Token* token; /// Current non-whitespace token.
+  Token* prevToken; /// Previous non-whitespace token.
 
   Information[] errors;
 
@@ -34,10 +35,12 @@ class Parser
   {
     debug prev = lx.text.ptr;
     nT();
+    prevToken = token;
   }
 
   void nT()
   {
+    prevToken = token;
     do
     {
       lx.nextToken();
@@ -68,6 +71,7 @@ debug writef("\33[31mtry_\33[0m");
     ++trying;
 //     auto len = errors.length;
     auto oldToken = token;
+    auto oldPrevToken = prevToken;
     auto oldCount = errorCount;
 //     auto lexerState = lx.getState();
     auto result = parseMethod();
@@ -77,6 +81,7 @@ debug writef("\33[31mtry_\33[0m");
 //       lexerState.restore(); // Restore state of the Lexer object.
 //       errors = errors[0..len]; // Remove errors that were added when parseMethod() was called.
       token = oldToken;
+      prevToken = oldPrevToken;
       lx.token = oldToken;
       errorCount = oldCount;
       success = false;
@@ -90,7 +95,7 @@ debug writef("\33[34m%s\33[0m", success);
 
   Class set(Class)(Class node, Token* begin)
   {
-    node.setTokens(begin, this.token);
+    node.setTokens(begin, this.prevToken);
     return node;
   }
 
@@ -494,9 +499,7 @@ debug writef("\33[34m%s\33[0m", success);
       switch (token.type)
       {
       case T.LBrace:
-        require(T.LBrace);
         func.funcBody = parseStatements();
-        require(T.RBrace);
         break;
       case T.Semicolon:
         nT();
@@ -505,9 +508,7 @@ debug writef("\33[34m%s\33[0m", success);
         //if (func.inBody)
           // TODO: issue error msg.
         nT();
-        require(T.LBrace);
         func.inBody = parseStatements();
-        require(T.RBrace);
         continue;
       case T.Out:
         //if (func.outBody)
@@ -519,9 +520,7 @@ debug writef("\33[34m%s\33[0m", success);
           func.outIdent = requireId();
           require(T.RParen);
         }
-        require(T.LBrace);
         func.outBody = parseStatements();
-        require(T.RBrace);
         continue;
       case T.Body:
         nT();
@@ -1506,9 +1505,11 @@ debug writef("\33[34m%s\33[0m", success);
   Statements parseStatements()
   {
     auto begin = token;
+    require(T.LBrace);
     auto statements = new Statements();
     while (token.type != T.RBrace && token.type != T.EOF)
       statements ~= parseStatement();
+    require(T.RBrace);
     return set(statements, begin);
   }
 
