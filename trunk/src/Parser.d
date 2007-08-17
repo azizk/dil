@@ -2872,11 +2872,10 @@ debug writef("\33[34m%s\33[0m", success);
 
   Expression parseAssignExpression()
   {
-    typeof(token) begin;
+    auto begin = token;
     auto e = parseCondExpression();
     while (1)
     {
-      begin = token;
       switch (token.type)
       {
       case T.Assign:
