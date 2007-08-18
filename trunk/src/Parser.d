@@ -798,7 +798,7 @@ debug writef("\33[34m%s\33[0m", success);
       // BindAlias = BindName(, BindAlias = BindName)*;
       // BindName(, BindName)*;
       Token* bindName, bindAlias;
-      while (1)
+      do
       {
         nT();
         bindAlias = requireId();
@@ -817,11 +817,7 @@ debug writef("\33[34m%s\33[0m", success);
         // Push identifiers.
         bindNames ~= bindName;
         bindAliases ~= bindAlias;
-
-        if (token.type != T.Comma)
-          break;
-        nT();
-      }
+      } while (token.type == T.Comma)
     }
 
     require(T.Semicolon);
