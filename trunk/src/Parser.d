@@ -1345,15 +1345,16 @@ debug writef("\33[34m%s\33[0m", success);
 
     while (1)
     {
+      auto begin2 = token;
       auto ident = requireId();
       Expression e;
       if (token.type == T.Not && peekNext() == T.LParen) // Identifier !( TemplateArguments )
       {
         nT(); // Skip !.
-        e = new TemplateInstanceExpression(ident, parseTemplateArguments());
+        e = set(new TemplateInstanceExpression(ident, parseTemplateArguments()), begin2);
       }
       else // Identifier
-        e = new IdentifierExpression(ident);
+        e = set(new IdentifierExpression(ident), begin2);
 
       identList ~= e;
 
@@ -1408,15 +1409,16 @@ debug writef("\33[34m%s\33[0m", success);
 
     while (1)
     {
+      auto begin2 = token;
       auto ident = requireId();
       // NB.: Currently Types can't be followed by "!=" so we don't need to peek for "(" when parsing TemplateInstances.
       if (token.type == T.Not/+ && peekNext() == T.LParen+/) // Identifier !( TemplateArguments )
       {
         nT(); // Skip !.
-        identList ~= new TemplateInstanceType(ident, parseTemplateArguments());
+        identList ~= set(new TemplateInstanceType(ident, parseTemplateArguments()), begin2);
       }
       else // Identifier
-        identList ~= new IdentifierType(ident);
+        identList ~= set(new IdentifierType(ident), begin2);
 
       if (token.type != T.Dot)
         break;
