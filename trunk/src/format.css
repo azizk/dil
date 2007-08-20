@@ -1,5 +1,5 @@
 @charset "utf-8";
-compilerinfo, sourcetext {
+compilerinfo, sourcecode {
   display: block;
   white-space: pre;
   font-family: Monospace;
@@ -17,9 +17,9 @@ n { color: teal; }
 /* Keyword */
 k { color: darkblue; font-weight: bold; }
 /* Line and block comments */
-c[c=l], c[c=b] { color: green; }
+c[t=l], c[t=b] { color: green; }
 /* Nested comments */
-c[c=n] { color: darkgreen; }
+c[t=n] { color: darkgreen; }
 /* Identifier */
 i { color: black; }
 /* String literal */
@@ -35,10 +35,22 @@ st { color: green; font-weight: bold; }
 /* When the first line starts with #! it's a "shebang" */
 shebang { color: gray; }
 /* Particular operators */
-op[c=aa] { content: "and"; } /*&& ∧*/
-op[c=oo] { content: "or"; } /*|| ∨*/
-op[c=n] { content: "¬"; } /*!*/
-op[c=ne] { content: "≠"; } /*!=*/
-op[c=le] { content: "≤"; } /*<=*/
-op[c=ge] { content: "≥"; } /*>=*/
-op[c=lg] { content: "≶"; } /*<>*/
+op[t=aa] { content: "and"; } /*&& ∧*/
+op[t=oo] { content: "or"; } /*|| ∨*/
+op[t=n] { content: "¬"; } /*!*/
+op[t=ne] { content: "≠"; } /*!=*/
+op[t=le] { content: "≤"; } /*<=*/
+op[t=ge] { content: "≥"; } /*>=*/
+op[t=lg] { content: "≶"; } /*<>*/
+
+/*
+d = Declaration
+s = Statement
+e = Expression
+t = Type
+o = Other
+*/
+/* d { background-color: #FFDDDD; } */
+/* e { background-color: #DDDDFF;} */
+d[t=Module] i, d[t=Import] i { color: blue; }
+t i { color: #119; }
