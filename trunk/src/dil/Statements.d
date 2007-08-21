@@ -2,12 +2,12 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.sStatements;
-import SyntaxTree;
-import Expressions;
-import Declarations;
-import Types;
-import Token;
+module dil.Statements;
+import dil.SyntaxTree;
+import dil.Expressions;
+import dil.Declarations;
+import dil.Types;
+import dil.Token;
 
 abstract class Statement : Node
 {

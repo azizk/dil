@@ -3,14 +3,14 @@
   License: GPL3
 +/
 module dparser;
-import Parser;
-import Lexer;
-import Token;
-import Messages;
 import std.stdio;
 import std.file;
-import Settings;
-import Declarations, Expressions, SyntaxTree;
+import dil.Parser;
+import dil.Lexer;
+import dil.Token;
+import dil.Messages;
+import dil.Settings;
+import dil.Declarations, dil.Expressions, dil.SyntaxTree;
 
 void main(char[][] args)
 {

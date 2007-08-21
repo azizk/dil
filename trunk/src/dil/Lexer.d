@@ -3,12 +3,12 @@
   License: GPL3
 +/
 module dil.Lexer;
-import Token;
-import Information;
-import Keywords;
-import Identifier;
-import Messages;
-import HtmlEntities;
+import dil.Token;
+import dil.Information;
+import dil.Keywords;
+import dil.Identifier;
+import dil.Messages;
+import dil.HtmlEntities;
 import std.stdio;
 import std.utf;
 import std.uni;
@@ -171,7 +171,7 @@ class Lexer
 
         if (!id)
         {
-          idtable[str] = Identifier.Identifier(TOK.Identifier, str);
+          idtable[str] = Identifier(TOK.Identifier, str);
           id = str in idtable;
         }
         assert(id);

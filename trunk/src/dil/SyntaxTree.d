@@ -3,7 +3,7 @@
   License: GPL3
 +/
 module dil.SyntaxTree;
-import Token;
+import dil.Token;
 
 enum NodeCategory
 {

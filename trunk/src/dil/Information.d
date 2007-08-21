@@ -3,7 +3,7 @@
   License: GPL3
 +/
 module dil.Information;
-import Messages;
+import dil.Messages;
 import std.stdarg;
 
 enum InfoType

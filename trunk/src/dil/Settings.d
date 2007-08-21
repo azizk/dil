@@ -3,8 +3,8 @@
   License: GPL3
 +/
 module dil.Settings;
-import Messages;
-import Parser, SyntaxTree, Declarations, Expressions;
+import dil.Messages;
+import dil.Parser, dil.SyntaxTree, dil.Declarations, dil.Expressions;
 import std.metastrings;
 
 version(D2)

@@ -3,9 +3,9 @@
   License: GPL3
 +/
 module dil.Types;
-import SyntaxTree;
-import Token;
-import Expressions;
+import dil.SyntaxTree;
+import dil.Token;
+import dil.Expressions;
 
 enum Linkage
 {

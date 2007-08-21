@@ -3,8 +3,8 @@
   License: GPL3
 +/
 module dil.Keywords;
-import Token;
-import Identifier;
+import dil.Token;
+import dil.Identifier;
 
 static const Identifier[] keywords = [
   {TOK.Abstract, "abstract"},

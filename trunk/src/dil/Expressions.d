@@ -3,11 +3,11 @@
   License: GPL3
 +/
 module dil.Expressions;
-import SyntaxTree;
-import Token;
-import Types;
-import Declarations;
-import Statements;
+import dil.SyntaxTree;
+import dil.Token;
+import dil.Types;
+import dil.Declarations;
+import dil.Statements;
 
 abstract class Expression : Node
 {

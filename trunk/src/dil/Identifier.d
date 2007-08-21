@@ -3,7 +3,7 @@
   License: GPL3
 +/
 module dil.Identifier;
-import Token;
+import dil.Token;
 
 struct Identifier
 {

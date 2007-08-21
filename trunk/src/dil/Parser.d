@@ -3,15 +3,15 @@
   License: GPL3
 +/
 module dil.Parser;
-import Lexer;
-import SyntaxTree;
-import Token;
-import Messages;
-import Information;
-import Declarations;
-import Statements;
-import Expressions;
-import Types;
+import dil.Lexer;
+import dil.SyntaxTree;
+import dil.Token;
+import dil.Messages;
+import dil.Information;
+import dil.Declarations;
+import dil.Statements;
+import dil.Expressions;
+import dil.Types;
 import std.stdio;
 
 private alias TOK T;
@@ -4134,7 +4134,7 @@ version(D2)
   void expected(TOK tok)
   {
     if (token.type != tok)
-      error(MID.ExpectedButFound, Token.Token.toString(tok), token.srcText);
+      error(MID.ExpectedButFound, Token.toString(tok), token.srcText);
   }
 
   void require(TOK tok)
@@ -4142,7 +4142,7 @@ version(D2)
     if (token.type == tok)
       nT();
     else
-      error(MID.ExpectedButFound, Token.Token.toString(tok), token.srcText);
+      error(MID.ExpectedButFound, Token.toString(tok), token.srcText);
   }
 
   void requireNext(TOK tok)

@@ -3,7 +3,7 @@
   License: GPL3
 +/
 module dil.Messages;
-import Settings;
+import dil.Settings;
 import std.stdarg;
 
 /// Index into table of compiler messages.
