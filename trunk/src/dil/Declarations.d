@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module Declarations;
+module dil.Declarations;
 import SyntaxTree;
 import Expressions;
 import Types;

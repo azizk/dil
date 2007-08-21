@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module Identifier;
+module dil.Identifier;
 import Token;
 
 struct Identifier

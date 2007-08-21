@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module HtmlEntities;
+module dil.HtmlEntities;
 
 private const dchar[char[]] entities_table;
 

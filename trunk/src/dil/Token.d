@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module Token;
+module dil.Token;
 import std.c.stdlib : malloc, free;
 import std.outofmemory;
 

@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module Settings;
+module dil.Settings;
 import Messages;
 import Parser, SyntaxTree, Declarations, Expressions;
 import std.metastrings;

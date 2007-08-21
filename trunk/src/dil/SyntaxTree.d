@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module SyntaxTree;
+module dil.SyntaxTree;
 import Token;
 
 enum NodeCategory

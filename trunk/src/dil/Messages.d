@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module Messages;
+module dil.Messages;
 import Settings;
 import std.stdarg;
 
