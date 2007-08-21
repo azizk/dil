@@ -17,20 +17,18 @@ void main(char[][] args)
   GlobalSettings.load();
 
   if (args.length <= 1)
-    return writefln(format(MID.HelpMain, VERSION, usageHighlight, COMPILED_WITH, COMPILED_VERSION, COMPILED_DATE));
+    return writefln(format(MID.HelpMain, VERSION, usageGenerate, COMPILED_WITH, COMPILED_VERSION, COMPILED_DATE));
 
   string command = args[1];
   switch (command)
   {
-  case "hl", "highlight":
+  case "gen", "generate":
     char[] fileName;
-    DocOption options;
+    DocOption options = DocOption.Tokens;
     foreach (arg; args[2..$])
     {
       switch (arg)
       {
-      case "--tokens":
-        options |= DocOption.Tokens; break;
       case "--syntax":
         options |= DocOption.Syntax; break;
       case "--xml":
@@ -105,6 +103,7 @@ char[] getShortClassName(Node n)
 {
   alias std.string.find find;
   char[] name = n.classinfo.name;
+  name = name[find(name, ".")+1 .. $]; // Remove package name
   name = name[find(name, ".")+1 .. $]; // Remove module name
   char[] remove;
   switch (n.category)

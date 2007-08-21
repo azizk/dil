@@ -63,5 +63,17 @@ Subcommands:
 Type 'dil help <subcommand>' for more help on a particular subcommand.
 
 Compiled with {3} v{4} on {5}.
-`
+`,
+  `Generate an XML or HTML document from a D source file.
+Usage:
+  dil gen file.d [Options]
+
+Options:
+  --syntax         : generate tags for syntax and tokens
+  --xml            : use XML format
+  --html           : use HTML format
+
+Example:
+  dil gen Parser.d --html --syntax > Parser.html
+`,
 ];

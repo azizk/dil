@@ -23,7 +23,7 @@ const COMPILED_WITH = __VENDOR__;
 const COMPILED_VERSION = Format!("%s.%s", __VERSION__/1000, __VERSION__%1000);
 const COMPILED_DATE = __TIMESTAMP__;
 
-const usageHighlight = "highlight (hl) file.d";
+const usageGenerate = "generate (gen)";
 
 struct GlobalSettings
 {
@@ -96,7 +96,7 @@ static:
         }
       }
       if (messages.length != MID.max+1)
-        throw new Exception(std.string.format("messages table in %s must exactly have %d entries, but %s were found.", fileName, MID.max, messages.length));
+        throw new Exception(std.string.format("messages table in %s must exactly have %d entries, but %s were found.", fileName, MID.max+1, messages.length));
       GlobalSettings.messages = messages;
     }
   }

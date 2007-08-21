@@ -60,6 +60,7 @@ enum MID
 
   // Help messages:
   HelpMain,
+  HelpGenerate,
 }
 
 string GetMsg(MID mid)
