@@ -12,9 +12,9 @@ string[] messages = [
   "empty character literal.",
   // #line
   "expected 'line' after '#'.",
-  `the filespec must be defined in a double quote string literal (e.g. "filespec".)`,
   "integer expected after #line",
-  "newline not allowed inside special token.",
+  `expected filespec string (e.g. "path\to\file".)`,
+  "unterminated filespec string.",
   "expected a terminating newline after special token.",
   // ""
   "unterminated string literal.",

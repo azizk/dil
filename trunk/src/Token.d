@@ -21,8 +21,9 @@ enum TOK : ushort
   Comment = 1 | Whitespace,
   Shebang = 2 | Whitespace,
   HashLine = 3 | Whitespace,
+  Filespec = 4 | Whitespace,
 
-  Identifier = 4,
+  Identifier = 5,
   String,
   Special,
   CharLiteral, WCharLiteral, DCharLiteral,
@@ -116,6 +117,11 @@ struct Token
 
   union
   {
+    struct
+    {
+      Token* line_num; // #line number
+      Token* line_filespec; // #line number filespec
+    }
     struct
     {
       string str;

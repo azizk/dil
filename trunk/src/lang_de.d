@@ -12,9 +12,9 @@ string[] messages = [
   "leeres Zeichenliteral.",
   // #line
   "erwartete 'line' nach '#'.",
-  `die Dateispezifikation (filespec) muss in Anführungszeichen angegeben werden (z.B. "filespec".)`,
   "Ganzzahl nach #line erwartet.",
-  "Zeilenumbrüche innerhalb eines Special Token sind nicht erlaubt.",
+  `erwartete Dateispezifikation (z.B. "pfad\zur\datei".)`,
+  "unterminierte Dateispezifikation (filespec.)",
   "ein Special Token muss mit einem Zeilenumbruch abgeschlossen werden.",
   // ""
   "unterminiertes Zeichenkettenliteral.",

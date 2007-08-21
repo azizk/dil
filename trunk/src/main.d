@@ -507,6 +507,9 @@ void printToken(Token* token, string[] tags)
   case TOK.Shebang:
     writef(tags[DP.Shebang], srcText);
     break;
+  case TOK.HashLine:
+    writef("<hl>%s</hl>", srcText);
+    break;
   default:
     if (token.isKeyword())
       writef(tags[DP.Keyword], srcText);

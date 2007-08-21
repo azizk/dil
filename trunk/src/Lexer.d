@@ -578,9 +578,7 @@ class Lexer
         t.end = p;
         return;
       case '#':
-        scanSpecialToken();
-        c = *p;
-        continue;
+        return scanSpecialToken(t);
       default:
       }
 
@@ -973,26 +971,28 @@ class Lexer
         break;
     case 'i','f','F', 'e', 'E': // Imaginary and float literal suffix
       goto LscanReal;
-    case '_':
-      ++p;
-      goto LscanOct;
     default:
-      if (isoctal(*p))
+      if (*p == '_' || isoctal(*p))
         goto LscanOct;
     }
 
-    ulong_ = p[-1];
+    // Number 0
+    assert(p[-1] == '0');
+    assert(ulong_ == 0);
     isDecimal = true;
     goto Lfinalize;
 
   LscanInteger:
+    assert(*p != 0 && isdigit(*p));
     isDecimal = true;
+    goto Lenter_loop_int;
     while (1)
     {
       if (*++p == '_')
         continue;
       if (!isdigit(*p))
         break;
+    Lenter_loop_int:
       if (ulong_ < ulong.max/10 || (ulong_ == ulong.max/10 && *p <= '5'))
       {
         ulong_ *= 10;
@@ -1028,6 +1028,7 @@ class Lexer
 
   LscanHex:
     assert(digits == 0);
+    assert(*p == 'x');
     while (1)
     {
       if (*++p == '_')
@@ -1071,6 +1072,7 @@ class Lexer
 
   LscanBin:
     assert(digits == 0);
+    assert(*p == 'b');
     while (1)
     {
       if (*++p == '0')
@@ -1098,12 +1100,16 @@ class Lexer
     goto Lfinalize;
 
   LscanOct:
+    assert(*p == '_' || isoctal(*p));
+    if (*p != '_')
+      goto Lenter_loop_oct;
     while (1)
     {
       if (*++p == '_')
         continue;
       if (!isoctal(*p))
         break;
+    Lenter_loop_oct:
       if (ulong_ < ulong.max/2 || (ulong_ == ulong.max/2 && *p <= '1'))
       {
         ulong_ *= 8;
@@ -1362,99 +1368,116 @@ class Lexer
   }
 
   /// Scan special token: #line Integer [Filespec] EndOfLine
-  // TODO: Handle case like: #line 0 #line 2
-  void scanSpecialToken()
+  void scanSpecialToken(ref Token t)
   {
     assert(*p == '#');
 
-    ++p;
+    t.type = TOK.HashLine;
+
     MID mid;
-    Token* t;
-    uint oldloc = this.loc, newloc;
 
-    peek(t);
-    if (!(this.loc == oldloc && p == t.start && t.type == TOK.Identifier && t.srcText == "line"))
+    ++p;
+    if (p[0] != 'l' || p[1] != 'i' || p[2] != 'n' || p[3] != 'e')
     {
-      this.loc = oldloc; // reset this.loc because we took a peek at the next token
-      mid = MID.ExpectedIdentifierSTLine;
-      goto Lerr;
-    }
-    p = t.end; // consume token
-
-    peek(t);
-    if (this.loc == oldloc && t.type == TOK.Int32)
-    {
-      newloc = t.uint_ - 1;
-      p = t.end;
-    }
-    else
-    {
-      this.loc = oldloc;
       mid = MID.ExpectedNumberAfterSTLine;
       goto Lerr;
     }
+    p += 3;
 
-    peek(t);
-    if (this.loc != oldloc)
-    {
-      this.loc = oldloc;
-      mid = MID.NewlineInSpecialToken;
-      goto Lerr;
-    }
-    if (t.type == TOK.String)
-    {
-      if (*t.start != '"')
-      {
-        mid = MID.ExpectedNormalStringLiteral;
-        goto Lerr;
-      }
-      fileName = t.srcText[1..$-1]; // contents of "..."
-      p = t.end;
-    }
-    else if (t.type == TOK.Identifier && t.srcText == "__FILE__")
-    {
-      p = t.end;
-    }
-/+
-    peek(t);
-    if (this.loc == oldloc && t.type != TOK.EOF)
-    {
-      mid = MID.UnterminatedSpecialToken;
-      goto Lerr;
-    }
-+/
+    enum State
+    { Number, Filespec, End }
+
+    State state;
+
+  Loop:
     while (1)
     {
-      switch (*p)
+      switch (*++p)
       {
       case '\r':
         if (p[1] == '\n')
           ++p;
-      case '\n':
-        ++p;
-        break;
+      case '\n', 0, _Z_:
+        break Loop;
       case LS[0]:
         if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
         {
-          p += 2;
-          break;
+          ++p; ++p;
+          break Loop;
         }
-      case 0, _Z_:
-        break;
+        goto default;
       default:
-        if (isspace(*p)) {
-          ++p;
+        if (isspace(*p))
           continue;
+        if (state == State.Number)
+        {
+          if (!isdigit(*p))
+          {
+            mid = MID.ExpectedNumberAfterSTLine;
+            goto Lerr;
+          }
+          t.line_num = new Token;
+          scan(*t.line_num);
+          --p;
+          state = State.Filespec;
         }
-        mid = MID.UnterminatedSpecialToken;
-        goto Lerr;
+        else if (state == State.Filespec)
+        {
+          if (*p != '"')
+          {
+            mid = MID.ExpectedFilespec;
+            goto Lerr;
+          }
+          t.line_filespec = new Token;
+          t.line_filespec.start = p;
+          t.line_filespec.type = TOK.Filespec;
+          while (1)
+          {
+            switch (*++p)
+            {
+            case '"':
+              break;
+            case LS[0]:
+              if (!(p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])))
+                goto default;
+            case '\r', '\n', 0, _Z_:
+              mid = MID.UnterminatedFilespec;
+              t.line_filespec.end = p;
+              goto Lerr;
+            default:
+              if (*p & 128)
+                decodeUTF8();
+              continue;
+            }
+            break; // Exit loop.
+          }
+          auto start = t.line_filespec.start +1; // +1 skips '"'
+          t.line_filespec.str = start[0 .. p - start];
+          t.line_filespec.end = p + 1;
+          state = State.End;
+        }
+        else/+ if (state == State.End)+/
+        {
+          mid = MID.UnterminatedSpecialToken;
+          goto Lerr;
+        }
       }
-      break;
     }
 
-    this.loc = newloc;
+    if (state == State.Number)
+    {
+      mid = MID.ExpectedNumberAfterSTLine;
+      goto Lerr;
+    }
+
+    this.loc = t.line_num.uint_ - 1;
+    if (t.line_filespec)
+      this.fileName = t.line_filespec.str;
+    t.end = p;
+
     return;
   Lerr:
+    t.end = p;
     error(mid);
   }
 
