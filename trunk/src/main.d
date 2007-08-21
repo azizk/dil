@@ -230,7 +230,7 @@ auto html_tags = [
 auto xml_tags = [
   // Head
   `<?xml version="1.0"?>`\n
-  `<?xml-stylesheet href="format.css" type="text/css"?>`\n
+  `<?xml-stylesheet href="dil_xml.css" type="text/css"?>`\n
   `<root>`[],
   // CompBegin
   `<compilerinfo>`,

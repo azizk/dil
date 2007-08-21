@@ -1,0 +1,60 @@
+@charset "utf-8";
+.compilerinfo, .sourcecode {
+  display: block;
+  white-space: pre;
+  font-family: Monospace;
+  font-size: 0.8em;
+}
+.compilerinfo {
+  white-space: normal;
+  border: 1px solid #A22;
+  padding: 0.5em;
+  margin: 1em;
+}
+.compilerinfo .error { display: block; }
+/* Number */
+.n { color: teal; }
+/* Keyword */
+.k { color: darkblue; font-weight: bold; }
+/* Line and block comments */
+.cl, .ct { color: green; }
+/* Nested comments */
+.cn { color: darkgreen; }
+/* Identifier */
+.i { color: black; }
+/* String literal */
+.sl { color: red; }
+/* Character literal */
+.cl { color: purple; }
+/* All bracket types */
+.br { color: orange; }
+/* Special tokens */
+.st { color: green; font-weight: bold; }
+/* #line, hash line */
+.hl { color: green; }
+/* filespec (e.g. #line number [filespec]) */
+.fs { color: purple;}
+/* When the first line starts with #! it's a "shebang" */
+.shebang { color: gray; }
+/* Operator */
+.op { color: royalblue; }
+/* Particular operators */
+.opaa { content: "and"; } /*&& ∧*/
+.opoo { content: "or"; } /*|| ∨*/
+.opn { content: "¬"; } /*!*/
+.opne { content: "≠"; } /*!=*/
+.ople { content: "≤"; } /*<=*/
+.opge { content: "≥"; } /*>=*/
+.oplg { content: "≶"; } /*<>*/
+
+/*
+d = Declaration
+s = Statement
+e = Expression
+t = Type
+o = Other
+*/
+/* .d { background-color: #FFDDDD; } */
+/* .e { background-color: #DDDDFF;} */
+.d.Module .i, .d.Import .i { color: blue; }
+.t .i { color: #119; }

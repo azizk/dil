@@ -26,8 +26,6 @@ i { color: black; }
 sl { color: red; }
 /* Character literal */
 cl { color: purple; }
-/* Operator */
-op { color: royalblue; }
 /* All bracket types */
 br { color: orange; }
 /* Special tokens */
@@ -38,6 +36,8 @@ hl { color: green; }
 fs { color: purple;}
 /* When the first line starts with #! it's a "shebang" */
 shebang { color: gray; }
+/* Operator */
+op { color: royalblue; }
 /* Particular operators */
 op[t=aa] { content: "and"; } /*&& ∧*/
 op[t=oo] { content: "or"; } /*|| ∨*/
