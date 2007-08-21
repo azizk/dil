@@ -157,6 +157,9 @@ enum DocPart
   SpecialToken,
   Shebang,
   Keyword,
+  HLineBegin,
+  HLineEnd,
+  Filespec,
 }
 
 auto html_tags = [
@@ -217,6 +220,12 @@ auto html_tags = [
   `<span class="shebang">%s</span>`,
   // Keyword
   `<span class="k">%s</span>`,
+  // HLineBegin
+  `<span class="hl">#line`,
+  // HLineEnd
+  "</span>",
+  // Filespec
+  `<span class="fs">%s</span>`,
 ];
 
 auto xml_tags = [
@@ -274,6 +283,12 @@ auto xml_tags = [
   "<shebang>%s</shebang>",
   // Keyword
   "<k>%s</k>",
+  // HLineBegin
+  "<hl>#line",
+  // HLineEnd
+  "</hl>",
+  // Filespec
+  "<fs>%s</fs>",
 ];
 
 static assert(html_tags.length == DocPart.max+1);
@@ -408,7 +423,7 @@ void tokensToDoc(string fileName, DocOption options)
 
     // Print whitespace between previous and current token.
     if (end != token.start)
-      writef("%s", xml_escape(end[0 .. token.start - end]));
+      writef("%s", end[0 .. token.start - end]);
     printToken(token, tags);
     end = token.end;
   }
@@ -508,7 +523,31 @@ void printToken(Token* token, string[] tags)
     writef(tags[DP.Shebang], srcText);
     break;
   case TOK.HashLine:
-    writef("<hl>%s</hl>", srcText);
+    void printWS(char* start, char* end)
+    {
+      if (start != end)
+        writef(start[0 .. end - start]);
+    }
+    writef(tags[DP.HLineBegin]);
+    auto num = token.line_num;
+    // Print whitespace between #line and number
+    auto ptr = token.start + "#line".length;
+    printWS(ptr, num.start);
+    printToken(num, tags);
+    if (token.line_filespec)
+    {
+      auto filespec = token.line_filespec;
+      // Print whitespace between number and filespec
+      printWS(num.end, filespec.start);
+      writef(tags[DP.Filespec], xml_escape(filespec.srcText));
+
+      ptr = filespec.end;
+    }
+    else
+      ptr = num.end;
+    // Print remaining whitespace
+    printWS(ptr, token.end);
+    writef(tags[DP.HLineEnd]);
     break;
   default:
     if (token.isKeyword())

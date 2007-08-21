@@ -32,6 +32,10 @@ op { color: royalblue; }
 br { color: orange; }
 /* Special tokens */
 st { color: green; font-weight: bold; }
+/* #line, hash line */
+hl { color: green; }
+/* filespec (e.g. #line number [filespec]) */
+fs { color: purple;}
 /* When the first line starts with #! it's a "shebang" */
 shebang { color: gray; }
 /* Particular operators */
