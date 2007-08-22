@@ -7,17 +7,6 @@ import dil.Messages;
 import dil.Parser, dil.SyntaxTree, dil.Declarations, dil.Expressions;
 import std.metastrings;
 
-version(D2)
-{
-  const VERSION_MAJOR = 2;
-  const VERSION_MINOR = 0;
-}
-else
-{
-  const VERSION_MAJOR = 1;
-  const VERSION_MINOR = 0;
-}
-
 template Pad(char[] str, uint amount)
 {
   static if (str.length >= amount)
@@ -29,6 +18,17 @@ template Pad(char[] str, uint amount)
 template Pad(int num, uint amount)
 {
   const char[] Pad = Pad!(ToString!(num), amount);
+}
+
+version(D2)
+{
+  const VERSION_MAJOR = 2;
+  const VERSION_MINOR = 0;
+}
+else
+{
+  const VERSION_MAJOR = 1;
+  const VERSION_MINOR = 0;
 }
 
 const string VERSION = Format!("%s.%s", VERSION_MAJOR, Pad!(VERSION_MINOR, 3));
