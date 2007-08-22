@@ -57,6 +57,7 @@ enum MID
   // Parser messages:
   ExpectedButFound,
   RedundantStorageClass,
+  TemplateTupleParameter,
 
   // Help messages:
   HelpMain,

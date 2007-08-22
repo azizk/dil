@@ -52,6 +52,7 @@ string[] messages = [
   // Parser messages:
   "erwartete '{1}', fand aber '{2}'.",
   "'{1}' ist redundant.",
+  "Template-Tupel-Parameter dürfen nur am Ende auftreten.",
 
   // Help messages:
   `dil v{1}

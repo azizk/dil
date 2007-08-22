@@ -4014,8 +4014,8 @@ version(D2)
           //         Identifier ...
           nT(); // Skip Identifier.
           nT(); // Skip Ellipses.
-          // if (token.type == T.Comma)
-          //  error(); // TODO: issue error msg for variadic param not being last.
+          if (token.type == T.Comma)
+            error(MID.TemplateTupleParameter); // TODO: issue error msg for variadic param not being last.
           tp = new TemplateTupleParameter(ident);
           break;
         case T.Comma, T.RParen, T.Colon, T.Assign:
@@ -4023,7 +4023,7 @@ version(D2)
           //         Identifier
           nT(); // Skip Identifier.
           parseSpecAndOrDefaultType();
-          tp = new TemplateAliasParameter(ident, specType, defType);
+          tp = new TemplateTypeParameter(ident, specType, defType);
           break;
         default:
           // TemplateValueParameter:

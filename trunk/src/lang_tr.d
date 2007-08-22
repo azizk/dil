@@ -52,6 +52,7 @@ string[] messages = [
   // Parser messages
   "'{1}' beklendi, ama '{2}' bulundu.",
   "'{1}' lüzumsuz.",
+  "şablon tuple parametre son sırada olmalı.",
 
   // Help messages:
   `dil v{1}
