@@ -3095,19 +3095,77 @@ debug writef("\33[34m%s\33[0m", success);
 
   Expression parseMulExpression()
   {
+    alias parsePostExpression parseNext;
     auto begin = token;
-    auto e = parseUnaryExpression();
+    auto e = parseNext();
     while (1)
     {
       auto operator = token;
       switch (operator.type)
       {
-      case T.Mul: nT(); e = new MulExpression(e, parseUnaryExpression(), operator); break;
-      case T.Div: nT(); e = new DivExpression(e, parseUnaryExpression(), operator); break;
-      case T.Mod: nT(); e = new ModExpression(e, parseUnaryExpression(), operator); break;
+      case T.Mul: nT(); e = new MulExpression(e, parseNext(), operator); break;
+      case T.Div: nT(); e = new DivExpression(e, parseNext(), operator); break;
+      case T.Mod: nT(); e = new ModExpression(e, parseNext(), operator); break;
       default:
         return e;
       }
+      set(e, begin);
+    }
+    assert(0);
+  }
+
+  Expression parsePostExpression()
+  {
+    auto begin = token;
+    auto e = parseUnaryExpression();
+    while (1)
+    {
+      switch (token.type)
+      {
+      case T.Dot:
+        e = new PostDotListExpression(e, parseDotListExpression());
+        goto Lset;
+      case T.PlusPlus:
+        e = new PostIncrExpression(e);
+        break;
+      case T.MinusMinus:
+        e = new PostDecrExpression(e);
+        break;
+      case T.LParen:
+        e = new CallExpression(e, parseArguments(T.RParen));
+        goto Lset;
+      case T.LBracket:
+        // parse Slice- and IndexExpression
+        nT();
+        if (token.type == T.RBracket)
+        {
+          e = new SliceExpression(e, null, null);
+          break;
+        }
+
+        Expression[] es = [parseAssignExpression()];
+
+        if (token.type == T.Slice)
+        {
+          nT();
+          e = new SliceExpression(e, es[0], parseAssignExpression());
+          require(T.RBracket);
+          goto Lset;
+        }
+        else if (token.type == T.Comma)
+        {
+           es ~= parseArguments(T.RBracket);
+        }
+        else
+          require(T.RBracket);
+
+        e = new IndexExpression(e, es);
+        goto Lset;
+      default:
+        return e;
+      }
+      nT();
+    Lset:
       set(e, begin);
     }
     assert(0);
@@ -3199,94 +3257,12 @@ debug writef("\33[34m%s\33[0m", success);
       }
       goto default;
     default:
-      e = parsePostExpression(parsePrimaryExpression());
+      e = parsePrimaryExpression();
       return e;
     }
     assert(e !is null);
     set(e, begin);
     return e;
-  }
-
-  Expression parsePostExpression(Expression e)
-  {
-    typeof(token) begin;
-    while (1)
-    {
-      begin = token;
-      switch (token.type)
-      {
-/*
-// Commented out because parseDotListExpression() handles this.
-      case T.Dot:
-        nT();
-        if (token.type == T.Identifier)
-        {
-          string ident = token.identifier;
-          nT();
-          if (token.type == T.Not && peekNext() == T.LParen) // Identifier !( TemplateArguments )
-          {
-            nT(); // Skip !.
-            e = new DotTemplateInstanceExpression(e, ident, parseTemplateArguments());
-          }
-          else
-          {
-            e = new DotIdExpression(e, ident);
-            nT();
-          }
-        }
-        else if (token.type == T.New)
-          e = parseNewExpression(e);
-        else
-          expected(T.Identifier);
-        continue;
-*/
-      case T.Dot:
-        e = new PostDotListExpression(e, parseDotListExpression());
-        goto Lset;
-      case T.PlusPlus:
-        e = new PostIncrExpression(e);
-        break;
-      case T.MinusMinus:
-        e = new PostDecrExpression(e);
-        break;
-      case T.LParen:
-        e = new CallExpression(e, parseArguments(T.RParen));
-        goto Lset;
-      case T.LBracket:
-        // parse Slice- and IndexExpression
-        nT();
-        if (token.type == T.RBracket)
-        {
-          e = new SliceExpression(e, null, null);
-          break;
-        }
-
-        Expression[] es = [parseAssignExpression()];
-
-        if (token.type == T.Slice)
-        {
-          nT();
-          e = new SliceExpression(e, es[0], parseAssignExpression());
-          require(T.RBracket);
-          goto Lset;
-        }
-        else if (token.type == T.Comma)
-        {
-           es ~= parseArguments(T.RBracket);
-        }
-        else
-          require(T.RBracket);
-
-        e = new IndexExpression(e, es);
-        goto Lset;
-      default:
-        return e;
-      }
-      nT();
-    Lset:
-      set(e, begin);
-    }
-    assert(0);
   }
 
   Expression parsePrimaryExpression()
@@ -3295,24 +3271,6 @@ debug writef("\33[34m%s\33[0m", success);
     Expression e;
     switch (token.type)
     {
-/*
-// Commented out because parseDotListExpression() handles this.
-    case T.Identifier:
-      string ident = token.identifier;
-      nT();
-      if (token.type == T.Not && peekNext() == T.LParen) // Identifier !( TemplateArguments )
-      {
-        nT(); // Skip !.
-        e = new TemplateInstanceExpression(ident, parseTemplateArguments());
-      }
-      else
-        e = new IdentifierExpression(ident);
-      break;
-    case T.Dot:
-      nT();
-      e = new IdentifierExpression(".");
-      break;
-*/
     case T.Identifier, T.Dot, T.Typeof:
       e = parseDotListExpression();
       break;
@@ -3447,22 +3405,6 @@ debug writef("\33[34m%s\33[0m", success);
       require(T.RParen);
       e = new TypeidExpression(type);
       break;
-/*
-// Commented out because parseDotListExpression() handles this.
-    case T.Typeof:
-      requireNext(T.LParen);
-      auto type = new TypeofType(parseExpression());
-      require(T.RParen);
-      if (token.type == T.Dot)
-      { // typeof ( Expression ) . Identifier
-        nT();
-        string ident = requireIdentifier;
-        e = new TypeDotIdExpression(type, ident);
-      }
-      else // typeof ( Expression )
-        e = new TypeofExpression(type);
-      break;
-*/
     case T.Is:
       requireNext(T.LParen);
 
