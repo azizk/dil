@@ -101,8 +101,15 @@ char[] xml_escape(char[] text)
 
 char[] getShortClassName(Node n)
 {
+  static char[][] name_table;
+  if (name_table is null)
+    name_table = new char[][NodeKind.max+1];
+  char[] name = name_table[n.kind];
+  if (name !is null)
+    return name;
+
   alias std.string.find find;
-  char[] name = n.classinfo.name;
+  name = n.classinfo.name;
   name = name[find(name, ".")+1 .. $]; // Remove package name
   name = name[find(name, ".")+1 .. $]; // Remove module name
   char[] remove;
@@ -124,6 +131,8 @@ char[] getShortClassName(Node n)
   auto idx = find(name, remove);
   if (idx != -1)
     name = name[0 .. idx];
+  // Store the name.
+  name_table[n.kind] = name;
   return name;
 }
 

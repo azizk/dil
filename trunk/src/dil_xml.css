@@ -57,4 +57,4 @@ o = Other
 /* d { background-color: #FFDDDD; } */
 /* e { background-color: #DDDDFF;} */
 d[t=Module] i, d[t=Import] i { color: blue; }
-t i { color: #119; }
+t > i { color: #119; }
