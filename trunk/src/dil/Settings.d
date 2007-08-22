@@ -33,11 +33,12 @@ else
 
 const string VERSION = Format!("%s.%s", VERSION_MAJOR, Pad!(VERSION_MINOR, 3));
 
+/// Used in main help message.
 const COMPILED_WITH = __VENDOR__;
+/// ditto
 const COMPILED_VERSION = Format!("%s.%s", __VERSION__/1000, Pad!(__VERSION__%1000, 3));
+/// ditto
 const COMPILED_DATE = __TIMESTAMP__;
-
-const usageGenerate = "generate (gen)";
 
 struct GlobalSettings
 {
