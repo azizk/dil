@@ -1,9 +1,9 @@
 =Purpose=
-dil is a hand-crafted compiler implementation for the D programming language. Currently the Lexer and the Parser are fully implemented (except for very minor things.) No semantic analysis is done at the moment. The backend will most probably be gcc.
+dil is a hand-crafted compiler implementation for the D programming language. Currently the lexer and the parser are fully implemented (except for very minor things.) No semantic analysis is done at the moment. The backend will most probably be gcc.
 
 What dil can do at the moment:
   * dil is fully internationalized and can output compiler messages in English and in German. You can determine which language to use with a setting in config.d.
-  * Using the lexer an XML file can be generated, where almost every token is wrapped in an XML-tag (doing all is not an issue.) The whitespace of the original source file is preserved. These XML files can be viewed in W3C-standards compatible browsers(`*`) in combination with a CSS document. (`*`Note: Internet Explorer is the only browser that spectacularly fails at this job.)
+  * Generate XML or HTML documents. You can choose to generate tags for tokens only or you can also have the whole parse tree unparsed. The whitespace of the original source file is preserved. You can view the HTML documents in any browser you like. The XML documents can only be viewed in W3C-standards compatible browsers(`*`) in combination with an XML formatting CSS document. dil provides two ordinary CSS documents (for XML/HTML) which can be customized to one's heart's content. (`*`Note: Internet Explorer is the only browser that spectacularly fails at this job.)
 
   * dil can parse D 2.0 additions:
     * [http://www.digitalmars.com/d/statement.html#ForeachRangeStatement ForeachRangeStatement].
@@ -15,7 +15,6 @@ What dil can do at the moment:
 
 Features you will or might see in dil:
   * Documentation generation ala doxygen (keeping ddoc in mind.)
-  * Generate syntax-highlighted D source files.
   * Refactoring (renaming symbols, modules; changing the type of a symbol etc.)
   * Coding rules enforcement.
   * Code search.
