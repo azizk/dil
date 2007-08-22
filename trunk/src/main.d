@@ -17,7 +17,7 @@ void main(char[][] args)
   GlobalSettings.load();
 
   if (args.length <= 1)
-    return writefln(format(MID.HelpMain, VERSION, usageGenerate, COMPILED_WITH, COMPILED_VERSION, COMPILED_DATE));
+    return writefln(helpMain());
 
   string command = args[1];
   switch (command)
@@ -50,8 +50,37 @@ void main(char[][] args)
     if (args.length == 3)
       parse(args[2]);
     break;
+  case "?", "help":
+    if (args.length == 3)
+      printHelp(args[2]);
+    else
+      writefln(helpMain());
+    break;
   default:
   }
+}
+
+const char[] COMMANDS =
+  "  generate (gen)\n"
+  "  help (?)\n";
+
+char[] helpMain()
+{
+  return format(MID.HelpMain, VERSION, COMMANDS, COMPILED_WITH, COMPILED_VERSION, COMPILED_DATE);
+}
+
+void printHelp(char[] command)
+{
+  char[] msg;
+  switch (command)
+  {
+  case "gen", "generate":
+    msg = GetMsg(MID.HelpGenerate);
+    break;
+  default:
+    msg = helpMain();
+  }
+  writefln(msg);
 }
 
 enum DocOption

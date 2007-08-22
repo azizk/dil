@@ -58,22 +58,19 @@ string[] messages = [
 Copyright (c) 2007 by Aziz Köksal. Licensed under the GPL3.
 
 Subcommands:
-  {2}
-
+{2}
 Type 'dil help <subcommand>' for more help on a particular subcommand.
 
-Compiled with {3} v{4} on {5}.
-`,
+Compiled with {3} v{4} on {5}.`,
   `Generate an XML or HTML document from a D source file.
 Usage:
   dil gen file.d [Options]
 
 Options:
-  --syntax         : generate tags for syntax and tokens
-  --xml            : use XML format
+  --syntax         : generate tags for the syntax tree
+  --xml            : use XML format (default)
   --html           : use HTML format
 
 Example:
-  dil gen Parser.d --html --syntax > Parser.html
-`,
+  dil gen Parser.d --html --syntax > Parser.html`,
 ];

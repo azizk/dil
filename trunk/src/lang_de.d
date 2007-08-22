@@ -58,23 +58,20 @@ string[] messages = [
 Copyright (c) 2007, Aziz Köksal. Lizensiert unter der GPL3.
 
 Befehle:
-  {2}
-
+{2}
 Geben Sie 'dil help <Befehl>' ein, um mehr Hilfe zu einem bestimmten Befehl zu
 erhalten.
 
-Kompiliert mit {3} v{4} am {5}.
-`,
+Kompiliert mit {3} v{4} am {5}.`,
   `Generiere ein XML- oder HTML-Dokument aus einer D-Quelltextdatei.
 Verwendung:
   dil gen datei.d [Optionen]
 
 Optionen:
-  --syntax         : generiere Elemente for die Syntax und Tokens
+  --syntax         : generiere Elemente für den Syntaxbaum
   --xml            : verwende XML-Format (voreingestellt)
   --html           : verwende HTML-Format
 
 Beispiel:
-  dil gen Parser.d --html --syntax > Parser.html
-`,
+  dil gen Parser.d --html --syntax > Parser.html`,
 ];

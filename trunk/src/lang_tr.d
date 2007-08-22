@@ -58,22 +58,19 @@ string[] messages = [
 Copyright (c) 2007, Aziz Köksal. Lisans GPL3.
 
 Komutlar:
-  {2}
-
+{2}
 Bir belirli komut'a yardım edinmek için 'dil help <komut>' yazınız.
 
-Bu yazılım {3} v{4} ile {5} tarihinde derletilmiş.
-`,
+Bu yazılım {3} v{4} ile {5} tarihinde derletilmiş.`,
   `Bir D kaynak kodundan XML yada HTML dosyası oluştur.
 Kullanım:
   dil gen dosya.d [Seçenekler]
 
 Seçenekler:
-  --syntax         : söz dizimi için etiket yazdır
-  --xml            : XML biçimi kullan
+  --syntax         : söz dizimi için etiketler yazdır
+  --xml            : XML biçimi kullan (varsayılır)
   --html           : HTML biçimi kullan
 
 Örnek:
-  dil gen Parser.d --html --syntax > Parser.html
-`,
+  dil gen Parser.d --html --syntax > Parser.html`,
 ];
