@@ -17,10 +17,24 @@ else
   const VERSION_MAJOR = 1;
   const VERSION_MINOR = 0;
 }
-const string VERSION = Format!("%s.%s", VERSION_MAJOR, VERSION_MINOR);
+
+template Pad(char[] str, uint amount)
+{
+  static if (str.length >= amount)
+    const char[] Pad = str;
+  else
+    const char[] Pad = "0" ~ Pad!(str, amount-1);
+}
+
+template Pad(int num, uint amount)
+{
+  const char[] Pad = Pad!(ToString!(num), amount);
+}
+
+const string VERSION = Format!("%s.%s", VERSION_MAJOR, Pad!(VERSION_MINOR, 3));
 
 const COMPILED_WITH = __VENDOR__;
-const COMPILED_VERSION = Format!("%s.%s", __VERSION__/1000, __VERSION__%1000);
+const COMPILED_VERSION = Format!("%s.%s", __VERSION__/1000, Pad!(__VERSION__%1000, 3));
 const COMPILED_DATE = __TIMESTAMP__;
 
 const usageGenerate = "generate (gen)";
