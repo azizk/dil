@@ -3971,26 +3971,16 @@ version(D2)
     auto tparams = new TemplateParameters;
 
     require(T.LParen);
-    if (token.type == T.RParen)
-      return tparams;
-
+    if (token.type != T.RParen)
     while (1)
     {
       auto paramBegin = token;
-      TP tp;
+      TemplateParameter tp;
       Token* ident;
-      Type valueType;
       Type specType, defType;
-      Expression specValue, defValue;
 
-      switch (token.type)
+      void parseSpecAndOrDefaultType()
       {
-      case T.Alias:
-        // TemplateAliasParameter:
-        //         alias Identifier
-        tp = TP.Alias;
-        nT(); // Skip alias keyword.
-        ident = requireId();
         // : SpecializationType
         if (token.type == T.Colon)
         {
@@ -4003,6 +3993,17 @@ version(D2)
           nT();
           defType = parseType();
         }
+      }
+
+      switch (token.type)
+      {
+      case T.Alias:
+        // TemplateAliasParameter:
+        //         alias Identifier
+        nT(); // Skip alias keyword.
+        ident = requireId();
+        parseSpecAndOrDefaultType();
+        tp = new TemplateAliasParameter(ident, specType, defType);
         break;
       case T.Identifier:
         ident = token;
@@ -4011,29 +4012,18 @@ version(D2)
         case T.Ellipses:
           // TemplateTupleParameter:
           //         Identifier ...
-          tp = TP.Tuple;
           nT(); // Skip Identifier.
           nT(); // Skip Ellipses.
           // if (token.type == T.Comma)
           //  error(); // TODO: issue error msg for variadic param not being last.
+          tp = new TemplateTupleParameter(ident);
           break;
         case T.Comma, T.RParen, T.Colon, T.Assign:
           // TemplateTypeParameter:
           //         Identifier
-          tp = TP.Type;
           nT(); // Skip Identifier.
-          // : SpecializationType
-          if (token.type == T.Colon)
-          {
-            nT();
-            specType = parseType();
-          }
-          // = DefaultType
-          if (token.type == T.Assign)
-          {
-            nT();
-            defType = parseType();
-          }
+          parseSpecAndOrDefaultType();
+          tp = new TemplateAliasParameter(ident, specType, defType);
           break;
         default:
           // TemplateValueParameter:
@@ -4046,8 +4036,8 @@ version(D2)
       LTemplateValueParameter:
         // TemplateValueParameter:
         //         Declarator
-        tp = TP.Value;
-        valueType = parseDeclarator(ident);
+        Expression specValue, defValue;
+        auto valueType = parseDeclarator(ident);
         // : SpecializationValue
         if (token.type == T.Colon)
         {
@@ -4060,9 +4050,11 @@ version(D2)
           nT();
           defValue = parseCondExpression();
         }
+        tp = new TemplateValueParameter(valueType, ident, specValue, defValue);
       }
 
-      tparams ~= set(new TemplateParameter(tp, valueType, ident, specType, defType, specValue, defValue), paramBegin);
+      // Push template parameter.
+      tparams ~= set(tp, paramBegin);
 
       if (token.type != T.Comma)
         break;

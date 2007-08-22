@@ -142,42 +142,75 @@ class BaseClass : Node
   }
 }
 
-enum TP
+abstract class TemplateParameter : Node
 {
-  Type,
-  Value,
-  Alias,
-  Tuple
-}
-
-class TemplateParameter : Node
-{
-  TP tp;
-  Type valueType;
-  Token* ident;
-  Type specType, defType;
-  Expression specValue, defValue;
-  this(TP tp, Type valueType, Token* ident, Type specType, Type defType, Expression specValue, Expression defValue)
+  this()
   {
     super(NodeCategory.Other);
+  }
+}
+
+class TemplateAliasParameter : TemplateParameter
+{
+  Token* ident;
+  Type specType, defType;
+  this(Token* ident, Type specType, Type defType)
+  {
     mixin(set_kind);
-    if (valueType)
-      this.children ~= valueType;
     if (specType)
       this.children ~= specType;
     if (defType)
       this.children ~= defType;
+    this.ident = ident;
+    this.specType = specType;
+    this.defType = defType;
+  }
+}
+
+class TemplateTypeParameter : TemplateParameter
+{
+  Token* ident;
+  Type specType, defType;
+  this(Token* ident, Type specType, Type defType)
+  {
+    mixin(set_kind);
+    if (specType)
+      this.children ~= specType;
+    if (defType)
+      this.children ~= defType;
+    this.ident = ident;
+    this.specType = specType;
+    this.defType = defType;
+  }
+}
+
+class TemplateValueParameter : TemplateParameter
+{
+  Type valueType;
+  Token* ident;
+  Expression specValue, defValue;
+  this(Type valueType, Token* ident, Expression specValue, Expression defValue)
+  {
+    mixin(set_kind);
+    this.children ~= valueType;
     if (specValue)
       this.children ~= specValue;
     if (defValue)
       this.children ~= defValue;
-    this.tp = tp;
     this.valueType = valueType;
     this.ident = ident;
-    this.specType = specType;
-    this.defType = defType;
     this.specValue = specValue;
     this.defValue = defValue;
+  }
+}
+
+class TemplateTupleParameter : TemplateParameter
+{
+  Token* ident;
+  this(Token* ident)
+  {
+    mixin(set_kind);
+    this.ident = ident;
   }
 }
 

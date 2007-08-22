@@ -202,7 +202,10 @@ enum NodeKind
   Parameter,
   Parameters,
   BaseClass,
-  TemplateParameter,
+  TemplateAliasParameter,
+  TemplateTypeParameter,
+  TemplateValueParameter,
+  TemplateTupleParameter,
   TemplateParameters,
   TemplateArguments,
 }
