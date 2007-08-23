@@ -143,7 +143,7 @@ class Lexer
       switch (t.type)
       {
       case TOK.DATE:
-        time_str = time_str[4..10] ~ time_str[20..24] ~ \0; break;
+        time_str = time_str[4..11] ~ time_str[20..24] ~ \0; break;
       case TOK.TIME:
         time_str = time_str[11..19] ~ \0; break;
       case TOK.TIMESTAMP:
