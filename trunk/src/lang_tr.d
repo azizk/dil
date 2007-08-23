@@ -65,7 +65,7 @@ Komutlar:
 Bir belirli komut'a yardım edinmek için 'dil help <komut>' yazınız.
 
 Bu yazılım {3} v{4} ile {5} tarihinde derletilmiş.`,
-  `Bir D kaynak kodundan XML yada HTML dosyası oluştur.
+  `Bir D kaynak kodundan XML veya HTML dosyası oluştur.
 Kullanım:
   dil gen dosya.d [Seçenekler]
 
