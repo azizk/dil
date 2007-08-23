@@ -29,6 +29,7 @@ const uint _Z_ = 26; /// Control+Z
 class Lexer
 {
   Token* head; /// The head of the doubly linked token list.
+  Token* tail; /// The tail of the linked list. Set in scan().
   Token* token; /// Points to the current token in the token list.
   string text;
   char* p; /// Points to the current character in the source text.
@@ -64,6 +65,18 @@ class Lexer
     this.head.type = TOK.HEAD;
     this.token = this.head;
     scanShebang();
+  }
+
+  ~this()
+  {
+    auto token = head.next;
+    do
+    {
+      assert(token.type == TOK.EOF ? token == tail && token.next is null : 1);
+      delete token.prev;
+      token = token.next;
+    } while (token !is null)
+    delete tail;
   }
 
   void scanShebang()
@@ -173,6 +186,7 @@ class Lexer
         assert(*p == 0 || *p == _Z_);
         t.type = TOK.EOF;
         t.end = p;
+        tail = &t;
         assert(t.start == t.end);
         return;
       }
@@ -1593,7 +1607,7 @@ class Lexer
     assert(t !is null);
     if (t.next)
       t = t.next;
-    else if (t.type != TOK.EOF)
+    else if (t != this.tail)
     {
       Token* new_t = new Token;
       scan(*new_t);
