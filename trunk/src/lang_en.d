@@ -53,6 +53,8 @@ string[] messages = [
   "expected '{1}', but found '{2}'.",
   "'{1}' is redundant.",
   "template tuple parameters can only be last.",
+  "the functions 'in' contract was already parsed.",
+  "the functions 'out' contract was already parsed.",
 
   // Help messages:
   `dil v{1}

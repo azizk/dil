@@ -58,6 +58,8 @@ enum MID
   ExpectedButFound,
   RedundantStorageClass,
   TemplateTupleParameter,
+  InContract,
+  OutContract,
 
   // Help messages:
   HelpMain,

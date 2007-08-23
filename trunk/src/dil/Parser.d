@@ -505,14 +505,14 @@ debug writef("\33[34m%s\33[0m", success);
         nT();
         break;
       case T.In:
-        //if (func.inBody)
-          // TODO: issue error msg.
+        if (func.inBody)
+          error(MID.InContract);
         nT();
         func.inBody = parseStatements();
         continue;
       case T.Out:
-        //if (func.outBody)
-          // TODO: issue error msg.
+        if (func.outBody)
+          error(MID.OutContract);
         nT();
         if (token.type == T.LParen)
         {
@@ -528,7 +528,7 @@ debug writef("\33[34m%s\33[0m", success);
       default:
         error(MID.ExpectedButFound, "FunctionBody", token.srcText);
       }
-      break; // exit while loop
+      break; // Exit loop.
     }
     set(func, begin);
     func.finishConstruction();
@@ -4015,7 +4015,7 @@ version(D2)
           nT(); // Skip Identifier.
           nT(); // Skip Ellipses.
           if (token.type == T.Comma)
-            error(MID.TemplateTupleParameter); // TODO: issue error msg for variadic param not being last.
+            error(MID.TemplateTupleParameter);
           tp = new TemplateTupleParameter(ident);
           break;
         case T.Comma, T.RParen, T.Colon, T.Assign:

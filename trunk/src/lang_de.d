@@ -53,6 +53,8 @@ string[] messages = [
   "erwartete '{1}', fand aber '{2}'.",
   "'{1}' ist redundant.",
   "Template-Tupel-Parameter dürfen nur am Ende auftreten.",
+  "der 'in'-Vertrag der Funktion wurde bereits geparsed.",
+  "der 'out'-Vertrag der Funktion wurde bereits geparsed.",
 
   // Help messages:
   `dil v{1}

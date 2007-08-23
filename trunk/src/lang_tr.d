@@ -53,6 +53,8 @@ string[] messages = [
   "'{1}' beklendi, ama '{2}' bulundu.",
   "'{1}' lüzumsuz.",
   "şablon tuple parametre son sırada olmalı.",
+  "fonksiyonun 'in' kontratı daha önceden ayrıştırılmış.",
+  "fonksiyonun 'out' kontratı daha önceden ayrıştırılmış.",
 
   // Help messages:
   `dil v{1}
