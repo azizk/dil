@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dparser;
+module main;
 import std.stdio;
 import std.file;
 import dil.Parser;
