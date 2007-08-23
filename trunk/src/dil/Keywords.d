@@ -107,11 +107,11 @@ static const Identifier[] keywords = [
   {TOK.While, "while"},
   {TOK.With, "with"},
   // Special tokens:
-  {TOK.Special, "__FILE__"},
-  {TOK.Special, "__LINE__"},
-  {TOK.Special, "__DATE__"},
-  {TOK.Special, "__TIME__"},
-  {TOK.Special, "__TIMESTAMP__"},
-  {TOK.Special, "__VENDOR__"},
-  {TOK.Special, "__VERSION__"},
+  {TOK.FILE, "__FILE__"},
+  {TOK.LINE, "__LINE__"},
+  {TOK.DATE, "__DATE__"},
+  {TOK.TIME, "__TIME__"},
+  {TOK.TIMESTAMP, "__TIMESTAMP__"},
+  {TOK.VENDOR, "__VENDOR__"},
+  {TOK.VERSION, "__VERSION__"},
 ];

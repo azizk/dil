@@ -32,6 +32,7 @@ else
 }
 
 const string VERSION = Format!("%s.%s", VERSION_MAJOR, Pad!(VERSION_MINOR, 3));
+const VENDOR = "dil";
 
 /// Used in main help message.
 const COMPILED_WITH = __VENDOR__;

@@ -25,8 +25,16 @@ enum TOK : ushort
 
   Identifier = 5,
   String,
-  Special,
   CharLiteral, WCharLiteral, DCharLiteral,
+
+  // Special tokens
+  FILE,
+  LINE,
+  DATE,
+  TIME,
+  TIMESTAMP,
+  VENDOR,
+  VERSION,
 
   // Numbers
   Int32, Int64, Uint32, Uint64,
@@ -158,6 +166,11 @@ struct Token
   bool isWhitespace()
   {
     return !!(type & TOK.Whitespace);
+  }
+
+  bool isSpecialToken()
+  {
+    return *start == '_' && type != TOK.Identifier;
   }
 
   int opEquals(TOK type2)

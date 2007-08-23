@@ -553,9 +553,6 @@ void printToken(Token* token, string[] tags)
        TOK.RBracket, TOK.LBrace, TOK.RBrace:
     writef(tags[DP.Bracket], srcText);
     break;
-  case TOK.Special:
-    writef(tags[DP.SpecialToken], srcText);
-    break;
   case TOK.Shebang:
     writef(tags[DP.Shebang], srcText);
     break;
@@ -589,6 +586,8 @@ void printToken(Token* token, string[] tags)
   default:
     if (token.isKeyword())
       writef(tags[DP.Keyword], srcText);
+    else if (token.isSpecialToken)
+      writef(tags[DP.SpecialToken], srcText);
     else
       writef("%s", srcText);
   }

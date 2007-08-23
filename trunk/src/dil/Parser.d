@@ -3490,12 +3490,14 @@ debug writef("\33[34m%s\33[0m", success);
       e = new TraitsExpression(id, args);
       break;
     }
-    case T.Special:
-      e = new SpecialTokenExpression(token);
-      nT();
-      break;
     default:
-      // TODO: issue error msg.
+      if (token.isSpecialToken)
+      {
+        e = new SpecialTokenExpression(token);
+        nT();
+        break;
+      }
+
       error(MID.ExpectedButFound, "Expression", token.srcText);
       e = new EmptyExpression();
     }

@@ -9,10 +9,13 @@ import dil.Keywords;
 import dil.Identifier;
 import dil.Messages;
 import dil.HtmlEntities;
+import dil.Settings;
 import std.stdio;
 import std.utf;
 import std.uni;
-import std.c.stdlib;
+import std.c.stdlib : strtof, strtod, strtold, getErrno, ERANGE;
+import std.c.time : time_t, time, ctime;
+import std.c.string : strlen;
 import std.string;
 
 const char[3] LS = \u2028;
@@ -106,6 +109,47 @@ class Lexer
     }
   }
 
+  void finalizeSpecialToken(ref Token t)
+  {
+    assert(t.srcText[0..2] == "__");
+    switch (t.type)
+    {
+    case TOK.FILE:
+      t.str = this.fileName;
+      break;
+    case TOK.LINE:
+      t.uint_ = this.loc;
+      break;
+    case TOK.DATE,
+         TOK.TIME,
+         TOK.TIMESTAMP:
+      time_t time_val;
+      time(&time_val);
+      char* str = ctime(&time_val);
+      char[] time_str = str[0 .. strlen(str)];
+      switch (t.type)
+      {
+      case TOK.DATE:
+        time_str = time_str[4..10] ~ time_str[20..24] ~ \0; break;
+      case TOK.TIME:
+        time_str = time_str[11..19] ~ \0; break;
+      case TOK.TIMESTAMP:
+        time_str = time_str[0..24] ~ \0; break;
+      default: assert(0);
+      }
+      t.str = time_str;
+      break;
+    case TOK.VENDOR:
+      t.str = VENDOR;
+      break;
+    case TOK.VERSION:
+      t.uint_ = VERSION_MAJOR*1000 + VERSION_MINOR;
+      break;
+    default:
+      assert(0);
+    }
+  }
+
   public void scan(out Token t)
   in
   {
@@ -176,6 +220,8 @@ class Lexer
         }
         assert(id);
         t.type = id.type;
+        if (t.isSpecialToken)
+          finalizeSpecialToken(t);
         return;
       }
 
