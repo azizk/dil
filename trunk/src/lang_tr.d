@@ -20,7 +20,7 @@ string[] messages = [
   "kapanmamış çift tırnak dizgisi.",
   // x""
   "heks sayı olmayan karakter '{1}' heks dizgisi içinde bulundu.",
-  "heks dizginin içindeki sayılar çift olmalılar.",
+  "heks dizginin içindeki sayılar çifter çifter olmalıdır.",
   "kapanmamış heks dizgisi.",
   // /* */ /+ +/
   "kapanmamış blok açıklaması (/* */).",
@@ -30,7 +30,7 @@ string[] messages = [
   "kapanmamış ters tırnak dizgisi.",
   // \x \u \U
   "tanımlanmamış çıkış serisi bulundu.",
-  "heksadesimal çıkış serisin sayıları az geliyor.",
+  "heksadesimal çıkış serisi sayıları yeterli değil.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "tanımlanmamış HTML varlık '{1}'",
   "kapanmamış HTML varlık.",
@@ -43,8 +43,8 @@ string[] messages = [
   "oktal rakam taşması.",
   "float rakam taşması.",
   "8 ve 9 sayılar oktal rakamlar'da geçersizdir.",
-  "geçersiz heks rakam; en azında bir heks sayı gerekdir.",
-  "geçersiz binari rakam; en azında bir binari sayı gerekdir.",
+  "geçersiz heks rakam; minimum bir heks sayı gereklidir.",
+  "geçersiz binari rakam; minimum bir binari sayı gereklidir.",
   "bir heksadesimal float rakamın üsü gereklidir.",
   "heksadesimal float rakamın üsün'de desimal sayılar eksik.",
   "üsler desimal sayı ile başlamalı.",
@@ -62,7 +62,7 @@ Copyright (c) 2007, Aziz Köksal. Lisans GPL3.
 
 Komutlar:
 {2}
-Bir belirli komut'a yardım edinmek için 'dil help <komut>' yazınız.
+Belirli komut'a yardım edinmek için 'dil help <komut>' yazınız.
 
 Bu yazılım {3} v{4} ile {5} tarihinde derletilmiş.`,
   `Bir D kaynak kodundan XML veya HTML dosyası oluştur.
