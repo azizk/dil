@@ -1639,15 +1639,15 @@ class Lexer
     string sourceText = "unittest { }";
     auto lx = new Lexer(sourceText, null);
 
-    Token next;
+    Token* next = lx.head;
     lx.peek(next);
-    assert(next == TOK.Unittest);
+    assert(next.type == TOK.Unittest);
     lx.peek(next);
-    assert(next == TOK.LBrace);
+    assert(next.type == TOK.LBrace);
     lx.peek(next);
-    assert(next == TOK.RBrace);
+    assert(next.type == TOK.RBrace);
     lx.peek(next);
-    assert(next == TOK.EOF);
+    assert(next.type == TOK.EOF);
     writefln("end of peek() unittest");
   }
 
@@ -1709,6 +1709,7 @@ class Lexer
 
 unittest
 {
+  writefln("Testing Lexer.");
   string[] toks = [
     ">",    ">=", ">>",  ">>=", ">>>", ">>>=", "<",   "<=",  "<>",
     "<>=",  "<<", "<<=", "!",   "!<",  "!>",   "!<=", "!>=", "!<>",
@@ -1724,14 +1725,18 @@ unittest
     src ~= op ~ " ";
 
   auto lx = new Lexer(src, "");
-  auto tokens = lx.getTokens();
+  auto token = lx.getTokens();
 
-  tokens = tokens[0..$-1]; // exclude TOK.EOF
-
-  assert(tokens.length == toks.length );
-
-  foreach (i, t; tokens)
-    assert(t.srcText == toks[i], std.string.format("Lexed '%s' but expected '%s'", t.srcText, toks[i]));
+  uint i;
+  assert(token == lx.head);
+  token = token.next;
+  do
+  {
+    assert(i < toks.length);
+    assert(token.srcText == toks[i], std.string.format("Scanned '%s' but expected '%s'", token.srcText, toks[i]));
+    ++i;
+    token = token.next;
+  } while (token.type != TOK.EOF)
 }
 
 unittest
