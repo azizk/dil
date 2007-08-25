@@ -3,6 +3,8 @@
   License: GPL3
 +/
 
+string lang_code = "tr";
+
 string[] messages = [
   // Lexer messages:
   "geçersiz Unikod karakteri.",

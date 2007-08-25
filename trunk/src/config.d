@@ -1,1 +1,1 @@
-option language = "en";
+option langfile = "lang_en.d";

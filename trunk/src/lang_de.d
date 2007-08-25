@@ -3,6 +3,8 @@
   License: GPL3
 +/
 
+string lang_code = "de";
+
 string[] messages = [
   // Lexer messages:
   "ungültiges Unicodezeichen.",

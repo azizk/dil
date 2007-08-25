@@ -62,59 +62,65 @@ static:
     foreach (decl; root.children)
     {
       auto v = Cast!(VariableDeclaration)(decl);
-      if (v && v.idents[0].srcText == "language")
+      if (v && v.idents[0].srcText == "langfile")
       {
         auto e = v.values[0];
         if (!e)
-          throw new Exception("language variable has no value set.");
+          throw new Exception("langfile variable has no value set.");
         auto val = Cast!(StringLiteralsExpression)(e);
         if (val)
         {
-          GlobalSettings.language = val.getString();
+          // Set fileName to d-file with messages table.
+          fileName = val.getString();
           break;
         }
       }
     }
 
     // Load messages
-    if (GlobalSettings.language.length)
+    sourceText = cast(char[]) std.file.read(fileName);
+    parser = new Parser(sourceText, fileName);
+    parser.start();
+    root = parser.parseModule();
+
+    if (parser.errors.length || parser.lx.errors.length)
     {
-      fileName = "lang_" ~ GlobalSettings.language ~ ".d";
-      sourceText = cast(char[]) std.file.read(fileName);
-      parser = new Parser(sourceText, fileName);
-      parser.start();
-      root = parser.parseModule();
-
-      if (parser.errors.length || parser.lx.errors.length)
-      {
-        throw new Exception("There are errors in "~fileName~".");
-      }
-
-      char[][] messages;
-      foreach (decl; root.children)
-      {
-        auto v = Cast!(VariableDeclaration)(decl);
-        if (v && v.idents[0].srcText == "messages")
-        {
-          auto e = v.values[0];
-          if (!e)
-            throw new Exception("messages variable in "~fileName~" has no value set.");
-          if (auto array = Cast!(ArrayInitializer)(e))
-          {
-            foreach (value; array.values)
-            {
-              if (auto str = Cast!(StringLiteralsExpression)(value))
-                messages ~= str.getString();
-            }
-          }
-          else
-            throw new Exception("messages variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");
-        }
-      }
-      if (messages.length != MID.max+1)
-        throw new Exception(std.string.format("messages table in %s must exactly have %d entries, but %s were found.", fileName, MID.max+1, messages.length));
-      GlobalSettings.messages = messages;
+      throw new Exception("There are errors in "~fileName~".");
     }
-  }
 
+    char[][] messages;
+    foreach (decl; root.children)
+    {
+      auto v = Cast!(VariableDeclaration)(decl);
+      if (v is null)
+        continue;
+      if (v.idents[0].srcText == "messages")
+      {
+        auto e = v.values[0];
+        if (!e)
+          throw new Exception("messages variable in "~fileName~" has no value set.");
+        if (auto array = Cast!(ArrayInitializer)(e))
+        {
+          foreach (value; array.values)
+          {
+            if (auto str = Cast!(StringLiteralsExpression)(value))
+              messages ~= str.getString();
+          }
+        }
+        else
+          throw new Exception("messages variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");
+      }
+      else if(v.idents[0].srcText == "lang_code")
+      {
+        auto e = v.values[0];
+        if (!e)
+          throw new Exception("lang_code variable in "~fileName~" has no value set.");
+        if (auto str = Cast!(StringLiteralsExpression)(e))
+            GlobalSettings.language = str.getString();
+      }
+    }
+    if (messages.length != MID.max+1)
+      throw new Exception(std.string.format("messages table in %s must exactly have %d entries, but %s were found.", fileName, MID.max+1, messages.length));
+    GlobalSettings.messages = messages;
+  }
 }
