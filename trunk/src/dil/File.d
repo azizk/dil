@@ -23,6 +23,8 @@ char[] loadFile(char[] fileName)
         text = toUTF8(cast(dchar[])utf32BEtoLE(data));
       else if (data[1..4] == cast(ubyte[3])x"00 00 00")
         text = toUTF8(cast(dchar[])data);
+      else
+        text = cast(char[])data;
     }
     else if (data.length >= 2)
     {
@@ -30,6 +32,8 @@ char[] loadFile(char[] fileName)
         text = toUTF8(cast(wchar[])utf16BEtoLE(data));
       else if (data[1] == 0)
         text = toUTF8(cast(wchar[])data);
+      else
+        text = cast(char[])data;
     }
     else
       text = cast(char[])data;
