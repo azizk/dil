@@ -4087,19 +4087,6 @@ version(D2)
     require(tok);
   }
 
-  string requireIdentifier()
-  {
-    string identifier;
-    if (token.type == T.Identifier)
-    {
-      identifier = token.identifier;
-      nT();
-    }
-    else
-      error(MID.ExpectedButFound, "Identifier", token.srcText);
-    return identifier;
-  }
-
   Token* requireId()
   {
     if (token.type == T.Identifier)

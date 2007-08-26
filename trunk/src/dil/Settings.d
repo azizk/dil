@@ -5,6 +5,7 @@
 module dil.Settings;
 import dil.Messages;
 import dil.Parser, dil.SyntaxTree, dil.Declarations, dil.Expressions;
+import dil.File;
 import std.metastrings;
 
 template Pad(char[] str, uint amount)
@@ -49,7 +50,7 @@ static:
   void load()
   {
     auto fileName = "config.d"[];
-    auto sourceText = cast(char[]) std.file.read(fileName);
+    auto sourceText = loadFile(fileName);
     auto parser = new Parser(sourceText, fileName);
     parser.start();
     auto root = parser.parseModule();
@@ -78,7 +79,7 @@ static:
     }
 
     // Load messages
-    sourceText = cast(char[]) std.file.read(fileName);
+    sourceText = loadFile(fileName);
     parser = new Parser(sourceText, fileName);
     parser.start();
     root = parser.parseModule();

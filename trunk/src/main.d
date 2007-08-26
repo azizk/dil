@@ -4,7 +4,6 @@
 +/
 module main;
 import std.stdio;
-import std.file;
 import dil.Parser;
 import dil.Lexer;
 import dil.Token;
@@ -94,7 +93,7 @@ enum DocOption
 
 void parse(string fileName)
 {
-  auto sourceText = cast(char[]) std.file.read(fileName);
+  auto sourceText = loadFile(fileName);
   auto parser = new Parser(sourceText, fileName);
   parser.start();
   auto root = parser.parseModule();
@@ -335,7 +334,7 @@ static assert(xml_tags.length == DocPart.max+1);
 void syntaxToDoc(string fileName, DocOption options)
 {
   auto tags = options & DocOption.HTML ? html_tags : xml_tags;
-  auto sourceText = cast(char[]) std.file.read(fileName);
+  auto sourceText = loadFile(fileName);
   auto parser = new Parser(sourceText, fileName);
   parser.start();
   auto root = parser.parseModule();
@@ -435,7 +434,7 @@ void syntaxToDoc(string fileName, DocOption options)
 void tokensToDoc(string fileName, DocOption options)
 {
   auto tags = options & DocOption.HTML ? html_tags : xml_tags;
-  auto sourceText = cast(char[]) std.file.read(fileName);
+  auto sourceText = loadFile(fileName);
   auto lx = new Lexer(sourceText, fileName);
 
   auto token = lx.getTokens();
