@@ -20,23 +20,23 @@ char[] loadFile(char[] fileName)
     if (data.length >= 4)
     {
       if (data[0..3] == cast(ubyte[3])x"00 00 00")
-        text = toUTF8(cast(dchar[])utf32BEtoLE(data));
+        text = toUTF8(cast(dchar[])utf32BEtoLE(data)); // UTF-32BE: 00 00 00 XX
       else if (data[1..4] == cast(ubyte[3])x"00 00 00")
-        text = toUTF8(cast(dchar[])data);
+        text = toUTF8(cast(dchar[])data); // UTF-32LE: XX 00 00 00
       else
-        text = cast(char[])data;
+        text = cast(char[])data; // UTF-8
     }
     else if (data.length >= 2)
     {
-      if (data[0] == 0)
+      if (data[0] == 0) // UTF-16BE: 00 XX
         text = toUTF8(cast(wchar[])utf16BEtoLE(data));
-      else if (data[1] == 0)
+      else if (data[1] == 0) // UTF-16LE: XX 00
         text = toUTF8(cast(wchar[])data);
       else
-        text = cast(char[])data;
+        text = cast(char[])data; // UTF-8
     }
     else
-      text = cast(char[])data;
+      text = cast(char[])data; // UTF-8
     break;
   case BOM.UTF8:
     text = cast(char[])data[3..$];
