@@ -11,6 +11,7 @@ import dil.Token;
 import dil.Messages;
 import dil.Settings;
 import dil.Declarations, dil.Expressions, dil.SyntaxTree;
+import dil.File;
 
 void main(char[][] args)
 {
