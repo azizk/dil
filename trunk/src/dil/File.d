@@ -15,7 +15,7 @@ char[] loadFile(char[] fileName)
   switch (bom)
   {
   case BOM.None:
-    // No BOM found. The spec says in this case that the first character
+    // No BOM found. According to the specs the first character
     // must be an ASCII character.
     if (data.length >= 4)
     {
@@ -56,8 +56,7 @@ char[] loadFile(char[] fileName)
   default:
     assert(0);
   }
-
-
+  assert(text !is null);
   return text;
 }
 
