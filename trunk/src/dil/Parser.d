@@ -558,7 +558,7 @@ debug writef("\33[34m%s\33[0m", success);
         tmp = StorageClass.Extern;
         addStorageClass();
         nT();
-        Linkage linkage;
+        Linkage linkage = Linkage.Extern;
         if (token.type == T.LParen)
         {
           nT();
@@ -1793,7 +1793,7 @@ debug writef("\33[34m%s\33[0m", success);
         tmp = StorageClass.Extern;
         addStorageClass();
         nT();
-        Linkage linkage;
+        Linkage linkage = Linkage.Extern;
         if (token.type == T.LParen)
         {
           nT();

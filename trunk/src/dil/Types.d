@@ -9,7 +9,7 @@ import dil.Expressions;
 
 enum Linkage
 {
-  Invalid,
+  Extern,
   C,
   Cpp,
   D,
