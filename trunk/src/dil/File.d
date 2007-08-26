@@ -5,6 +5,7 @@
 module dil.File;
 import std.stdio, std.file, std.utf;
 
+/// Loads a file in any valid Unicode format and converts it to UTF-8.
 char[] loadFile(char[] fileName)
 {
   ubyte[] data = cast(ubyte[]) std.file.read(fileName);
@@ -14,6 +15,24 @@ char[] loadFile(char[] fileName)
   switch (bom)
   {
   case BOM.None:
+    // No BOM found. The spec says in this case that the first character
+    // must be an ASCII character.
+    if (data.length >= 4)
+    {
+      if (data[0..3] == cast(ubyte[3])x"00 00 00")
+        text = toUTF8(cast(dchar[])utf32BEtoLE(data));
+      else if (data[1..4] == cast(ubyte[3])x"00 00 00")
+        text = toUTF8(cast(dchar[])data);
+    }
+    else if (data.length >= 2)
+    {
+      if (data[0] == 0)
+        text = toUTF8(cast(wchar[])utf16BEtoLE(data));
+      else if (data[1] == 0)
+        text = toUTF8(cast(wchar[])data);
+    }
+    else
+      text = cast(char[])data;
     break;
   case BOM.UTF8:
     text = cast(char[])data[3..$];
