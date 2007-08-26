@@ -64,7 +64,7 @@ char[] loadFile(char[] fileName)
 ubyte[] utf16BEtoLE(ubyte[] data)
 {
   if (data.length % 2)
-    throw new Exception("UTF-16 big endian source file data must be divisble by 2.");
+    throw new Exception("UTF-16 big endian source file byte length must be divisible by 2.");
   wchar[] result = cast(wchar[]) new ubyte[data.length];
   // BE to LE "1A 2B" -> "2B 1A"
   foreach (i, c; cast(wchar[]) data)
@@ -75,7 +75,7 @@ ubyte[] utf16BEtoLE(ubyte[] data)
 ubyte[] utf32BEtoLE(ubyte[] data)
 {
   if (data.length % 4)
-    throw new Exception("UTF-32 big endian source file data must be divisble by 4.");
+    throw new Exception("UTF-32 big endian source file byte length must be divisible by 4.");
   dchar[] result = cast(dchar[]) new ubyte[data.length];
   // BE to LE "1A 2B 3C 4D" -> "4D 3C 2B 1A"
   foreach (i, c; cast(dchar[]) data)
