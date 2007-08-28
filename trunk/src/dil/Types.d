@@ -7,15 +7,46 @@ import dil.SyntaxTree;
 import dil.Token;
 import dil.Expressions;
 
-enum Linkage
+class Linkage : Node
 {
-  Extern,
-  C,
-  Cpp,
-  D,
-  Windows,
-  Pascal,
-  System
+  enum Type
+  {
+    Extern,
+    C,
+    Cpp,
+    D,
+    Windows,
+    Pascal,
+    System
+  }
+
+  /++
+    This enum is used by the parser to find redundant
+    or conflicting extern attribute declarations.
+  +/
+  enum Category
+  {
+    Unset,
+    ExternSymbol = 1<<1, /// Extern
+    MangleSymbol = 1<<2  /// C, Cpp, D, Windows, Pascal, System
+  }
+
+  Linkage.Type type;
+
+  this(typeof(type) type)
+  {
+    super(NodeCategory.Other);
+    mixin(set_kind);
+    this.type = type;
+  }
+
+  static Category getCategory(Linkage linkage)
+  {
+    if (linkage is null)
+      return Category.ExternSymbol;
+    else
+      return Category.MangleSymbol;
+  }
 }
 
 enum StorageClass

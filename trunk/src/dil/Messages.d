@@ -60,6 +60,8 @@ enum MID
   TemplateTupleParameter,
   InContract,
   OutContract,
+  MissingLinkageType,
+  UnrecognizedLinkageType,
 
   // Help messages:
   HelpMain,

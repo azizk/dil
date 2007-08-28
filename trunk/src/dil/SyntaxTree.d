@@ -208,6 +208,7 @@ enum NodeKind
   TemplateTupleParameter,
   TemplateParameters,
   TemplateArguments,
+  Linkage,
 }
 
 /// This string is mixed into the constructor of a class that inherits from Node.

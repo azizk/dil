@@ -44,7 +44,7 @@ string[] messages = [
   "Überlauf in Binärzahl.",
   "Überlauf in Oktalzahl.",
   "Überlauf in Fließkommazahl.",
-  "die Ziffern 8 und 9 sind in Oktalzahlen verboten.",
+  "die Ziffern 8 und 9 sind in Oktalzahlen unzulässig.",
   "ungültige Hexzahl; mindestens eine Hexziffer erforderlich.",
   "ungültige Binärzahl; mindestens eine Binärziffer erforderlich.",
   "der Exponent einer hexadezimalen Fließkommazahl ist erforderlich.",
@@ -57,6 +57,8 @@ string[] messages = [
   "Template-Tupel-Parameter dürfen nur am Ende auftreten.",
   "der 'in'-Vertrag der Funktion wurde bereits geparsed.",
   "der 'out'-Vertrag der Funktion wurde bereits geparsed.",
+  "es wurde kein Verknüpfungstyp angegeben.",
+  "unbekannter Verknüpfungstyp '{1}'; gültig sind C, C++, D, Windows, Pascal und System.",
 
   // Help messages:
   `dil v{1}

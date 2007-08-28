@@ -57,6 +57,8 @@ string[] messages = [
   "template tuple parameters can only be last.",
   "the functions 'in' contract was already parsed.",
   "the functions 'out' contract was already parsed.",
+  "no linkage type was specified.",
+  "unrecognized linkage type '{1}'; valid types are C, C++, D, Windows, Pascal und System.",
 
   // Help messages:
   `dil v{1}

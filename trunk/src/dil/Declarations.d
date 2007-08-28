@@ -473,6 +473,8 @@ class ExternDeclaration : AttributeDeclaration
   {
     super(TOK.Extern, decls);
     mixin(set_kind);
+    if (linkage)
+      this.children ~= linkage;
     this.linkage = linkage;
   }
 }

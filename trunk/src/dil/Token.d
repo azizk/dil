@@ -36,7 +36,7 @@ enum TOK : ushort
   VENDOR,
   VERSION,
 
-  // Numbers
+  // Number literals
   Int32, Int64, Uint32, Uint64,
   // Floating point number scanner relies on this order. (FloatXY + 3 == ImaginaryXY)
   Float32, Float64, Float80,
@@ -107,7 +107,8 @@ enum TOK : ushort
   Ushort,Version,Void,Volatile,Wchar,While,With,
 
   HEAD, // start of linked list
-  EOF
+  EOF,
+  MAX
 }
 
 alias TOK.Abstract KeywordsBegin;
@@ -153,6 +154,38 @@ struct Token
     return start[0 .. end - start];
   }
 
+  /// Find next non-whitespace token. Returns 'this' token if the next token is TOK.EOF or null.
+  Token* nextNWS()
+  out(token)
+  {
+    assert(token !is null);
+  }
+  body
+  {
+    auto token = next;
+    while (token !is null && token.isWhitespace)
+      token = token.next;
+    if (token is null || token.type == TOK.EOF)
+      return this;
+    return token;
+  }
+
+  /// Find previous non-whitespace token. Returns 'this' token if the previous token is TOK.HEAD or null.
+  Token* prevNWS()
+  out(token)
+  {
+    assert(token !is null);
+  }
+  body
+  {
+    auto token = prev;
+    while (token !is null && token.isWhitespace)
+      token = token.prev;
+    if (token is null || token.type == TOK.HEAD)
+      return this;
+    return token;
+  }
+
   static string toString(TOK tok)
   {
     return tokToString[tok];
@@ -193,17 +226,25 @@ struct Token
   }
 }
 
-string[] tokToString = [
+const string[] tokToString = [
   "Invalid",
 
   "Comment",
   "#! /shebang/",
   "#line",
+  `"filespec"`,
 
   "Identifier",
   "String",
-  "Special",
   "CharLiteral", "WCharLiteral", "DCharLiteral",
+
+  "__FILE__",
+  "__LINE__",
+  "__DATE__",
+  "__TIME__",
+  "__TIMESTAMP__",
+  "__VENDOR__",
+  "__VERSION__",
 
   "Int32", "Int64", "Uint32", "Uint64",
   "Float32", "Float64", "Float80",
@@ -262,9 +303,11 @@ string[] tokToString = [
   "mixin","module","new","null","out","override","package",
   "pragma","private","protected","public","real","ref","return",
   "scope","short","static","struct","super","switch","synchronized",
-  "template","this","throw","true","try","typedef","typeid",
+  "template","this","throw","__traits","true","try","typedef","typeid",
   "typeof","ubyte","ucent","uint","ulong","union","unittest",
   "ushort","version","void","volatile","wchar","while","with",
 
+  "HEAD",
   "EOF"
 ];
+static assert(tokToString.length == TOK.MAX);

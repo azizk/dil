@@ -57,6 +57,8 @@ string[] messages = [
   "şablon tuple parametre son sırada olmalı.",
   "fonksiyonun 'in' kontratı daha önceden ayrıştırılmış.",
   "fonksiyonun 'out' kontratı daha önceden ayrıştırılmış.",
+  "bağlantı tüp (linkage type) belirtilmedi.",
+  "bilinmeyen bağlantı tüpü (linkage type) '{1}'; geçerli olanlar C, C++, D, Windows, Pascal ve System.",
 
   // Help messages:
   `dil v{1}

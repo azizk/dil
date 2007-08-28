@@ -549,6 +549,7 @@ class AttributeStatement : Statement
   this(TOK tok, Statement statement)
   {
     mixin(set_kind);
+    assert(statement !is null);
     this.children = [statement];
     this.tok = tok;
     this.statement = statement;
@@ -562,6 +563,8 @@ class ExternStatement : AttributeStatement
   {
     super(TOK.Extern, statement);
     mixin(set_kind);
+    if (linkage)
+      this.children ~= linkage;
     this.linkage = linkage;
   }
 }

@@ -535,16 +535,65 @@ debug writef("\33[34m%s\33[0m", success);
     return func;
   }
 
+  Linkage parseLinkage()
+  {
+    if (token.type != T.LParen)
+      return null;
+
+    nT(); // Skip (
+    if (token.type == T.RParen)
+    {
+      error(MID.MissingLinkageType);
+      nT();
+      return null;
+    }
+
+    auto begin = token;
+    auto ident = requireId();
+
+    Linkage.Type linktype;
+    switch (ident ? ident.identifier : null)
+    {
+    case "C":
+      if (token.type == T.PlusPlus)
+      {
+        nT();
+        linktype = Linkage.Type.Cpp;
+        break;
+      }
+      linktype = Linkage.Type.C;
+      break;
+    case "D":
+      linktype = Linkage.Type.D;
+      break;
+    case "Windows":
+      linktype = Linkage.Type.Windows;
+      break;
+    case "Pascal":
+      linktype = Linkage.Type.Pascal;
+      break;
+    case "System":
+      linktype = Linkage.Type.System;
+      break;
+    default:
+      error(MID.UnrecognizedLinkageType, token.srcText);
+      nT();
+    }
+    auto linkage = new Linkage(linktype);
+    set(linkage, begin);
+    require(T.RParen);
+    return linkage;
+  }
+
   Declaration parseStorageAttribute()
   {
     StorageClass stc, tmp;
+    Linkage.Category link_cat;
 
     void addStorageClass()
     {
       if (stc & tmp)
-      {
         error(MID.RedundantStorageClass, token.srcText);
-      }
       else
         stc |= tmp;
     }
@@ -552,46 +601,27 @@ debug writef("\33[34m%s\33[0m", success);
     Declaration parse()
     {
       Declaration decl;
+      auto begin = token;
       switch (token.type)
       {
       case T.Extern:
-        tmp = StorageClass.Extern;
-        addStorageClass();
+        stc |= StorageClass.Extern;
         nT();
-        Linkage linkage = Linkage.Extern;
-        if (token.type == T.LParen)
+        Linkage linkage = parseLinkage();
+
+        // Check for redundancy.
+        Linkage.Category link_cat_tmp = Linkage.getCategory(linkage);
+        if (link_cat & link_cat_tmp)
         {
-          nT();
-          auto ident = requireId();
-          switch (ident ? ident.identifier : null)
-          {
-          case "C":
-            if (token.type == T.PlusPlus)
-            {
-              nT();
-              linkage = Linkage.Cpp;
-              break;
-            }
-            linkage = Linkage.C;
-            break;
-          case "D":
-            linkage = Linkage.D;
-            break;
-          case "Windows":
-            linkage = Linkage.Windows;
-            break;
-          case "Pascal":
-            linkage = Linkage.Pascal;
-            break;
-          case "System":
-            linkage = Linkage.System;
-            break;
-          default:
-            // TODO: issue error msg. Unrecognized LinkageType.
-          }
-          require(T.RParen);
+          char[] srcText = begin.srcText;
+          if (link_cat_tmp == Linkage.Category.MangleSymbol)
+            srcText = begin.start[0 .. prevToken.end - begin.start];
+          error(MID.RedundantStorageClass, srcText);
         }
-        decl = new ExternDeclaration(linkage, parse());
+        else
+          link_cat |= link_cat_tmp;
+
+        decl = set(new ExternDeclaration(linkage, parse()), begin);
         break;
       case T.Override:
         tmp = StorageClass.Override;
@@ -622,6 +652,7 @@ debug writef("\33[34m%s\33[0m", success);
       version(D2)
       {
       case T.Invariant: // D 2.0
+        // TODO: could this be a class invariant?
         if (peekNext() == T.LParen)
           goto case_Declaration;
         tmp = StorageClass.Invariant;
@@ -637,7 +668,7 @@ debug writef("\33[34m%s\33[0m", success);
         addStorageClass();
         auto tok = token.type;
         nT();
-        decl = new AttributeDeclaration(tok, parse());
+        decl = set(new AttributeDeclaration(tok, parse()), begin);
         break;
       case T.Identifier:
       case_Declaration:
@@ -1772,6 +1803,7 @@ debug writef("\33[34m%s\33[0m", success);
   Statement parseAttributeStatement()
   {
     StorageClass stc, tmp;
+    Linkage.Category link_cat;
 
     void addStorageClass()
     {
@@ -1790,42 +1822,22 @@ debug writef("\33[34m%s\33[0m", success);
       switch (token.type)
       {
       case T.Extern:
-        tmp = StorageClass.Extern;
-        addStorageClass();
+        stc |= StorageClass.Extern;
         nT();
-        Linkage linkage = Linkage.Extern;
-        if (token.type == T.LParen)
+        Linkage linkage = parseLinkage();
+
+        // Check for redundancy.
+        Linkage.Category link_cat_tmp = Linkage.getCategory(linkage);
+        if (link_cat & link_cat_tmp)
         {
-          nT();
-          auto ident = requireId();
-          switch (ident ? ident.identifier : null)
-          {
-          case "C":
-            if (token.type == T.PlusPlus)
-            {
-              nT();
-              linkage = Linkage.Cpp;
-              break;
-            }
-            linkage = Linkage.C;
-            break;
-          case "D":
-            linkage = Linkage.D;
-            break;
-          case "Windows":
-            linkage = Linkage.Windows;
-            break;
-          case "Pascal":
-            linkage = Linkage.Pascal;
-            break;
-          case "System":
-            linkage = Linkage.System;
-            break;
-          default:
-            // TODO: issue error msg. Unrecognized LinkageType.
-          }
-          require(T.RParen);
+          char[] srcText = begin.srcText;
+          if (link_cat_tmp == Linkage.Category.MangleSymbol)
+            srcText = begin.start[0 .. prevToken.end - begin.start];
+          error(MID.RedundantStorageClass, srcText);
         }
+        else
+          link_cat |= link_cat_tmp;
+
         s = new ExternStatement(linkage, parse());
         break;
       case T.Static:

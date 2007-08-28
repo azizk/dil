@@ -46,7 +46,10 @@ op[t=ne] { content: "≠"; } /*!=*/
 op[t=le] { content: "≤"; } /*<=*/
 op[t=ge] { content: "≥"; } /*>=*/
 op[t=lg] { content: "≶"; } /*<>*/
-
+o[t=Linkage] i, o[t=Linkage] op
+{
+  color: red;
+}
 /*
 d = Declaration
 s = Statement
