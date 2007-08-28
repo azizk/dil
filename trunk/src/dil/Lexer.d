@@ -638,7 +638,7 @@ class Lexer
         t.end = p;
         return;
       case '#':
-        return scanSpecialToken(t);
+        return scanSpecialTokenSequence(t);
       default:
       }
 
@@ -1428,7 +1428,7 @@ class Lexer
   }
 
   /// Scan special token: #line Integer [Filespec] EndOfLine
-  void scanSpecialToken(ref Token t)
+  void scanSpecialTokenSequence(ref Token t)
   {
     assert(*p == '#');
 
