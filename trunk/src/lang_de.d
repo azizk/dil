@@ -57,8 +57,8 @@ string[] messages = [
   "Template-Tupel-Parameter dürfen nur am Ende auftreten.",
   "der 'in'-Vertrag der Funktion wurde bereits geparsed.",
   "der 'out'-Vertrag der Funktion wurde bereits geparsed.",
-  "es wurde kein Verknüpfungstyp angegeben.",
-  "unbekannter Verknüpfungstyp '{1}'; gültig sind C, C++, D, Windows, Pascal und System.",
+  "es wurde kein Verbindungstyp angegeben.",
+  "unbekannter Verbindungstyp '{1}'; gültig sind C, C++, D, Windows, Pascal und System.",
 
   // Help messages:
   `dil v{1}

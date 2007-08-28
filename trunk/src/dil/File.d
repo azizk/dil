@@ -8,7 +8,11 @@ import std.stdio, std.file, std.utf;
 /// Loads a file in any valid Unicode format and converts it to UTF-8.
 char[] loadFile(char[] fileName)
 {
-  ubyte[] data = cast(ubyte[]) std.file.read(fileName);
+  return data2text(cast(ubyte[]) std.file.read(fileName));
+}
+
+char[] data2text(ubyte[] data)
+{
   char[] text;
   BOM bom = tellBOM(data);
 
@@ -20,23 +24,30 @@ char[] loadFile(char[] fileName)
     if (data.length >= 4)
     {
       if (data[0..3] == cast(ubyte[3])x"00 00 00")
+      {
         text = toUTF8(cast(dchar[])utf32BEtoLE(data)); // UTF-32BE: 00 00 00 XX
+        break;
+      }
       else if (data[1..4] == cast(ubyte[3])x"00 00 00")
+      {
         text = toUTF8(cast(dchar[])data); // UTF-32LE: XX 00 00 00
-      else
-        text = cast(char[])data; // UTF-8
+        break;
+      }
     }
-    else if (data.length >= 2)
+    if (data.length >= 2)
     {
       if (data[0] == 0) // UTF-16BE: 00 XX
+      {
         text = toUTF8(cast(wchar[])utf16BEtoLE(data));
+        break;
+      }
       else if (data[1] == 0) // UTF-16LE: XX 00
+      {
         text = toUTF8(cast(wchar[])data);
-      else
-        text = cast(char[])data; // UTF-8
+        break;
+      }
     }
-    else
-      text = cast(char[])data; // UTF-8
+    text = cast(char[])data; // UTF-8
     break;
   case BOM.UTF8:
     text = cast(char[])data[3..$];
@@ -60,11 +71,43 @@ char[] loadFile(char[] fileName)
   return text;
 }
 
+unittest
+{
+  writefln("Testing function data2text().");
+  struct Data2Text
+  {
+    union
+    {
+      ubyte[] data;
+      char[] u8;
+    }
+    char[] text;
+  }
+  const Data2Text[] map = [
+    // Without BOM
+    {u8:"source", text:"source"},
+    {u8:"s\0o\0u\0r\0c\0e\0", text:"source"},
+    {u8:"\0s\0o\0u\0r\0c\0e", text:"source"},
+    {u8:"s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e\0\0\0", text:"source"},
+    {u8:"\0\0\0s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e", text:"source"},
+    // With BOM
+    {u8:"\xEF\xBB\xBFsource", text:"source"},
+    {u8:"\xFE\xFF\0s\0o\0u\0r\0c\0e", text:"source"},
+    {u8:"\xFF\xFEs\0o\0u\0r\0c\0e\0", text:"source"},
+    {u8:"\x00\x00\xFE\xFF\0\0\0s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e", text:"source"},
+    {u8:"\xFF\xFE\x00\x00s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e\0\0\0", text:"source"},
+  ];
+  alias data2text f;
+  foreach (pair; map)
+    assert(f(pair.data) == pair.text);
+}
+
 ubyte[] utf16BEtoLE(ubyte[] data)
 {
   if (data.length % 2)
     throw new Exception("UTF-16 big endian source file byte length must be divisible by 2.");
   wchar[] result = cast(wchar[]) new ubyte[data.length];
+  assert(result.length*2 == data.length);
   // BE to LE "1A 2B" -> "2B 1A"
   foreach (i, c; cast(wchar[]) data)
     result[i] = (c << 8) | (c >> 8);
@@ -76,12 +119,13 @@ ubyte[] utf32BEtoLE(ubyte[] data)
   if (data.length % 4)
     throw new Exception("UTF-32 big endian source file byte length must be divisible by 4.");
   dchar[] result = cast(dchar[]) new ubyte[data.length];
+  assert(result.length*4 == data.length);
   // BE to LE "1A 2B 3C 4D" -> "4D 3C 2B 1A"
   foreach (i, c; cast(dchar[]) data)
-    result[i] = ((c & 0xFF) << 24) |
-                ((c & 0xFF00) << 16) |
-                ((c & 0xFF0000) << 8) |
-                 (c & 0xFF000000);
+    result[i] = ((c & 0xFF)) |
+                ((c >> 8) & 0xFF) |
+                ((c >> 16) & 0xFF) |
+                 (c >> 24);
   return cast(ubyte[]) result;
 }
 
@@ -104,13 +148,15 @@ BOM tellBOM(ubyte[] data)
 
   if (data[0..2] == cast(ubyte[2])x"FE FF")
   {
-    if (data.length >= 4 && data[2..4] == cast(ubyte[2])x"00 00")
-      bom = BOM.UTF32LE; // FE FF 00 00
-    else
-      bom = BOM.UTF16BE; // FE FF XX XX
+    bom = BOM.UTF16BE; // FE FF
   }
   else if (data[0..2] == cast(ubyte[2])x"FF FE")
-    bom = BOM.UTF16LE; // FF FE
+  {
+    if (data.length >= 4 && data[2..4] == cast(ubyte[2])x"00 00")
+      bom = BOM.UTF32LE; // FF FE 00 00
+    else
+      bom = BOM.UTF16LE; // FF FE XX XX
+  }
   else if (data[0..2] == cast(ubyte[2])x"00 00")
   {
     if (data.length >= 4 && data[2..4] == cast(ubyte[2])x"FE FF")
@@ -155,7 +201,7 @@ unittest
     {cast(ub)x"FE FF",       BOM.UTF16BE},
     {cast(ub)x"FF FE",       BOM.UTF16LE},
     {cast(ub)x"00 00 FE FF", BOM.UTF32BE},
-    {cast(ub)x"FE FF 00 00", BOM.UTF32LE}
+    {cast(ub)x"FF FE 00 00", BOM.UTF32LE}
   ];
 
   foreach (pair; map)
