@@ -109,7 +109,7 @@ ubyte[] utf16BEtoLE(ubyte[] data)
   wchar[] result = cast(wchar[]) new ubyte[data.length];
   assert(result.length*2 == data.length);
   // BE to LE "1A 2B" -> "2B 1A"
-  foreach (i, c; cast(wchar[]) data)
+  foreach (i, c; cast(ushort[]) data)
     result[i] = (c << 8) | (c >> 8);
   return cast(ubyte[]) result;
 }
@@ -121,7 +121,7 @@ ubyte[] utf32BEtoLE(ubyte[] data)
   dchar[] result = cast(dchar[]) new ubyte[data.length];
   assert(result.length*4 == data.length);
   // BE to LE "1A 2B 3C 4D" -> "4D 3C 2B 1A"
-  foreach (i, c; cast(dchar[]) data)
+  foreach (i, c; cast(uint[]) data)
     result[i] = ((c & 0xFF)) |
                 ((c >> 8) & 0xFF) |
                 ((c >> 16) & 0xFF) |
