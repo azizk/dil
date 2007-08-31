@@ -69,11 +69,26 @@ class ModuleDeclaration : Declaration
   {
     super(false);
     mixin(set_kind);
-    if (moduleFQN.length)
-    {
-      this.moduleName = moduleFQN[$-1];
-      this.packages = moduleFQN[0..$-1];
-    }
+    assert(moduleFQN.length != 0);
+    this.moduleName = moduleFQN[$-1];
+    this.packages = moduleFQN[0..$-1];
+  }
+
+  string getName()
+  {
+    if (moduleName)
+      return moduleName.identifier;
+    return null;
+  }
+
+  string getPackageName(char separator)
+  {
+    char[] pname;
+    foreach (pckg; packages)
+      if (pckg)
+        pname ~= pckg.identifier ~ separator;
+    pname = pname[0..$-1];
+    return pname;
   }
 }
 

@@ -6,7 +6,9 @@ module dil.Module;
 import dil.SyntaxTree;
 import dil.Declarations;
 import dil.Parser;
+import dil.Lexer;
 import dil.File;
+import std.path;
 
 class Module
 {
@@ -16,6 +18,7 @@ class Module
   Declarations root; /// The root of the AST.
   ImportDeclaration[] imports;
   ModuleDeclaration moduleDecl;
+  private Parser parser;
 
   this(string fileName)
   {
@@ -25,7 +28,7 @@ class Module
   void parse()
   {
     auto sourceText = loadFile(fileName);
-    auto parser = new Parser(sourceText, fileName);
+    this.parser = new Parser(sourceText, fileName);
     parser.start();
 
     this.root = parser.parseModule();
@@ -34,6 +37,17 @@ class Module
     {
       // moduleDecl will be null if first node can't be casted to ModuleDeclaration.
       this.moduleDecl = Cast!(ModuleDeclaration)(root.children[0]);
+      if (moduleDecl)
+      {
+        this.moduleName = moduleDecl.getName();
+        this.packageName = moduleDecl.getPackageName('/');
+      }
+      else
+      {
+        auto str = getBaseName(getName(fileName));
+        if (Lexer.isNonReservedIdentifier(str))
+          this.moduleName = str;
+      }
 
       this.imports = parser.imports;
     }

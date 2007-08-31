@@ -13,6 +13,7 @@ import dil.Module;
 void execute(string fileName)
 {
   auto mod = new Module(fileName);
+  mod.parse();
   auto root = mod.root;
 
   Module[] modules;

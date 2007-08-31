@@ -1658,6 +1658,23 @@ class Lexer
     return head;
   }
 
+  static bool isNonReservedIdentifier(char[] ident)
+  {
+    static Identifier[string] reserved_ids_table;
+    if (reserved_ids_table is null)
+      foreach(k; keywords)
+        reserved_ids_table[k.str] = k;
+
+    try
+      foreach (dchar c; ident)
+        if (!isident(c) && !isUniAlpha(c))
+          return false;
+    catch (Exception e)
+      return false;
+
+    return !(ident in reserved_ids_table);
+  }
+
   private void encodeUTF8(inout char[] str, dchar d)
   {
     char[6] b;
