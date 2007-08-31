@@ -9,18 +9,60 @@ import dil.Token;
 import dil.Parser, dil.Lexer;
 import dil.File;
 import dil.Module;
+import dil.Settings;
 import std.stdio : writefln;
+import std.path : getDirName, dirSep = sep;
+import std.file : exists;
 
-void execute(string fileName, string[] includePaths)
+string findModule(string moduleFQN, string[] importPaths)
 {
+  string modulePath;
+  foreach (path; importPaths)
+  {
+    modulePath = path ~ (path[$-1] == dirSep[0] ? "" : dirSep) ~ moduleFQN ~ ".d";
+    if (exists(modulePath))
+      return modulePath;
+  }
+  return null;
+}
+
+void execute(string fileName, string[] importPaths)
+{
+  // Add directory of file and global directories to import paths.
+  importPaths ~= getDirName(fileName) ~ GlobalSettings.importPaths;
+
+  Module[string] loadedModules;
+
+  Module loadModule(string moduleFQN)
+  {
+    auto mod_ = moduleFQN in loadedModules;
+    if (mod_ !is null)
+      return *mod_;
+
+    auto modulePath = findModule(moduleFQN, importPaths);
+    if (modulePath is null)
+      writefln("Warning: Module %s.d couldn't be found.", moduleFQN);
+    else
+    {
+      auto mod = new Module(modulePath);
+      mod.parse();
+
+      loadedModules[moduleFQN] = mod;
+
+      auto moduleFQNs = mod.getImports();
+
+      foreach (moduleFQN_; moduleFQNs)
+        mod.modules ~= loadModule(moduleFQN_);
+      return mod;
+    }
+    return null;
+  }
+
   auto mod = new Module(fileName);
   mod.parse();
-  auto root = mod.root;
 
-  Module[] modules;
+  auto moduleFQNs = mod.getImports();
 
-  foreach (decl; root.children)
-  {
-
-  }
+  foreach (moduleFQN_; moduleFQNs)
+    mod.modules ~= loadModule(moduleFQN_);
 }

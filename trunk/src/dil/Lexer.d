@@ -1140,15 +1140,16 @@ class Lexer
         ++digits;
         ulong_ *= 2;
       }
-      if (*p == '1')
+      else if (*p == '1')
       {
         ++digits;
         ulong_ *= 2;
         ulong_ += *p - '0';
       }
-      if (*p == '_')
-        continue;
-      break;
+      else if (*p == '_')
+        continue; 
+      else
+        break;
     }
 
     if (digits == 0)
@@ -1156,7 +1157,8 @@ class Lexer
 
     if (digits > 64)
       error(MID.OverflowBinaryNumber);
-    assert((p[-1] == '0' || p[-1] == '1' || p[-1] == '_') && !(*p == '0' || *p == '1' || *p == '_'));
+    assert(p[-1] == '0' || p[-1] == '1' || p[-1] == '_', p[-1] ~ "");
+    assert( !(*p == '0' || *p == '1' || *p == '_') );
     goto Lfinalize;
 
   LscanOct:

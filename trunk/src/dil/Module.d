@@ -20,6 +20,8 @@ class Module
   ModuleDeclaration moduleDecl;
   private Parser parser;
 
+  Module[] modules;
+
   this(string fileName)
   {
     this.fileName = fileName;
@@ -59,5 +61,10 @@ class Module
     foreach (import_; imports)
       result ~= import_.getModuleFQNs(std.path.sep[0]);
     return result;
+  }
+
+  string getFQN()
+  {
+    return packageName ~ std.path.sep ~ moduleName;
   }
 }

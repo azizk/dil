@@ -47,6 +47,7 @@ struct GlobalSettings
 static:
   string language; /// Language of messages catalogue to load.
   string[] messages; /// Table of localized compiler messages.
+  string[] importPaths; /// Array of import paths to look for modules.
   void load()
   {
     auto fileName = "config.d"[];
@@ -63,18 +64,32 @@ static:
     foreach (decl; root.children)
     {
       auto v = Cast!(VariableDeclaration)(decl);
-      if (v && v.idents[0].srcText == "langfile")
+      if (v is null)
+        continue;
+      auto vname = v.idents[0].srcText;
+      if (vname == "langfile")
       {
         auto e = v.values[0];
         if (!e)
           throw new Exception("langfile variable has no value set.");
         auto val = Cast!(StringLiteralsExpression)(e);
         if (val)
-        {
           // Set fileName to d-file with messages table.
           fileName = val.getString();
-          break;
+      }
+      else if (vname == "import_paths")
+      {
+        auto e = v.values[0];
+        if (e is null)
+          throw new Exception("import_paths variable has no variable set.");
+        if (auto array = Cast!(ArrayInitializer)(e))
+        {
+          foreach (value; array.values)
+            if (auto str = Cast!(StringLiteralsExpression)(value))
+              GlobalSettings.importPaths ~= str.getString();
         }
+        else
+          throw new Exception("import_paths variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");
       }
     }
 

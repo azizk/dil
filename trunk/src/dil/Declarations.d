@@ -87,7 +87,8 @@ class ModuleDeclaration : Declaration
     foreach (pckg; packages)
       if (pckg)
         pname ~= pckg.identifier ~ separator;
-    pname = pname[0..$-1]; // Remove last separator
+    if (pname.length)
+      pname = pname[0..$-1]; // Remove last separator
     return pname;
   }
 }

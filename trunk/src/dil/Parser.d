@@ -1905,13 +1905,11 @@ debug writef("\33[34m%s\33[0m", success);
     // auto Identifier = Expression
     if (token.type == T.Auto)
     {
-      auto a = new AttributeStatement(token.type, null);
       nT();
       ident = requireId();
       require(T.Assign);
       auto init = parseExpression();
-      a.statement = new DeclarationStatement(new VariableDeclaration(null, [ident], [init]));
-      variable = a;
+      variable = new AttributeStatement(T.Auto, new DeclarationStatement(new VariableDeclaration(null, [ident], [init])));
     }
     else
     {
