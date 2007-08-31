@@ -13,6 +13,7 @@ import dil.Declarations, dil.Expressions, dil.SyntaxTree;
 import dil.File;
 import cmd.Generate;
 import cmd.Statistics;
+import cmd.ImportGraph;
 
 void main(char[][] args)
 {
@@ -43,13 +44,10 @@ void main(char[][] args)
     }
     if (!(options & (DocOption.XML | DocOption.HTML)))
       options |= DocOption.XML; // Default to XML.
-    if (options & DocOption.Syntax)
-      syntaxToDoc(fileName, options);
-    else
-      tokensToDoc(fileName, options);
+    cmd.Generate.execute(fileName, options);
     break;
   case "stats", "statistics":
-    statistics(args[2]);
+    cmd.Statistics.execute(args[2]);
     break;
   case "parse":
     if (args.length == 3)

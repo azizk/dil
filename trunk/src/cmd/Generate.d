@@ -17,6 +17,14 @@ enum DocOption
   XML = 1<<3
 }
 
+void execute(string fileName, DocOption options)
+{
+  if (options & DocOption.Syntax)
+    syntaxToDoc(fileName, options);
+  else
+    tokensToDoc(fileName, options);
+}
+
 char[] xml_escape(char[] text)
 {
   char[] result;

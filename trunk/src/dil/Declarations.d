@@ -58,30 +58,36 @@ class IllegalDeclaration : Declaration
   }
 }
 
-alias Token*[] ModuleName; // Identifier(.Identifier)*
+/// FQN = fully qualified name
+alias Token*[] ModuleFQN; // Identifier(.Identifier)*
 
 class ModuleDeclaration : Declaration
 {
-  ModuleName moduleName; // module name sits at end of array
-  this(ModuleName moduleName)
+  Token* moduleName;
+  Token*[] packages;
+  this(ModuleFQN moduleFQN)
   {
     super(false);
     mixin(set_kind);
-    this.moduleName = moduleName;
+    if (moduleFQN.length)
+    {
+      this.moduleName = moduleFQN[$-1];
+      this.packages = moduleFQN[0..$-1];
+    }
   }
 }
 
 class ImportDeclaration : Declaration
 {
-  ModuleName[] moduleNames;
+  ModuleFQN[] moduleFQNs;
   Token*[] moduleAliases;
   Token*[] bindNames;
   Token*[] bindAliases;
-  this(ModuleName[] moduleNames, Token*[] moduleAliases, Token*[] bindNames, Token*[] bindAliases)
+  this(ModuleFQN[] moduleFQNs, Token*[] moduleAliases, Token*[] bindNames, Token*[] bindAliases)
   {
     super(false);
     mixin(set_kind);
-    this.moduleNames = moduleNames;
+    this.moduleFQNs = moduleFQNs;
     this.moduleAliases = moduleAliases;
     this.bindNames = bindNames;
     this.bindAliases = bindAliases;

@@ -24,6 +24,8 @@ class Parser
 
   Information[] errors;
 
+  ImportDeclaration[] imports;
+
   this(char[] srcText, string fileName)
   {
     lx = new Lexer(srcText, fileName);
@@ -119,14 +121,14 @@ debug writef("\33[34m%s\33[0m", success);
     if (token.type == T.Module)
     {
       auto begin = token;
-      ModuleName moduleName;
+      ModuleFQN moduleFQN;
       do
       {
         nT();
-        moduleName ~= requireId();
+        moduleFQN ~= requireId();
       } while (token.type == T.Dot)
       require(T.Semicolon);
-      decls ~= set(new ModuleDeclaration(moduleName), begin);
+      decls ~= set(new ModuleDeclaration(moduleFQN), begin);
     }
     decls ~= parseDeclarationDefinitions();
     return decls;
@@ -220,6 +222,8 @@ debug writef("\33[34m%s\33[0m", success);
       break;
     case T.Import:
       decl = parseImportDeclaration();
+      assert(decl && decl.kind == NodeKind.ImportDeclaration);
+      imports ~= cast(ImportDeclaration)cast(void*)decl;
       break;
     case T.Enum:
       decl = parseEnumDeclaration();
@@ -781,7 +785,7 @@ debug writef("\33[34m%s\33[0m", success);
       nT();
     }
 
-    ModuleName[] moduleNames;
+    ModuleFQN[] moduleFQNs;
     Token*[] moduleAliases;
     Token*[] bindNames;
     Token*[] bindAliases;
@@ -789,7 +793,7 @@ debug writef("\33[34m%s\33[0m", success);
     nT(); // Skip import keyword.
     while (1)
     {
-      ModuleName moduleName;
+      ModuleFQN moduleFQN;
       Token* moduleAlias;
 
       moduleAlias = requireId();
@@ -798,11 +802,11 @@ debug writef("\33[34m%s\33[0m", success);
       if (token.type == T.Assign)
       {
         nT();
-        moduleName ~= requireId();
+        moduleFQN ~= requireId();
       }
       else // import Identifier [^=]
       {
-        moduleName ~= moduleAlias;
+        moduleFQN ~= moduleAlias;
         moduleAlias = null;
       }
 
@@ -810,11 +814,11 @@ debug writef("\33[34m%s\33[0m", success);
       while (token.type == T.Dot)
       {
         nT();
-        moduleName ~= requireId();
+        moduleFQN ~= requireId();
       }
 
       // Push identifiers.
-      moduleNames ~= moduleName;
+      moduleFQNs ~= moduleFQN;
       moduleAliases ~= moduleAlias;
 
       if (token.type == T.Colon)
@@ -853,7 +857,7 @@ debug writef("\33[34m%s\33[0m", success);
 
     require(T.Semicolon);
 
-    return new ImportDeclaration(moduleNames, moduleAliases, bindNames, bindAliases);
+    return new ImportDeclaration(moduleFQNs, moduleAliases, bindNames, bindAliases);
   }
 
   Declaration parseEnumDeclaration()

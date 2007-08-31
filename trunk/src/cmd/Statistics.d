@@ -18,7 +18,7 @@ struct Statistics
   uint commentCount;
 }
 
-void statistics(string fileName)
+void execute(string fileName)
 {
   auto sourceText = loadFile(fileName);
   auto lx = new Lexer(sourceText, fileName);
