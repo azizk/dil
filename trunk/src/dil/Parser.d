@@ -857,7 +857,7 @@ debug writef("\33[34m%s\33[0m", success);
 
     require(T.Semicolon);
 
-    return new ImportDeclaration(moduleFQNs, moduleAliases, bindNames, bindAliases);
+    return new ImportDeclaration(moduleFQNs, moduleAliases, bindNames, bindAliases, isStatic);
   }
 
   Declaration parseEnumDeclaration()

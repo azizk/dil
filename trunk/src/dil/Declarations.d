@@ -87,7 +87,7 @@ class ModuleDeclaration : Declaration
     foreach (pckg; packages)
       if (pckg)
         pname ~= pckg.identifier ~ separator;
-    pname = pname[0..$-1];
+    pname = pname[0..$-1]; // Remove last separator
     return pname;
   }
 }
@@ -98,7 +98,8 @@ class ImportDeclaration : Declaration
   Token*[] moduleAliases;
   Token*[] bindNames;
   Token*[] bindAliases;
-  this(ModuleFQN[] moduleFQNs, Token*[] moduleAliases, Token*[] bindNames, Token*[] bindAliases)
+  bool isStatic;
+  this(ModuleFQN[] moduleFQNs, Token*[] moduleAliases, Token*[] bindNames, Token*[] bindAliases, bool isStatic)
   {
     super(false);
     mixin(set_kind);
@@ -106,6 +107,21 @@ class ImportDeclaration : Declaration
     this.moduleAliases = moduleAliases;
     this.bindNames = bindNames;
     this.bindAliases = bindAliases;
+    this.isStatic = isStatic;
+  }
+
+  string[] getModuleFQNs(char separator)
+  {
+    string[] FQNs;
+    foreach (moduleFQN; moduleFQNs)
+    {
+      char[] FQN;
+      foreach (ident; moduleFQN)
+        if (ident)
+          FQN ~= ident.identifier ~ separator;
+      FQNs ~= FQN[0..$-1]; // Remove last separator
+    }
+    return FQNs;
   }
 }
 

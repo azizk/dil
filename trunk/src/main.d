@@ -46,6 +46,21 @@ void main(char[][] args)
       options |= DocOption.XML; // Default to XML.
     cmd.Generate.execute(fileName, options);
     break;
+  case "importgraph", "igraph":
+    string fileName;
+    string[] includePaths;
+    foreach (arg; args[2..$])
+    {
+      if (arg.length >= 2 && arg[0..2] == "-I")
+      {
+        if (arg.length >= 3)
+          includePaths ~= args[2..$];
+      }
+      else
+        fileName = arg;
+    }
+    cmd.ImportGraph.execute(fileName, includePaths);
+    break;
   case "stats", "statistics":
     cmd.Statistics.execute(args[2]);
     break;
@@ -66,6 +81,7 @@ void main(char[][] args)
 const char[] COMMANDS =
   "  generate (gen)\n"
   "  help (?)\n"
+  "  importgraph (igraph)\n"
   "  statistics (stats)\n";
 
 char[] helpMain()

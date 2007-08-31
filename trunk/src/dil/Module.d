@@ -40,7 +40,7 @@ class Module
       if (moduleDecl)
       {
         this.moduleName = moduleDecl.getName();
-        this.packageName = moduleDecl.getPackageName('/');
+        this.packageName = moduleDecl.getPackageName(std.path.sep[0]);
       }
       else
       {
@@ -51,5 +51,13 @@ class Module
 
       this.imports = parser.imports;
     }
+  }
+
+  string[] getImports()
+  {
+    string[] result;
+    foreach (import_; imports)
+      result ~= import_.getModuleFQNs(std.path.sep[0]);
+    return result;
   }
 }
