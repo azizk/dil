@@ -12,6 +12,7 @@ import std.path;
 
 class Module
 {
+  bool isLightweight; /// If true an ImportParser is used instead of a full Parser.
   string fileName; /// Path to the source file.
   string packageName;
   string moduleName;
@@ -22,18 +23,21 @@ class Module
 
   Module[] modules;
 
-  this(string fileName)
+  this(string fileName, bool isLight = false)
   {
     this.fileName = fileName;
+    this.isLightweight = isLightweight;
   }
 
   void parse()
   {
     auto sourceText = loadFile(fileName);
-    this.parser = new Parser(sourceText, fileName);
-    parser.start();
+    if (this.isLightweight)
+      this.parser = new ImportParser(sourceText, fileName);
+    else
+      this.parser = new Parser(sourceText, fileName);
 
-    this.root = parser.parseModule();
+    this.root = parser.start();
 
     if (root.children.length)
     {

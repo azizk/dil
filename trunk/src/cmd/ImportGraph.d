@@ -38,13 +38,13 @@ void execute(string fileName, string[] importPaths)
     auto mod_ = moduleFQN in loadedModules;
     if (mod_ !is null)
       return *mod_;
-
+// writefln(moduleFQN);
     auto modulePath = findModule(moduleFQN, importPaths);
     if (modulePath is null)
       writefln("Warning: Module %s.d couldn't be found.", moduleFQN);
     else
     {
-      auto mod = new Module(modulePath);
+      auto mod = new Module(modulePath, true);
       mod.parse();
 
       loadedModules[moduleFQN] = mod;
@@ -58,7 +58,7 @@ void execute(string fileName, string[] importPaths)
     return null;
   }
 
-  auto mod = new Module(fileName);
+  auto mod = new Module(fileName, true);
   mod.parse();
 
   auto moduleFQNs = mod.getImports();

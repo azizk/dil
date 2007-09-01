@@ -247,8 +247,7 @@ void syntaxToDoc(string fileName, DocOption options)
   auto tags = options & DocOption.HTML ? html_tags : xml_tags;
   auto sourceText = loadFile(fileName);
   auto parser = new Parser(sourceText, fileName);
-  parser.start();
-  auto root = parser.parseModule();
+  auto root = parser.start();
   auto lx = parser.lx;
 
   auto token = lx.head;

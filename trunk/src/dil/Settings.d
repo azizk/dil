@@ -53,8 +53,7 @@ static:
     auto fileName = "config.d"[];
     auto sourceText = loadFile(fileName);
     auto parser = new Parser(sourceText, fileName);
-    parser.start();
-    auto root = parser.parseModule();
+    auto root = parser.start();
 
     if (parser.errors.length || parser.lx.errors.length)
     {
@@ -96,8 +95,7 @@ static:
     // Load messages
     sourceText = loadFile(fileName);
     parser = new Parser(sourceText, fileName);
-    parser.start();
-    root = parser.parseModule();
+    root = parser.start();
 
     if (parser.errors.length || parser.lx.errors.length)
     {

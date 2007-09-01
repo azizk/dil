@@ -16,6 +16,35 @@ import std.stdio;
 
 private alias TOK T;
 
+class ImportParser : Parser
+{
+  this(char[] srcText, string fileName)
+  {
+    super(srcText, fileName);
+  }
+
+  Declarations start()
+  {
+    auto decls = new Declarations;
+    super.init();
+    if (token.type == T.Module)
+      decls ~= parseModuleDeclaration();
+    while (token.type != T.EOF)
+    {
+      if (token.type == T.Import)
+      {
+        auto decl = parseImportDeclaration();
+        assert(decl && decl.kind == NodeKind.ImportDeclaration);
+        super.imports ~= cast(ImportDeclaration)cast(void*)decl;
+        decls ~= decl;
+      }
+      else
+        nT();
+    }
+    return decls;
+  }
+}
+
 class Parser
 {
   Lexer lx;
@@ -33,7 +62,7 @@ class Parser
 
   debug char* prev;
 
-  void start()
+  private void init()
   {
     debug prev = lx.text.ptr;
     nT();
@@ -114,24 +143,27 @@ debug writef("\33[34m%s\33[0m", success);
   + Declaration parsing methods +
   ++++++++++++++++++++++++++++++/
 
-  Declarations parseModule()
+  Declarations start()
   {
+    init();
     auto decls = new Declarations;
-
     if (token.type == T.Module)
-    {
-      auto begin = token;
-      ModuleFQN moduleFQN;
-      do
-      {
-        nT();
-        moduleFQN ~= requireId();
-      } while (token.type == T.Dot)
-      require(T.Semicolon);
-      decls ~= set(new ModuleDeclaration(moduleFQN), begin);
-    }
+      decls ~= parseModuleDeclaration();
     decls ~= parseDeclarationDefinitions();
     return decls;
+  }
+
+  Declaration parseModuleDeclaration()
+  {
+    auto begin = token;
+    ModuleFQN moduleFQN;
+    do
+    {
+      nT();
+      moduleFQN ~= requireId();
+    } while (token.type == T.Dot)
+    require(T.Semicolon);
+    return set(new ModuleDeclaration(moduleFQN), begin);
   }
 
   Declarations parseDeclarationDefinitions()

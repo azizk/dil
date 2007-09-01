@@ -107,8 +107,7 @@ void parse(string fileName)
 {
   auto sourceText = loadFile(fileName);
   auto parser = new Parser(sourceText, fileName);
-  parser.start();
-  auto root = parser.parseModule();
+  auto root = parser.start();
 
 void print(Node[] decls, char[] indent)
 {
