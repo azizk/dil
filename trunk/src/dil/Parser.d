@@ -23,7 +23,7 @@ class ImportParser : Parser
     super(srcText, fileName);
   }
 
-  Declarations start()
+  override Declarations start()
   {
     auto decls = new Declarations;
     super.init();
@@ -2233,7 +2233,7 @@ debug writef("\33[34m%s\33[0m", success);
       {
         nT();
         Token* ident;
-        auto type = parseDeclarator(ident);
+        auto type = parseDeclarator(ident, true);
         param = new Parameter(null, type, ident, null);
         require(T.RParen);
       }
@@ -3635,9 +3635,8 @@ debug writef("\33[34m%s\33[0m", success);
       t = new InvariantType(t);
       set(t, begin);
       break;
-    }
+    } // version(D2)
     default:
-      // TODO: issue error msg.
       error(MID.ExpectedButFound, "BasicType", token.srcText);
       t = new UndefinedType();
       nT();
@@ -3754,7 +3753,13 @@ debug writef("\33[34m%s\33[0m", success);
     else
     {
       bool success;
-      auto assocType = try_(parseType(), success);
+      Type parseAAType()
+      {
+        auto type = parseType();
+        require(T.RBracket);
+        return type;
+      }
+      auto assocType = try_(parseAAType(), success);
       if (success)
         t = new ArrayType(t, assocType);
       else
@@ -3766,8 +3771,8 @@ debug writef("\33[34m%s\33[0m", success);
           e2 = parseExpression();
         }
         t = new ArrayType(t, e, e2);
+        require(T.RBracket);
       }
-      require(T.RBracket);
     }
     set(t, begin);
     return t;
