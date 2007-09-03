@@ -13,7 +13,8 @@ import std.path;
 class Module
 {
   bool isLightweight; /// If true an ImportParser is used instead of a full Parser.
-  string fileName; /// Path to the source file.
+  string filePath; /// Path to the source file.
+  string moduleFQN; /// Fully qualified name of the module.
   string packageName;
   string moduleName;
   Declarations root; /// The root of the AST.
@@ -23,36 +24,40 @@ class Module
 
   Module[] modules;
 
-  this(string fileName, bool isLight = false)
+  this(string filePath, bool isLight = false)
   {
-    this.fileName = fileName;
+    this.filePath = filePath;
     this.isLightweight = isLightweight;
   }
 
   void parse()
   {
-    auto sourceText = loadFile(fileName);
+    auto sourceText = loadFile(filePath);
     if (this.isLightweight)
-      this.parser = new ImportParser(sourceText, fileName);
+      this.parser = new ImportParser(sourceText, filePath);
     else
-      this.parser = new Parser(sourceText, fileName);
+      this.parser = new Parser(sourceText, filePath);
 
     this.root = parser.start();
 
     if (root.children.length)
     {
-      // moduleDecl will be null if first node can't be casted to ModuleDeclaration.
+      // moduleDecl will be null if first node can't be cast to ModuleDeclaration.
       this.moduleDecl = Cast!(ModuleDeclaration)(root.children[0]);
       if (moduleDecl)
       {
-        this.moduleName = moduleDecl.getName();
-        this.packageName = moduleDecl.getPackageName(std.path.sep[0]);
+        this.setFQN(moduleDecl.getFQN());
       }
       else
       {
-        auto str = getBaseName(getName(fileName));
+        // Take base name of file path as module name.
+        auto str = getBaseName(getName(filePath));
         if (Lexer.isNonReservedIdentifier(str))
-          this.moduleName = str;
+        {
+          this.moduleFQN = moduleName = str;
+        }
+        // else
+        // TODO: error: file name has invalid identifier characters.
       }
 
       this.imports = parser.imports;
@@ -69,6 +74,27 @@ class Module
 
   string getFQN()
   {
-    return packageName ~ std.path.sep ~ moduleName;
+    return moduleFQN;
+  }
+
+  void setFQN(string moduleFQN)
+  {
+    uint i = moduleFQN.length;
+    if (i != 0) // Don't decrement if string has zero length.
+      i--;
+    // Find last dot.
+    for (; i != 0 && moduleFQN[i] != '.'; i--)
+    {}
+    this.moduleFQN = moduleFQN;
+    this.packageName = moduleFQN[0..i];
+    this.moduleName = moduleFQN[(i == 0 ? 0 : i+1) .. $];
+  }
+
+  string getFQNPath()
+  {
+    if (packageName.length)
+      return packageName ~ std.path.sep ~ moduleName;
+    else
+      return moduleName;
   }
 }

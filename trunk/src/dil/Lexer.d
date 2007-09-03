@@ -1441,7 +1441,7 @@ class Lexer
     ++p;
     if (p[0] != 'l' || p[1] != 'i' || p[2] != 'n' || p[3] != 'e')
     {
-      mid = MID.ExpectedNumberAfterSTLine;
+      mid = MID.ExpectedIdentifierSTLine;
       goto Lerr;
     }
     p += 3;

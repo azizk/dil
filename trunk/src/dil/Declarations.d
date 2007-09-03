@@ -74,6 +74,15 @@ class ModuleDeclaration : Declaration
     this.packages = moduleFQN[0..$-1];
   }
 
+  string getFQN()
+  {
+    auto pname = getPackageName('.');
+    if (pname.length)
+      return pname ~ "." ~ getName();
+    else
+      return getName();
+  }
+
   string getName()
   {
     if (moduleName)
