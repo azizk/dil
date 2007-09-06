@@ -35,7 +35,10 @@ class Lexer
   char* p; /// Points to the current character in the source text.
   char* end; /// Points one character past the end of the source text.
 
-  uint loc = 1; /// line of code
+  uint loc = 1; /// Actual line of code.
+
+  uint loc_old; /// Store actual line number when #line token is parsed.
+  uint loc_hline; /// Line number set by #line.
 
   char[] fileName;
 
@@ -1532,7 +1535,8 @@ class Lexer
       goto Lerr;
     }
 
-    this.loc = t.line_num.uint_ - 1;
+    this.loc_old = this.loc;
+    this.loc_hline = t.line_num.uint_ - 1;
     if (t.line_filespec)
       this.fileName = t.line_filespec.str;
     t.end = p;
@@ -1541,6 +1545,12 @@ class Lexer
   Lerr:
     t.end = p;
     error(mid);
+  }
+
+  uint errorLoc()
+  {
+    // ∆loc + line_num_of(#line)
+    return this.loc - this.loc_old + this.loc_hline;
   }
 
   dchar decodeUTF8()
@@ -1633,7 +1643,7 @@ class Lexer
   void error(MID id, ...)
   {
 //     if (reportErrors)
-    errors ~= new Information(InfoType.Lexer, id, loc, arguments(_arguments, _argptr));
+    errors ~= new Information(InfoType.Lexer, id, this.errorLoc, arguments(_arguments, _argptr));
   }
 
   unittest
