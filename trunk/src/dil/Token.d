@@ -215,7 +215,10 @@ struct Token
   {
     void* p = malloc(size);
     if (p is null)
-      throw new OutOfMemoryException();
+      version(Tango)
+        throw new OutOfMemoryException(__FILE__, __LINE__);
+      else
+        throw new OutOfMemoryException();
     *cast(Token*)p = Token.init;
     return p;
   }
