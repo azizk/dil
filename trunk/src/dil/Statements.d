@@ -435,9 +435,20 @@ class AsmInstruction : Statement
   this(Token* ident, Expression[] operands)
   {
     mixin(set_kind);
-    this.children = operands;
+    if (operands.length)
+      this.children = operands;
     this.ident = ident;
     this.operands = operands;
+  }
+}
+
+class AsmAlignStatement : Statement
+{
+  Token* number;
+  this(Token* number)
+  {
+    mixin(set_kind);
+    this.number = number;
   }
 }
 

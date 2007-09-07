@@ -2505,26 +2505,32 @@ debug writef("\33[34m%s\33[0m", success);
   {
     auto begin = token;
     Statement s;
+    typeof(token) ident;
     switch (token.type)
     {
+    // Keywords that are valid opcodes.
+    case T.In, T.Int, T.Out:
+      ident = token;
+      nT();
+      goto LOpcode;
     case T.Identifier:
-      auto ident = token;
-      auto next = peekNext();
-      if (next == T.Colon)
+      ident = token;
+      nT(); // Skip Identifier
+      if (token.type == T.Colon)
       {
         // Identifier : AsmInstruction
-        nT(); // Skip Identifier
         nT(); // Skip :
         s = new LabeledStatement(ident, parseAsmInstruction());
         break;
       }
 
+    LOpcode:
       // Opcode ;
       // Opcode Operands ;
       // Opcode
       //     Identifier
       Expression[] es;
-      if (next != T.Semicolon)
+      if (token.type != T.Semicolon)
       {
         while (1)
         {
@@ -2537,12 +2543,29 @@ debug writef("\33[34m%s\33[0m", success);
       require(T.Semicolon);
       s = new AsmInstruction(ident, es);
       break;
+    case T.Align:
+      nT();
+      auto number = token;
+      switch (token.type)
+      {
+      case T.Int32, T.Int64, T.Uint32, T.Uint64:
+        number = token; nT(); break;
+      default:
+        if (token.type != T.Semicolon)
+          nT();
+        number = null;
+        // TODO: report error: number expected after asm align statement.
+        error(MID.ExpectedButFound, "integer", token.srcText);
+      }
+      require(T.Semicolon);
+      s = new AsmAlignStatement(number);
+      break;
     case T.Semicolon:
       s = new EmptyStatement();
       nT();
       break;
     default:
-      error(MID.ExpectedButFound, "AsmStatement", token.srcText);
+      error(MID.ExpectedButFound, "AsmInstruction", token.srcText);
       s = new IllegalAsmInstruction(token);
       nT();
     }
@@ -2553,7 +2576,7 @@ debug writef("\33[34m%s\33[0m", success);
   Expression parseAsmExpression()
   {
     auto begin = token;
-    auto e = parseOrOrExpression();
+    auto e = parseAsmOrOrExpression();
     if (token.type == T.Question)
     {
       auto tok = token;
@@ -2735,7 +2758,7 @@ debug writef("\33[34m%s\33[0m", success);
   {
     auto begin = token;
     auto e = parseAsmUnaryExpression();
-    while (token.type == T.RBracket)
+    while (token.type == T.LBracket)
     {
       nT();
       e = parseAsmExpression();
@@ -2752,29 +2775,34 @@ debug writef("\33[34m%s\33[0m", success);
     Expression e;
     switch (token.type)
     {
+    case T.Byte,  T.Short,  T.Int,
+         T.Float, T.Double, T.Real:
+      goto LAsmTypePrefix;
     case T.Identifier:
       switch (token.identifier)
       {
-      case "near", "far",   "byte",  "short",  "int",
-           "word", "dword", "float", "double", "real":
+      case "near", "far",   /*"byte",  "short",  "int",*/
+           "word", "dword"/*, "float", "double", "real"*/:
+      LAsmTypePrefix:
         nT();
         if (token.type == T.Identifier && token.identifier == "ptr")
           nT();
         else
           error(MID.ExpectedButFound, "ptr", token.srcText);
-        e = new AsmTypeExpression(parseAsmUnaryExpression());
+        e = new AsmTypeExpression(parseAsmExpression());
         break;
       case "offset":
         nT();
-        e = new AsmOffsetExpression(parseAsmUnaryExpression());
+        e = new AsmOffsetExpression(parseAsmExpression());
         break;
       case "seg":
         nT();
-        e = new AsmSegExpression(parseAsmUnaryExpression());
+        e = new AsmSegExpression(parseAsmExpression());
         break;
       default:
+        goto LparseAsmPrimaryExpression;
       }
-      goto default;
+      break;
     case T.Minus:
     case T.Plus:
       nT();
@@ -2788,6 +2816,7 @@ debug writef("\33[34m%s\33[0m", success);
       nT();
       e = new CompExpression(parseAsmUnaryExpression());
     default:
+    LparseAsmPrimaryExpression:
       e = parseAsmPrimaryExpression();
       return e;
     }

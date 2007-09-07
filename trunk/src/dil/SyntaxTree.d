@@ -82,6 +82,7 @@ enum NodeKind
   VolatileStatement,
   AsmStatement,
   AsmInstruction,
+  AsmAlignStatement,
   IllegalAsmInstruction,
   PragmaStatement,
   MixinStatement,
