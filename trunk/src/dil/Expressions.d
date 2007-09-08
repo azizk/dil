@@ -618,7 +618,8 @@ class TemplateInstanceExpression : Expression
   this(Token* ident, TemplateArguments targs)
   {
     mixin(set_kind);
-    this.children = [targs];
+    if (targs)
+      this.children = [targs];
     this.ident = ident;
     this.targs = targs;
   }
@@ -872,7 +873,8 @@ class TraitsExpression : Expression
   this(typeof(ident) ident, typeof(targs) targs)
   {
     mixin(set_kind);
-    this.children = [targs];
+    if (targs)
+      this.children = [targs];
     this.ident = ident;
     this.targs = targs;
   }

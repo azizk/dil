@@ -397,7 +397,8 @@ class TemplateInstanceType : Type
   {
     super(TID.TemplateInstance);
     mixin(set_kind);
-    this.children ~= targs;
+    if (targs)
+      this.children ~= targs;
     this.ident = ident;
     this.targs = targs;
   }

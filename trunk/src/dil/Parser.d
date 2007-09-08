@@ -3975,78 +3975,55 @@ debug writef("\33[34m%s\33[0m", success);
 
   TemplateArguments parseTemplateArguments()
   {
-    auto begin = token;
-    auto args = new TemplateArguments;
-
+    TemplateArguments targs;
     require(T.LParen);
     if (token.type != T.RParen)
-    {
-      while (1)
-      {
-        bool success;
-        auto typeArgument = try_(parseType(), success);
-        if (success)
-        {
-          // TemplateArgument:
-          //         Type
-          //         Symbol
-          args ~= typeArgument;
-        }
-        else
-        {
-          // TemplateArgument:
-          //         AssignExpression
-          args ~= parseAssignExpression();
-        }
-        if (token.type != T.Comma)
-          break; // Exit loop.
-        nT();
-      }
-    }
+     targs = parseTemplateArguments_();
     require(T.RParen);
-    set(args, begin);
-    return args;
+    return targs;
   }
+
 version(D2)
 {
   TemplateArguments parseTemplateArguments2()
   {
     assert(token.type == T.Comma);
     nT();
-    auto begin = token;
-    auto args = new TemplateArguments;
-
+    TemplateArguments targs;
     if (token.type != T.RParen)
-    {
-      while (1)
-      {
-        bool success;
-        auto typeArgument = try_(parseType(), success);
-        if (success)
-        {
-          // TemplateArgument:
-          //         Type
-          //         Symbol
-          args ~= typeArgument;
-        }
-        else
-        {
-          // TemplateArgument:
-          //         AssignExpression
-          args ~= parseAssignExpression();
-        }
-        if (token.type != T.Comma)
-          break; // Exit loop.
-        nT();
-      }
-    }
+      targs = parseTemplateArguments_();
     else
       error(MID.ExpectedButFound, "Type/Expression", ")");
     require(T.RParen);
-    set(args, begin);
-    return args;
+    return targs;
   }
 } // version(D2)
+
+  TemplateArguments parseTemplateArguments_()
+  {
+    auto begin = token;
+    auto targs = new TemplateArguments;
+    while (1)
+    {
+      bool success;
+      auto typeArgument = try_(parseType(), success);
+      if (success)
+        // TemplateArgument:
+        //         Type
+        //         Symbol
+        targs ~= typeArgument;
+      else
+        // TemplateArgument:
+        //         AssignExpression
+        targs ~= parseAssignExpression();
+      if (token.type != T.Comma)
+        break; // Exit loop.
+      nT();
+    }
+    set(targs, begin);
+    return targs;
+  }
+
   TemplateParameters parseTemplateParameterList()
   {
     auto begin = token;
