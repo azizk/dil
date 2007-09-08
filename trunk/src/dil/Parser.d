@@ -3514,8 +3514,17 @@ debug writef("\33[34m%s\33[0m", success);
         }
       default:
       }
+
+      TemplateParameters tparams;
+    version(D2)
+    {
+      // is ( Type Identifier : TypeSpecialization , TemplateParameterList )
+      // is ( Type Identifier == TypeSpecialization , TemplateParameterList )
+      if (ident && specType && token.type == T.Comma)
+        tparams = parseTemplateParameterList2();
+    }
       require(T.RParen);
-      e = new IsExpression(type, ident, opTok, specTok, specType);
+      e = new IsExpression(type, ident, opTok, specTok, specType, tparams);
       break;
     case T.LParen:
       if (tokenAfterParenIs(T.LBrace))
@@ -4026,11 +4035,34 @@ version(D2)
 
   TemplateParameters parseTemplateParameterList()
   {
+    TemplateParameters tparams;
+    require(T.LParen);
+    if (token.type != T.RParen)
+      tparams = parseTemplateParameterList_();
+    require(T.RParen);
+    return tparams;
+  }
+
+version(D2)
+{
+  TemplateParameters parseTemplateParameterList2()
+  {
+    assert(token.type == T.Comma);
+    nT();
+    TemplateParameters tparams;
+    if (token.type != T.RParen)
+      tparams = parseTemplateParameterList_();
+    else
+      error(MID.ExpectedButFound, "Type/Expression", ")");
+    return tparams;
+  }
+} // version(D2)
+
+  TemplateParameters parseTemplateParameterList_()
+  {
     auto begin = token;
     auto tparams = new TemplateParameters;
 
-    require(T.LParen);
-    if (token.type != T.RParen)
     while (1)
     {
       auto paramBegin = token;
@@ -4119,7 +4151,6 @@ version(D2)
         break;
       nT();
     }
-    require(T.RParen);
     set(tparams, begin);
     return tparams;
   }

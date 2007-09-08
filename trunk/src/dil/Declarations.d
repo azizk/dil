@@ -464,7 +464,9 @@ class TemplateDeclaration : Declaration
   {
     super(true);
     mixin(set_kind);
-    this.children = [cast(Node)tparams, decls];
+    if (tparams)
+      this.children = [tparams];
+    this.children ~= decls;
     this.name = name;
     this.tparams = tparams;
     this.decls = decls;

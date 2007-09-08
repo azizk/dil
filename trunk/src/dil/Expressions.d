@@ -819,17 +819,21 @@ class IsExpression : Expression
   Token* ident;
   Token* opTok, specTok;
   Type specType;
-  this(Type type, Token* ident, Token* opTok, Token* specTok, Type specType)
+  TemplateParameters tparams; // D 2.0
+  this(Type type, Token* ident, Token* opTok, Token* specTok, Type specType, typeof(tparams) tparams)
   {
     mixin(set_kind);
     this.children = [type];
     if (specType)
       this.children ~= specType;
+    if (tparams)
+      this.children ~= tparams;
     this.type = type;
     this.ident = ident;
     this.opTok = opTok;
     this.specTok = specTok;
     this.specType = specType;
+    this.tparams = tparams;
   }
 }
 
