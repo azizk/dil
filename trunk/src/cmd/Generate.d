@@ -276,6 +276,7 @@ void syntaxToDoc(string fileName, DocOption options)
   {
     foreach (node; nodes)
     {
+      assert(node !is null);
       auto begin = node.begin;
       if (begin)
       {

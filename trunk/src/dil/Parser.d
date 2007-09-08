@@ -4014,8 +4014,16 @@ version(D2)
     auto targs = new TemplateArguments;
     while (1)
     {
+      Type parseType_()
+      {
+        auto type = parseType();
+        if (token.type == T.Comma || token.type == T.RParen)
+          return type;
+        ++errorCount; // Cause try_() to fail.
+        return null;
+      }
       bool success;
-      auto typeArgument = try_(parseType(), success);
+      auto typeArgument = try_(parseType_(), success);
       if (success)
         // TemplateArgument:
         //         Type
