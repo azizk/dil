@@ -4,17 +4,17 @@ dil is a hand-crafted compiler implementation for the D programming language. Cu
 What dil can do at the moment:
   * dil is fully internationalized and can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in config.d.
   * Generate XML or HTML documents. You can choose to generate tags for tokens only or you can also have the whole parse tree unparsed. The whitespace of the original source file is preserved. You can view the HTML documents in any browser you like. The XML documents can only be viewed in W3C-standards compatible browsers(`*`) in combination with an XML formatting CSS document. dil provides two ordinary CSS documents (for XML/HTML) which can be customized to one's heart's content. (`*`Note: Internet Explorer is the only browser that spectacularly fails at this job.)
-  * Generate module dependency graphs in the dot format.
+  * Generate module dependency graphs in the dot format. Demo [http://dil.googlecode.com/files/main.svg SVG], [http://dil.googlecode.com/files/main.png PNG] (1.3MB) or [http://dil.googlecode.com/files/main.gif GIF]. Cyclic edges and nodes are highlighted in red.
   * Generate simple code statistics (lines of code, number of whitespace characters etc.) When dil has advanced enough [http://www.aivosto.com/project/help/pm-oo-ck.html OO-metrics] will be supported.
 
   * dil can parse D 2.0 additions:
     * [http://www.digitalmars.com/d/statement.html#ForeachRangeStatement ForeachRangeStatement].
+    * Optional [http://www.digitalmars.com/d/expression.html#IsExpression TemplateParameterList in IsExpression].
     * Cast expressions: cast(const) and cast(invariant).
     * Type constructors: const(Type) and invariant(Type).
     * Traits expressions: `__`traits(Identifier) and `__`traits(Identifier, !TemplateArguments).
     * const/invariant/final/scope/static as storage classes in parameter lists (e.g. void func(final scope Foo f);).
     * invariant as storage class for declarations (e.g. invariant Foo f;).
-    * [http://www.digitalmars.com/d/expression.html#IsExpression Optional TemplateParameterList in IsExpression].
 
 Features you will or might see in dil:
   * Documentation generation ala doxygen (keeping ddoc in mind.)
