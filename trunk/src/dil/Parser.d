@@ -2593,8 +2593,8 @@ debug writef("\33[34m%s\33[0m", success);
 
   Expression parseAsmOrOrExpression()
   {
-    auto begin = token;
     alias parseAsmAndAndExpression parseNext;
+    auto begin = token;
     auto e = parseNext();
     while (token.type == T.OrLogical)
     {
@@ -2608,8 +2608,8 @@ debug writef("\33[34m%s\33[0m", success);
 
   Expression parseAsmAndAndExpression()
   {
-    auto begin = token;
     alias parseAsmOrExpression parseNext;
+    auto begin = token;
     auto e = parseNext();
     while (token.type == T.AndLogical)
     {
@@ -2623,8 +2623,8 @@ debug writef("\33[34m%s\33[0m", success);
 
   Expression parseAsmOrExpression()
   {
-    auto begin = token;
     alias parseAsmXorExpression parseNext;
+    auto begin = token;
     auto e = parseNext();
     while (token.type == T.OrBinary)
     {

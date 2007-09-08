@@ -82,4 +82,6 @@ Valinnat:
 
 Esimerkki:
   dil gen Parser.d --html --syntax > Parser.html`,
+
+  ``,
 ];

@@ -69,6 +69,7 @@ Subcommands:
 Type 'dil help <subcommand>' for more help on a particular subcommand.
 
 Compiled with {3} v{4} on {5}.`,
+
   `Generate an XML or HTML document from a D source file.
 Usage:
   dil gen file.d [Options]
@@ -80,4 +81,33 @@ Options:
 
 Example:
   dil gen Parser.d --html --syntax > Parser.html`,
+
+  `Parse a module and extract information from the resulting module dependency graph.
+Usage:
+  dil igraph file.d Format [Options]
+
+  The directory of file.d is implicitly added to the list of import paths.
+
+Format:
+  --dot            : generate a dot document
+  -gbp             : Group modules by package names
+  -gbf             : Group modules by full package name
+  -hle             : highlight cyclic edges in the graph
+  -hlv             : highlight modules in cyclic relationship
+
+  --paths          : print a list of paths to the modules imported by file.d
+  -lN              : print N levels.
+
+  --list           : print a list of the module names imported by file.d
+  -lN              : print N levels.
+
+Options:
+  -Ipath           : add 'path' to the list of import paths where modules are
+                     looked for
+  -rREGEXP         : exclude modules whose names match the regular expression
+                     REGEXP
+  -i               : include unlocatable modules
+
+Example:
+  dil igraph src/main.d`,
 ];

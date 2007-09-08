@@ -70,6 +70,7 @@ Geben Sie 'dil help <Befehl>' ein, um mehr Hilfe zu einem bestimmten Befehl zu
 erhalten.
 
 Kompiliert mit {3} v{4} am {5}.`,
+
   `Generiere ein XML- oder HTML-Dokument aus einer D-Quelltextdatei.
 Verwendung:
   dil gen datei.d [Optionen]
@@ -81,4 +82,6 @@ Optionen:
 
 Beispiel:
   dil gen Parser.d --html --syntax > Parser.html`,
+
+  ``,
 ];

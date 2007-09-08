@@ -3,7 +3,6 @@
   License: GPL3
 +/
 module main;
-import std.stdio;
 import dil.Parser;
 import dil.Lexer;
 import dil.Token;
@@ -14,6 +13,7 @@ import dil.File;
 import cmd.Generate;
 import cmd.Statistics;
 import cmd.ImportGraph;
+import std.stdio, std.conv;
 
 void main(char[][] args)
 {
@@ -47,19 +47,43 @@ void main(char[][] args)
     cmd.Generate.execute(fileName, options);
     break;
   case "importgraph", "igraph":
-    string fileName;
+    string filePath;
     string[] includePaths;
+    string[] regexps;
+    uint levels;
+    IGraphOption options;
     foreach (arg; args[2..$])
     {
-      if (arg.length >= 2 && arg[0..2] == "-I")
-      {
-        if (arg.length >= 3)
-          includePaths ~= args[2..$];
-      }
+      if (strbeg(arg, "-I"))
+        includePaths ~= arg[2..$];
+      else if(strbeg(arg, "-r"))
+        regexps ~= arg[2..$];
+      else if(strbeg(arg, "-l"))
+        levels = toUint(arg[2..$]);
       else
-        fileName = arg;
+        switch (arg)
+        {
+        case "--dot":
+          options |= IGraphOption.PrintDot; break;
+        case "--paths":
+          options |= IGraphOption.PrintPaths; break;
+        case "--list":
+          options |= IGraphOption.PrintList; break;
+        case "-i":
+          options |= IGraphOption.IncludeUnlocatableModules; break;
+        case "-hle":
+          options |= IGraphOption.HighlightCyclicEdges; break;
+        case "-hlv":
+          options |= IGraphOption.HighlightCyclicVertices; break;
+        case "-gbp":
+          options |= IGraphOption.GroupByPackageNames; break;
+        case "-gbf":
+          options |= IGraphOption.GroupByFullPackageName; break;
+        default:
+          filePath = arg;
+        }
     }
-    cmd.ImportGraph.execute(fileName, includePaths);
+    cmd.ImportGraph.execute(filePath, includePaths, regexps, levels, options);
     break;
   case "stats", "statistics":
     cmd.Statistics.execute(args[2]);
@@ -84,6 +108,16 @@ const char[] COMMANDS =
   "  importgraph (igraph)\n"
   "  statistics (stats)\n";
 
+bool strbeg(char[] str, char[] begin)
+{
+  if (str.length >= begin.length)
+  {
+    if (str[0 .. begin.length] == begin)
+      return true;
+  }
+  return false;
+}
+
 char[] helpMain()
 {
   return format(MID.HelpMain, VERSION, COMMANDS, COMPILED_WITH, COMPILED_VERSION, COMPILED_DATE);
@@ -96,6 +130,9 @@ void printHelp(char[] command)
   {
   case "gen", "generate":
     msg = GetMsg(MID.HelpGenerate);
+    break;
+  case "importgraph", "igraph":
+    msg = GetMsg(MID.HelpImportGraph);
     break;
   default:
     msg = helpMain();
@@ -114,7 +151,7 @@ void print(Node[] decls, char[] indent)
   foreach(decl; decls)
   {
     assert(decl !is null);
-    writefln(indent, decl.classinfo.name, ": begin=%s end=%s", decl.begin ? decl.begin.srcText : "\33[31mnull\33[0m", decl.end ? decl.end.srcText : "\33[31mnull\33[0m");
+//     writefln(indent, decl.classinfo.name, ": begin=%s end=%s", decl.begin ? decl.begin.srcText : "\33[31mnull\33[0m", decl.end ? decl.end.srcText : "\33[31mnull\33[0m");
     print(decl.children, indent ~ "  ");
   }
 }
