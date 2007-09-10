@@ -1578,7 +1578,7 @@ class Lexer
     foreach(k; keywords)
       idtable[k.str] = k;
   }
-/+
+/+ // Not needed anymore because tokens are stored in a linked list.
   struct State
   {
     Lexer lexer;
@@ -1648,6 +1648,7 @@ class Lexer
 
   unittest
   {
+    writefln("Testing method Lexer.peek()");
     string sourceText = "unittest { }";
     auto lx = new Lexer(sourceText, null);
 
@@ -1660,7 +1661,6 @@ class Lexer
     assert(next.type == TOK.RBrace);
     lx.peek(next);
     assert(next.type == TOK.EOF);
-    writefln("end of peek() unittest");
   }
 
   Token* getTokens()
@@ -1672,16 +1672,34 @@ class Lexer
 
   static bool isNonReservedIdentifier(char[] ident)
   {
+    if (ident.length == 0)
+      return false;
+
     static Identifier[string] reserved_ids_table;
     if (reserved_ids_table is null)
       foreach(k; keywords)
         reserved_ids_table[k.str] = k;
 
+    size_t idx = 1; // Index to the 2nd character in ident.
+    dchar isFirstCharUniAlpha()
+    {
+      idx = 0;
+      // NB: decode() could throw an Exception which would be
+      // caught by the next try-catch-block.
+      return isUniAlpha(std.utf.decode(ident, idx));
+    }
+
     try
-      foreach (dchar c; ident)
-        if (!isident(c) && !isUniAlpha(c))
-          return false;
-    catch (Exception e)
+    {
+      if (isidbeg(ident[0]) ||
+          ident[0] & 128 && isFirstCharUniAlpha())
+      {
+        foreach (dchar c; ident[idx..$])
+          if (!isident(c) && !isUniAlpha(c))
+            return false;
+      }
+    }
+    catch (Exception)
       return false;
 
     return !(ident in reserved_ids_table);
