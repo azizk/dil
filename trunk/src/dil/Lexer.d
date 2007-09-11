@@ -656,12 +656,13 @@ class Lexer
   void scanNormalStringLiteral(ref Token t)
   {
     assert(*p == '"');
-    ++p;
     char[] buffer;
     t.type = TOK.String;
+    uint c;
     while (1)
     {
-      switch (*p)
+      c = *++p;
+      switch (c)
       {
       case '"':
         ++p;
@@ -673,42 +674,41 @@ class Lexer
         return;
       case '\\':
         ++p;
-        dchar d = scanEscapeSequence();
-        if (d & 128)
-          encodeUTF8(buffer, d);
+        c = scanEscapeSequence();
+        --p;
+        if (c & 128)
+          encodeUTF8(buffer, c);
         else
-          buffer ~= d;
+          break;
         continue;
       case '\r':
         if (p[1] == '\n')
           ++p;
       case '\n':
-        ++p;
         ++loc;
-        buffer ~= '\n'; // Convert EndOfLine to \n.
-        continue;
+        c = '\n'; // Convert EndOfLine to \n.
+        break;
       case 0, _Z_:
         error(MID.UnterminatedString);
         goto Lreturn;
       default:
-        if (*p & 128)
+        if (c & 128)
         {
 //           char* begin = p;
-          dchar d = decodeUTF8();
-          if (d == LSd || d == PSd)
+          c = decodeUTF8();
+          if (c == LSd || c == PSd)
             goto case '\n';
 
           // We don't copy per pointer because we might include
           // invalid, skipped utf-8 sequences. See decodeUTF8().
 //           ++p;
 //           buffer ~= begin[0 .. p - begin];
-          ++p;
-          encodeUTF8(buffer, d);
+          encodeUTF8(buffer, c);
           continue;
         }
-        // Copy ASCII character.
-        buffer ~= *p++;
       }
+      // Copy ASCII character.
+      buffer ~= c;
     }
     assert(0);
   }
