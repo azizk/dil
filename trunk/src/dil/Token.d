@@ -134,7 +134,11 @@ struct Token
     struct
     {
       string str;
-      char pf;
+      char pf; /// Postfix 'c', 'w' or 'd'
+    version(D2)
+      Token* tok_str; /// Points to the contents of a token string stored as a
+                      /// doubly linked list. The last token is always '}' or
+                      /// EOF in case end of source text is "q{" EOF.
     }
     dchar  dchar_;
     long   long_;

@@ -92,30 +92,25 @@ class Lexer
       ++p;
       while (1)
       {
+        t.end = p;
         switch (*++p)
         {
         case '\r':
           if (p[1] == '\n')
             ++p;
         case '\n':
+          ++p;
           ++loc;
-          if (p[-1] == '\r')
-            t.end = p-1;
-          else
-            t.end = p;
-          break;
-        case LS[0]:
-          t.end = p;
-          if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
-          {
-            ++p; ++p;
-            ++loc;
-          }
           break;
         case 0, _Z_:
-          t.end = p;
           break;
         default:
+          if (*p & 128)
+          {
+            auto c = decodeUTF8();
+            if (c == LSd || c == PSd)
+              goto case '\n';
+          }
           continue;
         }
         break; // Exit loop.
@@ -220,6 +215,13 @@ class Lexer
           return scanRawStringLiteral(t);
         if (c == 'x' && p[1] == '"')
           return scanHexStringLiteral(t);
+      version(D2)
+      {
+        if (c == 'q' && p[1] == '"')
+          return scanDelimitedStringLiteral(t);
+        if (c == 'q' && p[1] == '{')
+          return scanTokenStringLiteral(t);
+      }
       Lidentifier:
         do
         { c = *++p; }
@@ -672,10 +674,10 @@ class Lexer
       case '\\':
         ++p;
         dchar d = scanEscapeSequence();
-        if (d < 128)
-          buffer ~= d;
-        else
+        if (d & 128)
           encodeUTF8(buffer, d);
+        else
+          buffer ~= d;
         continue;
       case '\r':
         if (p[1] == '\n')
@@ -790,8 +792,8 @@ class Lexer
       case '\r':
         if (p[1] == '\n')
           ++p;
-        c = '\n'; // Convert '\r' and '\r\n' to '\n'
       case '\n':
+        c = '\n'; // Convert EndOfLine ('\r','\r\n','\n',LS,PS) to '\n'
         ++loc;
         break;
       case '`':
@@ -806,14 +808,6 @@ class Lexer
           return;
         }
         break;
-      case LS[0]:
-        if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
-        {
-          c = '\n';
-          ++p; ++p;
-          ++loc;
-        }
-        break;
       case 0, _Z_:
         if (delim == 'r')
           error(MID.UnterminatedRawString);
@@ -821,6 +815,14 @@ class Lexer
           error(MID.UnterminatedBackQuoteString);
         goto Lreturn;
       default:
+        if (c & 128)
+        {
+          c = decodeUTF8();
+          if (c == LSd || c == PSd)
+            goto case '\n';
+          encodeUTF8(buffer, c);
+          continue;
+        }
       }
       buffer ~= c; // copy character to buffer
     }
@@ -883,7 +885,7 @@ class Lexer
         else if (isspace(c))
           continue;
 
-        if (c >= 128)
+        if (c & 128)
         {
           c = decodeUTF8();
           if (c == LSd || c == PSd)
@@ -904,6 +906,257 @@ class Lexer
     }
     assert(0);
   }
+
+version(D2)
+{
+  void scanDelimitedStringLiteral(ref Token t)
+  {
+    assert(p[0] == 'q' && p[1] == '"');
+    t.type = TOK.String;
+
+    char[] buffer;
+    dchar opening_delim, // 0 if no nested delimiter or '[', '(', '<', '{'
+          closing_delim; // Will be ']', ')', '>', '}', any other character
+                         // or the first, decoded character of an identifier.
+    char[] str_delim; // Identifier delimiter
+    uint level = 1;
+
+    ++p; ++p; // Skip q"
+    uint c = *p;
+    switch (c)
+    {
+    case '(':
+      opening_delim = c;
+      closing_delim = ')'; // *p + 1
+      break;
+    case '[', '<', '{':
+      opening_delim = c;
+      closing_delim = c + 2; // Get to closing counterpart. Feature of ASCII table.
+      break;
+    default:
+      char* begin = p;
+      closing_delim = c;
+      // TODO: What to do about newlines? Skip or accept as delimiter?
+      // TODO: Check for non-printable characters?
+      if (c & 128)
+      {
+        closing_delim = decodeUTF8();
+        if (!isUniAlpha(c))
+          break;
+      }
+      else if (!isidbeg(c))
+        break;
+      // Parse identifier + newline
+      do
+      { c = *++p; }
+      while (isident(c) || c & 128 && isUniAlpha(decodeUTF8()))
+      // Store identifier
+      str_delim = begin[0..p-begin];
+      // Scan newline
+      switch (*p)
+      {
+      case '\r':
+        if (p[1] == '\n')
+          ++p;
+      case '\n':
+        ++loc;
+        break;
+      case LS[0]:
+        if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+        {
+          ++p; ++p;
+          ++loc;
+          break;
+        }
+        // goto default;
+      default:
+        // TODO: error(MID.ExpectedNewlineAfterIdentDelim);
+      }
+    }
+
+    bool checkStringDelim(char* p)
+    {
+      assert(str_delim.length != 0);
+      if (end-p >= str_delim.length && // Check remaining length.
+          p[0..str_delim.length] == str_delim) // Compare.
+        return true;
+      return false;
+    }
+
+    while (1)
+    {
+      c = *++p;
+      switch (c)
+      {
+      case '\r':
+        if (p[1] == '\n')
+          ++p;
+      case '\n':
+        c = '\n'; // Convert EndOfLine ('\r','\r\n','\n',LS,PS) to '\n'
+        ++loc;
+        break;
+      case 0, _Z_:
+//         error(MID.UnterminatedDelimitedString);
+        goto Lreturn3;
+      default:
+        if (c & 128)
+        {
+          auto begin = p;
+          c = decodeUTF8();
+          if (c == LSd || c == PSd)
+            goto case '\n';
+          if (c == closing_delim)
+          {
+            if (str_delim.length && checkStringDelim(begin))
+            {
+              p = begin + str_delim.length;
+              goto Lreturn2;
+            }
+            assert(level == 1);
+            --level;
+            goto Lreturn;
+          }
+          encodeUTF8(buffer, c);
+          continue;
+        }
+        else
+        {
+          if (c == opening_delim)
+            ++level;
+          else if (c == closing_delim)
+          {
+            if (str_delim.length && checkStringDelim(p))
+            {
+              p += str_delim.length;
+              goto Lreturn2;
+            }
+            if (--level == 0)
+              goto Lreturn;
+          }
+        }
+      }
+      buffer ~= c; // copy character to buffer
+    }
+  Lreturn:
+    assert(*p == closing_delim);
+    assert(level == 0);
+    ++p; // Skip closing delimiter.
+  Lreturn2:
+    if (*p == '"')
+      ++p;
+    // else
+    // TODO: error(MID.ExpectedDblQuoteAfterDelim, str_delim.length ? str_delim : p[-1]);
+
+    t.pf = scanPostfix();
+  Lreturn3:
+    t.str = buffer ~ '\0';
+    t.end = p;
+  }
+
+  void scanTokenStringLiteral(ref Token t)
+  {
+    assert(p[0] == 'q' && p[1] == '{');
+    t.type = TOK.String;
+    // Copy members that might be changed by subsequent tokens. Like #line for example.
+    auto loc_old = this.loc_old;
+    auto loc_hline = this.loc_hline;
+    auto filePath = this.fileName;
+
+    uint loc = this.loc;
+    uint level = 1;
+
+    ++p; ++p; // Skip q{
+
+    auto prev_t = &t;
+    Token* token;
+    while (1)
+    {
+      token = new Token;
+      scan(*token);
+      // Save the tokens in a doubly linked list.
+      // Could be useful for various tools.
+      token.prev = prev_t;
+      prev_t.next = token;
+      prev_t = token;
+      switch (token.type)
+      {
+      case TOK.LBrace:
+        ++level;
+        continue;
+      case TOK.RBrace:
+        if (--level == 0)
+        {
+          t.tok_str = t.next;
+          t.next = null;
+          break;
+        }
+        continue;
+      case TOK.EOF:
+        // TODO: error(MID.UnterminatedTokenString);
+        t.tok_str = t.next;
+        t.next = token;
+        break;
+      default:
+        continue;
+      }
+      break; // Exit loop.
+    }
+
+    assert(token.type == TOK.RBrace || token.type == TOK.EOF);
+    assert(token.type == TOK.RBrace && t.next is null ||
+           token.type == TOK.EOF && t.next !is null);
+
+    char[] buffer;
+    // token points to } or EOF
+    if (token.type == TOK.EOF)
+    {
+      t.end = token.start;
+      buffer = t.srcText[2..$].dup ~ '\0';
+    }
+    else
+    {
+      // Assign to buffer before scanPostfix().
+      t.end = p;
+      buffer = t.srcText[2..$-1].dup ~ '\0';
+      t.pf = scanPostfix();
+      t.end = p;
+    }
+    // Convert EndOfLines to '\n'
+    if (loc != this.loc)
+    {
+      assert(buffer[$-1] == '\0');
+      uint i, j;
+      for (; i < buffer.length; ++i)
+        switch (buffer[i])
+        {
+        case '\r':
+          if (buffer[i+1] == '\n')
+            ++i;
+        case '\n':
+          buffer[j++] = '\n';
+          break;
+        case LS[0]:
+          auto b = buffer[i..$];
+          if (b[1] == LS[1] && (b[2] == LS[2] || b[2] == PS[2]))
+          {
+            ++i; ++i;
+            goto case '\n';
+          }
+          // goto default;
+        default:
+          buffer[j++] = buffer[i]; // Copy character
+        }
+      buffer.length = j; // Adjust length
+    }
+    assert(buffer[$-1] == '\0');
+    t.str = buffer;
+
+    // Restore possibly changed members.
+    this.loc_old = loc_old;
+    this.loc_hline = loc_hline;
+    this.fileName = filePath;
+  }
+}
 
   dchar scanEscapeSequence()
   {
@@ -1567,8 +1820,9 @@ class Lexer
     {
       error(MID.InvalidUTF8Sequence);
       // Skip to next valid utf-8 sequence
-      while (UTF8stride[*++p] != 0xFF) {}
+      while (p < end && UTF8stride[*++p] != 0xFF) {}
       --p;
+      assert(p < end);
     }
     return d;
   }
