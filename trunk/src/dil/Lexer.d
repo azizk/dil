@@ -390,7 +390,6 @@ class Lexer
         char[] buffer;
         do
         {
-          ++p;
           c = scanEscapeSequence();
           if (c < 128)
             buffer ~= c;
@@ -673,7 +672,6 @@ class Lexer
         t.end = p;
         return;
       case '\\':
-        ++p;
         c = scanEscapeSequence();
         --p;
         if (c & 128)
@@ -722,8 +720,7 @@ class Lexer
     switch (*p)
     {
     case '\\':
-      ++p;
-      switch (*p)
+      switch (p[1])
       {
       case 'u':
         type = TOK.WCharLiteral; break;
@@ -1160,6 +1157,8 @@ version(D2)
 
   dchar scanEscapeSequence()
   {
+    assert(*p == '\\');
+    ++p;
     uint c = char2ev(*p);
     if (c)
     {
@@ -1234,7 +1233,7 @@ version(D2)
           if (*p == ';')
           {
             c = entity2Unicode(begin[0..p - begin]);
-            ++p;
+            ++p; // Skip ;
             if (c == 0xFFFF)
               error(MID.UndefinedHTMLEntity, (begin-1)[0..p-(begin-1)]);
           }
@@ -1245,7 +1244,20 @@ version(D2)
           error(MID.InvalidBeginHTMLEntity);
       }
       else
-        error(MID.UndefinedEscapeSequence);
+      {
+        // TODO: add parameter to localized strings
+        dchar d = *p;
+        char[] str = `\`;
+        if (d & 128)
+        {
+          d = decodeUTF8();
+          encodeUTF8(str, d);
+          ++p;
+        }
+        else
+          str ~= d;
+        error(MID.UndefinedEscapeSequence/+, str+/);
+      }
     }
 
     return c;
