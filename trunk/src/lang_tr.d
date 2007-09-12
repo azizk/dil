@@ -48,7 +48,7 @@ string[] messages = [
   "geçersiz heks rakam; minimum bir heks sayı gereklidir.",
   "geçersiz binari rakam; minimum bir binari sayı gereklidir.",
   "bir heksadesimal float rakamın üsü gereklidir.",
-  "heksadesimal float rakamın üsün'de desimal sayılar eksik.",
+  "heksadesimal float üsler desimal sayı ile başlamalı.",
   "üsler desimal sayı ile başlamalı.",
 
   // Parser messages

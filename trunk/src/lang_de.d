@@ -48,7 +48,7 @@ string[] messages = [
   "ungültige Hexzahl; mindestens eine Hexziffer erforderlich.",
   "ungültige Binärzahl; mindestens eine Binärziffer erforderlich.",
   "der Exponent einer hexadezimalen Fließkommazahl ist erforderlich.",
-  "fehlende Dezimalzahlen im Exponent der hexadezimalen Fließkommazahl.",
+  "Hexadezimal-Exponenten müssen mit einer Dezimalziffer anfangen.",
   "Exponenten müssen mit einer Dezimalziffer anfangen.",
 
   // Parser messages:

@@ -48,7 +48,7 @@ string[] messages = [
   "virheellinen heksaluku; odotettiin vähintään yhtä heksanumeroa.",
   "virheellinen binääriluku; odotettiin vähintään yhtä binäärinumeroa.",
   "heksadesimaalisen liukuluvun eksponentti vaaditaan.",
-  "heksadesimaalisen liukuluvun eksponentista puuttui numeroita.",
+  "heksadesimaalisen liukuluvun eksponentista puuttui numeroita.", // TODO: update
   "eksponenttien tulee alkaa numerolla.",
 
   // Parser messages

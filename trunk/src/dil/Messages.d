@@ -51,8 +51,8 @@ enum MID
   NoDigitsInHexNumber,
   NoDigitsInBinNumber,
   HexFloatExponentRequired,
-  HexFloatMissingExpDigits,
-  FloatExponentDigitExpected,
+  HexFloatExpMustStartWithDigit,
+  FloatExpMustStartWithDigit,
 
   // Parser messages:
   ExpectedButFound,

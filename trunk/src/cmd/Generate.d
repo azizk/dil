@@ -477,7 +477,7 @@ void printToken(Token* token, string[] tags)
     auto num = token.line_num;
     if (num is null)
     {
-      writef(token.start[0 .. token.end - token.start]);
+      writef(token.srcText);
       writef(tags[DP.HLineEnd]);
       break;
     }

@@ -48,8 +48,8 @@ string[] messages = [
   "invalid hex number; at least one hex digit expected.",
   "invalid binary number; at least one binary digit expected.",
   "the exponent of a hexadecimal float number is required.",
-  "missing decimal digits in hexadecimal float exponent.",
-  "exponents have to start with a digit.",
+  "hexadecimal float exponents must start with a digit.",
+  "exponents must start with a digit.",
 
   // Parser messages
   "expected '{1}', but found '{2}'.",

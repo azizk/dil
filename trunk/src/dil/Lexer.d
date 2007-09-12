@@ -1370,30 +1370,25 @@ version(D2)
         ulong_ += *p - 'a' + 10;
     }
 
+    assert(ishexad(p[-1]) || p[-1] == '_' || p[-1] == 'x');
+    assert(!ishexad(*p) && *p != '_');
+
     switch (*p)
     {
     case '.':
-      if (p[1] != '.')
-        goto LscanHexReal;
-      break;
-    case 'L':
-      if (p[1] != 'i')
+      if (p[1] == '.')
         break;
-    case 'i', 'p', 'P':
-      goto LscanHexReal;
+    case 'p', 'P':
+      return scanHexReal(t);
     default:
     }
+
     if (digits == 0)
       error(MID.NoDigitsInHexNumber);
     else if (digits > 16)
-    {
-      // Overflow: skip following digits.
       error(MID.OverflowHexNumber);
-      while (ishexad(*++p)) {}
-    }
+
     goto Lfinalize;
-  LscanHexReal:
-    return scanHexReal(t);
 
   LscanBin:
     assert(digits == 0);
@@ -1419,9 +1414,9 @@ version(D2)
 
     if (digits == 0)
       error(MID.NoDigitsInBinNumber);
-
-    if (digits > 64)
+    else if (digits > 64)
       error(MID.OverflowBinaryNumber);
+
     assert(p[-1] == '0' || p[-1] == '1' || p[-1] == '_', p[-1] ~ "");
     assert( !(*p == '0' || *p == '1' || *p == '_') );
     goto Lfinalize;
@@ -1588,7 +1583,7 @@ version(D2)
       if (*p == '-' || *p == '+')
         ++p;
       if (!isdigit(*p))
-        error(MID.FloatExponentDigitExpected);
+        error(MID.FloatExpMustStartWithDigit);
       else
         while (isdigit(*++p) || *p == '_') {}
     }
@@ -1613,48 +1608,33 @@ version(D2)
 
   void scanHexReal(ref Token t)
   {
-    assert(*p == '.' || *p == 'i' || *p == 'p' || *p == 'P' || (*p == 'L' && p[1] == 'i'));
+    assert(*p == '.' || *p == 'p' || *p == 'P');
     MID mid;
     if (*p == '.')
-      while (ishexad(*++p) || *p == '_') {}
+      while (ishexad(*++p) || *p == '_')
+      {}
+    // Decimal exponent is required.
     if (*p != 'p' && *p != 'P')
     {
       mid = MID.HexFloatExponentRequired;
       goto Lerr;
     }
-    // Copy mantissa to a buffer ignoring underscores.
-    char* end = p;
-    p = t.start;
-    char[] buffer;
-    do
+    // Scan exponent
+    assert(*p == 'p' || *p == 'P');
+    if (!isdigit(*++p))
     {
-      if (*p == '_')
-      {
-        ++p;
-        continue;
-      }
-      buffer ~= *p;
-      ++p;
-    } while (p != end)
-
-    assert(p == end && (*p == 'p' || *p == 'P'));
-    // Scan and copy the exponent.
-    buffer ~= 'p';
-    size_t bufflen = buffer.length;
-    while (1)
-    {
-      if (*++p == '_')
-        continue;
-      if (isdigit(*p))
-        buffer ~= *p;
-      else
-        break;
-    }
-    // When the buffer length hasn't changed, no digits were copied.
-    if (bufflen == buffer.length) {
-      mid = MID.HexFloatMissingExpDigits;
+      mid = MID.HexFloatExpMustStartWithDigit;
       goto Lerr;
     }
+    while (isdigit(*++p) || *p == '_')
+    {}
+    // Copy whole number and remove underscores from buffer.
+    char[] buffer = t.start[0..p-t.start].dup;
+    uint j;
+    foreach (c; buffer)
+      if (c != '_')
+        buffer[j++] = c;
+    buffer.length = j; // Adjust length.
     buffer ~= 0; // Terminate for C functions.
     finalizeFloat(t, buffer);
     return;
@@ -1666,6 +1646,7 @@ version(D2)
 
   void finalizeFloat(ref Token t, string buffer)
   {
+    assert(buffer[$-1] == 0);
     // Float number is well-formed. Check suffixes and do conversion.
     switch (*p)
     {
@@ -1747,12 +1728,12 @@ version(D2)
           }
           t.line_num = new Token;
           scan(*t.line_num);
-          --p;
           if (t.line_num.type != TOK.Int32 && t.line_num.type != TOK.Uint32)
           {
             mid = MID.ExpectedIntegerAfterSTLine;
             goto Lerr;
           }
+          --p; // Go one back because scan() advanced p past the integer.
           state = State.Filespec;
         }
         else if (state == State.Filespec)
