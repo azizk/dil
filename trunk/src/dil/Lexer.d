@@ -1711,10 +1711,12 @@ version(D2)
     }
     p += 3;
 
+    // TODO: #line58"path/file" is legal. Require spaces?
+    //       State.Space could be used for that purpose.
     enum State
-    { Number, Filespec, End }
+    { /+Space,+/ Integer, Filespec, End }
 
-    State state;
+    State state = State.Integer;
 
   Loop:
     while (1)
@@ -1736,16 +1738,21 @@ version(D2)
       default:
         if (isspace(*p))
           continue;
-        if (state == State.Number)
+        if (state == State.Integer)
         {
           if (!isdigit(*p))
           {
-            mid = MID.ExpectedNumberAfterSTLine;
+            mid = MID.ExpectedIntegerAfterSTLine;
             goto Lerr;
           }
           t.line_num = new Token;
           scan(*t.line_num);
           --p;
+          if (t.line_num.type != TOK.Int32 && t.line_num.type != TOK.Uint32)
+          {
+            mid = MID.ExpectedIntegerAfterSTLine;
+            goto Lerr;
+          }
           state = State.Filespec;
         }
         else if (state == State.Filespec)
@@ -1791,9 +1798,9 @@ version(D2)
       }
     }
 
-    if (state == State.Number)
+    if (state == State.Integer)
     {
-      mid = MID.ExpectedNumberAfterSTLine;
+      mid = MID.ExpectedIntegerAfterSTLine;
       goto Lerr;
     }
 

@@ -17,7 +17,7 @@ enum MID
   EmptyCharacterLiteral,
   // #line
   ExpectedIdentifierSTLine,
-  ExpectedNumberAfterSTLine,
+  ExpectedIntegerAfterSTLine,
   ExpectedFilespec,
   UnterminatedFilespec,
   UnterminatedSpecialToken,

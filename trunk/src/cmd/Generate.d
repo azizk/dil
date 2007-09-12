@@ -169,7 +169,7 @@ auto html_tags = [
   // Keyword
   `<span class="k">%s</span>`,
   // HLineBegin
-  `<span class="hl">#line`,
+  `<span class="hl">`,
   // HLineEnd
   "</span>",
   // Filespec
@@ -232,7 +232,7 @@ auto xml_tags = [
   // Keyword
   "<k>%s</k>",
   // HLineBegin
-  "<hl>#line",
+  "<hl>",
   // HLineEnd
   "</hl>",
   // Filespec
@@ -475,9 +475,15 @@ void printToken(Token* token, string[] tags)
     }
     writef(tags[DP.HLineBegin]);
     auto num = token.line_num;
+    if (num is null)
+    {
+      writef(token.start[0 .. token.end - token.start]);
+      writef(tags[DP.HLineEnd]);
+      break;
+    }
     // Print whitespace between #line and number
-    auto ptr = token.start + "#line".length;
-    printWS(ptr, num.start);
+    auto ptr = token.start;
+    printWS(ptr, num.start); // prints "#line" as well
     printToken(num, tags);
     if (token.line_filespec)
     {
