@@ -1245,18 +1245,15 @@ version(D2)
       }
       else
       {
-        // TODO: add parameter to localized strings
         dchar d = *p;
         char[] str = `\`;
         if (d & 128)
-        {
-          d = decodeUTF8();
-          encodeUTF8(str, d);
-          ++p;
-        }
+          encodeUTF8(str, decodeUTF8());
         else
           str ~= d;
-        error(MID.UndefinedEscapeSequence/+, str+/);
+        ++p;
+        // TODO: check for unprintable character?
+        error(MID.UndefinedEscapeSequence, str);
       }
     }
 

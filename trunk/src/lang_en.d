@@ -31,7 +31,7 @@ string[] messages = [
   "unterminated raw string.",
   "unterminated back quote string.",
   // \x \u \U
-  "found undefined escape sequence.",
+  "found undefined escape sequence '{1}'.",
   "insufficient number of hex digits in escape sequence.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "undefined HTML entity '{1}'",

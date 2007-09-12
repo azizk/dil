@@ -31,7 +31,7 @@ string[] messages = [
   "kapanmamış çiğ dizgisi.",
   "kapanmamış ters tırnak dizgisi.",
   // \x \u \U
-  "tanımlanmamış çıkış serisi bulundu.",
+  "tanımlanmamış çıkış serisi '{1}' bulundu.",
   "heksadesimal çıkış serisi sayıları yeterli değil.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "tanımlanmamış HTML varlık '{1}'",

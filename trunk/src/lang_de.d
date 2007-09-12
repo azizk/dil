@@ -31,7 +31,7 @@ string[] messages = [
   "unterminierte rohe Zeichenkette.",
   "unterminierte Backquote-Zeichenkette.",
   // \x \u \U
-  "undefinierte Escapesequenz gefunden.",
+  "undefinierte Escapesequenz '{1}' gefunden.",
   "unzureichende Anzahl von Hexziffern in Escapesequenz.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "undefinierte HTML-Entität '{1}'",

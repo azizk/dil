@@ -31,7 +31,7 @@ string[] messages = [
   "päättämätön raakamerkkijono.",
   "päättämätön gravisaksenttimerkkijono.",
   // \x \u \U
-  "löydettiin määrittelemätön escape-sekvenssi.",
+  "löydettiin määrittelemätön escape-sekvenssi.", // TODO: Insert '{1}'
   "riittämätön määrä heksanumeroita escape-sekvenssissä.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "määrittelemätön HTML-entiteetti '{1}'",
