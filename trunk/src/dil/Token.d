@@ -18,12 +18,13 @@ enum TOK : ushort
 
   /// Flag for whitespace tokens that must be ignored in the parsing phase.
   Whitespace = 0x8000,
-  Comment = 1 | Whitespace,
-  Shebang = 2 | Whitespace,
-  HashLine = 3 | Whitespace,
-  Filespec = 4 | Whitespace,
+  Illegal = 1 | Whitespace,
+  Comment = 2 | Whitespace,
+  Shebang = 3 | Whitespace,
+  HashLine = 4 | Whitespace,
+  Filespec = 5 | Whitespace,
 
-  Identifier = 5,
+  Identifier = 6,
   String,
   CharLiteral, WCharLiteral, DCharLiteral,
 
@@ -121,8 +122,9 @@ struct Token
 
   Token* next, prev;
 
-  char* start;
-  char* end;
+  char* ws;    /// Start of whitespace characters before token. Null if no WS.
+  char* start; /// Start of token in source text.
+  char* end;   /// Points one past the end of token in source text.
 
   union
   {
@@ -236,6 +238,7 @@ struct Token
 const string[] tokToString = [
   "Invalid",
 
+  "Illegal",
   "Comment",
   "#! /shebang/",
   "#line",

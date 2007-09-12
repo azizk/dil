@@ -7,6 +7,7 @@ string lang_code = "fi";
 
 string[] messages = [
   // Lexer messages:
+  "", // TODO: translate
   "virheellinen Unicode-merkki.",
   "virheellinen UTF-8-merkkijono.",
   // ''

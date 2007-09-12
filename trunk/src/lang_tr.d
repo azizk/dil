@@ -7,6 +7,7 @@ string lang_code = "tr";
 
 string[] messages = [
   // Lexer messages:
+  "illegal karakter bulundu: '{1}'",
   "geçersiz Unikod karakteri.",
   "geçersiz UTF-8 serisi.",
   // ''

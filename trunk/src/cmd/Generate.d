@@ -251,7 +251,6 @@ void syntaxToDoc(string fileName, DocOption options)
   auto lx = parser.lx;
 
   auto token = lx.head;
-  char* end = lx.text.ptr;
 
   writefln(tags[DocPart.Head]);
   // Output error messages.
@@ -312,10 +311,6 @@ void syntaxToDoc(string fileName, DocOption options)
   {
     token = token.next;
 
-    // Print whitespace between previous and current token.
-    if (end != token.start)
-      writef("%s", end[0 .. token.start - end]);
-
     Node[]* nodes = token in beginNodes;
 
     if (nodes)
@@ -336,8 +331,6 @@ void syntaxToDoc(string fileName, DocOption options)
         else
           writef(tags[DocPart.SyntaxEnd], getTag(node.category));
     }
-
-    end = token.end;
   }
   writef(tags[DocPart.SrcEnd], tags[DocPart.Tail]);
 }
@@ -349,7 +342,6 @@ void tokensToDoc(string fileName, DocOption options)
   auto lx = new Lexer(sourceText, fileName);
 
   auto token = lx.getTokens();
-  char* end = lx.text.ptr;
 
   writefln(tags[DocPart.Head]);
 
@@ -368,12 +360,7 @@ void tokensToDoc(string fileName, DocOption options)
   while (token.type != TOK.EOF)
   {
     token = token.next;
-
-    // Print whitespace between previous and current token.
-    if (end != token.start)
-      writef("%s", end[0 .. token.start - end]);
     printToken(token, tags);
-    end = token.end;
   }
   writef(\n, tags[DocPart.SrcEnd], \n, tags[DocPart.Tail]);
 }
@@ -382,6 +369,10 @@ void printToken(Token* token, string[] tags)
 {
   alias DocPart DP;
   string srcText = xml_escape(token.srcText);
+
+  // Print whitespace.
+  if (token.ws)
+    writef(token.ws[0..token.start - token.ws]);
 
   switch(token.type)
   {

@@ -173,9 +173,41 @@ class Lexer
   }
   body
   {
-    uint c = *p;
-
+    // Scan whitespace.
+    auto pws = p;
     while (1)
+    {
+      switch (*p)
+      {
+      case '\r':
+        if (p[1] == '\n')
+          ++p;
+      case '\n':
+        ++p;
+        ++loc;
+        continue;
+      case LS[0]:
+        if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+        {
+          p += 3;
+          ++loc;
+          continue;
+        }
+        // goto default;
+      default:
+        if (!isspace(*p))
+          break;
+        ++p;
+        continue;
+      }
+      break; // Exit loop.
+    }
+
+    if (p != pws)
+      t.ws = pws;
+
+    // Scan token.
+    uint c = *p;
     {
       t.start = p;
 
@@ -187,26 +219,6 @@ class Lexer
         tail = &t;
         assert(t.start == t.end);
         return;
-      }
-
-      if (c == '\n')
-      {
-        c = *++p;
-        ++loc;
-        continue;
-      }
-      else if (c == '\r')
-      {
-        c = *++p;
-        if (c != '\n')
-          ++loc;
-        continue;
-      }
-      else if (c == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
-      {
-        p += 3;
-        c = *p;
-        continue;
       }
 
       if (isidbeg(c))
@@ -646,9 +658,20 @@ class Lexer
       default:
       }
 
-      if (c & 128 && isUniAlpha(decodeUTF8()))
-        goto Lidentifier;
-      c = *++p;
+      if (c & 128)
+      {
+        c = decodeUTF8();
+        if (isUniAlpha(c))
+          goto Lidentifier;
+      }
+
+      error(MID.IllegalCharacter, cast(dchar)c);
+
+      ++p;
+      t.type = TOK.Illegal;
+      t.dchar_ = c;
+      t.end = p;
+      return;
     }
   }
 

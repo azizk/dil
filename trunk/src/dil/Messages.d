@@ -10,6 +10,7 @@ import std.stdarg;
 enum MID
 {
   // Lexer messages:
+  IllegalCharacter,
   InvalidUnicodeCharacter,
   InvalidUTF8Sequence,
   // ''

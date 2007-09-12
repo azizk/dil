@@ -7,6 +7,7 @@ string lang_code = "de";
 
 string[] messages = [
   // Lexer messages:
+  "illegales Zeichen gefunden: '{1}'",
   "ungültiges Unicodezeichen.",
   "ungültige UTF-8-Sequenz.",
   // ''
