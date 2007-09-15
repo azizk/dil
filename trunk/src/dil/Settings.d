@@ -6,7 +6,8 @@ module dil.Settings;
 import dil.Messages;
 import dil.Parser, dil.SyntaxTree, dil.Declarations, dil.Expressions;
 import dil.File;
-import std.metastrings;
+import std.metastrings : FormatT = Format, ToString;
+import common;
 
 template Pad(char[] str, uint amount)
 {
@@ -32,20 +33,20 @@ else
   const VERSION_MINOR = 0;
 }
 
-const string VERSION = Format!("%s.%s", VERSION_MAJOR, Pad!(VERSION_MINOR, 3));
+const string VERSION = FormatT!("%s.%s", VERSION_MAJOR, Pad!(VERSION_MINOR, 3));
 const VENDOR = "dil";
 
 /// Used in main help message.
 const COMPILED_WITH = __VENDOR__;
 /// ditto
-const COMPILED_VERSION = Format!("%s.%s", __VERSION__/1000, Pad!(__VERSION__%1000, 3));
+const COMPILED_VERSION = FormatT!("%s.%s", __VERSION__/1000, Pad!(__VERSION__%1000, 3));
 /// ditto
 const COMPILED_DATE = __TIMESTAMP__;
 
 struct GlobalSettings
 {
 static:
-  string language; /// Language of messages catalogue to load.
+  string language; /// Language of loaded messages catalogue.
   string[] messages; /// Table of localized compiler messages.
   string[] importPaths; /// Array of import paths to look for modules.
   void load()
@@ -134,7 +135,7 @@ static:
       }
     }
     if (messages.length != MID.max+1)
-      throw new Exception(std.string.format("messages table in %s must exactly have %d entries, but %s were found.", fileName, MID.max+1, messages.length));
+      throw new Exception(Format("messages table in {0} must exactly have {1} entries, but {2} were found.", fileName, MID.max+1, messages.length));
     GlobalSettings.messages = messages;
   }
 }

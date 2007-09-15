@@ -4,6 +4,7 @@
 +/
 module dil.Identifier;
 import dil.Token;
+import common;
 
 struct Identifier
 {

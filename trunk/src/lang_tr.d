@@ -7,7 +7,7 @@ string lang_code = "tr";
 
 string[] messages = [
   // Lexer messages:
-  "illegal karakter bulundu: '{1}'",
+  "illegal karakter bulundu: '{0}'",
   "geçersiz Unikod karakteri.",
   "geçersiz UTF-8 serisi.",
   // ''
@@ -22,7 +22,7 @@ string[] messages = [
   // ""
   "kapanmamış çift tırnak dizgisi.",
   // x""
-  "heks sayı olmayan karakter '{1}' heks dizgisi içinde bulundu.",
+  "heks sayı olmayan karakter '{0}' heks dizgisi içinde bulundu.",
   "heks dizginin içindeki sayılar çifter çifter olmalıdır.",
   "kapanmamış heks dizgisi.",
   // /* */ /+ +/
@@ -32,10 +32,10 @@ string[] messages = [
   "kapanmamış çiğ dizgisi.",
   "kapanmamış ters tırnak dizgisi.",
   // \x \u \U
-  "tanımlanmamış çıkış serisi '{1}' bulundu.",
+  "tanımlanmamış çıkış serisi '{0}' bulundu.",
   "heksadesimal çıkış serisi sayıları yeterli değil.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
-  "tanımlanmamış HTML varlık '{1}'",
+  "tanımlanmamış HTML varlık '{0}'",
   "kapanmamış HTML varlık.",
   "HTML varlık bir harf ile başlamalı.",
   // integer overflows
@@ -53,23 +53,23 @@ string[] messages = [
   "üsler desimal sayı ile başlamalı.",
 
   // Parser messages
-  "'{1}' beklendi, ama '{2}' bulundu.",
-  "'{1}' lüzumsuz.",
+  "'{0}' beklendi, ama '{1}' bulundu.",
+  "'{0}' lüzumsuz.",
   "şablon tuple parametre son sırada olmalı.",
   "fonksiyonun 'in' kontratı daha önceden ayrıştırılmış.",
   "fonksiyonun 'out' kontratı daha önceden ayrıştırılmış.",
   "bağlantı tüp (linkage type) belirtilmedi.",
-  "bilinmeyen bağlantı tüpü (linkage type) '{1}'; geçerli olanlar C, C++, D, Windows, Pascal ve System.",
+  "bilinmeyen bağlantı tüpü (linkage type) '{0}'; geçerli olanlar C, C++, D, Windows, Pascal ve System.",
 
   // Help messages:
-  `dil v{1}
+  `dil v{0}
 Copyright (c) 2007, Aziz Köksal. Lisans GPL3.
 
 Komutlar:
-{2}
+{1}
 Belirli komut'a yardım edinmek için 'dil help <komut>' yazınız.
 
-Bu yazılım {3} v{4} ile {5} tarihinde derletilmiş.`,
+Bu yazılım {2} v{3} ile {4} tarihinde derletilmiş.`,
 
   `Bir D kaynak kodundan XML veya HTML dosyası oluştur.
 Kullanım:

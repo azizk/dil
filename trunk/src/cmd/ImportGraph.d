@@ -10,11 +10,13 @@ import dil.Parser, dil.Lexer;
 import dil.File;
 import dil.Module;
 import dil.Settings;
-import std.stdio : writefln, writef;
-import std.path : getDirName, dirSep = sep;
-import std.file : exists;
-import std.string : replace;
-import std.regexp;
+import tango.text.Regex : RegExp = Regex;
+import tango.io.FilePath;
+import tango.io.FileConst;
+import tango.text.Util;
+import common;
+
+alias FileConst.PathSeparatorChar dirSep;
 
 enum IGraphOption
 {
@@ -34,8 +36,9 @@ string findModulePath(string moduleFQN, string[] importPaths)
   string modulePath;
   foreach (path; importPaths)
   {
-    modulePath = path ~ (path[$-1] == dirSep[0] ? "" : dirSep) ~ moduleFQN ~ ".d";
-    if (exists(modulePath))
+    modulePath = path ~ (path[$-1] == dirSep ? "" : [dirSep]) ~ moduleFQN ~ ".d";
+    // TODO: also check for *.di?
+    if ((new FilePath(modulePath)).exists())
       return modulePath;
   }
   return null;
@@ -78,7 +81,7 @@ void execute(string filePath, string[] importPaths, string[] strRegexps, uint le
     regexps ~= new RegExp(strRegexp);
 
   // Add directory of file and global directories to import paths.
-  auto fileDir = getDirName(filePath);
+  auto fileDir = (new FilePath(filePath)).folder();
   if (fileDir.length)
     importPaths ~= fileDir;
   importPaths ~= GlobalSettings.importPaths;
@@ -95,7 +98,7 @@ void execute(string filePath, string[] importPaths, string[] strRegexps, uint le
 
     // Ignore module names matching regular expressions.
     foreach (rx; regexps)
-      if (rx.test(replace(moduleFQNPath, dirSep, ".")))
+      if (rx.test(replace(moduleFQNPath, dirSep, '.')))
         return null;
 
     auto modulePath = findModulePath(moduleFQNPath, importPaths);
@@ -105,7 +108,7 @@ void execute(string filePath, string[] importPaths, string[] strRegexps, uint le
       if (options & IGraphOption.IncludeUnlocatableModules)
       {
         mod = new Vertex(null);
-        mod.setFQN(replace(moduleFQNPath, dirSep, "."));
+        mod.setFQN(replace(moduleFQNPath, dirSep, '.'));
         loadedModules[moduleFQNPath] = mod;
         loadedModulesList ~= mod;
         mod.id = loadedModulesList.length -1;
@@ -173,7 +176,7 @@ void printPaths(Vertex[] vertices, uint level, char[] indent)
     return;
   foreach (vertex; vertices)
   {
-    writefln(indent, vertex.filePath);
+    Stdout(indent)(vertex.filePath).newline;
     if (vertex.outgoing.length)
       printPaths(vertex.outgoing, level-1, indent~"  ");
   }
@@ -185,7 +188,7 @@ void printList(Vertex[] vertices, uint level, char[] indent)
     return;
   foreach (vertex; vertices)
   {
-    writefln(indent, vertex.getFQN());
+    Stdout(indent)(vertex.getFQN()).newline;
     if (vertex.outgoing.length)
       printList(vertex.outgoing, level-1, indent~"  ");
   }
@@ -202,28 +205,28 @@ void printDot(Vertex[] loadedModulesList, Edge[] edges, IGraphOption options)
                  IGraphOption.HighlightCyclicEdges))
     analyzeGraph(loadedModulesList, edges.dup);
 
-  writefln("Digraph ModuleDependencies\n{");
+  Stdout("Digraph ModuleDependencies\n{\n");
 
   if (options & IGraphOption.HighlightCyclicVertices)
     foreach (i, module_; loadedModulesList)
-      writefln(`  n%d [label="%s"%s];`, i, module_.getFQN(), (module_.isCyclic ? ",style=filled,fillcolor=tomato" : ""));
+      Stdout.format(`  n{0} [label="{1}"{2}];`, i, module_.getFQN(), (module_.isCyclic ? ",style=filled,fillcolor=tomato" : "")).newline;
   else
     foreach (i, module_; loadedModulesList)
-      writefln(`  n%d [label="%s"];`, i, module_.getFQN());
+      Stdout.format(`  n{0} [label="{1}"];`, i, module_.getFQN()).newline;
 
   foreach (edge; edges)
-    writefln(`  n%d -> n%d%s;`, edge.outgoing.id, edge.incoming.id, (edge.isCyclic ? "[color=red]" : ""));
+    Stdout.format(`  n{0} -> n{1}{2};`, edge.outgoing.id, edge.incoming.id, (edge.isCyclic ? "[color=red]" : "")).newline;
 
   if (options & IGraphOption.GroupByFullPackageName)
     foreach (packageName, vertices; verticesByPckgName)
     {
-      writef(`  subgraph "cluster_%s" {`\n`    label="%s";color=blue;`"\n    ", packageName, packageName);
+      Stdout.format(`  subgraph "cluster_{0}" {`\n`    label="{1}";color=blue;`"\n    ", packageName, packageName);
       foreach (module_; vertices)
-        writef(`n%d;`, module_.id);
-      writefln("\n  }");
+        Stdout.format(`n{0};`, module_.id);
+      Stdout("\n  }\n");
     }
 
-  writefln("}");
+  Stdout("}\n");
 }
 
 void analyzeGraph(Vertex[] vertices, Edge[] edges)

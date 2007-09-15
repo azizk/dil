@@ -8,7 +8,11 @@ import dil.Declarations;
 import dil.Parser;
 import dil.Lexer;
 import dil.File;
-import std.path;
+import tango.io.FilePath;
+import tango.io.FileConst;
+import common;
+
+alias FileConst.PathSeparatorChar dirSep;
 
 class Module
 {
@@ -51,7 +55,7 @@ class Module
       else
       {
         // Take base name of file path as module name.
-        auto str = getBaseName(getName(filePath));
+        auto str = (new FilePath(filePath)).name();
         if (Lexer.isNonReservedIdentifier(str))
         {
           this.moduleFQN = moduleName = str;
@@ -68,7 +72,7 @@ class Module
   {
     string[] result;
     foreach (import_; imports)
-      result ~= import_.getModuleFQNs(std.path.sep[0]);
+      result ~= import_.getModuleFQNs(dirSep);
     return result;
   }
 
@@ -93,7 +97,7 @@ class Module
   string getFQNPath()
   {
     if (packageName.length)
-      return packageName ~ std.path.sep ~ moduleName;
+      return packageName ~ dirSep ~ moduleName;
     else
       return moduleName;
   }

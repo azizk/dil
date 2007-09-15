@@ -22,7 +22,7 @@ string[] messages = [
   // ""
   "päättämätön merkkijonoliteraali.",
   // x""
-  "ei-heksamerkki '{1}' löytyi heksajonossa.",
+  "ei-heksamerkki '{0}' löytyi heksajonossa.",
   "pariton määrä heksanumeroita heksajonossa.",
   "päättämätön heksajono.",
   // /* */ /+ +/
@@ -32,10 +32,10 @@ string[] messages = [
   "päättämätön raakamerkkijono.",
   "päättämätön gravisaksenttimerkkijono.",
   // \x \u \U
-  "löydettiin määrittelemätön escape-sekvenssi.", // TODO: Insert '{1}'
+  "löydettiin määrittelemätön escape-sekvenssi.", // TODO: Insert '{0}'
   "riittämätön määrä heksanumeroita escape-sekvenssissä.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
-  "määrittelemätön HTML-entiteetti '{1}'",
+  "määrittelemätön HTML-entiteetti '{0}'",
   "päättämätön HTML-entiteetti.",
   "HTML-entiteettien tulee alkaa kirjaimella.",
   // integer overflows
@@ -53,23 +53,23 @@ string[] messages = [
   "eksponenttien tulee alkaa numerolla.",
 
   // Parser messages
-  "odotettiin '{1}':a, mutta löydettiin '{2}'.",
-  "'{1}' on redundantti.",
+  "odotettiin '{0}':a, mutta löydettiin '{1}'.",
+  "'{0}' on redundantti.",
   "tupla voi esiintyä ainoastaan mallin viimeisenä parametrina.",
   "funktion alkuehto jäsennettiin jo.",
   "funktion loppuehto jäsennettiin jo.",
   "linkitystyyppiä ei määritelty.",
-  "tunnistamaton linkitystyyppi '{1}'; sallittuja tyyppejä ovat C, C++, D, Windows, Pascal ja System.",
+  "tunnistamaton linkitystyyppi '{0}'; sallittuja tyyppejä ovat C, C++, D, Windows, Pascal ja System.",
 
   // Help messages:
-  `dil v{1}
+  `dil v{0}
 Copyright (c) 2007, Aziz Köksal. GPL3-lisensöity.
 
 Alikomennot:
-{2}
+{1}
 Lisäohjeita tietystä alitoiminnosta saa kirjoittamalla 'dil help <toiminto>'.
 
-Käännetty {3}:n versiolla {4} {5}.`,
+Käännetty {2}:n versiolla {3} {4}.`,
 
   `Luo XML- tai HTML-dokumentti D-lähdekoodista.
 

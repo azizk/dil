@@ -13,14 +13,16 @@ import dil.File;
 import cmd.Generate;
 import cmd.Statistics;
 import cmd.ImportGraph;
-import std.stdio, std.conv;
+import common;
+
+import Integer = tango.text.convert.Integer;
 
 void main(char[][] args)
 {
   GlobalSettings.load();
 
   if (args.length <= 1)
-    return writefln(helpMain());
+    return Stdout(helpMain()).newline;
 
   string command = args[1];
   switch (command)
@@ -59,7 +61,7 @@ void main(char[][] args)
       else if(strbeg(arg, "-r"))
         regexps ~= arg[2..$];
       else if(strbeg(arg, "-l"))
-        levels = toUint(arg[2..$]);
+        levels = Integer.parse (arg[2..$]);
       else
         switch (arg)
         {
@@ -96,7 +98,7 @@ void main(char[][] args)
     if (args.length == 3)
       printHelp(args[2]);
     else
-      writefln(helpMain());
+      Stdout(helpMain());
     break;
   default:
   }
@@ -120,7 +122,7 @@ bool strbeg(char[] str, char[] begin)
 
 char[] helpMain()
 {
-  return format(MID.HelpMain, VERSION, COMMANDS, COMPILED_WITH, COMPILED_VERSION, COMPILED_DATE);
+  return FormatMsg(MID.HelpMain, VERSION, COMMANDS, COMPILED_WITH, COMPILED_VERSION, COMPILED_DATE);
 }
 
 void printHelp(char[] command)
@@ -137,7 +139,7 @@ void printHelp(char[] command)
   default:
     msg = helpMain();
   }
-  writefln(msg);
+  Stdout(msg).newline;
 }
 
 void parse(string fileName)
@@ -158,6 +160,6 @@ void print(Node[] decls, char[] indent)
 print(root.children, "");
 foreach (error; parser.errors)
 {
-  writefln(`%s(%d)P: %s`, parser.lx.fileName, error.loc, error.getMsg);
+  Stdout.format(`{0}({1})P: {2}`, parser.lx.fileName, error.loc, error.getMsg);
 }
 }

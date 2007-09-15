@@ -7,7 +7,8 @@ import dil.SyntaxTree;
 import dil.Token;
 import dil.Parser, dil.Lexer;
 import dil.File;
-import std.stdio;
+import tango.io.Print;
+import common;
 
 enum DocOption
 {
@@ -20,9 +21,9 @@ enum DocOption
 void execute(string fileName, DocOption options)
 {
   if (options & DocOption.Syntax)
-    syntaxToDoc(fileName, options);
+    syntaxToDoc(fileName, Stdout, options);
   else
-    tokensToDoc(fileName, options);
+    tokensToDoc(fileName, Stdout, options);
 }
 
 char[] xml_escape(char[] text)
@@ -39,6 +40,26 @@ char[] xml_escape(char[] text)
   return result;
 }
 
+
+/// Find object in subject and return position.
+/// Returns -1 if no match was found.
+int find(char[] subject, char[] object)
+{
+  if (object.length > subject.length)
+    return -1;
+  foreach (i, c; subject)
+  {
+    if (c == object[0])
+    {
+      if (object.length > (subject.length - i))
+        return -1;
+      if (object == subject[i..i+object.length])
+        return i;
+    }
+  }
+  return -1;
+}
+
 char[] getShortClassName(Node n)
 {
   static char[][] name_table;
@@ -48,7 +69,6 @@ char[] getShortClassName(Node n)
   if (name !is null)
     return name;
 
-  alias std.string.find find;
   name = n.classinfo.name;
   name = name[find(name, ".")+1 .. $]; // Remove package name
   name = name[find(name, ".")+1 .. $]; // Remove module name
@@ -123,9 +143,9 @@ auto html_tags = [
   // CompEnd
   `</div>`,
   // Error
-  `<p class="error %s">%s(%d)%s: %s</p>`,
+  `<p class="error {0}">{1}({2}){3}: {4}</p>`,
   // SyntaxBegin
-  `<span class="%s %s">`,
+  `<span class="{0} {1}">`,
   // SyntaxEnd
   `</span>`,
   // SrcBegin
@@ -135,15 +155,15 @@ auto html_tags = [
   // Tail
   `</html>`,
   // Identifier
-  `<span class="i">%s</span>`,
+  `<span class="i">{0}</span>`,
   // Comment
-  `<span class="c%s">%s</span>`,
+  `<span class="c{0}">{1}</span>`,
   // StringLiteral
-  `<span class="sl">%s</span>`,
+  `<span class="sl">{0}</span>`,
   // CharLiteral
-  `<span class="cl">%s</span>`,
+  `<span class="cl">{0}</span>`,
   // Operator
-  `<span class="op">%s</span>`,
+  `<span class="op">{0}</span>`,
   // LorG
   `<span class="oplg">&lt;&gt;</span>`,
   // LessEqual
@@ -159,21 +179,21 @@ auto html_tags = [
   // Not
   `<span class="opn">!</span>`,
   // Number
-  `<span class="n">%s</span>`,
+  `<span class="n">{0}</span>`,
   // Bracket
-  `<span class="br">%s</span>`,
+  `<span class="br">{0}</span>`,
   // SpecialToken
-  `<span class="st">%s</span>`,
+  `<span class="st">{0}</span>`,
   // Shebang
-  `<span class="shebang">%s</span>`,
+  `<span class="shebang">{0}</span>`,
   // Keyword
-  `<span class="k">%s</span>`,
+  `<span class="k">{0}</span>`,
   // HLineBegin
   `<span class="hl">`,
   // HLineEnd
   "</span>",
   // Filespec
-  `<span class="fs">%s</span>`,
+  `<span class="fs">{0}</span>`,
 ];
 
 auto xml_tags = [
@@ -186,11 +206,11 @@ auto xml_tags = [
   // CompEnd
   `</compilerinfo>`,
   // Error
-  `<error t="%s">%s(%d)%s: %s</error>`,
+  `<error t="{0}">{1}({2}){3}: {4}</error>`,
   // SyntaxBegin
-  `<%s t="%s">`,
+  `<{0} t="{1}">`,
   // SyntaxEnd
-  `</%s>`,
+  `</{0}>`,
   // SrcBegin
   `<sourcecode>`,
   // SrcEnd
@@ -198,15 +218,15 @@ auto xml_tags = [
   // Tail
   `</root>`,
   // Identifier
-  "<i>%s</i>",
+  "<i>{0}</i>",
   // Comment
-  `<c t="%s">%s</c>`,
+  `<c t="{0}">{1}</c>`,
   // StringLiteral
-  "<sl>%s</sl>",
+  "<sl>{0}</sl>",
   // CharLiteral
-  "<cl>%s</cl>",
+  "<cl>{0}</cl>",
   // Operator
-  "<op>%s</op>",
+  "<op>{0}</op>",
   // LorG
   `<op t="lg">&lt;&gt;</op>`,
   // LessEqual
@@ -222,27 +242,27 @@ auto xml_tags = [
   // Not
   `<op t="n">!</op>`,
   // Number
-  "<n>%s</n>",
+  "<n>{0}</n>",
   // Bracket
-  "<br>%s</br>",
+  "<br>{0}</br>",
   // SpecialToken
-  "<st>%s</st>",
+  "<st>{0}</st>",
   // Shebang
-  "<shebang>%s</shebang>",
+  "<shebang>{0}</shebang>",
   // Keyword
-  "<k>%s</k>",
+  "<k>{0}</k>",
   // HLineBegin
   "<hl>",
   // HLineEnd
   "</hl>",
   // Filespec
-  "<fs>%s</fs>",
+  "<fs>{0}</fs>",
 ];
 
 static assert(html_tags.length == DocPart.max+1);
 static assert(xml_tags.length == DocPart.max+1);
 
-void syntaxToDoc(string fileName, DocOption options)
+void syntaxToDoc(string fileName, Print!(char) print, DocOption options)
 {
   auto tags = options & DocOption.HTML ? html_tags : xml_tags;
   auto sourceText = loadFile(fileName);
@@ -252,22 +272,22 @@ void syntaxToDoc(string fileName, DocOption options)
 
   auto token = lx.head;
 
-  writefln(tags[DocPart.Head]);
+  print(tags[DocPart.Head]~\n);
   // Output error messages.
   if (lx.errors.length || parser.errors.length)
   {
-    writefln(tags[DocPart.CompBegin]);
+    print(tags[DocPart.CompBegin]~\n);
     foreach (error; lx.errors)
     {
-      writefln(tags[DocPart.Error], "L", lx.fileName, error.loc, "L", xml_escape(error.getMsg));
+      print.formatln(tags[DocPart.Error], "L", lx.fileName, error.loc, "L", xml_escape(error.getMsg));
     }
     foreach (error; parser.errors)
     {
-      writefln(tags[DocPart.Error], "P", lx.fileName, error.loc, "P", xml_escape(error.getMsg));
+      print.formatln(tags[DocPart.Error], "P", lx.fileName, error.loc, "P", xml_escape(error.getMsg));
     }
-    writefln(tags[DocPart.CompEnd]);
+    print(tags[DocPart.CompEnd]~\n);
   }
-  writef(tags[DocPart.SrcBegin]);
+  print(tags[DocPart.SrcBegin]);
 
   Node[][Token*] beginNodes, endNodes;
 
@@ -316,10 +336,10 @@ void syntaxToDoc(string fileName, DocOption options)
     if (nodes)
     {
       foreach (node; *nodes)
-        writef(tags[DocPart.SyntaxBegin], getTag(node.category), getShortClassName(node));
+        print.format(tags[DocPart.SyntaxBegin], getTag(node.category), getShortClassName(node));
     }
 
-    printToken(token, tags);
+    printToken(token, tags, print);
 
     nodes = token in endNodes;
 
@@ -327,15 +347,15 @@ void syntaxToDoc(string fileName, DocOption options)
     {
       foreach_reverse (node; *nodes)
         if (options & DocOption.HTML)
-          writef(tags[DocPart.SyntaxEnd]);
+          print(tags[DocPart.SyntaxEnd]);
         else
-          writef(tags[DocPart.SyntaxEnd], getTag(node.category));
+          print.format(tags[DocPart.SyntaxEnd], getTag(node.category));
     }
   }
-  writef(tags[DocPart.SrcEnd], tags[DocPart.Tail]);
+  print(\n~tags[DocPart.SrcEnd])(\n~tags[DocPart.Tail]);
 }
 
-void tokensToDoc(string fileName, DocOption options)
+void tokensToDoc(string fileName, Print!(char) print, DocOption options)
 {
   auto tags = options & DocOption.HTML ? html_tags : xml_tags;
   auto sourceText = loadFile(fileName);
@@ -343,41 +363,41 @@ void tokensToDoc(string fileName, DocOption options)
 
   auto token = lx.getTokens();
 
-  writefln(tags[DocPart.Head]);
+  print(tags[DocPart.Head]~\n);
 
   if (lx.errors.length)
   {
-    writefln(tags[DocPart.CompBegin]);
+    print(tags[DocPart.CompBegin]~\n);
     foreach (error; lx.errors)
     {
-      writefln(tags[DocPart.Error], "L", lx.fileName, error.loc, "L", xml_escape(error.getMsg));
+      print.formatln(tags[DocPart.Error], "L", lx.fileName, error.loc, "L", xml_escape(error.getMsg));
     }
-    writefln(tags[DocPart.CompEnd]);
+    print(tags[DocPart.CompEnd]~\n);
   }
-  writef(tags[DocPart.SrcBegin]);
+  print(tags[DocPart.SrcBegin]);
 
   // Traverse linked list and print tokens.
   while (token.type != TOK.EOF)
   {
     token = token.next;
-    printToken(token, tags);
+    printToken(token, tags, print);
   }
-  writef(\n, tags[DocPart.SrcEnd], \n, tags[DocPart.Tail]);
+  print(\n~tags[DocPart.SrcEnd])(\n~tags[DocPart.Tail]);
 }
 
-void printToken(Token* token, string[] tags)
+void printToken(Token* token, string[] tags, Print!(char) print)
 {
   alias DocPart DP;
   string srcText = xml_escape(token.srcText);
 
   // Print whitespace.
   if (token.ws)
-    writef(token.ws[0..token.start - token.ws]);
+    print(token.ws[0..token.start - token.ws]);
 
   switch(token.type)
   {
   case TOK.Identifier:
-    writef(tags[DP.Identifier], srcText);
+    print.format(tags[DP.Identifier], srcText);
     break;
   case TOK.Comment:
     string t;
@@ -389,13 +409,13 @@ void printToken(Token* token, string[] tags)
     default:
       assert(0);
     }
-    writef(tags[DP.Comment], t, srcText);
+    print.format(tags[DP.Comment], t, srcText);
     break;
   case TOK.String:
-    writef(tags[DP.StringLiteral], srcText);
+    print.format(tags[DP.StringLiteral], srcText);
     break;
   case TOK.CharLiteral, TOK.WCharLiteral, TOK.DCharLiteral:
-    writef(tags[DP.CharLiteral], srcText);
+    print.format(tags[DP.CharLiteral], srcText);
     break;
   case TOK.Assign,        TOK.Equal,
        TOK.Less,          TOK.Greater,
@@ -419,69 +439,69 @@ void printToken(Token* token, string[] tags)
        TOK.UorL,
        TOK.UorLorE,
        TOK.LorEorG:
-    writef(tags[DP.Operator], srcText);
+    print.format(tags[DP.Operator], srcText);
     break;
   case TOK.LorG:
-    writef(tags[DP.LorG]);
+    print(tags[DP.LorG]);
     break;
   case TOK.LessEqual:
-    writef(tags[DP.LessEqual]);
+    print(tags[DP.LessEqual]);
     break;
   case TOK.GreaterEqual:
-    writef(tags[DP.GreaterEqual]);
+    print(tags[DP.GreaterEqual]);
     break;
   case TOK.AndLogical:
-    writef(tags[DP.AndLogical]);
+    print(tags[DP.AndLogical]);
     break;
   case TOK.OrLogical:
-    writef(tags[DP.OrLogical]);
+    print(tags[DP.OrLogical]);
     break;
   case TOK.NotEqual:
-    writef(tags[DP.NotEqual]);
+    print(tags[DP.NotEqual]);
     break;
   case TOK.Not:
     // Check if this is part of a template instantiation.
-    // TODO: comments aren't skipped.
+    // TODO: comments aren't skipped. Use Token.nextNWS and Token.prevNWS
     if (token.prev.type == TOK.Identifier && token.next.type == TOK.LParen)
       goto default;
-    writef(tags[DP.Not]);
+    print(tags[DP.Not]);
     break;
   case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
        TOK.Float32, TOK.Float64, TOK.Float80,
        TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
-    writef(tags[DP.Number], srcText);
+    print.format(tags[DP.Number], srcText);
     break;
   case TOK.LParen, TOK.RParen, TOK.LBracket,
        TOK.RBracket, TOK.LBrace, TOK.RBrace:
-    writef(tags[DP.Bracket], srcText);
+    print.format(tags[DP.Bracket], srcText);
     break;
   case TOK.Shebang:
-    writef(tags[DP.Shebang], srcText);
+    print.format(tags[DP.Shebang], srcText);
     break;
   case TOK.HashLine:
     void printWS(char* start, char* end)
     {
       if (start != end)
-        writef(start[0 .. end - start]);
+        print(start[0 .. end - start]);
     }
-    writef(tags[DP.HLineBegin]);
+    print(tags[DP.HLineBegin]);
     auto num = token.line_num;
     if (num is null)
     {
-      writef(token.srcText);
-      writef(tags[DP.HLineEnd]);
+      print(token.srcText);
+      print(tags[DP.HLineEnd]);
       break;
     }
     // Print whitespace between #line and number
     auto ptr = token.start;
     printWS(ptr, num.start); // prints "#line" as well
-    printToken(num, tags);
+    printToken(num, tags, print);
     if (token.line_filespec)
     {
       auto filespec = token.line_filespec;
       // Print whitespace between number and filespec
       printWS(num.end, filespec.start);
-      writef(tags[DP.Filespec], xml_escape(filespec.srcText));
+      print.format(tags[DP.Filespec], xml_escape(filespec.srcText));
 
       ptr = filespec.end;
     }
@@ -489,14 +509,14 @@ void printToken(Token* token, string[] tags)
       ptr = num.end;
     // Print remaining whitespace
     printWS(ptr, token.end);
-    writef(tags[DP.HLineEnd]);
+    print(tags[DP.HLineEnd]);
     break;
   default:
     if (token.isKeyword())
-      writef(tags[DP.Keyword], srcText);
+      print.format(tags[DP.Keyword], srcText);
     else if (token.isSpecialToken)
-      writef(tags[DP.SpecialToken], srcText);
+      print.format(tags[DP.SpecialToken], srcText);
     else
-      writef("%s", srcText);
+      print(srcText);
   }
 }

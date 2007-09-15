@@ -74,7 +74,7 @@ class ModuleDeclaration : Declaration
     this.packages = moduleFQN[0..$-1];
   }
 
-  string getFQN()
+  char[] getFQN()
   {
     auto pname = getPackageName('.');
     if (pname.length)
@@ -83,14 +83,14 @@ class ModuleDeclaration : Declaration
       return getName();
   }
 
-  string getName()
+  char[] getName()
   {
     if (moduleName)
       return moduleName.identifier;
     return null;
   }
 
-  string getPackageName(char separator)
+  char[] getPackageName(char separator)
   {
     char[] pname;
     foreach (pckg; packages)
@@ -120,9 +120,9 @@ class ImportDeclaration : Declaration
     this.isStatic = isStatic;
   }
 
-  string[] getModuleFQNs(char separator)
+  char[][] getModuleFQNs(char separator)
   {
-    string[] FQNs;
+    char[][] FQNs;
     foreach (moduleFQN; moduleFQNs)
     {
       char[] FQN;

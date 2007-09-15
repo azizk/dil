@@ -7,7 +7,7 @@ string lang_code = "en";
 
 string[] messages = [
   // Lexer messages:
-  "illegal character found: '{1}'",
+  "illegal character found: '{0}'",
   "invalid Unicode character.",
   "invalid UTF-8 sequence.",
   // ''
@@ -22,7 +22,7 @@ string[] messages = [
   // ""
   "unterminated string literal.",
   // x""
-  "non-hex character '{1}' found in hex string.",
+  "non-hex character '{0}' found in hex string.",
   "odd number of hex digits in hex string.",
   "unterminated hex string.",
   // /* */ /+ +/
@@ -32,10 +32,10 @@ string[] messages = [
   "unterminated raw string.",
   "unterminated back quote string.",
   // \x \u \U
-  "found undefined escape sequence '{1}'.",
+  "found undefined escape sequence '{0}'.",
   "insufficient number of hex digits in escape sequence.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
-  "undefined HTML entity '{1}'",
+  "undefined HTML entity '{0}'",
   "unterminated HTML entity.",
   "HTML entities must begin with a letter.",
   // integer overflows
@@ -53,23 +53,23 @@ string[] messages = [
   "exponents must start with a digit.",
 
   // Parser messages
-  "expected '{1}', but found '{2}'.",
-  "'{1}' is redundant.",
+  "expected '{0}', but found '{1}'.",
+  "'{0}' is redundant.",
   "template tuple parameters can only be last.",
   "the functions 'in' contract was already parsed.",
   "the functions 'out' contract was already parsed.",
   "no linkage type was specified.",
-  "unrecognized linkage type '{1}'; valid types are C, C++, D, Windows, Pascal und System.",
+  "unrecognized linkage type '{0}'; valid types are C, C++, D, Windows, Pascal und System.",
 
   // Help messages:
-  `dil v{1}
+  `dil v{0}
 Copyright (c) 2007 by Aziz Köksal. Licensed under the GPL3.
 
 Subcommands:
-{2}
+{1}
 Type 'dil help <subcommand>' for more help on a particular subcommand.
 
-Compiled with {3} v{4} on {5}.`,
+Compiled with {2} v{3} on {4}.`,
 
   `Generate an XML or HTML document from a D source file.
 Usage:

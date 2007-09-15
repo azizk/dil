@@ -3,15 +3,17 @@
   License: GPL3
 +/
 module dil.File;
-import std.stdio, std.file, std.utf;
+import tango.io.File;
+import std.utf;
+import common;
 
 /// Loads a file in any valid Unicode format and converts it to UTF-8.
-char[] loadFile(char[] fileName)
+char[] loadFile(char[] filePath)
 {
-  return data2text(cast(ubyte[]) std.file.read(fileName));
+  return data2Utf8(cast(ubyte[]) (new File(filePath)).read());
 }
 
-char[] data2text(ubyte[] data)
+char[] data2Utf8(ubyte[] data)
 {
   char[] text;
   BOM bom = tellBOM(data);
@@ -73,7 +75,7 @@ char[] data2text(ubyte[] data)
 
 unittest
 {
-  writefln("Testing function data2text().");
+  Stdout("Testing function data2Utf8().\n");
   struct Data2Text
   {
     union
@@ -97,7 +99,7 @@ unittest
     {u8:"\x00\x00\xFE\xFF\0\0\0s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e", text:"source"},
     {u8:"\xFF\xFE\x00\x00s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e\0\0\0", text:"source"},
   ];
-  alias data2text f;
+  alias data2Utf8 f;
   foreach (pair; map)
     assert(f(pair.data) == pair.text);
 }
@@ -105,7 +107,7 @@ unittest
 ubyte[] utf16BEtoLE(ubyte[] data)
 {
   if (data.length % 2)
-    throw new Exception("UTF-16 big endian source file byte length must be divisible by 2.");
+    throw new Exception("The byte length of a UTF-16 big endian source file must be divisible by 2.");
   wchar[] result = cast(wchar[]) new ubyte[data.length];
   assert(result.length*2 == data.length);
   // BE to LE "1A 2B" -> "2B 1A"
@@ -117,7 +119,7 @@ ubyte[] utf16BEtoLE(ubyte[] data)
 ubyte[] utf32BEtoLE(ubyte[] data)
 {
   if (data.length % 4)
-    throw new Exception("UTF-32 big endian source file byte length must be divisible by 4.");
+    throw new Exception("The byte length of a UTF-32 big endian source file must be divisible by 4.");
   dchar[] result = cast(dchar[]) new ubyte[data.length];
   assert(result.length*4 == data.length);
   // BE to LE "1A 2B 3C 4D" -> "4D 3C 2B 1A"
@@ -172,7 +174,7 @@ BOM tellBOM(ubyte[] data)
 
 unittest
 {
-  writefln("Testing function tellBOM().");
+  Stdout("Testing function tellBOM().\n");
 
   struct Data2BOM
   {
@@ -205,5 +207,5 @@ unittest
   ];
 
   foreach (pair; map)
-    assert(tellBOM(pair.data) == pair.bom, std.string.format("Failed at %s", pair.data));
+    assert(tellBOM(pair.data) == pair.bom, Format("Failed at {0}", pair.data));
 }

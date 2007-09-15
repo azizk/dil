@@ -3,8 +3,9 @@
   License: GPL3
 +/
 module dil.Token;
-import std.c.stdlib : malloc, free;
-import std.outofmemory;
+import common;
+import tango.stdc.stdlib : malloc, free;
+import tango.core.Exception;
 
 struct Position
 {
@@ -221,10 +222,7 @@ struct Token
   {
     void* p = malloc(size);
     if (p is null)
-      version(Tango)
-        throw new OutOfMemoryException(__FILE__, __LINE__);
-      else
-        throw new OutOfMemoryException();
+      throw new OutOfMemoryException(__FILE__, __LINE__);
     *cast(Token*)p = Token.init;
     return p;
   }

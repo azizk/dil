@@ -706,7 +706,7 @@ class StringLiteralsExpression : Expression
     this.strings = strings;
   }
 
-  string getString()
+  char[] getString()
   {
     char[] buffer;
     foreach (strTok; strings)

@@ -4,7 +4,7 @@
 +/
 module dil.Messages;
 import dil.Settings;
-import std.stdarg;
+import common;
 
 /// Index into table of compiler messages.
 enum MID
@@ -76,41 +76,17 @@ string GetMsg(MID mid)
   return GlobalSettings.messages[mid];
 }
 
-char[] format(MID mid, ...)
+char[] FormatMsg(MID mid, ...)
 {
-  auto args = arguments(_arguments, _argptr);
-  return format_args(GetMsg(mid), args);
+  return Format(_arguments, _argptr, GetMsg(mid));
 }
 
-char[] format(char[] format_str, ...)
+/+
+char[] FormatArray(char[] format_str, char[][] args)
 {
-  auto args = arguments(_arguments, _argptr);
-  return format_args(format_str, args);
+  auto tiinfos = new TypeInfo[args.length];
+  foreach (ref tiinfo; tiinfos)
+    tiinfo = typeid(char[]);
+  return Format(tiinfos, args.ptr, format_str);
 }
-
-char[] format_args(char[] format_str, char[][] args)
-{
-  char[] result = format_str;
-
-  foreach (i, arg; args)
-    result = std.string.replace(result, std.string.format("{%s}", i+1), arg);
-
-  return result;
-}
-
-char[][] arguments(TypeInfo[] tinfos, void* argptr)
-{
-  char[][] args;
-  foreach (ti; tinfos)
-  {
-    if (ti == typeid(char[]))
-      args ~= va_arg!(char[])(argptr);
-    else if (ti == typeid(int))
-      args ~= std.string.format(va_arg!(int)(argptr));
-    else if (ti == typeid(dchar))
-      args ~= std.string.format(va_arg!(dchar)(argptr));
-    else
-      assert(0, "argument type not supported yet.");
-  }
-  return args;
-}
++/

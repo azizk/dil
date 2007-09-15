@@ -10,13 +10,13 @@ import dil.Identifier;
 import dil.Messages;
 import dil.HtmlEntities;
 import dil.Settings;
-import std.stdio;
+import tango.stdc.stdlib : strtof, strtod, strtold;
+import tango.stdc.errno : errno, ERANGE;
+import tango.stdc.time : time_t, time, ctime;
+import tango.stdc.string : strlen;
 import std.utf;
 import std.uni;
-import std.c.stdlib : strtof, strtod, strtold, getErrno, ERANGE;
-import std.c.time : time_t, time, ctime;
-import std.c.string : strlen;
-import std.string;
+import common;
 
 const char[3] LS = \u2028;
 const char[3] PS = \u2029;
@@ -169,7 +169,7 @@ class Lexer
   out
   {
     assert(text.ptr <= t.start && t.start < end);
-    assert(text.ptr < t.end && t.end <= end, std.string.format(t.type));
+    assert(text.ptr < t.end && t.end <= end, Token.toString(t.type));
   }
   body
   {
@@ -1693,7 +1693,7 @@ version(D2)
       ++p;
       t.type += 3; // Switch to imaginary counterpart.
     }
-    if (getErrno == ERANGE)
+    if (errno() == ERANGE)
       error(MID.OverflowFloatNumber);
     t.end = p;
   }
@@ -1914,15 +1914,15 @@ version(D2)
     return this.token.type;
   }
 
-  void error(MID id, ...)
+  void error(MID mid, ...)
   {
 //     if (reportErrors)
-    errors ~= new Information(InfoType.Lexer, id, this.errorLoc, arguments(_arguments, _argptr));
+    errors ~= new Information(InfoType.Lexer, mid, this.errorLoc, Format(_arguments, _argptr, GetMsg(mid)));
   }
 
   unittest
   {
-    writefln("Testing method Lexer.peek()");
+    Stdout("Testing method Lexer.peek()\n");
     string sourceText = "unittest { }";
     auto lx = new Lexer(sourceText, null);
 
@@ -2030,7 +2030,7 @@ version(D2)
 
 unittest
 {
-  writefln("Testing Lexer.");
+  Stdout("Testing Lexer.\n");
   string[] toks = [
     ">",    ">=", ">>",  ">>=", ">>>", ">>>=", "<",   "<=",  "<>",
     "<>=",  "<<", "<<=", "!",   "!<",  "!>",   "!<=", "!>=", "!<>",
@@ -2054,7 +2054,7 @@ unittest
   do
   {
     assert(i < toks.length);
-    assert(token.srcText == toks[i], std.string.format("Scanned '%s' but expected '%s'", token.srcText, toks[i]));
+    assert(token.srcText == toks[i], Format("Scanned '{0}' but expected '{1}'", token.srcText, toks[i]));
     ++i;
     token = token.next;
   } while (token.type != TOK.EOF)

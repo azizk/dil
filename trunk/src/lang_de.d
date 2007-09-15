@@ -7,7 +7,7 @@ string lang_code = "de";
 
 string[] messages = [
   // Lexer messages:
-  "illegales Zeichen gefunden: '{1}'",
+  "illegales Zeichen gefunden: '{0}'",
   "ungültiges Unicodezeichen.",
   "ungültige UTF-8-Sequenz.",
   // ''
@@ -22,7 +22,7 @@ string[] messages = [
   // ""
   "unterminiertes Zeichenkettenliteral.",
   // x""
-  "Nicht-Hexzeichen '{1}' in Hexzeichenkette gefunden.",
+  "Nicht-Hexzeichen '{0}' in Hexzeichenkette gefunden.",
   "ungerade Anzahl von Hexziffern in Hexzeichenkette.",
   "unterminierte Hexzeichenkette.",
   // /* */ /+ +/
@@ -32,10 +32,10 @@ string[] messages = [
   "unterminierte rohe Zeichenkette.",
   "unterminierte Backquote-Zeichenkette.",
   // \x \u \U
-  "undefinierte Escapesequenz '{1}' gefunden.",
+  "undefinierte Escapesequenz '{0}' gefunden.",
   "unzureichende Anzahl von Hexziffern in Escapesequenz.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
-  "undefinierte HTML-Entität '{1}'",
+  "undefinierte HTML-Entität '{0}'",
   "unterminierte HTML-Entität.",
   "HTML-Entitäten müssen mit einem Buchstaben beginnen.",
   // integer overflows
@@ -53,24 +53,24 @@ string[] messages = [
   "Exponenten müssen mit einer Dezimalziffer anfangen.",
 
   // Parser messages:
-  "erwartete '{1}', fand aber '{2}'.",
-  "'{1}' ist redundant.",
+  "erwartete '{0}', fand aber '{1}'.",
+  "'{0}' ist redundant.",
   "Template-Tupel-Parameter dürfen nur am Ende auftreten.",
   "der 'in'-Vertrag der Funktion wurde bereits geparsed.",
   "der 'out'-Vertrag der Funktion wurde bereits geparsed.",
   "es wurde kein Verbindungstyp angegeben.",
-  "unbekannter Verbindungstyp '{1}'; gültig sind C, C++, D, Windows, Pascal und System.",
+  "unbekannter Verbindungstyp '{0}'; gültig sind C, C++, D, Windows, Pascal und System.",
 
   // Help messages:
-  `dil v{1}
+  `dil v{0}
 Copyright (c) 2007, Aziz Köksal. Lizensiert unter der GPL3.
 
 Befehle:
-{2}
+{1}
 Geben Sie 'dil help <Befehl>' ein, um mehr Hilfe zu einem bestimmten Befehl zu
 erhalten.
 
-Kompiliert mit {3} v{4} am {5}.`,
+Kompiliert mit {2} v{3} am {4}.`,
 
   `Generiere ein XML- oder HTML-Dokument aus einer D-Quelltextdatei.
 Verwendung:

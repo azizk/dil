@@ -12,7 +12,7 @@ import dil.Declarations;
 import dil.Statements;
 import dil.Expressions;
 import dil.Types;
-import std.stdio;
+import common;
 
 private alias TOK T;
 
@@ -4196,7 +4196,7 @@ version(D2)
     return null;
   }
 
-  void error(MID id, ...)
+  void error(MID mid, ...)
   {
     if (trying)
     {
@@ -4206,7 +4206,7 @@ version(D2)
 
 //     if (errors.length == 10)
 //       return;
-    errors ~= new Information(InfoType.Parser, id, lx.loc, arguments(_arguments, _argptr));
+    errors ~= new Information(InfoType.Parser, mid, lx.loc, Format(_arguments, _argptr, GetMsg(mid)));
 //     writefln("(%d)P: ", lx.loc, errors[$-1].getMsg);
   }
 }

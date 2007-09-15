@@ -4,7 +4,7 @@
 +/
 module dil.Information;
 import dil.Messages;
-import std.stdarg;
+import common;
 
 enum InfoType
 {
@@ -18,18 +18,18 @@ class Information
   MID id;
   InfoType type;
   uint loc;
-  string[] arguments;
+  string message;
 
-  this(InfoType type, MID id, uint loc, string[] arguments)
+  this(InfoType type, MID id, uint loc, string message)
   {
     this.id = id;
     this.type = type;
     this.loc = loc;
-    this.arguments = arguments;
+    this.message = message;
   }
 
   string getMsg()
   {
-    return format_args(GetMsg(id), arguments);
+    return this.message;
   }
 }

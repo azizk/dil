@@ -6,7 +6,7 @@ module cmd.Statistics;
 import dil.Token;
 import dil.File;
 import dil.Lexer;
-import std.stdio;
+import common;
 
 struct Statistics
 {
@@ -24,7 +24,6 @@ void execute(string fileName)
   auto lx = new Lexer(sourceText, fileName);
 
   auto token = lx.getTokens();
-  char* end = lx.text.ptr;
 
   Statistics stats;
   // Traverse linked list.
@@ -33,9 +32,10 @@ void execute(string fileName)
     token = token.next;
 
     // Count whitespace characters
-    if (end != token.start)
+    if (token.ws)
     {
-      stats.whitespaceCount += token.start - end;
+      // TODO: naive method doesn't account for \r\n, LS and PS.
+      stats.whitespaceCount += token.start - token.ws;
     }
 
     switch (token.type)
@@ -58,21 +58,20 @@ void execute(string fileName)
 
     if (token.isWhitespace)
       stats.wsTokenCount++;
-
-    end = token.end;
   }
-  writefln("Whitespace character count: %s\n"
-           "Whitespace token count: %s\n"
-           "Keyword count: %s\n"
-           "Identifier count: %s\n"
-           "Number count: %s\n"
-           "Comment count: %s\n"
-           "Lines of code: %s",
-           stats.whitespaceCount,
-           stats.wsTokenCount,
-           stats.keywordCount,
-           stats.identCount,
-           stats.numberCount,
-           stats.commentCount,
-           lx.loc);
+  Stdout.formatln(
+    "Whitespace character count: {0}\n"
+    "Whitespace token count: {1}\n"
+    "Keyword count: {2}\n"
+    "Identifier count: {3}\n"
+    "Number count: {4}\n"
+    "Comment count: {5}\n"
+    "Lines of code: {6}",
+    stats.whitespaceCount,
+    stats.wsTokenCount,
+    stats.keywordCount,
+    stats.identCount,
+    stats.numberCount,
+    stats.commentCount,
+    lx.loc);
 }

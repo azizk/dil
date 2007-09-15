@@ -4,6 +4,7 @@
 +/
 module dil.SyntaxTree;
 import dil.Token;
+import common;
 
 enum NodeCategory
 {
