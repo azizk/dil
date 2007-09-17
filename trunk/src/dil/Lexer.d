@@ -1673,7 +1673,10 @@ version(D2)
     }
     // Scan exponent
     assert(*p == 'p' || *p == 'P');
-    if (!isdigit(*++p))
+    ++p;
+    if (*p == '+' || *p == '-')
+      ++p;
+    if (!isdigit(*p))
     {
       mid = MID.HexFloatExpMustStartWithDigit;
       goto Lerr;
