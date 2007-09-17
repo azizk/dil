@@ -61,7 +61,7 @@ void main(char[][] args)
       else if(strbeg(arg, "-r"))
         regexps ~= arg[2..$];
       else if(strbeg(arg, "-l"))
-        levels = Integer.parse (arg[2..$]);
+        levels = Integer.toInt(arg[2..$]);
       else
         switch (arg)
         {

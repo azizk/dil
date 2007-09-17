@@ -12,14 +12,16 @@ import common;
 
 enum DocOption
 {
-  Tokens,
+  Empty,
+  Tokens = 1,
   Syntax = 1<<1,
-  HTML = 1<<2,
-  XML = 1<<3
+  HTML   = 1<<2,
+  XML    = 1<<3
 }
 
 void execute(string fileName, DocOption options)
 {
+  assert(options != DocOption.Empty);
   if (options & DocOption.Syntax)
     syntaxToDoc(fileName, Stdout, options);
   else

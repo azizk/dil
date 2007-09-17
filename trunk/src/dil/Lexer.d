@@ -39,6 +39,7 @@ class Lexer
 
   uint loc_old; /// Store actual line number when #line token is parsed.
   uint loc_hline; /// Line number set by #line.
+  private uint inTokenString; // > 0 if inside q{ }
 
   char[] fileName;
 
@@ -935,11 +936,12 @@ version(D2)
     t.type = TOK.String;
 
     char[] buffer;
-    dchar opening_delim, // 0 if no nested delimiter or '[', '(', '<', '{'
-          closing_delim; // Will be ']', ')', '>', '}', any other character
-                         // or the first, decoded character of an identifier.
-    char[] str_delim; // Identifier delimiter
-    uint level = 1;
+    dchar opening_delim = 0, // 0 if no nested delimiter or '[', '(', '<', '{'
+          closing_delim; // Will be ']', ')', '>', '},
+                         // the first character of an identifier or
+                         // any other Unicode/ASCII character.
+    char[] str_delim; // Identifier delimiter.
+    uint level = 1; // Counter for nestable delimiters.
 
     ++p; ++p; // Skip q"
     uint c = *p;
@@ -947,49 +949,65 @@ version(D2)
     {
     case '(':
       opening_delim = c;
-      closing_delim = ')'; // *p + 1
+      closing_delim = ')'; // c + 1
       break;
     case '[', '<', '{':
       opening_delim = c;
       closing_delim = c + 2; // Get to closing counterpart. Feature of ASCII table.
       break;
     default:
+      dchar scanNewline()
+      {
+        switch (*p)
+        {
+        case '\r':
+          if (p[1] == '\n')
+            ++p;
+        case '\n':
+          ++p;
+          ++loc;
+          return '\n';
+        case LS[0]:
+          if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+          {
+            ++p; ++p; ++p;
+            ++loc;
+            return '\n';
+          }
+        default:
+        }
+        return 0;
+      }
+
+      // Skip leading newlines:
+      while (scanNewline() != 0){}
+      assert(*p != '\n' && *p != '\r');
+      assert(!(*p == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])));
+
       char* begin = p;
+      c = *p;
       closing_delim = c;
-      // TODO: What to do about newlines? Skip or accept as delimiter?
       // TODO: Check for non-printable characters?
       if (c & 128)
       {
         closing_delim = decodeUTF8();
-        if (!isUniAlpha(c))
-          break;
+        if (!isUniAlpha(closing_delim))
+          break; // Not an identifier.
       }
       else if (!isidbeg(c))
-        break;
-      // Parse identifier + newline
+        break; // Not an identifier.
+
+      // Parse Identifier + EndOfLine
       do
       { c = *++p; }
       while (isident(c) || c & 128 && isUniAlpha(decodeUTF8()))
       // Store identifier
       str_delim = begin[0..p-begin];
       // Scan newline
-      switch (*p)
+      if (scanNewline() == '\n')
+        --p; // Go back one because of "c = *++p;" in main loop.
+      else
       {
-      case '\r':
-        if (p[1] == '\n')
-          ++p;
-      case '\n':
-        ++loc;
-        break;
-      case LS[0]:
-        if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
-        {
-          ++p; ++p;
-          ++loc;
-          break;
-        }
-        // goto default;
-      default:
         // TODO: error(MID.ExpectedNewlineAfterIdentDelim);
       }
     }
@@ -997,7 +1015,8 @@ version(D2)
     bool checkStringDelim(char* p)
     {
       assert(str_delim.length != 0);
-      if (end-p >= str_delim.length && // Check remaining length.
+      if (buffer[$-1] == '\n' && // Last character copied to buffer must be '\n'.
+          end-p >= str_delim.length && // Check remaining length.
           p[0..str_delim.length] == str_delim) // Compare.
         return true;
       return false;
@@ -1016,7 +1035,7 @@ version(D2)
         ++loc;
         break;
       case 0, _Z_:
-//         error(MID.UnterminatedDelimitedString);
+        // TODO: error(MID.UnterminatedDelimitedString);
         goto Lreturn3;
       default:
         if (c & 128)
@@ -1027,14 +1046,20 @@ version(D2)
             goto case '\n';
           if (c == closing_delim)
           {
-            if (str_delim.length && checkStringDelim(begin))
+            if (str_delim.length)
             {
-              p = begin + str_delim.length;
-              goto Lreturn2;
+              if (checkStringDelim(begin))
+              {
+                p = begin + str_delim.length;
+                goto Lreturn2;
+              }
             }
-            assert(level == 1);
-            --level;
-            goto Lreturn;
+            else
+            {
+              assert(level == 1);
+              --level;
+              goto Lreturn;
+            }
           }
           encodeUTF8(buffer, c);
           continue;
@@ -1045,30 +1070,33 @@ version(D2)
             ++level;
           else if (c == closing_delim)
           {
-            if (str_delim.length && checkStringDelim(p))
+            if (str_delim.length)
             {
-              p += str_delim.length;
-              goto Lreturn2;
+              if (checkStringDelim(p))
+              {
+                p += str_delim.length;
+                goto Lreturn2;
+              }
             }
-            if (--level == 0)
+            else if (--level == 0)
               goto Lreturn;
           }
         }
       }
       buffer ~= c; // copy character to buffer
     }
-  Lreturn:
-    assert(*p == closing_delim);
+  Lreturn: // Character delimiter.
+    assert(c == closing_delim);
     assert(level == 0);
     ++p; // Skip closing delimiter.
-  Lreturn2:
+  Lreturn2: // String delimiter.
     if (*p == '"')
       ++p;
     // else
     // TODO: error(MID.ExpectedDblQuoteAfterDelim, str_delim.length ? str_delim : p[-1]);
 
     t.pf = scanPostfix();
-  Lreturn3:
+  Lreturn3: // Error.
     t.str = buffer ~ '\0';
     t.end = p;
   }
@@ -1077,10 +1105,10 @@ version(D2)
   {
     assert(p[0] == 'q' && p[1] == '{');
     t.type = TOK.String;
-    // Copy members that might be changed by subsequent tokens. Like #line for example.
-    auto loc_old = this.loc_old;
-    auto loc_hline = this.loc_hline;
-    auto filePath = this.fileName;
+
+    // A guard against changes to particular members:
+    // this.loc_old, this.loc_hline and this.fileName
+    ++inTokenString;
 
     uint loc = this.loc;
     uint level = 1;
@@ -1171,12 +1199,9 @@ version(D2)
     assert(buffer[$-1] == '\0');
     t.str = buffer;
 
-    // Restore possibly changed members.
-    this.loc_old = loc_old;
-    this.loc_hline = loc_hline;
-    this.fileName = filePath;
+    --inTokenString;
   }
-}
+} // version(D2)
 
   dchar scanEscapeSequence()
   {
@@ -1314,10 +1339,12 @@ version(D2)
     case 'L':
       if (p[1] == 'i')
         goto LscanReal;
+      break;
     case '.':
       if (p[1] == '.')
         break;
-    case 'i','f','F', 'e', 'E': // Imaginary and float literal suffix
+    case 'i','f','F', // Imaginary and float literal suffixes.
+         'e', 'E':    // Float exponent.
       goto LscanReal;
     default:
       if (*p == '_' || isoctal(*p))
@@ -1504,6 +1531,7 @@ version(D2)
       Long     = 2
     }
 
+    // Scan optional suffix: L, Lu, LU, u, uL, U or UL.
     Suffix suffix;
     while (1)
     {
@@ -1527,6 +1555,7 @@ version(D2)
       break;
     }
 
+    // Determine type of Integer.
     switch (suffix)
     {
     case Suffix.None:
@@ -1584,20 +1613,26 @@ version(D2)
   void scanReal(ref Token t)
   {
     if (*p == '.')
+    {
+      assert(p[1] != '.');
       // This function was called by scan() or scanNumber().
       while (isdigit(*++p) || *p == '_') {}
-    else
-    {
-      // This function was called by scanNumber().
-      debug switch (*p)
-      {
-      case 'L':
-        if (p[1] != 'i')
-          assert(0);
-      case 'i', 'f', 'F', 'e', 'E': break;
-      default: assert(0);
-      }
     }
+    else
+      // This function was called by scanNumber().
+      assert(delegate (){
+        switch (*p)
+        {
+        case 'L':
+          if (p[1] != 'i')
+            return false;
+        case 'i', 'f', 'F', 'e', 'E':
+          return true;
+        default:
+        }
+        return false;
+      }()
+      );
 
     // Scan exponent.
     if (*p == 'e' || *p == 'E')
@@ -1611,21 +1646,15 @@ version(D2)
         while (isdigit(*++p) || *p == '_') {}
     }
 
-    // Copy string to buffer ignoring underscores.
-    char[] buffer;
-    char* end = p;
-    p = t.start;
-    do
-    {
-      if (*p == '_')
-      {
-        ++p;
-        continue;
-      }
-      buffer ~= *p;
-      ++p;
-    } while (p != end)
-    buffer ~= 0;
+    // Copy whole number and remove underscores from buffer.
+    char[] buffer = t.start[0..p-t.start].dup;
+    uint j;
+    foreach (c; buffer)
+      if (c != '_')
+        buffer[j++] = c;
+    buffer.length = j; // Adjust length.
+    buffer ~= 0; // Terminate for C functions.
+
     finalizeFloat(t, buffer);
   }
 
@@ -1808,10 +1837,14 @@ version(D2)
       goto Lerr;
     }
 
-    this.loc_old = this.loc;
-    this.loc_hline = t.line_num.uint_ - 1;
-    if (t.line_filespec)
-      this.fileName = t.line_filespec.str;
+    // Evaluate #line only when not in token string.
+    if (!inTokenString)
+    {
+      this.loc_old = this.loc;
+      this.loc_hline = t.line_num.uint_ - 1;
+      if (t.line_filespec)
+        this.fileName = t.line_filespec.str;
+    }
     t.end = p;
 
     return;
