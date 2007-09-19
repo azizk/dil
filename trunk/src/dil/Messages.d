@@ -3,7 +3,6 @@
   License: GPL3
 +/
 module dil.Messages;
-import dil.Settings;
 import common;
 
 /// Index into table of compiler messages.
@@ -70,10 +69,18 @@ enum MID
   HelpImportGraph,
 }
 
+private string[] messages;
+
+package void SetMessages(string[] msgs)
+{
+  assert(MID.max+1 == msgs.length);
+  messages = msgs;
+}
+
 string GetMsg(MID mid)
 {
-  assert(mid < GlobalSettings.messages.length);
-  return GlobalSettings.messages[mid];
+  assert(mid < messages.length);
+  return messages[mid];
 }
 
 char[] FormatMsg(MID mid, ...)

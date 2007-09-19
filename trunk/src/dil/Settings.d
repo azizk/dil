@@ -137,5 +137,6 @@ static:
     if (messages.length != MID.max+1)
       throw new Exception(Format("messages table in {0} must exactly have {1} entries, but {2} were found.", fileName, MID.max+1, messages.length));
     GlobalSettings.messages = messages;
+    dil.Messages.SetMessages(messages);
   }
 }

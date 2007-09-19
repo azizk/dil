@@ -333,6 +333,10 @@ void syntaxToDoc(string fileName, Print!(char) print, DocOption options)
   {
     token = token.next;
 
+    // Print whitespace.
+    if (token.ws)
+      print(token.ws[0..token.start - token.ws]);
+
     Node[]* nodes = token in beginNodes;
 
     if (nodes)
@@ -382,6 +386,9 @@ void tokensToDoc(string fileName, Print!(char) print, DocOption options)
   while (token.type != TOK.EOF)
   {
     token = token.next;
+    // Print whitespace.
+    if (token.ws)
+      print(token.ws[0..token.start - token.ws]);
     printToken(token, tags, print);
   }
   print(\n~tags[DocPart.SrcEnd])(\n~tags[DocPart.Tail]);
@@ -391,10 +398,6 @@ void printToken(Token* token, string[] tags, Print!(char) print)
 {
   alias DocPart DP;
   string srcText = xml_escape(token.srcText);
-
-  // Print whitespace.
-  if (token.ws)
-    print(token.ws[0..token.start - token.ws]);
 
   switch(token.type)
   {
