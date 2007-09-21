@@ -557,7 +557,11 @@ class SliceExpression : UnaryExpression
   {
     super(e);
     mixin(set_kind);
-    this.children ~= [left, right];
+    if (left)
+      this.children ~= left;
+    if (right)
+      this.children ~= right;
+
     this.left = left;
     this.right = right;
   }

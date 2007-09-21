@@ -1335,24 +1335,33 @@ version(D2)
     case 'x','X':
       goto LscanHex;
     case 'b','B':
-      goto LscanBin;
+      goto LscanBinary;
     case 'L':
       if (p[1] == 'i')
-        goto LscanReal;
-      break;
+        goto LscanReal; // 0Li
+      break; // 0L
     case '.':
       if (p[1] == '.')
-        break;
+        break; // 0..
+      // 0.
     case 'i','f','F', // Imaginary and float literal suffixes.
          'e', 'E':    // Float exponent.
       goto LscanReal;
     default:
-      if (*p == '_' || isoctal(*p))
-        goto LscanOct;
+      if (*p == '_')
+        goto LscanOctal; // 0_
+      else if (isdigit(*p))
+      {
+        if (*p == '8' || *p == '9')
+          goto Loctal_hasDecimalDigits; // 08 or 09
+        else
+          goto Loctal_enter_loop; // 0[0-7]
+      }
     }
 
     // Number 0
     assert(p[-1] == '0');
+    assert(*p != '_' && !isdigit(*p));
     assert(ulong_ == 0);
     isDecimal = true;
     goto Lfinalize;
@@ -1440,7 +1449,7 @@ version(D2)
 
     goto Lfinalize;
 
-  LscanBin:
+  LscanBinary:
     assert(digits == 0);
     assert(*p == 'b');
     while (1)
@@ -1471,33 +1480,31 @@ version(D2)
     assert( !(*p == '0' || *p == '1' || *p == '_') );
     goto Lfinalize;
 
-  LscanOct:
-    assert(*p == '_' || isoctal(*p));
-    if (*p != '_')
-      goto Lenter_loop_oct;
+  LscanOctal:
+    assert(*p == '_');
     while (1)
     {
       if (*++p == '_')
         continue;
       if (!isoctal(*p))
         break;
-    Lenter_loop_oct:
+    Loctal_enter_loop:
       if (ulong_ < ulong.max/2 || (ulong_ == ulong.max/2 && *p <= '1'))
       {
         ulong_ *= 8;
         ulong_ += *p - '0';
-        ++p;
         continue;
       }
       // Overflow: skip following digits.
       overflow = true;
-      while (isdigit(*++p)) {}
+      while (isoctal(*++p)) {}
       break;
     }
 
     bool hasDecimalDigits;
     if (isdigit(*p))
     {
+    Loctal_hasDecimalDigits:
       hasDecimalDigits = true;
       while (isdigit(*++p)) {}
     }

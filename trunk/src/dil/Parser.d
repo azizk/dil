@@ -1025,6 +1025,7 @@ debug writef("\33[34m%s\33[0m", success);
       bases ~= new BaseClass(prot, type);
       if (token.type != T.Comma)
         break;
+      nT();
     }
     return bases;
   }
@@ -2248,7 +2249,7 @@ debug writef("\33[34m%s\33[0m", success);
       finBody = new FinallyBody(parseNoScopeStatement());
     }
 
-    if (catchBodies.length == 0 || finBody is null)
+    if (catchBodies.length == 0 && finBody is null)
     {
       // TODO: issue error msg.
     }
@@ -2782,7 +2783,7 @@ debug writef("\33[34m%s\33[0m", success);
       switch (token.identifier)
       {
       case "near", "far",   /*"byte",  "short",  "int",*/
-           "word", "dword"/*, "float", "double", "real"*/:
+           "word", "dword", "qword"/*, "float", "double", "real"*/:
       LAsmTypePrefix:
         nT();
         if (token.type == T.Identifier && token.identifier == "ptr")

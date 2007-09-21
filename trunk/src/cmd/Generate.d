@@ -297,7 +297,13 @@ void syntaxToDoc(string fileName, Print!(char) print, DocOption options)
   {
     foreach (node; nodes)
     {
-      assert(node !is null);
+      assert(delegate bool(){
+          foreach (child; node.children)
+            if (child is null)
+              return false;
+          return true;
+        }() == true, Format("Node '{0}' has a null child", node.classinfo.name)
+      );
       auto begin = node.begin;
       if (begin)
       {
@@ -306,10 +312,18 @@ void syntaxToDoc(string fileName, Print!(char) print, DocOption options)
         beginNodes[begin] ~= node;
         endNodes[end] ~= node;
       }
+
       if (node.children.length)
         populateAAs(node.children);
     }
   }
+  assert(delegate bool(){
+      foreach (child; root.children)
+        if (child is null)
+          return false;
+      return true;
+    }() == true, Format("Root node has a null child")
+  );
   populateAAs(root.children);
 
   char[] getTag(NodeCategory nc)

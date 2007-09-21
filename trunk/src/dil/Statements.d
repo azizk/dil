@@ -319,6 +319,7 @@ class WithStatement : Statement
   this(Expression expr, Statement withBody)
   {
     mixin(set_kind);
+    assert(expr !is null && withBody !is null);
     this.children = [cast(Node)expr, withBody];
     this.expr = expr;
     this.withBody = withBody;
@@ -329,10 +330,13 @@ class SynchronizedStatement : Statement
 {
   Expression expr;
   Statement syncBody;
-  this(Expression expr, Statement withBody)
+  this(Expression expr, Statement syncBody)
   {
     mixin(set_kind);
-    this.children = [cast(Node)expr, syncBody];
+    if (expr)
+      this.children ~= expr;
+    assert(syncBody !is null);
+    this.children ~= syncBody;
     this.expr = expr;
     this.syncBody = syncBody;
   }
@@ -346,6 +350,7 @@ class TryStatement : Statement
   this(Statement tryBody, CatchBody[] catchBodies, FinallyBody finallyBody)
   {
     mixin(set_kind);
+    assert(tryBody !is null);
     this.children = [tryBody];
     if (catchBodies.length)
       this.children ~= catchBodies;
@@ -364,7 +369,10 @@ class CatchBody : Statement
   this(Parameter param, Statement catchBody)
   {
     mixin(set_kind);
-    this.children = [cast(Node)param, catchBody];
+    if (param)
+      this.children ~= param;
+    assert(catchBody !is null);
+    this.children ~= catchBody;
     this.param = param;
     this.catchBody = catchBody;
   }
@@ -376,6 +384,7 @@ class FinallyBody : Statement
   this(Statement finallyBody)
   {
     mixin(set_kind);
+    assert(finallyBody !is null);
     this.children = [finallyBody];
     this.finallyBody = finallyBody;
   }
@@ -388,6 +397,7 @@ class ScopeGuardStatement : Statement
   this(Token* condition, Statement scopeBody)
   {
     mixin(set_kind);
+    assert(scopeBody !is null);
     this.children = [scopeBody];
     this.condition = condition;
     this.scopeBody = scopeBody;
