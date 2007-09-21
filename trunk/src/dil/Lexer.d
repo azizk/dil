@@ -54,7 +54,7 @@ class Lexer
     this.fileName = fileName;
 
     this.text = text;
-    if (text[$-1] != 0)
+    if (text.length == 0 || text[$-1] != 0)
     {
       this.text.length = this.text.length + 1;
       this.text[$-1] = 0;
@@ -169,8 +169,8 @@ class Lexer
   }
   out
   {
-    assert(text.ptr <= t.start && t.start < end);
-    assert(text.ptr < t.end && t.end <= end, Token.toString(t.type));
+    assert(text.ptr <= t.start && t.start < end, Token.toString(t.type));
+    assert(text.ptr <= t.end && t.end <= end, Token.toString(t.type));
   }
   body
   {

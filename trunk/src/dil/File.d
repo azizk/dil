@@ -15,6 +15,9 @@ char[] loadFile(char[] filePath)
 
 char[] data2Utf8(ubyte[] data)
 {
+  if (data.length == 0)
+    return null;
+
   char[] text;
   BOM bom = tellBOM(data);
 
@@ -69,7 +72,6 @@ char[] data2Utf8(ubyte[] data)
   default:
     assert(0);
   }
-  assert(text !is null);
   return text;
 }
 
