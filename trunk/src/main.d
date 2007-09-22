@@ -88,7 +88,7 @@ void main(char[][] args)
     cmd.ImportGraph.execute(filePath, includePaths, regexps, levels, options);
     break;
   case "stats", "statistics":
-    cmd.Statistics.execute(args[2]);
+    cmd.Statistics.execute(args[2..$]);
     break;
   case "parse":
     if (args.length == 3)
