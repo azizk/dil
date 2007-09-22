@@ -72,7 +72,7 @@ static:
         auto e = v.values[0];
         if (!e)
           throw new Exception("langfile variable has no value set.");
-        auto val = Cast!(StringLiteralsExpression)(e);
+        auto val = Cast!(StringExpression)(e);
         if (val)
           // Set fileName to d-file with messages table.
           fileName = val.getString();
@@ -85,7 +85,7 @@ static:
         if (auto array = Cast!(ArrayInitializer)(e))
         {
           foreach (value; array.values)
-            if (auto str = Cast!(StringLiteralsExpression)(value))
+            if (auto str = Cast!(StringExpression)(value))
               GlobalSettings.importPaths ~= str.getString();
         }
         else
@@ -118,7 +118,7 @@ static:
         {
           foreach (value; array.values)
           {
-            if (auto str = Cast!(StringLiteralsExpression)(value))
+            if (auto str = Cast!(StringExpression)(value))
               messages ~= str.getString();
           }
         }
@@ -130,7 +130,7 @@ static:
         auto e = v.values[0];
         if (!e)
           throw new Exception("lang_code variable in "~fileName~" has no value set.");
-        if (auto str = Cast!(StringLiteralsExpression)(e))
+        if (auto str = Cast!(StringExpression)(e))
             GlobalSettings.language = str.getString();
       }
     }

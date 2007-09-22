@@ -669,7 +669,7 @@ class BoolExpression : Expression
   }
 }
 
-class IntNumberExpression : Expression
+class IntExpression : Expression
 {
   TOK type;
   ulong number;
@@ -681,7 +681,7 @@ class IntNumberExpression : Expression
   }
 }
 
-class RealNumberExpression : Expression
+class RealExpression : Expression
 {
   TOK type;
   real number;
@@ -693,7 +693,7 @@ class RealNumberExpression : Expression
   }
 }
 
-class CharLiteralExpression : Expression
+class CharExpression : Expression
 {
   this()
   {
@@ -701,7 +701,7 @@ class CharLiteralExpression : Expression
   }
 }
 
-class StringLiteralsExpression : Expression
+class StringExpression : Expression
 {
   Token*[] strings;
   this(Token*[] strings)
@@ -732,7 +732,7 @@ class ArrayLiteralExpression : Expression
   }
 }
 
-class AssocArrayLiteralExpression : Expression
+class AArrayLiteralExpression : Expression
 {
   Expression[] keys, values;
   this(Expression[] keys, Expression[] values)

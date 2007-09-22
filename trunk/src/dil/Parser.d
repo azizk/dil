@@ -2828,12 +2828,12 @@ debug writef("\33[34m%s\33[0m", success);
     switch (token.type)
     {
     case T.Int32, T.Int64, T.Uint32, T.Uint64:
-      e = new IntNumberExpression(token.type, token.ulong_);
+      e = new IntExpression(token.type, token.ulong_);
       nT();
       break;
     case T.Float32, T.Float64, T.Float80,
          T.Imaginary32, T.Imaginary64, T.Imaginary80:
-      e = new RealNumberExpression(token.type, token.real_);
+      e = new RealExpression(token.type, token.real_);
       nT();
       break;
     case T.Dollar:
@@ -3367,17 +3367,17 @@ debug writef("\33[34m%s\33[0m", success);
       e = new DollarExpression();
       break;
     case T.Int32, T.Int64, T.Uint32, T.Uint64:
-      e = new IntNumberExpression(token.type, token.ulong_);
+      e = new IntExpression(token.type, token.ulong_);
       nT();
       break;
     case T.Float32, T.Float64, T.Float80,
          T.Imaginary32, T.Imaginary64, T.Imaginary80:
-      e = new RealNumberExpression(token.type, token.real_);
+      e = new RealExpression(token.type, token.real_);
       nT();
       break;
     case T.CharLiteral, T.WCharLiteral, T.DCharLiteral:
       nT();
-      e = new CharLiteralExpression();
+      e = new CharExpression();
       break;
     case T.String:
       Token*[] stringLiterals;
@@ -3386,7 +3386,7 @@ debug writef("\33[34m%s\33[0m", success);
         stringLiterals ~= token;
         nT();
       } while (token.type == T.String)
-      e = new StringLiteralsExpression(stringLiterals);
+      e = new StringExpression(stringLiterals);
       break;
     case T.LBracket:
       Expression[] values;
@@ -3426,7 +3426,7 @@ debug writef("\33[34m%s\33[0m", success);
         nT();
       }
       require(T.RBracket);
-      e = new AssocArrayLiteralExpression(keys, values);
+      e = new AArrayLiteralExpression(keys, values);
       break;
     case T.LBrace:
       // DelegateLiteral := { Statements }
