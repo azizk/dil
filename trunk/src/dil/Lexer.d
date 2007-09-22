@@ -2160,10 +2160,11 @@ version(gen_ptable)
 static this()
 {
   alias ptable p;
+  assert(p.length == 256);
   // Initialize character properties table.
   for (int i; i < p.length; ++i)
   {
-    p[i] = 0;
+    p[i] = 0; // Reset
     if ('0' <= i && i <= '7')
       p[i] |= CP.Octal;
     if ('0' <= i && i <= '9')
@@ -2192,11 +2193,10 @@ static this()
   p['v'] |= 11 << 8;
   // Print a formatted array literal.
   char[] array = "[\n";
-  for (int i; i < p.length; ++i)
+  foreach (i, c; ptable)
   {
-    int c = p[i];
-    array ~= std.string.format(c>255?" 0x%x,":"%2d,", c, ((i+1) % 16) ? "":"\n");
+    array ~= Format((c>255?" 0x{0:x},":"{0,2},"), c) ~ (((i+1) % 16) ? "":"\n");
   }
   array[$-2..$] = "\n]";
-  writefln(array);
+  Stdout(array).newline;
 }
