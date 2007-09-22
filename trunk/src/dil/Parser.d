@@ -1631,7 +1631,7 @@ debug writef("\33[34m%s\33[0m", success);
       if (success)
         goto case_DeclarationStatement; // Declaration
       else
-        goto default; // Expression
+        goto case_ExpressionStatement; // Expression
     // BasicType
     case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
          T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
@@ -1706,7 +1706,7 @@ debug writef("\33[34m%s\33[0m", success);
       break;
     case T.Mixin:
       if (peekNext() == T.LParen)
-        goto default; // Parse as expression.
+        goto case_ExpressionStatement; // Parse as expression.
       s = parseMixin!(MixinStatement)();
       break;
     case T.Static:
@@ -1755,24 +1755,73 @@ debug writef("\33[34m%s\33[0m", success);
       nT();
       s = new EmptyStatement();
       break;
+    /+
+      Parse ExpressionStatement:
+    +/
+    // Tokens that start a PrimaryExpression.
+    // case T.Identifier, T.Dot, T.Typeof:
+    case T.This:
+    case T.Super:
+    case T.Null:
+    case T.True, T.False:
+    // case T.Dollar:
+    case T.Int32, T.Int64, T.Uint32, T.Uint64:
+    case T.Float32, T.Float64, T.Float80,
+         T.Imaginary32, T.Imaginary64, T.Imaginary80:
+    case T.CharLiteral, T.WCharLiteral, T.DCharLiteral:
+    case T.String:
+    case T.LBracket:
+    // case T.LBrace:
+    case T.Function, T.Delegate:
+    case T.Assert:
+    // case T.Mixin:
+    case T.Import:
+    case T.Typeid:
+    case T.Is:
+    case T.LParen:
+    // IntegralType
+    /+case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
+         T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
+         T.Int,    T.Uint,    T.Long,   T.Ulong,
+         T.Float,  T.Double,  T.Real,
+         T.Ifloat, T.Idouble, T.Ireal,
+         T.Cfloat, T.Cdouble, T.Creal, T.Void:+/
+    case T.Traits:
+    // Tokens that can start a UnaryExpression:
+    case T.AndBinary,
+         T.PlusPlus,
+         T.MinusMinus,
+         T.Mul,
+         T.Minus,
+         T.Plus,
+         T.Not,
+         T.Tilde,
+         T.New,
+         T.Delete,
+         T.Cast:
+    case_ExpressionStatement:
+      s = new ExpressionStatement(parseExpression());
+      require(T.Semicolon);
+      break;
     default:
-      bool success;
-      auto expression = try_(parseExpression(), success);
-// writefln("parseExpression()=", failed?"failed":"success");
-      if (success)
-      {
-        require(T.Semicolon);
-        s = new ExpressionStatement(expression);
-      }
-      else
-      {
-        error(MID.ExpectedButFound, "Statement", token.srcText);
-        s = new IllegalStatement(token);
-        nT();
-      }
+      if (token.isSpecialToken)
+        goto case_ExpressionStatement;
+
+      // Assert that this isn't a valid expression.
+      assert(
+        delegate bool(){
+          bool success;
+          auto expression = try_(parseExpression(), success);
+          return success;
+        }() == false, "Any token that could start a valid expression must have been caught by a case statement in parseStatement()."
+      );
+
+      // Report error: it's an illegal statement.
+      error(MID.ExpectedButFound, "Statement", token.srcText);
+      s = new IllegalStatement(token);
+      nT();
     }
     assert(s !is null);
-//     writef("§%s§", s.classinfo.name);
     set(s, begin);
     return s;
   }
