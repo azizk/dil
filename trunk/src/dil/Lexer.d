@@ -91,17 +91,13 @@ class Lexer
       t.start = p;
       t.type = TOK.Shebang;
       ++p;
+      assert(*p == '!');
       while (1)
       {
-        t.end = p;
-        switch (*++p)
+        t.end = ++p;
+        switch (*p)
         {
-        case '\r':
-          if (p[1] == '\n')
-            ++p;
-        case '\n':
-          ++p;
-          ++loc;
+        case '\n', '\r':
           break;
         case 0, _Z_:
           break;
@@ -116,6 +112,8 @@ class Lexer
         }
         break; // Exit loop.
       }
+      // Reset p. The newline will be scanned as whitespace in scan().
+      p = t.end;
       this.head.next = t;
       t.prev = this.head;
     }
@@ -1766,18 +1764,11 @@ version(D2)
     {
       switch (*++p)
       {
-      case '\r':
-        if (p[1] == '\n')
-          ++p;
-      case '\n', 0, _Z_:
-        break Loop;
       case LS[0]:
-        if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
-        {
-          ++p; ++p;
-          break Loop;
-        }
-        goto default;
+        if (!(p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])))
+          goto default;
+      case '\r', '\n', 0, _Z_:
+        break Loop;
       default:
         if (isspace(*p))
           continue;
@@ -1840,6 +1831,9 @@ version(D2)
         }
       }
     }
+    assert(*p == '\r' || *p == '\n' || *p == 0 || *p == _Z_ ||
+           *p == LS[0] && (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+    );
 
     if (state == State.Integer)
     {
