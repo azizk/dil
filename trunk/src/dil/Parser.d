@@ -925,8 +925,8 @@ debug writef("\33[34m%s\33[0m", success);
     else if (token.type == T.LBrace)
     {
       hasBody = true;
-      nT();
-      do
+      nT(); // Skip {
+      while (token.type != T.RBrace)
       {
         members ~= requireId();
 
@@ -938,15 +938,11 @@ debug writef("\33[34m%s\33[0m", success);
         else
           values ~= null;
 
-        if (token.type == T.Comma)
-          nT();
-        else if (token.type != T.RBrace)
-        {
-          expected(T.RBrace);
+        if (token.type != T.Comma)
           break;
-        }
-      } while (token.type != T.RBrace)
-      nT();
+        nT(); // Skip ,
+      }
+      require(T.RBrace);
     }
     else
       error(MID.ExpectedButFound, "enum declaration", token.srcText);
