@@ -62,6 +62,8 @@ enum MID
   OutContract,
   MissingLinkageType,
   UnrecognizedLinkageType,
+  ExpectedBaseClasses,
+  BaseClassInForwardDeclaration,
 
   // Help messages:
   HelpMain,

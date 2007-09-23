@@ -60,6 +60,8 @@ string[] messages = [
   "funktion loppuehto jäsennettiin jo.",
   "linkitystyyppiä ei määritelty.",
   "tunnistamaton linkitystyyppi '{0}'; sallittuja tyyppejä ovat C, C++, D, Windows, Pascal ja System.",
+  "expected one or more base classes, not '{0}'.", // TODO: translate
+  "base classes are not allowed in forward declarations.", // TODO: translate
 
   // Help messages:
   `dil v{0}

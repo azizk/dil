@@ -60,6 +60,8 @@ string[] messages = [
   "the functions 'out' contract was already parsed.",
   "no linkage type was specified.",
   "unrecognized linkage type '{0}'; valid types are C, C++, D, Windows, Pascal und System.",
+  "expected one or more base classes, not '{0}'.",
+  "base classes are not allowed in forward declarations.",
 
   // Help messages:
   `dil v{0}

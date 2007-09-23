@@ -860,8 +860,6 @@ debug writef("\33[34m%s\33[0m", success);
       moduleFQNs ~= moduleFQN;
       moduleAliases ~= moduleAlias;
 
-      if (token.type == T.Colon)
-        break;
       if (token.type != T.Comma)
         break;
       nT();
@@ -980,8 +978,8 @@ debug writef("\33[34m%s\33[0m", success);
 
     if (token.type == T.Semicolon)
     {
-      //if (bases.length != 0)
-        // TODO: Error: bases classes are not allowed in forward declarations.
+      if (bases.length != 0)
+        error(MID.BaseClassInForwardDeclaration);
       nT();
     }
     else if (token.type == T.LBrace)
@@ -1017,7 +1015,7 @@ debug writef("\33[34m%s\33[0m", success);
       case T.Package:   prot = Protection.Package;   break;
       case T.Public:  /*prot = Protection.Public;*/  break;
       default:
-        // TODO: issue error msg
+        error(MID.ExpectedBaseClasses, token.srcText);
         return bases;
       }
       nT(); // Skip protection attribute.
@@ -1056,8 +1054,8 @@ debug writef("\33[34m%s\33[0m", success);
 
     if (token.type == T.Semicolon)
     {
-      //if (bases.length != 0)
-        // TODO: error: base classes are not allowed in forward declarations.
+      if (bases.length != 0)
+        error(MID.BaseClassInForwardDeclaration);
       nT();
     }
     else if (token.type == T.LBrace)

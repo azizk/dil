@@ -60,6 +60,8 @@ string[] messages = [
   "der 'out'-Vertrag der Funktion wurde bereits geparsed.",
   "es wurde kein Verbindungstyp angegeben.",
   "unbekannter Verbindungstyp '{0}'; gültig sind C, C++, D, Windows, Pascal und System.",
+  "erwartete eine oder mehrere Basisklassen, nicht '{0}'.",
+  "Basisklassen sind in Vorwärtsdeklarationen nicht erlaubt.",
 
   // Help messages:
   `dil v{0}

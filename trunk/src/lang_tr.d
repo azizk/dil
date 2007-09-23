@@ -60,6 +60,8 @@ string[] messages = [
   "fonksiyonun 'out' kontratı daha önceden ayrıştırılmış.",
   "bağlantı tüp (linkage type) belirtilmedi.",
   "bilinmeyen bağlantı tüpü (linkage type) '{0}'; geçerli olanlar C, C++, D, Windows, Pascal ve System.",
+  "expected one or more base classes, not '{0}'.", // TODO: translate
+  "base classes are not allowed in forward declarations.", // TODO: translate
 
   // Help messages:
   `dil v{0}
