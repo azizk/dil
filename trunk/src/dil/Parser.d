@@ -903,8 +903,7 @@ debug writef("\33[34m%s\33[0m", success);
 
     Token* enumName;
     Type baseType;
-    Token*[] members;
-    Expression[] values;
+    EnumMember[] members;
     bool hasBody;
 
     nT(); // Skip enum keyword.
@@ -933,15 +932,19 @@ debug writef("\33[34m%s\33[0m", success);
       nT(); // Skip {
       while (token.type != T.RBrace)
       {
-        members ~= requireId();
+        auto begin = token;
+        auto memberName = requireId();
+        Expression value;
 
         if (token.type == T.Assign)
         {
           nT();
-          values ~= parseAssignExpression();
+          value = parseAssignExpression();
         }
         else
-          values ~= null;
+          value = null;
+
+        members ~= set(new EnumMember(memberName, value), begin);
 
         if (token.type != T.Comma)
           break;
@@ -952,7 +955,7 @@ debug writef("\33[34m%s\33[0m", success);
     else
       error(MID.ExpectedButFound, "enum declaration", token.srcText);
 
-    return new EnumDeclaration(enumName, baseType, members, values, hasBody);
+    return new EnumDeclaration(enumName, baseType, members, hasBody);
   }
 
   Declaration parseClassDeclaration()

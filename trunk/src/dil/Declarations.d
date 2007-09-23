@@ -163,21 +163,35 @@ class EnumDeclaration : Declaration
 {
   Token* name;
   Type baseType;
-  Token*[] members;
-  Expression[] values;
-  this(Token* name, Type baseType, Token*[] members, Expression[] values, bool hasBody)
+  EnumMember[] members;
+  this(Token* name, Type baseType, EnumMember[] members, bool hasBody)
   {
     super(hasBody);
     mixin(set_kind);
     if (baseType)
       this.children = [baseType];
-    foreach(value; values)
-      if (value)
-        this.children ~= value;
+    if (members.length)
+        this.children ~= members;
+
     this.name = name;
     this.baseType = baseType;
     this.members = members;
-    this.values = values;
+  }
+}
+
+class EnumMember : Node
+{
+  Token* name;
+  Expression value;
+  this(Token* name, Expression value)
+  {
+    super(NodeCategory.Other);
+    mixin(set_kind);
+    if (value)
+      this.children = [value];
+
+    this.name = name;
+    this.value = value;
   }
 }
 
