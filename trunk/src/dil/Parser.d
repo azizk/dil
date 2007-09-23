@@ -348,7 +348,7 @@ debug writef("\33[34m%s\33[0m", success);
         { DeclDefs }
         DeclDef
   */
-  Declaration parseDeclarationsBlock()
+  Declaration parseDeclarationsBlock(bool noColon = false)
   {
     Declaration d;
     switch (token.type)
@@ -357,6 +357,8 @@ debug writef("\33[34m%s\33[0m", success);
       d = parseDeclarationDefinitionsBlock();
       break;
     case T.Colon:
+      if (noColon == true)
+        goto default;
       nT();
       auto decls = new Declarations;
       while (token.type != T.RBrace && token.type != T.EOF)
@@ -367,6 +369,11 @@ debug writef("\33[34m%s\33[0m", success);
       d = parseDeclarationDefinition();
     }
     return d;
+  }
+
+  Declaration parseDeclarationsBlockNoColon()
+  {
+    return parseDeclarationsBlock(true);
   }
 
   Declaration parseDeclaration(StorageClass stc = StorageClass.None)
@@ -1214,15 +1221,13 @@ debug writef("\33[34m%s\33[0m", success);
 
       // debug DeclarationsBlock
       // debug ( Condition ) DeclarationsBlock
-      decls = parseDeclarationsBlock();
+      decls = parseDeclarationsBlockNoColon();
 
       // else DeclarationsBlock
       if (token.type == T.Else)
       {
         nT();
-        //if (token.type == T.Colon)
-          // TODO: avoid "else:"?
-        elseDecls = parseDeclarationsBlock();
+        elseDecls = parseDeclarationsBlockNoColon();
       }
     }
 
@@ -1271,15 +1276,13 @@ debug writef("\33[34m%s\33[0m", success);
       require(T.RParen);
 
       // version ( Condition ) DeclarationsBlock
-      decls = parseDeclarationsBlock();
+      decls = parseDeclarationsBlockNoColon();
 
       // else DeclarationsBlock
       if (token.type == T.Else)
       {
         nT();
-        //if (token.type == T.Colon)
-          // TODO: avoid "else:"?
-        elseDecls = parseDeclarationsBlock();
+        elseDecls = parseDeclarationsBlockNoColon();
       }
     }
 
@@ -1300,18 +1303,12 @@ debug writef("\33[34m%s\33[0m", success);
     condition = parseAssignExpression();
     require(T.RParen);
 
-    if (token.type != T.Colon)
-      ifDecls = parseDeclarationsBlock();
-    else
-      expected(T.LBrace); // TODO: better error msg
+    ifDecls = parseDeclarationsBlockNoColon();
 
     if (token.type == T.Else)
     {
       nT();
-      if (token.type != T.Colon)
-        elseDecls = parseDeclarationsBlock();
-      else
-        expected(T.LBrace); // TODO: better error msg
+      elseDecls = parseDeclarationsBlockNoColon();
     }
 
     return new StaticIfDeclaration(condition, ifDecls, elseDecls);
