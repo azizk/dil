@@ -125,12 +125,19 @@ ubyte[] utf32BEtoLE(ubyte[] data)
   dchar[] result = cast(dchar[]) new ubyte[data.length];
   assert(result.length*4 == data.length);
   // BE to LE "1A 2B 3C 4D" -> "4D 3C 2B 1A"
+  // TODO: the 'bswap' asm instruction could be used instead of shifts and &-operations.
   foreach (i, c; cast(uint[]) data)
-    result[i] = ((c & 0xFF)) |
-                ((c >> 8) & 0xFF) |
-                ((c >> 16) & 0xFF) |
-                 (c >> 24);
+    result[i] = (c << 24) |
+               ((c >> 8) & 0xFF00) |
+               ((c << 8) & 0xFF0000) |
+                (c >> 24);
   return cast(ubyte[]) result;
+}
+
+unittest
+{
+  ubyte[] test = cast(ubyte[])x"1A 2B 3C 4D";
+  assert(utf32BEtoLE(test) == cast(ubyte[])x"4D 3C 2B 1A");
 }
 
 /// Byte Order Mark
