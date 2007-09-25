@@ -213,6 +213,14 @@ struct Token
     return *start == '_' && type != TOK.Identifier;
   }
 
+version(D2)
+{
+  bool isTokenStringLiteral()
+  {
+    return type == TOK.String && tok_str !is null;
+  }
+}
+
   int opEquals(TOK type2)
   {
     return type == type2;
@@ -229,8 +237,46 @@ struct Token
 
   delete(void* p)
   {
+    auto token = cast(Token*)p;
+    if (token)
+    {
+      if(token.type == TOK.HashLine)
+        token.destructHashLineToken();
+      else
+      {
+      version(D2)
+        if (token.isTokenStringLiteral)
+          token.destructTokenStringLiteral();
+      }
+    }
     free(p);
   }
+
+  void destructHashLineToken()
+  {
+    assert(type == TOK.HashLine);
+    delete line_num;
+    delete line_filespec;
+  }
+
+version(D2)
+{
+  void destructTokenStringLiteral()
+  {
+    assert(type == TOK.String);
+    assert(start && *start == 'q' && start[1] == '{');
+    assert(tok_str !is null);
+    auto tok_it = tok_str;
+    auto tok_del = tok_str;
+    while (tok_it && tok_it.type != TOK.EOF)
+    {
+      tok_it = tok_it.next;
+      assert(tok_del && tok_del.type != TOK.EOF);
+      delete tok_del;
+      tok_del = tok_it;
+    }
+  }
+}
 }
 
 const string[] tokToString = [

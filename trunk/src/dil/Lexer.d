@@ -1410,7 +1410,7 @@ version(D2)
 
   LscanHex:
     assert(digits == 0);
-    assert(*p == 'x');
+    assert(*p == 'x' || *p == 'X');
     while (1)
     {
       if (*++p == '_')
@@ -1427,7 +1427,7 @@ version(D2)
         ulong_ += *p - 'a' + 10;
     }
 
-    assert(ishexad(p[-1]) || p[-1] == '_' || p[-1] == 'x');
+    assert(ishexad(p[-1]) || p[-1] == '_' || p[-1] == 'x' || p[-1] == 'X');
     assert(!ishexad(*p) && *p != '_');
 
     switch (*p)
@@ -1449,7 +1449,7 @@ version(D2)
 
   LscanBinary:
     assert(digits == 0);
-    assert(*p == 'b');
+    assert(*p == 'b' || *p == 'B');
     while (1)
     {
       if (*++p == '0')
@@ -1474,7 +1474,7 @@ version(D2)
     else if (digits > 64)
       error(MID.OverflowBinaryNumber);
 
-    assert(p[-1] == '0' || p[-1] == '1' || p[-1] == '_', p[-1] ~ "");
+    assert(p[-1] == '0' || p[-1] == '1' || p[-1] == '_' || p[-1] == 'b' || p[-1] == 'B', p[-1] ~ "");
     assert( !(*p == '0' || *p == '1' || *p == '_') );
     goto Lfinalize;
 
