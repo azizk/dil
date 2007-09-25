@@ -210,16 +210,6 @@ class Lexer
     {
       t.start = p;
 
-      if (c == 0 || c == _Z_)
-      {
-        assert(*p == 0 || *p == _Z_);
-        t.type = TOK.EOF;
-        t.end = p;
-        tail = &t;
-        assert(t.start == t.end);
-        return;
-      }
-
       if (isidbeg(c))
       {
         if (c == 'r' && p[1] == '"' && ++p)
@@ -250,7 +240,16 @@ class Lexer
         }
         assert(id);
         t.type = id.type;
-        if (t.isSpecialToken)
+        if (t.type == TOK.Identifier)
+          return;
+        if (t.type == TOK.EOF)
+        {
+          t.type = TOK.EOF;
+          t.end = p;
+          tail = &t;
+          assert(t.srcText == "__EOF__");
+        }
+        else if (t.isSpecialToken)
           finalizeSpecialToken(t);
         return;
       }
@@ -655,6 +654,17 @@ class Lexer
       case '#':
         return scanSpecialTokenSequence(t);
       default:
+      }
+
+      // Check for EOF
+      if (c == 0 || c == _Z_)
+      {
+        assert(*p == 0 || *p == _Z_);
+        t.type = TOK.EOF;
+        t.end = p;
+        tail = &t;
+        assert(t.start == t.end);
+        return;
       }
 
       if (c & 128)

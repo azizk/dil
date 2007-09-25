@@ -114,4 +114,5 @@ static const Identifier[] keywords = [
   {TOK.TIMESTAMP, "__TIMESTAMP__"},
   {TOK.VENDOR, "__VENDOR__"},
   {TOK.VERSION, "__VERSION__"},
+  {TOK.EOF, "__EOF__"}, // D2.0
 ];
