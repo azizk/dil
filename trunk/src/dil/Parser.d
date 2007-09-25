@@ -389,6 +389,11 @@ debug writef("\33[34m%s\33[0m", success);
       ident = token;
       nT();
     }
+    else if (token.type == T.LParen)
+    {
+      type = parseType();
+      parseCFunctionPointerType(type, ident);
+    }
     else
     {
       type = parseType();
@@ -3860,17 +3865,47 @@ debug writef("\33[34m%s\33[0m", success);
     return t;
   }
 
+  Type parseCFunctionPointerType(Type type, ref Token* ident)
+  {
+    assert(token.type == T.LParen);
+    auto begin = token;
+    nT(); // Skip (
+    type = parseBasicType2(type);
+    if (token.type == T.LParen)
+    {
+      // Can be nested.
+      type = parseCFunctionPointerType(type, ident);
+    }
+    else if (token.type == T.Identifier)
+    {
+      // The identifier of the function pointer and the declaration.
+      ident = token;
+      nT();
+      type = parseDeclaratorSuffix(type);
+    }
+    require(T.RParen);
+    // Optional parameter list
+    auto params = token.type == T.LParen ? parseParameterList() : null;
+    type = set(new CFuncPointerType(type, params), begin);
+    return type;
+  }
+
   Type parseDeclarator(ref Token* ident, bool identOptional = false)
   {
     auto t = parseType();
 
-    if (token.type == T.Identifier)
+    if (token.type == T.LParen)
+    {
+      t = parseCFunctionPointerType(t, ident);
+    }
+    else if (token.type == T.Identifier)
     {
       ident = token;
       nT();
       t = parseDeclaratorSuffix(t);
     }
-    else if (!identOptional)
+
+    if (ident is null && !identOptional)
       expected(T.Identifier);
 
     return t;

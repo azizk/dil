@@ -196,6 +196,7 @@ enum NodeKind
   ArrayType,
   FunctionType,
   DelegateType,
+  CFuncPointerType,
   ConstType, // D2.0
   InvariantType, // D2.0
 

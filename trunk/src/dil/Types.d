@@ -307,6 +307,7 @@ enum TID
   Function,
   Delegate,
   Pointer,
+  CFuncPointer,
   Array,
   DotList,
   Identifier,
@@ -464,6 +465,18 @@ class DelegateType : Type
     this.children = [cast(Node)returnType, parameters];
     this.returnType = returnType;
     this.parameters = parameters;
+  }
+}
+
+class CFuncPointerType : Type
+{
+  Parameters params;
+  this(Type type, Parameters params)
+  {
+    super(TID.CFuncPointer, type);
+    mixin(set_kind);
+    if (params)
+      this.children ~= params;
   }
 }
 
