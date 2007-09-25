@@ -26,6 +26,20 @@ const dchar PSd = 0x2029;
 
 const uint _Z_ = 26; /// Control+Z
 
+struct Location
+{
+  size_t lineNum;
+  char* filePath;
+
+  static Location opCall(size_t lineNum, typeof(filePath) filePath)
+  {
+    Location l;
+    l.lineNum = lineNum;
+    l.filePath = filePath;
+    return l;
+  }
+}
+
 class Lexer
 {
   Token* head; /// The head of the doubly linked token list.
@@ -49,6 +63,10 @@ class Lexer
 
   Identifier[string] idtable;
 
+  version(token2LocTable)
+    /// Maps every token that starts a new line to a Location.
+    Location[Token*] token2LocTable;
+
   this(string text, string fileName)
   {
     this.fileName = fileName;
@@ -69,6 +87,13 @@ class Lexer
     this.head.type = TOK.HEAD;
     this.token = this.head;
     scanShebang();
+  version(token2LocTable)
+  {
+    // Add first token to table.
+    auto firstToken = this.head;
+    peek(firstToken);
+    token2LocTable[firstToken] = Location(1, null);
+  }
   }
 
   ~this()
@@ -184,13 +209,14 @@ class Lexer
       case '\n':
         ++p;
         ++loc;
+      version(token2LocTable)
+        token2LocTable[&t] = Location(loc, null);
         continue;
       case LS[0]:
         if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
         {
-          p += 3;
-          ++loc;
-          continue;
+          ++p; ++p;
+          goto case '\n';
         }
         // goto default;
       default:
