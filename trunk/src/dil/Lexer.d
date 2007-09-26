@@ -51,7 +51,7 @@ class Lexer
 
   uint loc = 1; /// Actual line of code.
 
-  uint loc_old; /// Store actual line number when #line token is parsed.
+  uint loc_old; /// Store actual line number when #line token is scanned.
   uint loc_hline; /// Line number set by #line.
   private uint inTokenString; // > 0 if inside q{ }
 
@@ -122,16 +122,14 @@ class Lexer
         t.end = ++p;
         switch (*p)
         {
-        case '\n', '\r':
-          break;
-        case 0, _Z_:
+        case '\r', '\n', 0, _Z_:
           break;
         default:
           if (*p & 128)
           {
             auto c = decodeUTF8();
             if (c == LSd || c == PSd)
-              goto case '\n';
+              break;
           }
           continue;
         }
@@ -185,7 +183,7 @@ class Lexer
     }
   }
 
-  public void scan(out Token t)
+  public void scan_(out Token t)
   in
   {
     assert(text.ptr <= p && p < end);
@@ -294,119 +292,31 @@ class Lexer
           t.end = p;
           return;
         case '+':
-          uint level = 1;
-          while (1)
-          {
-            c = *++p;
-          LswitchNC: // only jumped to from default case of next switch(c)
-            switch (c)
-            {
-            case '\r':
-              if (p[1] == '\n')
-                ++p;
-            case '\n':
-              ++loc;
-              continue;
-            case 0, _Z_:
-              error(MID.UnterminatedNestedComment);
-              goto LreturnNC;
-            default:
-            }
-
-            c <<= 8;
-            c |= *++p;
-            switch (c)
-            {
-            case 0x2F2B: // /+
-              ++level;
-              continue;
-            case 0x2B2F: // +/
-              if (--level == 0)
-              {
-                ++p;
-              LreturnNC:
-                t.type = TOK.Comment;
-                t.end = p;
-                return;
-              }
-              continue;
-            case 0xE280: // LS[0..1] || PS[0..1]
-              if (p[1] == LS[2] || p[1] == PS[2])
-              {
-                ++loc;
-                ++p;
-              }
-              continue;
-            default:
-              c &= char.max;
-              goto LswitchNC;
-            }
-          }
+          return scanNestedComment(t);
         case '*':
-          while (1)
-          {
-            c = *++p;
-          LswitchBC: // only jumped to from default case of next switch(c)
-            switch (c)
-            {
-            case '\r':
-              if (p[1] == '\n')
-                ++p;
-            case '\n':
-              ++loc;
-              continue;
-            case 0, _Z_:
-              error(MID.UnterminatedBlockComment);
-              goto LreturnBC;
-            default:
-            }
-
-            c <<= 8;
-            c |= *++p;
-            switch (c)
-            {
-            case 0x2A2F: // */
-              ++p;
-            LreturnBC:
-              t.type = TOK.Comment;
-              t.end = p;
-              return;
-            case 0xE280: // LS[0..1] || PS[0..1]
-              if (p[1] == LS[2] || p[1] == PS[2])
-              {
-                ++loc;
-                ++p;
-              }
-              continue;
-            default:
-              c &= char.max;
-              goto LswitchBC;
-            }
-          }
-          assert(0);
+          return scanBlockComment(t);
         case '/':
           while (1)
           {
             c = *++p;
             switch (c)
             {
-            case '\r':
-              if (p[1] == '\n')
-                ++p;
-            case '\n':
-            case 0, _Z_:
+            case '\r', '\n', 0, _Z_:
               break;
-            case LS[0]:
-              if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
-                break;
-              continue;
             default:
+              if (c & 128)
+              {
+                c = decodeUTF8();
+                if (c == LSd || c == PSd)
+                  break;
+              }
               continue;
             }
-            t.type = TOK.Comment;
-            t.end = p;
-            return;
+            break; // Exit loop.
           }
+          t.type = TOK.Comment;
+          t.end = p;
+          return;
         default:
           t.type = TOK.Div;
           t.end = p;
@@ -707,6 +617,568 @@ class Lexer
       t.dchar_ = c;
       t.end = p;
       return;
+    }
+  }
+
+  template toUint(char[] T)
+  {
+    static assert(0 < T.length && T.length <= 4);
+    static if (T.length == 1)
+      const uint toUint = T[0];
+    else
+      const uint toUint = (T[0] << ((T.length-1)*8)) | toUint!(T[1..$]);
+  }
+  static assert(toUint!("\xAA\xBB\xCC\xDD") == 0xAABBCCDD);
+
+  // Can't use this yet due to a bug in DMD (bug id=1534).
+  template case_(char[] str, TOK tok, char[] label)
+  {
+    const char[] case_ =
+      `case `~toUint!(str).stringof~`:
+
+         goto `~label~`;`;
+  }
+
+  template case_L4(char[] str, TOK tok)
+  {
+    const char[] case_L4 = case_!(str, tok, "Lcommon_4");
+  }
+
+  template case_L3(char[] str, TOK tok)
+  {
+    const char[] case_L3 = case_!(str, tok, "Lcommon_3");
+  }
+
+  template case_L2(char[] str, TOK tok)
+  {
+    const char[] case_L2 = case_!(str, tok, "Lcommon_2");
+  }
+
+  template case_L1(char[] str, TOK tok)
+  {
+    const char[] case_L3 = case_!(str, tok, "Lcommon");
+  }
+
+  public void scan(out Token t)
+  in
+  {
+    assert(text.ptr <= p && p < end);
+  }
+  out
+  {
+    assert(text.ptr <= t.start && t.start < end, Token.toString(t.type));
+    assert(text.ptr <= t.end && t.end <= end, Token.toString(t.type));
+  }
+  body
+  {
+    // Scan whitespace.
+    auto pws = p;
+    while (1)
+    {
+      switch (*p)
+      {
+      case '\r':
+        if (p[1] == '\n')
+          ++p;
+      case '\n':
+        ++p;
+        ++loc;
+      version(token2LocTable)
+        token2LocTable[&t] = Location(loc, null);
+        continue;
+      case LS[0]:
+        if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+        {
+          ++p; ++p;
+          goto case '\n';
+        }
+        // goto default;
+      default:
+        if (!isspace(*p))
+          break;
+        ++p;
+        continue;
+      }
+      break; // Exit loop.
+    }
+
+    if (p != pws)
+      t.ws = pws;
+
+    // Scan token.
+    t.start = p;
+
+    uint c = *p;
+    assert(end - p != 0);
+    switch (end - p)
+    {
+    case 1:
+      goto L1character;
+    case 2:
+      c <<= 8; c |= p[1];
+      goto L2characters;
+    case 3:
+      c <<= 8; c |= p[1]; c <<= 8; c |= p[2];
+      goto L3characters;
+    default:
+      version(BigEndian)
+        c = *cast(uint*)p;
+      else
+      {
+        c <<= 8; c |= p[1]; c <<= 8; c |= p[2]; c <<= 8; c |= p[3];
+      }
+    }
+
+    // 4 character tokens.
+    switch (c)
+    {
+    case toUint!(">>>="):
+      t.type = TOK.RShiftAssign;
+      goto Lcommon_4;
+    case toUint!("!<>="):
+      t.type = TOK.Unordered;
+    Lcommon_4:
+      p += 4;
+      t.end = p;
+      return;
+    default:
+    }
+
+    c >>>= 8;
+  L3characters:
+    assert(p == t.start);
+    // 3 character tokens.
+    switch (c)
+    {
+    case toUint!(">>="):
+      t.type = TOK.RShiftAssign;
+      goto Lcommon_3;
+    case toUint!(">>>"):
+      t.type = TOK.URShift;
+      goto Lcommon_3;
+    case toUint!("<>="):
+      t.type = TOK.LorEorG;
+      goto Lcommon_3;
+    case toUint!("<<="):
+      t.type = TOK.LShiftAssign;
+      goto Lcommon_3;
+    case toUint!("!<="):
+      t.type = TOK.UorG;
+      goto Lcommon_3;
+    case toUint!("!>="):
+      t.type = TOK.UorL;
+      goto Lcommon_3;
+    case toUint!("!<>"):
+      t.type = TOK.UorE;
+      goto Lcommon_3;
+    case toUint!("..."):
+      t.type = TOK.Ellipses;
+    Lcommon_3:
+      p += 3;
+      t.end = p;
+      return;
+    default:
+    }
+
+    c >>>= 8;
+  L2characters:
+    assert(p == t.start);
+    // 2 character tokens.
+    switch (c)
+    {
+    case toUint!("/+"):
+      ++p; // Skip /
+      return scanNestedComment(t);
+    case toUint!("/*"):
+      ++p; // Skip /
+      return scanBlockComment(t);
+    case toUint!("//"):
+      ++p; // Skip /
+      assert(*p == '/');
+      while (1)
+      {
+        c = *++p;
+        switch (c)
+        {
+        case '\r', '\n', 0, _Z_:
+          break;
+        default:
+          if (c & 128)
+          {
+            c = decodeUTF8();
+            if (c == LSd || c == PSd)
+              break;
+          }
+          continue;
+        }
+        break; // Exit loop.
+      }
+      t.type = TOK.Comment;
+      t.end = p;
+      return;
+    case toUint!(">="):
+      t.type = TOK.GreaterEqual;
+      goto Lcommon_2;
+    case toUint!(">>"):
+      t.type = TOK.RShift;
+      goto Lcommon_2;
+    case toUint!("<<"):
+      t.type = TOK.LShift;
+      goto Lcommon_2;
+    case toUint!("<="):
+      t.type = TOK.LessEqual;
+      goto Lcommon_2;
+    case toUint!("<>"):
+      t.type = TOK.LorG;
+      goto Lcommon_2;
+    case toUint!("!<"):
+      t.type = TOK.UorGorE;
+      goto Lcommon_2;
+    case toUint!("!>"):
+      t.type = TOK.UorLorE;
+      goto Lcommon_2;
+    case toUint!("!="):
+      t.type = TOK.NotEqual;
+      goto Lcommon_2;
+    case toUint!(".."):
+      t.type = TOK.Slice;
+      goto Lcommon_2;
+    case toUint!("&&"):
+      t.type = TOK.AndLogical;
+      goto Lcommon_2;
+    case toUint!("&="):
+      t.type = TOK.AndAssign;
+      goto Lcommon_2;
+    case toUint!("||"):
+      t.type = TOK.OrLogical;
+      goto Lcommon_2;
+    case toUint!("|="):
+      t.type = TOK.OrAssign;
+      goto Lcommon_2;
+    case toUint!("++"):
+      t.type = TOK.PlusPlus;
+      goto Lcommon_2;
+    case toUint!("+="):
+      t.type = TOK.PlusAssign;
+      goto Lcommon_2;
+    case toUint!("--"):
+      t.type = TOK.MinusMinus;
+      goto Lcommon_2;
+    case toUint!("-="):
+      t.type = TOK.MinusAssign;
+      goto Lcommon_2;
+    case toUint!("=="):
+      t.type = TOK.Equal;
+      goto Lcommon_2;
+    case toUint!("~="):
+      t.type = TOK.CatAssign;
+      goto Lcommon_2;
+    case toUint!("*="):
+      t.type = TOK.MulAssign;
+      goto Lcommon_2;
+    case toUint!("/="):
+      t.type = TOK.DivAssign;
+      goto Lcommon_2;
+    case toUint!("^="):
+      t.type = TOK.XorAssign;
+      goto Lcommon_2;
+    case toUint!("%="):
+      t.type = TOK.ModAssign;
+    Lcommon_2:
+      p += 2;
+      t.end = p;
+      return;
+    default:
+    }
+
+    c >>>= 8;
+  L1character:
+    assert(p == t.start);
+    assert(*p == c, Format("p={0},c={1}", *p, cast(dchar)c));
+    // 1 character tokens.
+    switch (c)
+    {
+    case '\'':
+      return scanCharacterLiteral(t);
+    case '`':
+      return scanRawStringLiteral(t);
+    case '"':
+      return scanNormalStringLiteral(t);
+    case '\\':
+      char[] buffer;
+      do
+      {
+        c = scanEscapeSequence();
+        if (c < 128)
+          buffer ~= c;
+        else
+          encodeUTF8(buffer, c);
+      } while (*p == '\\')
+      buffer ~= 0;
+      t.type = TOK.String;
+      t.str = buffer;
+      t.end = p;
+      return;
+    case '<':
+      t.type = TOK.Greater;
+      goto Lcommon;
+    case '>':
+      t.type = TOK.Less;
+      goto Lcommon;
+    case '^':
+      t.type = TOK.Xor;
+      goto Lcommon;
+    case '!':
+      t.type = TOK.Not;
+      goto Lcommon;
+    case '.':
+      if (isdigit(p[1]))
+        return scanReal(t);
+      t.type = TOK.Dot;
+      goto Lcommon;
+    case '&':
+      t.type = TOK.AndBinary;
+      goto Lcommon;
+    case '|':
+      t.type = TOK.OrBinary;
+      goto Lcommon;
+    case '+':
+      t.type = TOK.Plus;
+      goto Lcommon;
+    case '-':
+      t.type = TOK.Minus;
+      goto Lcommon;
+    case '=':
+      t.type = TOK.Assign;
+      goto Lcommon;
+    case '~':
+      t.type = TOK.Tilde;
+      goto Lcommon;
+    case '*':
+      t.type = TOK.Mul;
+      goto Lcommon;
+    case '/':
+      t.type = TOK.Div;
+      goto Lcommon;
+    case '%':
+      t.type = TOK.Mod;
+      goto Lcommon;
+    case '(':
+      t.type = TOK.LParen;
+      goto Lcommon;
+    case ')':
+      t.type = TOK.RParen;
+      goto Lcommon;
+    case '[':
+      t.type = TOK.LBracket;
+      goto Lcommon;
+    case ']':
+      t.type = TOK.RBracket;
+      goto Lcommon;
+    case '{':
+      t.type = TOK.LBrace;
+      goto Lcommon;
+    case '}':
+      t.type = TOK.RBrace;
+      goto Lcommon;
+    case ':':
+      t.type = TOK.Colon;
+      goto Lcommon;
+    case ';':
+      t.type = TOK.Semicolon;
+      goto Lcommon;
+    case '?':
+      t.type = TOK.Question;
+      goto Lcommon;
+    case ',':
+      t.type = TOK.Comma;
+      goto Lcommon;
+    case '$':
+      t.type = TOK.Dollar;
+    Lcommon:
+      ++p;
+      t.end = p;
+      return;
+    case '#':
+      return scanSpecialTokenSequence(t);
+    default:
+    }
+
+    assert(p == t.start);
+    assert(*p == c);
+
+    // TODO: consider moving isidbeg() and isdigit() up.
+    if (isidbeg(c))
+    {
+      if (c == 'r' && p[1] == '"' && ++p)
+        return scanRawStringLiteral(t);
+      if (c == 'x' && p[1] == '"')
+        return scanHexStringLiteral(t);
+    version(D2)
+    {
+      if (c == 'q' && p[1] == '"')
+        return scanDelimitedStringLiteral(t);
+      if (c == 'q' && p[1] == '{')
+        return scanTokenStringLiteral(t);
+    }
+    Lidentifier:
+      do
+      { c = *++p; }
+      while (isident(c) || c & 128 && isUniAlpha(decodeUTF8()))
+
+      t.end = p;
+
+      string str = t.srcText;
+      Identifier* id = str in idtable;
+
+      if (!id)
+      {
+        idtable[str] = Identifier(TOK.Identifier, str);
+        id = str in idtable;
+      }
+      assert(id);
+      t.type = id.type;
+      if (t.type == TOK.Identifier)
+        return;
+      if (t.type == TOK.EOF)
+      {
+        t.type = TOK.EOF;
+        t.end = p;
+        tail = &t;
+        assert(t.srcText == "__EOF__");
+      }
+      else if (t.isSpecialToken)
+        finalizeSpecialToken(t);
+      return;
+    }
+
+    if (isdigit(c))
+      return scanNumber(t);
+
+    // Check for EOF
+    if (c == 0 || c == _Z_)
+    {
+      assert(*p == 0 || *p == _Z_, *p~"");
+      t.type = TOK.EOF;
+      t.end = p;
+      tail = &t;
+      assert(t.start == t.end);
+      return;
+    }
+
+    if (c & 128)
+    {
+      c = decodeUTF8();
+      if (isUniAlpha(c))
+        goto Lidentifier;
+    }
+
+    error(MID.IllegalCharacter, cast(dchar)c);
+
+    ++p;
+    t.type = TOK.Illegal;
+    t.dchar_ = c;
+    t.end = p;
+    return;
+  }
+
+  void scanBlockComment(ref Token t)
+  {
+    assert(p[-1] == '/' && *p == '*');
+    uint c;
+    while (1)
+    {
+      c = *++p;
+    LswitchBC: // only jumped to from default case of next switch(c)
+      switch (c)
+      {
+      case '\r':
+        if (p[1] == '\n')
+          ++p;
+      case '\n':
+        ++loc;
+        continue;
+      case 0, _Z_:
+        error(MID.UnterminatedBlockComment);
+        goto LreturnBC;
+      default:
+        if (c & 128)
+        {
+          c = decodeUTF8();
+          if (c == LSd || c == PSd)
+            goto case '\n';
+          continue;
+        }
+      }
+
+      c <<= 8;
+      c |= *++p;
+      switch (c)
+      {
+      case toUint!("*/"):
+        ++p;
+      LreturnBC:
+        t.type = TOK.Comment;
+        t.end = p;
+        return;
+      default:
+        c &= char.max;
+        goto LswitchBC;
+      }
+    }
+  }
+
+  void scanNestedComment(ref Token t)
+  {
+    assert(p[-1] == '/' && *p == '+');
+    uint level = 1;
+    uint c;
+    while (1)
+    {
+      c = *++p;
+    LswitchNC: // only jumped to from default case of next switch(c)
+      switch (c)
+      {
+      case '\r':
+        if (p[1] == '\n')
+          ++p;
+      case '\n':
+        ++loc;
+        continue;
+      case 0, _Z_:
+        error(MID.UnterminatedNestedComment);
+        goto LreturnNC;
+      default:
+        if (c & 128)
+        {
+          c = decodeUTF8();
+          if (c == LSd || c == PSd)
+            goto case '\n';
+          continue;
+        }
+      }
+
+      c <<= 8;
+      c |= *++p;
+      switch (c)
+      {
+      case toUint!("/+"):
+        ++level;
+        continue;
+      case toUint!("+/"):
+        if (--level == 0)
+        {
+          ++p;
+        LreturnNC:
+          t.type = TOK.Comment;
+          t.end = p;
+          return;
+        }
+        continue;
+      default:
+        c &= char.max;
+        goto LswitchNC;
+      }
     }
   }
 
@@ -2104,19 +2576,56 @@ version(D2)
 unittest
 {
   Stdout("Testing Lexer.\n");
-  string[] toks = [
-    ">",    ">=", ">>",  ">>=", ">>>", ">>>=", "<",   "<=",  "<>",
-    "<>=",  "<<", "<<=", "!",   "!<",  "!>",   "!<=", "!>=", "!<>",
-    "!<>=", ".",  "..",  "...", "&",   "&&",   "&=",  "+",   "++",
-    "+=",   "-",  "--",  "-=",  "=",   "==",   "~",   "~=",  "*",
-    "*=",   "/",  "/=",  "^",   "^=",  "%",    "%=",  "(",   ")",
-    "[",    "]",  "{",   "}",   ":",   ";",    "?",   ",",   "$"
+  struct Pair
+  {
+    char[] token;
+    TOK type;
+  }
+  static Pair[] pairs = [
+    {"//çay\n", TOK.Comment},       {"&",       TOK.AndBinary},
+    {"/*çağ*/", TOK.Comment},       {"&&",      TOK.AndLogical},
+    {"/+çak+/", TOK.Comment},       {"&=",      TOK.AndAssign},
+    {">",       TOK.Greater},       {"+",       TOK.Plus},
+    {">=",      TOK.GreaterEqual},  {"++",      TOK.PlusPlus},
+    {">>",      TOK.RShift},        {"+=",      TOK.PlusAssign},
+    {">>=",     TOK.RShiftAssign},  {"-",       TOK.Minus},
+    {">>>",     TOK.URShift},       {"--",      TOK.MinusMinus},
+    {">>>=",    TOK.URShiftAssign}, {"-=",      TOK.MinusAssign},
+    {"<",       TOK.Less},          {"=",       TOK.Assign},
+    {"<=",      TOK.LessEqual},     {"==",      TOK.Equal},
+    {"<>",      TOK.LorG},          {"~",       TOK.Tilde},
+    {"<>=",     TOK.LorEorG},       {"~=",      TOK.CatAssign},
+    {"<<",      TOK.LShift},        {"*",       TOK.Mul},
+    {"<<=",     TOK.LShiftAssign},  {"*=",      TOK.MulAssign},
+    {"!",       TOK.Not},           {"/",       TOK.Div},
+    {"!=",      TOK.NotEqual},      {"/=",      TOK.DivAssign},
+    {"!<",      TOK.UorGorE},       {"^",       TOK.Xor},
+    {"!>",      TOK.UorLorE},       {"^=",      TOK.XorAssign},
+    {"!<=",     TOK.UorG},          {"%",       TOK.Mod},
+    {"!>=",     TOK.UorL},          {"%=",      TOK.ModAssign},
+    {"!<>",     TOK.UorE},          {"(",       TOK.LParen},
+    {"!<>=",    TOK.Unordered},     {")",       TOK.RParen},
+    {".",       TOK.Dot},           {"[",       TOK.LBracket},
+    {"..",      TOK.Slice},         {"]",       TOK.RBracket},
+    {"...",     TOK.Ellipses},      {"{",       TOK.LBrace},
+    {"|",       TOK.OrBinary},      {"}",       TOK.RBrace},
+    {"||",      TOK.OrLogical},     {":",       TOK.Colon},
+    {"|=",      TOK.OrAssign},      {";",       TOK.Semicolon},
+    {"?",       TOK.Question},      {",",       TOK.Comma},
+    {"$",       TOK.Dollar},        {"cam",     TOK.Identifier},
+    {"çay",     TOK.Identifier},    {".0",      TOK.Float64},
+    {"0",       TOK.Int32},
   ];
 
   char[] src;
 
-  foreach (op; toks)
-    src ~= op ~ " ";
+  foreach (pair; pairs)
+    src ~= pair.token ~ " ";
+
+  assert(pairs[0].token == "//çay\n");
+  // Remove \n after src has been constructed.
+  // It won't be part of the scanned token string.
+  pairs[0].token = "//çay";
 
   auto lx = new Lexer(src, "");
   auto token = lx.getTokens();
@@ -2126,8 +2635,8 @@ unittest
   token = token.next;
   do
   {
-    assert(i < toks.length);
-    assert(token.srcText == toks[i], Format("Scanned '{0}' but expected '{1}'", token.srcText, toks[i]));
+    assert(i < pairs.length);
+    assert(token.srcText == pairs[i].token, Format("Scanned '{0}' but expected '{1}'", token.srcText, pairs[i].token));
     ++i;
     token = token.next;
   } while (token.type != TOK.EOF)
