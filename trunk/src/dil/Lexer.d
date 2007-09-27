@@ -1807,6 +1807,15 @@ version(D2)
         else
           error(MID.InvalidBeginHTMLEntity);
       }
+      else if (*p == '\n' || *p == '\r' ||
+               *p == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+      {
+        error(MID.UndefinedEscapeSequence, r"\NewLine");
+      }
+      else if (*p == 0 || *p == _Z_)
+      {
+        error(MID.UndefinedEscapeSequence, r"\EOF");
+      }
       else
       {
         dchar d = *p;
