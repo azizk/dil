@@ -99,12 +99,12 @@ class Lexer
   ~this()
   {
     auto token = head.next;
-    do
+    while (token !is null)
     {
       assert(token.type == TOK.EOF ? token == tail && token.next is null : 1);
       delete token.prev;
       token = token.next;
-    } while (token !is null)
+    }
     delete tail;
   }
 
@@ -124,13 +124,12 @@ class Lexer
         {
         case '\r', '\n', 0, _Z_:
           break;
+        case LS[0]:
+          if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+            break;
         default:
           if (*p & 128)
-          {
-            auto c = decodeUTF8();
-            if (c == LSd || c == PSd)
-              break;
-          }
+            decodeUTF8();
           continue;
         }
         break; // Exit loop.
@@ -197,6 +196,7 @@ class Lexer
   {
     // Scan whitespace.
     auto pws = p;
+    auto old_loc = this.loc;
     while (1)
     {
       switch (*p)
@@ -207,8 +207,6 @@ class Lexer
       case '\n':
         ++p;
         ++loc;
-      version(token2LocTable)
-        token2LocTable[&t] = Location(loc, null);
         continue;
       case LS[0]:
         if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
@@ -227,7 +225,12 @@ class Lexer
     }
 
     if (p != pws)
+    {
       t.ws = pws;
+      if (old_loc != this.loc)
+        version(token2LocTable)
+          token2LocTable[&t] = Location(loc, null);
+    }
 
     // Scan token.
     uint c = *p;
@@ -673,6 +676,7 @@ class Lexer
   {
     // Scan whitespace.
     auto pws = p;
+    auto old_loc = this.loc;
     while (1)
     {
       switch (*p)
@@ -683,8 +687,6 @@ class Lexer
       case '\n':
         ++p;
         ++loc;
-      version(token2LocTable)
-        token2LocTable[&t] = Location(loc, null);
         continue;
       case LS[0]:
         if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
@@ -703,7 +705,12 @@ class Lexer
     }
 
     if (p != pws)
+    {
       t.ws = pws;
+      if (old_loc != this.loc)
+        version(token2LocTable)
+          token2LocTable[&t] = Location(loc, null);
+    }
 
     // Scan token.
     t.start = p;
