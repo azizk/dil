@@ -19,13 +19,14 @@ enum TOK : ushort
 
   /// Flag for whitespace tokens that must be ignored in the parsing phase.
   Whitespace = 0x8000,
-  Illegal = 1 | Whitespace,
-  Comment = 2 | Whitespace,
-  Shebang = 3 | Whitespace,
+  Illegal  = 1 | Whitespace,
+  Comment  = 2 | Whitespace,
+  Shebang  = 3 | Whitespace,
   HashLine = 4 | Whitespace,
   Filespec = 5 | Whitespace,
+  Empty    = 6,
 
-  Identifier = 6,
+  Identifier = 7,
   String,
   CharLiteral, WCharLiteral, DCharLiteral,
 
@@ -287,6 +288,7 @@ const string[] tokToString = [
   "#! /shebang/",
   "#line",
   `"filespec"`,
+  "Empty",
 
   "Identifier",
   "String",

@@ -2966,7 +2966,12 @@ debug writef("\33[34m%s\33[0m", success);
     default:
       error(MID.ExpectedButFound, "Expression", token.srcText);
       e = new EmptyExpression();
-      break;
+      if (!trying)
+      {
+        // Insert a dummy token and don't consume current one.
+        begin = lx.insertEmptyTokenBefore(token);
+        prevToken = begin;
+      }
     }
     set(e, begin);
     return e;
@@ -3633,6 +3638,12 @@ debug writef("\33[34m%s\33[0m", success);
 
       error(MID.ExpectedButFound, "Expression", token.srcText);
       e = new EmptyExpression();
+      if (!trying)
+      {
+        // Insert a dummy token and don't consume current one.
+        begin = lx.insertEmptyTokenBefore(token);
+        prevToken = begin;
+      }
     }
     set(e, begin);
     return e;

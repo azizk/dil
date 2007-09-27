@@ -726,6 +726,15 @@ class Lexer
       else
       {
         c <<= 8; c |= p[1]; c <<= 8; c |= p[2]; c <<= 8; c |= p[3];
+        /+
+        c = *cast(uint*)p;
+        asm
+        {
+          mov EDX, c;
+          bswap EDX;
+          mov c, EDX;
+        }
+        +/
       }
     }
 
@@ -896,6 +905,7 @@ class Lexer
     assert(p == t.start);
     assert(*p == c, Format("p={0},c={1}", *p, cast(dchar)c));
     // 1 character tokens.
+    // TODO: consider storing the token type in ptable.
     switch (c)
     {
     case '\'':
@@ -2385,7 +2395,7 @@ version(D2)
     {
       error(MID.InvalidUTF8Sequence);
       // Skip to next valid utf-8 sequence
-      while (p < end && UTF8stride[*++p] != 0xFF) {}
+      while (++p < end && UTF8stride[*p] == 0xFF) {}
       --p;
       assert(p < end);
     }
@@ -2432,6 +2442,28 @@ version(D2)
     return State(this);
   }
 +/
+  /+
+    Insert an empty dummy token before t.
+    Useful in the parsing phase for representing a node in the AST
+    that doesn't consume an actual token from the source text.
+  +/
+  Token* insertEmptyTokenBefore(Token* t)
+  {
+    assert(t !is null && t.prev !is null);
+    assert(text.ptr <= t.start && t.start < end, Token.toString(t.type));
+    assert(text.ptr <= t.end && t.end <= end, Token.toString(t.type));
+
+    auto prev_t = t.prev;
+    auto new_t = new Token;
+    new_t.type = TOK.Empty;
+    new_t.start = new_t.end = prev_t.end;
+    // Link in new token.
+    prev_t.next = new_t;
+    new_t.prev = prev_t;
+    new_t.next = t;
+    t.prev = new_t;
+    return new_t;
+  }
 
   private void scanNext(ref Token* t)
   {
