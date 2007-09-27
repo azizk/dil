@@ -389,32 +389,34 @@ debug writef("\33[34m%s\33[0m", success);
       ident = token;
       nT();
     }
-    else if (token.type == T.LParen)
-    {
-      type = parseType();
-      parseCFunctionPointerType(type, ident);
-    }
     else
     {
       type = parseType();
-      ident = requireId();
-      // Type FunctionName ( ParameterList ) FunctionBody
       if (token.type == T.LParen)
       {
-        // It's a function declaration
-        TemplateParameters tparams;
-        if (tokenAfterParenIs(T.LParen))
-        {
-          // ( TemplateParameterList ) ( ParameterList )
-          tparams = parseTemplateParameterList();
-        }
-
-        auto params = parseParameterList();
-        // ReturnType FunctionName ( ParameterList )
-        auto funcBody = parseFunctionBody();
-        return new FunctionDeclaration(type, ident, tparams, params, funcBody);
+        parseCFunctionPointerType(type, ident);
       }
-      type = parseDeclaratorSuffix(type);
+      else
+      {
+        ident = requireId();
+        // Type FunctionName ( ParameterList ) FunctionBody
+        if (token.type == T.LParen)
+        {
+          // It's a function declaration
+          TemplateParameters tparams;
+          if (tokenAfterParenIs(T.LParen))
+          {
+            // ( TemplateParameterList ) ( ParameterList )
+            tparams = parseTemplateParameterList();
+          }
+
+          auto params = parseParameterList();
+          // ReturnType FunctionName ( ParameterList )
+          auto funcBody = parseFunctionBody();
+          return new FunctionDeclaration(type, ident, tparams, params, funcBody);
+        }
+        type = parseDeclaratorSuffix(type);
+      }
     }
 
     // It's a variable declaration.
