@@ -988,7 +988,7 @@ class AsmLocalSizeExpression : Expression
 class AsmRegisterExpression : Expression
 {
   Token* register;
-  Token* number; // ST(0) - ST(7)
+  Token* number; // ST(0) - ST(7) or FS:0, FS:4, FS:8
   this(Token* register, Token* number = null)
   {
     mixin(set_kind);

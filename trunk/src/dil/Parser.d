@@ -2929,6 +2929,27 @@ debug writef("\33[34m%s\33[0m", success);
         }
         e = new AsmRegisterExpression(register, number);
         break;
+      case "FS":
+        auto register = token;
+        nT();
+        // TODO: is the colon-number part optional?
+        Token* number;
+        if (token.type == T.Colon)
+        {
+          // :0, :4, :8
+          nT();
+          switch (token.srcText)
+          {
+          case "0", "4", "8":
+            number = token;
+            nT();
+            break;
+          default:
+            error(MID.ExpectedButFound, "0, 4 or 8", token.srcText);
+          }
+        }
+        e = new AsmRegisterExpression(register, number);
+        break;
       case "AL", "AH", "AX", "EAX",
            "BL", "BH", "BX", "EBX",
            "CL", "CH", "CX", "ECX",
@@ -2937,7 +2958,7 @@ debug writef("\33[34m%s\33[0m", success);
            "SP", "ESP",
            "DI", "EDI",
            "SI", "ESI",
-           "ES", "CS", "SS", "DS", "GS", "FS",
+           "ES", "CS", "SS", "DS", "GS",
            "CR0", "CR2", "CR3", "CR4",
            "DR0", "DR1", "DR2", "DR3", "DR6", "DR7",
            "TR3", "TR4", "TR5", "TR6", "TR7",
