@@ -26,17 +26,50 @@ const dchar PSd = 0x2029;
 
 const uint _Z_ = 26; /// Control+Z
 
-struct Location
+final class Location
 {
   size_t lineNum;
   char* filePath;
+  char* from, to; // Used to calculate column.
 
-  static Location opCall(size_t lineNum, typeof(filePath) filePath)
+  this(size_t lineNum, char* filePath)
   {
-    Location l;
-    l.lineNum = lineNum;
-    l.filePath = filePath;
-    return l;
+    this(lineNum, filePath, null, null);
+  }
+
+  this(size_t lineNum, char* filePath, char* from, char* to)
+  {
+    assert(from <= to);
+    this.lineNum  = lineNum;
+    this.filePath = filePath;
+    this.from     = from;
+    this.to       = to;
+  }
+
+  uint getColumn()
+  {
+    uint col = 1;
+    auto p = from;
+    for (; p <= to; ++p)
+    {
+      assert(*p != '\n' && *p != '\r');
+      if (*p & 128)
+      {
+        size_t idx;
+        dchar d;
+        try
+        {
+          d = std.utf.decode(p[0 .. to-p], idx);
+          assert(d != LSd && d != PSd);
+          p += idx -1;
+        }
+        catch (UtfException e)
+        { }
+      }
+
+      ++col;
+    }
+    return col;
   }
 }
 
@@ -93,7 +126,7 @@ class Lexer
     // Add first token to table.
     auto firstToken = this.head;
     peek(firstToken);
-    token2LocTable[firstToken] = Location(1, null);
+    token2LocTable[firstToken] = new Location(1, null);
   }
   }
 
@@ -248,7 +281,7 @@ class Lexer
       t.ws = pws;
       if (old_loc != this.loc)
         version(token2LocTable)
-          token2LocTable[&t] = Location(loc, null);
+          token2LocTable[&t] = new Location(loc, null);
     }
 
     // Scan token.
@@ -729,7 +762,7 @@ class Lexer
       t.ws = pws;
       if (old_loc != this.loc)
         version(token2LocTable)
-          token2LocTable[&t] = Location(loc, null);
+          token2LocTable[&t] = new Location(loc, null);
     }
 
     // Scan token.
