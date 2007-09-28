@@ -49,6 +49,7 @@ class Lexer
   char* p; /// Points to the current character in the source text.
   char* end; /// Points one character past the end of the source text.
 
+  char* p_newl;
   uint loc = 1; /// Actual line of code.
 
   uint loc_old; /// Store actual line number when #line token is scanned.
@@ -182,6 +183,22 @@ class Lexer
     }
   }
 
+  void set_p_newl(char* p)
+  {
+    assert(delegate()
+      {
+        if (!((p-1) >= text.ptr && p < end))
+          return false;
+        // Check that previous character is a newline.
+        if (p[-1] != '\n' &&  p[-1] != '\r' &&
+            p[-1] != LS[2] && p[-1] != PS[2])
+          return false;
+        return true;
+      }() == true
+    );
+    this.p_newl = p;
+  }
+
   public void scan_(out Token t)
   in
   {
@@ -205,8 +222,10 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
+        assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         ++p;
         ++loc;
+        set_p_newl(p);
         continue;
       case LS[0]:
         if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
@@ -306,13 +325,12 @@ class Lexer
             {
             case '\r', '\n', 0, _Z_:
               break;
+            case LS[0]:
+              if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+                break;
             default:
               if (c & 128)
-              {
-                c = decodeUTF8();
-                if (c == LSd || c == PSd)
-                  break;
-              }
+                decodeUTF8();
               continue;
             }
             break; // Exit loop.
@@ -685,8 +703,10 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
+        assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         ++p;
         ++loc;
+        set_p_newl(p);
         continue;
       case LS[0]:
         if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
@@ -818,13 +838,12 @@ class Lexer
         {
         case '\r', '\n', 0, _Z_:
           break;
+        case LS[0]:
+          if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+            break;
         default:
           if (c & 128)
-          {
-            c = decodeUTF8();
-            if (c == LSd || c == PSd)
-              break;
-          }
+            decodeUTF8();
           continue;
         }
         break; // Exit loop.
@@ -1113,7 +1132,9 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
+        assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         ++loc;
+        set_p_newl(p+1);
         continue;
       case 0, _Z_:
         error(MID.UnterminatedBlockComment);
@@ -1160,7 +1181,9 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
+        assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         ++loc;
+        set_p_newl(p+1);
         continue;
       case 0, _Z_:
         error(MID.UnterminatedNestedComment);
@@ -1230,8 +1253,10 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
+        assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         ++loc;
         c = '\n'; // Convert EndOfLine to \n.
+        set_p_newl(p+1);
         break;
       case 0, _Z_:
         error(MID.UnterminatedString);
@@ -1239,15 +1264,10 @@ class Lexer
       default:
         if (c & 128)
         {
-//           char* begin = p;
           c = decodeUTF8();
           if (c == LSd || c == PSd)
             goto case '\n';
 
-          // We don't copy per pointer because we might include
-          // invalid, skipped utf-8 sequences. See decodeUTF8().
-//           ++p;
-//           buffer ~= begin[0 .. p - begin];
           encodeUTF8(buffer, c);
           continue;
         }
@@ -1280,15 +1300,18 @@ class Lexer
     case '\'':
       ++p;
       id = MID.EmptyCharacterLiteral;
+    // fall through
     case '\n', '\r', 0, _Z_:
       goto Lerr;
+    case LS[0]:
+      if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+        goto Lerr;
+    // fall through
     default:
       uint c = *p;
       if (c & 128)
       {
         c = decodeUTF8();
-        if (c == LSd || c == PSd)
-          goto Lerr;
         if (c <= 0xFFFF)
           type = TOK.WCharLiteral;
         else
@@ -1337,8 +1360,10 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
+        assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         c = '\n'; // Convert EndOfLine ('\r','\r\n','\n',LS,PS) to '\n'
         ++loc;
+        set_p_newl(p+1);
         break;
       case '`':
       case '"':
@@ -1403,7 +1428,9 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
+        assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         ++loc;
+        set_p_newl(p+1);
         continue;
       default:
         if (ishexad(c))
@@ -1427,17 +1454,12 @@ class Lexer
           continue;
         }
         else if (isspace(c))
-          continue;
-
-        if (c & 128)
+          continue; // Skip spaces.
+        else if (c & 128)
         {
           c = decodeUTF8();
           if (c == LSd || c == PSd)
-          {
-            ++p; ++p;
-            ++loc;
-            continue;
-          }
+            goto case '\n';
         }
         else if (c == 0 || c == _Z_)
         {
@@ -1487,15 +1509,16 @@ version(D2)
           if (p[1] == '\n')
             ++p;
         case '\n':
+          assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
           ++p;
           ++loc;
+          set_p_newl(p);
           return '\n';
         case LS[0]:
           if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
           {
-            ++p; ++p; ++p;
-            ++loc;
-            return '\n';
+            ++p; ++p;
+            goto case '\n';
           }
         default:
         }
@@ -1504,8 +1527,8 @@ version(D2)
 
       // Skip leading newlines:
       while (scanNewline() != 0){}
-      assert(*p != '\n' && *p != '\r');
-      assert(!(*p == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])));
+      assert(*p != '\n' && *p != '\r' &&
+             !(*p == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])));
 
       char* begin = p;
       c = *p;
@@ -1554,8 +1577,10 @@ version(D2)
         if (p[1] == '\n')
           ++p;
       case '\n':
+        assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         c = '\n'; // Convert EndOfLine ('\r','\r\n','\n',LS,PS) to '\n'
         ++loc;
+        set_p_newl(p+1);
         break;
       case 0, _Z_:
         // TODO: error(MID.UnterminatedDelimitedString);
