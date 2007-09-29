@@ -1,5 +1,5 @@
 =Purpose=
-dil is a hand-crafted compiler implementation for the D programming language. Currently the lexer and the parser are fully implemented (except for very minor things.) No semantic analysis is done at the moment. The backend will most probably be gcc.
+dil is a hand-crafted compiler implementation for the D programming language written in D 1.0. The lexer and the parser are fully implemented, but no semantic analysis is done at the moment. The backend will most probably be gcc or [http://llvm.org LLVM].
 
 What dil can do at the moment:
   * dil is fully internationalized and can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in config.d.
@@ -16,6 +16,7 @@ What dil can do at the moment:
     * Traits expressions: `__`traits(Identifier) and `__`traits(Identifier, !TemplateArguments).
     * const/invariant/final/scope/static as storage classes in parameter lists (e.g. void func(final scope Foo f);).
     * invariant as storage class for declarations (e.g. invariant Foo f;).
+    * The identifier `__EOF__` is interpreted as the end of file.
 
 Features you will or might see in dil:
   * Documentation generation ala doxygen (keeping ddoc in mind.)
