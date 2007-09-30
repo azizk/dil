@@ -1256,10 +1256,9 @@ class Lexer
       case '\\':
         c = scanEscapeSequence();
         --p;
-        if (c & 128)
-          encodeUTF8(buffer, c);
-        else
+        if (c < 128)
           break;
+        encodeUTF8(buffer, c);
         continue;
       case '\r':
         if (p[1] == '\n')
@@ -1284,7 +1283,7 @@ class Lexer
           continue;
         }
       }
-      // Copy ASCII character.
+      assert(isascii(c));
       buffer ~= c;
     }
     assert(0);
@@ -1407,7 +1406,8 @@ class Lexer
           continue;
         }
       }
-      buffer ~= c; // copy character to buffer
+      assert(isascii(c));
+      buffer ~= c;
     }
     assert(0);
   }
@@ -1657,7 +1657,8 @@ version(D2)
           }
         }
       }
-      buffer ~= c; // copy character to buffer
+      assert(isascii(c));
+      buffer ~= c;
     }
   Lreturn: // Character delimiter.
     assert(c == closing_delim);
@@ -1826,9 +1827,11 @@ version(D2)
           return c;
         }
       }
-      // TODO: when c is encoded again by encodeUTF8() the same error is reported twice.
-      if (!isValidDchar(c))
+      if (!isEncodable(c))
+      {
+        c = 0;
         error(sequenceStart, MID.InvalidUnicodeCharacter);
+      }
       return c;
     case 'u':
       digits = 4;
@@ -1886,12 +1889,11 @@ version(D2)
       }
       else
       {
-        dchar d = *p;
         char[] str = `\`;
-        if (d & 128)
+        if (*p & 128)
           encodeUTF8(str, decodeUTF8());
         else
-          str ~= d;
+          str ~= *p;
         ++p;
         // TODO: check for unprintable character?
         error(sequenceStart, MID.UndefinedEscapeSequence, str);
@@ -2455,27 +2457,6 @@ version(D2)
     error(errorAtColumn, mid);
   }
 
-  dchar decodeUTF8()
-  {
-    assert(*p & 128, "check for ASCII char before calling decodeUTF8().");
-    size_t idx;
-    dchar d;
-    try
-    {
-      d = std.utf.decode(p[0 .. end-p], idx);
-      p += idx -1;
-    }
-    catch (UtfException e)
-    {
-      error(p, MID.InvalidUTF8Sequence);
-      // Move to next valid UTF-8 sequence or ASCII character.
-      while (++p < end && *p & 0xC0 == 0x80) {}
-      assert(p < end);
-      --p;
-    }
-    return d;
-  }
-
   /+
     Insert an empty dummy token before t.
     Useful in the parsing phase for representing a node in the AST
@@ -2574,10 +2555,41 @@ version(D2)
     return !(ident in reserved_ids_table);
   }
 
-  private void encodeUTF8(inout char[] str, dchar d)
+  /+
+    Returns true if d can be encoded as a UTF-8 sequence.
+  +/
+  bool isEncodable(dchar d)
+  {
+    return d < 0xD800 ||
+          (d > 0xDFFF && d <= 0x10FFFF && d != 0xFFFF && d != 0xFFFE);
+  }
+
+  dchar decodeUTF8()
+  {
+    assert(!isascii(*p), "check for ASCII char before calling decodeUTF8().");
+    size_t idx;
+    dchar d;
+    try
+    {
+      d = std.utf.decode(p[0 .. end-p], idx);
+      p += idx -1;
+    }
+    catch (UtfException e)
+    {
+      error(p, MID.InvalidUTF8Sequence);
+      // Move to next valid UTF-8 sequence or ASCII character.
+      while (++p < end && *p & 0xC0 == 0x80) {}
+      assert(p < end);
+      --p;
+    }
+    return d;
+  }
+
+  private void encodeUTF8(ref char[] str, dchar d)
   {
     char[6] b;
-    assert(d > 0x7F, "check for ASCII char before calling encodeUTF8().");
+    assert(!isascii(d), "check for ASCII char before calling encodeUTF8().");
+    assert(isEncodable(d), "check that 'd' is encodable before calling encodeUTF8().");
     if (d < 0x800)
     {
       b[0] = 0xC0 | (d >> 6);
@@ -2599,6 +2611,7 @@ version(D2)
       b[3] = 0x80 | (d & 0x3F);
       str ~= b[0..4];
     }
+    /+ // There are no 5 and 6 byte UTF-8 sequences yet.
     else if (d < 0x4000000)
     {
       b[0] = 0xF8 | (d >> 24);
@@ -2618,8 +2631,9 @@ version(D2)
       b[5] = 0x80 | (d & 0x3F);
       str ~= b[0..6];
     }
-//     else
-//       error(MID.InvalidUnicodeCharacter);
+    +/
+    else
+     assert(0);
   }
 }
 
@@ -2761,6 +2775,7 @@ int isidbeg(char c) { return ptable[c] & (CP.Alpha | CP.Underscore); }
 int isident(char c) { return ptable[c] & (CP.Alpha | CP.Underscore | CP.Digit); }
 int isspace(char c) { return ptable[c] & CP.Whitespace; }
 int char2ev(char c) { return ptable[c] >> 8; /*(ptable[c] & EVMask) >> 8;*/ }
+int isascii(uint c) { return c < 128; }
 
 version(gen_ptable)
 static this()

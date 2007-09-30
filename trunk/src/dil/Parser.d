@@ -327,7 +327,6 @@ class Parser
       decl = new IllegalDeclaration(token);
       nT();
     }
-//     writef("§%s§", decl.classinfo.name);
     set(decl, begin);
     return decl;
   }
@@ -1573,7 +1572,6 @@ class Parser
 
   Statement parseStatement()
   {
-// writefln("°parseStatement:(%d)token='%s'°", lx.loc, token.srcText);
     auto begin = token;
     Statement s;
     Declaration d;
@@ -3006,8 +3004,6 @@ class Parser
       e = new CommaExpression(e, parseAssignExpression(), comma);
       set(e, begin);
     }
-// if (!trying)
-// writef("§%s§", e.classinfo.name);
     return e;
   }
 
