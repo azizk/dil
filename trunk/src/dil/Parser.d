@@ -55,16 +55,13 @@ class Parser
 
   ImportDeclaration[] imports;
 
-  this(char[] srcText, string fileName)
+  this(char[] srcText, string filePath)
   {
-    lx = new Lexer(srcText, fileName);
+    lx = new Lexer(srcText, filePath);
   }
-
-  debug char* prev;
 
   private void init()
   {
-    debug prev = lx.text.ptr;
     nT();
     prevToken = token;
   }
@@ -76,51 +73,45 @@ class Parser
     {
       lx.nextToken();
       token = lx.token;
-
-debug if (!trying)
-{
-      writef("\33[32m%s\33[0m", token.type);
-      writef("%s", prev[0 .. token.end - prev]);
-      prev = token.end;
-}
     } while (token.isWhitespace) // Skip whitespace
   }
-
+/+
   void skipToOnePast(TOK tok)
   {
     for (; token.type != tok && token.type != T.EOF; nT())
     {}
     nT();
   }
++/
+  uint trying;
+  uint errorCount;
 
-  int trying;
-  int errorCount;
-
-  ReturnType try_(ReturnType)(lazy ReturnType parseMethod, out bool success)
+  /++
+    This method executes the delegate parseMethod and when an error occurred
+    the state of the lexer and parser are restored.
+  +/
+  ReturnType try_(ReturnType)(ReturnType delegate() parseMethod, out bool success)
   {
-debug writef("\33[31mtry_\33[0m");
     ++trying;
-//     auto len = errors.length;
-    auto oldToken = token;
-    auto oldPrevToken = prevToken;
-    auto oldCount = errorCount;
-//     auto lexerState = lx.getState();
+    auto oldToken     = this.token;
+    auto oldPrevToken = this.prevToken;
+    auto oldCount     = this.errorCount;
+
     auto result = parseMethod();
-    // If the length of the array changed we know an error occurred.
+
+    // Check if an error occurred.
     if (errorCount != oldCount)
     {
-//       lexerState.restore(); // Restore state of the Lexer object.
-//       errors = errors[0..len]; // Remove errors that were added when parseMethod() was called.
-      token = oldToken;
-      prevToken = oldPrevToken;
-      lx.token = oldToken;
+      // Restore members.
+      token      = oldToken;
+      prevToken  = oldPrevToken;
+      lx.token   = oldToken;
       errorCount = oldCount;
       success = false;
     }
     else
       success = true;
     --trying;
-debug writef("\33[34m%s\33[0m", success);
     return result;
   }
 
@@ -525,7 +516,7 @@ debug writef("\33[34m%s\33[0m", success);
       }
 
       bool success;
-      auto si = try_(parseStructInitializer(), success);
+      auto si = try_(&parseStructInitializer, success);
       if (success)
       {
         init = si;
@@ -1632,7 +1623,7 @@ debug writef("\33[34m%s\33[0m", success);
       goto case T.Dot;
     case T.Dot, T.Typeof:
       bool success;
-      d = try_(parseDeclaration(), success);
+      d = try_({return parseDeclaration();}, success);
       if (success)
         goto case_DeclarationStatement; // Declaration
       else
@@ -1816,7 +1807,7 @@ debug writef("\33[34m%s\33[0m", success);
       assert(
         delegate bool(){
           bool success;
-          auto expression = try_(parseExpression(), success);
+          auto expression = try_(&parseExpression, success);
           return success;
         }() == false, "Any token that could start a valid expression must have been caught by a case statement in parseStatement()."
       );
@@ -2004,7 +1995,7 @@ debug writef("\33[34m%s\33[0m", success);
         return type;
       }
       bool success;
-      auto type = try_(parseDeclaratorAssign(), success);
+      auto type = try_(&parseDeclaratorAssign, success);
       if (success)
       {
         auto init = parseExpression();
@@ -3400,7 +3391,7 @@ debug writef("\33[34m%s\33[0m", success);
         return type;
       }
       bool success;
-      auto type = try_(parseType_(), success);
+      auto type = try_(&parseType_, success);
       if (success)
       {
         auto ident = requireId();
@@ -3880,7 +3871,7 @@ debug writef("\33[34m%s\33[0m", success);
         require(T.RBracket);
         return type;
       }
-      auto assocType = try_(parseAAType(), success);
+      auto assocType = try_(&parseAAType, success);
       if (success)
         t = new ArrayType(t, assocType);
       else
@@ -4136,7 +4127,7 @@ version(D2)
         return null;
       }
       bool success;
-      auto typeArgument = try_(parseType_(), success);
+      auto typeArgument = try_(&parseType_, success);
       if (success)
         // TemplateArgument:
         //         Type
