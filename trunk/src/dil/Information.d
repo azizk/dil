@@ -127,7 +127,7 @@ final class Location
       );
 
       // Skip this byte if it is a trail byte of a UTF-8 sequence.
-      if (*p & 0xC0 == 0x80)
+      if ((*p & 0xC0) == 0x80)
         continue; // *p == 0b10xx_xxxx
       // Only count ASCII characters and the first byte of a UTF-8 sequence.
       ++col;

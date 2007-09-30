@@ -2564,11 +2564,17 @@ version(D2)
           (d > 0xDFFF && d <= 0x10FFFF && d != 0xFFFF && d != 0xFFFE);
   }
 
+  bool isTrailByte(ubyte b)
+  {
+    return (b & 0xC0) == 0x80;
+  }
+
+/+
   dchar decodeUTF8()
   {
     assert(!isascii(*p), "check for ASCII char before calling decodeUTF8().");
     size_t idx;
-    dchar d;
+    dchar d = 0;
     try
     {
       d = std.utf.decode(p[0 .. end-p], idx);
@@ -2578,18 +2584,98 @@ version(D2)
     {
       error(p, MID.InvalidUTF8Sequence);
       // Move to next valid UTF-8 sequence or ASCII character.
-      while (++p < end && *p & 0xC0 == 0x80) {}
+      while (++p < end && isTrailByte(*p)) {}
       assert(p < end);
       --p;
     }
+    return d;
+  }
++/
+
+  dchar decodeUTF8()
+  {
+    assert(!isascii(*p), "check for ASCII char before calling decodeUTF8().");
+    char* p = this.p;
+    dchar d = *p;
+
+    // Check for overlong sequences.
+    switch (d)
+    {
+    // 11100000 100xxxxx
+    // 11110000 1000xxxx
+    // 11111000 10000xxx
+    // 11111100 100000xx
+    case 0xE0, 0xF0, 0xF8, 0xFC:
+      if ((p[1] & d) == 0x80)
+        goto Lerr;
+    default:
+      if ((d & 0xFE) == 0xC0) // 1100000x
+        goto Lerr;
+    }
+
+    // Decode
+    if ((d & 0b1110_0000) == 0b1100_0000)
+    {
+      // 110xxxxx 10xxxxxx
+      d &= 0b0001_1111;
+      if (!isTrailByte(*++p))
+        goto Lerr2;
+      d = (d << 6) | *p & 0b0011_1111;
+    }
+    else if ((d & 0b1111_0000) == 0b1110_0000)
+    {
+      // 1110xxxx 10xxxxxx 10xxxxxx
+      d &= 0b0000_1111;
+      if (!isTrailByte(*++p))
+        goto Lerr2;
+      d = (d << 6) | *p & 0b0011_1111;
+      if (!isTrailByte(*++p))
+        goto Lerr2;
+      d = (d << 6) | *p & 0b0011_1111;
+    }
+    else if ((d & 0b1111_1000) == 0b1111_0000)
+    {
+      // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+      d &= 0b0000_0111;
+      if (!isTrailByte(*++p))
+        goto Lerr2;
+      d = (d << 6) | *p & 0b0011_1111;
+      if (!isTrailByte(*++p))
+        goto Lerr2;
+      d = (d << 6) | *p & 0b0011_1111;
+      if (!isTrailByte(*++p))
+        goto Lerr2;
+      d = (d << 6) | *p & 0b0011_1111;
+    }
+    else
+      // 5 and 6 byte UTF-8 sequences are not allowed yet.
+      // 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+      // 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+      goto Lerr;
+
+    if (!isEncodable(d))
+    {
+    Lerr:
+      // Move to next valid UTF-8 sequence or ASCII character.
+      while (++p < end && isTrailByte(*p)) {}
+      assert(p < end);
+      --p;
+    Lerr2:
+      d = 0;
+      error(this.p, MID.InvalidUTF8Sequence);
+    }
+
+    this.p = p;
     return d;
   }
 
   private void encodeUTF8(ref char[] str, dchar d)
   {
     char[6] b;
-    assert(!isascii(d), "check for ASCII char before calling encodeUTF8().");
+    assert(!isascii(d) || d == 0, "check for ASCII char before calling encodeUTF8().");
     assert(isEncodable(d), "check that 'd' is encodable before calling encodeUTF8().");
+    if (d == 0)
+      return;
     if (d < 0x800)
     {
       b[0] = 0xC0 | (d >> 6);
