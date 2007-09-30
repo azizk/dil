@@ -26,74 +26,24 @@ const dchar PSd = 0x2029;
 
 const uint _Z_ = 26; /// Control+Z
 
-final class Location
-{
-  size_t lineNum;
-  char* filePath;
-  char* from, to; // Used to calculate column.
-
-  this(size_t lineNum, char* filePath)
-  {
-    this(lineNum, filePath, null, null);
-  }
-
-  this(size_t lineNum, char* filePath, char* from, char* to)
-  {
-    assert(from <= to);
-    this.lineNum  = lineNum;
-    this.filePath = filePath;
-    this.from     = from;
-    this.to       = to;
-  }
-
-  uint getColumn()
-  {
-    uint col = 1;
-    auto p = from;
-    for (; p <= to; ++p)
-    {
-      assert(*p != '\n' && *p != '\r');
-      if (*p & 128)
-      {
-        size_t idx;
-        dchar d;
-        try
-        {
-          d = std.utf.decode(p[0 .. to-p], idx);
-          assert(d != LSd && d != PSd);
-          p += idx -1;
-        }
-        catch (UtfException e)
-        { }
-      }
-
-      ++col;
-    }
-    return col;
-  }
-}
-
 class Lexer
 {
   Token* head; /// The head of the doubly linked token list.
   Token* tail; /// The tail of the linked list. Set in scan().
   Token* token; /// Points to the current token in the token list.
-  string text;
+  string text; /// The source text.
+  char[] filePath; /// Path to the source file.
   char* p; /// Points to the current character in the source text.
   char* end; /// Points one character past the end of the source text.
 
-  char* p_newl;
+  // Members used to generate error messages:
+  Information[] errors;
+  char* lineBegin; /// Always points to the beginning of the current line.
   uint loc = 1; /// Actual line of code.
-
   uint loc_old; /// Store actual line number when #line token is scanned.
   uint loc_hline; /// Line number set by #line.
-  private uint inTokenString; // > 0 if inside q{ }
-
-  char[] fileName;
-
-  Information[] errors;
-
-//   bool reportErrors;
+  uint inTokenString; /// > 0 if inside q{ }
+  Location errorLoc;
 
   Identifier[string] idtable;
 
@@ -101,9 +51,9 @@ class Lexer
     /// Maps every token that starts a new line to a Location.
     Location[Token*] token2LocTable;
 
-  this(string text, string fileName)
+  this(string text, string filePath)
   {
-    this.fileName = fileName;
+    this.filePath = filePath;
 
     this.text = text;
     if (text.length == 0 || text[$-1] != 0)
@@ -114,8 +64,9 @@ class Lexer
 
     this.p = this.text.ptr;
     this.end = this.p + this.text.length;
-//     this.reportErrors = true;
-    loadKeywords();
+    this.lineBegin = this.p;
+    this.errorLoc = new Location(filePath, 1, this.lineBegin, this.lineBegin);
+    loadKeywords(this.idtable);
 
     this.head = new Token;
     this.head.type = TOK.HEAD;
@@ -181,10 +132,10 @@ class Lexer
     switch (t.type)
     {
     case TOK.FILE:
-      t.str = this.fileName;
+      t.str = this.errorLoc.filePath;
       break;
     case TOK.LINE:
-      t.uint_ = this.loc;
+      t.uint_ = this.errorLineNum(this.loc);
       break;
     case TOK.DATE,
          TOK.TIME,
@@ -216,20 +167,40 @@ class Lexer
     }
   }
 
-  void set_p_newl(char* p)
+  void setLineBegin(char* p)
   {
-    assert(delegate()
-      {
-        if (!((p-1) >= text.ptr && p < end))
-          return false;
-        // Check that previous character is a newline.
-        if (p[-1] != '\n' &&  p[-1] != '\r' &&
-            p[-1] != LS[2] && p[-1] != PS[2])
-          return false;
-        return true;
-      }() == true
-    );
-    this.p_newl = p;
+    // Check that we can look behind one character.
+    assert((p-1) >= text.ptr && p < end);
+    // Check that previous character is a newline.
+    assert(p[-1] == '\n' ||  p[-1] == '\r' ||
+           p[-1] == LS[2] || p[-1] == PS[2]);
+    this.lineBegin = p;
+  }
+
+  private void scanNext(ref Token* t)
+  {
+    assert(t !is null);
+    if (t.next)
+      t = t.next;
+    else if (t != this.tail)
+    {
+      Token* new_t = new Token;
+      scan(*new_t);
+      new_t.prev = t;
+      t.next = new_t;
+      t = new_t;
+    }
+  }
+
+  void peek(ref Token* t)
+  {
+    scanNext(t);
+  }
+
+  TOK nextToken()
+  {
+    scanNext(this.token);
+    return this.token.type;
   }
 
   public void scan_(out Token t)
@@ -258,7 +229,7 @@ class Lexer
         assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         ++p;
         ++loc;
-        set_p_newl(p);
+        setLineBegin(p);
         continue;
       case LS[0]:
         if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
@@ -664,7 +635,7 @@ class Lexer
           goto Lidentifier;
       }
 
-      error(MID.IllegalCharacter, cast(dchar)c);
+      error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
       ++p;
       t.type = TOK.Illegal;
@@ -739,7 +710,7 @@ class Lexer
         assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         ++p;
         ++loc;
-        set_p_newl(p);
+        setLineBegin(p);
         continue;
       case LS[0]:
         if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
@@ -1142,7 +1113,7 @@ class Lexer
         goto Lidentifier;
     }
 
-    error(MID.IllegalCharacter, cast(dchar)c);
+    error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
     ++p;
     t.type = TOK.Illegal;
@@ -1154,6 +1125,8 @@ class Lexer
   void scanBlockComment(ref Token t)
   {
     assert(p[-1] == '/' && *p == '*');
+    auto tokenLineNum = loc;
+    auto tokenLineBegin = lineBegin;
     uint c;
     while (1)
     {
@@ -1167,10 +1140,10 @@ class Lexer
       case '\n':
         assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         ++loc;
-        set_p_newl(p+1);
+        setLineBegin(p+1);
         continue;
       case 0, _Z_:
-        error(MID.UnterminatedBlockComment);
+        error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedBlockComment);
         goto LreturnBC;
       default:
         if (c & 128)
@@ -1197,11 +1170,14 @@ class Lexer
         goto LswitchBC;
       }
     }
+    assert(0);
   }
 
   void scanNestedComment(ref Token t)
   {
     assert(p[-1] == '/' && *p == '+');
+    auto tokenLineNum = loc;
+    auto tokenLineBegin = lineBegin;
     uint level = 1;
     uint c;
     while (1)
@@ -1216,10 +1192,10 @@ class Lexer
       case '\n':
         assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         ++loc;
-        set_p_newl(p+1);
+        setLineBegin(p+1);
         continue;
       case 0, _Z_:
-        error(MID.UnterminatedNestedComment);
+        error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedNestedComment);
         goto LreturnNC;
       default:
         if (c & 128)
@@ -1253,11 +1229,14 @@ class Lexer
         goto LswitchNC;
       }
     }
+    assert(0);
   }
 
   void scanNormalStringLiteral(ref Token t)
   {
     assert(*p == '"');
+    auto tokenLineNum = loc;
+    auto tokenLineBegin = lineBegin;
     char[] buffer;
     t.type = TOK.String;
     uint c;
@@ -1289,10 +1268,10 @@ class Lexer
         assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         ++loc;
         c = '\n'; // Convert EndOfLine to \n.
-        set_p_newl(p+1);
+        setLineBegin(p+1);
         break;
       case 0, _Z_:
-        error(MID.UnterminatedString);
+        error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedString);
         goto Lreturn;
       default:
         if (c & 128)
@@ -1358,7 +1337,7 @@ class Lexer
       ++p;
     else
     Lerr:
-      error(id);
+      error(t.start, id);
     t.type = type;
     t.end = p;
   }
@@ -1379,6 +1358,8 @@ class Lexer
 
   void scanRawStringLiteral(ref Token t)
   {
+    auto tokenLineNum = loc;
+    auto tokenLineBegin = lineBegin;
     uint delim = *p;
     assert(delim == '`' || delim == '"' && p[-1] == 'r');
     t.type = TOK.String;
@@ -1396,7 +1377,7 @@ class Lexer
         assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         c = '\n'; // Convert EndOfLine ('\r','\r\n','\n',LS,PS) to '\n'
         ++loc;
-        set_p_newl(p+1);
+        setLineBegin(p+1);
         break;
       case '`':
       case '"':
@@ -1412,9 +1393,9 @@ class Lexer
         break;
       case 0, _Z_:
         if (delim == 'r')
-          error(MID.UnterminatedRawString);
+          error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedRawString);
         else
-          error(MID.UnterminatedBackQuoteString);
+          error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedBackQuoteString);
         goto Lreturn;
       default:
         if (c & 128)
@@ -1436,12 +1417,16 @@ class Lexer
     assert(p[0] == 'x' && p[1] == '"');
     t.type = TOK.String;
 
+    auto tokenLineNum = loc;
+    auto tokenLineBegin = lineBegin;
+
     uint c;
     ubyte[] buffer;
     ubyte h; // hex number
     uint n; // number of hex digits
 
     ++p;
+    assert(*p == '"');
     while (1)
     {
       c = *++p;
@@ -1450,7 +1435,7 @@ class Lexer
       case '"':
         ++p;
         if (n & 1)
-          error(MID.OddNumberOfDigitsInHexString);
+          error(tokenLineNum, tokenLineBegin, t.start, MID.OddNumberOfDigitsInHexString);
         t.pf = scanPostfix();
       Lreturn:
         buffer ~= 0;
@@ -1463,7 +1448,7 @@ class Lexer
       case '\n':
         assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         ++loc;
-        set_p_newl(p+1);
+        setLineBegin(p+1);
         continue;
       default:
         if (ishexad(c))
@@ -1488,19 +1473,24 @@ class Lexer
         }
         else if (isspace(c))
           continue; // Skip spaces.
-        else if (c & 128)
+        else if (c == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
         {
-          c = decodeUTF8();
-          if (c == LSd || c == PSd)
-            goto case '\n';
+          ++p; ++p;
+          goto case '\n';
         }
         else if (c == 0 || c == _Z_)
         {
-          error(MID.UnterminatedHexString);
+          error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedHexString);
           t.pf = 0;
           goto Lreturn;
         }
-        error(MID.NonHexCharInHexString, cast(dchar)c);
+        else
+        {
+          auto errorAt = p;
+          if (c & 128)
+            c = decodeUTF8();
+          error(errorAt, MID.NonHexCharInHexString, cast(dchar)c);
+        }
       }
     }
     assert(0);
@@ -1512,6 +1502,9 @@ version(D2)
   {
     assert(p[0] == 'q' && p[1] == '"');
     t.type = TOK.String;
+
+    auto tokenLineNum = loc;
+    auto tokenLineBegin = lineBegin;
 
     char[] buffer;
     dchar opening_delim = 0, // 0 if no nested delimiter or '[', '(', '<', '{'
@@ -1545,7 +1538,7 @@ version(D2)
           assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
           ++p;
           ++loc;
-          set_p_newl(p);
+          setLineBegin(p);
           return '\n';
         case LS[0]:
           if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
@@ -1587,7 +1580,7 @@ version(D2)
         --p; // Go back one because of "c = *++p;" in main loop.
       else
       {
-        // TODO: error(MID.ExpectedNewlineAfterIdentDelim);
+        // TODO: error(p, MID.ExpectedNewlineAfterIdentDelim);
       }
     }
 
@@ -1613,10 +1606,10 @@ version(D2)
         assert(*p == '\n' || *p == '\r' || *p == LS[2] || *p == PS[2]);
         c = '\n'; // Convert EndOfLine ('\r','\r\n','\n',LS,PS) to '\n'
         ++loc;
-        set_p_newl(p+1);
+        setLineBegin(p+1);
         break;
       case 0, _Z_:
-        // TODO: error(MID.UnterminatedDelimitedString);
+        // TODO: error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedDelimitedString);
         goto Lreturn3;
       default:
         if (c & 128)
@@ -1673,8 +1666,10 @@ version(D2)
   Lreturn2: // String delimiter.
     if (*p == '"')
       ++p;
-    // else
-    // TODO: error(MID.ExpectedDblQuoteAfterDelim, str_delim.length ? str_delim : p[-1]);
+    else
+    {
+      // TODO: error(p, MID.ExpectedDblQuoteAfterDelim, str_delim.length ? str_delim : closing_delim~"");
+    }
 
     t.pf = scanPostfix();
   Lreturn3: // Error.
@@ -1687,8 +1682,11 @@ version(D2)
     assert(p[0] == 'q' && p[1] == '{');
     t.type = TOK.String;
 
+    auto tokenLineNum = loc;
+    auto tokenLineBegin = lineBegin;
+
     // A guard against changes to particular members:
-    // this.loc_old, this.loc_hline and this.fileName
+    // this.loc_old, this.loc_hline and this.errorLoc.filePath
     ++inTokenString;
 
     uint loc = this.loc;
@@ -1721,7 +1719,7 @@ version(D2)
         }
         continue;
       case TOK.EOF:
-        // TODO: error(MID.UnterminatedTokenString);
+        // TODO: error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedTokenString);
         t.tok_str = t.next;
         t.next = token;
         break;
@@ -1787,6 +1785,9 @@ version(D2)
   dchar scanEscapeSequence()
   {
     assert(*p == '\\');
+
+    auto sequenceStart = p; // Used for error reporting.
+
     ++p;
     uint c = char2ev(*p);
     if (c)
@@ -1821,13 +1822,14 @@ version(D2)
         }
         else
         {
-          error(MID.InsufficientHexDigits);
-          break;
+          error(sequenceStart, MID.InsufficientHexDigits);
+          return c;
         }
       }
+      // TODO: when c is encoded again by encodeUTF8() the same error is reported twice.
       if (!isValidDchar(c))
-        error(MID.InvalidUnicodeCharacter);
-      break;
+        error(sequenceStart, MID.InvalidUnicodeCharacter);
+      return c;
     case 'u':
       digits = 4;
       goto case 'x';
@@ -1861,25 +1863,26 @@ version(D2)
 
           if (*p == ';')
           {
+            // Pass entity excluding '&' and ';'.
             c = entity2Unicode(begin[0..p - begin]);
             ++p; // Skip ;
             if (c == 0xFFFF)
-              error(MID.UndefinedHTMLEntity, (begin-1)[0..p-(begin-1)]);
+              error(sequenceStart, MID.UndefinedHTMLEntity, sequenceStart[0 .. p - sequenceStart]);
           }
           else
-            error(MID.UnterminatedHTMLEntity);
+            error(sequenceStart, MID.UnterminatedHTMLEntity);
         }
         else
-          error(MID.InvalidBeginHTMLEntity);
+          error(sequenceStart, MID.InvalidBeginHTMLEntity);
       }
       else if (*p == '\n' || *p == '\r' ||
                *p == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
       {
-        error(MID.UndefinedEscapeSequence, r"\NewLine");
+        error(sequenceStart, MID.UndefinedEscapeSequence, r"\NewLine");
       }
       else if (*p == 0 || *p == _Z_)
       {
-        error(MID.UndefinedEscapeSequence, r"\EOF");
+        error(sequenceStart, MID.UndefinedEscapeSequence, r"\EOF");
       }
       else
       {
@@ -1891,7 +1894,7 @@ version(D2)
           str ~= d;
         ++p;
         // TODO: check for unprintable character?
-        error(MID.UndefinedEscapeSequence, str);
+        error(sequenceStart, MID.UndefinedEscapeSequence, str);
       }
     }
 
@@ -1995,7 +1998,7 @@ version(D2)
     }
 
     if (overflow)
-      error(MID.OverflowDecimalNumber);
+      error(t.start, MID.OverflowDecimalNumber);
 
     assert((isdigit(p[-1]) || p[-1] == '_') && !isdigit(*p) && *p != '_');
     goto Lfinalize;
@@ -2032,10 +2035,8 @@ version(D2)
     default:
     }
 
-    if (digits == 0)
-      error(MID.NoDigitsInHexNumber);
-    else if (digits > 16)
-      error(MID.OverflowHexNumber);
+    if (digits == 0 || digits > 16)
+      error(t.start, digits == 0 ? MID.NoDigitsInHexNumber : MID.OverflowHexNumber);
 
     goto Lfinalize;
 
@@ -2061,10 +2062,8 @@ version(D2)
         break;
     }
 
-    if (digits == 0)
-      error(MID.NoDigitsInBinNumber);
-    else if (digits > 64)
-      error(MID.OverflowBinaryNumber);
+    if (digits == 0 || digits > 64)
+      error(t.start, digits == 0 ? MID.NoDigitsInBinNumber : MID.OverflowBinaryNumber);
 
     assert(p[-1] == '0' || p[-1] == '1' || p[-1] == '_' || p[-1] == 'b' || p[-1] == 'B', p[-1] ~ "");
     assert( !(*p == '0' || *p == '1' || *p == '_') );
@@ -2115,9 +2114,10 @@ version(D2)
     }
 
     if (hasDecimalDigits)
-      error(MID.OctalNumberHasDecimals);
+      error(t.start, MID.OctalNumberHasDecimals);
+
     if (overflow)
-      error(MID.OverflowOctalNumber);
+      error(t.start, MID.OverflowOctalNumber);
 //     goto Lfinalize;
 
   Lfinalize:
@@ -2156,30 +2156,30 @@ version(D2)
     switch (suffix)
     {
     case Suffix.None:
-      if (ulong_ & 0x8000000000000000)
+      if (ulong_ & 0x8000_0000_0000_0000)
       {
         if (isDecimal)
-          error(MID.OverflowDecimalSign);
+          error(t.start, MID.OverflowDecimalSign);
         t.type = TOK.Uint64;
       }
-      else if (ulong_ & 0xFFFFFFFF00000000)
+      else if (ulong_ & 0xFFFF_FFFF_0000_0000)
         t.type = TOK.Int64;
-      else if (ulong_ & 0x80000000)
+      else if (ulong_ & 0x8000_0000)
         t.type = isDecimal ? TOK.Int64 : TOK.Uint32;
       else
         t.type = TOK.Int32;
       break;
     case Suffix.Unsigned:
-      if (ulong_ & 0xFFFFFFFF00000000)
+      if (ulong_ & 0xFFFF_FFFF_0000_0000)
         t.type = TOK.Uint64;
       else
         t.type = TOK.Uint32;
       break;
     case Suffix.Long:
-      if (ulong_ & 0x8000000000000000)
+      if (ulong_ & 0x8000_0000_0000_0000)
       {
         if (isDecimal)
-          error(MID.OverflowDecimalSign);
+          error(t.start, MID.OverflowDecimalSign);
         t.type = TOK.Uint64;
       }
       else
@@ -2217,18 +2217,19 @@ version(D2)
     }
     else
       // This function was called by scanNumber().
-      assert(delegate (){
-        switch (*p)
+      assert(delegate ()
         {
-        case 'L':
-          if (p[1] != 'i')
-            return false;
-        case 'i', 'f', 'F', 'e', 'E':
-          return true;
-        default:
-        }
-        return false;
-      }()
+          switch (*p)
+          {
+          case 'L':
+            if (p[1] != 'i')
+              return false;
+          case 'i', 'f', 'F', 'e', 'E':
+            return true;
+          default:
+          }
+          return false;
+        }()
       );
 
     // Scan exponent.
@@ -2237,10 +2238,10 @@ version(D2)
       ++p;
       if (*p == '-' || *p == '+')
         ++p;
-      if (!isdigit(*p))
-        error(MID.FloatExpMustStartWithDigit);
-      else
+      if (isdigit(*p))
         while (isdigit(*++p) || *p == '_') {}
+      else
+        error(t.start, MID.FloatExpMustStartWithDigit);
     }
 
     // Copy whole number and remove underscores from buffer.
@@ -2293,7 +2294,7 @@ version(D2)
   Lerr:
     t.type = TOK.Float32;
     t.end = p;
-    error(mid);
+    error(t.start, mid);
   }
 
   void finalizeFloat(ref Token t, string buffer)
@@ -2323,7 +2324,7 @@ version(D2)
       t.type += 3; // Switch to imaginary counterpart.
     }
     if (errno() == ERANGE)
-      error(MID.OverflowFloatNumber);
+      error(t.start, MID.OverflowFloatNumber);
     t.end = p;
   }
 
@@ -2331,10 +2332,10 @@ version(D2)
   void scanSpecialTokenSequence(ref Token t)
   {
     assert(*p == '#');
-
     t.type = TOK.HashLine;
 
     MID mid;
+    auto errorAtColumn = p;
 
     ++p;
     if (p[0] != 'l' || p[1] != 'i' || p[2] != 'n' || p[3] != 'e')
@@ -2368,6 +2369,7 @@ version(D2)
         {
           if (!isdigit(*p))
           {
+            errorAtColumn = p;
             mid = MID.ExpectedIntegerAfterSTLine;
             goto Lerr;
           }
@@ -2375,6 +2377,7 @@ version(D2)
           scan(*t.line_num);
           if (t.line_num.type != TOK.Int32 && t.line_num.type != TOK.Uint32)
           {
+            errorAtColumn = t.line_num.start;
             mid = MID.ExpectedIntegerAfterSTLine;
             goto Lerr;
           }
@@ -2385,6 +2388,7 @@ version(D2)
         {
           if (*p != '"')
           {
+            errorAtColumn = p;
             mid = MID.ExpectedFilespec;
             goto Lerr;
           }
@@ -2401,6 +2405,7 @@ version(D2)
               if (!(p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2])))
                 goto default;
             case '\r', '\n', 0, _Z_:
+              errorAtColumn = t.line_filespec.start;
               mid = MID.UnterminatedFilespec;
               t.line_filespec.end = p;
               goto Lerr;
@@ -2429,6 +2434,7 @@ version(D2)
 
     if (state == State.Integer)
     {
+      errorAtColumn = p;
       mid = MID.ExpectedIntegerAfterSTLine;
       goto Lerr;
     }
@@ -2439,20 +2445,14 @@ version(D2)
       this.loc_old = this.loc;
       this.loc_hline = t.line_num.uint_ - 1;
       if (t.line_filespec)
-        this.fileName = t.line_filespec.str;
+        this.errorLoc.setFilePath(t.line_filespec.str);
     }
     t.end = p;
 
     return;
   Lerr:
     t.end = p;
-    error(mid);
-  }
-
-  uint errorLoc()
-  {
-    // ∆loc + line_num_of(#line)
-    return this.loc - this.loc_old + this.loc_hline;
+    error(errorAtColumn, mid);
   }
 
   dchar decodeUTF8()
@@ -2467,55 +2467,15 @@ version(D2)
     }
     catch (UtfException e)
     {
-      error(MID.InvalidUTF8Sequence);
-      // Skip to next valid utf-8 sequence
-      while (++p < end && UTF8stride[*p] == 0xFF) {}
-      --p;
+      error(p, MID.InvalidUTF8Sequence);
+      // Move to next valid UTF-8 sequence or ASCII character.
+      while (++p < end && *p & 0xC0 == 0x80) {}
       assert(p < end);
+      --p;
     }
     return d;
   }
 
-  void loadKeywords()
-  {
-    foreach(k; keywords)
-      idtable[k.str] = k;
-  }
-/+ // Not needed anymore because tokens are stored in a linked list.
-  struct State
-  {
-    Lexer lexer;
-    Token token;
-    char* scanPointer;
-    int loc;
-    string fileName;
-    size_t errorLen;
-    static State opCall(Lexer lx)
-    {
-      State s;
-      s.lexer = lx;
-      s.token = lx.token;
-      s.scanPointer = lx.p;
-      s.loc = lx.loc;
-      s.fileName = lx.fileName;
-      s.errorLen = lx.errors.length;
-      return s;
-    }
-    void restore()
-    {
-      lexer.p = scanPointer;
-      lexer.token = token;
-      lexer.loc = loc;
-      lexer.fileName = fileName;
-      lexer.errors = lexer.errors[0..errorLen];
-    }
-  }
-
-  State getState()
-  {
-    return State(this);
-  }
-+/
   /+
     Insert an empty dummy token before t.
     Useful in the parsing phase for representing a node in the AST
@@ -2539,53 +2499,32 @@ version(D2)
     return new_t;
   }
 
-  private void scanNext(ref Token* t)
+  void updateErrorLoc(char* columnPos)
   {
-    assert(t !is null);
-    if (t.next)
-      t = t.next;
-    else if (t != this.tail)
-    {
-      Token* new_t = new Token;
-      scan(*new_t);
-      new_t.prev = t;
-      t.next = new_t;
-      t = new_t;
-    }
+    updateErrorLoc(this.loc, this.lineBegin, columnPos);
   }
 
-  void peek(ref Token* t)
+  void updateErrorLoc(uint lineNum, char* lineBegin, char* columnPos)
   {
-    scanNext(t);
+    errorLoc.set(this.errorLineNum(lineNum), lineBegin, columnPos);
   }
 
-  TOK nextToken()
+  uint errorLineNum(uint loc)
   {
-    scanNext(this.token);
-    return this.token.type;
+    // ∆loc + line_num_of(#line)
+    return loc - this.loc_old + this.loc_hline;
   }
 
-  void error(MID mid, ...)
+  void error(char* columnPos, MID mid, ...)
   {
-//     if (reportErrors)
-    errors ~= new Information(InfoType.Lexer, mid, this.errorLoc, Format(_arguments, _argptr, GetMsg(mid)));
+    updateErrorLoc(columnPos);
+    errors ~= new Information(InfoType.Lexer, mid, errorLoc.clone, Format(_arguments, _argptr, GetMsg(mid)));
   }
 
-  unittest
+  void error(uint lineNum, char* lineBegin, char* columnPos, MID mid, ...)
   {
-    Stdout("Testing method Lexer.peek()\n");
-    string sourceText = "unittest { }";
-    auto lx = new Lexer(sourceText, null);
-
-    Token* next = lx.head;
-    lx.peek(next);
-    assert(next.type == TOK.Unittest);
-    lx.peek(next);
-    assert(next.type == TOK.LBrace);
-    lx.peek(next);
-    assert(next.type == TOK.RBrace);
-    lx.peek(next);
-    assert(next.type == TOK.EOF);
+    updateErrorLoc(lineNum, lineBegin, columnPos);
+    errors ~= new Information(InfoType.Lexer, mid, errorLoc.clone, Format(_arguments, _argptr, GetMsg(mid)));
   }
 
   Token* getTokens()
@@ -2595,6 +2534,12 @@ version(D2)
     return head;
   }
 
+  static void loadKeywords(ref Identifier[string] table)
+  {
+    foreach(k; keywords)
+      table[k.str] = k;
+  }
+
   static bool isNonReservedIdentifier(char[] ident)
   {
     if (ident.length == 0)
@@ -2602,8 +2547,7 @@ version(D2)
 
     static Identifier[string] reserved_ids_table;
     if (reserved_ids_table is null)
-      foreach(k; keywords)
-        reserved_ids_table[k.str] = k;
+      loadKeywords(reserved_ids_table);
 
     size_t idx = 1; // Index to the 2nd character in ident.
     dchar isFirstCharUniAlpha()
@@ -2674,8 +2618,8 @@ version(D2)
       b[5] = 0x80 | (d & 0x3F);
       str ~= b[0..6];
     }
-    else
-      error(MID.InvalidUnicodeCharacter);
+//     else
+//       error(MID.InvalidUnicodeCharacter);
   }
 }
 
@@ -2746,6 +2690,23 @@ unittest
     ++i;
     token = token.next;
   } while (token.type != TOK.EOF)
+}
+
+unittest
+{
+  Stdout("Testing method Lexer.peek()\n");
+  string sourceText = "unittest { }";
+  auto lx = new Lexer(sourceText, null);
+
+  Token* next = lx.head;
+  lx.peek(next);
+  assert(next.type == TOK.Unittest);
+  lx.peek(next);
+  assert(next.type == TOK.LBrace);
+  lx.peek(next);
+  assert(next.type == TOK.RBrace);
+  lx.peek(next);
+  assert(next.type == TOK.EOF);
 }
 
 unittest

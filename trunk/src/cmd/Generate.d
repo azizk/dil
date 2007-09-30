@@ -281,11 +281,11 @@ void syntaxToDoc(string fileName, Print!(char) print, DocOption options)
     print(tags[DocPart.CompBegin]~\n);
     foreach (error; lx.errors)
     {
-      print.formatln(tags[DocPart.Error], "L", lx.fileName, error.loc, "L", xml_escape(error.getMsg));
+      print.formatln(tags[DocPart.Error], "L", error.filePath, Format("{0},{1}", error.loc, error.col), "L", xml_escape(error.getMsg));
     }
     foreach (error; parser.errors)
     {
-      print.formatln(tags[DocPart.Error], "P", lx.fileName, error.loc, "P", xml_escape(error.getMsg));
+      print.formatln(tags[DocPart.Error], "P", error.filePath, Format("{0},{1}", error.loc, error.col), "P", xml_escape(error.getMsg));
     }
     print(tags[DocPart.CompEnd]~\n);
   }
@@ -390,7 +390,7 @@ void tokensToDoc(string fileName, Print!(char) print, DocOption options)
     print(tags[DocPart.CompBegin]~\n);
     foreach (error; lx.errors)
     {
-      print.formatln(tags[DocPart.Error], "L", lx.fileName, error.loc, "L", xml_escape(error.getMsg));
+      print.formatln(tags[DocPart.Error], "L", error.filePath, Format("{0},{1}", error.loc, error.col), "L", xml_escape(error.getMsg));
     }
     print(tags[DocPart.CompEnd]~\n);
   }

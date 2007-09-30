@@ -4316,10 +4316,7 @@ version(D2)
       ++errorCount;
       return;
     }
-
-//     if (errors.length == 10)
-//       return;
-    errors ~= new Information(InfoType.Parser, mid, lx.loc, Format(_arguments, _argptr, GetMsg(mid)));
-//     writefln("(%d)P: ", lx.loc, errors[$-1].getMsg);
+    lx.updateErrorLoc(token.start);
+    errors ~= new Information(InfoType.Parser, mid, lx.errorLoc.clone, Format(_arguments, _argptr, GetMsg(mid)));
   }
 }

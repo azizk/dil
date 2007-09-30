@@ -160,6 +160,6 @@ void print(Node[] decls, char[] indent)
 print(root.children, "");
 foreach (error; parser.errors)
 {
-  Stdout.format(`{0}({1})P: {2}`, parser.lx.fileName, error.loc, error.getMsg);
+  Stdout.format(`{0}({1})P: {2}`, error.filePath, error.loc, error.getMsg);
 }
 }
