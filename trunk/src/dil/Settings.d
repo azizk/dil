@@ -6,6 +6,7 @@ module dil.Settings;
 import dil.Messages;
 import dil.Parser, dil.SyntaxTree, dil.Declarations, dil.Expressions;
 import dil.File;
+import tango.io.FilePath;
 import std.metastrings : FormatT = Format, ToString;
 import common;
 
@@ -49,9 +50,10 @@ static:
   string language; /// Language of loaded messages catalogue.
   string[] messages; /// Table of localized compiler messages.
   string[] importPaths; /// Array of import paths to look for modules.
-  void load()
+  void load(char[] execPath_)
   {
-    auto fileName = "config.d"[];
+    scope execPath = new FilePath(execPath_);
+    auto fileName = execPath.file("config.d").toUtf8();
     auto sourceText = loadFile(fileName);
     auto parser = new Parser(sourceText, fileName);
     auto root = parser.start();
@@ -94,7 +96,7 @@ static:
     }
 
     // Load messages
-    sourceText = loadFile(fileName);
+    sourceText = loadFile(execPath.file(fileName).toUtf8());
     parser = new Parser(sourceText, fileName);
     root = parser.start();
 
