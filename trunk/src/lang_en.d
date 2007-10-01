@@ -93,16 +93,17 @@ Usage:
 
 Format:
   --dot            : generate a dot document
+  Further options for --dot:
   -gbp             : Group modules by package names
   -gbf             : Group modules by full package name
   -hle             : highlight cyclic edges in the graph
   -hlv             : highlight modules in cyclic relationship
 
   --paths          : print a list of paths to the modules imported by file.d
-  -lN              : print N levels.
-
   --list           : print a list of the module names imported by file.d
+  Options common to --paths and --list:
   -lN              : print N levels.
+  -m               : mark modules in cyclic relationships with a star.
 
 Options:
   -Ipath           : add 'path' to the list of import paths where modules are

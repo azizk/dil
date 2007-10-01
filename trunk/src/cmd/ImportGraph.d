@@ -22,13 +22,14 @@ enum IGraphOption
 {
   None,
   IncludeUnlocatableModules = 1,
-  HighlightCyclicEdges      = 1<<1,
-  HighlightCyclicVertices   = 1<<2,
-  PrintDot                  = 1<<3,
-  PrintPaths                = 1<<4,
-  PrintList                 = 1<<5,
-  GroupByPackageNames       = 1<<6,
-  GroupByFullPackageName    = 1<<7,
+  PrintDot                  = 1<<1,
+  HighlightCyclicEdges      = 1<<2,
+  HighlightCyclicVertices   = 1<<3,
+  GroupByPackageNames       = 1<<4,
+  GroupByFullPackageName    = 1<<5,
+  PrintPaths                = 1<<6,
+  PrintList                 = 1<<7,
+  MarkCyclicModules         = 1<<8,
 }
 
 string findModulePath(string moduleFQN, string[] importPaths)
@@ -162,11 +163,17 @@ void execute(string filePath, string[] importPaths, string[] strRegexps, uint le
   // Finished loading modules.
 
 
-  if (options & IGraphOption.PrintPaths)
-    printPaths(loadedModulesList, levels+1, "");
-  else if (options & IGraphOption.PrintList)
-    printList(loadedModulesList, levels+1, "");
-  else if (options & IGraphOption.PrintDot)
+  if (options & (IGraphOption.PrintList | IGraphOption.PrintPaths))
+  {
+    if (options & IGraphOption.MarkCyclicModules)
+      analyzeGraph(loadedModulesList, edges.dup);
+
+    if (options & IGraphOption.PrintPaths)
+      printPaths(loadedModulesList, levels+1, "");
+    else
+      printList(loadedModulesList, levels+1, "");
+  }
+  else 
     printDot(loadedModulesList, edges, options);
 }
 
@@ -176,7 +183,7 @@ void printPaths(Vertex[] vertices, uint level, char[] indent)
     return;
   foreach (vertex; vertices)
   {
-    Stdout(indent)(vertex.filePath).newline;
+    Stdout(indent)((vertex.isCyclic?"*":"")~vertex.filePath).newline;
     if (vertex.outgoing.length)
       printPaths(vertex.outgoing, level-1, indent~"  ");
   }
@@ -188,7 +195,7 @@ void printList(Vertex[] vertices, uint level, char[] indent)
     return;
   foreach (vertex; vertices)
   {
-    Stdout(indent)(vertex.getFQN()).newline;
+    Stdout(indent)((vertex.isCyclic?"*":"")~vertex.getFQN()).newline;
     if (vertex.outgoing.length)
       printList(vertex.outgoing, level-1, indent~"  ");
   }

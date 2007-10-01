@@ -81,6 +81,8 @@ void main(char[][] args)
           options |= IGraphOption.GroupByPackageNames; break;
         case "-gbf":
           options |= IGraphOption.GroupByFullPackageName; break;
+        case "-m":
+          options |= IGraphOption.MarkCyclicModules; break;
         default:
           filePath = arg;
         }
