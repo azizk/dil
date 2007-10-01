@@ -2564,33 +2564,17 @@ version(D2)
           (d > 0xDFFF && d <= 0x10FFFF && d != 0xFFFF && d != 0xFFFE);
   }
 
+  /// Is this a trail byte of a UTF-8 sequence?
   bool isTrailByte(ubyte b)
   {
-    return (b & 0xC0) == 0x80;
+    return (b & 0xC0) == 0x80; // 10xx_xxxx
   }
 
-/+
-  dchar decodeUTF8()
+  /// Is this a lead byte of a UTF-8 sequence?
+  bool isLeadByte(ubyte b)
   {
-    assert(!isascii(*p), "check for ASCII char before calling decodeUTF8().");
-    size_t idx;
-    dchar d = 0;
-    try
-    {
-      d = std.utf.decode(p[0 .. end-p], idx);
-      p += idx -1;
-    }
-    catch (UtfException e)
-    {
-      error(p, MID.InvalidUTF8Sequence);
-      // Move to next valid UTF-8 sequence or ASCII character.
-      while (++p < end && isTrailByte(*p)) {}
-      assert(p < end);
-      --p;
-    }
-    return d;
+    return (b & 0xC0) == 0xC0; // 11xx_xxxx
   }
-+/
 
   dchar decodeUTF8()
   {
@@ -2598,54 +2582,50 @@ version(D2)
     char* p = this.p;
     dchar d = *p;
 
+    ++p; // Move to second byte.
+    // Error if second byte is not a trail byte.
+    if (!isTrailByte(*p))
+      goto Lerr2;
+
     // Check for overlong sequences.
     switch (d)
     {
-    // 11100000 100xxxxx
-    // 11110000 1000xxxx
-    // 11111000 10000xxx
-    // 11111100 100000xx
-    case 0xE0, 0xF0, 0xF8, 0xFC:
-      if ((p[1] & d) == 0x80)
+    case 0xE0, // 11100000 100xxxxx
+         0xF0, // 11110000 1000xxxx
+         0xF8, // 11111000 10000xxx
+         0xFC: // 11111100 100000xx
+      if ((*p & d) == 0x80)
         goto Lerr;
     default:
       if ((d & 0xFE) == 0xC0) // 1100000x
         goto Lerr;
     }
 
+    const char[] checkNextByte = "if (!isTrailByte(*++p))"
+                                 "  goto Lerr2;";
+    const char[] appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
+
     // Decode
     if ((d & 0b1110_0000) == 0b1100_0000)
     {
       // 110xxxxx 10xxxxxx
       d &= 0b0001_1111;
-      if (!isTrailByte(*++p))
-        goto Lerr2;
-      d = (d << 6) | *p & 0b0011_1111;
+      mixin(appendSixBits);
     }
     else if ((d & 0b1111_0000) == 0b1110_0000)
     {
       // 1110xxxx 10xxxxxx 10xxxxxx
       d &= 0b0000_1111;
-      if (!isTrailByte(*++p))
-        goto Lerr2;
-      d = (d << 6) | *p & 0b0011_1111;
-      if (!isTrailByte(*++p))
-        goto Lerr2;
-      d = (d << 6) | *p & 0b0011_1111;
+      mixin(appendSixBits ~
+            checkNextByte ~ appendSixBits);
     }
     else if ((d & 0b1111_1000) == 0b1111_0000)
     {
       // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
       d &= 0b0000_0111;
-      if (!isTrailByte(*++p))
-        goto Lerr2;
-      d = (d << 6) | *p & 0b0011_1111;
-      if (!isTrailByte(*++p))
-        goto Lerr2;
-      d = (d << 6) | *p & 0b0011_1111;
-      if (!isTrailByte(*++p))
-        goto Lerr2;
-      d = (d << 6) | *p & 0b0011_1111;
+      mixin(appendSixBits ~
+            checkNextByte ~ appendSixBits ~
+            checkNextByte ~ appendSixBits);
     }
     else
       // 5 and 6 byte UTF-8 sequences are not allowed yet.
@@ -2653,13 +2633,26 @@ version(D2)
       // 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
       goto Lerr;
 
+    assert(isTrailByte(*p));
+
     if (!isEncodable(d))
     {
     Lerr:
-      // Move to next valid UTF-8 sequence or ASCII character.
-      while (++p < end && isTrailByte(*p)) {}
-      assert(p < end);
+      // Three cases:
+      // *) the UTF-8 sequence was successfully decoded but the resulting
+      //    character is invalid.
+      //    p points to last trail byte in the sequence.
+      // *) the UTF-8 sequence is overlong.
+      //    p points to second byte in the sequence.
+      // *) the UTF-8 sequence has more than 4 bytes or starts with
+      //    a trail byte.
+      //    p points to second byte in the sequence.
+      assert(isTrailByte(*p));
+      // Move to next ASCII character or lead byte of a UTF-8 sequence.
+      while (p < (end-1) && isTrailByte(*p))
+        ++p;
       --p;
+      assert(!isTrailByte(p[1]));
     Lerr2:
       d = 0;
       error(this.p, MID.InvalidUTF8Sequence);
