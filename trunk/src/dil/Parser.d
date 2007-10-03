@@ -226,7 +226,7 @@ class Parser
       switch (peekNext())
       {
       case T.Import:
-        goto case T.Import;
+        goto case_Import;
       case T.This:
         decl = parseStaticConstructorDeclaration();
         break;
@@ -244,6 +244,7 @@ class Parser
       }
       break;
     case T.Import:
+    case_Import:
       decl = parseImportDeclaration();
       assert(decl && decl.kind == NodeKind.ImportDeclaration);
       imports ~= cast(ImportDeclaration)cast(void*)decl;
@@ -820,6 +821,8 @@ class Parser
       isStatic = true;
       nT();
     }
+
+    assert(token.type == T.Import);
 
     ModuleFQN[] moduleFQNs;
     Token*[] moduleAliases;
