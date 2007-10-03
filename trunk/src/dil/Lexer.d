@@ -18,11 +18,14 @@ import std.utf;
 import std.uni;
 import common;
 
-const char[3] LS = \u2028;
-const char[3] PS = \u2029;
+const char[3] LS = \u2028; /// Line separator.
+const char[3] PS = \u2029; /// Paragraph separator.
 
 const dchar LSd = 0x2028;
 const dchar PSd = 0x2029;
+
+/// U+FFFD = �. Used to replace invalid Unicode characters.
+const dchar REPLACEMENT_CHAR = '\uFFFD';
 
 const uint _Z_ = 26; /// Control+Z
 
@@ -1829,7 +1832,7 @@ version(D2)
       }
       if (!isEncodable(c))
       {
-        c = 0;
+        c = REPLACEMENT_CHAR;
         error(sequenceStart, MID.InvalidUnicodeCharacter);
       }
       return c;
@@ -2555,13 +2558,35 @@ version(D2)
     return !(ident in reserved_ids_table);
   }
 
-  /+
+  /++
     Returns true if d can be encoded as a UTF-8 sequence.
   +/
   bool isEncodable(dchar d)
   {
     return d < 0xD800 ||
-          (d > 0xDFFF && d <= 0x10FFFF && d != 0xFFFF && d != 0xFFFE);
+          (d > 0xDFFF && d <= 0x10FFFF);
+  }
+
+  /++
+    There are a total of 66 noncharacters.
+    Returns true if this is one of them.
+    See_also: Chapter 16.7 Noncharacters in Unicode 5.0
+  +/
+  bool isNoncharacter(dchar d)
+  {
+    return 0xFDD0 <= d && d <= 0xFDEF || // 32
+           d <= 0x10FFFF && (d & 0xFFFF) >= 0xFFFE; // 34
+  }
+
+  /++
+    Returns true if this character is not a noncharacter, not a surrogate
+    code point and not higher than 0x10FFFF.
+  +/
+  bool isValidDecodedChar(dchar d)
+  {
+    return d < 0xD800 ||
+          (d > 0xDFFF && d < 0xFDD0) ||
+          (d > 0xFDEF && d <= 0x10FFFF && (d & 0xFFFF) < 0xFFFE);
   }
 
   /// Is this a trail byte of a UTF-8 sequence?
@@ -2654,7 +2679,7 @@ version(D2)
       --p;
       assert(!isTrailByte(p[1]));
     Lerr2:
-      d = 0;
+      d = REPLACEMENT_CHAR;
       error(this.p, MID.InvalidUTF8Sequence);
     }
 
@@ -2665,10 +2690,9 @@ version(D2)
   private void encodeUTF8(ref char[] str, dchar d)
   {
     char[6] b;
-    assert(!isascii(d) || d == 0, "check for ASCII char before calling encodeUTF8().");
+    assert(!isascii(d), "check for ASCII char before calling encodeUTF8().");
     assert(isEncodable(d), "check that 'd' is encodable before calling encodeUTF8().");
-    if (d == 0)
-      return;
+
     if (d < 0x800)
     {
       b[0] = 0xC0 | (d >> 6);
