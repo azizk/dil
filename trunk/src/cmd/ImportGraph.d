@@ -162,6 +162,15 @@ void execute(string filePath, string[] importPaths, string[] strRegexps, uint le
   }
   // Finished loading modules.
 
+  // Check that every module has at least one incoming or outgoing edge.
+  assert(
+    delegate {
+      foreach (mod; loadedModulesList)
+        if (mod.incoming.length == 0 && mod.outgoing.length == 0)
+          throw new Exception("module "~mod.getFQN()~" has no edges in the graph.");
+      return true;
+    }() == true
+  );
 
   if (options & (IGraphOption.PrintList | IGraphOption.PrintPaths))
   {
@@ -236,9 +245,9 @@ void printDot(Vertex[] loadedModulesList, Edge[] edges, IGraphOption options)
   Stdout("}\n");
 }
 
-void analyzeGraph(Vertex[] vertices, Edge[] edges)
+void analyzeGraph(Vertex[] vertices_init, Edge[] edges)
 {
-  void recursive(Vertex[] modules)
+  void recursive(Vertex[] vertices)
   {
     foreach (idx, vertex; vertices)
     {
@@ -264,10 +273,17 @@ void analyzeGraph(Vertex[] vertices, Edge[] edges)
               edges[j++] = edges[i];
           edges.length = j;
           vertices = vertices[0..idx] ~ vertices[idx+1..$];
-          return recursive(modules);
+          recursive(vertices);
+          return;
         }
         else
-          assert(0, "orphaned module: "~vertex.getFQN()~" (has no edges in graph)"); // orphaned vertex (module) in graph
+        {
+          // Edges to this vertex were removed previously.
+          // Only remove vertex now.
+          vertices = vertices[0..idx] ~ vertices[idx+1..$];
+          recursive(vertices);
+          return;
+        }
       }
       else if (incoming == 0)
       {
@@ -280,11 +296,13 @@ void analyzeGraph(Vertex[] vertices, Edge[] edges)
             edges[j++] = edges[i];
         edges.length = j;
         vertices = vertices[0..idx] ~ vertices[idx+1..$];
-        return recursive(modules);
+        recursive(vertices);
+        return;
       }
 //       else
 //       {
 //         // source && sink
+//         // continue loop.
 //       }
     }
 
@@ -295,5 +313,5 @@ void analyzeGraph(Vertex[] vertices, Edge[] edges)
       if (edge)
         edge.isCyclic = true;
   }
-  recursive(vertices);
+  recursive(vertices_init);
 }
