@@ -33,10 +33,11 @@ string[] messages = [
   "päättämätön gravisaksenttimerkkijono.",
   // \x \u \U
   "löydettiin määrittelemätön escape-sekvenssi.", // TODO: Insert '{0}'
+  "found invalid Unicode escape sequence '{0}'.", // TODO: translate
   "riittämätön määrä heksanumeroita escape-sekvenssissä.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "määrittelemätön HTML-entiteetti '{0}'",
-  "päättämätön HTML-entiteetti.",
+  "päättämätön HTML-entiteetti.", // TODO: insert '{0}'
   "HTML-entiteettien tulee alkaa kirjaimella.",
   // integer overflows
   "desimaaliluku ylivuotaa etumerkin.",

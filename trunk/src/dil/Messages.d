@@ -35,6 +35,7 @@ enum MID
   UnterminatedBackQuoteString,
   // \x \u \U
   UndefinedEscapeSequence,
+  InvalidUnicodeEscapeSequence,
   InsufficientHexDigits,
   // \&[a-zA-Z][a-zA-Z0-9]+;
   UndefinedHTMLEntity,

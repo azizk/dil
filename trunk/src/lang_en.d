@@ -33,10 +33,11 @@ string[] messages = [
   "unterminated back quote string.",
   // \x \u \U
   "found undefined escape sequence '{0}'.",
+  "found invalid Unicode escape sequence '{0}'.",
   "insufficient number of hex digits in escape sequence.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "undefined HTML entity '{0}'",
-  "unterminated HTML entity.",
+  "unterminated HTML entity '{0}'.",
   "HTML entities must begin with a letter.",
   // integer overflows
   "decimal number overflows sign bit.",

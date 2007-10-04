@@ -1827,13 +1827,15 @@ version(D2)
         else
         {
           error(sequenceStart, MID.InsufficientHexDigits);
-          return c;
+          return REPLACEMENT_CHAR;
         }
       }
+
       if (!isEncodable(c))
       {
         c = REPLACEMENT_CHAR;
-        error(sequenceStart, MID.InvalidUnicodeCharacter);
+        assert(*sequenceStart == '\\');
+        error(sequenceStart, MID.InvalidUnicodeEscapeSequence, sequenceStart[0..p-sequenceStart]);
       }
       return c;
     case 'u':
@@ -1876,7 +1878,7 @@ version(D2)
               error(sequenceStart, MID.UndefinedHTMLEntity, sequenceStart[0 .. p - sequenceStart]);
           }
           else
-            error(sequenceStart, MID.UnterminatedHTMLEntity);
+            error(sequenceStart, MID.UnterminatedHTMLEntity, sequenceStart[0 .. p - sequenceStart]);
         }
         else
           error(sequenceStart, MID.InvalidBeginHTMLEntity);

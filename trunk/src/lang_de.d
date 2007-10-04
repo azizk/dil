@@ -33,10 +33,11 @@ string[] messages = [
   "unterminierte Backquote-Zeichenkette.",
   // \x \u \U
   "undefinierte Escapesequenz '{0}' gefunden.",
+  "ungültige Unicode-Escapesequenz '{0}' gefunden.",
   "unzureichende Anzahl von Hexziffern in Escapesequenz.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "undefinierte HTML-Entität '{0}'",
-  "unterminierte HTML-Entität.",
+  "unterminierte HTML-Entität '{0}'.",
   "HTML-Entitäten müssen mit einem Buchstaben beginnen.",
   // integer overflows
   "Dezimalzahl überläuft im Vorzeichenbit.",

@@ -33,10 +33,11 @@ string[] messages = [
   "kapanmamış ters tırnak dizgisi.",
   // \x \u \U
   "tanımlanmamış çıkış serisi '{0}' bulundu.",
+  "geçersiz Unikod çıkış serisi '{0}' bulundu.",
   "heksadesimal çıkış serisi sayıları yeterli değil.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "tanımlanmamış HTML varlık '{0}'",
-  "kapanmamış HTML varlık.",
+  "kapanmamış HTML varlık '{0}'.",
   "HTML varlık bir harf ile başlamalı.",
   // integer overflows
   "desimal rakamın bit işareti taşdı.",
