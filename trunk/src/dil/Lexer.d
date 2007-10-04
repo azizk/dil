@@ -1787,6 +1787,9 @@ version(D2)
 } // version(D2)
 
   dchar scanEscapeSequence()
+  out(result)
+  { assert(isEncodable(result)); }
+  body
   {
     assert(*p == '\\');
 
@@ -1799,12 +1802,13 @@ version(D2)
       ++p;
       return c;
     }
+
     uint digits = 2;
 
     switch (*p)
     {
     case 'x':
-      c = 0;
+      assert(c == 0);
       while (1)
       {
         ++p;
@@ -1821,23 +1825,19 @@ version(D2)
           if (!--digits)
           {
             ++p;
+            if (isEncodable(c))
+              return c; // Return valid escape value.
+
+            error(sequenceStart, MID.InvalidUnicodeEscapeSequence, sequenceStart[0..p-sequenceStart]);
             break;
           }
+          continue;
         }
-        else
-        {
-          error(sequenceStart, MID.InsufficientHexDigits);
-          return REPLACEMENT_CHAR;
-        }
-      }
 
-      if (!isEncodable(c))
-      {
-        c = REPLACEMENT_CHAR;
-        assert(*sequenceStart == '\\');
-        error(sequenceStart, MID.InvalidUnicodeEscapeSequence, sequenceStart[0..p-sequenceStart]);
+        error(sequenceStart, MID.InsufficientHexDigits);
+        break;
       }
-      return c;
+      break;
     case 'u':
       digits = 4;
       goto case 'x';
@@ -1847,7 +1847,7 @@ version(D2)
     default:
       if (isoctal(*p))
       {
-        c = 0;
+        assert(c == 0);
         c += *p - '0';
         ++p;
         if (!isoctal(*p))
@@ -1860,6 +1860,7 @@ version(D2)
         c *= 8;
         c += *p - '0';
         ++p;
+        return c; // Return valid escape value.
       }
       else if(*p == '&')
       {
@@ -1874,7 +1875,9 @@ version(D2)
             // Pass entity excluding '&' and ';'.
             c = entity2Unicode(begin[0..p - begin]);
             ++p; // Skip ;
-            if (c == 0xFFFF)
+            if (c != 0xFFFF)
+              return c; // Return valid escape value.
+            else
               error(sequenceStart, MID.UndefinedHTMLEntity, sequenceStart[0 .. p - sequenceStart]);
           }
           else
@@ -1904,8 +1907,7 @@ version(D2)
         error(sequenceStart, MID.UndefinedEscapeSequence, str);
       }
     }
-
-    return c;
+    return REPLACEMENT_CHAR; // Error: return replacement character.
   }
 
   /*
