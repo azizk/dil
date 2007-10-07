@@ -87,6 +87,7 @@ final class Location
 
   void set(size_t lineNum, char* lineBegin, char* to)
   {
+    assert(lineBegin !is null && to !is null);
     assert(lineBegin <= to);
     this.lineNum   = lineNum;
     this.lineBegin = lineBegin;

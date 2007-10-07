@@ -39,11 +39,10 @@ class Lexer
   char* p; /// Points to the current character in the source text.
   char* end; /// Points one character past the end of the source text.
 
-  // Members used to generate error messages:
+  // Members used for error messages:
   Information[] errors;
   char* lineBegin; /// Always points to the beginning of the current line.
   uint loc = 1; /// Actual line of code.
-  uint loc_old; /// Store actual line number when #line token is scanned.
   uint loc_hline; /// Line number set by #line.
   uint inTokenString; /// > 0 if inside q{ }
   Location errorLoc;
@@ -180,11 +179,15 @@ class Lexer
     this.lineBegin = p;
   }
 
-  private void scanNext(ref Token* t)
+  private void scanNext(bool rescan)(ref Token* t)
   {
     assert(t !is null);
     if (t.next)
+    {
       t = t.next;
+      static if (rescan == true)
+        rescanNewlines(*t);
+    }
     else if (t != this.tail)
     {
       Token* new_t = new Token;
@@ -197,13 +200,128 @@ class Lexer
 
   void peek(ref Token* t)
   {
-    scanNext(t);
+    scanNext!(false)(t);
   }
 
   TOK nextToken()
   {
-    scanNext(this.token);
+    scanNext!(true)(this.token);
     return this.token.type;
+  }
+
+  void rescanNewlines(ref Token t)
+  {
+    auto p = t.ws;
+    auto end = t.start;
+
+    if (p !is null)
+    {
+      assert(end !is null);
+      // Scan preceding whitespace for newlines.
+      do
+      {
+        switch (*p)
+        {
+        case '\r':
+          if (p[1] == '\n')
+            ++p;
+        case '\n':
+          ++loc;
+          setLineBegin(p + 1);
+          break;
+        case LS[0]:
+          assert(p+2 < end && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]));
+          ++p; ++p;
+          ++loc;
+          setLineBegin(p + 1);
+          break;
+        default:
+          assert(isspace(*p));
+        }
+        ++p;
+      } while (p < end)
+    }
+
+    if (t.type == TOK.String && t.start[0] != '\\' ||
+        t.type == TOK.Comment && t.start[1] != '/')
+    {
+      // String literals and comments are the only tokens that can have
+      // newlines.
+      p = t.start;
+      end = t.end;
+      assert(p !is null && end !is null);
+      do
+      {
+        switch (*p)
+        {
+        case '\r':
+          if (p[1] == '\n')
+            ++p;
+        case '\n':
+          ++loc;
+          setLineBegin(p + 1);
+          break;
+        case LS[0]:
+          if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+          {
+            ++p; ++p;
+            ++loc;
+            setLineBegin(p + 1);
+            break;
+          }
+        default:
+        }
+        ++p;
+      } while (p < end)
+    }
+    else
+    {
+      if (t.type == TOK.HashLine)
+        evaluateHashLine(t);
+
+      assert(delegate() {
+          p = t.start;
+          end = t.end;
+          while (p < end)
+          {
+            if (*p == '\n' || *p == '\r' ||
+                (p+2) < end && *p == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
+              return false;
+            ++p;
+          }
+          return true;
+        }() == true, "Token '" ~ t.srcText ~ "' has unexpected newline."
+      );
+    }
+  }
+
+  struct LocState
+  {
+    char[] filePath;
+    uint loc;
+    uint loc_hline;
+    char* lineBegin;
+  }
+
+  LocState getState()
+  {
+    LocState s;
+    s.filePath = this.errorLoc.filePath;
+    s.lineBegin = this.lineBegin;
+    s.loc_hline = this.loc_hline;
+    s.loc = this.loc;
+    return s;
+  }
+
+  void restoreState(LocState s)
+  {
+    if (s.lineBegin == this.lineBegin)
+      return;
+    assert(s.loc != this.loc);
+    this.errorLoc.setFilePath(s.filePath);
+    this.lineBegin = s.lineBegin;
+    this.loc = s.loc;
+    this.loc_hline = s.loc_hline;
   }
 
   public void scan_(out Token t)
@@ -1690,7 +1808,7 @@ version(D2)
     auto tokenLineBegin = lineBegin;
 
     // A guard against changes to particular members:
-    // this.loc_old, this.loc_hline and this.errorLoc.filePath
+    // this.loc_hline and this.errorLoc.filePath
     ++inTokenString;
 
     uint loc = this.loc;
@@ -2450,18 +2568,24 @@ version(D2)
 
     // Evaluate #line only when not in token string.
     if (!inTokenString)
-    {
-      this.loc_old = this.loc;
-      this.loc_hline = t.line_num.uint_ - 1;
-      if (t.line_filespec)
-        this.errorLoc.setFilePath(t.line_filespec.str);
-    }
+      evaluateHashLine(t);
     t.end = p;
 
     return;
   Lerr:
     t.end = p;
     error(errorAtColumn, mid);
+  }
+
+  void evaluateHashLine(ref Token t)
+  {
+    assert(t.type == TOK.HashLine);
+    if (t.line_num)
+    {
+      this.loc_hline = this.loc - t.line_num.uint_ + 1;
+      if (t.line_filespec)
+        this.errorLoc.setFilePath(t.line_filespec.str);
+    }
   }
 
   /+
@@ -2499,8 +2623,7 @@ version(D2)
 
   uint errorLineNum(uint loc)
   {
-    // ∆loc + line_num_of(#line)
-    return loc - this.loc_old + this.loc_hline;
+    return loc - this.loc_hline;
   }
 
   void error(char* columnPos, MID mid, ...)

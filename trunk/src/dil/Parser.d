@@ -96,6 +96,7 @@ class Parser
     auto oldToken     = this.token;
     auto oldPrevToken = this.prevToken;
     auto oldCount     = this.errorCount;
+    auto lexerState   = this.lx.getState();
 
     auto result = parseMethod();
 
@@ -103,6 +104,7 @@ class Parser
     if (errorCount != oldCount)
     {
       // Restore members.
+      lx.restoreState(lexerState);
       token      = oldToken;
       prevToken  = oldPrevToken;
       lx.token   = oldToken;
@@ -123,10 +125,23 @@ class Parser
 
   TOK peekNext()
   {
+    auto state = lx.getState();
     Token* next = token;
     do
       lx.peek(next);
     while (next.isWhitespace) // Skip whitespace
+    lx.restoreState(state);
+    return next.type;
+  }
+
+  TOK peekAfter(ref Token* next)
+  {
+    assert(next !is null);
+    auto state = lx.getState();
+    do
+      lx.peek(next);
+    while (next.isWhitespace) // Skip whitespace
+    lx.restoreState(state);
     return next.type;
   }
 
@@ -271,11 +286,9 @@ class Parser
     version(D2)
     {
       auto next = token;
-      lx.peek(next);
-      if (next.type == T.LParen)
+      if (peekAfter(next) == T.LParen)
       {
-        lx.peek(next);
-        if (next.type != T.RParen)
+        if (peekAfter(next) != T.RParen)
           goto case_Declaration;
       }
       else
@@ -3794,6 +3807,8 @@ class Parser
     assert(token.type == T.LParen);
     Token* next = token;
     uint level = 1;
+    auto state = lx.getState();
+  Loop:
     while (1)
     {
       lx.peek(next);
@@ -3801,22 +3816,22 @@ class Parser
       {
       case T.RParen:
         if (--level == 0)
-        { // Closing parentheses found.
-          lx.peek(next);
-          break;
+        { // Last, closing parentheses found.
+          do
+            lx.peek(next);
+          while (next.isWhitespace)
+          break Loop;
         }
-        continue;
+        break;
       case T.LParen:
         ++level;
-        continue;
-      case T.EOF:
         break;
+      case T.EOF:
+        break Loop;
       default:
-        continue;
       }
-      break;
     }
-
+    lx.restoreState(state);
     return next.type == tok;
   }
 
