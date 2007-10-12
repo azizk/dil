@@ -11,7 +11,7 @@ from ui_translator import Ui_MainWindow
 from ui_about import Ui_AboutDialog
 from ui_new_project import Ui_NewProjectDialog
 
-import project
+from project import Project
 
 g_scriptDir = sys.path[0]
 g_CWD = os.getcwd()
@@ -28,6 +28,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     # Custom connections
     QtCore.QObject.connect(self.action_About, QtCore.SIGNAL("triggered()"), self.showAboutDialog)
     QtCore.QObject.connect(self.action_New_Project, QtCore.SIGNAL("triggered()"), self.createNewProject)
+    QtCore.QObject.connect(self.action_Open_Project, QtCore.SIGNAL("triggered()"), self.openProject)
 
     self.readSettings()
 
@@ -38,6 +39,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
   def createNewProject(self):
     NewProjectDialog().exec_()
+
+  def openProject(self):
+    filePath = QtGui.QFileDialog.getOpenFileName(self, "Select Project File", g_CWD, "Translator Project (*.tproj)");
+
+    project = Project(filePath)
 
   def closeEvent(self, event):
     self.writeSettings()
@@ -78,10 +84,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     yaml.dump(g_settings, open(g_settingsFile, "w")) #default_flow_style=False
 
 
-class ProjectTree(QtGui.QTreeWidget)
-  QtGui.QTreeWidget.__init__(self)
-  def __init__(self):
-    pass
+class ProjectTree(QtGui.QTreeWidget):
+  def __init__(self, parent):
+    QtGui.QTreeWidget.__init__(self, parent)
 
 
 class NewProjectDialog(QtGui.QDialog, Ui_NewProjectDialog):
@@ -92,7 +97,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProjectDialog):
     QtCore.QObject.connect(self.pickFileButton, QtCore.SIGNAL("clicked()"), self.pickFilePath)
 
   def pickFilePath(self):
-    filePath = QtGui.QFileDialog.getSaveFileName(self, "Select Project File", g_CWD, "Translator Project (*.tproj)");
+    filePath = QtGui.QFileDialog.getSaveFileName(self, "New Project File", g_CWD, "Translator Project (*.tproj)");
     filePath = str(filePath) # Convert QString
     if os.path.splitext(filePath)[1] != ".tproj":
       filePath += ".tproj"

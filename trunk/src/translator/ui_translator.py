@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'translator.ui'
 #
-# Created: Fri Oct 12 22:15:30 2007
+# Created: Fri Oct 12 22:49:36 2007
 #      by: PyQt4 UI code generator 4.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -57,7 +57,15 @@ class Ui_MainWindow(object):
 
         self.action_Build_Project = QtGui.QAction(MainWindow)
         self.action_Build_Project.setObjectName("action_Build_Project")
+
+        self.action_Open_Project = QtGui.QAction(MainWindow)
+        self.action_Open_Project.setObjectName("action_Open_Project")
+
+        self.action_Close_Project = QtGui.QAction(MainWindow)
+        self.action_Close_Project.setObjectName("action_Close_Project")
+        self.menu_File.addAction(self.action_Open_Project)
         self.menu_File.addAction(self.action_New_Project)
+        self.menu_File.addAction(self.action_Close_Project)
         self.menu_File.addSeparator()
         self.menu_File.addAction(self.action_Quit)
         self.menu_Help.addAction(self.action_About)
@@ -81,9 +89,13 @@ class Ui_MainWindow(object):
         self.action_Quit.setText(QtGui.QApplication.translate("MainWindow", "&Quit", None, QtGui.QApplication.UnicodeUTF8))
         self.action_Quit.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+Q", None, QtGui.QApplication.UnicodeUTF8))
         self.action_About.setText(QtGui.QApplication.translate("MainWindow", "&About", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_New_Project.setText(QtGui.QApplication.translate("MainWindow", "&New Project", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_New_Project.setText(QtGui.QApplication.translate("MainWindow", "&New Project...", None, QtGui.QApplication.UnicodeUTF8))
         self.action_New_Project.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+N", None, QtGui.QApplication.UnicodeUTF8))
         self.action_Add_catalogue.setText(QtGui.QApplication.translate("MainWindow", "&Add catalogue", None, QtGui.QApplication.UnicodeUTF8))
         self.action_Properties.setText(QtGui.QApplication.translate("MainWindow", "&Properties", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_Build_Project.setText(QtGui.QApplication.translate("MainWindow", "Build Project", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Build_Project.setText(QtGui.QApplication.translate("MainWindow", "&Build Project", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Open_Project.setText(QtGui.QApplication.translate("MainWindow", "&Open Project...", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Open_Project.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+O", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Close_Project.setText(QtGui.QApplication.translate("MainWindow", "&Close Project", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Close_Project.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+W", None, QtGui.QApplication.UnicodeUTF8))
 

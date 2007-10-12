@@ -2,6 +2,7 @@
 # Author: Aziz Köksal
 # License: GPL2
 import exceptions
+import yaml
 
 class LangFile:
   class LoadingError(exceptions.Exception):
@@ -42,7 +43,7 @@ class LangFile:
          not msg.has_key("LastEdited"):
         raise LoadingError("")
 
-  def checkType(var, type_, msg=""):
+  def checkType(self, var, type_, msg=""):
     if not isinstance(var, type_):
       raise LoadingError(msg)
 

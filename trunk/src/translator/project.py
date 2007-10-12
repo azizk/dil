@@ -4,6 +4,7 @@
 import langfile
 import datetime
 import exceptions
+import yaml
 
 class Project:
   class LoadingError(exceptions.Exception):
@@ -28,7 +29,7 @@ class Project:
       self.name = doc["Name"]
       self.source = doc["SourceLangFile"]
       self.langFilePaths = doc["LangFiles"]
-      self.msgids = doc["MsgIDs"]
+      self.msgIDs = doc["MsgIDs"]
       self.creationDate = doc["CreationDate"]
     except KeyError, e:
       raise LoadingError("Missing member '%s' in '%s'" % (e.message, filePath))
@@ -36,7 +37,7 @@ class Project:
     self.checkType(self.name, str)
     self.checkType(self.source, str)
     self.checkType(self.langFilePaths, list)
-    for path in self.langFilesPaths:
+    for path in self.langFilePaths:
       self.checkType(path, str)
     self.checkType(self.msgIDs, list)
     for msg in self.msgIDs:
@@ -52,7 +53,7 @@ class Project:
     for filePath in self.langFilePaths:
       self.langFiles += LangFile(filePath)
 
-  def checkType(var, type_):
+  def checkType(self, var, type_):
     if not isinstance(var, type_):
       raise LoadingException("%s is not of type %s" % (str(var), str(type_)))
 

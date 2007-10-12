@@ -28,7 +28,9 @@
     <property name="title" >
      <string>&amp;File</string>
     </property>
+    <addaction name="action_Open_Project" />
     <addaction name="action_New_Project" />
+    <addaction name="action_Close_Project" />
     <addaction name="separator" />
     <addaction name="action_Quit" />
    </widget>
@@ -67,7 +69,7 @@
   </action>
   <action name="action_New_Project" >
    <property name="text" >
-    <string>&amp;New Project</string>
+    <string>&amp;New Project...</string>
    </property>
    <property name="shortcut" >
     <string>Ctrl+N</string>
@@ -85,7 +87,23 @@
   </action>
   <action name="action_Build_Project" >
    <property name="text" >
-    <string>Build Project</string>
+    <string>&amp;Build Project</string>
+   </property>
+  </action>
+  <action name="action_Open_Project" >
+   <property name="text" >
+    <string>&amp;Open Project...</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="action_Close_Project" >
+   <property name="text" >
+    <string>&amp;Close Project</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+W</string>
    </property>
   </action>
  </widget>
