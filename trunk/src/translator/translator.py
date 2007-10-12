@@ -4,11 +4,14 @@
 # License: GPL2
 import sys, os
 import yaml
+
 from PyQt4 import QtCore, QtGui
 # User interface modules
 from ui_translator import Ui_MainWindow
 from ui_about import Ui_AboutDialog
 from ui_new_project import Ui_NewProjectDialog
+
+import project
 
 g_scriptDir = sys.path[0]
 g_CWD = os.getcwd()
@@ -46,16 +49,15 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
   def readSettings(self):
     # Set default size
     self.resize(QtCore.QSize(500, 400))
-
+    doc = {}
     try:
       doc = yaml.load(open(g_settingsFile, "r"))
     except:
       self.moveToCenterOfDesktop()
       return
 
-    if isinstance(doc, type({})):
-      g_settings = doc
-    else:
+    g_settings = doc
+    if not isinstance(doc, dict):
       g_settings = {}
 
     try:
@@ -74,6 +76,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
       "Size" : [self.size().width(), self.size().height()]
     }
     yaml.dump(g_settings, open(g_settingsFile, "w")) #default_flow_style=False
+
+
+class ProjectTree(QtGui.QTreeWidget)
+  QtGui.QTreeWidget.__init__(self)
+  def __init__(self):
+    pass
 
 
 class NewProjectDialog(QtGui.QDialog, Ui_NewProjectDialog):
@@ -101,12 +109,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProjectDialog):
       QtGui.QMessageBox.warning(self, "Warning", "Please, choose or enter a path for the project file.")
       return
 
-    projectData = {
-      "Name":projectName,
-      "LangFiles":[],
-      "SourceLangFile":'',
-      "MsgIDs":[]
-    }
+    projectData = Project.newProjectData(projectName)
 
     if os.path.splitext(filePath)[1] != ".tproj":
       filePath += ".tproj"

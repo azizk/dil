@@ -13,59 +13,7 @@
    <string>Translator</string>
   </property>
   <widget class="QWidget" name="centralwidget" >
-   <layout class="QVBoxLayout" >
-    <item>
-     <layout class="QVBoxLayout" >
-      <item>
-       <widget class="QSplitter" name="splitter_2" >
-        <property name="orientation" >
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <widget class="QListView" name="listView" />
-        <widget class="QSplitter" name="splitter" >
-         <property name="orientation" >
-          <enum>Qt::Vertical</enum>
-         </property>
-         <widget class="QTextEdit" name="textEdit" >
-          <property name="tabChangesFocus" >
-           <bool>true</bool>
-          </property>
-         </widget>
-         <widget class="QTextEdit" name="textEdit_2" >
-          <property name="tabChangesFocus" >
-           <bool>true</bool>
-          </property>
-         </widget>
-        </widget>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" >
-        <item>
-         <spacer>
-          <property name="orientation" >
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" >
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton" >
-          <property name="text" >
-           <string>Exit</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </item>
-   </layout>
+   <layout class="QVBoxLayout" />
   </widget>
   <widget class="QMenuBar" name="menubar" >
    <property name="geometry" >
@@ -141,30 +89,8 @@
    </property>
   </action>
  </widget>
- <tabstops>
-  <tabstop>listView</tabstop>
-  <tabstop>textEdit</tabstop>
-  <tabstop>textEdit_2</tabstop>
-  <tabstop>pushButton</tabstop>
- </tabstops>
  <resources/>
  <connections>
-  <connection>
-   <sender>pushButton</sender>
-   <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel" >
-     <x>596</x>
-     <y>430</y>
-    </hint>
-    <hint type="destinationlabel" >
-     <x>266</x>
-     <y>171</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>action_Quit</sender>
    <signal>triggered()</signal>
