@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'translator.ui'
 #
-# Created: Wed Oct 10 22:04:31 2007
+# Created: Fri Oct 12 10:58:49 2007
 #      by: PyQt4 UI code generator 4.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -66,25 +66,47 @@ class Ui_MainWindow(object):
 
         self.menu_Help = QtGui.QMenu(self.menubar)
         self.menu_Help.setObjectName("menu_Help")
+
+        self.menu_Project = QtGui.QMenu(self.menubar)
+        self.menu_Project.setObjectName("menu_Project")
         MainWindow.setMenuBar(self.menubar)
 
         self.statusbar = QtGui.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-        self.actionQuit = QtGui.QAction(MainWindow)
-        self.actionQuit.setObjectName("actionQuit")
+        self.action_Quit = QtGui.QAction(MainWindow)
+        self.action_Quit.setObjectName("action_Quit")
 
-        self.actionAbout = QtGui.QAction(MainWindow)
-        self.actionAbout.setObjectName("actionAbout")
-        self.menu_File.addAction(self.actionQuit)
-        self.menu_Help.addAction(self.actionAbout)
+        self.action_About = QtGui.QAction(MainWindow)
+        self.action_About.setObjectName("action_About")
+
+        self.action_New_Project = QtGui.QAction(MainWindow)
+        self.action_New_Project.setObjectName("action_New_Project")
+
+        self.action_Add_catalogue = QtGui.QAction(MainWindow)
+        self.action_Add_catalogue.setObjectName("action_Add_catalogue")
+
+        self.action_Properties = QtGui.QAction(MainWindow)
+        self.action_Properties.setObjectName("action_Properties")
+
+        self.action_Build_Project = QtGui.QAction(MainWindow)
+        self.action_Build_Project.setObjectName("action_Build_Project")
+        self.menu_File.addAction(self.action_New_Project)
+        self.menu_File.addSeparator()
+        self.menu_File.addAction(self.action_Quit)
+        self.menu_Help.addAction(self.action_About)
+        self.menu_Project.addAction(self.action_Add_catalogue)
+        self.menu_Project.addAction(self.action_Build_Project)
+        self.menu_Project.addSeparator()
+        self.menu_Project.addAction(self.action_Properties)
         self.menubar.addAction(self.menu_File.menuAction())
+        self.menubar.addAction(self.menu_Project.menuAction())
         self.menubar.addAction(self.menu_Help.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QObject.connect(self.pushButton,QtCore.SIGNAL("clicked()"),MainWindow.close)
-        QtCore.QObject.connect(self.actionQuit,QtCore.SIGNAL("triggered()"),MainWindow.close)
+        QtCore.QObject.connect(self.action_Quit,QtCore.SIGNAL("triggered()"),MainWindow.close)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.listView,self.textEdit)
         MainWindow.setTabOrder(self.textEdit,self.textEdit_2)
@@ -95,7 +117,13 @@ class Ui_MainWindow(object):
         self.pushButton.setText(QtGui.QApplication.translate("MainWindow", "Exit", None, QtGui.QApplication.UnicodeUTF8))
         self.menu_File.setTitle(QtGui.QApplication.translate("MainWindow", "&File", None, QtGui.QApplication.UnicodeUTF8))
         self.menu_Help.setTitle(QtGui.QApplication.translate("MainWindow", "&Help", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionQuit.setText(QtGui.QApplication.translate("MainWindow", "Quit", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionQuit.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+Q", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionAbout.setText(QtGui.QApplication.translate("MainWindow", "&About", None, QtGui.QApplication.UnicodeUTF8))
+        self.menu_Project.setTitle(QtGui.QApplication.translate("MainWindow", "&Project", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Quit.setText(QtGui.QApplication.translate("MainWindow", "&Quit", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Quit.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+Q", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_About.setText(QtGui.QApplication.translate("MainWindow", "&About", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_New_Project.setText(QtGui.QApplication.translate("MainWindow", "&New Project", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_New_Project.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+N", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Add_catalogue.setText(QtGui.QApplication.translate("MainWindow", "&Add catalogue", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Properties.setText(QtGui.QApplication.translate("MainWindow", "&Properties", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Build_Project.setText(QtGui.QApplication.translate("MainWindow", "Build Project", None, QtGui.QApplication.UnicodeUTF8))
 
