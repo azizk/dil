@@ -44,7 +44,7 @@
     <property name="title" >
      <string>&amp;Project</string>
     </property>
-    <addaction name="action_Add_catalogue" />
+    <addaction name="action_Add_Catalogue" />
     <addaction name="action_Build_Project" />
     <addaction name="separator" />
     <addaction name="action_Properties" />
@@ -75,7 +75,7 @@
     <string>Ctrl+N</string>
    </property>
   </action>
-  <action name="action_Add_catalogue" >
+  <action name="action_Add_Catalogue" >
    <property name="text" >
     <string>&amp;Add catalogue</string>
    </property>

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'translator.ui'
 #
-# Created: Fri Oct 12 22:49:36 2007
+# Created: Sun Oct 14 13:11:43 2007
 #      by: PyQt4 UI code generator 4.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -49,8 +49,8 @@ class Ui_MainWindow(object):
         self.action_New_Project = QtGui.QAction(MainWindow)
         self.action_New_Project.setObjectName("action_New_Project")
 
-        self.action_Add_catalogue = QtGui.QAction(MainWindow)
-        self.action_Add_catalogue.setObjectName("action_Add_catalogue")
+        self.action_Add_Catalogue = QtGui.QAction(MainWindow)
+        self.action_Add_Catalogue.setObjectName("action_Add_Catalogue")
 
         self.action_Properties = QtGui.QAction(MainWindow)
         self.action_Properties.setObjectName("action_Properties")
@@ -69,7 +69,7 @@ class Ui_MainWindow(object):
         self.menu_File.addSeparator()
         self.menu_File.addAction(self.action_Quit)
         self.menu_Help.addAction(self.action_About)
-        self.menu_Project.addAction(self.action_Add_catalogue)
+        self.menu_Project.addAction(self.action_Add_Catalogue)
         self.menu_Project.addAction(self.action_Build_Project)
         self.menu_Project.addSeparator()
         self.menu_Project.addAction(self.action_Properties)
@@ -91,7 +91,7 @@ class Ui_MainWindow(object):
         self.action_About.setText(QtGui.QApplication.translate("MainWindow", "&About", None, QtGui.QApplication.UnicodeUTF8))
         self.action_New_Project.setText(QtGui.QApplication.translate("MainWindow", "&New Project...", None, QtGui.QApplication.UnicodeUTF8))
         self.action_New_Project.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+N", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_Add_catalogue.setText(QtGui.QApplication.translate("MainWindow", "&Add catalogue", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Add_Catalogue.setText(QtGui.QApplication.translate("MainWindow", "&Add catalogue", None, QtGui.QApplication.UnicodeUTF8))
         self.action_Properties.setText(QtGui.QApplication.translate("MainWindow", "&Properties", None, QtGui.QApplication.UnicodeUTF8))
         self.action_Build_Project.setText(QtGui.QApplication.translate("MainWindow", "&Build Project", None, QtGui.QApplication.UnicodeUTF8))
         self.action_Open_Project.setText(QtGui.QApplication.translate("MainWindow", "&Open Project...", None, QtGui.QApplication.UnicodeUTF8))
