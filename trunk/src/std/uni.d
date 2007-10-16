@@ -555,8 +555,8 @@ int isUniAlpha(dchar u)
 	    assert(table[i][0] <= table[i][1]);
 	    if (i < table.length - 1)
 	    {
-		if (table[i][1] >= table[i + 1][0])
-		    printf("table[%d][1] = x%x, table[%d][0] = x%x\n", i, table[i][1], i + 1, table[i + 1][0]);
+//		if (table[i][1] >= table[i + 1][0])
+//		    printf("table[%d][1] = x%x, table[%d][0] = x%x\n", i, table[i][1], i + 1, table[i + 1][0]);
 		assert(table[i][1] < table[i + 1][0]);
 	    }
 	}
