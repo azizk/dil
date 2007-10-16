@@ -2,7 +2,7 @@
  * Author: Jari-Matti Mäkelä
  * License: GPL3
  */
-module trunk.src.docgen.docgen;
+module docgen.docgen;
 
 import docgen.modulegraph.writer;
 

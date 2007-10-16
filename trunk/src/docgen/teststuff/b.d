@@ -1,0 +1,4 @@
+module b;
+
+import a;
+
