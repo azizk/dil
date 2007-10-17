@@ -19,7 +19,7 @@ import Integer = tango.text.convert.Integer;
 
 void main(char[][] args)
 {
-  GlobalSettings.load(args[0]);
+  GlobalSettings.load();
 
   if (args.length <= 1)
     return Stdout(helpMain()).newline;
