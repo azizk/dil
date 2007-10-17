@@ -5,7 +5,6 @@
 module docgen.graphutils.modulenamewriter;
 import docgen.graphutils.writer;
 
-import tango.io.protocol.Writer : Writer;
 import tango.io.FileConduit : FileConduit;
 import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
@@ -21,7 +20,7 @@ class ModuleNameWriter : AbstractGraphWriter {
   }
 
   void generateGraph(Vertex[] vertices, Edge[] edges) {
-    auto output = new Writer(outputs[0]);
+    auto output = new Print!(char)(new Layout!(char), outputs[0]);
 
     void doList(Vertex[] v, uint level, char[] indent = "") {
       if (!level) return;

@@ -4,6 +4,8 @@
  */
 module docgen.misc.misc;
 
+char[] docgen_version = "Dil document generator 0.1";
+
 enum DocFormat {
   LaTeX,
   XML,

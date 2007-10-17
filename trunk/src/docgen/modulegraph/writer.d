@@ -29,11 +29,12 @@ class ModuleGraphGenerator {
 
     Edge[] edges;
     Vertex[] vertices;
-
+    /*
     loadModules(null, null, null,
       gwf.options.IncludeUnlocatableModules,
       vertices, edges);
 
     writer(vertices, edges);
+    */
   }
 }

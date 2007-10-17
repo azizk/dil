@@ -5,7 +5,10 @@
 module docgen.sourcelisting.writers;
 
 public import docgen.sourcelisting.writer;
-import dil.Parser;
+import docgen.sourcelisting.latexwriter;
+import docgen.sourcelisting.htmlwriter;
+import docgen.sourcelisting.xmlwriter;
+import docgen.sourcelisting.plaintextwriter;
 
 class DefaultListingWriterFactory : AbstractListingWriterFactory {
   this(ListingOptions options) {
@@ -22,62 +25,8 @@ class DefaultListingWriterFactory : AbstractListingWriterFactory {
         return new HTMLWriter(this, outputs);
       case DocFormat.PlainText:
         return new PlainTextWriter(this, outputs);
+      default:
+        throw new Exception("Listing writer type does not exist!");
     }
   }
-}
-
-
-/**
- * TODO
- */
-class LaTeXWriter : AbstractListingWriter {
-  this(ListingWriterFactory factory, OutputStream[] outputs) {
-    super(factory, outputs);
-    assert(outputs.length == 2, "Wrong number of outputs");
-  }
-
-  void generateListing(Parser parser) { /* TODO */ }
-  void generateListing(InputStream input) { /* TODO */ }
-}
-
-
-/**
- * TODO
- */
-class XMLWriter : AbstractListingWriter {
-  this(ListingWriterFactory factory, OutputStream[] outputs) {
-    super(factory, outputs);
-    assert(outputs.length == 2, "Wrong number of outputs");
-  }
-
-  void generateListing(Parser parser) { /* TODO */ }
-  void generateListing(InputStream input) { /* TODO */ }
-}
-
-
-/**
- * TODO: add support for html/xml/latex?
- */
-class HTMLWriter : AbstractListingWriter {
-  this(ListingWriterFactory factory, OutputStream[] outputs) {
-    super(factory, outputs);
-    assert(outputs.length == 2, "Wrong number of outputs");
-  }
-
-  void generateListing(Parser parser) { /* TODO */ }
-  void generateListing(InputStream input) { /* TODO */ }
-}
-
-
-/**
- * TODO
- */
-class PlainTextWriter : AbstractListingWriter {
-  this(ListingWriterFactory factory, OutputStream[] outputs) {
-    super(factory, outputs);
-    assert(outputs.length == 2, "Wrong number of outputs");
-  }
-
-  void generateListing(Parser parser) { /* TODO */ }
-  void generateListing(InputStream input) { /* TODO */ }
 }

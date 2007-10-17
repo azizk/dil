@@ -5,7 +5,6 @@
 module docgen.graphutils.dotwriter;
 import docgen.graphutils.writer;
 
-import tango.io.protocol.Writer : Writer;
 import tango.io.FileConduit : FileConduit;
 import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;

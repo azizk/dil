@@ -5,10 +5,14 @@
 module docgen.docgen;
 
 import docgen.modulegraph.writer;
+import docgen.sourcelisting.writer;
+import docgen.templates.writer;
+import docgen.graphutils.writer;
 
 struct DocGeneratorOptions {
-  GraphWriterOptions graph;
-  ListingsOptions listings;
+  GraphOptions graph;
+  ListingOptions listings;
+  TemplateOptions templates;
   CommentFormat commentFormat;
 }
 

@@ -10,6 +10,7 @@ import tango.io.model.IConduit : OutputStream, InputStream;
 
 struct ListingOptions {
   DocFormat docFormat;
+  bool enableListings;
 }
 
 interface ListingWriter {

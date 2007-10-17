@@ -22,6 +22,8 @@ class DefaultGraphWriterFactory : AbstractGraphWriterFactory {
         return &((new ModuleNameWriter(this, outputs)).generateGraph);
       case GraphFormat.ModulePaths:
         return &((new ModulePathWriter(this, outputs)).generateGraph);
+      default:
+        throw new Exception("Graph writer type does not exist!");
     }
   }
 }

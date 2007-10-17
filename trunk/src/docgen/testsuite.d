@@ -6,6 +6,7 @@ module docgen.testsuite;
 
 import docgen.tests.graphs;
 import docgen.tests.parse;
+import docgen.tests.doctemplate;
 import tango.io.Stdout;
 
 /**
@@ -21,5 +22,7 @@ void main() {
   graph4();
   parse1();
   parse2();
+  doctemplate1();
+  
   Stdout("done.\n");
 }
