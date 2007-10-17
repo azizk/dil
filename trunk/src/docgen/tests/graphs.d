@@ -4,19 +4,20 @@
  */
 module docgen.tests.graphs;
 
+import docgen.tests.common;
 import docgen.graphutils.writers;
 import tango.io.Stdout;
 import tango.io.FileConduit;
 
 void saveDefaultGraph(Vertex[] vertices, Edge[] edges, char[] fname) {
-  GraphOptions test;
-  test.graphFormat = GraphFormat.Dot;
-  test.HighlightCyclicVertices = true;
-  //test.format = GraphOutputFormat.ModuleNames;
-  //test.format = GraphOutputFormat.ModulePaths;
-  test.depth = 5;
+  auto gen = new TestDocGenerator;
+  gen.options.graph.HighlightCyclicVertices = true;
+  gen.options.graph.graphFormat = GraphFormat.Dot;
+  //gen.options.graph.graphFormat = GraphFormat.ModuleNames;
+  //gen.options.graph.graphFormat = GraphFormat.ModulePaths;
+  gen.options.graph.depth = 5;
   
-  auto gwf = new DefaultGraphWriterFactory(test);
+  auto gwf = new DefaultGraphWriterFactory(gen);
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
   auto file2 = new FileConduit("docgen/teststuff/" ~ fname ~ "-2", FileConduit.WriteCreate);
   auto writer = gwf.createGraphWriter( [ file2, file] );

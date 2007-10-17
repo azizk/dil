@@ -8,11 +8,6 @@ public import docgen.misc.misc;
 import dil.Parser;
 import tango.io.model.IConduit : OutputStream, InputStream;
 
-struct ListingOptions {
-  DocFormat docFormat;
-  bool enableListings;
-}
-
 interface ListingWriter {
   void generateListing(Parser parser);
   void generateListing(InputStream input);
@@ -28,15 +23,6 @@ abstract class AbstractListingWriter : ListingWriter {
   }
 }
 
-interface ListingWriterFactory {
-  ListingOptions *options();
+interface ListingWriterFactory : WriterFactory {
   ListingWriter createListingWriter(OutputStream[] outputs);
-}
-
-abstract class AbstractListingWriterFactory : ListingWriterFactory {
-  protected ListingOptions m_options;
-
-  public ListingOptions *options() {
-    return &m_options;
-  }
 }

@@ -9,7 +9,6 @@ import tango.io.FileConduit : FileConduit;
 import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
 
-
 /**
  * Creates a graph rule file for the dot utility.
  *
@@ -26,12 +25,12 @@ class DotWriter : AbstractGraphWriter {
     auto output = new Print!(char)(new Layout!(char), outputs[1]);
 
     Vertex[][char[]] verticesByPckgName;
-    if (factory.options.GroupByFullPackageName)
+    if (factory.options.graph.GroupByFullPackageName)
       foreach (module_; vertices)
         verticesByPckgName[module_.name] ~= module_; // FIXME: is it name or loc?
 
-    if (factory.options.HighlightCyclicVertices ||
-        factory.options.HighlightCyclicEdges)
+    if (factory.options.graph.HighlightCyclicVertices ||
+        factory.options.graph.HighlightCyclicEdges)
       findCycles(vertices, edges);
 
     if (cast(FileConduit)outputs[1]) {
@@ -39,7 +38,7 @@ class DotWriter : AbstractGraphWriter {
       char[] fn = (cast(FileConduit)outputs[1]).toUtf8();
 
       // .dot -> .svg/.png/.gif/...
-      fn = fn[0..$-3] ~ imageFormatExts[factory.options.imageFormat];
+      fn = fn[0..$-3] ~ imageFormatExts[factory.options.graph.imageFormat];
 
       switch(factory.options.docFormat) {
         case DocFormat.LaTeX:
@@ -58,7 +57,7 @@ class DotWriter : AbstractGraphWriter {
 
     output("Digraph ModuleDependencies {\n");
 
-    if (factory.options.HighlightCyclicVertices)
+    if (factory.options.graph.HighlightCyclicVertices)
       foreach (module_; vertices)
         output.format(
           `  n{0} [label="{1}"{2}];`\n,
@@ -78,7 +77,7 @@ class DotWriter : AbstractGraphWriter {
         (edge.isCyclic ? "[color=red]" : "")
       );
 
-    if (factory.options.GroupByFullPackageName)
+    if (factory.options.graph.GroupByFullPackageName)
       foreach (packageName, vertices; verticesByPckgName) {
         output.format(
           `  subgraph "cluster_{0}" {{`\n`    label="{0}";color=blue;`\n`    `,

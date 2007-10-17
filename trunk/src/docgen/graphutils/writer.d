@@ -9,32 +9,6 @@ public import docgen.graphutils.primitives;
 import tango.io.model.IConduit : OutputStream;
 debug import tango.io.Stdout;
 
-enum ImageFormat {
-  PNG,
-  SVG,
-  GIF
-}
-
-const imageFormatExts = [ "png", "svg", "gif" ];
-
-enum GraphFormat {
-  Dot,
-  ModuleNames,
-  ModulePaths
-}
-
-struct GraphOptions {
-  GraphFormat graphFormat;
-  ImageFormat imageFormat;
-  DocFormat docFormat;
-  uint depth;
-  bool IncludeUnlocatableModules;
-  bool HighlightCyclicEdges;
-  bool HighlightCyclicVertices;
-  bool GroupByPackageNames;
-  bool GroupByFullPackageName;
-}
-
 interface GraphWriter {
   void generateGraph(Vertex[], Edge[]);
 }
@@ -162,15 +136,6 @@ abstract class AbstractGraphWriter : GraphWriter {
     +/
 }
 
-interface GraphWriterFactory {
-  GraphOptions *options();
+interface GraphWriterFactory : WriterFactory {
   GraphWriterDg createGraphWriter(OutputStream[] outputs);
-}
-
-abstract class AbstractGraphWriterFactory : GraphWriterFactory {
-  protected GraphOptions m_options;
-
-  public GraphOptions *options() {
-    return &m_options;
-  }
 }

@@ -10,13 +10,13 @@ import docgen.templates.xmlwriter;
 import docgen.templates.plaintextwriter;
 import docgen.templates.latexwriter;
 
-class DefaultTemplateWriterFactory : AbstractTemplateWriterFactory {
-  this(TemplateOptions options) {
-    m_options = options;
+class DefaultTemplateWriterFactory : AbstractWriterFactory, TemplateWriterFactory {
+  this(DocGenerator generator) {
+    super(generator);
   }
 
   TemplateWriter createTemplateWriter(OutputStream[] outputs) {
-    switch (m_options.docFormat) {
+    switch (options.docFormat) {
       case DocFormat.LaTeX:
         return new LaTeXWriter(this, outputs);
       case DocFormat.XML:

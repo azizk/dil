@@ -10,15 +10,6 @@ import tango.util.time.Date;
 import tango.util.time.Clock;
 import tango.text.convert.Sprint;
 
-struct TemplateOptions {
-  DocFormat docFormat;
-  char[] title = "Test project";
-  char[] versionString = "1.0";
-  char[] copyright;
-  char[] paperSize = "a4paper";
-  bool literateStyle = true;
-}
-
 interface TemplateWriter {
   void generateTemplate();
 }
@@ -43,16 +34,6 @@ abstract class AbstractTemplateWriter : TemplateWriter {
   }
 }
 
-interface TemplateWriterFactory {
-  TemplateOptions *options();
+interface TemplateWriterFactory : WriterFactory {
   TemplateWriter createTemplateWriter(OutputStream[] outputs);
 }
-
-abstract class AbstractTemplateWriterFactory : TemplateWriterFactory {
-  protected TemplateOptions m_options;
-
-  public TemplateOptions *options() {
-    return &m_options;
-  }
-}
-

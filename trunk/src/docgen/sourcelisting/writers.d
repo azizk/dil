@@ -10,9 +10,9 @@ import docgen.sourcelisting.htmlwriter;
 import docgen.sourcelisting.xmlwriter;
 import docgen.sourcelisting.plaintextwriter;
 
-class DefaultListingWriterFactory : AbstractListingWriterFactory {
-  this(ListingOptions options) {
-    m_options = options;
+class DefaultListingWriterFactory : AbstractWriterFactory, ListingWriterFactory {
+  this(DocGenerator generator) {
+    super(generator);
   }
 
   ListingWriter createListingWriter(OutputStream[] outputs) {

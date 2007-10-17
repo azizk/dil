@@ -8,19 +8,20 @@ import docgen.modulegraph.writer;
 import docgen.sourcelisting.writer;
 import docgen.templates.writer;
 import docgen.graphutils.writer;
+import docgen.misc.misc;
 
-struct DocGeneratorOptions {
-  GraphOptions graph;
-  ListingOptions listings;
-  TemplateOptions templates;
-  CommentFormat commentFormat;
-}
 
 /**
  * Main routine for doc generation.
  */
-class DocGenerator {
-  public static void generate() {
+class DefaultDocGenerator : DocGenerator {
+  DocGeneratorOptions m_options;
+  
+  public void generate() {
 
+  }
+  
+  public DocGeneratorOptions *options() {
+    return &m_options;
   }
 }

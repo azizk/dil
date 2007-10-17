@@ -31,6 +31,6 @@ class ModulePathWriter : AbstractGraphWriter {
       }
     }
 
-    doPaths(vertices, factory.options.depth);
+    doPaths(vertices, factory.options.graph.depth);
   }
 }

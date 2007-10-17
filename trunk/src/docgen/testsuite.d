@@ -23,6 +23,5 @@ void main() {
   parse1();
   parse2();
   doctemplate1();
-  
   Stdout("done.\n");
 }

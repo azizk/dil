@@ -9,13 +9,13 @@ import docgen.graphutils.dotwriter;
 import docgen.graphutils.modulepathwriter;
 import docgen.graphutils.modulenamewriter;
 
-class DefaultGraphWriterFactory : AbstractGraphWriterFactory {
-  this(GraphOptions options) {
-    m_options = options;
+class DefaultGraphWriterFactory : AbstractWriterFactory, GraphWriterFactory {
+  this(DocGenerator generator) {
+    super(generator);
   }
 
   GraphWriterDg createGraphWriter(OutputStream[] outputs) {
-    switch (m_options.graphFormat) {
+    switch (options.graph.graphFormat) {
       case GraphFormat.Dot:
         return &((new DotWriter(this, outputs)).generateGraph);
       case GraphFormat.ModuleNames:

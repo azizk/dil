@@ -28,7 +28,7 @@ void parse1() {
   Module[] modules;
 
   Parser.loadModules(
-    [ "c" ], ["docgen/teststuff/"[].dup],
+    [ "c" ], [ "docgen/teststuff/" ],
     null, true, -1,
     (char[] fqn, char[] path, Module m) {
       file.format("{0} = {1}\n", fqn, path);
@@ -52,8 +52,7 @@ saveToFile("parse2.txt", (Print!(char) file){
 Module[] modules;
 
 Parser.loadModules(
-  [ "docgen-tests" ], [".", "/home/jm/d/tango/"],
-//  [ "c" ], ["docgen/teststuff/"[].dup],
+  [ "docgen/testsuite" ], [".", "/home/jm/d/tango/"],
   null, true, -1,
   (char[] fqn, char[] path, Module m) {
     file.format("{0} = {1}\n", fqn, path);

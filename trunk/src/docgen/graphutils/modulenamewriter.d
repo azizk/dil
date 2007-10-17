@@ -9,7 +9,6 @@ import tango.io.FileConduit : FileConduit;
 import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
 
-
 /**
  * TODO: add support for html/xml/latex?
  */
@@ -32,6 +31,6 @@ class ModuleNameWriter : AbstractGraphWriter {
       }
     }
 
-    doList(vertices, factory.options.depth);
+    doList(vertices, factory.options.graph.depth);
   }
 }
