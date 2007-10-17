@@ -3,6 +3,7 @@
  * License: GPL3
  */
 module docgen.misc.misc;
+import tango.io.model.IConduit : OutputStream;
 
 char[] docgen_version = "Dil document generator 0.1";
 
@@ -82,5 +83,19 @@ abstract class AbstractWriterFactory : WriterFactory {
 
   this(DocGenerator generator) {
     this.generator = generator;
+  }
+}
+
+template AbstractWriter(T, int n = -1) {
+  abstract class AbstractWriter {
+    protected T factory;
+    protected OutputStream[] outputs;
+  
+    this(T factory, OutputStream[] outputs) {
+      this.factory = factory;
+      this.outputs = outputs;
+      static if (n > -1)
+        assert(outputs.length == n, "Incorrect number of outputs");
+    }
   }
 }

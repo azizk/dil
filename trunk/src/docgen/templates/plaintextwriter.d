@@ -14,10 +14,9 @@ import tango.text.convert.Layout : Layout;
 /**
  * Writes a plain text document skeleton.
  */
-class PlainTextWriter : AbstractTemplateWriter {
+class PlainTextWriter : AbstractWriter!(TemplateWriterFactory, 1), TemplateWriter {
   this(TemplateWriterFactory factory, OutputStream[] outputs) {
     super(factory, outputs);
-    assert(outputs.length == 1, "Wrong number of outputs");
   }
 
   void generateTemplate() {

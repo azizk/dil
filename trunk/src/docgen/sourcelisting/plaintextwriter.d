@@ -14,10 +14,9 @@ import tango.text.convert.Layout : Layout;
 /**
  * TODO
  */
-class PlainTextWriter : AbstractListingWriter {
+class PlainTextWriter : AbstractWriter!(ListingWriterFactory, 2), ListingWriter {
   this(ListingWriterFactory factory, OutputStream[] outputs) {
     super(factory, outputs);
-    assert(outputs.length == 2, "Wrong number of outputs");
   }
 
   void generateListing(Parser parser) { /* TODO */ }

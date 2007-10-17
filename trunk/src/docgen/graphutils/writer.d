@@ -6,7 +6,6 @@ module docgen.graphutils.writer;
 
 public import docgen.misc.misc;
 public import docgen.graphutils.primitives;
-import tango.io.model.IConduit : OutputStream;
 debug import tango.io.Stdout;
 
 interface GraphWriter {
@@ -15,61 +14,52 @@ interface GraphWriter {
 
 alias void delegate(Vertex[], Edge[]) GraphWriterDg;
 
-abstract class AbstractGraphWriter : GraphWriter {
-  protected GraphWriterFactory factory;
-  protected OutputStream[] outputs;
-
-  this(GraphWriterFactory factory, OutputStream[] outputs) {
-    this.factory = factory;
-    this.outputs = outputs;
+/**
+ * Marks all cycles in the graph.
+ *
+ * May have bugs, but is a bit simpler than the previous version.
+ */
+void findCycles(Vertex[] vertices, Edge[] edges) {
+  debug void p() {
+    foreach(e; edges) Stderr(e.type)(" "c);
+    Stderr.newline;
   }
 
-  /**
-   * Marks all cycles in the graph.
-   *
-   * May have bugs, but is a bit simpler than the previous version.
-   */
-  protected static void findCycles(Vertex[] vertices, Edge[] edges) {
-    debug void p() {
-      foreach(e; edges) Stderr(e.type)(" "c);
-      Stderr.newline;
+  bool visit(Edge edge) {
+    if (edge.type == EdgeType.Reserved) {
+      edge.type = EdgeType.CyclicDependency;
+      debug p();
+      return true;
     }
 
-    bool visit(Edge edge) {
-      if (edge.type == EdgeType.Reserved) {
+    bool wasCyclic = edge.isCyclic();
+    edge.type = EdgeType.Reserved;
+    debug p();
+
+    foreach(edge2; edge.incoming.outgoingEdges)
+      if (visit(edge2)) {
+        if (edge.isCyclic()) {
+          edge.type = EdgeType.Reserved;
+          wasCyclic = true;
+          debug p();
+          continue;
+        }
         edge.type = EdgeType.CyclicDependency;
-        debug p();
         return true;
       }
 
-      bool wasCyclic = edge.isCyclic();
-      edge.type = EdgeType.Reserved;
-      debug p();
-
-      foreach(edge2; edge.incoming.outgoingEdges)
-        if (visit(edge2)) {
-          if (edge.isCyclic()) {
-            edge.type = EdgeType.Reserved;
-            wasCyclic = true;
-            debug p();
-            continue;
-          }
-          edge.type = EdgeType.CyclicDependency;
-          return true;
-        }
-
-      edge.type = wasCyclic ? EdgeType.CyclicDependency : EdgeType.Dependency;
-      debug p();
-      return false;
-    }
-
-    foreach(vertex; vertices)
-      foreach(edge; vertex.outgoingEdges)
-        if (edge.type == EdgeType.Unspecified) {
-          visit(edge);
-          debug Stderr("*\n");
-        }
+    edge.type = wasCyclic ? EdgeType.CyclicDependency : EdgeType.Dependency;
+    debug p();
+    return false;
   }
+
+  foreach(vertex; vertices)
+    foreach(edge; vertex.outgoingEdges)
+      if (edge.type == EdgeType.Unspecified) {
+        visit(edge);
+        debug Stderr("*\n");
+      }
+}
 
     /+
     void analyzeGraph(Vertex[] vertices, Edge[] edges)
@@ -134,7 +124,6 @@ abstract class AbstractGraphWriter : GraphWriter {
     recursive(vertices);
     }
     +/
-}
 
 interface GraphWriterFactory : WriterFactory {
   GraphWriterDg createGraphWriter(OutputStream[] outputs);

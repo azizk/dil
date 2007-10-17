@@ -13,16 +13,6 @@ interface ListingWriter {
   void generateListing(InputStream input);
 }
 
-abstract class AbstractListingWriter : ListingWriter {
-  protected ListingWriterFactory factory;
-  protected OutputStream[] outputs;
-
-  this(ListingWriterFactory factory, OutputStream[] outputs) {
-    this.factory = factory;
-    this.outputs = outputs;
-  }
-}
-
 interface ListingWriterFactory : WriterFactory {
   ListingWriter createListingWriter(OutputStream[] outputs);
 }

@@ -14,10 +14,9 @@ import tango.text.convert.Layout : Layout;
  *
  * TODO: support changing colors / graph style?
  */
-class DotWriter : AbstractGraphWriter {
+class DotWriter : AbstractWriter!(GraphWriterFactory, 2), GraphWriter {
   this(GraphWriterFactory factory, OutputStream[] outputs) {
     super(factory, outputs);
-    assert(outputs.length == 2, "Wrong number of outputs");
   }
 
   void generateGraph(Vertex[] vertices, Edge[] edges) {

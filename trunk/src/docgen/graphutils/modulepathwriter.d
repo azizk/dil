@@ -12,10 +12,9 @@ import tango.text.convert.Layout : Layout;
 /**
  * TODO: add support for html/xml/latex?
  */
-class ModulePathWriter : AbstractGraphWriter {
+class ModulePathWriter : AbstractWriter!(GraphWriterFactory, 1), GraphWriter {
   this(GraphWriterFactory factory, OutputStream[] outputs) {
     super(factory, outputs);
-    assert(outputs.length == 1, "Wrong number of outputs");
   }
 
   void generateGraph(Vertex[] vertices, Edge[] edges) {

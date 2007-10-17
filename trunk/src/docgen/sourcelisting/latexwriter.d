@@ -15,10 +15,9 @@ import tango.text.convert.Layout : Layout;
 /**
  * Adds a code listing section for the given file. 
  */
-class LaTeXWriter : AbstractListingWriter {
+class LaTeXWriter : AbstractWriter!(ListingWriterFactory, 2), ListingWriter {
   this(ListingWriterFactory factory, OutputStream[] outputs) {
     super(factory, outputs);
-    assert(outputs.length == 2, "Wrong number of outputs");
   }
 
   void generateListing(Parser parser) {

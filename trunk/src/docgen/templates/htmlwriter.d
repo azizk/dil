@@ -14,10 +14,9 @@ import tango.text.convert.Layout : Layout;
 /**
  * Writes a HTML document skeleton.
  */
-class HTMLWriter : AbstractTemplateWriter {
+class HTMLWriter : AbstractWriter!(TemplateWriterFactory, 2), TemplateWriter {
   this(TemplateWriterFactory factory, OutputStream[] outputs) {
     super(factory, outputs);
-    assert(outputs.length == 1, "Wrong number of outputs");
   }
 
   void generateTemplate() {
