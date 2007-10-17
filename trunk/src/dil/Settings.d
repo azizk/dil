@@ -50,9 +50,9 @@ static:
   string language; /// Language of loaded messages catalogue.
   string[] messages; /// Table of localized compiler messages.
   string[] importPaths; /// Array of import paths to look for modules.
-  void load(char[] execPath_)
+  void load()
   {
-    scope execPath = new FilePath(execPath_);
+    scope execPath = new FilePath(GetExecutableFilePath());
     auto fileName = execPath.file("config.d").toUtf8();
     auto sourceText = loadFile(fileName);
     auto parser = new Parser(sourceText, fileName);
@@ -142,3 +142,63 @@ static:
     dil.Messages.SetMessages(messages);
   }
 }
+
+version(Windows)
+{
+private extern(Windows) uint GetModuleFileNameA(void*, char*, uint);
+/++
+  Get the fully qualified path to this executable.
++/
+char[] GetExecutableFilePath()
+{
+  alias GetModuleFileNameA GetModuleFileName;
+  char[] buffer = new char[256];
+  uint count;
+
+  while (1)
+  {
+    if (buffer is null)
+      return null;
+
+    count = GetModuleFileName(null, buffer.ptr, buffer.length);
+    if (count == 0)
+      return null;
+    if (buffer.length != count && buffer[count] == 0)
+      break;
+    // Increase size of buffer
+    buffer.length = buffer.length * 2;
+  }
+  assert(buffer[count] == 0);
+  // Reduce buffer to the actual length of the string (excluding '\0'.)
+  if (count < buffer.length)
+    buffer.length = count;
+  return buffer;
+}
+}
+else version(linux)
+{
+private extern(C) size_t readlink(char* path, char* buf, size_t bufsize);
+/++
+  Get the fully qualified path to this executable.
++/
+char[] GetExecutableFilePath()
+{
+  char[] buffer = new char[256];
+  size_t count;
+
+  while (1)
+  {
+    // This won't work on very old Linux systems.
+    count = readlink("/proc/self/exe".ptr, buffer.ptr, buffer.length);
+    if (count == -1)
+      return null;
+    if (count < buffer.length)
+      break;
+    buffer.length = buffer.length * 2;
+  }
+  buffer.length = count;
+  return buffer;
+}
+}
+else
+  static assert(0, "GetExecutableFilePath() is not implemented on your platform.");
