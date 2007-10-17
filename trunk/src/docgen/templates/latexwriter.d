@@ -53,6 +53,7 @@ class LaTeXWriter : AbstractWriter!(TemplateWriterFactory, 1), TemplateWriter {
     \setcounter{tocdepth}{1}
     \newcommand{\clearemptydoublepage}{\newpage{\pagestyle{empty}\cleardoublepage}}
     \def\thechapter{\Roman{chapter}}
+    \def\thesection{\arabic{chapter}.\arabic{section}}
     % \renewcommand{\footrulewidth}{0.4pt}
 
     \begin{document}

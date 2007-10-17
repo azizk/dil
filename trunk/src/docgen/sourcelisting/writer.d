@@ -10,7 +10,7 @@ import tango.io.model.IConduit : OutputStream, InputStream;
 
 interface ListingWriter {
   void generateListing(Parser parser);
-  void generateListing(InputStream input);
+  void generateListing(InputStream input, char[] moduleName);
 }
 
 interface ListingWriterFactory : WriterFactory {

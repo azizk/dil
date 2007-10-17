@@ -24,22 +24,21 @@ void saveToFile(char[] fname, void delegate(Print!(char) file) foo) {
 //@unittest
 void parse1() {
   saveToFile("parse1.txt", (Print!(char) file){
+    Module[] modules;
   
-  Module[] modules;
-
-  Parser.loadModules(
-    [ "c" ], [ "docgen/teststuff/" ],
-    null, true, -1,
-    (char[] fqn, char[] path, Module m) {
-      file.format("{0} = {1}\n", fqn, path);
-    },
-    (Module imported, Module importer) {
-      file.format("{0} <- {1}\n",
-        imported ? imported.moduleFQN : "null"[],
-        importer ? importer.moduleFQN : "null"[]
-      );
-    },
-    modules
+    Parser.loadModules(
+      [ "c" ], [ "docgen/teststuff/" ],
+      null, true, -1,
+      (char[] fqn, char[] path, Module m) {
+        file.format("{0} = {1}\n", fqn, path);
+      },
+      (Module imported, Module importer) {
+        file.format("{0} <- {1}\n",
+          imported ? imported.moduleFQN : "null"[],
+          importer ? importer.moduleFQN : "null"[]
+        );
+      },
+      modules
     );
   });
 }
@@ -47,23 +46,22 @@ void parse1() {
 // load the imports of dil
 //@unittest
 void parse2() {
-saveToFile("parse2.txt", (Print!(char) file){
-
-Module[] modules;
-
-Parser.loadModules(
-  [ "docgen/testsuite" ], [".", "/home/jm/d/tango/"],
-  null, true, -1,
-  (char[] fqn, char[] path, Module m) {
-    file.format("{0} = {1}\n", fqn, path);
-  },
-  (Module imported, Module importer) {
-    file.format("{0} <- {1}\n",
-      imported ? imported.moduleFQN : "null"[],
-      importer ? importer.moduleFQN : "null"[]
+  saveToFile("parse2.txt", (Print!(char) file){
+    Module[] modules;
+    
+    Parser.loadModules(
+      [ "docgen/testsuite" ], [".", "/home/jm/d/tango/"],
+      null, true, -1,
+      (char[] fqn, char[] path, Module m) {
+        file.format("{0} = {1}\n", fqn, path);
+      },
+      (Module imported, Module importer) {
+        file.format("{0} <- {1}\n",
+          imported ? imported.moduleFQN : "null"[],
+          importer ? importer.moduleFQN : "null"[]
+        );
+      },
+      modules
     );
-  },
-  modules
-  );
-});
+  });
 }

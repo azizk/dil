@@ -5,9 +5,11 @@
 module docgen.tests.graphs;
 
 import docgen.tests.common;
+import docgen.misc.parser;
 import docgen.graphutils.writers;
 import tango.io.Stdout;
 import tango.io.FileConduit;
+import dil.Module;
 
 void saveDefaultGraph(Vertex[] vertices, Edge[] edges, char[] fname) {
   auto gen = new TestDocGenerator;
@@ -96,4 +98,44 @@ void graph4() {
   edges ~= a.addChild(g);
 
   saveDefaultGraph( [a,b,c,d,e,f,g], edges, "graph4.dot" );
+}
+
+
+// parses the test modules and creates a dep graph
+//@unittest
+void graph5() {
+  auto gen = new TestDocGenerator;
+  gen.options.graph.HighlightCyclicVertices = true;
+  gen.options.graph.graphFormat = GraphFormat.Dot;
+  gen.options.docFormat = DocFormat.LaTeX;
+  auto fname = "dependencies.tex";
+  auto imgFname = "depgraph.dot";
+  
+  auto gwf = new DefaultGraphWriterFactory(gen);
+  auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
+  auto imgFile = new FileConduit("docgen/teststuff/" ~ imgFname, FileConduit.WriteCreate);
+  
+  Module[] modules;
+  Edge[] edges;
+  Vertex[char[]] vertices;
+  int id = 1;
+  
+  Parser.loadModules(
+    [ "c" ], [ "docgen/teststuff/" ],
+    null, true, -1,
+    (char[] fqn, char[] path, Module m) {
+      vertices[m.moduleFQN] = new Vertex(m.moduleFQN, m.filePath, id++);
+    },
+    (Module imported, Module importer) {
+      edges ~= vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
+    },
+    modules
+  );
+  
+  auto writer = gwf.createGraphWriter( [ file, imgFile ] );
+  
+  writer(vertices.values, edges);
+  
+  file.close();
+  imgFile.close();
 }

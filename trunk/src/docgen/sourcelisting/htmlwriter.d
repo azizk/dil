@@ -21,5 +21,5 @@ class HTMLWriter : AbstractWriter!(ListingWriterFactory, 2), ListingWriter {
   }
 
   void generateListing(Parser parser) { /* TODO */ }
-  void generateListing(InputStream input) { /* TODO */ }
+  void generateListing(InputStream input, char[] moduleName) { /* TODO */ }
 }

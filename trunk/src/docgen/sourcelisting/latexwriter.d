@@ -8,8 +8,8 @@ public import docgen.sourcelisting.writer;
 import dil.Parser;
 import tango.io.protocol.Writer : Writer;
 import tango.io.FileConduit : FileConduit;
-import tango.io.Buffer : Buffer;
-import tango.io.Print: Print;
+import tango.io.Print;
+import tango.io.FilePath;
 import tango.text.convert.Layout : Layout;
 
 /**
@@ -26,16 +26,15 @@ class LaTeXWriter : AbstractWriter!(ListingWriterFactory, 2), ListingWriter {
     /* TODO */
   }
   
-  void generateListing(InputStream input) {
+  void generateListing(InputStream input, char[] moduleName) {
     auto output2 = new Print!(char)(new Layout!(char), outputs[0]);
 
     if (cast(FileConduit)outputs[1]) {
       char[] fn = (cast(FileConduit)outputs[1]).toUtf8();
-      output2.format("\\lstinputlisting[language=d]{{{0}}", fn);
+      fn = FilePath(fn).file;
+      output2.format("\\section{{Module {0}}\n", moduleName);
+      output2.format("\\lstinputlisting[language=d]{{{0}}\n", fn);
     }
-    
-    auto buf = new Buffer(256);
-    buf.output = outputs[1];
-    buf.copy(input);
+    outputs[1].copy(input);
   }
 }

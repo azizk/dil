@@ -8,6 +8,7 @@ import docgen.graphutils.writer;
 import tango.io.FileConduit : FileConduit;
 import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
+import tango.io.FilePath;
 
 /**
  * Creates a graph rule file for the dot utility.
@@ -35,6 +36,7 @@ class DotWriter : AbstractWriter!(GraphWriterFactory, 2), GraphWriter {
     if (cast(FileConduit)outputs[1]) {
       // name of the .dot file
       char[] fn = (cast(FileConduit)outputs[1]).toUtf8();
+      fn = FilePath(fn).file;
 
       // .dot -> .svg/.png/.gif/...
       fn = fn[0..$-3] ~ imageFormatExts[factory.options.graph.imageFormat];
