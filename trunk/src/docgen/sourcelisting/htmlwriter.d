@@ -4,15 +4,10 @@
  */
 module docgen.sourcelisting.htmlwriter;
 
-public import docgen.sourcelisting.writer;
+import docgen.sourcelisting.writer;
 import docgen.misc.textutils;
-import dil.Parser;
-import tango.io.protocol.Writer : Writer;
-import tango.io.FileConduit : FileConduit;
+//import dil.Parser;
 import tango.io.stream.FileStream;
-import tango.io.Print: Print;
-import tango.text.convert.Layout : Layout;
-import tango.text.stream.LineIterator;
 
 
 /**
@@ -26,7 +21,7 @@ class HTMLWriter : AbstractWriter!(ListingWriterFactory), ListingWriter {
     this.writer = writer;
   }
   
-  void generateListing(Parser parser) { /* TODO */ }
+  //void generateListing(Parser parser) { /* TODO */ }
   
   void generateListing(InputStream input, OutputStream output, char[] moduleName) {
     auto inputStream = cast(FileInput)input;

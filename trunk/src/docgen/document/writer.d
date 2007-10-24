@@ -13,7 +13,7 @@ import tango.io.stream.FileStream;
 import tango.io.Stdout;
 import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
-public import dil.Module;
+public import docgen.misc.parser;
 
 char[] timeNow() {
   auto date = Clock.toDate;
@@ -47,7 +47,7 @@ char[] loadTemplate(char[] style, char[] format, char[] templateName) {
 const templateNames = [
   "firstpage"[], "toc"[], "modules"[],
   "listings"[], "dependencies"[], "index"[],
-  "lastpage"[],
+  "lastpage"[], "langdef"[], "makefile"[],
   "graphics"[], "listing"[]
 ];
 
@@ -67,6 +67,10 @@ interface DocumentWriter {
   void generateIndexSection();
 
   void generateLastPage();
+
+  void generateLangDef();
+
+  void generateMakeFile();
   
   /**
    * Writes a tag for the given image to the output stream
@@ -133,6 +137,18 @@ template AbstractDocumentWriter(int n, char[] format) {
       auto print = new Print!(char)(new Layout!(char), outputs[0]);
     
       print.format(templates["lastpage"]);
+    }
+
+    void generateLangDef() {
+      auto print = new Print!(char)(new Layout!(char), outputs[0]);
+    
+      print(templates["langdef"]);
+    }
+
+    void generateMakeFile() {
+      auto print = new Print!(char)(new Layout!(char), outputs[0]);
+    
+      print(templates["makefile"]);
     }
 
     // --- page components

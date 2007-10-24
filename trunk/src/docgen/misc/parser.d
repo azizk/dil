@@ -4,21 +4,17 @@
  */
 module docgen.misc.parser;
 
-import docgen.graphutils.writers;
-
 import dil.Parser;
-import dil.Module;
 import dil.Settings;
+public import dil.Module;
 import tango.text.Regex : RegExp = Regex;
 import tango.io.FilePath;
-import tango.io.FileConst;
 import tango.text.Util;
-import common;
 debug import tango.io.Stdout;
 
 class Parser {
-  private static string findModulePath(string moduleFQN, string[] importPaths) {
-    string modulePath;
+  private static char[] findModulePath(char[] moduleFQN, char[][] importPaths) {
+    char[] modulePath;
 
     foreach (path; importPaths) {
       modulePath = path ~ (path[$-1] == dirSep ? "" : [dirSep]) ~ moduleFQN ~ ".d";
@@ -52,9 +48,9 @@ class Parser {
    *     idg = Delegate that gets called for every import found
    *     modules = List of parsed modules
    */
-  public static void loadModules(string filePath, string[] importPaths, string[] strRegexps,
+  public static void loadModules(char[] filePath, char[][] importPaths, char[][] strRegexps,
                                  bool IncludeUnlocatableModules, int recursionDepth,
-                                 void delegate (string fqn, string path, Module) mdg,
+                                 void delegate (char[] fqn, char[] path, Module) mdg,
                                  void delegate (Module imported, Module importer) idg,
                                  out Module[] modules) {
 
@@ -79,9 +75,9 @@ class Parser {
    *     idg = Delegate that gets called for every import found
    *     modules = List of parsed modules
    */
-  public static void loadModules(string[] filePaths, string[] importPaths, string[] strRegexps,
+  public static void loadModules(char[][] filePaths, char[][] importPaths, char[][] strRegexps,
                                  bool IncludeUnlocatableModules, int recursionDepth,
-                                 void delegate (string fqn, string path, Module) mdg,
+                                 void delegate (char[] fqn, char[] path, Module) mdg,
                                  void delegate (Module imported, Module importer) idg,
                                  out Module[] modules) {
     // Initialize regular expressions.
@@ -102,9 +98,9 @@ class Parser {
       Stdout("Import path: ")(path).newline;
     }
 
-    Module[string] loadedModules;
+    Module[char[]] loadedModules;
 
-    Module loadModule(string moduleFQNPath, int depth) {
+    Module loadModule(char[] moduleFQNPath, int depth) {
       if (depth == 0) return null;
       
       debug Stdout("Loading ")(moduleFQNPath).newline;
@@ -147,8 +143,13 @@ class Parser {
         foreach (moduleFQN_; moduleFQNs) {
           auto loaded_mod = loadModule(moduleFQN_, depth == -1 ? depth : depth-1);
 
-          if (loaded_mod !is null)
+          if (loaded_mod !is null) {
             idg(loaded_mod, mod);
+          } else {
+            auto tmp = new Module(null, true);
+            tmp.moduleFQN = replace(moduleFQN_.dup, dirSep, '.');
+            idg(tmp, mod);
+          }
         }
       }
 

@@ -5,7 +5,6 @@
 module docgen.graphutils.dotwriter;
 import docgen.graphutils.writer;
 
-import tango.io.FileConduit : FileConduit;
 import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
 import tango.io.FilePath;
@@ -30,29 +29,29 @@ class DotWriter : AbstractGraphWriter {
         factory.options.graph.highlightCyclicEdges)
       findCycles(vertices, edges);
 
-    if (cast(FileConduit)imageFile.conduit) {
-      // name of the .dot file
-      char[] fn = (cast(FileConduit)imageFile.conduit).toUtf8();
-      fn = FilePath(fn).file;
+    // name of the .dot file
+    char[] fn = (cast(Object)imageFile.conduit).toUtf8();
+    fn = FilePath(fn).file;
 
-      fn = fn[0..$-4];
-      
-      writer.addGraphics(fn);
-    }
+    fn = fn[0..$-4];
+    
+    writer.addGraphics(fn);
     
     image("Digraph ModuleDependencies {\n");
 
-    if (factory.options.graph.highlightCyclicVertices)
-      foreach (module_; vertices)
-        image.format(
-          `  n{0} [label="{1}"{2}];`\n,
-          module_.id,
-          module_.name,
-          (module_.isCyclic ? ",style=filled,fillcolor=" ~ factory.options.graph.nodeColor : "")
-        );
-    else
-        foreach (i, module_; vertices)
-            image.format(`  n{0} [label="{1}"];`, i, module_.name);
+    foreach (module_; vertices)
+      image.format(
+        `  n{0} [label="{1}"{2}];`\n,
+        module_.id,
+        module_.name,
+        (module_.isCyclic && factory.options.graph.highlightCyclicVertices ?
+          ",style=filled,fillcolor=" ~ factory.options.graph.nodeColor :
+          (module_.type == VertexType.UnlocatableModule ?
+            ",style=filled,fillcolor=" ~ factory.options.graph.unlocatableNodeColor :
+            ""
+          )
+        )
+      );
 
     foreach (edge; edges)
       image.format(

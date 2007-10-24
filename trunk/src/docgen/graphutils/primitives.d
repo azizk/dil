@@ -34,6 +34,7 @@ class Edge {
 
 enum VertexType {
   Module,
+  UnlocatableModule,
   Package,
   Class,
   Interface,

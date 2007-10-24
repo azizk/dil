@@ -6,9 +6,7 @@ module docgen.tests.doctemplate;
 
 import docgen.tests.common;
 import docgen.document.writers;
-import tango.io.Stdout;
 import tango.io.FileConduit;
-import tango.io.protocol.Writer : Writer;
 
 // doc template
 //@unittest

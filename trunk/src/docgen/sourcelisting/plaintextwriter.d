@@ -4,13 +4,9 @@
  */
 module docgen.sourcelisting.plaintextwriter;
 
-public import docgen.sourcelisting.writer;
+import docgen.sourcelisting.writer;
 import docgen.misc.textutils;
-import dil.Parser;
-import tango.io.protocol.Writer : Writer;
-import tango.io.FileConduit : FileConduit;
-import tango.io.Print: Print;
-import tango.text.convert.Layout : Layout;
+//import dil.Parser;
 import tango.io.FilePath;
 
 /**
@@ -24,14 +20,14 @@ class PlainTextWriter : AbstractWriter!(ListingWriterFactory), ListingWriter {
     this.writer = writer;
   }
 
-  void generateListing(Parser parser) { /* TODO */ }
+  //void generateListing(Parser parser) { /* TODO */ }
   
   void generateListing(InputStream input, OutputStream output, char[] moduleName) {
     output.copy(input);
     
     writer.addListing(
       moduleName,
-      FilePath((cast(FileConduit)output.conduit).toUtf8()).file
+      FilePath((cast(Object)output.conduit).toUtf8()).file
     );
   }
 }

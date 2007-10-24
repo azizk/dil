@@ -5,11 +5,9 @@
 module docgen.tests.parse;
 
 import docgen.misc.parser;
-import tango.io.Stdout;
 import tango.io.FileConduit;
 import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
-import dil.Module;
 
 void saveToFile(char[] fname, void delegate(Print!(char) file) foo) {
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);

@@ -4,9 +4,6 @@
  */
 module docgen.misc.textutils;
 
-import tango.io.model.IConduit;
-import tango.io.stream.GreedyStream;
-
 // copied from Generate.d
 char[] xml_escape(char[] text)
 {
@@ -21,16 +18,6 @@ char[] xml_escape(char[] text)
       default:  result ~= c;
     }
   return result;
-}
-
-class XMLEscapeOutput : GreedyOutput {
-  this (OutputStream stream) {
-    super(stream);
-  }
-
-  uint write (void[] src) {
-    return super.write( xml_escape(cast(char[])src) );
-  }
 }
 
 char[] plainTextHeading(char[] s) {

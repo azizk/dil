@@ -50,6 +50,7 @@ struct GraphOptions {
   uint depth;
   char[] nodeColor = "tomato";
   char[] cyclicNodeColor = "red";
+  char[] unlocatableNodeColor = "gray";
   char[] clusterColor = "blue";
   bool includeUnlocatableModules;
   bool highlightCyclicEdges;

@@ -8,7 +8,6 @@ import docgen.tests.common;
 import docgen.misc.parser;
 import docgen.graphutils.writers;
 import docgen.document.writers;
-import tango.io.Stdout;
 import tango.io.FileConduit;
 import dil.Module;
 

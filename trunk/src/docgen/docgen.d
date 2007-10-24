@@ -4,17 +4,16 @@
  */
 module docgen.docgen;
 
-import docgen.modulegraph.writer;
 import docgen.sourcelisting.writers;
 import docgen.document.writers;
 import docgen.graphutils.writers;
 import docgen.misc.misc;
 import docgen.misc.parser;
-import dil.Module;
 import tango.core.Array;
 import tango.io.stream.FileStream;
 import tango.text.Ascii;
 import tango.text.Util : replace;
+debug import tango.io.Stdout;
 
 abstract class DefaultDocGenerator : DocGenerator {
   DocGeneratorOptions m_options;
@@ -44,9 +43,24 @@ abstract class DefaultDocGenerator : DocGenerator {
       options.parser.rootPaths, options.parser.importPaths,
       null, true, -1,
       (char[] fqn, char[] path, Module m) {
-        vertices[m.moduleFQN] = new Vertex(m.moduleFQN, m.filePath, id++);
+        if (m is null) {
+          if (fqn in vertices) {
+            debug Stdout.format("{} already set.\n", fqn);
+            return;
+
+          }
+          auto vertex = new Vertex(fqn, path, id++);
+          vertex.type = VertexType.UnlocatableModule;
+          vertices[fqn] = vertex;
+          debug Stdout.format("Setting {} = {}.\n", fqn, path);
+
+        } else {
+          vertices[m.moduleFQN] = new Vertex(m.moduleFQN, m.filePath, id++);
+          debug Stdout.format("Setting {} = {}.\n", m.moduleFQN, m.filePath);
+        }
       },
       (Module imported, Module importer) {
+        debug Stdout.format("Connecting {} - {}.\n", imported.moduleFQN, importer.moduleFQN);
         edges ~= vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
       },
       modules
@@ -78,7 +92,7 @@ class LaTeXDocGenerator : DefaultDocGenerator {
   }
 
   /**
-   * Generates document skeleton
+   * Generates document skeleton.
    */
   void generateDoc(char[] docFileName) {
     auto ddf = new DefaultDocumentWriterFactory(this);
@@ -98,13 +112,39 @@ class LaTeXDocGenerator : DefaultDocGenerator {
   }
 
   /**
-   * Generates documentation for modules
+   * Generates D language definition file.
    */
-  void generateModules() {
+  void generateLangDef() {
+    auto docFile = new FileOutput(outPath("lstlang0.sty"));
+    docWriter.setOutput([docFile]);
+
+    docWriter.generateLangDef();
+
+    docFile.close();
   }
 
   /**
-   * Generates source file listings.listings
+   * Generates "makefile" for processing the .dot and .tex files.
+   */
+  void generateMakeFile() {
+    auto docFile = new FileOutput(outPath("make.sh"));
+    docWriter.setOutput([docFile]);
+
+    docWriter.generateMakeFile();
+
+    docFile.close();
+  }
+
+  /**
+   * Generates documentation for modules.
+   */
+  void generateModules(char[] modulesFile) {
+    auto docFile = new FileOutput(outPath(modulesFile));
+    docFile.close();
+  }
+
+  /**
+   * Generates source file listings.
    */
   void generateListings(char[] listingsFile) {
     auto dlwf = new DefaultListingWriterFactory(this);
@@ -112,9 +152,9 @@ class LaTeXDocGenerator : DefaultDocGenerator {
     docWriter.setOutput([docFile]);
     auto writer = dlwf.createListingWriter(docWriter);
 
-    modules.sort(
+    /*modules.sort(
       (Module a, Module b){ return icompare(a.moduleFQN, b.moduleFQN); }
-    );
+    );*/
 
     foreach(mod; modules) {
       auto dstFname = replace(mod.moduleFQN.dup, '.', '_') ~ ".d";
@@ -148,14 +188,19 @@ class LaTeXDocGenerator : DefaultDocGenerator {
     auto depGraphTexFile = "dependencies.tex";
     auto depGraphFile = "depgraph.dot";
     auto listingsFile = "files.tex";
+    auto modulesFile = "modules.tex";
 
     generateDoc(docFileName);
 
     if (options.listings.enableListings)
       generateListings(listingsFile);
 
+    generateModules(modulesFile);
+
     generateDependencies(depGraphTexFile, depGraphFile);
 
+    generateLangDef();
+    generateMakeFile();
   }
 }
 
@@ -167,12 +212,13 @@ void main(char[][] args) {
   options.graph.depth = 0;
   options.graph.nodeColor = "tomato";
   options.graph.cyclicNodeColor = "red";
+  options.graph.unlocatableNodeColor = "gray";
   options.graph.clusterColor = "blue";
   options.graph.includeUnlocatableModules = true;
   options.graph.highlightCyclicEdges = true;
   options.graph.highlightCyclicVertices = true;
-  options.graph.groupByPackageNames = true;
-  options.graph.groupByFullPackageName = true;
+  options.graph.groupByPackageNames = false;
+  options.graph.groupByFullPackageName = false;
   
   options.listings.literateStyle = true;
   options.listings.enableListings = true;

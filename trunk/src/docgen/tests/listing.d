@@ -8,11 +8,8 @@ import docgen.misc.parser;
 import docgen.tests.common;
 import docgen.sourcelisting.writers;
 import docgen.document.writers;
-import dil.Module;
-import tango.io.Stdout;
 import tango.io.FileConduit;
 import tango.text.Util;
-import tango.io.protocol.Writer : Writer;
 
 // doc template
 //@unittest
