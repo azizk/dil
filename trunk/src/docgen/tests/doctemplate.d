@@ -5,7 +5,7 @@
 module docgen.tests.doctemplate;
 
 import docgen.tests.common;
-import docgen.templates.writers;
+import docgen.document.writers;
 import tango.io.Stdout;
 import tango.io.FileConduit;
 import tango.io.protocol.Writer : Writer;
@@ -17,11 +17,11 @@ void doctemplate1() {
   gen.options.docFormat = DocFormat.LaTeX;
   auto fname = "doctemplate.tex";
   
-  auto gwf = new DefaultTemplateWriterFactory(gen);
+  auto gwf = new DefaultDocumentWriterFactory(gen);
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
-  auto writer = gwf.createTemplateWriter( [ file ] );
+  auto writer = gwf.createDocumentWriter( [ file ] );
   
-  writer.generateTemplate();
+  writer.generateDocument();
   
   file.close();
 }

@@ -7,6 +7,7 @@ module docgen.tests.graphs;
 import docgen.tests.common;
 import docgen.misc.parser;
 import docgen.graphutils.writers;
+import docgen.document.writers;
 import tango.io.Stdout;
 import tango.io.FileConduit;
 import dil.Module;
@@ -14,17 +15,18 @@ import dil.Module;
 void saveDefaultGraph(Vertex[] vertices, Edge[] edges, char[] fname) {
   auto gen = new TestDocGenerator;
   gen.options.graph.HighlightCyclicVertices = true;
+  gen.options.graph.imageFormat = ImageFormat.SVG;
   gen.options.graph.graphFormat = GraphFormat.Dot;
   //gen.options.graph.graphFormat = GraphFormat.ModuleNames;
   //gen.options.graph.graphFormat = GraphFormat.ModulePaths;
   gen.options.graph.depth = 5;
-  
+  auto ddf = new DefaultDocumentWriterFactory(gen);
   auto gwf = new DefaultGraphWriterFactory(gen);
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
   auto file2 = new FileConduit("docgen/teststuff/" ~ fname ~ "-2", FileConduit.WriteCreate);
-  auto writer = gwf.createGraphWriter( [ file2, file] );
+  auto writer = gwf.createGraphWriter( ddf.createDocumentWriter( [ file2 ] ) );
   
-  writer(vertices, edges);
+  writer.generateGraph(vertices, edges, file);
   
   file.close();
   file2.close();
@@ -107,10 +109,12 @@ void graph5() {
   auto gen = new TestDocGenerator;
   gen.options.graph.HighlightCyclicVertices = true;
   gen.options.graph.graphFormat = GraphFormat.Dot;
+  gen.options.graph.imageFormat = ImageFormat.SVG;
   gen.options.docFormat = DocFormat.LaTeX;
   auto fname = "dependencies.tex";
   auto imgFname = "depgraph.dot";
   
+  auto ddf = new DefaultDocumentWriterFactory(gen);
   auto gwf = new DefaultGraphWriterFactory(gen);
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
   auto imgFile = new FileConduit("docgen/teststuff/" ~ imgFname, FileConduit.WriteCreate);
@@ -131,10 +135,10 @@ void graph5() {
     },
     modules
   );
+
+  auto writer = gwf.createGraphWriter( ddf.createDocumentWriter( [ file ] ) );
   
-  auto writer = gwf.createGraphWriter( [ file, imgFile ] );
-  
-  writer(vertices.values, edges);
+  writer.generateGraph(vertices.values, edges, imgFile);
   
   file.close();
   imgFile.close();

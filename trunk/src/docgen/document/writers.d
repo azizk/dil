@@ -2,20 +2,20 @@
  * Author: Jari-Matti Mäkelä
  * License: GPL3
  */
-module docgen.templates.writers;
+module docgen.document.writers;
 
-public import docgen.templates.writer;
-import docgen.templates.htmlwriter;
-import docgen.templates.xmlwriter;
-import docgen.templates.plaintextwriter;
-import docgen.templates.latexwriter;
+public import docgen.document.writer;
+import docgen.document.htmlwriter;
+import docgen.document.xmlwriter;
+import docgen.document.plaintextwriter;
+import docgen.document.latexwriter;
 
-class DefaultTemplateWriterFactory : AbstractWriterFactory, TemplateWriterFactory {
+class DefaultDocumentWriterFactory : AbstractWriterFactory, DocumentWriterFactory {
   this(DocGenerator generator) {
     super(generator);
   }
 
-  TemplateWriter createTemplateWriter(OutputStream[] outputs) {
+  DocumentWriter createDocumentWriter(OutputStream[] outputs) {
     switch (options.docFormat) {
       case DocFormat.LaTeX:
         return new LaTeXWriter(this, outputs);
@@ -26,7 +26,7 @@ class DefaultTemplateWriterFactory : AbstractWriterFactory, TemplateWriterFactor
       case DocFormat.PlainText:
         return new PlainTextWriter(this, outputs);
       default:
-        throw new Exception("Template writer type does not exist!");
+        throw new Exception("Document writer type does not exist!");
     }
   }
 }

@@ -14,11 +14,14 @@ import tango.text.convert.Layout : Layout;
 /**
  * TODO
  */
-class XMLWriter : AbstractWriter!(ListingWriterFactory, 2), ListingWriter {
-  this(ListingWriterFactory factory, OutputStream[] outputs) {
-    super(factory, outputs);
+class XMLWriter : AbstractWriter!(ListingWriterFactory), ListingWriter {
+  DocumentWriter writer;
+  
+  this(ListingWriterFactory factory, DocumentWriter writer) {
+    super(factory);
+    this.writer = writer;
   }
 
   void generateListing(Parser parser) { /* TODO */ }
-  void generateListing(InputStream input, char[] moduleName) { /* TODO */ }
+  void generateListing(InputStream input, OutputStream output, char[] moduleName) { /* TODO */ }
 }

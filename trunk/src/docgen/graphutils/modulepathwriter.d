@@ -9,22 +9,18 @@ import tango.io.FileConduit : FileConduit;
 import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
 
-/**
- * TODO: add support for html/xml/latex?
- */
-class ModulePathWriter : AbstractWriter!(GraphWriterFactory, 1), GraphWriter {
-  this(GraphWriterFactory factory, OutputStream[] outputs) {
-    super(factory, outputs);
+class ModulePathWriter : AbstractGraphWriter {
+  this(GraphWriterFactory factory, DocumentWriter writer) {
+    super(factory, writer);
   }
 
-  void generateGraph(Vertex[] vertices, Edge[] edges) {
-    auto output = new Print!(char)(new Layout!(char), outputs[0]);
+  void generateGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
 
     void doPaths(Vertex[] v, uint level, char[] indent = "") {
       if (!level) return;
 
       foreach (vertex; v) {
-        output(indent)(vertex.location).newline;
+        // TODO: output(indent)(vertex.location).newline;
         if (vertex.outgoing.length)
           doPaths(vertex.outgoing, level-1, indent ~ "  ");
       }

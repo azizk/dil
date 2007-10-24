@@ -6,13 +6,12 @@ module docgen.graphutils.writer;
 
 public import docgen.misc.misc;
 public import docgen.graphutils.primitives;
+public import docgen.document.writer;
 debug import tango.io.Stdout;
 
 interface GraphWriter {
-  void generateGraph(Vertex[], Edge[]);
+  void generateGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile);
 }
-
-alias void delegate(Vertex[], Edge[]) GraphWriterDg;
 
 /**
  * Marks all cycles in the graph.
@@ -126,5 +125,14 @@ void findCycles(Vertex[] vertices, Edge[] edges) {
     +/
 
 interface GraphWriterFactory : WriterFactory {
-  GraphWriterDg createGraphWriter(OutputStream[] outputs);
+  GraphWriter createGraphWriter(DocumentWriter writer);
+}
+
+abstract class AbstractGraphWriter : AbstractWriter!(GraphWriterFactory), GraphWriter {
+  DocumentWriter writer;
+  
+  this(GraphWriterFactory factory, DocumentWriter writer) {
+    super(factory);
+    this.writer = writer;
+  }
 }

@@ -12,17 +12,14 @@ import tango.io.FilePath;
 
 /**
  * Creates a graph rule file for the dot utility.
- *
- * TODO: support changing colors / graph style?
  */
-class DotWriter : AbstractWriter!(GraphWriterFactory, 2), GraphWriter {
-  this(GraphWriterFactory factory, OutputStream[] outputs) {
-    super(factory, outputs);
+class DotWriter : AbstractGraphWriter {
+  this(GraphWriterFactory factory, DocumentWriter writer) {
+    super(factory, writer);
   }
 
-  void generateGraph(Vertex[] vertices, Edge[] edges) {
-    auto output2 = new Print!(char)(new Layout!(char), outputs[0]);
-    auto output = new Print!(char)(new Layout!(char), outputs[1]);
+  void generateGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
+    auto image = new Print!(char)(new Layout!(char), imageFile);
 
     Vertex[][char[]] verticesByPckgName;
     if (factory.options.graph.GroupByFullPackageName)
@@ -33,64 +30,52 @@ class DotWriter : AbstractWriter!(GraphWriterFactory, 2), GraphWriter {
         factory.options.graph.HighlightCyclicEdges)
       findCycles(vertices, edges);
 
-    if (cast(FileConduit)outputs[1]) {
+    if (cast(FileConduit)imageFile.conduit) {
       // name of the .dot file
-      char[] fn = (cast(FileConduit)outputs[1]).toUtf8();
+      char[] fn = (cast(FileConduit)imageFile.conduit).toUtf8();
       fn = FilePath(fn).file;
 
-      // .dot -> .svg/.png/.gif/...
-      fn = fn[0..$-3] ~ imageFormatExts[factory.options.graph.imageFormat];
-
-      switch(factory.options.docFormat) {
-        case DocFormat.LaTeX:
-          output2.format("\\includegraphics{{{0}}", fn);
-          break;
-        case DocFormat.XML:
-          // TODO
-          break;
-        case DocFormat.HTML:
-          output2.format(`<img src="{0}" />`, fn);
-          break;
-        case DocFormat.PlainText:
-          throw new Exception("Dot output is not supported in plain text mode.");
-      }
+      fn = fn[0..$-4];
+      
+      writer.addGraphics(fn);
     }
-
-    output("Digraph ModuleDependencies {\n");
+    
+    image("Digraph ModuleDependencies {\n");
 
     if (factory.options.graph.HighlightCyclicVertices)
       foreach (module_; vertices)
-        output.format(
+        image.format(
           `  n{0} [label="{1}"{2}];`\n,
           module_.id,
           module_.name,
-          (module_.isCyclic ? ",style=filled,fillcolor=tomato" : "")
+          (module_.isCyclic ? ",style=filled,fillcolor=" ~ factory.options.graph.nodeColor : "")
         );
     else
         foreach (i, module_; vertices)
-            output.format(`  n{0} [label="{1}"];`, i, module_.name);
+            image.format(`  n{0} [label="{1}"];`, i, module_.name);
 
     foreach (edge; edges)
-      output.format(
+      image.format(
         `  n{0} -> n{1}{2};`\n,
         edge.outgoing.id,
         edge.incoming.id,
-        (edge.isCyclic ? "[color=red]" : "")
+        (edge.isCyclic ? "[color=" ~ factory.options.graph.cyclicNodeColor ~ "]" : "")
       );
 
     if (factory.options.graph.GroupByFullPackageName)
       foreach (packageName, vertices; verticesByPckgName) {
-        output.format(
-          `  subgraph "cluster_{0}" {{`\n`    label="{0}";color=blue;`\n`    `,
+        image.format(
+          `  subgraph "cluster_{0}" {{`\n`    label="{0}";color=`
+          ~ factory.options.graph.clusterColor ~ `;`\n`    `,
           packageName,
           packageName
         );
 
         foreach (module_; vertices)
-          output.format(`n{0};`, module_.id);
-        output("\n  }\n");
+          image.format(`n{0};`, module_.id);
+        image("\n  }\n");
       }
 
-    output("}");
+    image("}");
   }
 }

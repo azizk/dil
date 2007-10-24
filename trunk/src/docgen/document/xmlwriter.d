@@ -2,9 +2,9 @@
  * Author: Jari-Matti Mäkelä
  * License: GPL3
  */
-module docgen.templates.xmlwriter;
+module docgen.document.xmlwriter;
 
-import docgen.templates.writer;
+import docgen.document.writer;
 import tango.io.FileConduit : FileConduit;
 import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
@@ -14,10 +14,10 @@ import tango.text.convert.Layout : Layout;
 /**
  * TODO
  */
-class XMLWriter : AbstractWriter!(TemplateWriterFactory, 1), TemplateWriter {
-  this(TemplateWriterFactory factory, OutputStream[] outputs) {
+class XMLWriter : AbstractDocumentWriter!(2, "xml") {
+  this(DocumentWriterFactory factory, OutputStream[] outputs) {
     super(factory, outputs);
   }
 
-  void generateTemplate() { /* TODO */ }
+  void generateDocument() { /* TODO */ }
 }

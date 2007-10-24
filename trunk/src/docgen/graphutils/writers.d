@@ -14,14 +14,14 @@ class DefaultGraphWriterFactory : AbstractWriterFactory, GraphWriterFactory {
     super(generator);
   }
 
-  GraphWriterDg createGraphWriter(OutputStream[] outputs) {
+  GraphWriter createGraphWriter(DocumentWriter writer) {
     switch (options.graph.graphFormat) {
       case GraphFormat.Dot:
-        return &((new DotWriter(this, outputs)).generateGraph);
+        return new DotWriter(this, writer);
       case GraphFormat.ModuleNames:
-        return &((new ModuleNameWriter(this, outputs)).generateGraph);
+        return new ModuleNameWriter(this, writer);
       case GraphFormat.ModulePaths:
-        return &((new ModulePathWriter(this, outputs)).generateGraph);
+        return new ModulePathWriter(this, writer);
       default:
         throw new Exception("Graph writer type does not exist!");
     }

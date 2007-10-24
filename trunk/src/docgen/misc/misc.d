@@ -7,6 +7,7 @@ import tango.io.model.IConduit : OutputStream;
 
 char[] docgen_version = "Dil document generator 0.1";
 
+/** Supported document output formats. */
 enum DocFormat {
   LaTeX,
   XML,
@@ -14,19 +15,29 @@ enum DocFormat {
   PlainText
 }
 
+/**
+ * Supported comment formats.
+ * 
+ * http://www.stack.nl/~dimitri/doxygen/docblocks.html
+ * http://www.digitalmars.com/d/ddoc.html
+ */
 enum CommentFormat {
   Ddoc,
   Doxygen
 }
 
+/** Supported image formats. */
 enum ImageFormat {
   PNG,
   SVG,
-  GIF
+  GIF,
+  PS
 }
 
-const imageFormatExts = [ "png", "svg", "gif" ];
+/** Image format extensions. */
+const imageFormatExts = [ "png", "svg", "gif", "ps" ];
 
+/** Supported graph writers. */
 enum GraphFormat {
   Dot,
   ModuleNames,
@@ -37,6 +48,9 @@ struct GraphOptions {
   GraphFormat graphFormat;
   ImageFormat imageFormat;
   uint depth;
+  char[] nodeColor = "tomato";
+  char[] cyclicNodeColor = "red";
+  char[] clusterColor = "";
   bool IncludeUnlocatableModules;
   bool HighlightCyclicEdges;
   bool HighlightCyclicVertices;
@@ -45,25 +59,46 @@ struct GraphOptions {
 }
 
 struct ListingOptions {
+  /// use literate programming symbols [LaTeX]
   bool literateStyle = true;
+  /// enable source code listings
   bool enableListings;
 }
 
 struct TemplateOptions {
+  /// project title
   char[] title = "Test project";
+  /// project version
   char[] versionString = "1.0";
+  /// copyright notice
   char[] copyright;
+  /// paper size [LaTeX]
   char[] paperSize = "a4paper";
+  /// use short file names [HTML]
+  bool shortFileNames;
+  /// page template style to use, customizable via docgen/templates
+  char[] templateStyle = "default";
+}
+
+struct ParserOptions {
+  /// location for the generated output
+  char[] outputDir;
+  /// paths to search for imports 
+  char[][] importPaths;
+  /// regexps for excluding modules
+  char[][] strRegexps;
 }
 
 struct DocGeneratorOptions {
-  
   GraphOptions graph;
   ListingOptions listings;
   TemplateOptions templates;
+  ParserOptions parser;
   DocFormat docFormat;
   CommentFormat commentFormat;
 }
+
+// ---
 
 interface DocGenerator {
   DocGeneratorOptions *options();
@@ -86,16 +121,22 @@ abstract class AbstractWriterFactory : WriterFactory {
   }
 }
 
-template AbstractWriter(T, int n = -1) {
+template AbstractWriter(T, int n = 0) {
   abstract class AbstractWriter {
     protected T factory;
-    protected OutputStream[] outputs;
   
-    this(T factory, OutputStream[] outputs) {
-      this.factory = factory;
-      this.outputs = outputs;
-      static if (n > -1)
+    static if (n > 0) {
+      protected OutputStream[] outputs;
+      
+      this(T factory, OutputStream[] outputs) {
+        this.factory = factory;
+        this.outputs = outputs;
         assert(outputs.length == n, "Incorrect number of outputs");
+      }
+    } else {
+      this(T factory) {
+        this.factory = factory;
+      }
     }
   }
 }

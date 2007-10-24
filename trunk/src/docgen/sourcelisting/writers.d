@@ -15,16 +15,16 @@ class DefaultListingWriterFactory : AbstractWriterFactory, ListingWriterFactory 
     super(generator);
   }
 
-  ListingWriter createListingWriter(OutputStream[] outputs) {
+  ListingWriter createListingWriter(DocumentWriter writer) {
     switch (options.docFormat) {
       case DocFormat.LaTeX:
-        return new LaTeXWriter(this, outputs);
+        return new LaTeXWriter(this, writer);
       case DocFormat.XML:
-        return new XMLWriter(this, outputs);
+        return new XMLWriter(this, writer);
       case DocFormat.HTML:
-        return new HTMLWriter(this, outputs);
+        return new HTMLWriter(this, writer);
       case DocFormat.PlainText:
-        return new PlainTextWriter(this, outputs);
+        return new PlainTextWriter(this, writer);
       default:
         throw new Exception("Listing writer type does not exist!");
     }
