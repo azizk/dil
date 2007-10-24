@@ -17,7 +17,7 @@ class LaTeXWriter : AbstractDocumentWriter!(1, "latex") {
     super(factory, outputs);
   }
 
-  void generateDocument() {
+  void generateFirstPage() {
     auto print = new Print!(char)(new Layout!(char), outputs[0]);
     
     print.format(

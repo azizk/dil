@@ -20,7 +20,39 @@ class PlainTextWriter : AbstractDocumentWriter!(1, "plaintext") {
     super(factory, outputs);
   }
 
-  void generateDocument() {
+  void generateTOC(Module[] modules) {
+    // TODO
+    auto print = new Print!(char)(new Layout!(char), outputs[0]);
+  
+    print.format(templates["toc"]);
+  }
+
+  void generateModuleSection() {
+    // TODO
+    auto print = new Print!(char)(new Layout!(char), outputs[0]);
+  
+    print.format(templates["modules"]);
+  }
+
+  void generateListingSection() {
+    // TODO
+    auto print = new Print!(char)(new Layout!(char), outputs[0]);
+  
+    print.format(templates["listings"]);
+  }
+
+  void generateDepGraphSection() {
+    // TODO
+    auto print = new Print!(char)(new Layout!(char), outputs[0]);
+  
+    print.format(templates["dependencies"]);
+  }
+
+  void generateIndexSection() { }
+
+  void generateLastPage() { }
+
+  void generateFirstPage() {
     auto output = new Print!(char)(new Layout!(char), outputs[0]);
     
     output(

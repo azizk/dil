@@ -14,7 +14,7 @@ import dil.Module;
 
 void saveDefaultGraph(Vertex[] vertices, Edge[] edges, char[] fname) {
   auto gen = new TestDocGenerator;
-  gen.options.graph.HighlightCyclicVertices = true;
+  gen.options.graph.highlightCyclicVertices = true;
   gen.options.graph.imageFormat = ImageFormat.SVG;
   gen.options.graph.graphFormat = GraphFormat.Dot;
   //gen.options.graph.graphFormat = GraphFormat.ModuleNames;
@@ -107,7 +107,7 @@ void graph4() {
 //@unittest
 void graph5() {
   auto gen = new TestDocGenerator;
-  gen.options.graph.HighlightCyclicVertices = true;
+  gen.options.graph.highlightCyclicVertices = true;
   gen.options.graph.graphFormat = GraphFormat.Dot;
   gen.options.graph.imageFormat = ImageFormat.SVG;
   gen.options.docFormat = DocFormat.LaTeX;

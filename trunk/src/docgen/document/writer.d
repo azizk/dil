@@ -13,6 +13,7 @@ import tango.io.stream.FileStream;
 import tango.io.Stdout;
 import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
+public import dil.Module;
 
 char[] timeNow() {
   auto date = Clock.toDate;
@@ -43,11 +44,29 @@ char[] loadTemplate(char[] style, char[] format, char[] templateName) {
   return content;
 }
 
-const templateNames = [ "firstpage"[], "graphics"[], "listing"[] ];
-//const templateNames = [ "firstpage", "toc", "module", "depGraph", "graphics" ];
+const templateNames = [
+  "firstpage"[], "toc"[], "modules"[],
+  "listings"[], "dependencies"[], "index"[],
+  "lastpage"[],
+  "graphics"[], "listing"[]
+];
 
 interface DocumentWriter {
-  void generateDocument();
+  void setOutput(OutputStream[] outputs);
+
+  void generateFirstPage();
+
+  void generateTOC(Module[] modules);
+
+  void generateModuleSection();
+
+  void generateListingSection();
+
+  void generateDepGraphSection();
+
+  void generateIndexSection();
+
+  void generateLastPage();
   
   /**
    * Writes a tag for the given image to the output stream
@@ -75,7 +94,49 @@ template AbstractDocumentWriter(int n, char[] format) {
         templates[tpl] = loadTemplate(factory.options.templates.templateStyle, format, tpl);
       }
     }
-  
+
+    void setOutput(OutputStream[] outputs) {
+      this.outputs = outputs;
+    }
+
+    void generateTOC(Module[] modules) {
+      auto print = new Print!(char)(new Layout!(char), outputs[0]);
+    
+      print.format(templates["toc"]);
+    }
+
+    void generateModuleSection() {
+      auto print = new Print!(char)(new Layout!(char), outputs[0]);
+    
+      print.format(templates["modules"]);
+    }
+
+    void generateListingSection() {
+      auto print = new Print!(char)(new Layout!(char), outputs[0]);
+    
+      print.format(templates["listings"]);
+    }
+
+    void generateDepGraphSection() {
+      auto print = new Print!(char)(new Layout!(char), outputs[0]);
+    
+      print.format(templates["dependencies"]);
+    }
+
+    void generateIndexSection() {
+      auto print = new Print!(char)(new Layout!(char), outputs[0]);
+    
+      print.format(templates["index"]);
+    }
+
+    void generateLastPage() {
+      auto print = new Print!(char)(new Layout!(char), outputs[0]);
+    
+      print.format(templates["lastpage"]);
+    }
+
+    // --- page components
+
     void addGraphics(char[] imageFile) {
       auto print = new Print!(char)(new Layout!(char), outputs[0]);
     

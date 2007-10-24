@@ -50,12 +50,12 @@ struct GraphOptions {
   uint depth;
   char[] nodeColor = "tomato";
   char[] cyclicNodeColor = "red";
-  char[] clusterColor = "";
-  bool IncludeUnlocatableModules;
-  bool HighlightCyclicEdges;
-  bool HighlightCyclicVertices;
-  bool GroupByPackageNames;
-  bool GroupByFullPackageName;
+  char[] clusterColor = "blue";
+  bool includeUnlocatableModules;
+  bool highlightCyclicEdges;
+  bool highlightCyclicVertices;
+  bool groupByPackageNames;
+  bool groupByFullPackageName;
 }
 
 struct ListingOptions {
@@ -81,21 +81,25 @@ struct TemplateOptions {
 }
 
 struct ParserOptions {
-  /// location for the generated output
-  char[] outputDir;
   /// paths to search for imports 
   char[][] importPaths;
+  /// paths to "root files"
+  char[][] rootPaths;
   /// regexps for excluding modules
   char[][] strRegexps;
 }
 
 struct DocGeneratorOptions {
+  /// location for the generated output
+  char[] outputDir;
+
+  DocFormat docFormat;
+  CommentFormat commentFormat;
+  
   GraphOptions graph;
   ListingOptions listings;
   TemplateOptions templates;
   ParserOptions parser;
-  DocFormat docFormat;
-  CommentFormat commentFormat;
 }
 
 // ---

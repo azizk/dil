@@ -22,12 +22,12 @@ class DotWriter : AbstractGraphWriter {
     auto image = new Print!(char)(new Layout!(char), imageFile);
 
     Vertex[][char[]] verticesByPckgName;
-    if (factory.options.graph.GroupByFullPackageName)
+    if (factory.options.graph.groupByFullPackageName)
       foreach (module_; vertices)
         verticesByPckgName[module_.name] ~= module_; // FIXME: is it name or loc?
 
-    if (factory.options.graph.HighlightCyclicVertices ||
-        factory.options.graph.HighlightCyclicEdges)
+    if (factory.options.graph.highlightCyclicVertices ||
+        factory.options.graph.highlightCyclicEdges)
       findCycles(vertices, edges);
 
     if (cast(FileConduit)imageFile.conduit) {
@@ -42,7 +42,7 @@ class DotWriter : AbstractGraphWriter {
     
     image("Digraph ModuleDependencies {\n");
 
-    if (factory.options.graph.HighlightCyclicVertices)
+    if (factory.options.graph.highlightCyclicVertices)
       foreach (module_; vertices)
         image.format(
           `  n{0} [label="{1}"{2}];`\n,
@@ -62,7 +62,7 @@ class DotWriter : AbstractGraphWriter {
         (edge.isCyclic ? "[color=" ~ factory.options.graph.cyclicNodeColor ~ "]" : "")
       );
 
-    if (factory.options.graph.GroupByFullPackageName)
+    if (factory.options.graph.groupByFullPackageName)
       foreach (packageName, vertices; verticesByPckgName) {
         image.format(
           `  subgraph "cluster_{0}" {{`\n`    label="{0}";color=`

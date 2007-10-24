@@ -16,7 +16,7 @@ import tango.text.Util;
 import common;
 
 alias FileConst.PathSeparatorChar dirSep;
-
+/+
 class ModuleGraphGenerator {
 
   /**
@@ -38,3 +38,4 @@ class ModuleGraphGenerator {
     */
   }
 }
++/

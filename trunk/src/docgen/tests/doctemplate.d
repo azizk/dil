@@ -21,7 +21,13 @@ void doctemplate1() {
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
   auto writer = gwf.createDocumentWriter( [ file ] );
   
-  writer.generateDocument();
+  writer.generateFirstPage();
+  writer.generateTOC(null);
+  writer.generateModuleSection();
+  writer.generateListingSection();
+  writer.generateDepGraphSection();
+  writer.generateIndexSection();
+  writer.generateLastPage();
   
   file.close();
 }

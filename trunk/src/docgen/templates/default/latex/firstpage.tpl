@@ -46,22 +46,3 @@
 \end{{titlepage}
 
 \clearemptydoublepage
-
-\tableofcontents
-\thispagestyle{{empty}
-
-\clearemptydoublepage
-
-\setcounter{{page}{{1}
-\chapter{{Module documentation}
-\input{{modules}
-
-\chapter{{File listings}
-\input{{files}
-
-\chapter{{Dependency diagram}
-\input{{dependencies}
-
-\printindex
-
-\end{{document}

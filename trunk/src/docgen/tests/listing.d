@@ -22,7 +22,7 @@ void listing1() {
   auto fname = "files.tex";
   
   auto ddf = new DefaultDocumentWriterFactory(gen);
-  auto gwf = new DefaultListingWriterFactory(gen);
+  auto dlwf = new DefaultListingWriterFactory(gen);
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
   
 
@@ -41,7 +41,7 @@ void listing1() {
     
     auto srcFile = new FileConduit(mod.filePath);
     auto dstFile = new FileConduit("docgen/teststuff/_" ~ dstFname ~ ".d", FileConduit.WriteCreate);
-    auto writer = gwf.createListingWriter( ddf.createDocumentWriter( [ file ] ) );
+    auto writer = dlwf.createListingWriter( ddf.createDocumentWriter( [ file ] ) );
     
     writer.generateListing(srcFile, dstFile, mod.moduleFQN);
 
