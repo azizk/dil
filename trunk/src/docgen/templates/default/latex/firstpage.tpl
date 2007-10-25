@@ -3,6 +3,7 @@
 \usepackage{{makeidx}
 \usepackage{{fancyhdr}
 \usepackage{{graphicx}
+\usepackage{{hyperref}
 \usepackage{{multicol}
 \usepackage{{float}
 \usepackage{{textcomp}
@@ -25,6 +26,7 @@
   columns=fixed,
   basicstyle=\small
 }
+\hypersetup{{backref,colorlinks=true}
 \makeindex
 \setcounter{{tocdepth}{{1}
 \newcommand{{\clearemptydoublepage}{{\newpage{{\pagestyle{{empty}\cleardoublepage}}

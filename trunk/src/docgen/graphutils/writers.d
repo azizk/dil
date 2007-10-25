@@ -14,8 +14,8 @@ class DefaultGraphWriterFactory : AbstractWriterFactory, GraphWriterFactory {
     super(generator);
   }
 
-  GraphWriter createGraphWriter(DocumentWriter writer) {
-    switch (options.graph.graphFormat) {
+  GraphWriter createGraphWriter(DocumentWriter writer, GraphFormat outputFormat) {
+    switch (outputFormat) {
       case GraphFormat.Dot:
         return new DotWriter(this, writer);
       case GraphFormat.ModuleNames:

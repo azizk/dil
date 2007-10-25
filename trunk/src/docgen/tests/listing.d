@@ -15,7 +15,7 @@ import tango.text.Util;
 //@unittest
 void listing1() {
   auto gen = new TestDocGenerator;
-  gen.options.docFormat = DocFormat.LaTeX;
+  gen.options.outputFormats = [ DocFormat.LaTeX ];
   auto fname = "files.tex";
   
   auto ddf = new DefaultDocumentWriterFactory(gen);
@@ -38,7 +38,8 @@ void listing1() {
     
     auto srcFile = new FileConduit(mod.filePath);
     auto dstFile = new FileConduit("docgen/teststuff/_" ~ dstFname ~ ".d", FileConduit.WriteCreate);
-    auto writer = dlwf.createListingWriter( ddf.createDocumentWriter( [ file ] ) );
+    auto writer = dlwf.createListingWriter( ddf.createDocumentWriter( [ file ],
+          DocFormat.LaTeX ), DocFormat.LaTeX );
     
     writer.generateListing(srcFile, dstFile, mod.moduleFQN);
 

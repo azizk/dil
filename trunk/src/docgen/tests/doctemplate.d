@@ -12,12 +12,12 @@ import tango.io.FileConduit;
 //@unittest
 void doctemplate1() {
   auto gen = new TestDocGenerator;
-  gen.options.docFormat = DocFormat.LaTeX;
+  gen.options.outputFormats = [ DocFormat.LaTeX ];
   auto fname = "doctemplate.tex";
   
   auto gwf = new DefaultDocumentWriterFactory(gen);
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
-  auto writer = gwf.createDocumentWriter( [ file ] );
+  auto writer = gwf.createDocumentWriter( [ file ], DocFormat.LaTeX );
   
   writer.generateFirstPage();
   writer.generateTOC(null);

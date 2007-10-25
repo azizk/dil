@@ -40,8 +40,11 @@ abstract class DefaultDocGenerator : DocGenerator {
     int id = 1;
 
     Parser.loadModules(
-      options.parser.rootPaths, options.parser.importPaths,
-      null, true, -1,
+      options.parser.rootPaths,
+      options.parser.importPaths,
+      options.parser.strRegexps,
+      options.graph.includeUnlocatableModules,
+      options.graph.depth,
       (char[] fqn, char[] path, Module m) {
         if (m is null) {
           if (fqn in vertices) {
@@ -70,9 +73,9 @@ abstract class DefaultDocGenerator : DocGenerator {
   void createDepGraph(char[] depGraphFile) {
     auto imgFile = new FileOutput(outPath(depGraphFile));
 
-    auto writer = graphFactory.createGraphWriter( docWriter );
+    auto writer = graphFactory.createGraphWriter( docWriter, GraphFormat.Dot );
 
-    writer.generateGraph(vertices.values, edges, imgFile);
+    writer.generateDepGraph(vertices.values, edges, imgFile);
 
     imgFile.close();
   }
@@ -98,7 +101,7 @@ class LaTeXDocGenerator : DefaultDocGenerator {
     auto ddf = new DefaultDocumentWriterFactory(this);
 
     auto docFile = new FileOutput(outPath(docFileName));
-    docWriter = ddf.createDocumentWriter( [ docFile ] );
+    docWriter = ddf.createDocumentWriter( [ docFile ], DocFormat.LaTeX );
 
     docWriter.generateFirstPage();
     docWriter.generateTOC(modules);
@@ -150,7 +153,7 @@ class LaTeXDocGenerator : DefaultDocGenerator {
     auto dlwf = new DefaultListingWriterFactory(this);
     auto docFile = new FileOutput(outPath(listingsFile));
     docWriter.setOutput([docFile]);
-    auto writer = dlwf.createListingWriter(docWriter);
+    auto writer = dlwf.createListingWriter(docWriter, DocFormat.LaTeX);
 
     /*modules.sort(
       (Module a, Module b){ return icompare(a.moduleFQN, b.moduleFQN); }
@@ -207,17 +210,16 @@ class LaTeXDocGenerator : DefaultDocGenerator {
 void main(char[][] args) {
   DocGeneratorOptions options;
 
-  options.graph.graphFormat = GraphFormat.Dot;
-  options.graph.imageFormat = ImageFormat.PS;
-  options.graph.depth = 0;
+  options.graph.imageFormat = ImageFormat.PDF;
+  options.graph.depth = -1;
   options.graph.nodeColor = "tomato";
   options.graph.cyclicNodeColor = "red";
   options.graph.unlocatableNodeColor = "gray";
   options.graph.clusterColor = "blue";
-  options.graph.includeUnlocatableModules = true;
+  options.graph.includeUnlocatableModules = false;
   options.graph.highlightCyclicEdges = true;
   options.graph.highlightCyclicVertices = true;
-  options.graph.groupByPackageNames = false;
+  options.graph.groupByPackageNames = true;
   options.graph.groupByFullPackageName = false;
   
   options.listings.literateStyle = true;
@@ -234,8 +236,8 @@ void main(char[][] args) {
   options.parser.rootPaths = [ args[1] ];
   options.parser.strRegexps = null;
 
-  options.docFormat = DocFormat.LaTeX;
-  options.commentFormat = CommentFormat.Doxygen;
+  options.outputFormats = [ DocFormat.LaTeX ];
+  options.parser.commentFormat = CommentFormat.Doxygen;
   options.outputDir = args[3];
   
 

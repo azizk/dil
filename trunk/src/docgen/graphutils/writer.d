@@ -10,7 +10,7 @@ public import docgen.document.writer;
 debug import tango.io.Stdout;
 
 interface GraphWriter {
-  void generateGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile);
+  void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile);
 }
 
 /**
@@ -60,72 +60,8 @@ void findCycles(Vertex[] vertices, Edge[] edges) {
       }
 }
 
-    /+
-    void analyzeGraph(Vertex[] vertices, Edge[] edges)
-    {
-    void recursive(Vertex[] modules)
-    {
-      foreach (idx, vertex; vertices)
-      {
-        uint outgoing, incoming;
-        foreach (j, edge; edges)
-        {
-          if (edge.outgoing is vertex)
-            outgoing++;
-          if (edge.incoming is vertex)
-            incoming++;
-        }
-
-        if (outgoing == 0)
-        {
-          if (incoming != 0)
-          {
-            // Vertex is a sink.
-            alias outgoing i; // Reuse
-            alias incoming j; // Reuse
-            // Remove edges.
-            for (i=j=0; i < edges.length; i++)
-              if (edges[i].incoming !is vertex)
-                edges[j++] = edges[i];
-            edges.length = j;
-            vertices = vertices[0..idx] ~ vertices[idx+1..$];
-            return recursive(modules);
-          }
-          else
-            assert(0, "orphaned module: "~vertex.getFQN()~" (has no edges in graph)"); // orphaned vertex (module) in graph
-        }
-        else if (incoming == 0)
-        {
-          // Vertex is a source
-          alias outgoing i; // Reuse
-          alias incoming j; // Reuse
-          // Remove edges.
-          for (i=j=0; i < edges.length; i++)
-            if (edges[i].outgoing !is vertex)
-              edges[j++] = edges[i];
-          edges.length = j;
-          vertices = vertices[0..idx] ~ vertices[idx+1..$];
-          return recursive(modules);
-        }
-//         else
-//         {
-//           // source && sink
-//         }
-      }
-
-      // When reaching this point it means only cylic edges and vertices are left.
-      foreach (vertex; vertices)
-        vertex.isCyclic = true;
-      foreach (edge; edges)
-        if (edge)
-          edge.isCyclic = true;
-    }
-    recursive(vertices);
-    }
-    +/
-
 interface GraphWriterFactory : WriterFactory {
-  GraphWriter createGraphWriter(DocumentWriter writer);
+  GraphWriter createGraphWriter(DocumentWriter writer, GraphFormat outputFormat);
 }
 
 abstract class AbstractGraphWriter : AbstractWriter!(GraphWriterFactory), GraphWriter {

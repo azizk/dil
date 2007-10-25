@@ -15,5 +15,5 @@ interface ListingWriter {
 }
 
 interface ListingWriterFactory : WriterFactory {
-  ListingWriter createListingWriter(DocumentWriter writer);
+  ListingWriter createListingWriter(DocumentWriter writer, DocFormat outputFormat);
 }

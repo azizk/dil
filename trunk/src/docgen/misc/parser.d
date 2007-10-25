@@ -145,7 +145,7 @@ class Parser {
 
           if (loaded_mod !is null) {
             idg(loaded_mod, mod);
-          } else {
+          } else if (IncludeUnlocatableModules) {
             auto tmp = new Module(null, true);
             tmp.moduleFQN = replace(moduleFQN_.dup, dirSep, '.');
             idg(tmp, mod);

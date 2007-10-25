@@ -15,7 +15,6 @@ void saveDefaultGraph(Vertex[] vertices, Edge[] edges, char[] fname) {
   auto gen = new TestDocGenerator;
   gen.options.graph.highlightCyclicVertices = true;
   gen.options.graph.imageFormat = ImageFormat.SVG;
-  gen.options.graph.graphFormat = GraphFormat.Dot;
   //gen.options.graph.graphFormat = GraphFormat.ModuleNames;
   //gen.options.graph.graphFormat = GraphFormat.ModulePaths;
   gen.options.graph.depth = 5;
@@ -23,9 +22,12 @@ void saveDefaultGraph(Vertex[] vertices, Edge[] edges, char[] fname) {
   auto gwf = new DefaultGraphWriterFactory(gen);
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
   auto file2 = new FileConduit("docgen/teststuff/" ~ fname ~ "-2", FileConduit.WriteCreate);
-  auto writer = gwf.createGraphWriter( ddf.createDocumentWriter( [ file2 ] ) );
+  auto writer = gwf.createGraphWriter(
+    ddf.createDocumentWriter( [ file2 ], DocFormat.LaTeX),
+    GraphFormat.Dot
+  );
   
-  writer.generateGraph(vertices, edges, file);
+  writer.generateDepGraph(vertices, edges, file);
   
   file.close();
   file2.close();
@@ -107,9 +109,8 @@ void graph4() {
 void graph5() {
   auto gen = new TestDocGenerator;
   gen.options.graph.highlightCyclicVertices = true;
-  gen.options.graph.graphFormat = GraphFormat.Dot;
-  gen.options.graph.imageFormat = ImageFormat.SVG;
-  gen.options.docFormat = DocFormat.LaTeX;
+  gen.options.graph.imageFormat = ImageFormat.PDF;
+  gen.options.outputFormats = [ DocFormat.LaTeX ];
   auto fname = "dependencies.tex";
   auto imgFname = "depgraph.dot";
   
@@ -135,9 +136,12 @@ void graph5() {
     modules
   );
 
-  auto writer = gwf.createGraphWriter( ddf.createDocumentWriter( [ file ] ) );
+  auto writer = gwf.createGraphWriter(
+    ddf.createDocumentWriter( [ file ], DocFormat.LaTeX ),
+    GraphFormat.Dot
+  );
   
-  writer.generateGraph(vertices.values, edges, imgFile);
+  writer.generateDepGraph(vertices.values, edges, imgFile);
   
   file.close();
   imgFile.close();

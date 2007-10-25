@@ -84,7 +84,7 @@ interface DocumentWriter {
 }
 
 interface DocumentWriterFactory : WriterFactory {
-  DocumentWriter createDocumentWriter(OutputStream[] outputs);
+  DocumentWriter createDocumentWriter(OutputStream[] outputs, DocFormat outputFormat);
 }
 
 template AbstractDocumentWriter(int n, char[] format) {

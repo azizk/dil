@@ -15,8 +15,8 @@ class DefaultListingWriterFactory : AbstractWriterFactory, ListingWriterFactory 
     super(generator);
   }
 
-  ListingWriter createListingWriter(DocumentWriter writer) {
-    switch (options.docFormat) {
+  ListingWriter createListingWriter(DocumentWriter writer, DocFormat outputFormat) {
+    switch (outputFormat) {
       case DocFormat.LaTeX:
         return new LaTeXWriter(this, writer);
       case DocFormat.XML:

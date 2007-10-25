@@ -31,11 +31,11 @@ enum ImageFormat {
   PNG,
   SVG,
   GIF,
-  PS
+  PDF
 }
 
 /** Image format extensions. */
-const imageFormatExts = [ "png", "svg", "gif", "ps" ];
+const imageFormatExts = [ "png", "svg", "gif", "pdf" ];
 
 /** Supported graph writers. */
 enum GraphFormat {
@@ -45,7 +45,6 @@ enum GraphFormat {
 }
 
 struct GraphOptions {
-  GraphFormat graphFormat;
   ImageFormat imageFormat;
   uint depth;
   char[] nodeColor = "tomato";
@@ -88,14 +87,15 @@ struct ParserOptions {
   char[][] rootPaths;
   /// regexps for excluding modules
   char[][] strRegexps;
+  /// comment format [comment parser]
+  CommentFormat commentFormat;
 }
 
 struct DocGeneratorOptions {
   /// location for the generated output
   char[] outputDir;
 
-  DocFormat docFormat;
-  CommentFormat commentFormat;
+  DocFormat[] outputFormats;
   
   GraphOptions graph;
   ListingOptions listings;

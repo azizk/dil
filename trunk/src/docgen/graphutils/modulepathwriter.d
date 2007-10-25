@@ -13,7 +13,7 @@ class ModulePathWriter : AbstractGraphWriter {
     super(factory, writer);
   }
 
-  void generateGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
+  void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
 
     void doPaths(Vertex[] v, uint level, char[] indent = "") {
       if (!level) return;

@@ -13,7 +13,7 @@ class ModuleNameWriter : AbstractGraphWriter {
     super(factory, writer);
   }
 
-  void generateGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
+  void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
 
     void doList(Vertex[] v, uint level, char[] indent = "") {
       if (!level) return;

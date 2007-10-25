@@ -15,8 +15,8 @@ class DefaultDocumentWriterFactory : AbstractWriterFactory, DocumentWriterFactor
     super(generator);
   }
 
-  DocumentWriter createDocumentWriter(OutputStream[] outputs) {
-    switch (options.docFormat) {
+  DocumentWriter createDocumentWriter(OutputStream[] outputs, DocFormat outputFormat) {
+    switch (outputFormat) {
       case DocFormat.LaTeX:
         return new LaTeXWriter(this, outputs);
       case DocFormat.XML:
