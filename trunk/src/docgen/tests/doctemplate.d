@@ -12,7 +12,6 @@ import tango.io.FileConduit;
 //@unittest
 void doctemplate1() {
   auto gen = new TestDocGenerator;
-  gen.options.outputFormats = [ DocFormat.LaTeX ];
   auto fname = "doctemplate.tex";
   
   auto gwf = new DefaultDocumentWriterFactory(gen);

@@ -5,15 +5,20 @@
 module docgen.tests.common;
 
 import docgen.misc.misc;
+import docgen.config.configurator;
 
 class TestDocGenerator : DocGenerator {
-  DocGeneratorOptions m_options;
-  
+  Configurator config;
+
+  this() {
+    config = new DefaultConfigurator();
+  }
+
   public void generate() {
 
   }
   
   public DocGeneratorOptions *options() {
-    return &m_options;
+    return config.getConfiguration();
   }
 }

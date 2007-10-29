@@ -27,7 +27,7 @@ class LaTeXWriter : AbstractDocumentWriter!(1, "latex") {
       factory.options.templates.versionString,
       docgen_version,
       timeNow(),
-      factory.options.listings.literateStyle ? "" : "%"
+      factory.options.listing.literateStyle ? "" : "%"
     );
   }
 }

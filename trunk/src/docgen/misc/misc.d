@@ -45,39 +45,50 @@ enum GraphFormat {
 }
 
 struct GraphOptions {
+  /// image format to use for graphs
   ImageFormat imageFormat;
+  /// maximum depth of dependencies in graphs
   uint depth;
-  char[] nodeColor = "tomato";
-  char[] cyclicNodeColor = "red";
-  char[] unlocatableNodeColor = "gray";
-  char[] clusterColor = "blue";
+  /// color of normal modules
+  char[] nodeColor;
+  /// color of the modules in cyclic dep relation
+  char[] cyclicNodeColor;
+  /// unlocatable module color
+  char[] unlocatableNodeColor;
+  /// package color
+  char[] clusterColor;
+  /// include unlocatable modules to the dep graph
   bool includeUnlocatableModules;
+  /// highlight imports in cyclic dep relation
   bool highlightCyclicEdges;
+  /// highlight modules in cyclic dep relation
   bool highlightCyclicVertices;
+  /// group modules by package names in dep graph
   bool groupByPackageNames;
+  /// group modules hierarchically or by full package name
   bool groupByFullPackageName;
 }
 
 struct ListingOptions {
   /// use literate programming symbols [LaTeX]
-  bool literateStyle = true;
+  bool literateStyle;
   /// enable source code listings
   bool enableListings;
 }
 
 struct TemplateOptions {
   /// project title
-  char[] title = "Test project";
+  char[] title;
   /// project version
-  char[] versionString = "1.0";
+  char[] versionString;
   /// copyright notice
   char[] copyright;
   /// paper size [LaTeX]
-  char[] paperSize = "a4paper";
+  char[] paperSize;
   /// use short file names [HTML]
   bool shortFileNames;
   /// page template style to use, customizable via docgen/templates
-  char[] templateStyle = "default";
+  char[] templateStyle;
 }
 
 struct ParserOptions {
@@ -95,10 +106,11 @@ struct DocGeneratorOptions {
   /// location for the generated output
   char[] outputDir;
 
+  /// list of document formats to be generated
   DocFormat[] outputFormats;
   
   GraphOptions graph;
-  ListingOptions listings;
+  ListingOptions listing;
   TemplateOptions templates;
   ParserOptions parser;
 }

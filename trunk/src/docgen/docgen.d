@@ -9,87 +9,92 @@ import docgen.document.writers;
 import docgen.graphutils.writers;
 import docgen.misc.misc;
 import docgen.misc.parser;
+import docgen.config.configurator;
 import tango.core.Array;
 import tango.io.stream.FileStream;
 import tango.text.Ascii;
 import tango.text.Util : replace;
+import tango.io.FilePath;
 debug import tango.io.Stdout;
 
-abstract class DefaultDocGenerator : DocGenerator {
-  DocGeneratorOptions m_options;
-  DocumentWriter docWriter;
-  GraphWriterFactory graphFactory;
-  
-  Module[] modules;
-  Edge[] edges;
-  Vertex[char[]] vertices;
+template DefaultDocGenerator(char[] genDir) {
+  abstract class DefaultDocGenerator : DocGenerator {
+    DocGeneratorOptions m_options;
+    DocumentWriter docWriter;
+    GraphWriterFactory graphFactory;
+    
+    Module[] modules;
+    Edge[] edges;
+    Vertex[char[]] vertices;
 
-  this(DocGeneratorOptions options) {
-    m_options = options;
-    parseSources();
-    graphFactory = new DefaultGraphWriterFactory(this);
-  }
+    this(DocGeneratorOptions options) {
+      m_options = options;
+      graphFactory = new DefaultGraphWriterFactory(this);
 
-  // TODO: constructor for situations where parsing has happened elsewhere
+      // create output dir
+      (new FilePath(options.outputDir ~ "/" ~ genDir)).create();
+    }
 
-  char[] outPath(char[] file) {
-    return options.outputDir ~ "/" ~ file;
-  }
+    // TODO: constructor for situations where parsing has happened elsewhere
 
-  void parseSources() {
-    int id = 1;
+    char[] outPath(char[] file) {
+      return options.outputDir ~ "/" ~ genDir ~ "/" ~ file;
+    }
 
-    Parser.loadModules(
-      options.parser.rootPaths,
-      options.parser.importPaths,
-      options.parser.strRegexps,
-      options.graph.includeUnlocatableModules,
-      options.graph.depth,
-      (char[] fqn, char[] path, Module m) {
-        if (m is null) {
-          if (fqn in vertices) {
-            debug Stdout.format("{} already set.\n", fqn);
-            return;
+    void parseSources() {
+      int id = 1;
 
+      Parser.loadModules(
+        options.parser.rootPaths,
+        options.parser.importPaths,
+        options.parser.strRegexps,
+        options.graph.includeUnlocatableModules,
+        options.graph.depth,
+        (char[] fqn, char[] path, Module m) {
+          if (m is null) {
+            if (fqn in vertices) {
+              debug Stdout.format("{} already set.\n", fqn);
+              return;
+
+            }
+            auto vertex = new Vertex(fqn, path, id++);
+            vertex.type = VertexType.UnlocatableModule;
+            vertices[fqn] = vertex;
+            debug Stdout.format("Setting {} = {}.\n", fqn, path);
+
+          } else {
+            vertices[m.moduleFQN] = new Vertex(m.moduleFQN, m.filePath, id++);
+            debug Stdout.format("Setting {} = {}.\n", m.moduleFQN, m.filePath);
           }
-          auto vertex = new Vertex(fqn, path, id++);
-          vertex.type = VertexType.UnlocatableModule;
-          vertices[fqn] = vertex;
-          debug Stdout.format("Setting {} = {}.\n", fqn, path);
+        },
+        (Module imported, Module importer) {
+          debug Stdout.format("Connecting {} - {}.\n", imported.moduleFQN, importer.moduleFQN);
+          edges ~= vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
+        },
+        modules
+      );
+    }
 
-        } else {
-          vertices[m.moduleFQN] = new Vertex(m.moduleFQN, m.filePath, id++);
-          debug Stdout.format("Setting {} = {}.\n", m.moduleFQN, m.filePath);
-        }
-      },
-      (Module imported, Module importer) {
-        debug Stdout.format("Connecting {} - {}.\n", imported.moduleFQN, importer.moduleFQN);
-        edges ~= vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
-      },
-      modules
-    );
-  }
+    void createDepGraph(char[] depGraphFile) {
+      auto imgFile = new FileOutput(outPath(depGraphFile));
 
-  void createDepGraph(char[] depGraphFile) {
-    auto imgFile = new FileOutput(outPath(depGraphFile));
+      auto writer = graphFactory.createGraphWriter( docWriter, GraphFormat.Dot );
 
-    auto writer = graphFactory.createGraphWriter( docWriter, GraphFormat.Dot );
+      writer.generateDepGraph(vertices.values, edges, imgFile);
 
-    writer.generateDepGraph(vertices.values, edges, imgFile);
+      imgFile.close();
+    }
 
-    imgFile.close();
-  }
-
-  public DocGeneratorOptions *options() {
-    return &m_options;
-  }
+    public DocGeneratorOptions *options() {
+      return &m_options;
+    }
 }
-
+}
 
 /**
  * Main routine for LaTeX doc generation.
  */
-class LaTeXDocGenerator : DefaultDocGenerator {
+class LaTeXDocGenerator : DefaultDocGenerator!("latex") {
   this(DocGeneratorOptions options) {
     super(options);
   }
@@ -190,13 +195,15 @@ class LaTeXDocGenerator : DefaultDocGenerator {
     auto docFileName = "document.tex";
     auto depGraphTexFile = "dependencies.tex";
     auto depGraphFile = "depgraph.dot";
-    auto listingsFile = "files.tex";
+    auto listingFile = "files.tex";
     auto modulesFile = "modules.tex";
+
+    parseSources();
 
     generateDoc(docFileName);
 
-    if (options.listings.enableListings)
-      generateListings(listingsFile);
+    if (options.listing.enableListings)
+      generateListings(listingFile);
 
     generateModules(modulesFile);
 
@@ -208,40 +215,14 @@ class LaTeXDocGenerator : DefaultDocGenerator {
 }
 
 void main(char[][] args) {
-  DocGeneratorOptions options;
+  Configurator config = new DefaultConfigurator();
 
-  options.graph.imageFormat = ImageFormat.PDF;
-  options.graph.depth = -1;
-  options.graph.nodeColor = "tomato";
-  options.graph.cyclicNodeColor = "red";
-  options.graph.unlocatableNodeColor = "gray";
-  options.graph.clusterColor = "blue";
-  options.graph.includeUnlocatableModules = false;
-  options.graph.highlightCyclicEdges = true;
-  options.graph.highlightCyclicVertices = true;
-  options.graph.groupByPackageNames = true;
-  options.graph.groupByFullPackageName = false;
-  
-  options.listings.literateStyle = true;
-  options.listings.enableListings = true;
-
-  options.templates.title = "Test project";
-  options.templates.versionString = "1.0";
-  options.templates.copyright = "(C) Me!";
-  options.templates.paperSize = "a4paper";
-  options.templates.shortFileNames = false;
-  options.templates.templateStyle = "default";
-
-  options.parser.importPaths = [ args[2] ];
+  auto options = config.getConfiguration();
   options.parser.rootPaths = [ args[1] ];
-  options.parser.strRegexps = null;
-
-  options.outputFormats = [ DocFormat.LaTeX ];
-  options.parser.commentFormat = CommentFormat.Doxygen;
+  options.parser.importPaths = [ args[2] ];
   options.outputDir = args[3];
-  
 
-  auto generator = new LaTeXDocGenerator(options);
+  auto generator = new LaTeXDocGenerator(*options);
 
   generator.generate();
 }
