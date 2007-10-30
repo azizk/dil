@@ -33,36 +33,36 @@ void findCycles(Vertex[] vertices, Edge[] edges) {
   }
 
   bool visit(Edge edge) {
-    if (edge.type == EdgeType.Reserved) {
-      edge.type = EdgeType.CyclicDependency;
+    if (edge.cycleType == CycleType.Reserved) {
+      edge.cycleType = CycleType.Cyclic;
       version(VerboseDebug) p();
       return true;
     }
 
     bool wasCyclic = edge.isCyclic();
-    edge.type = EdgeType.Reserved;
+    edge.cycleType = CycleType.Reserved;
     version(VerboseDebug) p();
 
     foreach(edge2; edge.incoming.outgoingEdges)
       if (visit(edge2)) {
         if (edge.isCyclic()) {
-          edge.type = EdgeType.Reserved;
+          edge.cycleType = CycleType.Reserved;
           wasCyclic = true;
           version(VerboseDebug) p();
           continue;
         }
-        edge.type = EdgeType.CyclicDependency;
+        edge.cycleType = CycleType.Cyclic;
         return true;
       }
 
-    edge.type = wasCyclic ? EdgeType.CyclicDependency : EdgeType.Dependency;
+    edge.cycleType = wasCyclic ? CycleType.Cyclic : CycleType.Cyclefree;
     version(VerboseDebug) p();
     return false;
   }
 
   foreach(vertex; vertices)
     foreach(edge; vertex.outgoingEdges)
-      if (edge.type == EdgeType.Unspecified) {
+      if (edge.cycleType == CycleType.Unspecified) {
         visit(edge);
         debug Stderr("*\n");
       }

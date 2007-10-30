@@ -12,6 +12,9 @@ import tango.io.FilePath;
 import tango.text.Util;
 debug import tango.io.Stdout;
 
+alias void delegate (char[] fqn, char[] path, Module module_) modDg;
+alias void delegate (Module imported, Module importer, bool isPublic) importDg;
+
 class Parser {
   private static char[] findModulePath(char[] moduleFQN, char[][] importPaths) {
     char[] modulePath;
@@ -50,9 +53,7 @@ class Parser {
    */
   public static void loadModules(char[] filePath, char[][] importPaths, char[][] strRegexps,
                                  bool IncludeUnlocatableModules, int recursionDepth,
-                                 void delegate (char[] fqn, char[] path, Module) mdg,
-                                 void delegate (Module imported, Module importer) idg,
-                                 out Module[] modules) {
+                                 modDg mdg, importDg idg, out Module[] modules) {
 
     loadModules([filePath], importPaths, strRegexps, IncludeUnlocatableModules,
       recursionDepth, mdg, idg, modules);
@@ -77,9 +78,7 @@ class Parser {
    */
   public static void loadModules(char[][] filePaths, char[][] importPaths, char[][] strRegexps,
                                  bool IncludeUnlocatableModules, int recursionDepth,
-                                 void delegate (char[] fqn, char[] path, Module) mdg,
-                                 void delegate (Module imported, Module importer) idg,
-                                 out Module[] modules) {
+                                 modDg mdg, importDg idg, out Module[] modules) {
     // Initialize regular expressions.
     RegExp[] regexps;
     foreach (strRegexp; strRegexps)
@@ -137,20 +136,21 @@ class Parser {
 
         mdg(FQN, moduleFQNPath, mod);
 
-        auto moduleFQNs = mod.getImports();
+        auto imports = mod.imports;
 
         // TODO: add public/private attribute to the dg parameters 
-        foreach (moduleFQN_; moduleFQNs) {
-          auto loaded_mod = loadModule(moduleFQN_, depth == -1 ? depth : depth-1);
+        foreach (importList; imports)
+          foreach(moduleFQN_; importList.getModuleFQNs(dirSep)) {
+            auto loaded_mod = loadModule(moduleFQN_, depth == -1 ? depth : depth-1);
 
-          if (loaded_mod !is null) {
-            idg(loaded_mod, mod);
-          } else if (IncludeUnlocatableModules) {
-            auto tmp = new Module(null, true);
-            tmp.moduleFQN = replace(moduleFQN_.dup, dirSep, '.');
-            idg(tmp, mod);
+            if (loaded_mod !is null) {
+              idg(loaded_mod, mod, importList.isPublic());
+            } else if (IncludeUnlocatableModules) {
+              auto tmp = new Module(null, true);
+              tmp.moduleFQN = replace(moduleFQN_.dup, dirSep, '.');
+              idg(tmp, mod, importList.isPublic());
+            }
           }
-        }
       }
 
       return mod;

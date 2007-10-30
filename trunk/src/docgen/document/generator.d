@@ -1,3 +1,7 @@
+/**
+ * Author: Jari-Matti Mäkelä
+ * License: GPL3
+ */
 module docgen.document.generator;
 
 import docgen.sourcelisting.writers;
@@ -6,10 +10,7 @@ import docgen.graphutils.writers;
 import docgen.misc.misc;
 import docgen.misc.parser;
 import docgen.config.configurator;
-import tango.core.Array;
 import tango.io.stream.FileStream;
-import tango.text.Ascii;
-import tango.text.Util : replace;
 import tango.io.FilePath;
 debug import tango.io.Stdout;
 
@@ -23,6 +24,7 @@ template DefaultDocGenerator(char[] genDir) {
 
     GraphWriterFactory graphFactory;
     PageWriterFactory pageFactory;
+    DefaultListingWriterFactory listingFactory;
     
     Module[] modules;
     Edge[] edges;
@@ -34,6 +36,7 @@ template DefaultDocGenerator(char[] genDir) {
 
       createGraphWriterFactory();
       createPageWriterFactory();
+      createListingWriterFactory();
 
       // create output dir
       (new FilePath(options.outputDir ~ "/" ~ genDir)).create();
@@ -45,6 +48,10 @@ template DefaultDocGenerator(char[] genDir) {
 
     protected void createPageWriterFactory() {
       pageFactory = new DefaultPageWriterFactory(this);
+    }
+
+    protected void createListingWriterFactory() {
+      listingFactory = new DefaultListingWriterFactory(this);
     }
 
     protected char[] outPath(char[] file) {

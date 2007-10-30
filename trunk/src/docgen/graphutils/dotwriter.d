@@ -50,25 +50,27 @@ class DotWriter : AbstractGraphWriter {
         module_.name;
 
       image ~= sprint.format(
-        `  n{0} [label="{1}"{2}];`\n,
+        `  n{} [label="{}",style=filled,fillcolor={}];`\n,
         module_.id,
         nodeName,
-        (module_.isCyclic && factory.options.graph.highlightCyclicVertices ?
-          ",style=filled,fillcolor=" ~ factory.options.graph.nodeColor :
-          (module_.type == VertexType.UnlocatableModule ?
-            ",style=filled,fillcolor=" ~ factory.options.graph.unlocatableNodeColor :
-            ""
-          )
-        )
+        module_.isCyclic && factory.options.graph.highlightCyclicVertices ?
+          factory.options.graph.cyclicNodeColor :
+        module_.type == VertexType.UnlocatableModule ?
+          factory.options.graph.unlocatableNodeColor :
+          factory.options.graph.nodeColor
       );
     }
 
     foreach (edge; edges)
       image ~= sprint.format(
-        `  n{0} -> n{1}{2};`\n,
+        `  n{} -> n{}[color={}];`\n,
         edge.outgoing.id,
         edge.incoming.id,
-        (edge.isCyclic ? "[color=" ~ factory.options.graph.cyclicNodeColor ~ "]" : "")
+        edge.isCyclic ?
+          factory.options.graph.cyclicDepColor :
+        edge.type == EdgeType.PublicDependency ?
+          factory.options.graph.publicDepColor ~ ",style=bold" :
+          factory.options.graph.depColor
       );
 
     if (factory.options.graph.groupByPackageNames)

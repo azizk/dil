@@ -130,8 +130,10 @@ void graph5() {
     (char[] fqn, char[] path, Module m) {
       vertices[m.moduleFQN] = new Vertex(m.moduleFQN, m.filePath, id++);
     },
-    (Module imported, Module importer) {
-      edges ~= vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
+    (Module imported, Module importer, bool isPublic) {
+      auto edge = vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
+      edge.type = isPublic ? EdgeType.PublicDependency : EdgeType.Dependency;
+      edges ~= edge;
     },
     modules
   );

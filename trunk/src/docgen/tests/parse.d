@@ -30,7 +30,7 @@ void parse1() {
       (char[] fqn, char[] path, Module m) {
         file.format("{0} = {1}\n", fqn, path);
       },
-      (Module imported, Module importer) {
+      (Module imported, Module importer, bool isPublic) {
         file.format("{0} <- {1}\n",
           imported ? imported.moduleFQN : "null"[],
           importer ? importer.moduleFQN : "null"[]
@@ -53,7 +53,7 @@ void parse2() {
       (char[] fqn, char[] path, Module m) {
         file.format("{0} = {1}\n", fqn, path);
       },
-      (Module imported, Module importer) {
+      (Module imported, Module importer, bool isPublic) {
         file.format("{0} <- {1}\n",
           imported ? imported.moduleFQN : "null"[],
           importer ? importer.moduleFQN : "null"[]

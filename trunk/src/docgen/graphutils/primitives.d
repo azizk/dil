@@ -9,17 +9,24 @@ enum EdgeType {
   Aggregation,
   Association,
   Composition,
-  CyclicDependency,
   Dependency,
   Generalization,
   Inheritance,
-  Reserved // for the cycle algorithm
+  PublicDependency
+}
+
+enum CycleType {
+  Unspecified,
+  Cyclefree,
+  Cyclic,
+  Reserved
 }
 
 class Edge {
   Vertex outgoing;
   Vertex incoming;
   EdgeType type;
+  CycleType cycleType; // used by the cycle algorithm
 
   this(Vertex o, Vertex i, EdgeType type = EdgeType.Unspecified) {
     this.outgoing = o;
@@ -28,7 +35,7 @@ class Edge {
   }
 
   bool isCyclic() {
-    return type == EdgeType.CyclicDependency;
+    return cycleType == CycleType.Cyclic;
   }
 }
 

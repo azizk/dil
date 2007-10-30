@@ -55,6 +55,12 @@ struct GraphOptions {
   char[] cyclicNodeColor;
   /// unlocatable module color
   char[] unlocatableNodeColor;
+  /// color of the dependencies
+  char[] depColor;
+  /// color of the dependencies in cyclic dep relation
+  char[] cyclicDepColor;
+  /// color of the public dependencies
+  char[] publicDepColor;
   /// package color
   char[] clusterColor;
   /// include unlocatable modules to the dep graph
@@ -100,6 +106,8 @@ struct ParserOptions {
   char[][] strRegexps;
   /// comment format [comment parser]
   CommentFormat commentFormat;
+  /// maximum depth of dependencies
+  uint depth;
 }
 
 struct DocGeneratorOptions {

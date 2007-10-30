@@ -127,6 +127,9 @@ class DefaultConfigurator : Configurator {
         _parseS("options.graph.nodeColor") ~
         _parseS("options.graph.cyclicNodeColor") ~
         _parseS("options.graph.unlocatableNodeColor") ~
+        _parseS("options.graph.depColor") ~
+        _parseS("options.graph.cyclicDepColor") ~
+        _parseS("options.graph.publicDepColor") ~
         _parseS("options.graph.clusterColor") ~
         _parseB("options.graph.includeUnlocatableModules") ~
         _parseB("options.graph.highlightCyclicEdges") ~
@@ -148,6 +151,7 @@ class DefaultConfigurator : Configurator {
             "Doxygen", "CommentFormat.Doxygen",
             "Ddoc", "CommentFormat.Ddoc"
         ) ~
+        _parseI("options.parser.depth") ~
         _parseEnumList!("options.outputFormats",
             "LaTeX", "DocFormat.LaTeX",
             "HTML", "DocFormat.HTML",
