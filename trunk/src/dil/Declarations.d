@@ -108,7 +108,8 @@ class ImportDeclaration : Declaration
   Token*[] moduleAliases;
   Token*[] bindNames;
   Token*[] bindAliases;
-  bool isStatic;
+  bool isStatic_;
+
   this(ModuleFQN[] moduleFQNs, Token*[] moduleAliases, Token*[] bindNames, Token*[] bindAliases, bool isStatic)
   {
     super(false);
@@ -117,7 +118,7 @@ class ImportDeclaration : Declaration
     this.moduleAliases = moduleAliases;
     this.bindNames = bindNames;
     this.bindAliases = bindAliases;
-    this.isStatic = isStatic;
+    this.isStatic_ = isStatic;
   }
 
   char[][] getModuleFQNs(char separator)
@@ -132,6 +133,17 @@ class ImportDeclaration : Declaration
       FQNs ~= FQN[0..$-1]; // Remove last separator
     }
     return FQNs;
+  }
+
+  bool isStatic()
+  {
+    return isStatic_;
+  }
+
+  bool isPublic()
+  {
+    // TODO:
+    return false;
   }
 }
 
