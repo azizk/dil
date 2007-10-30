@@ -27,7 +27,7 @@ interface CachingGraphWriterFactory : GraphWriterFactory {
  * May have bugs, but is a bit simpler than the previous version.
  */
 void findCycles(Vertex[] vertices, Edge[] edges) {
-  void p() {
+  debug void p() {
     foreach(e; edges) Stderr(e.type)(" "c);
     Stderr.newline;
   }
