@@ -4,6 +4,14 @@
 import yaml
 from errors import LoadingError
 
+def newLangFile(langCode, authors, license):
+  return {
+    "LangCode":langCode,
+    "Authors":authors,
+    "License":license,
+    "Messages":[]
+  }
+
 class LangFile:
   def __init__(self, filePath):
     self.filePath = filePath
@@ -50,11 +58,3 @@ class LangFile:
 
   def save(self):
     pass
-
-  def newLangFile(langCode, authors, license):
-    return {
-      "LangCode":langCode,
-      "Authors":authors,
-      "License":license,
-      "Messages":[]
-    }

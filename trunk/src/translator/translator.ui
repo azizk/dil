@@ -45,6 +45,7 @@
      <string>&amp;Project</string>
     </property>
     <addaction name="action_Add_Catalogue" />
+    <addaction name="action_Add_New_Catalogue" />
     <addaction name="action_Build_Project" />
     <addaction name="separator" />
     <addaction name="action_Properties" />
@@ -77,7 +78,7 @@
   </action>
   <action name="action_Add_Catalogue" >
    <property name="text" >
-    <string>&amp;Add catalogue</string>
+    <string>&amp;Add catalogue...</string>
    </property>
   </action>
   <action name="action_Properties" >
@@ -104,6 +105,11 @@
    </property>
    <property name="shortcut" >
     <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="action_Add_New_Catalogue" >
+   <property name="text" >
+    <string>Add new catalogue...</string>
    </property>
   </action>
  </widget>

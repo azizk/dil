@@ -1,0 +1,87 @@
+Authors:
+- [Aziz Köksal, aziz.koeksal@gmail.com]
+LangCode: de
+License: GPL3
+Messages:
+- {Annot: '', ID: 0, LastEd: '', Text: 'illegales Zeichen gefunden: ''{0}'''}
+- {Annot: '', ID: 1, LastEd: '', Text: ungültiges Unicodezeichen.}
+- {Annot: '', ID: 2, LastEd: '', Text: ungültige UTF-8-Sequenz.}
+- {Annot: '', ID: 3, LastEd: '', Text: unterminiertes Zeichenliteral.}
+- {Annot: '', ID: 4, LastEd: '', Text: leeres Zeichenliteral.}
+- {Annot: '', ID: 5, LastEd: '', Text: erwartete 'line' nach '#'.}
+- {Annot: '', ID: 6, LastEd: '', Text: 'Ganzzahl nach #line erwartet.'}
+- {Annot: '', ID: 7, LastEd: '', Text: erwartete Dateispezifikation (z.B. "pfad\zur\datei".)}
+- {Annot: '', ID: 8, LastEd: '', Text: unterminierte Dateispezifikation (filespec.)}
+- {Annot: '', ID: 9, LastEd: '', Text: ein Special Token muss mit einem Zeilenumbruch
+    abgeschlossen werden.}
+- {Annot: '', ID: 10, LastEd: '', Text: unterminiertes Zeichenkettenliteral.}
+- {Annot: '', ID: 11, LastEd: '', Text: 'Nicht-Hexzeichen ''{0}'' in Hexzeichenkette
+    gefunden.'}
+- {Annot: '', ID: 12, LastEd: '', Text: ungerade Anzahl von Hexziffern in Hexzeichenkette.}
+- {Annot: '', ID: 13, LastEd: '', Text: unterminierte Hexzeichenkette.}
+- {Annot: '', ID: 14, LastEd: '', Text: unterminierter Blockkommentar (/* */).}
+- {Annot: '', ID: 15, LastEd: '', Text: unterminierter verschachtelter Kommentar (/+
+    +/).}
+- {Annot: '', ID: 16, LastEd: '', Text: unterminierte rohe Zeichenkette.}
+- {Annot: '', ID: 17, LastEd: '', Text: unterminierte Backquote-Zeichenkette.}
+- {Annot: '', ID: 18, LastEd: '', Text: 'undefinierte Escapesequenz ''{0}'' gefunden.'}
+- {Annot: '', ID: 19, LastEd: '', Text: 'ungültige Unicode-Escapesequenz ''{0}'' gefunden.'}
+- {Annot: '', ID: 20, LastEd: '', Text: unzureichende Anzahl von Hexziffern in Escapesequenz.}
+- {Annot: '', ID: 21, LastEd: '', Text: 'undefinierte HTML-Entität ''{0}'''}
+- {Annot: '', ID: 22, LastEd: '', Text: 'unterminierte HTML-Entität ''{0}''.'}
+- {Annot: '', ID: 23, LastEd: '', Text: HTML-Entitäten müssen mit einem Buchstaben
+    beginnen.}
+- {Annot: '', ID: 24, LastEd: '', Text: Dezimalzahl überläuft im Vorzeichenbit.}
+- {Annot: '', ID: 25, LastEd: '', Text: Überlauf in Dezimalzahl.}
+- {Annot: '', ID: 26, LastEd: '', Text: Überlauf in Hexadezimalzahl.}
+- {Annot: '', ID: 27, LastEd: '', Text: Überlauf in Binärzahl.}
+- {Annot: '', ID: 28, LastEd: '', Text: Überlauf in Oktalzahl.}
+- {Annot: '', ID: 29, LastEd: '', Text: Überlauf in Fließkommazahl.}
+- {Annot: '', ID: 30, LastEd: '', Text: die Ziffern 8 und 9 sind in Oktalzahlen unzulässig.}
+- {Annot: '', ID: 31, LastEd: '', Text: ungültige Hexzahl; mindestens eine Hexziffer
+    erforderlich.}
+- {Annot: '', ID: 32, LastEd: '', Text: ungültige Binärzahl; mindestens eine Binärziffer
+    erforderlich.}
+- {Annot: '', ID: 33, LastEd: '', Text: der Exponent einer hexadezimalen Fließkommazahl
+    ist erforderlich.}
+- {Annot: '', ID: 34, LastEd: '', Text: Hexadezimal-Exponenten müssen mit einer Dezimalziffer
+    anfangen.}
+- {Annot: '', ID: 35, LastEd: '', Text: Exponenten müssen mit einer Dezimalziffer
+    anfangen.}
+- {Annot: '', ID: 36, LastEd: '', Text: 'erwartete ''{0}'', fand aber ''{1}''.'}
+- {Annot: '', ID: 37, LastEd: '', Text: '''{0}'' ist redundant.'}
+- {Annot: '', ID: 38, LastEd: '', Text: Template-Tupel-Parameter dürfen nur am Ende
+    auftreten.}
+- {Annot: '', ID: 39, LastEd: '', Text: der 'in'-Vertrag der Funktion wurde bereits
+    geparsed.}
+- {Annot: '', ID: 40, LastEd: '', Text: der 'out'-Vertrag der Funktion wurde bereits
+    geparsed.}
+- {Annot: '', ID: 41, LastEd: '', Text: es wurde kein Verbindungstyp angegeben.}
+- {Annot: '', ID: 42, LastEd: '', Text: 'unbekannter Verbindungstyp ''{0}''; gültig
+    sind C, C++, D, Windows, Pascal und System.'}
+- {Annot: '', ID: 43, LastEd: '', Text: 'erwartete eine oder mehrere Basisklassen,
+    nicht ''{0}''.'}
+- {Annot: '', ID: 44, LastEd: '', Text: Basisklassen sind in Vorwärtsdeklarationen
+    nicht erlaubt.}
+- {Annot: '', ID: 45, LastEd: '', Text: 'dil v{0}
+
+    Copyright (c) 2007, Aziz Köksal. Lizensiert unter der GPL3.
+
+
+    Befehle:
+
+    {1}
+
+    Geben Sie ''dil help <Befehl>'' ein, um mehr Hilfe zu einem bestimmten Befehl
+    zu
+
+    erhalten.
+
+
+    Kompiliert mit {2} v{3} am {4}.'}
+- {Annot: '', ID: 46, LastEd: '', Text: "Generiere ein XML- oder HTML-Dokument aus\
+    \ einer D-Quelltextdatei.\nVerwendung:\n  dil gen datei.d [Optionen]\n\nOptionen:\n\
+    \  --syntax         : generiere Elemente für den Syntaxbaum\n  --xml         \
+    \   : verwende XML-Format (voreingestellt)\n  --html           : verwende HTML-Format\n\
+    \nBeispiel:\n  dil gen Parser.d --html --syntax > Parser.html"}
+- {Annot: '', ID: 47, LastEd: '', Text: ''}

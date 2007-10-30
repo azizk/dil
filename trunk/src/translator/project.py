@@ -7,6 +7,16 @@ import langfile
 import datetime
 import yaml
 
+def newProjectData(projectName):
+  return {
+    "Name":projectName,
+    "LangFiles":[],
+    "SourceLangFile":'',
+    "MsgIDs":[],
+    "CreationDate":str(datetime.datetime.utcnow()),
+    "BuildScript":''
+  }
+
 class Project:
   # Members:
   # name
@@ -27,6 +37,7 @@ class Project:
       self.langFilePaths = list(doc["LangFiles"])
       self.msgIDs = list(doc["MsgIDs"])
       self.creationDate = str(doc["CreationDate"])
+      self.buildScript = str(doc["BuildScript"])
     except KeyError, e:
       raise LoadingError("Missing member '%s' in '%s'" % (e.message, projectPath))
 
@@ -49,6 +60,7 @@ class Project:
     self.langFiles = []
     for filePath in self.langFilePaths:
       if not os.path.exists(filePath):
+        # Look in project directory.
         projectDir = os.path.dirname(projectPath)
         filePath2 = os.path.join(projectDir, filePath)
         if not os.path.exists(filePath2):
@@ -62,13 +74,3 @@ class Project:
 
   def save(self):
     pass
-
-  def newProjectData(projectName):
-    return {
-      "Name":projectName,
-      "LangFiles":[],
-      "SourceLangFile":'',
-      "MsgIDs":[],
-      "CreationDate":str(datetime.datetime.utcnow())
-    }
-

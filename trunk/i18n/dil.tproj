@@ -1,0 +1,54 @@
+BuildScript: build.py
+CreationDate: '2007-10-12 09:41:17.868084'
+LangFiles: [en.cat, de.cat, tr.cat, fi.cat]
+MsgIDs:
+- {ID: 0, Name: IllegalCharacter, Order: 0}
+- {ID: 1, Name: InvalidUnicodeCharacter, Order: 1}
+- {ID: 2, Name: InvalidUTF8Sequence, Order: 2}
+- {ID: 3, Name: UnterminatedCharacterLiteral, Order: 3}
+- {ID: 4, Name: EmptyCharacterLiteral, Order: 4}
+- {ID: 5, Name: ExpectedIdentifierSTLine, Order: 5}
+- {ID: 6, Name: ExpectedIntegerAfterSTLine, Order: 6}
+- {ID: 7, Name: ExpectedFilespec, Order: 7}
+- {ID: 8, Name: UnterminatedFilespec, Order: 8}
+- {ID: 9, Name: UnterminatedSpecialToken, Order: 9}
+- {ID: 10, Name: UnterminatedString, Order: 10}
+- {ID: 11, Name: NonHexCharInHexString, Order: 11}
+- {ID: 12, Name: OddNumberOfDigitsInHexString, Order: 12}
+- {ID: 13, Name: UnterminatedHexString, Order: 13}
+- {ID: 14, Name: UnterminatedBlockComment, Order: 14}
+- {ID: 15, Name: UnterminatedNestedComment, Order: 15}
+- {ID: 16, Name: UnterminatedRawString, Order: 16}
+- {ID: 17, Name: UnterminatedBackQuoteString, Order: 17}
+- {ID: 18, Name: UndefinedEscapeSequence, Order: 18}
+- {ID: 19, Name: InvalidUnicodeEscapeSequence, Order: 19}
+- {ID: 20, Name: InsufficientHexDigits, Order: 20}
+- {ID: 21, Name: UndefinedHTMLEntity, Order: 21}
+- {ID: 22, Name: UnterminatedHTMLEntity, Order: 22}
+- {ID: 23, Name: InvalidBeginHTMLEntity, Order: 23}
+- {ID: 24, Name: OverflowDecimalSign, Order: 24}
+- {ID: 25, Name: OverflowDecimalNumber, Order: 25}
+- {ID: 26, Name: OverflowHexNumber, Order: 26}
+- {ID: 27, Name: OverflowBinaryNumber, Order: 27}
+- {ID: 28, Name: OverflowOctalNumber, Order: 28}
+- {ID: 29, Name: OverflowFloatNumber, Order: 29}
+- {ID: 30, Name: OctalNumberHasDecimals, Order: 30}
+- {ID: 31, Name: NoDigitsInHexNumber, Order: 31}
+- {ID: 32, Name: NoDigitsInBinNumber, Order: 32}
+- {ID: 33, Name: HexFloatExponentRequired, Order: 33}
+- {ID: 34, Name: HexFloatExpMustStartWithDigit, Order: 34}
+- {ID: 35, Name: FloatExpMustStartWithDigit, Order: 35}
+- {ID: 36, Name: ExpectedButFound, Order: 36}
+- {ID: 37, Name: RedundantStorageClass, Order: 37}
+- {ID: 38, Name: TemplateTupleParameter, Order: 38}
+- {ID: 39, Name: InContract, Order: 39}
+- {ID: 40, Name: OutContract, Order: 40}
+- {ID: 41, Name: MissingLinkageType, Order: 41}
+- {ID: 42, Name: UnrecognizedLinkageType, Order: 42}
+- {ID: 43, Name: ExpectedBaseClasses, Order: 43}
+- {ID: 44, Name: BaseClassInForwardDeclaration, Order: 44}
+- {ID: 45, Name: HelpMain, Order: 45}
+- {ID: 46, Name: HelpGenerate, Order: 46}
+- {ID: 47, Name: HelpImportGraph, Order: 47}
+Name: dil
+SourceLangFile: ''
