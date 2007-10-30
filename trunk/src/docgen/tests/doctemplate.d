@@ -5,7 +5,7 @@
 module docgen.tests.doctemplate;
 
 import docgen.tests.common;
-import docgen.document.writers;
+import docgen.page.writers;
 import tango.io.FileConduit;
 
 // doc template
@@ -14,9 +14,9 @@ void doctemplate1() {
   auto gen = new TestDocGenerator;
   auto fname = "doctemplate.tex";
   
-  auto gwf = new DefaultDocumentWriterFactory(gen);
+  auto gwf = new DefaultPageWriterFactory(gen);
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
-  auto writer = gwf.createDocumentWriter( [ file ], DocFormat.LaTeX );
+  auto writer = gwf.createPageWriter( [ file ], DocFormat.LaTeX );
   
   writer.generateFirstPage();
   writer.generateTOC(null);

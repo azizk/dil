@@ -1,3 +1,7 @@
+/**
+ * Author: Jari-Matti Mäkelä
+ * License: GPL3
+ */
 module docgen.config.configurator;
 
 import docgen.config.reader;
@@ -5,10 +9,20 @@ import docgen.misc.misc;
 
 import Integer = tango.text.convert.Integer;
 import tango.io.stream.FileStream;
+import tango.io.Stdout;
 
+/**
+ * Class for handling and merging doc generator options.
+ */
 interface Configurator {
+  /**
+   * Merges configuration options from the given file.
+   */
   void mergeConfiguration(char[] cfgFile);
   
+  /**
+   * Returns a hierarchical structure of configuration options.
+   */
   DocGeneratorOptions *getConfiguration();
 }
 
@@ -56,18 +70,22 @@ template _parseEnum(char[] key, V...) {
   const char[] _parseEnum = `case "` ~ key ~
     `":` ~ _wrong(key) ~ `switch(val[0]) {` ~
     _parseEnum_!(false, key, V) ~
-      `default: err(); }`;
+      `default: err(); } continue;`;
 }
 
 template _parseEnumList(char[] key, V...) {
   const char[] _parseEnumList = `case "` ~ key ~
-    `":` ~ _wrong(key) ~ `switch(val[0]) {` ~
+    `":` ~ `foreach (item; val) switch(item) {` ~
     _parseEnum_!(true, key, V) ~
-      `default: err(); }`;
+      `default: err(); } continue;`;
 }
 
 class DefaultConfigurator : Configurator {
+  private:
+    
   DocGeneratorOptions options;
+
+  public:
 
   const defaultProfileLocation = "docgen/config/default.cfg";
 
@@ -129,7 +147,7 @@ class DefaultConfigurator : Configurator {
         _parseEnum!("options.parser.commentFormat",
             "Doxygen", "CommentFormat.Doxygen",
             "Ddoc", "CommentFormat.Ddoc"
-        ) ~ 
+        ) ~
         _parseEnumList!("options.outputFormats",
             "LaTeX", "DocFormat.LaTeX",
             "HTML", "DocFormat.HTML",

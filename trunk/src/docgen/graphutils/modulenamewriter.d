@@ -9,7 +9,7 @@ import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
 
 class ModuleNameWriter : AbstractGraphWriter {
-  this(GraphWriterFactory factory, DocumentWriter writer) {
+  this(GraphWriterFactory factory, PageWriter writer) {
     super(factory, writer);
   }
 

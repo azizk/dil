@@ -6,11 +6,19 @@ module docgen.graphutils.writer;
 
 public import docgen.misc.misc;
 public import docgen.graphutils.primitives;
-public import docgen.document.writer;
+public import docgen.page.writer;
 debug import tango.io.Stdout;
 
 interface GraphWriter {
   void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile);
+}
+
+interface GraphWriterFactory : WriterFactory {
+  GraphWriter createGraphWriter(PageWriter writer, GraphFormat outputFormat);
+}
+
+interface CachingGraphWriterFactory : GraphWriterFactory {
+  char[] getCachedGraph(Vertex[] vertices, Edge[] edges, GraphFormat format);
 }
 
 /**
@@ -19,7 +27,7 @@ interface GraphWriter {
  * May have bugs, but is a bit simpler than the previous version.
  */
 void findCycles(Vertex[] vertices, Edge[] edges) {
-  debug void p() {
+  void p() {
     foreach(e; edges) Stderr(e.type)(" "c);
     Stderr.newline;
   }
@@ -27,20 +35,20 @@ void findCycles(Vertex[] vertices, Edge[] edges) {
   bool visit(Edge edge) {
     if (edge.type == EdgeType.Reserved) {
       edge.type = EdgeType.CyclicDependency;
-      debug p();
+      version(VerboseDebug) p();
       return true;
     }
 
     bool wasCyclic = edge.isCyclic();
     edge.type = EdgeType.Reserved;
-    debug p();
+    version(VerboseDebug) p();
 
     foreach(edge2; edge.incoming.outgoingEdges)
       if (visit(edge2)) {
         if (edge.isCyclic()) {
           edge.type = EdgeType.Reserved;
           wasCyclic = true;
-          debug p();
+          version(VerboseDebug) p();
           continue;
         }
         edge.type = EdgeType.CyclicDependency;
@@ -48,7 +56,7 @@ void findCycles(Vertex[] vertices, Edge[] edges) {
       }
 
     edge.type = wasCyclic ? EdgeType.CyclicDependency : EdgeType.Dependency;
-    debug p();
+    version(VerboseDebug) p();
     return false;
   }
 
@@ -60,14 +68,10 @@ void findCycles(Vertex[] vertices, Edge[] edges) {
       }
 }
 
-interface GraphWriterFactory : WriterFactory {
-  GraphWriter createGraphWriter(DocumentWriter writer, GraphFormat outputFormat);
-}
-
 abstract class AbstractGraphWriter : AbstractWriter!(GraphWriterFactory), GraphWriter {
-  DocumentWriter writer;
+  PageWriter writer;
   
-  this(GraphWriterFactory factory, DocumentWriter writer) {
+  this(GraphWriterFactory factory, PageWriter writer) {
     super(factory);
     this.writer = writer;
   }

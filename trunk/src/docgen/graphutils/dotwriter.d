@@ -9,16 +9,17 @@ import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
 import tango.io.FilePath;
 import tango.text.Util;
+debug import tango.io.Stdout;
 
 /**
  * Creates a graph rule file for the dot utility.
  */
 class DotWriter : AbstractGraphWriter {
-  this(GraphWriterFactory factory, DocumentWriter writer) {
+  this(GraphWriterFactory factory, PageWriter writer) {
     super(factory, writer);
   }
 
-  void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
+  void generateDepImageFile(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
     auto image = new Print!(char)(new Layout!(char), imageFile);
 
     Vertex[][char[]] verticesByPckgName;
@@ -38,14 +39,6 @@ class DotWriter : AbstractGraphWriter {
         factory.options.graph.highlightCyclicEdges)
       findCycles(vertices, edges);
 
-    // name of the .dot file
-    char[] fn = (cast(Object)imageFile.conduit).toUtf8();
-    fn = FilePath(fn).file;
-
-    fn = fn[0..$-3] ~ imageFormatExts[factory.options.graph.imageFormat];
-    
-    writer.addGraphics(fn);
-    
     image("Digraph ModuleDependencies {\n");
 
     foreach (module_; vertices) {
@@ -113,4 +106,44 @@ class DotWriter : AbstractGraphWriter {
 
     image("}");
   }
+        
+  void generateImageTag(OutputStream imageFile) {
+    // name of the .dot file
+    char[] fn = (cast(Object)imageFile.conduit).toUtf8();
+    fn = FilePath(fn).file;
+
+    fn = fn[0..$-3] ~ imageFormatExts[factory.options.graph.imageFormat];
+    
+    writer.addGraphics(fn);
+  }
+
+  protected void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
+    generateImageTag(imageFile);
+    generateDepImageFile(vertices, edges, imageFile);
+  }
 }
+
+class CachingDotWriter : DotWriter {
+  CachingGraphWriterFactory factory;
+
+  this(CachingGraphWriterFactory factory, PageWriter writer) {
+    super(factory, writer);
+  }
+
+  protected void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
+    generateImageTag(imageFile);
+
+    auto cached = factory.getCachedGraph(vertices, edges, GraphFormat.Dot);
+
+    if (cached) {
+      auto image = new Print!(char)(new Layout!(char), imageFile);
+      
+      if (cached) {
+        debug Stdout("Image cache hit.\n");
+        image(cached);
+      } else
+        generateDepImageFile(vertices, edges, imageFile);
+    }
+  }
+}
+

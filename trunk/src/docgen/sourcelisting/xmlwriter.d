@@ -11,9 +11,9 @@ import docgen.sourcelisting.writer;
  * TODO
  */
 class XMLWriter : AbstractWriter!(ListingWriterFactory), ListingWriter {
-  DocumentWriter writer;
+  PageWriter writer;
   
-  this(ListingWriterFactory factory, DocumentWriter writer) {
+  this(ListingWriterFactory factory, PageWriter writer) {
     super(factory);
     this.writer = writer;
   }

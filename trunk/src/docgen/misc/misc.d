@@ -122,6 +122,10 @@ interface DocGenerator {
   void generate();
 }
 
+interface CachingDocGenerator : DocGenerator {
+  char[] getCachedGraph(Object[] vertices, Object[] edges, GraphFormat format);
+}
+
 interface WriterFactory {
   DocGeneratorOptions *options();
 }
@@ -137,6 +141,7 @@ abstract class AbstractWriterFactory : WriterFactory {
     this.generator = generator;
   }
 }
+
 
 template AbstractWriter(T, int n = 0) {
   abstract class AbstractWriter {

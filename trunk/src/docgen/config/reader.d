@@ -1,7 +1,14 @@
+/**
+ * Author: Jari-Matti Mäkelä
+ * License: GPL3
+ */
 module docgen.config.reader;
 
 debug import tango.io.Stdout;
 
+/**
+ * Lexes a s-exp like input
+ */
 char[][] lex(char[] input) {
   char[][] tokens;
 
@@ -91,6 +98,9 @@ char[][] lex(char[] input) {
   return tokens;
 }
 
+/**
+ * Parser a s-exp like input used by the config files.
+ */
 char[][][char[]] parse(char[][] tokens) {
   char[][][char[]] values;
   size_t i = 1;

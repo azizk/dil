@@ -7,7 +7,7 @@ module docgen.tests.graphs;
 import docgen.tests.common;
 import docgen.misc.parser;
 import docgen.graphutils.writers;
-import docgen.document.writers;
+import docgen.page.writers;
 import tango.io.FileConduit;
 import dil.Module;
 
@@ -18,12 +18,12 @@ void saveDefaultGraph(Vertex[] vertices, Edge[] edges, char[] fname) {
   //gen.options.graph.graphFormat = GraphFormat.ModuleNames;
   //gen.options.graph.graphFormat = GraphFormat.ModulePaths;
   gen.options.graph.depth = 5;
-  auto ddf = new DefaultDocumentWriterFactory(gen);
+  auto ddf = new DefaultPageWriterFactory(gen);
   auto gwf = new DefaultGraphWriterFactory(gen);
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
   auto file2 = new FileConduit("docgen/teststuff/" ~ fname ~ "-2", FileConduit.WriteCreate);
   auto writer = gwf.createGraphWriter(
-    ddf.createDocumentWriter( [ file2 ], DocFormat.LaTeX),
+    ddf.createPageWriter( [ file2 ], DocFormat.LaTeX),
     GraphFormat.Dot
   );
   
@@ -114,7 +114,7 @@ void graph5() {
   auto fname = "dependencies.tex";
   auto imgFname = "depgraph.dot";
   
-  auto ddf = new DefaultDocumentWriterFactory(gen);
+  auto ddf = new DefaultPageWriterFactory(gen);
   auto gwf = new DefaultGraphWriterFactory(gen);
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
   auto imgFile = new FileConduit("docgen/teststuff/" ~ imgFname, FileConduit.WriteCreate);
@@ -137,7 +137,7 @@ void graph5() {
   );
 
   auto writer = gwf.createGraphWriter(
-    ddf.createDocumentWriter( [ file ], DocFormat.LaTeX ),
+    ddf.createPageWriter( [ file ], DocFormat.LaTeX ),
     GraphFormat.Dot
   );
   

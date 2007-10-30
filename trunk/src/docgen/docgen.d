@@ -4,8 +4,10 @@
  */
 module docgen.docgen;
 
+import docgen.document.generator;
+
 import docgen.sourcelisting.writers;
-import docgen.document.writers;
+import docgen.page.writers;
 import docgen.graphutils.writers;
 import docgen.misc.misc;
 import docgen.misc.parser;
@@ -18,79 +20,6 @@ import tango.io.FilePath;
 
 import tango.io.Stdout;
 
-template DefaultDocGenerator(char[] genDir) {
-  abstract class DefaultDocGenerator : DocGenerator {
-    DocGeneratorOptions m_options;
-    DocumentWriter docWriter;
-    GraphWriterFactory graphFactory;
-    
-    Module[] modules;
-    Edge[] edges;
-    Vertex[char[]] vertices;
-
-    this(DocGeneratorOptions options) {
-      m_options = options;
-      graphFactory = new DefaultGraphWriterFactory(this);
-
-      // create output dir
-      (new FilePath(options.outputDir ~ "/" ~ genDir)).create();
-    }
-
-    // TODO: constructor for situations where parsing has happened elsewhere
-
-    protected char[] outPath(char[] file) {
-      return options.outputDir ~ "/" ~ genDir ~ "/" ~ file;
-    }
-
-    void parseSources() {
-      int id = 1;
-
-      Parser.loadModules(
-        options.parser.rootPaths,
-        options.parser.importPaths,
-        options.parser.strRegexps,
-        options.graph.includeUnlocatableModules,
-        options.graph.depth,
-        (char[] fqn, char[] path, Module m) {
-          if (m is null) {
-            if (fqn in vertices) {
-              debug Stdout.format("{} already set.\n", fqn);
-              return;
-
-            }
-            auto vertex = new Vertex(fqn, path, id++);
-            vertex.type = VertexType.UnlocatableModule;
-            vertices[fqn] = vertex;
-            debug Stdout.format("Setting {} = {}.\n", fqn, path);
-
-          } else {
-            vertices[m.moduleFQN] = new Vertex(m.moduleFQN, m.filePath, id++);
-            debug Stdout.format("Setting {} = {}.\n", m.moduleFQN, m.filePath);
-          }
-        },
-        (Module imported, Module importer) {
-          debug Stdout.format("Connecting {} - {}.\n", imported.moduleFQN, importer.moduleFQN);
-          edges ~= vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
-        },
-        modules
-      );
-    }
-
-    void createDepGraph(char[] depGraphFile) {
-      auto imgFile = new FileOutput(outPath(depGraphFile));
-
-      auto writer = graphFactory.createGraphWriter( docWriter, GraphFormat.Dot );
-
-      writer.generateDepGraph(vertices.values, edges, imgFile);
-
-      imgFile.close();
-    }
-
-    public DocGeneratorOptions *options() {
-      return &m_options;
-    }
-}
-}
 
 class HTMLDocGenerator : DefaultDocGenerator!("html") {
   this(DocGeneratorOptions options) {
@@ -114,7 +43,7 @@ class PlainTextDocGenerator : DefaultDocGenerator!("txt") {
 /**
  * Main routine for LaTeX doc generation.
  */
-class LaTeXDocGenerator : DefaultDocGenerator!("latex") {
+class LaTeXDocGenerator : DefaultCachingDocGenerator!("latex") {
   this(DocGeneratorOptions options) {
     super(options);
   }
@@ -123,10 +52,8 @@ class LaTeXDocGenerator : DefaultDocGenerator!("latex") {
    * Generates document skeleton.
    */
   void generateDoc(char[] docFileName) {
-    auto ddf = new DefaultDocumentWriterFactory(this);
-
     auto docFile = new FileOutput(outPath(docFileName));
-    docWriter = ddf.createDocumentWriter( [ docFile ], DocFormat.LaTeX );
+    docWriter = pageFactory.createPageWriter( [ docFile ], DocFormat.LaTeX );
 
     docWriter.generateFirstPage();
     docWriter.generateTOC(modules);
@@ -180,9 +107,6 @@ class LaTeXDocGenerator : DefaultDocGenerator!("latex") {
     docWriter.setOutput([docFile]);
     auto writer = dlwf.createListingWriter(docWriter, DocFormat.LaTeX);
 
-    /*modules.sort(
-      (Module a, Module b){ return icompare(a.moduleFQN, b.moduleFQN); }
-    );*/
 
     foreach(mod; modules) {
       auto dstFname = replace(mod.moduleFQN.dup, '.', '_') ~ ".d";
@@ -256,31 +180,29 @@ void main(char[][] args) {
   options.outputDir = args[$-1];
 
   foreach(format; options.outputFormats) {
+    DocGenerator generator;
+
     switch(format) {
       case DocFormat.LaTeX:
-        auto generator = new LaTeXDocGenerator(*options);
+        generator = new LaTeXDocGenerator(*options);
         Stdout("Generating LaTeX docs..");
-        generator.generate();
-        Stdout("done.").newline;
         break;
       case DocFormat.HTML:
-        auto generator = new HTMLDocGenerator(*options);
+        generator = new HTMLDocGenerator(*options);
         Stdout("Generating HTML docs..");
-        generator.generate();
-        Stdout("done.").newline;
         break;
       case DocFormat.XML:
-        auto generator = new XMLDocGenerator(*options);
+        generator = new XMLDocGenerator(*options);
         Stdout("Generating XML docs..");
-        generator.generate();
-        Stdout("done.").newline;
         break;
       case DocFormat.PlainText:
-        auto generator = new PlainTextDocGenerator(*options);
+        generator = new PlainTextDocGenerator(*options);
         Stdout("Generating plain text docs..");
-        generator.generate();
-        Stdout("done.").newline;
         break;
+      default: throw new Exception("Format not supported");
     }
+
+    generator.generate();
+    Stdout("done.").newline;
   }
 }

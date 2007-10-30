@@ -5,7 +5,7 @@
 module docgen.sourcelisting.writer;
 
 public import docgen.misc.misc;
-public import docgen.document.writer;
+public import docgen.page.writer;
 //import dil.Parser;
 import tango.io.model.IConduit : OutputStream, InputStream;
 
@@ -15,5 +15,5 @@ interface ListingWriter {
 }
 
 interface ListingWriterFactory : WriterFactory {
-  ListingWriter createListingWriter(DocumentWriter writer, DocFormat outputFormat);
+  ListingWriter createListingWriter(PageWriter writer, DocFormat outputFormat);
 }
