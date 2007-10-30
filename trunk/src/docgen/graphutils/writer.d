@@ -18,7 +18,7 @@ interface GraphWriterFactory : WriterFactory {
 }
 
 interface CachingGraphWriterFactory : GraphWriterFactory {
-  char[] getCachedGraph(Vertex[] vertices, Edge[] edges, GraphFormat format);
+  GraphCache graphCache();
 }
 
 /**
@@ -75,4 +75,32 @@ abstract class AbstractGraphWriter : AbstractWriter!(GraphWriterFactory), GraphW
     super(factory);
     this.writer = writer;
   }
+}
+
+class DefaultGraphCache : GraphCache {
+  private char[][Object[]][Object[]][GraphFormat] m_graphCache;
+
+  char[] getCachedGraph(Object[] vertices, Object[] edges, GraphFormat format) {
+    debug Stdout("Starting graph lookup\n");
+    debug Stdout(&vertices, &edges, format).newline;
+    debug Stdout(&m_graphCache).newline;
+    
+    auto lookup1 = format in m_graphCache;
+    if (lookup1) {
+      auto lookup2 = edges in *lookup1;
+      if (lookup2) {
+        auto lookup3 = vertices in *lookup2;
+        if (lookup3)
+          return *lookup3;
+      }
+    }
+    debug Stdout("Graph cache miss!\n");
+    return null;
+  }
+
+  void setCachedGraph(Object[] vertices, Object[] edges, GraphFormat format, char[]
+      contents) {
+    m_graphCache[format][edges][vertices] = contents;
+      debug Stdout("Graph cache updated!\n");
+    }
 }

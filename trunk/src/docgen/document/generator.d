@@ -13,9 +13,12 @@ import tango.text.Util : replace;
 import tango.io.FilePath;
 debug import tango.io.Stdout;
 
+alias void delegate(ref Module[], ref Edge[], ref Vertex[char[]]) ParserDg;
+
 template DefaultDocGenerator(char[] genDir) {
   abstract class DefaultDocGenerator : DocGenerator {
     DocGeneratorOptions m_options;
+    ParserDg m_parser;
     PageWriter docWriter;
 
     GraphWriterFactory graphFactory;
@@ -25,8 +28,9 @@ template DefaultDocGenerator(char[] genDir) {
     Edge[] edges;
     Vertex[char[]] vertices;
 
-    this(DocGeneratorOptions options) {
+    this(DocGeneratorOptions options, ParserDg parser) {
       m_options = options;
+      m_parser = parser;
 
       createGraphWriterFactory();
       createPageWriterFactory();
@@ -34,8 +38,6 @@ template DefaultDocGenerator(char[] genDir) {
       // create output dir
       (new FilePath(options.outputDir ~ "/" ~ genDir)).create();
     }
-
-    // TODO: constructor for situations where parsing has happened elsewhere
 
     protected void createGraphWriterFactory() {
       graphFactory = new DefaultGraphWriterFactory(this);
@@ -50,41 +52,7 @@ template DefaultDocGenerator(char[] genDir) {
     }
 
     protected void parseSources() {
-      int id = 1;
-
-      Parser.loadModules(
-        options.parser.rootPaths,
-        options.parser.importPaths,
-        options.parser.strRegexps,
-        options.graph.includeUnlocatableModules,
-        options.graph.depth,
-        (char[] fqn, char[] path, Module m) {
-          if (m is null) {
-            if (fqn in vertices) {
-              debug Stdout.format("{} already set.\n", fqn);
-              return;
-
-            }
-            auto vertex = new Vertex(fqn, path, id++);
-            vertex.type = VertexType.UnlocatableModule;
-            vertices[fqn] = vertex;
-            debug Stdout.format("Setting {} = {}.\n", fqn, path);
-
-          } else {
-            vertices[m.moduleFQN] = new Vertex(m.moduleFQN, m.filePath, id++);
-            debug Stdout.format("Setting {} = {}.\n", m.moduleFQN, m.filePath);
-          }
-        },
-        (Module imported, Module importer) {
-          debug Stdout.format("Connecting {} - {}.\n", imported.moduleFQN, importer.moduleFQN);
-          edges ~= vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
-        },
-        modules
-      );
-
-      modules.sort(
-        (Module a, Module b){ return icompare(a.moduleFQN, b.moduleFQN); }
-      );
+      m_parser(modules, edges, vertices);
     }
 
     void createDepGraph(char[] depGraphFile) {
@@ -105,23 +73,15 @@ template DefaultDocGenerator(char[] genDir) {
 
 template DefaultCachingDocGenerator(char[] genDir) {
   abstract class DefaultCachingDocGenerator : DefaultDocGenerator!(genDir), CachingDocGenerator {
-    this(DocGeneratorOptions options) {
-      super(options);
+    GraphCache m_graphCache;
+
+    this(DocGeneratorOptions options, ParserDg parser, GraphCache graphCache) {
+      super(options, parser);
+      m_graphCache = graphCache;
     }
     
-    private char[][Object[]][Object[]][GraphFormat] m_graphCache;
-
-    char[] getCachedGraph(Object[] vertices, Object[] edges, GraphFormat format) {
-      auto lookup1 = format in m_graphCache;
-      if (lookup1) {
-        auto lookup2 = edges in *lookup1;
-        if (lookup2) {
-          auto lookup3 = vertices in *lookup2;
-          if (lookup3)
-            return *lookup3;
-        }
-      }
-      return null;
+    GraphCache graphCache() {
+      return m_graphCache;
     }
 
     protected void createGraphWriterFactory() {

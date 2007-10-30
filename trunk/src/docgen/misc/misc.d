@@ -122,8 +122,13 @@ interface DocGenerator {
   void generate();
 }
 
-interface CachingDocGenerator : DocGenerator {
+interface GraphCache {  
   char[] getCachedGraph(Object[] vertices, Object[] edges, GraphFormat format);
+  void setCachedGraph(Object[] vertices, Object[] edges, GraphFormat format, char[] contents);
+}
+
+interface CachingDocGenerator : DocGenerator {
+  GraphCache graphCache();
 }
 
 interface WriterFactory {

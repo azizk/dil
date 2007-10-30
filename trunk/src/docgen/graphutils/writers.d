@@ -28,21 +28,22 @@ class DefaultGraphWriterFactory : AbstractWriterFactory, GraphWriterFactory {
   }
 }
 
-class DefaultCachingGraphWriterFactory : AbstractWriterFactory, GraphWriterFactory {
+class DefaultCachingGraphWriterFactory : AbstractWriterFactory, CachingGraphWriterFactory {
   CachingDocGenerator generator;
 
   this(CachingDocGenerator generator) {
     super(generator);
+    this.generator = generator;
   }
 
-  char[] getCachedGraph(Vertex[] vertices, Edge[] edges, GraphFormat format) {
-    return generator.getCachedGraph(vertices, edges, format);
+  GraphCache graphCache() {
+    return generator.graphCache;
   }
 
   GraphWriter createGraphWriter(PageWriter writer, GraphFormat outputFormat) {
     switch (outputFormat) {
       case GraphFormat.Dot:
-        return new DotWriter(this, writer);
+        return new CachingDotWriter(this, writer);
       case GraphFormat.ModuleNames:
         return new ModuleNameWriter(this, writer);
       case GraphFormat.ModulePaths:

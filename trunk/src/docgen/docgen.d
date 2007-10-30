@@ -22,20 +22,20 @@ import tango.io.Stdout;
 
 
 class HTMLDocGenerator : DefaultDocGenerator!("html") {
-  this(DocGeneratorOptions options) {
-    super(options);
+  this(DocGeneratorOptions options, ParserDg parser) {
+    super(options, parser);
   }
   public void generate() { /* TODO */ }
 }
 class XMLDocGenerator : DefaultDocGenerator!("xml") {
-  this(DocGeneratorOptions options) {
-    super(options);
+  this(DocGeneratorOptions options, ParserDg parser) {
+    super(options, parser);
   }
   public void generate() { /* TODO */ }
 }
 class PlainTextDocGenerator : DefaultDocGenerator!("txt") {
-  this(DocGeneratorOptions options) {
-    super(options);
+  this(DocGeneratorOptions options, ParserDg parser) {
+    super(options, parser);
   }
   public void generate() { /* TODO */ }
 }
@@ -44,8 +44,8 @@ class PlainTextDocGenerator : DefaultDocGenerator!("txt") {
  * Main routine for LaTeX doc generation.
  */
 class LaTeXDocGenerator : DefaultCachingDocGenerator!("latex") {
-  this(DocGeneratorOptions options) {
-    super(options);
+  this(DocGeneratorOptions options, ParserDg parser, GraphCache graphcache) {
+    super(options, parser, graphcache);
   }
 
   /**
@@ -179,24 +179,79 @@ void main(char[][] args) {
   options.parser.importPaths = args[2..$-1];
   options.outputDir = args[$-1];
 
+  Module[] cachedModules;
+  Edge[] cachedEdges;
+  Vertex[char[]] cachedVertices;
+
+  void parser(ref Module[] modules, ref Edge[] edges, ref Vertex[char[]] vertices) {
+    if (cachedModules != null) {
+      modules = cachedModules;
+      edges = cachedEdges;
+      vertices = cachedVertices;
+      return;
+    }
+
+    int id = 1;
+
+    Parser.loadModules(
+      options.parser.rootPaths,
+      options.parser.importPaths,
+      options.parser.strRegexps,
+      options.graph.includeUnlocatableModules,
+      options.graph.depth,
+      (char[] fqn, char[] path, Module m) {
+        if (m is null) {
+          if (fqn in vertices) {
+            debug Stdout.format("{} already set.\n", fqn);
+            return;
+
+          }
+          auto vertex = new Vertex(fqn, path, id++);
+          vertex.type = VertexType.UnlocatableModule;
+          vertices[fqn] = vertex;
+          debug Stdout.format("Setting {} = {}.\n", fqn, path);
+
+        } else {
+          vertices[m.moduleFQN] = new Vertex(m.moduleFQN, m.filePath, id++);
+          debug Stdout.format("Setting {} = {}.\n", m.moduleFQN, m.filePath);
+        }
+      },
+      (Module imported, Module importer) {
+        debug Stdout.format("Connecting {} - {}.\n", imported.moduleFQN, importer.moduleFQN);
+        edges ~= vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
+      },
+      modules
+    );
+
+    modules.sort(
+      (Module a, Module b){ return icompare(a.moduleFQN, b.moduleFQN); }
+    );
+
+    cachedVertices = vertices;
+    cachedModules = modules;
+    cachedEdges = edges;
+  }
+  
+  GraphCache graphcache = new DefaultGraphCache();
+
   foreach(format; options.outputFormats) {
     DocGenerator generator;
 
     switch(format) {
       case DocFormat.LaTeX:
-        generator = new LaTeXDocGenerator(*options);
+        generator = new LaTeXDocGenerator(*options, &parser, graphcache);
         Stdout("Generating LaTeX docs..");
         break;
       case DocFormat.HTML:
-        generator = new HTMLDocGenerator(*options);
+        generator = new HTMLDocGenerator(*options, &parser);
         Stdout("Generating HTML docs..");
         break;
       case DocFormat.XML:
-        generator = new XMLDocGenerator(*options);
+        generator = new XMLDocGenerator(*options, &parser);
         Stdout("Generating XML docs..");
         break;
       case DocFormat.PlainText:
-        generator = new PlainTextDocGenerator(*options);
+        generator = new PlainTextDocGenerator(*options, &parser);
         Stdout("Generating plain text docs..");
         break;
       default: throw new Exception("Format not supported");

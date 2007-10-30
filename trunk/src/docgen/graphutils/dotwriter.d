@@ -9,6 +9,7 @@ import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
 import tango.io.FilePath;
 import tango.text.Util;
+import tango.text.convert.Sprint;
 debug import tango.io.Stdout;
 
 /**
@@ -19,8 +20,9 @@ class DotWriter : AbstractGraphWriter {
     super(factory, writer);
   }
 
-  void generateDepImageFile(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
-    auto image = new Print!(char)(new Layout!(char), imageFile);
+  char[] generateDepImageFile(Vertex[] vertices, Edge[] edges) {
+    char[] image;
+    auto sprint = new Sprint!(char);
 
     Vertex[][char[]] verticesByPckgName;
     if (factory.options.graph.groupByFullPackageName ||
@@ -39,7 +41,7 @@ class DotWriter : AbstractGraphWriter {
         factory.options.graph.highlightCyclicEdges)
       findCycles(vertices, edges);
 
-    image("Digraph ModuleDependencies {\n");
+    image ~= "Digraph ModuleDependencies {\n";
 
     foreach (module_; vertices) {
       auto nodeName = 
@@ -47,7 +49,7 @@ class DotWriter : AbstractGraphWriter {
         module_.name.split(".")[$-1] :
         module_.name;
 
-      image.format(
+      image ~= sprint.format(
         `  n{0} [label="{1}"{2}];`\n,
         module_.id,
         nodeName,
@@ -62,7 +64,7 @@ class DotWriter : AbstractGraphWriter {
     }
 
     foreach (edge; edges)
-      image.format(
+      image ~= sprint.format(
         `  n{0} -> n{1}{2};`\n,
         edge.outgoing.id,
         edge.incoming.id,
@@ -79,20 +81,20 @@ class DotWriter : AbstractGraphWriter {
             char[] pkg;
             foreach(part; name) {
               pkg ~= part ~ ".";
-              image.format(
+              image ~= sprint.format(
                 `subgraph "cluster_{0}" {{`\n`  label="{0}"`\n,
                 pkg[0..$-1],
                 pkg[0..$-1]
               );
             }
             for (int i=0; i< name.length; i++) {
-              image("}\n");
+              image ~= "}\n";
             }
           }
         }
       }
       foreach (packageName, vertices; verticesByPckgName) {
-        image.format(
+        image ~= sprint.format(
           `  subgraph "cluster_{0}" {{`\n`  label="{0}";color=`
           ~ factory.options.graph.clusterColor ~ `;`\n`  `,
           packageName,
@@ -100,11 +102,13 @@ class DotWriter : AbstractGraphWriter {
         );
 
         foreach (module_; vertices)
-          image.format(`n{0};`, module_.id);
-        image("\n  }\n");
+          image ~= sprint.format(`n{0};`, module_.id);
+        image ~= "\n  }\n";
       }
 
-    image("}");
+    image ~= "}";
+
+    return image;
   }
         
   void generateImageTag(OutputStream imageFile) {
@@ -119,7 +123,10 @@ class DotWriter : AbstractGraphWriter {
 
   protected void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
     generateImageTag(imageFile);
-    generateDepImageFile(vertices, edges, imageFile);
+    
+    auto image = generateDepImageFile(vertices, edges);
+    auto printer = new Print!(char)(new Layout!(char), imageFile);
+    printer(image);
   }
 }
 
@@ -128,21 +135,22 @@ class CachingDotWriter : DotWriter {
 
   this(CachingGraphWriterFactory factory, PageWriter writer) {
     super(factory, writer);
+    this.factory = factory;
   }
 
   protected void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
     generateImageTag(imageFile);
 
-    auto cached = factory.getCachedGraph(vertices, edges, GraphFormat.Dot);
+    auto cached = factory.graphCache.getCachedGraph(vertices, edges, GraphFormat.Dot);
 
+    auto printer = new Print!(char)(new Layout!(char), imageFile);
+    
     if (cached) {
-      auto image = new Print!(char)(new Layout!(char), imageFile);
-      
-      if (cached) {
-        debug Stdout("Image cache hit.\n");
-        image(cached);
-      } else
-        generateDepImageFile(vertices, edges, imageFile);
+      printer(cached);
+    } else {
+      auto image = generateDepImageFile(vertices, edges);
+      factory.graphCache.setCachedGraph(vertices, edges, GraphFormat.Dot, image);
+      printer(image);
     }
   }
 }
