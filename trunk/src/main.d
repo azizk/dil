@@ -8,6 +8,7 @@ import dil.Lexer;
 import dil.Token;
 import dil.Messages;
 import dil.Settings;
+import dil.CompilerInfo;
 import dil.Declarations, dil.Expressions, dil.SyntaxTree;
 import dil.File;
 import cmd.Generate;

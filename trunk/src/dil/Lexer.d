@@ -9,7 +9,7 @@ import dil.Keywords;
 import dil.Identifier;
 import dil.Messages;
 import dil.HtmlEntities;
-import dil.Settings;
+import dil.CompilerInfo;
 import tango.stdc.stdlib : strtof, strtod, strtold;
 import tango.stdc.errno : errno, ERANGE;
 import tango.stdc.time : time_t, time, ctime;
