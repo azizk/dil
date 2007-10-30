@@ -15,7 +15,8 @@ import tango.io.stream.FileStream;
 import tango.text.Ascii;
 import tango.text.Util : replace;
 import tango.io.FilePath;
-debug import tango.io.Stdout;
+
+import tango.io.Stdout;
 
 template DefaultDocGenerator(char[] genDir) {
   abstract class DefaultDocGenerator : DocGenerator {
@@ -37,7 +38,7 @@ template DefaultDocGenerator(char[] genDir) {
 
     // TODO: constructor for situations where parsing has happened elsewhere
 
-    char[] outPath(char[] file) {
+    protected char[] outPath(char[] file) {
       return options.outputDir ~ "/" ~ genDir ~ "/" ~ file;
     }
 
@@ -89,6 +90,25 @@ template DefaultDocGenerator(char[] genDir) {
       return &m_options;
     }
 }
+}
+
+class HTMLDocGenerator : DefaultDocGenerator!("html") {
+  this(DocGeneratorOptions options) {
+    super(options);
+  }
+  public void generate() { /* TODO */ }
+}
+class XMLDocGenerator : DefaultDocGenerator!("xml") {
+  this(DocGeneratorOptions options) {
+    super(options);
+  }
+  public void generate() { /* TODO */ }
+}
+class PlainTextDocGenerator : DefaultDocGenerator!("txt") {
+  this(DocGeneratorOptions options) {
+    super(options);
+  }
+  public void generate() { /* TODO */ }
 }
 
 /**
@@ -214,15 +234,53 @@ class LaTeXDocGenerator : DefaultDocGenerator!("latex") {
   }
 }
 
+void usage() {
+  Stdout(
+    "Usage: docgen rootpath importpath_1 ... importpath_n outputdir"
+  ).newline;
+}
+
 void main(char[][] args) {
+  Stdout(docgen_version).newline.newline;
+
+  if (args.length<3) {
+    usage();
+    return;
+  }
+
   Configurator config = new DefaultConfigurator();
 
   auto options = config.getConfiguration();
   options.parser.rootPaths = [ args[1] ];
-  options.parser.importPaths = [ args[2] ];
-  options.outputDir = args[3];
+  options.parser.importPaths = args[2..$-1];
+  options.outputDir = args[$-1];
 
-  auto generator = new LaTeXDocGenerator(*options);
-
-  generator.generate();
+  foreach(format; options.outputFormats) {
+    switch(format) {
+      case DocFormat.LaTeX:
+        auto generator = new LaTeXDocGenerator(*options);
+        Stdout("Generating LaTeX docs..");
+        generator.generate();
+        Stdout("done.").newline;
+        break;
+      case DocFormat.HTML:
+        auto generator = new HTMLDocGenerator(*options);
+        Stdout("Generating HTML docs..");
+        generator.generate();
+        Stdout("done.").newline;
+        break;
+      case DocFormat.XML:
+        auto generator = new XMLDocGenerator(*options);
+        Stdout("Generating XML docs..");
+        generator.generate();
+        Stdout("done.").newline;
+        break;
+      case DocFormat.PlainText:
+        auto generator = new PlainTextDocGenerator(*options);
+        Stdout("Generating plain text docs..");
+        generator.generate();
+        Stdout("done.").newline;
+        break;
+    }
+  }
 }

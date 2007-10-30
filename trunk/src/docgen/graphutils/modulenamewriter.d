@@ -14,17 +14,24 @@ class ModuleNameWriter : AbstractGraphWriter {
   }
 
   void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
+    char[][] contents;
 
-    void doList(Vertex[] v, uint level, char[] indent = "") {
+    void doList(Vertex[] v, uint level) {
       if (!level) return;
 
+      contents ~= "(";
+
       foreach (vertex; v) {
-        // TODO: output(indent)(vertex.name).newline;
+        contents ~= vertex.name;
         if (vertex.outgoing.length)
-          doList(vertex.outgoing, level-1, indent ~ "  ");
+          doList(vertex.outgoing, level-1);
       }
+
+      contents ~= ")";
     }
 
     doList(vertices, factory.options.graph.depth);
+
+    writer.addList(contents, false);
   }
 }

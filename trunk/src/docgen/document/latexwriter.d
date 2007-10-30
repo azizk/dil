@@ -6,8 +6,6 @@ module docgen.document.latexwriter;
 
 import docgen.document.writer;
 import tango.io.FileConduit : FileConduit;
-import tango.io.Print: Print;
-import tango.text.convert.Layout : Layout;
 
 /**
  * Writes a LaTeX document skeleton.
@@ -18,8 +16,6 @@ class LaTeXWriter : AbstractDocumentWriter!(1, "latex") {
   }
 
   void generateFirstPage() {
-    auto print = new Print!(char)(new Layout!(char), outputs[0]);
-    
     print.format(
       templates["firstpage"],
       factory.options.templates.paperSize,
@@ -29,5 +25,15 @@ class LaTeXWriter : AbstractDocumentWriter!(1, "latex") {
       timeNow(),
       factory.options.listing.literateStyle ? "" : "%"
     );
+  }
+
+  void addList(char[][] contents, bool ordered) {
+    foreach(item; contents) {
+      switch(item) {
+        case "(": print(ordered ? "\\begin{enumerate}" : "\\begin{itemize}"); continue;
+        case ")": print(ordered ? "\\end{enumerate}" : "\\end{itemize}"); continue;
+        default: print("\\item")(item)(\n);
+      }
+    }
   }
 }

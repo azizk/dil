@@ -15,6 +15,95 @@ import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
 public import docgen.misc.parser;
 
+const templateDir = "docgen/templates/";
+
+// template file names
+const templateNames = [
+  "firstpage"[], "toc"[], "modules"[],
+  "listings"[], "dependencies"[], "index"[],
+  "lastpage"[], "langdef"[], "makefile"[],
+  "graphics"[], "listing"[]
+];
+
+/**
+ * Writes the logical subcomponents of a document,
+ * e.g. sections, embedded graphics, lists
+ */
+interface DocumentWriter {
+  /**
+   * Updates the outputstreams.
+   */
+  void setOutput(OutputStream[] outputs);
+
+  /**
+   * Generates the first page(s).
+   */
+  void generateFirstPage();
+
+  /**
+   * Generates table of contents.
+   */
+  void generateTOC(Module[] modules);
+
+  /**
+   * Generates module documentation section.
+   */
+  void generateModuleSection();
+
+  /**
+   * Generates source code listing section.
+   */
+  void generateListingSection();
+
+  /**
+   * Generates dependency graph section.
+   */
+  void generateDepGraphSection();
+
+  /**
+   * Generates an index section.
+   */
+  void generateIndexSection();
+
+  /**
+   * Generates the last page(s).
+   */
+  void generateLastPage();
+
+  /**
+   * Generates a language definition file [LaTeX].
+   * Could be used for DTD too, I suppose.
+   */
+  void generateLangDef();
+
+  /**
+   * Generates a makefile used for document post-processing.
+   */
+  void generateMakeFile();
+  
+  // --- page components
+  //
+  /*
+   * Adds an external graphics file. 
+   */
+  void addGraphics(char[] imageFile);
+  
+  /**
+   * Adds a source code listing.
+   */
+  void addListing(char[] moduleName, char[] contents, bool inline = true);
+
+  /**
+   * Adds a list of items.
+   */
+  void addList(char[][] contents, bool ordered);
+}
+
+interface DocumentWriterFactory : WriterFactory {
+  DocumentWriter createDocumentWriter(OutputStream[] outputs, DocFormat outputFormat);
+}
+
+
 char[] timeNow() {
   auto date = Clock.toDate;
   auto sprint = new Sprint!(char);
@@ -26,7 +115,7 @@ char[] timeNow() {
 }
 
 char[] loadTemplate(char[] style, char[] format, char[] templateName) {
-  char[] fn = "docgen/templates/"~style~"/"~format~"/"~templateName~".tpl";
+  char[] fn = templateDir~style~"/"~format~"/"~templateName~".tpl";
   
   scope(failure) {
     Stderr("Warning: error opening template "~fn~".");
@@ -44,55 +133,14 @@ char[] loadTemplate(char[] style, char[] format, char[] templateName) {
   return content;
 }
 
-const templateNames = [
-  "firstpage"[], "toc"[], "modules"[],
-  "listings"[], "dependencies"[], "index"[],
-  "lastpage"[], "langdef"[], "makefile"[],
-  "graphics"[], "listing"[]
-];
-
-interface DocumentWriter {
-  void setOutput(OutputStream[] outputs);
-
-  void generateFirstPage();
-
-  void generateTOC(Module[] modules);
-
-  void generateModuleSection();
-
-  void generateListingSection();
-
-  void generateDepGraphSection();
-
-  void generateIndexSection();
-
-  void generateLastPage();
-
-  void generateLangDef();
-
-  void generateMakeFile();
-  
-  /**
-   * Writes a tag for the given image to the output stream
-   */ 
-  void addGraphics(char[] imageFile);
-  
-  /**
-   * Writes a tag for the given source listing to the output stream;
-   */
-  void addListing(char[] moduleName, char[] contents, bool inline = true);
-}
-
-interface DocumentWriterFactory : WriterFactory {
-  DocumentWriter createDocumentWriter(OutputStream[] outputs, DocFormat outputFormat);
-}
-
 template AbstractDocumentWriter(int n, char[] format) {
   abstract class AbstractDocumentWriter : AbstractWriter!(DocumentWriterFactory, n), DocumentWriter {
     protected char[][char[]] templates;
+    protected Print!(char) print;
          
     this(DocumentWriterFactory factory, OutputStream[] outputs) {
       super(factory, outputs);
+      setOutput(outputs);
     
       foreach(tpl; templateNames) {
         templates[tpl] = loadTemplate(factory.options.templates.templateStyle, format, tpl);
@@ -101,67 +149,48 @@ template AbstractDocumentWriter(int n, char[] format) {
 
     void setOutput(OutputStream[] outputs) {
       this.outputs = outputs;
+
+      print = new Print!(char)(new Layout!(char), outputs[0]);
     }
 
     void generateTOC(Module[] modules) {
-      auto print = new Print!(char)(new Layout!(char), outputs[0]);
-    
       print.format(templates["toc"]);
     }
 
     void generateModuleSection() {
-      auto print = new Print!(char)(new Layout!(char), outputs[0]);
-    
       print.format(templates["modules"]);
     }
 
     void generateListingSection() {
-      auto print = new Print!(char)(new Layout!(char), outputs[0]);
-    
       print.format(templates["listings"]);
     }
 
     void generateDepGraphSection() {
-      auto print = new Print!(char)(new Layout!(char), outputs[0]);
-    
       print.format(templates["dependencies"]);
     }
 
     void generateIndexSection() {
-      auto print = new Print!(char)(new Layout!(char), outputs[0]);
-    
       print.format(templates["index"]);
     }
 
     void generateLastPage() {
-      auto print = new Print!(char)(new Layout!(char), outputs[0]);
-    
       print.format(templates["lastpage"]);
     }
 
     void generateLangDef() {
-      auto print = new Print!(char)(new Layout!(char), outputs[0]);
-    
       print(templates["langdef"]);
     }
 
     void generateMakeFile() {
-      auto print = new Print!(char)(new Layout!(char), outputs[0]);
-    
       print(templates["makefile"]);
     }
 
-    // --- page components
 
     void addGraphics(char[] imageFile) {
-      auto print = new Print!(char)(new Layout!(char), outputs[0]);
-    
       print.format(templates["graphics"], imageFile);
     }
     
     void addListing(char[] moduleName, char[] contents, bool inline) {
-      auto print = new Print!(char)(new Layout!(char), outputs[0]);
-    
       print.format(templates["listing"], moduleName, contents);
     }
   }

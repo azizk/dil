@@ -5,9 +5,8 @@
 module docgen.document.htmlwriter;
 
 import docgen.document.writer;
+import docgen.misc.textutils;
 import tango.io.FileConduit : FileConduit;
-import tango.io.Print: Print;
-import tango.text.convert.Layout : Layout;
 
 // TODO: this is mostly broken now
 
@@ -21,29 +20,21 @@ class HTMLWriter : AbstractDocumentWriter!(2, "html") {
 
   void generateTOC(Module[] modules) {
     // TODO
-    auto print = new Print!(char)(new Layout!(char), outputs[0]);
-  
     print.format(templates["toc"]);
   }
 
   void generateModuleSection() {
     // TODO
-    auto print = new Print!(char)(new Layout!(char), outputs[0]);
-  
     print.format(templates["modules"]);
   }
 
   void generateListingSection() {
     // TODO
-    auto print = new Print!(char)(new Layout!(char), outputs[0]);
-  
     print.format(templates["listings"]);
   }
 
   void generateDepGraphSection() {
     // TODO
-    auto print = new Print!(char)(new Layout!(char), outputs[0]);
-  
     print.format(templates["dependencies"]);
   }
 
@@ -52,14 +43,22 @@ class HTMLWriter : AbstractDocumentWriter!(2, "html") {
   void generateLastPage() { }
 
   void generateFirstPage() {
-    auto output = new Print!(char)(new Layout!(char), outputs[0]);
-    
-    output.format(
+    print.format(
       templates["firstpage"],
       factory.options.templates.title,
       factory.options.templates.copyright,
       factory.options.templates.versionString,
       docgen_version
     );
+  }
+
+  void addList(char[][] contents, bool ordered) {
+    foreach(item; contents) {
+      switch(item) {
+        case "(": print(ordered ? "<ol>" : "<ul>"); continue;
+        case ")": print(ordered ? "</ol>" : "</ul>"); continue;
+        default: print("<li>")(xml_escape(item))("</li>");
+      }
+    }
   }
 }

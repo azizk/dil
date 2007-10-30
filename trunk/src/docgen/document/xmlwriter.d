@@ -5,9 +5,8 @@
 module docgen.document.xmlwriter;
 
 import docgen.document.writer;
+import docgen.misc.textutils;
 import tango.io.FileConduit : FileConduit;
-import tango.io.Print: Print;
-import tango.text.convert.Layout : Layout;
 
 //TODO: this is mostly broken now
 
@@ -21,29 +20,21 @@ class XMLWriter : AbstractDocumentWriter!(2, "xml") {
 
   void generateTOC(Module[] modules) {
     // TODO
-    auto print = new Print!(char)(new Layout!(char), outputs[0]);
-  
     print.format(templates["toc"]);
   }
 
   void generateModuleSection() {
     // TODO
-    auto print = new Print!(char)(new Layout!(char), outputs[0]);
-  
     print.format(templates["modules"]);
   }
 
   void generateListingSection() {
     // TODO
-    auto print = new Print!(char)(new Layout!(char), outputs[0]);
-  
     print.format(templates["listings"]);
   }
 
   void generateDepGraphSection() {
     // TODO
-    auto print = new Print!(char)(new Layout!(char), outputs[0]);
-  
     print.format(templates["dependencies"]);
   }
 
@@ -52,4 +43,14 @@ class XMLWriter : AbstractDocumentWriter!(2, "xml") {
   void generateLastPage() { }
 
   void generateFirstPage() { }
+
+  void addList(char[][] contents, bool ordered) {
+    foreach(item; contents) {
+      switch(item) {
+        case "(": print(ordered ? "<ol>" : "<ul>"); continue;
+        case ")": print(ordered ? "</ol>" : "</ul>"); continue;
+        default: print("<li>")(xml_escape(item))("</li>");
+      }
+    }
+  }
 }
