@@ -20,7 +20,6 @@ class LaTeXDocGenerator : DefaultCachingDocGenerator {
   auto depGraphFile = "depgraph.dot";
   auto listingFile = "files.tex";
   auto modulesFile = "modules.tex";
-  auto langDefFile = "lstlang0.sty";
 
   public:
 
@@ -45,7 +44,6 @@ class LaTeXDocGenerator : DefaultCachingDocGenerator {
     generateClasses();
     generateModules();
     generateDependencies();
-    generateLangDef();
     generateMakeFile(docFileName, "pdf");
   }
 
@@ -68,13 +66,6 @@ class LaTeXDocGenerator : DefaultCachingDocGenerator {
     docWriter.generateLastPage();
 
     docFile.close();
-  }
-
-  /**
-   * Generates D language definition file.
-   */
-  void generateLangDef() {
-    writeSimpleFile(langDefFile, { docWriter.generateCustomPage("langdef"); });
   }
 
   /**

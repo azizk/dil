@@ -10,8 +10,6 @@ import tango.io.FileConduit : FileConduit;
 import tango.text.convert.Sprint;
 import tango.io.FilePath;
 
-// TODO: this is mostly broken now
-
 /**
  * Writes a HTML document skeleton.
  */
@@ -76,8 +74,8 @@ class HTMLWriter : AbstractPageWriter!("html") {
     auto content = super.getTemplate(name);
 
     foreach(pageName; [
-      "firstpage"[], "toc"[], "classes"[], "modules"[], "listings"[],
-      "dependencies"[], "lastpage"[] ]) {
+      "firstpage"[], "toc"[], "classes"[], "modules"[], "listing"[],
+      "listings"[], "dependencies"[], "lastpage"[] ]) {
       if (name == pageName) {
         auto sprint = new Sprint!(char)(5120);
         char[] title = factory.options.templates.title ~ " ";
@@ -86,6 +84,7 @@ class HTMLWriter : AbstractPageWriter!("html") {
           case "toc": title ~= "TOC"; break;
           case "classes": title ~= "Class index"; break;
           case "modules": title ~= "Module index"; break;
+          case "listing": title ~= "File contents"; break;
           case "listings": title ~= "File index"; break;
           case "dependencies": title ~="Dependencies"; break;
         }
@@ -103,9 +102,15 @@ class HTMLWriter : AbstractPageWriter!("html") {
       switch(item) {
         case "(": print(ordered ? "<ol>" : "<ul>"); continue;
         case ")": print(ordered ? "</ol>" : "</ul>"); continue;
-        default: print("<li>")(xml_escape(item))("</li>");
+        default: print("<li>")(item)("</li>");
       }
     }
+  }
+
+  override void addListing(char[] moduleName, char[] contents, bool inline) {
+    print.format(getTemplate("listing"), moduleName, contents);
+
+    footer();
   }
 
   protected:

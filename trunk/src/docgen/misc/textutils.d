@@ -9,6 +9,7 @@ char[] xml_escape(char[] text)
 {
   char[] result;
   result.length = text.length;
+  result.length = 0;
   foreach(c; text)
     switch(c)
     {

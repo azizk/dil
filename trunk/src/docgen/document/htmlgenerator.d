@@ -98,6 +98,17 @@ class HTMLDocGenerator : DefaultCachingDocGenerator {
   void generateListings() {
     writeSimpleFile(docFileNames[4], {
       docWriter.generateListingSection(modules);
+
+      char[][] contents;
+
+      foreach(mod; modules) {
+        auto FQN = mod.moduleFQN;
+        auto dstFname = replace(mod.moduleFQN.dup, '.', '_') ~ ".html";
+        contents ~= `<a href="` ~ dstFname ~ `">` ~ FQN ~ "</a>";
+      }
+
+      docWriter.addList(contents, false);
+
       docWriter.generateCustomPage("pagetemplate2", docgen_version);
     });
 
