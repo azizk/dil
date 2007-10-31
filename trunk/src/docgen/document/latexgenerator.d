@@ -61,8 +61,8 @@ class LaTeXDocGenerator : DefaultCachingDocGenerator {
     docWriter.generateFirstPage();
     docWriter.generateTOC(modules);
     docWriter.generateClassSection();
-    docWriter.generateModuleSection();
-    docWriter.generateListingSection();
+    docWriter.generateModuleSection(modules);
+    docWriter.generateListingSection(modules);
     docWriter.generateDepGraphSection();
     docWriter.generateIndexSection();
     docWriter.generateLastPage();

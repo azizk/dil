@@ -1,10 +1,10 @@
 #!/bin/sh
 
 for i in *.dot; do
-  F=`echo $i|sed 's/dot/{2}/'`
-  dot $i -T{2} -o$F
+  F=`echo $i|sed 's/dot/{1}/'`
+  dot $i -T{1} -o$F
 done
 
-pdflatex {1}
+pdflatex {0}
 makeindex document
-pdflatex {1}
+pdflatex {0}

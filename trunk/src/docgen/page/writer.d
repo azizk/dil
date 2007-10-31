@@ -49,12 +49,12 @@ interface PageWriter {
   /**
    * Generates module documentation section.
    */
-  void generateModuleSection();
+  void generateModuleSection(Module[] modules);
 
   /**
    * Generates source code listing section.
    */
-  void generateListingSection();
+  void generateListingSection(Module[] modules);
 
   /**
    * Generates dependency graph section.
@@ -130,11 +130,11 @@ template AbstractPageWriter(char[] format, int n = 0) {
       print.format(getTemplate("classes"));
     }
 
-    void generateModuleSection() {
+    void generateModuleSection(Module[] modules) {
       print.format(getTemplate("modules"));
     }
 
-    void generateListingSection() {
+    void generateListingSection(Module[] modules) {
       print.format(getTemplate("listings"));
     }
 
@@ -151,7 +151,13 @@ template AbstractPageWriter(char[] format, int n = 0) {
     }
 
     void generateCustomPage(char[] name, char[][] args ...) {
-      print.format(getTemplate(name), args);
+      switch(args.length) {
+        case 0: print.format(getTemplate(name)); break;
+        case 1: print.format(getTemplate(name), args[0]); break;
+        case 2: print.format(getTemplate(name), args[0], args[1]); break;
+        case 3: print.format(getTemplate(name), args[0], args[1], args[2]); break;
+        default: throw new Exception("Too many arguments");
+      }
     }
 
     //---

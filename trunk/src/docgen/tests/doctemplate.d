@@ -20,8 +20,8 @@ void doctemplate1() {
   
   writer.generateFirstPage();
   writer.generateTOC(null);
-  writer.generateModuleSection();
-  writer.generateListingSection();
+  writer.generateModuleSection(null);
+  writer.generateListingSection(null);
   writer.generateDepGraphSection();
   writer.generateIndexSection();
   writer.generateLastPage();

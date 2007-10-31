@@ -48,7 +48,7 @@ class HTMLDocGenerator : DefaultCachingDocGenerator {
     generateClasses();
     generateModules();
     generateDependencies();
-    generateMakeFile("", imageFormatExts[options.graph.imageFormat]);
+    generateMakeFile(imageFormatExts[options.graph.imageFormat]);
   }
 
   protected:
@@ -58,10 +58,11 @@ class HTMLDocGenerator : DefaultCachingDocGenerator {
    */
   void generateDoc() {
     writeSimpleFile(docFileNames[0], { docWriter.generateFirstPage(); });
-    writeSimpleFile(docFileNames[1], { docWriter.generateTOC(modules); });
-    writeSimpleFile(docFileNames[2], { docWriter.generateClassSection(); });
-    writeSimpleFile(docFileNames[3], { docWriter.generateModuleSection(); });
-    writeSimpleFile(docFileNames[4], { docWriter.generateListingSection(); });
+    /*
+    writeSimpleFile(docFileNames[1], {
+      docWriter.generateTOC(modules);
+      docWriter.generateCustomPage("pagetemplate2", docgen_version);
+    });*/
   }
 
   /**
@@ -75,22 +76,31 @@ class HTMLDocGenerator : DefaultCachingDocGenerator {
    * Generates documentation for classes.
    */
   void generateClasses() {
-    //auto docFile = outputFile(classesFile);
-    //docFile.close();
+    writeSimpleFile(docFileNames[2], {
+      docWriter.generateClassSection();
+      docWriter.generateCustomPage("pagetemplate2", docgen_version);
+    });
   }
 
   /**
    * Generates documentation for modules.
    */
   void generateModules() {
-    //auto docFile = outputFile(modulesFile);
-    //docFile.close();
+    writeSimpleFile(docFileNames[3], {
+      docWriter.generateModuleSection(modules);
+      docWriter.generateCustomPage("pagetemplate2", docgen_version);
+    });
   }
 
   /**
    * Generates source file listings.
    */
   void generateListings() {
+    writeSimpleFile(docFileNames[4], {
+      docWriter.generateListingSection(modules);
+      docWriter.generateCustomPage("pagetemplate2", docgen_version);
+    });
+
     auto writer = listingFactory.createListingWriter(docWriter, docFormat);
 
     foreach(mod; modules) {
@@ -109,12 +119,16 @@ class HTMLDocGenerator : DefaultCachingDocGenerator {
    */
   void generateDependencies() {
     writeSimpleFile(depGraphDocFile, {
+      docWriter.generateDepGraphSection();
+
       auto imgFile = outputFile(depGraphFile);
 
       auto writer = graphFactory.createGraphWriter( docWriter, GraphFormat.Dot );
       writer.generateDepGraph(vertices.values, edges, imgFile);
 
       imgFile.close();
+
+      docWriter.generateCustomPage("pagetemplate2", docgen_version);
     });
   }
 }
