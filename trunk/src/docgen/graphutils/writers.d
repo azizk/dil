@@ -10,6 +10,8 @@ import docgen.graphutils.modulepathwriter;
 import docgen.graphutils.modulenamewriter;
 
 class DefaultGraphWriterFactory : AbstractWriterFactory, GraphWriterFactory {
+  public:
+
   this(DocGenerator generator) {
     super(generator);
   }
@@ -29,6 +31,8 @@ class DefaultGraphWriterFactory : AbstractWriterFactory, GraphWriterFactory {
 }
 
 class DefaultCachingGraphWriterFactory : AbstractWriterFactory, CachingGraphWriterFactory {
+  public:
+
   CachingDocGenerator generator;
 
   this(CachingDocGenerator generator) {
@@ -40,7 +44,7 @@ class DefaultCachingGraphWriterFactory : AbstractWriterFactory, CachingGraphWrit
     return generator.graphCache;
   }
 
-  GraphWriter createGraphWriter(PageWriter writer, GraphFormat outputFormat) {
+  override GraphWriter createGraphWriter(PageWriter writer, GraphFormat outputFormat) {
     switch (outputFormat) {
       case GraphFormat.Dot:
         return new CachingDotWriter(this, writer);

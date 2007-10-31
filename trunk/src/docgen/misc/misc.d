@@ -146,7 +146,9 @@ interface WriterFactory {
 abstract class AbstractWriterFactory : WriterFactory {
   protected DocGenerator generator;
 
-  public DocGeneratorOptions *options() {
+  public:
+  
+  DocGeneratorOptions *options() {
     return generator.options;
   }
 
@@ -159,19 +161,18 @@ abstract class AbstractWriterFactory : WriterFactory {
 template AbstractWriter(T, int n = 0) {
   abstract class AbstractWriter {
     protected T factory;
+    protected OutputStream[] outputs;
   
     static if (n > 0) {
-      protected OutputStream[] outputs;
-      
       this(T factory, OutputStream[] outputs) {
         this.factory = factory;
         this.outputs = outputs;
         assert(outputs.length == n, "Incorrect number of outputs");
       }
-    } else {
-      this(T factory) {
-        this.factory = factory;
-      }
+    }
+
+    this(T factory) {
+      this.factory = factory;
     }
   }
 }

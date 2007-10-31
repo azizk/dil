@@ -103,7 +103,7 @@ void main(char[][] args) {
         Stdout("Generating LaTeX docs..");
         break;
       case DocFormat.HTML:
-        generator = new HTMLDocGenerator(*options, &parser);
+        generator = new HTMLDocGenerator(*options, &parser, graphcache);
         Stdout("Generating HTML docs..");
         break;
       case DocFormat.XML:

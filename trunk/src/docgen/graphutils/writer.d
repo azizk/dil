@@ -69,8 +69,12 @@ void findCycles(Vertex[] vertices, Edge[] edges) {
 }
 
 abstract class AbstractGraphWriter : AbstractWriter!(GraphWriterFactory), GraphWriter {
+  protected:
+
   PageWriter writer;
   
+  public:
+
   this(GraphWriterFactory factory, PageWriter writer) {
     super(factory);
     this.writer = writer;
@@ -78,7 +82,11 @@ abstract class AbstractGraphWriter : AbstractWriter!(GraphWriterFactory), GraphW
 }
 
 class DefaultGraphCache : GraphCache {
-  private char[][Object[]][Object[]][GraphFormat] m_graphCache;
+  private:
+    
+  char[][Object[]][Object[]][GraphFormat] m_graphCache;
+
+  public:
 
   char[] getCachedGraph(Object[] vertices, Object[] edges, GraphFormat format) {
     debug Stdout("Starting graph lookup\n");
@@ -101,6 +109,6 @@ class DefaultGraphCache : GraphCache {
   void setCachedGraph(Object[] vertices, Object[] edges, GraphFormat format, char[]
       contents) {
     m_graphCache[format][edges][vertices] = contents;
-      debug Stdout("Graph cache updated!\n");
-    }
+    debug Stdout("Graph cache updated!\n");
+  }
 }

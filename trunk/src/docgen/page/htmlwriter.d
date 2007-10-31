@@ -7,35 +7,39 @@ module docgen.page.htmlwriter;
 import docgen.page.writer;
 import docgen.misc.textutils;
 import tango.io.FileConduit : FileConduit;
+import tango.text.convert.Sprint;
+import tango.io.FilePath;
 
 // TODO: this is mostly broken now
 
 /**
  * Writes a HTML document skeleton.
  */
-class HTMLWriter : AbstractPageWriter!(2, "html") {
+class HTMLWriter : AbstractPageWriter!("html") {
+  char[] styleSheetFile;
+  
   this(PageWriterFactory factory, OutputStream[] outputs) {
-    super(factory, outputs);
+    super(factory);
   }
 
   void generateTOC(Module[] modules) {
     // TODO
-    print.format(templates["toc"]);
+    print.format(getTemplate("toc"));
   }
 
   void generateModuleSection() {
     // TODO
-    print.format(templates["modules"]);
+    print.format(getTemplate("modules"));
   }
 
   void generateListingSection() {
     // TODO
-    print.format(templates["listings"]);
+    print.format(getTemplate("listings"));
   }
 
   void generateDepGraphSection() {
     // TODO
-    print.format(templates["dependencies"]);
+    print.format(getTemplate("dependencies"));
   }
 
   void generateIndexSection() { }
@@ -44,12 +48,48 @@ class HTMLWriter : AbstractPageWriter!(2, "html") {
 
   void generateFirstPage() {
     print.format(
-      templates["firstpage"],
+      getTemplate("firstpage"),
       factory.options.templates.title,
-      factory.options.templates.copyright,
       factory.options.templates.versionString,
-      docgen_version
+      docgen_version,
+      factory.options.templates.copyright
     );
+  }
+  
+  /**
+   * A hack for figuring out the stylesheet file name.
+   */
+  void generateCustomPage(char[] name, char[][] args ...) {
+    super.generateCustomPage(name, args);
+
+    if (name == "stylesheet") {
+      styleSheetFile = (new FilePath(
+        (cast(Object)outputs[0].conduit).toUtf8())).file();
+    }
+  }
+
+  /**
+   * Overrides the default template fetcher in order to
+   * provide a consistent layout for all pages.
+   */
+  override char[] getTemplate(char[] name) {
+    auto content = super.getTemplate(name);
+
+    foreach(pageName; [
+      "firstpage"[], "toc"[], "classes"[], "modules"[], "files"[],
+      "dependencies"[], "index"[], "lastpage"[] ]) {
+      if (name == pageName) {
+        auto sprint = new Sprint!(char)(5120);
+        return sprint.format(
+          super.getTemplate("pagetemplate"),
+          styleSheetFile,
+          name, // FIXME
+          content,
+          docgen_version);
+      }
+    }
+
+    return content;
   }
 
   void addList(char[][] contents, bool ordered) {

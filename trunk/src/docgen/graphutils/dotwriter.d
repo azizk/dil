@@ -16,9 +16,21 @@ debug import tango.io.Stdout;
  * Creates a graph rule file for the dot utility.
  */
 class DotWriter : AbstractGraphWriter {
+  public:
+
   this(GraphWriterFactory factory, PageWriter writer) {
     super(factory, writer);
   }
+
+  void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
+    generateImageTag(imageFile);
+    
+    auto image = generateDepImageFile(vertices, edges);
+    auto printer = new Print!(char)(new Layout!(char), imageFile);
+    printer(image);
+  }
+
+  protected:
 
   char[] generateDepImageFile(Vertex[] vertices, Edge[] edges) {
     char[] image;
@@ -121,26 +133,22 @@ class DotWriter : AbstractGraphWriter {
     fn = fn[0..$-3] ~ imageFormatExts[factory.options.graph.imageFormat];
     
     writer.addGraphics(fn);
-  }
-
-  protected void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
-    generateImageTag(imageFile);
-    
-    auto image = generateDepImageFile(vertices, edges);
-    auto printer = new Print!(char)(new Layout!(char), imageFile);
-    printer(image);
-  }
+  } 
 }
 
 class CachingDotWriter : DotWriter {
+  private:
+
   CachingGraphWriterFactory factory;
+
+  public:
 
   this(CachingGraphWriterFactory factory, PageWriter writer) {
     super(factory, writer);
     this.factory = factory;
   }
 
-  protected void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
+  override void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
     generateImageTag(imageFile);
 
     auto cached = factory.graphCache.getCachedGraph(vertices, edges, GraphFormat.Dot);

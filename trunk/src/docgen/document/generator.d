@@ -16,83 +16,108 @@ debug import tango.io.Stdout;
 
 alias void delegate(ref Module[], ref Edge[], ref Vertex[char[]]) ParserDg;
 
-template DefaultDocGenerator(char[] genDir) {
-  abstract class DefaultDocGenerator : DocGenerator {
-    DocGeneratorOptions m_options;
-    ParserDg m_parser;
-    PageWriter docWriter;
+abstract class DefaultDocGenerator : DocGenerator {
+  protected:
 
-    GraphWriterFactory graphFactory;
-    PageWriterFactory pageFactory;
-    DefaultListingWriterFactory listingFactory;
-    
-    Module[] modules;
-    Edge[] edges;
-    Vertex[char[]] vertices;
+  DocFormat docFormat;
+  auto makeFile = "make.sh";
+  char[] genDir;
 
-    this(DocGeneratorOptions options, ParserDg parser) {
-      m_options = options;
-      m_parser = parser;
+  DocGeneratorOptions m_options;
+  ParserDg m_parser;
+  PageWriter docWriter;
 
-      createGraphWriterFactory();
-      createPageWriterFactory();
-      createListingWriterFactory();
+  GraphWriterFactory graphFactory;
+  PageWriterFactory pageFactory;
+  DefaultListingWriterFactory listingFactory;
+  
+  Module[] modules;
+  Edge[] edges;
+  Vertex[char[]] vertices;
 
-      // create output dir
-      (new FilePath(options.outputDir ~ "/" ~ genDir)).create();
-    }
+  public:
 
-    protected void createGraphWriterFactory() {
-      graphFactory = new DefaultGraphWriterFactory(this);
-    }
+  this(DocGeneratorOptions options, ParserDg parser) {
+    m_options = options;
+    m_parser = parser;
 
-    protected void createPageWriterFactory() {
-      pageFactory = new DefaultPageWriterFactory(this);
-    }
+    createGraphWriterFactory();
+    createPageWriterFactory();
+    createListingWriterFactory();
 
-    protected void createListingWriterFactory() {
-      listingFactory = new DefaultListingWriterFactory(this);
-    }
-
-    protected char[] outPath(char[] file) {
-      return options.outputDir ~ "/" ~ genDir ~ "/" ~ file;
-    }
-
-    protected void parseSources() {
-      m_parser(modules, edges, vertices);
-    }
-
-    void createDepGraph(char[] depGraphFile) {
-      auto imgFile = new FileOutput(outPath(depGraphFile));
-
-      auto writer = graphFactory.createGraphWriter( docWriter, GraphFormat.Dot );
-
-      writer.generateDepGraph(vertices.values, edges, imgFile);
-
-      imgFile.close();
-    }
-
-    public DocGeneratorOptions *options() {
-      return &m_options;
-    }
+    // create output dir
+    (new FilePath(options.outputDir ~ "/" ~ genDir)).create();
   }
+
+  DocGeneratorOptions *options() {
+    return &m_options;
+  }
+
+  protected:
+
+  void createGraphWriterFactory() {
+    graphFactory = new DefaultGraphWriterFactory(this);
+  }
+
+  void createPageWriterFactory() {
+    pageFactory = new DefaultPageWriterFactory(this);
+  }
+
+  void createListingWriterFactory() {
+    listingFactory = new DefaultListingWriterFactory(this);
+  }
+
+  char[] outPath(char[] file) {
+    return options.outputDir ~ "/" ~ genDir ~ "/" ~ file;
+  }
+
+  FileOutput outputFile(char[] fname) {
+    return new FileOutput(outPath(fname));
+  }
+
+  void parseSources() {
+    m_parser(modules, edges, vertices);
+  }
+
+  //---
+
+  void writeSimpleFile(char[] fname, void delegate() dg) {
+    auto docFile = outputFile(fname);
+
+    docWriter.setOutput([docFile]);
+    dg();
+
+    docFile.close();
+  }
+
+  /**
+   * Generates "makefile" for processing e.g. .dot files.
+   */
+  void generateMakeFile(char[][] args ...) {
+    writeSimpleFile(makeFile, { docWriter.generateCustomPage("makefile", args); } );
+  }
+  
 }
 
-template DefaultCachingDocGenerator(char[] genDir) {
-  abstract class DefaultCachingDocGenerator : DefaultDocGenerator!(genDir), CachingDocGenerator {
-    GraphCache m_graphCache;
-
-    this(DocGeneratorOptions options, ParserDg parser, GraphCache graphCache) {
-      super(options, parser);
-      m_graphCache = graphCache;
-    }
+abstract class DefaultCachingDocGenerator : DefaultDocGenerator, CachingDocGenerator {
+  private:
     
-    GraphCache graphCache() {
-      return m_graphCache;
-    }
+  GraphCache m_graphCache;
 
-    protected void createGraphWriterFactory() {
-      graphFactory = new DefaultCachingGraphWriterFactory(this);
-    }
+  public:
+
+  this(DocGeneratorOptions options, ParserDg parser, GraphCache graphCache) {
+    super(options, parser);
+    m_graphCache = graphCache;
+  }
+  
+  GraphCache graphCache() {
+    return m_graphCache;
+  }
+
+  protected:
+
+  void createGraphWriterFactory() {
+    graphFactory = new DefaultCachingGraphWriterFactory(this);
   }
 }

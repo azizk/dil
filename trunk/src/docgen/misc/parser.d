@@ -16,7 +16,9 @@ alias void delegate (char[] fqn, char[] path, Module module_) modDg;
 alias void delegate (Module imported, Module importer, bool isPublic) importDg;
 
 class Parser {
-  private static char[] findModulePath(char[] moduleFQN, char[][] importPaths) {
+  private:
+    
+  static char[] findModulePath(char[] moduleFQN, char[][] importPaths) {
     char[] modulePath;
 
     foreach (path; importPaths) {
@@ -33,6 +35,8 @@ class Parser {
     debug Stdout("  * ")(moduleFQN)(" does not exist in imports")().newline()();
     return null;
   }
+
+  public:
 
   /**
    * Imports the transitive closure of imports starting from "filePath",
@@ -51,7 +55,7 @@ class Parser {
    *     idg = Delegate that gets called for every import found
    *     modules = List of parsed modules
    */
-  public static void loadModules(char[] filePath, char[][] importPaths, char[][] strRegexps,
+  static void loadModules(char[] filePath, char[][] importPaths, char[][] strRegexps,
                                  bool IncludeUnlocatableModules, int recursionDepth,
                                  modDg mdg, importDg idg, out Module[] modules) {
 
@@ -76,7 +80,7 @@ class Parser {
    *     idg = Delegate that gets called for every import found
    *     modules = List of parsed modules
    */
-  public static void loadModules(char[][] filePaths, char[][] importPaths, char[][] strRegexps,
+  static void loadModules(char[][] filePaths, char[][] importPaths, char[][] strRegexps,
                                  bool IncludeUnlocatableModules, int recursionDepth,
                                  modDg mdg, importDg idg, out Module[] modules) {
     // Initialize regular expressions.

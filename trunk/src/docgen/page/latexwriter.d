@@ -10,14 +10,14 @@ import tango.io.FileConduit : FileConduit;
 /**
  * Writes a LaTeX document skeleton.
  */
-class LaTeXWriter : AbstractPageWriter!(1, "latex") {
+class LaTeXWriter : AbstractPageWriter!("latex", 1) {
   this(PageWriterFactory factory, OutputStream[] outputs) {
     super(factory, outputs);
   }
 
   void generateFirstPage() {
     print.format(
-      templates["firstpage"],
+      getTemplate("firstpage"),
       factory.options.templates.paperSize,
       factory.options.templates.title,
       factory.options.templates.versionString,

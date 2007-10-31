@@ -12,28 +12,55 @@ import tango.text.Util : replace;
 /**
  * Main routine for LaTeX doc generation.
  */
-class LaTeXDocGenerator : DefaultCachingDocGenerator!("latex") {
+class LaTeXDocGenerator : DefaultCachingDocGenerator {
+  private:
+
   auto docFileName = "document.tex";
-  auto depGraphTexFile = "dependencies.tex";
+  auto depGraphDocFile = "dependencies.tex";
   auto depGraphFile = "depgraph.dot";
   auto listingFile = "files.tex";
   auto modulesFile = "modules.tex";
   auto langDefFile = "lstlang0.sty";
-  auto makeFile = "make.sh";
+
+  public:
 
   this(DocGeneratorOptions options, ParserDg parser, GraphCache graphcache) {
+    genDir = "latex";
+    docFormat = DocFormat.LaTeX;
+
     super(options, parser, graphcache);
   }
 
   /**
+   * Generates the documentation.
+   */
+  void generate() {
+    parseSources();
+
+    generateDoc();
+
+    if (options.listing.enableListings)
+      generateListings();
+
+    generateClasses();
+    generateModules();
+    generateDependencies();
+    generateLangDef();
+    generateMakeFile(docFileName, "pdf");
+  }
+
+  protected:
+
+  /**
    * Generates document skeleton.
    */
-  void generateDoc(char[] docFileName) {
-    auto docFile = new FileOutput(outPath(docFileName));
-    docWriter = pageFactory.createPageWriter( [ docFile ], DocFormat.LaTeX );
+  void generateDoc() {
+    auto docFile = outputFile(docFileName);
+    docWriter = pageFactory.createPageWriter( [ docFile ], docFormat );
 
     docWriter.generateFirstPage();
     docWriter.generateTOC(modules);
+    docWriter.generateClassSection();
     docWriter.generateModuleSection();
     docWriter.generateListingSection();
     docWriter.generateDepGraphSection();
@@ -47,23 +74,14 @@ class LaTeXDocGenerator : DefaultCachingDocGenerator!("latex") {
    * Generates D language definition file.
    */
   void generateLangDef() {
-    auto docFile = new FileOutput(outPath(langDefFile));
-
-    docWriter.setOutput([docFile]);
-    docWriter.generateLangDef();
-
-    docFile.close();
+    writeSimpleFile(langDefFile, { docWriter.generateCustomPage("langdef"); });
   }
 
   /**
-   * Generates "makefile" for processing the .dot and .tex files.
+   * Generates documentation for classes.
    */
-  void generateMakeFile() {
-    auto docFile = new FileOutput(outPath(makeFile));
-
-    docWriter.setOutput([docFile]);
-    docWriter.generateMakeFile();
-
+  void generateClasses() {
+    auto docFile = outputFile(modulesFile);
     docFile.close();
   }
 
@@ -71,7 +89,7 @@ class LaTeXDocGenerator : DefaultCachingDocGenerator!("latex") {
    * Generates documentation for modules.
    */
   void generateModules() {
-    auto docFile = new FileOutput(outPath(modulesFile));
+    auto docFile = outputFile(modulesFile);
     docFile.close();
   }
 
@@ -79,52 +97,34 @@ class LaTeXDocGenerator : DefaultCachingDocGenerator!("latex") {
    * Generates source file listings.
    */
   void generateListings() {
-    auto docFile = new FileOutput(outPath(listingFile));
+    writeSimpleFile(listingFile, {
+      auto writer = listingFactory.createListingWriter(docWriter, docFormat);
 
-    docWriter.setOutput([docFile]);
-    auto writer = listingFactory.createListingWriter(docWriter, DocFormat.LaTeX);
+      foreach(mod; modules) {
+        auto dstFname = replace(mod.moduleFQN.dup, '.', '_') ~ ".d";
+        
+        auto srcFile = new FileInput(mod.filePath);
+        auto dstFile = outputFile(dstFname);
+        
+        writer.generateListing(srcFile, dstFile, mod.moduleFQN);
 
-    foreach(mod; modules) {
-      auto dstFname = replace(mod.moduleFQN.dup, '.', '_') ~ ".d";
-      
-      auto srcFile = new FileInput(mod.filePath);
-      auto dstFile = new FileOutput(outPath(dstFname));
-      
-      writer.generateListing(srcFile, dstFile, mod.moduleFQN);
-
-      srcFile.close();
-      dstFile.close();
-    }
-    
-    docFile.close();
+        srcFile.close();
+        dstFile.close();
+      }
+    });
   }
 
   /**
    * Generates dependency graphs.
    */
   void generateDependencies() {
-    auto docFile = new FileOutput(outPath(depGraphTexFile));
+    writeSimpleFile(depGraphDocFile, {
+      auto imgFile = outputFile(depGraphFile);
 
-    docWriter.setOutput([docFile]);
-    createDepGraph(depGraphFile);
+      auto writer = graphFactory.createGraphWriter( docWriter, GraphFormat.Dot );
+      writer.generateDepGraph(vertices.values, edges, imgFile);
 
-    docFile.close();
-  }
-
-  /**
-   * Generates the documentation.
-   */
-  public void generate() {
-    parseSources();
-
-    generateDoc(docFileName);
-
-    if (options.listing.enableListings)
-      generateListings();
-
-    generateModules();
-    generateDependencies();
-    generateLangDef();
-    generateMakeFile();
+      imgFile.close();
+    });
   }
 }

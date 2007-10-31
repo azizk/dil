@@ -29,6 +29,7 @@ class HTMLWriter : AbstractWriter!(ListingWriterFactory), ListingWriter {
     auto bytesRead = inputStream.read (content);
     
     assert(bytesRead == inputStream.length, "Error reading source file");
+    assert(output == null);
     
     writer.addListing(
       moduleName,

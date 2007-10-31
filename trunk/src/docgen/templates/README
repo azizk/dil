@@ -1,0 +1,14 @@
+The docgen uses the following template file names by default
+
+firstpage
+toc
+classes
+modules
+listings
+dependencies
+index
+lastpage
+langdef
+makefile
+graphics
+listing

@@ -13,29 +13,29 @@ import tango.io.FileConduit : FileConduit;
 /**
  * TODO
  */
-class XMLWriter : AbstractPageWriter!(2, "xml") {
+class XMLWriter : AbstractPageWriter!("xml", 1) {
   this(PageWriterFactory factory, OutputStream[] outputs) {
     super(factory, outputs);
   }
 
   void generateTOC(Module[] modules) {
     // TODO
-    print.format(templates["toc"]);
+    print.format(getTemplate("toc"));
   }
 
   void generateModuleSection() {
     // TODO
-    print.format(templates["modules"]);
+    print.format(getTemplate("modules"));
   }
 
   void generateListingSection() {
     // TODO
-    print.format(templates["listings"]);
+    print.format(getTemplate("listings"));
   }
 
   void generateDepGraphSection() {
     // TODO
-    print.format(templates["dependencies"]);
+    print.format(getTemplate("dependencies"));
   }
 
   void generateIndexSection() { }

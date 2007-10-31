@@ -9,9 +9,15 @@ import docgen.misc.misc;
 import tango.io.stream.FileStream;
 import tango.text.Util : replace;
 
-class XMLDocGenerator : DefaultDocGenerator!("xml") {
+class XMLDocGenerator : DefaultDocGenerator {
+  public:
+
   this(DocGeneratorOptions options, ParserDg parser) {
+    genDir = "xml";
+    docFormat = DocFormat.XML;
+
     super(options, parser);
   }
-  public void generate() { /* TODO */ }
+
+  void generate() { /* TODO */ }
 }

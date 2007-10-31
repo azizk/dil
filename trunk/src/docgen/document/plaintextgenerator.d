@@ -9,9 +9,15 @@ import docgen.misc.misc;
 import tango.io.stream.FileStream;
 import tango.text.Util : replace;
 
-class PlainTextDocGenerator : DefaultDocGenerator!("txt") {
+class PlainTextDocGenerator : DefaultDocGenerator {
+  public:
+
   this(DocGeneratorOptions options, ParserDg parser) {
+    genDir = "txt";
+    docFormat = DocFormat.PlainText;
+    
     super(options, parser);
   }
-  public void generate() { /* TODO */ }
+
+  void generate() { /* TODO */ }
 }
