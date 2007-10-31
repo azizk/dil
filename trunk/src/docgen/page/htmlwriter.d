@@ -25,17 +25,14 @@ class HTMLWriter : AbstractPageWriter!("html") {
   }
 
   override void generateClassSection() {
-    // TODO
     print.format(getTemplate("classes"), factory.options.templates.title);
   }
 
   override void generateModuleSection(Module[] modules) {
-    // TODO
     print.format(getTemplate("modules"), factory.options.templates.title);
   }
 
   override void generateListingSection(Module[] modules) {
-    // TODO
     print.format(getTemplate("listings"), factory.options.templates.title);
   }
 
@@ -57,7 +54,7 @@ class HTMLWriter : AbstractPageWriter!("html") {
   /**
    * A hack for figuring out the stylesheet file name.
    */
-  void generateCustomPage(char[] name, char[][] args ...) {
+  override void generateCustomPage(char[] name, char[][] args ...) {
     super.generateCustomPage(name, args);
 
     if (name == "stylesheet") {

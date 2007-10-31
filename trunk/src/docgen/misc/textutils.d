@@ -24,7 +24,7 @@ char[] xml_escape(char[] text)
 char[] plainTextHeading(char[] s) {
   char[] line;
   line.length = 80;
-  line[] = "=";
+  line[] = '=';
 
   return s ~ \n ~ line[0..s.length].dup ~ \n ~ \n;
 }
@@ -32,7 +32,7 @@ char[] plainTextHeading(char[] s) {
 char[] plainTextHorizLine(int l = 80) {
   char[] line;
   line.length = 80;
-  line[] = "-";
+  line[] = '-';
   
   return line[0..l].dup ~ \n;
 }

@@ -99,20 +99,20 @@ void main(char[][] args) {
 
     switch(format) {
       case DocFormat.LaTeX:
-        generator = new LaTeXDocGenerator(*options, &parser, graphcache);
         Stdout("Generating LaTeX docs..");
+        generator = new LaTeXDocGenerator(*options, &parser, graphcache);
         break;
       case DocFormat.HTML:
-        generator = new HTMLDocGenerator(*options, &parser, graphcache);
         Stdout("Generating HTML docs..");
+        generator = new HTMLDocGenerator(*options, &parser, graphcache);
         break;
       case DocFormat.XML:
-        generator = new XMLDocGenerator(*options, &parser);
         Stdout("Generating XML docs..");
+        generator = new XMLDocGenerator(*options, &parser);
         break;
       case DocFormat.PlainText:
-        generator = new PlainTextDocGenerator(*options, &parser);
         Stdout("Generating plain text docs..");
+        generator = new PlainTextDocGenerator(*options, &parser, graphcache);
         break;
       default: throw new Exception("Format not supported");
     }

@@ -14,7 +14,6 @@ import tango.io.stream.FileStream;
 import tango.io.FilePath;
 import tango.io.FileScan;
 debug import tango.io.Stdout;
-import tango.io.Stdout;
 
 
 alias void delegate(ref Module[], ref Edge[], ref Vertex[char[]]) ParserDg;
@@ -85,8 +84,7 @@ abstract class DefaultDocGenerator : DocGenerator {
       (new FilePath(outPath(filePath.file))).copy(filePath.toUtf8());
     }
 
-    Stdout();
-    Stdout(scan.files.length)(" static files copied.\n");
+    debug Stdout(scan.files.length)(" static files copied.\n");
   }
 
   FileOutput outputFile(char[] fname) {
