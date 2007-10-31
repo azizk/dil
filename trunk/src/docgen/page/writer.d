@@ -19,6 +19,8 @@ public import docgen.misc.parser;
 
 const templateDir = "docgen/templates/";
 
+const formatDirs = [ "latex"[], "xml"[], "html"[], "plaintext"[] ];
+
 /**
  * Writes the logical subcomponents of a document,
  * e.g. sections, embedded graphics, lists

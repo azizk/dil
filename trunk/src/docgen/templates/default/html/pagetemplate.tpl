@@ -7,6 +7,15 @@
   <link rel="stylesheet" href="{0}" media="all" title="default" />
 </head>
 <body>
+<div class="tabs">
+  <ul>
+    <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
+    <li><a href="classes.html"><span>Classes</span></a></li>
+    <li><a href="modules.html"><span>Modules</span></a></li>
+    <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="depgraph.html"><span>Dependencies</span></a></li>
+  </ul>
+</div>
 <h1>{1}</h1>
 {2}
 <hr />

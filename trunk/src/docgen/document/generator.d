@@ -12,7 +12,10 @@ import docgen.misc.parser;
 import docgen.config.configurator;
 import tango.io.stream.FileStream;
 import tango.io.FilePath;
+import tango.io.FileScan;
 debug import tango.io.Stdout;
+import tango.io.Stdout;
+
 
 alias void delegate(ref Module[], ref Edge[], ref Vertex[char[]]) ParserDg;
 
@@ -47,6 +50,9 @@ abstract class DefaultDocGenerator : DocGenerator {
 
     // create output dir
     (new FilePath(options.outputDir ~ "/" ~ genDir)).create();
+
+    // copy static files
+    copyStaticContent();
   }
 
   DocGeneratorOptions *options() {
@@ -69,6 +75,18 @@ abstract class DefaultDocGenerator : DocGenerator {
 
   char[] outPath(char[] file) {
     return options.outputDir ~ "/" ~ genDir ~ "/" ~ file;
+  }
+
+  void copyStaticContent() {
+    auto scan = new FileScan();
+    scan(templateDir~options.templates.templateStyle~"/"~formatDirs[docFormat]~"/static/");
+
+    foreach(filePath; scan.files) {
+      (new FilePath(outPath(filePath.file))).copy(filePath.toUtf8());
+    }
+
+    Stdout();
+    Stdout(scan.files.length)(" static files copied.\n");
   }
 
   FileOutput outputFile(char[] fname) {

@@ -1,3 +1,5 @@
+@import "tabs.css";
+
 body {{
-background: #ccc;
+background: #fff;
 }
