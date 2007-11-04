@@ -29,6 +29,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     self.project = None
     # Modifications
+    self.pages = QtGui.QStackedWidget()
+    self.setCentralWidget(self.pages)
     self.disableMenuItems()
     self.projectDock = QtGui.QDockWidget("Project", self)
     self.projectTree = ProjectTree(self)
@@ -116,12 +118,15 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     self.action_Close_Project.setEnabled(False)
     self.menubar.removeAction(self.menu_Project.menuAction())
 
-  def projectTreeItemChanged(self, item, column):
-    if item == None:
+  def projectTreeItemChanged(self, current, previous):
+    if current == None:
       return
-    # TODO: set centralwidget to the form corresponding to the item.
-    if isinstance(item, LangFileItem):
-      print "LangFileItem"
+
+    if isinstance(current, LangFileItem):
+      index = self.pages.indexOf(current.msgForm)
+      if index == -1:
+        index = self.pages.addWidget(current.msgForm)
+      self.pages.setCurrentIndex(index)
 
   def closeEvent(self, event):
     if self.closeProject() == False:
@@ -166,17 +171,37 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     yaml.dump(g_settings, open(g_settingsFile, "w")) #default_flow_style=False
 
 class MsgForm(QtGui.QWidget, Ui_MsgForm):
-  def __init__(self):
+  def __init__(self, langFile):
     QtGui.QWidget.__init__(self)
     self.setupUi(self)
+
+    self.langFile = langFile
+    self.treeWidget.setColumnCount(2)
+    self.treeWidget.setHeaderLabels(["ID", "Text"])
+    for msg in self.langFile.messages:
+      item = QtGui.QTreeWidgetItem([str(msg["ID"]), msg["Text"]])
+      self.treeWidget.addTopLevelItem(item)
+
+    QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("currentItemChanged (QTreeWidgetItem *,QTreeWidgetItem *)"), self.treeItemChanged)
+
+  def treeItemChanged(self, current, previous):
+    msg = self.langFile.getMsg(int(current.text(0)))
+    self.destEdit.setText(msg["Text"])
+    self.destAnnotEdit.setText(msg["Annot"])
 
 class MsgIDItem(QtGui.QTreeWidgetItem):
   def __init__(self, parent, text):
     QtGui.QTreeWidgetItem.__init__(self, parent, [text])
 
 class LangFileItem(QtGui.QTreeWidgetItem):
-  def __init__(self, parent, text):
-    QtGui.QTreeWidgetItem.__init__(self, parent, [text])
+  def __init__(self, parent, langFile):
+    QtGui.QTreeWidgetItem.__init__(self, parent, [langFile.langCode])
+    self.langFile = langFile
+    self.msgForm = MsgForm(langFile)
+
+class ProjectItem(QtGui.QTreeWidgetItem):
+  def __init__(self, text):
+    QtGui.QTreeWidgetItem.__init__(self, [text])
 
 class ProjectTree(QtGui.QTreeWidget):
   def __init__(self, parent):
@@ -188,11 +213,11 @@ class ProjectTree(QtGui.QTreeWidget):
   def setProject(self, project):
     self.project = project
 
-    self.topItem = QtGui.QTreeWidgetItem([self.project.name])
+    self.topItem = ProjectItem(self.project.name)
     self.addTopLevelItem(self.topItem)
 
     for langFile in self.project.langFiles:
-      langFileItem = LangFileItem(self.topItem, langFile.langCode)
+      langFileItem = LangFileItem(self.topItem, langFile)
 
     self.msgIDsItem = QtGui.QTreeWidgetItem(self.topItem, ["Message IDs"])
     for msgID in self.project.msgIDs:

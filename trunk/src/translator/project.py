@@ -58,6 +58,7 @@ class Project:
 
     # Load language files.
     self.langFiles = []
+    IDList = [msg["ID"] for msgID in self.msgIDs]
     for filePath in self.langFilePaths:
       if not os.path.exists(filePath):
         # Look in project directory.
@@ -66,7 +67,9 @@ class Project:
         if not os.path.exists(filePath2):
           raise LoadingError("Project: Language file '%s' doesn't exist"%filePath)
         filePath = filePath2
-      self.langFiles += [langfile.LangFile(filePath)]
+      langFile = langfile.LangFile(filePath)
+      langFile.createMissingMessages(IDList)
+      self.langFiles += [langFile]
 
   def checkType(self, var, type_):
     if not isinstance(var, type_):

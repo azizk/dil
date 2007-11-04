@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'msg_form.ui'
 #
-# Created: Sun Oct 21 17:33:29 2007
+# Created: Thu Nov  1 10:10:41 2007
 #      by: PyQt4 UI code generator 4.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -19,6 +19,7 @@ class Ui_MsgForm(object):
         self.vboxlayout.setObjectName("vboxlayout")
 
         self.splitter = QtGui.QSplitter(MsgForm)
+        self.splitter.setFrameShape(QtGui.QFrame.StyledPanel)
         self.splitter.setOrientation(QtCore.Qt.Vertical)
         self.splitter.setObjectName("splitter")
 
@@ -32,24 +33,24 @@ class Ui_MsgForm(object):
         self.label.setObjectName("label")
         self.vboxlayout1.addWidget(self.label)
 
-        self.listWidget = QtGui.QListWidget(self.layoutWidget)
-        self.listWidget.setObjectName("listWidget")
-        self.vboxlayout1.addWidget(self.listWidget)
+        self.treeWidget = QtGui.QTreeWidget(self.layoutWidget)
+        self.treeWidget.setObjectName("treeWidget")
+        self.vboxlayout1.addWidget(self.treeWidget)
 
-        self.widget = QtGui.QWidget(self.splitter)
-        self.widget.setObjectName("widget")
+        self.layoutWidget1 = QtGui.QWidget(self.splitter)
+        self.layoutWidget1.setObjectName("layoutWidget1")
 
-        self.gridlayout = QtGui.QGridLayout(self.widget)
+        self.gridlayout = QtGui.QGridLayout(self.layoutWidget1)
         self.gridlayout.setObjectName("gridlayout")
 
         self.vboxlayout2 = QtGui.QVBoxLayout()
         self.vboxlayout2.setObjectName("vboxlayout2")
 
-        self.label_2 = QtGui.QLabel(self.widget)
+        self.label_2 = QtGui.QLabel(self.layoutWidget1)
         self.label_2.setObjectName("label_2")
         self.vboxlayout2.addWidget(self.label_2)
 
-        self.sourceEdit = QtGui.QTextEdit(self.widget)
+        self.sourceEdit = QtGui.QTextEdit(self.layoutWidget1)
         self.sourceEdit.setObjectName("sourceEdit")
         self.vboxlayout2.addWidget(self.sourceEdit)
         self.gridlayout.addLayout(self.vboxlayout2,0,0,1,1)
@@ -57,11 +58,11 @@ class Ui_MsgForm(object):
         self.vboxlayout3 = QtGui.QVBoxLayout()
         self.vboxlayout3.setObjectName("vboxlayout3")
 
-        self.label_3 = QtGui.QLabel(self.widget)
+        self.label_3 = QtGui.QLabel(self.layoutWidget1)
         self.label_3.setObjectName("label_3")
         self.vboxlayout3.addWidget(self.label_3)
 
-        self.sourceAnnotEdit = QtGui.QTextEdit(self.widget)
+        self.sourceAnnotEdit = QtGui.QTextEdit(self.layoutWidget1)
         self.sourceAnnotEdit.setObjectName("sourceAnnotEdit")
         self.vboxlayout3.addWidget(self.sourceAnnotEdit)
         self.gridlayout.addLayout(self.vboxlayout3,0,1,1,1)
@@ -69,11 +70,11 @@ class Ui_MsgForm(object):
         self.vboxlayout4 = QtGui.QVBoxLayout()
         self.vboxlayout4.setObjectName("vboxlayout4")
 
-        self.label_4 = QtGui.QLabel(self.widget)
+        self.label_4 = QtGui.QLabel(self.layoutWidget1)
         self.label_4.setObjectName("label_4")
         self.vboxlayout4.addWidget(self.label_4)
 
-        self.destEdit = QtGui.QTextEdit(self.widget)
+        self.destEdit = QtGui.QTextEdit(self.layoutWidget1)
         self.destEdit.setObjectName("destEdit")
         self.vboxlayout4.addWidget(self.destEdit)
         self.gridlayout.addLayout(self.vboxlayout4,1,0,1,1)
@@ -81,11 +82,11 @@ class Ui_MsgForm(object):
         self.vboxlayout5 = QtGui.QVBoxLayout()
         self.vboxlayout5.setObjectName("vboxlayout5")
 
-        self.label_5 = QtGui.QLabel(self.widget)
+        self.label_5 = QtGui.QLabel(self.layoutWidget1)
         self.label_5.setObjectName("label_5")
         self.vboxlayout5.addWidget(self.label_5)
 
-        self.destAnnotEdit = QtGui.QTextEdit(self.widget)
+        self.destAnnotEdit = QtGui.QTextEdit(self.layoutWidget1)
         self.destAnnotEdit.setObjectName("destAnnotEdit")
         self.vboxlayout5.addWidget(self.destAnnotEdit)
         self.gridlayout.addLayout(self.vboxlayout5,1,1,1,1)
@@ -97,6 +98,7 @@ class Ui_MsgForm(object):
     def retranslateUi(self, MsgForm):
         MsgForm.setWindowTitle(QtGui.QApplication.translate("MsgForm", "Form", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("MsgForm", "Messages:", None, QtGui.QApplication.UnicodeUTF8))
+        self.treeWidget.headerItem().setText(0,QtGui.QApplication.translate("MsgForm", "1", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("MsgForm", "Source string:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("MsgForm", "Source annotation:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("MsgForm", "Translation:", None, QtGui.QApplication.UnicodeUTF8))
