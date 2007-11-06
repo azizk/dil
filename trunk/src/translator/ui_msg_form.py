@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'msg_form.ui'
 #
-# Created: Thu Nov  1 10:10:41 2007
+# Created: Tue Nov  6 12:15:01 2007
 #      by: PyQt4 UI code generator 4.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -74,9 +74,9 @@ class Ui_MsgForm(object):
         self.label_4.setObjectName("label_4")
         self.vboxlayout4.addWidget(self.label_4)
 
-        self.destEdit = QtGui.QTextEdit(self.layoutWidget1)
-        self.destEdit.setObjectName("destEdit")
-        self.vboxlayout4.addWidget(self.destEdit)
+        self.translEdit = QtGui.QTextEdit(self.layoutWidget1)
+        self.translEdit.setObjectName("translEdit")
+        self.vboxlayout4.addWidget(self.translEdit)
         self.gridlayout.addLayout(self.vboxlayout4,1,0,1,1)
 
         self.vboxlayout5 = QtGui.QVBoxLayout()
@@ -86,9 +86,9 @@ class Ui_MsgForm(object):
         self.label_5.setObjectName("label_5")
         self.vboxlayout5.addWidget(self.label_5)
 
-        self.destAnnotEdit = QtGui.QTextEdit(self.layoutWidget1)
-        self.destAnnotEdit.setObjectName("destAnnotEdit")
-        self.vboxlayout5.addWidget(self.destAnnotEdit)
+        self.translAnnotEdit = QtGui.QTextEdit(self.layoutWidget1)
+        self.translAnnotEdit.setObjectName("translAnnotEdit")
+        self.vboxlayout5.addWidget(self.translAnnotEdit)
         self.gridlayout.addLayout(self.vboxlayout5,1,1,1,1)
         self.vboxlayout.addWidget(self.splitter)
 

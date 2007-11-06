@@ -185,9 +185,33 @@ class MsgForm(QtGui.QWidget, Ui_MsgForm):
     QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("currentItemChanged (QTreeWidgetItem *,QTreeWidgetItem *)"), self.treeItemChanged)
 
   def treeItemChanged(self, current, previous):
-    msg = self.langFile.getMsg(int(current.text(0)))
-    self.destEdit.setText(msg["Text"])
-    self.destAnnotEdit.setText(msg["Annot"])
+    if current == None:
+      return
+    ID = int(current.text(0))
+    self.setTranslMsg(self.langFile.getMsg(ID))
+    self.setSourceMsg(self.langFile.source.getMsg(ID))
+
+  def setTranslMsg(self, msg):
+    self.translEdit.setText(msg["Text"])
+    self.translAnnotEdit.setText(msg["Annot"])
+
+  def setSourceMsg(self, msg):
+    self.sourceEdit.setText(msg["Text"])
+    self.sourceAnnotEdit.setText(msg["Annot"])
+
+class MsgFormSource(MsgForm):
+  def __init__(self, langFile):
+    MsgForm.__init__(self, langFile)
+
+    for x in [self.translEdit,
+              self.translAnnotEdit,
+              self.label_4,
+              self.label_5]:
+      x.close()
+
+  def treeItemChanged(self, current, previous):
+    ID = int(current.text(0))
+    self.setSourceMsg(self.langFile.getMsg(ID))
 
 class MsgIDItem(QtGui.QTreeWidgetItem):
   def __init__(self, parent, text):
@@ -197,7 +221,10 @@ class LangFileItem(QtGui.QTreeWidgetItem):
   def __init__(self, parent, langFile):
     QtGui.QTreeWidgetItem.__init__(self, parent, [langFile.langCode])
     self.langFile = langFile
-    self.msgForm = MsgForm(langFile)
+    if langFile.isSource:
+      self.msgForm = MsgFormSource(langFile)
+    else:
+      self.msgForm = MsgForm(langFile)
 
 class ProjectItem(QtGui.QTreeWidgetItem):
   def __init__(self, text):
@@ -225,6 +252,26 @@ class ProjectTree(QtGui.QTreeWidget):
 
     for x in [self.topItem, self.msgIDsItem]:
       x.setExpanded(True)
+
+  def contextMenuEvent(self, event):
+    item = self.itemAt(event.pos())
+    func_map = {
+      None : lambda item: None,
+      QtGui.QTreeWidgetItem : lambda item: None,
+      ProjectItem : self.showMenuProjectItem,
+      LangFileItem : self.showMenuLangFileItem,
+      MsgIDItem : self.showMenuMsgIDItem
+    }
+    func_map[type(item)](item)
+
+  def showMenuProjectItem(self, item):
+    print "ProjectItem"
+
+  def showMenuLangFileItem(self, item):
+    print "LangFileItem"
+
+  def showMenuMsgIDItem(self, item):
+    print "MsgIDItem"
 
   def clear(self):
     self.topItem = None

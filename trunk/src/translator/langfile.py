@@ -15,6 +15,8 @@ def newLangFile(langCode, authors, license):
 class LangFile:
   def __init__(self, filePath):
     self.filePath = filePath
+    self.isSource = False
+    self.source = None
     # Load language file and check data integrity.
     doc = yaml.load(open(filePath, "r"))
     self.doc = doc
@@ -54,6 +56,9 @@ class LangFile:
   def checkType(self, var, type_, msg=""):
     if not isinstance(var, type_):
       raise LoadingError(msg)
+
+  def setSource(self, sourceLangFile):
+    self.source = sourceLangFile
 
   def getMsg(self, ID):
     for msg in self.messages:

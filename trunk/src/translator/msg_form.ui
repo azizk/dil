@@ -81,7 +81,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QTextEdit" name="destEdit" />
+          <widget class="QTextEdit" name="translEdit" />
          </item>
         </layout>
        </item>
@@ -95,7 +95,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QTextEdit" name="destAnnotEdit" />
+          <widget class="QTextEdit" name="translAnnotEdit" />
          </item>
         </layout>
        </item>

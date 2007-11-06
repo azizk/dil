@@ -1,6 +1,6 @@
 BuildScript: build.py
 CreationDate: '2007-10-12 09:41:17.868084'
-LangFiles: [en.cat, de.cat, tr.cat, fi.cat]
+LangFiles: [de.cat, tr.cat, fi.cat]
 MsgIDs:
 - {ID: 0, Name: IllegalCharacter, Order: 0}
 - {ID: 1, Name: InvalidUnicodeCharacter, Order: 1}
@@ -51,4 +51,4 @@ MsgIDs:
 - {ID: 46, Name: HelpGenerate, Order: 46}
 - {ID: 47, Name: HelpImportGraph, Order: 47}
 Name: dil
-SourceLangFile: ''
+SourceLangFile: en.cat
