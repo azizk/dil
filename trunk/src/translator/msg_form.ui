@@ -15,6 +15,9 @@
   <layout class="QVBoxLayout" >
    <item>
     <widget class="QSplitter" name="splitter" >
+     <property name="frameShape" >
+      <enum>QFrame::StyledPanel</enum>
+     </property>
      <property name="orientation" >
       <enum>Qt::Vertical</enum>
      </property>
@@ -28,11 +31,17 @@
         </widget>
        </item>
        <item>
-        <widget class="QListWidget" name="listWidget" />
+        <widget class="QTreeWidget" name="treeWidget" >
+         <column>
+          <property name="text" >
+           <string>1</string>
+          </property>
+         </column>
+        </widget>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="" >
+     <widget class="QWidget" name="layoutWidget" >
       <layout class="QGridLayout" >
        <item row="0" column="0" >
         <layout class="QVBoxLayout" >
@@ -72,7 +81,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QTextEdit" name="destEdit" />
+          <widget class="QTextEdit" name="translEdit" />
          </item>
         </layout>
        </item>
@@ -86,7 +95,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QTextEdit" name="destAnnotEdit" />
+          <widget class="QTextEdit" name="translAnnotEdit" />
          </item>
         </layout>
        </item>

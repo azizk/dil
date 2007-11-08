@@ -15,6 +15,8 @@ def newLangFile(langCode, authors, license):
 class LangFile:
   def __init__(self, filePath):
     self.filePath = filePath
+    self.isSource = False
+    self.source = None
     # Load language file and check data integrity.
     doc = yaml.load(open(filePath, "r"))
     self.doc = doc
@@ -39,7 +41,7 @@ class LangFile:
         authors += [unicode(author[0]), unicode(author[1])]
     self.authors = authors
 
-    messages = []
+    self.msgDict = {} # {ID : msg, ...}
     for msg in self.messages:
       self.checkType(msg, dict, "LangFile: messages must be of type dict.")
       try:
@@ -49,12 +51,30 @@ class LangFile:
         msg["LastEd"] = unicode(msg["LastEd"])
       except KeyError, e:
         raise LoadingError("LangFile: a message is missing the '%s' key." % str(e))
-      messages += [msg]
-    self.messages = messages
+      self.msgDict[msg["ID"]] = msg
 
   def checkType(self, var, type_, msg=""):
     if not isinstance(var, type_):
       raise LoadingError(msg)
+
+  def setSource(self, sourceLangFile):
+    self.source = sourceLangFile
+
+  def getMsg(self, ID):
+    for msg in self.messages:
+      if msg["ID"] == ID:
+        return msg
+    return None
+
+  def createMissingMessages(self, IDs):
+    for ID in IDs:
+      if not self.msgDict.has_key(ID):
+        msg = self.createEmptyMsg(ID)
+        self.msgDict[ID] = msg
+        self.messages += [msg]
+
+  def createEmptyMsg(self, ID):
+    return {"ID":ID,"Text":"","Annot":"","LastEd":""}
 
   def save(self):
     pass
