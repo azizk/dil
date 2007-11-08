@@ -22,6 +22,14 @@ g_catExt = ".cat"
 g_settingsFile = os.path.join(g_scriptDir, "settings.yaml")
 g_settings = {}
 
+def QStackedWidgetClear(self):
+  widgets = [self.widget(i) for i in range(0, self.count())]
+  while self.currentWidget():
+    self.removeWidget(self.currentWidget())
+  [widget.close() for widget in widgets]
+
+QtGui.QStackedWidget.clear = QStackedWidgetClear
+
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
   def __init__(self):
     QtGui.QMainWindow.__init__(self)
@@ -108,6 +116,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     self.project = None
     self.disableMenuItems()
     self.projectTree.clear()
+    self.pages.clear()
     return True
 
   def enableMenuItems(self):
@@ -127,6 +136,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
       if index == -1:
         index = self.pages.addWidget(current.msgForm)
       self.pages.setCurrentIndex(index)
+      current.msgForm.updateData()
 
   def closeEvent(self, event):
     if self.closeProject() == False:
@@ -170,24 +180,47 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     }
     yaml.dump(g_settings, open(g_settingsFile, "w")) #default_flow_style=False
 
+class MessageItem(QtGui.QTreeWidgetItem):
+  def __init__(self, msg):
+    QtGui.QTreeWidgetItem.__init__(self, [str(msg["ID"]), msg["Text"]])
+    self.msg = msg
+
+  def getID(self):
+    return self.msg["ID"]
+
+  def setMsgText(self, text):
+    self.msg["Text"] = text
+
+  def setMsgAnnot(self, text):
+    self.msg["Annot"] = text
+
 class MsgForm(QtGui.QWidget, Ui_MsgForm):
   def __init__(self, langFile):
     QtGui.QWidget.__init__(self)
     self.setupUi(self)
 
     self.langFile = langFile
+    self.currentItem = None
+    self.colID = 0
+    self.colText = 1
     self.treeWidget.setColumnCount(2)
     self.treeWidget.setHeaderLabels(["ID", "Text"])
     for msg in self.langFile.messages:
-      item = QtGui.QTreeWidgetItem([str(msg["ID"]), msg["Text"]])
-      self.treeWidget.addTopLevelItem(item)
+      self.treeWidget.addTopLevelItem(MessageItem(msg))
 
     QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("currentItemChanged (QTreeWidgetItem *,QTreeWidgetItem *)"), self.treeItemChanged)
+    QtCore.QObject.connect(self.translEdit, QtCore.SIGNAL("textChanged()"), self.translEditTextChanged)
+    QtCore.QObject.connect(self.translAnnotEdit, QtCore.SIGNAL("textChanged()"), self.translAnnotEditTextChanged)
+
+    #self.translEdit.focusOutEvent = self.translEditFocusOut
 
   def treeItemChanged(self, current, previous):
+    self.currentItem = current
     if current == None:
+      self.setTranslMsg("")
+      self.setSourceMsg("")
       return
-    ID = int(current.text(0))
+    ID = current.getID()
     self.setTranslMsg(self.langFile.getMsg(ID))
     self.setSourceMsg(self.langFile.source.getMsg(ID))
 
@@ -199,6 +232,37 @@ class MsgForm(QtGui.QWidget, Ui_MsgForm):
     self.sourceEdit.setText(msg["Text"])
     self.sourceAnnotEdit.setText(msg["Annot"])
 
+  #def translEditFocusOut(self, event):
+    #if self.currentItem:
+      #print self.currentItem.text(self.colText)
+      #if self.translEdit.document().isModified():
+        #self.translEdit.document().setModified(False)
+        #print "translEdit was modified"
+    #QtGui.QTextEdit.focusOutEvent(self.translEdit, event)
+
+  def translEditTextChanged(self):
+    if self.currentItem:
+      text = self.translEdit.toPlainText()
+      self.currentItem.setText(self.colText, text)
+      self.currentItem.setMsgText(text)
+
+  def translAnnotEditTextChanged(self):
+    if self.currentItem:
+      text = self.translAnnotEdit.toPlainText()
+      self.currentItem.setMsgAnnot(text)
+
+  def updateData(self):
+    if self.currentItem == None:
+      return
+    ID = self.currentItem.getID()
+    msg = self.langFile.source.getMsg(ID)
+    text = self.sourceEdit.toPlainText()
+    if text != msg["Text"]:
+      self.sourceEdit.setText(msg["Text"])
+    text = self.sourceAnnotEdit.toPlainText()
+    if text != msg["Annot"]:
+      self.sourceAnnotEdit.setText(msg["Annot"])
+
 class MsgFormSource(MsgForm):
   def __init__(self, langFile):
     MsgForm.__init__(self, langFile)
@@ -209,9 +273,29 @@ class MsgFormSource(MsgForm):
               self.label_5]:
       x.close()
 
+    QtCore.QObject.connect(self.sourceEdit, QtCore.SIGNAL("textChanged()"), self.sourceEditTextChanged)
+    QtCore.QObject.connect(self.sourceAnnotEdit, QtCore.SIGNAL("textChanged()"), self.sourceAnnotEditTextChanged)
+
   def treeItemChanged(self, current, previous):
-    ID = int(current.text(0))
+    self.currentItem = current
+    if current == None:
+      self.setSourceMsg("")
+      return
+    ID = current.getID()
     self.setSourceMsg(self.langFile.getMsg(ID))
+
+  def sourceEditTextChanged(self):
+    if self.currentItem:
+      text = self.sourceEdit.toPlainText()
+      self.currentItem.setText(self.colText, text)
+      self.currentItem.setMsgText(text)
+
+  def sourceAnnotEditTextChanged(self):
+    if self.currentItem:
+      text = self.sourceAnnotEdit.toPlainText()
+      #self.currentItem.setText(self.colAnnot, text)
+      self.currentItem.setMsgAnnot(text)
+
 
 class MsgIDItem(QtGui.QTreeWidgetItem):
   def __init__(self, parent, text):
