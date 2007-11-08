@@ -8,7 +8,6 @@ public import docgen.sourcelisting.writer;
 import docgen.sourcelisting.latexwriter;
 import docgen.sourcelisting.htmlwriter;
 import docgen.sourcelisting.xmlwriter;
-import docgen.sourcelisting.plaintextwriter;
 
 class DefaultListingWriterFactory : AbstractWriterFactory, ListingWriterFactory {
   this(DocGenerator generator) {
@@ -23,8 +22,6 @@ class DefaultListingWriterFactory : AbstractWriterFactory, ListingWriterFactory 
         return new XMLWriter(this, writer);
       case DocFormat.HTML:
         return new HTMLWriter(this, writer);
-      case DocFormat.PlainText:
-        return new PlainTextWriter(this, writer);
       default:
         throw new Exception("Listing writer type does not exist!");
     }

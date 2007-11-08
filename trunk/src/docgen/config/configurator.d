@@ -5,7 +5,7 @@
 module docgen.config.configurator;
 
 import docgen.config.reader;
-import docgen.misc.misc;
+import docgen.misc.options;
 
 import Integer = tango.text.convert.Integer;
 import tango.io.stream.FileStream;

@@ -4,11 +4,13 @@
  */
 module docgen.document.generator;
 
-import docgen.sourcelisting.writers;
-import docgen.page.writers;
-import docgen.graphutils.writers;
 import docgen.misc.misc;
 import docgen.misc.parser;
+public import docgen.misc.options;
+import docgen.page.writers;
+import docgen.moduledoc.writers;
+import docgen.graphutils.writers;
+import docgen.sourcelisting.writers;
 import docgen.config.configurator;
 import tango.io.stream.FileStream;
 import tango.io.FilePath;
@@ -31,7 +33,8 @@ abstract class DefaultDocGenerator : DocGenerator {
 
   GraphWriterFactory graphFactory;
   PageWriterFactory pageFactory;
-  DefaultListingWriterFactory listingFactory;
+  ListingWriterFactory listingFactory;
+  ModuleDocWriterFactory moduleDocFactory;
   
   Module[] modules;
   Edge[] edges;
@@ -46,6 +49,7 @@ abstract class DefaultDocGenerator : DocGenerator {
     createGraphWriterFactory();
     createPageWriterFactory();
     createListingWriterFactory();
+    createModuleDocWriterFactory();
 
     // create output dir
     (new FilePath(options.outputDir ~ "/" ~ genDir)).create();
@@ -70,6 +74,10 @@ abstract class DefaultDocGenerator : DocGenerator {
 
   void createListingWriterFactory() {
     listingFactory = new DefaultListingWriterFactory(this);
+  }
+
+  void createModuleDocWriterFactory() {
+    moduleDocFactory = new DefaultModuleDocWriterFactory(this);
   }
 
   char[] outPath(char[] file) {

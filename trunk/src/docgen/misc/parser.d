@@ -142,7 +142,6 @@ class Parser {
 
         auto imports = mod.imports;
 
-        // TODO: add public/private attribute to the dg parameters 
         foreach (importList; imports)
           foreach(moduleFQN_; importList.getModuleFQNs(dirSep)) {
             auto loaded_mod = loadModule(moduleFQN_, depth == -1 ? depth : depth-1);

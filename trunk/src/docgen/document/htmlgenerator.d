@@ -90,6 +90,9 @@ class HTMLDocGenerator : DefaultCachingDocGenerator {
       docWriter.generateModuleSection(modules);
       docWriter.generateCustomPage("pagetemplate2", docgen_version);
     });
+    
+//    auto mdw = moduleDocFactory.createModuleDocWriter(docWriter, docFormat);
+
   }
 
   /**
@@ -101,11 +104,15 @@ class HTMLDocGenerator : DefaultCachingDocGenerator {
 
       char[][] contents;
 
+      contents ~= "(";
+
       foreach(mod; modules) {
         auto FQN = mod.moduleFQN;
         auto dstFname = replace(mod.moduleFQN.dup, '.', '_') ~ ".html";
         contents ~= `<a href="` ~ dstFname ~ `">` ~ FQN ~ "</a>";
       }
+
+      contents ~= ")";
 
       docWriter.addList(contents, false);
 

@@ -5,6 +5,7 @@
 module docgen.page.writer;
 
 public import docgen.misc.misc;
+public import docgen.misc.options;
 import tango.io.model.IConduit : OutputStream;
 import tango.util.time.Date;
 import tango.util.time.Clock;
@@ -215,7 +216,7 @@ template AbstractPageWriter(char[] format, int n = 0) {
         date.asDay(),
         date.asMonth(),
         date.day,
-        date.year);
+        date.year).dup;
     }
   }
 }

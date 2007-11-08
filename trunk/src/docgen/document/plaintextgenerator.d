@@ -91,14 +91,14 @@ class PlainTextDocGenerator : DefaultCachingDocGenerator {
 
       foreach(mod; modules) {
         auto FQN = mod.moduleFQN;
-        contents ~= FQN ~ " (see " ~ FQN ~ ".d)";
+        contents ~= FQN ~ " (see " ~ replace(FQN.dup, '.', '_') ~ ".d)";
       }
 
       docWriter.addList(contents, false);
     });
 
     foreach(mod; modules)
-      (new FilePath(outPath(mod.moduleFQN ~ ".d"))).copy(mod.filePath);
+      (new FilePath(outPath(replace(mod.moduleFQN.dup, '.', '_') ~ ".d"))).copy(mod.filePath);
   }
 
   /**

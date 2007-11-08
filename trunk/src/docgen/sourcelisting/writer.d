@@ -4,7 +4,7 @@
  */
 module docgen.sourcelisting.writer;
 
-public import docgen.misc.misc;
+import docgen.misc.misc;
 public import docgen.page.writer;
 //import dil.Parser;
 import tango.io.model.IConduit : OutputStream, InputStream;

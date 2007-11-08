@@ -32,7 +32,7 @@ char[][] lex(char[] input) {
   foreach(size_t i, c; input) {
     if (sidx > i) continue;
     switch(c) { // states space, token, textEnd
-      case '"':
+      case '"': // starts a ""-string
         switch(state) {
           case 0:
             char[] buf;
@@ -61,11 +61,15 @@ char[][] lex(char[] input) {
           case 1: continue;
           case 2: err(i);
         }
-      case ' ':
+      case '#': // starts a comment
+        sidx = i;
+        while (input[++sidx] != '\n' && sidx<input.length) {}
+        continue;
+      case ' ': // whitespace
       case '\t':
       case '\n':
-      case '(':
-      case ')':
+      case '(': // begins a block
+      case ')': // ends a block
         switch(state) {
           case 1: end(i);
           case 0:

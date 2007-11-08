@@ -5,6 +5,7 @@
 module docgen.tests.common;
 
 import docgen.misc.misc;
+import docgen.misc.options;
 import docgen.config.configurator;
 
 class TestDocGenerator : DocGenerator {
