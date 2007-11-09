@@ -15,9 +15,6 @@
   <layout class="QVBoxLayout" >
    <item>
     <widget class="QSplitter" name="splitter" >
-     <property name="frameShape" >
-      <enum>QFrame::StyledPanel</enum>
-     </property>
      <property name="orientation" >
       <enum>Qt::Vertical</enum>
      </property>

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'msg_form.ui'
 #
-# Created: Tue Nov  6 12:15:01 2007
+# Created: Fri Nov  9 15:38:32 2007
 #      by: PyQt4 UI code generator 4.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -19,7 +19,6 @@ class Ui_MsgForm(object):
         self.vboxlayout.setObjectName("vboxlayout")
 
         self.splitter = QtGui.QSplitter(MsgForm)
-        self.splitter.setFrameShape(QtGui.QFrame.StyledPanel)
         self.splitter.setOrientation(QtCore.Qt.Vertical)
         self.splitter.setObjectName("splitter")
 

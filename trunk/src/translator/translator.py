@@ -22,13 +22,12 @@ g_catExt = ".cat"
 g_settingsFile = os.path.join(g_scriptDir, "settings.yaml")
 g_settings = {}
 
-def QStackedWidgetClear(self):
-  widgets = [self.widget(i) for i in range(0, self.count())]
-  while self.currentWidget():
-    self.removeWidget(self.currentWidget())
-  [widget.close() for widget in widgets]
-
-QtGui.QStackedWidget.clear = QStackedWidgetClear
+def QTabWidgetCloseAll(self):
+ for i in range(0, self.count()):
+   widget = self.widget(0)
+   self.removeTab(0)
+   widget.close()
+QtGui.QTabWidget.closeAll = QTabWidgetCloseAll
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
   def __init__(self):
@@ -37,11 +36,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     self.project = None
     # Modifications
-    self.pages = QtGui.QStackedWidget()
+    self.pages = QtGui.QTabWidget()
     self.setCentralWidget(self.pages)
     self.disableMenuItems()
     self.projectDock = QtGui.QDockWidget("Project", self)
-    self.projectTree = ProjectTree(self)
+    self.projectTree = ProjectTree(self.projectDock)
     self.projectDock.setWidget(self.projectTree)
     self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.projectDock)
     # Custom connections
@@ -52,7 +51,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     QtCore.QObject.connect(self.action_Properties, QtCore.SIGNAL("triggered()"), self.showProjectProperties)
     QtCore.QObject.connect(self.action_Add_Catalogue, QtCore.SIGNAL("triggered()"), self.addCatalogue)
     QtCore.QObject.connect(self.action_Add_New_Catalogue, QtCore.SIGNAL("triggered()"), self.addNewCatalogue)
-    QtCore.QObject.connect(self.projectTree, QtCore.SIGNAL("currentItemChanged (QTreeWidgetItem *,QTreeWidgetItem *)"), self.projectTreeItemChanged)
+    QtCore.QObject.connect(self.projectTree, QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"), self.projectTreeItemDblClicked)
+    QtCore.QObject.connect(self.projectTree, QtCore.SIGNAL("onKeyEnter"), self.projectTreeItemActivated)
+    QtCore.QObject.connect(self.projectTree, QtCore.SIGNAL("onKeyDelete"), self.projectTreeItemDeleted)
 
     self.readSettings()
 
@@ -116,7 +117,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     self.project = None
     self.disableMenuItems()
     self.projectTree.clear()
-    self.pages.clear()
+    self.pages.closeAll()
     return True
 
   def enableMenuItems(self):
@@ -127,16 +128,22 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     self.action_Close_Project.setEnabled(False)
     self.menubar.removeAction(self.menu_Project.menuAction())
 
-  def projectTreeItemChanged(self, current, previous):
-    if current == None:
+  def projectTreeItemDblClicked(self, item, int):
+    self.projectTreeItemActivated(item)
+
+  def projectTreeItemActivated(self, item):
+    if item == None:
       return
 
-    if isinstance(current, LangFileItem):
-      index = self.pages.indexOf(current.msgForm)
+    if isinstance(item, LangFileItem):
+      index = self.pages.indexOf(item.msgForm)
       if index == -1:
-        index = self.pages.addWidget(current.msgForm)
+        index = self.pages.addTab(item.msgForm, item.text(0))
       self.pages.setCurrentIndex(index)
-      current.msgForm.updateData()
+      item.msgForm.updateData()
+
+  def projectTreeItemDeleted(self, item):
+    pass
 
   def closeEvent(self, event):
     if self.closeProject() == False:
@@ -198,6 +205,7 @@ class MsgForm(QtGui.QWidget, Ui_MsgForm):
   def __init__(self, langFile):
     QtGui.QWidget.__init__(self)
     self.setupUi(self)
+    self.vboxlayout.setMargin(0)
 
     self.langFile = langFile
     self.currentItem = None
@@ -320,6 +328,14 @@ class ProjectTree(QtGui.QTreeWidget):
     self.topItem = None
     self.msgIDsItem = None
     self.headerItem().setHidden(True)
+
+  def keyReleaseEvent(self, event):
+    Qt = QtCore.Qt
+    key = event.key()
+    if key in [Qt.Key_Enter, Qt.Key_Return]:
+      self.emit(QtCore.SIGNAL("onKeyEnter"), self.currentItem())
+    elif key == Qt.Key_Delete:
+      self.emit(QtCore.SIGNAL("onKeyDelete"), self.currentItem())
 
   def setProject(self, project):
     self.project = project
