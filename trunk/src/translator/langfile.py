@@ -14,12 +14,19 @@ def newLangFile(langCode, authors, license):
 
 class LangFile:
   def __init__(self, filePath):
-    self.filePath = filePath
+    from os import path
+    self.filePath = path.abspath(filePath)
     self.isSource = False
     self.source = None
     # Load language file and check data integrity.
-    doc = yaml.load(open(filePath, "r"))
-    self.doc = doc
+    try:
+      self.doc = yaml.load(open(filePath, "r"))
+    except yaml.YAMLError, e:
+      raise LoadingError(str(e))
+    self.verify()
+
+  def verify(self):
+    doc = self.doc
     self.checkType(doc, dict)
     try:
       self.langCode = str(doc["LangCode"])
@@ -77,4 +84,14 @@ class LangFile:
     return {"ID":ID,"Text":"","Annot":"","LastEd":""}
 
   def save(self):
-    pass
+    #langFile = open(self.filePath, "w")
+    print "Saved", self.filePath
+    #print yaml.dump(self.doc, allow_unicode=True)
+    #langFile.close()
+
+  def getFileName(self):
+    from os import path
+    return path.basename(self.filePath)
+
+  def getFilePath(self):
+    return self.filePath

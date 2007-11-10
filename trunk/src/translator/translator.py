@@ -22,6 +22,12 @@ g_catExt = ".cat"
 g_settingsFile = os.path.join(g_scriptDir, "settings.yaml")
 g_settings = {}
 
+Qt = QtCore.Qt
+Qt.connect = QtCore.QObject.connect
+Qt.disconnect = QtCore.QObject.disconnect
+Qt.SIGNAL = QtCore.SIGNAL
+Qt.SLOT = QtCore.SLOT
+
 def QTabWidgetCloseAll(self):
  for i in range(0, self.count()):
    widget = self.widget(0)
@@ -44,16 +50,20 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     self.projectDock.setWidget(self.projectTree)
     self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.projectDock)
     # Custom connections
-    QtCore.QObject.connect(self.action_About, QtCore.SIGNAL("triggered()"), self.showAboutDialog)
-    QtCore.QObject.connect(self.action_New_Project, QtCore.SIGNAL("triggered()"), self.createNewProject)
-    QtCore.QObject.connect(self.action_Open_Project, QtCore.SIGNAL("triggered()"), self.openProjectAction)
-    QtCore.QObject.connect(self.action_Close_Project, QtCore.SIGNAL("triggered()"), self.closeProject)
-    QtCore.QObject.connect(self.action_Properties, QtCore.SIGNAL("triggered()"), self.showProjectProperties)
-    QtCore.QObject.connect(self.action_Add_Catalogue, QtCore.SIGNAL("triggered()"), self.addCatalogue)
-    QtCore.QObject.connect(self.action_Add_New_Catalogue, QtCore.SIGNAL("triggered()"), self.addNewCatalogue)
-    QtCore.QObject.connect(self.projectTree, QtCore.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"), self.projectTreeItemDblClicked)
-    QtCore.QObject.connect(self.projectTree, QtCore.SIGNAL("onKeyEnter"), self.projectTreeItemActivated)
-    QtCore.QObject.connect(self.projectTree, QtCore.SIGNAL("onKeyDelete"), self.projectTreeItemDeleted)
+    Qt.connect(self.action_About, Qt.SIGNAL("triggered()"), self.showAboutDialog)
+    Qt.connect(self.action_New_Project, Qt.SIGNAL("triggered()"), self.createNewProject)
+    Qt.connect(self.action_Open_Project, Qt.SIGNAL("triggered()"), self.openProjectAction)
+    Qt.connect(self.action_Close_Project, Qt.SIGNAL("triggered()"), self.closeProject)
+    Qt.connect(self.action_Save, Qt.SIGNAL("triggered()"), self.saveForm)
+    Qt.connect(self.action_Save_All, Qt.SIGNAL("triggered()"), self.saveAllForms)
+    Qt.connect(self.action_Close, Qt.SIGNAL("triggered()"), self.closeForm)
+    Qt.connect(self.action_Close_All, Qt.SIGNAL("triggered()"), self.closeAllForms)
+    Qt.connect(self.action_Properties, Qt.SIGNAL("triggered()"), self.showProjectProperties)
+    Qt.connect(self.action_Add_Catalogue, Qt.SIGNAL("triggered()"), self.addCatalogue)
+    Qt.connect(self.action_Add_New_Catalogue, QtCore.SIGNAL("triggered()"), self.addNewCatalogue)
+    Qt.connect(self.projectTree, Qt.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"), self.projectTreeItemDblClicked)
+    Qt.connect(self.projectTree, Qt.SIGNAL("onKeyEnter"), self.projectTreeItemActivated)
+    Qt.connect(self.projectTree, Qt.SIGNAL("onKeyDelete"), self.projectTreeItemDeleted)
 
     self.readSettings()
 
@@ -108,9 +118,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
   def closeProject(self):
     if self.project == None:
       return True
-
-    button = QtGui.QMessageBox.question(self, "Closing", "Close the current project?", QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel, QtGui.QMessageBox.Cancel)
-    if button == QtGui.QMessageBox.Cancel:
+    MB = QtGui.QMessageBox
+    button = MB.question(self, "Closing", "Close the current project?", MB.Ok | MB.Cancel, MB.Cancel)
+    if button == MB.Cancel:
       return False
 
     del self.project
@@ -121,11 +131,21 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     return True
 
   def enableMenuItems(self):
-    self.action_Close_Project.setEnabled(True)
+    #self.action_Close_Project.setEnabled(True)
+    for action in [ self.action_Save,
+                    self.action_Save_All,
+                    self.action_Close,
+                    self.action_Close_All ]:
+      action.setEnabled(True)
     self.menubar.insertMenu(self.menu_Help.menuAction(), self.menu_Project)
 
   def disableMenuItems(self):
-    self.action_Close_Project.setEnabled(False)
+    #self.action_Close_Project.setEnabled(False)
+    for action in [ self.action_Save,
+                    self.action_Save_All,
+                    self.action_Close,
+                    self.action_Close_All ]:
+      action.setEnabled(False)
     self.menubar.removeAction(self.menu_Project.menuAction())
 
   def projectTreeItemDblClicked(self, item, int):
@@ -136,21 +156,66 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
       return
 
     if isinstance(item, LangFileItem):
-      index = self.pages.indexOf(item.msgForm)
+      msgForm = None
+      if not item.isDocOpen():
+        msgForm = item.openDoc()
+        msgForm.setModifiedCallback(self.formModified)
+      index = self.pages.indexOf(msgForm)
       if index == -1:
-        index = self.pages.addTab(item.msgForm, item.text(0))
+        index = self.pages.addTab(msgForm, msgForm.getDocumentTitle())
       self.pages.setCurrentIndex(index)
-      item.msgForm.updateData()
+      msgForm.updateData()
 
   def projectTreeItemDeleted(self, item):
     pass
+
+  def formModified(self, form):
+    # Append an asterisk to the tab label
+    index = self.pages.indexOf(form)
+    text = form.getDocumentTitle() + "*"
+    self.pages.setTabText(index, text)
+
+  def saveForm(self):
+    self.saveDocument(self.pages.currentWidget())
+
+  def saveAllForms(self):
+    for i in range(0, self.pages.count()):
+      self.saveDocument(self.pages.widget(i))
+
+  def saveDocument(self, form):
+    if form.isModified:
+      index = self.pages.indexOf(form)
+      text = form.getDocumentTitle()
+      self.pages.setTabText(index, text)
+      form.save()
+
+  def closeForm(self):
+    if self.pages.currentWidget():
+      self.closeDocument(self.pages.currentWidget())
+
+  def closeAllForms(self):
+    for i in range(0, self.pages.count()):
+      self.closeDocument(self.pages.widget(i))
+
+  def closeDocument(self, form):
+    if form.isModified:
+      MB = QtGui.QMessageBox
+      button = MB.question(self, "Closing Document", "The document '%s' has been modified.\nDo you want to save the changes?" % form.getDocumentFullPath(), MB.Save | MB.Discard | MB.Cancel, MB.Cancel)
+      if button == MB.Cancel:
+        return False
+      if button == MB.Save:
+        self.saveDocument(form)
+    index = self.pages.indexOf(form)
+    self.pages.removeTab(index)
+    form.close()
+    return True
 
   def closeEvent(self, event):
     if self.closeProject() == False:
       event.ignore()
       return
-    # Exitting
     self.writeSettings()
+    # Closing application
 
   def moveToCenterOfDesktop(self):
     rect = QtGui.QApplication.desktop().geometry()
@@ -187,6 +252,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     }
     yaml.dump(g_settings, open(g_settingsFile, "w")) #default_flow_style=False
 
+
 class MessageItem(QtGui.QTreeWidgetItem):
   def __init__(self, msg):
     QtGui.QTreeWidgetItem.__init__(self, [str(msg["ID"]), msg["Text"]])
@@ -201,9 +267,41 @@ class MessageItem(QtGui.QTreeWidgetItem):
   def setMsgAnnot(self, text):
     self.msg["Annot"] = text
 
-class MsgForm(QtGui.QWidget, Ui_MsgForm):
-  def __init__(self, langFile):
+
+class Document(QtGui.QWidget):
+  def __init__(self):
     QtGui.QWidget.__init__(self)
+    self.isModified = False
+    self.modifiedCallback = None
+    self.documentTitle = ""
+    self.documentFullPath = ""
+
+  def modified(self):
+    if not self.isModified:
+      self.isModified = True
+      self.modifiedCallback(self)
+
+  def setModifiedCallback(self, func):
+    self.modifiedCallback = func
+
+  def save(self):
+    self.isModified = False
+
+  def close(self):
+    self.emit(Qt.SIGNAL("closed()"))
+    QtGui.QWidget.close(self)
+
+  def getDocumentTitle(self):
+    return self.documentTitle
+
+  def getDocumentFullPath(self):
+    return self.documentFullPath
+
+class MsgForm(Document, Ui_MsgForm):
+  def __init__(self, langFile):
+    Document.__init__(self)
+    self.documentTitle = langFile.getFileName()
+    self.documentFullPath = langFile.getFilePath()
     self.setupUi(self)
     self.vboxlayout.setMargin(0)
 
@@ -216,21 +314,24 @@ class MsgForm(QtGui.QWidget, Ui_MsgForm):
     for msg in self.langFile.messages:
       self.treeWidget.addTopLevelItem(MessageItem(msg))
 
-    QtCore.QObject.connect(self.treeWidget, QtCore.SIGNAL("currentItemChanged (QTreeWidgetItem *,QTreeWidgetItem *)"), self.treeItemChanged)
-    QtCore.QObject.connect(self.translEdit, QtCore.SIGNAL("textChanged()"), self.translEditTextChanged)
-    QtCore.QObject.connect(self.translAnnotEdit, QtCore.SIGNAL("textChanged()"), self.translAnnotEditTextChanged)
+    Qt.connect(self.treeWidget, Qt.SIGNAL("currentItemChanged (QTreeWidgetItem *,QTreeWidgetItem *)"), self.treeItemChanged)
+    Qt.connect(self.translEdit, Qt.SIGNAL("textChanged()"), self.translEditTextChanged)
+    Qt.connect(self.translAnnotEdit, Qt.SIGNAL("textChanged()"), self.translAnnotEditTextChanged)
 
     #self.translEdit.focusOutEvent = self.translEditFocusOut
 
   def treeItemChanged(self, current, previous):
-    self.currentItem = current
     if current == None:
       self.setTranslMsg("")
       self.setSourceMsg("")
       return
     ID = current.getID()
+    # Set the text controls.
+    # The slots receiving text changed signals do nothing if self.currentItem is None.
+    self.currentItem = None
     self.setTranslMsg(self.langFile.getMsg(ID))
     self.setSourceMsg(self.langFile.source.getMsg(ID))
+    self.currentItem = current
 
   def setTranslMsg(self, msg):
     self.translEdit.setText(msg["Text"])
@@ -250,14 +351,16 @@ class MsgForm(QtGui.QWidget, Ui_MsgForm):
 
   def translEditTextChanged(self):
     if self.currentItem:
-      text = self.translEdit.toPlainText()
+      text = unicode(self.translEdit.toPlainText())
       self.currentItem.setText(self.colText, text)
       self.currentItem.setMsgText(text)
+      self.modified()
 
   def translAnnotEditTextChanged(self):
     if self.currentItem:
-      text = self.translAnnotEdit.toPlainText()
+      text = unicode(self.translAnnotEdit.toPlainText())
       self.currentItem.setMsgAnnot(text)
+      self.modified()
 
   def updateData(self):
     if self.currentItem == None:
@@ -271,6 +374,11 @@ class MsgForm(QtGui.QWidget, Ui_MsgForm):
     if text != msg["Annot"]:
       self.sourceAnnotEdit.setText(msg["Annot"])
 
+  def save(self):
+    Document.save(self)
+    self.langFile.save()
+
+
 class MsgFormSource(MsgForm):
   def __init__(self, langFile):
     MsgForm.__init__(self, langFile)
@@ -281,28 +389,31 @@ class MsgFormSource(MsgForm):
               self.label_5]:
       x.close()
 
-    QtCore.QObject.connect(self.sourceEdit, QtCore.SIGNAL("textChanged()"), self.sourceEditTextChanged)
-    QtCore.QObject.connect(self.sourceAnnotEdit, QtCore.SIGNAL("textChanged()"), self.sourceAnnotEditTextChanged)
+    Qt.connect(self.sourceEdit, Qt.SIGNAL("textChanged()"), self.sourceEditTextChanged)
+    Qt.connect(self.sourceAnnotEdit, Qt.SIGNAL("textChanged()"), self.sourceAnnotEditTextChanged)
 
   def treeItemChanged(self, current, previous):
-    self.currentItem = current
     if current == None:
       self.setSourceMsg("")
       return
     ID = current.getID()
+    self.currentItem = None
     self.setSourceMsg(self.langFile.getMsg(ID))
+    self.currentItem = current
 
   def sourceEditTextChanged(self):
     if self.currentItem:
-      text = self.sourceEdit.toPlainText()
+      text = unicode(self.sourceEdit.toPlainText())
       self.currentItem.setText(self.colText, text)
       self.currentItem.setMsgText(text)
+      self.modified()
 
   def sourceAnnotEditTextChanged(self):
     if self.currentItem:
-      text = self.sourceAnnotEdit.toPlainText()
+      text = unicode(self.sourceAnnotEdit.toPlainText())
       #self.currentItem.setText(self.colAnnot, text)
       self.currentItem.setMsgAnnot(text)
+      self.modified()
 
 
 class MsgIDItem(QtGui.QTreeWidgetItem):
@@ -313,10 +424,23 @@ class LangFileItem(QtGui.QTreeWidgetItem):
   def __init__(self, parent, langFile):
     QtGui.QTreeWidgetItem.__init__(self, parent, [langFile.langCode])
     self.langFile = langFile
-    if langFile.isSource:
-      self.msgForm = MsgFormSource(langFile)
-    else:
-      self.msgForm = MsgForm(langFile)
+    self.msgForm = None
+
+  def isDocOpen(self):
+    return self.msgForm != None
+
+  def openDoc(self):
+    if self.msgForm == None:
+      if self.langFile.isSource:
+        self.msgForm = MsgFormSource(self.langFile)
+      else:
+        self.msgForm = MsgForm(self.langFile)
+      Qt.connect(self.msgForm, Qt.SIGNAL("closed()"), self.docClosed)
+    return self.msgForm
+
+  def docClosed(self):
+    print "docClosed()"
+    self.msgForm = None
 
 class ProjectItem(QtGui.QTreeWidgetItem):
   def __init__(self, text):
@@ -333,9 +457,9 @@ class ProjectTree(QtGui.QTreeWidget):
     Qt = QtCore.Qt
     key = event.key()
     if key in [Qt.Key_Enter, Qt.Key_Return]:
-      self.emit(QtCore.SIGNAL("onKeyEnter"), self.currentItem())
+      self.emit(Qt.SIGNAL("onKeyEnter"), self.currentItem())
     elif key == Qt.Key_Delete:
-      self.emit(QtCore.SIGNAL("onKeyDelete"), self.currentItem())
+      self.emit(Qt.SIGNAL("onKeyDelete"), self.currentItem())
 
   def setProject(self, project):
     self.project = project
@@ -383,7 +507,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProjectDialog):
     QtGui.QDialog.__init__(self)
     self.setupUi(self)
 
-    QtCore.QObject.connect(self.pickFileButton, QtCore.SIGNAL("clicked()"), self.pickFilePath)
+    Qt.connect(self.pickFileButton, Qt.SIGNAL("clicked()"), self.pickFilePath)
 
   def pickFilePath(self):
     filePath = QtGui.QFileDialog.getSaveFileName(self, "New Project File", g_CWD, "Translator Project (*%s)" % g_projectExt);

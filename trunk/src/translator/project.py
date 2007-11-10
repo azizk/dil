@@ -28,8 +28,14 @@ class Project:
   def __init__(self, projectPath):
     self.projectPath = projectPath
     # Load project file and check data integrity.
-    doc = yaml.load(open(projectPath, "r"))
-    self.doc = doc
+    try:
+      self.doc = yaml.load(open(projectPath, "r"))
+    except yaml.YAMLError, e:
+      raise LoadingError(str(e))
+    self.verify()
+
+  def verify(self):
+    doc = self.doc
     self.checkType(doc, dict)
     try:
       self.name = str(doc["Name"])

@@ -30,7 +30,12 @@
     </property>
     <addaction name="action_Open_Project" />
     <addaction name="action_New_Project" />
-    <addaction name="action_Close_Project" />
+    <addaction name="separator" />
+    <addaction name="action_Save" />
+    <addaction name="action_Save_All" />
+    <addaction name="separator" />
+    <addaction name="action_Close" />
+    <addaction name="action_Close_All" />
     <addaction name="separator" />
     <addaction name="action_Quit" />
    </widget>
@@ -49,6 +54,8 @@
     <addaction name="action_Build_Project" />
     <addaction name="separator" />
     <addaction name="action_Properties" />
+    <addaction name="separator" />
+    <addaction name="action_Close_Project" />
    </widget>
    <addaction name="menu_File" />
    <addaction name="menu_Project" />
@@ -99,9 +106,9 @@
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="action_Close_Project" >
+  <action name="action_Close" >
    <property name="text" >
-    <string>&amp;Close Project</string>
+    <string>&amp;Close</string>
    </property>
    <property name="shortcut" >
     <string>Ctrl+W</string>
@@ -110,6 +117,38 @@
   <action name="action_Add_New_Catalogue" >
    <property name="text" >
     <string>Add new catalogue...</string>
+   </property>
+  </action>
+  <action name="action_Close_Project" >
+   <property name="text" >
+    <string>&amp;Close Project</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+F4</string>
+   </property>
+  </action>
+  <action name="action_Save" >
+   <property name="text" >
+    <string>&amp;Save</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="action_Save_All" >
+   <property name="text" >
+    <string>Save &amp;All</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="action_Close_All" >
+   <property name="text" >
+    <string>Clos&amp;e All</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+Shift+W</string>
    </property>
   </action>
  </widget>

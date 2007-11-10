@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'translator.ui'
 #
-# Created: Sun Oct 21 17:33:29 2007
+# Created: Fri Nov  9 20:02:57 2007
 #      by: PyQt4 UI code generator 4.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -61,14 +61,31 @@ class Ui_MainWindow(object):
         self.action_Open_Project = QtGui.QAction(MainWindow)
         self.action_Open_Project.setObjectName("action_Open_Project")
 
-        self.action_Close_Project = QtGui.QAction(MainWindow)
-        self.action_Close_Project.setObjectName("action_Close_Project")
+        self.action_Close = QtGui.QAction(MainWindow)
+        self.action_Close.setObjectName("action_Close")
 
         self.action_Add_New_Catalogue = QtGui.QAction(MainWindow)
         self.action_Add_New_Catalogue.setObjectName("action_Add_New_Catalogue")
+
+        self.action_Close_Project = QtGui.QAction(MainWindow)
+        self.action_Close_Project.setObjectName("action_Close_Project")
+
+        self.action_Save = QtGui.QAction(MainWindow)
+        self.action_Save.setObjectName("action_Save")
+
+        self.action_Save_All = QtGui.QAction(MainWindow)
+        self.action_Save_All.setObjectName("action_Save_All")
+
+        self.action_Close_All = QtGui.QAction(MainWindow)
+        self.action_Close_All.setObjectName("action_Close_All")
         self.menu_File.addAction(self.action_Open_Project)
         self.menu_File.addAction(self.action_New_Project)
-        self.menu_File.addAction(self.action_Close_Project)
+        self.menu_File.addSeparator()
+        self.menu_File.addAction(self.action_Save)
+        self.menu_File.addAction(self.action_Save_All)
+        self.menu_File.addSeparator()
+        self.menu_File.addAction(self.action_Close)
+        self.menu_File.addAction(self.action_Close_All)
         self.menu_File.addSeparator()
         self.menu_File.addAction(self.action_Quit)
         self.menu_Help.addAction(self.action_About)
@@ -77,6 +94,8 @@ class Ui_MainWindow(object):
         self.menu_Project.addAction(self.action_Build_Project)
         self.menu_Project.addSeparator()
         self.menu_Project.addAction(self.action_Properties)
+        self.menu_Project.addSeparator()
+        self.menu_Project.addAction(self.action_Close_Project)
         self.menubar.addAction(self.menu_File.menuAction())
         self.menubar.addAction(self.menu_Project.menuAction())
         self.menubar.addAction(self.menu_Help.menuAction())
@@ -100,7 +119,15 @@ class Ui_MainWindow(object):
         self.action_Build_Project.setText(QtGui.QApplication.translate("MainWindow", "&Build Project", None, QtGui.QApplication.UnicodeUTF8))
         self.action_Open_Project.setText(QtGui.QApplication.translate("MainWindow", "&Open Project...", None, QtGui.QApplication.UnicodeUTF8))
         self.action_Open_Project.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+O", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_Close_Project.setText(QtGui.QApplication.translate("MainWindow", "&Close Project", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_Close_Project.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+W", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Close.setText(QtGui.QApplication.translate("MainWindow", "&Close", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Close.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+W", None, QtGui.QApplication.UnicodeUTF8))
         self.action_Add_New_Catalogue.setText(QtGui.QApplication.translate("MainWindow", "Add new catalogue...", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Close_Project.setText(QtGui.QApplication.translate("MainWindow", "&Close Project", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Close_Project.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+F4", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Save.setText(QtGui.QApplication.translate("MainWindow", "&Save", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Save.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+S", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Save_All.setText(QtGui.QApplication.translate("MainWindow", "Save &All", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Save_All.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+Shift+S", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Close_All.setText(QtGui.QApplication.translate("MainWindow", "Clos&e All", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Close_All.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+Shift+W", None, QtGui.QApplication.UnicodeUTF8))
 
