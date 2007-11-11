@@ -63,7 +63,7 @@ char[][] lex(char[] input) {
         }
       case '#': // starts a comment
         sidx = i;
-        while (input[++sidx] != '\n' && sidx<input.length) {}
+        while (++sidx<input.length && input[sidx] != '\n') {}
         continue;
       case ' ': // whitespace
       case '\t':
