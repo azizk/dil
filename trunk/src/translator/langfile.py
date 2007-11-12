@@ -4,6 +4,11 @@
 import yaml
 from errors import LoadingError
 
+# Avoid that all unicode strings are tagged with "!!python/unicode".
+def unicode_representer(dumper, data):
+  return dumper.represent_scalar(u'tag:yaml.org,2002:str', data)
+yaml.add_representer(unicode, unicode_representer)
+
 def newLangFile(langCode, authors, license):
   return {
     "LangCode":langCode,
@@ -84,10 +89,9 @@ class LangFile:
     return {"ID":ID,"Text":"","Annot":"","LastEd":""}
 
   def save(self):
-    #langFile = open(self.filePath, "w")
-    print "Saved", self.filePath
-    #print yaml.dump(self.doc, allow_unicode=True)
-    #langFile.close()
+    langFile = open(self.filePath, "w")
+    yaml.dump(self.doc, stream=langFile, allow_unicode=True)
+    langFile.close()
 
   def getFileName(self):
     from os import path
