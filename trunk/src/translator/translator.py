@@ -12,6 +12,7 @@ from ui_about import Ui_AboutDialog
 from ui_new_project import Ui_NewProjectDialog
 from ui_project_properties import Ui_ProjectProperties
 from ui_msg_form import Ui_MsgForm
+from ui_closing_project import Ui_ClosingProjectDialog
 
 from project import Project, newProjectData
 
@@ -29,9 +30,9 @@ Qt.SIGNAL = QtCore.SIGNAL
 Qt.SLOT = QtCore.SLOT
 
 def QTabWidgetCloseAll(self):
- for i in range(0, self.count()):
-   widget = self.widget(0)
-   self.removeTab(0)
+ for i in range(self.count()-1,-1,-1):
+   widget = self.widget(i)
+   self.removeTab(i)
    widget.close()
 QtGui.QTabWidget.closeAll = QTabWidgetCloseAll
 
@@ -50,17 +51,18 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     self.projectDock.setWidget(self.projectTree)
     self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.projectDock)
     # Custom connections
-    Qt.connect(self.action_About, Qt.SIGNAL("triggered()"), self.showAboutDialog)
-    Qt.connect(self.action_New_Project, Qt.SIGNAL("triggered()"), self.createNewProject)
-    Qt.connect(self.action_Open_Project, Qt.SIGNAL("triggered()"), self.openProjectAction)
-    Qt.connect(self.action_Close_Project, Qt.SIGNAL("triggered()"), self.closeProject)
-    Qt.connect(self.action_Save, Qt.SIGNAL("triggered()"), self.saveForm)
-    Qt.connect(self.action_Save_All, Qt.SIGNAL("triggered()"), self.saveAllForms)
-    Qt.connect(self.action_Close, Qt.SIGNAL("triggered()"), self.closeForm)
-    Qt.connect(self.action_Close_All, Qt.SIGNAL("triggered()"), self.closeAllForms)
-    Qt.connect(self.action_Properties, Qt.SIGNAL("triggered()"), self.showProjectProperties)
-    Qt.connect(self.action_Add_Catalogue, Qt.SIGNAL("triggered()"), self.addCatalogue)
-    Qt.connect(self.action_Add_New_Catalogue, QtCore.SIGNAL("triggered()"), self.addNewCatalogue)
+    triggered = Qt.SIGNAL("triggered()")
+    Qt.connect(self.action_About, triggered, self.showAboutDialog)
+    Qt.connect(self.action_New_Project, triggered, self.createNewProject)
+    Qt.connect(self.action_Open_Project, triggered, self.openProjectAction)
+    Qt.connect(self.action_Close_Project, triggered, self.closeProjectAction)
+    Qt.connect(self.action_Save, triggered, self.saveForm)
+    Qt.connect(self.action_Save_All, triggered, self.saveAllForms)
+    Qt.connect(self.action_Close, triggered, self.closeForm)
+    Qt.connect(self.action_Close_All, triggered, self.closeAllForms)
+    Qt.connect(self.action_Properties, triggered, self.showProjectProperties)
+    Qt.connect(self.action_Add_Catalogue, triggered, self.addCatalogue)
+    Qt.connect(self.action_Add_New_Catalogue, triggered, self.addNewCatalogue)
     Qt.connect(self.projectTree, Qt.SIGNAL("itemDoubleClicked(QTreeWidgetItem*,int)"), self.projectTreeItemDblClicked)
     Qt.connect(self.projectTree, Qt.SIGNAL("onKeyEnter"), self.projectTreeItemActivated)
     Qt.connect(self.projectTree, Qt.SIGNAL("onKeyDelete"), self.projectTreeItemDeleted)
@@ -78,19 +80,21 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     dialog.exec_()
 
   def createNewProject(self):
-    if self.cantCloseProjectIfOpen():
+    if self.rejectClosingProject():
       return
     dialog = NewProjectDialog()
     code = dialog.exec_()
     if code == QtGui.QDialog.Accepted:
+      self.closeProject()
       self.openProject(str(dialog.projectFilePath.text()))
 
   def openProjectAction(self):
-    if self.cantCloseProjectIfOpen():
+    if self.rejectClosingProject():
       return
     filePath = QtGui.QFileDialog.getOpenFileName(self, "Select Project File", g_CWD, "Translator Project (*%s)" % g_projectExt);
     filePath = str(filePath)
     if filePath:
+      self.closeProject()
       self.openProject(filePath)
 
   def openProject(self, filePath):
@@ -103,6 +107,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     self.enableMenuItems()
     self.projectTree.setProject(self.project)
 
+  def closeProjectAction(self):
+    if not self.rejectClosingProject():
+      self.closeProject()
+
   def addCatalogue(self):
     filePath = QtGui.QFileDialog.getOpenFileName(self, "Select Project File", g_CWD, "Catalogue (*%s)" % g_catExt);
     filePath = str(filePath)
@@ -110,25 +118,37 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
   def addNewCatalogue(self):
     pass
 
-  def cantCloseProjectIfOpen(self):
+  def rejectClosingProject(self):
     if self.project == None:
       return False
-    return self.closeProject()
+
+    modifiedDocs = []
+    # Check if any open document is modified.
+    for i in range(0, self.pages.count()):
+      if self.pages.widget(i).isModified:
+        modifiedDocs += [self.pages.widget(i)]
+    # Display dialog if so.
+    if len(modifiedDocs):
+      dialog = ClosingProjectDialog(modifiedDocs)
+      code = dialog.exec_()
+      if code == dialog.Accepted:
+        for doc in dialog.getSelectedDocs():
+          self.saveDocument(doc)
+      elif code == dialog.Rejected:
+        return True
+      elif code == dialog.DiscardAll:
+        pass
+
+    return False
 
   def closeProject(self):
     if self.project == None:
-      return True
-    MB = QtGui.QMessageBox
-    button = MB.question(self, "Closing", "Close the current project?", MB.Ok | MB.Cancel, MB.Cancel)
-    if button == MB.Cancel:
-      return False
-
+      return
     del self.project
     self.project = None
     self.disableMenuItems()
     self.projectTree.clear()
     self.pages.closeAll()
-    return True
 
   def enableMenuItems(self):
     #self.action_Close_Project.setEnabled(True)
@@ -184,9 +204,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
   def saveDocument(self, form):
     if form.isModified:
+      # Reset tab text.
       index = self.pages.indexOf(form)
       text = form.getDocumentTitle()
       self.pages.setTabText(index, text)
+
       form.save()
 
   def closeForm(self):
@@ -194,7 +216,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
       self.closeDocument(self.pages.currentWidget())
 
   def closeAllForms(self):
-    for i in range(0, self.pages.count()):
+    for i in range(self.pages.count()-1, -1, -1):
       self.closeDocument(self.pages.widget(i))
 
   def closeDocument(self, form):
@@ -211,7 +233,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     return True
 
   def closeEvent(self, event):
-    if self.closeProject() == False:
+    if self.rejectClosingProject():
       event.ignore()
       return
     self.writeSettings()
@@ -439,7 +461,6 @@ class LangFileItem(QtGui.QTreeWidgetItem):
     return self.msgForm
 
   def docClosed(self):
-    print "docClosed()"
     self.msgForm = None
 
 class ProjectItem(QtGui.QTreeWidgetItem):
@@ -502,6 +523,34 @@ class ProjectTree(QtGui.QTreeWidget):
     self.msgIDsItem = None
     QtGui.QTreeWidget.clear(self)
 
+
+class ClosingProjectDialog(QtGui.QDialog, Ui_ClosingProjectDialog):
+  DiscardAll = 2
+  def __init__(self, docs):
+    QtGui.QDialog.__init__(self)
+    self.setupUi(self)
+    Qt.connect(self.button_Discard_All, Qt.SIGNAL("clicked()"),   self.discardAll)
+
+    self.items = []
+    for doc in docs:
+      title = doc.getDocumentTitle()
+      path = doc.getDocumentFullPath()
+      item = QtGui.QTreeWidgetItem([title, path])
+      item.doc = doc
+      item.setFlags(item.flags()|Qt.ItemIsUserCheckable);
+      item.setCheckState(0, Qt.Checked)
+      self.items += [item]
+    self.treeWidget.addTopLevelItems(self.items)
+
+    self.button_Cancel.setFocus()
+
+  def getSelectedDocs(self):
+    return [item.doc for item in self.items if item.checkState(0)]
+
+  def discardAll(self):
+    self.done(self.DiscardAll)
+
+
 class NewProjectDialog(QtGui.QDialog, Ui_NewProjectDialog):
   def __init__(self):
     QtGui.QDialog.__init__(self)
@@ -522,11 +571,12 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProjectDialog):
     projectName = str(self.projectName.text())
     filePath = str(self.projectFilePath.text())
 
+    MB = QtGui.QMessageBox
     if projectName == "":
-      QtGui.QMessageBox.warning(self, "Warning", "Please, enter a name for the project.")
+      MB.warning(self, "Warning", "Please, enter a name for the project.")
       return
     if filePath == "":
-      QtGui.QMessageBox.warning(self, "Warning", "Please, choose or enter a path for the project file.")
+      MB.warning(self, "Warning", "Please, choose or enter a path for the project file.")
       return
 
     projectData = newProjectData(projectName)
@@ -537,7 +587,7 @@ class NewProjectDialog(QtGui.QDialog, Ui_NewProjectDialog):
     try:
       yaml.dump(projectData, open(filePath, "w"), default_flow_style=False)
     except Exception, e:
-      QtGui.QMessageBox.critical(self, "Error", str(e))
+      MB.critical(self, "Error", str(e))
       return
 
     # Accept and close dialog.
