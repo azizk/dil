@@ -67,7 +67,26 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     Qt.connect(self.projectTree, Qt.SIGNAL("onKeyEnter"), self.projectTreeItemActivated)
     Qt.connect(self.projectTree, Qt.SIGNAL("onKeyDelete"), self.projectTreeItemDeleted)
 
+    shortcut = QtGui.QShortcut(QtGui.QKeySequence(Qt.CTRL+Qt.Key_Tab), self)
+    Qt.connect(shortcut, Qt.SIGNAL("activated()"), self.nextDocument)
+    shortcut = QtGui.QShortcut(QtGui.QKeySequence(Qt.CTRL+Qt.SHIFT+Qt.Key_Tab), self)
+    Qt.connect(shortcut, Qt.SIGNAL("activated()"), self.prevDocument)
+
     self.readSettings()
+
+  def nextDocument(self):
+    count = self.pages.count()
+    if count < 1: return
+    index = self.pages.currentIndex()+1
+    if index == count: index = 0
+    self.pages.setCurrentIndex(index)
+
+  def prevDocument(self):
+    count = self.pages.count()
+    if count < 1: return
+    index = self.pages.currentIndex()-1
+    if index == -1: index = count-1
+    self.pages.setCurrentIndex(index)
 
   def showAboutDialog(self):
     about = QtGui.QDialog()
@@ -144,6 +163,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
   def closeProject(self):
     if self.project == None:
       return
+    self.project.save()
     del self.project
     self.project = None
     self.disableMenuItems()
@@ -180,6 +200,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
       if not item.isDocOpen():
         msgForm = item.openDoc()
         msgForm.setModifiedCallback(self.formModified)
+      else:
+        msgForm = item.openDoc()
       index = self.pages.indexOf(msgForm)
       if index == -1:
         index = self.pages.addTab(msgForm, msgForm.getDocumentTitle())
@@ -236,6 +258,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     if self.rejectClosingProject():
       event.ignore()
       return
+    self.closeProject()
     self.writeSettings()
     # Closing application
 
@@ -441,6 +464,7 @@ class MsgFormSource(MsgForm):
 class MsgIDItem(QtGui.QTreeWidgetItem):
   def __init__(self, parent, text):
     QtGui.QTreeWidgetItem.__init__(self, parent, [text])
+    self.setFlags(self.flags()|Qt.ItemIsEditable);
 
 class LangFileItem(QtGui.QTreeWidgetItem):
   def __init__(self, parent, langFile):
@@ -466,13 +490,23 @@ class LangFileItem(QtGui.QTreeWidgetItem):
 class ProjectItem(QtGui.QTreeWidgetItem):
   def __init__(self, text):
     QtGui.QTreeWidgetItem.__init__(self, [text])
+    self.setFlags(self.flags()|Qt.ItemIsEditable);
 
 class ProjectTree(QtGui.QTreeWidget):
   def __init__(self, parent):
     QtGui.QTreeWidget.__init__(self, parent)
+    self.project = None
     self.topItem = None
     self.msgIDsItem = None
     self.headerItem().setHidden(True)
+
+  def itemChanged(self, item, column):
+    text = unicode(item.text(0))
+    #if hasattr(item, "textChanged"):
+      #item.textChanged(text)
+    if isinstance(item, ProjectItem):
+      self.project.setName(text)
+      print text
 
   def keyReleaseEvent(self, event):
     Qt = QtCore.Qt
@@ -498,6 +532,8 @@ class ProjectTree(QtGui.QTreeWidget):
     for x in [self.topItem, self.msgIDsItem]:
       x.setExpanded(True)
 
+    Qt.connect(self, Qt.SIGNAL("itemChanged(QTreeWidgetItem*,int)"), self.itemChanged)
+
   def contextMenuEvent(self, event):
     item = self.itemAt(event.pos())
     func_map = {
@@ -519,8 +555,10 @@ class ProjectTree(QtGui.QTreeWidget):
     print "MsgIDItem"
 
   def clear(self):
+    self.project = None
     self.topItem = None
     self.msgIDsItem = None
+    Qt.disconnect(self, Qt.SIGNAL("itemChanged(QTreeWidgetItem*,int)"), self.itemChanged)
     QtGui.QTreeWidget.clear(self)
 
 

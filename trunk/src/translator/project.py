@@ -38,7 +38,7 @@ class Project:
     doc = self.doc
     self.checkType(doc, dict)
     try:
-      self.name = str(doc["Name"])
+      self.name = unicode(doc["Name"])
       self.srcLangFilePath = str(doc["SourceLangFile"])
       self.langFilePaths = list(doc["LangFiles"])
       self.msgIDs = list(doc["MsgIDs"])
@@ -91,5 +91,11 @@ class Project:
       filePath = filePath2
     return langfile.LangFile(filePath)
 
+  def setName(self, name):
+    self.name = name
+
   def save(self):
-    pass
+    self.doc["Name"] = self.name
+    file_ = open(self.projectPath, "w")
+    yaml.dump(self.doc, stream=file_, allow_unicode=True)
+    file_.close()
