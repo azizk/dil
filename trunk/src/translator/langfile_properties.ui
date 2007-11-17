@@ -1,73 +1,62 @@
 <ui version="4.0" >
- <class>ProjectPropertiesDialog</class>
- <widget class="QDialog" name="ProjectPropertiesDialog" >
+ <class>LangFilePropertiesDialog</class>
+ <widget class="QDialog" name="LangFilePropertiesDialog" >
   <property name="geometry" >
    <rect>
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>152</height>
+    <height>228</height>
    </rect>
   </property>
   <property name="windowTitle" >
-   <string>Project Properties</string>
+   <string>Language File Properties</string>
   </property>
   <layout class="QVBoxLayout" >
    <item>
     <layout class="QGridLayout" >
-     <item row="0" column="0" >
+     <item row="1" column="0" >
       <widget class="QLabel" name="label_2" >
        <property name="text" >
-        <string>Project name:</string>
+        <string>Language code:</string>
        </property>
        <property name="alignment" >
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="buddy" >
-        <cstring>projectNameField</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1" >
-      <widget class="QLineEdit" name="projectNameField" />
-     </item>
-     <item row="1" column="0" >
-      <widget class="QLabel" name="label" >
-       <property name="text" >
-        <string>Build script:</string>
-       </property>
-       <property name="alignment" >
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-       <property name="buddy" >
-        <cstring>buildScriptField</cstring>
+        <cstring>langCodeField</cstring>
        </property>
       </widget>
      </item>
      <item row="1" column="1" >
-      <layout class="QHBoxLayout" >
-       <item>
-        <widget class="QLineEdit" name="buildScriptField" />
-       </item>
-       <item>
-        <widget class="QToolButton" name="pickFileButton" >
-         <property name="text" >
-          <string>...</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="2" column="1" >
-      <widget class="QLineEdit" name="creationDateField" />
+      <widget class="QLineEdit" name="langCodeField" />
      </item>
      <item row="2" column="0" >
-      <widget class="QLabel" name="label_3" >
+      <widget class="QLabel" name="label" >
        <property name="text" >
         <string>Creation date:</string>
        </property>
        <property name="alignment" >
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="buddy" >
+        <cstring>creationDateField</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" >
+      <widget class="QLineEdit" name="creationDateField" />
+     </item>
+     <item row="0" column="1" >
+      <widget class="QTextEdit" name="authorsField" />
+     </item>
+     <item row="0" column="0" >
+      <widget class="QLabel" name="label_3" >
+       <property name="text" >
+        <string>Author(s):</string>
+       </property>
+       <property name="alignment" >
+        <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
        </property>
       </widget>
      </item>
@@ -78,10 +67,13 @@
      <property name="orientation" >
       <enum>Qt::Vertical</enum>
      </property>
+     <property name="sizeType" >
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
      <property name="sizeHint" >
       <size>
        <width>20</width>
-       <height>40</height>
+       <height>10</height>
       </size>
      </property>
     </spacer>
@@ -103,7 +95,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>ProjectPropertiesDialog</receiver>
+   <receiver>LangFilePropertiesDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel" >
@@ -119,7 +111,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>ProjectPropertiesDialog</receiver>
+   <receiver>LangFilePropertiesDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel" >

@@ -10,7 +10,7 @@ from PyQt4 import QtCore, QtGui
 from ui_translator import Ui_MainWindow
 from ui_about import Ui_AboutDialog
 from ui_new_project import Ui_NewProjectDialog
-from ui_project_properties import Ui_ProjectProperties
+from ui_project_properties import Ui_ProjectPropertiesDialog
 from ui_msg_form import Ui_MsgForm
 from ui_closing_project import Ui_ClosingProjectDialog
 
@@ -94,9 +94,9 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     about.exec_()
 
   def showProjectProperties(self):
-    dialog = QtGui.QDialog()
-    Ui_ProjectProperties().setupUi(dialog)
+    dialog = ProjectPropertiesDialog(self.project)
     dialog.exec_()
+    self.projectTree.updateProjectName()
 
   def createNewProject(self):
     if self.rejectClosingProject():
@@ -133,6 +133,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
   def addCatalogue(self):
     filePath = QtGui.QFileDialog.getOpenFileName(self, "Select Project File", g_CWD, "Catalogue (*%s)" % g_catExt);
     filePath = str(filePath)
+    # TODO:
+    #self.project.addLangFile(filePath)
 
   def addNewCatalogue(self):
     pass
@@ -499,8 +501,11 @@ class ProjectTree(QtGui.QTreeWidget):
     self.topItem = None
     self.msgIDsItem = None
     self.headerItem().setHidden(True)
+    self.ignoreItemChanged = False
 
   def itemChanged(self, item, column):
+    if self.ignoreItemChanged:
+      return
     text = unicode(item.text(0))
     #if hasattr(item, "textChanged"):
       #item.textChanged(text)
@@ -554,6 +559,11 @@ class ProjectTree(QtGui.QTreeWidget):
   def showMenuMsgIDItem(self, item):
     print "MsgIDItem"
 
+  def updateProjectName(self):
+    self.ignoreItemChanged = True
+    self.topItem.setText(0, self.project.name)
+    self.ignoreItemChanged = False
+
   def clear(self):
     self.project = None
     self.topItem = None
@@ -589,21 +599,42 @@ class ClosingProjectDialog(QtGui.QDialog, Ui_ClosingProjectDialog):
     self.done(self.DiscardAll)
 
 
+class ProjectPropertiesDialog(QtGui.QDialog, Ui_ProjectPropertiesDialog):
+  def __init__(self, project):
+    QtGui.QDialog.__init__(self)
+    self.setupUi(self)
+    Qt.connect(self.pickFileButton, Qt.SIGNAL("clicked()"), self.pickFilePath)
+
+    self.project = project
+    self.projectNameField.setText(self.project.name)
+    self.buildScriptField.setText(self.project.buildScript)
+    self.creationDateField.setText(self.project.creationDate)
+
+  def pickFilePath(self):
+    filePath = QtGui.QFileDialog.getOpenFileName(self, "Select Build Script File", g_CWD, "Python Script (*.py)");
+    if filePath:
+      self.buildScriptField.setText(str(filePath))
+
+  def accept(self):
+    self.project.setName(unicode(self.projectNameField.text()))
+    self.project.setBuildScript(unicode(self.buildScriptField.text()))
+    self.project.setCreationDate(str(self.creationDateField.text()))
+    QtGui.QDialog.accept(self)
+
+
 class NewProjectDialog(QtGui.QDialog, Ui_NewProjectDialog):
   def __init__(self):
     QtGui.QDialog.__init__(self)
     self.setupUi(self)
-
     Qt.connect(self.pickFileButton, Qt.SIGNAL("clicked()"), self.pickFilePath)
 
   def pickFilePath(self):
     filePath = QtGui.QFileDialog.getSaveFileName(self, "New Project File", g_CWD, "Translator Project (*%s)" % g_projectExt);
-    if not filePath:
-      return
-    filePath = str(filePath) # Convert QString
-    if os.path.splitext(filePath)[1] != g_projectExt:
-      filePath += g_projectExt
-    self.projectFilePath.setText(filePath)
+    if filePath:
+      filePath = str(filePath) # Convert QString
+      if os.path.splitext(filePath)[1] != g_projectExt:
+        filePath += g_projectExt
+      self.projectFilePath.setText(filePath)
 
   def accept(self):
     projectName = str(self.projectName.text())

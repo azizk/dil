@@ -94,8 +94,16 @@ class Project:
   def setName(self, name):
     self.name = name
 
+  def setBuildScript(self, filePath):
+    self.buildScript = filePath
+
+  def setCreationDate(self, date):
+    self.creationDate = date
+
   def save(self):
     self.doc["Name"] = self.name
+    self.doc["BuildScript"] = self.buildScript
+    self.doc["CreationDate"] = self.creationDate
     file_ = open(self.projectPath, "w")
     yaml.dump(self.doc, stream=file_, allow_unicode=True)
     file_.close()
