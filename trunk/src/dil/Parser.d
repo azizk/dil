@@ -323,7 +323,7 @@ class Parser
       break;
     // Declaration
     case T.Identifier, T.Dot, T.Typeof:
-    // BasicType
+    // IntegralType
     case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
          T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
          T.Int,    T.Uint,    T.Long,   T.Ulong,
@@ -331,8 +331,7 @@ class Parser
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
     case_Declaration:
-      decl = parseDeclaration();
-      break;
+      return parseDeclaration();
     /+case T.Module:
       // TODO: Error: module is optional and can appear only once at the top of the source file.
       break;+/
@@ -380,8 +379,15 @@ class Parser
     return parseDeclarationsBlock(true);
   }
 
-  Declaration parseDeclaration(StorageClass stc = StorageClass.None)
+  /++
+    Parses either a VariableDeclaration or a FunctionDeclaration.
+    Params:
+      stc = the previously parsed storage classes
+      optionalParameterList = a hint for how to parse C-style function pointers
+  +/
+  Declaration parseDeclaration(StorageClass stc = StorageClass.None, bool optionalParameterList = true)
   {
+    auto begin = token;
     Type type;
     Token* ident;
 
@@ -398,7 +404,18 @@ class Parser
       type = parseType();
       if (token.type == T.LParen)
       {
-        parseCFunctionPointerType(type, ident);
+        // C-style function pointers make the grammar ambiguous.
+        // We have to treat them specially at function scope.
+        // Example:
+        //   void foo() {
+        //     // A pointer to a function taking an integer and returning 'some_type'.
+        //     some_type (*p_func)(int);
+        //     // In the following case precedence is given to a CallExpression.
+        //     something(*p); // 'something' may be a function/method or an object having opCall overloaded.
+        //   }
+        //   // A pointer to a function taking no parameters and returning 'something'.
+        //   something(*p);
+        type = parseCFunctionPointerType(type, ident, optionalParameterList);
       }
       else
       {
@@ -417,7 +434,7 @@ class Parser
           auto params = parseParameterList();
           // ReturnType FunctionName ( ParameterList )
           auto funcBody = parseFunctionBody();
-          return new FunctionDeclaration(type, ident, tparams, params, funcBody);
+          return set(new FunctionDeclaration(type, ident, tparams, params, funcBody), begin);
         }
         type = parseDeclaratorSuffix(type);
       }
@@ -441,7 +458,7 @@ class Parser
         values ~= null;
     }
     require(T.Semicolon);
-    return new VariableDeclaration(type, idents, values);
+    return set(new VariableDeclaration(type, idents, values), begin);
   }
 
   Expression parseInitializer()
@@ -1605,7 +1622,7 @@ class Parser
       else
         expected(T.Struct);
       d = new AlignDeclaration(size, structDecl ? structDecl : new Declarations);
-      goto case_DeclarationStatement;
+      goto LreturnDeclarationStatement;
 /+ Not applicable for statements.
 //          T.Private,
 //          T.Package,
@@ -1637,12 +1654,12 @@ class Parser
       goto case T.Dot;
     case T.Dot, T.Typeof:
       bool success;
-      d = try_({return parseDeclaration();}, success);
+      d = try_({return parseDeclaration(StorageClass.None, false);}, success);
       if (success)
-        goto case_DeclarationStatement; // Declaration
+        goto LreturnDeclarationStatement; // Declaration
       else
-        goto case_ExpressionStatement; // Expression
-    // BasicType
+        goto case_parseExpressionStatement; // Expression
+    // IntegralType
     case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
          T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
          T.Int,    T.Uint,    T.Long,   T.Ulong,
@@ -1651,7 +1668,7 @@ class Parser
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
     case_parseDeclaration:
       d = parseDeclaration();
-      goto case_DeclarationStatement;
+      goto LreturnDeclarationStatement;
     case T.If:
       s = parseIfStatement();
       break;
@@ -1716,7 +1733,7 @@ class Parser
       break;
     case T.Mixin:
       if (peekNext() == T.LParen)
-        goto case_ExpressionStatement; // Parse as expression.
+        goto case_parseExpressionStatement; // Parse as expression.
       s = parseMixin!(MixinStatement)();
       break;
     case T.Static:
@@ -1741,20 +1758,20 @@ class Parser
     // DeclDef
     case T.Alias, T.Typedef:
       d = parseDeclarationDefinition();
-      goto case_DeclarationStatement;
+      goto LreturnDeclarationStatement;
     case T.Enum:
       d = parseEnumDeclaration();
-      goto case_DeclarationStatement;
+      goto LreturnDeclarationStatement;
     case T.Class:
       d = parseClassDeclaration();
-      goto case_DeclarationStatement;
+      goto LreturnDeclarationStatement;
     case T.Interface:
       d = parseInterfaceDeclaration();
-      goto case_DeclarationStatement;
+      goto LreturnDeclarationStatement;
     case T.Struct, T.Union:
       d = parseAggregateDeclaration();
-      goto case_DeclarationStatement;
-    case_DeclarationStatement:
+      // goto LreturnDeclarationStatement;
+    LreturnDeclarationStatement:
       set(d, begin);
       s = new DeclarationStatement(d);
       break;
@@ -1809,13 +1826,13 @@ class Parser
          T.New,
          T.Delete,
          T.Cast:
-    case_ExpressionStatement:
+    case_parseExpressionStatement:
       s = new ExpressionStatement(parseExpression());
       require(T.Semicolon);
       break;
     default:
       if (token.isSpecialToken)
-        goto case_ExpressionStatement;
+        goto case_parseExpressionStatement;
 
       // Assert that this isn't a valid expression.
       assert(
@@ -3623,7 +3640,7 @@ class Parser
         // TODO: create ParenExpression?
       }
       break;
-    // BasicType . Identifier
+    // IntegralType . Identifier
     case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
          T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
          T.Int,    T.Uint,    T.Long,   T.Ulong,
@@ -3904,16 +3921,17 @@ class Parser
     return t;
   }
 
-  Type parseCFunctionPointerType(Type type, ref Token* ident)
+  Type parseCFunctionPointerType(Type type, ref Token* ident, bool optionalParamList)
   {
     assert(token.type == T.LParen);
+    assert(type !is null);
     auto begin = token;
     nT(); // Skip (
     type = parseBasicType2(type);
     if (token.type == T.LParen)
     {
       // Can be nested.
-      type = parseCFunctionPointerType(type, ident);
+      type = parseCFunctionPointerType(type, ident, true);
     }
     else if (token.type == T.Identifier)
     {
@@ -3923,8 +3941,13 @@ class Parser
       type = parseDeclaratorSuffix(type);
     }
     require(T.RParen);
-    // Optional parameter list
-    auto params = token.type == T.LParen ? parseParameterList() : null;
+
+    Parameters params;
+    if (optionalParamList)
+      params = token.type == T.LParen ? parseParameterList() : null;
+    else
+      params = parseParameterList();
+
     type = set(new CFuncPointerType(type, params), begin);
     return type;
   }
@@ -3935,7 +3958,7 @@ class Parser
 
     if (token.type == T.LParen)
     {
-      t = parseCFunctionPointerType(t, ident);
+      t = parseCFunctionPointerType(t, ident, true);
     }
     else if (token.type == T.Identifier)
     {
