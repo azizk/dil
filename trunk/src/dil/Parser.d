@@ -75,14 +75,31 @@ class Parser
       token = lx.token;
     } while (token.isWhitespace) // Skip whitespace
   }
-/+
-  void skipToOnePast(TOK tok)
+
+  /++
+    Start the parser and return the parsed Declarations.
+  +/
+  Declarations start()
   {
-    for (; token.type != tok && token.type != T.EOF; nT())
-    {}
-    nT();
+    init();
+    auto begin = token;
+    auto decls = new Declarations;
+    if (token.type == T.Module)
+      decls ~= parseModuleDeclaration();
+    decls ~= parseDeclarationDefinitions();
+    set(decls, begin);
+    return decls;
   }
-+/
+
+  /++
+    Start the parser and return the parsed Expression.
+  +/
+  Expression start2()
+  {
+    init();
+    return parseExpression();
+  }
+
   uint trying;
   uint errorCount;
 
@@ -117,10 +134,21 @@ class Parser
     return result;
   }
 
+  /++
+    Sets the begin and end tokens of an AST node.
+  +/
   Class set(Class)(Class node, Token* begin)
   {
     node.setTokens(begin, this.prevToken);
     return node;
+  }
+
+  /++
+    Returns true if set() has been called on a node, or false otherwise.
+  +/
+  bool isNodeSet(Node node)
+  {
+    return node.begin !is null && node.end !is null;
   }
 
   TOK peekNext()
@@ -148,16 +176,6 @@ class Parser
   /++++++++++++++++++++++++++++++
   + Declaration parsing methods +
   ++++++++++++++++++++++++++++++/
-
-  Declarations start()
-  {
-    init();
-    auto decls = new Declarations;
-    if (token.type == T.Module)
-      decls ~= parseModuleDeclaration();
-    decls ~= parseDeclarationDefinitions();
-    return decls;
-  }
 
   Declaration parseModuleDeclaration()
   {
@@ -187,12 +205,13 @@ class Parser
   */
   Declarations parseDeclarationDefinitionsBlock()
   {
+    auto begin = token;
     auto decls = new Declarations;
     require(T.LBrace);
     while (token.type != T.RBrace && token.type != T.EOF)
       decls ~= parseDeclarationDefinition();
     require(T.RBrace);
-    return decls;
+    return set(decls, token);
   }
 
   Declaration parseDeclarationDefinition()
@@ -363,14 +382,16 @@ class Parser
       if (noColon == true)
         goto default;
       nT();
+      auto begin = token;
       auto decls = new Declarations;
       while (token.type != T.RBrace && token.type != T.EOF)
         decls ~= parseDeclarationDefinition();
-      d = decls;
+      d = set(decls, begin);
       break;
     default:
       d = parseDeclarationDefinition();
     }
+    assert(isNodeSet(d));
     return d;
   }
 
@@ -817,6 +838,7 @@ class Parser
       if (token.type == T.Semicolon)
       {
         nT();
+        // TODO: call set()?
         decls = new EmptyDeclaration();
       }
       else
@@ -1018,7 +1040,6 @@ class Parser
     else if (token.type == T.LBrace)
     {
       hasBody = true;
-      // TODO: think about setting a member status variable to a flag InClassBody... this way we can check for DeclDefs that are illegal in class bodies in the parsing phase.
       decls = parseDeclarationDefinitionsBlock();
     }
     else
@@ -1483,16 +1504,17 @@ class Parser
   +/
   DotListType parseDotListType()
   {
+    auto begin = token;
     Type[] identList;
     if (token.type == T.Dot)
     {
-      identList ~= new IdentifierType(token);
+      identList ~= set(new IdentifierType(token), begin);
       nT();
     }
     else if (token.type == T.Typeof)
     {
       requireNext(T.LParen);
-      identList ~= new TypeofType(parseExpression());
+      identList ~= set(new TypeofType(parseExpression()), begin);
       require(T.RParen);
       if (token.type != T.Dot)
         goto Lreturn;
@@ -1501,16 +1523,16 @@ class Parser
 
     while (1)
     {
-      auto begin2 = token;
+      begin = token;
       auto ident = requireId();
       // NB.: Currently Types can't be followed by "!=" so we don't need to peek for "(" when parsing TemplateInstances.
       if (token.type == T.Not/+ && peekNext() == T.LParen+/) // Identifier !( TemplateArguments )
       {
         nT(); // Skip !.
-        identList ~= set(new TemplateInstanceType(ident, parseTemplateArguments()), begin2);
+        identList ~= set(new TemplateInstanceType(ident, parseTemplateArguments()), begin);
       }
       else // Identifier
-        identList ~= set(new IdentifierType(ident), begin2);
+        identList ~= set(new IdentifierType(ident), begin);
 
       if (token.type != T.Dot)
         break;
@@ -1553,22 +1575,23 @@ class Parser
     // This code is similar to parseDotListType().
     if (token.type == T.Dot)
     {
-      templateIdent ~= new IdentifierExpression(token);
+      templateIdent ~= set(new IdentifierExpression(token), begin);
       nT();
     }
 
     while (1)
     {
+      begin = token;
       auto ident = requireId();
       Expression e;
       if (token.type == T.Not) // Identifier !( TemplateArguments )
       {
         // No need to peek for T.LParen. This must be a template instance.
         nT();
-        e = new TemplateInstanceExpression(ident, parseTemplateArguments());
+        e = set(new TemplateInstanceExpression(ident, parseTemplateArguments()), begin);
       }
       else // Identifier
-        e = new IdentifierExpression(ident);
+        e = set(new IdentifierExpression(ident), begin);
 
       templateIdent ~= e;
 
@@ -2007,6 +2030,7 @@ class Parser
     require(T.LParen);
 
     Token* ident;
+    auto begin = token; // For start of AutoDeclaration or normal Declaration.
     // auto Identifier = Expression
     if (token.type == T.Auto)
     {
@@ -2014,7 +2038,12 @@ class Parser
       ident = requireId();
       require(T.Assign);
       auto init = parseExpression();
-      variable = new AttributeStatement(T.Auto, new DeclarationStatement(new VariableDeclaration(null, [ident], [init])));
+      auto v = new VariableDeclaration(null, [ident], [init]);
+      set(v, ident);
+      auto d = new DeclarationStatement(v);
+      set(d, ident);
+      variable = new AttributeStatement(T.Auto, d);
+      set(variable, begin);
     }
     else
     {
@@ -2030,7 +2059,10 @@ class Parser
       if (success)
       {
         auto init = parseExpression();
-        variable = new DeclarationStatement(new VariableDeclaration(type, [ident], [init]));
+        auto v = new VariableDeclaration(type, [ident], [init]);
+        set(v, begin);
+        variable = new DeclarationStatement(v);
+        set(variable, begin);
       }
       else
         condition = parseExpression();
@@ -3755,6 +3787,8 @@ class Parser
       break;
     case T.Identifier, T.Typeof, T.Dot:
       t = parseDotListType();
+      assert(!isNodeSet(t));
+      set(t, begin);
       break;
     version(D2)
     {
