@@ -78,7 +78,11 @@ char[] getShortClassName(Node n)
   switch (n.category)
   {
   alias NodeCategory NC;
-  case NC.Declaration: remove = "Declaration"; break;
+  case NC.Declaration:
+    if (n.kind == NodeKind.Declarations)
+      return name;
+    remove = "Declaration";
+    break;
   case NC.Statement:
     if (n.kind == NodeKind.Statements)
       return name;
@@ -504,7 +508,7 @@ void printToken(Token* token, string[] tags, Print!(char) print)
         print(start[0 .. end - start]);
     }
     print(tags[DP.HLineBegin]);
-    auto num = token.line_num;
+    auto num = token.tokLineNum;
     if (num is null)
     {
       print(token.srcText);
@@ -515,9 +519,9 @@ void printToken(Token* token, string[] tags, Print!(char) print)
     auto ptr = token.start;
     printWS(ptr, num.start); // prints "#line" as well
     printToken(num, tags, print);
-    if (token.line_filespec)
+    if (token.tokLineFilespec)
     {
-      auto filespec = token.line_filespec;
+      auto filespec = token.tokLineFilespec;
       // Print whitespace between number and filespec
       printWS(num.end, filespec.start);
       print.format(tags[DP.Filespec], xml_escape(filespec.srcText));

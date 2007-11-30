@@ -109,19 +109,17 @@ class Parser
   +/
   ReturnType try_(ReturnType)(ReturnType delegate() parseMethod, out bool success)
   {
-    ++trying;
     auto oldToken     = this.token;
     auto oldPrevToken = this.prevToken;
     auto oldCount     = this.errorCount;
-    auto lexerState   = this.lx.getState();
 
+    ++trying;
     auto result = parseMethod();
-
+    --trying;
     // Check if an error occurred.
     if (errorCount != oldCount)
     {
       // Restore members.
-      lx.restoreState(lexerState);
       token      = oldToken;
       prevToken  = oldPrevToken;
       lx.token   = oldToken;
@@ -130,7 +128,6 @@ class Parser
     }
     else
       success = true;
-    --trying;
     return result;
   }
 
@@ -144,7 +141,7 @@ class Parser
   }
 
   /++
-    Returns true if set() has been called on a node, or false otherwise.
+    Returns true if set() has been called on a node.
   +/
   bool isNodeSet(Node node)
   {
@@ -153,23 +150,19 @@ class Parser
 
   TOK peekNext()
   {
-    auto state = lx.getState();
     Token* next = token;
     do
       lx.peek(next);
     while (next.isWhitespace) // Skip whitespace
-    lx.restoreState(state);
     return next.type;
   }
 
   TOK peekAfter(ref Token* next)
   {
     assert(next !is null);
-    auto state = lx.getState();
     do
       lx.peek(next);
     while (next.isWhitespace) // Skip whitespace
-    lx.restoreState(state);
     return next.type;
   }
 
@@ -190,6 +183,11 @@ class Parser
     return set(new ModuleDeclaration(moduleFQN), begin);
   }
 
+  /++
+    DeclDefs:
+      DeclDef
+      DeclDefs
+  +/
   Declarations parseDeclarationDefinitions()
   {
     auto decls = new Declarations;
@@ -198,11 +196,11 @@ class Parser
     return decls;
   }
 
-  /*
+  /++
     DeclDefsBlock:
         { }
         { DeclDefs }
-  */
+  +/
   Declarations parseDeclarationDefinitionsBlock()
   {
     auto begin = token;
@@ -211,7 +209,7 @@ class Parser
     while (token.type != T.RBrace && token.type != T.EOF)
       decls ~= parseDeclarationDefinition();
     require(T.RBrace);
-    return set(decls, token);
+    return set(decls, begin);
   }
 
   Declaration parseDeclarationDefinition()
@@ -3858,7 +3856,6 @@ class Parser
     assert(token.type == T.LParen);
     Token* next = token;
     uint level = 1;
-    auto state = lx.getState();
   Loop:
     while (1)
     {
@@ -3882,7 +3879,6 @@ class Parser
       default:
       }
     }
-    lx.restoreState(state);
     return next.type == tok;
   }
 
@@ -4378,7 +4374,8 @@ version(D2)
       ++errorCount;
       return;
     }
-    lx.updateErrorLoc(token.start);
-    errors ~= new Information(InfoType.Parser, mid, lx.errorLoc.clone, Format(_arguments, _argptr, GetMsg(mid)));
+    auto location = Lexer.getLocation(this.token);
+    auto msg = Format(_arguments, _argptr, GetMsg(mid));
+    errors ~= new Information(InfoType.Parser, mid, location, msg);
   }
 }

@@ -156,7 +156,7 @@ void print(Node[] decls, char[] indent)
   foreach(decl; decls)
   {
     assert(decl !is null);
-//     writefln(indent, decl.classinfo.name, ": begin=%s end=%s", decl.begin ? decl.begin.srcText : "\33[31mnull\33[0m", decl.end ? decl.end.srcText : "\33[31mnull\33[0m");
+    Stdout.formatln("{}{}: begin={} end={}", indent, decl.classinfo.name, decl.begin ? decl.begin.srcText : "\33[31mnull\33[0m", decl.end ? decl.end.srcText : "\33[31mnull\33[0m");
     print(decl.children, indent ~ "  ");
   }
 }

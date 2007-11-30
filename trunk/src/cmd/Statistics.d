@@ -92,7 +92,7 @@ Statistics getStatistics(string filePath)
 
   Statistics stats;
 
-  stats.linesOfCode = lx.loc;
+  stats.linesOfCode = lx.lineNum;
   // Traverse linked list.
   while (token.type != TOK.EOF)
   {

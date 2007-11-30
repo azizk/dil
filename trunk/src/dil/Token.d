@@ -7,12 +7,6 @@ import common;
 import tango.stdc.stdlib : malloc, free;
 import tango.core.Exception;
 
-struct Position
-{
-  size_t loc;
-  size_t col;
-}
-
 enum TOK : ushort
 {
   Invalid,
@@ -24,9 +18,10 @@ enum TOK : ushort
   Shebang  = 3 | Whitespace,
   HashLine = 4 | Whitespace,
   Filespec = 5 | Whitespace,
-  Empty    = 6,
+  Newline  = 6 | Whitespace,
+  Empty    = 7,
 
-  Identifier = 7,
+  Identifier = 8,
   String,
   CharLiteral, WCharLiteral, DCharLiteral,
 
@@ -119,9 +114,8 @@ alias TOK.With KeywordsEnd;
 
 struct Token
 {
-  TOK type;
-//   Position pos;
-
+  TOK type; /// The type of the token.
+  /// Pointers to the next and previous tokens (doubly-linked list.)
   Token* next, prev;
 
   char* ws;    /// Start of whitespace characters before token. Null if no WS.
@@ -130,15 +124,24 @@ struct Token
 
   union
   {
+    /// For newline tokens.
     struct
     {
-      Token* line_num; // #line number
-      Token* line_filespec; // #line number filespec
+      char[] filePath;
+      uint lineNum;
+      uint lineNum_hline;
     }
+    /// For #line tokens.
+    struct
+    {
+      Token* tokLineNum; /// #line number
+      Token* tokLineFilespec; /// #line number filespec
+    }
+    /// For string tokens.
     struct
     {
       string str;
-      char pf; /// Postfix 'c', 'w' or 'd'
+      char pf; /// Postfix 'c', 'w', 'd' or 0 for none.
     version(D2)
       Token* tok_str; /// Points to the contents of a token string stored as a
                       /// doubly linked list. The last token is always '}' or
@@ -199,16 +202,30 @@ struct Token
     return tokToString[tok];
   }
 
+  /++
+    Returns true if this is a token which can have newlines in it.
+    These can be any string literal except for escape literals
+    and block and nested comments.
+  +/
+  bool isMultiline()
+  {
+    return type == TOK.String && start[0] != '\\' ||
+           type == TOK.Comment && start[1] != '/';
+  }
+
+  /// Returns true if this is a keyword token.
   bool isKeyword()
   {
     return KeywordsBegin <= type && type <= KeywordsEnd;
   }
 
+  /// Returns true if this is a whitespace token.
   bool isWhitespace()
   {
     return !!(type & TOK.Whitespace);
   }
 
+  /// Returns true if this is a special token.
   bool isSpecialToken()
   {
     return *start == '_' && type != TOK.Identifier;
@@ -216,6 +233,7 @@ struct Token
 
 version(D2)
 {
+  /// Returns true if this is a token string literal.
   bool isTokenStringLiteral()
   {
     return type == TOK.String && tok_str !is null;
@@ -256,8 +274,8 @@ version(D2)
   void destructHashLineToken()
   {
     assert(type == TOK.HashLine);
-    delete line_num;
-    delete line_filespec;
+    delete tokLineNum;
+    delete tokLineFilespec;
   }
 
 version(D2)
@@ -280,7 +298,8 @@ version(D2)
 }
 }
 
-const string[] tokToString = [
+/// A table mapping each TOK to a string.
+private const string[] tokToString = [
   "Invalid",
 
   "Illegal",
@@ -288,6 +307,7 @@ const string[] tokToString = [
   "#! /shebang/",
   "#line",
   `"filespec"`,
+  "Newline",
   "Empty",
 
   "Identifier",
@@ -315,14 +335,14 @@ const string[] tokToString = [
 
   ".", "..", "...",
 
-  "Unordered",
-  "UorE",
-  "UorG",
-  "UorGorE",
-  "UorL",
-  "UorLorE",
-  "LorEorG",
-  "LorG",
+  "!<>=", // Unordered
+  "!<>",  // UorE
+  "!<=",  // UorG
+  "!<",   // UorGorE
+  "!>=",  // UorL
+  "!>",   // UorLorE
+  "<>=",  // LorEorG
+  "<>",   // LorG
 
   "=", "==", "!=", "!",
   "<=", "<",
