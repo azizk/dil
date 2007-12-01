@@ -152,6 +152,7 @@ enum NodeKind
   PrimaryExpressio,
   IdentifierExpression,
   SpecialTokenExpression,
+  DotExpression,
   DotListExpression,
   TemplateInstanceExpression,
   ThisExpression,
@@ -188,6 +189,7 @@ enum NodeKind
   // Types:
   IntegralType,
   UndefinedType,
+  DotType,
   DotListType,
   IdentifierType,
   TypeofType,

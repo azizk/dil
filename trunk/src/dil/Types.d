@@ -309,6 +309,7 @@ enum TID
   Pointer,
   CFuncPointer,
   Array,
+  Dot,
   DotList,
   Identifier,
   Typeof,
@@ -375,6 +376,15 @@ class IdentifierType : Type
     super(TID.Identifier);
     mixin(set_kind);
     this.ident = ident;
+  }
+}
+
+class DotType : Type
+{
+  this()
+  {
+    super(TID.Dot);
+    mixin(set_kind);
   }
 }
 

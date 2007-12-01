@@ -604,6 +604,15 @@ class IdentifierListExpression : Expression
   }
 }
 */
+
+class DotExpression : Expression
+{
+  this()
+  {
+    mixin(set_kind);
+  }
+}
+
 class DotListExpression : Expression
 {
   Expression[] items;

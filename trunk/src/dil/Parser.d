@@ -810,9 +810,6 @@ class Parser
       // Pragma:
       //     pragma ( Identifier )
       //     pragma ( Identifier , ExpressionList )
-      // ExpressionList:
-      //     AssignExpression
-      //     AssignExpression , ExpressionList
       nT();
       Token* ident;
       Expression[] args;
@@ -1437,8 +1434,8 @@ class Parser
     Expression[] identList;
     if (token.type == T.Dot)
     {
-      identList ~= set(new IdentifierExpression(token), begin);
       nT();
+      identList ~= set(new DotExpression(), begin);
     }
     else if (token.type == T.Typeof)
     {
@@ -1504,8 +1501,8 @@ class Parser
     Type[] identList;
     if (token.type == T.Dot)
     {
-      identList ~= set(new IdentifierType(token), begin);
       nT();
+      identList ~= set(new DotType(), begin);
     }
     else if (token.type == T.Typeof)
     {
@@ -1572,8 +1569,8 @@ class Parser
     // This code is similar to parseDotListType().
     if (token.type == T.Dot)
     {
-      templateIdent ~= set(new IdentifierExpression(token), begin);
       nT();
+      templateIdent ~= set(new DotExpression(), begin);
     }
 
     while (1)
