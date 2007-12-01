@@ -53,6 +53,11 @@ class Information
   }
 }
 
+class InformationManager
+{
+  Information[] info;
+}
+
 final class Location
 {
   char[] filePath;
@@ -99,7 +104,7 @@ final class Location
     this.filePath = filePath;
   }
 
-  /+
+  /++
     This is a primitive method to count the number of characters in a string.
     Unicode compound characters and other special characters are not
     taken into account.

@@ -4,11 +4,13 @@
 +/
 module dil.Scope;
 import dil.Symbol;
+import dil.Information;
 import common;
 
 class Scope
 {
   Scope parent; /// The surrounding scope.
+  InformationManager infoMan; /// Collects errors reported during the semantic phase.
 
   this()
   {
@@ -19,7 +21,7 @@ class Scope
   +/
   Symbol find(char[] ident)
   {
-
+    return null;
   }
 
   /++

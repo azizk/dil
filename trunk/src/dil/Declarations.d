@@ -8,6 +8,7 @@ import dil.Expressions;
 import dil.Types;
 import dil.Statements;
 import dil.Token;
+import dil.Scope;
 
 abstract class Declaration : Node
 {
@@ -16,6 +17,13 @@ abstract class Declaration : Node
   {
     super(NodeCategory.Declaration);
     this.hasBody = hasBody;
+  }
+
+  void semantic(Scope sc)
+  {
+//     foreach (node; this.children)
+//       if (node.category == NodeCategory.Declaration)
+//         (cast(Declaration)cast(void*)node).semantic(sc);
   }
 }
 
@@ -30,6 +38,11 @@ class Declarations : Declaration
   void opCatAssign(Declaration d)
   {
     this.children ~= d;
+  }
+
+  void opCatAssign(Declaration[] decls)
+  {
+    this.children ~= decls;
   }
 
   void opCatAssign(Declarations ds)

@@ -695,9 +695,11 @@ class RealExpression : Expression
 
 class CharExpression : Expression
 {
-  this()
+  Token* charLiteral;
+  this(Token* charLiteral)
   {
     mixin(set_kind);
+    this.charLiteral = charLiteral;
   }
 }
 

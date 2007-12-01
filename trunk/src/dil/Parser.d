@@ -188,9 +188,9 @@ class Parser
       DeclDef
       DeclDefs
   +/
-  Declarations parseDeclarationDefinitions()
+  Declaration[] parseDeclarationDefinitions()
   {
-    auto decls = new Declarations;
+    Declaration[] decls;
     while (token.type != T.EOF)
       decls ~= parseDeclarationDefinition();
     return decls;
@@ -823,15 +823,10 @@ class Parser
 
       if (token.type == T.Comma)
       {
-        // Parse at least one argument.
         nT();
-        args ~= parseAssignExpression();
+        args = parseExpressionList();
       }
-
-      if (token.type == T.Comma)
-        args ~= parseArguments(T.RParen);
-      else
-        require(T.RParen);
+      require(T.RParen);
 
       if (token.type == T.Semicolon)
       {
@@ -1072,10 +1067,11 @@ class Parser
       }
       nT(); // Skip protection attribute.
     LparseBasicType:
+      auto begin = token;
       auto type = parseBasicType();
       //if (type.tid != TID.DotList)
         // TODO: issue error msg. base classes can only be one or more identifiers or template instances separated by dots.
-      bases ~= new BaseClass(prot, type);
+      bases ~= set(new BaseClass(prot, type), begin);
       if (token.type != T.Comma)
         break;
       nT();
@@ -1437,10 +1433,11 @@ class Parser
   DotListExpression parseDotListExpression()
   {
     assert(token.type == T.Identifier || token.type == T.Dot || token.type == T.Typeof);
+    auto begin = token;
     Expression[] identList;
     if (token.type == T.Dot)
     {
-      identList ~= new IdentifierExpression(token);
+      identList ~= set(new IdentifierExpression(token), begin);
       nT();
     }
     else if (token.type == T.Typeof)
@@ -1448,7 +1445,8 @@ class Parser
       requireNext(T.LParen);
       auto type = new TypeofType(parseExpression());
       require(T.RParen);
-      identList ~= new TypeofExpression(type);
+      set(type, begin);
+      identList ~= set(new TypeofExpression(type), begin);
       if (token.type != T.Dot)
         goto Lreturn;
       nT();
@@ -1456,16 +1454,16 @@ class Parser
 
     while (1)
     {
-      auto begin2 = token;
+      begin = token;
       auto ident = requireId();
       Expression e;
       if (token.type == T.Not && peekNext() == T.LParen) // Identifier !( TemplateArguments )
       {
         nT(); // Skip !.
-        e = set(new TemplateInstanceExpression(ident, parseTemplateArguments()), begin2);
+        e = set(new TemplateInstanceExpression(ident, parseTemplateArguments()), begin);
       }
       else // Identifier
-        e = set(new IdentifierExpression(ident), begin2);
+        e = set(new IdentifierExpression(ident), begin);
 
       identList ~= e;
 
@@ -1512,8 +1510,9 @@ class Parser
     else if (token.type == T.Typeof)
     {
       requireNext(T.LParen);
-      identList ~= set(new TypeofType(parseExpression()), begin);
+      auto type = new TypeofType(parseExpression());
       require(T.RParen);
+      identList ~= set(type, begin);
       if (token.type != T.Dot)
         goto Lreturn;
       nT();
@@ -1834,7 +1833,7 @@ class Parser
          T.Float,  T.Double,  T.Real,
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:+/
-    case T.Traits:
+    case T.Traits: // D2.0
     // Tokens that can start a UnaryExpression:
     case T.AndBinary,
          T.PlusPlus,
@@ -1855,14 +1854,15 @@ class Parser
       if (token.isSpecialToken)
         goto case_parseExpressionStatement;
 
-      // Assert that this isn't a valid expression.
-      assert(
-        delegate bool(){
-          bool success;
-          auto expression = try_(&parseExpression, success);
-          return success;
-        }() == false, "Any token that could start a valid expression must have been caught by a case statement in parseStatement()."
-      );
+      if (token.type != T.Dollar)
+        // Assert that this isn't a valid expression.
+        assert(
+          delegate bool(){
+            bool success;
+            auto expression = try_(&parseExpression, success);
+            return success;
+          }() == false, "Didn't expect valid expression."
+        );
 
       // Report error: it's an illegal statement.
       error(MID.ExpectedButFound, "Statement", token.srcText);
@@ -1874,7 +1874,7 @@ class Parser
     return s;
   }
 
-  /+
+  /++
     ScopeStatement:
         NoScopeStatement
   +/
@@ -1883,7 +1883,7 @@ class Parser
     return new ScopeStatement(parseNoScopeStatement());
   }
 
-  /+
+  /++
     NoScopeStatement:
         NonEmptyStatement
         BlockStatement
@@ -1893,6 +1893,7 @@ class Parser
   +/
   Statement parseNoScopeStatement()
   {
+    auto begin = token;
     Statement s;
     if (token.type == T.LBrace)
     {
@@ -1901,20 +1902,20 @@ class Parser
       while (token.type != T.RBrace && token.type != T.EOF)
         ss ~= parseStatement();
       require(T.RBrace);
-      s = ss;
+      s = set(ss, begin);
     }
     else if (token.type == T.Semicolon)
     {
       error(MID.ExpectedButFound, "non-empty statement", ";");
-      s = new EmptyStatement();
       nT();
+      s = set(new EmptyStatement(), begin);
     }
     else
       s = parseStatement();
     return s;
   }
 
-  /+
+  /++
     NoScopeOrEmptyStatement:
         ;
         NoScopeStatement
@@ -1923,8 +1924,9 @@ class Parser
   {
     if (token.type == T.Semicolon)
     {
+      auto begin = token;
       nT();
-      return new EmptyStatement();
+      return set(new EmptyStatement(), begin);
     }
     else
       return parseNoScopeStatement();
@@ -1938,9 +1940,7 @@ class Parser
     void addStorageClass()
     {
       if (stc & tmp)
-      {
         error(MID.RedundantStorageClass, token.srcText);
-      }
       else
         stc |= tmp;
     }
@@ -2195,16 +2195,21 @@ class Parser
     return new SwitchStatement(condition, switchBody);
   }
 
-  Statement parseCaseDefaultBody()
+  /++
+    Helper function for parsing the body of
+    a default or case statement.
+  +/
+  Statement parseCaseOrDefaultBody()
   {
     // This function is similar to parseNoScopeStatement()
+    auto begin = token;
     auto s = new Statements();
     while (token.type != T.Case &&
-            token.type != T.Default &&
-            token.type != T.RBrace &&
-            token.type != T.EOF)
+           token.type != T.Default &&
+           token.type != T.RBrace &&
+           token.type != T.EOF)
       s ~= parseStatement();
-    return new ScopeStatement(s);
+    return set(new ScopeStatement(s), begin);
   }
 
   Statement parseCaseStatement()
@@ -2219,7 +2224,7 @@ class Parser
     } while (token.type == T.Comma)
     require(T.Colon);
 
-    auto caseBody = parseCaseDefaultBody();
+    auto caseBody = parseCaseOrDefaultBody();
     return new CaseStatement(values, caseBody);
   }
 
@@ -2228,7 +2233,8 @@ class Parser
     assert(token.type == T.Default);
     nT();
     require(T.Colon);
-    return new DefaultStatement(parseCaseDefaultBody());
+    auto defaultBody = parseCaseOrDefaultBody();
+    return new DefaultStatement(defaultBody);
   }
 
   Statement parseContinueStatement()
@@ -2335,9 +2341,11 @@ class Parser
       if (token.type == T.LParen)
       {
         nT();
+        auto begin = token;
         Token* ident;
         auto type = parseDeclarator(ident, true);
         param = new Parameter(null, type, ident, null);
+        set(param, begin);
         require(T.RParen);
       }
       catchBodies ~= new CatchBody(param, parseNoScopeStatement());
@@ -2347,8 +2355,10 @@ class Parser
 
     if (token.type == T.Finally)
     {
+      auto begin = token;
       nT();
       finBody = new FinallyBody(parseNoScopeStatement());
+      set(finBody, begin);
     }
 
     if (catchBodies.length == 0 && finBody is null)
@@ -2423,15 +2433,10 @@ class Parser
 
     if (token.type == T.Comma)
     {
-      // Parse at least one argument.
       nT();
-      args ~= parseAssignExpression();
+      args = parseExpressionList();
     }
-
-    if (token.type == T.Comma)
-      args ~= parseArguments(T.RParen);
-    else
-      require(T.RParen);
+    require(T.RParen);
 
     pragmaBody = parseNoScopeOrEmptyStatement();
 
@@ -3021,19 +3026,17 @@ class Parser
         break;
       default:
         // DotIdentifier
-        auto begin2 = token;
         Expression[] identList;
-        goto LenterLoop;
-        while (token.type == T.Dot)
+        while (1)
         {
-          nT();
-          begin2 = token;
+          auto begin2 = token;
           auto ident = requireId();
-        LenterLoop:
-          e = new IdentifierExpression(token);
-          nT();
+          e = new IdentifierExpression(ident);
           set(e, begin2);
           identList ~= e;
+          if (token.type != T.Dot)
+            break;
+          nT(); // Skip dot.
         }
         e = new DotListExpression(identList);
       }
@@ -3144,8 +3147,8 @@ class Parser
 
   Expression parseOrOrExpression()
   {
-    auto begin = token;
     alias parseAndAndExpression parseNext;
+    auto begin = token;
     auto e = parseNext();
     while (token.type == T.OrLogical)
     {
@@ -3159,8 +3162,8 @@ class Parser
 
   Expression parseAndAndExpression()
   {
-    auto begin = token;
     alias parseOrExpression parseNext;
+    auto begin = token;
     auto e = parseNext();
     while (token.type == T.AndLogical)
     {
@@ -3174,8 +3177,8 @@ class Parser
 
   Expression parseOrExpression()
   {
-    auto begin = token;
     alias parseXorExpression parseNext;
+    auto begin = token;
     auto e = parseNext();
     while (token.type == T.OrBinary)
     {
@@ -3189,8 +3192,8 @@ class Parser
 
   Expression parseXorExpression()
   {
-    auto begin = token;
     alias parseAndExpression parseNext;
+    auto begin = token;
     auto e = parseNext();
     while (token.type == T.Xor)
     {
@@ -3204,8 +3207,8 @@ class Parser
 
   Expression parseAndExpression()
   {
-    auto begin = token;
     alias parseCmpExpression parseNext;
+    auto begin = token;
     auto e = parseNext();
     while (token.type == T.AndBinary)
     {
@@ -3219,6 +3222,7 @@ class Parser
 
   Expression parseCmpExpression()
   {
+    alias parseShiftExpression parseNext;
     auto begin = token;
     auto e = parseShiftExpression();
 
@@ -3227,7 +3231,7 @@ class Parser
     {
     case T.Equal, T.NotEqual:
       nT();
-      e = new EqualExpression(e, parseShiftExpression(), operator);
+      e = new EqualExpression(e, parseNext(), operator);
       break;
     case T.Not:
       if (peekNext() != T.Is)
@@ -3236,17 +3240,17 @@ class Parser
       // fall through
     case T.Is:
       nT();
-      e = new IdentityExpression(e, parseShiftExpression(), operator);
+      e = new IdentityExpression(e, parseNext(), operator);
       break;
     case T.LessEqual, T.Less, T.GreaterEqual, T.Greater,
          T.Unordered, T.UorE, T.UorG, T.UorGorE,
          T.UorL, T.UorLorE, T.LorEorG, T.LorG:
       nT();
-      e = new RelExpression(e, parseShiftExpression(), operator);
+      e = new RelExpression(e, parseNext(), operator);
       break;
     case T.In:
       nT();
-      e = new InExpression(e, parseShiftExpression(), operator);
+      e = new InExpression(e, parseNext(), operator);
       break;
     default:
       return e;
@@ -3257,16 +3261,17 @@ class Parser
 
   Expression parseShiftExpression()
   {
+    alias parseAddExpression parseNext;
     auto begin = token;
-    auto e = parseAddExpression();
+    auto e = parseNext();
     while (1)
     {
       auto operator = token;
       switch (operator.type)
       {
-      case T.LShift:  nT(); e = new LShiftExpression(e, parseAddExpression(), operator); break;
-      case T.RShift:  nT(); e = new RShiftExpression(e, parseAddExpression(), operator); break;
-      case T.URShift: nT(); e = new URShiftExpression(e, parseAddExpression(), operator); break;
+      case T.LShift:  nT(); e = new LShiftExpression(e, parseNext(), operator); break;
+      case T.RShift:  nT(); e = new RShiftExpression(e, parseNext(), operator); break;
+      case T.URShift: nT(); e = new URShiftExpression(e, parseNext(), operator); break;
       default:
         return e;
       }
@@ -3277,16 +3282,17 @@ class Parser
 
   Expression parseAddExpression()
   {
+    alias parseMulExpression parseNext;
     auto begin = token;
-    auto e = parseMulExpression();
+    auto e = parseNext();
     while (1)
     {
       auto operator = token;
       switch (operator.type)
       {
-      case T.Plus:  nT(); e = new PlusExpression(e, parseMulExpression(), operator); break;
-      case T.Minus: nT(); e = new MinusExpression(e, parseMulExpression(), operator); break;
-      case T.Tilde: nT(); e = new CatExpression(e, parseMulExpression(), operator); break;
+      case T.Plus:  nT(); e = new PlusExpression(e, parseNext(), operator); break;
+      case T.Minus: nT(); e = new MinusExpression(e, parseNext(), operator); break;
+      case T.Tilde: nT(); e = new CatExpression(e, parseNext(), operator); break;
       default:
         return e;
       }
@@ -3334,7 +3340,7 @@ class Parser
         e = new PostDecrExpression(e);
         break;
       case T.LParen:
-        e = new CallExpression(e, parseArguments(T.RParen));
+        e = new CallExpression(e, parseArguments());
         goto Lset;
       case T.LBracket:
         // parse Slice- and IndexExpression
@@ -3354,12 +3360,13 @@ class Parser
           require(T.RBracket);
           goto Lset;
         }
-        else if (token.type == T.Comma)
+
+        if (token.type == T.Comma)
         {
-           es ~= parseArguments(T.RBracket);
+           nT();
+           es ~= parseExpressionList();
         }
-        else
-          require(T.RBracket);
+        require(T.RBracket);
 
         e = new IndexExpression(e, es);
         goto Lset;
@@ -3506,8 +3513,8 @@ class Parser
       nT();
       break;
     case T.CharLiteral, T.WCharLiteral, T.DCharLiteral:
+      e = new CharExpression(token);
       nT();
-      e = new CharExpression();
       break;
     case T.String:
       Token*[] stringLiterals;
@@ -3527,10 +3534,12 @@ class Parser
         e = parseAssignExpression();
         if (token.type == T.Colon)
           goto LparseAssocArray;
-        else if (token.type == T.Comma)
-          values = [e] ~ parseArguments(T.RBracket);
-        else
-          require(T.RBracket);
+        if (token.type == T.Comma)
+        {
+          nT();
+          values = [e] ~ parseExpressionList();
+        }
+        require(T.RBracket);
       }
       else
         nT();
@@ -3732,7 +3741,7 @@ class Parser
     Expression[] ctorArguments;
 
     if (token.type == T.LParen)
-      newArguments = parseArguments(T.RParen);
+      newArguments = parseArguments();
 
     // NewAnonClassExpression:
     //         new (ArgumentList)opt class (ArgumentList)opt SuperClassopt InterfaceClassesopt ClassBody
@@ -3740,7 +3749,7 @@ class Parser
     {
       nT();
       if (token.type == T.LParen)
-        ctorArguments = parseArguments(T.RParen);
+        ctorArguments = parseArguments();
 
       BaseClass[] bases = token.type != T.LBrace ? parseBaseClasses(false) : null ;
 
@@ -3755,7 +3764,7 @@ class Parser
     auto type = parseType();
 
     if (token.type == T.LParen)
-      ctorArguments = parseArguments(T.RParen);
+      ctorArguments = parseArguments();
 
     return set(new NewExpression(/*e, */newArguments, type, ctorArguments), begin);
   }
@@ -4003,28 +4012,38 @@ class Parser
     return t;
   }
 
-  Expression[] parseArguments(TOK terminator)
+  /++
+    Parse a list of AssignExpressions.
+    ExpressionList:
+      AssignExpression
+      AssignExpression , ExpressionList
+  +/
+  Expression[] parseExpressionList()
   {
-    assert(token.type == T.LParen || token.type == T.LBracket || token.type == T.Comma);
-    assert(terminator == T.RParen || terminator == T.RBracket);
-    Expression[] args;
-
-    nT();
-    if (token.type == terminator)
+    Expression[] expressions;
+    while (1)
     {
+      expressions ~= parseAssignExpression();
+      if (token.type != T.Comma)
+        break;
       nT();
-      return null;
     }
+    return expressions;
+  }
 
-    goto LenterLoop;
-    do
-    {
-      nT();
-    LenterLoop:
-      args ~= parseAssignExpression();
-    } while (token.type == T.Comma)
-
-    require(terminator);
+  /++
+    Arguments:
+      ( )
+      ( ExpressionList )
+  +/
+  Expression[] parseArguments()
+  {
+    assert(token.type == T.LParen);
+    nT();
+    Expression[] args;
+    if (token.type != TOK.RParen)
+      args = parseExpressionList();
+    require(TOK.RParen);
     return args;
   }
 
