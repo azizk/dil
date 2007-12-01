@@ -159,10 +159,18 @@ struct Token
 
   alias srcText identifier;
 
+  /// Returns the text of the token.
   string srcText()
   {
     assert(start && end);
     return start[0 .. end - start];
+  }
+
+  /// Returns the preceding whitespace of the token.
+  string wsChars()
+  {
+    assert(ws && start);
+    return ws[0 .. start - ws];
   }
 
   /// Find next non-whitespace token. Returns 'this' token if the next token is TOK.EOF or null.
@@ -296,6 +304,18 @@ version(D2)
     }
   }
 }
+}
+
+/++
+  Not used at the moment. Could be useful if more
+  info is needed about the location of nodes/tokens.
++/
+struct NewlineInfo
+{
+  char[] oriPath;   /// Original path to the source text.
+  char[] setPath;   /// Path set by #line.
+  uint oriLineNum;  /// Actual line number in the source text.
+  uint setLineNum;  /// Delta line number set by #line.
 }
 
 /// A table mapping each TOK to a string.

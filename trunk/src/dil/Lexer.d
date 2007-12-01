@@ -2535,6 +2535,19 @@ version(D2)
     return head;
   }
 
+  /// Scan the whole text until EOF is encountered.
+  void scanAll()
+  {
+    while (nextToken() != TOK.EOF)
+    {}
+  }
+
+  /// HEAD -> Newline -> First Token
+  Token* firstToken()
+  {
+    return this.head.next.next;
+  }
+
   static void loadKeywords(ref Identifier[string] table)
   {
     foreach(k; keywords)

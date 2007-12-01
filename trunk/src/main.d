@@ -93,6 +93,43 @@ void main(char[][] args)
   case "stats", "statistics":
     cmd.Statistics.execute(args[2..$]);
     break;
+  case "tok", "tokenize":
+    char[] filePath;
+    char[] sourceText;
+    char[] separator;
+    bool ignoreWSToks;
+    bool printWS;
+
+    foreach (arg; args[2..$])
+    {
+      if (strbeg(arg, "-t"))
+        sourceText = arg[2..$];
+      else if (strbeg(arg, "-s"))
+        separator = arg[2..$];
+      else if (arg == "-i")
+        ignoreWSToks = true;
+      else if (arg == "-ws")
+        printWS = true;
+      else
+        filePath = arg;
+    }
+
+    separator  || (separator = "\n");
+    sourceText || (sourceText = loadFile(filePath));
+
+    auto lx = new Lexer(sourceText, null);
+    lx.scanAll();
+    auto token = lx.firstToken();
+
+    for (; token.type != TOK.EOF; token = token.next)
+    {
+      if (token.type == TOK.Newline || ignoreWSToks && token.isWhitespace)
+        continue;
+      if (printWS && token.ws)
+        Stdout(token.wsChars);
+      Stdout(token.srcText)(separator);
+    }
+    break;
   case "parse":
     if (args.length == 3)
       parse(args[2]);
@@ -111,7 +148,8 @@ const char[] COMMANDS =
   "  generate (gen)\n"
   "  help (?)\n"
   "  importgraph (igraph)\n"
-  "  statistics (stats)\n";
+  "  statistics (stats)\n"
+  "  tokenize (tok)\n";
 
 bool strbeg(char[] str, char[] begin)
 {
@@ -138,6 +176,21 @@ void printHelp(char[] command)
     break;
   case "importgraph", "igraph":
     msg = GetMsg(MID.HelpImportGraph);
+    break;
+  case "tok", "tokenize":
+    msg = `Print the tokens of a D source file.
+Usage:
+  dil tok file.d [Options]
+
+Options:
+  -tTEXT          : tokenize TEXT instead of a file.
+  -sSEPARATOR     : print SEPARATOR instead of newline between tokens.
+  -i              : ignore whitespace tokens (e.g. comments, shebang etc.)
+  -ws             : print a token's preceding whitespace characters.
+
+Example:
+  dil tok -t"module foo; void func(){}"
+  dil tok main.d | grep ^[0-9]`;
     break;
   default:
     msg = helpMain();
