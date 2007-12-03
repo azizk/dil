@@ -245,4 +245,32 @@ class Node
     this.begin = begin;
     this.end = end;
   }
+
+  void addChild(Node child)
+  {
+    assert(child !is null, "failed in " ~ this.classinfo.name);
+    this.children ~= child;
+  }
+
+  void addOptChild(Node child)
+  {
+    child is null || addChild(child);
+  }
+
+  void addChildren(Node[] children)
+  {
+    assert(children !is null && delegate{
+      foreach (child; children)
+        if (child is null)
+          return false;
+      return true; }(),
+      "failed in " ~ this.classinfo.name
+    );
+    this.children ~= children;
+  }
+
+  void addOptChildren(Node[] children)
+  {
+    children is null || addChildren(children);
+  }
 }

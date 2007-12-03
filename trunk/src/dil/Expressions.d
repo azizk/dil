@@ -31,7 +31,7 @@ abstract class BinaryExpression : Expression
   Token* tok;
   this(Expression left, Expression right, Token* tok)
   {
-    this.children = [left, right];
+    addChildren([left, right]);
     this.left = left;
     this.right = right;
     this.tok = tok;
@@ -45,7 +45,7 @@ class CondExpression : BinaryExpression
   {
     super(left, right, tok);
     mixin(set_kind);
-    this.children ~= [condition];
+    addChild(condition);
     this.condition = condition;
   }
 }
@@ -339,7 +339,7 @@ abstract class UnaryExpression : Expression
   Expression e;
   this(Expression e)
   {
-    this.children ~= e;
+    addChild(e);
     this.e = e;
   }
 }
@@ -455,7 +455,7 @@ class PostDotListExpression : UnaryExpression
   {
     super(e);
     mixin(set_kind);
-    this.children ~= [dotList];
+    addChild(dotList);
     this.dotList = dotList;
   }
 }
@@ -467,7 +467,7 @@ class CallExpression : UnaryExpression
   {
     super(e);
     mixin(set_kind);
-    this.children ~= args;
+    addOptChildren(args);
     this.args = args;
   }
 }
@@ -481,11 +481,9 @@ class NewExpression : /*Unary*/Expression
   {
     /*super(e);*/
     mixin(set_kind);
-    if (newArgs.length)
-      this.children ~= newArgs;
-    this.children ~= type;
-    if (ctorArgs.length)
-      this.children ~= ctorArgs;
+    addOptChildren(newArgs);
+    addChild(type);
+    addOptChildren(ctorArgs);
     this.newArgs = newArgs;
     this.type = type;
     this.ctorArgs = ctorArgs;
@@ -502,13 +500,10 @@ class NewAnonClassExpression : /*Unary*/Expression
   {
     /*super(e);*/
     mixin(set_kind);
-    if (newArgs.length)
-      this.children ~= newArgs;
-    if (bases.length)
-      this.children ~= bases;
-    if (ctorArgs.length)
-      this.children ~= ctorArgs;
-    this.children ~= decls;
+    addOptChildren(newArgs);
+    addOptChildren(bases);
+    addOptChildren(ctorArgs);
+    addChild(decls);
 
     this.newArgs = newArgs;
     this.bases = bases;
@@ -531,7 +526,7 @@ class CastExpression : UnaryExpression
   Type type;
   this(Expression e, Type type)
   {
-    this.children = [type];
+    addChild(type); // Add type before super().
     super(e);
     mixin(set_kind);
     this.type = type;
@@ -545,7 +540,7 @@ class IndexExpression : UnaryExpression
   {
     super(e);
     mixin(set_kind);
-    this.children ~= args;
+    addChildren(args);
     this.args = args;
   }
 }
@@ -557,10 +552,9 @@ class SliceExpression : UnaryExpression
   {
     super(e);
     mixin(set_kind);
+    assert(left ? (right !is null) : right is null);
     if (left)
-      this.children ~= left;
-    if (right)
-      this.children ~= right;
+      addChildren([left, right]);
 
     this.left = left;
     this.right = right;
@@ -619,7 +613,7 @@ class DotListExpression : Expression
   this(Expression[] items)
   {
     mixin(set_kind);
-    this.children = items;
+    addChildren(items);
     this.items = items;
   }
 }
@@ -631,8 +625,7 @@ class TemplateInstanceExpression : Expression
   this(Token* ident, TemplateArguments targs)
   {
     mixin(set_kind);
-    if (targs)
-      this.children = [targs];
+    addOptChild(targs);
     this.ident = ident;
     this.targs = targs;
   }
@@ -738,7 +731,7 @@ class ArrayLiteralExpression : Expression
   this(Expression[] values)
   {
     mixin(set_kind);
-    this.children = values;
+    addOptChildren(values);
     this.values = values;
   }
 }
@@ -751,7 +744,7 @@ class AArrayLiteralExpression : Expression
     assert(keys.length == values.length);
     mixin(set_kind);
     foreach (i, key; keys)
-      this.children ~= [key, values[i]];
+      addChildren([key, values[i]]);
     this.keys = keys;
     this.values = values;
   }
@@ -763,9 +756,8 @@ class AssertExpression : Expression
   this(Expression expr, Expression msg)
   {
     mixin(set_kind);
-    this.children = [expr];
-    if (msg)
-      this.children ~= msg;
+    addChild(expr);
+    addOptChild(msg);
     this.expr = expr;
     this.msg = msg;
   }
@@ -777,7 +769,7 @@ class MixinExpression : Expression
   this(Expression expr)
   {
     mixin(set_kind);
-    this.children = [expr];
+    addChild(expr);
     this.expr = expr;
   }
 }
@@ -788,7 +780,7 @@ class ImportExpression : Expression
   this(Expression expr)
   {
     mixin(set_kind);
-    this.children = [expr];
+    addChild(expr);
     this.expr = expr;
   }
 }
@@ -799,7 +791,7 @@ class TypeofExpression : Expression
   this(Type type)
   {
     mixin(set_kind);
-    this.children = [type];
+    addChild(type);
     this.type = type;
   }
 }
@@ -811,7 +803,7 @@ class TypeDotIdExpression : Expression
   this(Type type, Token* ident)
   {
     mixin(set_kind);
-    this.children = [type];
+    addChild(type);
     this.type = type;
     this.ident = ident;
   }
@@ -823,7 +815,7 @@ class TypeidExpression : Expression
   this(Type type)
   {
     mixin(set_kind);
-    this.children = [type];
+    addChild(type);
     this.type = type;
   }
 }
@@ -838,11 +830,10 @@ class IsExpression : Expression
   this(Type type, Token* ident, Token* opTok, Token* specTok, Type specType, typeof(tparams) tparams)
   {
     mixin(set_kind);
-    this.children = [type];
-    if (specType)
-      this.children ~= specType;
-    if (tparams)
-      this.children ~= tparams;
+    addChild(type);
+    addOptChild(specType);
+  version(D2)
+    addOptChild(tparams);
     this.type = type;
     this.ident = ident;
     this.opTok = opTok;
@@ -861,11 +852,9 @@ class FunctionLiteralExpression : Expression
   this()
   {
     mixin(set_kind);
-    if (returnType)
-      this.children ~= returnType;
-    if (parameters)
-      this.children ~= parameters;
-    this.children ~= funcBody;
+    addOptChild(returnType);
+    addOptChild(parameters);
+    addChild(funcBody);
   }
 
   this(Type returnType, Parameters parameters, FunctionBody funcBody)
@@ -892,8 +881,7 @@ class TraitsExpression : Expression
   this(typeof(ident) ident, typeof(targs) targs)
   {
     mixin(set_kind);
-    if (targs)
-      this.children = [targs];
+    addOptChild(targs);
     this.ident = ident;
     this.targs = targs;
   }
@@ -918,10 +906,8 @@ class ArrayInitializer : Expression
     mixin(set_kind);
     foreach (i, key; keys)
     {
-      if (key)
-        this.children ~= key;
-      if (values[i])
-        this.children ~= values[i];
+      addOptChild(key); // The key is optional in ArrayInitializers.
+      addChild(values[i]);
     }
     this.keys = keys;
     this.values = values;
@@ -935,7 +921,7 @@ class StructInitializer : Expression
   this(Token*[] idents, Expression[] values)
   {
     mixin(set_kind);
-    this.children = values;
+    addOptChildren(values);
     this.idents = idents;
     this.values = values;
   }
@@ -983,7 +969,7 @@ class AsmBracketExpression : Expression
   this(Expression e)
   {
     mixin(set_kind);
-    this.children = [e];
+    addChild(e);
     this.e = e;
   }
 }

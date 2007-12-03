@@ -311,7 +311,7 @@ class Lexer
     This is the old scan method.
     TODO: profile old and new to see which one is faster.
   +/
-  public void scan_(out Token t)
+  public void scan(out Token t)
   in
   {
     assert(text.ptr <= p && p < end);
@@ -771,7 +771,7 @@ class Lexer
     const char[] case_L3 = case_!(str, tok, "Lcommon");
   }
 
-  public void scan(out Token t)
+  public void scan_(out Token t)
   in
   {
     assert(text.ptr <= p && p < end);

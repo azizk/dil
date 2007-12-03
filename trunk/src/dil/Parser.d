@@ -12,6 +12,7 @@ import dil.Declarations;
 import dil.Statements;
 import dil.Expressions;
 import dil.Types;
+import dil.Enums;
 import common;
 
 private alias TOK T;
@@ -86,7 +87,7 @@ class Parser
     auto decls = new Declarations;
     if (token.type == T.Module)
       decls ~= parseModuleDeclaration();
-    decls ~= parseDeclarationDefinitions();
+    decls.addOptChildren(parseDeclarationDefinitions());
     set(decls, begin);
     return decls;
   }
@@ -2212,15 +2213,9 @@ class Parser
   Statement parseCaseStatement()
   {
     assert(token.type == T.Case);
-    // T.Case skipped in do-while.
-    Expression[] values;
-    do
-    {
-      nT();
-      values ~= parseAssignExpression();
-    } while (token.type == T.Comma)
+    nT();
+    auto values = parseExpressionList();
     require(T.Colon);
-
     auto caseBody = parseCaseOrDefaultBody();
     return new CaseStatement(values, caseBody);
   }
@@ -3342,6 +3337,7 @@ class Parser
       case T.LBracket:
         // parse Slice- and IndexExpression
         nT();
+        // [] is a SliceExpression
         if (token.type == T.RBracket)
         {
           e = new SliceExpression(e, null, null);
@@ -3350,6 +3346,7 @@ class Parser
 
         Expression[] es = [parseAssignExpression()];
 
+        // [ AssignExpression .. AssignExpression ]
         if (token.type == T.Slice)
         {
           nT();
@@ -3358,6 +3355,7 @@ class Parser
           goto Lset;
         }
 
+        // [ ExpressionList ]
         if (token.type == T.Comma)
         {
            nT();
@@ -3371,7 +3369,7 @@ class Parser
         return e;
       }
       nT();
-    Lset:
+    Lset: // Jumped here to skip nT().
       set(e, begin);
     }
     assert(0);
@@ -3699,9 +3697,7 @@ class Parser
       auto id = requireId();
       TemplateArguments args;
       if (token.type == T.Comma)
-      {
         args = parseTemplateArguments2();
-      }
       else
         require(T.RParen);
       e = new TraitsExpression(id, args);

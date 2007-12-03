@@ -8,16 +8,20 @@ import dil.Expressions;
 import dil.Types;
 import dil.Statements;
 import dil.Token;
+import dil.Enums;
 import dil.Scope;
 
 abstract class Declaration : Node
 {
   bool hasBody;
-  this(bool hasBody)
+  this()
   {
     super(NodeCategory.Declaration);
-    this.hasBody = hasBody;
   }
+
+  // Members relevant to semantic phase.
+  StorageClass stc;
+  Protection prot;
 
   void semantic(Scope sc)
   {
@@ -25,29 +29,34 @@ abstract class Declaration : Node
 //       if (node.category == NodeCategory.Declaration)
 //         (cast(Declaration)cast(void*)node).semantic(sc);
   }
+
+  final bool isStatic()
+  {
+    return !!(stc & StorageClass.Static);
+  }
+
+  final bool isPublic()
+  {
+    return !!(prot & Protection.Public);
+  }
 }
 
 class Declarations : Declaration
 {
   this()
   {
-    super(true);
+    hasBody = true;
     mixin(set_kind);
   }
 
   void opCatAssign(Declaration d)
   {
-    this.children ~= d;
-  }
-
-  void opCatAssign(Declaration[] decls)
-  {
-    this.children ~= decls;
+    addChild(d);
   }
 
   void opCatAssign(Declarations ds)
   {
-    this.children ~= ds.children;
+    addChildren(ds.children);
   }
 }
 
@@ -55,7 +64,6 @@ class EmptyDeclaration : Declaration
 {
   this()
   {
-    super(false);
     mixin(set_kind);
   }
 }
@@ -65,7 +73,6 @@ class IllegalDeclaration : Declaration
   Token* token;
   this(Token* token)
   {
-    super(false);
     mixin(set_kind);
     this.token = token;
   }
@@ -80,7 +87,6 @@ class ModuleDeclaration : Declaration
   Token*[] packages;
   this(ModuleFQN moduleFQN)
   {
-    super(false);
     mixin(set_kind);
     assert(moduleFQN.length != 0);
     this.moduleName = moduleFQN[$-1];
@@ -121,17 +127,16 @@ class ImportDeclaration : Declaration
   Token*[] moduleAliases;
   Token*[] bindNames;
   Token*[] bindAliases;
-  bool isStatic_;
 
   this(ModuleFQN[] moduleFQNs, Token*[] moduleAliases, Token*[] bindNames, Token*[] bindAliases, bool isStatic)
   {
-    super(false);
     mixin(set_kind);
     this.moduleFQNs = moduleFQNs;
     this.moduleAliases = moduleAliases;
     this.bindNames = bindNames;
     this.bindAliases = bindAliases;
-    this.isStatic_ = isStatic;
+    if (isStatic)
+      this.stc |= StorageClass.Static;
   }
 
   char[][] getModuleFQNs(char separator)
@@ -147,17 +152,6 @@ class ImportDeclaration : Declaration
     }
     return FQNs;
   }
-
-  bool isStatic()
-  {
-    return isStatic_;
-  }
-
-  bool isPublic()
-  {
-    // TODO:
-    return false;
-  }
 }
 
 class AliasDeclaration : Declaration
@@ -165,9 +159,8 @@ class AliasDeclaration : Declaration
   Declaration decl;
   this(Declaration decl)
   {
-    super(false);
     mixin(set_kind);
-    this.children = [decl];
+    addChild(decl);
     this.decl = decl;
   }
 }
@@ -177,9 +170,8 @@ class TypedefDeclaration : Declaration
   Declaration decl;
   this(Declaration decl)
   {
-    super(false);
     mixin(set_kind);
-    this.children = [decl];
+    addChild(decl);
     this.decl = decl;
   }
 }
@@ -191,12 +183,10 @@ class EnumDeclaration : Declaration
   EnumMember[] members;
   this(Token* name, Type baseType, EnumMember[] members, bool hasBody)
   {
-    super(hasBody);
+    super.hasBody = hasBody;
     mixin(set_kind);
-    if (baseType)
-      this.children = [baseType];
-    if (members.length)
-        this.children ~= members;
+    addOptChild(baseType);
+    addOptChildren(members);
 
     this.name = name;
     this.baseType = baseType;
@@ -212,8 +202,7 @@ class EnumMember : Node
   {
     super(NodeCategory.Other);
     mixin(set_kind);
-    if (value)
-      this.children = [value];
+    addOptChild(value);
 
     this.name = name;
     this.value = value;
@@ -228,14 +217,11 @@ class ClassDeclaration : Declaration
   Declarations decls;
   this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls, bool hasBody)
   {
-    super(hasBody);
+    super.hasBody = hasBody;
     mixin(set_kind);
-    if (tparams)
-      this.children = [tparams];
-    if (bases.length)
-      this.children ~= bases;
-    if (decls)
-      this.children ~= decls;
+    addOptChild(tparams);
+    addOptChildren(bases);
+    addOptChild(decls);
 
     this.name = name;
     this.tparams = tparams;
@@ -252,14 +238,11 @@ class InterfaceDeclaration : Declaration
   Declarations decls;
   this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls, bool hasBody)
   {
-    super(hasBody);
+    super.hasBody = hasBody;
     mixin(set_kind);
-    if (tparams)
-      this.children = [tparams];
-    if (bases.length)
-      this.children ~= bases;
-    if (decls)
-      this.children ~= decls;
+    addOptChild(tparams);
+    addOptChildren(bases);
+    addOptChild(decls);
 
     this.name = name;
     this.tparams = tparams;
@@ -275,12 +258,10 @@ class StructDeclaration : Declaration
   Declarations decls;
   this(Token* name, TemplateParameters tparams, Declarations decls, bool hasBody)
   {
-    super(hasBody);
+    super.hasBody = hasBody;
     mixin(set_kind);
-    if (tparams)
-      this.children = [tparams];
-    if (decls)
-      this.children ~= decls;
+    addOptChild(tparams);
+    addOptChild(decls);
 
     this.name = name;
     this.tparams = tparams;
@@ -295,12 +276,10 @@ class UnionDeclaration : Declaration
   Declarations decls;
   this(Token* name, TemplateParameters tparams, Declarations decls, bool hasBody)
   {
-    super(hasBody);
+    super.hasBody = hasBody;
     mixin(set_kind);
-    if (tparams)
-      this.children = [tparams];
-    if (decls)
-      this.children ~= decls;
+    addOptChild(tparams);
+    addOptChild(decls);
 
     this.name = name;
     this.tparams = tparams;
@@ -314,10 +293,10 @@ class ConstructorDeclaration : Declaration
   FunctionBody funcBody;
   this(Parameters parameters, FunctionBody funcBody)
   {
-    super(true);
+    super.hasBody = true;
     mixin(set_kind);
-    assert(parameters !is null && funcBody !is null);
-    this.children = [cast(Node)parameters, funcBody];
+    addChild(parameters);
+    addChild(funcBody);
 
     this.parameters = parameters;
     this.funcBody = funcBody;
@@ -329,10 +308,9 @@ class StaticConstructorDeclaration : Declaration
   FunctionBody funcBody;
   this(FunctionBody funcBody)
   {
-    super(true);
+    super.hasBody = true;
     mixin(set_kind);
-    assert(funcBody !is null);
-    this.children = [funcBody];
+    addChild(funcBody);
 
     this.funcBody = funcBody;
   }
@@ -343,9 +321,9 @@ class DestructorDeclaration : Declaration
   FunctionBody funcBody;
   this(FunctionBody funcBody)
   {
-    super(true);
+    super.hasBody = true;
     mixin(set_kind);
-    this.children = [funcBody];
+    addChild(funcBody);
 
     this.funcBody = funcBody;
   }
@@ -356,9 +334,9 @@ class StaticDestructorDeclaration : Declaration
   FunctionBody funcBody;
   this(FunctionBody funcBody)
   {
-    super(true);
+    super.hasBody = true;
     mixin(set_kind);
-    this.children = [funcBody];
+    addChild(funcBody);
 
     this.funcBody = funcBody;
   }
@@ -373,13 +351,12 @@ class FunctionDeclaration : Declaration
   FunctionBody funcBody;
   this(Type returnType, Token* funcName, TemplateParameters tparams, Parameters params, FunctionBody funcBody)
   {
-    assert(returnType !is null);
-    super(funcBody.funcBody !is null);
+    super.hasBody = funcBody.funcBody !is null;
     mixin(set_kind);
-    this.children = [returnType];
-    if (tparams)
-      this.children ~= tparams;
-    this.children ~= [cast(Node)params, funcBody];
+    addChild(returnType);
+    addOptChild(tparams);
+    addChild(params);
+    addChild(funcBody);
 
     this.returnType = returnType;
     this.funcName = funcName;
@@ -396,13 +373,10 @@ class VariableDeclaration : Declaration
   Expression[] values;
   this(Type type, Token*[] idents, Expression[] values)
   {
-    super(false);
     mixin(set_kind);
-    if (type)
-      this.children = [type];
+    addOptChild(type);
     foreach(value; values)
-      if (value)
-        this.children ~= value;
+      addOptChild(value);
 
     this.type = type;
     this.idents = idents;
@@ -415,10 +389,9 @@ class InvariantDeclaration : Declaration
   FunctionBody funcBody;
   this(FunctionBody funcBody)
   {
-    super(true);
+    super.hasBody = true;
     mixin(set_kind);
-    assert(funcBody !is null);
-    this.children = [funcBody];
+    addChild(funcBody);
 
     this.funcBody = funcBody;
   }
@@ -429,10 +402,9 @@ class UnittestDeclaration : Declaration
   FunctionBody funcBody;
   this(FunctionBody funcBody)
   {
-    super(true);
+    super.hasBody = true;
     mixin(set_kind);
-    assert(funcBody !is null);
-    this.children = [funcBody];
+    addChild(funcBody);
 
     this.funcBody = funcBody;
   }
@@ -446,12 +418,10 @@ class DebugDeclaration : Declaration
 
   this(Token* spec, Token* cond, Declaration decls, Declaration elseDecls)
   {
-    super(true /+decls.length != 0+/);
+    super.hasBody = decls !is null;
     mixin(set_kind);
-    if (decls)
-      this.children = [decls];
-    if (elseDecls)
-      this.children ~= elseDecls;
+    addOptChild(decls);
+    addOptChild(elseDecls);
 
     this.spec = spec;
     this.cond = cond;
@@ -468,12 +438,10 @@ class VersionDeclaration : Declaration
 
   this(Token* spec, Token* cond, Declaration decls, Declaration elseDecls)
   {
-    super(true /+decls.length != 0+/);
+    super.hasBody = decls !is null;
     mixin(set_kind);
-    if (decls)
-      this.children = [decls];
-    if (elseDecls)
-      this.children ~= elseDecls;
+    addOptChild(decls);
+    addOptChild(elseDecls);
 
     this.spec = spec;
     this.cond = cond;
@@ -488,14 +456,11 @@ class StaticIfDeclaration : Declaration
   Declaration ifDecls, elseDecls;
   this(Expression condition, Declaration ifDecls, Declaration elseDecls)
   {
-    super(true);
+    super.hasBody = true;
     mixin(set_kind);
-    assert(condition !is null);
-    this.children = [condition];
-    if (ifDecls)
-      this.children ~= ifDecls;
-    if (elseDecls)
-      this.children ~= elseDecls;
+    addChild(condition);
+    addOptChild(ifDecls);
+    addOptChild(elseDecls);
 
     this.condition = condition;
     this.ifDecls = ifDecls;
@@ -508,12 +473,11 @@ class StaticAssertDeclaration : Declaration
   Expression condition, message;
   this(Expression condition, Expression message)
   {
-    super(true);
+    super.hasBody = true;
     mixin(set_kind);
-    assert(condition !is null);
-    this.children = [condition];
-    if (message)
-      this.children ~= message;
+    addChild(condition);
+    addOptChild(message);
+
     this.condition = condition;
     this.message = message;
   }
@@ -526,12 +490,10 @@ class TemplateDeclaration : Declaration
   Declarations decls;
   this(Token* name, TemplateParameters tparams, Declarations decls)
   {
-    super(true);
+    super.hasBody = true;
     mixin(set_kind);
-    if (tparams)
-      this.children = [tparams];
-    assert(decls !is null);
-    this.children ~= decls;
+    addOptChild(tparams);
+    addChild(decls);
 
     this.name = name;
     this.tparams = tparams;
@@ -545,10 +507,10 @@ class NewDeclaration : Declaration
   FunctionBody funcBody;
   this(Parameters parameters, FunctionBody funcBody)
   {
-    super(true);
+    super.hasBody = true;
     mixin(set_kind);
-    assert(parameters !is null && funcBody !is null);
-    this.children = [cast(Node)parameters, funcBody];
+    addChild(parameters);
+    addChild(funcBody);
 
     this.parameters = parameters;
     this.funcBody = funcBody;
@@ -561,10 +523,10 @@ class DeleteDeclaration : Declaration
   FunctionBody funcBody;
   this(Parameters parameters, FunctionBody funcBody)
   {
-    super(true);
+    super.hasBody = true;
     mixin(set_kind);
-    assert(parameters !is null && funcBody !is null);
-    this.children = [cast(Node)parameters, funcBody];
+    addChild(parameters);
+    addChild(funcBody);
 
     this.parameters = parameters;
     this.funcBody = funcBody;
@@ -577,10 +539,9 @@ class AttributeDeclaration : Declaration
   Declaration decls;
   this(TOK attribute, Declaration decls)
   {
-    super(true);
+    super.hasBody = true;
     mixin(set_kind);
-    assert(decls !is null);
-    this.children ~= decls;
+    addChild(decls);
 
     this.attribute = attribute;
     this.decls = decls;
@@ -594,8 +555,8 @@ class ExternDeclaration : AttributeDeclaration
   {
     super(TOK.Extern, decls);
     mixin(set_kind);
-    if (linkage)
-      this.children ~= linkage;
+    addOptChild(linkage);
+
     this.linkage = linkage;
   }
 }
@@ -617,8 +578,7 @@ class PragmaDeclaration : AttributeDeclaration
   Expression[] args;
   this(Token* ident, Expression[] args, Declaration decls)
   {
-    if (args.length)
-      this.children ~= args; // Add args before calling super().
+    addOptChildren(args); // Add args before calling super().
     super(TOK.Pragma, decls);
     mixin(set_kind);
 
@@ -632,21 +592,21 @@ class MixinDeclaration : Declaration
   Expression[] templateIdents;
   Token* mixinIdent;
   Expression argument; // mixin ( AssignExpression )
+
   this(Expression[] templateIdents, Token* mixinIdent)
   {
-    super(false);
     mixin(set_kind);
-    assert(templateIdents.length != 0);
-    this.children = templateIdents;
+    addChildren(templateIdents);
+
     this.templateIdents = templateIdents;
     this.mixinIdent = mixinIdent;
   }
+
   this(Expression argument)
   {
-    super(false);
     mixin(set_kind);
-    assert(argument !is null);
-    this.children = [argument];
+    addChild(argument);
+
     this.argument = argument;
   }
 }

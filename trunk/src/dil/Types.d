@@ -6,6 +6,7 @@ module dil.Types;
 import dil.SyntaxTree;
 import dil.Token;
 import dil.Expressions;
+import dil.Enums;
 
 class Linkage : Node
 {
@@ -49,27 +50,6 @@ class Linkage : Node
   }
 }
 
-enum StorageClass
-{
-  None         = 0,
-  Abstract     = 1,
-  Auto         = 1<<2,
-  Const        = 1<<3,
-  Deprecated   = 1<<4,
-  Extern       = 1<<5,
-  Final        = 1<<6,
-  Invariant    = 1<<7,
-  Override     = 1<<8,
-  Scope        = 1<<9,
-  Static       = 1<<10,
-  Synchronized = 1<<11,
-  In           = 1<<12,
-  Out          = 1<<13,
-  Ref          = 1<<14,
-  Lazy         = 1<<15,
-  Variadic     = 1<<16,
-}
-
 class Parameter : Node
 {
   StorageClass stc;
@@ -82,10 +62,9 @@ class Parameter : Node
   {
     super(NodeCategory.Other);
     mixin(set_kind);
-    if (type) // type can be null when param in foreach statement
-      this.children = [type];
-    if (assignExpr)
-      this.children ~= assignExpr;
+    // type can be null when param in foreach statement
+    addOptChild(type);
+    addOptChild(assignExpr);
 
     StorageClass stc;
     if (stcTok !is null)
@@ -139,24 +118,13 @@ class Parameters : Node
   }
 
   void opCatAssign(Parameter param)
-  { children ~= param; }
+  { addChild(param); }
 
   Parameter[] items()
   { return cast(Parameter[])children; }
 
   size_t length()
   { return children.length; }
-}
-
-
-enum Protection
-{
-  None,
-  Private   = 1,
-  Protected = 1<<1,
-  Package   = 1<<2,
-  Public    = 1<<3,
-  Export    = 1<<4
 }
 
 class BaseClass : Node
@@ -167,7 +135,7 @@ class BaseClass : Node
   {
     super(NodeCategory.Other);
     mixin(set_kind);
-    this.children = [type];
+    addChild(type);
     this.prot = prot;
     this.type = type;
   }
@@ -188,10 +156,8 @@ class TemplateAliasParameter : TemplateParameter
   this(Token* ident, Type specType, Type defType)
   {
     mixin(set_kind);
-    if (specType)
-      this.children ~= specType;
-    if (defType)
-      this.children ~= defType;
+    addOptChild(specType);
+    addOptChild(defType);
     this.ident = ident;
     this.specType = specType;
     this.defType = defType;
@@ -205,10 +171,8 @@ class TemplateTypeParameter : TemplateParameter
   this(Token* ident, Type specType, Type defType)
   {
     mixin(set_kind);
-    if (specType)
-      this.children ~= specType;
-    if (defType)
-      this.children ~= defType;
+    addOptChild(specType);
+    addOptChild(defType);
     this.ident = ident;
     this.specType = specType;
     this.defType = defType;
@@ -223,11 +187,9 @@ class TemplateValueParameter : TemplateParameter
   this(Type valueType, Token* ident, Expression specValue, Expression defValue)
   {
     mixin(set_kind);
-    this.children ~= valueType;
-    if (specValue)
-      this.children ~= specValue;
-    if (defValue)
-      this.children ~= defValue;
+    addChild(valueType);
+    addOptChild(specValue);
+    addOptChild(defValue);
     this.valueType = valueType;
     this.ident = ident;
     this.specValue = specValue;
@@ -255,7 +217,7 @@ class TemplateParameters : Node
 
   void opCatAssign(TemplateParameter parameter)
   {
-    this.children ~= parameter;
+    addChild(parameter);
   }
 
   TemplateParameter[] items()
@@ -274,7 +236,7 @@ class TemplateArguments : Node
 
   void opCatAssign(Node argument)
   {
-    this.children ~= argument;
+    addChild(argument);
   }
 }
 
@@ -331,8 +293,7 @@ abstract class Type : Node
   this(TID tid, Type next)
   {
     super(NodeCategory.Type);
-    if (next)
-      this.children ~= next;
+    addOptChild(next);
     this.tid = tid;
     this.next = next;
   }
@@ -363,7 +324,7 @@ class DotListType : Type
   {
     super(TID.DotList);
     mixin(set_kind);
-    this.children ~= dotList;
+    addChildren(dotList);
     this.dotList = dotList;
   }
 }
@@ -395,7 +356,7 @@ class TypeofType : Type
   {
     super(TID.Typeof);
     mixin(set_kind);
-    this.children ~= e;
+    addChild(e);
     this.e = e;
   }
 }
@@ -408,8 +369,7 @@ class TemplateInstanceType : Type
   {
     super(TID.TemplateInstance);
     mixin(set_kind);
-    if (targs)
-      this.children ~= targs;
+    addOptChild(targs);
     this.ident = ident;
     this.targs = targs;
   }
@@ -428,23 +388,25 @@ class ArrayType : Type
 {
   Expression e, e2;
   Type assocType;
+
   this(Type t)
   {
     super(TID.Array, t);
     mixin(set_kind);
   }
+
   this(Type t, Expression e, Expression e2)
   {
-    this.children = [e];
-    if (e2)
-      this.children ~= e2;
+    addChild(e);
+    addOptChild(e2);
     this.e = e;
     this.e2 = e2;
     this(t);
   }
+
   this(Type t, Type assocType)
   {
-    this.children = [assocType];
+    addChild(assocType);
     this.assocType = assocType;
     this(t);
   }
@@ -458,7 +420,8 @@ class FunctionType : Type
   {
     super(TID.Function);
     mixin(set_kind);
-    this.children = [cast(Node)returnType, parameters];
+    addChild(returnType);
+    addChild(parameters);
     this.returnType = returnType;
     this.parameters = parameters;
   }
@@ -472,7 +435,8 @@ class DelegateType : Type
   {
     super(TID.Delegate);
     mixin(set_kind);
-    this.children = [cast(Node)returnType, parameters];
+    addChild(returnType);
+    addChild(parameters);
     this.returnType = returnType;
     this.parameters = parameters;
   }
@@ -485,8 +449,7 @@ class CFuncPointerType : Type
   {
     super(TID.CFuncPointer, type);
     mixin(set_kind);
-    if (params)
-      this.children ~= params;
+    addOptChild(params);
   }
 }
 
