@@ -56,7 +56,7 @@ class Parser
 
   ImportDeclaration[] imports;
 
-  this(char[] srcText, string filePath)
+  this(char[] srcText, string filePath, InformationManager infoMan = null)
   {
     lx = new Lexer(srcText, filePath);
   }
@@ -837,18 +837,26 @@ class Parser
 
       decl = new PragmaDeclaration(ident, args, decls);
       break;
-    // Protection attributes
-    case T.Private:
-    case T.Package:
-    case T.Protected:
-    case T.Public:
-    case T.Export:
-      auto tok = token.type;
-      nT();
-      decl = new AttributeDeclaration(tok, parseDeclarationsBlock());
-      break;
     default:
-      assert(0);
+      // Protection attributes
+      Protection prot;
+      switch (token.type)
+      {
+      case T.Private:
+        prot = Protection.Private; break;
+      case T.Package:
+        prot = Protection.Package; break;
+      case T.Protected:
+        prot = Protection.Protected; break;
+      case T.Public:
+        prot = Protection.Public; break;
+      case T.Export:
+        prot = Protection.Export; break;
+      default:
+        assert(0);
+      }
+      nT();
+      decl = new ProtectionDeclaration(prot, parseDeclarationsBlock());
     }
     return decl;
   }
@@ -4386,7 +4394,7 @@ version(D2)
       ++errorCount;
       return;
     }
-    auto location = Lexer.getLocation(this.token);
+    auto location = this.token.getLocation();
     auto msg = Format(_arguments, _argptr, GetMsg(mid));
     errors ~= new Information(InfoType.Parser, mid, location, msg);
   }
