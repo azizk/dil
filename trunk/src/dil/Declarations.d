@@ -20,8 +20,8 @@ abstract class Declaration : Node
   }
 
   // Members relevant to semantic phase.
-  StorageClass stc;
-  Protection prot;
+  StorageClass stc; /// The storage class of this declaration.
+  Protection prot;  /// The protection attribute of this declaration.
 
   void semantic(Scope sc)
   {
@@ -545,6 +545,38 @@ class AttributeDeclaration : Declaration
 
     this.attribute = attribute;
     this.decls = decls;
+  }
+}
+
+class ProtectionDeclaration : AttributeDeclaration
+{
+  this(Protection prot, Declaration decls)
+  {
+    super(cast(TOK)0, decls);
+    mixin(set_kind);
+    super.prot = prot;
+  }
+
+  void semantic(Scope scop)
+  {
+    /+
+    void traverse(Node[] nodes)
+    {
+      foreach (node; nodes)
+      {
+        if (node.kind == NodeKind.ProtectionDeclaration)
+          break;
+        if (node.category == NodeCategory.Declaration)
+        {
+          auto decl = cast(Declaration)cast(void*)node;
+          decl.prot = this.prot;
+          if (node.children)
+            traverse(node.children);
+        }
+      }
+    }
+    traverse([this.decls]);
+    +/
   }
 }
 

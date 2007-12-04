@@ -18,16 +18,10 @@ import std.utf;
 import std.uni;
 import common;
 
-const char[3] LS = \u2028; /// Line separator.
-const char[3] PS = \u2029; /// Paragraph separator.
-const dchar LSd = 0x2028;
-const dchar PSd = 0x2029;
-static assert(LS[0] == PS[0] && LS[1] == PS[1]);
+public import dil.LexerFuncs;
 
 /// U+FFFD = �. Used to replace invalid Unicode characters.
 const dchar REPLACEMENT_CHAR = '\uFFFD';
-
-const uint _Z_ = 26; /// Control+Z
 
 class Lexer
 {
@@ -206,27 +200,6 @@ class Lexer
     return this.token.type;
   }
 
-  /// Returns true if d is a Unicode line or paragraph separator.
-  static bool isUnicodeNewlineChar(dchar d)
-  {
-    return d == LSd || d == PSd;
-  }
-
-  /// Returns true if p points to a line or paragraph separator.
-  static bool isUnicodeNewline(char* p)
-  {
-    return *p == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]);
-  }
-
-  /++
-    Returns true if p points to the start of a Newline.
-    Newline: \n | \r | \r\n | LS | PS
-  +/
-  static bool isNewline(char* p)
-  {
-    return *p == '\n' || *p == '\r' || isUnicodeNewline(p);
-  }
-
   /// Returns true if p points to the last character of a Newline.
   bool isNewlineEnd(char* p)
   {
@@ -237,74 +210,6 @@ class Lexer
         if (p[-1] == LS[1] && p[-2] == LS[0])
           return true;
     return false;
-  }
-
-  /++
-    Returns true if p points to the first character of an EndOfLine.
-    EndOfLine: Newline | 0 | _Z_
-  +/
-  static bool isEndOfLine(char* p)
-  {
-    return isNewline(p) || *p == 0 || *p == _Z_;
-  }
-
-  /++
-    Scans a Newline and sets p one character past it.
-    Returns '\n' if scanned or 0 otherwise.
-  +/
-  static dchar scanNewline(ref char* p)
-  {
-    switch (*p)
-    {
-    case '\r':
-      if (p[1] == '\n')
-        ++p;
-    case '\n':
-      ++p;
-      return '\n';
-    default:
-      if (isUnicodeNewline(p))
-      {
-        ++p; ++p; ++p;
-        return '\n';
-      }
-    }
-    return 0;
-  }
-
-  /// Returns a Location for the given token.
-  static Location getLocation(Token* token)
-  {
-    auto search_t = token.prev;
-    // Find previous newline token.
-    while (search_t.type != TOK.Newline)
-      search_t = search_t.prev;
-    auto filePath  = search_t.filePath;
-    auto lineNum   = search_t.lineNum - search_t.lineNum_hline;
-    auto lineBegin = search_t.end;
-    // Determine actual line begin and line number.
-    while (1)
-    {
-      search_t = search_t.next;
-      if (search_t == token)
-        break;
-      // Multiline tokens must be rescanned for newlines.
-      if (search_t.isMultiline)
-      {
-        auto p = search_t.start, end = search_t.end;
-        while (p != end)
-        {
-          if (Lexer.scanNewline(p) == '\n')
-          {
-            lineBegin = p;
-            ++lineNum;
-          }
-          else
-          ++p;
-        }
-      }
-    }
-    return new Location(filePath, lineNum, lineBegin, token.start);
   }
 
   /++

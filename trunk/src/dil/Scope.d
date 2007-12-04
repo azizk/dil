@@ -51,4 +51,15 @@ class Scope
     // delete this;
     return sc;
   }
+
+  import dil.Information;
+  import dil.Messages;
+  import dil.Token;
+  void error(Token* token, MID mid)
+  {
+    auto location = token.getLocation();
+    auto msg = GetMsg(mid);
+    auto error = new Information(InfoType.Semantic, mid, location, msg);
+//     infoMan.add(error);
+  }
 }

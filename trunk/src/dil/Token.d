@@ -3,9 +3,10 @@
   License: GPL3
 +/
 module dil.Token;
-import common;
+import dil.Location;
 import tango.stdc.stdlib : malloc, free;
 import tango.core.Exception;
+import common;
 
 enum TOK : ushort
 {
@@ -251,6 +252,42 @@ version(D2)
   int opEquals(TOK type2)
   {
     return type == type2;
+  }
+
+  import dil.LexerFuncs;
+  /// Returns the Location of this token.
+  Location getLocation()
+  {
+    auto search_t = this.prev;
+    // Find previous newline token.
+    while (search_t.type != TOK.Newline)
+      search_t = search_t.prev;
+    auto filePath  = search_t.filePath;
+    auto lineNum   = search_t.lineNum - search_t.lineNum_hline;
+    auto lineBegin = search_t.end;
+    // Determine actual line begin and line number.
+    while (1)
+    {
+      search_t = search_t.next;
+      if (search_t == this)
+        break;
+      // Multiline tokens must be rescanned for newlines.
+      if (search_t.isMultiline)
+      {
+        auto p = search_t.start, end = search_t.end;
+        while (p != end)
+        {
+          if (scanNewline(p) == '\n')
+          {
+            lineBegin = p;
+            ++lineNum;
+          }
+          else
+            ++p;
+        }
+      }
+    }
+    return new Location(filePath, lineNum, lineBegin, this.start);
   }
 
   new(size_t size)

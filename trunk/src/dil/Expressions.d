@@ -8,12 +8,24 @@ import dil.Token;
 import dil.Types;
 import dil.Declarations;
 import dil.Statements;
+import dil.Scope;
 
 abstract class Expression : Node
 {
   this()
   {
     super(NodeCategory.Expression);
+  }
+
+  Expression semantic(Scope scop)
+  {
+    return null;
+  }
+
+  import dil.Messages;
+  void error(Scope scop, MID mid)
+  {
+    scop.error(this.begin, mid);
   }
 }
 
@@ -771,6 +783,22 @@ class MixinExpression : Expression
     mixin(set_kind);
     addChild(expr);
     this.expr = expr;
+  }
+
+  // import dil.Parser;
+  Expression semantic(Scope scop)
+  {
+    // TODO:
+    /+
+    auto expr = this.expr.semantic(scop);
+    auto strExpr = Cast!(StringExpression)(expr);
+    // if (strExpr is null)
+    //  error(scop, MID.MixinExpressionMustBeString);
+    auto parser = new Parser(strExpr.getString(), "", scop.infoMan);
+    expr = parser.start2();
+    return expr;
+    +/
+    return null;
   }
 }
 

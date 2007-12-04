@@ -46,6 +46,7 @@ enum NodeKind
   NewDeclaration,
   DeleteDeclaration,
   AttributeDeclaration,
+  ProtectionDeclaration,
   ExternDeclaration,
   AlignDeclaration,
   PragmaDeclaration,
