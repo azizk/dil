@@ -3651,9 +3651,14 @@ class Parser
              T.Delegate,
              T.Super,
              T.Return:
+        case_Const_Invariant:
           specTok = token;
           nT();
           break;
+        case T.Const, T.Invariant:
+          if (peekNext() != T.LParen)
+            goto case_Const_Invariant;
+          // Fall through. It's a type.
         default:
           specType = parseType();
         }
