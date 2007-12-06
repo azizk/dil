@@ -349,7 +349,8 @@ class FunctionDeclaration : Declaration
   TemplateParameters tparams;
   Parameters params;
   FunctionBody funcBody;
-  this(Type returnType, Token* funcName, TemplateParameters tparams, Parameters params, FunctionBody funcBody)
+  this(Type returnType, Token* funcName, TemplateParameters tparams,
+       Parameters params, FunctionBody funcBody, StorageClass stc)
   {
     super.hasBody = funcBody.funcBody !is null;
     mixin(set_kind);
@@ -358,6 +359,7 @@ class FunctionDeclaration : Declaration
     addChild(params);
     addChild(funcBody);
 
+    this.stc = stc;
     this.returnType = returnType;
     this.funcName = funcName;
     this.tparams = tparams;

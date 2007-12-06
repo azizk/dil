@@ -17,35 +17,10 @@ import common;
 
 private alias TOK T;
 
-class ImportParser : Parser
-{
-  this(char[] srcText, string fileName)
-  {
-    super(srcText, fileName);
-  }
-
-  override Declarations start()
-  {
-    auto decls = new Declarations;
-    super.init();
-    if (token.type == T.Module)
-      decls ~= parseModuleDeclaration();
-    while (token.type != T.EOF)
-    {
-      if (token.type == T.Import)
-      {
-        auto decl = parseImportDeclaration();
-        assert(decl && decl.kind == NodeKind.ImportDeclaration);
-        super.imports ~= cast(ImportDeclaration)cast(void*)decl;
-        decls ~= decl;
-      }
-      else
-        nT();
-    }
-    return decls;
-  }
-}
-
+/++
+  The Parser produces an abstract syntax tree (AST) by analyzing
+  the tokens of the provided source code.
++/
 class Parser
 {
   Lexer lx;
@@ -61,7 +36,7 @@ class Parser
     lx = new Lexer(srcText, filePath);
   }
 
-  private void init()
+  protected void init()
   {
     nT();
     prevToken = token;
@@ -452,9 +427,24 @@ class Parser
           }
 
           auto params = parseParameterList();
+        version(D2)
+        {
+          switch (token.type)
+          {
+          case T.Const:
+            stc |= StorageClass.Const;
+            nT();
+            break;
+          case T.Invariant:
+            stc |= StorageClass.Invariant;
+            nT();
+            break;
+          default:
+          }
+        }
           // ReturnType FunctionName ( ParameterList )
           auto funcBody = parseFunctionBody();
-          return set(new FunctionDeclaration(type, ident, tparams, params, funcBody), begin);
+          return set(new FunctionDeclaration(type, ident, tparams, params, funcBody, stc), begin);
         }
         type = parseDeclaratorSuffix(type);
       }
@@ -1420,6 +1410,27 @@ class Parser
     return new DeleteDeclaration(parameters, funcBody);
   }
 
+  Type parseTypeofType()
+  {
+    assert(token.type == T.Typeof);
+    Type type;
+    requireNext(T.LParen);
+    switch (token.type)
+    {
+    version(D2)
+    {
+    case T.Return:
+      nT();
+      type = new TypeofType();
+      break;
+    }
+    default:
+      type = new TypeofType(parseExpression());
+    }
+    require(T.RParen);
+    return type;
+  }
+
   /+
     DotListExpression:
             . DotListItems
@@ -1448,9 +1459,7 @@ class Parser
     }
     else if (token.type == T.Typeof)
     {
-      requireNext(T.LParen);
-      auto type = new TypeofType(parseExpression());
-      require(T.RParen);
+      auto type = parseTypeofType();
       set(type, begin);
       identList ~= set(new TypeofExpression(type), begin);
       if (token.type != T.Dot)
@@ -1515,10 +1524,7 @@ class Parser
     }
     else if (token.type == T.Typeof)
     {
-      requireNext(T.LParen);
-      auto type = new TypeofType(parseExpression());
-      require(T.RParen);
-      identList ~= set(type, begin);
+      identList ~= set(parseTypeofType(), begin);
       if (token.type != T.Dot)
         goto Lreturn;
       nT();
@@ -4322,6 +4328,17 @@ version(D2)
           goto LTemplateValueParameter;
         }
         break;
+      version(D2)
+      {
+      case T.This:
+        // TemplateThisParameter
+        //         this TemplateTypeParameter
+        nT(); // Skip 'this' keyword.
+        ident = requireId();
+        parseSpecAndOrDefaultType();
+        tp = new TemplateThisParameter(ident, specType, defType);
+        break;
+      }
       default:
       LTemplateValueParameter:
         // TemplateValueParameter:

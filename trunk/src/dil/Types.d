@@ -179,6 +179,24 @@ class TemplateTypeParameter : TemplateParameter
   }
 }
 
+version(D2)
+{
+class TemplateThisParameter : TemplateParameter
+{
+  Token* ident;
+  Type specType, defType;
+  this(Token* ident, Type specType, Type defType)
+  {
+    mixin(set_kind);
+    addOptChild(specType);
+    addOptChild(defType);
+    this.ident = ident;
+    this.specType = specType;
+    this.defType = defType;
+  }
+}
+}
+
 class TemplateValueParameter : TemplateParameter
 {
   Type valueType;
@@ -354,10 +372,20 @@ class TypeofType : Type
   Expression e;
   this(Expression e)
   {
-    super(TID.Typeof);
-    mixin(set_kind);
+    this();
     addChild(e);
     this.e = e;
+  }
+
+  this()
+  {
+    super(TID.Typeof);
+    mixin(set_kind);
+  }
+
+  bool isTypeofReturn()
+  {
+    return e is null;
   }
 }
 

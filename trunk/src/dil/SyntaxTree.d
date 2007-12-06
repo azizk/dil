@@ -210,6 +210,7 @@ enum NodeKind
   BaseClass,
   TemplateAliasParameter,
   TemplateTypeParameter,
+  TemplateThisParameter, // D2.0
   TemplateValueParameter,
   TemplateTupleParameter,
   TemplateParameters,

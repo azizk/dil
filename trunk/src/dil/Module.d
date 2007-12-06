@@ -6,6 +6,7 @@ module dil.Module;
 import dil.SyntaxTree;
 import dil.Declarations;
 import dil.Parser;
+import dil.ImportParser;
 import dil.Lexer;
 import dil.File;
 import tango.io.FilePath;
@@ -28,7 +29,7 @@ class Module
 
   Module[] modules;
 
-  this(string filePath, bool isLight = false)
+  this(string filePath, bool isLightweight = false)
   {
     this.filePath = filePath;
     this.isLightweight = isLightweight;
