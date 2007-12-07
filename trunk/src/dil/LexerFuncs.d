@@ -59,7 +59,7 @@ dchar scanNewline(ref char* p)
   default:
     if (isUnicodeNewline(p))
     {
-      ++p; ++p; ++p;
+      p += 3;
       return '\n';
     }
   }

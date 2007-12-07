@@ -58,6 +58,15 @@ class Declarations : Declaration
   {
     addChildren(ds.children);
   }
+
+  void semantic(Scope scop)
+  {
+    foreach (node; this.children)
+    {
+      assert(node.category == NodeCategory.Declaration);
+      (cast(Declaration)cast(void*)node).semantic(scop);
+    }
+  }
 }
 
 class EmptyDeclaration : Declaration
@@ -66,6 +75,9 @@ class EmptyDeclaration : Declaration
   {
     mixin(set_kind);
   }
+
+  void semantic(Scope)
+  {}
 }
 
 class IllegalDeclaration : Declaration
@@ -76,6 +88,9 @@ class IllegalDeclaration : Declaration
     mixin(set_kind);
     this.token = token;
   }
+
+  void semantic(Scope)
+  {}
 }
 
 /// FQN = fully qualified name
@@ -215,9 +230,9 @@ class ClassDeclaration : Declaration
   TemplateParameters tparams;
   BaseClass[] bases;
   Declarations decls;
-  this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls, bool hasBody)
+  this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls)
   {
-    super.hasBody = hasBody;
+    super.hasBody = decls !is null;
     mixin(set_kind);
     addOptChild(tparams);
     addOptChildren(bases);
@@ -236,9 +251,9 @@ class InterfaceDeclaration : Declaration
   TemplateParameters tparams;
   BaseClass[] bases;
   Declarations decls;
-  this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls, bool hasBody)
+  this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls)
   {
-    super.hasBody = hasBody;
+    super.hasBody = decls !is null;
     mixin(set_kind);
     addOptChild(tparams);
     addOptChildren(bases);
@@ -256,9 +271,9 @@ class StructDeclaration : Declaration
   Token* name;
   TemplateParameters tparams;
   Declarations decls;
-  this(Token* name, TemplateParameters tparams, Declarations decls, bool hasBody)
+  this(Token* name, TemplateParameters tparams, Declarations decls)
   {
-    super.hasBody = hasBody;
+    super.hasBody = decls !is null;
     mixin(set_kind);
     addOptChild(tparams);
     addOptChild(decls);
@@ -274,9 +289,9 @@ class UnionDeclaration : Declaration
   Token* name;
   TemplateParameters tparams;
   Declarations decls;
-  this(Token* name, TemplateParameters tparams, Declarations decls, bool hasBody)
+  this(Token* name, TemplateParameters tparams, Declarations decls)
   {
-    super.hasBody = hasBody;
+    super.hasBody = decls !is null;
     mixin(set_kind);
     addOptChild(tparams);
     addOptChild(decls);
@@ -561,24 +576,10 @@ class ProtectionDeclaration : AttributeDeclaration
 
   void semantic(Scope scop)
   {
-    /+
-    void traverse(Node[] nodes)
-    {
-      foreach (node; nodes)
-      {
-        if (node.kind == NodeKind.ProtectionDeclaration)
-          break;
-        if (node.category == NodeCategory.Declaration)
-        {
-          auto decl = cast(Declaration)cast(void*)node;
-          decl.prot = this.prot;
-          if (node.children)
-            traverse(node.children);
-        }
-      }
-    }
-    traverse([this.decls]);
-    +/
+//     auto saved_prot = scop.protection;
+//     scop.protection = this.prot;
+//     decls.semantic(scop);
+//     scop.protection = saved_prot;
   }
 }
 

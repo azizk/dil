@@ -1007,15 +1007,12 @@ class Parser
     TemplateParameters tparams;
     BaseClass[] bases;
     Declarations decls;
-    bool hasBody;
 
     nT(); // Skip class keyword.
     className = requireId();
 
     if (token.type == T.LParen)
-    {
       tparams = parseTemplateParameterList();
-    }
 
     if (token.type == T.Colon)
       bases = parseBaseClasses();
@@ -1027,14 +1024,11 @@ class Parser
       nT();
     }
     else if (token.type == T.LBrace)
-    {
-      hasBody = true;
       decls = parseDeclarationDefinitionsBlock();
-    }
     else
       expected(T.LBrace); // TODO: better error msg
 
-    return new ClassDeclaration(className, tparams, bases, decls, hasBody);
+    return new ClassDeclaration(className, tparams, bases, decls);
   }
 
   BaseClass[] parseBaseClasses(bool colonLeadsOff = true)
@@ -1083,15 +1077,12 @@ class Parser
     TemplateParameters tparams;
     BaseClass[] bases;
     Declarations decls;
-    bool hasBody;
 
     nT(); // Skip interface keyword.
     name = requireId();
 
     if (token.type == T.LParen)
-    {
       tparams = parseTemplateParameterList();
-    }
 
     if (token.type == T.Colon)
       bases = parseBaseClasses();
@@ -1103,14 +1094,11 @@ class Parser
       nT();
     }
     else if (token.type == T.LBrace)
-    {
-      hasBody = true;
       decls = parseDeclarationDefinitionsBlock();
-    }
     else
       expected(T.LBrace); // TODO: better error msg
 
-    return new InterfaceDeclaration(name, tparams, bases, decls, hasBody);
+    return new InterfaceDeclaration(name, tparams, bases, decls);
   }
 
   Declaration parseAggregateDeclaration()
@@ -1122,7 +1110,6 @@ class Parser
     Token* name;
     TemplateParameters tparams;
     Declarations decls;
-    bool hasBody;
 
     nT(); // Skip struct or union keyword.
     // name is optional.
@@ -1131,9 +1118,7 @@ class Parser
       name = token;
       nT();
       if (token.type == T.LParen)
-      {
         tparams = parseTemplateParameterList();
-      }
     }
 
     if (token.type == T.Semicolon)
@@ -1143,17 +1128,14 @@ class Parser
       nT();
     }
     else if (token.type == T.LBrace)
-    {
-      hasBody = true;
       decls = parseDeclarationDefinitionsBlock();
-    }
     else
       expected(T.LBrace); // TODO: better error msg
 
     if (tok == T.Struct)
-      return new StructDeclaration(name, tparams, decls, hasBody);
+      return new StructDeclaration(name, tparams, decls);
     else
-      return new UnionDeclaration(name, tparams, decls, hasBody);
+      return new UnionDeclaration(name, tparams, decls);
   }
 
   Declaration parseConstructorDeclaration()

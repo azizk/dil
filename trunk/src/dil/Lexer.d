@@ -2683,6 +2683,7 @@ unittest
     TOK type;
   }
   static Pair[] pairs = [
+    {"#!äöüß",  TOK.Shebang},       {"\n",      TOK.Newline},
     {"//çay",   TOK.Comment},       {"\n",      TOK.Newline},
                                     {"&",       TOK.AndBinary},
     {"/*çağ*/", TOK.Comment},       {"&&",      TOK.AndLogical},
@@ -2725,7 +2726,8 @@ unittest
 
   // Join all token texts into a single string.
   foreach (i, pair; pairs)
-    if (pair.type == TOK.Comment && pair.tokenText[1] == '/') // Line comment.
+    if (pair.type == TOK.Comment && pair.tokenText[1] == '/' || // Line comment.
+        pair.type == TOK.Shebang)
     {
       assert(pairs[i+1].type == TOK.Newline); // Must be followed by a newline.
       src ~= pair.tokenText;
