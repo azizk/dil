@@ -13,6 +13,7 @@ import dil.Statements;
 import dil.Expressions;
 import dil.Types;
 import dil.Enums;
+import dil.CompilerInfo;
 import common;
 
 private alias TOK T;
@@ -29,7 +30,12 @@ class Parser
 
   Information[] errors;
 
-  ImportDeclaration[] imports;
+  ImportDeclaration[] imports; /// ImportDeclarations in the source text.
+
+  LinkageType linkageType;
+  Protection protection;
+  StorageClass storageClass;
+  uint alignSize = DEFAULT_ALIGN_SIZE;
 
   this(char[] srcText, string filePath, InformationManager infoMan = null)
   {
@@ -160,6 +166,7 @@ class Parser
   }
 
   /++
+    Parse DeclarationDefinitions until the end of file is hit.
     DeclDefs:
       DeclDef
       DeclDefs
@@ -173,22 +180,43 @@ class Parser
   }
 
   /++
+    Parse the body of a template, class, interface, struct or union.
     DeclDefsBlock:
         { }
         { DeclDefs }
   +/
-  Declarations parseDeclarationDefinitionsBlock()
+  Declarations parseDeclarationDefinitionsBody()
   {
+    // Save attributes.
+    auto linkageType  = this.linkageType;
+    auto protection   = this.protection;
+    auto storageClass = this.storageClass;
+    // Clear attributes.
+    this.linkageType  = LinkageType.None;
+    this.protection   = Protection.None;
+    this.storageClass = StorageClass.None;
+
+    // Parse body.
     auto begin = token;
     auto decls = new Declarations;
     require(T.LBrace);
     while (token.type != T.RBrace && token.type != T.EOF)
       decls ~= parseDeclarationDefinition();
     require(T.RBrace);
-    return set(decls, begin);
+    set(decls, begin);
+
+    // Restore original values.
+    this.linkageType  = linkageType;
+    this.protection   = protection;
+    this.storageClass = storageClass;
+
+    return decls;
   }
 
   Declaration parseDeclarationDefinition()
+  out(decl)
+  { assert(isNodeSet(decl)); }
+  body
   {
     auto begin = token;
     Declaration decl;
@@ -218,17 +246,16 @@ class Parser
          T.Scope:
     case_StaticAttribute:
     case_InvariantAttribute: // D 2.0
-      decl = parseStorageAttribute();
-      break;
+      return parseStorageAttribute();
     case T.Alias:
       nT();
       // TODO: parse StorageClasses?
-      decl = new AliasDeclaration(parseDeclaration());
+      decl = new AliasDeclaration(parseVariableOrFunction());
       break;
     case T.Typedef:
       nT();
       // TODO: parse StorageClasses?
-      decl = new TypedefDeclaration(parseDeclaration());
+      decl = new TypedefDeclaration(parseVariableOrFunction());
       break;
     case T.Static:
       switch (peekNext())
@@ -254,9 +281,10 @@ class Parser
     case T.Import:
     case_Import:
       decl = parseImportDeclaration();
-      assert(decl && decl.kind == NodeKind.ImportDeclaration);
-      imports ~= cast(ImportDeclaration)cast(void*)decl;
-      break;
+      imports ~= CastTo!(ImportDeclaration)(decl);
+      // Handle specially. StorageClass mustn't be set.
+      decl.setProtection(this.protection);
+      return set(decl, begin);
     case T.Enum:
       decl = parseEnumDeclaration();
       break;
@@ -324,7 +352,7 @@ class Parser
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
     case_Declaration:
-      return parseDeclaration();
+      return parseVariableOrFunction(this.storageClass, this.protection, this.linkageType);
     /+case T.Module:
       // TODO: Error: module is optional and can appear only once at the top of the source file.
       break;+/
@@ -333,24 +361,33 @@ class Parser
       decl = new IllegalDeclaration(token);
       nT();
     }
+    decl.setProtection(this.protection);
+    decl.setStorageClass(this.storageClass);
+    assert(!isNodeSet(decl));
     set(decl, begin);
     return decl;
   }
 
-  /*
+  /++
     DeclarationsBlock:
         : DeclDefs
         { }
         { DeclDefs }
         DeclDef
-  */
+  +/
   Declaration parseDeclarationsBlock(bool noColon = false)
   {
     Declaration d;
     switch (token.type)
     {
     case T.LBrace:
-      d = parseDeclarationDefinitionsBlock();
+      nT();
+      auto begin = token;
+      auto decls = new Declarations;
+      while (token.type != T.RBrace && token.type != T.EOF)
+        decls ~= parseDeclarationDefinition();
+      require(T.RBrace);
+      d = set(decls, begin);
       break;
     case T.Colon:
       if (noColon == true)
@@ -380,13 +417,16 @@ class Parser
       stc = the previously parsed storage classes
       optionalParameterList = a hint for how to parse C-style function pointers
   +/
-  Declaration parseDeclaration(StorageClass stc = StorageClass.None, bool optionalParameterList = true)
+  Declaration parseVariableOrFunction(StorageClass stc = StorageClass.None,
+                                      Protection protection = Protection.None,
+                                      LinkageType linkType = LinkageType.None,
+                                      bool optionalParameterList = true)
   {
     auto begin = token;
     Type type;
     Token* ident;
 
-    // Check for AutoDeclaration
+    // Check for AutoDeclaration: StorageClasses Identifier =
     if (stc != StorageClass.None &&
         token.type == T.Identifier &&
         peekNext() == T.Assign)
@@ -444,7 +484,11 @@ class Parser
         }
           // ReturnType FunctionName ( ParameterList )
           auto funcBody = parseFunctionBody();
-          return set(new FunctionDeclaration(type, ident, tparams, params, funcBody, stc), begin);
+          auto d = new FunctionDeclaration(type, ident, tparams, params, funcBody);
+          d.setStorageClass(stc);
+          d.setLinkageType(linkType);
+          d.setProtection(protection);
+          return set(d, begin);
         }
         type = parseDeclaratorSuffix(type);
       }
@@ -460,15 +504,16 @@ class Parser
       idents ~= requireId();
     LenterLoop:
       if (token.type == T.Assign)
-      {
-        nT();
-        values ~= parseInitializer();
-      }
+        nT(), (values ~= parseInitializer());
       else
         values ~= null;
     }
     require(T.Semicolon);
-    return set(new VariableDeclaration(type, idents, values), begin);
+    auto d = new VariableDeclaration(type, idents, values);
+    d.setStorageClass(stc);
+    d.setLinkageType(linkType);
+    d.setProtection(protection);
+    return set(d, begin);
   }
 
   Expression parseInitializer()
@@ -616,69 +661,69 @@ class Parser
     return func;
   }
 
-  Linkage parseLinkage()
+  LinkageType parseLinkageType()
   {
+    LinkageType linkageType;
     if (token.type != T.LParen)
-      return null;
+      return linkageType;
 
     nT(); // Skip (
     if (token.type == T.RParen)
     {
-      error(MID.MissingLinkageType);
       nT();
-      return null;
+      error(MID.MissingLinkageType);
+      return linkageType;
     }
 
-    auto begin = token;
     auto ident = requireId();
 
-    Linkage.Type linktype;
     switch (ident ? ident.identifier : null)
     {
     case "C":
       if (token.type == T.PlusPlus)
       {
         nT();
-        linktype = Linkage.Type.Cpp;
+        linkageType = LinkageType.Cpp;
         break;
       }
-      linktype = Linkage.Type.C;
+      linkageType = LinkageType.C;
       break;
     case "D":
-      linktype = Linkage.Type.D;
+      linkageType = LinkageType.D;
       break;
     case "Windows":
-      linktype = Linkage.Type.Windows;
+      linkageType = LinkageType.Windows;
       break;
     case "Pascal":
-      linktype = Linkage.Type.Pascal;
+      linkageType = LinkageType.Pascal;
       break;
     case "System":
-      linktype = Linkage.Type.System;
+      linkageType = LinkageType.System;
       break;
     default:
       error(MID.UnrecognizedLinkageType, token.srcText);
       nT();
     }
-    auto linkage = new Linkage(linktype);
-    set(linkage, begin);
     require(T.RParen);
-    return linkage;
+    return linkageType;
+  }
+
+  void checkLinkageType(ref LinkageType prev_lt, LinkageType lt, char* tokStart)
+  {
+    if (prev_lt == LinkageType.None)
+      prev_lt = lt;
+    else
+      // TODO: create new msg RedundantLinkageType.
+      error(MID.RedundantStorageClass, tokStart[0 .. prevToken.end - tokStart]);
   }
 
   Declaration parseStorageAttribute()
   {
-    StorageClass stc, tmp;
-    Linkage.Category link_cat;
+    StorageClass stc, stc_tmp;
+    LinkageType prev_linkageType;
 
-    void addStorageClass()
-    {
-      if (stc & tmp)
-        error(MID.RedundantStorageClass, token.srcText);
-      else
-        stc |= tmp;
-    }
-
+    auto saved_storageClass = this.storageClass; // Save.
+    // Nested function.
     Declaration parse()
     {
       Declaration decl;
@@ -686,41 +731,39 @@ class Parser
       switch (token.type)
       {
       case T.Extern:
-        stc |= StorageClass.Extern;
-        nT();
-        Linkage linkage = parseLinkage();
-
-        // Check for redundancy.
-        Linkage.Category link_cat_tmp = Linkage.getCategory(linkage);
-        if (link_cat & link_cat_tmp)
+        if (peekNext() != T.LParen)
         {
-          char[] srcText = begin.srcText;
-          if (link_cat_tmp == Linkage.Category.MangleSymbol)
-            srcText = begin.start[0 .. prevToken.end - begin.start];
-          error(MID.RedundantStorageClass, srcText);
+          stc_tmp = StorageClass.Extern;
+          goto Lcommon;
         }
-        else
-          link_cat |= link_cat_tmp;
 
-        decl = set(new ExternDeclaration(linkage, parse()), begin);
+        nT();
+        auto linkageType = parseLinkageType();
+        checkLinkageType(prev_linkageType, linkageType, begin.start);
+
+        auto saved = this.linkageType; // Save.
+        this.linkageType = linkageType; // Set.
+        decl = new LinkageDeclaration(linkageType, parse());
+        set(decl, begin);
+        this.linkageType = saved; // Restore.
         break;
       case T.Override:
-        tmp = StorageClass.Override;
+        stc_tmp = StorageClass.Override;
         goto Lcommon;
       case T.Deprecated:
-        tmp = StorageClass.Deprecated;
+        stc_tmp = StorageClass.Deprecated;
         goto Lcommon;
       case T.Abstract:
-        tmp = StorageClass.Abstract;
+        stc_tmp = StorageClass.Abstract;
         goto Lcommon;
       case T.Synchronized:
-        tmp = StorageClass.Synchronized;
+        stc_tmp = StorageClass.Synchronized;
         goto Lcommon;
       case T.Static:
-        tmp = StorageClass.Static;
+        stc_tmp = StorageClass.Static;
         goto Lcommon;
       case T.Final:
-        tmp = StorageClass.Final;
+        stc_tmp = StorageClass.Final;
         goto Lcommon;
       case T.Const:
       version(D2)
@@ -728,60 +771,73 @@ class Parser
         if (peekNext() == T.LParen)
           goto case_Declaration;
       }
-        tmp = StorageClass.Const;
+        stc_tmp = StorageClass.Const;
         goto Lcommon;
       version(D2)
       {
       case T.Invariant: // D 2.0
-        // TODO: could this be a class invariant?
-        if (peekNext() == T.LParen)
-          goto case_Declaration;
-        tmp = StorageClass.Invariant;
+        auto next = token;
+        if (peekAfter(next) == T.LParen)
+        {
+          if (peekAfter(next) != T.RParen)
+            goto case_Declaration; // invariant ( Type )
+          decl = parseDeclarationDefinition(); // invariant ( )
+          decl.setStorageClass(stc);
+          break;
+        }
+        // invariant as StorageClass.
+        stc_tmp = StorageClass.Invariant;
         goto Lcommon;
       }
       case T.Auto:
-        tmp = StorageClass.Auto;
+        stc_tmp = StorageClass.Auto;
         goto Lcommon;
       case T.Scope:
-        tmp = StorageClass.Scope;
+        stc_tmp = StorageClass.Scope;
         goto Lcommon;
       Lcommon:
-        addStorageClass();
+        // Issue error if redundant.
+        if (stc & stc_tmp)
+          error(MID.RedundantStorageClass, token.srcText);
+        else
+          stc |= stc_tmp;
+
         auto tok = token.type;
         nT();
-        decl = set(new AttributeDeclaration(tok, parse()), begin);
+        decl = new StorageClassDeclaration(stc_tmp, tok, parse());
+        set(decl, begin);
         break;
       case T.Identifier:
       case_Declaration:
         // This could be a normal Declaration or an AutoDeclaration
-        decl = parseDeclaration(stc);
+        decl = parseVariableOrFunction(stc, this.protection, prev_linkageType);
         break;
       default:
+        this.storageClass = stc; // Set.
         decl = parseDeclarationsBlock();
+        this.storageClass = saved_storageClass; // Reset.
       }
+      assert(isNodeSet(decl));
       return decl;
     }
     return parse();
   }
 
-  Token* parseAlignAttribute()
+  uint parseAlignAttribute()
   {
     assert(token.type == T.Align);
     nT(); // Skip align keyword.
-    Token* tok;
+    uint size = DEFAULT_ALIGN_SIZE; // Global default.
     if (token.type == T.LParen)
     {
       nT();
       if (token.type == T.Int32)
-      {
-        tok = token;
-        nT();
-      }
+        (size = token.int_), nT();
       else
         expected(T.Int32);
       require(T.RParen);
     }
-    return tok;
+    return size;
   }
 
   Declaration parseAttributeSpecifier()
@@ -791,11 +847,11 @@ class Parser
     switch (token.type)
     {
     case T.Align:
-      int size = -1;
-      auto intTok = parseAlignAttribute();
-      if (intTok)
-        size = intTok.int_;
-      decl = new AlignDeclaration(size, parseDeclarationsBlock());
+      uint alignSize = parseAlignAttribute();
+      auto saved = this.alignSize; // Save.
+      this.alignSize = alignSize; // Set.
+      decl = new AlignDeclaration(alignSize, parseDeclarationsBlock());
+      this.alignSize = saved; // Restore.
       break;
     case T.Pragma:
       // Pragma:
@@ -846,7 +902,10 @@ class Parser
         assert(0);
       }
       nT();
+      auto saved = this.protection; // Save.
+      this.protection = prot; // Set.
       decl = new ProtectionDeclaration(prot, parseDeclarationsBlock());
+      this.protection = saved; // Restore.
     }
     return decl;
   }
@@ -1024,7 +1083,7 @@ class Parser
       nT();
     }
     else if (token.type == T.LBrace)
-      decls = parseDeclarationDefinitionsBlock();
+      decls = parseDeclarationDefinitionsBody();
     else
       expected(T.LBrace); // TODO: better error msg
 
@@ -1094,7 +1153,7 @@ class Parser
       nT();
     }
     else if (token.type == T.LBrace)
-      decls = parseDeclarationDefinitionsBlock();
+      decls = parseDeclarationDefinitionsBody();
     else
       expected(T.LBrace); // TODO: better error msg
 
@@ -1128,12 +1187,16 @@ class Parser
       nT();
     }
     else if (token.type == T.LBrace)
-      decls = parseDeclarationDefinitionsBlock();
+      decls = parseDeclarationDefinitionsBody();
     else
       expected(T.LBrace); // TODO: better error msg
 
     if (tok == T.Struct)
-      return new StructDeclaration(name, tparams, decls);
+    {
+      auto d = new StructDeclaration(name, tparams, decls);
+      d.setAlignSize(this.alignSize);
+      return d;
+    }
     else
       return new UnionDeclaration(name, tparams, decls);
   }
@@ -1369,7 +1432,7 @@ class Parser
     nT(); // Skip template keyword.
     auto templateName = requireId();
     auto templateParams = parseTemplateParameterList();
-    auto decls = parseDeclarationDefinitionsBlock();
+    auto decls = parseDeclarationDefinitionsBody();
     return new TemplateDeclaration(templateName, templateParams, decls);
   }
 
@@ -1625,17 +1688,20 @@ class Parser
     switch (token.type)
     {
     case T.Align:
-      int size = -1;
-      auto intTok = parseAlignAttribute();
-      if (intTok)
-        size = intTok.int_;
+      uint size = parseAlignAttribute();
       // Restrict align attribute to structs in parsing phase.
-      Declaration structDecl;
+      StructDeclaration structDecl;
       if (token.type == T.Struct)
-        structDecl = parseAggregateDeclaration();
+      {
+        auto begin2 = token;
+        structDecl = CastTo!(StructDeclaration)(parseAggregateDeclaration());
+        structDecl.setAlignSize(size);
+        set(structDecl, begin2);
+      }
       else
         expected(T.Struct);
-      d = new AlignDeclaration(size, structDecl ? structDecl : new Declarations);
+
+      d = new AlignDeclaration(size, structDecl ? cast(Declaration)structDecl : new Declarations);
       goto LreturnDeclarationStatement;
 /+ Not applicable for statements.
 //          T.Private,
@@ -1668,7 +1734,10 @@ class Parser
       goto case T.Dot;
     case T.Dot, T.Typeof:
       bool success;
-      d = try_({return parseDeclaration(StorageClass.None, false);}, success);
+      d = try_(delegate {
+          return parseVariableOrFunction(StorageClass.None, Protection.None, LinkageType.None, false);
+        }, success
+      );
       if (success)
         goto LreturnDeclarationStatement; // Declaration
       else
@@ -1681,7 +1750,7 @@ class Parser
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
     case_parseDeclaration:
-      d = parseDeclaration();
+      d = parseVariableOrFunction();
       goto LreturnDeclarationStatement;
     case T.If:
       s = parseIfStatement();
@@ -1928,47 +1997,34 @@ class Parser
 
   Statement parseAttributeStatement()
   {
-    StorageClass stc, tmp;
-    Linkage.Category link_cat;
+    StorageClass stc, stc_tmp;
+    LinkageType prev_linkageType;
 
-    void addStorageClass()
-    {
-      if (stc & tmp)
-        error(MID.RedundantStorageClass, token.srcText);
-      else
-        stc |= tmp;
-    }
-
-    Statement parse()
+    // Nested function.
+    Declaration parse()
     {
       auto begin = token;
-      Statement s;
+      Declaration d;
       switch (token.type)
       {
       case T.Extern:
-        stc |= StorageClass.Extern;
-        nT();
-        Linkage linkage = parseLinkage();
-
-        // Check for redundancy.
-        Linkage.Category link_cat_tmp = Linkage.getCategory(linkage);
-        if (link_cat & link_cat_tmp)
+        if (peekNext() != T.LParen)
         {
-          char[] srcText = begin.srcText;
-          if (link_cat_tmp == Linkage.Category.MangleSymbol)
-            srcText = begin.start[0 .. prevToken.end - begin.start];
-          error(MID.RedundantStorageClass, srcText);
+          stc_tmp = StorageClass.Extern;
+          goto Lcommon;
         }
-        else
-          link_cat |= link_cat_tmp;
 
-        s = new ExternStatement(linkage, parse());
+        nT();
+        auto linkageType = parseLinkageType();
+        checkLinkageType(prev_linkageType, linkageType, begin.start);
+
+        d = new LinkageDeclaration(linkageType, parse());
         break;
       case T.Static:
-        tmp = StorageClass.Static;
+        stc_tmp = StorageClass.Static;
         goto Lcommon;
       case T.Final:
-        tmp = StorageClass.Final;
+        stc_tmp = StorageClass.Final;
         goto Lcommon;
       case T.Const:
       version(D2)
@@ -1976,38 +2032,42 @@ class Parser
         if (peekNext() == T.LParen)
           goto case_Declaration;
       }
-        tmp = StorageClass.Const;
+        stc_tmp = StorageClass.Const;
         goto Lcommon;
       version(D2)
       {
       case T.Invariant: // D 2.0
         if (peekNext() == T.LParen)
           goto case_Declaration;
-        tmp = StorageClass.Invariant;
+        stc_tmp = StorageClass.Invariant;
         goto Lcommon;
       }
       case T.Auto:
-        tmp = StorageClass.Auto;
+        stc_tmp = StorageClass.Auto;
         goto Lcommon;
       case T.Scope:
-        tmp = StorageClass.Scope;
+        stc_tmp = StorageClass.Scope;
         goto Lcommon;
       Lcommon:
-        addStorageClass();
+        // Issue error if redundant.
+        if (stc & stc_tmp)
+          error(MID.RedundantStorageClass, token.srcText);
+        else
+          stc |= stc_tmp;
+
         auto tok = token.type;
         nT();
-        s = new AttributeStatement(tok, parse());
+        d = new StorageClassDeclaration(stc_tmp, tok, parse());
         break;
       // TODO: allow "scope class", "abstract scope class" in function bodies?
       //case T.Class:
       default:
       case_Declaration:
-        s = new DeclarationStatement(parseDeclaration(stc));
+        return parseVariableOrFunction(stc, Protection.None, prev_linkageType);
       }
-      set(s, begin);
-      return s;
+      return set(d, begin);
     }
-    return parse();
+    return new DeclarationStatement(parse());
   }
 
   Statement parseIfStatement()
@@ -2032,9 +2092,9 @@ class Parser
       auto init = parseExpression();
       auto v = new VariableDeclaration(null, [ident], [init]);
       set(v, ident);
-      auto d = new DeclarationStatement(v);
-      set(d, ident);
-      variable = new AttributeStatement(T.Auto, d);
+      auto d = new StorageClassDeclaration(StorageClass.Auto, T.Auto, v);
+      set(d, begin);
+      variable = new DeclarationStatement(d);
       set(variable, begin);
     }
     else
@@ -3747,7 +3807,7 @@ class Parser
 
       BaseClass[] bases = token.type != T.LBrace ? parseBaseClasses(false) : null ;
 
-      auto decls = parseDeclarationDefinitionsBlock();
+      auto decls = parseDeclarationDefinitionsBody();
       return set(new NewAnonClassExpression(/*e, */newArguments, bases, ctorArguments, decls), begin);
     }
 

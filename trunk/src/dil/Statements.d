@@ -555,28 +555,3 @@ class VersionStatement : Statement
     this.elseBody = elseBody;
   }
 }
-
-class AttributeStatement : Statement
-{
-  TOK tok;
-  Statement statement;
-  this(TOK tok, Statement statement)
-  {
-    mixin(set_kind);
-    addChild(statement);
-    this.tok = tok;
-    this.statement = statement;
-  }
-}
-
-class ExternStatement : AttributeStatement
-{
-  Linkage linkage;
-  this(Linkage linkage, Statement statement)
-  {
-    super(TOK.Extern, statement);
-    mixin(set_kind);
-    addOptChild(linkage);
-    this.linkage = linkage;
-  }
-}

@@ -196,9 +196,8 @@ class ImportParser : Parser
     case T.Import:
     case_Import:
       auto decl = parseImportDeclaration();
-      assert(decl && decl.kind == NodeKind.ImportDeclaration);
-      decl.prot = prot; // Set the protection attribute.
-      imports ~= cast(ImportDeclaration)cast(void*)decl;
+      decl.setProtection(prot); // Set the protection attribute.
+      imports ~= CastTo!(ImportDeclaration)(decl);
       break;
     case T.Enum:
       nT();

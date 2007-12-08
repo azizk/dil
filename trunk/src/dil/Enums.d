@@ -34,3 +34,14 @@ enum Protection
   Public    = 1<<3,
   Export    = 1<<4
 }
+
+enum LinkageType
+{
+  None,
+  C,
+  Cpp,
+  D,
+  Windows,
+  Pascal,
+  System
+}

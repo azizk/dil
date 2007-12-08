@@ -39,6 +39,17 @@ abstract class Declaration : Node
   {
     return !!(prot & Protection.Public);
   }
+
+  final void setStorageClass(StorageClass stc)
+  {
+    this.stc = stc;
+  }
+
+  final void setProtection(Protection prot)
+  {
+    this.prot = prot;
+  }
+
 }
 
 class Declarations : Declaration
@@ -271,6 +282,7 @@ class StructDeclaration : Declaration
   Token* name;
   TemplateParameters tparams;
   Declarations decls;
+  uint alignSize;
   this(Token* name, TemplateParameters tparams, Declarations decls)
   {
     super.hasBody = decls !is null;
@@ -281,6 +293,11 @@ class StructDeclaration : Declaration
     this.name = name;
     this.tparams = tparams;
     this.decls = decls;
+  }
+
+  void setAlignSize(uint alignSize)
+  {
+    this.alignSize = alignSize;
   }
 }
 
@@ -364,8 +381,9 @@ class FunctionDeclaration : Declaration
   TemplateParameters tparams;
   Parameters params;
   FunctionBody funcBody;
+  LinkageType linkageType;
   this(Type returnType, Token* funcName, TemplateParameters tparams,
-       Parameters params, FunctionBody funcBody, StorageClass stc)
+       Parameters params, FunctionBody funcBody)
   {
     super.hasBody = funcBody.funcBody !is null;
     mixin(set_kind);
@@ -374,12 +392,16 @@ class FunctionDeclaration : Declaration
     addChild(params);
     addChild(funcBody);
 
-    this.stc = stc;
     this.returnType = returnType;
     this.funcName = funcName;
     this.tparams = tparams;
     this.params = params;
     this.funcBody = funcBody;
+  }
+
+  void setLinkageType(LinkageType linkageType)
+  {
+    this.linkageType = linkageType;
   }
 }
 
@@ -388,6 +410,7 @@ class VariableDeclaration : Declaration
   Type type;
   Token*[] idents;
   Expression[] values;
+  LinkageType linkageType;
   this(Type type, Token*[] idents, Expression[] values)
   {
     mixin(set_kind);
@@ -398,6 +421,11 @@ class VariableDeclaration : Declaration
     this.type = type;
     this.idents = idents;
     this.values = values;
+  }
+
+  void setLinkageType(LinkageType linkageType)
+  {
+    this.linkageType = linkageType;
   }
 }
 
@@ -567,11 +595,12 @@ class AttributeDeclaration : Declaration
 
 class ProtectionDeclaration : AttributeDeclaration
 {
+  Protection prot;
   this(Protection prot, Declaration decls)
   {
     super(cast(TOK)0, decls);
     mixin(set_kind);
-    super.prot = prot;
+    this.prot = prot;
   }
 
   void semantic(Scope scop)
@@ -583,16 +612,27 @@ class ProtectionDeclaration : AttributeDeclaration
   }
 }
 
-class ExternDeclaration : AttributeDeclaration
+class StorageClassDeclaration : AttributeDeclaration
 {
-  Linkage linkage;
-  this(Linkage linkage, Declaration decls)
+  StorageClass storageClass;
+  this(StorageClass storageClass, TOK tok, Declaration decl)
+  {
+    super(tok, decl);
+    mixin(set_kind);
+
+    this.storageClass = storageClass;
+  }
+}
+
+class LinkageDeclaration : AttributeDeclaration
+{
+  LinkageType linkageType;
+  this(LinkageType linkageType, Declaration decls)
   {
     super(TOK.Extern, decls);
     mixin(set_kind);
-    addOptChild(linkage);
 
-    this.linkage = linkage;
+    this.linkageType = linkageType;
   }
 }
 

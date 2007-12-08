@@ -47,7 +47,8 @@ enum NodeKind
   DeleteDeclaration,
   AttributeDeclaration,
   ProtectionDeclaration,
-  ExternDeclaration,
+  StorageClassDeclaration,
+  LinkageDeclaration,
   AlignDeclaration,
   PragmaDeclaration,
   MixinDeclaration,
@@ -92,8 +93,6 @@ enum NodeKind
   StaticAssertStatement,
   DebugStatement,
   VersionStatement,
-  AttributeStatement,
-  ExternStatement,
 
   // Expressions:
   EmptyExpression,
@@ -215,7 +214,6 @@ enum NodeKind
   TemplateTupleParameter,
   TemplateParameters,
   TemplateArguments,
-  Linkage,
   EnumMember,
 }
 
@@ -228,6 +226,12 @@ Class Cast(Class)(Node n)
   if (n.kind == mixin("NodeKind." ~ typeof(Class).stringof))
     return cast(Class)cast(void*)n;
   return null;
+}
+
+Class CastTo(Class)(Node n)
+{
+  assert(n !is null && n.kind == mixin("NodeKind." ~ typeof(Class).stringof));
+  return cast(Class)cast(void*)n;
 }
 
 class Node
