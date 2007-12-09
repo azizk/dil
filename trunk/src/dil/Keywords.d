@@ -6,6 +6,7 @@ module dil.Keywords;
 import dil.Token;
 import dil.Identifier;
 
+/// Table of reserved identifiers.
 static const Identifier[] keywords = [
   {TOK.Abstract, "abstract"},
   {TOK.Alias, "alias"},

@@ -297,17 +297,17 @@ class Lexer
         }
         assert(id);
         t.type = id.type;
-        if (t.type == TOK.Identifier)
+        if (t.type == TOK.Identifier || t.isKeyword)
           return;
-        if (t.type == TOK.EOF)
+        else if (t.isSpecialToken)
+          finalizeSpecialToken(t);
+        else if (t.type == TOK.EOF)
         {
-          t.type = TOK.EOF;
-          t.end = p;
           tail = &t;
           assert(t.srcText == "__EOF__");
         }
-        else if (t.isSpecialToken)
-          finalizeSpecialToken(t);
+        else
+          assert(0, "unexpected token: " ~ t.srcText);
         return;
       }
 
@@ -610,9 +610,9 @@ class Lexer
       }
 
       // Check for EOF
-      if (c == 0 || c == _Z_)
+      if (isEOF(c))
       {
-        assert(*p == 0 || *p == _Z_);
+        assert(isEOF(*p), ""~*p);
         t.type = TOK.EOF;
         t.end = p;
         tail = &t;
@@ -1049,17 +1049,17 @@ class Lexer
       }
       assert(id);
       t.type = id.type;
-      if (t.type == TOK.Identifier)
+      if (t.type == TOK.Identifier || t.isKeyword)
         return;
-      if (t.type == TOK.EOF)
+      else if (t.isSpecialToken)
+        finalizeSpecialToken(t);
+      else if (t.type == TOK.EOF)
       {
-        t.type = TOK.EOF;
-        t.end = p;
         tail = &t;
         assert(t.srcText == "__EOF__");
       }
-      else if (t.isSpecialToken)
-        finalizeSpecialToken(t);
+      else
+        assert(0, "unexpected token: " ~ t.srcText);
       return;
     }
 
@@ -1067,9 +1067,9 @@ class Lexer
       return scanNumber(t);
 
     // Check for EOF
-    if (c == 0 || c == _Z_)
+    if (isEOF(c))
     {
-      assert(*p == 0 || *p == _Z_, *p~"");
+      assert(isEOF(*p), *p~"");
       t.type = TOK.EOF;
       t.end = p;
       tail = &t;

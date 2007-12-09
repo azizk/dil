@@ -113,7 +113,7 @@ enum TOK : ushort
 alias TOK.Abstract KeywordsBegin;
 alias TOK.With KeywordsEnd;
 alias TOK.FILE SpecialTokensBegin;
-alias TOK.Version SpecialTokensEnd;
+alias TOK.VERSION SpecialTokensEnd;
 
 struct Token
 {
@@ -330,7 +330,7 @@ version(D2)
   /// Return the source text enclosed by the left and right token.
   static char[] textSpan(Token* left, Token* right)
   {
-    assert(left.end <= right.start);
+    assert(left.end <= right.start || left is right );
     return left.start[0 .. right.end - left.start];
   }
 
