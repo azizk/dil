@@ -345,9 +345,9 @@ class Parser
     // Declaration
     case T.Identifier, T.Dot, T.Typeof:
     // IntegralType
-    case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
-         T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
-         T.Int,    T.Uint,    T.Long,   T.Ulong,
+    case T.Char,   T.Wchar,   T.Dchar, T.Bool,
+         T.Byte,   T.Ubyte,   T.Short, T.Ushort,
+         T.Int,    T.Uint,    T.Long,  T.Ulong,
          T.Float,  T.Double,  T.Real,
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
@@ -357,9 +357,15 @@ class Parser
       // TODO: Error: module is optional and can appear only once at the top of the source file.
       break;+/
     default:
-      error(MID.ExpectedButFound, "Declaration", token.srcText);
-      decl = new IllegalDeclaration(token);
-      nT();
+      decl = new IllegalDeclaration();
+      // Skip to next valid token.
+      do
+        nT();
+      while (!token.isDeclDefStart &&
+              token.type != T.RBrace &&
+              token.type != T.EOF)
+      auto text = Token.textSpan(begin, this.prevToken);
+      error(begin, "illegal Declaration found: " ~ text);
     }
     decl.setProtection(this.protection);
     decl.setStorageClass(this.storageClass);
@@ -702,19 +708,18 @@ class Parser
       break;
     default:
       error(MID.UnrecognizedLinkageType, token.srcText);
-      nT();
     }
     require(T.RParen);
     return linkageType;
   }
 
-  void checkLinkageType(ref LinkageType prev_lt, LinkageType lt, char* tokStart)
+  void checkLinkageType(ref LinkageType prev_lt, LinkageType lt, Token* begin)
   {
     if (prev_lt == LinkageType.None)
       prev_lt = lt;
     else
       // TODO: create new msg RedundantLinkageType.
-      error(MID.RedundantStorageClass, tokStart[0 .. prevToken.end - tokStart]);
+      error(begin, "redundant linkage type: " ~ Token.textSpan(begin, this.prevToken));
   }
 
   Declaration parseStorageAttribute()
@@ -739,7 +744,7 @@ class Parser
 
         nT();
         auto linkageType = parseLinkageType();
-        checkLinkageType(prev_linkageType, linkageType, begin.start);
+        checkLinkageType(prev_linkageType, linkageType, begin);
 
         auto saved = this.linkageType; // Save.
         this.linkageType = linkageType; // Set.
@@ -1743,9 +1748,9 @@ class Parser
       else
         goto case_parseExpressionStatement; // Expression
     // IntegralType
-    case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
-         T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
-         T.Int,    T.Uint,    T.Long,   T.Ulong,
+    case T.Char,   T.Wchar,   T.Dchar, T.Bool,
+         T.Byte,   T.Ubyte,   T.Short, T.Ushort,
+         T.Int,    T.Uint,    T.Long,  T.Ulong,
          T.Float,  T.Double,  T.Real,
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
@@ -1889,10 +1894,10 @@ class Parser
     case T.Typeid:
     case T.Is:
     case T.LParen:
-    // IntegralType
-    /+case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
-         T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
-         T.Int,    T.Uint,    T.Long,   T.Ulong,
+    /+ // IntegralType
+    case T.Char,   T.Wchar,   T.Dchar, T.Bool,
+         T.Byte,   T.Ubyte,   T.Short, T.Ushort,
+         T.Int,    T.Uint,    T.Long,  T.Ulong,
          T.Float,  T.Double,  T.Real,
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:+/
@@ -1919,8 +1924,7 @@ class Parser
 
       if (token.type != T.Dollar)
         // Assert that this isn't a valid expression.
-        assert(
-          delegate bool(){
+        assert(delegate bool(){
             bool success;
             auto expression = try_(&parseExpression, success);
             return success;
@@ -1928,9 +1932,15 @@ class Parser
         );
 
       // Report error: it's an illegal statement.
-      error(MID.ExpectedButFound, "Statement", token.srcText);
-      s = new IllegalStatement(token);
-      nT();
+      s = new IllegalStatement();
+      // Skip to next valid token.
+      do
+        nT();
+      while (!token.isStatementStart &&
+              token.type != T.RBrace &&
+              token.type != T.EOF)
+      auto text = Token.textSpan(begin, this.prevToken);
+      error(begin, "illegal Statement found: " ~ text);
     }
     assert(s !is null);
     set(s, begin);
@@ -2016,7 +2026,7 @@ class Parser
 
         nT();
         auto linkageType = parseLinkageType();
-        checkLinkageType(prev_linkageType, linkageType, begin.start);
+        checkLinkageType(prev_linkageType, linkageType, begin);
 
         d = new LinkageDeclaration(linkageType, parse());
         break;
@@ -2721,9 +2731,15 @@ class Parser
       nT();
       break;
     default:
-      error(MID.ExpectedButFound, "AsmInstruction", token.srcText);
-      s = new IllegalAsmInstruction(token);
-      nT();
+      s = new IllegalAsmInstruction();
+      // Skip to next valid token.
+      do
+        nT();
+      while (!token.isAsmInstructionStart &&
+              token.type != T.RBrace &&
+              token.type != T.EOF)
+      auto text = Token.textSpan(begin, this.prevToken);
+      error(begin, "illegal AsmInstruction found: " ~ text);
     }
     set(s, begin);
     return s;
@@ -3736,9 +3752,9 @@ class Parser
       }
       break;
     // IntegralType . Identifier
-    case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
-         T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
-         T.Int,    T.Uint,    T.Long,   T.Ulong,
+    case T.Char,   T.Wchar,   T.Dchar, T.Bool,
+         T.Byte,   T.Ubyte,   T.Short, T.Ushort,
+         T.Int,    T.Uint,    T.Long,  T.Ulong,
          T.Float,  T.Double,  T.Real,
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
@@ -3836,9 +3852,9 @@ class Parser
 
     switch (token.type)
     {
-    case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
-         T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
-         T.Int,    T.Uint,    T.Long,   T.Ulong,
+    case T.Char,   T.Wchar,   T.Dchar, T.Bool,
+         T.Byte,   T.Ubyte,   T.Short, T.Ushort,
+         T.Int,    T.Uint,    T.Long,  T.Ulong,
          T.Float,  T.Double,  T.Real,
          T.Ifloat, T.Idouble, T.Ireal,
          T.Cfloat, T.Cdouble, T.Creal, T.Void:
@@ -4451,15 +4467,26 @@ version(D2)
     return null;
   }
 
+  /// Reports an error that has no message ID yet.
+  void error(Token* token, char[] formatMsg, ...)
+  {
+    error_(token, MID.min, formatMsg, _arguments, _argptr);
+  }
+
   void error(MID mid, ...)
+  {
+    error_(this.token, mid, GetMsg(mid), _arguments, _argptr);
+  }
+
+  void error_(Token* token, MID mid, char[] formatMsg, TypeInfo[] _arguments, void* _argptr)
   {
     if (trying)
     {
       ++errorCount;
       return;
     }
-    auto location = this.token.getLocation();
-    auto msg = Format(_arguments, _argptr, GetMsg(mid));
+    auto location = token.getLocation();
+    auto msg = Format(_arguments, _argptr, formatMsg);
     errors ~= new Information(InfoType.Parser, mid, location, msg);
   }
 }

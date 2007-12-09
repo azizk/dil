@@ -112,6 +112,8 @@ enum TOK : ushort
 
 alias TOK.Abstract KeywordsBegin;
 alias TOK.With KeywordsEnd;
+alias TOK.FILE SpecialTokensBegin;
+alias TOK.Version SpecialTokensEnd;
 
 struct Token
 {
@@ -212,9 +214,9 @@ struct Token
   }
 
   /++
-    Returns true if this is a token which can have newlines in it.
-    These can be any string literal except for escape literals
-    and block and nested comments.
+    Returns true if this is a token that can have newlines in it.
+    These can be block and nested comments and any string literal
+    except for escape string literals.
   +/
   bool isMultiline()
   {
@@ -237,7 +239,7 @@ struct Token
   /// Returns true if this is a special token.
   bool isSpecialToken()
   {
-    return *start == '_' && type != TOK.Identifier;
+    return SpecialTokensBegin <= type && type <= SpecialTokensEnd;
   }
 
 version(D2)
@@ -248,6 +250,24 @@ version(D2)
     return type == TOK.String && tok_str !is null;
   }
 }
+
+  /// Returns true if this token starts a DeclarationDefinition.
+  bool isDeclDefStart()
+  {
+    return isDeclDefStartToken(type);
+  }
+
+  /// Returns true if this token starts a Statement.
+  bool isStatementStart()
+  {
+    return isStatementStartToken(type);
+  }
+
+  /// Returns true if this token starts an AsmInstruction.
+  bool isAsmInstructionStart()
+  {
+    return isAsmInstructionStartToken(type);
+  }
 
   int opEquals(TOK type2)
   {
@@ -288,6 +308,30 @@ version(D2)
       }
     }
     return new Location(filePath, lineNum, lineBegin, this.start);
+  }
+
+  uint lineCount()
+  {
+    uint count = 1;
+    if (this.isMultiline)
+    {
+      auto p = this.start, end = this.end;
+      while (p != end)
+      {
+        if (scanNewline(p) == '\n')
+          ++count;
+        else
+          ++p;
+      }
+    }
+    return count;
+  }
+
+  /// Return the source text enclosed by the left and right token.
+  static char[] textSpan(Token* left, Token* right)
+  {
+    assert(left.end <= right.start);
+    return left.start[0 .. right.end - left.start];
   }
 
   new(size_t size)
@@ -444,3 +488,74 @@ private const string[] tokToString = [
   "EOF"
 ];
 static assert(tokToString.length == TOK.MAX);
+
+/// Returns true if this token starts a DeclarationDefinition.
+bool isDeclDefStartToken(TOK tok)
+{
+  switch (tok)
+  {
+  alias TOK T;
+  case  T.Align, T.Pragma, T.Export, T.Private, T.Package, T.Protected,
+        T.Public, T.Extern, T.Deprecated, T.Override, T.Abstract,
+        T.Synchronized, T.Static, T.Final, T.Const, T.Invariant/*D 2.0*/,
+        T.Auto, T.Scope, T.Alias, T.Typedef, T.Import, T.Enum, T.Class,
+        T.Interface, T.Struct, T.Union, T.This, T.Tilde, T.Unittest, T.Debug,
+        T.Version, T.Template, T.New, T.Delete, T.Mixin, T.Semicolon,
+        T.Identifier, T.Dot, T.Typeof,
+        T.Char,   T.Wchar,   T.Dchar, T.Bool,
+        T.Byte,   T.Ubyte,   T.Short, T.Ushort,
+        T.Int,    T.Uint,    T.Long,  T.Ulong,
+        T.Float,  T.Double,  T.Real,
+        T.Ifloat, T.Idouble, T.Ireal,
+        T.Cfloat, T.Cdouble, T.Creal, T.Void:
+    return true;
+  default:
+  }
+  return false;
+}
+
+/// Returns true if this token starts a Statement.
+bool isStatementStartToken(TOK tok)
+{
+  switch (tok)
+  {
+  alias TOK T;
+  case  T.Align, T.Extern, T.Final, T.Const, T.Auto, T.Identifier, T.Dot,
+        T.Typeof, T.If, T.While, T.Do, T.For, T.Foreach, T.Foreach_reverse,
+        T.Switch, T.Case, T.Default, T.Continue, T.Break, T.Return, T.Goto,
+        T.With, T.Synchronized, T.Try, T.Throw, T.Scope, T.Volatile, T.Asm,
+        T.Pragma, T.Mixin, T.Static, T.Debug, T.Version, T.Alias, T.Semicolon,
+        T.Enum, T.Class, T.Interface, T.Struct, T.Union, T.LBrace, T.Typedef,
+        T.This, T.Super, T.Null, T.True, T.False, T.Int32, T.Int64, T.Uint32,
+        T.Uint64, T.Float32, T.Float64, T.Float80, T.Imaginary32,
+        T.Imaginary64, T.Imaginary80, T.CharLiteral, T.WCharLiteral,
+        T.DCharLiteral, T.String, T.LBracket, T.Function, T.Delegate,
+        T.Assert, T.Import, T.Typeid, T.Is, T.LParen, T.Traits/*D2.0*/,
+        T.AndBinary, T.PlusPlus, T.MinusMinus, T.Mul,T.Minus, T.Plus, T.Not,
+        T.Tilde, T.New, T.Delete, T.Cast:
+  case  T.Char,   T.Wchar,   T.Dchar, T.Bool,
+        T.Byte,   T.Ubyte,   T.Short, T.Ushort,
+        T.Int,    T.Uint,    T.Long,  T.Ulong,
+        T.Float,  T.Double,  T.Real,
+        T.Ifloat, T.Idouble, T.Ireal,
+        T.Cfloat, T.Cdouble, T.Creal, T.Void:
+    return true;
+  default:
+    if (SpecialTokensBegin <= tok && tok <= SpecialTokensEnd)
+      return true;
+  }
+  return false;
+}
+
+/// Returns true if this token starts an AsmInstruction.
+bool isAsmInstructionStartToken(TOK tok)
+{
+  switch(tok)
+  {
+  alias TOK T;
+  case T.In, T.Int, T.Out, T.Identifier, T.Align, T.Semicolon:
+    return true;
+  default:
+  }
+  return false;
+}

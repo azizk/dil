@@ -34,12 +34,21 @@ bool isNewline(char* p)
 }
 
 /++
+  Returns true if p points to an EOF character.
+  EOF: 0 | _Z_
++/
+bool isEOF(dchar c)
+{
+  return c == 0 || c == _Z_;
+}
+
+/++
   Returns true if p points to the first character of an EndOfLine.
-  EndOfLine: Newline | 0 | _Z_
+  EndOfLine: Newline | EOF
 +/
 bool isEndOfLine(char* p)
 {
-  return isNewline(p) || *p == 0 || *p == _Z_;
+  return isNewline(p) || isEOF(*p);
 }
 
 /++

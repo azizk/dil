@@ -91,13 +91,16 @@ class EmptyDeclaration : Declaration
   {}
 }
 
+/++
+  Illegal declarations encompass all tokens that don't
+  start a DeclarationDefinition.
+  See_Also: dil.Parser.isDeclDefStartToken()
++/
 class IllegalDeclaration : Declaration
 {
-  Token* token;
-  this(Token* token)
+  this()
   {
     mixin(set_kind);
-    this.token = token;
   }
 
   void semantic(Scope)

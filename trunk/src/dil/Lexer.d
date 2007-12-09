@@ -1432,7 +1432,7 @@ class Lexer
         }
         else if (isspace(c))
           continue; // Skip spaces.
-        else if (c == 0 || c == _Z_)
+        else if (isEOF(c))
         {
           error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedHexString);
           t.pf = 0;
@@ -1839,7 +1839,7 @@ version(D2)
       }
       else if (isEndOfLine(p))
         error(sequenceStart, MID.UndefinedEscapeSequence,
-          (*p == 0 || *p == _Z_) ? `\EOF` : `\NewLine`);
+          isEOF(*p) ? `\EOF` : `\NewLine`);
       else
       {
         char[] str = `\`;

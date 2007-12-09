@@ -32,11 +32,9 @@ class Statements : Statement
 
 class IllegalStatement : Statement
 {
-  Token* tok;
-  this(Token* tok)
+  this()
   {
     mixin(set_kind);
-    this.tok = tok;
   }
 }
 
@@ -460,9 +458,8 @@ class AsmAlignStatement : Statement
 
 class IllegalAsmInstruction : IllegalStatement
 {
-  this(Token* token)
+  this()
   {
-    super(token);
     mixin(set_kind);
   }
 }
