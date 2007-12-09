@@ -11,9 +11,9 @@ struct Identifier
   TOK type;
   string str;
 
-  static Identifier opCall(TOK type, string str)
+  static Identifier* opCall(TOK type, string str)
   {
-    Identifier i;
+    auto i = new Identifier;
     i.type = type;
     i.str = str;
     return i;

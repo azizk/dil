@@ -23,6 +23,35 @@ public import dil.LexerFuncs;
 /// U+FFFD = �. Used to replace invalid Unicode characters.
 const dchar REPLACEMENT_CHAR = '\uFFFD';
 
+/// Global table of identifiers. Access must be synchronized.
+private Identifier*[string] idTable;
+
+static this()
+{
+  foreach(ref k; keywords)
+    idTable[k.str] = &k;
+}
+
+Identifier* idTableLookup(string idString)
+out(id)
+{ assert(id !is null); }
+body
+{
+  synchronized
+  {
+    Identifier** id = idString in idTable;
+    if (id)
+      return *id;
+    auto newID = Identifier(TOK.Identifier, idString);
+    idTable[idString] = newID;
+    return newID;
+  }
+}
+
+/++
+  The Lexer analyzes the characters of a source text and
+  produces a doubly-linked list of tokens.
++/
 class Lexer
 {
   Token* head;      /// The head of the doubly linked token list.
@@ -42,8 +71,6 @@ class Lexer
   uint lineNum_hline; /// Line number set by #line.
   uint inTokenString; /// > 0 if inside q{ }
   char[] errorPath;   /// The path displayed in error messages.
-
-  Identifier[string] idtable;
 
   /++
     Construct a Lexer object.
@@ -65,7 +92,6 @@ class Lexer
     this.p = this.text.ptr;
     this.end = this.p + this.text.length;
     this.lineBegin = this.p;
-    loadKeywords(this.idtable);
 
     this.head = new Token;
     this.head.type = TOK.HEAD;
@@ -287,16 +313,9 @@ class Lexer
 
         t.end = p;
 
-        string str = t.srcText;
-        Identifier* id = str in idtable;
-
-        if (!id)
-        {
-          idtable[str] = Identifier(TOK.Identifier, str);
-          id = str in idtable;
-        }
-        assert(id);
+        auto id = idTableLookup(t.srcText);
         t.type = id.type;
+
         if (t.type == TOK.Identifier || t.isKeyword)
           return;
         else if (t.isSpecialToken)
@@ -1039,16 +1058,9 @@ class Lexer
 
       t.end = p;
 
-      string str = t.srcText;
-      Identifier* id = str in idtable;
-
-      if (!id)
-      {
-        idtable[str] = Identifier(TOK.Identifier, str);
-        id = str in idtable;
-      }
-      assert(id);
+      auto id = idTableLookup(t.srcText);
       t.type = id.type;
+
       if (t.type == TOK.Identifier || t.isKeyword)
         return;
       else if (t.isSpecialToken)
@@ -2446,7 +2458,7 @@ version(D2)
 
     static Identifier[string] reserved_ids_table;
     if (reserved_ids_table is null)
-      loadKeywords(reserved_ids_table);
+      Lexer.loadKeywords(reserved_ids_table);
 
     size_t idx = 1; // Index to the 2nd character in ident.
     dchar isFirstCharUniAlpha()
