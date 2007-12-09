@@ -426,6 +426,7 @@ class Parser
   Declaration parseVariableOrFunction(StorageClass stc = StorageClass.None,
                                       Protection protection = Protection.None,
                                       LinkageType linkType = LinkageType.None,
+                                      bool testAutoDeclaration = false,
                                       bool optionalParameterList = true)
   {
     auto begin = token;
@@ -433,7 +434,7 @@ class Parser
     Token* ident;
 
     // Check for AutoDeclaration: StorageClasses Identifier =
-    if (stc != StorageClass.None &&
+    if (testAutoDeclaration &&
         token.type == T.Identifier &&
         peekNext() == T.Assign)
     {
@@ -815,7 +816,7 @@ class Parser
       case T.Identifier:
       case_Declaration:
         // This could be a normal Declaration or an AutoDeclaration
-        decl = parseVariableOrFunction(stc, this.protection, prev_linkageType);
+        decl = parseVariableOrFunction(stc, this.protection, prev_linkageType, true);
         break;
       default:
         this.storageClass = stc; // Set.
@@ -1740,7 +1741,9 @@ class Parser
     case T.Dot, T.Typeof:
       bool success;
       d = try_(delegate {
-          return parseVariableOrFunction(StorageClass.None, Protection.None, LinkageType.None, false);
+          return parseVariableOrFunction(StorageClass.None,
+                                         Protection.None,
+                                         LinkageType.None, false, false);
         }, success
       );
       if (success)
@@ -2073,7 +2076,7 @@ class Parser
       //case T.Class:
       default:
       case_Declaration:
-        return parseVariableOrFunction(stc, Protection.None, prev_linkageType);
+        return parseVariableOrFunction(stc, Protection.None, prev_linkageType, true);
       }
       return set(d, begin);
     }
