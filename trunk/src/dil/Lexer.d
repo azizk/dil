@@ -216,7 +216,7 @@ class Lexer
     This is the old scan method.
     TODO: profile old and new to see which one is faster.
   +/
-  public void scan(out Token t)
+  public void scan(ref Token t)
   in
   {
     assert(text.ptr <= p && p < end);
@@ -676,7 +676,7 @@ class Lexer
     const char[] case_L3 = case_!(str, tok, "Lcommon");
   }
 
-  public void scan_(out Token t)
+  public void scan_(ref Token t)
   in
   {
     assert(text.ptr <= p && p < end);
@@ -1098,13 +1098,16 @@ class Lexer
     assert(p[-1] == '/' && *p == '*');
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
-    uint c;
+  Loop:
     while (1)
     {
-      c = *++p;
-    LswitchBC: // only jumped to from default case of next switch(c)
-      switch (c)
+      switch (*++p)
       {
+      case '*':
+        if (p[1] != '/')
+          continue;
+        p += 2;
+        break Loop;
       case '\r':
         if (p[1] == '\n')
           ++p;
@@ -1112,36 +1115,23 @@ class Lexer
         assert(isNewlineEnd(p));
         ++lineNum;
         setLineBegin(p+1);
-        continue;
-      case 0, _Z_:
-        error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedBlockComment);
-        goto LreturnBC;
+        break;
       default:
-        if (!isascii(c))
+        if (!isascii(*p))
         {
-          c = decodeUTF8();
-          if (isUnicodeNewlineChar(c))
+          if (isUnicodeNewlineChar(decodeUTF8()))
             goto case '\n';
-          continue;
+        }
+        else if (isEOF(*p))
+        {
+          error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedBlockComment);
+          break Loop;
         }
       }
-
-      c <<= 8;
-      c |= *++p;
-      switch (c)
-      {
-      case toUint!("*/"):
-        ++p;
-      LreturnBC:
-        t.type = TOK.Comment;
-        t.end = p;
-        return;
-      default:
-        c &= char.max;
-        goto LswitchBC;
-      }
     }
-    assert(0);
+    t.type = TOK.Comment;
+    t.end = p;
+    return;
   }
 
   void scanNestedComment(ref Token t)
@@ -1150,13 +1140,23 @@ class Lexer
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
     uint level = 1;
-    uint c;
+  Loop:
     while (1)
     {
-      c = *++p;
-    LswitchNC: // only jumped to from default case of next switch(c)
-      switch (c)
+      switch (*++p)
       {
+      case '/':
+        if (p[1] == '+')
+          ++p, ++level;
+        continue;
+      case '+':
+        if (p[1] != '/')
+          continue;
+        ++p;
+        if (--level != 0)
+          continue;
+        ++p;
+        break Loop;
       case '\r':
         if (p[1] == '\n')
           ++p;
@@ -1165,42 +1165,22 @@ class Lexer
         ++lineNum;
         setLineBegin(p+1);
         continue;
-      case 0, _Z_:
-        error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedNestedComment);
-        goto LreturnNC;
       default:
-        if (!isascii(c))
+        if (!isascii(*p))
         {
-          c = decodeUTF8();
-          if (isUnicodeNewlineChar(c))
+          if (isUnicodeNewlineChar(decodeUTF8()))
             goto case '\n';
-          continue;
         }
-      }
-
-      c <<= 8;
-      c |= *++p;
-      switch (c)
-      {
-      case toUint!("/+"):
-        ++level;
-        continue;
-      case toUint!("+/"):
-        if (--level == 0)
+        else if (isEOF(*p))
         {
-          ++p;
-        LreturnNC:
-          t.type = TOK.Comment;
-          t.end = p;
-          return;
+          error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedNestedComment);
+          break Loop;
         }
-        continue;
-      default:
-        c &= char.max;
-        goto LswitchNC;
       }
     }
-    assert(0);
+    t.type = TOK.Comment;
+    t.end = p;
+    return;
   }
 
   char scanPostfix()
