@@ -9,6 +9,7 @@ import dil.Parser;
 import dil.ImportParser;
 import dil.Lexer;
 import dil.File;
+import dil.Scope;
 import tango.io.FilePath;
 import tango.io.FileConst;
 import common;
@@ -67,6 +68,12 @@ class Module
 
       this.imports = parser.imports;
     }
+  }
+
+  void semantic()
+  {
+    auto scop = new Scope();
+    this.root.semantic(scop);
   }
 
   string[] getImports()
