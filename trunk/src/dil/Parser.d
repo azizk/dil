@@ -14,7 +14,6 @@ import dil.Expressions;
 import dil.Types;
 import dil.Enums;
 import dil.CompilerInfo;
-import dil.IdentsEnum;
 import dil.IdTable;
 import common;
 
@@ -161,7 +160,7 @@ class Parser
     do
     {
       nT();
-      moduleFQN ~= requireId();
+      moduleFQN ~= requireIdentifier("expected module identifier, not '{}'");
     } while (token.type == T.Dot)
     require(T.Semicolon);
     return set(new ModuleDeclaration(moduleFQN), begin);
@@ -935,35 +934,30 @@ class Parser
     assert(token.type == T.Import);
 
     ModuleFQN[] moduleFQNs;
-    Token*[] moduleAliases;
-    Token*[] bindNames;
-    Token*[] bindAliases;
+    Identifier*[] moduleAliases;
+    Identifier*[] bindNames;
+    Identifier*[] bindAliases;
 
     nT(); // Skip import keyword.
     while (1)
     {
       ModuleFQN moduleFQN;
-      Token* moduleAlias;
-
-      moduleAlias = requireId();
+      Identifier* moduleAlias;
 
       // AliasName = ModuleName
-      if (token.type == T.Assign)
+      if (peekNext() == T.Assign)
       {
-        nT();
-        moduleFQN ~= requireId();
-      }
-      else // import Identifier [^=]
-      {
-        moduleFQN ~= moduleAlias;
-        moduleAlias = null;
+        moduleAlias = requireIdentifier("expected alias module name, not '{}'");
+        nT(); // Skip =
       }
 
       // Identifier(.Identifier)*
-      while (token.type == T.Dot)
+      while (1)
       {
+        moduleFQN ~= requireIdentifier("expected module identifier, not '{}'");
+        if (token.type != T.Dot)
+          break;
         nT();
-        moduleFQN ~= requireId();
       }
 
       // Push identifiers.
@@ -979,25 +973,18 @@ class Parser
     {
       // BindAlias = BindName(, BindAlias = BindName)*;
       // BindName(, BindName)*;
-      Token* bindName, bindAlias;
       do
       {
         nT();
-        bindAlias = requireId();
-
-        if (token.type == T.Assign)
+        Identifier* bindAlias;
+        // BindAlias = BindName
+        if (peekNext() == T.Assign)
         {
-          nT();
-          bindName = requireId();
+          bindAlias = requireIdentifier("expected alias name, not '{}'");
+          nT(); // Skip =
         }
-        else
-        {
-          bindName = bindAlias;
-          bindAlias = null;
-        }
-
         // Push identifiers.
-        bindNames ~= bindName;
+        bindNames ~= requireIdentifier("expected an identifier, not '{}'");
         bindAliases ~= bindAlias;
       } while (token.type == T.Comma)
     }
@@ -4449,6 +4436,40 @@ version(D2)
   {
     nT();
     require(tok);
+  }
+
+  Identifier* requireIdentifier()
+  {
+    Identifier* id;
+    if (token.type == T.Identifier)
+      (id = token.ident), nT();
+    else
+      error(MID.ExpectedButFound, "Identifier", token.srcText);
+    return id;
+  }
+
+  /++
+    Params:
+      errorMsg = an error that has no message ID yet.
+  +/
+  Identifier* requireIdentifier(char[] errorMsg)
+  {
+    Identifier* id;
+    if (token.type == T.Identifier)
+      (id = token.ident), nT();
+    else
+      error(token, errorMsg, token.srcText);
+    return id;
+  }
+
+  Identifier* requireIdentifier(MID mid)
+  {
+    Identifier* id;
+    if (token.type == T.Identifier)
+      (id = token.ident), nT();
+    else
+      error(mid, token.srcText);
+    return id;
   }
 
   Token* requireId()

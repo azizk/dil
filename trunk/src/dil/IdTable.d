@@ -3,12 +3,13 @@
   License: GPL3
 +/
 module dil.IdTable;
-import dil.Identifier;
-import dil.IdentsEnum;
 import dil.TokensEnum;
 import dil.IdentsGenerator;
 import dil.Keywords;
 import common;
+
+public import dil.Identifier;
+public import dil.IdentsEnum;
 
 struct Ident
 {

@@ -10,6 +10,7 @@ import dil.Statements;
 import dil.Token;
 import dil.Enums;
 import dil.Scope;
+import dil.Identifier;
 
 abstract class Declaration : Node
 {
@@ -108,12 +109,12 @@ class IllegalDeclaration : Declaration
 }
 
 /// FQN = fully qualified name
-alias Token*[] ModuleFQN; // Identifier(.Identifier)*
+alias Identifier*[] ModuleFQN; // Identifier(.Identifier)*
 
 class ModuleDeclaration : Declaration
 {
-  Token* moduleName;
-  Token*[] packages;
+  Identifier* moduleName;
+  Identifier*[] packages;
   this(ModuleFQN moduleFQN)
   {
     mixin(set_kind);
@@ -134,7 +135,7 @@ class ModuleDeclaration : Declaration
   char[] getName()
   {
     if (moduleName)
-      return moduleName.identifier;
+      return moduleName.str;
     return null;
   }
 
@@ -143,7 +144,7 @@ class ModuleDeclaration : Declaration
     char[] pname;
     foreach (pckg; packages)
       if (pckg)
-        pname ~= pckg.identifier ~ separator;
+        pname ~= pckg.str ~ separator;
     if (pname.length)
       pname = pname[0..$-1]; // Remove last separator
     return pname;
@@ -152,12 +153,13 @@ class ModuleDeclaration : Declaration
 
 class ImportDeclaration : Declaration
 {
+  private alias Identifier*[] Ids;
   ModuleFQN[] moduleFQNs;
-  Token*[] moduleAliases;
-  Token*[] bindNames;
-  Token*[] bindAliases;
+  Ids moduleAliases;
+  Ids bindNames;
+  Ids bindAliases;
 
-  this(ModuleFQN[] moduleFQNs, Token*[] moduleAliases, Token*[] bindNames, Token*[] bindAliases, bool isStatic)
+  this(ModuleFQN[] moduleFQNs, Ids moduleAliases, Ids bindNames, Ids bindAliases, bool isStatic)
   {
     mixin(set_kind);
     this.moduleFQNs = moduleFQNs;
@@ -176,7 +178,7 @@ class ImportDeclaration : Declaration
       char[] FQN;
       foreach (ident; moduleFQN)
         if (ident)
-          FQN ~= ident.identifier ~ separator;
+          FQN ~= ident.str ~ separator;
       FQNs ~= FQN[0..$-1]; // Remove last separator
     }
     return FQNs;
