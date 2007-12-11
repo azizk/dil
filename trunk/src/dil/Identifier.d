@@ -3,20 +3,24 @@
   License: GPL3
 +/
 module dil.Identifier;
-import dil.Token;
+import dil.TokensEnum;
+import dil.IdentsEnum;
 import common;
 
+align(1)
 struct Identifier
 {
-  TOK type;
   string str;
+  TOK type;
+  ID identID;
 
-  static Identifier* opCall(TOK type, string str)
+  static Identifier* opCall(string str, TOK type, ID identID = ID.Null)
   {
-    auto i = new Identifier;
-    i.type = type;
-    i.str = str;
-    return i;
+    auto id = new Identifier;
+    id.str = str;
+    id.type = type;
+    id.identID = identID;
+    return id;
   }
 
   uint toHash()
@@ -29,3 +33,4 @@ struct Identifier
     return hash;
   }
 }
+// pragma(msg, Identifier.sizeof.stringof);

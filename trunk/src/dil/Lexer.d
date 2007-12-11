@@ -10,6 +10,7 @@ import dil.Identifier;
 import dil.Messages;
 import dil.HtmlEntities;
 import dil.CompilerInfo;
+import dil.IdTable;
 import tango.stdc.stdlib : strtof, strtod, strtold;
 import tango.stdc.errno : errno, ERANGE;
 import tango.stdc.time : time_t, time, ctime;
@@ -22,31 +23,6 @@ public import dil.LexerFuncs;
 
 /// U+FFFD = �. Used to replace invalid Unicode characters.
 const dchar REPLACEMENT_CHAR = '\uFFFD';
-
-/// Global table of identifiers. Access must be synchronized.
-private Identifier*[string] idTable;
-
-static this()
-{
-  foreach(ref k; keywords)
-    idTable[k.str] = &k;
-}
-
-Identifier* idTableLookup(string idString)
-out(id)
-{ assert(id !is null); }
-body
-{
-  synchronized
-  {
-    Identifier** id = idString in idTable;
-    if (id)
-      return *id;
-    auto newID = Identifier(TOK.Identifier, idString);
-    idTable[idString] = newID;
-    return newID;
-  }
-}
 
 /++
   The Lexer analyzes the characters of a source text and
@@ -313,8 +289,9 @@ class Lexer
 
         t.end = p;
 
-        auto id = idTableLookup(t.srcText);
+        auto id = IdTable.lookup(t.srcText);
         t.type = id.type;
+        t.ident = id;
 
         if (t.type == TOK.Identifier || t.isKeyword)
           return;
@@ -326,7 +303,7 @@ class Lexer
           assert(t.srcText == "__EOF__");
         }
         else
-          assert(0, "unexpected token: " ~ t.srcText);
+          assert(0, "unexpected token type: " ~ Token.toString(t.type));
         return;
       }
 
@@ -1058,8 +1035,9 @@ class Lexer
 
       t.end = p;
 
-      auto id = idTableLookup(t.srcText);
+      auto id = IdTable.lookup(t.srcText);
       t.type = id.type;
+      t.ident = id;
 
       if (t.type == TOK.Identifier || t.isKeyword)
         return;
@@ -1071,7 +1049,7 @@ class Lexer
         assert(t.srcText == "__EOF__");
       }
       else
-        assert(0, "unexpected token: " ~ t.srcText);
+        assert(0, "unexpected token type: " ~ Token.toString(t.type));
       return;
     }
 

@@ -4,11 +4,12 @@
 +/
 module dil.Token;
 import dil.Location;
+import dil.Identifier;
 import tango.stdc.stdlib : malloc, free;
 import tango.core.Exception;
 import common;
 
-public import dil.TokenIDs;
+public import dil.TokensEnum;
 
 /++
   A Token is a sequence of characters formed by the lexical analyzer.
@@ -48,6 +49,7 @@ struct Token
                       /// doubly linked list. The last token is always '}' or
                       /// EOF in case end of source text is "q{" EOF.
     }
+    Identifier* ident;
     dchar  dchar_;
     long   long_;
     ulong  ulong_;

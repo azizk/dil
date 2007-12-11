@@ -14,9 +14,9 @@ import dil.Expressions;
 import dil.Types;
 import dil.Enums;
 import dil.CompilerInfo;
+import dil.IdentsEnum;
+import dil.IdTable;
 import common;
-
-private alias TOK T;
 
 /++
   The Parser produces an abstract syntax tree (AST) by analyzing
@@ -36,6 +36,8 @@ class Parser
   Protection protection;
   StorageClass storageClass;
   uint alignSize = DEFAULT_ALIGN_SIZE;
+
+  private alias TOK T;
 
   this(char[] srcText, string filePath, InformationManager infoMan = null)
   {
@@ -682,11 +684,13 @@ class Parser
       return linkageType;
     }
 
-    auto ident = requireId();
+    auto identTok = requireId();
 
-    switch (ident ? ident.identifier : null)
+    ID identID = identTok ? identTok.ident.identID : ID.Null;
+
+    switch (identID)
     {
-    case "C":
+    case ID.C:
       if (token.type == T.PlusPlus)
       {
         nT();
@@ -695,16 +699,16 @@ class Parser
       }
       linkageType = LinkageType.C;
       break;
-    case "D":
+    case ID.D:
       linkageType = LinkageType.D;
       break;
-    case "Windows":
+    case ID.Windows:
       linkageType = LinkageType.Windows;
       break;
-    case "Pascal":
+    case ID.Pascal:
       linkageType = LinkageType.Pascal;
       break;
-    case "System":
+    case ID.System:
       linkageType = LinkageType.System;
       break;
     default:
@@ -2448,14 +2452,13 @@ class Parser
 
     Token* condition = requireId();
     if (condition)
-      switch (condition.identifier)
+      switch (condition.ident.identID)
       {
-      case "exit":
-      case "success":
-      case "failure":
+      case ID.exit, ID.success, ID.failure:
         break;
       default:
-        // TODO: issue error msg.
+        // TODO: create MID.InvalidScopeIdentifier
+        error(condition, "'exit', 'success', 'failure' are valid scope identifiers, but not '{}';", condition.srcText);
       }
     require(T.RParen);
     Statement scopeBody;
@@ -2724,7 +2727,7 @@ class Parser
           nT();
         number = null;
         // TODO: report error: number expected after asm align statement.
-        error(MID.ExpectedButFound, "integer", token.srcText);
+        error(token, "expected an integer after align, not '{}'", token.srcText);
       }
       require(T.Semicolon);
       s = new AsmAlignStatement(number);
@@ -2954,23 +2957,23 @@ class Parser
          T.Float, T.Double, T.Real:
       goto LAsmTypePrefix;
     case T.Identifier:
-      switch (token.identifier)
+      switch (token.ident.identID)
       {
-      case "near", "far",   /*"byte",  "short",  "int",*/
-           "word", "dword", "qword"/*, "float", "double", "real"*/:
+      case ID.near, ID.far,/* "byte",  "short",  "int",*/
+           ID.word, ID.dword, ID.qword/*, "float", "double", "real"*/:
       LAsmTypePrefix:
         nT();
-        if (token.type == T.Identifier && token.identifier == "ptr")
+        if (token.type == T.Identifier && token.ident is Ident.ptr)
           nT();
         else
           error(MID.ExpectedButFound, "ptr", token.srcText);
         e = new AsmTypeExpression(parseAsmExpression());
         break;
-      case "offset":
+      case ID.offset:
         nT();
         e = new AsmOffsetExpression(parseAsmExpression());
         break;
-      case "seg":
+      case ID.seg:
         nT();
         e = new AsmSegExpression(parseAsmExpression());
         break;
@@ -3026,70 +3029,61 @@ class Parser
       e = new AsmBracketExpression(e);
       break;
     case T.Identifier:
-      switch (token.identifier)
+      auto register = token.ident;
+      switch (register.identID)
       {
       // __LOCAL_SIZE
-      case "__LOCAL_SIZE":
-        e = new AsmLocalSizeExpression();
+      case ID.__LOCAL_SIZE:
         nT();
+        e = new AsmLocalSizeExpression();
         break;
       // Register
-      case "ST":
-        auto register = token;
+      case ID.ST:
         nT();
         // (1) - (7)
-        Token* number;
+        int number = -1;
         if (token.type == T.LParen)
         {
           nT();
           if (token.type == T.Int32)
-          {
-            number = token;
-            nT();
-          }
+            (number = token.int_), nT();
           else
             expected(T.Int32);
           require(T.RParen);
         }
         e = new AsmRegisterExpression(register, number);
         break;
-      case "FS":
-        auto register = token;
+      case ID.FS:
         nT();
         // TODO: is the colon-number part optional?
-        Token* number;
+        int number = -1;
         if (token.type == T.Colon)
         {
           // :0, :4, :8
           nT();
-          switch (token.srcText)
-          {
-          case "0", "4", "8":
-            number = token;
-            nT();
-            break;
-          default:
+          if (token.type == T.Int32)
+            (number = token.int_), nT();
+          if (number != 0 && number != 4 && number != 8)
             error(MID.ExpectedButFound, "0, 4 or 8", token.srcText);
-          }
         }
         e = new AsmRegisterExpression(register, number);
         break;
-      case "AL", "AH", "AX", "EAX",
-           "BL", "BH", "BX", "EBX",
-           "CL", "CH", "CX", "ECX",
-           "DL", "DH", "DX", "EDX",
-           "BP", "EBP",
-           "SP", "ESP",
-           "DI", "EDI",
-           "SI", "ESI",
-           "ES", "CS", "SS", "DS", "GS",
-           "CR0", "CR2", "CR3", "CR4",
-           "DR0", "DR1", "DR2", "DR3", "DR6", "DR7",
-           "TR3", "TR4", "TR5", "TR6", "TR7",
-           "MM0", "MM1", "MM2", "MM3", "MM4", "MM5", "MM6", "MM7",
-           "XMM0", "XMM1", "XMM2", "XMM3", "XMM4", "XMM5", "XMM6", "XMM7":
-          e = new AsmRegisterExpression(token);
-          nT();
+      case ID.AL, ID.AH, ID.AX, ID.EAX,
+           ID.BL, ID.BH, ID.BX, ID.EBX,
+           ID.CL, ID.CH, ID.CX, ID.ECX,
+           ID.DL, ID.DH, ID.DX, ID.EDX,
+           ID.BP, ID.EBP, ID.SP, ID.ESP,
+           ID.DI, ID.EDI, ID.SI, ID.ESI,
+           ID.ES, ID.CS, ID.SS, ID.DS, ID.GS,
+           ID.CR0, ID.CR2, ID.CR3, ID.CR4,
+           ID.DR0, ID.DR1, ID.DR2, ID.DR3, ID.DR6, ID.DR7,
+           ID.TR3, ID.TR4, ID.TR5, ID.TR6, ID.TR7,
+           ID.MM0, ID.MM1, ID.MM2, ID.MM3,
+           ID.MM4, ID.MM5, ID.MM6, ID.MM7,
+           ID.XMM0, ID.XMM1, ID.XMM2, ID.XMM3,
+           ID.XMM4, ID.XMM5, ID.XMM6, ID.XMM7:
+        nT();
+        e = new AsmRegisterExpression(register);
         break;
       default:
         // DotIdentifier
@@ -3115,7 +3109,7 @@ class Parser
       {
         // Insert a dummy token and don't consume current one.
         begin = lx.insertEmptyTokenBefore(token);
-        prevToken = begin;
+        this.prevToken = begin;
       }
     }
     set(e, begin);
@@ -3797,7 +3791,7 @@ class Parser
       {
         // Insert a dummy token and don't consume current one.
         begin = lx.insertEmptyTokenBefore(token);
-        prevToken = begin;
+        this.prevToken = begin;
       }
     }
     set(e, begin);

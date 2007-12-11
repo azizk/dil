@@ -8,6 +8,7 @@ import dil.Token;
 import dil.Types;
 import dil.Declarations;
 import dil.Statements;
+import dil.Identifier;
 import dil.Scope;
 
 abstract class Expression : Node
@@ -1012,9 +1013,9 @@ class AsmLocalSizeExpression : Expression
 
 class AsmRegisterExpression : Expression
 {
-  Token* register;
-  Token* number; // ST(0) - ST(7) or FS:0, FS:4, FS:8
-  this(Token* register, Token* number = null)
+  Identifier* register;
+  int number; // ST(0) - ST(7) or FS:0, FS:4, FS:8
+  this(Identifier* register, int number = -1)
   {
     mixin(set_kind);
     this.register = register;
