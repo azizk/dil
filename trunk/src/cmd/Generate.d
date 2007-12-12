@@ -437,7 +437,7 @@ void printToken(Token* token, string[] tags, Print!(char) print)
   case TOK.String:
     print.format(tags[DP.StringLiteral], srcText);
     break;
-  case TOK.CharLiteral, TOK.WCharLiteral, TOK.DCharLiteral:
+  case TOK.CharLiteral:
     print.format(tags[DP.CharLiteral], srcText);
     break;
   case TOK.Assign,        TOK.Equal,

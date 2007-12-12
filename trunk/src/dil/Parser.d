@@ -1853,7 +1853,7 @@ class Parser
     case T.Int32, T.Int64, T.Uint32, T.Uint64:
     case T.Float32, T.Float64, T.Float80,
          T.Imaginary32, T.Imaginary64, T.Imaginary80:
-    case T.CharLiteral, T.WCharLiteral, T.DCharLiteral:
+    case T.CharLiteral:
     case T.String:
     case T.LBracket:
     // case T.LBrace:
@@ -3521,7 +3521,7 @@ class Parser
       e = new RealExpression(token.type, token.real_);
       nT();
       break;
-    case T.CharLiteral, T.WCharLiteral, T.DCharLiteral:
+    case T.CharLiteral:
       e = new CharExpression(token);
       nT();
       break;

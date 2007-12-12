@@ -1254,14 +1254,6 @@ class Lexer
     switch (*p)
     {
     case '\\':
-      switch (p[1])
-      {
-      case 'u':
-        t.type = TOK.WCharLiteral; break;
-      case 'U':
-        t.type = TOK.DCharLiteral; break;
-      default:
-      }
       t.dchar_ = scanEscapeSequence();
       break;
     case '\'':
@@ -1272,10 +1264,7 @@ class Lexer
         break;
       uint c = *p;
       if (!isascii(c))
-      {
         c = decodeUTF8();
-        t.type = c <= 0xFFFF ? TOK.WCharLiteral : TOK.DCharLiteral;
-      }
       t.dchar_ = c;
       ++p;
     }

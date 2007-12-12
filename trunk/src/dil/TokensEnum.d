@@ -21,7 +21,7 @@ enum TOK : ushort
 
   Identifier = 8,
   String,
-  CharLiteral, WCharLiteral, DCharLiteral,
+  CharLiteral,
 
   // Special tokens
   FILE,
@@ -126,7 +126,7 @@ const string[] tokToString = [
 
   "Identifier",
   "String",
-  "CharLiteral", "WCharLiteral", "DCharLiteral",
+  "CharLiteral",
 
   "__FILE__",
   "__LINE__",
