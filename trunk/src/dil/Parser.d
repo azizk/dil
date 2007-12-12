@@ -345,19 +345,15 @@ class Parser
       break;
     // Declaration
     case T.Identifier, T.Dot, T.Typeof:
-    // IntegralType
-    case T.Char,   T.Wchar,   T.Dchar, T.Bool,
-         T.Byte,   T.Ubyte,   T.Short, T.Ushort,
-         T.Int,    T.Uint,    T.Long,  T.Ulong,
-         T.Float,  T.Double,  T.Real,
-         T.Ifloat, T.Idouble, T.Ireal,
-         T.Cfloat, T.Cdouble, T.Creal, T.Void:
     case_Declaration:
       return parseVariableOrFunction(this.storageClass, this.protection, this.linkageType);
     /+case T.Module:
       // TODO: Error: module is optional and can appear only once at the top of the source file.
       break;+/
     default:
+      if (token.isIntegralType)
+        goto case_Declaration;
+
       decl = new IllegalDeclaration();
       // Skip to next valid token.
       do
@@ -1659,6 +1655,13 @@ class Parser
     auto begin = token;
     Statement s;
     Declaration d;
+
+    if (token.isIntegralType)
+    {
+      d = parseVariableOrFunction();
+      goto LreturnDeclarationStatement;
+    }
+
     switch (token.type)
     {
     case T.Align:
@@ -1677,16 +1680,9 @@ class Parser
 
       d = new AlignDeclaration(size, structDecl ? cast(Declaration)structDecl : new Declarations);
       goto LreturnDeclarationStatement;
-/+ Not applicable for statements.
-//          T.Private,
-//          T.Package,
-//          T.Protected,
-//          T.Public,
-//          T.Export,
-//          T.Deprecated,
-//          T.Override,
-//          T.Abstract,
-+/
+      /+ Not applicable for statements.
+         T.Private, T.Package, T.Protected, T.Public, T.Export,
+         T.Deprecated, T.Override, T.Abstract,+/
     case T.Extern,
          T.Final,
          T.Const,
@@ -1717,16 +1713,7 @@ class Parser
         goto LreturnDeclarationStatement; // Declaration
       else
         goto case_parseExpressionStatement; // Expression
-    // IntegralType
-    case T.Char,   T.Wchar,   T.Dchar, T.Bool,
-         T.Byte,   T.Ubyte,   T.Short, T.Ushort,
-         T.Int,    T.Uint,    T.Long,  T.Ulong,
-         T.Float,  T.Double,  T.Real,
-         T.Ifloat, T.Idouble, T.Ireal,
-         T.Cfloat, T.Cdouble, T.Creal, T.Void:
-    case_parseDeclaration:
-      d = parseVariableOrFunction();
-      goto LreturnDeclarationStatement;
+
     case T.If:
       s = parseIfStatement();
       break;
@@ -1864,26 +1851,10 @@ class Parser
     case T.Typeid:
     case T.Is:
     case T.LParen:
-    /+ // IntegralType
-    case T.Char,   T.Wchar,   T.Dchar, T.Bool,
-         T.Byte,   T.Ubyte,   T.Short, T.Ushort,
-         T.Int,    T.Uint,    T.Long,  T.Ulong,
-         T.Float,  T.Double,  T.Real,
-         T.Ifloat, T.Idouble, T.Ireal,
-         T.Cfloat, T.Cdouble, T.Creal, T.Void:+/
     case T.Traits: // D2.0
     // Tokens that can start a UnaryExpression:
-    case T.AndBinary,
-         T.PlusPlus,
-         T.MinusMinus,
-         T.Mul,
-         T.Minus,
-         T.Plus,
-         T.Not,
-         T.Tilde,
-         T.New,
-         T.Delete,
-         T.Cast:
+    case T.AndBinary, T.PlusPlus, T.MinusMinus, T.Mul, T.Minus,
+         T.Plus, T.Not, T.Tilde, T.New, T.Delete, T.Cast:
     case_parseExpressionStatement:
       s = new ExpressionStatement(parseExpression());
       require(T.Semicolon);
@@ -3693,21 +3664,6 @@ class Parser
         // TODO: create ParenExpression?
       }
       break;
-    // IntegralType . Identifier
-    case T.Char,   T.Wchar,   T.Dchar, T.Bool,
-         T.Byte,   T.Ubyte,   T.Short, T.Ushort,
-         T.Int,    T.Uint,    T.Long,  T.Ulong,
-         T.Float,  T.Double,  T.Real,
-         T.Ifloat, T.Idouble, T.Ireal,
-         T.Cfloat, T.Cdouble, T.Creal, T.Void:
-      auto type = new IntegralType(token.type);
-      nT();
-      set(type, begin);
-      require(T.Dot);
-      auto ident = requireIdentifier(MSG.ExpectedIdAfterTypeDot);
-
-      e = new TypeDotIdExpression(type, ident);
-      break;
     version(D2)
     {
     case T.Traits:
@@ -3723,20 +3679,30 @@ class Parser
       break;
     }
     default:
-      if (token.isSpecialToken)
+      if (token.isIntegralType)
+      { // IntegralType . Identifier
+        auto type = new IntegralType(token.type);
+        nT();
+        set(type, begin);
+        require(T.Dot);
+        auto ident = requireIdentifier(MSG.ExpectedIdAfterTypeDot);
+        e = new TypeDotIdExpression(type, ident);
+      }
+      else if (token.isSpecialToken)
       {
         e = new SpecialTokenExpression(token);
         nT();
-        break;
       }
-
-      error(MID.ExpectedButFound, "Expression", token.srcText);
-      e = new EmptyExpression();
-      if (!trying)
+      else
       {
-        // Insert a dummy token and don't consume current one.
-        begin = lx.insertEmptyTokenBefore(token);
-        this.prevToken = begin;
+        error(MID.ExpectedButFound, "Expression", token.srcText);
+        e = new EmptyExpression();
+        if (!trying)
+        {
+          // Insert a dummy token and don't consume current one.
+          begin = lx.insertEmptyTokenBefore(token);
+          this.prevToken = begin;
+        }
       }
     }
     set(e, begin);
@@ -3790,24 +3756,18 @@ class Parser
   {
     auto begin = token;
     Type t;
-//     IdentifierType tident;
 
-    switch (token.type)
+    if (token.isIntegralType)
     {
-    case T.Char,   T.Wchar,   T.Dchar, T.Bool,
-         T.Byte,   T.Ubyte,   T.Short, T.Ushort,
-         T.Int,    T.Uint,    T.Long,  T.Ulong,
-         T.Float,  T.Double,  T.Real,
-         T.Ifloat, T.Idouble, T.Ireal,
-         T.Cfloat, T.Cdouble, T.Creal, T.Void:
       t = new IntegralType(token.type);
       nT();
-      set(t, begin);
-      break;
+    }
+    else
+    switch (token.type)
+    {
     case T.Identifier, T.Typeof, T.Dot:
       t = parseDotListType();
       assert(!isNodeSet(t));
-      set(t, begin);
       break;
     version(D2)
     {
@@ -3818,7 +3778,6 @@ class Parser
       t = parseType();
       require(T.RParen);
       t = new ConstType(t);
-      set(t, begin);
       break;
     case T.Invariant:
       // invariant ( Type )
@@ -3827,16 +3786,14 @@ class Parser
       t = parseType();
       require(T.RParen);
       t = new InvariantType(t);
-      set(t, begin);
       break;
     } // version(D2)
     default:
       error(MID.ExpectedButFound, "BasicType", token.srcText);
       t = new UndefinedType();
       nT();
-      set(t, begin);
     }
-    return t;
+    return set(t, begin);
   }
 
   Type parseBasicType2(Type t)

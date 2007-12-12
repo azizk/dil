@@ -130,6 +130,12 @@ struct Token
     return KeywordsBegin <= type && type <= KeywordsEnd;
   }
 
+  /// Returns true if this is an integral type token.
+  bool isIntegralType()
+  {
+    return IntegralTypeBegin <= type && type <= IntegralTypeEnd;
+  }
+
   /// Returns true if this is a whitespace token.
   bool isWhitespace()
   {
@@ -311,15 +317,11 @@ bool isDeclDefStartToken(TOK tok)
         T.Auto, T.Scope, T.Alias, T.Typedef, T.Import, T.Enum, T.Class,
         T.Interface, T.Struct, T.Union, T.This, T.Tilde, T.Unittest, T.Debug,
         T.Version, T.Template, T.New, T.Delete, T.Mixin, T.Semicolon,
-        T.Identifier, T.Dot, T.Typeof,
-        T.Char,   T.Wchar,   T.Dchar, T.Bool,
-        T.Byte,   T.Ubyte,   T.Short, T.Ushort,
-        T.Int,    T.Uint,    T.Long,  T.Ulong,
-        T.Float,  T.Double,  T.Real,
-        T.Ifloat, T.Idouble, T.Ireal,
-        T.Cfloat, T.Cdouble, T.Creal, T.Void:
+        T.Identifier, T.Dot, T.Typeof:
     return true;
   default:
+    if (IntegralTypeBegin <= tok && tok <= IntegralTypeEnd)
+      return true;
   }
   return false;
 }
@@ -342,15 +344,10 @@ bool isStatementStartToken(TOK tok)
         T.Function, T.Delegate, T.Assert, T.Import, T.Typeid, T.Is, T.LParen,
         T.Traits/*D2.0*/, T.AndBinary, T.PlusPlus, T.MinusMinus, T.Mul,
         T.Minus, T.Plus, T.Not, T.Tilde, T.New, T.Delete, T.Cast:
-  case  T.Char,   T.Wchar,   T.Dchar, T.Bool,
-        T.Byte,   T.Ubyte,   T.Short, T.Ushort,
-        T.Int,    T.Uint,    T.Long,  T.Ulong,
-        T.Float,  T.Double,  T.Real,
-        T.Ifloat, T.Idouble, T.Ireal,
-        T.Cfloat, T.Cdouble, T.Creal, T.Void:
     return true;
   default:
-    if (SpecialTokensBegin <= tok && tok <= SpecialTokensEnd)
+    if (IntegralTypeBegin <= tok && tok <= IntegralTypeEnd ||
+        SpecialTokensBegin <= tok && tok <= SpecialTokensEnd)
       return true;
   }
   return false;

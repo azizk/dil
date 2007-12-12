@@ -87,20 +87,27 @@ enum TOK : ushort
   /* Keywords:
      NB.: Token.isKeyword() depends on this list being contiguous.
   */
-  Abstract,Alias,Align,Asm,Assert,Auto,Body,
-  Bool,Break,Byte,Case,Cast,Catch,Cdouble,
-  Cent,Cfloat,Char,Class,Const,Continue,Creal,
-  Dchar,Debug,Default,Delegate,Delete,Deprecated,Do,
-  Double,Else,Enum,Export,Extern,False,Final,
-  Finally,Float,For,Foreach,Foreach_reverse,Function,Goto,
-  Idouble,If,Ifloat,Import,In,Inout,Int,
-  Interface,Invariant,Ireal,Is,Lazy,Long,Macro/+D2.0+/,
-  Mixin,Module,New,Null,Out,Override,Package,
-  Pragma,Private,Protected,Public,Real,Ref/+D2.0+/,Return,
-  Scope,Short,Static,Struct,Super,Switch,Synchronized,
-  Template,This,Throw,Traits/+D2.0+/,True,Try,Typedef,Typeid,
-  Typeof,Ubyte,Ucent,Uint,Ulong,Union,Unittest,
-  Ushort,Version,Void,Volatile,Wchar,While,With,
+  Abstract, Alias, Align, Asm, Assert, Auto, Body,
+  Break, Case, Cast, Catch,
+  Cent, Class, Const, Continue,
+  Debug, Default, Delegate, Delete, Deprecated, Do,
+  Else, Enum, Export, Extern, False, Final,
+  Finally, For, Foreach, Foreach_reverse, Function, Goto,
+  If, Import, In, Inout,
+  Interface, Invariant, Is, Lazy, Macro/+D2.0+/,
+  Mixin, Module, New, Null, Out, Override, Package,
+  Pragma, Private, Protected, Public, Ref/+D2.0+/, Return,
+  Scope, Static, Struct, Super, Switch, Synchronized,
+  Template, This, Throw, Traits/+D2.0+/, True, Try, Typedef, Typeid,
+  Typeof, Union, Unittest,
+  Version, Volatile, While, With,
+  // Integral types.
+  Char,   Wchar,   Dchar, Bool, Ucent,
+  Byte,   Ubyte,   Short, Ushort,
+  Int,    Uint,    Long,  Ulong,
+  Float,  Double,  Real,
+  Ifloat, Idouble, Ireal,
+  Cfloat, Cdouble, Creal, Void,
 
   HEAD, // start of linked list
   EOF,
@@ -108,7 +115,9 @@ enum TOK : ushort
 }
 
 alias TOK.Abstract KeywordsBegin;
-alias TOK.With KeywordsEnd;
+alias TOK.Void KeywordsEnd;
+alias TOK.Char IntegralTypeBegin;
+alias TOK.Void IntegralTypeEnd;
 alias TOK.FILE SpecialTokensBegin;
 alias TOK.VERSION SpecialTokensEnd;
 
