@@ -4440,7 +4440,7 @@ version(D2)
   static:
     auto ExpectedIdAfterTypeDot = "expected identifier after '(Type).', not '{}'";
     auto ExpectedModuleIdentifier = "expected module identifier, not '{}'";
-    auto IllegalDeclaration = "illegal Declaration found: {}";
+    auto IllegalDeclaration = "illegal Declaration found: ";
     auto ExpectedFunctionName = "expected function name, not '{}'";
     auto ExpectedVariableName = "expected variable name, not '{}'";
     auto ExpectedFunctionBody = "expected function body, not '{}'";
