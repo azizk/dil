@@ -583,8 +583,8 @@ class PrimaryExpression
 
 class IdentifierExpression : Expression
 {
-  Token* identifier;
-  this(Token* identifier)
+  Identifier* identifier;
+  this(Identifier* identifier)
   {
     mixin(set_kind);
     this.identifier = identifier;
@@ -633,9 +633,9 @@ class DotListExpression : Expression
 
 class TemplateInstanceExpression : Expression
 {
-  Token* ident;
+  Identifier* ident;
   TemplateArguments targs;
-  this(Token* ident, TemplateArguments targs)
+  this(Identifier* ident, TemplateArguments targs)
   {
     mixin(set_kind);
     addOptChild(targs);
@@ -828,8 +828,8 @@ class TypeofExpression : Expression
 class TypeDotIdExpression : Expression
 {
   Type type;
-  Token* ident;
-  this(Type type, Token* ident)
+  Identifier* ident;
+  this(Type type, Identifier* ident)
   {
     mixin(set_kind);
     addChild(type);
@@ -852,11 +852,12 @@ class TypeidExpression : Expression
 class IsExpression : Expression
 {
   Type type;
-  Token* ident;
+  Identifier* ident;
   Token* opTok, specTok;
   Type specType;
   TemplateParameters tparams; // D 2.0
-  this(Type type, Token* ident, Token* opTok, Token* specTok, Type specType, typeof(tparams) tparams)
+  this(Type type, Identifier* ident, Token* opTok, Token* specTok,
+       Type specType, typeof(tparams) tparams)
   {
     mixin(set_kind);
     addChild(type);
@@ -905,7 +906,7 @@ version(D2)
 {
 class TraitsExpression : Expression
 {
-  Token* ident;
+  Identifier* ident;
   TemplateArguments targs;
   this(typeof(ident) ident, typeof(targs) targs)
   {
@@ -945,9 +946,9 @@ class ArrayInitializer : Expression
 
 class StructInitializer : Expression
 {
-  Token*[] idents;
+  Identifier*[] idents;
   Expression[] values;
-  this(Token*[] idents, Expression[] values)
+  this(Identifier*[] idents, Expression[] values)
   {
     mixin(set_kind);
     addOptChildren(values);

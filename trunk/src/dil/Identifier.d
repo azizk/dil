@@ -14,7 +14,15 @@ struct Identifier
   TOK type;
   ID identID;
 
-  static Identifier* opCall(string str, TOK type, ID identID = ID.Null)
+  static Identifier* opCall(string str, TOK type)
+  {
+    auto id = new Identifier;
+    id.str = str;
+    id.type = type;
+    return id;
+  }
+
+  static Identifier* opCall(string str, TOK type, ID identID)
   {
     auto id = new Identifier;
     id.str = str;

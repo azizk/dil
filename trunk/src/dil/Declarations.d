@@ -209,10 +209,10 @@ class TypedefDeclaration : Declaration
 
 class EnumDeclaration : Declaration
 {
-  Token* name;
+  Identifier* name;
   Type baseType;
   EnumMember[] members;
-  this(Token* name, Type baseType, EnumMember[] members, bool hasBody)
+  this(Identifier* name, Type baseType, EnumMember[] members, bool hasBody)
   {
     super.hasBody = hasBody;
     mixin(set_kind);
@@ -227,9 +227,9 @@ class EnumDeclaration : Declaration
 
 class EnumMember : Node
 {
-  Token* name;
+  Identifier* name;
   Expression value;
-  this(Token* name, Expression value)
+  this(Identifier* name, Expression value)
   {
     super(NodeCategory.Other);
     mixin(set_kind);
@@ -242,11 +242,11 @@ class EnumMember : Node
 
 class ClassDeclaration : Declaration
 {
-  Token* name;
+  Identifier* name;
   TemplateParameters tparams;
   BaseClass[] bases;
   Declarations decls;
-  this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls)
+  this(Identifier* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls)
   {
     super.hasBody = decls !is null;
     mixin(set_kind);
@@ -263,11 +263,11 @@ class ClassDeclaration : Declaration
 
 class InterfaceDeclaration : Declaration
 {
-  Token* name;
+  Identifier* name;
   TemplateParameters tparams;
   BaseClass[] bases;
   Declarations decls;
-  this(Token* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls)
+  this(Identifier* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls)
   {
     super.hasBody = decls !is null;
     mixin(set_kind);
@@ -284,11 +284,11 @@ class InterfaceDeclaration : Declaration
 
 class StructDeclaration : Declaration
 {
-  Token* name;
+  Identifier* name;
   TemplateParameters tparams;
   Declarations decls;
   uint alignSize;
-  this(Token* name, TemplateParameters tparams, Declarations decls)
+  this(Identifier* name, TemplateParameters tparams, Declarations decls)
   {
     super.hasBody = decls !is null;
     mixin(set_kind);
@@ -308,10 +308,10 @@ class StructDeclaration : Declaration
 
 class UnionDeclaration : Declaration
 {
-  Token* name;
+  Identifier* name;
   TemplateParameters tparams;
   Declarations decls;
-  this(Token* name, TemplateParameters tparams, Declarations decls)
+  this(Identifier* name, TemplateParameters tparams, Declarations decls)
   {
     super.hasBody = decls !is null;
     mixin(set_kind);
@@ -382,12 +382,12 @@ class StaticDestructorDeclaration : Declaration
 class FunctionDeclaration : Declaration
 {
   Type returnType;
-  Token* funcName;
+  Identifier* funcName;
   TemplateParameters tparams;
   Parameters params;
   FunctionBody funcBody;
   LinkageType linkageType;
-  this(Type returnType, Token* funcName, TemplateParameters tparams,
+  this(Type returnType, Identifier* funcName, TemplateParameters tparams,
        Parameters params, FunctionBody funcBody)
   {
     super.hasBody = funcBody.funcBody !is null;
@@ -413,10 +413,10 @@ class FunctionDeclaration : Declaration
 class VariableDeclaration : Declaration
 {
   Type type;
-  Token*[] idents;
+  Identifier*[] idents;
   Expression[] values;
   LinkageType linkageType;
-  this(Type type, Token*[] idents, Expression[] values)
+  this(Type type, Identifier*[] idents, Expression[] values)
   {
     mixin(set_kind);
     addOptChild(type);
@@ -460,7 +460,7 @@ class UnittestDeclaration : Declaration
   }
 }
 
-class DebugDeclaration : Declaration
+abstract class ConditionalCompilationDeclaration : Declaration
 {
   Token* spec;
   Token* cond;
@@ -469,7 +469,6 @@ class DebugDeclaration : Declaration
   this(Token* spec, Token* cond, Declaration decls, Declaration elseDecls)
   {
     super.hasBody = decls !is null;
-    mixin(set_kind);
     addOptChild(decls);
     addOptChild(elseDecls);
 
@@ -480,23 +479,21 @@ class DebugDeclaration : Declaration
   }
 }
 
-class VersionDeclaration : Declaration
+class DebugDeclaration : ConditionalCompilationDeclaration
 {
-  Token* spec;
-  Token* cond;
-  Declaration decls, elseDecls;
-
   this(Token* spec, Token* cond, Declaration decls, Declaration elseDecls)
   {
-    super.hasBody = decls !is null;
+    super(spec, cond, decls, elseDecls);
     mixin(set_kind);
-    addOptChild(decls);
-    addOptChild(elseDecls);
+  }
+}
 
-    this.spec = spec;
-    this.cond = cond;
-    this.decls = decls;
-    this.elseDecls = elseDecls;
+class VersionDeclaration : ConditionalCompilationDeclaration
+{
+  this(Token* spec, Token* cond, Declaration decls, Declaration elseDecls)
+  {
+    super(spec, cond, decls, elseDecls);
+    mixin(set_kind);
   }
 }
 
@@ -535,10 +532,10 @@ class StaticAssertDeclaration : Declaration
 
 class TemplateDeclaration : Declaration
 {
-  Token* name;
+  Identifier* name;
   TemplateParameters tparams;
   Declarations decls;
-  this(Token* name, TemplateParameters tparams, Declarations decls)
+  this(Identifier* name, TemplateParameters tparams, Declarations decls)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -607,14 +604,6 @@ class ProtectionDeclaration : AttributeDeclaration
     mixin(set_kind);
     this.prot = prot;
   }
-
-  void semantic(Scope scop)
-  {
-//     auto saved_prot = scop.protection;
-//     scop.protection = this.prot;
-//     decls.semantic(scop);
-//     scop.protection = saved_prot;
-  }
 }
 
 class StorageClassDeclaration : AttributeDeclaration
@@ -654,9 +643,9 @@ class AlignDeclaration : AttributeDeclaration
 
 class PragmaDeclaration : AttributeDeclaration
 {
-  Token* ident;
+  Identifier* ident;
   Expression[] args;
-  this(Token* ident, Expression[] args, Declaration decls)
+  this(Identifier* ident, Expression[] args, Declaration decls)
   {
     addOptChildren(args); // Add args before calling super().
     super(TOK.Pragma, decls);
@@ -670,10 +659,10 @@ class PragmaDeclaration : AttributeDeclaration
 class MixinDeclaration : Declaration
 {
   Expression[] templateIdents;
-  Token* mixinIdent;
+  Identifier* mixinIdent;
   Expression argument; // mixin ( AssignExpression )
 
-  this(Expression[] templateIdents, Token* mixinIdent)
+  this(Expression[] templateIdents, Identifier* mixinIdent)
   {
     mixin(set_kind);
     addChildren(templateIdents);

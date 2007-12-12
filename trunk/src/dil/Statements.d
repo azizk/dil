@@ -8,6 +8,7 @@ import dil.Expressions;
 import dil.Declarations;
 import dil.Types;
 import dil.Token;
+import dil.Identifier;
 
 abstract class Statement : Node
 {
@@ -49,7 +50,7 @@ class EmptyStatement : Statement
 class FunctionBody : Node
 {
   Statement funcBody, inBody, outBody;
-  Token* outIdent;
+  Identifier* outIdent;
   this()
   {
     super(NodeCategory.Other);
@@ -77,9 +78,9 @@ class ScopeStatement : Statement
 
 class LabeledStatement : Statement
 {
-  Token* label;
+  Identifier* label;
   Statement s;
-  this(Token* label, Statement s)
+  this(Identifier* label, Statement s)
   {
     mixin(set_kind);
     addChild(s);
@@ -272,8 +273,8 @@ class DefaultStatement : Statement
 
 class ContinueStatement : Statement
 {
-  Token* ident;
-  this(Token* ident)
+  Identifier* ident;
+  this(Identifier* ident)
   {
     mixin(set_kind);
     this.ident = ident;
@@ -282,8 +283,8 @@ class ContinueStatement : Statement
 
 class BreakStatement : Statement
 {
-  Token* ident;
-  this(Token* ident)
+  Identifier* ident;
+  this(Identifier* ident)
   {
     mixin(set_kind);
     this.ident = ident;
@@ -303,9 +304,9 @@ class ReturnStatement : Statement
 
 class GotoStatement : Statement
 {
-  Token* ident;
+  Identifier* ident;
   Expression caseExpr;
-  this(Token* ident, Expression caseExpr)
+  this(Identifier* ident, Expression caseExpr)
   {
     mixin(set_kind);
     addOptChild(caseExpr);
@@ -389,9 +390,9 @@ class FinallyBody : Statement
 
 class ScopeGuardStatement : Statement
 {
-  Token* condition;
+  Identifier* condition;
   Statement scopeBody;
-  this(Token* condition, Statement scopeBody)
+  this(Identifier* condition, Statement scopeBody)
   {
     mixin(set_kind);
     addChild(scopeBody);
@@ -435,9 +436,9 @@ class AsmStatement : Statement
 
 class AsmInstruction : Statement
 {
-  Token* ident;
+  Identifier* ident;
   Expression[] operands;
-  this(Token* ident, Expression[] operands)
+  this(Identifier* ident, Expression[] operands)
   {
     mixin(set_kind);
     addOptChildren(operands);
@@ -448,8 +449,8 @@ class AsmInstruction : Statement
 
 class AsmAlignStatement : Statement
 {
-  Token* number;
-  this(Token* number)
+  int number;
+  this(int number)
   {
     mixin(set_kind);
     this.number = number;
@@ -466,10 +467,10 @@ class IllegalAsmInstruction : IllegalStatement
 
 class PragmaStatement : Statement
 {
-  Token* ident;
+  Identifier* ident;
   Expression[] args;
   Statement pragmaBody;
-  this(Token* ident, Expression[] args, Statement pragmaBody)
+  this(Identifier* ident, Expression[] args, Statement pragmaBody)
   {
     mixin(set_kind);
     addOptChildren(args);
@@ -484,8 +485,8 @@ class PragmaStatement : Statement
 class MixinStatement : Statement
 {
   Expression[] templateIdents;
-  Token* mixinIdent;
-  this(Expression[] templateIdents, Token* mixinIdent)
+  Identifier* mixinIdent;
+  this(Expression[] templateIdents, Identifier* mixinIdent)
   {
     mixin(set_kind);
     addChildren(templateIdents);
@@ -523,32 +524,34 @@ class StaticAssertStatement : Statement
   }
 }
 
-class DebugStatement : Statement
+abstract class ConditionalCompilationStatement : Statement
 {
   Token* cond;
-  Statement debugBody, elseBody;
-  this(Token* cond, Statement debugBody, Statement elseBody)
+  Statement mainBody, elseBody;
+  this(Token* cond, Statement mainBody, Statement elseBody)
   {
-    mixin(set_kind);
-    addChild(debugBody);
+    addChild(mainBody);
     addOptChild(elseBody);
     this.cond = cond;
-    this.debugBody = debugBody;
+    this.mainBody = mainBody;
     this.elseBody = elseBody;
   }
 }
 
-class VersionStatement : Statement
+class DebugStatement : ConditionalCompilationStatement
 {
-  Token* cond;
-  Statement versionBody, elseBody;
+  this(Token* cond, Statement debugBody, Statement elseBody)
+  {
+    super(cond, debugBody, elseBody);
+    mixin(set_kind);
+  }
+}
+
+class VersionStatement : ConditionalCompilationStatement
+{
   this(Token* cond, Statement versionBody, Statement elseBody)
   {
+    super(cond, versionBody, elseBody);
     mixin(set_kind);
-    addChild(versionBody);
-    addOptChild(elseBody);
-    this.cond = cond;
-    this.versionBody = versionBody;
-    this.elseBody = elseBody;
   }
 }

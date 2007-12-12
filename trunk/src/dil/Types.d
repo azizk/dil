@@ -7,16 +7,17 @@ import dil.SyntaxTree;
 import dil.Token;
 import dil.Expressions;
 import dil.Enums;
+import dil.Identifier;
 
 class Parameter : Node
 {
   StorageClass stc;
   Token* stcTok;
   Type type;
-  Token* ident;
+  Identifier* ident;
   Expression assignExpr;
 
-  this(Token* stcTok, Type type, Token* ident, Expression assignExpr)
+  this(StorageClass stc, Type type, Identifier* ident, Expression assignExpr)
   {
     super(NodeCategory.Other);
     mixin(set_kind);
@@ -24,39 +25,23 @@ class Parameter : Node
     addOptChild(type);
     addOptChild(assignExpr);
 
-    StorageClass stc;
-    if (stcTok !is null)
-    {
-      // NB: In D 2.0 StorageClass.In means final/scope/const
-      switch (stcTok.type)
-      {
-      // TODO: D 2.0 invariant/const/final/scope
-      case TOK.In:   stc = StorageClass.In;   break;
-      case TOK.Out:  stc = StorageClass.Out;  break;
-      case TOK.Inout:
-      case TOK.Ref:  stc = StorageClass.Ref;  break;
-      case TOK.Lazy: stc = StorageClass.Lazy; break;
-      case TOK.Ellipses:
-        stc = StorageClass.Variadic;
-      default:
-      }
-    }
-
     this.stc = stc;
-    this.stcTok = stcTok;
     this.type = type;
     this.ident = ident;
     this.assignExpr = assignExpr;
   }
 
+  /// func(...) or func(int[] values ...)
   bool isVariadic()
   {
     return !!(stc & StorageClass.Variadic);
   }
 
+  /// func(...)
   bool isOnlyVariadic()
   {
-    return stc == StorageClass.Variadic;
+    return stc == StorageClass.Variadic &&
+           type is null && ident is null;
   }
 }
 
@@ -101,18 +86,20 @@ class BaseClass : Node
 
 abstract class TemplateParameter : Node
 {
-  this()
+  Identifier* ident;
+  this(Identifier* ident)
   {
     super(NodeCategory.Other);
+    this.ident = ident;
   }
 }
 
 class TemplateAliasParameter : TemplateParameter
 {
-  Token* ident;
   Type specType, defType;
-  this(Token* ident, Type specType, Type defType)
+  this(Identifier* ident, Type specType, Type defType)
   {
+    super(ident);
     mixin(set_kind);
     addOptChild(specType);
     addOptChild(defType);
@@ -124,10 +111,10 @@ class TemplateAliasParameter : TemplateParameter
 
 class TemplateTypeParameter : TemplateParameter
 {
-  Token* ident;
   Type specType, defType;
-  this(Token* ident, Type specType, Type defType)
+  this(Identifier* ident, Type specType, Type defType)
   {
+    super(ident);
     mixin(set_kind);
     addOptChild(specType);
     addOptChild(defType);
@@ -141,10 +128,10 @@ version(D2)
 {
 class TemplateThisParameter : TemplateParameter
 {
-  Token* ident;
   Type specType, defType;
-  this(Token* ident, Type specType, Type defType)
+  this(Identifier* ident, Type specType, Type defType)
   {
+    super(ident);
     mixin(set_kind);
     addOptChild(specType);
     addOptChild(defType);
@@ -158,10 +145,10 @@ class TemplateThisParameter : TemplateParameter
 class TemplateValueParameter : TemplateParameter
 {
   Type valueType;
-  Token* ident;
   Expression specValue, defValue;
-  this(Type valueType, Token* ident, Expression specValue, Expression defValue)
+  this(Type valueType, Identifier* ident, Expression specValue, Expression defValue)
   {
+    super(ident);
     mixin(set_kind);
     addChild(valueType);
     addOptChild(specValue);
@@ -175,9 +162,9 @@ class TemplateValueParameter : TemplateParameter
 
 class TemplateTupleParameter : TemplateParameter
 {
-  Token* ident;
-  this(Token* ident)
+  this(Identifier* ident)
   {
+    super(ident);
     mixin(set_kind);
     this.ident = ident;
   }
@@ -307,8 +294,8 @@ class DotListType : Type
 
 class IdentifierType : Type
 {
-  Token* ident;
-  this(Token* ident)
+  Identifier* ident;
+  this(Identifier* ident)
   {
     super(TID.Identifier);
     mixin(set_kind);
@@ -349,9 +336,9 @@ class TypeofType : Type
 
 class TemplateInstanceType : Type
 {
-  Token* ident;
+  Identifier* ident;
   TemplateArguments targs;
-  this(Token* ident, TemplateArguments targs)
+  this(Identifier* ident, TemplateArguments targs)
   {
     super(TID.TemplateInstance);
     mixin(set_kind);

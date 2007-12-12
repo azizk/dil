@@ -33,7 +33,7 @@ static:
       auto v = Cast!(VariableDeclaration)(decl);
       if (v is null)
         continue;
-      auto vname = v.idents[0].srcText;
+      auto vname = v.idents[0].str;
       if (vname == "langfile")
       {
         auto e = v.values[0];
@@ -76,7 +76,7 @@ static:
       auto v = Cast!(VariableDeclaration)(decl);
       if (v is null)
         continue;
-      if (v.idents[0].srcText == "messages")
+      if (v.idents[0].str == "messages")
       {
         auto e = v.values[0];
         if (!e)
@@ -92,7 +92,7 @@ static:
         else
           throw new Exception("messages variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");
       }
-      else if(v.idents[0].srcText == "lang_code")
+      else if(v.idents[0].str == "lang_code")
       {
         auto e = v.values[0];
         if (!e)
