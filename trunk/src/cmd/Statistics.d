@@ -87,8 +87,8 @@ Statistics getStatistics(string filePath)
 {
   auto sourceText = loadFile(filePath);
   auto lx = new Lexer(sourceText, filePath);
-
-  auto token = lx.getTokens();
+  lx.scanAll();
+  auto token = lx.firstToken();
 
   Statistics stats;
 
@@ -100,7 +100,7 @@ Statistics getStatistics(string filePath)
 
     // Count whitespace characters
     if (token.ws !is null)
-      stats.whitespaceCount += countWhitespaceCharacters(token.ws, token.start);
+      stats.whitespaceCount += token.start - token.ws;
 
     switch (token.type)
     {
@@ -115,47 +115,14 @@ Statistics getStatistics(string filePath)
          TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
       stats.numberCount++;
       break;
+    case TOK.Newline:
+      break;
     default:
       if (token.isKeyword)
         stats.keywordCount++;
+      else if (token.isWhitespace)
+        stats.wsTokenCount++;
     }
-
-    if (token.isWhitespace)
-      stats.wsTokenCount++;
   }
   return stats;
-}
-
-/// Counts newlines, \t, \v, \f and ' ' as whitespace characters.
-uint countWhitespaceCharacters(char* p, char* end)
-{
-  uint count;
-Loop:
-  while (1)
-  {
-    switch (*p)
-    {
-    case '\r':
-      if (p[1] == '\n')
-        ++p;
-    case '\n':
-      ++p;
-      ++count;
-      break;
-    case LS[0]:
-      if (p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]))
-      {
-        p += 3;
-        ++count;
-        break;
-      }
-    default:
-      if (!dil.Lexer.isspace(*p))
-        break Loop; // Exit loop.
-      ++p;
-      ++count;
-    }
-  }
-  assert(p is end);
-  return count;
 }
