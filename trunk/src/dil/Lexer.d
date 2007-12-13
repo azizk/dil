@@ -11,18 +11,14 @@ import dil.Messages;
 import dil.HtmlEntities;
 import dil.CompilerInfo;
 import dil.IdTable;
+import dil.Unicode;
 import tango.stdc.stdlib : strtof, strtod, strtold;
 import tango.stdc.errno : errno, ERANGE;
 import tango.stdc.time : time_t, time, ctime;
 import tango.stdc.string : strlen;
-import std.utf;
-import std.uni;
 import common;
 
 public import dil.LexerFuncs;
-
-/// U+FFFD = �. Used to replace invalid Unicode characters.
-const dchar REPLACEMENT_CHAR = '\uFFFD';
 
 /++
   The Lexer analyzes the characters of a source text and
@@ -1698,7 +1694,7 @@ version(D2)
 
   dchar scanEscapeSequence()
   out(result)
-  { assert(isEncodable(result)); }
+  { assert(isValidChar(result)); }
   body
   {
     assert(*p == '\\');
@@ -1735,7 +1731,7 @@ version(D2)
           if (!--digits)
           {
             ++p;
-            if (isEncodable(c))
+            if (isValidChar(c))
               return c; // Return valid escape value.
 
             error(sequenceStart, MID.InvalidUnicodeEscapeSequence, sequenceStart[0..p-sequenceStart]);
@@ -2418,80 +2414,35 @@ version(D2)
       table[k.str] = k;
   }
 
-  static bool isNonReservedIdentifier(char[] ident)
+  /// Returns true if str is a valid D identifier.
+  static bool isIdentifierString(char[] str)
   {
-    if (ident.length == 0)
+    if (str.length == 0 || isdigit(str[0]))
+      return false;
+    size_t idx;
+    do
+    {
+      auto c = dil.Unicode.decode(str, idx);
+      if (c == ERROR_CHAR || !(isident(c) || !isascii(c) && isUniAlpha(c)))
+        return false;
+    } while (idx < str.length)
+    return true;
+  }
+
+  /// Returns true if str is a keyword or a special token (__FILE__, __LINE__ etc.)
+  static bool isReservedIdentifier(char[] str)
+  {
+    if (str.length == 0)
       return false;
 
     static Identifier[string] reserved_ids_table;
     if (reserved_ids_table is null)
       Lexer.loadKeywords(reserved_ids_table);
 
-    size_t idx = 1; // Index to the 2nd character in ident.
-    dchar isFirstCharUniAlpha()
-    {
-      idx = 0;
-      // NB: decode() could throw an Exception which would be
-      // caught by the next try-catch-block.
-      return isUniAlpha(std.utf.decode(ident, idx));
-    }
-
-    try
-    {
-      if (isidbeg(ident[0]) || !isascii(ident[0]) && isFirstCharUniAlpha())
-      {
-        foreach (dchar c; ident[idx..$])
-          if (!isident(c) && !isUniAlpha(c))
-            return false;
-      }
-    }
-    catch (Exception)
+    if (!isIdentifierString(str))
       return false;
 
-    return !(ident in reserved_ids_table);
-  }
-
-  /++
-    Returns true if d can be encoded as a UTF-8 sequence.
-  +/
-  bool isEncodable(dchar d)
-  {
-    return d < 0xD800 ||
-          (d > 0xDFFF && d <= 0x10FFFF);
-  }
-
-  /++
-    There are a total of 66 noncharacters.
-    Returns true if this is one of them.
-    See_also: Chapter 16.7 Noncharacters in Unicode 5.0
-  +/
-  bool isNoncharacter(dchar d)
-  {
-    return 0xFDD0 <= d && d <= 0xFDEF || // 32
-           d <= 0x10FFFF && (d & 0xFFFF) >= 0xFFFE; // 34
-  }
-
-  /++
-    Returns true if this character is not a noncharacter, not a surrogate
-    code point and not higher than 0x10FFFF.
-  +/
-  bool isValidDecodedChar(dchar d)
-  {
-    return d < 0xD800 ||
-          (d > 0xDFFF && d < 0xFDD0) ||
-          (d > 0xFDEF && d <= 0x10FFFF && (d & 0xFFFF) < 0xFFFE);
-  }
-
-  /// Is this a trail byte of a UTF-8 sequence?
-  bool isTrailByte(ubyte b)
-  {
-    return (b & 0xC0) == 0x80; // 10xx_xxxx
-  }
-
-  /// Is this a lead byte of a UTF-8 sequence?
-  bool isLeadByte(ubyte b)
-  {
-    return (b & 0xC0) == 0xC0; // 11xx_xxxx
+    return (str in reserved_ids_table) !is null;
   }
 
   dchar decodeUTF8()
@@ -2553,7 +2504,7 @@ version(D2)
 
     assert(isTrailByte(*p));
 
-    if (!isEncodable(d))
+    if (!isValidChar(d))
     {
     Lerr:
       // Three cases:
@@ -2582,9 +2533,9 @@ version(D2)
 
   private void encodeUTF8(ref char[] str, dchar d)
   {
-    char[6] b;
+    char[6] b = void;
     assert(!isascii(d), "check for ASCII char before calling encodeUTF8().");
-    assert(isEncodable(d), "check that 'd' is encodable before calling encodeUTF8().");
+    assert(isValidChar(d), "check if character is valid before calling encodeUTF8().");
 
     if (d < 0x800)
     {

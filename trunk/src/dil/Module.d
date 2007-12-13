@@ -58,7 +58,7 @@ class Module
       {
         // Take base name of file path as module name.
         auto str = (new FilePath(filePath)).name();
-        if (Lexer.isNonReservedIdentifier(str))
+        if (!Lexer.isReservedIdentifier(str))
         {
           this.moduleFQN = moduleName = str;
         }
