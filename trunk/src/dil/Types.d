@@ -12,7 +12,6 @@ import dil.Identifier;
 class Parameter : Node
 {
   StorageClass stc;
-  Token* stcTok;
   TypeNode type;
   Identifier* ident;
   Expression defValue;
