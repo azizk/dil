@@ -488,9 +488,9 @@ class CallExpression : UnaryExpression
 class NewExpression : /*Unary*/Expression
 {
   Expression[] newArgs;
-  Type type;
+  TypeNode type;
   Expression[] ctorArgs;
-  this(/*Expression e, */Expression[] newArgs, Type type, Expression[] ctorArgs)
+  this(/*Expression e, */Expression[] newArgs, TypeNode type, Expression[] ctorArgs)
   {
     /*super(e);*/
     mixin(set_kind);
@@ -536,8 +536,8 @@ class DeleteExpression : UnaryExpression
 
 class CastExpression : UnaryExpression
 {
-  Type type;
-  this(Expression e, Type type)
+  TypeNode type;
+  this(Expression e, TypeNode type)
   {
     addChild(type); // Add type before super().
     super(e);
@@ -816,8 +816,8 @@ class ImportExpression : Expression
 
 class TypeofExpression : Expression
 {
-  Type type;
-  this(Type type)
+  TypeNode type;
+  this(TypeNode type)
   {
     mixin(set_kind);
     addChild(type);
@@ -827,9 +827,9 @@ class TypeofExpression : Expression
 
 class TypeDotIdExpression : Expression
 {
-  Type type;
+  TypeNode type;
   Identifier* ident;
-  this(Type type, Identifier* ident)
+  this(TypeNode type, Identifier* ident)
   {
     mixin(set_kind);
     addChild(type);
@@ -840,8 +840,8 @@ class TypeDotIdExpression : Expression
 
 class TypeidExpression : Expression
 {
-  Type type;
-  this(Type type)
+  TypeNode type;
+  this(TypeNode type)
   {
     mixin(set_kind);
     addChild(type);
@@ -851,13 +851,13 @@ class TypeidExpression : Expression
 
 class IsExpression : Expression
 {
-  Type type;
+  TypeNode type;
   Identifier* ident;
   Token* opTok, specTok;
-  Type specType;
+  TypeNode specType;
   TemplateParameters tparams; // D 2.0
-  this(Type type, Identifier* ident, Token* opTok, Token* specTok,
-       Type specType, typeof(tparams) tparams)
+  this(TypeNode type, Identifier* ident, Token* opTok, Token* specTok,
+       TypeNode specType, typeof(tparams) tparams)
   {
     mixin(set_kind);
     addChild(type);
@@ -875,7 +875,7 @@ class IsExpression : Expression
 
 class FunctionLiteralExpression : Expression
 {
-  Type returnType;
+  TypeNode returnType;
   Parameters parameters;
   FunctionBody funcBody;
 
@@ -887,7 +887,7 @@ class FunctionLiteralExpression : Expression
     addChild(funcBody);
   }
 
-  this(Type returnType, Parameters parameters, FunctionBody funcBody)
+  this(TypeNode returnType, Parameters parameters, FunctionBody funcBody)
   {
     this.returnType = returnType;
     this.parameters = parameters;

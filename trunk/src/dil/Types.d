@@ -13,22 +13,22 @@ class Parameter : Node
 {
   StorageClass stc;
   Token* stcTok;
-  Type type;
+  TypeNode type;
   Identifier* ident;
-  Expression assignExpr;
+  Expression defValue;
 
-  this(StorageClass stc, Type type, Identifier* ident, Expression assignExpr)
+  this(StorageClass stc, TypeNode type, Identifier* ident, Expression defValue)
   {
     super(NodeCategory.Other);
     mixin(set_kind);
     // type can be null when param in foreach statement
     addOptChild(type);
-    addOptChild(assignExpr);
+    addOptChild(defValue);
 
     this.stc = stc;
     this.type = type;
     this.ident = ident;
-    this.assignExpr = assignExpr;
+    this.defValue = defValue;
   }
 
   /// func(...) or func(int[] values ...)
@@ -73,8 +73,8 @@ class Parameters : Node
 class BaseClass : Node
 {
   Protection prot;
-  Type type;
-  this(Protection prot, Type type)
+  TypeNode type;
+  this(Protection prot, TypeNode type)
   {
     super(NodeCategory.Other);
     mixin(set_kind);
@@ -96,8 +96,8 @@ abstract class TemplateParameter : Node
 
 class TemplateAliasParameter : TemplateParameter
 {
-  Type specType, defType;
-  this(Identifier* ident, Type specType, Type defType)
+  TypeNode specType, defType;
+  this(Identifier* ident, TypeNode specType, TypeNode defType)
   {
     super(ident);
     mixin(set_kind);
@@ -111,8 +111,8 @@ class TemplateAliasParameter : TemplateParameter
 
 class TemplateTypeParameter : TemplateParameter
 {
-  Type specType, defType;
-  this(Identifier* ident, Type specType, Type defType)
+  TypeNode specType, defType;
+  this(Identifier* ident, TypeNode specType, TypeNode defType)
   {
     super(ident);
     mixin(set_kind);
@@ -128,8 +128,8 @@ version(D2)
 {
 class TemplateThisParameter : TemplateParameter
 {
-  Type specType, defType;
-  this(Identifier* ident, Type specType, Type defType)
+  TypeNode specType, defType;
+  this(Identifier* ident, TypeNode specType, TypeNode defType)
   {
     super(ident);
     mixin(set_kind);
@@ -144,9 +144,9 @@ class TemplateThisParameter : TemplateParameter
 
 class TemplateValueParameter : TemplateParameter
 {
-  Type valueType;
+  TypeNode valueType;
   Expression specValue, defValue;
-  this(Type valueType, Identifier* ident, Expression specValue, Expression defValue)
+  this(TypeNode valueType, Identifier* ident, Expression specValue, Expression defValue)
   {
     super(ident);
     mixin(set_kind);
@@ -227,6 +227,7 @@ enum TID
   Cfloat  = TOK.Cfloat,
   Cdouble = TOK.Cdouble,
   Creal   = TOK.Creal,
+  Ucent   = TOK.Ucent,
 
   Undefined,
   Function,
@@ -243,17 +244,17 @@ enum TID
   Invariant, // D2
 }
 
-abstract class Type : Node
+abstract class TypeNode : Node
 {
   TID tid;
-  Type next;
+  TypeNode next;
 
   this(TID tid)
   {
     this(tid, null);
   }
 
-  this(TID tid, Type next)
+  this(TID tid, TypeNode next)
   {
     super(NodeCategory.Type);
     addOptChild(next);
@@ -262,7 +263,7 @@ abstract class Type : Node
   }
 }
 
-class IntegralType : Type
+class IntegralType : TypeNode
 {
   this(TOK tok)
   {
@@ -271,7 +272,7 @@ class IntegralType : Type
   }
 }
 
-class UndefinedType : Type
+class UndefinedType : TypeNode
 {
   this()
   {
@@ -280,10 +281,10 @@ class UndefinedType : Type
   }
 }
 
-class DotListType : Type
+class DotListType : TypeNode
 {
-  Type[] dotList;
-  this(Type[] dotList)
+  TypeNode[] dotList;
+  this(TypeNode[] dotList)
   {
     super(TID.DotList);
     mixin(set_kind);
@@ -292,7 +293,7 @@ class DotListType : Type
   }
 }
 
-class IdentifierType : Type
+class IdentifierType : TypeNode
 {
   Identifier* ident;
   this(Identifier* ident)
@@ -303,7 +304,7 @@ class IdentifierType : Type
   }
 }
 
-class DotType : Type
+class DotType : TypeNode
 {
   this()
   {
@@ -312,7 +313,7 @@ class DotType : Type
   }
 }
 
-class TypeofType : Type
+class TypeofType : TypeNode
 {
   Expression e;
   this(Expression e)
@@ -334,7 +335,7 @@ class TypeofType : Type
   }
 }
 
-class TemplateInstanceType : Type
+class TemplateInstanceType : TypeNode
 {
   Identifier* ident;
   TemplateArguments targs;
@@ -348,27 +349,27 @@ class TemplateInstanceType : Type
   }
 }
 
-class PointerType : Type
+class PointerType : TypeNode
 {
-  this(Type t)
+  this(TypeNode t)
   {
     super(TID.Pointer, t);
     mixin(set_kind);
   }
 }
 
-class ArrayType : Type
+class ArrayType : TypeNode
 {
   Expression e, e2;
-  Type assocType;
+  TypeNode assocType;
 
-  this(Type t)
+  this(TypeNode t)
   {
     super(TID.Array, t);
     mixin(set_kind);
   }
 
-  this(Type t, Expression e, Expression e2)
+  this(TypeNode t, Expression e, Expression e2)
   {
     addChild(e);
     addOptChild(e2);
@@ -377,7 +378,7 @@ class ArrayType : Type
     this(t);
   }
 
-  this(Type t, Type assocType)
+  this(TypeNode t, TypeNode assocType)
   {
     addChild(assocType);
     this.assocType = assocType;
@@ -385,11 +386,11 @@ class ArrayType : Type
   }
 }
 
-class FunctionType : Type
+class FunctionType : TypeNode
 {
-  Type returnType;
+  TypeNode returnType;
   Parameters parameters;
-  this(Type returnType, Parameters parameters)
+  this(TypeNode returnType, Parameters parameters)
   {
     super(TID.Function);
     mixin(set_kind);
@@ -400,11 +401,11 @@ class FunctionType : Type
   }
 }
 
-class DelegateType : Type
+class DelegateType : TypeNode
 {
-  Type returnType;
+  TypeNode returnType;
   Parameters parameters;
-  this(Type returnType, Parameters parameters)
+  this(TypeNode returnType, Parameters parameters)
   {
     super(TID.Delegate);
     mixin(set_kind);
@@ -415,10 +416,10 @@ class DelegateType : Type
   }
 }
 
-class CFuncPointerType : Type
+class CFuncPointerType : TypeNode
 {
   Parameters params;
-  this(Type type, Parameters params)
+  this(TypeNode type, Parameters params)
   {
     super(TID.CFuncPointer, type);
     mixin(set_kind);
@@ -428,9 +429,9 @@ class CFuncPointerType : Type
 
 version(D2)
 {
-class ConstType : Type
+class ConstType : TypeNode
 {
-  this(Type t)
+  this(TypeNode t)
   {
     // If t is null: cast(const)
     super(TID.Const, t);
@@ -438,9 +439,9 @@ class ConstType : Type
   }
 }
 
-class InvariantType : Type
+class InvariantType : TypeNode
 {
-  this(Type t)
+  this(TypeNode t)
   {
     // If t is null: cast(invariant)
     super(TID.Invariant, t);

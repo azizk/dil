@@ -210,9 +210,9 @@ class TypedefDeclaration : Declaration
 class EnumDeclaration : Declaration
 {
   Identifier* name;
-  Type baseType;
+  TypeNode baseType;
   EnumMember[] members;
-  this(Identifier* name, Type baseType, EnumMember[] members, bool hasBody)
+  this(Identifier* name, TypeNode baseType, EnumMember[] members, bool hasBody)
   {
     super.hasBody = hasBody;
     mixin(set_kind);
@@ -381,13 +381,13 @@ class StaticDestructorDeclaration : Declaration
 
 class FunctionDeclaration : Declaration
 {
-  Type returnType;
+  TypeNode returnType;
   Identifier* funcName;
   TemplateParameters tparams;
   Parameters params;
   FunctionBody funcBody;
   LinkageType linkageType;
-  this(Type returnType, Identifier* funcName, TemplateParameters tparams,
+  this(TypeNode returnType, Identifier* funcName, TemplateParameters tparams,
        Parameters params, FunctionBody funcBody)
   {
     super.hasBody = funcBody.funcBody !is null;
@@ -412,11 +412,11 @@ class FunctionDeclaration : Declaration
 
 class VariableDeclaration : Declaration
 {
-  Type type;
+  TypeNode type;
   Identifier*[] idents;
   Expression[] values;
   LinkageType linkageType;
-  this(Type type, Identifier*[] idents, Expression[] values)
+  this(TypeNode type, Identifier*[] idents, Expression[] values)
   {
     mixin(set_kind);
     addOptChild(type);

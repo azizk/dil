@@ -37,7 +37,14 @@ class Parser
   uint alignSize = DEFAULT_ALIGN_SIZE;
 
   private alias TOK T;
+  private alias TypeNode Type;
 
+  /++
+    Construct a Parser object.
+    Params:
+      text     = the UTF-8 source code.
+      filePath = the path to the source code; used for error messages.
+  +/
   this(char[] srcText, string filePath, InformationManager infoMan = null)
   {
     lx = new Lexer(srcText, filePath);
