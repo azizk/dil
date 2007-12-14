@@ -76,6 +76,11 @@ class Module
     this.root.semantic(scop);
   }
 
+  bool hasErrors()
+  {
+    return parser.errors.length || parser.lx.errors.length;
+  }
+
   string[] getImports()
   {
     string[] result;

@@ -6,7 +6,7 @@ module dil.SettingsLoader;
 
 import dil.Settings;
 import dil.Messages;
-import dil.Parser, dil.SyntaxTree, dil.Declarations, dil.Expressions;
+import dil.Module, dil.SyntaxTree, dil.Declarations, dil.Expressions;
 import dil.File;
 import tango.io.FilePath;
 import common;
@@ -17,14 +17,13 @@ void loadSettings()
 
   // Load config.d
   auto filePath = execPath.file("config.d").toUtf8();
-  auto sourceText = loadFile(filePath);
-  auto parser = new Parser(sourceText, filePath);
-  auto root = parser.start();
+  auto modul = new Module(filePath);
+  modul.parse();
 
-  if (parser.errors.length || parser.lx.errors.length)
+  if (modul.hasErrors)
     throw new Exception("There are errors in " ~ filePath ~ ".");
 
-  foreach (decl; root.children)
+  foreach (decl; modul.root.children)
   {
     auto v = Cast!(VariableDeclaration)(decl);
     if (v is null)
@@ -68,16 +67,15 @@ void loadSettings()
   }
 
   // Load language file.
-  filePath = GlobalSettings.langFile;
-  sourceText = loadFile(execPath.file(filePath).toUtf8());
-  parser = new Parser(sourceText, filePath);
-  root = parser.start();
+  filePath = execPath.file(GlobalSettings.langFile).toUtf8();
+  modul = new Module(filePath);
+  modul.parse();
 
-  if (parser.errors.length || parser.lx.errors.length)
+  if (modul.hasErrors)
     throw new Exception("There are errors in "~filePath~".");
 
   char[][] messages;
-  foreach (decl; root.children)
+  foreach (decl; modul.root.children)
   {
     auto v = Cast!(VariableDeclaration)(decl);
     if (v is null)
