@@ -35,7 +35,7 @@ class Lexer
   char* end;        /// Points one character past the end of the source text.
 
   // Members used for error messages:
-  Information[] errors;
+  LexerError[] errors;
   /// Always points to the beginning of the current line.
   char* lineBegin;
 //   Token* newline;     /// Current newline token.
@@ -2385,7 +2385,7 @@ version(D2)
     lineNum = this.errorLineNumber(lineNum);
     auto location = new Location(errorPath, lineNum, lineBegin, columnPos);
     auto msg = Format(_arguments, _argptr, GetMsg(mid));
-    errors ~= new Information(InfoType.Lexer, mid, location, msg);
+    errors ~= new LexerError(location, msg);
   }
 
   Token* getTokens()

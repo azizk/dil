@@ -27,7 +27,7 @@ class Parser
   Token* token; /// Current non-whitespace token.
   Token* prevToken; /// Previous non-whitespace token.
 
-  Information[] errors;
+  ParserError[] errors;
 
   ImportDeclaration[] imports; /// ImportDeclarations in the source text.
 
@@ -4421,15 +4421,15 @@ version(D2)
   /// Reports an error that has no message ID yet.
   void error(Token* token, char[] formatMsg, ...)
   {
-    error_(token, MID.min, formatMsg, _arguments, _argptr);
+    error_(token, formatMsg, _arguments, _argptr);
   }
 
   void error(MID mid, ...)
   {
-    error_(this.token, mid, GetMsg(mid), _arguments, _argptr);
+    error_(this.token, GetMsg(mid), _arguments, _argptr);
   }
 
-  void error_(Token* token, MID mid, char[] formatMsg, TypeInfo[] _arguments, void* _argptr)
+  void error_(Token* token, char[] formatMsg, TypeInfo[] _arguments, void* _argptr)
   {
     if (trying)
     {
@@ -4438,7 +4438,7 @@ version(D2)
     }
     auto location = token.getLocation();
     auto msg = Format(_arguments, _argptr, formatMsg);
-    errors ~= new Information(InfoType.Parser, mid, location, msg);
+    errors ~= new ParserError(location, msg);
   }
 
   /// Collection of error messages with no MID yet.

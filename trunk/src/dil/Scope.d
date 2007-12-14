@@ -58,8 +58,7 @@ class Scope
   void error(Token* token, MID mid)
   {
     auto location = token.getLocation();
-    auto msg = GetMsg(mid);
-    auto error = new Information(InfoType.Semantic, mid, location, msg);
+    auto error = new SemanticError(location, GetMsg(mid));
 //     infoMan.add(error);
   }
 }
