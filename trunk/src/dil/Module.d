@@ -49,7 +49,7 @@ class Module
     if (root.children.length)
     {
       // moduleDecl will be null if first node can't be cast to ModuleDeclaration.
-      this.moduleDecl = Cast!(ModuleDeclaration)(root.children[0]);
+      this.moduleDecl = TryCast!(ModuleDeclaration)(root.children[0]);
       if (moduleDecl)
       {
         this.setFQN(moduleDecl.getFQN());
