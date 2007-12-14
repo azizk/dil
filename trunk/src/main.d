@@ -3,11 +3,13 @@
   License: GPL3
 +/
 module main;
+
 import dil.Parser;
 import dil.Lexer;
 import dil.Token;
 import dil.Messages;
 import dil.Settings;
+import dil.SettingsLoader;
 import dil.CompilerInfo;
 import dil.Declarations, dil.Expressions, dil.SyntaxTree;
 import dil.File;
@@ -17,10 +19,13 @@ import cmd.ImportGraph;
 import common;
 
 import Integer = tango.text.convert.Integer;
+import tango.io.File;
+import tango.text.Util;
+import tango.util.time.StopWatch;
 
 void main(char[][] args)
 {
-  GlobalSettings.load();
+  dil.SettingsLoader.loadSettings();
 
   if (args.length <= 1)
     return Stdout(helpMain()).newline;
@@ -130,6 +135,26 @@ void main(char[][] args)
       Stdout(token.srcText)(separator);
     }
     break;
+  case "profile":
+    if (args.length < 3)
+      break;
+    char[][] filePaths;
+    if (args[2] == "dstress")
+    {
+      auto text = cast(char[])(new File("dstress_files")).read();
+      filePaths = split(text, "\0");
+    }
+    else
+      filePaths = args[2..$];
+
+    StopWatch swatch;
+    swatch.start;
+
+    foreach (filePath; filePaths)
+      (new Lexer(loadFile(filePath), null)).scanAll();
+
+    Stdout.formatln("Scanned in {:f10}s.", swatch.stop);
+    break;
   case "parse":
     if (args.length == 3)
       parse(args[2]);
@@ -191,6 +216,14 @@ Options:
 Example:
   dil tok -t"module foo; void func(){}"
   dil tok main.d | grep ^[0-9]`;
+    break;
+  case "stats", "statistics":
+    msg = "Gather statistics about D source files.
+Usage:
+  dil stat file.d [file2.d, ...]
+
+Example:
+  dil stat src/dil/Parser.d src/dil/Lexer.d";
     break;
   default:
     msg = helpMain();

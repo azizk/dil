@@ -39,4 +39,5 @@ const COMPILED_VERSION = FormatT!("%s.%s", __VERSION__/1000, Pad!(__VERSION__%10
 /// ditto
 const COMPILED_DATE = __TIMESTAMP__;
 
-const DEFAULT_ALIGN_SIZE = 1; /// The global, default alignment size for struct fields.
+/// The global, default alignment size for struct fields.
+const DEFAULT_ALIGN_SIZE = 4;
