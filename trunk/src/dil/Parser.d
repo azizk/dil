@@ -2160,7 +2160,6 @@ class Parser
         if (next == T.Comma || next == T.Semicolon || next == T.RParen)
         {
           ident = requireIdentifier(MSG.ExpectedVariableName);
-          nT();
           break;
         }
         // fall through
@@ -4465,7 +4464,7 @@ version(D2)
     auto ExpectedTemplateName = "expected template name, not '{}'";
     auto ExpectedAnIdentifier = "expected an identifier, not '{}'";
     auto IllegalStatement = "illegal Statement found: ";
-    auto ExpectedNonEmptyStatement = "didn't expect ';', use { } instead";
+    auto ExpectedNonEmptyStatement = "didn't expect ';', use {{ }} instead";
     auto ExpectedScopeIdentifier = "expected 'exit', 'success' or 'failure', not '{}'";
     auto InvalidScopeIdentifier = "'exit', 'success', 'failure' are valid scope identifiers, but not '{}';";
     auto ExpectedIntegerAfterAlign = "expected an integer after align, not '{}'";

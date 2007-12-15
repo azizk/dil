@@ -2531,12 +2531,12 @@ version(D2)
     return d;
   }
 
-  private void encodeUTF8(ref char[] str, dchar d)
+  static void encodeUTF8(ref char[] str, dchar d)
   {
-    char[6] b = void;
     assert(!isascii(d), "check for ASCII char before calling encodeUTF8().");
     assert(isValidChar(d), "check if character is valid before calling encodeUTF8().");
 
+    char[6] b = void;
     if (d < 0x800)
     {
       b[0] = 0xC0 | (d >> 6);
