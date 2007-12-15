@@ -1,16 +1,16 @@
 // Relative paths are resolved from the directory of dil's executable.
 
 // Path to the language file.
-auto langfile = "lang_en.d";
+var langfile = "lang_en.d";
 // An array of import paths to look for modules.
-auto import_paths = [];
+var import_paths = [];
 /*
   Customizing error messages.
-  1: file path to the source text.
-  2: line number.
-  3: column number.
-  4: error message.
+  0: file path to the source text.
+  1: line number.
+  2: column number.
+  3: error message.
 */
-auto lexer_error = "{1}({2},{3})L: {4}";
-auto parser_error = "{1}({2},{3})P: {4}";
-auto semantic_error = "{1}({2},{3})S: {4}";
+var lexer_error = "{0}({1},{2})L: {3}";
+var parser_error = "{0}({1},{2})P: {3}";
+var semantic_error = "{0}({1},{2})S: {3}";

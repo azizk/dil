@@ -3,6 +3,7 @@
   License: GPL3
 +/
 module dil.Module;
+
 import dil.SyntaxTree;
 import dil.Declarations;
 import dil.Parser;
@@ -10,6 +11,7 @@ import dil.ImportParser;
 import dil.Lexer;
 import dil.File;
 import dil.Scope;
+import dil.Information;
 import tango.io.FilePath;
 import tango.io.FileConst;
 import common;
@@ -23,6 +25,7 @@ class Module
   string moduleFQN; /// Fully qualified name of the module.
   string packageName;
   string moduleName;
+
   Declarations root; /// The root of the AST.
   ImportDeclaration[] imports;
   ModuleDeclaration moduleDecl;
@@ -30,10 +33,18 @@ class Module
 
   Module[] modules;
 
+  InformationManager infoMan;
+
   this(string filePath, bool isLightweight = false)
   {
     this.filePath = filePath;
     this.isLightweight = isLightweight;
+  }
+
+  this(string filePath, InformationManager infoMan)
+  {
+    this(filePath, false);
+    this.infoMan = infoMan;
   }
 
   void parse()
@@ -42,7 +53,7 @@ class Module
     if (this.isLightweight)
       this.parser = new ImportParser(sourceText, filePath);
     else
-      this.parser = new Parser(sourceText, filePath);
+      this.parser = new Parser(sourceText, filePath, infoMan);
 
     this.root = parser.start();
 

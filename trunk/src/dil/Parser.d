@@ -27,6 +27,7 @@ class Parser
   Token* token; /// Current non-whitespace token.
   Token* prevToken; /// Previous non-whitespace token.
 
+  InformationManager infoMan;
   ParserError[] errors;
 
   ImportDeclaration[] imports; /// ImportDeclarations in the source text.
@@ -47,7 +48,8 @@ class Parser
   +/
   this(char[] srcText, string filePath, InformationManager infoMan = null)
   {
-    lx = new Lexer(srcText, filePath);
+    this.infoMan = infoMan;
+    lx = new Lexer(srcText, filePath, infoMan);
   }
 
   protected void init()
@@ -4437,7 +4439,10 @@ version(D2)
     }
     auto location = token.getLocation();
     auto msg = Format(_arguments, _argptr, formatMsg);
-    errors ~= new ParserError(location, msg);
+    auto error = new ParserError(location, msg);
+    errors ~= error;
+    if (infoMan !is null)
+      infoMan ~= error;
   }
 
   /// Collection of error messages with no MID yet.

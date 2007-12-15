@@ -35,6 +35,7 @@ class Lexer
   char* end;        /// Points one character past the end of the source text.
 
   // Members used for error messages:
+  InformationManager infoMan;
   LexerError[] errors;
   /// Always points to the beginning of the current line.
   char* lineBegin;
@@ -50,9 +51,10 @@ class Lexer
       text     = the UTF-8 source code.
       filePath = the path to the source code; used for error messages.
   +/
-  this(string text, string filePath)
+  this(string text, string filePath, InformationManager infoMan = null)
   {
     this.filePath = this.errorPath = filePath;
+    this.infoMan = infoMan;
 
     this.text = text;
     if (text.length == 0 || text[$-1] != 0)
@@ -2385,7 +2387,10 @@ version(D2)
     lineNum = this.errorLineNumber(lineNum);
     auto location = new Location(errorPath, lineNum, lineBegin, columnPos);
     auto msg = Format(_arguments, _argptr, GetMsg(mid));
-    errors ~= new LexerError(location, msg);
+    auto error = new LexerError(location, msg);
+    errors ~= error;
+    if (infoMan !is null)
+      infoMan ~= error;
   }
 
   Token* getTokens()

@@ -11,7 +11,9 @@ import dil.Messages;
 import dil.Settings;
 import dil.SettingsLoader;
 import dil.CompilerInfo;
+import dil.Module;
 import dil.Declarations, dil.Expressions, dil.SyntaxTree;
+import dil.Information;
 import dil.File;
 import cmd.Generate;
 import cmd.Statistics;
@@ -33,6 +35,33 @@ void main(char[][] args)
   string command = args[1];
   switch (command)
   {
+  case "c", "compile":
+    if (args.length < 2)
+      return printHelp("compile");
+
+    auto infoMan = new InformationManager();
+    auto filePaths = args[2..$];
+    foreach (filePath; filePaths)
+    {
+      auto mod = new Module(filePath, infoMan);
+      mod.parse();
+    }
+
+    foreach (info; infoMan.info)
+    {
+      char[] errorFormat;
+      if (info.classinfo is LexerError.classinfo)
+        errorFormat = GlobalSettings.lexerErrorFormat;
+      else if (info.classinfo is ParserError.classinfo)
+        errorFormat = GlobalSettings.parserErrorFormat;
+      else if (info.classinfo is SemanticError.classinfo)
+        errorFormat = GlobalSettings.semanticErrorFormat;
+      else
+        continue;
+      auto err = cast(Problem)info;
+      Stderr.formatln(errorFormat, err.filePath, err.loc, err.col, err.getMsg);
+    }
+    break;
   case "gen", "generate":
     char[] fileName;
     DocOption options = DocOption.Tokens;
@@ -160,16 +189,14 @@ void main(char[][] args)
       parse(args[2]);
     break;
   case "?", "help":
-    if (args.length == 3)
-      printHelp(args[2]);
-    else
-      Stdout(helpMain());
+    printHelp(args.length >= 3 ? args[2] : "");
     break;
   default:
   }
 }
 
 const char[] COMMANDS =
+  "  compile (c)\n"
   "  generate (gen)\n"
   "  help (?)\n"
   "  importgraph (igraph)\n"
@@ -196,6 +223,19 @@ void printHelp(char[] command)
   char[] msg;
   switch (command)
   {
+  case "c", "compile":
+    msg = "Compile D source files.
+Usage:
+  dil compile file.d [file2.d, ...] [Options]
+
+  This command only parses the source files and does little semantic analysis.
+  Errors are printed to standard error output.
+
+Options:
+
+Example:
+  dil c src/main.d";
+    break;
   case "gen", "generate":
     msg = GetMsg(MID.HelpGenerate);
     break;

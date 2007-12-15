@@ -16,7 +16,7 @@ static:
   string[] messages;
   /// Array of import paths to look for modules.
   string[] importPaths;
-  string lexerErrorFormat = "{1}({2},{3})L: {4}";
-  string parserErrorFormat = "{1}({2},{3})L: {4}";
-  string semanticErrorFormat = "{1}({2},{3})L: {4}";
+  string lexerErrorFormat = "{0}({1},{2})L: {3}";
+  string parserErrorFormat = "{0}({1},{2})P: {3}";
+  string semanticErrorFormat = "{0}({1},{2})S: {3}";
 }

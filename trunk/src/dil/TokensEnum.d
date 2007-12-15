@@ -89,7 +89,7 @@ enum TOK : ushort
   */
   Abstract, Alias, Align, Asm, Assert, Auto, Body,
   Break, Case, Cast, Catch,
-  Cent, Class, Const, Continue,
+  Class, Const, Continue,
   Debug, Default, Delegate, Delete, Deprecated, Do,
   Else, Enum, Export, Extern, False, Final,
   Finally, For, Foreach, Foreach_reverse, Function, Goto,
@@ -102,7 +102,7 @@ enum TOK : ushort
   Typeof, Union, Unittest,
   Version, Volatile, While, With,
   // Integral types.
-  Char,   Wchar,   Dchar, Bool, Ucent,
+  Char,   Wchar,   Dchar, Bool, Cent, Ucent,
   Byte,   Ubyte,   Short, Ushort,
   Int,    Uint,    Long,  Ulong,
   Float,  Double,  Real,
