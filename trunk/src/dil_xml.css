@@ -46,10 +46,6 @@ op[t=ne] { content: "≠"; } /*!=*/
 op[t=le] { content: "≤"; } /*<=*/
 op[t=ge] { content: "≥"; } /*>=*/
 op[t=lg] { content: "≶"; } /*<>*/
-o[t=Linkage] i, o[t=Linkage] op
-{
-  color: red;
-}
 /*
 d = Declaration
 s = Statement
@@ -57,7 +53,13 @@ e = Expression
 t = Type
 o = Other
 */
+o[t=Linkage] i, o[t=Linkage] op
+{
+  color: red;
+}
 /* d { background-color: #FFDDDD; } */
-/* e { background-color: #DDDDFF;} */
+/* e { background-color: #DDDDFF; } */
 d[t=Module] i, d[t=Import] i { color: blue; }
-t > i { color: #119; }
+t > i { color: #911; }
+t > br, t > op { color: #911; }
+t[t=Integral] k { color: #911; font-weight: normal; }

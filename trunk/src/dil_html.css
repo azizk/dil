@@ -46,7 +46,6 @@
 .ople { content: "≤"; } /*<=*/
 .opge { content: "≥"; } /*>=*/
 .oplg { content: "≶"; } /*<>*/
-
 /*
 d = Declaration
 s = Statement
@@ -55,6 +54,8 @@ t = Type
 o = Other
 */
 /* .d { background-color: #FFDDDD; } */
-/* .e { background-color: #DDDDFF;} */
+/* .e { background-color: #DDDDFF; } */
 .d.Module .i, .d.Import .i { color: blue; }
-.t .i { color: #119; }
+.t .i { color: #911; }
+.t .br, .t .op { color: #911; }
+.t .k { color: #911; font-weight: normal; }

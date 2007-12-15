@@ -226,6 +226,7 @@ enum TID
   Cfloat  = TOK.Cfloat,
   Cdouble = TOK.Cdouble,
   Creal   = TOK.Creal,
+  Cent    = TOK.Cent,
   Ucent   = TOK.Ucent,
 
   Undefined,
