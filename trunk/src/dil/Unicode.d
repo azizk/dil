@@ -127,6 +127,60 @@ body
 }
 
 /// Encodes a character and appends it to str.
+void encode(ref char[] str, dchar c)
+{
+  assert(isValidChar(c), "check if character is valid before calling encode().");
+
+  char[6] b = void;
+  if (c < 0x80)
+    str ~= c;
+  if (c < 0x800)
+  {
+    b[0] = 0xC0 | (c >> 6);
+    b[1] = 0x80 | (c & 0x3F);
+    str ~= b[0..2];
+  }
+  else if (c < 0x10000)
+  {
+    b[0] = 0xE0 | (c >> 12);
+    b[1] = 0x80 | ((c >> 6) & 0x3F);
+    b[2] = 0x80 | (c & 0x3F);
+    str ~= b[0..3];
+  }
+  else if (c < 0x200000)
+  {
+    b[0] = 0xF0 | (c >> 18);
+    b[1] = 0x80 | ((c >> 12) & 0x3F);
+    b[2] = 0x80 | ((c >> 6) & 0x3F);
+    b[3] = 0x80 | (c & 0x3F);
+    str ~= b[0..4];
+  }
+  /+ // There are no 5 and 6 byte UTF-8 sequences yet.
+  else if (c < 0x4000000)
+  {
+    b[0] = 0xF8 | (c >> 24);
+    b[1] = 0x80 | ((c >> 18) & 0x3F);
+    b[2] = 0x80 | ((c >> 12) & 0x3F);
+    b[3] = 0x80 | ((c >> 6) & 0x3F);
+    b[4] = 0x80 | (c & 0x3F);
+    str ~= b[0..5];
+  }
+  else if (c < 0x80000000)
+  {
+    b[0] = 0xFC | (c >> 30);
+    b[1] = 0x80 | ((c >> 24) & 0x3F);
+    b[2] = 0x80 | ((c >> 18) & 0x3F);
+    b[3] = 0x80 | ((c >> 12) & 0x3F);
+    b[4] = 0x80 | ((c >> 6) & 0x3F);
+    b[5] = 0x80 | (c & 0x3F);
+    str ~= b[0..6];
+  }
+  +/
+  else
+    assert(0);
+}
+
+/// Encodes a character and appends it to str.
 void encode(ref wchar[] str, dchar c)
 in { assert(isValidChar(c)); }
 body

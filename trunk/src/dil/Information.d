@@ -17,6 +17,11 @@ class Information
 class InformationManager
 {
   Information[] info;
+
+  void opCatAssign(Information info)
+  {
+    this.info ~= info;
+  }
 }
 
 class Problem : Information
