@@ -7,6 +7,7 @@ module dil.TypeSystem;
 import dil.Symbol;
 import dil.TypesEnum;
 import dil.CompilerInfo;
+import dil.Identifier;
 
 abstract class Type : Symbol
 {
@@ -37,17 +38,30 @@ class TypeBasic : Type
 
 class TypeDArray : Type
 {
-
+  this(Type next)
+  {
+    super(next, TYP.DArray);
+  }
 }
 
 class TypeAArray : Type
 {
-
+  Type keyType;
+  this(Type next, Type keyType)
+  {
+    super(next, TYP.AArray);
+    this.keyType = keyType;
+  }
 }
 
 class TypeSArray : Type
 {
-
+  size_t dimension;
+  this(Type next, size_t dimension)
+  {
+    super(next, TYP.SArray);
+    this.dimension = dimension;
+  }
 }
 
 class TypePointer : Type
@@ -60,7 +74,104 @@ class TypePointer : Type
 
 class TypeReference : Type
 {
+  this(Type next)
+  {
+    super(next, TYP.Reference);
+  }
+}
 
+class EnumType : Type
+{
+  this(Type baseType)
+  {
+    super(baseType, TYP.Enum);
+  }
+
+  Type baseType()
+  {
+    return next;
+  }
+}
+
+class StructType : Type
+{
+  this()
+  {
+    super(null, TYP.Struct);
+  }
+}
+
+class ClassType : Type
+{
+  this()
+  {
+    super(null, TYP.Class);
+  }
+}
+
+class TypedefType : Type
+{
+  this(Type next)
+  {
+    super(next, TYP.Typedef);
+  }
+}
+
+class FunctionType : Type
+{
+  this(Type next)
+  {
+    super(next, TYP.Function);
+  }
+}
+
+class DelegateType : Type
+{
+  this(Type next)
+  {
+    super(next, TYP.Delegate);
+  }
+}
+
+class IdentifierType : Type
+{
+  Identifier* ident;
+  this(Identifier* ident)
+  {
+    super(null, TYP.Identifier);
+  }
+}
+
+class TInstanceType : Type
+{
+  this()
+  {
+    super(null, TYP.TInstance);
+  }
+}
+
+class TupleType : Type
+{
+  this(Type next)
+  {
+    super(next, TYP.Tuple);
+  }
+}
+
+class ConstType : Type
+{
+  this(Type next)
+  {
+    super(next, TYP.Const);
+  }
+}
+
+class InvariantType : Type
+{
+  this(Type next)
+  {
+    super(next, TYP.Const);
+  }
 }
 
 struct TypeMetaInfo
