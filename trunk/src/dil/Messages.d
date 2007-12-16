@@ -100,3 +100,40 @@ char[] FormatArray(char[] format_str, char[][] args)
   return Format(tiinfos, args.ptr, format_str);
 }
 +/
+
+/// Collection of error messages with no MID yet.
+struct MSG
+{
+static:
+  // Parser messages:
+  auto ExpectedIdAfterTypeDot = "expected identifier after '(Type).', not '{}'";
+  auto ExpectedModuleIdentifier = "expected module identifier, not '{}'";
+  auto IllegalDeclaration = "illegal Declaration found: ";
+  auto ExpectedFunctionName = "expected function name, not '{}'";
+  auto ExpectedVariableName = "expected variable name, not '{}'";
+  auto ExpectedFunctionBody = "expected function body, not '{}'";
+  auto RedundantLinkageType = "redundant linkage type: ";
+  auto ExpectedPragmaIdentifier = "expected pragma identifier, not '{}'";
+  auto ExpectedAliasModuleName = "expected alias module name, not '{}'";
+  auto ExpectedAliasImportName = "expected alias name, not '{}'";
+  auto ExpectedImportName = "expected an identifier, not '{}'";
+  auto ExpectedEnumMember = "expected enum member, not '{}'";
+  auto ExpectedEnumBody = "expected enum body, not '{}'";
+  auto ExpectedClassName = "expected class name, not '{}'";
+  auto ExpectedClassBody = "expected class body, not '{}'";
+  auto ExpectedInterfaceName = "expected interface name, not '{}'";
+  auto ExpectedInterfaceBody = "expected interface body, not '{}'";
+  auto ExpectedTemplateName = "expected template name, not '{}'";
+  auto ExpectedAnIdentifier = "expected an identifier, not '{}'";
+  auto IllegalStatement = "illegal Statement found: ";
+  auto ExpectedNonEmptyStatement = "didn't expect ';', use {{ }} instead";
+  auto ExpectedScopeIdentifier = "expected 'exit', 'success' or 'failure', not '{}'";
+  auto InvalidScopeIdentifier = "'exit', 'success', 'failure' are valid scope identifiers, but not '{}';";
+  auto ExpectedIntegerAfterAlign = "expected an integer after align, not '{}'";
+  auto IllegalAsmInstructino = "illegal AsmInstruction found: ";
+  auto ExpectedDeclaratorIdentifier = "expected declarator identifier, not '{}'";
+  auto ExpectedTemplateParameters = "expected one or more template parameters not ')'";
+  auto ExpectedTypeOrExpression = "expected a type or and expression not ')'";
+  auto ExpectedAliasTemplateParam = "expected name for alias template parameter, not '{}'";
+  auto ExpectedNameForThisTempParam = "expected name for 'this' template parameter, not '{}'";
+}
