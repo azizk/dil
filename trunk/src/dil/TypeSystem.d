@@ -26,6 +26,18 @@ abstract class Type : Symbol
   {
     return new TypePointer(this);
   }
+
+  /// Get byte size of this type.
+  final size_t sizeOf()
+  {
+    return MITable.getSize(this);
+  }
+
+  /// Size is not in MITable. Find out via virtual method.
+  size_t sizeOf_()
+  {
+    return sizeOf();
+  }
 }
 
 class TypeBasic : Type
@@ -180,54 +192,69 @@ struct TypeMetaInfo
   size_t size; /// Byte size of the type.
 }
 
-static const TypeMetaInfo metaInfoTable[] = [
-  {'?', -1}, // Error
+struct MITable
+{
+static:
+  const size_t SIZE_NOT_AVAILABLE = -1; /// Size not available.
+  private alias SIZE_NOT_AVAILABLE SNA;
+  private alias PTR_SIZE PS;
+  private const TypeMetaInfo metaInfoTable[] = [
+    {'?', SNA}, // Error
 
-  {'a', 1},   // Char
-  {'u', 2},   // Wchar
-  {'w', 4},   // Dchar
-  {'b', 1},   // Bool
-  {'g', 1},   // Byte
-  {'h', 1},   // Ubyte
-  {'s', 2},   // Short
-  {'t', 2},   // Ushort
-  {'i', 4},   // Int
-  {'k', 4},   // Uint
-  {'l', 8},   // Long
-  {'m', 8},   // Ulong
-  {'?', 16},  // Cent
-  {'?', 16},  // Ucent
-  {'f', 4},   // Float
-  {'d', 8},   // Double
-  {'e', 12},  // Real
-  {'o', 4},   // Ifloat
-  {'p', 8},   // Idouble
-  {'j', 12},  // Ireal
-  {'q', 8},   // Cfloat
-  {'r', 16},  // Cdouble
-  {'c', 24},  // Creal
-  {'v', 1},   // void
+    {'a', 1},   // Char
+    {'u', 2},   // Wchar
+    {'w', 4},   // Dchar
+    {'b', 1},   // Bool
+    {'g', 1},   // Byte
+    {'h', 1},   // Ubyte
+    {'s', 2},   // Short
+    {'t', 2},   // Ushort
+    {'i', 4},   // Int
+    {'k', 4},   // Uint
+    {'l', 8},   // Long
+    {'m', 8},   // Ulong
+    {'?', 16},  // Cent
+    {'?', 16},  // Ucent
+    {'f', 4},   // Float
+    {'d', 8},   // Double
+    {'e', 12},  // Real
+    {'o', 4},   // Ifloat
+    {'p', 8},   // Idouble
+    {'j', 12},  // Ireal
+    {'q', 8},   // Cfloat
+    {'r', 16},  // Cdouble
+    {'c', 24},  // Creal
+    {'v', 1},   // void
 
-  {'n', -1},  // None
+    {'n', SNA},  // None
 
-  {'A', PTR_SIZE*2}, // Dynamic array
-  {'G', PTR_SIZE*2}, // Static array
-  {'H', PTR_SIZE*2}, // Associative array
+    {'A', PS*2}, // Dynamic array
+    {'G', PS*2}, // Static array
+    {'H', PS*2}, // Associative array
 
-  {'E', -1}, // Enum
-  {'S', -1}, // Struct
-  {'C', PTR_SIZE}, // Class
-  {'T', -1}, // Typedef
-  {'F', PTR_SIZE}, // Function
-  {'D', PTR_SIZE*2}, // Delegate
-  {'P', PTR_SIZE}, // Pointer
-  {'R', PTR_SIZE}, // Reference
-  {'I', -1}, // Identifier
-  {'?', -1}, // Template instance
-  {'B', -1}, // Tuple
-  {'x', -1}, // Const, D2
-  {'y', -1}, // Invariant, D2
-];
+    {'E', SNA}, // Enum
+    {'S', SNA}, // Struct
+    {'C', PS},  // Class
+    {'T', SNA}, // Typedef
+    {'F', PS},  // Function
+    {'D', PS*2}, // Delegate
+    {'P', PS},  // Pointer
+    {'R', PS},  // Reference
+    {'I', SNA}, // Identifier
+    {'?', SNA}, // Template instance
+    {'B', SNA}, // Tuple
+    {'x', SNA}, // Const, D2
+    {'y', SNA}, // Invariant, D2
+  ];
+
+  size_t getSize(Type type)
+  {
+    auto size = metaInfoTable[type.typ].size;
+    if (size == SIZE_NOT_AVAILABLE)
+      return type.sizeOf_();
+    return size;
+  }
+}
 
 /// A set of pre-defined types.
 struct Types
