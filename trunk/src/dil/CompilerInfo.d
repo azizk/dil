@@ -41,3 +41,12 @@ const COMPILED_DATE = __TIMESTAMP__;
 
 /// The global, default alignment size for struct fields.
 const DEFAULT_ALIGN_SIZE = 4;
+
+version(X86_64)
+{
+  const PTR_SIZE = 8; /// Pointer size on 64-bit platforms.
+}
+else
+{
+  const PTR_SIZE = 4; /// Pointer size on 32-bit platforms.
+}

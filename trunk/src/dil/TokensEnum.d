@@ -102,9 +102,10 @@ enum TOK : ushort
   Typeof, Union, Unittest,
   Version, Volatile, While, With,
   // Integral types.
-  Char,   Wchar,   Dchar, Bool, Cent, Ucent,
+  Char,   Wchar,   Dchar, Bool,
   Byte,   Ubyte,   Short, Ushort,
   Int,    Uint,    Long,  Ulong,
+  Cent,   Ucent,
   Float,  Double,  Real,
   Ifloat, Idouble, Ireal,
   Cfloat, Cdouble, Creal, Void,
