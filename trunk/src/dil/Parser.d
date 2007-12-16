@@ -393,8 +393,8 @@ class Parser
     switch (token.type)
     {
     case T.LBrace:
-      nT();
       auto begin = token;
+      nT();
       auto decls = new Declarations;
       while (token.type != T.RBrace && token.type != T.EOF)
         decls ~= parseDeclarationDefinition();
