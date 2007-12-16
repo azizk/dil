@@ -10,9 +10,11 @@ import dil.Declarations;
 import dil.Statements;
 import dil.Identifier;
 import dil.Scope;
+import dil.TypeSystem;
 
 abstract class Expression : Node
 {
+  Type type; /// The type of this expression.
   this()
   {
     super(NodeCategory.Expression);
