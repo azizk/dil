@@ -12,10 +12,16 @@ const:
 }
 
 static const StrPair[] identPairs = [
+  // Predefined version identifiers:
+  {"DigitalMars"}, {"X86"}, {"X86_64"},
+  /*{"Windows"}, */{"Win32"}, {"Win64"},
+  {"linux"}, {"LittleEndian"}, {"BigEndian"},
+  {"D_Coverage"}, {"D_InlineAsm_X86"}, {"D_Version2"},
+  {"none"}, {"all"},
+  // Variadic parameters:
+  {"_arguments"}, {"_argptr"},
   // scope:
-  {"exit"},
-  {"success"},
-  {"failure"},
+  {"exit"}, {"success"}, {"failure"},
   // pragma:
   {"msg"}, {"lib"},
   // Linkage:
