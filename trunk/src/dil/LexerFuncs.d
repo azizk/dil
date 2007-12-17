@@ -33,6 +33,12 @@ bool isNewline(char* p)
   return *p == '\n' || *p == '\r' || isUnicodeNewline(p);
 }
 
+/// Returns if c is a Newline character.
+bool isNewline(dchar c)
+{
+  return c == '\n' || c == '\r' || isUnicodeNewlineChar(c);
+}
+
 /++
   Returns true if p points to an EOF character.
   EOF: 0 | _Z_

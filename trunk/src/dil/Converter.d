@@ -8,6 +8,8 @@ import dil.Information;
 import dil.Location;
 import dil.Unicode;
 import dil.FileBOM;
+import dil.LexerFuncs;
+import dil.Messages;
 import common;
 
 /// Converts various Unicode encoding formats to UTF-8.
@@ -71,18 +73,13 @@ struct Converter
 
   char[] UTF32toUTF8(bool isBigEndian)(ubyte[] data)
   {
-    if (data.length % 4)
-    {
-      infoMan.info ~= new LexerError(new Location(filePath, 0),
-        "the byte length of a UTF-32 source file must be divisible by 4."
-      );
-      data = data[0 .. $ - $ % 4]; // Trim to valid size.
-    }
     if (data.length == 0)
       return null;
 
     char[] result;
-    foreach (dchar c; cast(dchar[])data)
+    uint lineNum = 1;
+    dchar[] text = cast(dchar[]) data[0 .. $-($%4)]; // Trim to multiple of 4.
+    foreach (dchar c; text)
     {
       static if (isBigEndian)
         c = BEtoMachineDword(c);
@@ -91,14 +88,24 @@ struct Converter
 
       if (!isValidChar(c))
       {
-        // TODO: correct location.
-        auto loc = new Location(filePath, 0);
-        infoMan.info ~= new LexerError(null, Format("invalid UTF-32 character '{:X}'.", c));
+        infoMan ~= new LexerError(
+          new Location(filePath, lineNum),
+          Format(MSG.InvalidUTF32Character, c)
+        );
         c = REPLACEMENT_CHAR;
       }
 
+      if (isNewline(c))
+        ++lineNum;
       dil.Unicode.encode(result, c);
     }
+
+    if (data.length % 4)
+      infoMan ~= new LexerError(
+        new Location(filePath, lineNum),
+        MSG.UTF32FileMustBeDivisibleBy4
+      );
+
     return result;
   }
 
@@ -107,22 +114,14 @@ struct Converter
 
   char[] UTF16toUTF8(bool isBigEndian)(ubyte[] data)
   {
-    if (data.length % 2)
-    {
-      infoMan ~= new LexerError(new Location(filePath, 0),
-        "the byte length of a UTF-16 source file must be divisible by 2."
-      );
-      data = data[0 .. $-1]; // Trim to valid size.
-    }
-
     if (data.length == 0)
       return null;
 
-    wchar[] text = cast(wchar[])data;
+    wchar[] text = cast(wchar[]) data[0 .. $-($%2)]; // Trim to multiple of two.
     wchar* p = text.ptr,
-          end = text.ptr + text.length;
+         end = text.ptr + text.length;
     char[] result;
-
+    uint lineNum = 1;
     dchar c = *p;
 
     do
@@ -151,14 +150,25 @@ struct Converter
       }
       else
       {
-        // TODO: correct location.
-        auto loc = new Location(filePath, 0);
-        infoMan ~= new LexerError(loc, Format("invalid UTF-16 character '{:X}'.", c));
+        infoMan ~= new LexerError(
+          new Location(filePath, lineNum),
+          Format(MSG.InvalidUTF16Character, c)
+        );
         c = REPLACEMENT_CHAR;
       }
+
+      if (isNewline(c))
+        ++lineNum;
       ++p;
       dil.Unicode.encode(result, c);
     } while (p < end)
+
+    if (data.length % 2)
+      infoMan ~= new LexerError(
+        new Location(filePath, lineNum),
+        MSG.UTF16FileMustBeDivisibleBy2
+      );
+
     return result;
   }
 

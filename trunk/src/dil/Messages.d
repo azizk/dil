@@ -105,6 +105,11 @@ char[] FormatArray(char[] format_str, char[][] args)
 struct MSG
 {
 static:
+  // Converter:
+  auto InvalidUTF16Character = "invalid UTF-16 character '\\u{:X4}'.";
+  auto InvalidUTF32Character = "invalid UTF-32 character '\\U{:X8}'.";
+  auto UTF16FileMustBeDivisibleBy2 = "the byte length of a UTF-16 source file must be divisible by 2.";
+  auto UTF32FileMustBeDivisibleBy4 = "the byte length of a UTF-32 source file must be divisible by 4.";
   // Parser messages:
   auto ExpectedIdAfterTypeDot = "expected identifier after '(Type).', not '{}'";
   auto ExpectedModuleIdentifier = "expected module identifier, not '{}'";
