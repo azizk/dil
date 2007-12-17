@@ -508,9 +508,12 @@ class Parser
         d.setProtection(protection);
         return set(d, begin);
       }
-      // Type VariableName DeclaratorSuffix
-      ident = requireIdentifier(MSG.ExpectedVariableName);
-      type = parseDeclaratorSuffix(type);
+      else
+      {
+        // Type VariableName DeclaratorSuffix
+        ident = requireIdentifier(MSG.ExpectedVariableName);
+        type = parseDeclaratorSuffix(type);
+      }
     }
 
     // It's a variable declaration.
@@ -3756,8 +3759,8 @@ class Parser
     else
       params = parseParameterList();
 
-    type = set(new CFuncPointerType(type, params), begin);
-    return type;
+    type = new CFuncPointerType(type, params);
+    return set(type, begin);
   }
 
   Type parseDeclarator(ref Identifier* ident, bool identOptional = false)
