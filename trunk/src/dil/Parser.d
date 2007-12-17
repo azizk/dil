@@ -449,7 +449,7 @@ class Parser
     }
     else
     {
-      type = parseType();
+      type = parseType(); // VariableType or ReturnType
       if (token.type == T.LParen)
       {
         // C-style function pointers make the grammar ambiguous.
@@ -465,46 +465,46 @@ class Parser
         //   something(*p);
         type = parseCFunctionPointerType(type, ident, optionalParameterList);
       }
-      else
-      {
+      else if (peekNext() == T.LParen)
+      { // Type FunctionName ( ParameterList ) FunctionBody
         ident = requireIdentifier(MSG.ExpectedFunctionName);
-        // Type FunctionName ( ParameterList ) FunctionBody
-        if (token.type == T.LParen)
+        ident || nT(); // Skip non-identifier token.
+        assert(token.type == T.LParen);
+        // It's a function declaration
+        TemplateParameters tparams;
+        if (tokenAfterParenIs(T.LParen))
         {
-          // It's a function declaration
-          TemplateParameters tparams;
-          if (tokenAfterParenIs(T.LParen))
-          {
-            // ( TemplateParameterList ) ( ParameterList )
-            tparams = parseTemplateParameterList();
-          }
+          // ( TemplateParameterList ) ( ParameterList )
+          tparams = parseTemplateParameterList();
+        }
 
-          auto params = parseParameterList();
-        version(D2)
+        auto params = parseParameterList();
+      version(D2)
+      {
+        switch (token.type)
         {
-          switch (token.type)
-          {
-          case T.Const:
-            stc |= StorageClass.Const;
-            nT();
-            break;
-          case T.Invariant:
-            stc |= StorageClass.Invariant;
-            nT();
-            break;
-          default:
-          }
+        case T.Const:
+          stc |= StorageClass.Const;
+          nT();
+          break;
+        case T.Invariant:
+          stc |= StorageClass.Invariant;
+          nT();
+          break;
+        default:
         }
-          // ReturnType FunctionName ( ParameterList )
-          auto funcBody = parseFunctionBody();
-          auto d = new FunctionDeclaration(type, ident, tparams, params, funcBody);
-          d.setStorageClass(stc);
-          d.setLinkageType(linkType);
-          d.setProtection(protection);
-          return set(d, begin);
-        }
-        type = parseDeclaratorSuffix(type);
       }
+        // ReturnType FunctionName ( ParameterList )
+        auto funcBody = parseFunctionBody();
+        auto d = new FunctionDeclaration(type, ident, tparams, params, funcBody);
+        d.setStorageClass(stc);
+        d.setLinkageType(linkType);
+        d.setProtection(protection);
+        return set(d, begin);
+      }
+      // Type VariableName DeclaratorSuffix
+      ident = requireIdentifier(MSG.ExpectedVariableName);
+      type = parseDeclaratorSuffix(type);
     }
 
     // It's a variable declaration.
