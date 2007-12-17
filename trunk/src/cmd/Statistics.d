@@ -10,13 +10,14 @@ import common;
 
 struct Statistics
 {
-  uint whitespaceCount;
-  uint wsTokenCount;
-  uint keywordCount;
-  uint identCount;
-  uint numberCount;
-  uint commentCount;
-  uint linesOfCode;
+  uint whitespaceCount; /// Counter for whitespace characters.
+  uint wsTokenCount;    /// Counter for all whitespace tokens.
+  uint keywordCount;    /// Counter for keywords.
+  uint identCount;      /// Counter for identifier.
+  uint numberCount;     /// Counter for number literals.
+  uint commentCount;    /// Counter for comments.
+  uint tokenCount;      /// Counter for all tokens produced by the Lexer.
+  uint linesOfCode;     /// Number of lines.
 
   void opAddAssign(Statistics s)
   {
@@ -26,6 +27,7 @@ struct Statistics
     this.identCount      += s.identCount;
     this.numberCount     += s.numberCount;
     this.commentCount    += s.commentCount;
+    this.tokenCount      += s.tokenCount;
     this.linesOfCode     += s.linesOfCode;
   }
 }
@@ -43,14 +45,15 @@ void execute(string[] filePaths)
     total += stat;
     Stdout.formatln(
       "----\n"
-      "File: {0}\n"
-      "Whitespace character count: {1}\n"
-      "Whitespace token count: {2}\n"
-      "Keyword count: {3}\n"
-      "Identifier count: {4}\n"
-      "Number count: {5}\n"
-      "Comment count: {6}\n"
-      "Lines of code: {7}",
+      "File: {}\n"
+      "Whitespace character count: {}\n"
+      "Whitespace token count: {}\n"
+      "Keyword count: {}\n"
+      "Identifier count: {}\n"
+      "Number count: {}\n"
+      "Comment count: {}\n"
+      "All tokens count: {}\n"
+      "Lines of code: {}",
       filePaths[i],
       stat.whitespaceCount,
       stat.wsTokenCount,
@@ -58,6 +61,7 @@ void execute(string[] filePaths)
       stat.identCount,
       stat.numberCount,
       stat.commentCount,
+      stat.tokenCount,
       stat.linesOfCode
     );
   }
@@ -65,20 +69,23 @@ void execute(string[] filePaths)
   if (filePaths.length > 1)
     Stdout.formatln(
       "--------------------------------------------------------------------------------\n"
-      "Total:\n"
-      "Whitespace character count: {0}\n"
-      "Whitespace token count: {1}\n"
-      "Keyword count: {2}\n"
-      "Identifier count: {3}\n"
-      "Number count: {4}\n"
-      "Comment count: {5}\n"
-      "Lines of code: {6}",
+      "Total of {} files:\n"
+      "Whitespace character count: {}\n"
+      "Whitespace token count: {}\n"
+      "Keyword count: {}\n"
+      "Identifier count: {}\n"
+      "Number count: {}\n"
+      "Comment count: {}\n"
+      "All tokens count: {}\n"
+      "Lines of code: {}",
+      filePaths.length,
       total.whitespaceCount,
       total.wsTokenCount,
       total.keywordCount,
       total.identCount,
       total.numberCount,
       total.commentCount,
+      total.tokenCount,
       total.linesOfCode
     );
 }
@@ -91,13 +98,14 @@ Statistics getStatistics(string filePath)
   auto token = lx.firstToken();
 
   Statistics stats;
-
+  // Lexer creates HEAD + Newline, which are not in the source text.
+  // No token left behind!
+  stats.tokenCount = 2;
   stats.linesOfCode = lx.lineNum;
   // Traverse linked list.
-  while (token.type != TOK.EOF)
+  while (1)
   {
-    token = token.next;
-
+    stats.tokenCount += 1;
     // Count whitespace characters
     if (token.ws !is null)
       stats.whitespaceCount += token.start - token.ws;
@@ -123,6 +131,11 @@ Statistics getStatistics(string filePath)
       else if (token.isWhitespace)
         stats.wsTokenCount++;
     }
+
+    if (token.next is null)
+      break;
+    token = token.next;
   }
+  assert(token.type == TOK.EOF);
   return stats;
 }
