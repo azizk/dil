@@ -27,7 +27,7 @@ class Parser
   Token* token; /// Current non-whitespace token.
   Token* prevToken; /// Previous non-whitespace token.
 
-  InformationManager infoMan;
+  InfoManager infoMan;
   ParserError[] errors;
 
   ImportDeclaration[] imports; /// ImportDeclarations in the source text.
@@ -46,7 +46,7 @@ class Parser
       text     = the UTF-8 source code.
       filePath = the path to the source code; used for error messages.
   +/
-  this(char[] srcText, string filePath, InformationManager infoMan = null)
+  this(char[] srcText, string filePath, InfoManager infoMan = null)
   {
     this.infoMan = infoMan;
     lx = new Lexer(srcText, filePath, infoMan);

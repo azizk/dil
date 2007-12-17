@@ -33,7 +33,7 @@ class Module
 
   Module[] modules;
 
-  InformationManager infoMan;
+  InfoManager infoMan;
 
   this(string filePath, bool isLightweight = false)
   {
@@ -41,7 +41,7 @@ class Module
     this.isLightweight = isLightweight;
   }
 
-  this(string filePath, InformationManager infoMan)
+  this(string filePath, InfoManager infoMan)
   {
     this(filePath, false);
     this.infoMan = infoMan;

@@ -14,9 +14,9 @@ import common;
 struct Converter
 {
   char[] filePath; /// For error messages.
-  InformationManager infoMan;
+  InfoManager infoMan;
 
-  static Converter opCall(char[] filePath, InformationManager infoMan)
+  static Converter opCall(char[] filePath, InfoManager infoMan)
   {
     Converter conv;
     conv.filePath = filePath;

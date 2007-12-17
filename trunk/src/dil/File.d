@@ -17,7 +17,7 @@ char[] loadFile(char[] filePath)
   return data2UTF8(cast(ubyte[]) (new File(filePath)).read());
 }
 
-char[] loadFile(char[] filePath, InformationManager infoMan)
+char[] loadFile(char[] filePath, InfoManager infoMan)
 {
   auto converter = Converter(filePath, infoMan);
   return converter.data2UTF8(cast(ubyte[]) (new File(filePath)).read());

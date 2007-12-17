@@ -10,7 +10,7 @@ import common;
 class Scope
 {
   Scope parent; /// The surrounding scope.
-  InformationManager infoMan; /// Collects errors reported during the semantic phase.
+  InfoManager infoMan; /// Collects errors reported during the semantic phase.
 
   this()
   {

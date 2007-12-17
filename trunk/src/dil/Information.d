@@ -14,7 +14,7 @@ class Information
 
 }
 
-class InformationManager
+class InfoManager
 {
   Information[] info;
 

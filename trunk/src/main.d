@@ -39,7 +39,7 @@ void main(char[][] args)
     if (args.length < 2)
       return printHelp("compile");
 
-    auto infoMan = new InformationManager();
+    auto infoMan = new InfoManager();
     auto filePaths = args[2..$];
     foreach (filePath; filePaths)
     {
