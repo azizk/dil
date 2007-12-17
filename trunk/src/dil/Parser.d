@@ -158,6 +158,12 @@ class Parser
     return next.type;
   }
 
+  /// Skips the current token if its type matches tok and returns true.
+  bool skipped()(TOK tok) // Templatized, so it's inlined.
+  {
+    return token.type == tok ? (nT(), true) : false;
+  }
+
   /++++++++++++++++++++++++++++++
   + Declaration parsing methods +
   ++++++++++++++++++++++++++++++/
@@ -516,8 +522,8 @@ class Parser
       nT();
       idents ~= requireIdentifier(MSG.ExpectedVariableName);
     LenterLoop:
-      if (token.type == T.Assign)
-        nT(), (values ~= parseInitializer());
+      if (skipped(T.Assign))
+        values ~= parseInitializer();
       else
         values ~= null;
     }
@@ -561,9 +567,8 @@ class Parser
       while (token.type != T.RBracket)
       {
         auto e = parseNonVoidInitializer();
-        if (token.type == T.Colon)
+        if (skipped(T.Colon))
         {
-          nT();
           keys ~= e;
           values ~= parseNonVoidInitializer();
         }
@@ -653,9 +658,8 @@ class Parser
         if (func.outBody)
           error(MID.OutContract);
         nT();
-        if (token.type == T.LParen)
+        if (skipped(T.LParen))
         {
-          nT();
           func.outIdent = requireIdentifier(MSG.ExpectedAnIdentifier);
           require(T.RParen);
         }
@@ -695,9 +699,8 @@ class Parser
     switch (identID)
     {
     case ID.C:
-      if (token.type == T.PlusPlus)
+      if (skipped(T.PlusPlus))
       {
-        nT();
         linkageType = LinkageType.Cpp;
         break;
       }
@@ -842,9 +845,8 @@ class Parser
     assert(token.type == T.Align);
     nT(); // Skip align keyword.
     uint size = DEFAULT_ALIGN_SIZE; // Global default.
-    if (token.type == T.LParen)
+    if (skipped(T.LParen))
     {
-      nT();
       if (token.type == T.Int32)
         (size = token.int_), nT();
       else
@@ -878,8 +880,8 @@ class Parser
       require(T.LParen);
       ident = requireIdentifier(MSG.ExpectedPragmaIdentifier);
 
-      if (token.type == T.Comma)
-        nT(), (args = parseExpressionList());
+      if (skipped(T.Comma))
+        args = parseExpressionList();
       require(T.RParen);
 
       decl = new PragmaDeclaration(ident, args, parseDeclarationsBlock());
@@ -914,15 +916,7 @@ class Parser
   Declaration parseImportDeclaration()
   {
     assert(token.type == T.Import || token.type == T.Static);
-
-    bool isStatic;
-
-    if (token.type == T.Static)
-    {
-      isStatic = true;
-      nT();
-    }
-
+    bool isStatic = skipped(T.Static);
     assert(token.type == T.Import);
 
     ModuleFQN[] moduleFQNs;
@@ -999,30 +993,25 @@ class Parser
 
     enumName = optionalIdentifier();
 
-    if (token.type == T.Colon)
-    {
-      nT();
+    if (skipped(T.Colon))
       baseType = parseBasicType();
-    }
 
-    if (token.type == T.Semicolon)
+    if (skipped(T.Semicolon))
     {
       if (enumName is null)
         expected(T.Identifier);
-      nT();
     }
-    else if (token.type == T.LBrace)
+    else if (skipped(T.LBrace))
     {
       hasBody = true;
-      nT(); // Skip {
       while (token.type != T.RBrace)
       {
         auto begin = token;
         auto name = requireIdentifier(MSG.ExpectedEnumMember);
         Expression value;
 
-        if (token.type == T.Assign)
-          nT(), (value = parseAssignExpression());
+        if (skipped(T.Assign))
+          value = parseAssignExpression();
         else
           value = null;
 
@@ -1058,11 +1047,10 @@ class Parser
     if (token.type == T.Colon)
       bases = parseBaseClasses();
 
-    if (token.type == T.Semicolon)
+    if (skipped(T.Semicolon))
     {
       if (bases.length != 0)
         error(MID.BaseClassInForwardDeclaration);
-      nT();
     }
     else if (token.type == T.LBrace)
       decls = parseDeclarationDefinitionsBody();
@@ -1128,11 +1116,10 @@ class Parser
     if (token.type == T.Colon)
       bases = parseBaseClasses();
 
-    if (token.type == T.Semicolon)
+    if (skipped(T.Semicolon))
     {
       if (bases.length != 0)
         error(MID.BaseClassInForwardDeclaration);
-      nT();
     }
     else if (token.type == T.LBrace)
       decls = parseDeclarationDefinitionsBody();
@@ -1159,11 +1146,10 @@ class Parser
     if (name && token.type == T.LParen)
       tparams = parseTemplateParameterList();
 
-    if (token.type == T.Semicolon)
+    if (skipped(T.Semicolon))
     {
       //if (name.length == 0)
         // TODO: error: forward declarations must have a name.
-      nT();
     }
     else if (token.type == T.LBrace)
       decls = parseDeclarationDefinitionsBody();
@@ -1237,7 +1223,6 @@ class Parser
   Declaration parseUnittestDeclaration()
   {
     assert(token.type == T.Unittest);
-
     nT(); // Skip unittest keyword.
     auto funcBody = parseFunctionBody();
     return new UnittestDeclaration(funcBody);
@@ -1245,15 +1230,9 @@ class Parser
 
   Token* parseIdentOrInt()
   {
-    if (token.type == T.Int32 ||
-        token.type == T.Identifier)
-    {
-      auto token = this.token;
-      nT();
-      return token;
-    }
-    else
-      error(token, MSG.ExpectedIdentOrInt, token.srcText);
+    if (skipped(T.Int32) || skipped(T.Identifier))
+      return this.prevToken;
+    error(token, MSG.ExpectedIdentOrInt, token.srcText);
     return null;
   }
 
@@ -1266,18 +1245,16 @@ class Parser
     Token* cond;
     Declaration decls, elseDecls;
 
-    if (token.type == T.Assign)
+    if (skipped(T.Assign))
     { // debug = Integer ;
       // debug = Identifier ;
-      nT();
       spec = parseIdentOrInt();
       require(T.Semicolon);
     }
     else
     { // ( Condition )
-      if (token.type == T.LParen)
+      if (skipped(T.LParen))
       {
-        nT();
         cond = parseIdentOrInt();
         require(T.RParen);
       }
@@ -1285,8 +1262,8 @@ class Parser
       // debug ( Condition ) DeclarationsBlock
       decls = parseDeclarationsBlockNoColon();
       // else DeclarationsBlock
-      if (token.type == T.Else)
-        nT(), (elseDecls = parseDeclarationsBlockNoColon());
+      if (skipped(T.Else))
+        elseDecls = parseDeclarationsBlockNoColon();
     }
 
     return new DebugDeclaration(spec, cond, decls, elseDecls);
@@ -1301,10 +1278,9 @@ class Parser
     Token* cond;
     Declaration decls, elseDecls;
 
-    if (token.type == T.Assign)
+    if (skipped(T.Assign))
     { // version = Integer ;
       // version = Identifier ;
-      nT();
       spec = parseIdentOrInt();
       require(T.Semicolon);
     }
@@ -1316,8 +1292,8 @@ class Parser
       // version ( Condition ) DeclarationsBlock
       decls = parseDeclarationsBlockNoColon();
       // else DeclarationsBlock
-      if (token.type == T.Else)
-        nT(), (elseDecls = parseDeclarationsBlockNoColon());
+      if (skipped(T.Else))
+        elseDecls = parseDeclarationsBlockNoColon();
     }
 
     return new VersionDeclaration(spec, cond, decls, elseDecls);
@@ -1326,7 +1302,6 @@ class Parser
   Declaration parseStaticIfDeclaration()
   {
     assert(token.type == T.Static);
-
     nT(); // Skip static keyword.
     nT(); // Skip if keyword.
 
@@ -1339,11 +1314,8 @@ class Parser
 
     ifDecls = parseDeclarationsBlockNoColon();
 
-    if (token.type == T.Else)
-    {
-      nT();
+    if (skipped(T.Else))
       elseDecls = parseDeclarationsBlockNoColon();
-    }
 
     return new StaticIfDeclaration(condition, ifDecls, elseDecls);
   }
@@ -1351,25 +1323,15 @@ class Parser
   Declaration parseStaticAssertDeclaration()
   {
     assert(token.type == T.Static);
-
     nT(); // Skip static keyword.
     nT(); // Skip assert keyword.
-
     Expression condition, message;
-
     require(T.LParen);
-
     condition = parseAssignExpression();
-
-    if (token.type == T.Comma)
-    {
-      nT();
+    if (skipped(T.Comma))
       message = parseAssignExpression();
-    }
-
     require(T.RParen);
     require(T.Semicolon);
-
     return new StaticAssertDeclaration(condition, message);
   }
 
@@ -1444,19 +1406,15 @@ class Parser
     assert(token.type == T.Identifier || token.type == T.Dot || token.type == T.Typeof);
     auto begin = token;
     Expression[] identList;
-    if (token.type == T.Dot)
-    {
-      nT();
+    if (skipped(T.Dot))
       identList ~= set(new DotExpression(), begin);
-    }
     else if (token.type == T.Typeof)
     {
       auto type = parseTypeofType();
       set(type, begin);
       identList ~= set(new TypeofExpression(type), begin);
-      if (token.type != T.Dot)
+      if (!skipped(T.Dot))
         goto Lreturn;
-      nT();
     }
 
     while (1)
@@ -1476,9 +1434,8 @@ class Parser
       identList ~= set(e, begin);
 
     LnewExpressionLoop:
-      if (token.type != T.Dot)
+      if (!skipped(T.Dot))
         break;
-      nT(); // Skip dot.
 
       if (token.type == T.New)
       {
@@ -1510,39 +1467,28 @@ class Parser
   {
     auto begin = token;
     Type[] identList;
-    if (token.type == T.Dot)
-    {
-      nT();
+    if (skipped(T.Dot))
       identList ~= set(new DotType(), begin);
-    }
     else if (token.type == T.Typeof)
     {
       identList ~= set(parseTypeofType(), begin);
-      if (token.type != T.Dot)
+      if (!skipped(T.Dot))
         goto Lreturn;
-      nT();
     }
 
-    while (1)
+    do
     {
       begin = token;
       auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
       Type t;
-      // NB.: Currently Types can't be followed by "!=" so we don't need to peek for "(" when parsing TemplateInstances.
-      if (token.type == T.Not/+ && peekNext() == T.LParen+/) // Identifier !( TemplateArguments )
-      {
-        nT(); // Skip !.
+      // NB.: Currently Types can't be followed by "!="
+      // so no need to peek for "(" when parsing TemplateInstances.
+      if (skipped(T.Not)/+ && peekNext() == T.LParen+/) // Identifier !( TemplateArguments )
         t = new TemplateInstanceType(ident, parseTemplateArguments());
-      }
       else // Identifier
         t = new IdentifierType(ident);
-
       identList ~= set(t, begin);
-
-      if (token.type != T.Dot)
-        break;
-      nT();
-    }
+    } while(skipped(T.Dot))
   Lreturn:
     return new DotListType(identList);
   }
@@ -1562,10 +1508,9 @@ class Parser
 
   static if (is(Class == MixinDeclaration))
   {
-    if (token.type == T.LParen)
+    if (skipped(T.LParen))
     {
       // TODO: What about mixin(...).ident;?
-      nT();
       auto e = parseAssignExpression();
       require(T.RParen);
       require(T.Semicolon);
@@ -1578,33 +1523,24 @@ class Parser
     Identifier* mixinIdent;
 
     // This code is similar to parseDotListType().
-    if (token.type == T.Dot)
-    {
-      nT();
+    if (skipped(T.Dot))
       templateIdent ~= set(new DotExpression(), begin);
-    }
 
     while (1)
     {
       begin = token;
       auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
       Expression e;
-      if (token.type == T.Not) // Identifier !( TemplateArguments )
+      if (skipped(T.Not)) // Identifier !( TemplateArguments )
       {
         // No need to peek for T.LParen. This must be a template instance.
-        nT();
         auto tparams = parseTemplateArguments();
         e = new TemplateInstanceExpression(ident, tparams);
       }
       else // Identifier
         e = new IdentifierExpression(ident);
-
       templateIdent ~= set(e, begin);
-
-      if (token.type != T.Dot)
-        break;
-      nT();
-    }
+    } while (skipped(T.Dot))
 
     mixinIdent = optionalIdentifier();
     require(T.Semicolon);
@@ -1886,9 +1822,8 @@ class Parser
   {
     auto begin = token;
     Statement s;
-    if (token.type == T.LBrace)
+    if (skipped(T.LBrace))
     {
-      nT();
       auto ss = new Statements();
       while (token.type != T.RBrace && token.type != T.EOF)
         ss ~= parseStatement();
@@ -1913,12 +1848,8 @@ class Parser
   +/
   Statement parseNoScopeOrEmptyStatement()
   {
-    if (token.type == T.Semicolon)
-    {
-      auto begin = token;
-      nT();
-      return set(new EmptyStatement(), begin);
-    }
+    if (skipped(T.Semicolon))
+      return set(new EmptyStatement(), this.prevToken);
     else
       return parseNoScopeStatement();
   }
@@ -2012,9 +1943,8 @@ class Parser
     Identifier* ident;
     auto begin = token; // For start of AutoDeclaration or normal Declaration.
     // auto Identifier = Expression
-    if (token.type == T.Auto)
+    if (skipped(T.Auto))
     {
-      nT();
       ident = requireIdentifier(MSG.ExpectedVariableName);
       require(T.Assign);
       auto init = parseExpression();
@@ -2049,11 +1979,8 @@ class Parser
     }
     require(T.RParen);
     ifBody = parseScopeStatement();
-    if (token.type == T.Else)
-    {
-      nT();
+    if (skipped(T.Else))
       elseBody = parseScopeStatement();
-    }
     return new IfStatement(variable, condition, ifBody, elseBody);
   }
 
@@ -2147,11 +2074,10 @@ class Parser
     e = parseExpression();
   version(D2)
   { //Foreach (ForeachType; LwrExpression .. UprExpression ) ScopeStatement
-    if (token.type == T.Slice)
+    if (skipped(T.Slice))
     {
       // if (params.length != 1)
         // error(MID.XYZ); // TODO: issue error msg
-      nT();
       auto upper = parseExpression();
       require(T.RParen);
       auto forBody = parseScopeStatement();
@@ -2168,7 +2094,6 @@ class Parser
   {
     assert(token.type == T.Switch);
     nT();
-
     require(T.LParen);
     auto condition = parseExpression();
     require(T.RParen);
@@ -2279,10 +2204,8 @@ class Parser
     assert(token.type == T.Synchronized);
     nT();
     Expression expr;
-
-    if (token.type == T.LParen)
+    if (skipped(T.LParen))
     {
-      nT();
       expr = parseExpression();
       require(T.RParen);
     }
@@ -2298,13 +2221,11 @@ class Parser
     CatchBody[] catchBodies;
     FinallyBody finBody;
 
-    while (token.type == T.Catch)
+    while (skipped(T.Catch))
     {
-      nT();
       Parameter param;
-      if (token.type == T.LParen)
+      if (skipped(T.LParen))
       {
-        nT();
         auto begin = token;
         Identifier* ident;
         auto type = parseDeclarator(ident, true);
@@ -2393,11 +2314,8 @@ class Parser
     require(T.LParen);
     ident = requireIdentifier(MSG.ExpectedPragmaIdentifier);
 
-    if (token.type == T.Comma)
-    {
-      nT();
+    if (skipped(T.Comma))
       args = parseExpressionList();
-    }
     require(T.RParen);
 
     pragmaBody = parseNoScopeOrEmptyStatement();
@@ -2418,11 +2336,8 @@ class Parser
     condition = parseExpression();
     require(T.RParen);
     ifBody = parseNoScopeStatement();
-    if (token.type == T.Else)
-    {
-      nT();
+    if (skipped(T.Else))
       elseBody = parseNoScopeStatement();
-    }
     return new StaticIfStatement(condition, ifBody, elseBody);
   }
 
@@ -2435,11 +2350,8 @@ class Parser
     Expression condition, message;
     require(T.LParen);
     condition = parseAssignExpression();
-    if (token.type == T.Comma)
-    {
-      nT();
+    if (skipped(T.Comma))
       message = parseAssignExpression();
-    }
     require(T.RParen);
     require(T.Semicolon);
     return new StaticAssertStatement(condition, message);
@@ -2454,9 +2366,8 @@ class Parser
     Statement debugBody, elseBody;
 
     // ( Condition )
-    if (token.type == T.LParen)
+    if (skipped(T.LParen))
     {
-      nT();
       cond = parseIdentOrInt();
       require(T.RParen);
     }
@@ -2464,8 +2375,8 @@ class Parser
     // debug ( Condition ) Statement
     debugBody = parseNoScopeStatement();
     // else Statement
-    if (token.type == T.Else)
-      nT(), (elseBody = parseNoScopeStatement());
+    if (skipped(T.Else))
+      elseBody = parseNoScopeStatement();
 
     return new DebugStatement(cond, debugBody, elseBody);
   }
@@ -2485,8 +2396,8 @@ class Parser
     // version ( Condition ) Statement
     versionBody = parseNoScopeStatement();
     // else Statement
-    if (token.type == T.Else)
-      nT(), (elseBody = parseNoScopeStatement());
+    if (skipped(T.Else))
+      elseBody = parseNoScopeStatement();
 
     return new VersionStatement(cond, versionBody, elseBody);
   }
@@ -2522,10 +2433,9 @@ class Parser
     case T.Identifier:
       ident = token.ident;
       nT(); // Skip Identifier
-      if (token.type == T.Colon)
+      if (skipped(T.Colon))
       {
         // Identifier : AsmInstruction
-        nT(); // Skip :
         s = new LabeledStatement(ident, parseAsmInstruction());
         break;
       }
@@ -2583,10 +2493,9 @@ class Parser
   {
     auto begin = token;
     auto e = parseAsmOrOrExpression();
-    if (token.type == T.Question)
+    if (skipped(T.Question))
     {
-      auto tok = token;
-      nT();
+      auto tok = this.prevToken;
       auto iftrue = parseAsmExpression();
       require(T.Colon);
       auto iffalse = parseAsmExpression();
@@ -2870,9 +2779,8 @@ class Parser
         nT();
         // (1) - (7)
         int number = -1;
-        if (token.type == T.LParen)
+        if (skipped(T.LParen))
         {
-          nT();
           if (token.type == T.Int32)
             (number = token.int_), nT();
           else
@@ -2885,10 +2793,9 @@ class Parser
         nT();
         // TODO: is the colon-number part optional?
         int number = -1;
-        if (token.type == T.Colon)
+        if (skipped(T.Colon))
         {
           // :0, :4, :8
-          nT();
           if (token.type == T.Int32)
             (number = token.int_), nT();
           if (number != 0 && number != 4 && number != 8)
@@ -3244,20 +3151,16 @@ class Parser
         Expression[] es = [parseAssignExpression()];
 
         // [ AssignExpression .. AssignExpression ]
-        if (token.type == T.Slice)
+        if (skipped(T.Slice))
         {
-          nT();
           e = new SliceExpression(e, es[0], parseAssignExpression());
           require(T.RBracket);
           goto Lset;
         }
 
         // [ ExpressionList ]
-        if (token.type == T.Comma)
-        {
-           nT();
+        if (skipped(T.Comma))
            es ~= parseExpressionList();
-        }
         require(T.RBracket);
 
         e = new IndexExpression(e, es);
@@ -3421,20 +3324,15 @@ class Parser
       Expression[] values;
 
       nT();
-      if (token.type != T.RBracket)
+      if (!skipped(T.RBracket))
       {
         e = parseAssignExpression();
         if (token.type == T.Colon)
           goto LparseAssocArray;
-        if (token.type == T.Comma)
-        {
-          nT();
+        if (skipped(T.Comma))
           values = [e] ~ parseExpressionList();
-        }
         require(T.RBracket);
       }
-      else
-        nT();
 
       e = new ArrayLiteralExpression(values);
       break;
@@ -3482,11 +3380,8 @@ class Parser
       Expression msg;
       requireNext(T.LParen);
       e = parseAssignExpression();
-      if (token.type == T.Comma)
-      {
-        nT();
+      if (skipped(T.Comma))
         msg = parseAssignExpression();
-      }
       require(T.RParen);
       e = new AssertExpression(e, msg);
       break;
@@ -3635,9 +3530,8 @@ class Parser
 
     // NewAnonClassExpression:
     //         new (ArgumentList)opt class (ArgumentList)opt SuperClassopt InterfaceClassesopt ClassBody
-    if (token.type == T.Class)
+    if (skipped(T.Class))
     {
-      nT();
       if (token.type == T.LParen)
         ctorArguments = parseArguments();
 
@@ -3808,11 +3702,8 @@ class Parser
     assert(token.type == T.LBracket);
     auto begin = token;
     nT();
-    if (token.type == T.RBracket)
-    {
+    if (skipped(T.RBracket))
       t = new ArrayType(t);
-      nT();
-    }
     else
     {
       bool success;
@@ -3828,11 +3719,8 @@ class Parser
       else
       {
         Expression e = parseExpression(), e2;
-        if (token.type == T.Slice)
-        {
-          nT();
+        if (skipped(T.Slice))
           e2 = parseExpression();
-        }
         t = new ArrayType(t, e, e2);
         require(T.RBracket);
       }
@@ -3877,9 +3765,7 @@ class Parser
     auto t = parseType();
 
     if (token.type == T.LParen)
-    {
       t = parseCFunctionPointerType(t, ident, true);
-    }
     else if (token.type == T.Identifier)
     {
       ident = token.ident;
@@ -3902,13 +3788,9 @@ class Parser
   Expression[] parseExpressionList()
   {
     Expression[] expressions;
-    while (1)
-    {
+    do
       expressions ~= parseAssignExpression();
-      if (token.type != T.Comma)
-        break;
-      nT();
-    }
+    while(skipped(T.Comma))
     return expressions;
   }
 
@@ -3945,11 +3827,8 @@ class Parser
 
     auto params = new Parameters();
 
-    if (token.type == T.RParen)
-    {
-      nT();
+    if (skipped(T.RParen))
       return set(params, begin);
-    }
 
   Loop:
     while (1)
@@ -3965,9 +3844,8 @@ class Parser
         params ~= set(new Parameter(stc, type, ident, defValue), paramBegin);
       }
 
-      if (token.type == T.Ellipses)
+      if (skipped(T.Ellipses))
       {
-        nT();
         stc = StorageClass.Variadic;
         pushParameter(); // type, ident and defValue will be null.
         break Loop;
@@ -4024,12 +3902,11 @@ class Parser
       default:
         type = parseDeclarator(ident, true);
 
-        if (token.type == T.Assign)
-          nT(), (defValue = parseAssignExpression());
+        if (skipped(T.Assign))
+          defValue = parseAssignExpression();
 
-        if (token.type == T.Ellipses)
+        if (skipped(T.Ellipses))
         {
-          nT();
           stc |= StorageClass.Variadic;
           pushParameter();
           break Loop;
@@ -4145,17 +4022,11 @@ version(D2)
       void parseSpecAndOrDefaultType()
       {
         // : SpecializationType
-        if (token.type == T.Colon)
-        {
-          nT();
+        if (skipped(T.Colon))
           specType = parseType();
-        }
         // = DefaultType
-        if (token.type == T.Assign)
-        {
-          nT();
+        if (skipped(T.Assign))
           defType = parseType();
-        }
       }
 
       switch (token.type)
@@ -4213,17 +4084,11 @@ version(D2)
         Expression specValue, defValue;
         auto valueType = parseDeclarator(ident);
         // : SpecializationValue
-        if (token.type == T.Colon)
-        {
-          nT();
+        if (skipped(T.Colon))
           specValue = parseCondExpression();
-        }
         // = DefaultValue
-        if (token.type == T.Assign)
-        {
-          nT();
+        if (skipped(T.Assign))
           defValue = parseCondExpression();
-        }
         tp = new TemplateValueParameter(valueType, ident, specValue, defValue);
       }
 
