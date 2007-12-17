@@ -136,4 +136,5 @@ static:
   auto ExpectedTypeOrExpression = "expected a type or and expression not ')'";
   auto ExpectedAliasTemplateParam = "expected name for alias template parameter, not '{}'";
   auto ExpectedNameForThisTempParam = "expected name for 'this' template parameter, not '{}'";
+  auto ExpectedIdentOrInt = "expected an identifier or an integer, not '{}'";
 }

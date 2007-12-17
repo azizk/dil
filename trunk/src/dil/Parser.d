@@ -1243,58 +1243,50 @@ class Parser
     return new UnittestDeclaration(funcBody);
   }
 
+  Token* parseIdentOrInt()
+  {
+    if (token.type == T.Int32 ||
+        token.type == T.Identifier)
+    {
+      auto token = this.token;
+      nT();
+      return token;
+    }
+    else
+      error(token, MSG.ExpectedIdentOrInt, token.srcText);
+    return null;
+  }
+
   Declaration parseDebugDeclaration()
   {
     assert(token.type == T.Debug);
-
     nT(); // Skip debug keyword.
 
-    Token* spec; // debug = Integer ;
-                 // debug = Identifier ;
-    Token* cond; // debug ( Integer )
-                 // debug ( Identifier )
+    Token* spec;
+    Token* cond;
     Declaration decls, elseDecls;
 
-    void parseIdentOrInt(ref Token* tok)
-    {
-      nT();
-      if (token.type == T.Int32 ||
-          token.type == T.Identifier)
-      {
-        tok = token;
-        nT();
-      }
-      else
-        expected(T.Identifier); // TODO: better error msg
-    }
-
     if (token.type == T.Assign)
-    {
-      parseIdentOrInt(spec);
+    { // debug = Integer ;
+      // debug = Identifier ;
+      nT();
+      spec = parseIdentOrInt();
       require(T.Semicolon);
     }
     else
-    {
-      // Condition:
-      //     Integer
-      //     Identifier
-      // ( Condition )
+    { // ( Condition )
       if (token.type == T.LParen)
       {
-        parseIdentOrInt(cond);
+        nT();
+        cond = parseIdentOrInt();
         require(T.RParen);
       }
-
       // debug DeclarationsBlock
       // debug ( Condition ) DeclarationsBlock
       decls = parseDeclarationsBlockNoColon();
-
       // else DeclarationsBlock
       if (token.type == T.Else)
-      {
-        nT();
-        elseDecls = parseDeclarationsBlockNoColon();
-      }
+        nT(), (elseDecls = parseDeclarationsBlockNoColon());
     }
 
     return new DebugDeclaration(spec, cond, decls, elseDecls);
@@ -1303,53 +1295,29 @@ class Parser
   Declaration parseVersionDeclaration()
   {
     assert(token.type == T.Version);
-
     nT(); // Skip version keyword.
 
-    Token* spec; // version = Integer ;
-                 // version = Identifier ;
-    Token* cond; // version ( Integer )
-                 // version ( Identifier )
+    Token* spec;
+    Token* cond;
     Declaration decls, elseDecls;
 
-    void parseIdentOrInt(ref Token* tok)
-    {
-      if (token.type == T.Int32 ||
-          token.type == T.Identifier)
-      {
-        tok = token;
-        nT();
-      }
-      else
-        expected(T.Identifier); // TODO: better error msg
-    }
-
     if (token.type == T.Assign)
-    {
+    { // version = Integer ;
+      // version = Identifier ;
       nT();
-      parseIdentOrInt(spec);
+      spec = parseIdentOrInt();
       require(T.Semicolon);
     }
     else
-    {
-      // Condition:
-      //     Integer
-      //     Identifier
-
-      // ( Condition )
+    { // ( Condition )
       require(T.LParen);
-      parseIdentOrInt(cond);
+      cond = parseIdentOrInt();
       require(T.RParen);
-
       // version ( Condition ) DeclarationsBlock
       decls = parseDeclarationsBlockNoColon();
-
       // else DeclarationsBlock
       if (token.type == T.Else)
-      {
-        nT();
-        elseDecls = parseDeclarationsBlockNoColon();
-      }
+        nT(), (elseDecls = parseDeclarationsBlockNoColon());
     }
 
     return new VersionDeclaration(spec, cond, decls, elseDecls);
@@ -2482,55 +2450,22 @@ class Parser
     assert(token.type == T.Debug);
     nT(); // Skip debug keyword.
 
-    Token* cond; // debug ( Integer )
-                 // debug ( Identifier )
+    Token* cond;
     Statement debugBody, elseBody;
 
-    void parseIdentOrInt(ref Token* tok)
+    // ( Condition )
+    if (token.type == T.LParen)
     {
       nT();
-      if (token.type == T.Int32 ||
-          token.type == T.Identifier)
-      {
-        tok = token;
-        nT();
-      }
-      else
-        expected(T.Identifier); // TODO: better error msg
+      cond = parseIdentOrInt();
+      require(T.RParen);
     }
-
-//     if (token.type == T.Assign)
-//     {
-//       parseIdentOrInt(identSpec, levelSpec);
-//       require(T.Semicolon);
-//     }
-//     else
-    {
-      // Condition:
-      //     Integer
-      //     Identifier
-
-      // ( Condition )
-      if (token.type == T.LParen)
-      {
-        parseIdentOrInt(cond);
-        require(T.RParen);
-      }
-
-      // debug Statement
-      // debug ( Condition ) Statement
-      debugBody = parseNoScopeStatement();
-
-      // else Statement
-      if (token.type == T.Else)
-      {
-        // debug without condition and else body makes no sense
-        //if (levelCond == -1 && identCond.length == 0)
-          // TODO: issue error msg
-        nT();
-        elseBody = parseNoScopeStatement();
-      }
-    }
+    // debug Statement
+    // debug ( Condition ) Statement
+    debugBody = parseNoScopeStatement();
+    // else Statement
+    if (token.type == T.Else)
+      nT(), (elseBody = parseNoScopeStatement());
 
     return new DebugStatement(cond, debugBody, elseBody);
   }
@@ -2538,51 +2473,20 @@ class Parser
   Statement parseVersionStatement()
   {
     assert(token.type == T.Version);
-
     nT(); // Skip version keyword.
 
-    Token* cond; // version ( Integer )
-                 // version ( Identifier )
+    Token* cond;
     Statement versionBody, elseBody;
 
-    void parseIdentOrInt(ref Token* tok)
-    {
-      if (token.type == T.Int32 ||
-          token.type == T.Identifier)
-      {
-        tok = token;
-        nT();
-      }
-      else
-        expected(T.Identifier); // TODO: better error msg
-    }
-
-//     if (token.type == T.Assign)
-//     {
-//       parseIdentOrInt(identSpec, levelSpec);
-//       require(T.Semicolon);
-//     }
-//     else
-    {
-      // Condition:
-      //     Integer
-      //     Identifier
-
-      // ( Condition )
-      require(T.LParen);
-      parseIdentOrInt(cond);
-      require(T.RParen);
-
-      // version ( Condition ) Statement
-      versionBody = parseNoScopeStatement();
-
-      // else Statement
-      if (token.type == T.Else)
-      {
-        nT();
-        elseBody = parseNoScopeStatement();
-      }
-    }
+    // ( Condition )
+    require(T.LParen);
+    cond = parseIdentOrInt();
+    require(T.RParen);
+    // version ( Condition ) Statement
+    versionBody = parseNoScopeStatement();
+    // else Statement
+    if (token.type == T.Else)
+      nT(), (elseBody = parseNoScopeStatement());
 
     return new VersionStatement(cond, versionBody, elseBody);
   }
