@@ -2227,12 +2227,14 @@ version(D2)
     default:
       t.type = TOK.Float64;
       t.double_ = strtod(buffer.ptr, null);
-      break;
     }
     if (*p == 'i')
     {
       ++p;
       t.type += 3; // Switch to imaginary counterpart.
+      assert(t.type == TOK.Imaginary32 ||
+             t.type == TOK.Imaginary64 ||
+             t.type == TOK.Imaginary80);
     }
     if (errno() == ERANGE)
       error(t.start, MID.OverflowFloatNumber);
