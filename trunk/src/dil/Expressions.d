@@ -778,15 +778,15 @@ class RealExpression : Expression
 
   this(Token* token)
   {
-    auto type = Types.Float; // Most common case?
+    auto type = Types.Double; // Most common case?
     switch (token.type)
     {
-    // case T.Float32:
-    //   type = Types.Float; break;
-    case TOK.Float64:
-      type = Types.Double; break;
+    case TOK.Float32:
+      type = Types.Float; break;
+    // case TOK.Float64:
+    //   type = Types.Double; break;
     case TOK.Float80:
-      type = Types.Double; break;
+      type = Types.Real; break;
     case TOK.Imaginary32:
       type = Types.Ifloat; break;
     case TOK.Imaginary64:
@@ -794,7 +794,7 @@ class RealExpression : Expression
     case TOK.Imaginary80:
       type = Types.Ireal; break;
     default:
-      assert(token.type == TOK.Float32);
+      assert(token.type == TOK.Float64);
     }
     this(token.real_, type);
   }
