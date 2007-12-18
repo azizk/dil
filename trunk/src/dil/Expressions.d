@@ -748,23 +748,63 @@ class IntExpression : Expression
     this(token.ulong_, type);
   }
 
-  Expression semantic(Scope scop)
+  Expression semantic(Scope)
   {
     if (type)
       return this;
+
+    if (number & 0x8000_0000_0000_0000)
+      type = Types.Ulong; // 0xFFFF_FFFF_FFFF_FFFF
+    else if (number & 0xFFFF_FFFF_0000_0000)
+      type = Types.Long; // 0x7FFF_FFFF_FFFF_FFFF
+    else if (number & 0x8000_0000)
+      type = Types.Uint; // 0xFFFF_FFFF
+    else
+      type = Types.Int; // 0x7FFF_FFFF
     return this;
   }
 }
 
 class RealExpression : Expression
 {
-  TOK type;
   real number;
-  this(TOK type, real number)
+
+  this(real number, Type type)
   {
     mixin(set_kind);
     this.number = number;
     this.type = type;
+  }
+
+  this(Token* token)
+  {
+    auto type = Types.Float; // Most common case?
+    switch (token.type)
+    {
+    // case T.Float32:
+    //   type = Types.Float; break;
+    case TOK.Float64:
+      type = Types.Double; break;
+    case TOK.Float80:
+      type = Types.Double; break;
+    case TOK.Imaginary32:
+      type = Types.Ifloat; break;
+    case TOK.Imaginary64:
+      type = Types.Idouble; break;
+    case TOK.Imaginary80:
+      type = Types.Ireal; break;
+    default:
+      assert(token.type == TOK.Float32);
+    }
+    this(token.real_, type);
+  }
+
+  Expression semantic(Scope)
+  {
+    if (type)
+      return this;
+    type = Types.Double;
+    return this;
   }
 }
 

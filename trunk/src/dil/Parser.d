@@ -2754,7 +2754,7 @@ class Parser
       break;
     case T.Float32, T.Float64, T.Float80,
          T.Imaginary32, T.Imaginary64, T.Imaginary80:
-      e = new RealExpression(token.type, token.real_);
+      e = new RealExpression(token);
       nT();
       break;
     case T.Dollar:
@@ -3307,7 +3307,7 @@ class Parser
       break;
     case T.Float32, T.Float64, T.Float80,
          T.Imaginary32, T.Imaginary64, T.Imaginary80:
-      e = new RealExpression(token.type, token.real_);
+      e = new RealExpression(token);
       nT();
       break;
     case T.CharLiteral:
