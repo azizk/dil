@@ -2749,7 +2749,7 @@ class Parser
     switch (token.type)
     {
     case T.Int32, T.Int64, T.Uint32, T.Uint64:
-      e = new IntExpression(token.type, token.ulong_);
+      e = new IntExpression(token);
       nT();
       break;
     case T.Float32, T.Float64, T.Float80,
@@ -3302,7 +3302,7 @@ class Parser
       e = new DollarExpression();
       break;
     case T.Int32, T.Int64, T.Uint32, T.Uint64:
-      e = new IntExpression(token.type, token.ulong_);
+      e = new IntExpression(token);
       nT();
       break;
     case T.Float32, T.Float64, T.Float80,

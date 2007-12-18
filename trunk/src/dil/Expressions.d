@@ -606,11 +606,32 @@ class IdentifierExpression : Expression
 
 class SpecialTokenExpression : Expression
 {
-  Token* special;
-  this(Token* special)
+  Token* specialToken;
+  this(Token* specialToken)
   {
     mixin(set_kind);
-    this.special = special;
+    this.specialToken = specialToken;
+  }
+
+  Expression e; /// The expression created in the semantic phase.
+
+  Expression semantic(Scope)
+  {
+    if (type)
+      return e;
+    switch (specialToken.type)
+    {
+    case TOK.LINE, TOK.VERSION:
+      e = new IntExpression(specialToken.uint_, Types.Uint);
+      break;
+    case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
+      e = new StringExpression(specialToken.str);
+      break;
+    default:
+      assert(0);
+    }
+    type = e.type;
+    return e;
   }
 }
 
@@ -699,13 +720,39 @@ class BoolExpression : Expression
 
 class IntExpression : Expression
 {
-  TOK type;
   ulong number;
-  this(TOK type, ulong number)
+
+  this(ulong number, Type type)
   {
     mixin(set_kind);
     this.number = number;
     this.type = type;
+  }
+
+  this(Token* token)
+  {
+    auto type = Types.Int; // Should be most common case.
+    switch (token.type)
+    {
+    // case TOK.Int32:
+    //   type = Types.Int; break;
+    case TOK.Uint32:
+      type = Types.Uint; break;
+    case TOK.Int64:
+      type = Types.Long; break;
+    case TOK.Uint64:
+      type = Types.Ulong; break;
+    default:
+      assert(token.type == TOK.Int32);
+    }
+    this(token.ulong_, type);
+  }
+
+  Expression semantic(Scope scop)
+  {
+    if (type)
+      return this;
+    return this;
   }
 }
 
@@ -746,20 +793,51 @@ class CharExpression : Expression
 
 class StringExpression : Expression
 {
-  Token*[] strings;
-  this(Token*[] strings)
+  Token*[] stringTokens;
+  this()
+  { mixin(set_kind); }
+
+  /// Constructor used in parsing phase.
+  this(Token*[] stringTokens)
   {
-    mixin(set_kind);
-    this.strings = strings;
+    this.stringTokens = stringTokens;
+  }
+
+  ubyte[] str;   /// The string data.
+  Type charType; /// The character type of the string.
+  // Constructors used in semantic phase.
+  this(ubyte[] str, Type charType)
+  {
+    this();
+    this.str = str;
+    this.charType = charType;
+    type = new TypeSArray(charType, str.length);
+  }
+
+  this(char[] str)
+  {
+    this(cast(ubyte[])str, Types.Char);
+  }
+  this(wchar[] str)
+  {
+    this(cast(ubyte[])str, Types.Wchar);
+  }
+  this(dchar[] str)
+  {
+    this(cast(ubyte[])str, Types.Dchar);
+  }
+
+  Expression semantic()
+  {
+    if (type)
+      return this;
   }
 
   char[] getString()
   {
     char[] buffer;
-    foreach (strTok; strings)
-    {
-      buffer ~= strTok.str[0..$-1];
-    }
+    foreach (token; stringTokens)
+      buffer ~= token.str[0..$-1];
     return buffer;
   }
 }
