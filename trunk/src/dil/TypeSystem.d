@@ -12,14 +12,14 @@ import dil.Identifier;
 abstract class Type : Symbol
 {
   Type next;
-  TYP typ;
+  TYP tid; /// The ID of the type.
 
   this(){}
 
-  this(Type next, TYP typ)
+  this(Type next, TYP tid)
   {
     this.next = next;
-    this.typ = typ;
+    this.tid = tid;
   }
 
   TypePointer ptrTo()
@@ -249,7 +249,7 @@ static:
 
   size_t getSize(Type type)
   {
-    auto size = metaInfoTable[type.typ].size;
+    auto size = metaInfoTable[type.tid].size;
     if (size == SIZE_NOT_AVAILABLE)
       return type.sizeOf_();
     return size;
@@ -270,6 +270,7 @@ static:
 
   TypeBasic Size_t, Ptrdiff_t;
   TypePointer Void_ptr;
+  TypeBasic Undefined;
 
   /// Allocates an instance of TypeBasic and assigns it to typeName.
   template newTB(char[] typeName)
@@ -314,5 +315,6 @@ static:
       Ptrdiff_t = Int;
     }
     Void_ptr = Void.ptrTo;
+    Undefined = new TypeBasic(TYP.Error);
   }
 }

@@ -3311,7 +3311,7 @@ class Parser
       nT();
       break;
     case T.CharLiteral:
-      e = new CharExpression(token);
+      e = new CharExpression(token.dchar_);
       nT();
       break;
     case T.String:

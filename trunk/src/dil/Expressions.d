@@ -11,6 +11,7 @@ import dil.Statements;
 import dil.Identifier;
 import dil.Scope;
 import dil.TypeSystem;
+import common;
 
 abstract class Expression : Node
 {
@@ -20,15 +21,25 @@ abstract class Expression : Node
     super(NodeCategory.Expression);
   }
 
+  // Semantic analysis:
+
   Expression semantic(Scope scop)
   {
-    return null;
+    debug Stdout("SA for "~this.classinfo.name).newline;
+    if (!type)
+      type = Types.Undefined;
+    return this;
   }
 
   import dil.Messages;
   void error(Scope scop, MID mid)
   {
     scop.error(this.begin, mid);
+  }
+
+  void error(Scope scop, char[] msg)
+  {
+
   }
 }
 
@@ -712,11 +723,24 @@ class RealExpression : Expression
 
 class CharExpression : Expression
 {
-  Token* charLiteral;
-  this(Token* charLiteral)
+  dchar character;
+  this(dchar character)
   {
     mixin(set_kind);
-    this.charLiteral = charLiteral;
+    this.character = character;
+  }
+
+  Expression semantic(Scope scop)
+  {
+    if (type)
+      return this;
+    if (character <= 0xFF)
+      type = Types.Char;
+    else if (character <= 0xFFFF)
+      type = Types.Wchar;
+    else
+      type = Types.Dchar;
+    return this;
   }
 }
 
