@@ -864,6 +864,7 @@ class StringExpression : Expression
   /// Constructor used in parsing phase.
   this(Token*[] stringTokens)
   {
+    this();
     this.stringTokens = stringTokens;
   }
 
