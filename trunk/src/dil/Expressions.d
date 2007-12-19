@@ -700,6 +700,19 @@ class NullExpression : Expression
   {
     mixin(set_kind);
   }
+
+  this(Type type)
+  {
+    this();
+    this.type = type;
+  }
+
+  Expression semantic(Scope)
+  {
+    if (!type)
+      type = Types.Void_ptr;
+    return this;
+  }
 }
 
 class DollarExpression : Expression
