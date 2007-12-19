@@ -729,6 +729,18 @@ class BoolExpression : Expression
   {
     mixin(set_kind);
   }
+
+  Expression e;
+  Expression semantic(Scope scop)
+  {
+    if (type)
+      return this;
+    assert(this.begin !is null);
+    auto b = (this.begin.type == TOK.True) ? true : false;
+    e = new IntExpression(b, Types.Bool);
+    type = Types.Bool;
+    return this;
+  }
 }
 
 class IntExpression : Expression
