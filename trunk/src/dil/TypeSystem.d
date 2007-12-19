@@ -186,66 +186,91 @@ class InvariantType : Type
   }
 }
 
+/// Represents a value related to a type.
+union Value
+{
+  void*  pvoid;
+  bool   bool_;
+  dchar  dchar_;
+  long   long_;
+  ulong  ulong_;
+  int    int_;
+  uint   uint_;
+  float  float_;
+  double double_;
+  real   real_;
+  creal  creal_;
+}
+
 struct TypeMetaInfo
 {
   char mangle; /// Mangle character of the type.
-  size_t size; /// Byte size of the type.
+  ushort size; /// Byte size of the type.
+  Value* defaultInit; /// Default initialization value.
 }
 
 struct MITable
 {
 static:
-  const size_t SIZE_NOT_AVAILABLE = -1; /// Size not available.
+  const ushort SIZE_NOT_AVAILABLE = 0; /// Size not available.
+  const Value VZERO = {int_:0}; /// Value 0.
+  const Value VNULL = {pvoid:null}; /// Value null.
+  const Value V0xFF = {dchar_:0xFF}; /// Value 0xFF.
+  const Value V0xFFFF = {dchar_:0xFFFF}; /// Value 0xFFFF.
+  const Value VFALSE = {bool_:false}; /// Value false.
+  const Value VNAN = {float_:float.nan}; /// Value NAN.
+  const Value VCNAN = {creal_:creal.nan}; /// Value complex NAN.
   private alias SIZE_NOT_AVAILABLE SNA;
   private alias PTR_SIZE PS;
   private const TypeMetaInfo metaInfoTable[] = [
     {'?', SNA}, // Error
 
-    {'a', 1},   // Char
-    {'u', 2},   // Wchar
-    {'w', 4},   // Dchar
-    {'b', 1},   // Bool
-    {'g', 1},   // Byte
-    {'h', 1},   // Ubyte
-    {'s', 2},   // Short
-    {'t', 2},   // Ushort
-    {'i', 4},   // Int
-    {'k', 4},   // Uint
-    {'l', 8},   // Long
-    {'m', 8},   // Ulong
-    {'?', 16},  // Cent
-    {'?', 16},  // Ucent
-    {'f', 4},   // Float
-    {'d', 8},   // Double
-    {'e', 12},  // Real
-    {'o', 4},   // Ifloat
-    {'p', 8},   // Idouble
-    {'j', 12},  // Ireal
-    {'q', 8},   // Cfloat
-    {'r', 16},  // Cdouble
-    {'c', 24},  // Creal
+    {'a', 1, &V0xFF},   // Char
+    {'u', 2, &V0xFFFF},   // Wchar
+    {'w', 4, &V0xFFFF},   // Dchar
+    {'b', 1, &VFALSE},   // Bool
+    {'g', 1, &VZERO},   // Byte
+    {'h', 1, &VZERO},   // Ubyte
+    {'s', 2, &VZERO},   // Short
+    {'t', 2, &VZERO},   // Ushort
+    {'i', 4, &VZERO},   // Int
+    {'k', 4, &VZERO},   // Uint
+    {'l', 8, &VZERO},   // Long
+    {'m', 8, &VZERO},   // Ulong
+    {'?', 16, &VZERO},  // Cent
+    {'?', 16, &VZERO},  // Ucent
+    {'f', 4, &VNAN},   // Float
+    {'d', 8, &VNAN},   // Double
+    {'e', 12, &VNAN},  // Real
+    {'o', 4, &VNAN},   // Ifloat
+    {'p', 8, &VNAN},   // Idouble
+    {'j', 12, &VNAN},  // Ireal
+    {'q', 8, &VCNAN},   // Cfloat
+    {'r', 16, &VCNAN},  // Cdouble
+    {'c', 24, &VCNAN},  // Creal
     {'v', 1},   // void
 
     {'n', SNA},  // None
 
-    {'A', PS*2}, // Dynamic array
-    {'G', PS*2}, // Static array
-    {'H', PS*2}, // Associative array
+    {'A', PS*2, &VNULL}, // Dynamic array
+    {'G', PS*2, &VNULL}, // Static array
+    {'H', PS*2, &VNULL}, // Associative array
 
     {'E', SNA}, // Enum
     {'S', SNA}, // Struct
-    {'C', PS},  // Class
+    {'C', PS, &VNULL},  // Class
     {'T', SNA}, // Typedef
     {'F', PS},  // Function
-    {'D', PS*2}, // Delegate
-    {'P', PS},  // Pointer
-    {'R', PS},  // Reference
+    {'D', PS*2, &VNULL}, // Delegate
+    {'P', PS, &VNULL},  // Pointer
+    {'R', PS, &VNULL},  // Reference
     {'I', SNA}, // Identifier
     {'?', SNA}, // Template instance
     {'B', SNA}, // Tuple
     {'x', SNA}, // Const, D2
     {'y', SNA}, // Invariant, D2
   ];
+  static assert(metaInfoTable.length == TYP.max+1);
 
   size_t getSize(Type type)
   {
