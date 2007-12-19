@@ -162,6 +162,7 @@ enum NodeKind
   BoolExpression,
   IntExpression,
   RealExpression,
+  ComplexExpression,
   CharExpression,
   StringExpression,
   ArrayLiteralExpression,
@@ -250,6 +251,12 @@ class Node
   {
     this.begin = begin;
     this.end = end;
+  }
+
+  Class setToks(Class)(Class node)
+  {
+    node.setTokens(this.begin, this.end);
+    return node;
   }
 
   void addChild(Node child)
