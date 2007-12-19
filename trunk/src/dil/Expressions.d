@@ -808,6 +808,30 @@ class RealExpression : Expression
   }
 }
 
+/++
+  This expression holds a complex number.
+  It is only created in the semantic phase.
++/
+class ComplexExpression : Expression
+{
+  creal number;
+
+  this(creal number, Type type)
+  {
+    mixin(set_kind);
+    this.number = number;
+    this.type = type;
+  }
+
+  Expression semantic(Scope)
+  {
+    if (type)
+      return this;
+    type = Types.Cdouble;
+    return this;
+  }
+}
+
 class CharExpression : Expression
 {
   dchar character;
