@@ -24,6 +24,9 @@ struct Ident
   }
 }
 
+/++
+  Global table for hoarding and retrieving identifiers.
++/
 struct IdTable
 {
 static:
@@ -36,6 +39,7 @@ static:
   /// Initializes the static table.
   static this()
   {
+    // Load keywords and pre-defined identifiers into the static table.
     foreach (ref k; keywords)
       staticTable[k.str] = &k;
     foreach (id; Ident.allIds())
@@ -59,25 +63,50 @@ static:
     return id ? *id : null;
   }
 
+  alias Identifier* function(string idString) LookupFunction;
+  /// Look up idString in the growing table.
+  LookupFunction inGrowing = &_inGrowing_unsafe; // Default to unsafe function.
+
+  /++
+    Set the thread safety mode of this table.
+    Call this function only if you can be sure
+    that this table is not being accessed
+    (like during lexing, parsing and semantic phase.)
+  +/
+  void setThreadsafe(bool b)
+  {
+    if (b)
+      IdTable.inGrowing = &_inGrowing_safe;
+    else
+      IdTable.inGrowing = &_inGrowing_unsafe;
+  }
+
+  /++
+    Returns the Identifier for idString.
+    Adds idString to the table if not found.
+  +/
+  private Identifier* _inGrowing_unsafe(string idString)
+  out(id)
+  { assert(id !is null); }
+  body
+  {
+    auto id = idString in growingTable;
+    if (id)
+      return *id;
+    auto newID = Identifier(idString, TOK.Identifier);
+    growingTable[idString] = newID;
+    return newID;
+  }
+
   /++
     Returns the Identifier for idString.
     Adds idString to the table if not found.
     Access to the data structure is synchronized.
   +/
-  Identifier* inGrowing(string idString)
-  out(id)
-  { assert(id !is null); }
-  body
+  private Identifier* _inGrowing_safe(string idString)
   {
     synchronized
-    {
-      auto id = idString in growingTable;
-      if (id)
-        return *id;
-      auto newID = Identifier(idString, TOK.Identifier);
-      growingTable[idString] = newID;
-      return newID;
-    }
+      return _inGrowing_unsafe(idString);
   }
 
   /+
@@ -97,4 +126,16 @@ static:
     }
   }
   +/
+}
+
+unittest
+{
+  // TODO: write benchmark.
+  // Single table
+
+  // Single table. synchronized
+
+  // Two tables.
+
+  // Two tables. synchronized
 }
