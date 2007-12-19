@@ -18,6 +18,15 @@ struct Statistics
   uint commentCount;    /// Counter for comments.
   uint tokenCount;      /// Counter for all tokens produced by the Lexer.
   uint linesOfCode;     /// Number of lines.
+  uint[] tokensTable;   /// Table of counters for all token types.
+
+  static Statistics opCall(bool allocateTokensTable)
+  {
+    Statistics s;
+    if (allocateTokensTable)
+      s.tokensTable = new uint[TOK.MAX];
+    return s;
+  }
 
   void opAddAssign(Statistics s)
   {
@@ -29,16 +38,18 @@ struct Statistics
     this.commentCount    += s.commentCount;
     this.tokenCount      += s.tokenCount;
     this.linesOfCode     += s.linesOfCode;
+    foreach (i, count; s.tokensTable)
+      this.tokensTable[i] += count;
   }
 }
 
-void execute(string[] filePaths)
+void execute(string[] filePaths, bool printTokensTable)
 {
   Statistics[] stats;
   foreach (filePath; filePaths)
-    stats ~= getStatistics(filePath);
+    stats ~= getStatistics(filePath, printTokensTable);
 
-  Statistics total;
+  auto total = Statistics(printTokensTable);
 
   foreach (i, ref stat; stats)
   {
@@ -67,6 +78,7 @@ void execute(string[] filePaths)
   }
 
   if (filePaths.length > 1)
+  {
     Stdout.formatln(
       "--------------------------------------------------------------------------------\n"
       "Total of {} files:\n"
@@ -88,24 +100,49 @@ void execute(string[] filePaths)
       total.tokenCount,
       total.linesOfCode
     );
+  }
+
+  if (printTokensTable)
+  {
+    Stdout("Table of tokens:").newline;
+    Stdout.formatln(" {,10} | {}", "Count", "Token type");
+    Stdout("-----------------------------").newline;
+    foreach (i, count; total.tokensTable)
+      Stdout.formatln(" {,10} | {}", count, Token.toString(cast(TOK)i));
+    Stdout("// End of table.").newline;
+  }
 }
 
-Statistics getStatistics(string filePath)
+Statistics getStatistics(string filePath, bool printTokensTable)
 {
   auto sourceText = loadFile(filePath);
   auto lx = new Lexer(sourceText, filePath);
   lx.scanAll();
   auto token = lx.firstToken();
 
-  Statistics stats;
+  auto stats = Statistics(printTokensTable);
   // Lexer creates HEAD + Newline, which are not in the source text.
   // No token left behind!
   stats.tokenCount = 2;
   stats.linesOfCode = lx.lineNum;
+  if (printTokensTable)
+  {
+    stats.tokensTable[TOK.HEAD] = 1;
+    stats.tokensTable[TOK.Newline & ~TOK.Whitespace] = 1;
+  }
   // Traverse linked list.
   while (1)
   {
     stats.tokenCount += 1;
+
+    if (printTokensTable)
+    {
+      if (token.isWhitespace)
+        stats.tokensTable[token.type & ~TOK.Whitespace] += 1;
+      else
+        stats.tokensTable[token.type] += 1;
+    }
+
     // Count whitespace characters
     if (token.ws !is null)
       stats.whitespaceCount += token.start - token.ws;

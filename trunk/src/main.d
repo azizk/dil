@@ -125,7 +125,14 @@ void main(char[][] args)
     cmd.ImportGraph.execute(filePath, includePaths, regexps, levels, options);
     break;
   case "stats", "statistics":
-    cmd.Statistics.execute(args[2..$]);
+    char[][] filePaths;
+    bool printTokensTable;
+    foreach (arg; args[2..$])
+      if (arg == "--table")
+        printTokensTable = true;
+      else
+        filePaths ~= arg;
+    cmd.Statistics.execute(filePaths, printTokensTable);
     break;
   case "tok", "tokenize":
     char[] filePath;
@@ -260,7 +267,10 @@ Example:
   case "stats", "statistics":
     msg = "Gather statistics about D source files.
 Usage:
-  dil stat file.d [file2.d, ...]
+  dil stat file.d [file2.d, ...] [Options]
+
+Options:
+  --table         : print the count of all types of tokens in a table.
 
 Example:
   dil stat src/dil/Parser.d src/dil/Lexer.d";
