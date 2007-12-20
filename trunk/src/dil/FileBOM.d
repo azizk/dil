@@ -3,6 +3,7 @@
   License: GPL3
 +/
 module dil.FileBOM;
+import common;
 
 /// Byte Order Mark
 enum BOM

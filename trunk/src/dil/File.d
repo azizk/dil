@@ -111,7 +111,7 @@ unittest
     {u8:"\x00\x00\xFE\xFF\0\0\0s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e", text:"source"},
     {u8:"\xFF\xFE\x00\x00s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e\0\0\0", text:"source"},
   ];
-  alias data2Utf8 f;
+  alias data2UTF8 f;
   foreach (pair; map)
     assert(f(pair.data) == pair.text);
 }
