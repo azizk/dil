@@ -283,7 +283,7 @@ class Lexer
       Lidentifier:
         do
         { c = *++p; }
-        while (isident(c) || !isascii(c) && isUniAlpha(decodeUTF8()))
+        while (isident(c) || !isascii(c) && isUnicodeAlpha())
 
         t.end = p;
 
@@ -1029,7 +1029,7 @@ class Lexer
     Lidentifier:
       do
       { c = *++p; }
-      while (isident(c) || !isascii(c) && isUniAlpha(decodeUTF8()))
+      while (isident(c) || !isascii(c) && isUnicodeAlpha())
 
       t.end = p;
 
@@ -1485,7 +1485,7 @@ version(D2)
       // Parse Identifier + EndOfLine
       do
       { c = *++p; }
-      while (isident(c) || !isascii(c) && isUniAlpha(decodeUTF8()))
+      while (isident(c) || !isascii(c) && isUnicodeAlpha())
       // Store identifier
       str_delim = begin[0..p-begin];
       // Scan newline
@@ -2452,6 +2452,64 @@ version(D2)
     return (str in reserved_ids_table) !is null;
   }
 
+  /++
+    Returns true if the current character to be decoded is
+    a Unicode alpha character.
+    The current pointer 'p' is not advanced if false is returned.
+  +/
+  bool isUnicodeAlpha()
+  {
+    assert(!isascii(*p), "check for ASCII char before calling decodeUTF8().");
+    char* p = this.p;
+    dchar d = *p;
+    ++p; // Move to second byte.
+    // Error if second byte is not a trail byte.
+    if (!isTrailByte(*p))
+      return false;
+    // Check for overlong sequences.
+    switch (d)
+    {
+    case 0xE0, 0xF0, 0xF8, 0xFC:
+      if ((*p & d) == 0x80)
+        return false;
+    default:
+      if ((d & 0xFE) == 0xC0) // 1100000x
+        return false;
+    }
+    const char[] checkNextByte = "if (!isTrailByte(*++p))"
+                                 "  return false;";
+    const char[] appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
+    // Decode
+    if ((d & 0b1110_0000) == 0b1100_0000)
+    {
+      d &= 0b0001_1111;
+      mixin(appendSixBits);
+    }
+    else if ((d & 0b1111_0000) == 0b1110_0000)
+    {
+      d &= 0b0000_1111;
+      mixin(appendSixBits ~
+            checkNextByte ~ appendSixBits);
+    }
+    else if ((d & 0b1111_1000) == 0b1111_0000)
+    {
+      d &= 0b0000_0111;
+      mixin(appendSixBits ~
+            checkNextByte ~ appendSixBits ~
+            checkNextByte ~ appendSixBits);
+    }
+    else
+      return false;
+
+    assert(isTrailByte(*p));
+    if (!isValidChar(d) || !isUniAlpha(d))
+      return false;
+    // Only advance pointer if this is a Unicode alpha character.
+    this.p = p;
+    return true;
+  }
+
+  /// Decodes the next UTF-8 sequence.
   dchar decodeUTF8()
   {
     assert(!isascii(*p), "check for ASCII char before calling decodeUTF8().");
@@ -2483,21 +2541,18 @@ version(D2)
 
     // Decode
     if ((d & 0b1110_0000) == 0b1100_0000)
-    {
-      // 110xxxxx 10xxxxxx
+    { // 110xxxxx 10xxxxxx
       d &= 0b0001_1111;
       mixin(appendSixBits);
     }
     else if ((d & 0b1111_0000) == 0b1110_0000)
-    {
-      // 1110xxxx 10xxxxxx 10xxxxxx
+    { // 1110xxxx 10xxxxxx 10xxxxxx
       d &= 0b0000_1111;
       mixin(appendSixBits ~
             checkNextByte ~ appendSixBits);
     }
     else if ((d & 0b1111_1000) == 0b1111_0000)
-    {
-      // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+    { // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
       d &= 0b0000_0111;
       mixin(appendSixBits ~
             checkNextByte ~ appendSixBits ~
