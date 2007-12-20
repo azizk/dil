@@ -43,14 +43,13 @@ class LangFile:
 
     authors = []
     for author in self.authors:
-      author = list(author)
-      author_len = len(author)
-      if author_len == 0:
-        pass
-      elif author_len == 1:
-        authors += [unicode(author[0]), ""]
-      else:
-        authors += [unicode(author[0]), unicode(author[1])]
+      self.checkType(author, dict, "LangFile: author must be of type dict.")
+      try:
+        author["Name"] = unicode(author["Name"])
+        author["EMail"] = str(author["EMail"])
+        authors += [author]
+      except KeyError, e:
+        raise LoadingError("Author is missing '%s' in '%s'" % (e.message, filePath))
     self.authors = authors
 
     self.msgDict = {} # {ID : msg, ...}
@@ -60,7 +59,7 @@ class LangFile:
         msg["ID"] = int(msg["ID"])
         msg["Text"] = unicode(msg["Text"])
         msg["Annot"] = unicode(msg["Annot"])
-        msg["LastEd"] = unicode(msg["LastEd"])
+        msg["LastEd"] = int(msg["LastEd"])
       except KeyError, e:
         raise LoadingError("LangFile: a message is missing the '%s' key." % str(e))
       self.msgDict[msg["ID"]] = msg
@@ -89,9 +88,21 @@ class LangFile:
     return {"ID":ID,"Text":"","Annot":"","LastEd":""}
 
   def save(self):
+    self.doc["LangCode"] = self.langCode
+    self.doc["License"] = self.license
+    self.doc["Authors"] = self.authors
     langFile = open(self.filePath, "w")
     yaml.dump(self.doc, stream=langFile, allow_unicode=True)
     langFile.close()
+
+  def setLangCode(self, langCode):
+    self.langCode = langCode
+
+  def setLicense(self, license):
+    self.license = license
+
+  def setAuthors(self, authors):
+    self.authors = authors
 
   def getFileName(self):
     from os import path

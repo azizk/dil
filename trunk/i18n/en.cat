@@ -1,61 +1,61 @@
 Authors:
-- [Aziz Köksal, aziz.koeksal@gmail.com]
+- {EMail: aziz.koeksal@gmail.com, Name: Aziz Köksal}
 LangCode: en
 License: GPL3
 Messages:
-- {Annot: '', ID: 0, LastEd: '', Text: 'illegal character found: ''{0}'''}
-- {Annot: '', ID: 1, LastEd: '', Text: invalid Unicode character.}
-- {Annot: '', ID: 2, LastEd: '', Text: invalid UTF-8 sequence.}
-- {Annot: '', ID: 3, LastEd: '', Text: unterminated character literal.}
-- {Annot: '', ID: 4, LastEd: '', Text: empty character literal.}
-- {Annot: '', ID: 5, LastEd: '', Text: expected 'line' after '#'.}
-- {Annot: '', ID: 6, LastEd: '', Text: 'integer expected after #line'}
-- {Annot: '', ID: 7, LastEd: '', Text: expected filespec string (e.g. "path\to\file".)}
-- {Annot: '', ID: 8, LastEd: '', Text: unterminated filespec string.}
-- {Annot: '', ID: 9, LastEd: '', Text: expected a terminating newline after special
+- {Annot: '', ID: 0, LastEd: 0, Text: 'illegal character found: ''{0}'''}
+- {Annot: '', ID: 1, LastEd: 0, Text: invalid Unicode character.}
+- {Annot: '', ID: 2, LastEd: 0, Text: invalid UTF-8 sequence.}
+- {Annot: '', ID: 3, LastEd: 0, Text: unterminated character literal.}
+- {Annot: '', ID: 4, LastEd: 0, Text: empty character literal.}
+- {Annot: '', ID: 5, LastEd: 0, Text: expected 'line' after '#'.}
+- {Annot: '', ID: 6, LastEd: 0, Text: 'integer expected after #line'}
+- {Annot: '', ID: 7, LastEd: 0, Text: expected filespec string (e.g. "path\to\file".)}
+- {Annot: '', ID: 8, LastEd: 0, Text: unterminated filespec string.}
+- {Annot: '', ID: 9, LastEd: 0, Text: expected a terminating newline after special
     token.}
-- {Annot: '', ID: 10, LastEd: '', Text: unterminated string literal.}
-- {Annot: '', ID: 11, LastEd: '', Text: 'non-hex character ''{0}'' found in hex string.'}
-- {Annot: '', ID: 12, LastEd: '', Text: odd number of hex digits in hex string.}
-- {Annot: '', ID: 13, LastEd: '', Text: unterminated hex string.}
-- {Annot: '', ID: 14, LastEd: '', Text: unterminated block comment (/* */).}
-- {Annot: '', ID: 15, LastEd: '', Text: unterminated nested comment (/+ +/).}
-- {Annot: '', ID: 16, LastEd: '', Text: unterminated raw string.}
-- {Annot: '', ID: 17, LastEd: '', Text: unterminated back quote string.}
-- {Annot: '', ID: 18, LastEd: '', Text: 'found undefined escape sequence ''{0}''.'}
-- {Annot: '', ID: 19, LastEd: '', Text: 'found invalid Unicode escape sequence ''{0}''.'}
-- {Annot: '', ID: 20, LastEd: '', Text: insufficient number of hex digits in escape
+- {Annot: '', ID: 10, LastEd: 0, Text: unterminated string literal.}
+- {Annot: '', ID: 11, LastEd: 0, Text: 'non-hex character ''{0}'' found in hex string.'}
+- {Annot: '', ID: 12, LastEd: 0, Text: odd number of hex digits in hex string.}
+- {Annot: '', ID: 13, LastEd: 0, Text: unterminated hex string.}
+- {Annot: '', ID: 14, LastEd: 0, Text: unterminated block comment (/* */).}
+- {Annot: '', ID: 15, LastEd: 0, Text: unterminated nested comment (/+ +/).}
+- {Annot: '', ID: 16, LastEd: 0, Text: unterminated raw string.}
+- {Annot: '', ID: 17, LastEd: 0, Text: unterminated back quote string.}
+- {Annot: '', ID: 18, LastEd: 0, Text: 'found undefined escape sequence ''{0}''.'}
+- {Annot: '', ID: 19, LastEd: 0, Text: 'found invalid Unicode escape sequence ''{0}''.'}
+- {Annot: '', ID: 20, LastEd: 0, Text: insufficient number of hex digits in escape
     sequence.}
-- {Annot: '', ID: 21, LastEd: '', Text: 'undefined HTML entity ''{0}'''}
-- {Annot: '', ID: 22, LastEd: '', Text: 'unterminated HTML entity ''{0}''.'}
-- {Annot: '', ID: 23, LastEd: '', Text: HTML entities must begin with a letter.}
-- {Annot: '', ID: 24, LastEd: '', Text: decimal number overflows sign bit.}
-- {Annot: '', ID: 25, LastEd: '', Text: overflow in decimal number.}
-- {Annot: '', ID: 26, LastEd: '', Text: overflow in hexadecimal number.}
-- {Annot: '', ID: 27, LastEd: '', Text: overflow in binary number.}
-- {Annot: '', ID: 28, LastEd: '', Text: overflow in octal number.}
-- {Annot: '', ID: 29, LastEd: '', Text: overflow in float number.}
-- {Annot: '', ID: 30, LastEd: '', Text: digits 8 and 9 are not allowed in octal numbers.}
-- {Annot: '', ID: 31, LastEd: '', Text: invalid hex number; at least one hex digit
+- {Annot: '', ID: 21, LastEd: 0, Text: 'undefined HTML entity ''{0}'''}
+- {Annot: '', ID: 22, LastEd: 0, Text: 'unterminated HTML entity ''{0}''.'}
+- {Annot: '', ID: 23, LastEd: 0, Text: HTML entities must begin with a letter.}
+- {Annot: '', ID: 24, LastEd: 0, Text: decimal number overflows sign bit.}
+- {Annot: '', ID: 25, LastEd: 0, Text: overflow in decimal number.}
+- {Annot: '', ID: 26, LastEd: 0, Text: overflow in hexadecimal number.}
+- {Annot: '', ID: 27, LastEd: 0, Text: overflow in binary number.}
+- {Annot: '', ID: 28, LastEd: 0, Text: overflow in octal number.}
+- {Annot: '', ID: 29, LastEd: 0, Text: overflow in float number.}
+- {Annot: '', ID: 30, LastEd: 0, Text: digits 8 and 9 are not allowed in octal numbers.}
+- {Annot: '', ID: 31, LastEd: 0, Text: invalid hex number; at least one hex digit
     expected.}
-- {Annot: '', ID: 32, LastEd: '', Text: invalid binary number; at least one binary
+- {Annot: '', ID: 32, LastEd: 0, Text: invalid binary number; at least one binary
     digit expected.}
-- {Annot: '', ID: 33, LastEd: '', Text: the exponent of a hexadecimal float number
+- {Annot: '', ID: 33, LastEd: 0, Text: the exponent of a hexadecimal float number
     is required.}
-- {Annot: '', ID: 34, LastEd: '', Text: hexadecimal float exponents must start with
+- {Annot: '', ID: 34, LastEd: 0, Text: hexadecimal float exponents must start with
     a digit.}
-- {Annot: '', ID: 35, LastEd: '', Text: exponents must start with a digit.}
-- {Annot: '', ID: 36, LastEd: '', Text: 'expected ''{0}'', but found ''{1}''.'}
-- {Annot: '', ID: 37, LastEd: '', Text: '''{0}'' is redundant.'}
-- {Annot: '', ID: 38, LastEd: '', Text: template tuple parameters can only be last.}
-- {Annot: '', ID: 39, LastEd: '', Text: the functions 'in' contract was already parsed.}
-- {Annot: '', ID: 40, LastEd: '', Text: the functions 'out' contract was already parsed.}
-- {Annot: '', ID: 41, LastEd: '', Text: no linkage type was specified.}
-- {Annot: '', ID: 42, LastEd: '', Text: 'unrecognized linkage type ''{0}''; valid
-    types are C, C++, D, Windows, Pascal und System.'}
-- {Annot: '', ID: 43, LastEd: '', Text: 'expected one or more base classes, not ''{0}''.'}
-- {Annot: '', ID: 44, LastEd: '', Text: base classes are not allowed in forward declarations.}
-- {Annot: '', ID: 45, LastEd: '', Text: 'dil v{0}
+- {Annot: '', ID: 35, LastEd: 0, Text: exponents must start with a digit.}
+- {Annot: '', ID: 36, LastEd: 0, Text: 'expected ''{0}'', but found ''{1}''.'}
+- {Annot: '', ID: 37, LastEd: 0, Text: '''{0}'' is redundant.'}
+- {Annot: '', ID: 38, LastEd: 0, Text: template tuple parameters can only be last.}
+- {Annot: '', ID: 39, LastEd: 0, Text: the functions 'in' contract was already parsed.}
+- {Annot: '', ID: 40, LastEd: 0, Text: the functions 'out' contract was already parsed.}
+- {Annot: '', ID: 41, LastEd: 0, Text: no linkage type was specified.}
+- {Annot: '', ID: 42, LastEd: 0, Text: 'unrecognized linkage type ''{0}''; valid types
+    are C, C++, D, Windows, Pascal und System.'}
+- {Annot: '', ID: 43, LastEd: 0, Text: 'expected one or more base classes, not ''{0}''.'}
+- {Annot: '', ID: 44, LastEd: 0, Text: base classes are not allowed in forward declarations.}
+- {Annot: '', ID: 45, LastEd: 0, Text: 'dil v{0}
 
     Copyright (c) 2007 by Aziz Köksal. Licensed under the GPL3.
 
@@ -68,12 +68,12 @@ Messages:
 
 
     Compiled with {2} v{3} on {4}.'}
-- {Annot: '', ID: 46, LastEd: '', Text: "Generate an XML or HTML document from a D\
+- {Annot: '', ID: 46, LastEd: 0, Text: "Generate an XML or HTML document from a D\
     \ source file.\nUsage:\n  dil gen file.d [Options]\n\nOptions:\n  --syntax   \
     \      : generate tags for the syntax tree\n  --xml            : use XML format\
     \ (default)\n  --html           : use HTML format\n\nExample:\n  dil gen Parser.d\
     \ --html --syntax > Parser.html"}
-- {Annot: '', ID: 47, LastEd: '', Text: "Parse a module and extract information from\
+- {Annot: '', ID: 47, LastEd: 0, Text: "Parse a module and extract information from\
     \ the resulting module dependency graph.\nUsage:\n  dil igraph file.d Format [Options]\n\
     \n  The directory of file.d is implicitly added to the list of import paths.\n\
     \nFormat:\n  --dot            : generate a dot document\n  Further options for\

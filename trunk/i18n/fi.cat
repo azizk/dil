@@ -1,61 +1,61 @@
 Authors:
-- [Jari-Matti Mäkelä, jmjm@iki.fi]
+- {EMail: jmjm@iki.fi, Name: Jari-Matti Mäkelä}
 LangCode: fi
 License: GPL3
 Messages:
-- {Annot: '', ID: 0, LastEd: '', Text: ''}
-- {Annot: '', ID: 1, LastEd: '', Text: virheellinen Unicode-merkki.}
-- {Annot: '', ID: 2, LastEd: '', Text: virheellinen UTF-8-merkkijono.}
-- {Annot: '', ID: 3, LastEd: '', Text: päättämätön merkkiliteraali.}
-- {Annot: '', ID: 4, LastEd: '', Text: tyhjä merkkiliteraali.}
-- {Annot: '', ID: 5, LastEd: '', Text: 'odotettiin rivinumeroa ''#'':n jälkeen.'}
-- {Annot: '', ID: 6, LastEd: '', Text: 'odotettiin kokonaislukua #line:n jälkeen'}
-- {Annot: '', ID: 7, LastEd: '', Text: odotettiin tiedostomäärittelyn merkkijonoa
-    (esim. "polku\tiedostoon")}
-- {Annot: '', ID: 8, LastEd: '', Text: päättämätön tiedostomäärittely.}
-- {Annot: '', ID: 9, LastEd: '', Text: odotettiin päättävää rivinvaihtoa erikoismerkin
+- {Annot: '', ID: 0, LastEd: 0, Text: ''}
+- {Annot: '', ID: 1, LastEd: 0, Text: virheellinen Unicode-merkki.}
+- {Annot: '', ID: 2, LastEd: 0, Text: virheellinen UTF-8-merkkijono.}
+- {Annot: '', ID: 3, LastEd: 0, Text: päättämätön merkkiliteraali.}
+- {Annot: '', ID: 4, LastEd: 0, Text: tyhjä merkkiliteraali.}
+- {Annot: '', ID: 5, LastEd: 0, Text: 'odotettiin rivinumeroa ''#'':n jälkeen.'}
+- {Annot: '', ID: 6, LastEd: 0, Text: 'odotettiin kokonaislukua #line:n jälkeen'}
+- {Annot: '', ID: 7, LastEd: 0, Text: odotettiin tiedostomäärittelyn merkkijonoa (esim.
+    "polku\tiedostoon")}
+- {Annot: '', ID: 8, LastEd: 0, Text: päättämätön tiedostomäärittely.}
+- {Annot: '', ID: 9, LastEd: 0, Text: odotettiin päättävää rivinvaihtoa erikoismerkin
     jälkeen.}
-- {Annot: '', ID: 10, LastEd: '', Text: päättämätön merkkijonoliteraali.}
-- {Annot: '', ID: 11, LastEd: '', Text: 'ei-heksamerkki ''{0}'' löytyi heksajonossa.'}
-- {Annot: '', ID: 12, LastEd: '', Text: pariton määrä heksanumeroita heksajonossa.}
-- {Annot: '', ID: 13, LastEd: '', Text: päättämätön heksajono.}
-- {Annot: '', ID: 14, LastEd: '', Text: päättämätön lohkokommentti (/* */).}
-- {Annot: '', ID: 15, LastEd: '', Text: päättämätön sisäkkäinen kommentti (/+ +/).}
-- {Annot: '', ID: 16, LastEd: '', Text: päättämätön raakamerkkijono.}
-- {Annot: '', ID: 17, LastEd: '', Text: päättämätön gravisaksenttimerkkijono.}
-- {Annot: '', ID: 18, LastEd: '', Text: löydettiin määrittelemätön escape-sekvenssi.}
-- {Annot: '', ID: 19, LastEd: '', Text: 'found invalid Unicode escape sequence ''{0}''.'}
-- {Annot: '', ID: 20, LastEd: '', Text: riittämätön määrä heksanumeroita escape-sekvenssissä.}
-- {Annot: '', ID: 21, LastEd: '', Text: 'määrittelemätön HTML-entiteetti ''{0}'''}
-- {Annot: '', ID: 22, LastEd: '', Text: päättämätön HTML-entiteetti.}
-- {Annot: '', ID: 23, LastEd: '', Text: HTML-entiteettien tulee alkaa kirjaimella.}
-- {Annot: '', ID: 24, LastEd: '', Text: desimaaliluku ylivuotaa etumerkin.}
-- {Annot: '', ID: 25, LastEd: '', Text: desimaaliluvun ylivuoto.}
-- {Annot: '', ID: 26, LastEd: '', Text: heksadesimaaliluvun ylivuoto.}
-- {Annot: '', ID: 27, LastEd: '', Text: binääriluvun ylivuoto.}
-- {Annot: '', ID: 28, LastEd: '', Text: oktaaliluvun ylivuoto.}
-- {Annot: '', ID: 29, LastEd: '', Text: liukuluvun ylivuoto.}
-- {Annot: '', ID: 30, LastEd: '', Text: numerot 8 ja 9 eivät ole sallittuja oktaaliluvuissa.}
-- {Annot: '', ID: 31, LastEd: '', Text: virheellinen heksaluku; odotettiin vähintään
+- {Annot: '', ID: 10, LastEd: 0, Text: päättämätön merkkijonoliteraali.}
+- {Annot: '', ID: 11, LastEd: 0, Text: 'ei-heksamerkki ''{0}'' löytyi heksajonossa.'}
+- {Annot: '', ID: 12, LastEd: 0, Text: pariton määrä heksanumeroita heksajonossa.}
+- {Annot: '', ID: 13, LastEd: 0, Text: päättämätön heksajono.}
+- {Annot: '', ID: 14, LastEd: 0, Text: päättämätön lohkokommentti (/* */).}
+- {Annot: '', ID: 15, LastEd: 0, Text: päättämätön sisäkkäinen kommentti (/+ +/).}
+- {Annot: '', ID: 16, LastEd: 0, Text: päättämätön raakamerkkijono.}
+- {Annot: '', ID: 17, LastEd: 0, Text: päättämätön gravisaksenttimerkkijono.}
+- {Annot: '', ID: 18, LastEd: 0, Text: löydettiin määrittelemätön escape-sekvenssi.}
+- {Annot: '', ID: 19, LastEd: 0, Text: 'found invalid Unicode escape sequence ''{0}''.'}
+- {Annot: '', ID: 20, LastEd: 0, Text: riittämätön määrä heksanumeroita escape-sekvenssissä.}
+- {Annot: '', ID: 21, LastEd: 0, Text: 'määrittelemätön HTML-entiteetti ''{0}'''}
+- {Annot: '', ID: 22, LastEd: 0, Text: päättämätön HTML-entiteetti.}
+- {Annot: '', ID: 23, LastEd: 0, Text: HTML-entiteettien tulee alkaa kirjaimella.}
+- {Annot: '', ID: 24, LastEd: 0, Text: desimaaliluku ylivuotaa etumerkin.}
+- {Annot: '', ID: 25, LastEd: 0, Text: desimaaliluvun ylivuoto.}
+- {Annot: '', ID: 26, LastEd: 0, Text: heksadesimaaliluvun ylivuoto.}
+- {Annot: '', ID: 27, LastEd: 0, Text: binääriluvun ylivuoto.}
+- {Annot: '', ID: 28, LastEd: 0, Text: oktaaliluvun ylivuoto.}
+- {Annot: '', ID: 29, LastEd: 0, Text: liukuluvun ylivuoto.}
+- {Annot: '', ID: 30, LastEd: 0, Text: numerot 8 ja 9 eivät ole sallittuja oktaaliluvuissa.}
+- {Annot: '', ID: 31, LastEd: 0, Text: virheellinen heksaluku; odotettiin vähintään
     yhtä heksanumeroa.}
-- {Annot: '', ID: 32, LastEd: '', Text: virheellinen binääriluku; odotettiin vähintään
+- {Annot: '', ID: 32, LastEd: 0, Text: virheellinen binääriluku; odotettiin vähintään
     yhtä binäärinumeroa.}
-- {Annot: '', ID: 33, LastEd: '', Text: heksadesimaalisen liukuluvun eksponentti vaaditaan.}
-- {Annot: '', ID: 34, LastEd: '', Text: heksadesimaalisen liukuluvun eksponentista
+- {Annot: '', ID: 33, LastEd: 0, Text: heksadesimaalisen liukuluvun eksponentti vaaditaan.}
+- {Annot: '', ID: 34, LastEd: 0, Text: heksadesimaalisen liukuluvun eksponentista
     puuttui numeroita.}
-- {Annot: '', ID: 35, LastEd: '', Text: eksponenttien tulee alkaa numerolla.}
-- {Annot: '', ID: 36, LastEd: '', Text: 'odotettiin ''{0}'':a, mutta löydettiin ''{1}''.'}
-- {Annot: '', ID: 37, LastEd: '', Text: '''{0}'' on redundantti.'}
-- {Annot: '', ID: 38, LastEd: '', Text: tupla voi esiintyä ainoastaan mallin viimeisenä
+- {Annot: '', ID: 35, LastEd: 0, Text: eksponenttien tulee alkaa numerolla.}
+- {Annot: '', ID: 36, LastEd: 0, Text: 'odotettiin ''{0}'':a, mutta löydettiin ''{1}''.'}
+- {Annot: '', ID: 37, LastEd: 0, Text: '''{0}'' on redundantti.'}
+- {Annot: '', ID: 38, LastEd: 0, Text: tupla voi esiintyä ainoastaan mallin viimeisenä
     parametrina.}
-- {Annot: '', ID: 39, LastEd: '', Text: funktion alkuehto jäsennettiin jo.}
-- {Annot: '', ID: 40, LastEd: '', Text: funktion loppuehto jäsennettiin jo.}
-- {Annot: '', ID: 41, LastEd: '', Text: linkitystyyppiä ei määritelty.}
-- {Annot: '', ID: 42, LastEd: '', Text: 'tunnistamaton linkitystyyppi ''{0}''; sallittuja
+- {Annot: '', ID: 39, LastEd: 0, Text: funktion alkuehto jäsennettiin jo.}
+- {Annot: '', ID: 40, LastEd: 0, Text: funktion loppuehto jäsennettiin jo.}
+- {Annot: '', ID: 41, LastEd: 0, Text: linkitystyyppiä ei määritelty.}
+- {Annot: '', ID: 42, LastEd: 0, Text: 'tunnistamaton linkitystyyppi ''{0}''; sallittuja
     tyyppejä ovat C, C++, D, Windows, Pascal ja System.'}
-- {Annot: '', ID: 43, LastEd: '', Text: 'expected one or more base classes, not ''{0}''.'}
-- {Annot: '', ID: 44, LastEd: '', Text: base classes are not allowed in forward declarations.}
-- {Annot: '', ID: 45, LastEd: '', Text: 'dil v{0}
+- {Annot: '', ID: 43, LastEd: 0, Text: 'expected one or more base classes, not ''{0}''.'}
+- {Annot: '', ID: 44, LastEd: 0, Text: base classes are not allowed in forward declarations.}
+- {Annot: '', ID: 45, LastEd: 0, Text: 'dil v{0}
 
     Copyright (c) 2007, Aziz Köksal. GPL3-lisensöity.
 
@@ -68,9 +68,9 @@ Messages:
 
 
     Käännetty {2}:n versiolla {3} {4}.'}
-- {Annot: '', ID: 46, LastEd: '', Text: "Luo XML- tai HTML-dokumentti D-lähdekoodista.\n\
+- {Annot: '', ID: 46, LastEd: 0, Text: "Luo XML- tai HTML-dokumentti D-lähdekoodista.\n\
     Käyttö:\n  dil gen tiedosto.d [Valinnat]\n\nValinnat:\n  --syntax         : luo\
     \ elementtejä syntaksipuun mukaisesti\n  --xml            : käytä XML-muotoa (oletus)\n\
     \  --html           : käytä HTML-muotoa\n\nEsimerkki:\n  dil gen Parser.d --html\
     \ --syntax > Parser.html"}
-- {Annot: '', ID: 47, LastEd: '', Text: ''}
+- {Annot: '', ID: 47, LastEd: 0, Text: ''}

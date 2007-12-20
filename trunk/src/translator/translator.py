@@ -47,7 +47,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     self.setCentralWidget(self.pages)
     self.disableMenuItems()
     self.projectDock = QtGui.QDockWidget("Project", self)
-    self.projectTree = ProjectTree(self.projectDock)
+    self.projectTree = ProjectTree(self.projectDock, self)
     self.projectDock.setWidget(self.projectTree)
     self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.projectDock)
     # Custom connections
@@ -300,21 +300,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     yaml.dump(g_settings, open(g_settingsFile, "w")) #default_flow_style=False
 
 
-class MessageItem(QtGui.QTreeWidgetItem):
-  def __init__(self, msg):
-    QtGui.QTreeWidgetItem.__init__(self, [str(msg["ID"]), msg["Text"]])
-    self.msg = msg
-
-  def getID(self):
-    return self.msg["ID"]
-
-  def setMsgText(self, text):
-    self.msg["Text"] = text
-
-  def setMsgAnnot(self, text):
-    self.msg["Annot"] = text
-
-
 class Document(QtGui.QWidget):
   def __init__(self):
     QtGui.QWidget.__init__(self)
@@ -344,6 +329,22 @@ class Document(QtGui.QWidget):
   def getDocumentFullPath(self):
     return self.documentFullPath
 
+
+class MessageItem(QtGui.QTreeWidgetItem):
+  def __init__(self, msg):
+    QtGui.QTreeWidgetItem.__init__(self, [str(msg["ID"]), msg["Text"], "Done"])
+    self.msg = msg
+
+  def getID(self):
+    return self.msg["ID"]
+
+  def setMsgText(self, text):
+    self.msg["Text"] = text
+
+  def setMsgAnnot(self, text):
+    self.msg["Annot"] = text
+
+
 class MsgForm(Document, Ui_MsgForm):
   def __init__(self, langFile):
     Document.__init__(self)
@@ -356,16 +357,25 @@ class MsgForm(Document, Ui_MsgForm):
     self.currentItem = None
     self.colID = 0
     self.colText = 1
+    #self.colStat = 2
+    #self.treeWidget.setColumnCount(3)
     self.treeWidget.setColumnCount(2)
-    self.treeWidget.setHeaderLabels(["ID", "Text"])
+    self.treeWidget.setHeaderLabels(["ID", "Text"]) #, "Status"
+    self.msgItemDict = {} # Maps msg IDs to msg items.
     for msg in self.langFile.messages:
-      self.treeWidget.addTopLevelItem(MessageItem(msg))
+      item = MessageItem(msg)
+      self.msgItemDict[msg["ID"]] = item
+      self.treeWidget.addTopLevelItem(item)
 
     Qt.connect(self.treeWidget, Qt.SIGNAL("currentItemChanged (QTreeWidgetItem *,QTreeWidgetItem *)"), self.treeItemChanged)
     Qt.connect(self.translEdit, Qt.SIGNAL("textChanged()"), self.translEditTextChanged)
     Qt.connect(self.translAnnotEdit, Qt.SIGNAL("textChanged()"), self.translAnnotEditTextChanged)
 
     #self.translEdit.focusOutEvent = self.translEditFocusOut
+
+  def sourceMsgChanged(self, msg):
+    # TODO:
+    pass
 
   def treeItemChanged(self, current, previous):
     if current == None:
@@ -495,8 +505,9 @@ class ProjectItem(QtGui.QTreeWidgetItem):
     self.setFlags(self.flags()|Qt.ItemIsEditable);
 
 class ProjectTree(QtGui.QTreeWidget):
-  def __init__(self, parent):
+  def __init__(self, parent, mainWindow):
     QtGui.QTreeWidget.__init__(self, parent)
+    self.mainWindow = mainWindow
     self.project = None
     self.topItem = None
     self.msgIDsItem = None
@@ -551,7 +562,12 @@ class ProjectTree(QtGui.QTreeWidget):
     func_map[type(item)](item)
 
   def showMenuProjectItem(self, item):
-    print "ProjectItem"
+    mousePos = QtGui.QCursor.pos()
+    menu = QtGui.QMenu()
+    actions = {}
+    actions[menu.addAction("Build")] = lambda: None
+    actions[menu.addAction("Properties")] = lambda: self.mainWindow.showProjectProperties()
+    actions[menu.exec_(mousePos)]()
 
   def showMenuLangFileItem(self, item):
     print "LangFileItem"

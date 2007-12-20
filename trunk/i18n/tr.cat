@@ -1,63 +1,62 @@
 Authors:
-- [Aziz Köksal, aziz.koeksal@gmail.com]
+- {EMail: aziz.koeksal@gmail.com, Name: Aziz Köksal}
 LangCode: tr
 License: GPL3
 Messages:
-- {Annot: '', ID: 0, LastEd: '', Text: 'illegal karakter bulundu: ''{0}'''}
-- {Annot: '', ID: 1, LastEd: '', Text: geçersiz Unikod karakteri.}
-- {Annot: '', ID: 2, LastEd: '', Text: geçersiz UTF-8 serisi.}
-- {Annot: '', ID: 3, LastEd: '', Text: kapanmamış karakter sabiti.}
-- {Annot: '', ID: 4, LastEd: '', Text: boş karakter sabiti.}
-- {Annot: '', ID: 5, LastEd: '', Text: '''#'' karakter''den sonra ''line'' beklendi.'}
-- {Annot: '', ID: 6, LastEd: '', Text: '''#line''''den sonra rakam beklendi.'}
-- {Annot: '', ID: 7, LastEd: '', Text: filespec dizgisi beklendi (e.g. "yol\dosya".)}
-- {Annot: '', ID: 8, LastEd: '', Text: kapanmamış filespec dizgisi.}
-- {Annot: '', ID: 9, LastEd: '', Text: özel belirtici'den (special token) sonra yeni
+- {Annot: '', ID: 0, LastEd: 0, Text: 'illegal karakter bulundu: ''{0}'''}
+- {Annot: '', ID: 1, LastEd: 0, Text: geçersiz Unikod karakteri.}
+- {Annot: '', ID: 2, LastEd: 0, Text: geçersiz UTF-8 serisi.}
+- {Annot: '', ID: 3, LastEd: 0, Text: kapanmamış karakter sabiti.}
+- {Annot: '', ID: 4, LastEd: 0, Text: boş karakter sabiti.}
+- {Annot: '', ID: 5, LastEd: 0, Text: '''#'' karakter''den sonra ''line'' beklendi.'}
+- {Annot: '', ID: 6, LastEd: 0, Text: '''#line''''den sonra rakam beklendi.'}
+- {Annot: '', ID: 7, LastEd: 0, Text: filespec dizgisi beklendi (e.g. "yol\dosya".)}
+- {Annot: '', ID: 8, LastEd: 0, Text: kapanmamış filespec dizgisi.}
+- {Annot: '', ID: 9, LastEd: 0, Text: özel belirtici'den (special token) sonra yeni
     bir satır beklendi.}
-- {Annot: '', ID: 10, LastEd: '', Text: kapanmamış çift tırnak dizgisi.}
-- {Annot: '', ID: 11, LastEd: '', Text: 'heks sayı olmayan karakter ''{0}'' heks dizgisi
+- {Annot: '', ID: 10, LastEd: 0, Text: kapanmamış çift tırnak dizgisi.}
+- {Annot: '', ID: 11, LastEd: 0, Text: 'heks sayı olmayan karakter ''{0}'' heks dizgisi
     içinde bulundu.'}
-- {Annot: '', ID: 12, LastEd: '', Text: heks dizginin içindeki sayılar çifter çifter
+- {Annot: '', ID: 12, LastEd: 0, Text: heks dizginin içindeki sayılar çifter çifter
     olmalıdır.}
-- {Annot: '', ID: 13, LastEd: '', Text: kapanmamış heks dizgisi.}
-- {Annot: '', ID: 14, LastEd: '', Text: kapanmamış blok açıklaması (/* */).}
-- {Annot: '', ID: 15, LastEd: '', Text: kapanmamış iç içe koyulabilen açıklaması (/+
+- {Annot: '', ID: 13, LastEd: 0, Text: kapanmamış heks dizgisi.}
+- {Annot: '', ID: 14, LastEd: 0, Text: kapanmamış blok açıklaması (/* */).}
+- {Annot: '', ID: 15, LastEd: 0, Text: kapanmamış iç içe koyulabilen açıklaması (/+
     +/).}
-- {Annot: '', ID: 16, LastEd: '', Text: kapanmamış çiğ dizgisi.}
-- {Annot: '', ID: 17, LastEd: '', Text: kapanmamış ters tırnak dizgisi.}
-- {Annot: '', ID: 18, LastEd: '', Text: 'tanımlanmamış çıkış serisi ''{0}'' bulundu.'}
-- {Annot: '', ID: 19, LastEd: '', Text: 'geçersiz Unikod çıkış serisi ''{0}'' bulundu.'}
-- {Annot: '', ID: 20, LastEd: '', Text: heksadesimal çıkış serisi sayıları yeterli
+- {Annot: '', ID: 16, LastEd: 0, Text: kapanmamış çiğ dizgisi.}
+- {Annot: '', ID: 17, LastEd: 0, Text: kapanmamış ters tırnak dizgisi.}
+- {Annot: '', ID: 18, LastEd: 0, Text: 'tanımlanmamış çıkış serisi ''{0}'' bulundu.'}
+- {Annot: '', ID: 19, LastEd: 0, Text: 'geçersiz Unikod çıkış serisi ''{0}'' bulundu.'}
+- {Annot: '', ID: 20, LastEd: 0, Text: heksadesimal çıkış serisi sayıları yeterli
     değil.}
-- {Annot: '', ID: 21, LastEd: '', Text: 'tanımlanmamış HTML varlık ''{0}'''}
-- {Annot: '', ID: 22, LastEd: '', Text: 'kapanmamış HTML varlık ''{0}''.'}
-- {Annot: '', ID: 23, LastEd: '', Text: HTML varlık bir harf ile başlamalı.}
-- {Annot: '', ID: 24, LastEd: '', Text: desimal rakamın bit işareti taşdı.}
-- {Annot: '', ID: 25, LastEd: '', Text: desimal rakam taşması.}
-- {Annot: '', ID: 26, LastEd: '', Text: heksadesimal rakam taşması.}
-- {Annot: '', ID: 27, LastEd: '', Text: binari rakam taşması.}
-- {Annot: '', ID: 28, LastEd: '', Text: oktal rakam taşması.}
-- {Annot: '', ID: 29, LastEd: '', Text: float rakam taşması.}
-- {Annot: '', ID: 30, LastEd: '', Text: 8 ve 9 sayılar oktal rakamlar'da geçersizdir.}
-- {Annot: '', ID: 31, LastEd: '', Text: geçersiz heks rakam; minimum bir heks sayı
+- {Annot: '', ID: 21, LastEd: 0, Text: 'tanımlanmamış HTML varlık ''{0}'''}
+- {Annot: '', ID: 22, LastEd: 0, Text: 'kapanmamış HTML varlık ''{0}''.'}
+- {Annot: '', ID: 23, LastEd: 0, Text: HTML varlık bir harf ile başlamalı.}
+- {Annot: '', ID: 24, LastEd: 0, Text: desimal rakamın bit işareti taşdı.}
+- {Annot: '', ID: 25, LastEd: 0, Text: desimal rakam taşması.}
+- {Annot: '', ID: 26, LastEd: 0, Text: heksadesimal rakam taşması.}
+- {Annot: '', ID: 27, LastEd: 0, Text: binari rakam taşması.}
+- {Annot: '', ID: 28, LastEd: 0, Text: oktal rakam taşması.}
+- {Annot: '', ID: 29, LastEd: 0, Text: float rakam taşması.}
+- {Annot: '', ID: 30, LastEd: 0, Text: 8 ve 9 sayılar oktal rakamlar'da geçersizdir.}
+- {Annot: '', ID: 31, LastEd: 0, Text: geçersiz heks rakam; minimum bir heks sayı
     gereklidir.}
-- {Annot: '', ID: 32, LastEd: '', Text: geçersiz binari rakam; minimum bir binari
-    sayı gereklidir.}
-- {Annot: '', ID: 33, LastEd: '', Text: bir heksadesimal float rakamın üsü gereklidir.}
-- {Annot: '', ID: 34, LastEd: '', Text: heksadesimal float üsler desimal sayı ile
-    başlamalı.}
-- {Annot: '', ID: 35, LastEd: '', Text: üsler desimal sayı ile başlamalı.}
-- {Annot: '', ID: 36, LastEd: '', Text: '''{0}'' beklendi, ama ''{1}'' bulundu.'}
-- {Annot: '', ID: 37, LastEd: '', Text: '''{0}'' lüzumsuz.'}
-- {Annot: '', ID: 38, LastEd: '', Text: şablon tuple parametre son sırada olmalı.}
-- {Annot: '', ID: 39, LastEd: '', Text: fonksiyonun 'in' kontratı daha önceden ayrıştırılmış.}
-- {Annot: '', ID: 40, LastEd: '', Text: fonksiyonun 'out' kontratı daha önceden ayrıştırılmış.}
-- {Annot: '', ID: 41, LastEd: '', Text: bağlantı tüp (linkage type) belirtilmedi.}
-- {Annot: '', ID: 42, LastEd: '', Text: 'bilinmeyen bağlantı tüpü (linkage type) ''{0}'';
+- {Annot: '', ID: 32, LastEd: 0, Text: geçersiz binari rakam; minimum bir binari sayı
+    gereklidir.}
+- {Annot: '', ID: 33, LastEd: 0, Text: bir heksadesimal float rakamın üsü gereklidir.}
+- {Annot: '', ID: 34, LastEd: 0, Text: heksadesimal float üsler desimal sayı ile başlamalı.}
+- {Annot: '', ID: 35, LastEd: 0, Text: üsler desimal sayı ile başlamalı.}
+- {Annot: '', ID: 36, LastEd: 0, Text: '''{0}'' beklendi, ama ''{1}'' bulundu.'}
+- {Annot: '', ID: 37, LastEd: 0, Text: '''{0}'' lüzumsuz.'}
+- {Annot: '', ID: 38, LastEd: 0, Text: şablon tuple parametre son sırada olmalı.}
+- {Annot: '', ID: 39, LastEd: 0, Text: fonksiyonun 'in' kontratı daha önceden ayrıştırılmış.}
+- {Annot: '', ID: 40, LastEd: 0, Text: fonksiyonun 'out' kontratı daha önceden ayrıştırılmış.}
+- {Annot: '', ID: 41, LastEd: 0, Text: bağlantı tüp (linkage type) belirtilmedi.}
+- {Annot: '', ID: 42, LastEd: 0, Text: 'bilinmeyen bağlantı tüpü (linkage type) ''{0}'';
     geçerli olanlar C, C++, D, Windows, Pascal ve System.'}
-- {Annot: '', ID: 43, LastEd: '', Text: ''}
-- {Annot: '', ID: 44, LastEd: '', Text: ''}
-- {Annot: '', ID: 45, LastEd: '', Text: 'dil v{0}
+- {Annot: '', ID: 43, LastEd: 0, Text: ''}
+- {Annot: '', ID: 44, LastEd: 0, Text: ''}
+- {Annot: '', ID: 45, LastEd: 0, Text: 'dil v{0}
 
     Copyright (c) 2007, Aziz Köksal. Lisans GPL3.
 
@@ -66,9 +65,9 @@ Messages:
 
 
     Bu yazılım {2} v{3} ile {4} tarihinde derletilmiş.'}
-- {Annot: '', ID: 46, LastEd: '', Text: "Bir D kaynak kodundan XML veya HTML dosyası\
+- {Annot: '', ID: 46, LastEd: 0, Text: "Bir D kaynak kodundan XML veya HTML dosyası\
     \ oluştur.\nKullanım:\n  dil gen dosya.d [Seçenekler]\n\nSeçenekler:\n  --syntax\
     \         : söz dizimi için etiketler yazdır\n  --xml            : XML biçimi\
     \ kullan (varsayılır)\n  --html           : HTML biçimi kullan\n\nÖrnek:\n  dil\
     \ gen Parser.d --html --syntax > Parser.html"}
-- {Annot: '', ID: 47, LastEd: '', Text: ''}
+- {Annot: '', ID: 47, LastEd: 0, Text: ''}
