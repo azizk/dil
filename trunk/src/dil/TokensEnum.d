@@ -9,17 +9,15 @@ enum TOK : ushort
 {
   Invalid,
 
-  /// Flag for whitespace tokens that must be ignored in the parsing phase.
-  Whitespace = 0x8000,
-  Illegal  = 1 | Whitespace,
-  Comment  = 2 | Whitespace,
-  Shebang  = 3 | Whitespace,
-  HashLine = 4 | Whitespace,
-  Filespec = 5 | Whitespace,
-  Newline  = 6 | Whitespace,
-  Empty    = 7,
+  Illegal,
+  Comment,
+  Shebang,
+  HashLine,
+  Filespec,
+  Newline,
+  Empty,
 
-  Identifier = 8,
+  Identifier,
   String,
   CharLiteral,
 

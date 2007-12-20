@@ -16,7 +16,14 @@ public import dil.TokensEnum;
 +/
 struct Token
 {
+  enum Flags : ushort
+  {
+    None,
+    Whitespace = 1, /// Tokens with this flag are ignored by the Parser.
+  }
+
   TOK type; /// The type of the token.
+  Flags flags; /// The flags of the token.
   /// Pointers to the next and previous tokens (doubly-linked list.)
   Token* next, prev;
 
@@ -113,6 +120,12 @@ struct Token
     return tokToString[tok];
   }
 
+  /// Adds Flags.Whitespace to this token's flags.
+  void setWhitespaceFlag()
+  {
+    this.flags |= Flags.Whitespace;
+  }
+
   /++
     Returns true if this is a token that can have newlines in it.
     These can be block and nested comments and any string literal
@@ -139,7 +152,7 @@ struct Token
   /// Returns true if this is a whitespace token.
   bool isWhitespace()
   {
-    return !!(type & TOK.Whitespace);
+    return !!(flags & Flags.Whitespace);
   }
 
   /// Returns true if this is a special token.

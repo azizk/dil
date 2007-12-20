@@ -74,6 +74,7 @@ class Lexer
     // Add a newline as the first token after the head.
     auto newline = new Token;
     newline.type = TOK.Newline;
+    newline.setWhitespaceFlag();
     newline.start = newline.end = this.p;
     newline.filePath = this.errorPath;
     newline.lineNum = 1;
@@ -108,6 +109,7 @@ class Lexer
     {
       auto t = new Token;
       t.type = TOK.Shebang;
+      t.setWhitespaceFlag();
       t.start = p;
       ++p;
       while (!isEndOfLine(++p))
@@ -253,6 +255,7 @@ class Lexer
         setLineBegin(p);
 //         this.newline = &t;
         t.type = TOK.Newline;
+        t.setWhitespaceFlag();
         t.filePath = this.errorPath;
         t.lineNum = lineNum;
         t.lineNum_hline = lineNum_hline;
@@ -326,6 +329,7 @@ class Lexer
           while (!isEndOfLine(++p))
             isascii(*p) || decodeUTF8();
           t.type = TOK.Comment;
+          t.setWhitespaceFlag();
           t.end = p;
           return;
         default:
@@ -625,6 +629,7 @@ class Lexer
 
       ++p;
       t.type = TOK.Illegal;
+      t.setWhitespaceFlag();
       t.dchar_ = c;
       t.end = p;
       return;
@@ -705,6 +710,7 @@ class Lexer
       setLineBegin(p);
 //       this.newline = &t;
       t.type = TOK.Newline;
+      t.setWhitespaceFlag();
       t.filePath = this.errorPath;
       t.lineNum = lineNum;
       t.lineNum_hline = lineNum_hline;
@@ -817,6 +823,7 @@ class Lexer
       while (!isEndOfLine(++p))
         isascii(*p) || decodeUTF8();
       t.type = TOK.Comment;
+      t.setWhitespaceFlag();
       t.end = p;
       return;
     case toUint!(">="):
@@ -1076,6 +1083,7 @@ class Lexer
 
     ++p;
     t.type = TOK.Illegal;
+    t.setWhitespaceFlag();
     t.dchar_ = c;
     t.end = p;
     return;
@@ -1118,6 +1126,7 @@ class Lexer
       }
     }
     t.type = TOK.Comment;
+    t.setWhitespaceFlag();
     t.end = p;
     return;
   }
@@ -1167,6 +1176,7 @@ class Lexer
       }
     }
     t.type = TOK.Comment;
+    t.setWhitespaceFlag();
     t.end = p;
     return;
   }
@@ -2246,6 +2256,7 @@ version(D2)
   {
     assert(*p == '#');
     t.type = TOK.HashLine;
+    t.setWhitespaceFlag();
 
     MID mid;
     auto errorAtColumn = p;
@@ -2299,6 +2310,7 @@ version(D2)
         t.tokLineFilespec = new Token;
         t.tokLineFilespec.start = p;
         t.tokLineFilespec.type = TOK.Filespec;
+        t.tokLineFilespec.setWhitespaceFlag();
         while (*++p != '"')
         {
           if (isEndOfLine(p))
