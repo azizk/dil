@@ -128,7 +128,7 @@ Statistics getStatistics(string filePath, bool printTokensTable)
   if (printTokensTable)
   {
     stats.tokensTable[TOK.HEAD] = 1;
-    stats.tokensTable[TOK.Newline & ~TOK.Whitespace] = 1;
+    stats.tokensTable[TOK.Newline] = 1;
   }
   // Traverse linked list.
   while (1)
@@ -136,12 +136,7 @@ Statistics getStatistics(string filePath, bool printTokensTable)
     stats.tokenCount += 1;
 
     if (printTokensTable)
-    {
-      if (token.isWhitespace)
-        stats.tokensTable[token.type & ~TOK.Whitespace] += 1;
-      else
-        stats.tokensTable[token.type] += 1;
-    }
+      stats.tokensTable[token.type] += 1;
 
     // Count whitespace characters
     if (token.ws !is null)
