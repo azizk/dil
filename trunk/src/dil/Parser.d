@@ -432,7 +432,10 @@ class Parser
   /++
     Parses either a VariableDeclaration or a FunctionDeclaration.
     Params:
-      stc = the previously parsed storage classes
+      stc = previously parsed storage classes
+      protection = previously parsed protection attribute
+      linkType = previously parsed linkage type
+      testAutoDeclaration = whether to check for an AutoDeclaration
       optionalParameterList = a hint for how to parse C-style function pointers
   +/
   Declaration parseVariableOrFunction(StorageClass stc = StorageClass.None,
@@ -921,13 +924,13 @@ class Parser
     assert(token.type == T.Import || token.type == T.Static);
     bool isStatic = skipped(T.Static);
     assert(token.type == T.Import);
+    nT(); // Skip import keyword.
 
     ModuleFQN[] moduleFQNs;
     Identifier*[] moduleAliases;
     Identifier*[] bindNames;
     Identifier*[] bindAliases;
 
-    nT(); // Skip import keyword.
     while (1)
     {
       ModuleFQN moduleFQN;
@@ -986,13 +989,12 @@ class Parser
   Declaration parseEnumDeclaration()
   {
     assert(token.type == T.Enum);
+    nT(); // Skip enum keyword.
 
     Identifier* enumName;
     Type baseType;
     EnumMember[] members;
     bool hasBody;
-
-    nT(); // Skip enum keyword.
 
     enumName = optionalIdentifier();
 
@@ -1035,13 +1037,13 @@ class Parser
   Declaration parseClassDeclaration()
   {
     assert(token.type == T.Class);
+    nT(); // Skip class keyword.
 
     Identifier* className;
     TemplateParameters tparams;
     BaseClass[] bases;
     Declarations decls;
 
-    nT(); // Skip class keyword.
     className = requireIdentifier(MSG.ExpectedClassName);
 
     if (token.type == T.LParen)
@@ -1104,13 +1106,13 @@ class Parser
   Declaration parseInterfaceDeclaration()
   {
     assert(token.type == T.Interface);
+    nT(); // Skip interface keyword.
 
     Identifier* name;
     TemplateParameters tparams;
     BaseClass[] bases;
     Declarations decls;
 
-    nT(); // Skip interface keyword.
     name = requireIdentifier(MSG.ExpectedInterfaceName);
 
     if (token.type == T.LParen)
@@ -1135,14 +1137,12 @@ class Parser
   Declaration parseAggregateDeclaration()
   {
     assert(token.type == T.Struct || token.type == T.Union);
-
     TOK tok = token.type;
+    nT(); // Skip struct or union keyword.
 
     Identifier* name;
     TemplateParameters tparams;
     Declarations decls;
-
-    nT(); // Skip struct or union keyword.
 
     name = optionalIdentifier();
 
@@ -1529,7 +1529,7 @@ class Parser
     if (skipped(T.Dot))
       templateIdent ~= set(new DotExpression(), begin);
 
-    while (1)
+    do
     {
       begin = token;
       auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
@@ -2154,6 +2154,7 @@ class Parser
     assert(token.type == T.Break);
     nT();
     auto ident = optionalIdentifier();
+    require(T.Semicolon);
     return new BreakStatement(ident);
   }
 
@@ -2352,9 +2353,9 @@ class Parser
     nT();
     Expression condition, message;
     require(T.LParen);
-    condition = parseAssignExpression();
+    condition = parseAssignExpression(); // Condition.
     if (skipped(T.Comma))
-      message = parseAssignExpression();
+      message = parseAssignExpression(); // Error message.
     require(T.RParen);
     require(T.Semicolon);
     return new StaticAssertStatement(condition, message);
