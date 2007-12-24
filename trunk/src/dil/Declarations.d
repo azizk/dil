@@ -10,7 +10,8 @@ import dil.Statements;
 import dil.Token;
 import dil.Enums;
 import dil.Scope;
-import dil.Identifier;
+import dil.IdTable;
+import dil.Semantics;
 
 abstract class Declaration : Node
 {
@@ -653,6 +654,12 @@ class PragmaDeclaration : AttributeDeclaration
 
     this.ident = ident;
     this.args = args;
+  }
+
+  void semantic(Scope scop)
+  {
+    pragmaSemantic(scop, begin, ident, args);
+    decls.semantic(scop);
   }
 }
 

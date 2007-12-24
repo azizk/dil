@@ -8,13 +8,20 @@ import dil.Expressions;
 import dil.Declarations;
 import dil.Types;
 import dil.Token;
-import dil.Identifier;
+import dil.IdTable;
+import dil.Scope;
+import dil.Semantics;
 
 abstract class Statement : Node
 {
   this()
   {
     super(NodeCategory.Statement);
+  }
+
+  void semantic(Scope scop)
+  {
+
   }
 }
 
@@ -479,6 +486,12 @@ class PragmaStatement : Statement
     this.ident = ident;
     this.args = args;
     this.pragmaBody = pragmaBody;
+  }
+
+  void semantic(Scope scop)
+  {
+    pragmaSemantic(scop, begin, ident, args);
+    pragmaBody.semantic(scop);
   }
 }
 

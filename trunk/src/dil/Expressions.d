@@ -31,6 +31,11 @@ abstract class Expression : Node
     return this;
   }
 
+  Expression evaluate()
+  {
+    return null;
+  }
+
   import dil.Messages;
   void error(Scope scop, MID mid)
   {
