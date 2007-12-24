@@ -62,6 +62,13 @@ abstract class BinaryExpression : Expression
     this.right = right;
     this.tok = tok;
   }
+
+  Expression semantic(Scope scop)
+  {
+    left = left.semantic(scop);
+    right = right.semantic(scop);
+    return this;
+  }
 }
 
 class CondExpression : BinaryExpression
@@ -69,9 +76,9 @@ class CondExpression : BinaryExpression
   Expression condition;
   this(Expression condition, Expression left, Expression right, Token* tok)
   {
+    addChild(condition);
     super(left, right, tok);
     mixin(set_kind);
-    addChild(condition);
     this.condition = condition;
   }
 }
@@ -720,6 +727,16 @@ class DollarExpression : Expression
   this()
   {
     mixin(set_kind);
+  }
+
+  Expression semantic(Scope scop)
+  {
+    if (type)
+      return this;
+    type = Types.Size_t;
+    // if (!scop.inArraySubscript)
+    //   error(scop, "$ can only be in an array subscript.");
+    return this;
   }
 }
 
