@@ -27,7 +27,17 @@ static const StrPair[] identPairs = [
   // Linkage:
   {"C"}, {"D"}, {"Windows"}, {"Pascal"}, {"System"},
   // Operator methods:
+  {"opNeg"},
+  {"opPos"},
+  {"opComp"},
+  {"opAddAssign"},
+  {"opSubAssign"},
+  {"opPostInc"},
+  {"opPostDec"},
   {"opCall"},
+  {"opCast"},
+  {"opIndex"},
+  {"opSlice"},
   // ASM identifiers:
   {"near"}, {"far"}, {"word"}, {"dword"}, {"qword"},
   {"ptr"}, {"offset"}, {"seg"}, {"__LOCAL_SIZE"},
