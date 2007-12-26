@@ -10,6 +10,7 @@ enum SYM
 {
   Module,
   Class,
+  Interface,
   Struct,
   Union,
   Variable,

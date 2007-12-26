@@ -38,6 +38,14 @@ class Class : Aggregate
   }
 }
 
+class Interface : Aggregate
+{
+  this()
+  {
+    this.sid = SYM.Interface;
+  }
+}
+
 class Union : Aggregate
 {
   this()
