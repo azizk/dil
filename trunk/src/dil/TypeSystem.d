@@ -18,6 +18,8 @@ abstract class Type : Symbol
 
   this(Type next, TYP tid)
   {
+    this.sid = SYM.Type;
+
     this.next = next;
     this.tid = tid;
   }
@@ -295,7 +297,7 @@ static:
 
   TypeBasic Size_t, Ptrdiff_t;
   TypePointer Void_ptr;
-  TypeBasic Undefined;
+  TypeBasic Error, Undefined;
 
   /// Allocates an instance of TypeBasic and assigns it to typeName.
   template newTB(char[] typeName)
@@ -340,6 +342,7 @@ static:
       Ptrdiff_t = Int;
     }
     Void_ptr = Void.ptrTo;
+    Error = new TypeBasic(TYP.Error);
     Undefined = new TypeBasic(TYP.Error);
   }
 }

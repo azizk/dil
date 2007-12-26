@@ -3,14 +3,20 @@
   License: GPL3
 +/
 module dil.Scope;
+
 import dil.Symbol;
+import dil.Symbols;
 import dil.Information;
+import dil.Messages;
+import dil.Token;
 import common;
 
 class Scope
 {
   Scope parent; /// The surrounding scope.
   InfoManager infoMan; /// Collects errors reported during the semantic phase.
+
+  ScopeSymbol symbol; /// The current symbol with the symbol table.
 
   this()
   {
@@ -52,9 +58,32 @@ class Scope
     return sc;
   }
 
-  import dil.Information;
-  import dil.Messages;
-  import dil.Token;
+  /// Search for the enclosing Class scope.
+  Scope classScope()
+  {
+    auto scop = this;
+    while (scop)
+    {
+      if (scop.symbol.sid == SYM.Class)
+        return scop;
+      scop = scop.parent;
+    }
+    return null;
+  }
+
+  /// Search for the enclosing Module scope.
+  Scope moduleScope()
+  {
+    auto scop = this;
+    while (scop)
+    {
+      if (scop.symbol.sid == SYM.Module)
+        return scop;
+      scop = scop.parent;
+    }
+    return null;
+  }
+
   void error(Token* token, MID mid)
   {
     auto location = token.getLocation();

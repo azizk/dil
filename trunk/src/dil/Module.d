@@ -11,6 +11,8 @@ import dil.ImportParser;
 import dil.Lexer;
 import dil.File;
 import dil.Scope;
+import dil.Symbol;
+import dil.Symbols;
 import dil.Information;
 import tango.io.FilePath;
 import tango.io.FileConst;
@@ -18,7 +20,7 @@ import common;
 
 alias FileConst.PathSeparatorChar dirSep;
 
-class Module
+class Module : ScopeSymbol
 {
   bool isLightweight; /// If true an ImportParser is used instead of a full Parser.
   string filePath; /// Path to the source file.
@@ -37,6 +39,8 @@ class Module
 
   this(string filePath, bool isLightweight = false)
   {
+    this.sid = SYM.Module;
+
     this.filePath = filePath;
     this.isLightweight = isLightweight;
   }
