@@ -488,7 +488,7 @@ class PragmaStatement : Statement
     this.pragmaBody = pragmaBody;
   }
 
-  void semantic(Scope scop)
+  override void semantic(Scope scop)
   {
     pragmaSemantic(scop, begin, ident, args);
     pragmaBody.semantic(scop);

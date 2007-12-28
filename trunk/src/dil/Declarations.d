@@ -30,9 +30,9 @@ abstract class Declaration : Node
 
   void semantic(Scope sc)
   {
-//     foreach (node; this.children)
-//       if (node.category == NodeCategory.Declaration)
-//         (cast(Declaration)cast(void*)node).semantic(sc);
+    foreach (node; this.children)
+      if (node.category == NodeCategory.Declaration)
+        (cast(Declaration)cast(void*)node).semantic(sc);
   }
 
   final bool isStatic()
@@ -75,7 +75,7 @@ class Declarations : Declaration
     addChildren(ds.children);
   }
 
-  void semantic(Scope scop)
+  override void semantic(Scope scop)
   {
     foreach (node; this.children)
     {
@@ -85,6 +85,7 @@ class Declarations : Declaration
   }
 }
 
+/// Single semicolon.
 class EmptyDeclaration : Declaration
 {
   this()
@@ -92,14 +93,14 @@ class EmptyDeclaration : Declaration
     mixin(set_kind);
   }
 
-  void semantic(Scope)
+  override void semantic(Scope)
   {}
 }
 
 /++
   Illegal declarations encompass all tokens that don't
   start a DeclarationDefinition.
-  See_Also: dil.Parser.isDeclDefStartToken()
+  See_Also: dil.Token.isDeclDefStartToken()
 +/
 class IllegalDeclaration : Declaration
 {
@@ -108,7 +109,7 @@ class IllegalDeclaration : Declaration
     mixin(set_kind);
   }
 
-  void semantic(Scope)
+  override void semantic(Scope)
   {}
 }
 
@@ -443,7 +444,7 @@ class VariableDeclaration : Declaration
 
   Variable[] variables;
 
-  void semantic(Scope scop)
+  override void semantic(Scope scop)
   {
     Type type;
 
@@ -693,7 +694,7 @@ class PragmaDeclaration : AttributeDeclaration
     this.args = args;
   }
 
-  void semantic(Scope scop)
+  override void semantic(Scope scop)
   {
     pragmaSemantic(scop, begin, ident, args);
     decls.semantic(scop);

@@ -68,7 +68,7 @@ abstract class BinaryExpression : Expression
     this.tok = tok;
   }
 
-  Expression semantic(Scope scop)
+  override Expression semantic(Scope scop)
   {
     left = left.semantic(scop);
     right = right.semantic(scop);
@@ -627,7 +627,7 @@ class SpecialTokenExpression : Expression
 
   Expression e; /// The expression created in the semantic phase.
 
-  Expression semantic(Scope)
+  override Expression semantic(Scope)
   {
     if (type)
       return e;
@@ -719,7 +719,7 @@ class NullExpression : Expression
     this.type = type;
   }
 
-  Expression semantic(Scope)
+  override Expression semantic(Scope)
   {
     if (!type)
       type = Types.Void_ptr;
@@ -734,7 +734,7 @@ class DollarExpression : Expression
     mixin(set_kind);
   }
 
-  Expression semantic(Scope scop)
+  override Expression semantic(Scope scop)
   {
     if (type)
       return this;
@@ -753,7 +753,7 @@ class BoolExpression : Expression
   }
 
   Expression e;
-  Expression semantic(Scope scop)
+  override Expression semantic(Scope scop)
   {
     if (type)
       return this;
@@ -795,7 +795,7 @@ class IntExpression : Expression
     this(token.ulong_, type);
   }
 
-  Expression semantic(Scope)
+  override Expression semantic(Scope)
   {
     if (type)
       return this;
@@ -846,7 +846,7 @@ class RealExpression : Expression
     this(token.real_, type);
   }
 
-  Expression semantic(Scope)
+  override Expression semantic(Scope)
   {
     if (type)
       return this;
@@ -870,7 +870,7 @@ class ComplexExpression : Expression
     this.type = type;
   }
 
-  Expression semantic(Scope)
+  override Expression semantic(Scope)
   {
     if (type)
       return this;
@@ -888,7 +888,7 @@ class CharExpression : Expression
     this.character = character;
   }
 
-  Expression semantic(Scope scop)
+  override Expression semantic(Scope scop)
   {
     if (type)
       return this;
@@ -939,7 +939,7 @@ class StringExpression : Expression
     this(cast(ubyte[])str, Types.Dchar);
   }
 
-  Expression semantic()
+  override Expression semantic(Scope scop)
   {
     if (type)
       return this;
@@ -1003,7 +1003,7 @@ class MixinExpression : Expression
   }
 
   // import dil.Parser;
-  Expression semantic(Scope scop)
+  override Expression semantic(Scope scop)
   {
     // TODO:
     /+

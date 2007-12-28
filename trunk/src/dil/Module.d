@@ -85,12 +85,16 @@ class Module : ScopeSymbol
     }
   }
 
+  /// Starts the semantic analysis of this module.
   void semantic()
   {
+    // Create module scope.
     auto scop = new Scope();
+    scop.symbol = this; // Set this module as the scope's symbol.
     this.root.semantic(scop);
   }
 
+  /// Returns true if there are errors in the source file.
   bool hasErrors()
   {
     return parser.errors.length || parser.lx.errors.length;
