@@ -3,11 +3,14 @@
   License: GPL3
 +/
 module dil.Types;
+
 import dil.SyntaxTree;
 import dil.Token;
 import dil.Expressions;
 import dil.Enums;
 import dil.Identifier;
+import dil.Scope;
+import dil.TypeSystem;
 
 class Parameter : Node
 {
@@ -260,6 +263,11 @@ abstract class TypeNode : Node
     addOptChild(next);
     this.tid = tid;
     this.next = next;
+  }
+
+  Type semantic(Scope scop)
+  {
+    return Types.Error;
   }
 }
 

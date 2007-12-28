@@ -15,11 +15,22 @@ import common;
 /// A symbol that has its own scope with a symbol table.
 class ScopeSymbol : Symbol
 {
-  SymbolTable symbolTable; /// The symbol table.
+  protected SymbolTable symbolTable; /// The symbol table.
 
   this()
   {
-    symbolTable = new SymbolTable;
+  }
+
+  /// Look up ident in the table.
+  Symbol lookup(Identifier* ident)
+  {
+    return symbolTable.lookup(ident);
+  }
+
+  /// Insert a symbol into the table.
+  void insert(Symbol s, Identifier* ident)
+  {
+    symbolTable.insert(s, ident);
   }
 }
 
@@ -28,6 +39,17 @@ class Aggregate : ScopeSymbol
 {
   Function[] funcs;
   Variable[] fields;
+
+  override void insert(Symbol s, Identifier* ident)
+  {
+    if (s.sid == SYM.Variable)
+      // Append variable to fields.
+      fields ~= cast(Variable)cast(void*)s;
+    else if (s.sid == SYM.Function)
+      // Append function to funcs.
+      funcs ~= cast(Function)cast(void*)s;
+    super.insert(s, ident);
+  }
 }
 
 class Class : Aggregate

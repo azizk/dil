@@ -38,6 +38,16 @@ class Scope
 
   }
 
+  /// Insert a new variable symbol into this scope.
+  void insert(Variable var)
+  {
+    auto sym = symbol.lookup(var.ident);
+    if (sym)
+      error("variable '"~var.ident.str~"' conflicts with another definition in its scope");
+    else
+      symbol.insert(var, var.ident);
+  }
+
   /++
     Create a new inner scope.
   +/
@@ -87,7 +97,12 @@ class Scope
   void error(Token* token, MID mid)
   {
     auto location = token.getLocation();
-    auto error = new SemanticError(location, GetMsg(mid));
-//     infoMan.add(error);
+    infoMan ~= new SemanticError(location, GetMsg(mid));
+  }
+
+  void error(char[] msg)
+  {
+    auto location = new Location("", 0);
+    infoMan ~= new SemanticError(location, msg);
   }
 }

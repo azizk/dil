@@ -3,6 +3,7 @@
   License: GPL3
 +/
 module dil.Declarations;
+
 import dil.SyntaxTree;
 import dil.Expressions;
 import dil.Types;
@@ -12,6 +13,8 @@ import dil.Enums;
 import dil.Scope;
 import dil.IdTable;
 import dil.Semantics;
+import dil.Symbols;
+import dil.TypeSystem;
 
 abstract class Declaration : Node
 {
@@ -413,18 +416,22 @@ class FunctionDeclaration : Declaration
 
 class VariableDeclaration : Declaration
 {
-  TypeNode type;
+  TypeNode typeNode;
   Identifier*[] idents;
   Expression[] values;
   LinkageType linkageType;
-  this(TypeNode type, Identifier*[] idents, Expression[] values)
+  this(TypeNode typeNode, Identifier*[] idents, Expression[] values)
   {
+    // No empty arrays allowed. Both arrays must be of same size.
+    assert(idents.length != 0 && idents.length == values.length);
+    // If no type (in case of AutoDeclaration), first value mustn't be null.
+    assert(typeNode ? 1 : values[0] !is null);
     mixin(set_kind);
-    addOptChild(type);
+    addOptChild(typeNode);
     foreach(value; values)
       addOptChild(value);
 
-    this.type = type;
+    this.typeNode = typeNode;
     this.idents = idents;
     this.values = values;
   }
@@ -432,6 +439,36 @@ class VariableDeclaration : Declaration
   void setLinkageType(LinkageType linkageType)
   {
     this.linkageType = linkageType;
+  }
+
+  Variable[] variables;
+
+  void semantic(Scope scop)
+  {
+    Type type;
+
+    if (typeNode)
+      // Get type from typeNode.
+      type = typeNode.semantic(scop);
+    else
+    { // Infer type from first initializer.
+      auto firstValue = values[0];
+      firstValue = firstValue.semantic(scop);
+      type = firstValue.type;
+    }
+    assert(type !is null);
+
+    // Iterate over variable identifiers in this declaration.
+    foreach (i, ident; idents)
+    {
+      // Perform semantic analysis on value.
+      values[i] = values[i].semantic(scop);
+      // Create a new variable symbol.
+      auto variable = new Variable(stc, linkageType, type, ident, this);
+      variables ~= variable;
+      // Add to scope.
+      scop.insert(variable);
+    }
   }
 }
 

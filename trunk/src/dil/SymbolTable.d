@@ -11,7 +11,7 @@ import common;
 /++
   Maps an identifier string to a Symbol.
 +/
-class SymbolTable
+struct SymbolTable
 {
   protected Symbol[char[]] table;
 
@@ -21,5 +21,10 @@ class SymbolTable
     assert(ident !is null);
     auto psym = ident.str in table;
     return psym ? *psym : null;
+  }
+
+  void insert(Symbol s, Identifier* ident)
+  {
+    table[ident.str] = s;
   }
 }
