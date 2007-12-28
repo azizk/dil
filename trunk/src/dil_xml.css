@@ -59,6 +59,7 @@ o[t=Linkage] i, o[t=Linkage] op
 }
 /* d { background-color: #FFDDDD; } */
 /* e { background-color: #DDDDFF; } */
+d[t=Illegal], s[t=Illegal] { background-color: #DD4422; }
 d[t=Module] i, d[t=Import] i { color: blue; }
 t > i { color: #911; }
 t > br, t > op { color: #911; }
