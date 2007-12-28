@@ -78,7 +78,8 @@ class Union : Aggregate
 
 class Struct : Aggregate
 {
-  this()
+  Identifier* ident;
+  this(Identifier* ident)
   {
     this.sid = SYM.Struct;
   }

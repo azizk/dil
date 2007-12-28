@@ -313,6 +313,20 @@ class StructDeclaration : Declaration
   {
     this.alignSize = alignSize;
   }
+
+  Struct struct_; /// The struct symbol for this declaration.
+
+  override void semantic(Scope scop)
+  {
+    if (struct_)
+      return;
+    struct_ = new Struct(name);
+    // Create a new scope.
+    scop = scop.push(struct_);
+    // Continue semantic analysis.
+    decls.semantic(scop);
+    scop.pop();
+  }
 }
 
 class UnionDeclaration : Declaration

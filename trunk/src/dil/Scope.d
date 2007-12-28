@@ -51,11 +51,12 @@ class Scope
   /++
     Create a new inner scope.
   +/
-  Scope push()
+  Scope push(ScopeSymbol symbol)
   {
     auto sc = new Scope();
     sc.parent = this;
     sc.infoMan = this.infoMan;
+    sc.symbol = symbol;
     return sc;
   }
 
