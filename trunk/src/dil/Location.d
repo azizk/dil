@@ -4,6 +4,7 @@
 +/
 module dil.Location;
 import dil.LexerFuncs;
+import dil.Unicode;
 import common;
 
 final class Location
@@ -40,7 +41,6 @@ final class Location
 
   void set(size_t lineNum, char* lineBegin, char* to)
   {
-    assert(lineBegin !is null && to !is null);
     assert(lineBegin <= to);
     this.lineNum   = lineNum;
     this.lineBegin = lineBegin;
@@ -61,13 +61,15 @@ final class Location
   {
     uint col;
     auto p = lineBegin;
+    if (!p)
+      return 0;
     for (; p <= to; ++p)
     {
       assert(delegate ()
         {
           // Check that there is no newline between p and to.
           // But 'to' may point to a newline.
-          if (p != to && (*p == '\n' || *p == '\r'))
+          if (p != to && isNewline(*p))
             return false;
           if (to-p >= 2 && isUnicodeNewline(p))
             return false;
@@ -76,7 +78,7 @@ final class Location
       );
 
       // Skip this byte if it is a trail byte of a UTF-8 sequence.
-      if ((*p & 0xC0) == 0x80)
+      if (isTrailByte(*p))
         continue; // *p == 0b10xx_xxxx
       // Only count ASCII characters and the first byte of a UTF-8 sequence.
       ++col;

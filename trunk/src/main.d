@@ -44,7 +44,10 @@ void main(char[][] args)
     foreach (filePath; filePaths)
     {
       auto mod = new Module(filePath, infoMan);
+      // Parse the file.
       mod.parse();
+      // Start semantic analysis.
+      mod.semantic();
     }
 
     foreach (info; infoMan.info)

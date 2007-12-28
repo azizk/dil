@@ -15,6 +15,7 @@ import dil.IdTable;
 import dil.Semantics;
 import dil.Symbols;
 import dil.TypeSystem;
+import common;
 
 abstract class Declaration : Node
 {
@@ -31,8 +32,11 @@ abstract class Declaration : Node
   void semantic(Scope sc)
   {
     foreach (node; this.children)
+    {
+      assert(node !is null);
       if (node.category == NodeCategory.Declaration)
         (cast(Declaration)cast(void*)node).semantic(sc);
+    }
   }
 
   final bool isStatic()
@@ -463,7 +467,8 @@ class VariableDeclaration : Declaration
     foreach (i, ident; idents)
     {
       // Perform semantic analysis on value.
-      values[i] = values[i].semantic(scop);
+      if (values[i])
+        values[i] = values[i].semantic(scop);
       // Create a new variable symbol.
       auto variable = new Variable(stc, linkageType, type, ident, this);
       variables ~= variable;

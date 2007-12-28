@@ -13,7 +13,7 @@ import common;
 +/
 struct SymbolTable
 {
-  protected Symbol[char[]] table;
+  Symbol[char[]] table;
 
   /// Look up ident in the table.
   Symbol lookup(Identifier* ident)

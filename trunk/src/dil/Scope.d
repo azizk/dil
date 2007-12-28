@@ -55,6 +55,7 @@ class Scope
   {
     auto sc = new Scope();
     sc.parent = this;
+    sc.infoMan = this.infoMan;
     return sc;
   }
 
