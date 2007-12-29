@@ -289,6 +289,22 @@ class InterfaceDeclaration : Declaration
     this.bases = bases;
     this.decls = decls;
   }
+
+  alias dil.Symbols.Interface InterfaceSymbol;
+
+  InterfaceSymbol interface_; /// The interface symbol for this declaration.
+
+  override void semantic(Scope scop)
+  {
+    if (interface_)
+      return;
+    interface_ = new InterfaceSymbol(name, this);
+    // Create a new scope.
+    scop = scop.push(interface_);
+    // Continue semantic analysis.
+    decls.semantic(scop);
+    scop.pop();
+  }
 }
 
 class StructDeclaration : Declaration
@@ -320,7 +336,7 @@ class StructDeclaration : Declaration
   {
     if (struct_)
       return;
-    struct_ = new Struct(name);
+    struct_ = new Struct(name, this);
     // Create a new scope.
     scop = scop.push(struct_);
     // Continue semantic analysis.
@@ -476,6 +492,10 @@ class VariableDeclaration : Declaration
       type = firstValue.type;
     }
     assert(type !is null);
+
+    // Check for interface.
+    if (scop.isInterface)
+      return scop.error(begin, "an interface can't have member variables");
 
     // Iterate over variable identifiers in this declaration.
     foreach (i, ident; idents)

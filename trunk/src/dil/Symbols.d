@@ -37,6 +37,7 @@ class ScopeSymbol : Symbol
 /// Aggregates have function and field members.
 class Aggregate : ScopeSymbol
 {
+  Identifier* ident; /// The name of this aggregate.
   Function[] funcs;
   Variable[] fields;
 
@@ -62,9 +63,11 @@ class Class : Aggregate
 
 class Interface : Aggregate
 {
-  this()
+  this(Identifier* ident, Node interfNode)
   {
     this.sid = SYM.Interface;
+    this.ident = ident;
+    this.node = interfNode;
   }
 }
 
@@ -78,10 +81,11 @@ class Union : Aggregate
 
 class Struct : Aggregate
 {
-  Identifier* ident;
-  this(Identifier* ident)
+  this(Identifier* ident, Node structNode)
   {
     this.sid = SYM.Struct;
+    this.ident = ident;
+    this.node = structNode;
   }
 }
 

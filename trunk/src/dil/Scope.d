@@ -50,6 +50,8 @@ class Scope
     }
     else
       symbol.insert(var, var.ident);
+    // Set the current scope symbol as the parent.
+    var.parent = symbol;
   }
 
   /++
@@ -72,6 +74,11 @@ class Scope
     auto sc = parent;
     // delete this;
     return sc;
+  }
+
+  bool isInterface()
+  {
+    return symbol.isInterface;
   }
 
   /// Search for the enclosing Class scope.

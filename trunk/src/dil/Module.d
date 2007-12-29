@@ -88,6 +88,8 @@ class Module : ScopeSymbol
   /// Starts the semantic analysis of this module.
   void semantic()
   {
+    if (this.hasErrors)
+      return;
     // Create module scope.
     auto scop = new Scope();
     scop.symbol = this; // Set this module as the scope's symbol.
