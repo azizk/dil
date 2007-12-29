@@ -55,9 +55,11 @@ class Aggregate : ScopeSymbol
 
 class Class : Aggregate
 {
-  this()
+  this(Identifier* ident, Node classNode)
   {
     this.sid = SYM.Class;
+    this.ident = ident;
+    this.node = classNode;
   }
 }
 

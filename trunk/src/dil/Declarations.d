@@ -276,6 +276,20 @@ class ClassDeclaration : AggregateDeclaration
 
     this.bases = bases;
   }
+
+  Class class_; /// The class symbol for this declaration.
+
+  override void semantic(Scope scop)
+  {
+    if (class_)
+      return;
+    class_ = new Class(name, this);
+    // Create a new scope.
+    scop = scop.push(class_);
+    // Continue semantic analysis.
+    decls && decls.semantic(scop);
+    scop.pop();
+  }
 }
 
 class InterfaceDeclaration : AggregateDeclaration
@@ -350,7 +364,7 @@ class UnionDeclaration : AggregateDeclaration
     addOptChild(decls);
   }
 
-  Union union_; /// The struct symbol for this declaration.
+  Union union_; /// The union symbol for this declaration.
 
   override void semantic(Scope scop)
   {
