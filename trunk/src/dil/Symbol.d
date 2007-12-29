@@ -4,6 +4,7 @@
 +/
 module dil.Symbol;
 
+import dil.SyntaxTree;
 import common;
 
 /// Symbol IDs.
@@ -25,6 +26,10 @@ enum SYM
 class Symbol
 {
   SYM sid;
+  Symbol parent; /// The parent this symbol belongs to.
+  /// The AST node that produced this symbol.
+  /// Useful for source code location info and retrieval of doc comments.
+  Node node;
 
   // A template macro for building isXYZ() methods.
   private template is_(char[] kind)

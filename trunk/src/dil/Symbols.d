@@ -107,7 +107,6 @@ class Variable : Symbol
 
   Type type;
   Identifier* ident;
-  Node varDecl; /// The VariableDeclaration or Parameter node - for source code location.
 
   this(StorageClass stc, LinkageType linkType,
        Type type, Identifier* ident, Node varDecl)
@@ -118,6 +117,6 @@ class Variable : Symbol
     this.linkType = linkType;
     this.type = type;
     this.ident = ident;
-    this.varDecl = varDecl;
+    this.node = varDecl;
   }
 }
