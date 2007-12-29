@@ -76,7 +76,7 @@ class Scope
     auto scop = this;
     while (scop)
     {
-      if (scop.symbol.sid == SYM.Class)
+      if (scop.symbol.isClass)
         return scop;
       scop = scop.parent;
     }
@@ -89,7 +89,7 @@ class Scope
     auto scop = this;
     while (scop)
     {
-      if (scop.symbol.sid == SYM.Module)
+      if (scop.symbol.isModule)
         return scop;
       scop = scop.parent;
     }

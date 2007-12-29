@@ -42,10 +42,10 @@ class Aggregate : ScopeSymbol
 
   override void insert(Symbol s, Identifier* ident)
   {
-    if (s.sid == SYM.Variable)
+    if (s.isVariable)
       // Append variable to fields.
       fields ~= cast(Variable)cast(void*)s;
-    else if (s.sid == SYM.Function)
+    else if (s.isFunction)
       // Append function to funcs.
       funcs ~= cast(Function)cast(void*)s;
     super.insert(s, ident);
