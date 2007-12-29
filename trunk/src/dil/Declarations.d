@@ -249,45 +249,47 @@ class EnumMember : Node
   }
 }
 
-class ClassDeclaration : Declaration
+abstract class AggregateDeclaration : Declaration
 {
   Identifier* name;
   TemplateParameters tparams;
-  BaseClass[] bases;
   Declarations decls;
-  this(Identifier* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls)
+  this(Identifier* name, TemplateParameters tparams, Declarations decls)
   {
     super.hasBody = decls !is null;
-    mixin(set_kind);
-    addOptChild(tparams);
-    addOptChildren(bases);
-    addOptChild(decls);
-
     this.name = name;
     this.tparams = tparams;
-    this.bases = bases;
     this.decls = decls;
   }
 }
 
-class InterfaceDeclaration : Declaration
+class ClassDeclaration : AggregateDeclaration
 {
-  Identifier* name;
-  TemplateParameters tparams;
   BaseClass[] bases;
-  Declarations decls;
   this(Identifier* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls)
   {
-    super.hasBody = decls !is null;
+    super(name, tparams, decls);
     mixin(set_kind);
     addOptChild(tparams);
     addOptChildren(bases);
     addOptChild(decls);
 
-    this.name = name;
-    this.tparams = tparams;
     this.bases = bases;
-    this.decls = decls;
+  }
+}
+
+class InterfaceDeclaration : AggregateDeclaration
+{
+  BaseClass[] bases;
+  this(Identifier* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls)
+  {
+    super(name, tparams, decls);
+    mixin(set_kind);
+    addOptChild(tparams);
+    addOptChildren(bases);
+    addOptChild(decls);
+
+    this.bases = bases;
   }
 
   alias dil.Symbols.Interface InterfaceSymbol;
@@ -302,27 +304,20 @@ class InterfaceDeclaration : Declaration
     // Create a new scope.
     scop = scop.push(interface_);
     // Continue semantic analysis.
-    decls.semantic(scop);
+    decls && decls.semantic(scop);
     scop.pop();
   }
 }
 
-class StructDeclaration : Declaration
+class StructDeclaration : AggregateDeclaration
 {
-  Identifier* name;
-  TemplateParameters tparams;
-  Declarations decls;
   uint alignSize;
   this(Identifier* name, TemplateParameters tparams, Declarations decls)
   {
-    super.hasBody = decls !is null;
+    super(name, tparams, decls);
     mixin(set_kind);
     addOptChild(tparams);
     addOptChild(decls);
-
-    this.name = name;
-    this.tparams = tparams;
-    this.decls = decls;
   }
 
   void setAlignSize(uint alignSize)
@@ -340,26 +335,19 @@ class StructDeclaration : Declaration
     // Create a new scope.
     scop = scop.push(struct_);
     // Continue semantic analysis.
-    decls.semantic(scop);
+    decls && decls.semantic(scop);
     scop.pop();
   }
 }
 
-class UnionDeclaration : Declaration
+class UnionDeclaration : AggregateDeclaration
 {
-  Identifier* name;
-  TemplateParameters tparams;
-  Declarations decls;
   this(Identifier* name, TemplateParameters tparams, Declarations decls)
   {
-    super.hasBody = decls !is null;
+    super(name, tparams, decls);
     mixin(set_kind);
     addOptChild(tparams);
     addOptChild(decls);
-
-    this.name = name;
-    this.tparams = tparams;
-    this.decls = decls;
   }
 }
 
