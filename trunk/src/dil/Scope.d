@@ -43,7 +43,11 @@ class Scope
   {
     auto sym = symbol.lookup(var.ident);
     if (sym)
-      error("variable '"~var.ident.str~"' conflicts with another definition in its scope");
+    {
+      auto loc = sym.node.begin.getLocation();
+      auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
+      error(var.node.begin, "variable '"~var.ident.str~"' conflicts with symbol @"~locString);
+    }
     else
       symbol.insert(var, var.ident);
   }
@@ -102,9 +106,9 @@ class Scope
     infoMan ~= new SemanticError(location, GetMsg(mid));
   }
 
-  void error(char[] msg)
+  void error(Token* token, char[] msg)
   {
-    auto location = new Location("", 0);
+    auto location = token.getLocation();
     infoMan ~= new SemanticError(location, msg);
   }
 }

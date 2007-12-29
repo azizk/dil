@@ -85,4 +85,5 @@ final class Location
     }
     return col;
   }
+  alias calculateColumn colNum;
 }
