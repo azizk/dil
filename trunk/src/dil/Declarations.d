@@ -349,6 +349,20 @@ class UnionDeclaration : AggregateDeclaration
     addOptChild(tparams);
     addOptChild(decls);
   }
+
+  Union union_; /// The struct symbol for this declaration.
+
+  override void semantic(Scope scop)
+  {
+    if (union_)
+      return;
+    union_ = new Union(name, this);
+    // Create a new scope.
+    scop = scop.push(union_);
+    // Continue semantic analysis.
+    decls && decls.semantic(scop);
+    scop.pop();
+  }
 }
 
 class ConstructorDeclaration : Declaration

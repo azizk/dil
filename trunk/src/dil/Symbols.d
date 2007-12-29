@@ -63,19 +63,21 @@ class Class : Aggregate
 
 class Interface : Aggregate
 {
-  this(Identifier* ident, Node interfNode)
+  this(Identifier* ident, Node interfaceNode)
   {
     this.sid = SYM.Interface;
     this.ident = ident;
-    this.node = interfNode;
+    this.node = interfaceNode;
   }
 }
 
 class Union : Aggregate
 {
-  this()
+  this(Identifier* ident, Node unionNode)
   {
     this.sid = SYM.Union;
+    this.ident = ident;
+    this.node = unionNode;
   }
 }
 
