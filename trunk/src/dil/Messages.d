@@ -133,13 +133,16 @@ static:
   auto IllegalStatement = "illegal Statement found: ";
   auto ExpectedNonEmptyStatement = "didn't expect ';', use {{ } instead";
   auto ExpectedScopeIdentifier = "expected 'exit', 'success' or 'failure', not '{}'";
-  auto InvalidScopeIdentifier = "'exit', 'success', 'failure' are valid scope identifiers, but not '{}';";
+  auto InvalidScopeIdentifier = "'exit', 'success', 'failure' are valid scope identifiers, but not '{}'";
   auto ExpectedIntegerAfterAlign = "expected an integer after align, not '{}'";
   auto IllegalAsmInstructino = "illegal AsmInstruction found: ";
   auto ExpectedDeclaratorIdentifier = "expected declarator identifier, not '{}'";
-  auto ExpectedTemplateParameters = "expected one or more template parameters not ')'";
-  auto ExpectedTypeOrExpression = "expected a type or and expression not ')'";
+  auto ExpectedTemplateParameters = "expected one or more template parameters, not ')'";
+  auto ExpectedTypeOrExpression = "expected a type or and expression, not ')'";
   auto ExpectedAliasTemplateParam = "expected name for alias template parameter, not '{}'";
   auto ExpectedNameForThisTempParam = "expected name for 'this' template parameter, not '{}'";
   auto ExpectedIdentOrInt = "expected an identifier or an integer, not '{}'";
+  // Semantic analysis:
+  auto VariableConflictsWithDecl = "variable '{}' conflicts with declaration @{}";
+  auto InterfaceCantHaveVariables = "an interface can't have member variables";
 }

@@ -46,7 +46,7 @@ class Scope
     {
       auto loc = sym.node.begin.getLocation();
       auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
-      error(var.node.begin, "variable '"~var.ident.str~"' conflicts with symbol @"~locString);
+      error(var.node.begin, MSG.VariableConflictsWithDecl, var.ident.str, locString);
     }
     else
       symbol.insert(var, var.ident);
@@ -113,9 +113,10 @@ class Scope
     infoMan ~= new SemanticError(location, GetMsg(mid));
   }
 
-  void error(Token* token, char[] msg)
+  void error(Token* token, char[] formatMsg, ...)
   {
     auto location = token.getLocation();
+    auto msg = Format(_arguments, _argptr, formatMsg);
     infoMan ~= new SemanticError(location, msg);
   }
 }

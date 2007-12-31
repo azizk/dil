@@ -15,6 +15,7 @@ import dil.IdTable;
 import dil.Semantics;
 import dil.Symbols;
 import dil.TypeSystem;
+import dil.Messages;
 import common;
 
 abstract class Declaration : Node
@@ -511,7 +512,7 @@ class VariableDeclaration : Declaration
 
     // Check for interface.
     if (scop.isInterface)
-      return scop.error(begin, "an interface can't have member variables");
+      return scop.error(begin, MSG.InterfaceCantHaveVariables);
 
     // Iterate over variable identifiers in this declaration.
     foreach (i, ident; idents)
