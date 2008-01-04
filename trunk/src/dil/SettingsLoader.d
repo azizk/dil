@@ -16,7 +16,7 @@ void loadSettings()
   scope execPath = new FilePath(GetExecutableFilePath());
 
   // Load config.d
-  auto filePath = execPath.file("config.d").toUtf8();
+  auto filePath = execPath.file("config.d").toString();
   auto modul = new Module(filePath);
   modul.parse();
 
@@ -67,7 +67,7 @@ void loadSettings()
   }
 
   // Load language file.
-  filePath = execPath.file(GlobalSettings.langFile).toUtf8();
+  filePath = execPath.file(GlobalSettings.langFile).toString();
   modul = new Module(filePath);
   modul.parse();
 

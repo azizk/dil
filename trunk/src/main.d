@@ -23,7 +23,7 @@ import common;
 import Integer = tango.text.convert.Integer;
 import tango.io.File;
 import tango.text.Util;
-import tango.util.time.StopWatch;
+import tango.time.StopWatch;
 
 void main(char[][] args)
 {
