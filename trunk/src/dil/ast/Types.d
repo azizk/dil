@@ -9,7 +9,7 @@ import dil.Token;
 import dil.ast.Expressions;
 import dil.Enums;
 import dil.Identifier;
-import dil.Scope;
+import dil.semantic.Scope;
 import dil.semantic.Types;
 
 class Parameter : Node

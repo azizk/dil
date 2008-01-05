@@ -10,7 +10,7 @@ import dil.parser.Parser;
 import dil.parser.ImportParser;
 import dil.lexer.Lexer;
 import dil.File;
-import dil.Scope;
+import dil.semantic.Scope;
 import dil.semantic.Symbol;
 import dil.semantic.Symbols;
 import dil.Information;

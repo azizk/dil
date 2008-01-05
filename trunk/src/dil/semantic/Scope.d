@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.Scope;
+module dil.semantic.Scope;
 
 import dil.semantic.Symbol;
 import dil.semantic.Symbols;

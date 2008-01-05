@@ -10,7 +10,7 @@ import dil.ast.Declarations;
 import dil.ast.Types;
 import dil.Token;
 import dil.IdTable;
-import dil.Scope;
+import dil.semantic.Scope;
 import dil.semantic.Analysis;
 
 abstract class Statement : Node

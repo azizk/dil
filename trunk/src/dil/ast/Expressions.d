@@ -10,7 +10,7 @@ import dil.ast.Declarations;
 import dil.ast.Statements;
 import dil.Token;
 import dil.Identifier;
-import dil.Scope;
+import dil.semantic.Scope;
 import dil.semantic.Types;
 import common;
 
