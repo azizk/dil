@@ -6,7 +6,7 @@ module dil.IdTable;
 
 import dil.lexer.TokensEnum;
 import dil.IdentsGenerator;
-import dil.Keywords;
+import dil.lexer.Keywords;
 import common;
 
 public import dil.Identifier;

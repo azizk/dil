@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.Keywords;
+module dil.lexer.Keywords;
 
 import dil.lexer.Token;
 import dil.Identifier;
