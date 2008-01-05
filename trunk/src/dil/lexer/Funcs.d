@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.LexerFuncs;
+module dil.lexer.Funcs;
 
 const char[3] LS = \u2028; /// Line separator.
 const char[3] PS = \u2029; /// Paragraph separator.

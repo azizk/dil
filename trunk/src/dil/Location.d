@@ -3,7 +3,7 @@
   License: GPL3
 +/
 module dil.Location;
-import dil.LexerFuncs;
+import dil.lexer.Funcs;
 import dil.Unicode;
 import common;
 

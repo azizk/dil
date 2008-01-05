@@ -3,6 +3,7 @@
   License: GPL3
 +/
 module dil.lexer.Lexer;
+
 import dil.Token;
 import dil.Information;
 import dil.Keywords;
@@ -18,7 +19,7 @@ import tango.stdc.time : time_t, time, ctime;
 import tango.stdc.string : strlen;
 import common;
 
-public import dil.LexerFuncs;
+public import dil.lexer.Funcs;
 
 /++
   The Lexer analyzes the characters of a source text and

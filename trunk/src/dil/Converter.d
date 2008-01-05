@@ -8,7 +8,7 @@ import dil.Information;
 import dil.Location;
 import dil.Unicode;
 import dil.FileBOM;
-import dil.LexerFuncs;
+import dil.lexer.Funcs;
 import dil.Messages;
 import common;
 

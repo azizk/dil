@@ -3,8 +3,10 @@
   License: GPL3
 +/
 module dil.Token;
+
 import dil.Location;
 import dil.Identifier;
+import dil.lexer.Funcs;
 import tango.stdc.stdlib : malloc, free;
 import tango.core.Exception;
 import common;
@@ -193,7 +195,6 @@ version(D2)
     return type == type2;
   }
 
-  import dil.LexerFuncs;
   /// Returns the Location of this token.
   Location getLocation()
   {
