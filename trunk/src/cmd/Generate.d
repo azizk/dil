@@ -12,6 +12,7 @@ import dil.File;
 import tango.io.Print;
 import common;
 
+/// Options for the generate command.
 enum DocOption
 {
   Empty,
@@ -21,15 +22,17 @@ enum DocOption
   XML    = 1<<3
 }
 
-void execute(string fileName, DocOption options)
+/// Executes the command.
+void execute(string filePath, DocOption options)
 {
   assert(options != DocOption.Empty);
   if (options & DocOption.Syntax)
-    syntaxToDoc(fileName, Stdout, options);
+    syntaxToDoc(filePath, Stdout, options);
   else
-    tokensToDoc(fileName, Stdout, options);
+    tokensToDoc(filePath, Stdout, options);
 }
 
+/// Escapes the characters '<', '>' and '&' with named character entities.
 char[] xml_escape(char[] text)
 {
   char[] result;
@@ -64,6 +67,10 @@ char[] xml_escape(char[] text)
   return -1;
 }+/
 
+/++
+  Find the last occurrence of object in subject.
+  Returns the index if found, or -1 if not.
++/
 int rfind(char[] subject, char object)
 {
   foreach_reverse(i, c; subject)
@@ -72,6 +79,7 @@ int rfind(char[] subject, char object)
   return -1;
 }
 
+/// Returns the short class name of an instance descending from Node.
 char[] getShortClassName(Node node)
 {
   static char[][] name_table;
@@ -82,8 +90,8 @@ char[] getShortClassName(Node node)
   if (name !is null)
     return name; // Return cached name.
 
-  name = node.classinfo.name;
-  name = name[rfind(name, '.')+1 .. $]; // Remove package and module name
+  name = node.classinfo.name; // Get the fully qualified name of the class.
+  name = name[rfind(name, '.')+1 .. $]; // Remove package and module name.
 
   uint suffixLength;
   switch (node.category)
@@ -115,6 +123,7 @@ char[] getShortClassName(Node node)
   return name;
 }
 
+/// Indices into the XML and HTML tag arrays.
 enum DocPart
 {
   Head,
@@ -278,14 +287,16 @@ auto xml_tags = [
   "<fs>{0}</fs>",
 ];
 
+// The size of the arrays must equal the number of members in enum DocPart.
 static assert(html_tags.length == DocPart.max+1);
 static assert(xml_tags.length == DocPart.max+1);
 
-void syntaxToDoc(string fileName, Print!(char) print, DocOption options)
+/// Prints the syntax tree of a source file using the buffer print.
+void syntaxToDoc(string filePath, Print!(char) print, DocOption options)
 {
   auto tags = options & DocOption.HTML ? html_tags : xml_tags;
-  auto sourceText = loadFile(fileName);
-  auto parser = new Parser(sourceText, fileName);
+  auto sourceText = loadFile(filePath);
+  auto parser = new Parser(sourceText, filePath);
   auto root = parser.start();
   auto lx = parser.lx;
 
@@ -392,11 +403,12 @@ void syntaxToDoc(string fileName, Print!(char) print, DocOption options)
   print(\n~tags[DocPart.SrcEnd])(\n~tags[DocPart.Tail]);
 }
 
-void tokensToDoc(string fileName, Print!(char) print, DocOption options)
+/// Prints all tokens of a source file using the buffer print.
+void tokensToDoc(string filePath, Print!(char) print, DocOption options)
 {
   auto tags = options & DocOption.HTML ? html_tags : xml_tags;
-  auto sourceText = loadFile(fileName);
-  auto lx = new Lexer(sourceText, fileName);
+  auto sourceText = loadFile(filePath);
+  auto lx = new Lexer(sourceText, filePath);
 
   auto token = lx.getTokens();
 
@@ -425,6 +437,7 @@ void tokensToDoc(string fileName, Print!(char) print, DocOption options)
   print(\n~tags[DocPart.SrcEnd])(\n~tags[DocPart.Tail]);
 }
 
+/// Prints a token with tags using the buffer print.
 void printToken(Token* token, string[] tags, Print!(char) print)
 {
   alias DocPart DP;
