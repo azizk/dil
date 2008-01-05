@@ -11,7 +11,7 @@ import dil.Declarations;
 import dil.Statements;
 import dil.Identifier;
 import dil.Scope;
-import dil.TypeSystem;
+import dil.semantic.Types;
 import common;
 
 abstract class Expression : Node

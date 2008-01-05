@@ -10,7 +10,7 @@ import dil.Expressions;
 import dil.Enums;
 import dil.Identifier;
 import dil.Scope;
-import dil.TypeSystem;
+import dil.semantic.Types;
 
 class Parameter : Node
 {

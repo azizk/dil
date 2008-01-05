@@ -14,7 +14,7 @@ import dil.Scope;
 import dil.IdTable;
 import dil.semantic.Analysis;
 import dil.Symbols;
-import dil.TypeSystem;
+import dil.semantic.Types;
 import dil.Messages;
 import common;
 

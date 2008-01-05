@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.TypeSystem;
+module dil.semantic.Type;
 
 import dil.Symbol;
 import dil.TypesEnum;

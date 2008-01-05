@@ -8,7 +8,7 @@ import dil.Symbol;
 import dil.SymbolTable;
 import dil.ast.Node;
 import dil.Enums;
-import dil.TypeSystem;
+import dil.semantic.Types;
 import dil.Identifier;
 import common;
 
