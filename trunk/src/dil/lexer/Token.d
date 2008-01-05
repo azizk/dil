@@ -4,9 +4,9 @@
 +/
 module dil.lexer.Token;
 
-import dil.Location;
-import dil.Identifier;
+import dil.lexer.Identifier;
 import dil.lexer.Funcs;
+import dil.Location;
 import tango.stdc.stdlib : malloc, free;
 import tango.core.Exception;
 import common;

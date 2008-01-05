@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.Identifier;
+module dil.lexer.Identifier;
 
 import dil.lexer.TokensEnum;
 import dil.IdentsEnum;

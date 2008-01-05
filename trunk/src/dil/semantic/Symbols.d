@@ -6,10 +6,10 @@ module dil.semantic.Symbols;
 
 import dil.semantic.Symbol;
 import dil.semantic.SymbolTable;
-import dil.ast.Node;
-import dil.Enums;
 import dil.semantic.Types;
-import dil.Identifier;
+import dil.ast.Node;
+import dil.lexer.Identifier;
+import dil.Enums;
 import common;
 
 /// A symbol that has its own scope with a symbol table.

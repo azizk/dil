@@ -6,8 +6,8 @@ module dil.semantic.Type;
 
 import dil.semantic.Symbol;
 import dil.semantic.TypesEnum;
+import dil.lexer.Identifier;
 import dil.CompilerInfo;
-import dil.Identifier;
 
 abstract class Type : Symbol
 {

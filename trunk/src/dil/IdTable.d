@@ -9,7 +9,7 @@ import dil.IdentsGenerator;
 import dil.lexer.Keywords;
 import common;
 
-public import dil.Identifier;
+public import dil.lexer.Identifier;
 public import dil.IdentsEnum;
 
 struct Ident

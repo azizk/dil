@@ -6,7 +6,7 @@ module dil.lexer.Lexer;
 
 import dil.lexer.Token;
 import dil.lexer.Keywords;
-import dil.Identifier;
+import dil.lexer.Identifier;
 import dil.Information;
 import dil.Messages;
 import dil.HtmlEntities;

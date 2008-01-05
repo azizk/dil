@@ -5,7 +5,7 @@
 module dil.lexer.Keywords;
 
 import dil.lexer.Token;
-import dil.Identifier;
+import dil.lexer.Identifier;
 
 /// Table of reserved identifiers.
 static const Identifier[] keywords = [

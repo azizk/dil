@@ -5,7 +5,7 @@
 module dil.semantic.SymbolTable;
 
 import dil.semantic.Symbol;
-import dil.Identifier;
+import dil.lexer.Identifier;
 import common;
 
 /++
