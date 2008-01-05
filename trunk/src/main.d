@@ -4,7 +4,7 @@
 +/
 module main;
 
-import dil.Parser;
+import dil.parser.Parser;
 import dil.lexer.Lexer;
 import dil.Token;
 import dil.Messages;
@@ -286,22 +286,17 @@ Example:
 
 void parse(string fileName)
 {
-  auto sourceText = loadFile(fileName);
-  auto parser = new Parser(sourceText, fileName);
-  auto root = parser.start();
+  auto mod = new Module(fileName);
+  mod.parse();
 
-void print(Node[] decls, char[] indent)
-{
-  foreach(decl; decls)
+  void print(Node[] decls, char[] indent)
   {
-    assert(decl !is null);
-    Stdout.formatln("{}{}: begin={} end={}", indent, decl.classinfo.name, decl.begin ? decl.begin.srcText : "\33[31mnull\33[0m", decl.end ? decl.end.srcText : "\33[31mnull\33[0m");
-    print(decl.children, indent ~ "  ");
+    foreach(decl; decls)
+    {
+      assert(decl !is null);
+      Stdout.formatln("{}{}: begin={} end={}", indent, decl.classinfo.name, decl.begin ? decl.begin.srcText : "\33[31mnull\33[0m", decl.end ? decl.end.srcText : "\33[31mnull\33[0m");
+      print(decl.children, indent ~ "  ");
+    }
   }
-}
-print(root.children, "");
-foreach (error; parser.errors)
-{
-  Stdout.format(`{0}({1})P: {2}`, error.filePath, error.loc, error.getMsg);
-}
+  print(mod.root.children, "");
 }

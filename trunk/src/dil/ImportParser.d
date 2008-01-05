@@ -3,7 +3,8 @@
   License: GPL3
 +/
 module dil.ImportParser;
-import dil.Parser;
+
+import dil.parser.Parser;
 import dil.Token;
 import dil.Enums;
 import dil.Declarations;

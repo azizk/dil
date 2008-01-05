@@ -3,9 +3,11 @@
   License: GPL3
 +/
 module cmd.Generate;
+
 import dil.SyntaxTree;
 import dil.Token;
-import dil.Parser, dil.lexer.Lexer;
+import dil.parser.Parser;
+import dil.lexer.Lexer;
 import dil.File;
 import tango.io.Print;
 import common;
