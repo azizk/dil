@@ -5,7 +5,7 @@
 module dil.Scope;
 
 import dil.semantic.Symbol;
-import dil.Symbols;
+import dil.semantic.Symbols;
 import dil.Information;
 import dil.Messages;
 import dil.Token;

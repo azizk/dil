@@ -12,7 +12,7 @@ import dil.lexer.Lexer;
 import dil.File;
 import dil.Scope;
 import dil.semantic.Symbol;
-import dil.Symbols;
+import dil.semantic.Symbols;
 import dil.Information;
 import tango.io.FilePath;
 import tango.io.FileConst;

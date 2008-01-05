@@ -13,7 +13,7 @@ import dil.Enums;
 import dil.Scope;
 import dil.IdTable;
 import dil.semantic.Analysis;
-import dil.Symbols;
+import dil.semantic.Symbols;
 import dil.semantic.Types;
 import dil.Messages;
 import common;
@@ -307,15 +307,15 @@ class InterfaceDeclaration : AggregateDeclaration
     this.bases = bases;
   }
 
-  alias dil.Symbols.Interface InterfaceSymbol;
+  alias dil.semantic.Symbols.Interface Interface;
 
-  InterfaceSymbol interface_; /// The interface symbol for this declaration.
+  Interface interface_; /// The interface symbol for this declaration.
 
   override void semantic(Scope scop)
   {
     if (interface_)
       return;
-    interface_ = new InterfaceSymbol(name, this);
+    interface_ = new Interface(name, this);
     // Create a new scope.
     scop = scop.push(interface_);
     // Continue semantic analysis.
