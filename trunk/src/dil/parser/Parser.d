@@ -10,7 +10,7 @@ import dil.Token;
 import dil.Messages;
 import dil.Information;
 import dil.ast.Declarations;
-import dil.Statements;
+import dil.ast.Statements;
 import dil.ast.Expressions;
 import dil.Types;
 import dil.Enums;

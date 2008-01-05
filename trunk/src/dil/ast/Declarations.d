@@ -7,7 +7,7 @@ module dil.ast.Declarations;
 import dil.ast.Node;
 import dil.ast.Expressions;
 import dil.Types;
-import dil.Statements;
+import dil.ast.Statements;
 import dil.Token;
 import dil.Enums;
 import dil.Scope;
