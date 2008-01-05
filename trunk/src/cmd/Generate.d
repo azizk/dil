@@ -47,7 +47,7 @@ char[] xml_escape(char[] text)
 
 /// Find object in subject and return position.
 /// Returns -1 if no match was found.
-int find(char[] subject, char[] object)
+/+int find(char[] subject, char[] object)
 {
   if (object.length > subject.length)
     return -1;
@@ -62,45 +62,56 @@ int find(char[] subject, char[] object)
     }
   }
   return -1;
+}+/
+
+int rfind(char[] subject, char object)
+{
+  foreach_reverse(i, c; subject)
+    if (c == object)
+      return i;
+  return -1;
 }
 
-char[] getShortClassName(Node n)
+char[] getShortClassName(Node node)
 {
   static char[][] name_table;
   if (name_table is null)
-    name_table = new char[][NodeKind.max+1];
-  char[] name = name_table[n.kind];
+    name_table = new char[][NodeKind.max+1]; // Create a new table.
+  // Look up in table.
+  char[] name = name_table[node.kind];
   if (name !is null)
-    return name;
+    return name; // Return cached name.
 
-  name = n.classinfo.name;
-  name = name[find(name, ".")+1 .. $]; // Remove package name
-  name = name[find(name, ".")+1 .. $]; // Remove module name
-  char[] remove;
-  switch (n.category)
+  name = node.classinfo.name;
+  name = name[rfind(name, '.')+1 .. $]; // Remove package and module name
+
+  uint suffixLength;
+  switch (node.category)
   {
   alias NodeCategory NC;
   case NC.Declaration:
-    if (n.kind == NodeKind.Declarations)
-      return name;
-    remove = "Declaration";
+    if (node.kind == NodeKind.Declarations)
+      break;
+    suffixLength = "Declaration".length;
     break;
   case NC.Statement:
-    if (n.kind == NodeKind.Statements)
-      return name;
-    remove = "Statement";
+    if (node.kind == NodeKind.Statements)
+      break;
+    suffixLength = "Statement".length;
     break;
-  case NC.Expression:  remove = "Expression"; break;
-  case NC.Type:        remove = "Type"; break;
-  case NC.Other:       return name;
+  case NC.Expression:
+    suffixLength = "Expression".length;
+    break;
+  case NC.Type:
+    suffixLength = "Type".length;
+    break;
+  case NC.Other:
   default:
   }
   // Remove common suffix.
-  auto idx = find(name, remove);
-  if (idx != -1)
-    name = name[0 .. idx];
-  // Store the name.
-  name_table[n.kind] = name;
+  name = name[0 .. $ - suffixLength];
+  // Store the name in the table.
+  name_table[node.kind] = name;
   return name;
 }
 
