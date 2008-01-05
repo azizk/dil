@@ -4,7 +4,7 @@
 +/
 module dil.semantic.Type;
 
-import dil.Symbol;
+import dil.semantic.Symbol;
 import dil.TypesEnum;
 import dil.CompilerInfo;
 import dil.Identifier;

@@ -11,7 +11,7 @@ import dil.parser.ImportParser;
 import dil.lexer.Lexer;
 import dil.File;
 import dil.Scope;
-import dil.Symbol;
+import dil.semantic.Symbol;
 import dil.Symbols;
 import dil.Information;
 import tango.io.FilePath;

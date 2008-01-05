@@ -4,7 +4,7 @@
 +/
 module dil.Scope;
 
-import dil.Symbol;
+import dil.semantic.Symbol;
 import dil.Symbols;
 import dil.Information;
 import dil.Messages;

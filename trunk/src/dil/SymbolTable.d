@@ -4,7 +4,7 @@
 +/
 module dil.SymbolTable;
 
-import dil.Symbol;
+import dil.semantic.Symbol;
 import dil.Identifier;
 import common;
 
