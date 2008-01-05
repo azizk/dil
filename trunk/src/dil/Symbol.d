@@ -4,7 +4,7 @@
 +/
 module dil.Symbol;
 
-import dil.SyntaxTree;
+import dil.ast.Node;
 import common;
 
 /// Symbol IDs.

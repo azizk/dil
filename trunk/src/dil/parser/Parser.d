@@ -5,7 +5,7 @@
 module dil.parser.Parser;
 
 import dil.lexer.Lexer;
-import dil.SyntaxTree;
+import dil.ast.Node;
 import dil.Token;
 import dil.Messages;
 import dil.Information;

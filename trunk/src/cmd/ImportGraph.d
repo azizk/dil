@@ -3,7 +3,8 @@
   License: GPL3
 +/
 module cmd.ImportGraph;
-import dil.SyntaxTree;
+
+import dil.ast.Node;
 import dil.Declarations;
 import dil.Token;
 import dil.File;

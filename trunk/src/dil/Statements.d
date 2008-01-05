@@ -3,7 +3,8 @@
   License: GPL3
 +/
 module dil.Statements;
-import dil.SyntaxTree;
+
+import dil.ast.Node;
 import dil.Expressions;
 import dil.Declarations;
 import dil.Types;

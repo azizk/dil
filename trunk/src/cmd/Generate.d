@@ -4,7 +4,7 @@
 +/
 module cmd.Generate;
 
-import dil.SyntaxTree;
+import dil.ast.Node;
 import dil.Token;
 import dil.parser.Parser;
 import dil.lexer.Lexer;

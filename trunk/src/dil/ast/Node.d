@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.SyntaxTree;
+module dil.ast.Node;
 import dil.Token;
 import common;
 

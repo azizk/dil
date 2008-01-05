@@ -4,10 +4,10 @@
 +/
 module dil.Semantics;
 
+import dil.ast.Node;
 import dil.Expressions;
 import dil.Token;
 import dil.Scope;
-import dil.SyntaxTree;
 import dil.IdTable;
 import common;
 

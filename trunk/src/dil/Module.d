@@ -4,7 +4,7 @@
 +/
 module dil.Module;
 
-import dil.SyntaxTree;
+import dil.ast.Node;
 import dil.Declarations;
 import dil.parser.Parser;
 import dil.parser.ImportParser;

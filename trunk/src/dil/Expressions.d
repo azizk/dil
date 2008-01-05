@@ -3,7 +3,8 @@
   License: GPL3
 +/
 module dil.Expressions;
-import dil.SyntaxTree;
+
+import dil.ast.Node;
 import dil.Token;
 import dil.Types;
 import dil.Declarations;
@@ -943,6 +944,7 @@ class StringExpression : Expression
   {
     if (type)
       return this;
+    return this;
   }
 
   char[] getString()

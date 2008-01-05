@@ -4,7 +4,7 @@
 +/
 module dil.Types;
 
-import dil.SyntaxTree;
+import dil.ast.Node;
 import dil.Token;
 import dil.Expressions;
 import dil.Enums;

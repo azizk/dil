@@ -6,7 +6,7 @@ module dil.Symbols;
 
 import dil.Symbol;
 import dil.SymbolTable;
-import dil.SyntaxTree;
+import dil.ast.Node;
 import dil.Enums;
 import dil.TypeSystem;
 import dil.Identifier;

@@ -4,7 +4,7 @@
 +/
 module dil.Declarations;
 
-import dil.SyntaxTree;
+import dil.ast.Node;
 import dil.Expressions;
 import dil.Types;
 import dil.Statements;
