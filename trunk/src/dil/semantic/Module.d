@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.Module;
+module dil.semantic.Module;
 
 import dil.ast.Node;
 import dil.ast.Declarations;

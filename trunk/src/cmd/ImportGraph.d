@@ -6,9 +6,9 @@ module cmd.ImportGraph;
 
 import dil.ast.Node;
 import dil.ast.Declarations;
+import dil.semantic.Module;
 import dil.Token;
 import dil.File;
-import dil.Module;
 import dil.Settings;
 import tango.text.Regex : RegExp = Regex;
 import tango.io.FilePath;
