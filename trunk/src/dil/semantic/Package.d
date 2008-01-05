@@ -2,8 +2,9 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.Package;
-import dil.Symbol;
+module dil.semantic.Package;
+
+import dil.semantic.Symbol;
 
 class Package : Symbol
 {
