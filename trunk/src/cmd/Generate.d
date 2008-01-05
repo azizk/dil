@@ -162,7 +162,7 @@ auto html_tags = [
   `<html>`\n
   `<head>`\n
   `<meta http-equiv="Content-Type" content="text/html; charset=utf-8">`\n
-  `<link href="dil_html.css" rel="stylesheet" type="text/css">`\n
+  `<link href="html.css" rel="stylesheet" type="text/css">`\n
   `</head>`\n
   `<body>`[],
   // CompBegin
@@ -226,7 +226,7 @@ auto html_tags = [
 auto xml_tags = [
   // Head
   `<?xml version="1.0"?>`\n
-  `<?xml-stylesheet href="dil_xml.css" type="text/css"?>`\n
+  `<?xml-stylesheet href="xml.css" type="text/css"?>`\n
   `<root>`[],
   // CompBegin
   `<compilerinfo>`,
