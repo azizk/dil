@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.TypesEnum;
+module dil.semantic.TypesEnum;
 
 enum TYP
 {
