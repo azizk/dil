@@ -5,7 +5,7 @@
 module cmd.Statistics;
 import dil.Token;
 import dil.File;
-import dil.Lexer;
+import dil.lexer.Lexer;
 import common;
 
 struct Statistics

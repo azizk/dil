@@ -3,7 +3,7 @@
   License: GPL3
 +/
 module dil.Parser;
-import dil.Lexer;
+import dil.lexer.Lexer;
 import dil.SyntaxTree;
 import dil.Token;
 import dil.Messages;

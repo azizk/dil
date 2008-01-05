@@ -8,7 +8,7 @@ import dil.SyntaxTree;
 import dil.Declarations;
 import dil.Parser;
 import dil.ImportParser;
-import dil.Lexer;
+import dil.lexer.Lexer;
 import dil.File;
 import dil.Scope;
 import dil.Symbol;

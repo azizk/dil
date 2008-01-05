@@ -6,7 +6,6 @@ module cmd.ImportGraph;
 import dil.SyntaxTree;
 import dil.Declarations;
 import dil.Token;
-import dil.Parser, dil.Lexer;
 import dil.File;
 import dil.Module;
 import dil.Settings;
@@ -37,7 +36,7 @@ string findModulePath(string moduleFQN, string[] importPaths)
   string modulePath;
   foreach (path; importPaths)
   {
-    modulePath = path ~ (path[$-1] == dirSep ? "" : [dirSep]) ~ moduleFQN ~ ".d";
+    modulePath = path ~ dirSep ~ moduleFQN ~ ".d";
     // TODO: also check for *.di?
     if ((new FilePath(modulePath)).exists())
       return modulePath;

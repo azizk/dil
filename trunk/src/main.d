@@ -5,7 +5,7 @@
 module main;
 
 import dil.Parser;
-import dil.Lexer;
+import dil.lexer.Lexer;
 import dil.Token;
 import dil.Messages;
 import dil.Settings;
