@@ -5,10 +5,10 @@
 module dil.ast.Expressions;
 
 import dil.ast.Node;
-import dil.Token;
-import dil.Types;
+import dil.ast.Types;
 import dil.ast.Declarations;
 import dil.ast.Statements;
+import dil.Token;
 import dil.Identifier;
 import dil.Scope;
 import dil.semantic.Types;
