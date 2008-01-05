@@ -11,7 +11,7 @@ import dil.Messages;
 import dil.Information;
 import dil.ast.Declarations;
 import dil.Statements;
-import dil.Expressions;
+import dil.ast.Expressions;
 import dil.Types;
 import dil.Enums;
 import dil.CompilerInfo;

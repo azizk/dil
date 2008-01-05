@@ -5,7 +5,7 @@
 module dil.semantic.Analysis;
 
 import dil.ast.Node;
-import dil.Expressions;
+import dil.ast.Expressions;
 import dil.Token;
 import dil.Scope;
 import dil.IdTable;

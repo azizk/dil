@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.Expressions;
+module dil.ast.Expressions;
 
 import dil.ast.Node;
 import dil.Token;
