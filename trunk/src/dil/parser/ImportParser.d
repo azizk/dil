@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.ImportParser;
+module dil.parser.ImportParser;
 
 import dil.parser.Parser;
 import dil.Token;

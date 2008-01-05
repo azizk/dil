@@ -7,7 +7,7 @@ module dil.Module;
 import dil.SyntaxTree;
 import dil.Declarations;
 import dil.parser.Parser;
-import dil.ImportParser;
+import dil.parser.ImportParser;
 import dil.lexer.Lexer;
 import dil.File;
 import dil.Scope;
