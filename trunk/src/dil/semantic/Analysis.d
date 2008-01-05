@@ -7,7 +7,7 @@ module dil.semantic.Analysis;
 import dil.ast.Node;
 import dil.ast.Expressions;
 import dil.semantic.Scope;
-import dil.IdTable;
+import dil.lexer.IdTable;
 import common;
 
 /// Common semantics for pragma declarations and statements.

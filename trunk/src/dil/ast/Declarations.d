@@ -8,12 +8,12 @@ import dil.ast.Node;
 import dil.ast.Expressions;
 import dil.ast.Types;
 import dil.ast.Statements;
-import dil.Enums;
-import dil.IdTable;
+import dil.lexer.IdTable;
 import dil.semantic.Scope;
 import dil.semantic.Analysis;
 import dil.semantic.Symbols;
 import dil.semantic.Types;
+import dil.Enums;
 import dil.Messages;
 import common;
 

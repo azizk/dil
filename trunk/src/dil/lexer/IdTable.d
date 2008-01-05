@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.IdTable;
+module dil.lexer.IdTable;
 
 import dil.lexer.TokensEnum;
 import dil.IdentsGenerator;
