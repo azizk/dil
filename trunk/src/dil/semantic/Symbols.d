@@ -5,7 +5,7 @@
 module dil.semantic.Symbols;
 
 import dil.semantic.Symbol;
-import dil.SymbolTable;
+import dil.semantic.SymbolTable;
 import dil.ast.Node;
 import dil.Enums;
 import dil.semantic.Types;
