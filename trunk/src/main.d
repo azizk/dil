@@ -12,7 +12,7 @@ import dil.Settings;
 import dil.SettingsLoader;
 import dil.CompilerInfo;
 import dil.Module;
-import dil.Declarations, dil.Expressions, dil.ast.Node;
+import dil.ast.Declarations, dil.Expressions, dil.ast.Node;
 import dil.Information;
 import dil.File;
 import cmd.Generate;

@@ -6,7 +6,7 @@ module dil.Statements;
 
 import dil.ast.Node;
 import dil.Expressions;
-import dil.Declarations;
+import dil.ast.Declarations;
 import dil.Types;
 import dil.Token;
 import dil.IdTable;

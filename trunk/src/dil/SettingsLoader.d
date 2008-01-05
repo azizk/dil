@@ -6,7 +6,7 @@ module dil.SettingsLoader;
 
 import dil.Settings;
 import dil.Messages;
-import dil.Module, dil.ast.Node, dil.Declarations, dil.Expressions;
+import dil.Module, dil.ast.Node, dil.ast.Declarations, dil.Expressions;
 import dil.File;
 import tango.io.FilePath;
 import common;

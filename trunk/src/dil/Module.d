@@ -5,7 +5,7 @@
 module dil.Module;
 
 import dil.ast.Node;
-import dil.Declarations;
+import dil.ast.Declarations;
 import dil.parser.Parser;
 import dil.parser.ImportParser;
 import dil.lexer.Lexer;

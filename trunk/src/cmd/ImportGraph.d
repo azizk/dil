@@ -5,7 +5,7 @@
 module cmd.ImportGraph;
 
 import dil.ast.Node;
-import dil.Declarations;
+import dil.ast.Declarations;
 import dil.Token;
 import dil.File;
 import dil.Module;

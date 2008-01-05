@@ -8,7 +8,7 @@ import dil.ast.Node;
 import dil.parser.Parser;
 import dil.Token;
 import dil.Enums;
-import dil.Declarations;
+import dil.ast.Declarations;
 import dil.Statements;
 import common;
 

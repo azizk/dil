@@ -9,7 +9,7 @@ import dil.ast.Node;
 import dil.Token;
 import dil.Messages;
 import dil.Information;
-import dil.Declarations;
+import dil.ast.Declarations;
 import dil.Statements;
 import dil.Expressions;
 import dil.Types;
