@@ -3,7 +3,8 @@
   License: GPL3
 +/
 module dil.Identifier;
-import dil.TokensEnum;
+
+import dil.lexer.TokensEnum;
 import dil.IdentsEnum;
 import common;
 

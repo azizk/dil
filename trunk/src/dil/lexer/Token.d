@@ -11,7 +11,7 @@ import tango.stdc.stdlib : malloc, free;
 import tango.core.Exception;
 import common;
 
-public import dil.TokensEnum;
+public import dil.lexer.TokensEnum;
 
 /++
   A Token is a sequence of characters formed by the lexical analyzer.

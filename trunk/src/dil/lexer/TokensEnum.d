@@ -2,7 +2,8 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.TokensEnum;
+module dil.lexer.TokensEnum;
+
 import common;
 
 enum TOK : ushort
