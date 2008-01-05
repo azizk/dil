@@ -12,7 +12,7 @@ import dil.Token;
 import dil.Enums;
 import dil.Scope;
 import dil.IdTable;
-import dil.Semantics;
+import dil.semantic.Analysis;
 import dil.Symbols;
 import dil.TypeSystem;
 import dil.Messages;

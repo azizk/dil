@@ -11,7 +11,7 @@ import dil.Types;
 import dil.Token;
 import dil.IdTable;
 import dil.Scope;
-import dil.Semantics;
+import dil.semantic.Analysis;
 
 abstract class Statement : Node
 {
