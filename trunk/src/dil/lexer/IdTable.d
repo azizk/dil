@@ -10,7 +10,7 @@ import dil.lexer.Keywords;
 import common;
 
 public import dil.lexer.Identifier;
-public import dil.IdentsEnum;
+public import dil.lexer.IdentsEnum;
 
 struct Ident
 {

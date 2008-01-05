@@ -5,7 +5,7 @@
 module dil.lexer.Identifier;
 
 import dil.lexer.TokensEnum;
-import dil.IdentsEnum;
+import dil.lexer.IdentsEnum;
 import common;
 
 align(1)
