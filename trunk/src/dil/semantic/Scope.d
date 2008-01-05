@@ -6,9 +6,9 @@ module dil.semantic.Scope;
 
 import dil.semantic.Symbol;
 import dil.semantic.Symbols;
+import dil.lexer.Token;
 import dil.Information;
 import dil.Messages;
-import dil.Token;
 import common;
 
 class Scope

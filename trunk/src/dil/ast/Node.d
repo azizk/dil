@@ -3,8 +3,10 @@
   License: GPL3
 +/
 module dil.ast.Node;
-import dil.Token;
+
 import common;
+
+public import dil.lexer.Token;
 
 enum NodeCategory
 {

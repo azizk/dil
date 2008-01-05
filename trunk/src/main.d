@@ -6,7 +6,7 @@ module main;
 
 import dil.parser.Parser;
 import dil.lexer.Lexer;
-import dil.Token;
+import dil.lexer.Token;
 import dil.Messages;
 import dil.Settings;
 import dil.SettingsLoader;

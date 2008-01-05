@@ -5,14 +5,13 @@
 module dil.parser.Parser;
 
 import dil.lexer.Lexer;
-import dil.Token;
-import dil.Messages;
-import dil.Information;
 import dil.ast.Node;
 import dil.ast.Declarations;
 import dil.ast.Statements;
 import dil.ast.Expressions;
 import dil.ast.Types;
+import dil.Messages;
+import dil.Information;
 import dil.Enums;
 import dil.CompilerInfo;
 import dil.IdTable;

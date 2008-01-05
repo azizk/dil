@@ -8,7 +8,6 @@ import dil.ast.Node;
 import dil.ast.Expressions;
 import dil.ast.Types;
 import dil.ast.Statements;
-import dil.Token;
 import dil.Enums;
 import dil.IdTable;
 import dil.semantic.Scope;

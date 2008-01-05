@@ -5,9 +5,8 @@
 module cmd.Generate;
 
 import dil.ast.Node;
-import dil.Token;
-import dil.parser.Parser;
 import dil.lexer.Lexer;
+import dil.parser.Parser;
 import dil.File;
 import tango.io.Print;
 import common;

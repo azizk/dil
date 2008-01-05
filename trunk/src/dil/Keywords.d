@@ -3,7 +3,8 @@
   License: GPL3
 +/
 module dil.Keywords;
-import dil.Token;
+
+import dil.lexer.Token;
 import dil.Identifier;
 
 /// Table of reserved identifiers.

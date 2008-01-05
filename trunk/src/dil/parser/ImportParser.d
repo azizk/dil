@@ -4,12 +4,11 @@
 +/
 module dil.parser.ImportParser;
 
-import dil.ast.Node;
 import dil.parser.Parser;
-import dil.Token;
-import dil.Enums;
+import dil.ast.Node;
 import dil.ast.Declarations;
 import dil.ast.Statements;
+import dil.Enums;
 import common;
 
 private alias TOK T;

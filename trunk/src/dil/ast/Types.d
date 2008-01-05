@@ -5,7 +5,6 @@
 module dil.ast.Types;
 
 import dil.ast.Node;
-import dil.Token;
 import dil.ast.Expressions;
 import dil.Enums;
 import dil.Identifier;

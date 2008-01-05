@@ -4,7 +4,7 @@
 +/
 module dil.lexer.Lexer;
 
-import dil.Token;
+import dil.lexer.Token;
 import dil.Information;
 import dil.Keywords;
 import dil.Identifier;
