@@ -4,7 +4,7 @@
 +/
 module dil.lexer.IdentsEnum;
 
-import dil.IdentsGenerator;
+import dil.lexer.IdentsGenerator;
 
 mixin(
   "enum ID : ushort {"
