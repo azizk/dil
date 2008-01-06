@@ -36,7 +36,7 @@ struct Identifier
   {
     uint hash;
     foreach(c; str) {
-      hash *= 9;
+      hash *= 11;
       hash += c;
     }
     return hash;
