@@ -69,3 +69,126 @@ class Parameters : Node
   size_t length()
   { return children.length; }
 }
+
+/*********************
+  Template parameters:
+*/
+
+abstract class TemplateParameter : Node
+{
+  Identifier* ident;
+  this(Identifier* ident)
+  {
+    super(NodeCategory.Other);
+    this.ident = ident;
+  }
+}
+
+class TemplateAliasParameter : TemplateParameter
+{
+  TypeNode specType, defType;
+  this(Identifier* ident, TypeNode specType, TypeNode defType)
+  {
+    super(ident);
+    mixin(set_kind);
+    addOptChild(specType);
+    addOptChild(defType);
+    this.ident = ident;
+    this.specType = specType;
+    this.defType = defType;
+  }
+}
+
+class TemplateTypeParameter : TemplateParameter
+{
+  TypeNode specType, defType;
+  this(Identifier* ident, TypeNode specType, TypeNode defType)
+  {
+    super(ident);
+    mixin(set_kind);
+    addOptChild(specType);
+    addOptChild(defType);
+    this.ident = ident;
+    this.specType = specType;
+    this.defType = defType;
+  }
+}
+
+version(D2)
+{
+class TemplateThisParameter : TemplateParameter
+{
+  TypeNode specType, defType;
+  this(Identifier* ident, TypeNode specType, TypeNode defType)
+  {
+    super(ident);
+    mixin(set_kind);
+    addOptChild(specType);
+    addOptChild(defType);
+    this.ident = ident;
+    this.specType = specType;
+    this.defType = defType;
+  }
+}
+}
+
+class TemplateValueParameter : TemplateParameter
+{
+  TypeNode valueType;
+  Expression specValue, defValue;
+  this(TypeNode valueType, Identifier* ident, Expression specValue, Expression defValue)
+  {
+    super(ident);
+    mixin(set_kind);
+    addChild(valueType);
+    addOptChild(specValue);
+    addOptChild(defValue);
+    this.valueType = valueType;
+    this.ident = ident;
+    this.specValue = specValue;
+    this.defValue = defValue;
+  }
+}
+
+class TemplateTupleParameter : TemplateParameter
+{
+  this(Identifier* ident)
+  {
+    super(ident);
+    mixin(set_kind);
+    this.ident = ident;
+  }
+}
+
+class TemplateParameters : Node
+{
+  this()
+  {
+    super(NodeCategory.Other);
+    mixin(set_kind);
+  }
+
+  void opCatAssign(TemplateParameter parameter)
+  {
+    addChild(parameter);
+  }
+
+  TemplateParameter[] items()
+  {
+    return cast(TemplateParameter[])children;
+  }
+}
+
+class TemplateArguments : Node
+{
+  this()
+  {
+    super(NodeCategory.Other);
+    mixin(set_kind);
+  }
+
+  void opCatAssign(Node argument)
+  {
+    addChild(argument);
+  }
+}
