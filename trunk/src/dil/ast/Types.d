@@ -12,20 +12,6 @@ import dil.Enums;
 import dil.semantic.Scope;
 import dil.semantic.Types;
 
-class BaseClass : Node
-{
-  Protection prot;
-  TypeNode type;
-  this(Protection prot, TypeNode type)
-  {
-    super(NodeCategory.Other);
-    mixin(set_kind);
-    addChild(type);
-    this.prot = prot;
-    this.type = type;
-  }
-}
-
 enum TID
 {
   Void    = TOK.Void,
