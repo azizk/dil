@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.ast.Parameter;
+module dil.ast.Parameters;
 
 import dil.ast.Node;
 import dil.ast.Types;
