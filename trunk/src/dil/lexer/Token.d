@@ -33,15 +33,11 @@ struct Token
   char* start; /// Start of token in source text.
   char* end;   /// Points one past the end of token in source text.
 
+  // Data associated with this token.
   union
   {
     /// For newline tokens.
-    struct
-    {
-      char[] filePath;
-      uint lineNum;
-      uint lineNum_hline;
-    }
+    NewlineData newline;
     /// For #line tokens.
     struct
     {
@@ -202,8 +198,8 @@ version(D2)
     // Find previous newline token.
     while (search_t.type != TOK.Newline)
       search_t = search_t.prev;
-    auto filePath  = search_t.filePath;
-    auto lineNum   = search_t.lineNum - search_t.lineNum_hline;
+    auto filePath  = search_t.newline.filePaths.setPath;
+    auto lineNum   = search_t.newline.oriLineNum - search_t.newline.setLineNum;
     auto lineBegin = search_t.end;
     // Determine actual line begin and line number.
     while (1)
@@ -307,14 +303,15 @@ version(D2)
 }
 }
 
-/++
-  Not used at the moment. Could be useful if more
-  info is needed about the location of nodes/tokens.
-+/
-struct NewlineInfo
+/// Stores data about newlines.
+struct NewlineData
 {
-  char[] oriPath;   /// Original path to the source text.
-  char[] setPath;   /// Path set by #line.
+  struct FilePaths
+  {
+    char[] oriPath;   /// Original path to the source text.
+    char[] setPath;   /// Path set by #line.
+  }
+  FilePaths* filePaths;
   uint oriLineNum;  /// Actual line number in the source text.
   uint setLineNum;  /// Delta line number set by #line.
 }

@@ -38,23 +38,24 @@ class Lexer
   // Members used for error messages:
   InfoManager infoMan;
   LexerError[] errors;
-  /// Always points to the beginning of the current line.
+  /// Always points to the first character of the current line.
   char* lineBegin;
 //   Token* newline;     /// Current newline token.
   uint lineNum = 1;   /// Current, actual source text line number.
   uint lineNum_hline; /// Line number set by #line.
   uint inTokenString; /// > 0 if inside q{ }
-  char[] errorPath;   /// The path displayed in error messages.
+  NewlineData.FilePaths* filePaths;
 
   /++
     Construct a Lexer object.
     Params:
       text     = the UTF-8 source code.
       filePath = the path to the source code; used for error messages.
+      infoMan  = the information manager (for collecting error messages.)
   +/
   this(string text, string filePath, InfoManager infoMan = null)
   {
-    this.filePath = this.errorPath = filePath;
+    this.filePath = filePath;
     this.infoMan = infoMan;
 
     this.text = text;
@@ -72,14 +73,16 @@ class Lexer
     this.head.type = TOK.HEAD;
     this.head.start = this.head.end = this.p;
     this.token = this.head;
+    // Initialize this.filePaths.
+    newFilePath(this.filePath);
     // Add a newline as the first token after the head.
     auto newline = new Token;
     newline.type = TOK.Newline;
     newline.setWhitespaceFlag();
     newline.start = newline.end = this.p;
-    newline.filePath = this.errorPath;
-    newline.lineNum = 1;
-    newline.lineNum_hline = 0;
+    newline.newline.filePaths = this.filePaths;
+    newline.newline.oriLineNum = 1;
+    newline.newline.setLineNum = 0;
     // Link in.
     this.token.next = newline;
     newline.prev = this.token;
@@ -127,7 +130,7 @@ class Lexer
     switch (t.type)
     {
     case TOK.FILE:
-      t.str = this.errorPath;
+      t.str = this.filePaths.setPath;
       break;
     case TOK.LINE:
       t.uint_ = this.errorLineNumber(this.lineNum);
@@ -160,6 +163,15 @@ class Lexer
     default:
       assert(0);
     }
+  }
+
+  /// Sets a new file path.
+  void newFilePath(char[] newPath)
+  {
+    auto paths = new NewlineData.FilePaths;
+    paths.oriPath = this.filePath;
+    paths.setPath = newPath;
+    this.filePaths = paths;
   }
 
   private void setLineBegin(char* p)
@@ -257,9 +269,9 @@ class Lexer
 //         this.newline = &t;
         t.type = TOK.Newline;
         t.setWhitespaceFlag();
-        t.filePath = this.errorPath;
-        t.lineNum = lineNum;
-        t.lineNum_hline = lineNum_hline;
+        t.newline.filePaths = this.filePaths;
+        t.newline.oriLineNum = lineNum;
+        t.newline.setLineNum = lineNum_hline;
         t.end = p;
         return;
       default:
@@ -712,9 +724,9 @@ class Lexer
 //       this.newline = &t;
       t.type = TOK.Newline;
       t.setWhitespaceFlag();
-      t.filePath = this.errorPath;
-      t.lineNum = lineNum;
-      t.lineNum_hline = lineNum_hline;
+      t.newline.filePaths = this.filePaths;
+      t.newline.oriLineNum = lineNum;
+      t.newline.setLineNum = lineNum_hline;
       t.end = p;
       return;
     default:
@@ -2348,7 +2360,7 @@ version(D2)
     {
       this.lineNum_hline = this.lineNum - t.tokLineNum.uint_ + 1;
       if (t.tokLineFilespec)
-        this.errorPath = t.tokLineFilespec.str;
+        newFilePath(t.tokLineFilespec.str);
     }
     t.end = p;
 
@@ -2400,6 +2412,7 @@ version(D2)
               TypeInfo[] _arguments, void* _argptr)
   {
     lineNum = this.errorLineNumber(lineNum);
+    auto errorPath = this.filePaths.setPath;
     auto location = new Location(errorPath, lineNum, lineBegin, columnPos);
     auto msg = Format(_arguments, _argptr, GetMsg(mid));
     auto error = new LexerError(location, msg);
