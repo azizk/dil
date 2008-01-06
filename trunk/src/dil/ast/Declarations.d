@@ -8,6 +8,7 @@ import dil.ast.Node;
 import dil.ast.Expressions;
 import dil.ast.Types;
 import dil.ast.Statements;
+import dil.ast.Parameter;
 import dil.lexer.IdTable;
 import dil.semantic.Scope;
 import dil.semantic.Analysis;

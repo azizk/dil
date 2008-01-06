@@ -10,6 +10,7 @@ import dil.ast.Declarations;
 import dil.ast.Statements;
 import dil.ast.Expressions;
 import dil.ast.Types;
+import dil.ast.Parameter;
 import dil.lexer.IdTable;
 import dil.Messages;
 import dil.Information;
