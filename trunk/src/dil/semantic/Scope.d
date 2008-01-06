@@ -7,6 +7,7 @@ module dil.semantic.Scope;
 import dil.semantic.Symbol;
 import dil.semantic.Symbols;
 import dil.lexer.Token;
+import dil.lexer.Identifier;
 import dil.Information;
 import dil.Messages;
 import common;
@@ -30,12 +31,20 @@ class Scope
     return null;
   }
 
-  /++
-    Add a symbol to this scope.
-  +/
-  void add(Symbol sym)
+  /// Insert a symbol into this scope.
+  void insert(Symbol sym, Identifier* ident)
   {
-
+    auto sym2 = symbol.lookup(ident);
+    if (sym2)
+    {
+      auto loc = sym2.node.begin.getLocation();
+      auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
+      error(sym.node.begin, MSG.DeclConflictsWithDecl, ident.str, locString);
+    }
+    else
+      symbol.insert(sym, ident);
+    // Set the current scope symbol as the parent.
+    sym.parent = symbol;
   }
 
   /// Insert a new variable symbol into this scope.

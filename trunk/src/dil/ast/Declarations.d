@@ -106,7 +106,7 @@ class EmptyDeclaration : Declaration
 /++
   Illegal declarations encompass all tokens that don't
   start a DeclarationDefinition.
-  See_Also: dil.Token.isDeclDefStartToken()
+  See_Also: dil.lexer.Token.isDeclDefStartToken()
 +/
 class IllegalDeclaration : Declaration
 {
@@ -279,15 +279,17 @@ class ClassDeclaration : AggregateDeclaration
     this.bases = bases;
   }
 
-  Class class_; /// The class symbol for this declaration.
+  Class symbol; /// The class symbol for this declaration.
 
   override void semantic(Scope scop)
   {
-    if (class_)
+    if (symbol)
       return;
-    class_ = new Class(name, this);
+    symbol = new Class(name, this);
+    // Insert into current scope.
+    scop.insert(symbol, name);
     // Create a new scope.
-    scop = scop.push(class_);
+    scop = scop.push(symbol);
     // Continue semantic analysis.
     decls && decls.semantic(scop);
     scop.pop();
@@ -310,15 +312,17 @@ class InterfaceDeclaration : AggregateDeclaration
 
   alias dil.semantic.Symbols.Interface Interface;
 
-  Interface interface_; /// The interface symbol for this declaration.
+  Interface symbol; /// The interface symbol for this declaration.
 
   override void semantic(Scope scop)
   {
-    if (interface_)
+    if (symbol)
       return;
-    interface_ = new Interface(name, this);
+    symbol = new Interface(name, this);
+    // Insert into current scope.
+    scop.insert(symbol, name);
     // Create a new scope.
-    scop = scop.push(interface_);
+    scop = scop.push(symbol);
     // Continue semantic analysis.
     decls && decls.semantic(scop);
     scop.pop();
@@ -341,15 +345,17 @@ class StructDeclaration : AggregateDeclaration
     this.alignSize = alignSize;
   }
 
-  Struct struct_; /// The struct symbol for this declaration.
+  Struct symbol; /// The struct symbol for this declaration.
 
   override void semantic(Scope scop)
   {
-    if (struct_)
+    if (symbol)
       return;
-    struct_ = new Struct(name, this);
+    symbol = new Struct(name, this);
+    // Insert into current scope.
+    scop.insert(symbol, name);
     // Create a new scope.
-    scop = scop.push(struct_);
+    scop = scop.push(symbol);
     // Continue semantic analysis.
     decls && decls.semantic(scop);
     scop.pop();
@@ -366,15 +372,17 @@ class UnionDeclaration : AggregateDeclaration
     addOptChild(decls);
   }
 
-  Union union_; /// The union symbol for this declaration.
+  Union symbol; /// The union symbol for this declaration.
 
   override void semantic(Scope scop)
   {
-    if (union_)
+    if (symbol)
       return;
-    union_ = new Union(name, this);
+    symbol = new Union(name, this);
+    // Insert into current scope.
+    scop.insert(symbol, name);
     // Create a new scope.
-    scop = scop.push(union_);
+    scop = scop.push(symbol);
     // Continue semantic analysis.
     decls && decls.semantic(scop);
     scop.pop();

@@ -143,6 +143,7 @@ static:
   auto ExpectedNameForThisTempParam = "expected name for 'this' template parameter, not '{}'";
   auto ExpectedIdentOrInt = "expected an identifier or an integer, not '{}'";
   // Semantic analysis:
+  auto DeclConflictsWithDecl = "declaration '{}' conflicts with declaration @{}";
   auto VariableConflictsWithDecl = "variable '{}' conflicts with declaration @{}";
   auto InterfaceCantHaveVariables = "an interface can't have member variables";
 }
