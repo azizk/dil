@@ -50,9 +50,10 @@ struct Token
       string str;
       char pf; /// Postfix 'c', 'w', 'd' or 0 for none.
     version(D2)
-      Token* tok_str; /// Points to the contents of a token string stored as a
-                      /// doubly linked list. The last token is always '}' or
-                      /// EOF in case end of source text is "q{" EOF.
+      Token* tok_str; /++ Points to the contents of a token string stored as a
+                          doubly linked list. The last token is always '}' or
+                          EOF in case end of source text is "q{" EOF.
+                      +/
     }
     Identifier* ident;
     dchar  dchar_;

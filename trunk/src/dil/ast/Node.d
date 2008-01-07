@@ -288,4 +288,54 @@ class Node
   {
     children is null || addChildren(children);
   }
+
+  static bool isDoxygenComment(Token* token)
+  { // Doxygen: '/+!' '/*!' '//!'
+    return token.type == TOK.Comment && token.start[2] == '!';
+  }
+
+  static bool isDDocComment(Token* token)
+  { // DDOC: '/++' '/**' '///'
+    return token.type == TOK.Comment && token.start[1] == token.start[2];
+  }
+
+  /++
+    Returns the surrounding documentation comment tokens.
+    Note: this function works correctly only if
+          the source text is syntactically correct.
+  +/
+  Token*[] getDocComments(bool function(Token*) isDocComment = &isDDocComment)
+  {
+    Token*[] comments;
+    // Get comment to the right.
+    auto token = end.next;
+    if (token.type == TOK.Comment &&
+        isDocComment(token))
+        comments ~= token;
+    // Get preceding comments.
+    token = begin;
+    // Scan backwards until we hit another declaration.
+    while (1)
+    {
+      token = token.prev;
+      if (token.type == TOK.LBrace ||
+          token.type == TOK.RBrace ||
+          token.type == TOK.Semicolon ||
+          token.type == TOK.HEAD)
+        break;
+      if (token.type == TOK.Comment)
+      {
+        // Check that this comment doesn't belong to the previous declaration.
+        switch (token.prev.type)
+        {
+        case TOK.Semicolon, TOK.RBrace:
+          break;
+        default:
+          if (isDocComment(token))
+            comments ~= token;
+        }
+      }
+    }
+    return comments;
+  }
 }
