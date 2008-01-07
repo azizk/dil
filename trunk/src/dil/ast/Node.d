@@ -307,13 +307,8 @@ class Node
   Token*[] getDocComments(bool function(Token*) isDocComment = &isDDocComment)
   {
     Token*[] comments;
-    // Get comment to the right.
-    auto token = end.next;
-    if (token.type == TOK.Comment &&
-        isDocComment(token))
-        comments ~= token;
     // Get preceding comments.
-    token = begin;
+    auto token = begin;
     // Scan backwards until we hit another declaration.
     while (1)
     {
@@ -336,6 +331,11 @@ class Node
         }
       }
     }
+    // Get single comment to the right.
+    token = end.next;
+    if (token.type == TOK.Comment &&
+        isDocComment(token))
+        comments ~= token;
     return comments;
   }
 }
