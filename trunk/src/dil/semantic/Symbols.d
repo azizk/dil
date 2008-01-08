@@ -15,7 +15,8 @@ import common;
 /// A symbol that has its own scope with a symbol table.
 class ScopeSymbol : Symbol
 {
-  protected SymbolTable symbolTable; /// The symbol table.
+  SymbolTable symbolTable; /// The symbol table.
+  Symbol[] members; /// The member symbols (in lexical order.)
 
   this()
   {
@@ -31,6 +32,7 @@ class ScopeSymbol : Symbol
   void insert(Symbol s, Identifier* ident)
   {
     symbolTable.insert(s, ident);
+    members ~= s;
   }
 }
 
@@ -90,6 +92,17 @@ class Struct : Aggregate
     this.sid = SYM.Struct;
     this.ident = ident;
     this.node = structNode;
+  }
+}
+
+class Enum : ScopeSymbol
+{
+  Identifier* ident;
+  this(Identifier* ident, Node enumNode)
+  {
+    this.sid = SYM.Enum;
+    this.ident = ident;
+    this.node = enumNode;
   }
 }
 
