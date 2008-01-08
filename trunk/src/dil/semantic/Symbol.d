@@ -5,6 +5,7 @@
 module dil.semantic.Symbol;
 
 import dil.ast.Node;
+import dil.lexer.Identifier;
 import common;
 
 /// Symbol IDs.
@@ -18,7 +19,7 @@ enum SYM
   Enum,
   Variable,
   Function,
-  Type,
+//   Type,
 }
 
 /++
@@ -28,6 +29,7 @@ class Symbol
 {
   SYM sid;
   Symbol parent; /// The parent this symbol belongs to.
+  Identifier* ident; /// The name of this symbol.
   /// The AST node that produced this symbol.
   /// Useful for source code location info and retrieval of doc comments.
   Node node;
@@ -45,5 +47,5 @@ class Symbol
   mixin(is_!("Enum"));
   mixin(is_!("Variable"));
   mixin(is_!("Function"));
-  mixin(is_!("Type"));
+//   mixin(is_!("Type"));
 }

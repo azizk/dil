@@ -37,9 +37,8 @@ class ScopeSymbol : Symbol
 }
 
 /// Aggregates have function and field members.
-class Aggregate : ScopeSymbol
+abstract class Aggregate : ScopeSymbol
 {
-  Identifier* ident; /// The name of this aggregate.
   Function[] funcs;
   Variable[] fields;
 
@@ -123,11 +122,10 @@ class Function : ScopeSymbol
 
 class Variable : Symbol
 {
-  StorageClass stc;
-  LinkageType linkType;
+  StorageClass stc; /// The storage classes.
+  LinkageType linkType; /// The linkage type.
 
-  Type type;
-  Identifier* ident;
+  Type type; /// The type of this variable.
 
   this(StorageClass stc, LinkageType linkType,
        Type type, Identifier* ident, Node varDecl)

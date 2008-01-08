@@ -9,7 +9,7 @@ import dil.semantic.TypesEnum;
 import dil.lexer.Identifier;
 import dil.CompilerInfo;
 
-abstract class Type : Symbol
+abstract class Type/* : Symbol*/
 {
   Type next;
   TYP tid; /// The ID of the type.
@@ -18,7 +18,7 @@ abstract class Type : Symbol
 
   this(Type next, TYP tid)
   {
-    this.sid = SYM.Type;
+//     this.sid = SYM.Type;
 
     this.next = next;
     this.tid = tid;
