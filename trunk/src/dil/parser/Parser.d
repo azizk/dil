@@ -379,7 +379,7 @@ class Parser
               token.type != T.RBrace &&
               token.type != T.EOF)
       auto text = Token.textSpan(begin, this.prevToken);
-      error(begin, MSG.IllegalDeclaration ~ text);
+      error(begin, MSG.IllegalDeclaration, text);
     }
     decl.setProtection(this.protection);
     decl.setStorageClass(this.storageClass);
@@ -739,7 +739,7 @@ class Parser
       prev_lt = lt;
     else
       // TODO: create new msg RedundantLinkageType.
-      error(begin, MSG.RedundantLinkageType ~ Token.textSpan(begin, this.prevToken));
+      error(begin, MSG.RedundantLinkageType, Token.textSpan(begin, this.prevToken));
   }
 
   Declaration parseStorageAttribute()
@@ -1799,7 +1799,7 @@ class Parser
               token.type != T.RBrace &&
               token.type != T.EOF)
       auto text = Token.textSpan(begin, this.prevToken);
-      error(begin, MSG.IllegalStatement ~ text);
+      error(begin, MSG.IllegalStatement, text);
     }
     assert(s !is null);
     set(s, begin);
@@ -2489,7 +2489,7 @@ class Parser
               token.type != T.RBrace &&
               token.type != T.EOF)
       auto text = Token.textSpan(begin, this.prevToken);
-      error(begin, MSG.IllegalAsmInstructino ~ text);
+      error(begin, MSG.IllegalAsmInstruction, text);
     }
     set(s, begin);
     return s;
