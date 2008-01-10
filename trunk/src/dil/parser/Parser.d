@@ -1372,6 +1372,7 @@ class Parser
   Type parseTypeofType()
   {
     assert(token.type == T.Typeof);
+    auto begin = token;
     Type type;
     requireNext(T.LParen);
     switch (token.type)
@@ -1387,115 +1388,8 @@ class Parser
       type = new TypeofType(parseExpression());
     }
     require(T.RParen);
+    set(type, begin);
     return type;
-  }
-
-  /+
-    DotListExpression:
-            . DotListItems
-            DotListItems
-            Typeof
-            Typeof . DotListItems
-    DotListItems:
-            DotListItem
-            DotListItem . DotListItems
-    DotListItem:
-            Identifier
-            TemplateInstance
-            NewExpression
-    TemplateInstance:
-            Identifier !( TemplateArguments )
-  +/
-  DotListExpression parseDotListExpression()
-  {
-    assert(token.type == T.Identifier || token.type == T.Dot || token.type == T.Typeof);
-    auto begin = token;
-    Expression[] identList;
-    if (skipped(T.Dot))
-      identList ~= set(new DotExpression(), begin);
-    else if (token.type == T.Typeof)
-    {
-      auto type = parseTypeofType();
-      set(type, begin);
-      identList ~= set(new TypeofExpression(type), begin);
-      if (!skipped(T.Dot))
-        goto Lreturn;
-    }
-
-    while (1)
-    {
-      begin = token;
-      auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
-      Expression e;
-      if (token.type == T.Not && peekNext() == T.LParen) // Identifier !( TemplateArguments )
-      {
-        nT(); // Skip !.
-        auto tparams = parseTemplateArguments();
-        e = new TemplateInstanceExpression(ident, tparams);
-      }
-      else // Identifier
-        e = new IdentifierExpression(ident);
-
-      identList ~= set(e, begin);
-
-    LnewExpressionLoop:
-      if (!skipped(T.Dot))
-        break;
-
-      if (token.type == T.New)
-      {
-        identList ~= parseNewExpression();
-        goto LnewExpressionLoop;
-      }
-    }
-
-  Lreturn:
-    return new DotListExpression(identList);
-  }
-
-  /+
-    DotListType:
-            . TypeItems
-            TypeItems
-            Typeof
-            Typeof . TypeItems
-    TypeItems:
-            TypeItem
-            TypeItem . TypeItems
-    TypeItem:
-            Identifier
-            TemplateInstance
-    TemplateInstance:
-            Identifier !( TemplateArguments )
-  +/
-  DotListType parseDotListType()
-  {
-    auto begin = token;
-    Type[] identList;
-    if (skipped(T.Dot))
-      identList ~= set(new DotType(), begin);
-    else if (token.type == T.Typeof)
-    {
-      identList ~= set(parseTypeofType(), begin);
-      if (!skipped(T.Dot))
-        goto Lreturn;
-    }
-
-    do
-    {
-      begin = token;
-      auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
-      Type t;
-      // NB.: Currently Types can't be followed by "!="
-      // so no need to peek for "(" when parsing TemplateInstances.
-      if (skipped(T.Not)/+ && peekNext() == T.LParen+/) // Identifier !( TemplateArguments )
-        t = new TemplateInstanceType(ident, parseTemplateArguments());
-      else // Identifier
-        t = new IdentifierType(ident);
-      identList ~= set(t, begin);
-    } while(skipped(T.Dot))
-  Lreturn:
-    return new DotListType(identList);
   }
 
   /*
@@ -1524,33 +1418,21 @@ class Parser
   }
 
     auto begin = token;
-    Expression[] templateIdent;
+    Expression e;
     Identifier* mixinIdent;
 
-    // This code is similar to parseDotListType().
     if (skipped(T.Dot))
-      templateIdent ~= set(new DotExpression(), begin);
+      e = set(new ModuleScopeExpression(parseIdentifierExpression()), begin);
+    else
+      e = parseIdentifierExpression();
 
-    do
-    {
-      begin = token;
-      auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
-      Expression e;
-      if (skipped(T.Not)) // Identifier !( TemplateArguments )
-      {
-        // No need to peek for T.LParen. This must be a template instance.
-        auto tparams = parseTemplateArguments();
-        e = new TemplateInstanceExpression(ident, tparams);
-      }
-      else // Identifier
-        e = new IdentifierExpression(ident);
-      templateIdent ~= set(e, begin);
-    } while (skipped(T.Dot))
+    while (skipped(T.Dot))
+      e = set(new DotExpression(e, parseIdentifierExpression()), begin);
 
     mixinIdent = optionalIdentifier();
     require(T.Semicolon);
 
-    return new Class(templateIdent, mixinIdent);
+    return new Class(e, mixinIdent);
   }
 
   /+++++++++++++++++++++++++++++
@@ -2736,6 +2618,11 @@ class Parser
     case T.Tilde:
       nT();
       e = new CompExpression(parseAsmUnaryExpression());
+      break;
+    case T.Dot:
+      nT();
+      e = new ModuleScopeExpression(parseIdentifierExpression());
+      break;
     default:
     LparseAsmPrimaryExpression:
       e = parseAsmPrimaryExpression();
@@ -2827,21 +2714,13 @@ class Parser
         e = new AsmRegisterExpression(register);
         break;
       default:
-        // DotIdentifier
-        Expression[] identList;
-        while (1)
+        e = parseIdentifierExpression();
+        while (skipped(TOK.Dot))
         {
-          auto begin2 = token;
-          auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
-          e = new IdentifierExpression(ident);
-          set(e, begin2);
-          identList ~= e;
-          if (token.type != T.Dot)
-            break;
-          nT(); // Skip dot.
+          e = new DotExpression(e, parseIdentifierExpression());
+          set(e, begin);
         }
-        e = new DotListExpression(identList);
-      }
+      } // end of switch
       break;
     default:
       error(MID.ExpectedButFound, "Expression", token.srcText);
@@ -3130,11 +3009,14 @@ class Parser
     auto e = parseUnaryExpression();
     while (1)
     {
+      while (skipped(T.Dot))
+      {
+        e = new DotExpression(e, parseNewOrIdentifierExpression());
+        set(e, begin);
+      }
+
       switch (token.type)
       {
-      case T.Dot:
-        e = new PostDotListExpression(e, parseDotListExpression());
-        goto Lset;
       case T.PlusPlus:
         e = new PostIncrExpression(e);
         break;
@@ -3266,6 +3148,10 @@ class Parser
         break;
       }
       goto default;
+    case T.Dot:
+      nT();
+      e = new ModuleScopeExpression(parseIdentifierExpression());
+      break;
     default:
       e = parsePrimaryExpression();
       return e;
@@ -3275,14 +3161,45 @@ class Parser
     return e;
   }
 
+  /++
+    IdentifierExpression:
+            Identifier
+            TemplateInstance
+    TemplateInstance:
+            Identifier !( TemplateArguments )
+  +/
+  Expression parseIdentifierExpression()
+  {
+    auto begin = token;
+    auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
+    Expression e;
+    if (token.type == T.Not && peekNext() == T.LParen)
+    { // Identifier !( TemplateArguments )
+      nT(); // Skip !.
+      auto tparams = parseTemplateArguments();
+      e = new TemplateInstanceExpression(ident, tparams);
+    }
+    else // Identifier
+      e = new IdentifierExpression(ident);
+    return set(e, begin);
+  }
+
+  Expression parseNewOrIdentifierExpression()
+  {
+    return token.type == T.New ? parseNewExpression() :  parseIdentifierExpression();
+  }
+
   Expression parsePrimaryExpression()
   {
     auto begin = token;
     Expression e;
     switch (token.type)
     {
-    case T.Identifier, T.Dot, T.Typeof:
-      e = parseDotListExpression();
+    case T.Identifier:
+      e = parseIdentifierExpression();
+      return e;
+    case T.Typeof:
+      e = new TypeofExpression(parseTypeofType());
       break;
     case T.This:
       nT();
@@ -3564,6 +3481,38 @@ class Parser
     return parseBasicType2(parseBasicType());
   }
 
+  Type parseIdentifierType()
+  {
+    auto begin = token;
+    auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
+    Type t;
+    if (skipped(T.Not)) // Identifier !( TemplateArguments )
+      t = new TemplateInstanceType(ident, parseTemplateArguments());
+    else // Identifier
+      t = new IdentifierType(ident);
+    return set(t, begin);
+  }
+
+  Type parseQualifiedType()
+  {
+    auto begin = token;
+    Type type;
+    if (skipped(T.Dot))
+      type = set(new ModuleScopeType(parseIdentifierType()), begin);
+    else if (token.type == T.Typeof)
+    {
+      type = parseTypeofType();
+      if (token.type != T.Dot)
+        return type;
+    }
+    else
+      type = parseIdentifierType();
+
+    while (skipped(T.Dot))
+      type = set(new QualifiedType(type, parseIdentifierType()), begin);
+    return type;
+  }
+
   Type parseBasicType()
   {
     auto begin = token;
@@ -3578,9 +3527,8 @@ class Parser
     switch (token.type)
     {
     case T.Identifier, T.Typeof, T.Dot:
-      t = parseDotListType();
-      assert(!isNodeSet(t));
-      break;
+      t = parseQualifiedType();
+      return t;
     version(D2)
     {
     case T.Const:

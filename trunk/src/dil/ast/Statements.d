@@ -498,13 +498,13 @@ class PragmaStatement : Statement
 
 class MixinStatement : Statement
 {
-  Expression[] templateIdents;
+  Expression templateExpr;
   Identifier* mixinIdent;
-  this(Expression[] templateIdents, Identifier* mixinIdent)
+  this(Expression templateExpr, Identifier* mixinIdent)
   {
     mixin(set_kind);
-    addChildren(templateIdents);
-    this.templateIdents = templateIdents;
+    addChild(templateExpr);
+    this.templateExpr = templateExpr;
     this.mixinIdent = mixinIdent;
   }
 }

@@ -143,7 +143,6 @@ enum NodeKind
   SignExpression,
   NotExpression,
   CompExpression,
-  PostDotListExpression,
   CallExpression,
   NewExpression,
   NewAnonClassExpression,
@@ -151,11 +150,10 @@ enum NodeKind
   CastExpression,
   IndexExpression,
   SliceExpression,
-  PrimaryExpressio,
+  ModuleScopeExpression,
   IdentifierExpression,
   SpecialTokenExpression,
   DotExpression,
-  DotListExpression,
   TemplateInstanceExpression,
   ThisExpression,
   SuperExpression,
@@ -190,10 +188,10 @@ enum NodeKind
   AsmRegisterExpression,
 
   // Types:
-  IntegralType,
   UndefinedType,
-  DotType,
-  DotListType,
+  IntegralType,
+  QualifiedType,
+  ModuleScopeType,
   IdentifierType,
   TypeofType,
   TemplateInstanceType,
@@ -316,11 +314,15 @@ class Node
       if (token.type == TOK.LBrace ||
           token.type == TOK.RBrace ||
           token.type == TOK.Semicolon ||
-          token.type == TOK.HEAD)
+          token.type == TOK.HEAD ||
+          (kind == NodeKind.EnumMember && token.type == TOK.Comma))
         break;
+
       if (token.type == TOK.Comment)
       {
         // Check that this comment doesn't belong to the previous declaration.
+        if (kind == NodeKind.EnumMember && token.type == TOK.Comma)
+          break;
         switch (token.prev.type)
         {
         case TOK.Semicolon, TOK.RBrace:
@@ -333,9 +335,18 @@ class Node
     }
     // Get single comment to the right.
     token = end.next;
-    if (token.type == TOK.Comment &&
-        isDocComment(token))
-        comments ~= token;
+    if (token.type == TOK.Comment && isDocComment(token))
+      comments ~= token;
+    else if (kind == NodeKind.EnumMember)
+    {
+      token = end.nextNWS;
+      if (token.type == TOK.Comma)
+      {
+        token = token.next;
+        if (token.type == TOK.Comment && isDocComment(token))
+          comments ~= token;
+      }
+    }
     return comments;
   }
 }

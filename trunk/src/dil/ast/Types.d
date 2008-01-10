@@ -45,8 +45,8 @@ enum TID
   Pointer,
   CFuncPointer,
   Array,
-  Dot,
-  DotList,
+  Qualified,
+  ModuleScope,
   Identifier,
   Typeof,
   TemplateInstance,
@@ -78,15 +78,6 @@ abstract class TypeNode : Node
   }
 }
 
-class IntegralType : TypeNode
-{
-  this(TOK tok)
-  {
-    super(cast(TID)tok);
-    mixin(set_kind);
-  }
-}
-
 class UndefinedType : TypeNode
 {
   this()
@@ -96,15 +87,12 @@ class UndefinedType : TypeNode
   }
 }
 
-class DotListType : TypeNode
+class IntegralType : TypeNode
 {
-  TypeNode[] dotList;
-  this(TypeNode[] dotList)
+  this(TOK tok)
   {
-    super(TID.DotList);
+    super(cast(TID)tok);
     mixin(set_kind);
-    addChildren(dotList);
-    this.dotList = dotList;
   }
 }
 
@@ -119,11 +107,22 @@ class IdentifierType : TypeNode
   }
 }
 
-class DotType : TypeNode
+class QualifiedType : TypeNode
 {
-  this()
+  alias next left;
+  TypeNode right;
+  this(TypeNode left, TypeNode right)
   {
-    super(TID.Dot);
+    super(TID.Qualified, left);
+    addChild(right);
+  }
+}
+
+class ModuleScopeType : TypeNode
+{
+  this(TypeNode next)
+  {
+    super(TID.ModuleScope, next);
     mixin(set_kind);
   }
 }

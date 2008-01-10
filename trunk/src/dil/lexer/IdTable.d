@@ -127,6 +127,18 @@ static:
     }
   }
   +/
+
+  static uint anonCount;
+  Identifier* genAnonymousID(char[] str)
+  {
+    ++anonCount;
+    auto x = anonCount;
+    // Convert count to a string and append it to str.
+    do
+      str = cast(char)('0' + (x % 10)) ~ str;
+    while (x /= 10)
+    return Identifier(str, TOK.Identifier);
+  }
 }
 
 unittest

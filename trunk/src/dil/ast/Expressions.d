@@ -374,6 +374,20 @@ class CatAssignExpression : BinaryExpression
   }
 }
 
+/// DotExpression := Expression '.' Expression
+class DotExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  {
+    super(left, right, null);
+    mixin(set_kind);
+  }
+}
+
+/*++++++++++++++++++++
++ Unary Expressions: +
+++++++++++++++++++++*/
+
 abstract class UnaryExpression : Expression
 {
   Expression e;
@@ -462,41 +476,6 @@ class CompExpression : UnaryExpression
   {
     super(e);
     mixin(set_kind);
-  }
-}
-/+
-class DotIdExpression : UnaryExpression
-{
-  string ident;
-  this(Expression e, string ident)
-  {
-    super(e);
-    this.ident = ident;
-  }
-}
-+/
-/+
-class DotTemplateInstanceExpression : UnaryExpression
-{
-  string ident;
-  TemplateArguments targs;
-  this(Expression e, string ident, TemplateArguments targs)
-  {
-    super(e);
-    this.ident = ident;
-    this.targs = targs;
-  }
-}
-+/
-class PostDotListExpression : UnaryExpression
-{
-  DotListExpression dotList;
-  this(Expression e, DotListExpression dotList)
-  {
-    super(e);
-    mixin(set_kind);
-    addChild(dotList);
-    this.dotList = dotList;
   }
 }
 
@@ -601,12 +580,22 @@ class SliceExpression : UnaryExpression
   }
 }
 
-/*
-class PrimaryExpression
+/// Module scope operator: '.' (IdentifierExpression|TemplateInstanceExpression)
+class ModuleScopeExpression : UnaryExpression
 {
-
+  this(Expression e)
+  {
+    super(e);
+    assert(e.kind == NodeKind.IdentifierExpression ||
+           e.kind == NodeKind.TemplateInstanceExpression
+    );
+    mixin(set_kind);
+  }
 }
-*/
+
+/*++++++++++++++++++++++
++ Primary Expressions: +
+++++++++++++++++++++++*/
 
 class IdentifierExpression : Expression
 {
@@ -646,36 +635,6 @@ class SpecialTokenExpression : Expression
     }
     type = e.type;
     return e;
-  }
-}
-
-/*
-class IdentifierListExpression : Expression
-{
-  Expression[] identList;
-  this(Expression[] identList)
-  {
-    this.identList = identList;
-  }
-}
-*/
-
-class DotExpression : Expression
-{
-  this()
-  {
-    mixin(set_kind);
-  }
-}
-
-class DotListExpression : Expression
-{
-  Expression[] items;
-  this(Expression[] items)
-  {
-    mixin(set_kind);
-    addChildren(items);
-    this.items = items;
   }
 }
 

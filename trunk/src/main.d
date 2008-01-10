@@ -5,16 +5,20 @@
 module main;
 
 import dil.parser.Parser;
-import dil.lexer.Lexer;
-import dil.lexer.Token;
+import dil.lexer.Lexer,
+       dil.lexer.Token;
+import dil.ast.Declarations,
+       dil.ast.Expressions,
+       dil.ast.Node;
 import dil.Messages;
 import dil.Settings;
 import dil.SettingsLoader;
 import dil.CompilerInfo;
 import dil.semantic.Module;
-import dil.ast.Declarations, dil.ast.Expressions, dil.ast.Node;
 import dil.Information;
 import dil.File;
+import dil.semantic.Symbols;
+
 import cmd.Generate;
 import cmd.Statistics;
 import cmd.ImportGraph;
@@ -48,6 +52,20 @@ void main(char[][] args)
       mod.parse();
       // Start semantic analysis.
       mod.semantic();
+
+      void printSymbolTable(ScopeSymbol scopeSym)
+      {
+        foreach (member; scopeSym.members)
+        {
+          auto tokens = member.node.getDocComments();
+          char[] docText;
+          foreach (token; tokens)
+            docText ~= token.srcText;
+          Stdout.formatln("Id:{}, Symbol:{}, DocText:{}", member.ident.str, member.classinfo.name, docText);
+        }
+      }
+
+      printSymbolTable(mod);
     }
 
     foreach (info; infoMan.info)

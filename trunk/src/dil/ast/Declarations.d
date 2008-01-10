@@ -205,6 +205,21 @@ class AliasDeclaration : Declaration
     addChild(decl);
     this.decl = decl;
   }
+
+  override void semantic(Scope scop)
+  {
+    /+
+    decl.semantic(scop); // call semantic() or do SA in if statements?
+    if (auto fd = TryCast!(FunctionDeclaration)(decl))
+    {
+      // TODO: do SA here?
+    }
+    else if (auto vd = TryCast!(VariableDeclaration)(decl))
+    {
+      // TODO: do SA here?
+    }
+    +/
+  }
 }
 
 class TypedefDeclaration : Declaration
@@ -215,6 +230,21 @@ class TypedefDeclaration : Declaration
     mixin(set_kind);
     addChild(decl);
     this.decl = decl;
+  }
+
+  override void semantic(Scope scop)
+  {
+    /+
+    decl.semantic(scop); // call semantic() or do SA in if statements?
+    if (auto fd = TryCast!(FunctionDeclaration)(decl))
+    {
+      // TODO: do SA here?
+    }
+    else if (auto vd = TryCast!(VariableDeclaration)(decl))
+    {
+      // TODO: do SA here?
+    }
+    +/
   }
 }
 
@@ -233,6 +263,43 @@ class EnumDeclaration : Declaration
     this.name = name;
     this.baseType = baseType;
     this.members = members;
+  }
+
+  Enum symbol;
+
+  override void semantic(Scope scop)
+  {
+    /+
+    // Create the symbol.
+    symbol = new Enum(name, this);
+    // Type semantics.
+    Type type = Types.Int; // Default to integer.
+    if (baseType)
+      type = baseType.semantic(scop);
+    auto enumType = new EnumType(symbol, type);
+    // Set the base type of the enum symbol.
+    symbol.setType(enumType);
+    if (name)
+    { // Insert named enum into scope.
+      scop.insert(symbol, symbol.ident);
+      // Create new scope.
+      scop = scop.push(symbol);
+    }
+    // Semantic on members.
+    foreach (member; members)
+    {
+      auto value = member.value;
+      if (value)
+      {
+        // value = value.semantic(scop);
+        // value = value.evaluate();
+      }
+      auto variable = new Variable(StorageClass.Const, LinkageType.None, type, member.name, member);
+      scop.insert(variable, variable.ident);
+    }
+    if (name)
+      scop.pop();
+    +/
   }
 }
 
@@ -530,6 +597,7 @@ class VariableDeclaration : Declaration
       if (values[i])
         values[i] = values[i].semantic(scop);
       // Create a new variable symbol.
+      // TODO: pass 'prot' to constructor.
       auto variable = new Variable(stc, linkageType, type, ident, this);
       variables ~= variable;
       // Add to scope.
@@ -768,16 +836,16 @@ class PragmaDeclaration : AttributeDeclaration
 
 class MixinDeclaration : Declaration
 {
-  Expression[] templateIdents;
+  Expression templateExpr;
   Identifier* mixinIdent;
   Expression argument; // mixin ( AssignExpression )
 
-  this(Expression[] templateIdents, Identifier* mixinIdent)
+  this(Expression templateExpr, Identifier* mixinIdent)
   {
     mixin(set_kind);
-    addChildren(templateIdents);
+    addChild(templateExpr);
 
-    this.templateIdents = templateIdents;
+    this.templateExpr = templateExpr;
     this.mixinIdent = mixinIdent;
   }
 
