@@ -64,9 +64,9 @@ class Scope
   }
 
   /++
-    Create a new inner scope.
+    Create and enter a new inner scope.
   +/
-  Scope push(ScopeSymbol symbol)
+  Scope enter(ScopeSymbol symbol)
   {
     auto sc = new Scope();
     sc.parent = this;
@@ -78,7 +78,7 @@ class Scope
   /++
     Destroy this scope and return the outer scope.
   +/
-  Scope pop()
+  Scope exit()
   {
     auto sc = parent;
     // delete this;

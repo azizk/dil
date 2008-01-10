@@ -356,10 +356,10 @@ class ClassDeclaration : AggregateDeclaration
     // Insert into current scope.
     scop.insert(symbol, name);
     // Create a new scope.
-    scop = scop.push(symbol);
+    scop = scop.enter(symbol);
     // Continue semantic analysis.
     decls && decls.semantic(scop);
-    scop.pop();
+    scop.exit();
   }
 }
 
@@ -389,10 +389,10 @@ class InterfaceDeclaration : AggregateDeclaration
     // Insert into current scope.
     scop.insert(symbol, name);
     // Create a new scope.
-    scop = scop.push(symbol);
+    scop = scop.enter(symbol);
     // Continue semantic analysis.
     decls && decls.semantic(scop);
-    scop.pop();
+    scop.exit();
   }
 }
 
@@ -422,10 +422,10 @@ class StructDeclaration : AggregateDeclaration
     // Insert into current scope.
     scop.insert(symbol, name);
     // Create a new scope.
-    scop = scop.push(symbol);
+    scop = scop.enter(symbol);
     // Continue semantic analysis.
     decls && decls.semantic(scop);
-    scop.pop();
+    scop.exit();
   }
 }
 
@@ -449,10 +449,10 @@ class UnionDeclaration : AggregateDeclaration
     // Insert into current scope.
     scop.insert(symbol, name);
     // Create a new scope.
-    scop = scop.push(symbol);
+    scop = scop.enter(symbol);
     // Continue semantic analysis.
     decls && decls.semantic(scop);
-    scop.pop();
+    scop.exit();
   }
 }
 
