@@ -2,9 +2,9 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.semantic.Type;
+module dil.semantic.Types;
 
-import dil.semantic.Symbol;
+import dil.semantic.Symbols;
 import dil.semantic.TypesEnum;
 import dil.lexer.Identifier;
 import dil.CompilerInfo;
@@ -96,9 +96,11 @@ class TypeReference : Type
 
 class EnumType : Type
 {
-  this(Type baseType)
+  Enum enumSymbol;
+  this(Enum enumSymbol, Type baseType)
   {
     super(baseType, TYP.Enum);
+    this.enumSymbol = enumSymbol;
   }
 
   Type baseType()
@@ -302,7 +304,7 @@ static:
   /// Allocates an instance of TypeBasic and assigns it to typeName.
   template newTB(char[] typeName)
   {
-    const TypeBasic newTB = mixin(typeName~" = new TypeBasic(TYP."~typeName~")");
+    const newTB = mixin(typeName~" = new TypeBasic(TYP."~typeName~")");
   }
 
   static this()

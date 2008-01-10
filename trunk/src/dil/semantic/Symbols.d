@@ -96,12 +96,17 @@ class Struct : Aggregate
 
 class Enum : ScopeSymbol
 {
-  Identifier* ident;
+  EnumType type;
   this(Identifier* ident, Node enumNode)
   {
     this.sid = SYM.Enum;
     this.ident = ident;
     this.node = enumNode;
+  }
+
+  void setType(EnumType type)
+  {
+    this.type = type;
   }
 }
 
