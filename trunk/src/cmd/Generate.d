@@ -297,7 +297,7 @@ void syntaxToDoc(string filePath, Print!(char) print, DocOption options)
   auto sourceText = loadFile(filePath);
   auto parser = new Parser(sourceText, filePath);
   auto root = parser.start();
-  auto lx = parser.lx;
+  auto lx = parser.lexer;
 
   auto token = lx.head;
 

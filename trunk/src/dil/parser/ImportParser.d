@@ -62,7 +62,7 @@ class ImportParser : Parser
     uint level = 1;
     while (1)
     {
-      lx.peek(next);
+      lexer.peek(next);
       if (next.type == opening)
         ++level;
       else if (next.type == closing && --level == 0)

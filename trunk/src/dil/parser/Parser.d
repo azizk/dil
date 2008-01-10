@@ -25,7 +25,7 @@ import common;
 +/
 class Parser
 {
-  Lexer lx;
+  Lexer lexer;
   Token* token; /// Current non-whitespace token.
   Token* prevToken; /// Previous non-whitespace token.
 
@@ -34,6 +34,7 @@ class Parser
 
   ImportDeclaration[] imports; /// ImportDeclarations in the source text.
 
+  // Attributes are evaluated in the parsing phase.
   LinkageType linkageType;
   Protection protection;
   StorageClass storageClass;
@@ -51,7 +52,7 @@ class Parser
   this(char[] srcText, string filePath, InfoManager infoMan = null)
   {
     this.infoMan = infoMan;
-    lx = new Lexer(srcText, filePath, infoMan);
+    lexer = new Lexer(srcText, filePath, infoMan);
   }
 
   protected void init()
@@ -65,8 +66,8 @@ class Parser
     prevToken = token;
     do
     {
-      lx.nextToken();
-      token = lx.token;
+      lexer.nextToken();
+      token = lexer.token;
     } while (token.isWhitespace) // Skip whitespace
   }
 
@@ -116,7 +117,7 @@ class Parser
       // Restore members.
       token      = oldToken;
       prevToken  = oldPrevToken;
-      lx.token   = oldToken;
+      lexer.token   = oldToken;
       errorCount = oldCount;
       success = false;
     }
@@ -146,7 +147,7 @@ class Parser
   {
     Token* next = token;
     do
-      lx.peek(next);
+      lexer.peek(next);
     while (next.isWhitespace) // Skip whitespace
     return next.type;
   }
@@ -155,7 +156,7 @@ class Parser
   {
     assert(next !is null);
     do
-      lx.peek(next);
+      lexer.peek(next);
     while (next.isWhitespace) // Skip whitespace
     return next.type;
   }
@@ -2728,7 +2729,7 @@ class Parser
       if (!trying)
       {
         // Insert a dummy token and don't consume current one.
-        begin = lx.insertEmptyTokenBefore(token);
+        begin = lexer.insertEmptyTokenBefore(token);
         this.prevToken = begin;
       }
     }
@@ -3430,7 +3431,7 @@ class Parser
         if (!trying)
         {
           // Insert a dummy token and don't consume current one.
-          begin = lx.insertEmptyTokenBefore(token);
+          begin = lexer.insertEmptyTokenBefore(token);
           this.prevToken = begin;
         }
       }
@@ -3597,14 +3598,14 @@ class Parser
   Loop:
     while (1)
     {
-      lx.peek(next);
+      lexer.peek(next);
       switch (next.type)
       {
       case T.RParen:
         if (--level == 0)
         { // Last, closing parentheses found.
           do
-            lx.peek(next);
+            lexer.peek(next);
           while (next.isWhitespace)
           break Loop;
         }

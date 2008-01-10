@@ -100,7 +100,7 @@ class Module : ScopeSymbol
   /// Returns true if there are errors in the source file.
   bool hasErrors()
   {
-    return parser.errors.length || parser.lx.errors.length;
+    return parser.errors.length || parser.lexer.errors.length;
   }
 
   string[] getImports()
