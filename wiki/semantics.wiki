@@ -1,0 +1,38 @@
+#summary Notes on the semantic rules of elements in the D programming language
+
+== Classes ==
+  * Inherits from Object (defined in module object) if no base class is specified.
+  * May inherit only from one class (single inheritance.)
+  * May inherit zero to any number of interfaces.
+  * All classes can be implicitly cast to object.Object.
+  * Methods are "virtual" by default.
+  * Is a reference type.
+  * Instances are allocated on the heap (or on the stack; see attribute 'scope'.)
+  * Every class has a ClassInfo (from module object.)
+  * Attributes:
+    * abstract: class can't be instantiated.
+    * final: disallows inheritance by other classes.
+    * scope: instances are allocated on the stack. Variable declarations of this class must be marked with the scope attribute.
+    * const, invariant: D2.0 feature. All declarations inside the class body are marked as const or invariant.
+    * deprecated: using the class is an error.
+    * Meaningless: auto, extern, override, static, synchronized.
+== Structs ==
+  * 'align' attribute has only a meaning for and in structs.
+  * Can't inherit other structs.
+  * Is a value type.
+== Interfaces ==
+  * Can't have fields (member variables.)
+  * Methods must be declared but not defined (i.e. no function body.)
+  * Can inherit other interfaces.
+== Enums ==
+  * The base type must be integral and it defaults to int.
+  * Named enums have their own scopes.
+  * The members of an anonymous enum are inserted into the scope that surrounds the enum declaration.
+== Functions ==
+  * Variable declarations may not shadow other variables in the surrounding scopes. E.g: `void f(){ int a; { int a;/* Error: shadows outer 'a'*/ } }`.
+== Variables ==
+  * Declarations are default initialized to Type.init.
+== Imports ==
+  * Private importing is the default.
+== Labels ==
+  * They are stored in a separate symbol table.
