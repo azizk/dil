@@ -17,6 +17,7 @@ enum SYM
   Struct,
   Union,
   Enum,
+  Template,
   Variable,
   Function,
 //   Type,
@@ -45,6 +46,7 @@ class Symbol
   mixin(is_!("Struct"));
   mixin(is_!("Union"));
   mixin(is_!("Enum"));
+  mixin(is_!("Template"));
   mixin(is_!("Variable"));
   mixin(is_!("Function"));
 //   mixin(is_!("Type"));

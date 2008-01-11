@@ -110,6 +110,16 @@ class Enum : ScopeSymbol
   }
 }
 
+class Template : ScopeSymbol
+{
+  this(Identifier* ident, Node templateNode)
+  {
+    this.sid = SYM.Template;
+    this.ident = ident;
+    this.node = templateNode;
+  }
+}
+
 class Function : ScopeSymbol
 {
   StorageClass stc;
