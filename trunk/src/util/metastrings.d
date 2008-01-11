@@ -22,7 +22,7 @@
     Only changed some types from string to char[]
 */
 
-module std.metastrings;
+module util.metastrings;
 
 /**
  * Formats constants into a string at compile time.

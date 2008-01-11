@@ -46,7 +46,7 @@
     Only commented out deprecated class UtfError.
 */
  
-module std.utf;
+module util.utf;
 
 // private import std.stdio;
 

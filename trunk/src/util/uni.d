@@ -21,7 +21,7 @@
  */
 
 
-module std.uni;
+module util.uni;
 
 /**
  * Returns !=0 if c is a Unicode lower case character.

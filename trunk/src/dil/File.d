@@ -8,7 +8,7 @@ import dil.FileBOM;
 import dil.Information;
 import dil.Converter;
 import tango.io.File;
-import std.utf;
+import util.utf;
 import common;
 
 /// Loads a file in any valid Unicode format and converts it to UTF-8.

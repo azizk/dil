@@ -3,7 +3,7 @@
   License: GPL3
 +/
 module dil.Unicode;
-public import std.uni : isUniAlpha;
+public import util.uni : isUniAlpha;
 
 /// U+FFFD = �. Used to replace invalid Unicode characters.
 const dchar REPLACEMENT_CHAR = '\uFFFD';

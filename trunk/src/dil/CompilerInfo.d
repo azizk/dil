@@ -3,7 +3,7 @@
   License: GPL3
 +/
 module dil.CompilerInfo;
-import std.metastrings : FormatT = Format, ToString;
+import util.metastrings : FormatT = Format, ToString;
 
 template Pad(char[] str, uint amount)
 {
