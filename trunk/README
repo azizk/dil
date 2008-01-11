@@ -1,0 +1,32 @@
+dil
+===
+Copyright (c) 2008 by Aziz Köksal <aziz.koeksal@gmail.com>
+This program is free software, licensed under the GPL3.
+Please, read the license file, COPYING, for further information.
+
+Description
+===========
+This software is a compiler written in D for the D programming language.
+
+How To Compile dil
+==================
+In order to compile dil you need to have:
+ *) DMD 1.024 (http://www.digitalmars.com/d/1.0/changelog.html)
+ *) Tango 0.99.4 (http://dsource.org/projects/tango/)
+ *) DSSS 0.71 (http://dsource.org/projects/dsss/)
+
+If you can't compile dil because you have a newer version of these programs
+then please report the problem to me (see Bugs section.)
+
+Before you run dil, make sure that the executable can find config.d and
+lang_en.d (which are located in trunk/src/.)
+The language can be configured in config.d.
+
+Bugs And Patches
+================
+"errare humanum est, ignoscere divinum" - to err is human, to forgive divine.
+ - Cicero
+
+Users can report problems with this software or submit patches by:
+ *) contacting me: aziz.koeksal@gmail.com
+ *) filing a bug report here: http://code.google.com/p/dil/issues/list
