@@ -20,7 +20,7 @@ import dil.CompilerInfo;
 import common;
 
 /++
-  The Parser produces an abstract syntax tree (AST) by analyzing
+  The Parser produces a full parse tree by analyzing
   the tokens of the provided source code.
 +/
 class Parser

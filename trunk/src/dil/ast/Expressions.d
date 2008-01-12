@@ -12,6 +12,7 @@ import dil.ast.Statements;
 import dil.ast.Parameters;
 import dil.ast.BaseClass;
 import dil.lexer.Identifier;
+import dil.parser.ExpressionParser;
 import dil.semantic.Scope;
 import dil.semantic.Types;
 import common;
@@ -930,20 +931,29 @@ class MixinExpression : Expression
     this.expr = expr;
   }
 
-  // import dil.Parser;
   override Expression semantic(Scope scop)
   {
+    if (type)
+      return this.expr;
     // TODO:
-    /+
     auto expr = this.expr.semantic(scop);
-    auto strExpr = Cast!(StringExpression)(expr);
-    // if (strExpr is null)
-    //  error(scop, MID.MixinExpressionMustBeString);
-    auto parser = new Parser(strExpr.getString(), "", scop.infoMan);
-    expr = parser.start2();
+    expr = expr.evaluate();
+    if (expr is null)
+      return this;
+    auto strExpr = TryCast!(StringExpression)(expr);
+    if (strExpr is null)
+     error(scop, MSG.MixinArgumentMustBeString);
+    else
+    {
+      auto loc = this.begin.getLocation();
+      auto filePath = loc.filePath;
+      auto parser = new_ExpressionParser(strExpr.getString(), filePath, scop.infoMan);
+      expr = parser.parse();
+      expr = expr.semantic(scop);
+    }
+    this.expr = expr;
+    this.type = expr.type;
     return expr;
-    +/
-    return null;
   }
 }
 

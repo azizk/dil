@@ -146,4 +146,5 @@ static:
   auto DeclConflictsWithDecl = "declaration '{}' conflicts with declaration @{}";
   auto VariableConflictsWithDecl = "variable '{}' conflicts with declaration @{}";
   auto InterfaceCantHaveVariables = "an interface can't have member variables";
+  auto MixinArgumentMustBeString = "the mixin argument must evaluate to a string";
 }
