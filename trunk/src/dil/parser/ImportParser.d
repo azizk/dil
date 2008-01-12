@@ -318,13 +318,6 @@ class ImportParser : Parser
       break;
     // Declaration
     case T.Identifier, T.Dot, T.Typeof:
-    // IntegralType
-    case T.Char,   T.Wchar,   T.Dchar,  T.Bool,
-         T.Byte,   T.Ubyte,   T.Short,  T.Ushort,
-         T.Int,    T.Uint,    T.Long,   T.Ulong,
-         T.Float,  T.Double,  T.Real,
-         T.Ifloat, T.Idouble, T.Ireal,
-         T.Cfloat, T.Cdouble, T.Creal, T.Void:
     case_Declaration:
       while (token.type != T.Semicolon && token.type != T.EOF)
         if (token.type == T.LParen)
@@ -336,6 +329,8 @@ class ImportParser : Parser
       skip(T.Semicolon);
       break;
     default:
+      if (token.isIntegralType)
+        goto case_Declaration;
       nT();
     }
   }
