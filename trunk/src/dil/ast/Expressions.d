@@ -1140,10 +1140,12 @@ class AsmSegExpression : UnaryExpression
 
 class AsmPostBracketExpression : UnaryExpression
 {
-  this(Expression e)
+  Expression e2; /// Expression in brackets: e [ e2 ]
+  this(Expression e, Expression e2)
   {
     super(e);
     mixin(set_kind);
+    addChild(e2);
   }
 }
 

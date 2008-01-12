@@ -2336,15 +2336,9 @@ class Parser
       //     Identifier
       Expression[] es;
       if (token.type != T.Semicolon)
-      {
-        while (1)
-        {
+        do
           es ~= parseAsmExpression();
-          if (token.type != T.Comma)
-            break;
-          nT();
-        }
-      }
+        while (skipped(T.Comma))
       require(T.Semicolon);
       s = new AsmInstruction(ident, es);
       break;
@@ -2562,11 +2556,9 @@ class Parser
   {
     auto begin = token;
     auto e = parseAsmUnaryExpression();
-    while (token.type == T.LBracket)
+    while (skipped(T.LBracket))
     {
-      nT();
-      e = parseAsmExpression();
-      e = new AsmPostBracketExpression(e);
+      e = new AsmPostBracketExpression(e, parseAsmExpression());
       require(T.RBracket);
       set(e, begin);
     }
@@ -2623,6 +2615,11 @@ class Parser
     case T.Dot:
       nT();
       e = new ModuleScopeExpression(parseIdentifierExpression());
+      while (skipped(TOK.Dot))
+      {
+        e = new DotExpression(e, parseIdentifierExpression());
+        set(e, begin);
+      }
       break;
     default:
     LparseAsmPrimaryExpression:
@@ -3174,7 +3171,7 @@ class Parser
     auto begin = token;
     auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
     Expression e;
-    if (token.type == T.Not && peekNext() == T.LParen)
+    if (token.type == T.Not /+&& peekNext() == T.LParen+/)
     { // Identifier !( TemplateArguments )
       nT(); // Skip !.
       auto tparams = parseTemplateArguments();
