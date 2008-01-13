@@ -241,8 +241,8 @@ class CFuncPointerType : TypeNode
   }
 }
 
-version(D2)
-{
+// version(D2)
+// {
 class ConstType : TypeNode
 {
   this(TypeNode t)
@@ -262,4 +262,4 @@ class InvariantType : TypeNode
     mixin(set_kind);
   }
 }
-} // version(D2)
+// } // version(D2)

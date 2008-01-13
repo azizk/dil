@@ -10,7 +10,9 @@ import dil.lexer.Lexer,
        dil.lexer.Token;
 import dil.ast.Declarations,
        dil.ast.Expressions,
-       dil.ast.Node;
+       dil.ast.Node,
+       dil.ast.Visitor;
+import dil.semantic.Pass1;
 import dil.Messages;
 import dil.Settings;
 import dil.SettingsLoader;

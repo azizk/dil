@@ -114,8 +114,8 @@ class TemplateTypeParameter : TemplateParameter
   }
 }
 
-version(D2)
-{
+// version(D2)
+// {
 class TemplateThisParameter : TemplateParameter
 {
   TypeNode specType, defType;
@@ -130,7 +130,7 @@ class TemplateThisParameter : TemplateParameter
     this.defType = defType;
   }
 }
-}
+// }
 
 class TemplateValueParameter : TemplateParameter
 {

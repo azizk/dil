@@ -1056,8 +1056,8 @@ class FunctionLiteralExpression : Expression
   }
 }
 
-version(D2)
-{
+// version(D2)
+// {
 class TraitsExpression : Expression
 {
   Identifier* ident;
@@ -1070,7 +1070,7 @@ class TraitsExpression : Expression
     this.targs = targs;
   }
 }
-}
+// }
 
 class VoidInitializer : Expression
 {

@@ -212,8 +212,8 @@ class ForeachStatement : Statement
   }
 }
 
-version(D2)
-{
+// version(D2)
+// {
 class ForeachRangeStatement : Statement
 {
   TOK tok;
@@ -233,7 +233,7 @@ class ForeachRangeStatement : Statement
     this.forBody = forBody;
   }
 }
-}
+// }
 
 class SwitchStatement : Statement
 {
