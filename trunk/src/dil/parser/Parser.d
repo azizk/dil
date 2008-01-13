@@ -3171,7 +3171,8 @@ class Parser
     auto begin = token;
     auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
     Expression e;
-    if (token.type == T.Not /+&& peekNext() == T.LParen+/)
+    // Peek for '(' to avoid matching: id !is id
+    if (token.type == T.Not && peekNext() == T.LParen)
     { // Identifier !( TemplateArguments )
       nT(); // Skip !.
       auto tparams = parseTemplateArguments();
