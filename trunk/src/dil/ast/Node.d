@@ -85,6 +85,11 @@ class Node
     return null;
   }
 
+  Class to(Class)()
+  {
+    return cast(Class)cast(void*)this;
+  }
+
   static bool isDoxygenComment(Token* token)
   { // Doxygen: '/+!' '/*!' '//!'
     return token.type == TOK.Comment && token.start[2] == '!';

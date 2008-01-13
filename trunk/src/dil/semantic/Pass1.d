@@ -21,28 +21,145 @@ class SemanticPass1 : Visitor
 {
   Scope scop;
 
-  /+Scope enterScope(Symbol s)
+  void enterScope(ScopeSymbol s)
   {
-    return null;
-  }+/
+    scop = scop.enter(s);
+  }
+
+  void exitScope()
+  {
+    scop = scop.exit();
+  }
 
 override
 {
-  Declaration visit(ClassDeclaration c)
+  Declaration visit(Declarations d)
   {
-    if (c.symbol)
-      return null;
-    c.symbol = new Class(c.name, c);
-    // Insert into current scope.
-    scop.insert(c.symbol, c.name);
-    // Enter a new scope.
-    this.scop = this.scop.enter(c.symbol);
-    // Continue semantic analysis.
-    c.decls && visitD(c.decls);
-    // Exit scope.
-    this.scop = scop.exit();
-    return c;
+    foreach (node; d.children)
+    {
+      assert(node.category == NodeCategory.Declaration);
+      visitD(node.to!(Declaration));
+    }
+    return d;
   }
+
+  Declaration visit(IllegalDeclaration)
+  { assert(0, "semantic pass on invalid AST"); return null; }
+  Declaration visit(EmptyDeclaration)
+  { return null; }
+  Declaration visit(ModuleDeclaration)
+  { return null; }
+  Declaration visit(ImportDeclaration)
+  { return null; }
+  Declaration visit(AliasDeclaration)
+  { return null; }
+  Declaration visit(TypedefDeclaration)
+  { return null; }
+  Declaration visit(EnumDeclaration)
+  { return null; }
+  Declaration visit(EnumMember)
+  { return null; }
+
+  Declaration visit(ClassDeclaration d)
+  {
+    if (d.symbol)
+      return null;
+    d.symbol = new Class(d.name, d);
+    // Insert into current scope.
+    scop.insert(d.symbol, d.name);
+    enterScope(d.symbol);
+    // Continue semantic analysis.
+    d.decls && visitD(d.decls);
+    exitScope();
+    return d;
+  }
+
+  Declaration visit(InterfaceDeclaration d)
+  {
+    if (d.symbol)
+      return null;
+    d.symbol = new dil.semantic.Symbols.Interface(d.name, d);
+    // Insert into current scope.
+    scop.insert(d.symbol, d.name);
+    enterScope(d.symbol);
+    // Continue semantic analysis.
+    d.decls && visitD(d.decls);
+    exitScope();
+    return d;
+  }
+
+  Declaration visit(StructDeclaration d)
+  {
+    if (d.symbol)
+      return null;
+    d.symbol = new Struct(d.name, d);
+    // Insert into current scope.
+    scop.insert(d.symbol, d.name);
+    enterScope(d.symbol);
+    // Continue semantic analysis.
+    d.decls && visitD(d.decls);
+    exitScope();
+    return d;
+  }
+
+  Declaration visit(UnionDeclaration d)
+  {
+    if (d.symbol)
+      return null;
+    d.symbol = new Union(d.name, d);
+    // Insert into current scope.
+    scop.insert(d.symbol, d.name);
+    enterScope(d.symbol);
+    // Continue semantic analysis.
+    d.decls && visitD(d.decls);
+    exitScope();
+    return d;
+  }
+
+  Declaration visit(ConstructorDeclaration)
+  { return null; }
+  Declaration visit(StaticConstructorDeclaration)
+  { return null; }
+  Declaration visit(DestructorDeclaration)
+  { return null; }
+  Declaration visit(StaticDestructorDeclaration)
+  { return null; }
+  Declaration visit(FunctionDeclaration)
+  { return null; }
+  Declaration visit(VariableDeclaration)
+  { return null; }
+  Declaration visit(InvariantDeclaration)
+  { return null; }
+  Declaration visit(UnittestDeclaration)
+  { return null; }
+  Declaration visit(DebugDeclaration)
+  { return null; }
+  Declaration visit(VersionDeclaration)
+  { return null; }
+  Declaration visit(StaticIfDeclaration)
+  { return null; }
+  Declaration visit(StaticAssertDeclaration)
+  { return null; }
+  Declaration visit(TemplateDeclaration)
+  { return null; }
+  Declaration visit(NewDeclaration)
+  { return null; }
+  Declaration visit(DeleteDeclaration)
+  { return null; }
+  Declaration visit(AttributeDeclaration)
+  { return null; }
+  Declaration visit(ProtectionDeclaration)
+  { return null; }
+  Declaration visit(StorageClassDeclaration)
+  { return null; }
+  Declaration visit(LinkageDeclaration)
+  { return null; }
+  Declaration visit(AlignDeclaration)
+  { return null; }
+  Declaration visit(PragmaDeclaration)
+  { return null; }
+  Declaration visit(MixinDeclaration)
+  { return null; }
 
   Expression visit(CommaExpression e)
   {
