@@ -2096,6 +2096,7 @@ class Parser
   Statement parseTryStatement()
   {
     assert(token.type == T.Try);
+    auto begin = token;
     nT();
 
     auto tryBody = parseScopeStatement();
@@ -2107,30 +2108,24 @@ class Parser
       Parameter param;
       if (skipped(T.LParen))
       {
-        auto begin = token;
+        auto begin2 = token;
         Identifier* ident;
         auto type = parseDeclarator(ident, true);
         param = new Parameter(StorageClass.None, type, ident, null);
-        set(param, begin);
+        set(param, begin2);
         require(T.RParen);
       }
-      catchBodies ~= new CatchBody(param, parseNoScopeStatement());
+      catchBodies ~= set(new CatchBody(param, parseNoScopeStatement()), begin);
       if (param is null)
         break; // This is a LastCatch
+      begin = token;
     }
 
-    if (token.type == T.Finally)
-    {
-      auto begin = token;
-      nT();
-      finBody = new FinallyBody(parseNoScopeStatement());
-      set(finBody, begin);
-    }
+    if (skipped(T.Finally))
+      finBody = set(new FinallyBody(parseNoScopeStatement()), prevToken);
 
     if (catchBodies.length == 0 && finBody is null)
-    {
-      // TODO: issue error msg.
-    }
+      assert(begin.type == T.Try), error(begin, MSG.MissingCatchOrFinally);
 
     return new TryStatement(tryBody, catchBodies, finBody);
   }

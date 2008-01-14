@@ -102,18 +102,36 @@ char[] getShortClassName(Node node)
     suffixLength = "Declaration".length;
     break;
   case NC.Statement:
-    if (node.kind == NodeKind.Statements)
+    switch (node.kind)
+    {
+    case NodeKind.Statements,
+         NodeKind.CatchBody,
+         NodeKind.FinallyBody,
+         NodeKind.AsmInstruction,
+         NodeKind.IllegalAsmInstruction:
       break;
-    suffixLength = "Statement".length;
+    default:
+     suffixLength = "Statement".length;
+    }
     break;
   case NC.Expression:
-    suffixLength = "Expression".length;
+    switch (node.kind)
+    {
+    case NodeKind.VoidInitializer,
+         NodeKind.ArrayInitializer,
+         NodeKind.StructInitializer:
+      break;
+    default:
+     suffixLength = "Expression".length;
+    }
     break;
   case NC.Type:
     suffixLength = "Type".length;
     break;
   case NC.Other:
+    break;
   default:
+    assert(0);
   }
   // Remove common suffix.
   name = name[0 .. $ - suffixLength];

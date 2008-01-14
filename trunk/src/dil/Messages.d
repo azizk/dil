@@ -135,6 +135,7 @@ static:
   auto ExpectedAliasTemplateParam = "expected name for alias template parameter, not '{}'";
   auto ExpectedNameForThisTempParam = "expected name for 'this' template parameter, not '{}'";
   auto ExpectedIdentOrInt = "expected an identifier or an integer, not '{}'";
+  auto MissingCatchOrFinally = "try statement is missing a catch or finally body.";
   // Semantic analysis:
   auto DeclConflictsWithDecl = "declaration '{}' conflicts with declaration @{}";
   auto VariableConflictsWithDecl = "variable '{}' conflicts with declaration @{}";

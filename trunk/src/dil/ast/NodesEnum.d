@@ -4,7 +4,7 @@
 +/
 module dil.ast.NodesEnum;
 
-enum NodeCategory
+enum NodeCategory : ushort
 {
   Declaration,
   Statement,
@@ -60,7 +60,6 @@ static const char[][] classNames = [
   "ExpressionStatement",
   "DeclarationStatement",
   "IfStatement",
-//   "ConditionalStatement",
   "WhileStatement",
   "DoWhileStatement",
   "ForStatement",
@@ -225,7 +224,7 @@ char[] generateNodeKindMembers()
 
 // enum NodeKind;
 mixin(
-  "enum NodeKind"
+  "enum NodeKind : ushort"
   "{"
     ~ generateNodeKindMembers ~
   "}"
