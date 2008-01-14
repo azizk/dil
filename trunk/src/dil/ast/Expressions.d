@@ -933,6 +933,7 @@ class ParenExpression : Expression
   this(Expression next)
   {
     mixin(set_kind);
+    addChild(next);
     this.next = next;
   }
 }
