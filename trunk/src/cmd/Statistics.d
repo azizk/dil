@@ -3,9 +3,11 @@
   License: GPL3
 +/
 module cmd.Statistics;
+
 import dil.File;
 import dil.lexer.Lexer;
 import dil.lexer.Token;
+import cmd.ASTStats;
 import common;
 
 struct Statistics

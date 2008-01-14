@@ -4,6 +4,8 @@
 +/
 module dil.ast.DefaultVisitor;
 
+import dil.ast.Visitor;
+
 import dil.ast.Node;
 import dil.ast.Declarations,
        dil.ast.Expressions,
