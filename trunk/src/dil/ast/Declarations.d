@@ -581,7 +581,7 @@ class VariableDeclaration : Declaration
     else
     { // Infer type from first initializer.
       auto firstValue = values[0];
-      firstValue = firstValue.semantic(scop);
+//       firstValue = firstValue.semantic(scop);
       type = firstValue.type;
     }
     assert(type !is null);
@@ -594,8 +594,8 @@ class VariableDeclaration : Declaration
     foreach (i, ident; idents)
     {
       // Perform semantic analysis on value.
-      if (values[i])
-        values[i] = values[i].semantic(scop);
+//       if (values[i])
+//         values[i] = values[i].semantic(scop);
       // Create a new variable symbol.
       // TODO: pass 'prot' to constructor.
       auto variable = new Variable(stc, linkageType, type, ident, this);

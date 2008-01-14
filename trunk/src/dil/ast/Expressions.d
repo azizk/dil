@@ -36,13 +36,6 @@ abstract class BinaryExpression : Expression
     this.right = right;
     this.tok = tok;
   }
-
-  override Expression semantic(Scope scop)
-  {
-    left = left.semantic(scop);
-    right = right.semantic(scop);
-    return this;
-  }
 }
 
 class CondExpression : BinaryExpression
@@ -583,26 +576,7 @@ class SpecialTokenExpression : Expression
     this.specialToken = specialToken;
   }
 
-  Expression e; /// The expression created in the semantic phase.
-
-  override Expression semantic(Scope)
-  {
-    if (type)
-      return e;
-    switch (specialToken.type)
-    {
-    case TOK.LINE, TOK.VERSION:
-      e = new IntExpression(specialToken.uint_, Types.Uint);
-      break;
-    case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
-      e = new StringExpression(specialToken.str);
-      break;
-    default:
-      assert(0);
-    }
-    type = e.type;
-    return e;
-  }
+  Expression value; /// The expression created in the semantic phase.
 }
 
 class TemplateInstanceExpression : Expression
@@ -646,13 +620,6 @@ class NullExpression : Expression
     this();
     this.type = type;
   }
-
-  override Expression semantic(Scope)
-  {
-    if (!type)
-      type = Types.Void_ptr;
-    return this;
-  }
 }
 
 class DollarExpression : Expression
@@ -660,16 +627,6 @@ class DollarExpression : Expression
   this()
   {
     mixin(set_kind);
-  }
-
-  override Expression semantic(Scope scop)
-  {
-    if (type)
-      return this;
-    type = Types.Size_t;
-    // if (!scop.inArraySubscript)
-    //   error(scop, "$ can only be in an array subscript.");
-    return this;
   }
 }
 
@@ -680,17 +637,7 @@ class BoolExpression : Expression
     mixin(set_kind);
   }
 
-  Expression e;
-  override Expression semantic(Scope scop)
-  {
-    if (type)
-      return this;
-    assert(this.begin !is null);
-    auto b = (this.begin.type == TOK.True) ? true : false;
-    e = new IntExpression(b, Types.Bool);
-    type = Types.Bool;
-    return this;
-  }
+  Expression value; /// IntExpression of type int.
 }
 
 class IntExpression : Expression
@@ -721,22 +668,6 @@ class IntExpression : Expression
       assert(token.type == TOK.Int32);
     }
     this(token.ulong_, type);
-  }
-
-  override Expression semantic(Scope)
-  {
-    if (type)
-      return this;
-
-    if (number & 0x8000_0000_0000_0000)
-      type = Types.Ulong; // 0xFFFF_FFFF_FFFF_FFFF
-    else if (number & 0xFFFF_FFFF_0000_0000)
-      type = Types.Long; // 0x7FFF_FFFF_FFFF_FFFF
-    else if (number & 0x8000_0000)
-      type = Types.Uint; // 0xFFFF_FFFF
-    else
-      type = Types.Int; // 0x7FFF_FFFF
-    return this;
   }
 }
 
@@ -773,14 +704,6 @@ class RealExpression : Expression
     }
     this(token.real_, type);
   }
-
-  override Expression semantic(Scope)
-  {
-    if (type)
-      return this;
-    type = Types.Double;
-    return this;
-  }
 }
 
 /++
@@ -797,14 +720,6 @@ class ComplexExpression : Expression
     this.number = number;
     this.type = type;
   }
-
-  override Expression semantic(Scope)
-  {
-    if (type)
-      return this;
-    type = Types.Cdouble;
-    return this;
-  }
 }
 
 class CharExpression : Expression
@@ -814,19 +729,6 @@ class CharExpression : Expression
   {
     mixin(set_kind);
     this.character = character;
-  }
-
-  override Expression semantic(Scope scop)
-  {
-    if (type)
-      return this;
-    if (character <= 0xFF)
-      type = Types.Char;
-    else if (character <= 0xFFFF)
-      type = Types.Wchar;
-    else
-      type = Types.Dchar;
-    return this;
   }
 }
 
@@ -865,13 +767,6 @@ class StringExpression : Expression
   this(dchar[] str)
   {
     this(cast(ubyte[])str, Types.Dchar);
-  }
-
-  override Expression semantic(Scope scop)
-  {
-    if (type)
-      return this;
-    return this;
   }
 
   char[] getString()
@@ -929,31 +824,6 @@ class MixinExpression : Expression
     mixin(set_kind);
     addChild(expr);
     this.expr = expr;
-  }
-
-  override Expression semantic(Scope scop)
-  {
-    if (type)
-      return this.expr;
-    // TODO:
-    auto expr = this.expr.semantic(scop);
-    expr = expr.evaluate();
-    if (expr is null)
-      return this;
-    auto strExpr = TryCast!(StringExpression)(expr);
-    if (strExpr is null)
-     error(scop, MSG.MixinArgumentMustBeString);
-    else
-    {
-      auto loc = this.begin.getLocation();
-      auto filePath = loc.filePath;
-      auto parser = new_ExpressionParser(strExpr.getString(), filePath, scop.infoMan);
-      expr = parser.parse();
-      expr = expr.semantic(scop);
-    }
-    this.expr = expr;
-    this.type = expr.type;
-    return expr;
   }
 }
 
