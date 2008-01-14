@@ -741,7 +741,6 @@ class Parser
     if (prev_lt == LinkageType.None)
       prev_lt = lt;
     else
-      // TODO: create new msg RedundantLinkageType.
       error(begin, MSG.RedundantLinkageType, Token.textSpan(begin, this.prevToken));
   }
 
@@ -1074,7 +1073,7 @@ class Parser
 
     BaseClass[] bases;
 
-    while (1)
+    do
     {
       Protection prot = Protection.Public;
       switch (token.type)
@@ -1092,13 +1091,8 @@ class Parser
     LparseBasicType:
       auto begin = token;
       auto type = parseBasicType();
-      //if (type.tid != TID.DotList)
-        // TODO: issue error msg. base classes can only be one or more identifiers or template instances separated by dots.
       bases ~= set(new BaseClass(prot, type), begin);
-      if (token.type != T.Comma)
-        break;
-      nT();
-    }
+    } while (skipped(T.Comma))
     return bases;
   }
 
@@ -1357,7 +1351,6 @@ class Parser
     assert(token.type == T.Delete);
     nT(); // Skip delete keyword.
     auto parameters = parseParameterList();
-    // TODO: only one parameter of type void* allowed. Check in parsing or semantic phase?
     auto funcBody = parseFunctionBody();
     return new DeleteDeclaration(parameters, funcBody);
   }
@@ -1402,7 +1395,6 @@ class Parser
   {
     if (skipped(T.LParen))
     {
-      // TODO: What about mixin(...).ident;?
       auto e = parseAssignExpression();
       require(T.RParen);
       require(T.Semicolon);
@@ -2152,7 +2144,6 @@ class Parser
       case ID.exit, ID.success, ID.failure:
         break;
       default:
-        // TODO: create MID.InvalidScopeIdentifier
         error(this.prevToken, MSG.InvalidScopeIdentifier, this.prevToken.srcText);
       }
     require(T.RParen);
@@ -3364,7 +3355,7 @@ class Parser
       e = new IsExpression(type, ident, opTok, specTok, specType, tparams);
       break;
     case T.LParen:
-      if (tokenAfterParenIs(T.LBrace))
+      if (tokenAfterParenIs(T.LBrace)) // Check for "(...) {"
       {
         auto parameters = parseParameterList();
         // ( ParameterList ) FunctionBody
@@ -3377,7 +3368,7 @@ class Parser
         nT();
         e = parseExpression();
         require(T.RParen);
-        // TODO: create ParenExpression?
+        e = new ParenExpression(e);
       }
       break;
     version(D2)

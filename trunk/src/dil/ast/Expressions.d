@@ -926,6 +926,17 @@ class FunctionLiteralExpression : Expression
   }
 }
 
+/// ParenthesisExpression := "(" Expression ")"
+class ParenExpression : Expression
+{
+  Expression next;
+  this(Expression next)
+  {
+    mixin(set_kind);
+    this.next = next;
+  }
+}
+
 // version(D2)
 // {
 class TraitsExpression : Expression

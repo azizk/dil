@@ -169,6 +169,7 @@ static const char[][] classNames = [
   "TypeDotIdExpression",
   "TypeidExpression",
   "IsExpression",
+  "ParenExpression",
   "FunctionLiteralExpression",
   "TraitsExpression", // D2.0
   "VoidInitializer",

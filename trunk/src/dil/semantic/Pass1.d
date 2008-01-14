@@ -176,6 +176,16 @@ override
   Declaration visit(MixinDeclaration)
   { return null; }
 
+  Expression visit(ParenExpression e)
+  {
+    if (!e.type)
+    {
+      e.next = visitE(e.next);
+      e.type = e.next.type;
+    }
+    return e;
+  }
+
   Expression visit(CommaExpression e)
   {
     if (!e.type)
