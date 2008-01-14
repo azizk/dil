@@ -10,19 +10,12 @@ import dil.ast.Declarations;
 import dil.ast.Types;
 import dil.ast.Parameters;
 import dil.lexer.IdTable;
-import dil.semantic.Scope;
-import dil.semantic.Analysis;
 
 abstract class Statement : Node
 {
   this()
   {
     super(NodeCategory.Statement);
-  }
-
-  void semantic(Scope scop)
-  {
-
   }
 }
 
@@ -487,12 +480,6 @@ class PragmaStatement : Statement
     this.ident = ident;
     this.args = args;
     this.pragmaBody = pragmaBody;
-  }
-
-  override void semantic(Scope scop)
-  {
-    pragmaSemantic(scop, begin, ident, args);
-    pragmaBody.semantic(scop);
   }
 }
 

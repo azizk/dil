@@ -94,7 +94,7 @@ class Module : ScopeSymbol
     auto scop = new Scope();
     scop.symbol = this; // Set this module as the scope's symbol.
     scop.infoMan = this.infoMan;
-    this.root.semantic(scop);
+//     this.root.semantic(scop);
   }
 
   /// Returns true if there are errors in the source file.

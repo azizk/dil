@@ -11,12 +11,8 @@ import dil.ast.Statements;
 import dil.ast.Parameters;
 import dil.ast.BaseClass;
 import dil.lexer.IdTable;
-import dil.semantic.Scope;
-import dil.semantic.Analysis;
 import dil.semantic.Symbols;
-import dil.semantic.Types;
 import dil.Enums;
-import dil.Messages;
 import common;
 
 abstract class Declaration : Node
@@ -30,16 +26,6 @@ abstract class Declaration : Node
   // Members relevant to semantic phase.
   StorageClass stc; /// The storage class of this declaration.
   Protection prot;  /// The protection attribute of this declaration.
-
-  void semantic(Scope sc)
-  {
-    foreach (node; this.children)
-    {
-      assert(node !is null);
-      if (node.category == NodeCategory.Declaration)
-        (cast(Declaration)cast(void*)node).semantic(sc);
-    }
-  }
 
   final bool isStatic()
   {
@@ -80,15 +66,6 @@ class Declarations : Declaration
   {
     addChildren(ds.children);
   }
-
-  override void semantic(Scope scop)
-  {
-    foreach (node; this.children)
-    {
-      assert(node.category == NodeCategory.Declaration);
-      (cast(Declaration)cast(void*)node).semantic(scop);
-    }
-  }
 }
 
 /// Single semicolon.
@@ -98,9 +75,6 @@ class EmptyDeclaration : Declaration
   {
     mixin(set_kind);
   }
-
-  override void semantic(Scope)
-  {}
 }
 
 /++
@@ -114,9 +88,6 @@ class IllegalDeclaration : Declaration
   {
     mixin(set_kind);
   }
-
-  override void semantic(Scope)
-  {}
 }
 
 /// FQN = fully qualified name
@@ -205,21 +176,6 @@ class AliasDeclaration : Declaration
     addChild(decl);
     this.decl = decl;
   }
-
-  override void semantic(Scope scop)
-  {
-    /+
-    decl.semantic(scop); // call semantic() or do SA in if statements?
-    if (auto fd = TryCast!(FunctionDeclaration)(decl))
-    {
-      // TODO: do SA here?
-    }
-    else if (auto vd = TryCast!(VariableDeclaration)(decl))
-    {
-      // TODO: do SA here?
-    }
-    +/
-  }
 }
 
 class TypedefDeclaration : Declaration
@@ -230,21 +186,6 @@ class TypedefDeclaration : Declaration
     mixin(set_kind);
     addChild(decl);
     this.decl = decl;
-  }
-
-  override void semantic(Scope scop)
-  {
-    /+
-    decl.semantic(scop); // call semantic() or do SA in if statements?
-    if (auto fd = TryCast!(FunctionDeclaration)(decl))
-    {
-      // TODO: do SA here?
-    }
-    else if (auto vd = TryCast!(VariableDeclaration)(decl))
-    {
-      // TODO: do SA here?
-    }
-    +/
   }
 }
 
@@ -266,41 +207,6 @@ class EnumDeclaration : Declaration
   }
 
   Enum symbol;
-
-  override void semantic(Scope scop)
-  {
-    /+
-    // Create the symbol.
-    symbol = new Enum(name, this);
-    // Type semantics.
-    Type type = Types.Int; // Default to integer.
-    if (baseType)
-      type = baseType.semantic(scop);
-    auto enumType = new EnumType(symbol, type);
-    // Set the base type of the enum symbol.
-    symbol.setType(enumType);
-    if (name)
-    { // Insert named enum into scope.
-      scop.insert(symbol, symbol.ident);
-      // Create new scope.
-      scop = scop.push(symbol);
-    }
-    // Semantic on members.
-    foreach (member; members)
-    {
-      auto value = member.value;
-      if (value)
-      {
-        // value = value.semantic(scop);
-        // value = value.evaluate();
-      }
-      auto variable = new Variable(StorageClass.Const, LinkageType.None, type, member.name, member);
-      scop.insert(variable, variable.ident);
-    }
-    if (name)
-      scop.pop();
-    +/
-  }
 }
 
 class EnumMember : Node
@@ -347,20 +253,6 @@ class ClassDeclaration : AggregateDeclaration
   }
 
   Class symbol; /// The class symbol for this declaration.
-
-  override void semantic(Scope scop)
-  {
-    if (symbol)
-      return;
-    symbol = new Class(name, this);
-    // Insert into current scope.
-    scop.insert(symbol, name);
-    // Create a new scope.
-    scop = scop.enter(symbol);
-    // Continue semantic analysis.
-    decls && decls.semantic(scop);
-    scop.exit();
-  }
 }
 
 class InterfaceDeclaration : AggregateDeclaration
@@ -380,20 +272,6 @@ class InterfaceDeclaration : AggregateDeclaration
   alias dil.semantic.Symbols.Interface Interface;
 
   Interface symbol; /// The interface symbol for this declaration.
-
-  override void semantic(Scope scop)
-  {
-    if (symbol)
-      return;
-    symbol = new Interface(name, this);
-    // Insert into current scope.
-    scop.insert(symbol, name);
-    // Create a new scope.
-    scop = scop.enter(symbol);
-    // Continue semantic analysis.
-    decls && decls.semantic(scop);
-    scop.exit();
-  }
 }
 
 class StructDeclaration : AggregateDeclaration
@@ -413,20 +291,6 @@ class StructDeclaration : AggregateDeclaration
   }
 
   Struct symbol; /// The struct symbol for this declaration.
-
-  override void semantic(Scope scop)
-  {
-    if (symbol)
-      return;
-    symbol = new Struct(name, this);
-    // Insert into current scope.
-    scop.insert(symbol, name);
-    // Create a new scope.
-    scop = scop.enter(symbol);
-    // Continue semantic analysis.
-    decls && decls.semantic(scop);
-    scop.exit();
-  }
 }
 
 class UnionDeclaration : AggregateDeclaration
@@ -440,20 +304,6 @@ class UnionDeclaration : AggregateDeclaration
   }
 
   Union symbol; /// The union symbol for this declaration.
-
-  override void semantic(Scope scop)
-  {
-    if (symbol)
-      return;
-    symbol = new Union(name, this);
-    // Insert into current scope.
-    scop.insert(symbol, name);
-    // Create a new scope.
-    scop = scop.enter(symbol);
-    // Continue semantic analysis.
-    decls && decls.semantic(scop);
-    scop.exit();
-  }
 }
 
 class ConstructorDeclaration : Declaration
@@ -570,40 +420,6 @@ class VariableDeclaration : Declaration
   }
 
   Variable[] variables;
-
-  override void semantic(Scope scop)
-  {
-    Type type;
-
-    if (typeNode)
-      // Get type from typeNode.
-      type = typeNode.semantic(scop);
-    else
-    { // Infer type from first initializer.
-      auto firstValue = values[0];
-//       firstValue = firstValue.semantic(scop);
-      type = firstValue.type;
-    }
-    assert(type !is null);
-
-    // Check for interface.
-    if (scop.isInterface)
-      return scop.error(begin, MSG.InterfaceCantHaveVariables);
-
-    // Iterate over variable identifiers in this declaration.
-    foreach (i, ident; idents)
-    {
-      // Perform semantic analysis on value.
-//       if (values[i])
-//         values[i] = values[i].semantic(scop);
-      // Create a new variable symbol.
-      // TODO: pass 'prot' to constructor.
-      auto variable = new Variable(stc, linkageType, type, ident, this);
-      variables ~= variable;
-      // Add to scope.
-      scop.insert(variable);
-    }
-  }
 }
 
 class InvariantDeclaration : Declaration
@@ -825,12 +641,6 @@ class PragmaDeclaration : AttributeDeclaration
 
     this.ident = ident;
     this.args = args;
-  }
-
-  override void semantic(Scope scop)
-  {
-    pragmaSemantic(scop, begin, ident, args);
-    decls.semantic(scop);
   }
 }
 

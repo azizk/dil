@@ -23,7 +23,7 @@ char[] generateAbstractVisitMethods()
   char[] text;
   foreach (className; classNames)
   {
-    text ~= "returnType!(\""~className~"\")" ~ " visit(" ~ className ~ ");\n";
+    text ~= "returnType!(\""~className~"\") visit("~className~");\n";
   }
   return text;
 }
@@ -99,6 +99,17 @@ abstract class Visitor
   {
     return cast(T function(Visitor,T))dispatch_vtable[n.kind];
   }
+
+  Declaration visit(Declaration n)
+  { return visitD(n); }
+  Statement visit(Statement n)
+  { return visitS(n); }
+  Expression visit(Expression n)
+  { return visitE(n); }
+  TypeNode visit(TypeNode n)
+  { return visitT(n); }
+  Node visit(Node n)
+  { return visitN(n); }
 
   Declaration visitD(Declaration n)
   {

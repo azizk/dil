@@ -12,12 +12,16 @@ import dil.ast.Node,
        dil.ast.Types,
        dil.ast.BaseClass,
        dil.ast.Parameters;
-
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
        dil.semantic.Types,
        dil.semantic.Scope,
-       dil.semantic.Module;
+       dil.semantic.Module,
+       dil.semantic.Analysis;
+import dil.Location;
+import dil.Information;
+import dil.Messages;
+import common;
 
 class SemanticPass1 : Visitor
 {
@@ -46,6 +50,13 @@ class SemanticPass1 : Visitor
     scop = scop.exit();
   }
 
+  void error(Token* token, char[] formatMsg, ...)
+  {
+    auto location = token.getLocation();
+    auto msg = Format(_arguments, _argptr, formatMsg);
+    modul.infoMan ~= new SemanticError(location, msg);
+  }
+
 override
 {
   Declaration visit(Declarations d)
@@ -60,18 +71,83 @@ override
 
   Declaration visit(IllegalDeclaration)
   { assert(0, "semantic pass on invalid AST"); return null; }
-  Declaration visit(EmptyDeclaration)
-  { return null; }
+
+  Declaration visit(EmptyDeclaration ed)
+  { return ed; }
+
   Declaration visit(ModuleDeclaration)
   { return null; }
   Declaration visit(ImportDeclaration)
   { return null; }
-  Declaration visit(AliasDeclaration)
-  { return null; }
-  Declaration visit(TypedefDeclaration)
-  { return null; }
-  Declaration visit(EnumDeclaration)
-  { return null; }
+
+//   Declaration visit(AliasDeclaration ad)
+//   {
+    /+
+    decl.semantic(scop); // call semantic() or do SA in if statements?
+    if (auto fd = TryCast!(FunctionDeclaration)(decl))
+    {
+      // TODO: do SA here?
+    }
+    else if (auto vd = TryCast!(VariableDeclaration)(decl))
+    {
+      // TODO: do SA here?
+    }
+    +/
+//     return ad;
+//   }
+
+  Declaration visit(TypedefDeclaration td)
+  {
+    /+
+    decl.semantic(scop); // call semantic() or do SA in if statements?
+    if (auto fd = TryCast!(FunctionDeclaration)(decl))
+    {
+      // TODO: do SA here?
+    }
+    else if (auto vd = TryCast!(VariableDeclaration)(decl))
+    {
+      // TODO: do SA here?
+    }
+    +/
+    return td;
+  }
+
+  Declaration visit(EnumDeclaration ed)
+  {
+    /+
+    // Create the symbol.
+    symbol = new Enum(name, this);
+    // Type semantics.
+    Type type = Types.Int; // Default to integer.
+    if (baseType)
+      type = baseType.semantic(scop);
+    auto enumType = new EnumType(symbol, type);
+    // Set the base type of the enum symbol.
+    symbol.setType(enumType);
+    if (name)
+    { // Insert named enum into scope.
+      scop.insert(symbol, symbol.ident);
+      // Create new scope.
+      scop = scop.push(symbol);
+    }
+    // Semantic on members.
+    foreach (member; members)
+    {
+      auto value = member.value;
+      if (value)
+      {
+        // value = value.semantic(scop);
+        // value = value.evaluate();
+      }
+      auto variable = new Variable(StorageClass.Const, LinkageType.None, type, member.name, member);
+      scop.insert(variable, variable.ident);
+    }
+    if (name)
+      scop.pop();
+    +/
+    return ed;
+  }
+
   Declaration visit(EnumMember)
   { return null; }
 
@@ -141,8 +217,42 @@ override
   { return null; }
   Declaration visit(FunctionDeclaration)
   { return null; }
-  Declaration visit(VariableDeclaration)
-  { return null; }
+
+  Declaration visit(VariableDeclaration vd)
+  {
+    Type type;
+
+    if (vd.typeNode)
+      // Get type from typeNode.
+      type = Types.Undefined; // visitN(d.typeNode);
+    else
+    { // Infer type from first initializer.
+      auto firstValue = vd.values[0];
+      firstValue = visitE(firstValue);
+      type = firstValue.type;
+    }
+    assert(type !is null);
+
+    // Check for interface.
+    if (scop.isInterface)
+      return error(vd.begin, MSG.InterfaceCantHaveVariables), vd;
+
+    // Iterate over variable identifiers in this declaration.
+    foreach (i, ident; vd.idents)
+    {
+      // Perform semantic analysis on value.
+      if (vd.values[i])
+        vd.values[i] = visitE(vd.values[i]);
+      // Create a new variable symbol.
+      // TODO: pass 'prot' to constructor.
+      auto variable = new Variable(vd.stc, vd.linkageType, type, ident, vd);
+      vd.variables ~= variable;
+      // Add to scope.
+      scop.insert(variable);
+    }
+    return vd;
+  }
+
   Declaration visit(InvariantDeclaration)
   { return null; }
   Declaration visit(UnittestDeclaration)
@@ -171,8 +281,21 @@ override
   { return null; }
   Declaration visit(AlignDeclaration)
   { return null; }
-  Declaration visit(PragmaDeclaration)
-  { return null; }
+
+  Declaration visit(PragmaDeclaration d)
+  {
+    pragmaSemantic(scop, d.begin, d.ident, d.args);
+    visitD(d.decls);
+    return d;
+  }
+
+  Statement visit(PragmaStatement s)
+  {
+    pragmaSemantic(scop, s.begin, s.ident, s.args);
+    visitS(s.pragmaBody);
+    return s;
+  }
+
   Declaration visit(MixinDeclaration)
   { return null; }
 

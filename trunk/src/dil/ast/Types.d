@@ -9,7 +9,6 @@ import dil.ast.Expressions;
 import dil.ast.Parameters;
 import dil.lexer.Identifier;
 import dil.Enums;
-import dil.semantic.Scope;
 import dil.semantic.Types;
 
 enum TID
@@ -70,11 +69,6 @@ abstract class TypeNode : Node
     addOptChild(next);
     this.tid = tid;
     this.next = next;
-  }
-
-  Type semantic(Scope scop)
-  {
-    return Types.Error;
   }
 }
 
