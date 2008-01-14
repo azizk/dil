@@ -15,11 +15,25 @@ import dil.ast.Node,
 
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
-       dil.semantic.Scope;
+       dil.semantic.Scope,
+       dil.semantic.Module;
 
 class SemanticPass1 : Visitor
 {
   Scope scop;
+  Module modul;
+
+  this(Module modul)
+  {
+    this.modul = modul;
+  }
+
+  /// Start semantic analysis.
+  void start()
+  {
+    assert(modul.root !is null);
+    visitN(modul.root);
+  }
 
   void enterScope(ScopeSymbol s)
   {
