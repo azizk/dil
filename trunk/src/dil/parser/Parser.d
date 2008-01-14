@@ -364,9 +364,6 @@ class Parser
     case T.Identifier, T.Dot, T.Typeof:
     case_Declaration:
       return parseVariableOrFunction(this.storageClass, this.protection, this.linkageType);
-    /+case :
-      // TODO: Error: module is optional and can appear only once at the top of the source file.
-      break;+/
     default:
       if (token.isIntegralType)
         goto case_Declaration;
@@ -1009,11 +1006,8 @@ class Parser
     if (skipped(T.Colon))
       baseType = parseBasicType();
 
-    if (skipped(T.Semicolon))
-    {
-      if (enumName is null)
-        expected(T.Identifier);
-    }
+    if (enumName && skipped(T.Semicolon))
+    {}
     else if (skipped(T.LBrace))
     {
       hasBody = true;
@@ -1060,11 +1054,8 @@ class Parser
     if (token.type == T.Colon)
       bases = parseBaseClasses();
 
-    if (skipped(T.Semicolon))
-    {
-      if (bases.length != 0)
-        error(MID.BaseClassInForwardDeclaration);
-    }
+    if (bases.length == 0 && skipped(T.Semicolon))
+    {}
     else if (token.type == T.LBrace)
       decls = parseDeclarationDefinitionsBody();
     else
@@ -1129,11 +1120,8 @@ class Parser
     if (token.type == T.Colon)
       bases = parseBaseClasses();
 
-    if (skipped(T.Semicolon))
-    {
-      if (bases.length != 0)
-        error(MID.BaseClassInForwardDeclaration);
-    }
+    if (bases.length == 0 && skipped(T.Semicolon))
+    {}
     else if (token.type == T.LBrace)
       decls = parseDeclarationDefinitionsBody();
     else
@@ -1157,15 +1145,14 @@ class Parser
     if (name && token.type == T.LParen)
       tparams = parseTemplateParameterList();
 
-    if (skipped(T.Semicolon))
-    {
-      //if (name.length == 0)
-        // TODO: error: forward declarations must have a name.
-    }
+    if (name && skipped(T.Semicolon))
+    {}
     else if (token.type == T.LBrace)
       decls = parseDeclarationDefinitionsBody();
     else
-      expected(T.LBrace); // TODO: better error msg
+      error(token, tok == T.Struct ?
+            MSG.ExpectedStructBody :
+            MSG.ExpectedUnionBody, token.srcText);
 
     if (tok == T.Struct)
     {

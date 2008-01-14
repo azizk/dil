@@ -119,6 +119,8 @@ static:
   auto ExpectedClassBody = "expected class body, not '{}'";
   auto ExpectedInterfaceName = "expected interface name, not '{}'";
   auto ExpectedInterfaceBody = "expected interface body, not '{}'";
+  auto ExpectedStructBody = "expected struct body, not '{}'";
+  auto ExpectedUnionBody = "expected union body, not '{}'";
   auto ExpectedTemplateName = "expected template name, not '{}'";
   auto ExpectedAnIdentifier = "expected an identifier, not '{}'";
   auto IllegalStatement = "illegal Statement found: {}";
