@@ -53,7 +53,7 @@ template returnType(char[] className)
     Expression visitCommaExpression(Visitor visitor, CommaExpression c)
     { visitor.visit(c); }
 
-  The equivalent in the traditional Visitor pattern would be:
+  The equivalent in the traditional visitor pattern would be:
     class CommaExpression : Expression
     {
       void accept(Visitor visitor)

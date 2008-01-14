@@ -63,7 +63,7 @@ override
   Declaration visit(ClassDeclaration d)
   {
     if (d.symbol)
-      return null;
+      return d;
     d.symbol = new Class(d.name, d);
     // Insert into current scope.
     scop.insert(d.symbol, d.name);
@@ -77,7 +77,7 @@ override
   Declaration visit(InterfaceDeclaration d)
   {
     if (d.symbol)
-      return null;
+      return d;
     d.symbol = new dil.semantic.Symbols.Interface(d.name, d);
     // Insert into current scope.
     scop.insert(d.symbol, d.name);
@@ -91,7 +91,7 @@ override
   Declaration visit(StructDeclaration d)
   {
     if (d.symbol)
-      return null;
+      return d;
     d.symbol = new Struct(d.name, d);
     // Insert into current scope.
     scop.insert(d.symbol, d.name);
@@ -105,7 +105,7 @@ override
   Declaration visit(UnionDeclaration d)
   {
     if (d.symbol)
-      return null;
+      return d;
     d.symbol = new Union(d.name, d);
     // Insert into current scope.
     scop.insert(d.symbol, d.name);
