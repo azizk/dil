@@ -91,16 +91,6 @@ char[] FormatMsg(MID mid, ...)
   return Format(_arguments, _argptr, GetMsg(mid));
 }
 
-/+
-char[] FormatArray(char[] format_str, char[][] args)
-{
-  auto tiinfos = new TypeInfo[args.length];
-  foreach (ref tiinfo; tiinfos)
-    tiinfo = typeid(char[]);
-  return Format(tiinfos, args.ptr, format_str);
-}
-+/
-
 /// Collection of error messages with no MID yet.
 struct MSG
 {
@@ -111,6 +101,7 @@ static:
   auto UTF16FileMustBeDivisibleBy2 = "the byte length of a UTF-16 source file must be divisible by 2.";
   auto UTF32FileMustBeDivisibleBy4 = "the byte length of a UTF-32 source file must be divisible by 4.";
   // Parser messages:
+  auto ModuleDeclarationNotFirst = "a module declaration is only allowed as the first declaration in a file";
   auto ExpectedIdAfterTypeDot = "expected identifier after '(Type).', not '{}'";
   auto ExpectedModuleIdentifier = "expected module identifier, not '{}'";
   auto IllegalDeclaration = "illegal Declaration found: {}";

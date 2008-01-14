@@ -173,6 +173,7 @@ class Parser
 
   Declaration parseModuleDeclaration()
   {
+    assert(token.type == T.Module);
     auto begin = token;
     ModuleFQN moduleFQN;
     do
@@ -268,12 +269,10 @@ class Parser
       return parseStorageAttribute();
     case T.Alias:
       nT();
-      // TODO: parse StorageClasses?
       decl = new AliasDeclaration(parseVariableOrFunction());
       break;
     case T.Typedef:
       nT();
-      // TODO: parse StorageClasses?
       decl = new TypedefDeclaration(parseVariableOrFunction());
       break;
     case T.Static:
@@ -365,12 +364,18 @@ class Parser
     case T.Identifier, T.Dot, T.Typeof:
     case_Declaration:
       return parseVariableOrFunction(this.storageClass, this.protection, this.linkageType);
-    /+case T.Module:
+    /+case :
       // TODO: Error: module is optional and can appear only once at the top of the source file.
       break;+/
     default:
       if (token.isIntegralType)
         goto case_Declaration;
+      else if (token.type == T.Module)
+      {
+        decl = parseModuleDeclaration();
+        error(begin, MSG.ModuleDeclarationNotFirst);
+        return decl;
+      }
 
       decl = new IllegalDeclaration();
       // Skip to next valid token.
