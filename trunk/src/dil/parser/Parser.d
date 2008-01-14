@@ -313,7 +313,7 @@ class Parser
       decl = parseInterfaceDeclaration();
       break;
     case T.Struct, T.Union:
-      decl = parseAggregateDeclaration();
+      decl = parseStructOrUnionDeclaration();
       break;
     case T.This:
       decl = parseConstructorDeclaration();
@@ -1142,7 +1142,7 @@ class Parser
     return new InterfaceDeclaration(name, tparams, bases, decls);
   }
 
-  Declaration parseAggregateDeclaration()
+  Declaration parseStructOrUnionDeclaration()
   {
     assert(token.type == T.Struct || token.type == T.Union);
     TOK tok = token.type;
@@ -1477,7 +1477,7 @@ class Parser
       if (token.type == T.Struct)
       {
         auto begin2 = token;
-        structDecl = CastTo!(StructDeclaration)(parseAggregateDeclaration());
+        structDecl = parseStructOrUnionDeclaration().to!(StructDeclaration);
         structDecl.setAlignSize(size);
         set(structDecl, begin2);
       }
@@ -1620,7 +1620,7 @@ class Parser
       d = parseInterfaceDeclaration();
       goto LreturnDeclarationStatement;
     case T.Struct, T.Union:
-      d = parseAggregateDeclaration();
+      d = parseStructOrUnionDeclaration();
       // goto LreturnDeclarationStatement;
     LreturnDeclarationStatement:
       set(d, begin);
