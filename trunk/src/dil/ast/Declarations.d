@@ -459,7 +459,7 @@ class StaticIfDeclaration : Declaration
     super.hasBody = true;
     mixin(set_kind);
     addChild(condition);
-    addOptChild(ifDecls);
+    addChild(ifDecls);
     addOptChild(elseDecls);
 
     this.condition = condition;

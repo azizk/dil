@@ -84,23 +84,23 @@ class LabeledStatement : Statement
 
 class ExpressionStatement : Statement
 {
-  Expression expression;
-  this(Expression expression)
+  Expression e;
+  this(Expression e)
   {
     mixin(set_kind);
-    addChild(expression);
-    this.expression = expression;
+    addChild(e);
+    this.e = e;
   }
 }
 
 class DeclarationStatement : Statement
 {
-  Declaration declaration;
-  this(Declaration declaration)
+  Declaration decl;
+  this(Declaration decl)
   {
     mixin(set_kind);
-    addChild(declaration);
-    this.declaration = declaration;
+    addChild(decl);
+    this.decl = decl;
   }
 }
 
@@ -286,12 +286,12 @@ class BreakStatement : Statement
 
 class ReturnStatement : Statement
 {
-  Expression expr;
-  this(Expression expr)
+  Expression e;
+  this(Expression e)
   {
     mixin(set_kind);
-    addOptChild(expr);
-    this.expr = expr;
+    addOptChild(e);
+    this.e = e;
   }
 }
 
@@ -310,30 +310,30 @@ class GotoStatement : Statement
 
 class WithStatement : Statement
 {
-  Expression expr;
+  Expression e;
   Statement withBody;
-  this(Expression expr, Statement withBody)
+  this(Expression e, Statement withBody)
   {
     mixin(set_kind);
-    addChild(expr);
+    addChild(e);
     addChild(withBody);
 
-    this.expr = expr;
+    this.e = e;
     this.withBody = withBody;
   }
 }
 
 class SynchronizedStatement : Statement
 {
-  Expression expr;
+  Expression e;
   Statement syncBody;
-  this(Expression expr, Statement syncBody)
+  this(Expression e, Statement syncBody)
   {
     mixin(set_kind);
-    addOptChild(expr);
+    addOptChild(e);
     addChild(syncBody);
 
-    this.expr = expr;
+    this.e = e;
     this.syncBody = syncBody;
   }
 }
@@ -396,12 +396,12 @@ class ScopeGuardStatement : Statement
 
 class ThrowStatement : Statement
 {
-  Expression expr;
-  this(Expression expr)
+  Expression e;
+  this(Expression e)
   {
     mixin(set_kind);
-    addChild(expr);
-    this.expr = expr;
+    addChild(e);
+    this.e = e;
   }
 }
 
