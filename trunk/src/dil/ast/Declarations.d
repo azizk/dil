@@ -568,17 +568,13 @@ class DeleteDeclaration : Declaration
   }
 }
 
-class AttributeDeclaration : Declaration
+abstract class AttributeDeclaration : Declaration
 {
-  TOK attribute;
   Declaration decls;
-  this(TOK attribute, Declaration decls)
+  this(Declaration decls)
   {
     super.hasBody = true;
-    mixin(set_kind);
     addChild(decls);
-
-    this.attribute = attribute;
     this.decls = decls;
   }
 }
@@ -588,7 +584,7 @@ class ProtectionDeclaration : AttributeDeclaration
   Protection prot;
   this(Protection prot, Declaration decls)
   {
-    super(cast(TOK)0, decls);
+    super(decls);
     mixin(set_kind);
     this.prot = prot;
   }
@@ -597,9 +593,9 @@ class ProtectionDeclaration : AttributeDeclaration
 class StorageClassDeclaration : AttributeDeclaration
 {
   StorageClass storageClass;
-  this(StorageClass storageClass, TOK tok, Declaration decl)
+  this(StorageClass storageClass, Declaration decl)
   {
-    super(tok, decl);
+    super(decl);
     mixin(set_kind);
 
     this.storageClass = storageClass;
@@ -611,7 +607,7 @@ class LinkageDeclaration : AttributeDeclaration
   LinkageType linkageType;
   this(LinkageType linkageType, Declaration decls)
   {
-    super(TOK.Extern, decls);
+    super(decls);
     mixin(set_kind);
 
     this.linkageType = linkageType;
@@ -623,7 +619,7 @@ class AlignDeclaration : AttributeDeclaration
   int size;
   this(int size, Declaration decls)
   {
-    super(TOK.Align, decls);
+    super(decls);
     mixin(set_kind);
     this.size = size;
   }
@@ -636,7 +632,7 @@ class PragmaDeclaration : AttributeDeclaration
   this(Identifier* ident, Expression[] args, Declaration decls)
   {
     addOptChildren(args); // Add args before calling super().
-    super(TOK.Pragma, decls);
+    super(decls);
     mixin(set_kind);
 
     this.ident = ident;

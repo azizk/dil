@@ -829,9 +829,8 @@ class Parser
         else
           stc |= stc_tmp;
 
-        auto tok = token.type;
         nT();
-        decl = new StorageClassDeclaration(stc_tmp, tok, parse());
+        decl = new StorageClassDeclaration(stc_tmp, parse());
         set(decl, begin);
         break;
       case T.Identifier:
@@ -1786,9 +1785,8 @@ class Parser
         else
           stc |= stc_tmp;
 
-        auto tok = token.type;
         nT();
-        d = new StorageClassDeclaration(stc_tmp, tok, parse());
+        d = new StorageClassDeclaration(stc_tmp, parse());
         break;
       // TODO: allow "scope class", "abstract scope class" in function bodies?
       //case T.Class:
@@ -1822,7 +1820,7 @@ class Parser
       auto init = parseExpression();
       auto v = new VariableDeclaration(null, [ident], [init]);
       set(v, begin.nextNWS);
-      auto d = new StorageClassDeclaration(StorageClass.Auto, T.Auto, v);
+      auto d = new StorageClassDeclaration(StorageClass.Auto, v);
       set(d, begin);
       variable = new DeclarationStatement(d);
       set(variable, begin);

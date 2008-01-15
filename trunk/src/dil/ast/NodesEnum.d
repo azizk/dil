@@ -43,7 +43,6 @@ static const char[][] classNames = [
   "TemplateDeclaration",
   "NewDeclaration",
   "DeleteDeclaration",
-  "AttributeDeclaration",
   "ProtectionDeclaration",
   "StorageClassDeclaration",
   "LinkageDeclaration",
