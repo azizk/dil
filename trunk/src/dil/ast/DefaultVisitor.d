@@ -312,96 +312,94 @@ override: // Override methods of the base class.
 
   Statement visit(S : Statement)(S s)
   {
-    static if (is(T == Statements))
+    static if (is(S == Statements))
       foreach (node; s.children)
         visitS(node.to!(Statement));
-    //static if (is(T == IllegalStatement))
-    static if (is(T == FunctionBody))
+    //static if (is(S == IllegalStatement))
+    static if (is(S == FunctionBody))
       s.funcBody && visitS(s.funcBody),
       s.inBody && visitS(s.inBody),
       s.outBody && visitS(s.outBody);
-    static if (is(T == ScopeStatement))
+    static if (is(S == ScopeStatement) || is(S == LabeledStatement))
       visitS(s.s);
-    static if (is(T == LabeledStatement))
-      visitS(s.s);
-    static if (is(T == ExpressionStatement))
+    static if (is(S == ExpressionStatement))
       visitE(s.e);
-    static if (is(T == DeclarationStatement))
+    static if (is(S == DeclarationStatement))
       visitD(s.decl);
-    static if (is(T == IfStatement))
+    static if (is(S == IfStatement))
     {
-      s.variable ? visitS(s.variable) : visitS(s.condition);
+      s.variable ? cast(Node)visitS(s.variable) : visitE(s.condition);
       visitS(s.ifBody), s.elseBody && visitS(s.elseBody);
     }
-    static if (is(T == WhileStatement))
+    static if (is(S == WhileStatement))
       visitE(s.condition), visitS(s.whileBody);
-    static if (is(T == DoWhileStatement))
-      visitE(s.condition), visitS(s.doBody);
-    static if (is(T == ForStatement))
+    static if (is(S == DoWhileStatement))
+      visitS(s.doBody), visitE(s.condition);
+    static if (is(S == ForStatement))
       s.init && visitS(s.init),
-      s.condition && visitS(s.condition),
-      s.increment && visitS(s.increment),
+      s.condition && visitE(s.condition),
+      s.increment && visitE(s.increment),
       visitS(s.forBody);
-    static if (is(T == ForeachStatement))
+    static if (is(S == ForeachStatement))
       visitN(s.params), visitE(s.aggregate), visitS(s.forBody);
-    static if (is(T == ForeachRangeStatement))
+    static if (is(S == ForeachRangeStatement))
       visitN(s.params), visitE(s.lower), visitE(s.upper), visitS(s.forBody);
-    static if (is(T == SwitchStatement))
+    static if (is(S == SwitchStatement))
       visitE(s.condition), visitS(s.switchBody);
-    static if (is(T == CaseStatement))
+    static if (is(S == CaseStatement))
     {
-      foreach (value; values)
+      foreach (value; s.values)
         visitE(value);
       visitS(s.caseBody);
     }
-    static if (is(T == DefaultStatement))
+    static if (is(S == DefaultStatement))
       visitS(s.defaultBody);
-    //static if (is(T == ContinueStatement))
-    //static if (is(T == BreakStatement))
-    static if (is(T == ReturnStatement))
-      visitS(s.expr);
-    static if (is(T == GotoStatement))
-      s.caseExpr && visitS(s.caseExpr);
-    static if (is(T == WithStatement))
+    //static if (is(S == ContinueStatement))
+    //static if (is(S == BreakStatement))
+    static if (is(S == ReturnStatement))
+      visitE(s.e);
+    static if (is(S == GotoStatement))
+      s.caseExpr && visitE(s.caseExpr);
+    static if (is(S == WithStatement))
       visitE(s.e), visitS(s.withBody);
-    static if (is(T == SynchronizedStatement))
+    static if (is(S == SynchronizedStatement))
       s.e && visitE(s.e), visitS(s.syncBody);
-    static if (is(T == TryStatement))
+    static if (is(S == TryStatement))
     {
       visitS(s.tryBody);
       foreach (body_; s.catchBodies)
         visitS(body_);
       s.finallyBody && visitS(s.finallyBody);
     }
-    static if (is(T == CatchBody))
+    static if (is(S == CatchBody))
       s.param && visitN(s.param), visitS(s.catchBody);
-    static if (is(T == FinallyBody))
+    static if (is(S == FinallyBody))
       visitS(s.finallyBody);
-    static if (is(T == ScopeGuardStatement))
+    static if (is(S == ScopeGuardStatement))
       visitS(s.scopeBody);
-    static if (is(T == ThrowStatement))
+    static if (is(S == ThrowStatement))
       visitE(s.e);
-    static if (is(T == VolatileStatement))
+    static if (is(S == VolatileStatement))
       s.volatileBody && visitS(s.volatileBody);
-    static if (is(T == AsmStatement))
+    static if (is(S == AsmStatement))
       visitS(s.statements);
-    static if (is(T == AsmInstruction))
+    static if (is(S == AsmInstruction))
       foreach (e; s.operands)
-        visitS(e);
-    //static if (is(T == AsmAlignStatement))
-    static if (is(T == PragmaStatement))
+        visitE(e);
+    //static if (is(S == AsmAlignStatement))
+    static if (is(S == PragmaStatement))
     {
       foreach (e; s.args)
         visitE(e);
       visitS(s.pragmaBody);
     }
-    static if (is(T == MixinStatement))
+    static if (is(S == MixinStatement))
       visitE(s.templateExpr);
-    static if (is(T == StaticIfStatement))
+    static if (is(S == StaticIfStatement))
       visitE(s.condition), visitS(s.ifBody), s.elseBody && visitS(s.elseBody);
-    static if (is(T == StaticAssertStatement))
+    static if (is(S == StaticAssertStatement))
       visitE(s.condition), s.message && visitE(s.message);
-    static if (is(T == DebugStatement) || is(T == VersionStatement))
+    static if (is(S == DebugStatement) || is(S == VersionStatement))
       visitS(s.mainBody), s.elseBody && visitS(s.elseBody);
     return s;
   }

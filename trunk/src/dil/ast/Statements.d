@@ -144,13 +144,13 @@ class WhileStatement : Statement
 
 class DoWhileStatement : Statement
 {
-  Expression condition;
   Statement doBody;
+  Expression condition;
   this(Expression condition, Statement doBody)
   {
     mixin(set_kind);
-    addChild(condition);
     addChild(doBody);
+    addChild(condition);
 
     this.condition = condition;
     this.doBody = doBody;
