@@ -734,23 +734,12 @@ class CharExpression : Expression
 
 class StringExpression : Expression
 {
-  Token*[] stringTokens;
-  this()
-  { mixin(set_kind); }
-
-  /// Constructor used in parsing phase.
-  this(Token*[] stringTokens)
-  {
-    this();
-    this.stringTokens = stringTokens;
-  }
-
   ubyte[] str;   /// The string data.
   Type charType; /// The character type of the string.
-  // Constructors used in semantic phase.
+
   this(ubyte[] str, Type charType)
   {
-    this();
+    mixin(set_kind);
     this.str = str;
     this.charType = charType;
     type = new TypeSArray(charType, str.length);
@@ -760,10 +749,12 @@ class StringExpression : Expression
   {
     this(cast(ubyte[])str, Types.Char);
   }
+
   this(wchar[] str)
   {
     this(cast(ubyte[])str, Types.Wchar);
   }
+
   this(dchar[] str)
   {
     this(cast(ubyte[])str, Types.Dchar);
@@ -771,10 +762,8 @@ class StringExpression : Expression
 
   char[] getString()
   {
-    char[] buffer;
-    foreach (token; stringTokens)
-      buffer ~= token.str[0..$-1];
-    return buffer;
+    // TODO: convert to char[] if charType !is Types.Char.
+    return cast(char[])str;
   }
 }
 

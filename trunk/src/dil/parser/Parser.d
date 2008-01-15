@@ -2700,8 +2700,7 @@ class Parser
       error(MID.ExpectedButFound, "Expression", token.srcText);
       e = new EmptyExpression();
       if (!trying)
-      {
-        // Insert a dummy token and don't consume current one.
+      { // Insert a dummy token and don't consume current one.
         begin = lexer.insertEmptyTokenBefore(token);
         this.prevToken = begin;
       }
@@ -2716,13 +2715,14 @@ class Parser
 
   Expression parseExpression()
   {
+    alias parseAssignExpression parseNext;
     auto begin = token;
-    auto e = parseAssignExpression();
+    auto e = parseNext();
     while (token.type == T.Comma)
     {
       auto comma = token;
       nT();
-      e = new CommaExpression(e, parseAssignExpression(), comma);
+      e = new CommaExpression(e, parseNext(), comma);
       set(e, begin);
     }
     return e;
@@ -2730,56 +2730,41 @@ class Parser
 
   Expression parseAssignExpression()
   {
+    alias parseAssignExpression parseNext;
     auto begin = token;
     auto e = parseCondExpression();
-    while (1)
+    switch (token.type)
     {
-      switch (token.type)
-      {
-      case T.Assign:
-        nT(); e = new AssignExpression(e, parseAssignExpression());
-        break;
-      case T.LShiftAssign:
-        nT(); e = new LShiftAssignExpression(e, parseAssignExpression());
-        break;
-      case T.RShiftAssign:
-        nT(); e = new RShiftAssignExpression(e, parseAssignExpression());
-        break;
-      case T.URShiftAssign:
-        nT(); e = new URShiftAssignExpression(e, parseAssignExpression());
-        break;
-      case T.OrAssign:
-        nT(); e = new OrAssignExpression(e, parseAssignExpression());
-        break;
-      case T.AndAssign:
-        nT(); e = new AndAssignExpression(e, parseAssignExpression());
-        break;
-      case T.PlusAssign:
-        nT(); e = new PlusAssignExpression(e, parseAssignExpression());
-        break;
-      case T.MinusAssign:
-        nT(); e = new MinusAssignExpression(e, parseAssignExpression());
-        break;
-      case T.DivAssign:
-        nT(); e = new DivAssignExpression(e, parseAssignExpression());
-        break;
-      case T.MulAssign:
-        nT(); e = new MulAssignExpression(e, parseAssignExpression());
-        break;
-      case T.ModAssign:
-        nT(); e = new ModAssignExpression(e, parseAssignExpression());
-        break;
-      case T.XorAssign:
-        nT(); e = new XorAssignExpression(e, parseAssignExpression());
-        break;
-      case T.CatAssign:
-        nT(); e = new CatAssignExpression(e, parseAssignExpression());
-        break;
-      default:
-        return e;
-      }
-      set(e, begin);
+    case T.Assign:
+      nT(); e = new AssignExpression(e, parseNext()); break;
+    case T.LShiftAssign:
+      nT(); e = new LShiftAssignExpression(e, parseNext()); break;
+    case T.RShiftAssign:
+      nT(); e = new RShiftAssignExpression(e, parseNext()); break;
+    case T.URShiftAssign:
+      nT(); e = new URShiftAssignExpression(e, parseNext()); break;
+    case T.OrAssign:
+      nT(); e = new OrAssignExpression(e, parseNext()); break;
+    case T.AndAssign:
+      nT(); e = new AndAssignExpression(e, parseNext()); break;
+    case T.PlusAssign:
+      nT(); e = new PlusAssignExpression(e, parseNext()); break;
+    case T.MinusAssign:
+      nT(); e = new MinusAssignExpression(e, parseNext()); break;
+    case T.DivAssign:
+      nT(); e = new DivAssignExpression(e, parseNext()); break;
+    case T.MulAssign:
+      nT(); e = new MulAssignExpression(e, parseNext()); break;
+    case T.ModAssign:
+      nT(); e = new ModAssignExpression(e, parseNext()); break;
+    case T.XorAssign:
+      nT(); e = new XorAssignExpression(e, parseNext()); break;
+    case T.CatAssign:
+      nT(); e = new CatAssignExpression(e, parseNext()); break;
+    default:
+      return e;
     }
+    set(e, begin);
     return e;
   }
 
@@ -3210,13 +3195,25 @@ class Parser
       nT();
       break;
     case T.String:
-      Token*[] stringLiterals;
-      do
+      char[] str = token.str;
+      char postfix = token.pf;
+      nT();
+      while (token.type == T.String)
       {
-        stringLiterals ~= token;
+        if (postfix == '\0')
+            postfix = token.pf;
+        else if (token.pf && token.pf != postfix)
+          error(token, MSG.StringPostfixMismatch);
+        str ~= token.str;
         nT();
-      } while (token.type == T.String)
-      e = new StringExpression(stringLiterals);
+      }
+      switch (postfix)
+      { // TODO: convert string
+      case 'w': e = new StringExpression(/+toUTF16+/(str)); break;
+      case 'd': e = new StringExpression(/+toUTF32+/(str)); break;
+      case 'c':
+      default: e = new StringExpression(str); break;
+      }
       break;
     case T.LBracket:
       Expression[] values;
@@ -3354,15 +3351,13 @@ class Parser
       break;
     case T.LParen:
       if (tokenAfterParenIs(T.LBrace)) // Check for "(...) {"
-      {
+      { // ( ParameterList ) FunctionBody
         auto parameters = parseParameterList();
-        // ( ParameterList ) FunctionBody
         auto funcBody = parseFunctionBody();
         e = new FunctionLiteralExpression(null, parameters, funcBody);
       }
       else
-      {
-        // ( Expression )
+      { // ( Expression )
         nT();
         e = parseExpression();
         require(T.RParen);
@@ -3403,8 +3398,7 @@ class Parser
         error(MID.ExpectedButFound, "Expression", token.srcText);
         e = new EmptyExpression();
         if (!trying)
-        {
-          // Insert a dummy token and don't consume current one.
+        { // Insert a dummy token and don't consume current one.
           begin = lexer.insertEmptyTokenBefore(token);
           this.prevToken = begin;
         }

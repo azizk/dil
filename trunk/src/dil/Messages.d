@@ -102,6 +102,7 @@ static:
   auto UTF32FileMustBeDivisibleBy4 = "the byte length of a UTF-32 source file must be divisible by 4.";
   // Parser messages:
   auto ModuleDeclarationNotFirst = "a module declaration is only allowed as the first declaration in a file";
+  auto StringPostfixMismatch = "string literal has mistmatching postfix character";
   auto ExpectedIdAfterTypeDot = "expected identifier after '(Type).', not '{}'";
   auto ExpectedModuleIdentifier = "expected module identifier, not '{}'";
   auto IllegalDeclaration = "illegal Declaration found: {}";
