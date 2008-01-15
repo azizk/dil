@@ -24,6 +24,7 @@ static const char[][] classNames = [
   "AliasDeclaration",
   "TypedefDeclaration",
   "EnumDeclaration",
+  "EnumMember",
   "ClassDeclaration",
   "InterfaceDeclaration",
   "StructDeclaration",
@@ -210,7 +211,6 @@ static const char[][] classNames = [
   "TemplateTupleParameter",
   "TemplateParameters",
   "TemplateArguments",
-  "EnumMember",
 ];
 
 char[] generateNodeKindMembers()

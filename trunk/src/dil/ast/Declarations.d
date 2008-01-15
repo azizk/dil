@@ -175,13 +175,12 @@ class EnumDeclaration : Declaration
   Enum symbol;
 }
 
-class EnumMember : Node
+class EnumMember : Declaration
 {
   Identifier* name;
   Expression value;
   this(Identifier* name, Expression value)
   {
-    super(NodeCategory.Other);
     mixin(set_kind);
     addOptChild(value);
 
