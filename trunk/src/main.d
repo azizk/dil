@@ -53,8 +53,11 @@ void main(char[][] args)
       auto mod = new Module(filePath, infoMan);
       // Parse the file.
       mod.parse();
+      if (mod.hasErrors)
+        continue;
       // Start semantic analysis.
-      mod.semantic();
+      auto pass1 = new SemanticPass1(mod);
+      pass1.start();
 
       void printSymbolTable(ScopeSymbol scopeSym)
       {

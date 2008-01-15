@@ -13,18 +13,16 @@ import dil.ast.Declarations,
        dil.ast.Parameters;
 
 /++
-  Generate abstract visit methods.
+  Generate visit methods.
   E.g.:
-    Declaration visit(ClassDeclaration);
-    Expression visit(CommaExpression);
+    Declaration visit(ClassDeclaration){return null;};
+    Expression visit(CommaExpression){return null;};
 +/
-char[] generateAbstractVisitMethods()
+char[] generateVisitMethods()
 {
   char[] text;
   foreach (className; classNames)
-  {
-    text ~= "returnType!(\""~className~"\") visit("~className~");\n";
-  }
+    text ~= "returnType!(\""~className~"\") visit("~className~"){return null;}\n";
   return text;
 }
 // pragma(msg, generateAbstractVisitMethods());
@@ -84,8 +82,7 @@ char[] generateVTable()
 
 abstract class Visitor
 {
-  abstract
-    mixin(generateAbstractVisitMethods());
+  mixin(generateVisitMethods());
 
   static
     mixin(generateDispatchFunctions());

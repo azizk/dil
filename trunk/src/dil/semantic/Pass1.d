@@ -25,8 +25,8 @@ import common;
 
 class SemanticPass1 : Visitor
 {
-  Scope scop;
-  Module modul;
+  Scope scop; /// The current scope.
+  Module modul; /// The module to be semantically checked.
 
   this(Module modul)
   {
@@ -37,6 +37,10 @@ class SemanticPass1 : Visitor
   void start()
   {
     assert(modul.root !is null);
+    // Create module scope.
+    scop = new Scope();
+    scop.symbol = modul; // Set this module as the scope's symbol.
+    scop.infoMan = modul.infoMan;
     visitN(modul.root);
   }
 
@@ -80,8 +84,8 @@ override
   Declaration visit(ImportDeclaration)
   { return null; }
 
-//   Declaration visit(AliasDeclaration ad)
-//   {
+  Declaration visit(AliasDeclaration ad)
+  {
     /+
     decl.semantic(scop); // call semantic() or do SA in if statements?
     if (auto fd = TryCast!(FunctionDeclaration)(decl))
@@ -93,8 +97,8 @@ override
       // TODO: do SA here?
     }
     +/
-//     return ad;
-//   }
+    return ad;
+  }
 
   Declaration visit(TypedefDeclaration td)
   {
@@ -271,16 +275,15 @@ override
   { return null; }
   Declaration visit(DeleteDeclaration)
   { return null; }
-  Declaration visit(AttributeDeclaration)
-  { return null; }
-  Declaration visit(ProtectionDeclaration)
-  { return null; }
-  Declaration visit(StorageClassDeclaration)
-  { return null; }
-  Declaration visit(LinkageDeclaration)
-  { return null; }
-  Declaration visit(AlignDeclaration)
-  { return null; }
+
+  Declaration visit(ProtectionDeclaration d)
+  { visitD(d.decls); return d; }
+  Declaration visit(StorageClassDeclaration d)
+  { visitD(d.decls); return d; }
+  Declaration visit(LinkageDeclaration d)
+  { visitD(d.decls); return d; }
+  Declaration visit(AlignDeclaration d)
+  { visitD(d.decls); return d; }
 
   Declaration visit(PragmaDeclaration d)
   {
