@@ -10,7 +10,6 @@ import dil.ast.Types;
 import dil.ast.Declarations;
 import dil.ast.Statements;
 import dil.ast.Parameters;
-import dil.ast.BaseClass;
 import dil.lexer.Identifier;
 import dil.semantic.Types;
 import common;

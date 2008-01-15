@@ -9,7 +9,6 @@ import dil.ast.Declarations,
        dil.ast.Expressions,
        dil.ast.Statements,
        dil.ast.Types,
-       dil.ast.BaseClass,
        dil.ast.Parameters;
 
 /++

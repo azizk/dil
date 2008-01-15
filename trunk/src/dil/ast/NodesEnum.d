@@ -195,6 +195,7 @@ static const char[][] classNames = [
   "FunctionType",
   "DelegateType",
   "CFuncPointerType",
+  "BaseClass",
   "ConstType", // D2.0
   "InvariantType", // D2.0
 
@@ -202,7 +203,6 @@ static const char[][] classNames = [
   "FunctionBody",
   "Parameter",
   "Parameters",
-  "BaseClass",
   "TemplateAliasParameter",
   "TemplateTypeParameter",
   "TemplateThisParameter", // D2.0

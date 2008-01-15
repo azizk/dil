@@ -10,7 +10,6 @@ import dil.ast.Node,
        dil.ast.Expressions,
        dil.ast.Statements,
        dil.ast.Types,
-       dil.ast.BaseClass,
        dil.ast.Parameters;
 import dil.semantic.Symbol,
        dil.semantic.Symbols,

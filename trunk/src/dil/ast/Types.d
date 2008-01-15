@@ -39,6 +39,7 @@ enum TID
   Ucent   = TOK.Ucent,
 
   Undefined,
+  BaseClass,
   Function,
   Delegate,
   Pointer,
@@ -232,6 +233,17 @@ class CFuncPointerType : TypeNode
     super(TID.CFuncPointer, type);
     mixin(set_kind);
     addOptChild(params);
+  }
+}
+
+class BaseClass : TypeNode
+{
+  Protection prot;
+  this(Protection prot, TypeNode type)
+  {
+    super(TID.BaseClass, type);
+    mixin(set_kind);
+    this.prot = prot;
   }
 }
 
