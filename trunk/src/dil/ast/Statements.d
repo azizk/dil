@@ -4,20 +4,13 @@
 +/
 module dil.ast.Statements;
 
+public import dil.ast.Statement;
 import dil.ast.Node;
 import dil.ast.Expressions;
 import dil.ast.Declarations;
 import dil.ast.Types;
 import dil.ast.Parameters;
 import dil.lexer.IdTable;
-
-abstract class Statement : Node
-{
-  this()
-  {
-    super(NodeCategory.Statement);
-  }
-}
 
 class Statements : Statement
 {
