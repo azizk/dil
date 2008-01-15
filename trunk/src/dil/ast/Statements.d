@@ -41,13 +41,12 @@ class EmptyStatement : Statement
   }
 }
 
-class FunctionBody : Node
+class FunctionBody : Statement
 {
   Statement funcBody, inBody, outBody;
   Identifier* outIdent;
   this()
   {
-    super(NodeCategory.Other);
     mixin(set_kind);
   }
 

@@ -55,6 +55,7 @@ static const char[][] classNames = [
   "Statements",
   "IllegalStatement",
   "EmptyStatement",
+  "FunctionBody",
   "ScopeStatement",
   "LabeledStatement",
   "ExpressionStatement",
@@ -201,7 +202,6 @@ static const char[][] classNames = [
   "InvariantType", // D2.0
 
   // Other:
-  "FunctionBody",
   "Parameter",
   "Parameters",
   "TemplateAliasParameter",
