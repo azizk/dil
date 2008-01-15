@@ -2697,7 +2697,7 @@ class Parser
       break;
     default:
       error(MID.ExpectedButFound, "Expression", token.srcText);
-      e = new EmptyExpression();
+      e = new IllegalExpression();
       if (!trying)
       { // Insert a dummy token and don't consume current one.
         begin = lexer.insertEmptyTokenBefore(token);
@@ -3395,7 +3395,7 @@ class Parser
       else
       {
         error(MID.ExpectedButFound, "Expression", token.srcText);
-        e = new EmptyExpression();
+        e = new IllegalExpression();
         if (!trying)
         { // Insert a dummy token and don't consume current one.
           begin = lexer.insertEmptyTokenBefore(token);

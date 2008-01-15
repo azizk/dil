@@ -14,7 +14,7 @@ import dil.lexer.Identifier;
 import dil.semantic.Types;
 import common;
 
-class EmptyExpression : Expression
+class IllegalExpression : Expression
 {
   this()
   {

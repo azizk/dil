@@ -93,7 +93,7 @@ static const char[][] classNames = [
   "VersionStatement",
 
   // Expressions:
-  "EmptyExpression",
+  "IllegalExpression",
   "BinaryExpression",
   "CondExpression",
   "CommaExpression",
