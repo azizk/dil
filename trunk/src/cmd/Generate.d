@@ -97,7 +97,8 @@ char[] getShortClassName(Node node)
   {
   alias NodeCategory NC;
   case NC.Declaration:
-    if (node.kind == NodeKind.Declarations)
+    if (node.kind == NodeKind.Declarations ||
+        node.kind == NodeKind.EnumMember)
       break;
     suffixLength = "Declaration".length;
     break;
@@ -107,6 +108,7 @@ char[] getShortClassName(Node node)
     case NodeKind.Statements,
          NodeKind.CatchBody,
          NodeKind.FinallyBody,
+         NodeKind.FunctionBody,
          NodeKind.AsmInstruction,
          NodeKind.IllegalAsmInstruction:
       break;
@@ -126,6 +128,8 @@ char[] getShortClassName(Node node)
     }
     break;
   case NC.Type:
+    if (node.kind == NodeKind.BaseClass)
+      break;
     suffixLength = "Type".length;
     break;
   case NC.Other:
