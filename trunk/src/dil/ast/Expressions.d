@@ -12,8 +12,6 @@ import dil.ast.Statements;
 import dil.ast.Parameters;
 import dil.ast.BaseClass;
 import dil.lexer.Identifier;
-import dil.parser.ExpressionParser;
-import dil.semantic.Scope;
 import dil.semantic.Types;
 import common;
 

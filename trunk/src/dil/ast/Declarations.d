@@ -4,6 +4,7 @@
 +/
 module dil.ast.Declarations;
 
+public import dil.ast.Declaration;
 import dil.ast.Node;
 import dil.ast.Expressions;
 import dil.ast.Types;
@@ -14,40 +15,6 @@ import dil.lexer.IdTable;
 import dil.semantic.Symbols;
 import dil.Enums;
 import common;
-
-abstract class Declaration : Node
-{
-  bool hasBody;
-  this()
-  {
-    super(NodeCategory.Declaration);
-  }
-
-  // Members relevant to semantic phase.
-  StorageClass stc; /// The storage class of this declaration.
-  Protection prot;  /// The protection attribute of this declaration.
-
-  final bool isStatic()
-  {
-    return !!(stc & StorageClass.Static);
-  }
-
-  final bool isPublic()
-  {
-    return !!(prot & Protection.Public);
-  }
-
-  final void setStorageClass(StorageClass stc)
-  {
-    this.stc = stc;
-  }
-
-  final void setProtection(Protection prot)
-  {
-    this.prot = prot;
-  }
-
-}
 
 class Declarations : Declaration
 {

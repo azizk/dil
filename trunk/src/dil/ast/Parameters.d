@@ -6,7 +6,7 @@ module dil.ast.Parameters;
 
 import dil.ast.Node;
 import dil.ast.Types;
-import dil.ast.Expressions;
+import dil.ast.Expression;
 import dil.lexer.Identifier;
 import dil.Enums;
 
