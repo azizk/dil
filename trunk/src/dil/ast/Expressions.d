@@ -416,6 +416,18 @@ class SignExpression : UnaryExpression
     super(e);
     mixin(set_kind);
   }
+
+  bool isPos()
+  {
+    assert(begin !is null);
+    return begin.type == TOK.Plus;
+  }
+
+  bool isNeg()
+  {
+    assert(begin !is null);
+    return begin.type == TOK.Minus;
+  }
 }
 
 class NotExpression : UnaryExpression
