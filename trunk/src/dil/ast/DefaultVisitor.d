@@ -12,18 +12,28 @@ import dil.ast.Declarations,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
+import common;
 
-class DefaultVisitor : Visitor
+/++
+  This huge template function, when instantiated for a certain node class,
+  generates a body of visit method calls on the subnodes.
++/
+returnType!(T.stringof) visitDefault(T)(T t)
 {
-override: // Override methods of the base class.
-  Declaration visit(D : Declaration)(D d)
+  assert(t !is null, "node passed to visitDefault() is null");
+  // Stdout(t).newline;
+
+  alias t d, s, e, n; // Variable aliases of t.
+
+  static if (is(T : Declaration))
   {
+    alias T D;
     static if (is(D == Declarations))
       foreach (node; d.children)
-        visitD(node.to!(Declaration));
-    static if (is(D == EmptyDeclaration))
-    static if (is(D == IllegalDeclaration))
-    static if (is(D == ModuleDeclaration))
+        visitN(node);
+    //static if (is(D == EmptyDeclaration))
+    //static if (is(D == IllegalDeclaration))
+    //static if (is(D == ModuleDeclaration))
     static if (is(D == AliasDeclaration) ||
                is(D == AliasDeclaration) ||
                is(D == TypedefDeclaration))
@@ -95,46 +105,11 @@ override: // Override methods of the base class.
     }
     static if (is(D == MixinDeclaration))
       d.templateExpr ? visitE(d.templateExpr) : visitE(d.argument);
-    return d;
   }
-
-  mixin visit!(Declarations);
-  mixin visit!(EmptyDeclaration);
-  mixin visit!(IllegalDeclaration);
-  mixin visit!(ModuleDeclaration);
-  mixin visit!(ImportDeclaration);
-  mixin visit!(AliasDeclaration);
-  mixin visit!(TypedefDeclaration);
-  mixin visit!(EnumDeclaration);
-  mixin visit!(EnumMember);
-  mixin visit!(ClassDeclaration);
-  mixin visit!(InterfaceDeclaration);
-  mixin visit!(StructDeclaration);
-  mixin visit!(UnionDeclaration);
-  mixin visit!(ConstructorDeclaration);
-  mixin visit!(StaticConstructorDeclaration);
-  mixin visit!(DestructorDeclaration);
-  mixin visit!(StaticDestructorDeclaration);
-  mixin visit!(FunctionDeclaration);
-  mixin visit!(VariableDeclaration);
-  mixin visit!(InvariantDeclaration);
-  mixin visit!(UnittestDeclaration);
-  mixin visit!(DebugDeclaration);
-  mixin visit!(VersionDeclaration);
-  mixin visit!(StaticIfDeclaration);
-  mixin visit!(StaticAssertDeclaration);
-  mixin visit!(TemplateDeclaration);
-  mixin visit!(NewDeclaration);
-  mixin visit!(DeleteDeclaration);
-  mixin visit!(ProtectionDeclaration);
-  mixin visit!(StorageClassDeclaration);
-  mixin visit!(LinkageDeclaration);
-  mixin visit!(AlignDeclaration);
-  mixin visit!(PragmaDeclaration);
-  mixin visit!(MixinDeclaration);
-
-  Expression visit(E : Expression)(E e)
+  else
+  static if (is(T : Expression))
   {
+    alias T E;
     static if (is(E == IllegalExpression))
     {}
     else
@@ -215,106 +190,14 @@ override: // Override methods of the base class.
           visitE(value);
 
     }
-    return e;
   }
-
-  mixin visit!(IllegalExpression);
-  mixin visit!(CondExpression);
-  mixin visit!(CommaExpression);
-  mixin visit!(OrOrExpression);
-  mixin visit!(AndAndExpression);
-  mixin visit!(OrExpression);
-  mixin visit!(XorExpression);
-  mixin visit!(AndExpression);
-  mixin visit!(EqualExpression);
-  mixin visit!(IdentityExpression);
-  mixin visit!(RelExpression);
-  mixin visit!(InExpression);
-  mixin visit!(LShiftExpression);
-  mixin visit!(RShiftExpression);
-  mixin visit!(URShiftExpression);
-  mixin visit!(PlusExpression);
-  mixin visit!(MinusExpression);
-  mixin visit!(CatExpression);
-  mixin visit!(MulExpression);
-  mixin visit!(DivExpression);
-  mixin visit!(ModExpression);
-  mixin visit!(AssignExpression);
-  mixin visit!(LShiftAssignExpression);
-  mixin visit!(RShiftAssignExpression);
-  mixin visit!(URShiftAssignExpression);
-  mixin visit!(OrAssignExpression);
-  mixin visit!(AndAssignExpression);
-  mixin visit!(PlusAssignExpression);
-  mixin visit!(MinusAssignExpression);
-  mixin visit!(DivAssignExpression);
-  mixin visit!(MulAssignExpression);
-  mixin visit!(ModAssignExpression);
-  mixin visit!(XorAssignExpression);
-  mixin visit!(CatAssignExpression);
-  mixin visit!(DotExpression);
-
-  mixin visit!(AddressExpression);
-  mixin visit!(PreIncrExpression);
-  mixin visit!(PreDecrExpression);
-  mixin visit!(PostIncrExpression);
-  mixin visit!(PostDecrExpression);
-  mixin visit!(DerefExpression);
-  mixin visit!(SignExpression);
-  mixin visit!(NotExpression);
-  mixin visit!(CompExpression);
-  mixin visit!(CallExpression);
-  mixin visit!(NewExpression);
-  mixin visit!(NewAnonClassExpression);
-  mixin visit!(DeleteExpression);
-  mixin visit!(CastExpression);
-  mixin visit!(IndexExpression);
-  mixin visit!(SliceExpression);
-  mixin visit!(ModuleScopeExpression);
-
-  mixin visit!(IdentifierExpression);
-  mixin visit!(SpecialTokenExpression);
-  mixin visit!(TemplateInstanceExpression);
-  mixin visit!(ThisExpression);
-  mixin visit!(SuperExpression);
-  mixin visit!(NullExpression);
-  mixin visit!(DollarExpression);
-  mixin visit!(BoolExpression);
-  mixin visit!(IntExpression);
-  mixin visit!(RealExpression);
-  mixin visit!(ComplexExpression);
-  mixin visit!(CharExpression);
-  mixin visit!(StringExpression);
-  mixin visit!(ArrayLiteralExpression);
-  mixin visit!(AArrayLiteralExpression);
-  mixin visit!(AssertExpression);
-  mixin visit!(MixinExpression);
-  mixin visit!(ImportExpression);
-  mixin visit!(TypeofExpression);
-  mixin visit!(TypeDotIdExpression);
-  mixin visit!(TypeidExpression);
-
-  mixin visit!(IsExpression);
-  mixin visit!(FunctionLiteralExpression);
-  mixin visit!(ParenExpression);
-  mixin visit!(TraitsExpression);
-  mixin visit!(VoidInitializer);
-  mixin visit!(ArrayInitializer);
-  mixin visit!(StructInitializer);
-  mixin visit!(AsmTypeExpression);
-
-  mixin visit!(AsmOffsetExpression);
-  mixin visit!(AsmSegExpression);
-  mixin visit!(AsmPostBracketExpression);
-  mixin visit!(AsmBracketExpression);
-  mixin visit!(AsmLocalSizeExpression);
-  mixin visit!(AsmRegisterExpression);
-
-  Statement visit(S : Statement)(S s)
+  else
+  static if (is(T : Statement))
   {
+    alias T S;
     static if (is(S == Statements))
       foreach (node; s.children)
-        visitS(node.to!(Statement));
+        visitS(cast(Statement)cast(void*)node/+.to!(Statement)+/);
     //static if (is(S == IllegalStatement))
     static if (is(S == FunctionBody))
       s.funcBody && visitS(s.funcBody),
@@ -384,13 +267,13 @@ override: // Override methods of the base class.
     static if (is(S == AsmStatement))
       visitS(s.statements);
     static if (is(S == AsmInstruction))
-      foreach (e; s.operands)
-        visitE(e);
+      foreach (op; s.operands)
+        visitE(op);
     //static if (is(S == AsmAlignStatement))
     static if (is(S == PragmaStatement))
     {
-      foreach (e; s.args)
-        visitE(e);
+      foreach (arg; s.args)
+        visitE(arg);
       visitS(s.pragmaBody);
     }
     static if (is(S == MixinStatement))
@@ -401,58 +284,15 @@ override: // Override methods of the base class.
       visitE(s.condition), s.message && visitE(s.message);
     static if (is(S == DebugStatement) || is(S == VersionStatement))
       visitS(s.mainBody), s.elseBody && visitS(s.elseBody);
-    return s;
   }
-
-  mixin visit!(Statements);
-  mixin visit!(IllegalStatement);
-  mixin visit!(EmptyStatement);
-  mixin visit!(FunctionBody);
-  mixin visit!(ScopeStatement);
-  mixin visit!(LabeledStatement);
-  mixin visit!(ExpressionStatement);
-  mixin visit!(DeclarationStatement);
-  mixin visit!(IfStatement);
-  mixin visit!(WhileStatement);
-  mixin visit!(DoWhileStatement);
-  mixin visit!(ForStatement);
-  mixin visit!(ForeachStatement);
-  mixin visit!(ForeachRangeStatement);
-  mixin visit!(SwitchStatement);
-  mixin visit!(CaseStatement);
-  mixin visit!(DefaultStatement);
-  mixin visit!(ContinueStatement);
-  mixin visit!(BreakStatement);
-  mixin visit!(ReturnStatement);
-  mixin visit!(GotoStatement);
-  mixin visit!(WithStatement);
-  mixin visit!(SynchronizedStatement);
-  mixin visit!(TryStatement);
-  mixin visit!(CatchBody);
-  mixin visit!(FinallyBody);
-  mixin visit!(ScopeGuardStatement);
-  mixin visit!(ThrowStatement);
-  mixin visit!(VolatileStatement);
-  mixin visit!(AsmStatement);
-  mixin visit!(AsmInstruction);
-  mixin visit!(AsmAlignStatement);
-  mixin visit!(IllegalAsmInstruction);
-  mixin visit!(PragmaStatement);
-  mixin visit!(MixinStatement);
-  mixin visit!(StaticIfStatement);
-  mixin visit!(StaticAssertStatement);
-  mixin visit!(DebugStatement);
-  mixin visit!(VersionStatement);
-
-  TypeNode visit(T : TypeNode)(T t)
+  else
+  static if (is(T : TypeNode))
   {
     //static if (is(T == UndefinedType))
     //static if (is(T == IntegralType))
     //static if (is(T == IdentifierType))
     static if (is(T == QualifiedType))
       visitT(t.left), visitT(t.right);
-    static if (is(T == ModuleScopeType))
-      visitT(t.next);
     static if (is(T == TypeofType))
       visitE(t.e);
     static if (is(T == TemplateInstanceType))
@@ -464,65 +304,35 @@ override: // Override methods of the base class.
       visitT(t.next);
       if (t.assocType)
         visitT(t.assocType);
-      else
+      else if (t.e)
         visitE(t.e), t.e2 && visitE(t.e2);
     }
     static if (is(T == FunctionType) || is(T == DelegateType))
       visitT(t.returnType), visitN(t.parameters);
     static if (is(T == CFuncPointerType))
       visitT(t.next), t.params && visitN(t.params);
-    static if (is(T == BaseClass))
+    static if (is(T == ModuleScopeType) ||
+               is(T == BaseClass) ||
+               is(T == ConstType) ||
+               is(T == InvariantType))
       visitT(t.next);
-    static if (is(T == ConstType) || is(T == InvariantType))
-      visitT(t.next);
-    return t;
   }
-
-  mixin visit!(UndefinedType);
-  mixin visit!(IntegralType);
-  mixin visit!(IdentifierType);
-  mixin visit!(QualifiedType);
-  mixin visit!(ModuleScopeType);
-  mixin visit!(TypeofType);
-  mixin visit!(TemplateInstanceType);
-  mixin visit!(PointerType);
-  mixin visit!(ArrayType);
-  mixin visit!(FunctionType);
-  mixin visit!(DelegateType);
-  mixin visit!(CFuncPointerType);
-  mixin visit!(BaseClass);
-  mixin visit!(ConstType);
-  mixin visit!(InvariantType);
-
-  Node visit(N : Parameter)(N n)
+  else
+  static if (is(T == Parameter))
   {
-    visitT(n.type);
+    n.type && visitT(n.type);
     n.defValue && visitE(n.defValue);
-    return n;
   }
-
-  Node visit(N : Parameters)(N n)
+  else
+  static if (is(T == Parameters) ||
+             is(T == TemplateParameters) ||
+             is(T == TemplateArguments))
   {
     foreach (node; n.children)
-      visitN(node.to!(Parameters));
-    return n;
+      visitN(node);
   }
-
-  Node visit(N : TemplateParameters)(N n)
-  {
-    foreach (node; n.children)
-      visitN(node.to!(TemplateParameters));
-    return n;
-  }
-
-  Node visit(N : TemplateArguments)(N n)
-  {
-    foreach (node; n.children)
-      visitN(node.to!(TemplateArguments));
-    return n;
-  }
-
-  Node visit(N : TemplateParameter)(N n)
+  else
+  static if (is(T : TemplateParameter))
   {
     static if (is(N == TemplateAliasParameter) ||
                is(N == TemplateTypeParameter) ||
@@ -534,16 +344,33 @@ override: // Override methods of the base class.
       n.specValue && visitN(n.specValue),
       n.defValue && visitN(n.defValue);
     //static if (is(N == TemplateTupleParameter))
-    return n;
   }
+  else
+    assert(0, "Missing default visit method for: "~t.classinfo.name);
+  return t;
+}
 
-  mixin visit!(Parameter);
-  mixin visit!(Parameters);
-  mixin visit!(TemplateAliasParameter);
-  mixin visit!(TemplateTypeParameter);
-  mixin visit!(TemplateThisParameter);
-  mixin visit!(TemplateValueParameter);
-  mixin visit!(TemplateTupleParameter);
-  mixin visit!(TemplateParameters);
-  mixin visit!(TemplateArguments);
+/++
+  Generate default visit methods.
+  E.g:
+  private mixin .visitDefault!(ClassDeclaration) _ClassDeclaration;
+  override returnType!("ClassDeclaration") visit(ClassDeclaration node)
+  { return _ClassDeclaration.visitDefault(node); }
++/
+char[] generateDefaultVisitMethods()
+{
+  char[] text;
+  foreach (className; classNames)
+    text ~= "private mixin .visitDefault!("~className~") _"~className~";\n"
+            "override returnType!(\""~className~"\") visit("~className~" node){return _"~className~".visitDefault(node);}\n";
+  return text;
+}
+// pragma(msg, generateDefaultVisitMethods());
+
+/++
+  This class provides default methods for traversing nodes in a syntax tree.
++/
+class DefaultVisitor : Visitor
+{
+  mixin(generateDefaultVisitMethods());
 }
