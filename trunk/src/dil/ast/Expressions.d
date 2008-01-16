@@ -1014,6 +1014,7 @@ class AsmPostBracketExpression : UnaryExpression
     super(e);
     mixin(set_kind);
     addChild(e2);
+    this.e2 = e2;
   }
 }
 
