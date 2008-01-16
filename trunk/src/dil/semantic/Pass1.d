@@ -67,7 +67,7 @@ override
     foreach (node; d.children)
     {
       assert(node.category == NodeCategory.Declaration);
-      visitD(node.to!(Declaration));
+      visitD(cast(Declaration)cast(void*)node);
     }
     return d;
   }
@@ -188,7 +188,8 @@ override
       return d;
     d.symbol = new Struct(d.name, d);
     // Insert into current scope.
-    scop.insert(d.symbol, d.name);
+    if (d.name)
+      scop.insert(d.symbol, d.name);
     enterScope(d.symbol);
     // Continue semantic analysis.
     d.decls && visitD(d.decls);
@@ -202,7 +203,8 @@ override
       return d;
     d.symbol = new Union(d.name, d);
     // Insert into current scope.
-    scop.insert(d.symbol, d.name);
+    if (d.name)
+      scop.insert(d.symbol, d.name);
     enterScope(d.symbol);
     // Continue semantic analysis.
     d.decls && visitD(d.decls);
@@ -223,20 +225,20 @@ override
 
   Declaration visit(VariableDeclaration vd)
   {
-    Type type;
+    Type type = Types.Undefined;
 
     if (vd.typeNode)
       // Get type from typeNode.
-      type = Types.Undefined; // visitN(d.typeNode);
+      type = visitT(vd.typeNode).type;
     else
     { // Infer type from first initializer.
-      auto firstValue = vd.values[0];
-      firstValue = visitE(firstValue);
-      type = firstValue.type;
+      auto firstInit = vd.values[0];
+      firstInit = visitE(firstInit);
+      type = firstInit.type;
     }
-    assert(type !is null);
+    //assert(type !is null);
 
-    // Check for interface.
+    // Check if we are in an interface.
     if (scop.isInterface)
       return error(vd.begin, MSG.InterfaceCantHaveVariables), vd;
 
@@ -415,6 +417,11 @@ override
       e.type = Types.Wchar;
     else
       e.type = Types.Dchar;
+    return e;
+  }
+
+  Expression visit(StringExpression e)
+  {
     return e;
   }
 

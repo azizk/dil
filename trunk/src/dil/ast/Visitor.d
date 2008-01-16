@@ -21,7 +21,7 @@ char[] generateVisitMethods()
 {
   char[] text;
   foreach (className; classNames)
-    text ~= "returnType!(\""~className~"\") visit("~className~"){return null;}\n";
+    text ~= "returnType!(\""~className~"\") visit("~className~" node){return node;}\n";
   return text;
 }
 // pragma(msg, generateAbstractVisitMethods());

@@ -21,7 +21,7 @@ import common;
 returnType!(T.stringof) visitDefault(T)(T t)
 {
   assert(t !is null, "node passed to visitDefault() is null");
-  // Stdout(t).newline;
+  //Stdout(t).newline;
 
   alias t d, s, e, n; // Variable aliases of t.
 
@@ -31,21 +31,21 @@ returnType!(T.stringof) visitDefault(T)(T t)
     static if (is(D == Declarations))
       foreach (node; d.children)
         visitN(node);
-    //static if (is(D == EmptyDeclaration))
-    //static if (is(D == IllegalDeclaration))
-    //static if (is(D == ModuleDeclaration))
+    //EmptyDeclaration,
+    //IllegalDeclaration,
+    //ModuleDeclaration have no subnodes.
     static if (is(D == AliasDeclaration) ||
                is(D == AliasDeclaration) ||
                is(D == TypedefDeclaration))
       visitD(d.decl);
     static if (is(D == EnumDeclaration))
     {
+      d.baseType && visitT(d.baseType);
       foreach (member; d.members)
         visitD(member);
-      visitT(d.baseType);
     }
     static if (is(D == EnumMember))
-      visitE(d.value);
+      d.value && visitE(d.value);
     static if (is(D == ClassDeclaration) || is( D == InterfaceDeclaration))
     {
       d.tparams && visitN(d.tparams);
@@ -123,12 +123,12 @@ returnType!(T.stringof) visitDefault(T)(T t)
     {
       static if (is(E == CastExpression))
         visitT(e.type);
-      visitE(e.e); // member of UnaryExpression
+      visitE(e.e); // Visit member in base class UnaryExpression.
       static if (is(E == IndexExpression))
         foreach (arg; e.args)
           visitE(arg);
       static if (is(E == SliceExpression))
-        visitE(e.left), visitE(e.right);
+        e.left && (visitE(e.left), visitE(e.right));
       static if (is(E == AsmPostBracketExpression))
         visitE(e.e2);
     }
@@ -182,13 +182,13 @@ returnType!(T.stringof) visitDefault(T)(T t)
         visitE(e.next);
       static if (is(E == TraitsExpression))
         visitN(e.targs);
+      // VoidInitializer has no subnodes.
       static if (is(E == ArrayInitializer))
         foreach (i, key; e.keys)
           key && visitE(key), visitE(e.values[i]);
       static if (is(E == StructInitializer))
         foreach (value; e.values)
           visitE(value);
-
     }
   }
   else
@@ -197,8 +197,8 @@ returnType!(T.stringof) visitDefault(T)(T t)
     alias T S;
     static if (is(S == Statements))
       foreach (node; s.children)
-        visitS(cast(Statement)cast(void*)node/+.to!(Statement)+/);
-    //static if (is(S == IllegalStatement))
+        visitS(cast(Statement)cast(void*)node);
+    //IllegalStatement has no subnodes.
     static if (is(S == FunctionBody))
       s.funcBody && visitS(s.funcBody),
       s.inBody && visitS(s.inBody),
@@ -237,10 +237,10 @@ returnType!(T.stringof) visitDefault(T)(T t)
     }
     static if (is(S == DefaultStatement))
       visitS(s.defaultBody);
-    //static if (is(S == ContinueStatement))
-    //static if (is(S == BreakStatement))
+    //ContinueStatement,
+    //BreakStatement have no subnodes.
     static if (is(S == ReturnStatement))
-      visitE(s.e);
+      s.e && visitE(s.e);
     static if (is(S == GotoStatement))
       s.caseExpr && visitE(s.caseExpr);
     static if (is(S == WithStatement))
@@ -269,7 +269,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
     static if (is(S == AsmInstruction))
       foreach (op; s.operands)
         visitE(op);
-    //static if (is(S == AsmAlignStatement))
+    //AsmAlignStatement has no subnodes.
     static if (is(S == PragmaStatement))
     {
       foreach (arg; s.args)
@@ -288,9 +288,9 @@ returnType!(T.stringof) visitDefault(T)(T t)
   else
   static if (is(T : TypeNode))
   {
-    //static if (is(T == UndefinedType))
-    //static if (is(T == IntegralType))
-    //static if (is(T == IdentifierType))
+    //UndefinedType,
+    //IntegralType,
+    //IdentifierType have no subnodes.
     static if (is(T == QualifiedType))
       visitT(t.left), visitT(t.right);
     static if (is(T == TypeofType))
@@ -343,7 +343,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
       visitT(n.valueType),
       n.specValue && visitN(n.specValue),
       n.defValue && visitN(n.defValue);
-    //static if (is(N == TemplateTupleParameter))
+    //TemplateTupleParameter has no subnodes.
   }
   else
     assert(0, "Missing default visit method for: "~t.classinfo.name);

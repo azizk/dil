@@ -58,6 +58,7 @@ abstract class TypeNode : Node
 {
   TID tid;
   TypeNode next;
+  Type type; /// The semantic type of this type node.
 
   this(TID tid)
   {
@@ -172,12 +173,15 @@ class ArrayType : TypeNode
   Expression e, e2;
   TypeNode assocType;
 
+  /// Dynamic array: T[]
   this(TypeNode t)
   {
     super(TID.Array, t);
     mixin(set_kind);
   }
 
+  /// Static array: T[E] or
+  /// Slice array (for tuples): T[E..E]
   this(TypeNode t, Expression e, Expression e2)
   {
     addChild(e);
@@ -187,6 +191,7 @@ class ArrayType : TypeNode
     this(t);
   }
 
+  /// Associative array: T[T]
   this(TypeNode t, TypeNode assocType)
   {
     addChild(assocType);
