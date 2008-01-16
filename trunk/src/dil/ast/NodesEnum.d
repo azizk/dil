@@ -94,7 +94,6 @@ static const char[][] classNames = [
 
   // Expressions:
   "IllegalExpression",
-  "BinaryExpression",
   "CondExpression",
   "CommaExpression",
   "OrOrExpression",
@@ -102,7 +101,6 @@ static const char[][] classNames = [
   "OrExpression",
   "XorExpression",
   "AndExpression",
-  "CmpExpression",
   "EqualExpression",
   "IdentityExpression",
   "RelExpression",
@@ -129,7 +127,6 @@ static const char[][] classNames = [
   "ModAssignExpression",
   "XorAssignExpression",
   "CatAssignExpression",
-  "UnaryExpression",
   "AddressExpression",
   "PreIncrExpression",
   "PreDecrExpression",
