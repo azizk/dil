@@ -1040,7 +1040,7 @@ class Parser
 
     Identifier* className;
     TemplateParameters tparams;
-    BaseClass[] bases;
+    BaseClassType[] bases;
     Declarations decls;
 
     className = requireIdentifier(MSG.ExpectedClassName);
@@ -1061,7 +1061,7 @@ class Parser
     return new ClassDeclaration(className, tparams, bases, decls);
   }
 
-  BaseClass[] parseBaseClasses(bool colonLeadsOff = true)
+  BaseClassType[] parseBaseClasses(bool colonLeadsOff = true)
   {
     if (colonLeadsOff)
     {
@@ -1069,7 +1069,7 @@ class Parser
       nT(); // Skip colon
     }
 
-    BaseClass[] bases;
+    BaseClassType[] bases;
 
     do
     {
@@ -1089,7 +1089,7 @@ class Parser
     LparseBasicType:
       auto begin = token;
       auto type = parseBasicType();
-      bases ~= set(new BaseClass(prot, type), begin);
+      bases ~= set(new BaseClassType(prot, type), begin);
     } while (skipped(T.Comma))
     return bases;
   }
@@ -1101,7 +1101,7 @@ class Parser
 
     Identifier* name;
     TemplateParameters tparams;
-    BaseClass[] bases;
+    BaseClassType[] bases;
     Declarations decls;
 
     name = requireIdentifier(MSG.ExpectedInterfaceName);
@@ -3426,7 +3426,7 @@ class Parser
       if (token.type == T.LParen)
         ctorArguments = parseArguments();
 
-      BaseClass[] bases = token.type != T.LBrace ? parseBaseClasses(false) : null ;
+      BaseClassType[] bases = token.type != T.LBrace ? parseBaseClasses(false) : null ;
 
       auto decls = parseDeclarationDefinitionsBody();
       return set(new NewAnonClassExpression(/*e, */newArguments, bases, ctorArguments, decls), begin);

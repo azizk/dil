@@ -128,8 +128,6 @@ char[] getShortClassName(Node node)
     }
     break;
   case NC.Type:
-    if (node.kind == NodeKind.BaseClass)
-      break;
     suffixLength = "Type".length;
     break;
   case NC.Other:

@@ -481,10 +481,10 @@ class NewExpression : /*Unary*/Expression
 class NewAnonClassExpression : /*Unary*/Expression
 {
   Expression[] newArgs;
-  BaseClass[] bases;
+  BaseClassType[] bases;
   Expression[] ctorArgs;
   Declarations decls;
-  this(/*Expression e, */Expression[] newArgs, BaseClass[] bases, Expression[] ctorArgs, Declarations decls)
+  this(/*Expression e, */Expression[] newArgs, BaseClassType[] bases, Expression[] ctorArgs, Declarations decls)
   {
     /*super(e);*/
     mixin(set_kind);
@@ -898,21 +898,21 @@ class IsExpression : Expression
 class FunctionLiteralExpression : Expression
 {
   TypeNode returnType;
-  Parameters parameters;
+  Parameters params;
   FunctionBody funcBody;
 
   this()
   {
     mixin(set_kind);
     addOptChild(returnType);
-    addOptChild(parameters);
+    addOptChild(params);
     addChild(funcBody);
   }
 
-  this(TypeNode returnType, Parameters parameters, FunctionBody funcBody)
+  this(TypeNode returnType, Parameters params, FunctionBody funcBody)
   {
     this.returnType = returnType;
-    this.parameters = parameters;
+    this.params = params;
     this.funcBody = funcBody;
     this();
   }

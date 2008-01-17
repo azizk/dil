@@ -205,8 +205,8 @@ abstract class AggregateDeclaration : Declaration
 
 class ClassDeclaration : AggregateDeclaration
 {
-  BaseClass[] bases;
-  this(Identifier* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls)
+  BaseClassType[] bases;
+  this(Identifier* name, TemplateParameters tparams, BaseClassType[] bases, Declarations decls)
   {
     super(name, tparams, decls);
     mixin(set_kind);
@@ -222,8 +222,8 @@ class ClassDeclaration : AggregateDeclaration
 
 class InterfaceDeclaration : AggregateDeclaration
 {
-  BaseClass[] bases;
-  this(Identifier* name, TemplateParameters tparams, BaseClass[] bases, Declarations decls)
+  BaseClassType[] bases;
+  this(Identifier* name, TemplateParameters tparams, BaseClassType[] bases, Declarations decls)
   {
     super(name, tparams, decls);
     mixin(set_kind);
@@ -273,16 +273,16 @@ class UnionDeclaration : AggregateDeclaration
 
 class ConstructorDeclaration : Declaration
 {
-  Parameters parameters;
+  Parameters params;
   FunctionBody funcBody;
-  this(Parameters parameters, FunctionBody funcBody)
+  this(Parameters params, FunctionBody funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
-    addChild(parameters);
+    addChild(params);
     addChild(funcBody);
 
-    this.parameters = parameters;
+    this.params = params;
     this.funcBody = funcBody;
   }
 }
@@ -329,12 +329,12 @@ class StaticDestructorDeclaration : Declaration
 class FunctionDeclaration : Declaration
 {
   TypeNode returnType;
-  Identifier* funcName;
+  Identifier* name;
   TemplateParameters tparams;
   Parameters params;
   FunctionBody funcBody;
   LinkageType linkageType;
-  this(TypeNode returnType, Identifier* funcName, TemplateParameters tparams,
+  this(TypeNode returnType, Identifier* name, TemplateParameters tparams,
        Parameters params, FunctionBody funcBody)
   {
     super.hasBody = funcBody.funcBody !is null;
@@ -345,7 +345,7 @@ class FunctionDeclaration : Declaration
     addChild(funcBody);
 
     this.returnType = returnType;
-    this.funcName = funcName;
+    this.name = name;
     this.tparams = tparams;
     this.params = params;
     this.funcBody = funcBody;
@@ -503,32 +503,32 @@ class TemplateDeclaration : Declaration
 
 class NewDeclaration : Declaration
 {
-  Parameters parameters;
+  Parameters params;
   FunctionBody funcBody;
-  this(Parameters parameters, FunctionBody funcBody)
+  this(Parameters params, FunctionBody funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
-    addChild(parameters);
+    addChild(params);
     addChild(funcBody);
 
-    this.parameters = parameters;
+    this.params = params;
     this.funcBody = funcBody;
   }
 }
 
 class DeleteDeclaration : Declaration
 {
-  Parameters parameters;
+  Parameters params;
   FunctionBody funcBody;
-  this(Parameters parameters, FunctionBody funcBody)
+  this(Parameters params, FunctionBody funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
-    addChild(parameters);
+    addChild(params);
     addChild(funcBody);
 
-    this.parameters = parameters;
+    this.params = params;
     this.funcBody = funcBody;
   }
 }

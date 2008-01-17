@@ -14,10 +14,10 @@ class Parameter : Node
 {
   StorageClass stc;
   TypeNode type;
-  Identifier* ident;
+  Identifier* name;
   Expression defValue;
 
-  this(StorageClass stc, TypeNode type, Identifier* ident, Expression defValue)
+  this(StorageClass stc, TypeNode type, Identifier* name, Expression defValue)
   {
     super(NodeCategory.Other);
     mixin(set_kind);
@@ -27,7 +27,7 @@ class Parameter : Node
 
     this.stc = stc;
     this.type = type;
-    this.ident = ident;
+    this.name = name;
     this.defValue = defValue;
   }
 
@@ -41,7 +41,7 @@ class Parameter : Node
   bool isOnlyVariadic()
   {
     return stc == StorageClass.Variadic &&
-           type is null && ident is null;
+           type is null && name is null;
   }
 }
 

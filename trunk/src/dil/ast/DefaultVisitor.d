@@ -57,8 +57,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
       d.tparams && visitN(d.tparams),
       d.decls && visitD(d.decls);
     static if (is(D == ConstructorDeclaration))
-      visitN(d.parameters),
-      visitS(d.funcBody);
+      visitN(d.params), visitS(d.funcBody);
     static if (is(D == StaticConstructorDeclaration) ||
                is(D == DestructorDeclaration) ||
                is(D == StaticDestructorDeclaration) ||
@@ -90,7 +89,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
       d.tparams && visitN(d.tparams),
       visitD(d.decls);
     static if (is(D == NewDeclaration) || is(D == DeleteDeclaration))
-      visitN(d.parameters),
+      visitN(d.params),
       visitS(d.funcBody);
     static if (is(D == ProtectionDeclaration) ||
                is(D == StorageClassDeclaration) ||
@@ -176,7 +175,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
         e.tparams && visitN(e.tparams);
       static if (is(E == FunctionLiteralExpression))
         e.returnType && visitT(e.returnType),
-        e.parameters && visitN(e.parameters),
+        e.params && visitN(e.params),
         visitS(e.funcBody);
       static if (is(E == ParenExpression))
         visitE(e.next);
@@ -308,11 +307,11 @@ returnType!(T.stringof) visitDefault(T)(T t)
         visitE(t.e), t.e2 && visitE(t.e2);
     }
     static if (is(T == FunctionType) || is(T == DelegateType))
-      visitT(t.returnType), visitN(t.parameters);
+      visitT(t.returnType), visitN(t.params);
     static if (is(T == CFuncPointerType))
       visitT(t.next), t.params && visitN(t.params);
     static if (is(T == ModuleScopeType) ||
-               is(T == BaseClass) ||
+               is(T == BaseClassType) ||
                is(T == ConstType) ||
                is(T == InvariantType))
       visitT(t.next);
@@ -372,5 +371,6 @@ char[] generateDefaultVisitMethods()
 +/
 class DefaultVisitor : Visitor
 {
+  // Comment out if too many errors are shown.
   mixin(generateDefaultVisitMethods());
 }

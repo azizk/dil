@@ -83,6 +83,7 @@ class UndefinedType : TypeNode
   }
 }
 
+/// char, int, float etc.
 class IntegralType : TypeNode
 {
   this(TOK tok)
@@ -92,6 +93,7 @@ class IntegralType : TypeNode
   }
 }
 
+/// Identifier
 class IdentifierType : TypeNode
 {
   Identifier* ident;
@@ -103,6 +105,7 @@ class IdentifierType : TypeNode
   }
 }
 
+/// Type "." Type
 class QualifiedType : TypeNode
 {
   alias next left;
@@ -114,6 +117,7 @@ class QualifiedType : TypeNode
   }
 }
 
+/// "." Type
 class ModuleScopeType : TypeNode
 {
   this(TypeNode next)
@@ -168,20 +172,21 @@ class PointerType : TypeNode
   }
 }
 
+/// Dynamic array: T[] or
+/// Static array: T[E] or
+/// Slice array (for tuples): T[E..E] or
+/// Associative array: T[T]
 class ArrayType : TypeNode
 {
   Expression e, e2;
   TypeNode assocType;
 
-  /// Dynamic array: T[]
   this(TypeNode t)
   {
     super(TID.Array, t);
     mixin(set_kind);
   }
 
-  /// Static array: T[E] or
-  /// Slice array (for tuples): T[E..E]
   this(TypeNode t, Expression e, Expression e2)
   {
     addChild(e);
@@ -191,7 +196,6 @@ class ArrayType : TypeNode
     this(t);
   }
 
-  /// Associative array: T[T]
   this(TypeNode t, TypeNode assocType)
   {
     addChild(assocType);
@@ -200,33 +204,35 @@ class ArrayType : TypeNode
   }
 }
 
+/// ReturnType "function" "(" Parameters? ")"
 class FunctionType : TypeNode
 {
   TypeNode returnType;
-  Parameters parameters;
-  this(TypeNode returnType, Parameters parameters)
+  Parameters params;
+  this(TypeNode returnType, Parameters params)
   {
     super(TID.Function);
     mixin(set_kind);
     addChild(returnType);
-    addChild(parameters);
+    addChild(params);
     this.returnType = returnType;
-    this.parameters = parameters;
+    this.params = params;
   }
 }
 
+/// ReturnType "delegate" "(" Parameters? ")"
 class DelegateType : TypeNode
 {
   TypeNode returnType;
-  Parameters parameters;
-  this(TypeNode returnType, Parameters parameters)
+  Parameters params;
+  this(TypeNode returnType, Parameters params)
   {
     super(TID.Delegate);
     mixin(set_kind);
     addChild(returnType);
-    addChild(parameters);
+    addChild(params);
     this.returnType = returnType;
-    this.parameters = parameters;
+    this.params = params;
   }
 }
 
@@ -241,7 +247,8 @@ class CFuncPointerType : TypeNode
   }
 }
 
-class BaseClass : TypeNode
+/// "class" Identifier : BaseClass
+class BaseClassType : TypeNode
 {
   Protection prot;
   this(Protection prot, TypeNode type)
