@@ -76,7 +76,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
         value && visitE(value);
     }
     static if (is(D == DebugDeclaration) || is(D == VersionDeclaration))
-      visitD(d.decls),
+      d.decls && visitD(d.decls),
       d.elseDecls && visitD(d.elseDecls);
     static if (is(D == StaticIfDeclaration))
       visitE(d.condition),

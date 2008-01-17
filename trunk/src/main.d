@@ -143,12 +143,15 @@ void main(char[][] args)
   case "stats", "statistics":
     char[][] filePaths;
     bool printTokensTable;
+    bool printNodesTable;
     foreach (arg; args[2..$])
-      if (arg == "--table")
+      if (arg == "--toktable")
         printTokensTable = true;
+      else if (arg == "--asttable")
+        printNodesTable = true;
       else
         filePaths ~= arg;
-    cmd.Statistics.execute(filePaths, printTokensTable);
+    cmd.Statistics.execute(filePaths, printTokensTable, printNodesTable);
     break;
   case "tok", "tokenize":
     char[] filePath;
@@ -324,7 +327,8 @@ Usage:
   dil stat file.d [file2.d, ...] [Options]
 
 Options:
-  --table         : print the count of all types of tokens in a table.
+  --toktable      : print the count of all kinds of tokens in a table.
+  --asttable      : print the count of all kinds of nodes in a table.
 
 Example:
   dil stat src/dil/Parser.d src/dil/Lexer.d";

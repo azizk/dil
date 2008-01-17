@@ -7,6 +7,8 @@ module cmd.Statistics;
 import dil.File;
 import dil.lexer.Lexer;
 import dil.lexer.Token;
+import dil.parser.Parser;
+import dil.ast.NodesEnum;
 import cmd.ASTStats;
 import common;
 
@@ -20,13 +22,16 @@ struct Statistics
   uint commentCount;    /// Counter for comments.
   uint tokenCount;      /// Counter for all tokens produced by the Lexer.
   uint linesOfCode;     /// Number of lines.
-  uint[] tokensTable;   /// Table of counters for all token types.
+  uint[] tokensTable;   /// Table of counters for all token kinds.
+  uint[] nodesTable;    /// Table of counters for all node kinds.
 
-  static Statistics opCall(bool allocateTokensTable)
+  static Statistics opCall(bool allocateTokensTable, bool allocateNodesTable = false)
   {
     Statistics s;
     if (allocateTokensTable)
       s.tokensTable = new uint[TOK.MAX];
+    if (allocateNodesTable)
+      s.nodesTable = new uint[classNames.length];
     return s;
   }
 
@@ -42,16 +47,18 @@ struct Statistics
     this.linesOfCode     += s.linesOfCode;
     foreach (i, count; s.tokensTable)
       this.tokensTable[i] += count;
+    foreach (i, count; s.nodesTable)
+      this.nodesTable[i] += count;
   }
 }
 
-void execute(string[] filePaths, bool printTokensTable)
+void execute(string[] filePaths, bool printTokensTable, bool printNodesTable)
 {
   Statistics[] stats;
   foreach (filePath; filePaths)
-    stats ~= getStatistics(filePath, printTokensTable);
+    stats ~= getStatistics(filePath, printTokensTable, printNodesTable);
 
-  auto total = Statistics(printTokensTable);
+  auto total = Statistics(printTokensTable, printNodesTable);
 
   foreach (i, ref stat; stats)
   {
@@ -107,22 +114,49 @@ void execute(string[] filePaths, bool printTokensTable)
   if (printTokensTable)
   {
     Stdout("Table of tokens:").newline;
-    Stdout.formatln(" {,10} | {}", "Count", "Token type");
+    Stdout.formatln(" {,10} | {}", "Count", "Token kind");
     Stdout("-----------------------------").newline;
     foreach (i, count; total.tokensTable)
       Stdout.formatln(" {,10} | {}", count, Token.toString(cast(TOK)i));
-    Stdout("// End of table.").newline;
+    Stdout("// End of tokens table.").newline;
+  }
+
+  if(printNodesTable)
+  {
+    Stdout("Table of nodes:").newline;
+    Stdout.formatln(" {,10} | {}", "Count", "Node kind");
+    Stdout("-----------------------------").newline;
+    foreach (i, count; total.nodesTable)
+      Stdout.formatln(" {,10} | {}", count, classNames[i]);
+    Stdout("// End of nodes table.").newline;
   }
 }
 
-Statistics getStatistics(string filePath, bool printTokensTable)
+Statistics getStatistics(string filePath, bool printTokensTable, bool printNodesTable)
 {
+  // Create a new record.
+  auto stats = Statistics(printTokensTable);
+
   auto sourceText = loadFile(filePath);
-  auto lx = new Lexer(sourceText, filePath);
-  lx.scanAll();
+  Parser parser;
+  Lexer lx;
+  if (printNodesTable)
+  {
+    parser = new Parser(sourceText, filePath);
+    auto rootNode = parser.start();
+    // Count nodes.
+    stats.nodesTable = (new ASTStats).count(rootNode);
+    lx = parser.lexer;
+  }
+  else
+  {
+    lx = new Lexer(sourceText, filePath);
+    lx.scanAll();
+  }
+
   auto token = lx.firstToken();
 
-  auto stats = Statistics(printTokensTable);
+  // Count tokens.
   // Lexer creates HEAD + Newline, which are not in the source text.
   // No token left behind!
   stats.tokenCount = 2;
