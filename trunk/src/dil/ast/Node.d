@@ -35,6 +35,7 @@ class Node
 
   this(NodeCategory category)
   {
+    assert(category != NodeCategory.Undefined);
     this.category = category;
   }
 

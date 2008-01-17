@@ -183,7 +183,7 @@ static const char[][] classNames = [
   "AsmRegisterExpression",
 
   // Types:
-  "UndefinedType",
+  "IllegalType",
   "IntegralType",
   "QualifiedType",
   "ModuleScopeType",

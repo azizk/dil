@@ -8,80 +8,33 @@ import dil.ast.Node;
 import dil.ast.Expression;
 import dil.ast.Parameters;
 import dil.lexer.Identifier;
-import dil.Enums;
 import dil.semantic.Types;
-
-// Scheduled for deletion.
-enum TID
-{
-  Void    = TOK.Void,
-  Char    = TOK.Char,
-  Wchar   = TOK.Wchar,
-  Dchar   = TOK.Dchar,
-  Bool    = TOK.Bool,
-  Byte    = TOK.Byte,
-  Ubyte   = TOK.Ubyte,
-  Short   = TOK.Short,
-  Ushort  = TOK.Ushort,
-  Int     = TOK.Int,
-  Uint    = TOK.Uint,
-  Long    = TOK.Long,
-  Ulong   = TOK.Ulong,
-  Float   = TOK.Float,
-  Double  = TOK.Double,
-  Real    = TOK.Real,
-  Ifloat  = TOK.Ifloat,
-  Idouble = TOK.Idouble,
-  Ireal   = TOK.Ireal,
-  Cfloat  = TOK.Cfloat,
-  Cdouble = TOK.Cdouble,
-  Creal   = TOK.Creal,
-  Cent    = TOK.Cent,
-  Ucent   = TOK.Ucent,
-
-  Undefined,
-  BaseClass,
-  Function,
-  Delegate,
-  Pointer,
-  CFuncPointer,
-  Array,
-  Qualified,
-  ModuleScope,
-  Identifier,
-  Typeof,
-  TemplateInstance,
-  Const, // D2
-  Invariant, // D2
-}
+import dil.Enums;
 
 /// The base class of all type nodes.
 abstract class TypeNode : Node
 {
-  TID tid;
   TypeNode next;
   Type type; /// The semantic type of this type node.
 
-  this(TID tid)
+  this()
   {
-    this(tid, null);
+    this(null);
   }
 
-  this(TID tid, TypeNode next)
+  this(TypeNode next)
   {
     super(NodeCategory.Type);
     addOptChild(next);
-    this.tid = tid;
     this.next = next;
   }
 }
 
-/// Illegal type.
-class UndefinedType : TypeNode
+/// Syntax error.
+class IllegalType : TypeNode
 {
   this()
   {
-    super(TID.Undefined);
     mixin(set_kind);
   }
 }
@@ -89,10 +42,11 @@ class UndefinedType : TypeNode
 /// char, int, float etc.
 class IntegralType : TypeNode
 {
+  TOK tok;
   this(TOK tok)
   {
-    super(cast(TID)tok);
     mixin(set_kind);
+    this.tok = tok;
   }
 }
 
@@ -102,7 +56,6 @@ class IdentifierType : TypeNode
   Identifier* ident;
   this(Identifier* ident)
   {
-    super(TID.Identifier);
     mixin(set_kind);
     this.ident = ident;
   }
@@ -115,7 +68,7 @@ class QualifiedType : TypeNode
   TypeNode right;
   this(TypeNode left, TypeNode right)
   {
-    super(TID.Qualified, left);
+    super(left);
     mixin(set_kind);
     addChild(right);
     this.right = right;
@@ -127,7 +80,7 @@ class ModuleScopeType : TypeNode
 {
   this(TypeNode next)
   {
-    super(TID.ModuleScope, next);
+    super(next);
     mixin(set_kind);
   }
 }
@@ -146,7 +99,6 @@ class TypeofType : TypeNode
   /// D2.0: "typeof" "(" "return" ")"
   this()
   {
-    super(TID.Typeof);
     mixin(set_kind);
   }
 
@@ -163,7 +115,6 @@ class TemplateInstanceType : TypeNode
   TemplateArguments targs;
   this(Identifier* ident, TemplateArguments targs)
   {
-    super(TID.TemplateInstance);
     mixin(set_kind);
     addOptChild(targs);
     this.ident = ident;
@@ -174,9 +125,9 @@ class TemplateInstanceType : TypeNode
 /// Type *
 class PointerType : TypeNode
 {
-  this(TypeNode t)
+  this(TypeNode next)
   {
-    super(TID.Pointer, t);
+    super(next);
     mixin(set_kind);
   }
 }
@@ -192,39 +143,37 @@ class ArrayType : TypeNode
 
   this(TypeNode t)
   {
-    super(TID.Array, t);
+    super(t);
     mixin(set_kind);
   }
 
   this(TypeNode t, Expression e, Expression e2)
   {
+    this(t);
     addChild(e);
     addOptChild(e2);
     this.e = e;
     this.e2 = e2;
-    this(t);
   }
 
   this(TypeNode t, TypeNode assocType)
   {
+    this(t);
     addChild(assocType);
     this.assocType = assocType;
-    this(t);
   }
 }
 
 /// ReturnType "function" "(" Parameters? ")"
 class FunctionType : TypeNode
 {
-  TypeNode returnType;
+  alias next returnType;
   Parameters params;
   this(TypeNode returnType, Parameters params)
   {
-    super(TID.Function);
+    super(returnType);
     mixin(set_kind);
-    addChild(returnType);
     addChild(params);
-    this.returnType = returnType;
     this.params = params;
   }
 }
@@ -232,15 +181,13 @@ class FunctionType : TypeNode
 /// ReturnType "delegate" "(" Parameters? ")"
 class DelegateType : TypeNode
 {
-  TypeNode returnType;
+  alias next returnType;
   Parameters params;
   this(TypeNode returnType, Parameters params)
   {
-    super(TID.Delegate);
+    super(returnType);
     mixin(set_kind);
-    addChild(returnType);
     addChild(params);
-    this.returnType = returnType;
     this.params = params;
   }
 }
@@ -251,7 +198,7 @@ class CFuncPointerType : TypeNode
   Parameters params;
   this(TypeNode type, Parameters params)
   {
-    super(TID.CFuncPointer, type);
+    super(type);
     mixin(set_kind);
     addOptChild(params);
   }
@@ -263,7 +210,7 @@ class BaseClassType : TypeNode
   Protection prot;
   this(Protection prot, TypeNode type)
   {
-    super(TID.BaseClass, type);
+    super(type);
     mixin(set_kind);
     this.prot = prot;
   }
@@ -274,10 +221,10 @@ class BaseClassType : TypeNode
 /// "const" "(" Type ")"
 class ConstType : TypeNode
 {
-  this(TypeNode t)
+  this(TypeNode next)
   {
     // If t is null: cast(const)
-    super(TID.Const, t);
+    super(next);
     mixin(set_kind);
   }
 }
@@ -285,10 +232,10 @@ class ConstType : TypeNode
 /// "invariant" "(" Type ")"
 class InvariantType : TypeNode
 {
-  this(TypeNode t)
+  this(TypeNode next)
   {
     // If t is null: cast(invariant)
-    super(TID.Invariant, t);
+    super(next);
     mixin(set_kind);
   }
 }

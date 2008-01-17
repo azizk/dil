@@ -287,7 +287,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
   else
   static if (is(T : TypeNode))
   {
-    //UndefinedType,
+    //IllegalType,
     //IntegralType,
     //IdentifierType have no subnodes.
     static if (is(T == QualifiedType))

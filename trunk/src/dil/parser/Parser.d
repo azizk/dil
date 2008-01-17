@@ -3518,7 +3518,7 @@ class Parser
     } // version(D2)
     default:
       error(MID.ExpectedButFound, "BasicType", token.srcText);
-      t = new UndefinedType();
+      t = new IllegalType();
       nT();
     }
     return set(t, begin);
