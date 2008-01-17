@@ -6,6 +6,7 @@ module dil.ast.NodesEnum;
 
 enum NodeCategory : ushort
 {
+  Undefined,
   Declaration,
   Statement,
   Expression,

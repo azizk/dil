@@ -66,7 +66,7 @@ override
   {
     foreach (node; d.children)
     {
-      assert(node.category == NodeCategory.Declaration);
+      assert(node.category == NodeCategory.Declaration, Format("{}", node));
       visitD(cast(Declaration)cast(void*)node);
     }
     return d;

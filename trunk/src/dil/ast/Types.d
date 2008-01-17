@@ -11,6 +11,7 @@ import dil.lexer.Identifier;
 import dil.Enums;
 import dil.semantic.Types;
 
+// Scheduled for deletion.
 enum TID
 {
   Void    = TOK.Void,
@@ -54,6 +55,7 @@ enum TID
   Invariant, // D2
 }
 
+/// The base class of all type nodes.
 abstract class TypeNode : Node
 {
   TID tid;
@@ -74,6 +76,7 @@ abstract class TypeNode : Node
   }
 }
 
+/// Illegal type.
 class UndefinedType : TypeNode
 {
   this()
@@ -113,7 +116,9 @@ class QualifiedType : TypeNode
   this(TypeNode left, TypeNode right)
   {
     super(TID.Qualified, left);
+    mixin(set_kind);
     addChild(right);
+    this.right = right;
   }
 }
 
@@ -127,6 +132,7 @@ class ModuleScopeType : TypeNode
   }
 }
 
+/// "typeof" "(" Expression ")
 class TypeofType : TypeNode
 {
   Expression e;
@@ -137,6 +143,7 @@ class TypeofType : TypeNode
     this.e = e;
   }
 
+  /// D2.0: "typeof" "(" "return" ")"
   this()
   {
     super(TID.Typeof);
@@ -149,6 +156,7 @@ class TypeofType : TypeNode
   }
 }
 
+/// Identifier "!" "(" TemplateParameters? ")"
 class TemplateInstanceType : TypeNode
 {
   Identifier* ident;
@@ -163,6 +171,7 @@ class TemplateInstanceType : TypeNode
   }
 }
 
+/// Type *
 class PointerType : TypeNode
 {
   this(TypeNode t)
@@ -236,6 +245,7 @@ class DelegateType : TypeNode
   }
 }
 
+/// Type "(" BasicType2 Identifier ")" "(" Parameters? ")"
 class CFuncPointerType : TypeNode
 {
   Parameters params;
@@ -247,7 +257,7 @@ class CFuncPointerType : TypeNode
   }
 }
 
-/// "class" Identifier : BaseClass
+/// "class" Identifier : BaseClasses
 class BaseClassType : TypeNode
 {
   Protection prot;
@@ -261,6 +271,7 @@ class BaseClassType : TypeNode
 
 // version(D2)
 // {
+/// "const" "(" Type ")"
 class ConstType : TypeNode
 {
   this(TypeNode t)
@@ -271,6 +282,7 @@ class ConstType : TypeNode
   }
 }
 
+/// "invariant" "(" Type ")"
 class InvariantType : TypeNode
 {
   this(TypeNode t)

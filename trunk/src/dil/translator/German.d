@@ -91,22 +91,39 @@ class GermanTranslator : DefaultVisitor
   }
 
   alias Enter!(ClassDeclaration) EnteredClass;
+  alias Enter!(InterfaceDeclaration) EnteredInterface;
+  alias Enter!(StructDeclaration) EnteredStruct;
+  alias Enter!(UnionDeclaration) EnteredUnion;
   alias Enter!(FunctionDeclaration) EnteredFunction;
   alias Enter!(ConstructorDeclaration) EnteredConstructor;
 
+  void printLoc(Node node)
+  {
+    auto loc = node.begin.getLocation();
+    put(indent).formatln("@({},{})",/+ loc.filePath,+/ loc.lineNum, loc.colNum);
+  }
 
 override:
   D visit(ModuleDeclaration n)
   {
-    put.format("Das Modul '{}'", n.moduleName.str);
+    printLoc(n);
+    put.format("Dies ist das Modul '{}'", n.moduleName.str);
     if (n.packages.length)
       put.format(" im Paket '{}'", n.getPackageName('.'));
     put(".").newline;
     return n;
   }
 
+  D visit(ImportDeclaration n)
+  {
+    printLoc(n);
+    put("Importiert Symbole aus einem anderen Modul bzw. Module.").newline;
+    return n;
+  }
+
   D visit(ClassDeclaration n)
   {
+    printLoc(n);
     scope E = new EnteredClass(n);
     put(indent).formatln("'{}' is eine Klasse mit den Eigenschaften:", n.name.str);
     scope I = new Indent();
@@ -114,11 +131,42 @@ override:
     return n;
   }
 
+  D visit(InterfaceDeclaration n)
+  {
+    printLoc(n);
+    scope E = new EnteredInterface(n);
+    put(indent).formatln("'{}' is ein Interface mit den Eigenschaften:", n.name.str);
+    scope I = new Indent();
+    n.decls && visitD(n.decls);
+    return n;
+  }
+
+  D visit(StructDeclaration n)
+  {
+    printLoc(n);
+    scope E = new EnteredStruct(n);
+    put(indent).formatln("'{}' is eine Datenstruktur mit den Eigenschaften:", n.name.str);
+    scope I = new Indent();
+    n.decls && visitD(n.decls);
+    return n;
+  }
+
+  D visit(UnionDeclaration n)
+  {
+    printLoc(n);
+    scope E = new EnteredUnion(n);
+    put(indent).formatln("'{}' is eine Datenunion mit den Eigenschaften:", n.name.str);
+    scope I = new Indent();
+    n.decls && visitD(n.decls);
+    return n;
+  }
+
   D visit(VariableDeclaration n)
   {
+    printLoc(n);
     char[] was;
     if (inAggregate)
-      was = "MemberVariable";
+      was = "Membervariable";
     else if (inFunc)
       was = "lokale Variable";
     else
@@ -137,84 +185,134 @@ override:
 
   D visit(FunctionDeclaration n)
   {
+    printLoc(n);
+    char[] was;
+    if (inAggregate)
+      was = "Methode";
+    else if(inFunc)
+      was = "geschachtelte Funktion";
+    else
+      was = "Funktion";
     scope E = new EnteredFunction(n);
-    char[] was = inAggregate ? "Methode" : "Funktion";
     put(indent).format("'{}' ist eine {} ", n.name.str, was);
-    if (n.params.length)
-      put("mit den Argumenten"), visitN(n.params);
+    if (n.params.length == 1)
+      put("mit dem Argument "), visitN(n.params);
+    else if (n.params.length > 1)
+      put("mit den Argumenten "), visitN(n.params);
     else
       put("ohne Argumente");
-    put.newline;
+    put(".").newline;
     scope I = new Indent();
     return n;
   }
 
   D visit(ConstructorDeclaration n)
   {
+    printLoc(n);
     scope E = new EnteredConstructor(n);
     put(indent)("Ein Konstruktor ");
     if (n.params.length == 1)
-      put("mit dem Argument "),put((visitN(n.params), "."));
+      put("mit dem Argument "), visitN(n.params);
     else if (n.params.length > 1)
-      put("mit den Argumenten "),put((visitN(n.params), "."));
+      put("mit den Argumenten "), visitN(n.params);
     else
-      put("ohne Argumente.");
-    put.newline;
+      put("ohne Argumente");
+    put(".").newline;
     return n;
   }
 
   D visit(StaticConstructorDeclaration n)
   {
-    put(indent)("Statischer Konstruktor.").newline;
+    printLoc(n);
+    put(indent)("Ein statischer Konstruktor.").newline;
     return n;
   }
 
   D visit(DestructorDeclaration n)
   {
-    put(indent)("Destruktor.").newline;
+    printLoc(n);
+    put(indent)("Ein Destruktor.").newline;
     return n;
   }
 
   D visit(StaticDestructorDeclaration n)
   {
-    put(indent)("Statischer Destruktor.").newline;
+    printLoc(n);
+    put(indent)("Ein statischer Destruktor.").newline;
     return n;
   }
 
   D visit(InvariantDeclaration n)
   {
+    printLoc(n);
     put(indent)("Eine Unveränderliche.").newline;
     return n;
   }
 
   D visit(UnittestDeclaration n)
   {
-    put(".").newline;
+    printLoc(n);
+    put(indent)("Ein Komponententest.").newline;
     return n;
   }
 
   Node visit(Parameter n)
   {
     put.format("'{}' des Typs \"", n.name ? n.name.str : "unbenannt");
-    visitN(n.type);
+    n.type && visitN(n.type);
     put(\");
+    return n;
+  }
+
+  Node visit(Parameters n)
+  {
+    if (n.length > 1)
+    {
+      visitN(n.children[0]);
+      foreach (node; n.children[1..$])
+        put(", "), visitN(node);
+    }
+    else
+      super.visit(n);
     return n;
   }
 
   TypeNode visit(ArrayType n)
   {
     if (n.assocType)
-      visitT(n.assocType);
+      put("assoziatives Array von ");
+//       visitT(n.assocType);
     else if (n.e)
-      visitE(n.e), n.e2 && visitE(n.e2);
+    {
+      if (n.e2)
+        put("gescheibtes Array von ");
+      else
+        put("statisches Array von ");
+//       visitE(n.e), n.e2 && visitE(n.e2);
+    }
     else
-      put("dynamisches Array von "), visitT(n.next);
+      put("dynamisches Array von ");
+    visitT(n.next);
     return n;
   }
 
   TypeNode visit(PointerType n)
   {
     put("Zeiger auf "), visitT(n.next);
+    return n;
+  }
+
+  TypeNode visit(QualifiedType n)
+  {
+    visitT(n.left);
+    put(".");
+    visitT(n.right);
+    return n;
+  }
+
+  TypeNode visit(IdentifierType n)
+  {
+    put(n.ident.str);
     return n;
   }
 
