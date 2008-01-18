@@ -4128,7 +4128,7 @@ version(D2)
       ++errorCount;
       return;
     }
-    auto location = token.getLocation();
+    auto location = token.getErrorLocation();
     auto msg = Format(_arguments, _argptr, formatMsg);
     auto error = new ParserError(location, msg);
     errors ~= error;

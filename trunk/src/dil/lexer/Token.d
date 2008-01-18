@@ -193,14 +193,22 @@ version(D2)
   }
 
   /// Returns the Location of this token.
-  Location getLocation()
+  Location getLocation(bool realLocation)()
   {
     auto search_t = this.prev;
     // Find previous newline token.
     while (search_t.type != TOK.Newline)
       search_t = search_t.prev;
-    auto filePath  = search_t.newline.filePaths.setPath;
-    auto lineNum   = search_t.newline.oriLineNum - search_t.newline.setLineNum;
+    static if (realLocation)
+    {
+      auto filePath  = search_t.newline.filePaths.oriPath;
+      auto lineNum   = search_t.newline.oriLineNum;
+    }
+    else
+    {
+      auto filePath  = search_t.newline.filePaths.setPath;
+      auto lineNum   = search_t.newline.oriLineNum - search_t.newline.setLineNum;
+    }
     auto lineBegin = search_t.end;
     // Determine actual line begin and line number.
     while (1)
@@ -226,6 +234,9 @@ version(D2)
     }
     return new Location(filePath, lineNum, lineBegin, this.start);
   }
+
+  alias getLocation!(true) getRealLocation;
+  alias getLocation!(false) getErrorLocation;
 
   uint lineCount()
   {

@@ -37,7 +37,7 @@ class Scope
     auto sym2 = symbol.lookup(ident);
     if (sym2)
     {
-      auto loc = sym2.node.begin.getLocation();
+      auto loc = sym2.node.begin.getErrorLocation();
       auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
       error(sym.node.begin, MSG.DeclConflictsWithDecl, ident.str, locString);
     }
@@ -53,7 +53,7 @@ class Scope
     auto sym = symbol.lookup(var.ident);
     if (sym)
     {
-      auto loc = sym.node.begin.getLocation();
+      auto loc = sym.node.begin.getErrorLocation();
       auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
       error(var.node.begin, MSG.VariableConflictsWithDecl, var.ident.str, locString);
     }
@@ -118,13 +118,13 @@ class Scope
 
   void error(Token* token, MID mid)
   {
-    auto location = token.getLocation();
+    auto location = token.getErrorLocation();
     infoMan ~= new SemanticError(location, GetMsg(mid));
   }
 
   void error(Token* token, char[] formatMsg, ...)
   {
-    auto location = token.getLocation();
+    auto location = token.getErrorLocation();
     auto msg = Format(_arguments, _argptr, formatMsg);
     infoMan ~= new SemanticError(location, msg);
   }

@@ -55,7 +55,7 @@ class SemanticPass1 : Visitor
 
   void error(Token* token, char[] formatMsg, ...)
   {
-    auto location = token.getLocation();
+    auto location = token.getErrorLocation();
     auto msg = Format(_arguments, _argptr, formatMsg);
     modul.infoMan ~= new SemanticError(location, msg);
   }
@@ -440,7 +440,7 @@ override
      error(scop, MSG.MixinArgumentMustBeString);
     else
     {
-      auto loc = this.begin.getLocation();
+      auto loc = this.begin.getErrorLocation();
       auto filePath = loc.filePath;
       auto parser = new_ExpressionParser(strExpr.getString(), filePath, scop.infoMan);
       expr = parser.parse();
