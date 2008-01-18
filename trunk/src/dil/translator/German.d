@@ -19,13 +19,15 @@ private alias Declaration D;
 +/
 class GermanTranslator : DefaultVisitor
 {
-  Print!(char) put;
+  Print!(char) put; /// Output buffer.
 
-  char[] indent;
-  char[] indentStep;
+  char[] indent; /// Current indendation string.
+  char[] indentStep; /// Appended to indent at each indendation level.
 
-  Declaration inAggregate;
-  Declaration inFunc;
+  Declaration inAggregate; /// Current aggregate.
+  Declaration inFunc; /// Current function.
+
+  bool pluralize; /// Whether to use the plural in the next type.
 
   /++
     Construct a GermanTranslator.
@@ -279,26 +281,34 @@ override:
 
   TypeNode visit(ArrayType n)
   {
+    char[] c1 = "s", c2 = "";
+    if (pluralize)
+      (pluralize = false), (c1 = "n"), (c2 = "s");
+    // Types after arrays should be in plural.
+    pluralize = true;
     if (n.assocType)
-      put("assoziatives Array von ");
+      put.format("assoziative{} Array{} von ", c1, c2);
 //       visitT(n.assocType);
     else if (n.e)
     {
       if (n.e2)
-        put("gescheibtes Array von ");
+        put.format("gescheibte{} Array{} von ", c1, c2);
       else
-        put("statisches Array von ");
+        put.format("statische{} Array{} von ", c1, c2);
 //       visitE(n.e), n.e2 && visitE(n.e2);
     }
     else
-      put("dynamisches Array von ");
+      put.format("dynamische{} Array{} von ", c1, c2);
     visitT(n.next);
     return n;
   }
 
   TypeNode visit(PointerType n)
   {
-    put("Zeiger auf "), visitT(n.next);
+    char[] c = "";
+    if (pluralize)
+      (pluralize = false), c = "n";
+    put.format("Zeiger{} auf ", c), visitT(n.next);
     return n;
   }
 
@@ -318,7 +328,14 @@ override:
 
   TypeNode visit(IntegralType n)
   {
-    put(n.begin.srcText);
+    char[] c = "";
+    if (pluralize)
+    {
+      (pluralize = false), c = "s";
+      if (n.tok == TOK.Void) // Avoid pluralizing "void"
+        c = "";
+    }
+    put.format(n.begin.srcText, c);
     return n;
   }
 }
