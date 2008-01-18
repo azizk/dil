@@ -334,7 +334,7 @@ override
   {
     if (e.type)
       return e.value;
-    switch (e.specialToken.type)
+    switch (e.specialToken.kind)
     {
     case TOK.LINE, TOK.VERSION:
       e.value = new IntExpression(e.specialToken.uint_, Types.Uint);
@@ -370,9 +370,7 @@ override
   {
     if (e.type)
       return e;
-    assert(e.begin !is null);
-    auto b = (e.begin.type == TOK.True) ? true : false;
-    e.value = new IntExpression(b, Types.Bool);
+    e.value = new IntExpression(e.toBool(), Types.Bool);
     e.type = Types.Bool;
     return e;
   }

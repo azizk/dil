@@ -390,7 +390,7 @@ void syntaxToDoc(string filePath, Print!(char) print, DocOption options)
   }
 
   // Traverse linked list and print tokens.
-  while (token.type != TOK.EOF)
+  while (token.kind != TOK.EOF)
   {
     token = token.next;
 
@@ -445,7 +445,7 @@ void tokensToDoc(string filePath, Print!(char) print, DocOption options)
   print(tags[DocPart.SrcBegin]);
 
   // Traverse linked list and print tokens.
-  while (token.type != TOK.EOF)
+  while (token.kind != TOK.EOF)
   {
     token = token.next;
     // Print whitespace.
@@ -462,7 +462,7 @@ void printToken(Token* token, string[] tags, Print!(char) print)
   alias DocPart DP;
   string srcText = xml_escape(token.srcText);
 
-  switch(token.type)
+  switch(token.kind)
   {
   case TOK.Identifier:
     print.format(tags[DP.Identifier], srcText);
@@ -530,7 +530,7 @@ void printToken(Token* token, string[] tags, Print!(char) print)
   case TOK.Not:
     // Check if this is part of a template instantiation.
     // TODO: comments aren't skipped. Use Token.nextNWS and Token.prevNWS
-    if (token.prev.type == TOK.Identifier && token.next.type == TOK.LParen)
+    if (token.prev.kind == TOK.Identifier && token.next.kind == TOK.LParen)
       goto default;
     print(tags[DP.Not]);
     break;

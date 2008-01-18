@@ -182,9 +182,9 @@ void main(char[][] args)
     lx.scanAll();
     auto token = lx.firstToken();
 
-    for (; token.type != TOK.EOF; token = token.next)
+    for (; token.kind != TOK.EOF; token = token.next)
     {
-      if (token.type == TOK.Newline || ignoreWSToks && token.isWhitespace)
+      if (token.kind == TOK.Newline || ignoreWSToks && token.isWhitespace)
         continue;
       if (printWS && token.ws)
         Stdout(token.wsChars);

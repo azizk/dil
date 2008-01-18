@@ -172,13 +172,13 @@ Statistics getStatistics(string filePath, bool printTokensTable, bool printNodes
     stats.tokenCount += 1;
 
     if (printTokensTable)
-      stats.tokensTable[token.type] += 1;
+      stats.tokensTable[token.kind] += 1;
 
     // Count whitespace characters
     if (token.ws !is null)
       stats.whitespaceCount += token.start - token.ws;
 
-    switch (token.type)
+    switch (token.kind)
     {
     case TOK.Identifier:
       stats.identCount++;
@@ -204,6 +204,6 @@ Statistics getStatistics(string filePath, bool printTokensTable, bool printNodes
       break;
     token = token.next;
   }
-  assert(token.type == TOK.EOF);
+  assert(token.kind == TOK.EOF);
   return stats;
 }

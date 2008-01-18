@@ -24,7 +24,7 @@ struct Token
     Whitespace = 1, /// Tokens with this flag are ignored by the Parser.
   }
 
-  TOK type; /// The type of the token.
+  TOK kind; /// The token kind.
   Flags flags; /// The flags of the token.
   /// Pointers to the next and previous tokens (doubly-linked list.)
   Token* next, prev;
@@ -93,7 +93,7 @@ struct Token
     auto token = next;
     while (token !is null && token.isWhitespace)
       token = token.next;
-    if (token is null || token.type == TOK.EOF)
+    if (token is null || token.kind == TOK.EOF)
       return this;
     return token;
   }
@@ -109,7 +109,7 @@ struct Token
     auto token = prev;
     while (token !is null && token.isWhitespace)
       token = token.prev;
-    if (token is null || token.type == TOK.HEAD)
+    if (token is null || token.kind == TOK.HEAD)
       return this;
     return token;
   }
@@ -132,20 +132,20 @@ struct Token
   +/
   bool isMultiline()
   {
-    return type == TOK.String && start[0] != '\\' ||
-           type == TOK.Comment && start[1] != '/';
+    return kind == TOK.String && start[0] != '\\' ||
+           kind == TOK.Comment && start[1] != '/';
   }
 
   /// Returns true if this is a keyword token.
   bool isKeyword()
   {
-    return KeywordsBegin <= type && type <= KeywordsEnd;
+    return KeywordsBegin <= kind && kind <= KeywordsEnd;
   }
 
   /// Returns true if this is an integral type token.
   bool isIntegralType()
   {
-    return IntegralTypeBegin <= type && type <= IntegralTypeEnd;
+    return IntegralTypeBegin <= kind && kind <= IntegralTypeEnd;
   }
 
   /// Returns true if this is a whitespace token.
@@ -157,7 +157,7 @@ struct Token
   /// Returns true if this is a special token.
   bool isSpecialToken()
   {
-    return SpecialTokensBegin <= type && type <= SpecialTokensEnd;
+    return SpecialTokensBegin <= kind && kind <= SpecialTokensEnd;
   }
 
 version(D2)
@@ -165,31 +165,31 @@ version(D2)
   /// Returns true if this is a token string literal.
   bool isTokenStringLiteral()
   {
-    return type == TOK.String && tok_str !is null;
+    return kind == TOK.String && tok_str !is null;
   }
 }
 
   /// Returns true if this token starts a DeclarationDefinition.
   bool isDeclDefStart()
   {
-    return isDeclDefStartToken(type);
+    return isDeclDefStartToken(kind);
   }
 
   /// Returns true if this token starts a Statement.
   bool isStatementStart()
   {
-    return isStatementStartToken(type);
+    return isStatementStartToken(kind);
   }
 
   /// Returns true if this token starts an AsmInstruction.
   bool isAsmInstructionStart()
   {
-    return isAsmInstructionStartToken(type);
+    return isAsmInstructionStartToken(kind);
   }
 
-  int opEquals(TOK type2)
+  int opEquals(TOK kind2)
   {
-    return type == type2;
+    return kind == kind2;
   }
 
   /// Returns the Location of this token.
@@ -197,7 +197,7 @@ version(D2)
   {
     auto search_t = this.prev;
     // Find previous newline token.
-    while (search_t.type != TOK.Newline)
+    while (search_t.kind != TOK.Newline)
       search_t = search_t.prev;
     static if (realLocation)
     {
@@ -276,7 +276,7 @@ version(D2)
     auto token = cast(Token*)p;
     if (token)
     {
-      if(token.type == TOK.HashLine)
+      if(token.kind == TOK.HashLine)
         token.destructHashLineToken();
       else
       {
@@ -290,7 +290,7 @@ version(D2)
 
   void destructHashLineToken()
   {
-    assert(type == TOK.HashLine);
+    assert(kind == TOK.HashLine);
     delete tokLineNum;
     delete tokLineFilespec;
   }
@@ -299,15 +299,15 @@ version(D2)
 {
   void destructTokenStringLiteral()
   {
-    assert(type == TOK.String);
+    assert(kind == TOK.String);
     assert(start && *start == 'q' && start[1] == '{');
     assert(tok_str !is null);
     auto tok_it = tok_str;
     auto tok_del = tok_str;
-    while (tok_it && tok_it.type != TOK.EOF)
+    while (tok_it && tok_it.kind != TOK.EOF)
     {
       tok_it = tok_it.next;
-      assert(tok_del && tok_del.type != TOK.EOF);
+      assert(tok_del && tok_del.kind != TOK.EOF);
       delete tok_del;
       tok_del = tok_it;
     }

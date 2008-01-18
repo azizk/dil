@@ -420,13 +420,13 @@ class SignExpression : UnaryExpression
   bool isPos()
   {
     assert(begin !is null);
-    return begin.type == TOK.Plus;
+    return begin.kind == TOK.Plus;
   }
 
   bool isNeg()
   {
     assert(begin !is null);
-    return begin.type == TOK.Minus;
+    return begin.kind == TOK.Minus;
   }
 }
 
@@ -646,6 +646,12 @@ class BoolExpression : Expression
     mixin(set_kind);
   }
 
+  bool toBool()
+  {
+    assert(begin !is null);
+    return begin.kind == TOK.True ? true : false;
+  }
+
   Expression value; /// IntExpression of type int.
 }
 
@@ -663,7 +669,7 @@ class IntExpression : Expression
   this(Token* token)
   {
     auto type = Types.Int; // Should be most common case.
-    switch (token.type)
+    switch (token.kind)
     {
     // case TOK.Int32:
     //   type = Types.Int; break;
@@ -674,7 +680,7 @@ class IntExpression : Expression
     case TOK.Uint64:
       type = Types.Ulong; break;
     default:
-      assert(token.type == TOK.Int32);
+      assert(token.kind == TOK.Int32);
     }
     this(token.ulong_, type);
   }
@@ -694,7 +700,7 @@ class RealExpression : Expression
   this(Token* token)
   {
     auto type = Types.Double; // Most common case?
-    switch (token.type)
+    switch (token.kind)
     {
     case TOK.Float32:
       type = Types.Float; break;
@@ -709,7 +715,7 @@ class RealExpression : Expression
     case TOK.Imaginary80:
       type = Types.Ireal; break;
     default:
-      assert(token.type == TOK.Float64);
+      assert(token.kind == TOK.Float64);
     }
     this(token.real_, type);
   }
