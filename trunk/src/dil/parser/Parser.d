@@ -3588,35 +3588,49 @@ class Parser
     return next.type == tok;
   }
 
-  Type parseDeclaratorSuffix(Type t)
+  /// Parse the C-style array types after the declarator.
+  Type parseDeclaratorSuffix(Type lhsType)
   {
-    switch (token.type)
+    // The Type chain should be as follows:
+    // int[3]* Identifier [][32]
+    //   <- <-              ->  -.
+    //       ^------------------´
+    // Resulting chain: [][32]*[3]int
+    Type parseNext() // Nested function required to accomplish this.
     {
-    case T.LBracket:
-      // Type Identifier ArrayType
-      // ArrayType := [] or [Type] or [Expression..Expression]
-      do
-        t = parseArrayType(t);
-      while (token.type == T.LBracket)
-      break;
-/+ // parsed in parseDeclaration()
-    case T.LParen:
-      TemplateParameters tparams;
-      if (tokenAfterParenIs(T.LParen))
-      {
-        // ( TemplateParameterList ) ( ParameterList )
-        tparams = parseTemplateParameterList();
-      }
+      if (token.type != T.LBracket)
+        return lhsType; // Break recursion; return Type on the left hand side of the Identifier.
 
-      auto params = parseParameterList();
-      // ReturnType FunctionName ( ParameterList )
-      t = new FunctionType(t, params, tparams);
-      break;
-+/
-    default:
-      break;
+      auto begin = token;
+      Type t;
+      nT();
+      if (skipped(T.RBracket))
+        t = new ArrayType(parseNext()); // [ ]
+      else
+      {
+        bool success;
+        Type parseAAType()
+        {
+          auto type = parseType();
+          require(T.RBracket);
+          return type;
+        }
+        auto assocType = try_(&parseAAType, success);
+        if (success)
+          t = new ArrayType(parseNext(), assocType); // [ Type ]
+        else
+        {
+          Expression e = parseExpression(), e2;
+          if (skipped(T.Slice))
+            e2 = parseExpression();
+          require(T.RBracket);
+          t = new ArrayType(parseNext(), e, e2); // [ Expression .. Expression ]
+        }
+      }
+      set(t, begin);
+      return t;
     }
-    return t;
+    return parseNext();
   }
 
   Type parseArrayType(Type t)
@@ -3643,8 +3657,8 @@ class Parser
         Expression e = parseExpression(), e2;
         if (skipped(T.Slice))
           e2 = parseExpression();
-        t = new ArrayType(t, e, e2);
         require(T.RBracket);
+        t = new ArrayType(t, e, e2);
       }
     }
     set(t, begin);
