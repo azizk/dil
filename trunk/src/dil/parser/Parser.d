@@ -1554,7 +1554,7 @@ class Parser
       s = parseVolatileStatement();
       break;
     case T.Asm:
-      s = parseAsmStatement();
+      s = parseAsmBlockStatement();
       break;
     case T.Pragma:
       s = parsePragmaStatement();
@@ -2270,19 +2270,19 @@ class Parser
   + Assembler parsing methods  +
   +++++++++++++++++++++++++++++/
 
-  Statement parseAsmStatement()
+  Statement parseAsmBlockStatement()
   {
     assert(token.kind == T.Asm);
     nT(); // Skip asm keyword.
     require(T.LBrace);
     auto ss = new CompoundStatement;
     while (token.kind != T.RBrace && token.kind != T.EOF)
-      ss ~= parseAsmInstruction();
+      ss ~= parseAsmStatement();
     require(T.RBrace);
-    return new AsmStatement(ss);
+    return new AsmBlockStatement(ss);
   }
 
-  Statement parseAsmInstruction()
+  Statement parseAsmStatement()
   {
     auto begin = token;
     Statement s;
@@ -2299,8 +2299,8 @@ class Parser
       nT(); // Skip Identifier
       if (skipped(T.Colon))
       {
-        // Identifier : AsmInstruction
-        s = new LabeledStatement(ident, parseAsmInstruction());
+        // Identifier : AsmStatement
+        s = new LabeledStatement(ident, parseAsmStatement());
         break;
       }
 
@@ -2315,7 +2315,7 @@ class Parser
           es ~= parseAsmExpression();
         while (skipped(T.Comma))
       require(T.Semicolon);
-      s = new AsmInstruction(ident, es);
+      s = new AsmStatement(ident, es);
       break;
     case T.Align:
       // align Integer;
@@ -2333,15 +2333,15 @@ class Parser
       nT();
       break;
     default:
-      s = new IllegalAsmInstruction();
+      s = new IllegalAsmStatement();
       // Skip to next valid token.
       do
         nT();
-      while (!token.isAsmInstructionStart &&
+      while (!token.isAsmStatementStart &&
               token.kind != T.RBrace &&
               token.kind != T.EOF)
       auto text = Token.textSpan(begin, this.prevToken);
-      error(begin, MSG.IllegalAsmInstruction, text);
+      error(begin, MSG.IllegalAsmStatement, text);
     }
     set(s, begin);
     return s;

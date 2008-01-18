@@ -416,7 +416,7 @@ class VolatileStatement : Statement
   }
 }
 
-class AsmStatement : Statement
+class AsmBlockStatement : Statement
 {
   CompoundStatement statements;
   this(CompoundStatement statements)
@@ -427,7 +427,7 @@ class AsmStatement : Statement
   }
 }
 
-class AsmInstruction : Statement
+class AsmStatement : Statement
 {
   Identifier* ident;
   Expression[] operands;
@@ -450,7 +450,7 @@ class AsmAlignStatement : Statement
   }
 }
 
-class IllegalAsmInstruction : IllegalStatement
+class IllegalAsmStatement : IllegalStatement
 {
   this()
   {

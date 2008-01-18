@@ -105,7 +105,7 @@ static:
   auto StringPostfixMismatch = "string literal has mistmatching postfix character";
   auto ExpectedIdAfterTypeDot = "expected identifier after '(Type).', not '{}'";
   auto ExpectedModuleIdentifier = "expected module identifier, not '{}'";
-  auto IllegalDeclaration = "illegal Declaration found: {}";
+  auto IllegalDeclaration = "illegal declaration found: {}";
   auto ExpectedFunctionName = "expected function name, not '{}'";
   auto ExpectedVariableName = "expected variable name, not '{}'";
   auto ExpectedFunctionBody = "expected function body, not '{}'";
@@ -124,12 +124,12 @@ static:
   auto ExpectedUnionBody = "expected union body, not '{}'";
   auto ExpectedTemplateName = "expected template name, not '{}'";
   auto ExpectedAnIdentifier = "expected an identifier, not '{}'";
-  auto IllegalStatement = "illegal Statement found: {}";
+  auto IllegalStatement = "illegal statement found: {}";
   auto ExpectedNonEmptyStatement = "didn't expect ';', use {{ } instead";
   auto ExpectedScopeIdentifier = "expected 'exit', 'success' or 'failure', not '{}'";
   auto InvalidScopeIdentifier = "'exit', 'success', 'failure' are valid scope identifiers, but not '{}'";
   auto ExpectedIntegerAfterAlign = "expected an integer after align, not '{}'";
-  auto IllegalAsmInstruction = "illegal AsmInstruction found: {}";
+  auto IllegalAsmStatement = "illegal asm statement found: {}";
   auto ExpectedDeclaratorIdentifier = "expected declarator identifier, not '{}'";
   auto ExpectedTemplateParameters = "expected one or more template parameters, not ')'";
   auto ExpectedTypeOrExpression = "expected a type or and expression, not ')'";

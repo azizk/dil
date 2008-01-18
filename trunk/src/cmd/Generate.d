@@ -104,9 +104,7 @@ char[] getShortClassName(Node node)
     {
     case NodeKind.CatchBody,
          NodeKind.FinallyBody,
-         NodeKind.FunctionBody,
-         NodeKind.AsmInstruction,
-         NodeKind.IllegalAsmInstruction:
+         NodeKind.FunctionBody:
       break;
     default:
      suffixLength = "Statement".length;

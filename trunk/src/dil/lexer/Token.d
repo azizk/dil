@@ -181,10 +181,10 @@ version(D2)
     return isStatementStartToken(kind);
   }
 
-  /// Returns true if this token starts an AsmInstruction.
-  bool isAsmInstructionStart()
+  /// Returns true if this token starts an AsmStatement.
+  bool isAsmStatementStart()
   {
-    return isAsmInstructionStartToken(kind);
+    return isAsmStatementStartToken(kind);
   }
 
   int opEquals(TOK kind2)
@@ -315,7 +315,7 @@ version(D2)
 }
 }
 
-/// Stores data about newlines.
+/// Data associated with newline tokens.
 struct NewlineData
 {
   struct FilePaths
@@ -376,8 +376,8 @@ bool isStatementStartToken(TOK tok)
   return false;
 }
 
-/// Returns true if this token starts an AsmInstruction.
-bool isAsmInstructionStartToken(TOK tok)
+/// Returns true if this token starts an AsmStatement.
+bool isAsmStatementStartToken(TOK tok)
 {
   switch(tok)
   {

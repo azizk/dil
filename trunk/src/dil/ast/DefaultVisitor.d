@@ -263,9 +263,9 @@ returnType!(T.stringof) visitDefault(T)(T t)
       visitE(s.e);
     static if (is(S == VolatileStatement))
       s.volatileBody && visitS(s.volatileBody);
-    static if (is(S == AsmStatement))
+    static if (is(S == AsmBlockStatement))
       visitS(s.statements);
-    static if (is(S == AsmInstruction))
+    static if (is(S == AsmStatement))
       foreach (op; s.operands)
         visitE(op);
     //AsmAlignStatement has no subnodes.
