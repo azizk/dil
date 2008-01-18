@@ -27,7 +27,8 @@ class GermanTranslator : DefaultVisitor
   Declaration inAggregate; /// Current aggregate.
   Declaration inFunc; /// Current function.
 
-  bool pluralize; /// Whether to use the plural in the next type.
+  bool pluralize; /// Whether to use the plural when printing the next types.
+  bool pointer; /// Whether next types should consider the previous pointer.
 
   /++
     Construct a GermanTranslator.
@@ -283,9 +284,8 @@ override:
   {
     char[] c1 = "s", c2 = "";
     if (pluralize)
-      (pluralize = false), (c1 = "n"), (c2 = "s");
-    // Types after arrays should be in plural.
-    pluralize = true;
+      (c1 = pointer ? ""[] : "n"), (c2 = "s");
+    pointer = false;
     if (n.assocType)
       put.format("assoziative{} Array{} von ", c1, c2);
 //       visitT(n.assocType);
@@ -299,15 +299,17 @@ override:
     }
     else
       put.format("dynamische{} Array{} von ", c1, c2);
+    // Types following arrays should be in plural.
+    pluralize = true;
     visitT(n.next);
+    pluralize = false;
     return n;
   }
 
   TypeNode visit(PointerType n)
   {
-    char[] c = "";
-    if (pluralize)
-      (pluralize = false), c = "n";
+    char[] c = pluralize ? (pointer ? ""[] : "n") : "";
+    pointer = true;
     put.format("Zeiger{} auf ", c), visitT(n.next);
     return n;
   }
@@ -328,14 +330,10 @@ override:
 
   TypeNode visit(IntegralType n)
   {
-    char[] c = "";
-    if (pluralize)
-    {
-      (pluralize = false), c = "s";
-      if (n.tok == TOK.Void) // Avoid pluralizing "void"
-        c = "";
-    }
-    put.format(n.begin.srcText, c);
+    char[] c = pluralize ? "s"[] : "";
+    if (n.tok == TOK.Void) // Avoid pluralizing "void"
+      c = "";
+    put.format("{}{}", n.begin.srcText, c);
     return n;
   }
 }
