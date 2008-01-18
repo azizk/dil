@@ -16,6 +16,7 @@ import dil.semantic.Module;
 import dil.semantic.Symbols;
 import dil.semantic.Pass1;
 import dil.translator.German;
+import dil.doc.Doc;
 import dil.Messages;
 import dil.Settings;
 import dil.SettingsLoader;
@@ -65,7 +66,7 @@ void main(char[][] args)
       {
         foreach (member; scopeSym.members)
         {
-          auto tokens = member.node.getDocComments();
+          auto tokens = getDocComments(member.node);
           char[] docText;
           foreach (token; tokens)
             docText ~= token.srcText;
