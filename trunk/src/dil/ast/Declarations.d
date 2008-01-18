@@ -15,7 +15,7 @@ import dil.semantic.Symbols;
 import dil.Enums;
 import common;
 
-class Declarations : Declaration
+class CompoundDeclaration : Declaration
 {
   this()
   {
@@ -28,7 +28,7 @@ class Declarations : Declaration
     addChild(d);
   }
 
-  void opCatAssign(Declarations ds)
+  void opCatAssign(CompoundDeclaration ds)
   {
     addChildren(ds.children);
   }
@@ -159,8 +159,8 @@ class EnumDeclaration : Declaration
 {
   Identifier* name;
   TypeNode baseType;
-  EnumMember[] members;
-  this(Identifier* name, TypeNode baseType, EnumMember[] members, bool hasBody)
+  EnumMemberDeclaration[] members;
+  this(Identifier* name, TypeNode baseType, EnumMemberDeclaration[] members, bool hasBody)
   {
     super.hasBody = hasBody;
     mixin(set_kind);
@@ -175,7 +175,7 @@ class EnumDeclaration : Declaration
   Enum symbol;
 }
 
-class EnumMember : Declaration
+class EnumMemberDeclaration : Declaration
 {
   Identifier* name;
   Expression value;
@@ -193,8 +193,8 @@ abstract class AggregateDeclaration : Declaration
 {
   Identifier* name;
   TemplateParameters tparams;
-  Declarations decls;
-  this(Identifier* name, TemplateParameters tparams, Declarations decls)
+  CompoundDeclaration decls;
+  this(Identifier* name, TemplateParameters tparams, CompoundDeclaration decls)
   {
     super.hasBody = decls !is null;
     this.name = name;
@@ -206,7 +206,7 @@ abstract class AggregateDeclaration : Declaration
 class ClassDeclaration : AggregateDeclaration
 {
   BaseClassType[] bases;
-  this(Identifier* name, TemplateParameters tparams, BaseClassType[] bases, Declarations decls)
+  this(Identifier* name, TemplateParameters tparams, BaseClassType[] bases, CompoundDeclaration decls)
   {
     super(name, tparams, decls);
     mixin(set_kind);
@@ -223,7 +223,7 @@ class ClassDeclaration : AggregateDeclaration
 class InterfaceDeclaration : AggregateDeclaration
 {
   BaseClassType[] bases;
-  this(Identifier* name, TemplateParameters tparams, BaseClassType[] bases, Declarations decls)
+  this(Identifier* name, TemplateParameters tparams, BaseClassType[] bases, CompoundDeclaration decls)
   {
     super(name, tparams, decls);
     mixin(set_kind);
@@ -242,7 +242,7 @@ class InterfaceDeclaration : AggregateDeclaration
 class StructDeclaration : AggregateDeclaration
 {
   uint alignSize;
-  this(Identifier* name, TemplateParameters tparams, Declarations decls)
+  this(Identifier* name, TemplateParameters tparams, CompoundDeclaration decls)
   {
     super(name, tparams, decls);
     mixin(set_kind);
@@ -260,7 +260,7 @@ class StructDeclaration : AggregateDeclaration
 
 class UnionDeclaration : AggregateDeclaration
 {
-  this(Identifier* name, TemplateParameters tparams, Declarations decls)
+  this(Identifier* name, TemplateParameters tparams, CompoundDeclaration decls)
   {
     super(name, tparams, decls);
     mixin(set_kind);
@@ -488,8 +488,8 @@ class TemplateDeclaration : Declaration
 {
   Identifier* name;
   TemplateParameters tparams;
-  Declarations decls;
-  this(Identifier* name, TemplateParameters tparams, Declarations decls)
+  CompoundDeclaration decls;
+  this(Identifier* name, TemplateParameters tparams, CompoundDeclaration decls)
   {
     super.hasBody = true;
     mixin(set_kind);

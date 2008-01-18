@@ -28,7 +28,7 @@ class Module : ScopeSymbol
   string packageName;
   string moduleName;
 
-  Declarations root; /// The root of the AST.
+  CompoundDeclaration root; /// The root of the AST.
   ImportDeclaration[] imports;
   ModuleDeclaration moduleDecl;
   private Parser parser;

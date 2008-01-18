@@ -62,7 +62,7 @@ class SemanticPass1 : Visitor
 
 override
 {
-  Declaration visit(Declarations d)
+  Declaration visit(CompoundDeclaration d)
   {
     foreach (node; d.children)
     {
@@ -151,7 +151,7 @@ override
     return ed;
   }
 
-  Declaration visit(EnumMember)
+  Declaration visit(EnumMemberDeclaration)
   { return null; }
 
   Declaration visit(ClassDeclaration d)

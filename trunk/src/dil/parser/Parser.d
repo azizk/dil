@@ -73,11 +73,11 @@ class Parser
   /++
     Start the parser and return the parsed Declarations.
   +/
-  Declarations start()
+  CompoundDeclaration start()
   {
     init();
     auto begin = token;
-    auto decls = new Declarations;
+    auto decls = new CompoundDeclaration;
     if (token.kind == T.Module)
       decls ~= parseModuleDeclaration();
     decls.addOptChildren(parseDeclarationDefinitions());
@@ -204,7 +204,7 @@ class Parser
         { }
         { DeclDefs }
   +/
-  Declarations parseDeclarationDefinitionsBody()
+  CompoundDeclaration parseDeclarationDefinitionsBody()
   {
     // Save attributes.
     auto linkageType  = this.linkageType;
@@ -217,7 +217,7 @@ class Parser
 
     // Parse body.
     auto begin = token;
-    auto decls = new Declarations;
+    auto decls = new CompoundDeclaration;
     require(T.LBrace);
     while (token.kind != T.RBrace && token.kind != T.EOF)
       decls ~= parseDeclarationDefinition();
@@ -405,7 +405,7 @@ class Parser
     case T.LBrace:
       auto begin = token;
       nT();
-      auto decls = new Declarations;
+      auto decls = new CompoundDeclaration;
       while (token.kind != T.RBrace && token.kind != T.EOF)
         decls ~= parseDeclarationDefinition();
       require(T.RBrace);
@@ -416,7 +416,7 @@ class Parser
         goto default;
       nT();
       auto begin = token;
-      auto decls = new Declarations;
+      auto decls = new CompoundDeclaration;
       while (token.kind != T.RBrace && token.kind != T.EOF)
         decls ~= parseDeclarationDefinition();
       d = set(decls, begin);
@@ -995,7 +995,7 @@ class Parser
 
     Identifier* enumName;
     Type baseType;
-    EnumMember[] members;
+    EnumMemberDeclaration[] members;
     bool hasBody;
 
     enumName = optionalIdentifier();
@@ -1019,7 +1019,7 @@ class Parser
         else
           value = null;
 
-        members ~= set(new EnumMember(name, value), begin);
+        members ~= set(new EnumMemberDeclaration(name, value), begin);
 
         if (token.kind != T.Comma)
           break;
@@ -1041,7 +1041,7 @@ class Parser
     Identifier* className;
     TemplateParameters tparams;
     BaseClassType[] bases;
-    Declarations decls;
+    CompoundDeclaration decls;
 
     className = requireIdentifier(MSG.ExpectedClassName);
 
@@ -1102,7 +1102,7 @@ class Parser
     Identifier* name;
     TemplateParameters tparams;
     BaseClassType[] bases;
-    Declarations decls;
+    CompoundDeclaration decls;
 
     name = requireIdentifier(MSG.ExpectedInterfaceName);
 
@@ -1130,7 +1130,7 @@ class Parser
 
     Identifier* name;
     TemplateParameters tparams;
-    Declarations decls;
+    CompoundDeclaration decls;
 
     name = optionalIdentifier();
 
@@ -1422,11 +1422,11 @@ class Parser
   + Statement parsing methods  +
   +++++++++++++++++++++++++++++/
 
-  Statements parseStatements()
+  CompoundStatement parseStatements()
   {
     auto begin = token;
     require(T.LBrace);
-    auto statements = new Statements();
+    auto statements = new CompoundStatement();
     while (token.kind != T.RBrace && token.kind != T.EOF)
       statements ~= parseStatement();
     require(T.RBrace);
@@ -1461,7 +1461,7 @@ class Parser
       else
         expected(T.Struct);
 
-      d = new AlignDeclaration(size, structDecl ? cast(Declaration)structDecl : new Declarations);
+      d = new AlignDeclaration(size, structDecl ? cast(Declaration)structDecl : new CompoundDeclaration);
       goto LreturnDeclarationStatement;
       /+ Not applicable for statements.
          T.Private, T.Package, T.Protected, T.Public, T.Export,
@@ -1694,7 +1694,7 @@ class Parser
     Statement s;
     if (skipped(T.LBrace))
     {
-      auto ss = new Statements();
+      auto ss = new CompoundStatement();
       while (token.kind != T.RBrace && token.kind != T.EOF)
         ss ~= parseStatement();
       require(T.RBrace);
@@ -1978,7 +1978,7 @@ class Parser
   {
     // This function is similar to parseNoScopeStatement()
     auto begin = token;
-    auto s = new Statements();
+    auto s = new CompoundStatement();
     while (token.kind != T.Case &&
            token.kind != T.Default &&
            token.kind != T.RBrace &&
@@ -2275,7 +2275,7 @@ class Parser
     assert(token.kind == T.Asm);
     nT(); // Skip asm keyword.
     require(T.LBrace);
-    auto ss = new Statements;
+    auto ss = new CompoundStatement;
     while (token.kind != T.RBrace && token.kind != T.EOF)
       ss ~= parseAsmInstruction();
     require(T.RBrace);

@@ -34,13 +34,13 @@ Token*[] getDocComments(Node node, bool function(Token*) isDocComment = &isDDocC
         token.kind == TOK.RBrace ||
         token.kind == TOK.Semicolon ||
         token.kind == TOK.HEAD ||
-        (node.kind == NodeKind.EnumMember && token.kind == TOK.Comma))
+        (node.kind == NodeKind.EnumMemberDeclaration && token.kind == TOK.Comma))
       break;
 
     if (token.kind == TOK.Comment)
     {
       // Check that this comment doesn't belong to the previous declaration.
-      if (node.kind == NodeKind.EnumMember && token.kind == TOK.Comma)
+      if (node.kind == NodeKind.EnumMemberDeclaration && token.kind == TOK.Comma)
         break;
       switch (token.prev.kind)
       {
@@ -56,7 +56,7 @@ Token*[] getDocComments(Node node, bool function(Token*) isDocComment = &isDDocC
   token = node.end.next;
   if (token.kind == TOK.Comment && isDocComment(token))
     comments ~= token;
-  else if (node.kind == NodeKind.EnumMember)
+  else if (node.kind == NodeKind.EnumMemberDeclaration)
   {
     token = node.end.nextNWS;
     if (token.kind == TOK.Comma)

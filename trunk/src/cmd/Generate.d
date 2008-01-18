@@ -97,16 +97,12 @@ char[] getShortClassName(Node node)
   {
   alias NodeCategory NC;
   case NC.Declaration:
-    if (node.kind == NodeKind.Declarations ||
-        node.kind == NodeKind.EnumMember)
-      break;
     suffixLength = "Declaration".length;
     break;
   case NC.Statement:
     switch (node.kind)
     {
-    case NodeKind.Statements,
-         NodeKind.CatchBody,
+    case NodeKind.CatchBody,
          NodeKind.FinallyBody,
          NodeKind.FunctionBody,
          NodeKind.AsmInstruction,

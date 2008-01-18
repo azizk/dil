@@ -483,8 +483,8 @@ class NewAnonClassExpression : /*Unary*/Expression
   Expression[] newArgs;
   BaseClassType[] bases;
   Expression[] ctorArgs;
-  Declarations decls;
-  this(/*Expression e, */Expression[] newArgs, BaseClassType[] bases, Expression[] ctorArgs, Declarations decls)
+  CompoundDeclaration decls;
+  this(/*Expression e, */Expression[] newArgs, BaseClassType[] bases, Expression[] ctorArgs, CompoundDeclaration decls)
   {
     /*super(e);*/
     mixin(set_kind);

@@ -28,7 +28,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
   static if (is(T : Declaration))
   {
     alias T D;
-    static if (is(D == Declarations))
+    static if (is(D == CompoundDeclaration))
       foreach (node; d.children)
         visitN(node);
     //EmptyDeclaration,
@@ -44,7 +44,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
       foreach (member; d.members)
         visitD(member);
     }
-    static if (is(D == EnumMember))
+    static if (is(D == EnumMemberDeclaration))
       d.value && visitE(d.value);
     static if (is(D == ClassDeclaration) || is( D == InterfaceDeclaration))
     {
@@ -194,7 +194,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
   static if (is(T : Statement))
   {
     alias T S;
-    static if (is(S == Statements))
+    static if (is(S == CompoundStatement))
       foreach (node; s.children)
         visitS(cast(Statement)cast(void*)node);
     //IllegalStatement has no subnodes.

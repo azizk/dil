@@ -20,9 +20,9 @@ class ImportParser : Parser
     super(srcText, fileName);
   }
 
-  override Declarations start()
+  override CompoundDeclaration start()
   {
-    auto decls = new Declarations;
+    auto decls = new CompoundDeclaration;
     super.init();
     if (token.kind == T.Module)
       decls ~= parseModuleDeclaration();

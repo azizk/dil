@@ -12,7 +12,7 @@ import dil.ast.Types;
 import dil.ast.Parameters;
 import dil.lexer.IdTable;
 
-class Statements : Statement
+class CompoundStatement : Statement
 {
   this()
   {
@@ -418,8 +418,8 @@ class VolatileStatement : Statement
 
 class AsmStatement : Statement
 {
-  Statements statements;
-  this(Statements statements)
+  CompoundStatement statements;
+  this(CompoundStatement statements)
   {
     mixin(set_kind);
     addChild(statements);

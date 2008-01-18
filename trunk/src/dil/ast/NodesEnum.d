@@ -17,7 +17,7 @@ enum NodeCategory : ushort
 /// Array of class names that inherit from Node.
 static const char[][] classNames = [
   // Declarations:
-  "Declarations",
+  "CompoundDeclaration",
   "EmptyDeclaration",
   "IllegalDeclaration",
   "ModuleDeclaration",
@@ -25,7 +25,7 @@ static const char[][] classNames = [
   "AliasDeclaration",
   "TypedefDeclaration",
   "EnumDeclaration",
-  "EnumMember",
+  "EnumMemberDeclaration",
   "ClassDeclaration",
   "InterfaceDeclaration",
   "StructDeclaration",
@@ -53,7 +53,7 @@ static const char[][] classNames = [
   "MixinDeclaration",
 
   // Statements:
-  "Statements",
+  "CompoundStatement",
   "IllegalStatement",
   "EmptyStatement",
   "FunctionBody",
