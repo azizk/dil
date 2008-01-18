@@ -357,7 +357,8 @@ class FunctionDeclaration : Declaration
   }
 }
 
-class VariableDeclaration : Declaration
+/// VariablesDeclaration := Type? Identifier ("=" Init)? ("," Identifier ("=" Init)?)* ";"
+class VariablesDeclaration : Declaration
 {
   TypeNode typeNode;
   Identifier*[] idents;

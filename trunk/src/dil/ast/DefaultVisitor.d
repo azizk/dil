@@ -69,7 +69,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
       d.tparams && visitN(d.tparams),
       visitN(d.params),
       visitS(d.funcBody);
-    static if (is(D == VariableDeclaration))
+    static if (is(D == VariablesDeclaration))
     {
       d.typeNode && visitT(d.typeNode);
       foreach(value; d.values)

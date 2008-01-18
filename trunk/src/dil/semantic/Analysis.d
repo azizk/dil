@@ -36,7 +36,7 @@ void pragma_msg(Scope scop, Token* pragmaLoc, Expression[] args)
     {
       // scop.error(e.begin, "expression is not evaluatable at compile time");
     }
-    else if (auto stringExpr = TryCast!(StringExpression)(e))
+    else if (auto stringExpr = e.Is!(StringExpression))
       // Print string to standard output.
       Stdout(stringExpr.getString());
     else
@@ -59,7 +59,7 @@ void pragma_lib(Scope scop, Token* pragmaLoc, Expression[] args)
   {
     // scop.error(e.begin, "expression is not evaluatable at compile time");
   }
-  else if (auto stringExpr = TryCast!(StringExpression)(e))
+  else if (auto stringExpr = e.Is!(StringExpression))
   {
     // TODO: collect library paths in Module?
     // scop.modul.addLibrary(stringExpr.getString());

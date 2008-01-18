@@ -12,20 +12,6 @@ public import dil.ast.NodesEnum;
 /// This string is mixed into the constructor of a class that inherits from Node.
 const string set_kind = `this.kind = mixin("NodeKind." ~ typeof(this).stringof);`;
 
-Class TryCast(Class)(Node n)
-{
-  assert(n !is null);
-  if (n.kind == mixin("NodeKind." ~ typeof(Class).stringof))
-    return cast(Class)cast(void*)n;
-  return null;
-}
-
-Class CastTo(Class)(Node n)
-{
-  assert(n !is null && n.kind == mixin("NodeKind." ~ typeof(Class).stringof));
-  return cast(Class)cast(void*)n;
-}
-
 class Node
 {
   NodeCategory category;
@@ -79,7 +65,7 @@ class Node
     children is null || addChildren(children);
   }
 
-  Class iS(Class)()
+  Class Is(Class)()
   {
     if (kind == mixin("NodeKind." ~ typeof(Class).stringof))
       return cast(Class)cast(void*)this;

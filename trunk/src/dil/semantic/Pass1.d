@@ -223,7 +223,7 @@ override
   Declaration visit(FunctionDeclaration)
   { return null; }
 
-  Declaration visit(VariableDeclaration vd)
+  Declaration visit(VariablesDeclaration vd)
   {
     Type type = Types.Undefined;
 

@@ -26,7 +26,7 @@ void loadSettings()
 
   foreach (decl; modul.root.children)
   {
-    auto v = TryCast!(VariableDeclaration)(decl);
+    auto v = decl.Is!(VariablesDeclaration);
     if (v is null)
       continue;
 
@@ -38,29 +38,29 @@ void loadSettings()
     switch (variableName)
     {
     case "langfile":
-      if (auto val = TryCast!(StringExpression)(e))
+      if (auto val = e.Is!(StringExpression))
         GlobalSettings.langFile = val.getString();
       break;
     case "import_paths":
-      if (auto array = TryCast!(ArrayInitializer)(e))
+      if (auto array = e.Is!(ArrayInitializer))
       {
         foreach (value; array.values)
-          if (auto str = TryCast!(StringExpression)(value))
+          if (auto str = value.Is!(StringExpression))
             GlobalSettings.importPaths ~= str.getString();
       }
       else
         throw new Exception("import_paths variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");
       break;
     case "lexer_error":
-      if (auto val = TryCast!(StringExpression)(e))
+      if (auto val = e.Is!(StringExpression))
         GlobalSettings.lexerErrorFormat = val.getString();
       break;
     case "parser_error":
-      if (auto val = TryCast!(StringExpression)(e))
+      if (auto val = e.Is!(StringExpression))
         GlobalSettings.parserErrorFormat = val.getString();
       break;
     case "semantic_error":
-      if (auto val = TryCast!(StringExpression)(e))
+      if (auto val = e.Is!(StringExpression))
         GlobalSettings.semanticErrorFormat = val.getString();
       break;
     default:
@@ -78,7 +78,7 @@ void loadSettings()
   char[][] messages;
   foreach (decl; modul.root.children)
   {
-    auto v = TryCast!(VariableDeclaration)(decl);
+    auto v = decl.Is!(VariablesDeclaration);
     if (v is null)
       continue;
 
@@ -90,11 +90,11 @@ void loadSettings()
     switch (variableName)
     {
     case "messages":
-      if (auto array = TryCast!(ArrayInitializer)(e))
+      if (auto array = e.Is!(ArrayInitializer))
       {
         foreach (value; array.values)
         {
-          if (auto str = TryCast!(StringExpression)(value))
+          if (auto str = value.Is!(StringExpression))
             messages ~= str.getString();
         }
       }
@@ -102,7 +102,7 @@ void loadSettings()
         throw new Exception("messages variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");
       break;
     case "lang_code":
-      if (auto str = TryCast!(StringExpression)(e))
+      if (auto str = e.Is!(StringExpression))
           GlobalSettings.langCode = str.getString();
       break;
     default:

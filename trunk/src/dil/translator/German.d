@@ -161,7 +161,7 @@ override:
     return n;
   }
 
-  D visit(VariableDeclaration n)
+  D visit(VariablesDeclaration n)
   {
     printLoc(n);
     char[] was;

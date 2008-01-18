@@ -35,7 +35,7 @@ static const char[][] classNames = [
   "DestructorDeclaration",
   "StaticDestructorDeclaration",
   "FunctionDeclaration",
-  "VariableDeclaration",
+  "VariablesDeclaration",
   "InvariantDeclaration",
   "UnittestDeclaration",
   "DebugDeclaration",

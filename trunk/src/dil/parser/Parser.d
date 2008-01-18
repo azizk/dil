@@ -298,7 +298,7 @@ class Parser
     case T.Import:
     case_Import:
       decl = parseImportDeclaration();
-      imports ~= CastTo!(ImportDeclaration)(decl);
+      imports ~= decl.to!(ImportDeclaration);
       // Handle specially. StorageClass mustn't be set.
       decl.setProtection(this.protection);
       return set(decl, begin);
@@ -538,7 +538,7 @@ class Parser
         values ~= null;
     }
     require(T.Semicolon);
-    auto d = new VariableDeclaration(type, idents, values);
+    auto d = new VariablesDeclaration(type, idents, values);
     d.setStorageClass(stc);
     d.setLinkageType(linkType);
     d.setProtection(protection);
@@ -1817,7 +1817,7 @@ class Parser
       ident = requireIdentifier(MSG.ExpectedVariableName);
       require(T.Assign);
       auto init = parseExpression();
-      auto v = new VariableDeclaration(null, [ident], [init]);
+      auto v = new VariablesDeclaration(null, [ident], [init]);
       set(v, begin.nextNWS);
       auto d = new StorageClassDeclaration(StorageClass.Auto, v);
       set(d, begin);
@@ -1838,7 +1838,7 @@ class Parser
       if (success)
       {
         auto init = parseExpression();
-        auto v = new VariableDeclaration(type, [ident], [init]);
+        auto v = new VariablesDeclaration(type, [ident], [init]);
         set(v, begin);
         variable = new DeclarationStatement(v);
         set(variable, begin);

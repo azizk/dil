@@ -63,8 +63,8 @@ class Module : ScopeSymbol
 
     if (root.children.length)
     {
-      // moduleDecl will be null if first node can't be cast to ModuleDeclaration.
-      this.moduleDecl = TryCast!(ModuleDeclaration)(root.children[0]);
+      // moduleDecl will be null if first node isn't a ModuleDeclaration.
+      this.moduleDecl = root.children[0].Is!(ModuleDeclaration);
       if (moduleDecl)
       {
         this.setFQN(moduleDecl.getFQN());

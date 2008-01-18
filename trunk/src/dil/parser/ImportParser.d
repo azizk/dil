@@ -197,7 +197,7 @@ class ImportParser : Parser
     case_Import:
       auto decl = parseImportDeclaration();
       decl.setProtection(prot); // Set the protection attribute.
-      imports ~= CastTo!(ImportDeclaration)(decl);
+      imports ~= decl.to!(ImportDeclaration);
       break;
     case T.Enum:
       nT();
