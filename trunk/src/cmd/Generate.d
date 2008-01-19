@@ -100,15 +100,7 @@ char[] getShortClassName(Node node)
     suffixLength = "Declaration".length;
     break;
   case NC.Statement:
-    switch (node.kind)
-    {
-    case NodeKind.CatchBody,
-         NodeKind.FinallyBody,
-         NodeKind.FunctionBody:
-      break;
-    default:
-     suffixLength = "Statement".length;
-    }
+    suffixLength = "Statement".length;
     break;
   case NC.Expression:
     switch (node.kind)

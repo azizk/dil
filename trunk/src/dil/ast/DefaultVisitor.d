@@ -198,7 +198,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
       foreach (node; s.children)
         visitS(cast(Statement)cast(void*)node);
     //IllegalStatement has no subnodes.
-    static if (is(S == FunctionBody))
+    static if (is(S == FuncBodyStatement))
       s.funcBody && visitS(s.funcBody),
       s.inBody && visitS(s.inBody),
       s.outBody && visitS(s.outBody);
@@ -249,13 +249,13 @@ returnType!(T.stringof) visitDefault(T)(T t)
     static if (is(S == TryStatement))
     {
       visitS(s.tryBody);
-      foreach (body_; s.catchBodies)
-        visitS(body_);
+      foreach (catchBody; s.catchBodies)
+        visitS(catchBody);
       s.finallyBody && visitS(s.finallyBody);
     }
-    static if (is(S == CatchBody))
+    static if (is(S == CatchStatement))
       s.param && visitN(s.param), visitS(s.catchBody);
-    static if (is(S == FinallyBody))
+    static if (is(S == FinallyStatement))
       visitS(s.finallyBody);
     static if (is(S == ScopeGuardStatement))
       visitS(s.scopeBody);

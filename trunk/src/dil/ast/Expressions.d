@@ -905,7 +905,7 @@ class FunctionLiteralExpression : Expression
 {
   TypeNode returnType;
   Parameters params;
-  FunctionBody funcBody;
+  FuncBodyStatement funcBody;
 
   this()
   {
@@ -915,7 +915,7 @@ class FunctionLiteralExpression : Expression
     addChild(funcBody);
   }
 
-  this(TypeNode returnType, Parameters params, FunctionBody funcBody)
+  this(TypeNode returnType, Parameters params, FuncBodyStatement funcBody)
   {
     this.returnType = returnType;
     this.params = params;
@@ -923,7 +923,7 @@ class FunctionLiteralExpression : Expression
     this();
   }
 
-  this(FunctionBody funcBody)
+  this(FuncBodyStatement funcBody)
   {
     this.funcBody = funcBody;
     this();

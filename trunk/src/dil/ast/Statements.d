@@ -41,7 +41,7 @@ class EmptyStatement : Statement
   }
 }
 
-class FunctionBody : Statement
+class FuncBodyStatement : Statement
 {
   Statement funcBody, inBody, outBody;
   Identifier* outIdent;
@@ -341,9 +341,9 @@ class SynchronizedStatement : Statement
 class TryStatement : Statement
 {
   Statement tryBody;
-  CatchBody[] catchBodies;
-  FinallyBody finallyBody;
-  this(Statement tryBody, CatchBody[] catchBodies, FinallyBody finallyBody)
+  CatchStatement[] catchBodies;
+  FinallyStatement finallyBody;
+  this(Statement tryBody, CatchStatement[] catchBodies, FinallyStatement finallyBody)
   {
     mixin(set_kind);
     addChild(tryBody);
@@ -356,7 +356,7 @@ class TryStatement : Statement
   }
 }
 
-class CatchBody : Statement
+class CatchStatement : Statement
 {
   Parameter param;
   Statement catchBody;
@@ -370,7 +370,7 @@ class CatchBody : Statement
   }
 }
 
-class FinallyBody : Statement
+class FinallyStatement : Statement
 {
   Statement finallyBody;
   this(Statement finallyBody)

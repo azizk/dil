@@ -335,7 +335,7 @@ class ImportParser : Parser
     }
   }
 
-  FunctionBody parseFunctionBody()
+  FuncBodyStatement parseFunctionBody()
   {
     while (1)
     {

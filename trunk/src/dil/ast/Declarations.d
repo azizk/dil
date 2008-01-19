@@ -274,8 +274,8 @@ class UnionDeclaration : AggregateDeclaration
 class ConstructorDeclaration : Declaration
 {
   Parameters params;
-  FunctionBody funcBody;
-  this(Parameters params, FunctionBody funcBody)
+  FuncBodyStatement funcBody;
+  this(Parameters params, FuncBodyStatement funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -289,8 +289,8 @@ class ConstructorDeclaration : Declaration
 
 class StaticConstructorDeclaration : Declaration
 {
-  FunctionBody funcBody;
-  this(FunctionBody funcBody)
+  FuncBodyStatement funcBody;
+  this(FuncBodyStatement funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -302,8 +302,8 @@ class StaticConstructorDeclaration : Declaration
 
 class DestructorDeclaration : Declaration
 {
-  FunctionBody funcBody;
-  this(FunctionBody funcBody)
+  FuncBodyStatement funcBody;
+  this(FuncBodyStatement funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -315,8 +315,8 @@ class DestructorDeclaration : Declaration
 
 class StaticDestructorDeclaration : Declaration
 {
-  FunctionBody funcBody;
-  this(FunctionBody funcBody)
+  FuncBodyStatement funcBody;
+  this(FuncBodyStatement funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -332,10 +332,10 @@ class FunctionDeclaration : Declaration
   Identifier* name;
   TemplateParameters tparams;
   Parameters params;
-  FunctionBody funcBody;
+  FuncBodyStatement funcBody;
   LinkageType linkageType;
   this(TypeNode returnType, Identifier* name, TemplateParameters tparams,
-       Parameters params, FunctionBody funcBody)
+       Parameters params, FuncBodyStatement funcBody)
   {
     super.hasBody = funcBody.funcBody !is null;
     mixin(set_kind);
@@ -390,8 +390,8 @@ class VariablesDeclaration : Declaration
 
 class InvariantDeclaration : Declaration
 {
-  FunctionBody funcBody;
-  this(FunctionBody funcBody)
+  FuncBodyStatement funcBody;
+  this(FuncBodyStatement funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -403,8 +403,8 @@ class InvariantDeclaration : Declaration
 
 class UnittestDeclaration : Declaration
 {
-  FunctionBody funcBody;
-  this(FunctionBody funcBody)
+  FuncBodyStatement funcBody;
+  this(FuncBodyStatement funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -505,8 +505,8 @@ class TemplateDeclaration : Declaration
 class NewDeclaration : Declaration
 {
   Parameters params;
-  FunctionBody funcBody;
-  this(Parameters params, FunctionBody funcBody)
+  FuncBodyStatement funcBody;
+  this(Parameters params, FuncBodyStatement funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -521,8 +521,8 @@ class NewDeclaration : Declaration
 class DeleteDeclaration : Declaration
 {
   Parameters params;
-  FunctionBody funcBody;
-  this(Parameters params, FunctionBody funcBody)
+  FuncBodyStatement funcBody;
+  this(Parameters params, FuncBodyStatement funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);

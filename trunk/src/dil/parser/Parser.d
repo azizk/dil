@@ -644,10 +644,10 @@ class Parser
     return init;
   }
 
-  FunctionBody parseFunctionBody()
+  FuncBodyStatement parseFunctionBody()
   {
     auto begin = token;
-    auto func = new FunctionBody;
+    auto func = new FuncBodyStatement;
     while (1)
     {
       switch (token.kind)
@@ -1984,6 +1984,7 @@ class Parser
            token.kind != T.RBrace &&
            token.kind != T.EOF)
       s ~= parseStatement();
+    set(s, begin);
     return set(new ScopeStatement(s), begin);
   }
 
@@ -2089,8 +2090,8 @@ class Parser
     nT();
 
     auto tryBody = parseScopeStatement();
-    CatchBody[] catchBodies;
-    FinallyBody finBody;
+    CatchStatement[] catchBodies;
+    FinallyStatement finBody;
 
     while (skipped(T.Catch))
     {
@@ -2104,14 +2105,14 @@ class Parser
         set(param, begin2);
         require(T.RParen);
       }
-      catchBodies ~= set(new CatchBody(param, parseNoScopeStatement()), begin);
+      catchBodies ~= set(new CatchStatement(param, parseNoScopeStatement()), begin);
       if (param is null)
         break; // This is a LastCatch
       begin = token;
     }
 
     if (skipped(T.Finally))
-      finBody = set(new FinallyBody(parseNoScopeStatement()), prevToken);
+      finBody = set(new FinallyStatement(parseNoScopeStatement()), prevToken);
 
     if (catchBodies.length == 0 && finBody is null)
       assert(begin.kind == T.Try), error(begin, MSG.MissingCatchOrFinally);
