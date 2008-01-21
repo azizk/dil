@@ -76,6 +76,7 @@ static const Identifier[] keywords = [
   {"private", TOK.Private},
   {"protected", TOK.Protected},
   {"public", TOK.Public},
+  {"pure", TOK.Pure}, // D2.0
   {"real", TOK.Real},
   {"ref", TOK.Ref},
   {"return", TOK.Return},
