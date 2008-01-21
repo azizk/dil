@@ -31,7 +31,7 @@ void pragma_msg(Scope scop, Token* pragmaLoc, Expression[] args)
 
   foreach (arg; args)
   {
-    auto e = arg.evaluate();
+    auto e = arg/+.evaluate()+/;
     if (e is null)
     {
       // scop.error(e.begin, "expression is not evaluatable at compile time");
@@ -54,7 +54,7 @@ void pragma_lib(Scope scop, Token* pragmaLoc, Expression[] args)
   if (args.length != 1)
     return /*scop.error(pragmaLoc, "expected one expression argument to pragma")*/;
 
-  auto e = args[0].evaluate();
+  auto e = args[0]/+.evaluate()+/;
   if (e is null)
   {
     // scop.error(e.begin, "expression is not evaluatable at compile time");

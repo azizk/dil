@@ -17,9 +17,4 @@ abstract class Expression : Node
   {
     super(NodeCategory.Expression);
   }
-
-  Expression evaluate()
-  {
-    return null;
-  }
 }
