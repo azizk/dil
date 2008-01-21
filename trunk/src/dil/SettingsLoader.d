@@ -30,8 +30,8 @@ void loadSettings()
     if (v is null)
       continue;
 
-    auto variableName = v.idents[0].str;
-    auto e = v.values[0];
+    auto variableName = v.names[0].str;
+    auto e = v.inits[0];
     if (!e)
       throw new Exception(variableName ~ " variable has no value set.");
 
@@ -82,8 +82,8 @@ void loadSettings()
     if (v is null)
       continue;
 
-    auto variableName = v.idents[0].str;
-    auto e = v.values[0];
+    auto variableName = v.names[0].str;
+    auto e = v.inits[0];
     if (!e)
       throw new Exception(variableName~" variable in "~filePath~" has no value set.");
 

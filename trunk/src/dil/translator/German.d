@@ -174,7 +174,7 @@ override:
       was = "lokale Variable";
     else
       was = "globale Variable";
-    foreach (name; n.idents)
+    foreach (name; n.names)
     {
       put(indent).format("'{}' ist eine {} des Typs: ", name.str, was);
       if (n.typeNode)

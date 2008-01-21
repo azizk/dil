@@ -34,6 +34,7 @@ class Parser
   ImportDeclaration[] imports; /// ImportDeclarations in the source text.
 
   // Attributes are evaluated in the parsing phase.
+  // Will probably be moved to class SemanticPass1.
   LinkageType linkageType;
   Protection protection;
   StorageClass storageClass;

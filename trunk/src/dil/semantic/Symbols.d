@@ -18,20 +18,21 @@ class ScopeSymbol : Symbol
   SymbolTable symbolTable; /// The symbol table.
   Symbol[] members; /// The member symbols (in lexical order.)
 
-  this()
+  this(SYM sid, Identifier* name, Node node)
   {
+    super(sid, name, node);
   }
 
   /// Look up ident in the table.
-  Symbol lookup(Identifier* ident)
+  Symbol lookup(Identifier* name)
   {
-    return symbolTable.lookup(ident);
+    return symbolTable.lookup(name);
   }
 
   /// Insert a symbol into the table.
-  void insert(Symbol s, Identifier* ident)
+  void insert(Symbol s, Identifier* name)
   {
-    symbolTable.insert(s, ident);
+    symbolTable.insert(s, name);
     members ~= s;
   }
 }
@@ -41,6 +42,11 @@ abstract class Aggregate : ScopeSymbol
 {
   Function[] funcs;
   Variable[] fields;
+
+  this(SYM sid, Identifier* name, Node node)
+  {
+    super(sid, name, node);
+  }
 
   override void insert(Symbol s, Identifier* ident)
   {
@@ -56,52 +62,42 @@ abstract class Aggregate : ScopeSymbol
 
 class Class : Aggregate
 {
-  this(Identifier* ident, Node classNode)
+  this(Identifier* name, Node classNode)
   {
-    this.sid = SYM.Class;
-    this.ident = ident;
-    this.node = classNode;
+    super(SYM.Class, name, classNode);
   }
 }
 
 class Interface : Aggregate
 {
-  this(Identifier* ident, Node interfaceNode)
+  this(Identifier* name, Node interfaceNode)
   {
-    this.sid = SYM.Interface;
-    this.ident = ident;
-    this.node = interfaceNode;
+    super(SYM.Interface, name, interfaceNode);
   }
 }
 
 class Union : Aggregate
 {
-  this(Identifier* ident, Node unionNode)
+  this(Identifier* name, Node unionNode)
   {
-    this.sid = SYM.Union;
-    this.ident = ident;
-    this.node = unionNode;
+    super(SYM.Union, name, unionNode);
   }
 }
 
 class Struct : Aggregate
 {
-  this(Identifier* ident, Node structNode)
+  this(Identifier* name, Node structNode)
   {
-    this.sid = SYM.Struct;
-    this.ident = ident;
-    this.node = structNode;
+    super(SYM.Struct, name, structNode);
   }
 }
 
 class Enum : ScopeSymbol
 {
   EnumType type;
-  this(Identifier* ident, Node enumNode)
+  this(Identifier* name, Node enumNode)
   {
-    this.sid = SYM.Enum;
-    this.ident = ident;
-    this.node = enumNode;
+    super(SYM.Enum, name, enumNode);
   }
 
   void setType(EnumType type)
@@ -112,45 +108,69 @@ class Enum : ScopeSymbol
 
 class Template : ScopeSymbol
 {
-  this(Identifier* ident, Node templateNode)
+  this(Identifier* name, Node templateNode)
   {
-    this.sid = SYM.Template;
-    this.ident = ident;
-    this.node = templateNode;
+    super(SYM.Template, name, templateNode);
   }
 }
 
 class Function : ScopeSymbol
 {
-  StorageClass stc;
-  LinkageType linkType;
+  Protection prot; /// The protection.
+  StorageClass stc; /// The storage classes.
+  LinkageType linkType; /// The linkage type.
 
   Type returnType;
-  Identifier* ident;
   Variable[] params;
 
-  this()
+  this(Identifier* name, Node functionNode)
   {
-    this.sid = SYM.Function;
+    super(SYM.Function, name, functionNode);
   }
 }
 
 class Variable : Symbol
 {
+  Protection prot; /// The protection.
   StorageClass stc; /// The storage classes.
   LinkageType linkType; /// The linkage type.
 
   Type type; /// The type of this variable.
 
-  this(StorageClass stc, LinkageType linkType,
-       Type type, Identifier* ident, Node varDecl)
+  this(Identifier* name,
+       Protection prot, StorageClass stc, LinkageType linkType,
+       Node variableNode)
   {
-    this.sid = SYM.Variable;
+    super(SYM.Variable, name, variableNode);
 
     this.stc = stc;
     this.linkType = linkType;
-    this.type = type;
-    this.ident = ident;
-    this.node = varDecl;
+  }
+}
+
+class Alias : Symbol
+{
+  this(Identifier* name, Node aliasNode)
+  {
+    super(SYM.Alias, name, aliasNode);
+  }
+}
+
+/++
+  A list of symbols that share the same identifier.
+  These can be functions, templates and aggregates with template parameter lists.
++/
+class OverloadSet : Symbol
+{
+  Symbol[] symbols;
+
+  this(Identifier* name, Node node)
+  {
+    super(SYM.OverloadSet, name, node);
+  }
+
+  void add(Symbol s)
+  {
+    symbols ~= s;
   }
 }

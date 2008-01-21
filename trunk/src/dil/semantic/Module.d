@@ -39,7 +39,7 @@ class Module : ScopeSymbol
 
   this(string filePath, bool isLightweight = false)
   {
-    this.sid = SYM.Module;
+    super(SYM.Module, null, null);
 
     this.filePath = filePath;
     this.isLightweight = isLightweight;

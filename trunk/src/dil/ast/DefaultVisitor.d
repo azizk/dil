@@ -72,8 +72,8 @@ returnType!(T.stringof) visitDefault(T)(T t)
     static if (is(D == VariablesDeclaration))
     {
       d.typeNode && visitT(d.typeNode);
-      foreach(value; d.values)
-        value && visitE(value);
+      foreach(init; d.inits)
+        init && visitE(init);
     }
     static if (is(D == DebugDeclaration) || is(D == VersionDeclaration))
       d.decls && visitD(d.decls),

@@ -85,7 +85,7 @@ class ModuleScopeType : TypeNode
   }
 }
 
-/// "typeof" "(" Expression ")
+/// "typeof" "(" Expression ")"
 class TypeofType : TypeNode
 {
   Expression e;

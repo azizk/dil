@@ -50,15 +50,15 @@ class Scope
   /// Insert a new variable symbol into this scope.
   void insert(Variable var)
   {
-    auto sym = symbol.lookup(var.ident);
+    auto sym = symbol.lookup(var.name);
     if (sym)
     {
       auto loc = sym.node.begin.getErrorLocation();
       auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
-      error(var.node.begin, MSG.VariableConflictsWithDecl, var.ident.str, locString);
+      error(var.node.begin, MSG.VariableConflictsWithDecl, var.name.str, locString);
     }
     else
-      symbol.insert(var, var.ident);
+      symbol.insert(var, var.name);
     // Set the current scope symbol as the parent.
     var.parent = symbol;
   }

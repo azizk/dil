@@ -11,6 +11,7 @@ import dil.ast.Node,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
+import dil.lexer.Identifier;
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
        dil.semantic.Types,
@@ -20,12 +21,20 @@ import dil.semantic.Symbol,
 import dil.Location;
 import dil.Information;
 import dil.Messages;
+import dil.Enums;
+import dil.CompilerInfo;
 import common;
 
 class SemanticPass1 : Visitor
 {
   Scope scop; /// The current scope.
   Module modul; /// The module to be semantically checked.
+
+  // Attributes:
+  LinkageType linkageType;
+  Protection protection;
+  StorageClass storageClass;
+  uint alignSize = DEFAULT_ALIGN_SIZE;
 
   this(Module modul)
   {
@@ -40,7 +49,7 @@ class SemanticPass1 : Visitor
     scop = new Scope();
     scop.symbol = modul; // Set this module as the scope's symbol.
     scop.infoMan = modul.infoMan;
-    visitN(modul.root);
+    visit(modul.root);
   }
 
   void enterScope(ScopeSymbol s)
@@ -53,6 +62,44 @@ class SemanticPass1 : Visitor
     scop = scop.exit();
   }
 
+  /// Insert a symbol into the current scope.
+  void insert(Symbol sym, Identifier* ident)
+  {
+    auto sym2 = scop.symbol.lookup(ident);
+    if (sym2)
+      reportSymbolConflict(sym, sym2, ident);
+    else
+      scop.symbol.insert(sym, ident);
+    // Set the current scope symbol as the parent.
+    sym.parent = scop.symbol;
+  }
+
+  /// Insert a symbol, overloading on the name, into the current scope.
+  void insertOverload(Symbol sym, Identifier* ident)
+  {
+    auto sym2 = scop.symbol.lookup(ident);
+    if (sym2)
+    {
+      if (sym2.isOverloadSet)
+        (cast(OverloadSet)cast(void*)sym2).add(sym);
+      else
+        reportSymbolConflict(sym, sym2, ident);
+    }
+    else
+      // Create a new overload set.
+      scop.symbol.insert(new OverloadSet(ident, sym.node), ident);
+    // Set the current scope symbol as the parent.
+    sym.parent = scop.symbol;
+  }
+
+  /// Report error: new symbol s1 conflicts with existing symbol s2.
+  void reportSymbolConflict(Symbol s1, Symbol s2, Identifier* ident)
+  {
+    auto loc = s2.node.begin.getErrorLocation();
+    auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
+    error(s1.node.begin, MSG.DeclConflictsWithDecl, ident.str, locString);
+  }
+
   void error(Token* token, char[] formatMsg, ...)
   {
     auto location = token.getErrorLocation();
@@ -60,9 +107,11 @@ class SemanticPass1 : Visitor
     modul.infoMan ~= new SemanticError(location, msg);
   }
 
+  private alias Declaration D;
+
 override
 {
-  Declaration visit(CompoundDeclaration d)
+  D visit(CompoundDeclaration d)
   {
     foreach (node; d.children)
     {
@@ -72,18 +121,18 @@ override
     return d;
   }
 
-  Declaration visit(IllegalDeclaration)
+  D visit(IllegalDeclaration)
   { assert(0, "semantic pass on invalid AST"); return null; }
 
-  Declaration visit(EmptyDeclaration ed)
+  D visit(EmptyDeclaration ed)
   { return ed; }
 
-  Declaration visit(ModuleDeclaration)
+  D visit(ModuleDeclaration)
   { return null; }
-  Declaration visit(ImportDeclaration)
+  D visit(ImportDeclaration)
   { return null; }
 
-  Declaration visit(AliasDeclaration ad)
+  D visit(AliasDeclaration ad)
   {
     /+
     decl.semantic(scop); // call semantic() or do SA in if statements?
@@ -99,7 +148,7 @@ override
     return ad;
   }
 
-  Declaration visit(TypedefDeclaration td)
+  D visit(TypedefDeclaration td)
   {
     /+
     decl.semantic(scop); // call semantic() or do SA in if statements?
@@ -115,52 +164,39 @@ override
     return td;
   }
 
-  Declaration visit(EnumDeclaration ed)
+  D visit(EnumDeclaration d)
   {
-    /+
     // Create the symbol.
-    symbol = new Enum(name, this);
-    // Type semantics.
-    Type type = Types.Int; // Default to integer.
-    if (baseType)
-      type = baseType.semantic(scop);
-    auto enumType = new EnumType(symbol, type);
-    // Set the base type of the enum symbol.
-    symbol.setType(enumType);
-    if (name)
-    { // Insert named enum into scope.
-      scop.insert(symbol, symbol.ident);
-      // Create new scope.
-      scop = scop.push(symbol);
+    d.symbol = new Enum(d.name, d);
+    if (d.name)
+    { // Declare named enum.
+      insert(d.symbol, d.name);
+      enterScope(d.symbol);
     }
-    // Semantic on members.
-    foreach (member; members)
+    // Declare members.
+    foreach (member; d.members)
     {
-      auto value = member.value;
-      if (value)
-      {
-        // value = value.semantic(scop);
-        // value = value.evaluate();
-      }
-      auto variable = new Variable(StorageClass.Const, LinkageType.None, type, member.name, member);
-      scop.insert(variable, variable.ident);
+      auto variable = new Variable(member.name, protection, storageClass, linkageType, member);
+      insert(variable, variable.name);
     }
-    if (name)
-      scop.pop();
-    +/
-    return ed;
+    if (d.name)
+      exitScope();
+    return d;
   }
 
-  Declaration visit(EnumMemberDeclaration)
+  D visit(EnumMemberDeclaration)
   { return null; }
 
-  Declaration visit(ClassDeclaration d)
+  D visit(ClassDeclaration d)
   {
     if (d.symbol)
       return d;
     d.symbol = new Class(d.name, d);
     // Insert into current scope.
-    scop.insert(d.symbol, d.name);
+    if (d.tparams)
+      insertOverload(d.symbol, d.name);
+    else
+      insert(d.symbol, d.name);
     enterScope(d.symbol);
     // Continue semantic analysis.
     d.decls && visitD(d.decls);
@@ -168,13 +204,16 @@ override
     return d;
   }
 
-  Declaration visit(InterfaceDeclaration d)
+  D visit(InterfaceDeclaration d)
   {
     if (d.symbol)
       return d;
     d.symbol = new dil.semantic.Symbols.Interface(d.name, d);
     // Insert into current scope.
-    scop.insert(d.symbol, d.name);
+    if (d.tparams)
+      insertOverload(d.symbol, d.name);
+    else
+      insert(d.symbol, d.name);
     enterScope(d.symbol);
     // Continue semantic analysis.
     d.decls && visitD(d.decls);
@@ -182,14 +221,19 @@ override
     return d;
   }
 
-  Declaration visit(StructDeclaration d)
+  D visit(StructDeclaration d)
   {
     if (d.symbol)
       return d;
     d.symbol = new Struct(d.name, d);
     // Insert into current scope.
     if (d.name)
-      scop.insert(d.symbol, d.name);
+    {
+      if (d.tparams)
+        insertOverload(d.symbol, d.name);
+      else
+        insert(d.symbol, d.name);
+    }
     enterScope(d.symbol);
     // Continue semantic analysis.
     d.decls && visitD(d.decls);
@@ -197,14 +241,19 @@ override
     return d;
   }
 
-  Declaration visit(UnionDeclaration d)
+  D visit(UnionDeclaration d)
   {
     if (d.symbol)
       return d;
     d.symbol = new Union(d.name, d);
     // Insert into current scope.
     if (d.name)
-      scop.insert(d.symbol, d.name);
+    {
+      if (d.tparams)
+        insertOverload(d.symbol, d.name);
+      else
+        insert(d.symbol, d.name);
+    }
     enterScope(d.symbol);
     // Continue semantic analysis.
     d.decls && visitD(d.decls);
@@ -212,81 +261,109 @@ override
     return d;
   }
 
-  Declaration visit(ConstructorDeclaration)
+  D visit(ConstructorDeclaration)
   { return null; }
-  Declaration visit(StaticConstructorDeclaration)
+  D visit(StaticConstructorDeclaration)
   { return null; }
-  Declaration visit(DestructorDeclaration)
+  D visit(DestructorDeclaration)
   { return null; }
-  Declaration visit(StaticDestructorDeclaration)
+  D visit(StaticDestructorDeclaration)
   { return null; }
-  Declaration visit(FunctionDeclaration)
+  D visit(FunctionDeclaration)
   { return null; }
 
-  Declaration visit(VariablesDeclaration vd)
+  D visit(VariablesDeclaration vd)
   {
-    Type type = Types.Undefined;
-
-    if (vd.typeNode)
-      // Get type from typeNode.
-      type = visitT(vd.typeNode).type;
-    else
-    { // Infer type from first initializer.
-      auto firstInit = vd.values[0];
-      firstInit = visitE(firstInit);
-      type = firstInit.type;
-    }
-    //assert(type !is null);
-
-    // Check if we are in an interface.
+    // Error if we are in an interface.
     if (scop.isInterface)
       return error(vd.begin, MSG.InterfaceCantHaveVariables), vd;
 
-    // Iterate over variable identifiers in this declaration.
-    foreach (i, ident; vd.idents)
+    // Insert variable symbols in this declaration into the symbol table.
+    foreach (name; vd.names)
     {
-      // Perform semantic analysis on value.
-      if (vd.values[i])
-        vd.values[i] = visitE(vd.values[i]);
-      // Create a new variable symbol.
-      // TODO: pass 'prot' to constructor.
-      auto variable = new Variable(vd.stc, vd.linkageType, type, ident, vd);
+      auto variable = new Variable(name, protection, storageClass, linkageType, vd);
       vd.variables ~= variable;
-      // Add to scope.
-      scop.insert(variable);
+      insert(variable, name);
     }
     return vd;
   }
 
-  Declaration visit(InvariantDeclaration)
+  D visit(InvariantDeclaration)
   { return null; }
-  Declaration visit(UnittestDeclaration)
+  D visit(UnittestDeclaration)
   { return null; }
-  Declaration visit(DebugDeclaration)
+  D visit(DebugDeclaration)
   { return null; }
-  Declaration visit(VersionDeclaration)
-  { return null; }
-  Declaration visit(StaticIfDeclaration)
-  { return null; }
-  Declaration visit(StaticAssertDeclaration)
-  { return null; }
-  Declaration visit(TemplateDeclaration)
-  { return null; }
-  Declaration visit(NewDeclaration)
-  { return null; }
-  Declaration visit(DeleteDeclaration)
+  D visit(VersionDeclaration)
   { return null; }
 
-  Declaration visit(ProtectionDeclaration d)
-  { visitD(d.decls); return d; }
-  Declaration visit(StorageClassDeclaration d)
-  { visitD(d.decls); return d; }
-  Declaration visit(LinkageDeclaration d)
-  { visitD(d.decls); return d; }
-  Declaration visit(AlignDeclaration d)
-  { visitD(d.decls); return d; }
+  D visit(StaticIfDeclaration d)
+  {
+    visitE(d.condition);
+    visitD(d.ifDecls);
+    d.elseDecls && visitD(d.elseDecls);
+    return null;
+  }
 
-  Declaration visit(PragmaDeclaration d)
+  D visit(StaticAssertDeclaration d)
+  { return d; } // SP2
+
+  D visit(TemplateDeclaration d)
+  {
+    if (d.symbol)
+      return d;
+    d.symbol = new Template(d.name, d);
+    // Insert into current scope.
+    insertOverload(d.symbol, d.name);
+    enterScope(d.symbol);
+    // Continue semantic analysis.
+    visitD(d.decls);
+    exitScope();
+    return d;
+  }
+
+  D visit(NewDeclaration)
+  { /*add id to env*/return null; }
+  D visit(DeleteDeclaration)
+  { /*add id to env*/return null; }
+
+  D visit(ProtectionDeclaration d)
+  {
+    auto saved = protection; // Save.
+    protection = d.prot; // Set.
+    visitD(d.decls);
+    protection = saved; // Restore.
+    return d;
+  }
+
+  D visit(StorageClassDeclaration d)
+  {
+    auto saved = storageClass; // Save.
+    storageClass = d.storageClass; // Set.
+    visitD(d.decls);
+    storageClass = saved; // Restore.
+    return d;
+  }
+
+  D visit(LinkageDeclaration d)
+  {
+    auto saved = linkageType; // Save.
+    linkageType = d.linkageType; // Set.
+    visitD(d.decls);
+    linkageType = saved; // Restore.
+    return d;
+  }
+
+  D visit(AlignDeclaration d)
+  {
+    auto saved = alignSize; // Save.
+    alignSize = d.size; // Set.
+    visitD(d.decls);
+    alignSize = saved; // Restore.
+    return d;
+  }
+
+  D visit(PragmaDeclaration d)
   {
     pragmaSemantic(scop, d.begin, d.ident, d.args);
     visitD(d.decls);
@@ -300,155 +377,13 @@ override
     return s;
   }
 
-  Declaration visit(MixinDeclaration)
-  { return null; }
-
-  Expression visit(ParenExpression e)
+  D visit(MixinDeclaration md)
   {
-    if (!e.type)
-    {
-      e.next = visitE(e.next);
-      e.type = e.next.type;
-    }
-    return e;
-  }
-
-  Expression visit(CommaExpression e)
-  {
-    if (!e.type)
-    {
-      e.left = visitE(e.left);
-      e.right = visitE(e.right);
-      e.type = e.right.type;
-    }
-    return e;
-  }
-
-  Expression visit(OrOrExpression)
-  { return null; }
-
-  Expression visit(AndAndExpression)
-  { return null; }
-
-  Expression visit(SpecialTokenExpression e)
-  {
-    if (e.type)
-      return e.value;
-    switch (e.specialToken.kind)
-    {
-    case TOK.LINE, TOK.VERSION:
-      e.value = new IntExpression(e.specialToken.uint_, Types.Uint);
-      break;
-    case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
-      e.value = new StringExpression(e.specialToken.str);
-      break;
-    default:
-      assert(0);
-    }
-    e.type = e.value.type;
-    return e.value;
-  }
-
-  Expression visit(DollarExpression e)
-  {
-    if (e.type)
-      return e;
-    e.type = Types.Size_t;
-    // if (!inArraySubscript)
-    //   error("$ can only be in an array subscript.");
-    return e;
-  }
-
-  Expression visit(NullExpression e)
-  {
-    if (!e.type)
-      e.type = Types.Void_ptr;
-    return e;
-  }
-
-  Expression visit(BoolExpression e)
-  {
-    if (e.type)
-      return e;
-    e.value = new IntExpression(e.toBool(), Types.Bool);
-    e.type = Types.Bool;
-    return e;
-  }
-
-  Expression visit(IntExpression e)
-  {
-    if (e.type)
-      return e;
-
-    if (e.number & 0x8000_0000_0000_0000)
-      e.type = Types.Ulong; // 0xFFFF_FFFF_FFFF_FFFF
-    else if (e.number & 0xFFFF_FFFF_0000_0000)
-      e.type = Types.Long; // 0x7FFF_FFFF_FFFF_FFFF
-    else if (e.number & 0x8000_0000)
-      e.type = Types.Uint; // 0xFFFF_FFFF
-    else
-      e.type = Types.Int; // 0x7FFF_FFFF
-    return e;
-  }
-
-  Expression visit(RealExpression e)
-  {
-    if (e.type)
-      e.type = Types.Double;
-    return e;
-  }
-
-  Expression visit(ComplexExpression e)
-  {
-    if (!e.type)
-      e.type = Types.Cdouble;
-    return e;
-  }
-
-  Expression visit(CharExpression e)
-  {
-    if (e.type)
-      return e;
-    if (e.character <= 0xFF)
-      e.type = Types.Char;
-    else if (e.character <= 0xFFFF)
-      e.type = Types.Wchar;
-    else
-      e.type = Types.Dchar;
-    return e;
-  }
-
-  Expression visit(StringExpression e)
-  {
-    return e;
-  }
-
-  Expression visit(MixinExpression me)
-  {
-    /+
-    if (type)
-      return this.expr;
-    // TODO:
-    auto expr = this.expr.semantic(scop);
-    expr = expr.evaluate();
-    if (expr is null)
-      return this;
-    auto strExpr = TryCast!(StringExpression)(expr);
-    if (strExpr is null)
-     error(scop, MSG.MixinArgumentMustBeString);
-    else
-    {
-      auto loc = this.begin.getErrorLocation();
-      auto filePath = loc.filePath;
-      auto parser = new_ExpressionParser(strExpr.getString(), filePath, scop.infoMan);
-      expr = parser.parse();
-      expr = expr.semantic(scop);
-    }
-    this.expr = expr;
-    this.type = expr.type;
-    return expr;
-    +/
-    return null;
+    // Add md to vector of (Scope, MixinDeclaration)
+    // and evaluate them in 2nd pass?
+    // TODO: store all attributes in md; they have to be applied
+    // to the content that is mixed in.
+    return md;
   }
 } // override
 }

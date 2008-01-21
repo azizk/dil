@@ -20,6 +20,8 @@ enum SYM
   Template,
   Variable,
   Function,
+  Alias,
+  OverloadSet,
 //   Type,
 }
 
@@ -30,10 +32,17 @@ class Symbol
 {
   SYM sid;
   Symbol parent; /// The parent this symbol belongs to.
-  Identifier* ident; /// The name of this symbol.
+  Identifier* name; /// The name of this symbol.
   /// The AST node that produced this symbol.
   /// Useful for source code location info and retrieval of doc comments.
   Node node;
+
+  this(SYM sid, Identifier* name, Node node)
+  {
+    this.sid = sid;
+    this.name = name;
+    this.node = node;
+  }
 
   // A template macro for building isXYZ() methods.
   private template is_(char[] kind)
@@ -49,5 +58,7 @@ class Symbol
   mixin(is_!("Template"));
   mixin(is_!("Variable"));
   mixin(is_!("Function"));
+  mixin(is_!("Alias"));
+  mixin(is_!("OverloadSet"));
 //   mixin(is_!("Type"));
 }

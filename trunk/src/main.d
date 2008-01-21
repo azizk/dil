@@ -70,7 +70,7 @@ void main(char[][] args)
           char[] docText;
           foreach (token; tokens)
             docText ~= token.srcText;
-          Stdout.formatln("Id:{}, Symbol:{}, DocText:{}", member.ident.str, member.classinfo.name, docText);
+          Stdout.formatln("Id:{}, Symbol:{}, DocText:{}", member.name.str, member.classinfo.name, docText);
         }
       }
 

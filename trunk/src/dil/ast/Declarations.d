@@ -189,6 +189,26 @@ class EnumMemberDeclaration : Declaration
   }
 }
 
+class TemplateDeclaration : Declaration
+{
+  Identifier* name;
+  TemplateParameters tparams;
+  CompoundDeclaration decls;
+  this(Identifier* name, TemplateParameters tparams, CompoundDeclaration decls)
+  {
+    super.hasBody = true;
+    mixin(set_kind);
+    addOptChild(tparams);
+    addChild(decls);
+
+    this.name = name;
+    this.tparams = tparams;
+    this.decls = decls;
+  }
+
+  Template symbol; /// The template symbol for this declaration.
+}
+
 abstract class AggregateDeclaration : Declaration
 {
   Identifier* name;
@@ -361,24 +381,25 @@ class FunctionDeclaration : Declaration
 class VariablesDeclaration : Declaration
 {
   TypeNode typeNode;
-  Identifier*[] idents;
-  Expression[] values;
-  LinkageType linkageType;
-  this(TypeNode typeNode, Identifier*[] idents, Expression[] values)
+  Identifier*[] names;
+  Expression[] inits;
+  this(TypeNode typeNode, Identifier*[] names, Expression[] values)
   {
     // No empty arrays allowed. Both arrays must be of same size.
-    assert(idents.length != 0 && idents.length == values.length);
+    assert(names.length != 0 && names.length == inits.length);
     // If no type (in case of AutoDeclaration), first value mustn't be null.
-    assert(typeNode ? 1 : values[0] !is null);
+    assert(typeNode ? 1 : inits[0] !is null);
     mixin(set_kind);
     addOptChild(typeNode);
-    foreach(value; values)
-      addOptChild(value);
+    foreach(init; inits)
+      addOptChild(init);
 
     this.typeNode = typeNode;
-    this.idents = idents;
-    this.values = values;
+    this.names = names;
+    this.inits = inits;
   }
+
+  LinkageType linkageType;
 
   void setLinkageType(LinkageType linkageType)
   {
@@ -481,24 +502,6 @@ class StaticAssertDeclaration : Declaration
 
     this.condition = condition;
     this.message = message;
-  }
-}
-
-class TemplateDeclaration : Declaration
-{
-  Identifier* name;
-  TemplateParameters tparams;
-  CompoundDeclaration decls;
-  this(Identifier* name, TemplateParameters tparams, CompoundDeclaration decls)
-  {
-    super.hasBody = true;
-    mixin(set_kind);
-    addOptChild(tparams);
-    addChild(decls);
-
-    this.name = name;
-    this.tparams = tparams;
-    this.decls = decls;
   }
 }
 
