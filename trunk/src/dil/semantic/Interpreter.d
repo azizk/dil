@@ -27,12 +27,12 @@ class Interpreter : Visitor
   {
   }
 
-  static const Result CantInterpret;
+  static const Result NAR; /// Not a Result. Similar to NAN in floating point arithmetics.
 
   static this()
   {
-    CantInterpret = new Result;
-    CantInterpret.type = Types.Error;
+    NAR = new Result;
+    NAR.type = Types.Error;
   }
 
   static Expression interpret(Expression e, InfoManager infoMan, Scope scop)
