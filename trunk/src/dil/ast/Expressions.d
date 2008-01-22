@@ -118,6 +118,7 @@ class EqualExpression : CmpExpression
   }
 }
 
+/// Expression "!"? "is" Expression
 class IdentityExpression : CmpExpression
 {
   this(Expression left, Expression right, Token* tok)

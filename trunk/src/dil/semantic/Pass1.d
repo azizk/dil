@@ -25,6 +25,12 @@ import dil.Enums;
 import dil.CompilerInfo;
 import common;
 
+/++
+  The fist pass is the declaration pass.
+  The basic task of this class is to traverse the parse tree,
+  find all kinds of declarations and add them
+  to the symbol tables of their respective scopes.
++/
 class SemanticPass1 : Visitor
 {
   Scope scop; /// The current scope.
@@ -36,6 +42,11 @@ class SemanticPass1 : Visitor
   StorageClass storageClass;
   uint alignSize = DEFAULT_ALIGN_SIZE;
 
+  /++
+    Construct a SemanticPass1 object.
+    Params:
+      modul = the module to be processed.
+  +/
   this(Module modul)
   {
     this.modul = modul;
@@ -102,9 +113,40 @@ class SemanticPass1 : Visitor
 
   void error(Token* token, char[] formatMsg, ...)
   {
+    if (!modul.infoMan)
+      return;
     auto location = token.getErrorLocation();
     auto msg = Format(_arguments, _argptr, formatMsg);
     modul.infoMan ~= new SemanticError(location, msg);
+  }
+
+
+  static class Deferred
+  {
+    Node node;
+    ScopeSymbol symbol;
+    // Saved attributes.
+    LinkageType linkageType;
+    Protection protection;
+    StorageClass storageClass;
+    uint alignSize;
+  }
+
+  // List of mixin and static if declarations.
+  // Their analysis must be deferred because they entail
+  // evaluation of expressions.
+  Deferred[] deferred;
+
+  void addDeferred(Node node, ScopeSymbol symbol)
+  {
+    auto d = new Deferred;
+    d.node = node;
+    d.symbol = symbol;
+    d.linkageType = linkageType;
+    d.protection = protection;
+    d.storageClass = storageClass;
+    d.alignSize = alignSize;
+    deferred ~= d;
   }
 
   private alias Declaration D;
@@ -116,7 +158,7 @@ override
     foreach (node; d.children)
     {
       assert(node.category == NodeCategory.Declaration, Format("{}", node));
-      visitD(cast(Declaration)cast(void*)node);
+      visitN(node);
     }
     return d;
   }
@@ -129,38 +171,19 @@ override
 
   D visit(ModuleDeclaration)
   { return null; }
-  D visit(ImportDeclaration)
-  { return null; }
+
+  D visit(ImportDeclaration d)
+  {
+    return d;
+  }
 
   D visit(AliasDeclaration ad)
   {
-    /+
-    decl.semantic(scop); // call semantic() or do SA in if statements?
-    if (auto fd = TryCast!(FunctionDeclaration)(decl))
-    {
-      // TODO: do SA here?
-    }
-    else if (auto vd = TryCast!(VariableDeclaration)(decl))
-    {
-      // TODO: do SA here?
-    }
-    +/
     return ad;
   }
 
   D visit(TypedefDeclaration td)
   {
-    /+
-    decl.semantic(scop); // call semantic() or do SA in if statements?
-    if (auto fd = TryCast!(FunctionDeclaration)(decl))
-    {
-      // TODO: do SA here?
-    }
-    else if (auto vd = TryCast!(VariableDeclaration)(decl))
-    {
-      // TODO: do SA here?
-    }
-    +/
     return td;
   }
 
@@ -299,14 +322,18 @@ override
 
   D visit(StaticIfDeclaration d)
   {
-    visitE(d.condition);
-    visitD(d.ifDecls);
-    d.elseDecls && visitD(d.elseDecls);
-    return null;
+    addDeferred(d, scop.symbol);
+    return d;
   }
 
-  D visit(StaticAssertDeclaration d)
-  { return d; } // SP2
+  D visit(MixinDeclaration d)
+  {
+    addDeferred(d, scop.symbol);
+    return d;
+  }
+
+  D visit(StaticAssertDeclaration)
+  { return null; }
 
   D visit(TemplateDeclaration d)
   {
@@ -375,15 +402,6 @@ override
     pragmaSemantic(scop, s.begin, s.ident, s.args);
     visitS(s.pragmaBody);
     return s;
-  }
-
-  D visit(MixinDeclaration md)
-  {
-    // Add md to vector of (Scope, MixinDeclaration)
-    // and evaluate them in 2nd pass?
-    // TODO: store all attributes in md; they have to be applied
-    // to the content that is mixed in.
-    return md;
   }
 } // override
 }
