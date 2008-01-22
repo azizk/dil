@@ -303,8 +303,8 @@ returnType!(T.stringof) visitDefault(T)(T t)
       visitT(t.next);
       if (t.assocType)
         visitT(t.assocType);
-      else if (t.e)
-        visitE(t.e), t.e2 && visitE(t.e2);
+      else if (t.e1)
+        visitE(t.e1), t.e2 && visitE(t.e2);
     }
     static if (is(T == FunctionType) || is(T == DelegateType))
       visitT(t.returnType), visitN(t.params);

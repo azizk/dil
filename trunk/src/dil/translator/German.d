@@ -289,7 +289,7 @@ override:
     if (n.assocType)
       put.format("assoziative{} Array{} von ", c1, c2);
 //       visitT(n.assocType);
-    else if (n.e)
+    else if (n.e1)
     {
       if (n.e2)
         put.format("gescheibte{} Array{} von ", c1, c2);

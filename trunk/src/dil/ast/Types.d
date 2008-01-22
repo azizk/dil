@@ -138,7 +138,7 @@ class PointerType : TypeNode
 /// Associative array: T[T]
 class ArrayType : TypeNode
 {
-  Expression e, e2;
+  Expression e1, e2;
   TypeNode assocType;
 
   this(TypeNode t)
@@ -147,12 +147,12 @@ class ArrayType : TypeNode
     mixin(set_kind);
   }
 
-  this(TypeNode t, Expression e, Expression e2)
+  this(TypeNode t, Expression e1, Expression e2)
   {
     this(t);
-    addChild(e);
+    addChild(e1);
     addOptChild(e2);
-    this.e = e;
+    this.e1 = e1;
     this.e2 = e2;
   }
 
@@ -161,6 +161,26 @@ class ArrayType : TypeNode
     this(t);
     addChild(assocType);
     this.assocType = assocType;
+  }
+
+  bool isDynamic()
+  {
+    return !assocType && !e1;
+  }
+
+  bool isStatic()
+  {
+    return e1 && !e2;
+  }
+
+  bool isSlice()
+  {
+    return e1 && e2;
+  }
+
+  bool isAssociative()
+  {
+    return assocType !is null;
   }
 }
 
