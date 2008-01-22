@@ -24,13 +24,14 @@ class IllegalExpression : Expression
 
 abstract class BinaryExpression : Expression
 {
-  Expression left, right;
+  Expression lhs; /// Left-hand side expression.
+  Expression rhs; /// Right-hand side expression.
   Token* tok;
-  this(Expression left, Expression right, Token* tok)
+  this(Expression lhs, Expression rhs, Token* tok)
   {
-    addChildren([left, right]);
-    this.left = left;
-    this.right = right;
+    addChildren([lhs, rhs]);
+    this.lhs = lhs;
+    this.rhs = rhs;
     this.tok = tok;
   }
 }

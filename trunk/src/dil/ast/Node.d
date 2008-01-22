@@ -16,7 +16,7 @@ class Node
 {
   NodeCategory category;
   NodeKind kind;
-  Node[] children;
+  Node[] children; // Will be probably removed sometime.
   Token* begin, end;
 
   this(NodeCategory category)

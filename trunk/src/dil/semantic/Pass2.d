@@ -102,6 +102,13 @@ override
     return md;
   }
 
+  T visit(TypeofType t)
+  {
+    t.e = visitE(t.e);
+    t.type = t.e.type;
+    return t;
+  }
+
   T visit(ArrayType t)
   {
     return t;
@@ -125,6 +132,7 @@ override
       TOK.Ifloat : Types.Ifloat, TOK.Idouble : Types.Idouble, TOK.Ireal : Types.Ireal,
       TOK.Cfloat : Types.Cfloat, TOK.Cdouble : Types.Cdouble, TOK.Creal : Types.Creal, TOK.Void : Types.Void
     ];
+    assert(t.tok in tok2Type);
     t.type = tok2Type[t.tok];
     return t;
   }
@@ -143,9 +151,9 @@ override
   {
     if (!e.type)
     {
-      e.left = visitE(e.left);
-      e.right = visitE(e.right);
-      e.type = e.right.type;
+      e.lhs = visitE(e.lhs);
+      e.rhs = visitE(e.rhs);
+      e.type = e.rhs.type;
     }
     return e;
   }

@@ -316,9 +316,9 @@ override:
 
   TypeNode visit(QualifiedType n)
   {
-    visitT(n.left);
+    visitT(n.lhs);
     put(".");
-    visitT(n.right);
+    visitT(n.rhs);
     return n;
   }
 

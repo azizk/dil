@@ -64,14 +64,14 @@ class IdentifierType : TypeNode
 /// Type "." Type
 class QualifiedType : TypeNode
 {
-  alias next left;
-  TypeNode right;
-  this(TypeNode left, TypeNode right)
+  alias next lhs; /// Left-hand side type.
+  TypeNode rhs; /// Right-hand side type.
+  this(TypeNode lhs, TypeNode rhs)
   {
-    super(left);
+    super(lhs);
     mixin(set_kind);
-    addChild(right);
-    this.right = right;
+    addChild(rhs);
+    this.rhs = rhs;
   }
 }
 

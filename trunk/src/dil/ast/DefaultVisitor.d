@@ -113,10 +113,10 @@ returnType!(T.stringof) visitDefault(T)(T t)
     {}
     else
     static if (is(E : CondExpression))
-      visitE(e.condition), visitE(e.left), visitE(e.right);
+      visitE(e.condition), visitE(e.lhs), visitE(e.rhs);
     else
     static if (is(E : BinaryExpression))
-      visitE(e.left), visitE(e.right);
+      visitE(e.lhs), visitE(e.rhs);
     else
     static if (is(E : UnaryExpression))
     {
@@ -291,7 +291,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
     //IntegralType,
     //IdentifierType have no subnodes.
     static if (is(T == QualifiedType))
-      visitT(t.left), visitT(t.right);
+      visitT(t.lhs), visitT(t.rhs);
     static if (is(T == TypeofType))
       visitE(t.e);
     static if (is(T == TemplateInstanceType))
