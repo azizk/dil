@@ -57,9 +57,7 @@ class SemanticPass1 : Visitor
   {
     assert(modul.root !is null);
     // Create module scope.
-    scop = new Scope();
-    scop.symbol = modul; // Set this module as the scope's symbol.
-    scop.infoMan = modul.infoMan;
+    scop = new Scope(null, modul);
     visit(modul.root);
   }
 
@@ -298,7 +296,7 @@ override
   D visit(VariablesDeclaration vd)
   {
     // Error if we are in an interface.
-    if (scop.isInterface)
+    if (scop.symbol.isInterface)
       return error(vd.begin, MSG.InterfaceCantHaveVariables), vd;
 
     // Insert variable symbols in this declaration into the symbol table.

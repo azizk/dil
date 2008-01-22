@@ -41,9 +41,7 @@ class SemanticPass2 : DefaultVisitor
   {
     assert(modul.root !is null);
     // Create module scope.
-    scop = new Scope();
-    scop.symbol = modul; // Set this module as the scope's symbol.
-    scop.infoMan = modul.infoMan;
+    scop = new Scope(null, modul);
     visit(modul.root);
   }
 
@@ -102,6 +100,11 @@ override
     return expr;
     +/
     return md;
+  }
+
+  T visit(ArrayType t)
+  {
+    return t;
   }
 
   T visit(PointerType t)
@@ -261,7 +264,7 @@ override
     {
       auto loc = me.begin.getErrorLocation();
       auto filePath = loc.filePath;
-      auto parser = new Parser(stringExpr.getString(), filePath, scop.infoMan);
+      auto parser = new Parser(stringExpr.getString(), filePath, modul.infoMan);
       expr = parser.start2();
       expr = visitE(expr); // Check expression.
     }

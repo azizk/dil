@@ -50,6 +50,7 @@ class TypeBasic : Type
   }
 }
 
+/// Dynamic array.
 class TypeDArray : Type
 {
   this(Type next)
@@ -58,6 +59,7 @@ class TypeDArray : Type
   }
 }
 
+/// Associative array.
 class TypeAArray : Type
 {
   Type keyType;
@@ -68,6 +70,7 @@ class TypeAArray : Type
   }
 }
 
+/// Static array.
 class TypeSArray : Type
 {
   size_t dimension;
