@@ -171,9 +171,9 @@ static const char[][] classNames = [
   "ParenExpression",
   "FunctionLiteralExpression",
   "TraitsExpression", // D2.0
-  "VoidInitializer",
-  "ArrayInitializer",
-  "StructInitializer",
+  "VoidInitExpression",
+  "ArrayInitExpression",
+  "StructInitExpression",
   "AsmTypeExpression",
   "AsmOffsetExpression",
   "AsmSegExpression",

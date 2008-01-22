@@ -960,7 +960,7 @@ class TraitsExpression : Expression
 }
 // }
 
-class VoidInitializer : Expression
+class VoidInitExpression : Expression
 {
   this()
   {
@@ -968,7 +968,7 @@ class VoidInitializer : Expression
   }
 }
 
-class ArrayInitializer : Expression
+class ArrayInitExpression : Expression
 {
   Expression[] keys;
   Expression[] values;
@@ -986,7 +986,7 @@ class ArrayInitializer : Expression
   }
 }
 
-class StructInitializer : Expression
+class StructInitExpression : Expression
 {
   Identifier*[] idents;
   Expression[] values;

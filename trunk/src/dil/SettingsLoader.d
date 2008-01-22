@@ -42,7 +42,7 @@ void loadSettings()
         GlobalSettings.langFile = val.getString();
       break;
     case "import_paths":
-      if (auto array = e.Is!(ArrayInitializer))
+      if (auto array = e.Is!(ArrayInitExpression))
       {
         foreach (value; array.values)
           if (auto str = value.Is!(StringExpression))
@@ -90,7 +90,7 @@ void loadSettings()
     switch (variableName)
     {
     case "messages":
-      if (auto array = e.Is!(ArrayInitializer))
+      if (auto array = e.Is!(ArrayInitExpression))
       {
         foreach (value; array.values)
         {

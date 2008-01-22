@@ -528,9 +528,8 @@ class Parser
     Identifier*[] idents = [ident];
     Expression[] values;
     goto LenterLoop; // We've already parsed an identifier. Jump to if statement and check for initializer.
-    while (token.kind == T.Comma)
+    while (skipped(T.Comma))
     {
-      nT();
       idents ~= requireIdentifier(MSG.ExpectedVariableName);
     LenterLoop:
       if (skipped(T.Assign))
@@ -555,7 +554,7 @@ class Parser
       if (next == T.Comma || next == T.Semicolon)
       {
         nT();
-        return set(new VoidInitializer(), begin);
+        return set(new VoidInitExpression(), begin);
       }
     }
     return parseNonVoidInitializer();
@@ -594,7 +593,7 @@ class Parser
         nT();
       }
       require(T.RBracket);
-      init = new ArrayInitializer(keys, values);
+      init = new ArrayInitExpression(keys, values);
       break;
     case T.LBrace:
       // StructInitializer:
@@ -626,7 +625,7 @@ class Parser
           nT();
         }
         require(T.RBrace);
-        return new StructInitializer(idents, values);
+        return new StructInitExpression(idents, values);
       }
 
       bool success;

@@ -182,10 +182,10 @@ returnType!(T.stringof) visitDefault(T)(T t)
       static if (is(E == TraitsExpression))
         visitN(e.targs);
       // VoidInitializer has no subnodes.
-      static if (is(E == ArrayInitializer))
+      static if (is(E == ArrayInitExpression))
         foreach (i, key; e.keys)
           key && visitE(key), visitE(e.values[i]);
-      static if (is(E == StructInitializer))
+      static if (is(E == StructInitExpression))
         foreach (value; e.values)
           visitE(value);
     }

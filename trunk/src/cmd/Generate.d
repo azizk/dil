@@ -103,15 +103,7 @@ char[] getShortClassName(Node node)
     suffixLength = "Statement".length;
     break;
   case NC.Expression:
-    switch (node.kind)
-    {
-    case NodeKind.VoidInitializer,
-         NodeKind.ArrayInitializer,
-         NodeKind.StructInitializer:
-      break;
-    default:
-     suffixLength = "Expression".length;
-    }
+    suffixLength = "Expression".length;
     break;
   case NC.Type:
     suffixLength = "Type".length;
