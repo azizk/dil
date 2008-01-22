@@ -94,7 +94,7 @@ class TypeReference : Type
   }
 }
 
-class EnumType : Type
+class TypeEnum : Type
 {
   Enum enumSymbol;
   this(Enum enumSymbol, Type baseType)
@@ -109,7 +109,7 @@ class EnumType : Type
   }
 }
 
-class StructType : Type
+class TypeStruct : Type
 {
   this()
   {
@@ -117,7 +117,7 @@ class StructType : Type
   }
 }
 
-class ClassType : Type
+class TypeClass : Type
 {
   this()
   {
@@ -125,7 +125,7 @@ class ClassType : Type
   }
 }
 
-class TypedefType : Type
+class TypeTypedef : Type
 {
   this(Type next)
   {
@@ -133,7 +133,7 @@ class TypedefType : Type
   }
 }
 
-class FunctionType : Type
+class TypeFunction : Type
 {
   this(Type next)
   {
@@ -141,7 +141,7 @@ class FunctionType : Type
   }
 }
 
-class DelegateType : Type
+class TypeDelegate : Type
 {
   this(Type next)
   {
@@ -149,7 +149,7 @@ class DelegateType : Type
   }
 }
 
-class IdentifierType : Type
+class TypeIdentifier : Type
 {
   Identifier* ident;
   this(Identifier* ident)
@@ -158,7 +158,7 @@ class IdentifierType : Type
   }
 }
 
-class TInstanceType : Type
+class TypeTemplInstance : Type
 {
   this()
   {
@@ -166,7 +166,7 @@ class TInstanceType : Type
   }
 }
 
-class TupleType : Type
+class TypeTuple : Type
 {
   this(Type next)
   {
@@ -174,7 +174,7 @@ class TupleType : Type
   }
 }
 
-class ConstType : Type
+class TypeConst : Type
 {
   this(Type next)
   {
@@ -182,7 +182,7 @@ class ConstType : Type
   }
 }
 
-class InvariantType : Type
+class TypeInvariant : Type
 {
   this(Type next)
   {

@@ -94,13 +94,13 @@ class Struct : Aggregate
 
 class Enum : ScopeSymbol
 {
-  EnumType type;
+  TypeEnum type;
   this(Identifier* name, Node enumNode)
   {
     super(SYM.Enum, name, enumNode);
   }
 
-  void setType(EnumType type)
+  void setType(TypeEnum type)
   {
     this.type = type;
   }
