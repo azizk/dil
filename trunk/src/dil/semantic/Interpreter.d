@@ -35,8 +35,14 @@ class Interpreter : Visitor
     CantInterpret.type = Types.Error;
   }
 
-  this(InfoManager infoMan)
+  static Expression interpret(Expression e, InfoManager infoMan, Scope scop)
   {
+    return (new Interpreter(scop, infoMan)).start(e);
+  }
+
+  this(Scope scop, InfoManager infoMan)
+  {
+    this.scop = scop;
     this.infoMan = infoMan;
   }
 
