@@ -11,7 +11,7 @@ import dil.ast.Node,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
-import dil.lexer.Identifier;
+import dil.lexer.IdTable;
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
        dil.semantic.Types,
@@ -132,16 +132,16 @@ class SemanticPass1 : Visitor
     uint alignSize;
   }
 
-  // List of mixin and static if declarations.
+  // List of mixin, static if and pragma(msg,...) declarations.
   // Their analysis must be deferred because they entail
   // evaluation of expressions.
   Deferred[] deferred;
 
-  void addDeferred(Node node, ScopeSymbol symbol)
+  void addDeferred(Node node)
   {
     auto d = new Deferred;
     d.node = node;
-    d.symbol = symbol;
+    d.symbol = scop.symbol;
     d.linkageType = linkageType;
     d.protection = protection;
     d.storageClass = storageClass;
@@ -320,18 +320,6 @@ override
   D visit(VersionDeclaration)
   { return null; }
 
-  D visit(StaticIfDeclaration d)
-  {
-    addDeferred(d, scop.symbol);
-    return d;
-  }
-
-  D visit(MixinDeclaration d)
-  {
-    addDeferred(d, scop.symbol);
-    return d;
-  }
-
   D visit(StaticAssertDeclaration)
   { return null; }
 
@@ -390,18 +378,28 @@ override
     return d;
   }
 
-  D visit(PragmaDeclaration d)
+  D visit(StaticIfDeclaration d)
   {
-    pragmaSemantic(scop, d.begin, d.ident, d.args);
-    visitD(d.decls);
+    addDeferred(d);
     return d;
   }
 
-  Statement visit(PragmaStatement s)
+  D visit(MixinDeclaration d)
   {
-    pragmaSemantic(scop, s.begin, s.ident, s.args);
-    visitS(s.pragmaBody);
-    return s;
+    addDeferred(d);
+    return d;
+  }
+
+  D visit(PragmaDeclaration d)
+  {
+    if (d.ident is Ident.msg)
+      addDeferred(d);
+    else
+    {
+      pragmaSemantic(scop, d.begin, d.ident, d.args);
+      visitD(d.decls);
+    }
+    return d;
   }
 } // override
 }
