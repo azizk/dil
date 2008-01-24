@@ -29,13 +29,12 @@ returnType!(T.stringof) visitDefault(T)(T t)
   {
     alias T D;
     static if (is(D == CompoundDeclaration))
-      foreach (node; d.children)
-        visitN(node);
+      foreach (decl; d.decls)
+        visitD(decl);
     //EmptyDeclaration,
     //IllegalDeclaration,
     //ModuleDeclaration have no subnodes.
     static if (is(D == AliasDeclaration) ||
-               is(D == AliasDeclaration) ||
                is(D == TypedefDeclaration))
       visitD(d.decl);
     static if (is(D == EnumDeclaration))

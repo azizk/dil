@@ -32,6 +32,11 @@ class CompoundDeclaration : Declaration
   {
     addChildren(ds.children);
   }
+
+  Declaration[] decls()
+  {
+    return cast(Declaration[])this.children;
+  }
 }
 
 /// Single semicolon.

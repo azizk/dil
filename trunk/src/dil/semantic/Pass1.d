@@ -153,11 +153,8 @@ override
 {
   D visit(CompoundDeclaration d)
   {
-    foreach (node; d.children)
-    {
-      assert(node.category == NodeCategory.Declaration, Format("{}", node));
-      visitN(node);
-    }
+    foreach (decl; d.decls)
+      visitD(decl);
     return d;
   }
 

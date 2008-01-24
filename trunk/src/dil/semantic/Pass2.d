@@ -17,7 +17,8 @@ import dil.semantic.Symbol,
        dil.semantic.Types,
        dil.semantic.Scope,
        dil.semantic.Module,
-       dil.semantic.Analysis;
+       dil.semantic.Analysis,
+       dil.semantic.Interpreter;
 import dil.parser.Parser;
 import dil.Location;
 import dil.Information;
@@ -261,9 +262,9 @@ override
   {
     if (me.type)
       return me.expr;
-    auto expr = visitE(me.expr);
-    // TODO: expr = expr.evaluate();
-    if (expr is null)
+    me.expr = visitE(me.expr);
+    auto expr = Interpreter.interpret(me.expr, modul.infoMan, scop);
+    if (expr is Interpreter.NAR)
       return me;
     auto stringExpr = expr.Is!(StringExpression);
     if (stringExpr is null)
@@ -281,9 +282,20 @@ override
     return me.expr;
   }
 
-  E visit(ImportExpression e)
+  E visit(ImportExpression ie)
   {
-    return e;
+    if (ie.type)
+      return ie.expr;
+    ie.expr = visitE(ie.expr);
+    auto expr = Interpreter.interpret(ie.expr, modul.infoMan, scop);
+    if (expr is Interpreter.NAR)
+      return ie;
+    auto stringExpr = expr.Is!(StringExpression);
+    //if (stringExpr is null)
+    //  error(me.begin, MSG.ImportArgumentMustBeString);
+    // TODO: load file
+    //ie.expr = new StringExpression(loadImportFile(stringExpr.getString()));
+    return ie.expr;
   }
 }
 }
