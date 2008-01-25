@@ -388,7 +388,7 @@ class VariablesDeclaration : Declaration
   TypeNode typeNode;
   Identifier*[] names;
   Expression[] inits;
-  this(TypeNode typeNode, Identifier*[] names, Expression[] values)
+  this(TypeNode typeNode, Identifier*[] names, Expression[] inits)
   {
     // No empty arrays allowed. Both arrays must be of same size.
     assert(names.length != 0 && names.length == inits.length);
