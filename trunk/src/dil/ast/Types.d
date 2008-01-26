@@ -4,31 +4,13 @@
 +/
 module dil.ast.Types;
 
+public import dil.ast.Type;
 import dil.ast.Node;
 import dil.ast.Expression;
 import dil.ast.Parameters;
 import dil.lexer.Identifier;
 import dil.semantic.Types;
 import dil.Enums;
-
-/// The base class of all type nodes.
-abstract class TypeNode : Node
-{
-  TypeNode next;
-  Type type; /// The semantic type of this type node.
-
-  this()
-  {
-    this(null);
-  }
-
-  this(TypeNode next)
-  {
-    super(NodeCategory.Type);
-    addOptChild(next);
-    this.next = next;
-  }
-}
 
 /// Syntax error.
 class IllegalType : TypeNode
