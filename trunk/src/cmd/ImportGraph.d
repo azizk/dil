@@ -71,17 +71,23 @@ class Graph
   void detectCycles()
   { // Cycles could also be detected in the GraphBuilder,
     // but having the code here makes things much clearer.
-    void visit(Vertex vertex)
+    bool visit(Vertex vertex)
     {
       if (vertex.status == Vertex.Status.Visiting)
       {
         vertex.isCyclic = true;
-        return;
+        return true;
       }
+      if (vertex.status == Vertex.Status.Visited)
+        return false;
+      // Flag as visiting.
       vertex.status = Vertex.Status.Visiting;
+      // Visit successors.
       foreach (outVertex; vertex.outgoing)
-        visit(outVertex);
+        vertex.isCyclic |= visit(outVertex);
+      // Flag as visited.
       vertex.status = Vertex.Status.Visited;
+      return false;
     }
     // Start visiting vertices.
     visit(vertices[0]);
