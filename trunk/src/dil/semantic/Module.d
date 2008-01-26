@@ -7,10 +7,8 @@ module dil.semantic.Module;
 import dil.ast.Node;
 import dil.ast.Declarations;
 import dil.parser.Parser;
-import dil.parser.ImportParser;
 import dil.lexer.Lexer;
 import dil.File;
-import dil.semantic.Scope;
 import dil.semantic.Symbol;
 import dil.semantic.Symbols;
 import dil.Information;
@@ -22,42 +20,36 @@ alias FileConst.PathSeparatorChar dirSep;
 
 class Module : ScopeSymbol
 {
-  bool isLightweight; /// If true an ImportParser is used instead of a full Parser.
   string filePath; /// Path to the source file.
-  string moduleFQN; /// Fully qualified name of the module.
-  string packageName;
-  string moduleName;
+  string moduleFQN; /// Fully qualified name of the module. E.g. dil.ast.Node
+  string packageName; /// E.g. dil.ast
+  string moduleName; /// E.g. Node
 
-  CompoundDeclaration root; /// The root of the AST.
-  ImportDeclaration[] imports;
-  ModuleDeclaration moduleDecl;
-  private Parser parser;
+  CompoundDeclaration root; /// The root of the parse tree.
+  ImportDeclaration[] imports; /// ImportDeclarations found in this file.
+  ModuleDeclaration moduleDecl; /// The optional ModuleDeclaration in this file.
+  Parser parser; /// The parser used to parse this file.
 
   Module[] modules;
 
   InfoManager infoMan;
 
-  this(string filePath, bool isLightweight = false)
+  this()
   {
     super(SYM.Module, null, null);
-
-    this.filePath = filePath;
-    this.isLightweight = isLightweight;
   }
 
-  this(string filePath, InfoManager infoMan)
+  this(string filePath, InfoManager infoMan = null)
   {
-    this(filePath, false);
+    this();
+    this.filePath = filePath;
     this.infoMan = infoMan;
   }
 
   void parse()
   {
-    auto sourceText = loadFile(filePath);
-    if (this.isLightweight)
-      this.parser = new ImportParser(sourceText, filePath);
-    else
-      this.parser = new Parser(sourceText, filePath, infoMan);
+    if (this.parser is null)
+      this.parser = new Parser(loadFile(filePath), filePath, infoMan);
 
     this.root = parser.start();
 
@@ -91,7 +83,7 @@ class Module : ScopeSymbol
     return parser.errors.length || parser.lexer.errors.length;
   }
 
-  string[] getImports()
+  string[] getImportPaths()
   {
     string[] result;
     foreach (import_; imports)
@@ -99,6 +91,8 @@ class Module : ScopeSymbol
     return result;
   }
 
+  /// Returns the fully qualified name of this module.
+  /// E.g.: dil.ast.Node
   string getFQN()
   {
     return moduleFQN;
@@ -117,11 +111,14 @@ class Module : ScopeSymbol
     this.moduleName = moduleFQN[(i == 0 ? 0 : i+1) .. $];
   }
 
+  /// Returns e.g. the FQN with slashes instead of dots.
+  /// E.g.: dil/ast/Node
   string getFQNPath()
   {
-    if (packageName.length)
-      return packageName ~ dirSep ~ moduleName;
-    else
-      return moduleName;
+    string FQNPath = moduleFQN.dup;
+    foreach (i, c; FQNPath)
+      if (c == '.')
+        FQNPath[i] = dirSep;
+    return FQNPath;
   }
 }
