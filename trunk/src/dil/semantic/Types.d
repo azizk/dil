@@ -4,7 +4,7 @@
 +/
 module dil.semantic.Types;
 
-import dil.semantic.Symbols;
+import dil.semantic.Symbol;
 import dil.semantic.TypesEnum;
 import dil.lexer.Identifier;
 import dil.CompilerInfo;
@@ -99,8 +99,8 @@ class TypeReference : Type
 
 class TypeEnum : Type
 {
-  Enum enumSymbol;
-  this(Enum enumSymbol, Type baseType)
+  Symbol enumSymbol;
+  this(Symbol enumSymbol, Type baseType)
   {
     super(baseType, TYP.Enum);
     this.enumSymbol = enumSymbol;
