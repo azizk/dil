@@ -60,34 +60,40 @@ class Graph
     vertices ~= vertex;
   }
 
-  void addEdge(Vertex from, Vertex to)
+  Edge addEdge(Vertex from, Vertex to)
   {
-    edges ~= new Edge(from, to);
+    auto edge = new Edge(from, to);
+    edges ~= edge;
     from.outgoing ~= to;
     to.incoming ~= from;
+    return edge;
   }
 
   /// Walks the graph and marks cyclic vertices and edges.
   void detectCycles()
   { // Cycles could also be detected in the GraphBuilder,
     // but having the code here makes things much clearer.
+
+    // Returns true if the vertex is in status Visiting.
     bool visit(Vertex vertex)
     {
-      if (vertex.status == Vertex.Status.Visiting)
+      switch (vertex.status)
       {
+      case Vertex.Status.Visiting:
         vertex.isCyclic = true;
         return true;
+      case Vertex.Status.None:
+        vertex.status = Vertex.Status.Visiting; // Flag as visiting.
+        foreach (outVertex; vertex.outgoing)    // Visit successors.
+          vertex.isCyclic |= visit(outVertex);
+        vertex.status = Vertex.Status.Visited;  // Flag as visited.
+        break;
+      case Vertex.Status.Visited:
+        break;
+      default:
+        assert(0, "unknown vertex status");
       }
-      if (vertex.status == Vertex.Status.Visited)
-        return false;
-      // Flag as visiting.
-      vertex.status = Vertex.Status.Visiting;
-      // Visit successors.
-      foreach (outVertex; vertex.outgoing)
-        vertex.isCyclic |= visit(outVertex);
-      // Flag as visited.
-      vertex.status = Vertex.Status.Visited;
-      return false;
+      return false; // return (vertex.status == Vertex.Status.Visiting);
     }
     // Start visiting vertices.
     visit(vertices[0]);
@@ -101,9 +107,11 @@ class Graph
 /// Represents a directed connection between two vertices.
 class Edge
 {
-  Vertex from; /// Coming from vertex.
-  Vertex to; /// Going to vertex.
-  bool isCyclic;
+  Vertex from;   /// Coming from vertex.
+  Vertex to;     /// Going to vertex.
+  bool isCyclic; /// Edge connects cyclic vertices.
+  bool isPublic; /// Public import.
+  bool isStatic; /// Static import.
 
   this(Vertex from, Vertex to)
   {
@@ -115,11 +123,11 @@ class Edge
 /// Represents a module in the graph.
 class Vertex
 {
-  Module modul; /// The module represented by this vertex.
-  uint id; /// The nth vertex in the graph.
+  Module modul;      /// The module represented by this vertex.
+  uint id;           /// The nth vertex in the graph.
   Vertex[] incoming; /// Also called predecessors.
   Vertex[] outgoing; /// Also called successors.
-  bool isCyclic; /// Whether this vertex is in a cyclic relationship with other vertices.
+  bool isCyclic;     /// Whether this vertex is in a cyclic relationship with other vertices.
 
   enum Status : ubyte
   { None, Visiting, Visited }
@@ -153,14 +161,17 @@ class GraphBuilder
   +/
   Vertex loadModule(string moduleFQNPath)
   {
-    // Filter out modules.
-    if (filterPredicate(moduleFQNPath))
-      return null;
-
     // Look up in table if the module is already loaded.
     auto pVertex = moduleFQNPath in loadedModulesTable;
     if (pVertex !is null)
-      return *pVertex; // Return already loaded module.
+      return *pVertex; // Returns null for filtered or unlocatable modules.
+
+    // Filter out modules.
+    if (filterPredicate && filterPredicate(moduleFQNPath))
+    { // Store null for filtered modules.
+      loadedModulesTable[moduleFQNPath] = null;
+      return null;
+    }
 
     // Locate the module in the file system.
     auto moduleFilePath = findModulePath(moduleFQNPath, importPaths);
@@ -175,8 +186,9 @@ class GraphBuilder
         vertex.modul = new Module("");
         vertex.modul.setFQN(replace(moduleFQNPath, dirSep, '.'));
         graph.addVertex(vertex);
-        loadedModulesTable[moduleFQNPath] = vertex;
       }
+      // Store vertex in the table (vertex may be null.)
+      loadedModulesTable[moduleFQNPath] = vertex;
     }
     else
     {
@@ -190,12 +202,20 @@ class GraphBuilder
 
       graph.addVertex(vertex);
       loadedModulesTable[modul.getFQNPath()] = vertex;
-      // Load modules which this module depends on.
-      foreach (moduleFQNPath_; modul.getImportPaths())
+
+      // Load the modules which this module depends on.
+      foreach (importDecl; modul.imports)
       {
-        auto loaded = loadModule(moduleFQNPath_);
-        if (loaded !is null)
-          graph.addEdge(vertex, loaded);
+        foreach (moduleFQNPath2; importDecl.getModuleFQNs(dirSep))
+        {
+          auto loaded = loadModule(moduleFQNPath2);
+          if (loaded !is null)
+          {
+            auto edge = graph.addEdge(vertex, loaded);
+            edge.isPublic = importDecl.isPublic();
+            edge.isStatic = importDecl.isStatic();
+          }
+        }
       }
     }
     return vertex;
@@ -224,7 +244,7 @@ void execute(string filePathString, string[] importPaths, string[] strRegexps, u
   gbuilder.filterPredicate = (string moduleFQNPath) {
     foreach (rx; regexps)
       // Replace slashes: dil/ast/Node -> dil.ast.Node
-      if (rx.test(replace(moduleFQNPath, dirSep, '.')))
+      if (rx.test(replace(moduleFQNPath.dup, dirSep, '.')))
         return true;
     return false;
   };
