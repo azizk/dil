@@ -32,23 +32,6 @@ enum IGraphOption
   MarkCyclicModules         = 1<<8,
 }
 
-string findModulePath(string moduleFQNPath, string[] importPaths)
-{
-  auto filePath = new FilePath();
-  foreach (importPath; importPaths)
-  {
-    filePath.set(importPath);
-    filePath.append(moduleFQNPath);
-    foreach (moduleSuffix; [".d", ".di"/*interface file*/])
-    {
-      filePath.suffix(moduleSuffix);
-      if (filePath.exists())
-        return filePath.toString();
-    }
-  }
-  return null;
-}
-
 class Graph
 {
   Vertex[] vertices;
@@ -134,6 +117,23 @@ class Vertex
   Status status; /// Used by the cycle detection algorithm.
 }
 
+string findModuleFilePath(string moduleFQNPath, string[] importPaths)
+{
+  auto filePath = new FilePath();
+  foreach (importPath; importPaths)
+  {
+    filePath.set(importPath);
+    filePath.append(moduleFQNPath);
+    foreach (moduleSuffix; [".d", ".di"/*interface file*/])
+    {
+      filePath.suffix(moduleSuffix);
+      if (filePath.exists())
+        return filePath.toString();
+    }
+  }
+  return null;
+}
+
 class GraphBuilder
 {
   Graph graph;
@@ -174,7 +174,7 @@ class GraphBuilder
     }
 
     // Locate the module in the file system.
-    auto moduleFilePath = findModulePath(moduleFQNPath, importPaths);
+    auto moduleFilePath = findModuleFilePath(moduleFQNPath, importPaths);
 
     Vertex vertex;
 
@@ -222,7 +222,8 @@ class GraphBuilder
   }
 }
 
-void execute(string filePathString, string[] importPaths, string[] strRegexps, uint levels, IGraphOption options)
+void execute(string filePathString, string[] importPaths, string[] strRegexps,
+             uint levels, string siStyle, string piStyle, IGraphOption options)
 {
   // Init regular expressions.
   RegExp[] regexps;
@@ -262,7 +263,7 @@ void execute(string filePathString, string[] importPaths, string[] strRegexps, u
       printModuleList(graph.vertices, levels+1, "");
   }
   else
-    printDotDocument(graph, options);
+    printDotDocument(graph, siStyle, piStyle, options);
 }
 
 void printModulePaths(Vertex[] vertices, uint level, char[] indent)
@@ -289,7 +290,8 @@ void printModuleList(Vertex[] vertices, uint level, char[] indent)
   }
 }
 
-void printDotDocument(Graph graph, IGraphOption options)
+void printDotDocument(Graph graph, string siStyle, string piStyle,
+                      IGraphOption options)
 {
   Vertex[][string] verticesByPckgName;
   if (options & IGraphOption.GroupByFullPackageName)
@@ -306,9 +308,22 @@ void printDotDocument(Graph graph, IGraphOption options)
   // 'i' and vertex.id should be the same.
   foreach (i, vertex; graph.vertices)
     Stdout.formatln(`  n{} [label="{}"{}];`, i, vertex.modul.getFQN(), (vertex.isCyclic ? ",style=filled,fillcolor=tomato" : ""));
+
   // Output edges.
   foreach (edge; graph.edges)
-    Stdout.formatln(`  n{} -> n{}{};`, edge.from.id, edge.to.id, (edge.isCyclic ? "[color=red]" : ""));
+  {
+    string edgeStyles = "";
+    if (edge.isStatic || edge.isPublic)
+    {
+      edgeStyles = `[style="`;
+      edge.isStatic && (edgeStyles ~= siStyle ~ ",");
+      edge.isPublic && (edgeStyles ~= piStyle);
+      edgeStyles[$-1] == ',' && (edgeStyles = edgeStyles[0..$-1]); // Remove last comma.
+      edgeStyles ~= `"]`;
+    }
+    edge.isCyclic && (edgeStyles ~= "[color=red]");
+    Stdout.formatln(`  n{} -> n{} {};`, edge.from.id, edge.to.id, edgeStyles);
+  }
 
   if (options & IGraphOption.GroupByFullPackageName)
     foreach (packageName, vertices; verticesByPckgName)

@@ -106,6 +106,8 @@ void main(char[][] args)
     string filePath;
     string[] includePaths;
     string[] regexps;
+    string siStyle = "dashed"; // static import style
+    string piStyle = "bold";   // public import style
     uint levels;
     IGraphOption options;
     foreach (arg; args[2..$])
@@ -116,6 +118,10 @@ void main(char[][] args)
         regexps ~= arg[2..$];
       else if(strbeg(arg, "-l"))
         levels = Integer.toInt(arg[2..$]);
+      else if(strbeg(arg, "-si"))
+        siStyle = arg[3..$];
+      else if(strbeg(arg, "-pi"))
+        piStyle = arg[3..$];
       else
         switch (arg)
         {
@@ -141,7 +147,7 @@ void main(char[][] args)
           filePath = arg;
         }
     }
-    cmd.ImportGraph.execute(filePath, includePaths, regexps, levels, options);
+    cmd.ImportGraph.execute(filePath, includePaths, regexps, levels, siStyle, piStyle, options);
     break;
   case "stats", "statistics":
     char[][] filePaths;
@@ -307,7 +313,40 @@ Example:
     msg = GetMsg(MID.HelpGenerate);
     break;
   case "importgraph", "igraph":
-    msg = GetMsg(MID.HelpImportGraph);
+//     msg = GetMsg(MID.HelpImportGraph);
+    msg = `Parse a module and build a module dependency graph based on its imports.
+Usage:
+  dil igraph file.d Format [Options]
+
+  The directory of file.d is implicitly added to the list of import paths.
+
+Format:
+  --dot            : generate a dot document
+  Options related to --dot:
+  -gbp             : Group modules by package names
+  -gbf             : Group modules by full package name
+  -hle             : highlight cyclic edges in the graph
+  -hlv             : highlight modules in cyclic relationships
+  -siSTYLE         : the edge style to use for static imports
+  -piSTYLE         : the edge style to use for public imports
+  STYLE can be: "dashed", "dotted", "solid", "invis" or "bold"
+
+  --paths          : print the file paths of the modules in the graph
+
+  --list           : print the names of the module in the graph
+  Options common to --paths and --list:
+  -lN              : print N levels.
+  -m               : use '*' to mark modules in cyclic relationships
+
+Options:
+  -Ipath           : add 'path' to the list of import paths where modules are
+                     looked for
+  -rREGEXP         : exclude modules whose names match the regular expression
+                     REGEXP
+  -i               : include unlocatable modules
+
+Example:
+  dil igraph src/main.d`;
     break;
   case "tok", "tokenize":
     msg = `Print the tokens of a D source file.
