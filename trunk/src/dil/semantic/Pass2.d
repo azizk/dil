@@ -77,30 +77,33 @@ override
 
   D visit(MixinDeclaration md)
   {
-    /+
-    if (type)
-      return this.expr;
-    // TODO:
-    auto expr = this.expr.semantic(scop);
-    expr = expr.evaluate();
-    if (expr is null)
-      return this;
-    auto strExpr = TryCast!(StringExpression)(expr);
-    if (strExpr is null)
-     error(scop, MSG.MixinArgumentMustBeString);
+    if (md.decls)
+      return md.decls;
+    if (md.isMixinExpression)
+    {
+      md.argument = visitE(md.argument);
+      auto expr = Interpreter.interpret(md.argument, modul.infoMan, scop);
+      if (expr is Interpreter.NAR)
+        return md;
+      auto stringExpr = expr.Is!(StringExpression);
+      if (stringExpr is null)
+      {
+        error(md.begin, MSG.MixinArgumentMustBeString);
+        return md;
+      }
+      else
+      { // Parse the declarations in the string.
+        auto loc = md.begin.getErrorLocation();
+        auto filePath = loc.filePath;
+        auto parser = new Parser(stringExpr.getString(), filePath, modul.infoMan);
+        md.decls = parser.start();
+      }
+    }
     else
     {
-      auto loc = this.begin.getErrorLocation();
-      auto filePath = loc.filePath;
-      auto parser = new_ExpressionParser(strExpr.getString(), filePath, scop.infoMan);
-      expr = parser.parse();
-      expr = expr.semantic(scop);
+      // TODO: implement template mixin.
     }
-    this.expr = expr;
-    this.type = expr.type;
-    return expr;
-    +/
-    return md;
+    return md.decls;
   }
 
   T visit(TypeofType t)
@@ -228,7 +231,7 @@ override
 
   E visit(RealExpression e)
   {
-    if (e.type)
+    if (!e.type)
       e.type = Types.Double;
     return e;
   }

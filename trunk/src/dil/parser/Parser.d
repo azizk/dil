@@ -1376,14 +1376,14 @@ class Parser
     return type;
   }
 
-  /*
+  /++
     TemplateMixin:
             mixin ( AssignExpression ) ;
             mixin TemplateIdentifier ;
             mixin TemplateIdentifier MixinIdentifier ;
             mixin TemplateIdentifier !( TemplateArguments ) ;
             mixin TemplateIdentifier !( TemplateArguments ) MixinIdentifier ;
-  */
+  +/
   Class parseMixin(Class)()
   {
     assert(token.kind == T.Mixin);

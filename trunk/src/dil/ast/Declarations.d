@@ -616,9 +616,12 @@ class PragmaDeclaration : AttributeDeclaration
 
 class MixinDeclaration : Declaration
 {
+  /// IdExpression := IdentifierExpression | TemplateInstanceExpression
+  /// MixinTemplate := IdExpression ("." IdExpression)*
   Expression templateExpr;
-  Identifier* mixinIdent;
-  Expression argument; // mixin ( AssignExpression )
+  Identifier* mixinIdent; /// Optional mixin identifier.
+  Expression argument; /// "mixin" "(" AssignExpression ")"
+  Declaration decls; /// Initialized in the semantic phase.
 
   this(Expression templateExpr, Identifier* mixinIdent)
   {
@@ -635,5 +638,10 @@ class MixinDeclaration : Declaration
     addChild(argument);
 
     this.argument = argument;
+  }
+
+  bool isMixinExpression()
+  {
+    return argument !is null;
   }
 }
