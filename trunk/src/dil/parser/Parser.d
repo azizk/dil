@@ -19,12 +19,12 @@ import dil.CompilerInfo;
 import common;
 
 /++
-  The Parser produces a full parse tree by analyzing
-  the tokens of the provided source code.
+  The Parser produces a full parse tree by examining
+  the list of tokens provided by the Lexer.
 +/
 class Parser
 {
-  Lexer lexer;
+  Lexer lexer; /// Used to lex the source code.
   Token* token; /// Current non-whitespace token.
   Token* prevToken; /// Previous non-whitespace token.
 
@@ -48,6 +48,7 @@ class Parser
     Params:
       text     = the UTF-8 source code.
       filePath = the path to the source code; used for error messages.
+      infoMan  = used for collecting error messages.
   +/
   this(char[] srcText, string filePath, InfoManager infoMan = null)
   {
@@ -55,12 +56,14 @@ class Parser
     lexer = new Lexer(srcText, filePath, infoMan);
   }
 
+  /// Moves to the first token.
   protected void init()
   {
     nT();
     prevToken = token;
   }
 
+  /// Moves to the next token.
   void nT()
   {
     prevToken = token;
@@ -71,9 +74,7 @@ class Parser
     } while (token.isWhitespace) // Skip whitespace
   }
 
-  /++
-    Start the parser and return the parsed Declarations.
-  +/
+  /// Start the parser and return the parsed Declarations.
   CompoundDeclaration start()
   {
     init();
@@ -86,17 +87,16 @@ class Parser
     return decls;
   }
 
-  /++
-    Start the parser and return the parsed Expression.
-  +/
+  /// Start the parser and return the parsed Expression.
   Expression start2()
   {
     init();
     return parseExpression();
   }
 
-  uint trying;
-  uint errorCount;
+  // Members related to the method try_().
+  uint trying; /// Greater than 0 if Parser is in try_().
+  uint errorCount; /// Used to track nr. of errors while being in try_().
 
   /++
     This method executes the delegate parseMethod and when an error occurred
@@ -104,6 +104,7 @@ class Parser
   +/
   ReturnType try_(ReturnType)(ReturnType delegate() parseMethod, out bool success)
   {
+    // Save members.
     auto oldToken     = this.token;
     auto oldPrevToken = this.prevToken;
     auto oldCount     = this.errorCount;
@@ -113,12 +114,11 @@ class Parser
     --trying;
     // Check if an error occurred.
     if (errorCount != oldCount)
-    {
-      // Restore members.
-      token      = oldToken;
-      prevToken  = oldPrevToken;
-      lexer.token   = oldToken;
-      errorCount = oldCount;
+    { // Restore members.
+      token       = oldToken;
+      prevToken   = oldPrevToken;
+      lexer.token = oldToken;
+      errorCount  = oldCount;
       success = false;
     }
     else
@@ -126,23 +126,20 @@ class Parser
     return result;
   }
 
-  /++
-    Sets the begin and end tokens of an AST node.
-  +/
+  /// Sets the begin and end tokens of a syntax tree node.
   Class set(Class)(Class node, Token* begin)
   {
     node.setTokens(begin, this.prevToken);
     return node;
   }
 
-  /++
-    Returns true if set() has been called on a node.
-  +/
-  bool isNodeSet(Node node)
+  /// Returns true if set() has been called on a node.
+  static bool isNodeSet(Node node)
   {
     return node.begin !is null && node.end !is null;
   }
 
+  /// Returns the token kind of the next token.
   TOK peekNext()
   {
     Token* next = token;
@@ -152,6 +149,7 @@ class Parser
     return next.kind;
   }
 
+  /// Returns the token kind of the token after 'next'.
   TOK peekAfter(ref Token* next)
   {
     assert(next !is null);
@@ -161,15 +159,15 @@ class Parser
     return next.kind;
   }
 
-  /// Skips the current token if its type matches tok and returns true.
-  bool skipped()(TOK tok) // Templatized, so it's inlined.
+  /// Skips the current token if it is of a certain kind and returns true.
+  bool skipped()(TOK kind) // Templatized, so it's inlined.
   {
-    return token.kind == tok ? (nT(), true) : false;
+    return token.kind == kind ? (nT(), true) : false;
   }
 
-  /++++++++++++++++++++++++++++++
-  + Declaration parsing methods +
-  ++++++++++++++++++++++++++++++/
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                        Declaration parsing methods                        |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   Declaration parseModuleDeclaration()
   {
@@ -933,35 +931,24 @@ class Parser
     Identifier*[] bindNames;
     Identifier*[] bindAliases;
 
-    while (1)
+    do
     {
       ModuleFQN moduleFQN;
       Identifier* moduleAlias;
-
       // AliasName = ModuleName
       if (peekNext() == T.Assign)
       {
         moduleAlias = requireIdentifier(MSG.ExpectedAliasModuleName);
         nT(); // Skip =
       }
-
-      // Identifier(.Identifier)*
-      while (1)
-      {
+      // Identifier ("." Identifier)*
+      do
         moduleFQN ~= requireIdentifier(MSG.ExpectedModuleIdentifier);
-        if (token.kind != T.Dot)
-          break;
-        nT();
-      }
-
+      while (skipped(T.Dot))
       // Push identifiers.
       moduleFQNs ~= moduleFQN;
       moduleAliases ~= moduleAlias;
-
-      if (token.kind != T.Comma)
-        break;
-      nT();
-    }
+    } while (skipped(T.Comma))
 
     if (token.kind == T.Colon)
     {
@@ -1386,6 +1373,7 @@ class Parser
   +/
   Class parseMixin(Class)()
   {
+  static assert(is(Class == MixinDeclaration) || is(Class == MixinStatement));
     assert(token.kind == T.Mixin);
     nT(); // Skip mixin keyword.
 
@@ -1418,9 +1406,9 @@ class Parser
     return new Class(e, mixinIdent);
   }
 
-  /+++++++++++++++++++++++++++++
-  + Statement parsing methods  +
-  +++++++++++++++++++++++++++++/
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                         Statement parsing methods                         |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   CompoundStatement parseStatements()
   {
@@ -1610,9 +1598,7 @@ class Parser
       nT();
       s = new EmptyStatement();
       break;
-    /+
-      Parse ExpressionStatement:
-    +/
+    // Parse an ExpressionStatement:
     // Tokens that start a PrimaryExpression.
     // case T.Identifier, T.Dot, T.Typeof:
     case T.This:
@@ -1729,8 +1715,7 @@ class Parser
     StorageClass stc, stc_tmp;
     LinkageType prev_linkageType;
 
-    // Nested function.
-    Declaration parse()
+    Declaration parse() // Nested function.
     {
       auto begin = token;
       Declaration d;
@@ -2267,9 +2252,9 @@ class Parser
     return new VersionStatement(cond, versionBody, elseBody);
   }
 
-  /+++++++++++++++++++++++++++++
-  + Assembler parsing methods  +
-  +++++++++++++++++++++++++++++/
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                         Assembler parsing methods                         |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   Statement parseAsmBlockStatement()
   {
@@ -2299,8 +2284,7 @@ class Parser
       ident = token.ident;
       nT(); // Skip Identifier
       if (skipped(T.Colon))
-      {
-        // Identifier : AsmStatement
+      { // Identifier : AsmStatement
         s = new LabeledStatement(ident, parseAsmStatement());
         break;
       }
@@ -2709,9 +2693,9 @@ class Parser
     return e;
   }
 
-  /+++++++++++++++++++++++++++++
-  + Expression parsing methods +
-  +++++++++++++++++++++++++++++/
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                        Expression parsing methods                         |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   Expression parseExpression()
   {
@@ -3258,8 +3242,8 @@ class Parser
       e = new FunctionLiteralExpression(funcBody);
       break;
     case T.Function, T.Delegate:
-      // FunctionLiteral := (function|delegate) Type? '(' ArgumentList ')' '{' Statements '}'
-      nT(); // Skip function|delegate token.
+      // FunctionLiteral := ("function"|"delegate") Type? "(" ArgumentList ")" FunctionBody
+      nT(); // Skip function or delegate keyword.
       Type returnType;
       Parameters parameters;
       if (token.kind != T.LBrace)
@@ -3594,8 +3578,8 @@ class Parser
   {
     // The Type chain should be as follows:
     // int[3]* Identifier [][32]
-    //   <- <-              ->  -.
-    //       ^------------------´
+    //   <- <-             ->  -.
+    //       ^-----------------´
     // Resulting chain: [][32]*[3]int
     Type parseNext() // Nested function required to accomplish this.
     {
