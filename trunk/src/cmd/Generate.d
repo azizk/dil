@@ -186,7 +186,7 @@ auto html_tags = [
   // StringLiteral
   `<span class="sl">{0}</span>`,
   // CharLiteral
-  `<span class="cl">{0}</span>`,
+  `<span class="chl">{0}</span>`,
   // Operator
   `<span class="op">{0}</span>`,
   // LorG
@@ -507,8 +507,7 @@ void printToken(Token* token, string[] tags, Print!(char) print)
     break;
   case TOK.Not:
     // Check if this is part of a template instantiation.
-    // TODO: comments aren't skipped. Use Token.nextNWS and Token.prevNWS
-    if (token.prev.kind == TOK.Identifier && token.next.kind == TOK.LParen)
+    if (token.prevNWS.kind == TOK.Identifier && token.nextNWS.kind == TOK.LParen)
       goto default;
     print(tags[DP.Not]);
     break;

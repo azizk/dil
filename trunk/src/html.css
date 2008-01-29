@@ -25,7 +25,7 @@
 /* String literal */
 .sl { color: red; }
 /* Character literal */
-.cl { color: purple; }
+.chl { color: purple; }
 /* All bracket types */
 .br { color: orange; }
 /* Special tokens */
