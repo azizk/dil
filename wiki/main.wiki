@@ -1,12 +1,12 @@
 Note: the Subversion repository is out of date. The code was migrated to [http://hg.sharesource.org/dil/ Mercurial].
 =Purpose=
-dil is a hand-crafted compiler implementation for the D programming language written in D 1.0. The lexer and the parser are fully implemented. Semantic analysis is being worked on. The backend will most probably be gcc or [http://llvm.org LLVM].
+dil is a hand-crafted compiler implementation for the D programming language written in D 1.0 using the [http://dsource.org/projects/tango Tango] standard library. The lexer and the parser are fully implemented. Semantic analysis is being worked on. The backend will most probably be gcc or [http://llvm.org LLVM].
 
 What dil can do at the moment:
   * dil is fully internationalized and can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in config.d.
-  * Generate XML or HTML documents. You can choose to generate tags for tokens only or you can also have the whole parse tree unparsed. The whitespace of the original source file is preserved. You can view the HTML documents in any browser you like. The XML documents can only be viewed in W3C-standards compatible browsers(`*`) in combination with an XML formatting CSS document. dil provides two ordinary CSS documents (for XML/HTML) which can be customized to one's heart's content. (`*`Note: Internet Explorer is the only browser that spectacularly fails at this job.)
-  * Generate module dependency graphs in the dot format. Demo [http://dil.googlecode.com/files/main.dot dot file]: rendered in [http://dil.googlecode.com/files/main.svg SVG], [http://dil.googlecode.com/files/main.png PNG] (1.3MB) or [http://dil.googlecode.com/files/main.gif GIF]. Cyclic edges and nodes are highlighted in red. (Note: the images are old. [http://dsource.org/projects/tango Tango] is used instead of Phobos now.)
-  * Generate simple code statistics (lines of code, number of whitespace characters etc.) When dil has advanced enough [http://www.aivosto.com/project/help/pm-oo-ck.html OO-metrics] will be supported.
+  * Generate XML or HTML documents. You can choose to generate tags for tokens only or you can also have the whole parse tree unparsed. The whitespace of the original source file is preserved. You can view the HTML documents in any browser you like. The XML documents can only be viewed in W3C-standards compatible browsers(`*`) in combination with an XML formatting CSS document. dil provides two ordinary CSS documents (for XML/HTML) which can be customized to one's heart's content. Example: dil's source code in [http://dil.googlecode.com/files/xml_rev709.zip XML] or [http://dil.googlecode.com/files/html_rev709.zip HTML]. (`*`Note: Internet Explorer is the only browser that spectacularly fails at this job.)
+  * Produce module dependency graphs using the graphviz dot format. For example, see the [http://dil.googlecode.com/files/main.2.dot dot file] of dil: rendered in [http://dil.googlecode.com/files/main.2.svg SVG], [http://dil.googlecode.com/files/main.2.png PNG] (2.7MB) or [http://dil.googlecode.com/files/main.2.gif GIF]. Cyclic edges (import statements) and nodes (modules) are highlighted in red. The edges of public imports are bold.
+  * Output code statistics (lines of code, count syntax tree nodes and tokens, number of whitespace characters etc.) When dil has advanced enough [http://www.aivosto.com/project/help/pm-oo-ck.html OO-metrics] will be supported. Example: [http://dil.googlecode.com/files/stats_dstress_r1835_2.txt dstress] (1.5MB text; totals are at the bottom)
 
   * dil can parse D 2.0 additions:
     * Delimited and token [http://www.digitalmars.com/d/lex.html#StringLiteral string literals].
@@ -14,13 +14,13 @@ What dil can do at the moment:
     * Optional [http://www.digitalmars.com/d/expression.html#IsExpression TemplateParameterList in IsExpression].
     * const and invariant in !IsExpressions.
     * [http://www.digitalmars.com/d/template.html#TemplateThisParameter TemplateThisParameter].
-    * Cast expressions: cast(const) and cast(invariant).
-    * Type constructors: const(Type) and invariant(Type).
+    * Cast expressions: `cast(const)` and `cast(invariant)`.
+    * Type constructors: `const(Type)` and `invariant(Type)`.
     * const and invariant attributes after the parameter list of a function (C++ style.)
-    * typeof(return).
-    * Traits expressions: `__`traits(Identifier) and `__`traits(Identifier, !TemplateArguments).
-    * const/invariant/final/scope/static as storage classes in parameter lists (e.g. void func(final scope Foo f);).
-    * invariant as a storage class for declarations (e.g. invariant Foo f;).
+    * `typeof(return)`.
+    * Traits expressions: `__traits(Identifier)` and `__traits(Identifier, TemplateArguments)`.
+    * const/invariant/final/scope/static as storage classes in parameter lists (e.g. `void func(ref const Foo f);`).
+    * invariant as a storage class for declarations (e.g. `invariant Foo f;`).
     * The identifier `__EOF__` is interpreted as the end of file.
 
 Features you will or might see in dil:
@@ -44,4 +44,3 @@ If you want to get the sources you can either check it out via SVN (`svn co http
 Note: For practical and technical reasons I've decided to change the source code management system from Subversion (SVN) to Mercurial (hg).
 I managed converting the old svn repository to an hg repository with the help of two fine persons at irc.freenode.net/#mercurial.
 Since the Google Code services don't support Mercurial repositories yet (please see [http://code.google.com/p/support/issues/detail?id=415 bug report]), I have decided to register at [http://sharesource.org sharesource.org] and have my hg repository hosted there for the time being. From now on development will continue in the [http://hg.sharesource.org/dil/ new Mercurial repository].
-However, I'll try to find a way to synchronize it with the svn repository, so that tools like DSSS can still fetch up to date versions.
