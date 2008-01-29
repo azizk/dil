@@ -192,6 +192,8 @@ class EnumMemberDeclaration : Declaration
     this.name = name;
     this.value = value;
   }
+
+  EnumMember symbol;
 }
 
 class TemplateDeclaration : Declaration

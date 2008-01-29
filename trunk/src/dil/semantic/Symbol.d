@@ -17,6 +17,7 @@ enum SYM
   Struct,
   Union,
   Enum,
+  EnumMember,
   Template,
   Variable,
   Function,
@@ -45,20 +46,21 @@ class Symbol
   }
 
   // A template macro for building isXYZ() methods.
-  private template is_(char[] kind)
+  private template isX(char[] kind)
   {
-    const char[] is_ = `bool is`~kind~`(){ return sid == SYM.`~kind~`; }`;
+    const char[] isX = `bool is`~kind~`(){ return sid == SYM.`~kind~`; }`;
   }
-  mixin(is_!("Module"));
-  mixin(is_!("Class"));
-  mixin(is_!("Interface"));
-  mixin(is_!("Struct"));
-  mixin(is_!("Union"));
-  mixin(is_!("Enum"));
-  mixin(is_!("Template"));
-  mixin(is_!("Variable"));
-  mixin(is_!("Function"));
-  mixin(is_!("Alias"));
-  mixin(is_!("OverloadSet"));
-//   mixin(is_!("Type"));
+  mixin(isX!("Module"));
+  mixin(isX!("Class"));
+  mixin(isX!("Interface"));
+  mixin(isX!("Struct"));
+  mixin(isX!("Union"));
+  mixin(isX!("Enum"));
+  mixin(isX!("EnumMember"));
+  mixin(isX!("Template"));
+  mixin(isX!("Variable"));
+  mixin(isX!("Function"));
+  mixin(isX!("Alias"));
+  mixin(isX!("OverloadSet"));
+//   mixin(isX!("Type"));
 }

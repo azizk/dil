@@ -68,11 +68,41 @@ class SemanticPass2 : DefaultVisitor
   private alias Statement S;
   private alias TypeNode T;
 
+  /// The scope symbol to use in identifier or template instance expressions.
+  /// E.g.: object.method(); // After 'object' has been visited, dotIdScope is
+  ///                        // set, and 'method' will be looked up there.
+  ScopeSymbol dotIdScope;
+
 override
 {
   D visit(CompoundDeclaration d)
   {
     return super.visit(d);
+  }
+
+  D visit(EnumDeclaration d)
+  {
+    Type type = Types.Int; // Default to int.
+    if (d.baseType)
+      type = visitT(d.baseType).type;
+    d.symbol.type = new TypeEnum(d.symbol, type);
+    enterScope(d.symbol);
+    foreach (member; d.members)
+    {
+      Expression finalValue;
+      if (member.value)
+      {
+        member.value = visitE(member.value);
+        finalValue = Interpreter.interpret(member.value, modul.infoMan, scop);
+        if (finalValue is Interpreter.NAR)
+          continue;
+      }
+      //else
+        // TODO: increment a number variable and assign that to value.
+      member.symbol.value = finalValue;
+    }
+    exitScope();
+    return d;
   }
 
   D visit(MixinDeclaration md)

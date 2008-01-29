@@ -72,41 +72,53 @@ class SemanticPass1 : Visitor
   }
 
   /// Insert a symbol into the current scope.
-  void insert(Symbol sym, Identifier* ident)
+  void insert(Symbol sym, Identifier* name)
   {
-    auto sym2 = scop.symbol.lookup(ident);
+    auto sym2 = scop.symbol.lookup(name);
     if (sym2)
-      reportSymbolConflict(sym, sym2, ident);
+      reportSymbolConflict(sym, sym2, name);
     else
-      scop.symbol.insert(sym, ident);
+      scop.symbol.insert(sym, name);
     // Set the current scope symbol as the parent.
     sym.parent = scop.symbol;
   }
 
-  /// Insert a symbol, overloading on the name, into the current scope.
-  void insertOverload(Symbol sym, Identifier* ident)
+  /// Insert a symbol into scopeSym.
+  void insert(Symbol symbol, ScopeSymbol scopeSym)
   {
-    auto sym2 = scop.symbol.lookup(ident);
+    auto symX = scopeSym.lookup(symbol.name);
+    if (symX)
+      reportSymbolConflict(symbol, symX, symbol.name);
+    else
+      scopeSym.insert(symbol, symbol.name);
+    // Set the current scope symbol as the parent.
+    symbol.parent = scopeSym;
+  }
+
+  /// Insert a symbol, overloading on the name, into the current scope.
+  void insertOverload(Symbol sym, Identifier* name)
+  {
+    auto sym2 = scop.symbol.lookup(name);
     if (sym2)
     {
       if (sym2.isOverloadSet)
         (cast(OverloadSet)cast(void*)sym2).add(sym);
       else
-        reportSymbolConflict(sym, sym2, ident);
+        reportSymbolConflict(sym, sym2, name);
     }
     else
       // Create a new overload set.
-      scop.symbol.insert(new OverloadSet(ident, sym.node), ident);
+      scop.symbol.insert(new OverloadSet(name, sym.node), name);
     // Set the current scope symbol as the parent.
     sym.parent = scop.symbol;
   }
 
   /// Report error: new symbol s1 conflicts with existing symbol s2.
-  void reportSymbolConflict(Symbol s1, Symbol s2, Identifier* ident)
+  void reportSymbolConflict(Symbol s1, Symbol s2, Identifier* name)
   {
     auto loc = s2.node.begin.getErrorLocation();
     auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
-    error(s1.node.begin, MSG.DeclConflictsWithDecl, ident.str, locString);
+    error(s1.node.begin, MSG.DeclConflictsWithDecl, name.str, locString);
   }
 
   void error(Token* token, char[] formatMsg, ...)
@@ -186,24 +198,30 @@ override
   {
     // Create the symbol.
     d.symbol = new Enum(d.name, d);
-    if (d.name)
-    { // Declare named enum.
-      insert(d.symbol, d.name);
-      enterScope(d.symbol);
-    }
+    auto isAnonymous = d.name is null;
+    if (isAnonymous)
+      d.symbol.name = IdTable.genAnonEnumID();
+    insert(d.symbol, d.name);
+    auto parentScopeSymbol = scop.symbol;
+    enterScope(d.symbol);
     // Declare members.
     foreach (member; d.members)
     {
-      auto variable = new Variable(member.name, protection, storageClass, linkageType, member);
-      insert(variable, variable.name);
+      visitD(member);
+      if (isAnonymous) // Also insert into parent scope if enum is anonymous.
+        insert(member.symbol, parentScopeSymbol);
+      member.symbol.parent = d.symbol;
     }
-    if (d.name)
-      exitScope();
+    exitScope();
     return d;
   }
 
-  D visit(EnumMemberDeclaration)
-  { return null; }
+  D visit(EnumMemberDeclaration d)
+  {
+    d.symbol = new EnumMember(d.name, protection, storageClass, linkageType, d);
+    insert(d.symbol, d.symbol.name);
+    return d;
+  }
 
   D visit(ClassDeclaration d)
   {

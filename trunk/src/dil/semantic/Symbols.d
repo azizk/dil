@@ -4,6 +4,7 @@
 +/
 module dil.semantic.Symbols;
 
+import dil.ast.Expression;
 import dil.semantic.Symbol;
 import dil.semantic.SymbolTable;
 import dil.semantic.Types;
@@ -136,6 +137,7 @@ class Variable : Symbol
   LinkageType linkType; /// The linkage type.
 
   Type type; /// The type of this variable.
+  Expression value; /// The value of this variable.
 
   this(Identifier* name,
        Protection prot, StorageClass stc, LinkageType linkType,
@@ -143,8 +145,20 @@ class Variable : Symbol
   {
     super(SYM.Variable, name, variableNode);
 
+    this.prot = prot;
     this.stc = stc;
     this.linkType = linkType;
+  }
+}
+
+class EnumMember : Variable
+{
+  this(Identifier* name,
+       Protection prot, StorageClass stc, LinkageType linkType,
+       Node enumMemberNode)
+  {
+    super(name, prot, stc, linkType, enumMemberNode);
+    this.sid = SYM.EnumMember;
   }
 }
 

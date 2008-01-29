@@ -139,6 +139,11 @@ static:
     while (x /= 10)
     return Identifier(str, TOK.Identifier);
   }
+
+  Identifier* genAnonEnumID()
+  {
+    return genAnonymousID("__anonenum");
+  }
 }
 
 unittest
