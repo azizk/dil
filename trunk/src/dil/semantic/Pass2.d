@@ -56,6 +56,11 @@ class SemanticPass2 : DefaultVisitor
     scop = scop.exit();
   }
 
+  Expression interpret(Expression e)
+  {
+    return Interpreter.interpret(e, modul.infoMan, scop);
+  }
+
   void error(Token* token, char[] formatMsg, ...)
   {
     auto location = token.getErrorLocation();
@@ -93,7 +98,7 @@ override
       if (member.value)
       {
         member.value = visitE(member.value);
-        finalValue = Interpreter.interpret(member.value, modul.infoMan, scop);
+        finalValue = interpret(member.value);
         if (finalValue is Interpreter.NAR)
           continue;
       }
@@ -112,7 +117,7 @@ override
     if (md.isMixinExpression)
     {
       md.argument = visitE(md.argument);
-      auto expr = Interpreter.interpret(md.argument, modul.infoMan, scop);
+      auto expr = interpret(md.argument);
       if (expr is Interpreter.NAR)
         return md;
       auto stringExpr = expr.Is!(StringExpression);
@@ -296,7 +301,7 @@ override
     if (me.type)
       return me.expr;
     me.expr = visitE(me.expr);
-    auto expr = Interpreter.interpret(me.expr, modul.infoMan, scop);
+    auto expr = interpret(me.expr);
     if (expr is Interpreter.NAR)
       return me;
     auto stringExpr = expr.Is!(StringExpression);
@@ -320,7 +325,7 @@ override
     if (ie.type)
       return ie.expr;
     ie.expr = visitE(ie.expr);
-    auto expr = Interpreter.interpret(ie.expr, modul.infoMan, scop);
+    auto expr = interpret(ie.expr);
     if (expr is Interpreter.NAR)
       return ie;
     auto stringExpr = expr.Is!(StringExpression);
