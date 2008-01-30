@@ -26,6 +26,12 @@ static const StrPair[] identPairs = [
   {"msg"}, {"lib"},
   // Linkage:
   {"C"}, {"D"}, {"Windows"}, {"Pascal"}, {"System"},
+  // Con-/Destructor:
+  {"__ctor"}, {"__dtor"},
+  // new() and delete() methods.
+  {"__new"}, {"__delete"},
+  // Unittest and invariant.
+  {"__unittest"}, {"__invariant"},
   // Operator methods:
   {"opNeg"},
   {"opPos"},
@@ -74,16 +80,15 @@ static const StrPair[] identPairs = [
   ]
   ---
 +/
-char[] generateIdentMembers(char[] private_members = "")
+char[] generateIdentMembers()
 {
-  private_members = "private struct Ids {static const:";
+  char[] private_members = "private struct Ids {static const:";
 
   char[] public_members = "";
   char[] array = "private Identifier*[] __allIds = [";
   foreach (pair; identPairs)
   {
-    // NB: conditional makes function uneligible for CTE.
-    // char[] idString = pair.idStr ? pair.idStr : pair.str;
+    // N.B.: Compiler cries for some reason when trying to access pair.idStr.
     // Identifier _str = {"str", TOK.Identifier, ID.str};
     private_members ~= "Identifier _"~pair.str~` = {"`~pair.str~`", TOK.Identifier, ID.`~pair.str~"};\n";
     // Identifier* str = &_str;
@@ -98,8 +103,9 @@ char[] generateIdentMembers(char[] private_members = "")
 }
 
 /// CTF for generating the members of the enum ID.
-char[] generateIDMembers(char[] members = "")
+char[] generateIDMembers()
 {
+  char[] members;
   foreach (pair; identPairs)
     members ~= pair.str ~ ",\n";
   return members;

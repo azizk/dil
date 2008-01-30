@@ -142,7 +142,7 @@ class SemanticPass1 : Visitor
     uint alignSize;
   }
 
-  // List of mixin, static if and pragma(msg,...) declarations.
+  // List of mixin, static if, static assert and pragma(msg,...) declarations.
   // Their analysis must be deferred because they entail
   // evaluation of expressions.
   Deferred[] deferred;
@@ -297,16 +297,40 @@ override
     return d;
   }
 
-  D visit(ConstructorDeclaration)
-  { return null; }
-  D visit(StaticConstructorDeclaration)
-  { return null; }
-  D visit(DestructorDeclaration)
-  { return null; }
-  D visit(StaticDestructorDeclaration)
-  { return null; }
-  D visit(FunctionDeclaration)
-  { return null; }
+  D visit(ConstructorDeclaration d)
+  {
+    auto func = new Function(Ident.__ctor, d);
+    insertOverload(func, func.name);
+    return d;
+  }
+
+  D visit(StaticConstructorDeclaration d)
+  {
+    auto func = new Function(Ident.__ctor, d);
+    insertOverload(func, func.name);
+    return d;
+  }
+
+  D visit(DestructorDeclaration d)
+  {
+    auto func = new Function(Ident.__dtor, d);
+    insertOverload(func, func.name);
+    return d;
+  }
+
+  D visit(StaticDestructorDeclaration d)
+  {
+    auto func = new Function(Ident.__dtor, d);
+    insertOverload(func, func.name);
+    return d;
+  }
+
+  D visit(FunctionDeclaration d)
+  {
+    auto func = new Function(d.name, d);
+    insertOverload(func, func.name);
+    return d;
+  }
 
   D visit(VariablesDeclaration vd)
   {
@@ -324,16 +348,23 @@ override
     return vd;
   }
 
-  D visit(InvariantDeclaration)
-  { return null; }
-  D visit(UnittestDeclaration)
-  { return null; }
+  D visit(InvariantDeclaration d)
+  {
+    auto func = new Function(Ident.__invariant, d);
+    insert(func, func.name);
+    return d;
+  }
+
+  D visit(UnittestDeclaration d)
+  {
+    auto func = new Function(Ident.__unittest, d);
+    insertOverload(func, func.name);
+    return d;
+  }
+
   D visit(DebugDeclaration)
   { return null; }
   D visit(VersionDeclaration)
-  { return null; }
-
-  D visit(StaticAssertDeclaration)
   { return null; }
 
   D visit(TemplateDeclaration d)
@@ -350,10 +381,19 @@ override
     return d;
   }
 
-  D visit(NewDeclaration)
-  { /*add id to env*/return null; }
-  D visit(DeleteDeclaration)
-  { /*add id to env*/return null; }
+  D visit(NewDeclaration d)
+  {
+    auto func = new Function(Ident.__new, d);
+    insert(func, func.name);
+    return d;
+  }
+
+  D visit(DeleteDeclaration d)
+  {
+    auto func = new Function(Ident.__delete, d);
+    insert(func, func.name);
+    return d;
+  }
 
   D visit(ProtectionDeclaration d)
   {
@@ -388,6 +428,14 @@ override
     alignSize = d.size; // Set.
     visitD(d.decls);
     alignSize = saved; // Restore.
+    return d;
+  }
+
+  // Deferred declarations:
+
+  D visit(StaticAssertDeclaration d)
+  {
+    addDeferred(d);
     return d;
   }
 
