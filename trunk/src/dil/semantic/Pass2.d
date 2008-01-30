@@ -87,26 +87,35 @@ override
 
   D visit(EnumDeclaration d)
   {
+    d.symbol.setCompleting();
+
     Type type = Types.Int; // Default to int.
     if (d.baseType)
       type = visitT(d.baseType).type;
     d.symbol.type = new TypeEnum(d.symbol, type);
+
     enterScope(d.symbol);
+
     foreach (member; d.members)
     {
       Expression finalValue;
+      member.symbol.setCompleting();
       if (member.value)
       {
         member.value = visitE(member.value);
         finalValue = interpret(member.value);
         if (finalValue is Interpreter.NAR)
-          continue;
+          finalValue = new IntExpression(0, d.symbol.type);
       }
       //else
         // TODO: increment a number variable and assign that to value.
+      member.symbol.type = d.symbol.type; // Assign TypeEnum.
       member.symbol.value = finalValue;
+      member.symbol.setComplete();
     }
+
     exitScope();
+    d.symbol.setComplete();
     return d;
   }
 

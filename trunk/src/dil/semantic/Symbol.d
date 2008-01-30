@@ -31,10 +31,18 @@ enum SYM
 +/
 class Symbol
 {
-  SYM sid;
+  enum Status : ushort
+  {
+    Declared,   /// The symbol has been declared.
+    Completing, /// The symbol is being processed.
+    Complete    /// The symbol is complete.
+  }
+
+  SYM sid; /// The ID of this symbol.
+  Status status; /// The semantic status of this symbol.
   Symbol parent; /// The parent this symbol belongs to.
   Identifier* name; /// The name of this symbol.
-  /// The AST node that produced this symbol.
+  /// The syntax tree node that produced this symbol.
   /// Useful for source code location info and retrieval of doc comments.
   Node node;
 
@@ -44,6 +52,18 @@ class Symbol
     this.name = name;
     this.node = node;
   }
+
+  void setCompleting()
+  { status = Status.Completing; }
+
+  void setComplete()
+  { status = Status.Complete; }
+
+  bool isCompleting()
+  { return status == Status.Completing; }
+
+  bool isComplete()
+  { return status == Status.Complete; }
 
   // A template macro for building isXYZ() methods.
   private template isX(char[] kind)
