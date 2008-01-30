@@ -5,6 +5,8 @@
 module dil.doc.Doc;
 
 import dil.ast.Node;
+import dil.lexer.Funcs;
+import common;
 
 bool isDoxygenComment(Token* token)
 { // Doxygen: '/+!' '/*!' '//!'
@@ -67,4 +69,59 @@ Token*[] getDocComments(Node node, bool function(Token*) isDocComment = &isDDocC
     }
   }
   return comments;
+}
+
+bool isspace(char c)
+{
+  return c == ' ' || c == '\t' || c == '\v' || c == '\f';
+}
+
+/// Sanitizes a DDoc comment string.
+/// The various newline types are converted to '\n'.
+/// Params:
+///   comment = the string to be sanitized.
+///   commentChar = '/', '+', or '*'
+string sanitize(string comment, char commentChar)
+{
+  string result = comment.dup ~ '\0';
+
+  assert(result[$-1] == '\0');
+  bool newline = true; // Indicates whether a newline has been encountered.
+  uint i, j;
+  for (; i < result.length; i++)
+  {
+    if (newline)
+    { // Ignore commentChars at the beginning of each new line.
+      newline = false;
+      while (isspace(result[i]))
+      { i++; }
+      while (result[i] == commentChar)
+      { i++; }
+    }
+    // Check for Newline.
+    switch (result[i])
+    {
+    case '\r':
+      if (result[i+1] == '\n')
+        i++;
+    case '\n':
+      result[j++] = '\n'; // Copy Newline as '\n'.
+      newline = true;
+      continue;
+    default:
+      if (isUnicodeNewline(result.ptr + i))
+      {
+        i++; i++;
+        goto case '\n';
+      }
+    }
+    // Copy character.
+    result[j++] = result[i];
+  }
+  result.length = j; // Adjust length.
+  // Lastly, strip trailing commentChars.
+  i = result.length - (1 + 1);
+  while (i && result[i] == commentChar)
+  { i--; }
+  return result;
 }
