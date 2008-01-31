@@ -129,15 +129,16 @@ static:
   +/
 
   static uint anonCount;
-  Identifier* genAnonymousID(char[] str)
+  Identifier* genAnonymousID(char[] prefix)
   {
     ++anonCount;
     auto x = anonCount;
     // Convert count to a string and append it to str.
+    char[] num;
     do
-      str = cast(char)('0' + (x % 10)) ~ str;
+      num = cast(char)('0' + (x % 10)) ~ num;
     while (x /= 10)
-    return Identifier(str, TOK.Identifier);
+    return Identifier(prefix ~ num, TOK.Identifier);
   }
 
   Identifier* genAnonEnumID()

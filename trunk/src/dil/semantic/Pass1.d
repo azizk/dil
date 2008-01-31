@@ -201,7 +201,7 @@ override
     auto isAnonymous = d.name is null;
     if (isAnonymous)
       d.symbol.name = IdTable.genAnonEnumID();
-    insert(d.symbol, d.name);
+    insert(d.symbol, d.symbol.name);
     auto parentScopeSymbol = scop.symbol;
     enterScope(d.symbol);
     // Declare members.

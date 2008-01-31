@@ -23,12 +23,14 @@ bool isDDocComment(Token* token)
   Note: this function works correctly only if
         the source text is syntactically correct.
 +/
-Token*[] getDocComments(Node node, bool function(Token*) isDocComment = &isDDocComment)
+Token*[] getDocTokens(Node node, bool function(Token*) isDocComment = &isDDocComment)
 {
   Token*[] comments;
+  auto isEnumMember = node.kind == NodeKind.EnumMemberDeclaration;
   // Get preceding comments.
   auto token = node.begin;
   // Scan backwards until we hit another declaration.
+Loop:
   while (1)
   {
     token = token.prev;
@@ -36,21 +38,18 @@ Token*[] getDocComments(Node node, bool function(Token*) isDocComment = &isDDocC
         token.kind == TOK.RBrace ||
         token.kind == TOK.Semicolon ||
         token.kind == TOK.HEAD ||
-        (node.kind == NodeKind.EnumMemberDeclaration && token.kind == TOK.Comma))
+        (isEnumMember && token.kind == TOK.Comma))
       break;
 
     if (token.kind == TOK.Comment)
-    {
-      // Check that this comment doesn't belong to the previous declaration.
-      if (node.kind == NodeKind.EnumMemberDeclaration && token.kind == TOK.Comma)
-        break;
+    { // Check that this comment doesn't belong to the previous declaration.
       switch (token.prev.kind)
       {
-      case TOK.Semicolon, TOK.RBrace:
-        break;
+      case TOK.Semicolon, TOK.RBrace, TOK.Comma:
+        break Loop;
       default:
         if (isDocComment(token))
-          comments ~= token;
+          comments = [token] ~ comments;
       }
     }
   }
@@ -58,7 +57,7 @@ Token*[] getDocComments(Node node, bool function(Token*) isDocComment = &isDDocC
   token = node.end.next;
   if (token.kind == TOK.Comment && isDocComment(token))
     comments ~= token;
-  else if (node.kind == NodeKind.EnumMemberDeclaration)
+  else if (isEnumMember)
   {
     token = node.end.nextNWS;
     if (token.kind == TOK.Comma)
@@ -71,12 +70,31 @@ Token*[] getDocComments(Node node, bool function(Token*) isDocComment = &isDDocC
   return comments;
 }
 
+bool isLineComment(Token* t)
+{
+  assert(t.kind == TOK.Comment);
+  return t.start[1] == '/';
+}
+
+/// Extracts the text body of the comment tokens.
+string getDDocText(Token*[] tokens)
+{
+  string result;
+  foreach (token; tokens)
+  {
+    auto n = isLineComment(token) ? 0 : 2; // 0 for "//", 2 for "+/" and "*/".
+    result ~= sanitize(token.srcText[3 .. $-n], token.start[1]);
+  }
+  return result;
+}
+
 bool isspace(char c)
 {
   return c == ' ' || c == '\t' || c == '\v' || c == '\f';
 }
 
 /// Sanitizes a DDoc comment string.
+/// Leading "commentChar"s are removed from the lines.
 /// The various newline types are converted to '\n'.
 /// Params:
 ///   comment = the string to be sanitized.

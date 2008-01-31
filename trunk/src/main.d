@@ -63,19 +63,21 @@ void main(char[][] args)
       auto pass1 = new SemanticPass1(mod);
       pass1.start();
 
-      void printSymbolTable(ScopeSymbol scopeSym)
+      void printSymbolTable(ScopeSymbol scopeSym, char[] indent)
       {
         foreach (member; scopeSym.members)
         {
-          auto tokens = getDocComments(member.node);
+          auto tokens = getDocTokens(member.node);
           char[] docText;
           foreach (token; tokens)
             docText ~= token.srcText;
-          Stdout.formatln("Id:{}, Symbol:{}, DocText:{}", member.name.str, member.classinfo.name, docText);
+          Stdout(indent).formatln("Id:{}, Symbol:{}, DocText:{}", member.name.str, member.classinfo.name, docText);
+          if (auto s = cast(ScopeSymbol)member)
+            printSymbolTable(s, indent ~ "→ ");
         }
       }
 
-      printSymbolTable(mod);
+      printSymbolTable(mod, "");
     }
 
     printErrors(infoMan);
