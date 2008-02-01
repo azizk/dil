@@ -57,8 +57,9 @@ class Graph
   { // Cycles could also be detected in the GraphBuilder,
     // but having the code here makes things much clearer.
 
+    // Commented out because this algorithm doesn't work.
     // Returns true if the vertex is in status Visiting.
-    bool visit(Vertex vertex)
+    /+bool visit(Vertex vertex)
     {
       switch (vertex.status)
       {
@@ -79,11 +80,14 @@ class Graph
       return false; // return (vertex.status == Vertex.Status.Visiting);
     }
     // Start visiting vertices.
-    visit(vertices[0]);
+    visit(vertices[0]);+/
 
-    foreach (edge; edges)
-      if (edge.from.isCyclic && edge.to.isCyclic)
-        edge.isCyclic = true;
+    //foreach (edge; edges)
+    //  if (edge.from.isCyclic && edge.to.isCyclic)
+    //    edge.isCyclic = true;
+
+    // Use functioning algorithm.
+    analyzeGraph(vertices, edges);
   }
 }
 
@@ -335,10 +339,10 @@ void printDotDocument(Graph graph, string siStyle, string piStyle,
   Stdout("}\n");
 }
 
-/+
 // This is the old algorithm that was used to detect cycles in a directed graph.
 void analyzeGraph(Vertex[] vertices_init, Edge[] edges)
 {
+  edges = edges.dup;
   void recursive(Vertex[] vertices)
   {
     foreach (idx, vertex; vertices)
@@ -407,4 +411,3 @@ void analyzeGraph(Vertex[] vertices_init, Edge[] edges)
   }
   recursive(vertices_init);
 }
-+/
