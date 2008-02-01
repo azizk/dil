@@ -9,7 +9,7 @@ import docgen.misc.parser;
 import docgen.graphutils.writers;
 import docgen.page.writers;
 import tango.io.FileConduit;
-import dil.Module;
+import dil.semantic.Module;
 
 void saveDefaultGraph(Vertex[] vertices, Edge[] edges, char[] fname) {
   auto gen = new TestDocGenerator;
@@ -22,6 +22,7 @@ void saveDefaultGraph(Vertex[] vertices, Edge[] edges, char[] fname) {
   auto gwf = new DefaultGraphWriterFactory(gen);
   auto file = new FileConduit("docgen/teststuff/" ~ fname, FileConduit.WriteCreate);
   auto file2 = new FileConduit("docgen/teststuff/" ~ fname ~ "-2", FileConduit.WriteCreate);
+
   auto writer = gwf.createGraphWriter(
     ddf.createPageWriter( [ file2 ], DocFormat.LaTeX),
     GraphFormat.Dot

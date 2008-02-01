@@ -89,7 +89,7 @@ abstract class DefaultDocGenerator : DocGenerator {
     scan(templateDir~options.templates.templateStyle~"/"~formatDirs[docFormat]~"/static/");
 
     foreach(filePath; scan.files) {
-      (new FilePath(outPath(filePath.file))).copy(filePath.toUtf8());
+      (new FilePath(outPath(filePath.file))).copy(filePath.toString());
     }
 
     debug Stdout(scan.files.length)(" static files copied.\n");

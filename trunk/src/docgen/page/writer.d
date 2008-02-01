@@ -6,9 +6,11 @@ module docgen.page.writer;
 
 public import docgen.misc.misc;
 public import docgen.misc.options;
+public import docgen.misc.parser;
 import tango.io.model.IConduit : OutputStream;
-import tango.util.time.Date;
-import tango.util.time.Clock;
+import tango.time.chrono.Gregorian;
+import tango.text.locale.Core;
+import tango.time.WallClock;
 import tango.text.convert.Sprint;
 import tango.io.stream.FileStream;
 import tango.io.Stdout;
@@ -16,7 +18,6 @@ import tango.io.Print: Print;
 import tango.text.convert.Layout : Layout;
 import tango.io.FilePath;
 import tango.io.FileScan;
-public import docgen.misc.parser;
 
 const templateDir = "docgen/templates/";
 
@@ -182,7 +183,7 @@ template AbstractPageWriter(char[] format, int n = 0) {
       debug Stdout(scan.files.length)(" template files loaded.\n");
 
       foreach(tpl; scan.files) {
-        m_templates[tpl.name] = loadTemplate(tpl.toUtf8());
+        m_templates[tpl.name] = loadTemplate(tpl.toString());
       }
     }
 
@@ -210,13 +211,21 @@ template AbstractPageWriter(char[] format, int n = 0) {
     }
     
     char[] timeNow() {
-      auto date = Clock.toDate;
+      auto n = WallClock.now;
+      auto c = Gregorian.generic;
+      auto d = c.toDate(n);
       auto sprint = new Sprint!(char);
-      return sprint.format("{0} {1} {2} {3}",
-        date.asDay(),
-        date.asMonth(),
-        date.day,
-        date.year).dup;
+
+      auto culture = new Culture("en-GB");
+      auto dateTimeFormat = culture.dateTimeFormat();
+
+      return sprint.format("{} {} {} {}",
+        dateTimeFormat.getAbbreviatedDayName(c.getDayOfWeek(n)),
+        1,//d.day(),
+        //dateTimeFormat.getAbbreviatedMonthName(d.month()),
+        2,//d.month(),
+        3//d.year()) //FIXME: something is broken here (Error: function expected before (), not *(&d + 8u) of type uint)
+        ).dup;
     }
   }
 }

@@ -59,7 +59,7 @@ class HTMLWriter : AbstractPageWriter!("html") {
 
     if (name == "stylesheet") {
       styleSheetFile = (new FilePath(
-        (cast(Object)outputs[0].conduit).toUtf8())).file();
+        (cast(Object)outputs[0].conduit).toString())).file();
     }
   }
 

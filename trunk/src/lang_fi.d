@@ -7,7 +7,7 @@ string lang_code = "fi";
 
 string[] messages = [
   // Lexer messages:
-  "", // TODO: translate
+  "virheellinen merkki: '{0}'",
   "virheellinen Unicode-merkki.",
   "virheellinen UTF-8-merkkijono.",
   // ''
@@ -22,7 +22,7 @@ string[] messages = [
   // ""
   "päättämätön merkkijonoliteraali.",
   // x""
-  "ei-heksamerkki '{0}' löytyi heksajonossa.",
+  "ei-heksamerkki '{0}' heksajonossa.",
   "pariton määrä heksanumeroita heksajonossa.",
   "päättämätön heksajono.",
   // /* */ /+ +/
@@ -32,12 +32,12 @@ string[] messages = [
   "päättämätön raakamerkkijono.",
   "päättämätön gravisaksenttimerkkijono.",
   // \x \u \U
-  "löydettiin määrittelemätön escape-sekvenssi.", // TODO: Insert '{0}'
-  "found invalid Unicode escape sequence '{0}'.", // TODO: translate
+  "määrittelemätön escape-sekvenssi {0}.",
+  "virheellinen Unicode escape-merkki '{0}'.",
   "riittämätön määrä heksanumeroita escape-sekvenssissä.",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "määrittelemätön HTML-entiteetti '{0}'",
-  "päättämätön HTML-entiteetti.", // TODO: insert '{0}'
+  "päättämätön HTML-entiteetti {0}.",
   "HTML-entiteettien tulee alkaa kirjaimella.",
   // integer overflows
   "desimaaliluku ylivuotaa etumerkin.",
@@ -50,19 +50,19 @@ string[] messages = [
   "virheellinen heksaluku; odotettiin vähintään yhtä heksanumeroa.",
   "virheellinen binääriluku; odotettiin vähintään yhtä binäärinumeroa.",
   "heksadesimaalisen liukuluvun eksponentti vaaditaan.",
-  "heksadesimaalisen liukuluvun eksponentista puuttui numeroita.", // TODO: update
+  "heksadesimaalisen liukuluvun eksponentin tulee alkaa numerolla.",
   "eksponenttien tulee alkaa numerolla.",
 
   // Parser messages
-  "odotettiin '{0}':a, mutta löydettiin '{1}'.",
+  "odotettiin '{0}':a, mutta luettiin '{1}'.",
   "'{0}' on redundantti.",
   "tupla voi esiintyä ainoastaan mallin viimeisenä parametrina.",
   "funktion alkuehto jäsennettiin jo.",
   "funktion loppuehto jäsennettiin jo.",
   "linkitystyyppiä ei määritelty.",
   "tunnistamaton linkitystyyppi '{0}'; sallittuja tyyppejä ovat C, C++, D, Windows, Pascal ja System.",
-  "expected one or more base classes, not '{0}'.", // TODO: translate
-  "base classes are not allowed in forward declarations.", // TODO: translate
+  "odotettiin yhtä tai useampaa luokkaa, ei '{0}':ta.",
+  "kantaluokat eivät ole sallittuja etukäteismäärittelyissä.",
 
   // Help messages:
   `dil v{0}

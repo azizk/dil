@@ -4,9 +4,9 @@
  */
 module docgen.misc.parser;
 
-import dil.Parser;
+import dil.parser.Parser;
 import dil.Settings;
-public import dil.Module;
+public import dil.semantic.Module;
 import tango.text.Regex : RegExp = Regex;
 import tango.io.FilePath;
 import tango.text.Util;
@@ -148,10 +148,10 @@ class Parser {
 
             if (loaded_mod !is null) {
               idg(loaded_mod, mod, importList.isPublic());
-            } else if (IncludeUnlocatableModules) {
+            } else if (IncludeUnlocatableModules) {/* FIXME
               auto tmp = new Module(null, true);
               tmp.moduleFQN = replace(moduleFQN_.dup, dirSep, '.');
-              idg(tmp, mod, importList.isPublic());
+              idg(tmp, mod, importList.isPublic());*/
             }
           }
       }

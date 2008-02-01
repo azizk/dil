@@ -26,7 +26,7 @@ class LaTeXWriter : AbstractWriter!(ListingWriterFactory), ListingWriter {
     
     writer.addListing(
       moduleName,
-      FilePath((cast(Object)output.conduit).toUtf8()).file
+      FilePath((cast(Object)output.conduit).toString()).file
     );
   }
 }

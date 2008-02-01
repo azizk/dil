@@ -8,6 +8,7 @@ import docgen.tests.graphs;
 import docgen.tests.parse;
 import docgen.tests.doctemplate;
 import docgen.tests.listing;
+//import docgen.tests.sexp;
 import tango.io.Stdout;
 
 /**
@@ -17,6 +18,7 @@ import tango.io.Stdout;
  */
 void main() {
   Stdout("Running..");
+
   graph1();
   graph2();
   graph3();
@@ -26,5 +28,6 @@ void main() {
   parse2();
   doctemplate1();
   listing1();
+//  loadConfig();
   Stdout("done.\n");
 }

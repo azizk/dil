@@ -4,13 +4,15 @@
  */
 module docgen.misc.options;
 
-/** Supported document output formats. */
-enum DocFormat {
-  LaTeX,
-  XML,
-  HTML,
-  PlainText
+import docgen.misc.meta;
+
+/** creates reflective enums, syntax: enum name + list of elements */
+template optionEnum(char[] name, T...) {
+  const optionEnum = createEnum!("_" ~ name, name, "__" ~ name, "___" ~ name, T);
 }
+
+/** Supported document output formats. */
+mixin(optionEnum!("DocFormat", "LaTeX", "XML", "HTML", "PlainText"));
 
 /**
  * Supported comment formats.
@@ -18,28 +20,16 @@ enum DocFormat {
  * http://www.stack.nl/~dimitri/doxygen/docblocks.html
  * http://www.digitalmars.com/d/ddoc.html
  */
-enum CommentFormat {
-  Ddoc,
-  Doxygen
-}
+mixin(optionEnum!("CommentFormat", "Ddoc", "Doxygen"));
 
 /** Supported image formats. */
-enum ImageFormat {
-  PNG,
-  SVG,
-  GIF,
-  PDF
-}
+mixin(optionEnum!("ImageFormat", "PNG", "SVG", "GIF", "PDF"));
 
 /** Image format extensions. */
 const imageFormatExts = [ "png", "svg", "gif", "pdf" ];
 
 /** Supported graph writers. */
-enum GraphFormat {
-  Dot,
-  ModuleNames,
-  ModulePaths
-}
+mixin(optionEnum!("GraphFormat", "Dot", "ModuleNames", "ModulePaths"));
 
 struct GraphOptions {
   /// image format to use for graphs
@@ -113,7 +103,7 @@ struct DocGeneratorOptions {
 
   /// list of document formats to be generated
   DocFormat[] outputFormats;
-  
+ 
   GraphOptions graph;
   ListingOptions listing;
   TemplateOptions templates;

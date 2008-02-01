@@ -127,7 +127,7 @@ class DotWriter : AbstractGraphWriter {
         
   void generateImageTag(OutputStream imageFile) {
     // name of the .dot file
-    char[] fn = (cast(Object)imageFile.conduit).toUtf8();
+    char[] fn = (cast(Object)imageFile.conduit).toString();
     fn = FilePath(fn).file;
 
     fn = fn[0..$-3] ~ imageFormatExts[factory.options.graph.imageFormat];
