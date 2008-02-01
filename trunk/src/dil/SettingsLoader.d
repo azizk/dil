@@ -15,9 +15,10 @@ import common;
 void loadSettings()
 {
   scope execPath = new FilePath(GetExecutableFilePath());
+  execPath = new FilePath(execPath.folder());
 
   // Load config.d
-  auto filePath = execPath.file("config.d").toString();
+  auto filePath = resolvePath(execPath, "config.d");
   auto modul = new Module(filePath);
   modul.parse();
 
@@ -51,6 +52,16 @@ void loadSettings()
       else
         throw new Exception("import_paths variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");
       break;
+    case "ddoc_files":
+      if (auto array = e.Is!(ArrayInitExpression))
+      {
+        foreach (value; array.values)
+          if (auto str = value.Is!(StringExpression))
+            GlobalSettings.ddocFilePaths ~= str.getString();
+      }
+      else
+        throw new Exception("import_paths variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");
+      break;
     case "lexer_error":
       if (auto val = e.Is!(StringExpression))
         GlobalSettings.lexerErrorFormat = val.getString();
@@ -68,7 +79,7 @@ void loadSettings()
   }
 
   // Load language file.
-  filePath = execPath.file(GlobalSettings.langFile).toString();
+  filePath = resolvePath(execPath, GlobalSettings.langFile);
   modul = new Module(filePath);
   modul.parse();
 
@@ -116,6 +127,13 @@ void loadSettings()
       );
   GlobalSettings.messages = messages;
   dil.Messages.SetMessages(messages);
+}
+
+string resolvePath(FilePath execPath, string filePath)
+{
+  if ((new FilePath(filePath)).isAbsolute())
+    return filePath;
+  return execPath.dup.append(filePath).toString();
 }
 
 version(Windows)

@@ -3,7 +3,9 @@
 // Path to the language file.
 var langfile = "lang_en.d";
 // An array of import paths to look for modules.
-var import_paths = [];
+var import_paths = []; // E.g.: ["src/", "import/"]
+// DDoc macro file paths.
+var ddoc_files = []; // E.g.: ["src/mymacros.ddoc", "othermacros.ddoc"]
 /*
   Customizing error messages.
   0: file path to the source text.
