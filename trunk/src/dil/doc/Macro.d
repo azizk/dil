@@ -94,11 +94,11 @@ struct MacroParser
     {
       skipWhitespace(p);
       auto idBegin = p;
-      if (isidbeg(*p) || isUnicodeAlpha(p)) // IdStart
+      if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
       {
         do // IdChar*
           p++;
-        while (isident(*p) || isUnicodeAlpha(p))
+        while (isident(*p) || isUnicodeAlpha(p, textEnd))
         auto idEnd = p;
 
         skipWhitespace(p);
@@ -121,63 +121,22 @@ struct MacroParser
       p++;
     p++;
   }
-
-  bool isUnicodeAlpha(ref char* ref_p)
-  {
-    char* p = ref_p; // Copy.
-    if (isascii(*p))
-      return false;
-
-    dchar d = *p;
-    p++; // Move to second byte.
-    // Error if second byte is not a trail byte.
-    if (!isTrailByte(*p))
-      return false;
-    // Check for overlong sequences.
-    switch (d)
-    {
-    case 0xE0, 0xF0, 0xF8, 0xFC:
-      if ((*p & d) == 0x80)
-        return false;
-    default:
-      if ((d & 0xFE) == 0xC0) // 1100000x
-        return false;
-    }
-    const char[] checkNextByte = "if (!isTrailByte(*++p))"
-                                 "  return false;";
-    const char[] appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
-    // Decode
-    if ((d & 0b1110_0000) == 0b1100_0000)
-    {
-      d &= 0b0001_1111;
-      mixin(appendSixBits);
-    }
-    else if ((d & 0b1111_0000) == 0b1110_0000)
-    {
-      d &= 0b0000_1111;
-      mixin(appendSixBits ~
-            checkNextByte ~ appendSixBits);
-    }
-    else if ((d & 0b1111_1000) == 0b1111_0000)
-    {
-      d &= 0b0000_0111;
-      mixin(appendSixBits ~
-            checkNextByte ~ appendSixBits ~
-            checkNextByte ~ appendSixBits);
-    }
-    else
-      return false;
-
-    assert(isTrailByte(*p));
-    if (!isValidChar(d) || !isUniAlpha(d))
-      return false;
-    // Only advance pointer if this is a Unicode alpha character.
-    ref_p = p;
-    return true;
-  }
 }
 
 char[] makeString(char* begin, char* end)
 {
   return begin[0 .. end - begin];
 }
+
+char[] expandMacros(MacroTable table, char[] text)
+{
+  char[] result;
+  char* p = text.ptr;
+  char* textEnd = p + text.length;
+//   while (p < text.length)
+//   {
+
+//   }
+  return result;
+}
+

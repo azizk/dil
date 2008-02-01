@@ -42,25 +42,51 @@ bool isLeadByte(ubyte b)
   return (b & 0xC0) == 0xC0; // 11xx_xxxx
 }
 
+/// Advances ref_p only if this is a valid Unicode alpha character.
+bool isUnicodeAlpha(ref char* ref_p, char* end)
+in { assert(ref_p && ref_p < end); }
+body
+{
+  if (*ref_p < 0x80)
+    return false;
+  auto p = ref_p;
+  auto c = decode(p, end);
+  if (!isUniAlpha(c))
+    return false;
+  ref_p = p;
+  return true;
+}
+
+/// index is set one past the last trail byte of the valid UTF-8 sequence.
 dchar decode(char[] str, ref size_t index)
-in { assert(str.length); }
+in { assert(str.length && index < str.length); }
 out(c) { assert(isValidChar(c)); }
 body
 {
   char* p = str.ptr + index;
   char* end = str.ptr + str.length;
-  dchar c = *p;
+  dchar c = decode(p, end);
+  if (c != ERROR_CHAR)
+    index = p - str.ptr + 1;
+  return c;
+}
 
-  if (!(p < end))
-    return ERROR_CHAR;
+/// ref_p is set to the last trail byte of the valid UTF-8 sequence.
+dchar decode(ref char* ref_p, char* end)
+in { assert(ref_p && ref_p < end); }
+out(c) { assert(isValidChar(c)); }
+body
+{
+  char* p = ref_p;
+  dchar c = *p;
 
   if (c < 0x80)
   {
-    ++index;
+    ref_p++;
     return c;
   }
 
-  ++p; // Move to second byte.
+  p++; // Move to second byte.
   if (!(p < end))
     return ERROR_CHAR;
 
@@ -82,18 +108,16 @@ body
       return ERROR_CHAR;
   }
 
-  const char[] checkNextByte = "if (++p < end && !isTrailByte(*p))"
+  const char[] checkNextByte = "if (!(++p < end && isTrailByte(*p)))"
                                 "  return ERROR_CHAR;";
   const char[] appendSixBits = "c = (c << 6) | *p & 0b0011_1111;";
 
-  auto next_index = index;
   // Decode
   if ((c & 0b1110_0000) == 0b1100_0000)
   {
     // 110xxxxx 10xxxxxx
     c &= 0b0001_1111;
     mixin(appendSixBits);
-    next_index += 2;
   }
   else if ((c & 0b1111_0000) == 0b1110_0000)
   {
@@ -101,7 +125,6 @@ body
     c &= 0b0000_1111;
     mixin(appendSixBits ~
           checkNextByte ~ appendSixBits);
-    next_index += 3;
   }
   else if ((c & 0b1111_1000) == 0b1111_0000)
   {
@@ -110,7 +133,6 @@ body
     mixin(appendSixBits ~
           checkNextByte ~ appendSixBits ~
           checkNextByte ~ appendSixBits);
-    next_index += 4;
   }
   else
     // 5 and 6 byte UTF-8 sequences are not allowed yet.
@@ -122,7 +144,7 @@ body
 
   if (!isValidChar(c))
     return ERROR_CHAR;
-  index = next_index;
+  ref_p = p;
   return c;
 }
 

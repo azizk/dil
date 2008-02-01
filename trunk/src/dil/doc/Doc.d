@@ -11,22 +11,36 @@ import common;
 
 class DDocComment
 {
-  string text;
   Section[] sections;
   Section summary; /// Optional summary section.
   Section description; /// Optional description section.
 
-  this(string text)
+  this(Section[] sections, Section summary, Section description)
   {
-    assert(text.length && text[$-1] == '\0');
-    this.text = text;
+    this.sections = sections;
+    this.summary = summary;
+    this.description = description;
   }
+}
+
+struct DDocParser
+{
+  char* p;
+  char* textEnd;
+  Section[] sections;
+  Section summary; /// Optional summary section.
+  Section description; /// Optional description section.
 
   /// Parses the DDoc text into sections.
-  void parseSections()
+  Section[] parse(string text)
   {
-    char* p = text.ptr;
-    char* textEnd = p + text.length;
+    if (!text.length)
+      return null;
+    if (text[$-1] != '\0')
+      text ~= '\0';
+    p = text.ptr;
+    textEnd = p + text.length;
+
     char* summaryBegin;
     char* idBegin, idEnd;
     char* nextIdBegin, nextIdEnd;
@@ -34,16 +48,19 @@ class DDocComment
     skipWhitespace(p);
     summaryBegin = p;
 
-    if (findNextIdColon(p, idBegin, idEnd))
+    if (findNextIdColon(idBegin, idEnd))
     { // Check that this is not an explicit section.
       if (summaryBegin != idBegin)
         scanSummaryAndDescription(summaryBegin, idBegin);
     }
     else // There are no explicit sections.
-      return scanSummaryAndDescription(summaryBegin, textEnd);
+    {
+      scanSummaryAndDescription(summaryBegin, textEnd);
+      return null;
+    }
 
     assert(idBegin && idEnd);
-    while (findNextIdColon(p, nextIdBegin, nextIdEnd))
+    while (findNextIdColon(nextIdBegin, nextIdEnd))
     {
       sections ~= new Section(makeString(idBegin, idEnd), makeString(idEnd+1, nextIdBegin));
       idBegin = nextIdBegin;
@@ -51,14 +68,15 @@ class DDocComment
     }
     // Add last section.
     sections ~= new Section(makeString(idBegin, idEnd), makeString(idEnd+1, textEnd));
+    return sections;
   }
 
   void scanSummaryAndDescription(char* p, char* end)
   {
-    assert(p != end && p < end);
+    assert(p < end);
     char* sectionBegin = p;
     // Search for the end of the first paragraph.
-    while (p != end && !(*p == '\n' && p[1] == '\n'))
+    while (p < end && !(*p == '\n' && p[1] == '\n'))
       p++;
     // The first paragraph is the summary.
     summary = new Section("", makeString(sectionBegin, p));
@@ -88,23 +106,23 @@ class DDocComment
   ///   idBegin = set to the first character of the Identifier
   ///   idEnd   = set to the colon following the Identifier
   /// Returns: true if found
-  bool findNextIdColon(ref char* ref_p, ref char* ref_idBegin, ref char* ref_idEnd)
+  bool findNextIdColon(ref char* ref_idBegin, ref char* ref_idEnd)
   {
-    auto p = ref_p;
+    auto p = this.p;
     while (*p != '\0')
     {
       auto idBegin = p;
       assert(isascii(*p) || isLeadByte(*p));
-      if (isidbeg(*p) || isUnicodeAlpha(p)) // IdStart
+      if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
       {
         do // IdChar*
           p++;
-        while (isident(*p) || isUnicodeAlpha(p))
+        while (isident(*p) || isUnicodeAlpha(p, textEnd))
         if (*p == ':') // :
         {
           ref_idBegin = idBegin;
           ref_idEnd = p;
-          ref_p = p;
+          this.p = p;
           return true;
         }
       }
@@ -117,65 +135,6 @@ class DDocComment
       p++;
     }
     return false;
-  }
-
-  /// This function assumes that there are no invalid
-  /// UTF-8 sequences in the string.
-  bool isUnicodeAlpha(ref char* ref_p)
-  {
-    char* p = ref_p; // Copy.
-    if (isascii(*p))
-      return false;
-
-    dchar d = *p;
-    p++; // Move to second byte.
-    // Error if second byte is not a trail byte.
-    assert(isTrailByte(*p));
-    // Check for overlong sequences.
-    assert(delegate () {
-      switch (d)
-      {
-      case 0xE0, 0xF0, 0xF8, 0xFC:
-        if ((*p & d) == 0x80)
-          return false;
-      default:
-        if ((d & 0xFE) == 0xC0) // 1100000x
-          return false;
-        return true;
-      }
-    }() == true
-    );
-    const char[] checkNextByte = "p++;"
-                                 "assert(isTrailByte(*p));";
-    const char[] appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
-    // Decode
-    if ((d & 0b1110_0000) == 0b1100_0000)
-    {
-      d &= 0b0001_1111;
-      mixin(appendSixBits);
-    }
-    else if ((d & 0b1111_0000) == 0b1110_0000)
-    {
-      d &= 0b0000_1111;
-      mixin(appendSixBits ~
-            checkNextByte ~ appendSixBits);
-    }
-    else if ((d & 0b1111_1000) == 0b1111_0000)
-    {
-      d &= 0b0000_0111;
-      mixin(appendSixBits ~
-            checkNextByte ~ appendSixBits ~
-            checkNextByte ~ appendSixBits);
-    }
-    else
-      return false;
-
-    assert(isTrailByte(*p) && isValidChar(d));
-    if (!isUniAlpha(d))
-      return false;
-    // Only advance pointer if this is a Unicode alpha character.
-    ref_p = p;
-    return true;
   }
 }
 
