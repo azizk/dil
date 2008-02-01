@@ -48,12 +48,6 @@ class MacroTable
   { return parent is null; }
 }
 
-void skipWhitespace(ref char* p)
-{
-  while (isspace(*p) || *p == '\n')
-    p++;
-}
-
 struct MacroParser
 {
   char* p;
@@ -90,9 +84,9 @@ struct MacroParser
 
   bool findNextMacroId(ref char* ref_idBegin, ref char* ref_idEnd, ref char* ref_bodyBegin)
   {
-    while (*p != '\0')
+    while (p < textEnd)
     {
-      skipWhitespace(p);
+      skipWhitespace();
       auto idBegin = p;
       if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
       {
@@ -101,12 +95,14 @@ struct MacroParser
         while (isident(*p) || isUnicodeAlpha(p, textEnd))
         auto idEnd = p;
 
-        skipWhitespace(p);
+        skipWhitespace();
         if (*p == '=')
         {
+          p++;
+          skipWhitespace();
           ref_idBegin = idBegin;
           ref_idEnd = idEnd;
-          ref_bodyBegin = p + 1;
+          ref_bodyBegin = p;
           return true;
         }
       }
@@ -115,9 +111,15 @@ struct MacroParser
     return false;
   }
 
+  void skipWhitespace()
+  {
+    while (p < textEnd && (isspace(*p) || *p == '\n'))
+      p++;
+  }
+
   void skipLine()
   {
-    while (*p != '\n')
+    while (p < textEnd && *p != '\n')
       p++;
     p++;
   }
@@ -133,10 +135,35 @@ char[] expandMacros(MacroTable table, char[] text)
   char[] result;
   char* p = text.ptr;
   char* textEnd = p + text.length;
-//   while (p < text.length)
-//   {
-
-//   }
+  char* macroEnd = p;
+  while (p+3 < textEnd) // minimum 4 chars: $(x)
+  {
+    if (*p == '$' && p[1] == '(')
+    {
+      // Copy string between macros.
+      result ~= makeString(macroEnd, p);
+      p += 2;
+      auto idBegin = p;
+      if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
+      {
+        do // IdChar*
+          p++;
+        while (p < textEnd && (isident(*p) || isUnicodeAlpha(p, textEnd)))
+        auto macroName = makeString(idBegin, p);
+        if (*p == ')')
+        {
+          p++;
+          macroEnd = p;
+        }
+        auto macro_ = table.search(macroName);
+        if (macro_)
+        {
+          result ~= macro_.text;
+        }
+      }
+    }
+    p++;
+  }
   return result;
 }
 
