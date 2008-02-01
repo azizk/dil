@@ -130,7 +130,7 @@ class DDocComment
     dchar d = *p;
     p++; // Move to second byte.
     // Error if second byte is not a trail byte.
-    assert(isTrailByte(*p), p[0..5]);
+    assert(isTrailByte(*p));
     // Check for overlong sequences.
     assert(delegate () {
       switch (d)
