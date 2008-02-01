@@ -52,28 +52,24 @@ class Module : ScopeSymbol
       this.parser = new Parser(loadFile(filePath), filePath, infoMan);
 
     this.root = parser.start();
+    this.imports = parser.imports;
 
     if (root.children.length)
     {
       // moduleDecl will be null if first node isn't a ModuleDeclaration.
       this.moduleDecl = root.children[0].Is!(ModuleDeclaration);
-      if (moduleDecl)
-      {
+      if (this.moduleDecl)
         this.setFQN(moduleDecl.getFQN());
-      }
-      else
-      {
-        // Take base name of file path as module name.
-        auto str = (new FilePath(filePath)).name();
-        if (!Lexer.isReservedIdentifier(str))
-        {
-          this.moduleFQN = moduleName = str;
-        }
-        // else
-        // TODO: error: file name has invalid identifier characters.
-      }
+    }
 
-      this.imports = parser.imports;
+    if (!this.moduleFQN.length)
+    {
+      // Take base name of file path as module name.
+      auto str = (new FilePath(filePath)).name();
+      if (!Lexer.isReservedIdentifier(str))
+        this.moduleFQN = this.moduleName = str;
+      else
+        throw new Exception("'"~str~"' is not a valid module name");
     }
   }
 

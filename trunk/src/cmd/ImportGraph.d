@@ -233,10 +233,8 @@ void execute(string filePathString, string[] importPaths, string[] strRegexps,
   // Add directory of file and global directories to import paths.
   auto filePath = new FilePath(filePathString);
   auto fileDir = filePath.folder();
-  if (fileDir.length)
-    importPaths ~= fileDir;
+  importPaths ~= fileDir;
   importPaths ~= GlobalSettings.importPaths;
-
 
   auto gbuilder = new GraphBuilder;
 
