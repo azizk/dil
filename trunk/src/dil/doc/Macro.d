@@ -12,6 +12,7 @@ class Macro
 {
   string name; /// The name of the macro.
   string text; /// Substitution text.
+  uint callLevel;  /// Recursive call level.
   this (string name, string text)
   {
     this.name = name;
@@ -130,7 +131,7 @@ char[] makeString(char* begin, char* end)
   return begin[0 .. end - begin];
 }
 
-char[] expandMacros(MacroTable table, char[] text)
+char[] expandMacros(MacroTable table, char[] text, char[][] args = null)
 {
   char[] result;
   char* p = text.ptr;
@@ -153,7 +154,7 @@ char[] expandMacros(MacroTable table, char[] text)
         // Create macro name.
         auto macroName = makeString(idBegin, p);
         // Get arguments.
-        auto args = scanArguments(p, textEnd);
+        auto macroArgs = scanArguments(p, textEnd);
         // TODO: still expand macro if no closing bracket was found?
         if (p == textEnd)
           break; // No closing bracket found.
@@ -163,7 +164,17 @@ char[] expandMacros(MacroTable table, char[] text)
 
         auto macro_ = table.search(macroName);
         if (macro_)
-          result ~= expandArguments(macro_.text, args);
+        { // Ignore recursive macro if:
+          if (macro_.callLevel != 0 &&
+               (macroArgs.length == 0 || // Macro has no arguments.
+                args.length && args[0] == macroArgs[0]) // arg0 == macroArg0.
+             )
+            continue;
+          macro_.callLevel++;
+          auto expandedText = expandArguments(macro_.text, macroArgs);
+          result ~= expandMacros(table, expandedText, macroArgs);
+          macro_.callLevel--;
+        }
         continue;
       }
     }
@@ -177,6 +188,8 @@ char[] expandMacros(MacroTable table, char[] text)
 /// Scans until the closing ')' is found.
 /// Returns [$0, $1, $2 ...].
 char[][] scanArguments(ref char* p, char* textEnd)
+out(args) { assert(args.length != 1); }
+body
 {
   // D specs: "The argument text can contain nested parentheses,
   //           "" or '' strings, comments, or tags."
@@ -279,7 +292,7 @@ body
 
       if (*p == '+')
       { // $+ = $2 to $n
-        if (args.length > 1)
+        if (args.length > 2)
           result ~= makeString(args[2].ptr, args[0].ptr + args[0].length);
       }
       else
