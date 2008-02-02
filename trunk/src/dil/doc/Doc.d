@@ -4,6 +4,7 @@
 +/
 module dil.doc.Doc;
 
+import dil.doc.Parser;
 import dil.ast.Node;
 import dil.lexer.Funcs;
 import dil.Unicode;
@@ -149,9 +150,42 @@ class Section
   }
 }
 
-char[] makeString(char* begin, char* end)
+class ParamsSection : Section
 {
-  return begin[0 .. end - begin];
+  string[] paramNames; /// Parameter names.
+  string[] paramDescs; /// Parameter descriptions.
+  this(string name, string text)
+  {
+    super(name, text);
+    IdentValueParser parser;
+    auto idvalues = parser.parse(text);
+    this.paramNames = new string[idvalues.length];
+    this.paramDescs = new string[idvalues.length];
+    foreach (i, idvalue; idvalues)
+    {
+      this.paramNames[i] = idvalue.ident;
+      this.paramDescs[i] = idvalue.value;
+    }
+  }
+}
+
+class MacrosSection : Section
+{
+  string[] macroNames; /// Parameter names.
+  string[] macroTexts; /// Parameter descriptions.
+  this(string name, string text)
+  {
+    super(name, text);
+    IdentValueParser parser;
+    auto idvalues = parser.parse(text);
+    this.macroNames = new string[idvalues.length];
+    this.macroTexts = new string[idvalues.length];
+    foreach (i, idvalue; idvalues)
+    {
+      this.macroNames[i] = idvalue.ident;
+      this.macroTexts[i] = idvalue.value;
+    }
+  }
 }
 
 bool isDoxygenComment(Token* token)
@@ -277,10 +311,11 @@ string sanitize(string comment, char commentChar)
     // Copy character.
     result[j++] = result[i];
   }
-  result.length = j; // Adjust length.
+  result.length = j - 1; // Adjust length. -1 removes '\0'.
   // Lastly, strip trailing commentChars.
-  i = result.length - (1 + 1);
-  while (i && result[i] == commentChar)
-  { i--; }
+  i = result.length;
+  while (--i && result[i] == commentChar)
+  {}
+  result.length = i + 1;
   return result;
 }
