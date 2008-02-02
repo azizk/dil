@@ -47,13 +47,13 @@ returnType!(T.stringof) visitDefault(T)(T t)
       d.value && visitE(d.value);
     static if (is(D == ClassDeclaration) || is( D == InterfaceDeclaration))
     {
-      d.tparams && visitN(d.tparams);
+//       d.tparams && visitN(d.tparams);
       foreach (base; d.bases)
         visitT(base);
       d.decls && visitD(d.decls);
     }
     static if (is(D == StructDeclaration) || is(D == UnionDeclaration))
-      d.tparams && visitN(d.tparams),
+//       d.tparams && visitN(d.tparams),
       d.decls && visitD(d.decls);
     static if (is(D == ConstructorDeclaration))
       visitN(d.params), visitS(d.funcBody);

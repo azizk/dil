@@ -1020,9 +1020,22 @@ class Parser
     return new EnumDeclaration(enumName, baseType, members, hasBody);
   }
 
+  /// Puts a declaration inside a template declaration.
+  Declaration putInsideTemplateDeclaration(Token* begin, Identifier* name,
+                                           Declaration aggregateDecl,
+                                           TemplateParameters tparams)
+  {
+    set(aggregateDecl, begin);
+    auto decls = new CompoundDeclaration;
+    decls ~= aggregateDecl;
+    set(decls, begin);
+    return new TemplateDeclaration(name, tparams, decls);
+  }
+
   Declaration parseClassDeclaration()
   {
     assert(token.kind == T.Class);
+    auto begin = token;
     nT(); // Skip class keyword.
 
     Identifier* className;
@@ -1032,7 +1045,8 @@ class Parser
 
     className = requireIdentifier(MSG.ExpectedClassName);
 
-    if (token.kind == T.LParen)
+    bool isTemplate = token.kind == T.LParen;
+    if (isTemplate)
       tparams = parseTemplateParameterList();
 
     if (token.kind == T.Colon)
@@ -1045,7 +1059,10 @@ class Parser
     else
       error(token, MSG.ExpectedClassBody, token.srcText);
 
-    return new ClassDeclaration(className, tparams, bases, decls);
+    Declaration d = new ClassDeclaration(className, /+tparams, +/bases, decls);
+    if (isTemplate)
+      d = putInsideTemplateDeclaration(begin, className, d, tparams);
+    return d;
   }
 
   BaseClassType[] parseBaseClasses(bool colonLeadsOff = true)
@@ -1084,6 +1101,7 @@ class Parser
   Declaration parseInterfaceDeclaration()
   {
     assert(token.kind == T.Interface);
+    auto begin = token;
     nT(); // Skip interface keyword.
 
     Identifier* name;
@@ -1093,7 +1111,8 @@ class Parser
 
     name = requireIdentifier(MSG.ExpectedInterfaceName);
 
-    if (token.kind == T.LParen)
+    bool isTemplate = token.kind == T.LParen;
+    if (isTemplate)
       tparams = parseTemplateParameterList();
 
     if (token.kind == T.Colon)
@@ -1106,13 +1125,16 @@ class Parser
     else
       error(token, MSG.ExpectedInterfaceBody, token.srcText);
 
-    return new InterfaceDeclaration(name, tparams, bases, decls);
+    Declaration d = new InterfaceDeclaration(name, /+tparams, +/bases, decls);
+    if (isTemplate)
+      d = putInsideTemplateDeclaration(begin, name, d, tparams);
+    return d;
   }
 
   Declaration parseStructOrUnionDeclaration()
   {
     assert(token.kind == T.Struct || token.kind == T.Union);
-    TOK tok = token.kind;
+    auto begin = token;
     nT(); // Skip struct or union keyword.
 
     Identifier* name;
@@ -1121,7 +1143,8 @@ class Parser
 
     name = optionalIdentifier();
 
-    if (name && token.kind == T.LParen)
+    bool isTemplate = name && token.kind == T.LParen;
+    if (isTemplate)
       tparams = parseTemplateParameterList();
 
     if (name && skipped(T.Semicolon))
@@ -1129,18 +1152,23 @@ class Parser
     else if (token.kind == T.LBrace)
       decls = parseDeclarationDefinitionsBody();
     else
-      error(token, tok == T.Struct ?
+      error(token, begin.kind == T.Struct ?
             MSG.ExpectedStructBody :
             MSG.ExpectedUnionBody, token.srcText);
 
-    if (tok == T.Struct)
+    Declaration d;
+    if (begin.kind == T.Struct)
     {
-      auto sd = new StructDeclaration(name, tparams, decls);
+      auto sd = new StructDeclaration(name, /+tparams, +/decls);
       sd.setAlignSize(this.alignSize);
-      return sd;
+      d = sd;
     }
     else
-      return new UnionDeclaration(name, tparams, decls);
+      d = new UnionDeclaration(name, /+tparams, +/decls);
+
+    if (isTemplate)
+      d = putInsideTemplateDeclaration(begin, name, d, tparams);
+    return d;
   }
 
   Declaration parseConstructorDeclaration()

@@ -229,10 +229,7 @@ override
       return d;
     d.symbol = new Class(d.name, d);
     // Insert into current scope.
-    if (d.tparams)
-      insertOverload(d.symbol, d.name);
-    else
-      insert(d.symbol, d.name);
+    insert(d.symbol, d.name);
     enterScope(d.symbol);
     // Continue semantic analysis.
     d.decls && visitD(d.decls);
@@ -246,10 +243,7 @@ override
       return d;
     d.symbol = new dil.semantic.Symbols.Interface(d.name, d);
     // Insert into current scope.
-    if (d.tparams)
-      insertOverload(d.symbol, d.name);
-    else
-      insert(d.symbol, d.name);
+    insert(d.symbol, d.name);
     enterScope(d.symbol);
     // Continue semantic analysis.
     d.decls && visitD(d.decls);
@@ -264,12 +258,7 @@ override
     d.symbol = new Struct(d.name, d);
     // Insert into current scope.
     if (d.name)
-    {
-      if (d.tparams)
-        insertOverload(d.symbol, d.name);
-      else
-        insert(d.symbol, d.name);
-    }
+      insert(d.symbol, d.name);
     enterScope(d.symbol);
     // Continue semantic analysis.
     d.decls && visitD(d.decls);
@@ -284,12 +273,7 @@ override
     d.symbol = new Union(d.name, d);
     // Insert into current scope.
     if (d.name)
-    {
-      if (d.tparams)
-        insertOverload(d.symbol, d.name);
-      else
-        insert(d.symbol, d.name);
-    }
+      insert(d.symbol, d.name);
     enterScope(d.symbol);
     // Continue semantic analysis.
     d.decls && visitD(d.decls);

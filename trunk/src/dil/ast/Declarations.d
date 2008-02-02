@@ -219,13 +219,13 @@ class TemplateDeclaration : Declaration
 abstract class AggregateDeclaration : Declaration
 {
   Identifier* name;
-  TemplateParameters tparams;
+//   TemplateParameters tparams;
   CompoundDeclaration decls;
-  this(Identifier* name, TemplateParameters tparams, CompoundDeclaration decls)
+  this(Identifier* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
   {
     super.hasBody = decls !is null;
     this.name = name;
-    this.tparams = tparams;
+//     this.tparams = tparams;
     this.decls = decls;
   }
 }
@@ -233,11 +233,11 @@ abstract class AggregateDeclaration : Declaration
 class ClassDeclaration : AggregateDeclaration
 {
   BaseClassType[] bases;
-  this(Identifier* name, TemplateParameters tparams, BaseClassType[] bases, CompoundDeclaration decls)
+  this(Identifier* name, /+TemplateParameters tparams, +/BaseClassType[] bases, CompoundDeclaration decls)
   {
-    super(name, tparams, decls);
+    super(name, /+tparams, +/decls);
     mixin(set_kind);
-    addOptChild(tparams);
+//     addOptChild(tparams);
     addOptChildren(bases);
     addOptChild(decls);
 
@@ -250,11 +250,11 @@ class ClassDeclaration : AggregateDeclaration
 class InterfaceDeclaration : AggregateDeclaration
 {
   BaseClassType[] bases;
-  this(Identifier* name, TemplateParameters tparams, BaseClassType[] bases, CompoundDeclaration decls)
+  this(Identifier* name, /+TemplateParameters tparams, +/BaseClassType[] bases, CompoundDeclaration decls)
   {
-    super(name, tparams, decls);
+    super(name, /+tparams, +/decls);
     mixin(set_kind);
-    addOptChild(tparams);
+//     addOptChild(tparams);
     addOptChildren(bases);
     addOptChild(decls);
 
@@ -269,11 +269,11 @@ class InterfaceDeclaration : AggregateDeclaration
 class StructDeclaration : AggregateDeclaration
 {
   uint alignSize;
-  this(Identifier* name, TemplateParameters tparams, CompoundDeclaration decls)
+  this(Identifier* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
   {
-    super(name, tparams, decls);
+    super(name, /+tparams, +/decls);
     mixin(set_kind);
-    addOptChild(tparams);
+//     addOptChild(tparams);
     addOptChild(decls);
   }
 
@@ -287,11 +287,11 @@ class StructDeclaration : AggregateDeclaration
 
 class UnionDeclaration : AggregateDeclaration
 {
-  this(Identifier* name, TemplateParameters tparams, CompoundDeclaration decls)
+  this(Identifier* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
   {
-    super(name, tparams, decls);
+    super(name, /+tparams, +/decls);
     mixin(set_kind);
-    addOptChild(tparams);
+//     addOptChild(tparams);
     addOptChild(decls);
   }
 
