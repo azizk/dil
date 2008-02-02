@@ -4,6 +4,7 @@
 +/
 module dil.doc.Macro;
 
+import dil.doc.Parser;
 import dil.lexer.Funcs;
 import dil.Unicode;
 import common;
@@ -35,6 +36,12 @@ class MacroTable
     table[macro_.name] = macro_;
   }
 
+  void insert(Macro[] macros)
+  {
+    foreach (macro_; macros)
+      insert(macro_);
+  }
+
   Macro search(string name)
   {
     auto pmacro = name in table;
@@ -51,78 +58,14 @@ class MacroTable
 
 struct MacroParser
 {
-  char* p;
-  char* textEnd;
-
   Macro[] parse(string text)
   {
-    if (!text.length)
-      return null;
-    if (text[$-1] != '\0')
-      text ~= '\0';
-    p = text.ptr;
-    textEnd = p + text.length;
-
-    Macro[] macros;
-
-    char* idBegin, idEnd, bodyBegin;
-    char* nextIdBegin, nextIdEnd, nextBodyBegin;
-
-    // Init.
-    findNextMacroId(idBegin, idEnd, bodyBegin);
-    // Continue.
-    while (findNextMacroId(nextIdBegin, nextIdEnd, nextBodyBegin))
-    {
-      macros ~= new Macro(makeString(idBegin, idEnd), makeString(bodyBegin, nextIdBegin));
-      idBegin = nextIdBegin;
-      idEnd = nextIdEnd;
-      bodyBegin = nextBodyBegin;
-    }
-    // Add last macro.
-    macros ~= new Macro(makeString(idBegin, idEnd), makeString(bodyBegin, textEnd));
+    IdentValueParser parser;
+    auto idvalues = parser.parse(text);
+    auto macros = new Macro[idvalues.length];
+    foreach (i, idvalue; idvalues)
+      macros[i] = new Macro(idvalue.ident, idvalue.value);
     return macros;
-  }
-
-  bool findNextMacroId(ref char* ref_idBegin, ref char* ref_idEnd, ref char* ref_bodyBegin)
-  {
-    while (p < textEnd)
-    {
-      skipWhitespace();
-      auto idBegin = p;
-      if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
-      {
-        do // IdChar*
-          p++;
-        while (isident(*p) || isUnicodeAlpha(p, textEnd))
-        auto idEnd = p;
-
-        skipWhitespace();
-        if (*p == '=')
-        {
-          p++;
-          skipWhitespace();
-          ref_idBegin = idBegin;
-          ref_idEnd = idEnd;
-          ref_bodyBegin = p;
-          return true;
-        }
-      }
-      skipLine();
-    }
-    return false;
-  }
-
-  void skipWhitespace()
-  {
-    while (p < textEnd && (isspace(*p) || *p == '\n'))
-      p++;
-  }
-
-  void skipLine()
-  {
-    while (p < textEnd && *p != '\n')
-      p++;
-    p++;
   }
 }
 
