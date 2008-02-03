@@ -113,7 +113,7 @@ class LaTeXDocGenerator : DefaultCachingDocGenerator {
       auto imgFile = outputFile(depGraphFile);
 
       auto writer = graphFactory.createGraphWriter( docWriter, GraphFormat.Dot );
-      writer.generateDepGraph(vertices.values, edges, imgFile);
+      writer.generateDepGraph(depGraph, imgFile);
 
       imgFile.close();
     });

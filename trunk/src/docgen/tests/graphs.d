@@ -11,7 +11,10 @@ import docgen.page.writers;
 import tango.io.FileConduit;
 import dil.semantic.Module;
 
-void saveDefaultGraph(Vertex[] vertices, Edge[] edges, char[] fname) {
+alias DepGraph.Edge Edge;
+alias DepGraph.Vertex Vertex;
+
+void saveDefaultGraph(DepGraph depGraph, char[] fname) {
   auto gen = new TestDocGenerator;
   gen.options.graph.highlightCyclicVertices = true;
   gen.options.graph.imageFormat = ImageFormat.SVG;
@@ -28,7 +31,7 @@ void saveDefaultGraph(Vertex[] vertices, Edge[] edges, char[] fname) {
     GraphFormat.Dot
   );
   
-  writer.generateDepGraph(vertices, edges, file);
+  writer.generateDepGraph(depGraph, file);
   
   file.close();
   file2.close();
@@ -37,71 +40,72 @@ void saveDefaultGraph(Vertex[] vertices, Edge[] edges, char[] fname) {
 // no edges
 //@unittest
 void graph1() {
-  auto a = new Vertex("mod_a", "path.to.mod_a", 1);
-  auto b = new Vertex("mod_b", "path.to.mod_b", 2);
-  auto c = new Vertex("mod_c", "path.to.mod_c", 3);
+  auto g = new DepGraph;
+  g.add(new Vertex("mod_a", "path.to.mod_a", 1));
+  g.add(new Vertex("mod_b", "path.to.mod_b", 2));
+  g.add(new Vertex("mod_c", "path.to.mod_c", 3));
   
-  saveDefaultGraph( [a,b,c], null, "graph1.dot" );
+  saveDefaultGraph(g, "graph1.dot");
 }
 
 
 // simple tree structure
 //@unittest
 void graph2() {
-  auto a = new Vertex("mod_a", "path.to.mod_a", 1);
-  auto b = new Vertex("mod_b", "path.to.mod_b", 2);
-  auto c = new Vertex("mod_c", "path.to.mod_c", 3);
-  auto d = new Vertex("mod_d", "path.to.mod_d", 4);
+  auto g = new DepGraph;
+  g.add(new Vertex("mod_a", "path.to.mod_a", 1));
+  g.add(new Vertex("mod_b", "path.to.mod_b", 2));
+  g.add(new Vertex("mod_c", "path.to.mod_c", 3));
+  g.add(new Vertex("mod_d", "path.to.mod_d", 4));
 
-  Edge[] edges;
-  edges ~= a.addChild(b);
-  edges ~= a.addChild(c);
-  edges ~= c.addChild(d);
+  g.connect(1, 0);
+  g.connect(2, 0);
+  g.connect(3, 2);
   
-  saveDefaultGraph( [a,b,c,d], edges, "graph2.dot" );
+  saveDefaultGraph(g, "graph2.dot");
 }
 
 // circular imports
 //@unittest
 void graph3() {
-  auto a = new Vertex("mod_a", "path.to.mod_a", 1);
-  auto b = new Vertex("mod_b", "path.to.mod_b", 2);
-  auto c = new Vertex("mod_c", "path.to.mod_c", 3);
-  auto d = new Vertex("mod_d", "path.to.mod_d", 4);
+  auto g = new DepGraph;
+  g.add(new Vertex("mod_a", "path.to.mod_a", 1));
+  g.add(new Vertex("mod_b", "path.to.mod_b", 2));
+  g.add(new Vertex("mod_c", "path.to.mod_c", 3));
+  g.add(new Vertex("mod_d", "path.to.mod_d", 4));
 
-  Edge[] edges;
-  edges ~= a.addChild(b);
-  edges ~= b.addChild(c);
-  edges ~= c.addChild(a);
-
-  saveDefaultGraph( [a,b,c,d], edges, "graph3.dot" );
+  g.connect(1, 0);
+  g.connect(2, 1);
+  g.connect(0, 2);
+  
+  saveDefaultGraph(g, "graph3.dot");
 }
 
 // more complex graph
 //@unittest
 void graph4() {
-  auto a = new Vertex("mod_a", "path.to.mod_a", 1);
-  auto b = new Vertex("mod_b", "path.to.mod_b", 2);
-  auto c = new Vertex("mod_c", "path.to.mod_c", 3);
-  auto d = new Vertex("mod_d", "path.to.mod_d", 4);
-  auto e = new Vertex("mod_e", "path.to.mod_e", 5);
-  auto f = new Vertex("mod_f", "path.to.mod_f", 6);
-  auto g = new Vertex("mod_g", "path.to.mod_g", 7);
+  auto g = new DepGraph;
+  g.add(new Vertex("mod_a", "path.to.mod_a", 1));
+  g.add(new Vertex("mod_b", "path.to.mod_b", 2));
+  g.add(new Vertex("mod_c", "path.to.mod_c", 3));
+  g.add(new Vertex("mod_d", "path.to.mod_d", 4));
+  g.add(new Vertex("mod_e", "path.to.mod_e", 5));
+  g.add(new Vertex("mod_f", "path.to.mod_f", 6));
+  g.add(new Vertex("mod_g", "path.to.mod_g", 7));
 
-  Edge[] edges;
-  edges ~= a.addChild(b);
-  edges ~= b.addChild(c);
-  edges ~= c.addChild(a);
-  edges ~= d.addChild(a);
-  edges ~= e.addChild(a);
-  edges ~= b.addChild(d);
-  edges ~= b.addChild(e);
-  edges ~= g.addChild(a);
-  edges ~= b.addChild(f);
-  edges ~= g.addChild(f);
-  edges ~= a.addChild(g);
+  g.connect(1, 0);
+  g.connect(2, 1);
+  g.connect(0, 2); 
+  g.connect(0, 3);
+  g.connect(0, 4);
+  g.connect(3, 1);
+  g.connect(4, 1);
+  g.connect(0, 6);
+  g.connect(5, 1);
+  g.connect(5, 6);
+  g.connect(6, 0);
 
-  saveDefaultGraph( [a,b,c,d,e,f,g], edges, "graph4.dot" );
+  saveDefaultGraph(g, "graph4.dot");
 }
 
 
@@ -129,11 +133,11 @@ void graph5() {
     [ "c" ], [ "docgen/teststuff/" ],
     null, true, -1,
     (char[] fqn, char[] path, Module m) {
-      vertices[m.moduleFQN] = new Vertex(m.moduleFQN, m.filePath, id++);
+      vertices[m.moduleFQN] = new DepGraph.Vertex(m.moduleFQN, m.filePath, id++);
     },
     (Module imported, Module importer, bool isPublic) {
       auto edge = vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
-      edge.type = isPublic ? EdgeType.PublicDependency : EdgeType.Dependency;
+      edge.isPublic = isPublic;
       edges ~= edge;
     },
     modules
@@ -144,7 +148,11 @@ void graph5() {
     GraphFormat.Dot
   );
   
-  writer.generateDepGraph(vertices.values, edges, imgFile);
+  auto graph = new DepGraph;
+  graph.edges = edges;
+  graph.vertices = vertices.values;
+
+  writer.generateDepGraph(graph, imgFile);
   
   file.close();
   imgFile.close();

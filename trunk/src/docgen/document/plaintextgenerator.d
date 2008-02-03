@@ -55,7 +55,9 @@ class PlainTextDocGenerator : DefaultCachingDocGenerator {
    * Generates document skeleton.
    */
   void generateDoc() {
-    writeSimpleFile(docFileNames[0], { docWriter.generateFirstPage(); });
+    writeSimpleFile(docFileNames[0], {
+      docWriter.generateFirstPage();
+    });
     
     writeSimpleFile(docFileNames[1], {
       docWriter.generateTOC(modules);
@@ -111,7 +113,7 @@ class PlainTextDocGenerator : DefaultCachingDocGenerator {
       auto imgFile = outputFile(depGraphFile);
 
       auto writer = graphFactory.createGraphWriter( docWriter, GraphFormat.Dot );
-      writer.generateDepGraph(vertices.values, edges, imgFile);
+      writer.generateDepGraph(depGraph, imgFile);
 
       imgFile.close();
     });

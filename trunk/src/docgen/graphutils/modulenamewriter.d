@@ -15,10 +15,13 @@ class ModuleNameWriter : AbstractGraphWriter {
     super(factory, writer);
   }
 
-  void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
+  void generateDepGraph(DepGraph depGraph, OutputStream imageFile) {
     char[][] contents;
 
-    void doList(Vertex[] v, uint level) {
+    auto edges = depGraph.edges;
+    auto vertices = depGraph.vertices;
+
+    void doList(DepGraph.Vertex[] v, uint level) {
       if (!level) return;
 
       contents ~= "(";

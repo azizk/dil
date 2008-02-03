@@ -18,7 +18,7 @@ import tango.io.FileScan;
 debug import tango.io.Stdout;
 
 
-alias void delegate(ref Module[], ref Edge[], ref Vertex[char[]]) ParserDg;
+alias void delegate(ref Module[], ref DepGraph) ParserDg;
 
 abstract class DefaultDocGenerator : DocGenerator {
   protected:
@@ -37,8 +37,7 @@ abstract class DefaultDocGenerator : DocGenerator {
   ModuleDocWriterFactory moduleDocFactory;
   
   Module[] modules;
-  Edge[] edges;
-  Vertex[char[]] vertices;
+  DepGraph depGraph;
 
   public:
 
@@ -100,7 +99,8 @@ abstract class DefaultDocGenerator : DocGenerator {
   }
 
   void parseSources() {
-    m_parser(modules, edges, vertices);
+    depGraph = new DepGraph();
+    m_parser(modules, depGraph);
   }
 
   //---

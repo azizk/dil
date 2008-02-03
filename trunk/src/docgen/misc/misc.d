@@ -14,8 +14,8 @@ interface DocGenerator {
 }
 
 interface GraphCache {  
-  char[] getCachedGraph(Object[] vertices, Object[] edges, GraphFormat format);
-  void setCachedGraph(Object[] vertices, Object[] edges, GraphFormat format, char[] contents);
+  char[] getCachedGraph(Object graph, GraphFormat format);
+  void setCachedGraph(Object graph, GraphFormat format, char[] contents);
 }
 
 interface CachingDocGenerator : DocGenerator {

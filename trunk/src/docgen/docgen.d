@@ -36,15 +36,19 @@ void main(char[][] args) {
   options.parser.importPaths = args[2..$-1];
   options.outputDir = args[$-1];
 
-  Module[] cachedModules;
-  Edge[] cachedEdges;
-  Vertex[char[]] cachedVertices;
+  alias DepGraph.Vertex Vertex;
+  alias DepGraph.Edge Edge;
 
-  void parser(ref Module[] modules, ref Edge[] edges, ref Vertex[char[]] vertices) {
-    if (cachedModules != null) {
+  Module[] cachedModules;
+  DepGraph cachedGraph;
+
+  void parser(ref Module[] modules, ref DepGraph depGraph) {
+    Edge[] edges;
+    Vertex[char[]] vertices;
+
+    if (cachedGraph != null) {
       modules = cachedModules;
-      edges = cachedEdges;
-      vertices = cachedVertices;
+      depGraph = cachedGraph;
       return;
     }
 
@@ -61,13 +65,10 @@ void main(char[][] args) {
           if (fqn in vertices) {
             debug Stdout.format("{} already set.\n", fqn);
             return;
-
           }
           auto vertex = new Vertex(fqn, path, id++);
-          vertex.type = VertexType.UnlocatableModule;
           vertices[fqn] = vertex;
           debug Stdout.format("Setting {} = {}.\n", fqn, path);
-
         } else {
           vertices[m.moduleFQN] = new Vertex(m.moduleFQN, m.filePath, id++);
           debug Stdout.format("Setting {} = {}.\n", m.moduleFQN, m.filePath);
@@ -76,8 +77,7 @@ void main(char[][] args) {
       (Module imported, Module importer, bool isPublic) {
         debug Stdout.format("Connecting {} - {}.\n", imported.moduleFQN, importer.moduleFQN);
         auto edge = vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
-        edge.type = isPublic ? EdgeType.PublicDependency : EdgeType.Dependency;
-        edge.type = id % 2 ? EdgeType.PublicDependency : EdgeType.Dependency; // FIXME: temporary feature for demonstrating public imports
+        edge.isPublic = isPublic;
         edges ~= edge;
       },
       modules
@@ -87,9 +87,11 @@ void main(char[][] args) {
       (Module a, Module b){ return icompare(a.moduleFQN, b.moduleFQN); }
     );
 
-    cachedVertices = vertices;
+    depGraph.edges = edges;
+    depGraph.vertices = vertices.values;
+
+    cachedGraph = depGraph;
     cachedModules = modules;
-    cachedEdges = edges;
   }
   
   GraphCache graphcache = new DefaultGraphCache();

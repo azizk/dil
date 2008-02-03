@@ -22,21 +22,24 @@ class DotWriter : AbstractGraphWriter {
     super(factory, writer);
   }
 
-  void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
+  void generateDepGraph(DepGraph depGraph, OutputStream imageFile) {
     generateImageTag(imageFile);
     
-    auto image = generateDepImageFile(vertices, edges);
+    auto image = generateDepImageFile(depGraph);
     auto printer = new Print!(char)(new Layout!(char), imageFile);
     printer(image);
   }
 
   protected:
 
-  char[] generateDepImageFile(Vertex[] vertices, Edge[] edges) {
+  char[] generateDepImageFile(DepGraph depGraph) {
     char[] image;
     auto sprint = new Sprint!(char);
+    
+    auto edges = depGraph.edges;
+    auto vertices = depGraph.vertices;
 
-    Vertex[][char[]] verticesByPckgName;
+    DepGraph.Vertex[][char[]] verticesByPckgName;
     if (factory.options.graph.groupByFullPackageName ||
         factory.options.graph.groupByPackageNames) {
       foreach (mod; vertices) {
@@ -51,7 +54,7 @@ class DotWriter : AbstractGraphWriter {
 
     if (factory.options.graph.highlightCyclicVertices ||
         factory.options.graph.highlightCyclicEdges)
-      findCycles(vertices, edges);
+      depGraph.markCycles();
 
     image ~= "Digraph ModuleDependencies {\n";
 
@@ -65,9 +68,9 @@ class DotWriter : AbstractGraphWriter {
         `  n{} [label="{}",style=filled,fillcolor={}];`\n,
         module_.id,
         nodeName,
-        module_.isCyclic && factory.options.graph.highlightCyclicVertices ?
+        module_.cyclic && factory.options.graph.highlightCyclicVertices ?
           factory.options.graph.cyclicNodeColor :
-        module_.type == VertexType.UnlocatableModule ?
+        module_.incoming.length == 0 && module_.outgoing.length == 0 ?
           factory.options.graph.unlocatableNodeColor :
           factory.options.graph.nodeColor
       );
@@ -78,9 +81,9 @@ class DotWriter : AbstractGraphWriter {
         `  n{} -> n{}[color={}];`\n,
         edge.outgoing.id,
         edge.incoming.id,
-        edge.isCyclic ?
+        edge.cyclic ?
           factory.options.graph.cyclicDepColor :
-        edge.type == EdgeType.PublicDependency ?
+        edge.isPublic ?
           factory.options.graph.publicDepColor ~ ",style=bold" :
           factory.options.graph.depColor
       );
@@ -148,18 +151,18 @@ class CachingDotWriter : DotWriter {
     this.factory = factory;
   }
 
-  override void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile) {
+  override void generateDepGraph(DepGraph depGraph, OutputStream imageFile) {
     generateImageTag(imageFile);
 
-    auto cached = factory.graphCache.getCachedGraph(vertices, edges, GraphFormat.Dot);
+    auto cached = factory.graphCache.getCachedGraph(depGraph, GraphFormat.Dot);
 
     auto printer = new Print!(char)(new Layout!(char), imageFile);
     
     if (cached) {
       printer(cached);
     } else {
-      auto image = generateDepImageFile(vertices, edges);
-      factory.graphCache.setCachedGraph(vertices, edges, GraphFormat.Dot, image);
+      auto image = generateDepImageFile(depGraph);
+      factory.graphCache.setCachedGraph(depGraph, GraphFormat.Dot, image);
       printer(image);
     }
   }

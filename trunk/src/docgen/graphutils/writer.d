@@ -10,7 +10,7 @@ public import docgen.page.writer;
 debug import tango.io.Stdout;
 
 interface GraphWriter {
-  void generateDepGraph(Vertex[] vertices, Edge[] edges, OutputStream imageFile);
+  void generateDepGraph(DepGraph depGraph, OutputStream imageFile);
 }
 
 interface GraphWriterFactory : WriterFactory {
@@ -20,7 +20,7 @@ interface GraphWriterFactory : WriterFactory {
 interface CachingGraphWriterFactory : GraphWriterFactory {
   GraphCache graphCache();
 }
-
+/+
 /**
  * Marks all cycles in the graph.
  *
@@ -67,6 +67,7 @@ void findCycles(Vertex[] vertices, Edge[] edges) {
         debug Stderr("*\n");
       }
 }
++/
 
 abstract class AbstractGraphWriter : AbstractWriter!(GraphWriterFactory), GraphWriter {
   protected:
@@ -84,31 +85,29 @@ abstract class AbstractGraphWriter : AbstractWriter!(GraphWriterFactory), GraphW
 class DefaultGraphCache : GraphCache {
   private:
     
-  char[][Object[]][Object[]][GraphFormat] m_graphCache;
+  char[][Object][GraphFormat] m_graphCache;
 
   public:
 
-  char[] getCachedGraph(Object[] vertices, Object[] edges, GraphFormat format) {
+  char[] getCachedGraph(Object graph, GraphFormat format) {
     debug Stdout("Starting graph lookup\n");
-    debug Stdout(&vertices, &edges, format).newline;
+    debug Stdout(&graph, format).newline;
     debug Stdout(&m_graphCache).newline;
     
     auto lookup1 = format in m_graphCache;
     if (lookup1) {
-      auto lookup2 = edges in *lookup1;
+      auto lookup2 = graph in *lookup1;
       if (lookup2) {
-        auto lookup3 = vertices in *lookup2;
-        if (lookup3)
-          return *lookup3;
+          return *lookup2;
       }
     }
     debug Stdout("Graph cache miss!\n");
     return null;
   }
 
-  void setCachedGraph(Object[] vertices, Object[] edges, GraphFormat format, char[]
+  void setCachedGraph(Object graph, GraphFormat format, char[]
       contents) {
-    m_graphCache[format][edges][vertices] = contents;
+    m_graphCache[format][graph] = contents;
     debug Stdout("Graph cache updated!\n");
   }
 }
