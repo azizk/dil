@@ -5,6 +5,8 @@
 module docgen.misc.parser;
 
 import dil.parser.Parser;
+import dil.parser.ImportParser;
+import dil.File;
 import dil.Settings;
 public import dil.semantic.Module;
 import tango.text.Regex : RegExp = Regex;
@@ -13,26 +15,26 @@ import tango.text.Util;
 debug import tango.io.Stdout;
 
 alias void delegate (char[] fqn, char[] path, Module module_) modDg;
-alias void delegate (Module imported, Module importer, bool isPublic) importDg;
+alias void delegate (Module imported, Module importer, bool isPublic, bool isStatic) importDg;
 
 class Parser {
   private:
     
-  static char[] findModulePath(char[] moduleFQN, char[][] importPaths) {
-    char[] modulePath;
+  static char[] findModuleFilePath(char[] moduleFQNPath, char[][] importPaths) {
+    auto filePath = new FilePath();
+    foreach (importPath; importPaths) {
+      filePath.set(importPath);
+      filePath.append(moduleFQNPath);
 
-    foreach (path; importPaths) {
-      modulePath = path ~ (path[$-1] == dirSep ? "" : [dirSep]) ~ moduleFQN ~ ".d";
-
-      // TODO: also check for *.di?
-
-      if ((new FilePath(modulePath)).exists()) {
-        debug Stdout("  * File for ")(moduleFQN)(" found: ")(modulePath).newline;
-        return modulePath;
+      foreach (moduleSuffix; [".d", ".di"/*interface file*/])
+      {
+        filePath.suffix(moduleSuffix);
+        if (filePath.exists())
+          return filePath.toString();
       }
     }
 
-    debug Stdout("  * ")(moduleFQN)(" does not exist in imports")().newline()();
+    debug Stdout("  * ")(moduleFQNPath)(" does not exist in imports\n")();
     return null;
   }
 
@@ -56,8 +58,8 @@ class Parser {
    *     modules = List of parsed modules
    */
   static void loadModules(char[] filePath, char[][] importPaths, char[][] strRegexps,
-                                 bool IncludeUnlocatableModules, int recursionDepth,
-                                 modDg mdg, importDg idg, out Module[] modules) {
+                          bool IncludeUnlocatableModules, int recursionDepth,
+                          modDg mdg, importDg idg, out Module[] modules) {
 
     loadModules([filePath], importPaths, strRegexps, IncludeUnlocatableModules,
       recursionDepth, mdg, idg, modules);
@@ -81,8 +83,9 @@ class Parser {
    *     modules = List of parsed modules
    */
   static void loadModules(char[][] filePaths, char[][] importPaths, char[][] strRegexps,
-                                 bool IncludeUnlocatableModules, int recursionDepth,
-                                 modDg mdg, importDg idg, out Module[] modules) {
+                          bool IncludeUnlocatableModules, int recursionDepth,
+                          modDg mdg, importDg idg, out Module[] modules) {
+
     // Initialize regular expressions.
     RegExp[] regexps;
     foreach (strRegexp; strRegexps)
@@ -121,33 +124,34 @@ class Parser {
       foreach (rx; regexps)
         if (rx.test(FQN)) return null;
 
-      auto modulePath = findModulePath(moduleFQNPath, importPaths);
+      auto moduleFilePath = findModuleFilePath(moduleFQNPath, importPaths);
       //foreach(filePath; filePaths)
         //if (moduleFQNPath == filePath) modulePath = filePath;
 
       debug Stdout("  FQN ")(FQN).newline;
-      debug Stdout("  Module path ")(modulePath).newline;
+      debug Stdout("  Module path ")(moduleFilePath).newline;
 
       Module mod = null;
 
-      if (modulePath is null) {
+      if (moduleFilePath is null) {
         if (IncludeUnlocatableModules)
           mdg(FQN, moduleFQNPath, null);
       } else {
-        mod = new Module(modulePath);
-        loadedModules[moduleFQNPath] = mod;
+        mod = new Module(moduleFilePath);
+        
+        // Use lightweight ImportParser.
+        mod.parser = new ImportParser(loadFile(moduleFilePath), moduleFilePath);
         mod.parse();
 
         mdg(FQN, moduleFQNPath, mod);
+        loadedModules[moduleFQNPath] = mod;
 
-        auto imports = mod.imports;
-
-        foreach (importList; imports)
-          foreach(moduleFQN_; importList.getModuleFQNs(dirSep)) {
+        foreach (importDecl; mod.imports)
+          foreach(moduleFQN_; importDecl.getModuleFQNs(dirSep)) {
             auto loaded_mod = loadModule(moduleFQN_, depth == -1 ? depth : depth-1);
 
             if (loaded_mod !is null) {
-              idg(loaded_mod, mod, importList.isPublic());
+              idg(loaded_mod, mod, importDecl.isPublic(), importDecl.isStatic());
             } else if (IncludeUnlocatableModules) {/* FIXME
               auto tmp = new Module(null, true);
               tmp.moduleFQN = replace(moduleFQN_.dup, dirSep, '.');

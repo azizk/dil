@@ -17,17 +17,26 @@ import tango.io.Stdout;
  *
  */
 void main() {
-  Stdout("Running..");
+  Stdout("Running..\n")();
 
+  Stdout(" Test1\n")();
   graph1();
+  Stdout(" Test2\n")();
   graph2();
+  Stdout(" Test3\n")();
   graph3();
+  Stdout(" Test4\n")();
   graph4();
+  Stdout(" Test5\n")();
   graph5();
+  Stdout(" Test6\n")();
   parse1();
+  Stdout(" Test7\n")();
   parse2();
+  Stdout(" Test8\n")();
   doctemplate1();
+  Stdout(" Test9\n")();
   listing1();
 //  loadConfig();
-  Stdout("done.\n");
+  Stdout("done.\n")();
 }

@@ -29,7 +29,7 @@ void listing1() {
     [ "c" ], [ "docgen/teststuff/" ],
     null, true, -1,
     (char[] fqn, char[] path, Module m) {},
-    (Module imported, Module importer, bool isPublic) {},
+    (Module imported, Module importer, bool isPublic, bool isStatic) {},
     modules
   );
   

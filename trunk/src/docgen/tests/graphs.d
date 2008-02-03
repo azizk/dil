@@ -135,9 +135,10 @@ void graph5() {
     (char[] fqn, char[] path, Module m) {
       vertices[m.moduleFQN] = new DepGraph.Vertex(m.moduleFQN, m.filePath, id++);
     },
-    (Module imported, Module importer, bool isPublic) {
+    (Module imported, Module importer, bool isPublic, bool isStatic) {
       auto edge = vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
       edge.isPublic = isPublic;
+      edge.isStatic = isStatic;
       edges ~= edge;
     },
     modules
