@@ -58,7 +58,7 @@ class ImportParser : Parser
 
   bool skipToClosing(T opening, T closing)
   {
-    Token* next = token;
+    alias token next;
     uint level = 1;
     while (1)
     {
@@ -257,6 +257,7 @@ class ImportParser : Parser
       else
         goto case_InvariantAttribute;
     }
+      nT();
       token.kind == T.LParen && skipToTokenAfterClosingParen();
       parseFunctionBody();
       break;
