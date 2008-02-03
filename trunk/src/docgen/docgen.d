@@ -46,7 +46,7 @@ void main(char[][] args) {
     Edge[] edges;
     Vertex[char[]] vertices;
 
-    if (cachedGraph != null) {
+    if (cachedGraph !is null) {
       modules = cachedModules;
       depGraph = cachedGraph;
       return;
@@ -74,18 +74,19 @@ void main(char[][] args) {
           debug Stdout.format("Setting {} = {}.\n", m.moduleFQN, m.filePath);
         }
       },
-      (Module imported, Module importer, bool isPublic) {
+      (Module imported, Module importer, bool isPublic, bool isStatic) {
         debug Stdout.format("Connecting {} - {}.\n", imported.moduleFQN, importer.moduleFQN);
         auto edge = vertices[imported.moduleFQN].addChild(vertices[importer.moduleFQN]);
         edge.isPublic = isPublic;
+        edge.isStatic = isStatic;
         edges ~= edge;
       },
       modules
     );
 
-    modules.sort(
-      (Module a, Module b){ return icompare(a.moduleFQN, b.moduleFQN); }
-    );
+//    modules.sort(
+//      (Module a, Module b){ return icompare(a.moduleFQN, b.moduleFQN); }
+//    );
 
     depGraph.edges = edges;
     depGraph.vertices = vertices.values;
