@@ -10,6 +10,8 @@ import dil.lexer.Funcs;
 import dil.Unicode;
 import common;
 
+import tango.text.Ascii : toLower;
+
 class DDocComment
 {
   Section[] sections;
@@ -22,6 +24,22 @@ class DDocComment
     this.summary = summary;
     this.description = description;
   }
+
+  Section getCopyright()
+  {
+    foreach (section; sections)
+      if (toLower(section.name) == "copyright")
+        return section;
+    return null;
+  }
+}
+
+/// Returns a node's DDocComment.
+DDocComment getDDocComment(Node node)
+{
+  DDocParser p;
+  p.parse(getDDocText(getDocTokens(node)));
+  return new DDocComment(p.sections, p.summary, p.description);
 }
 
 struct DDocParser
@@ -171,8 +189,8 @@ class ParamsSection : Section
 
 class MacrosSection : Section
 {
-  string[] macroNames; /// Parameter names.
-  string[] macroTexts; /// Parameter descriptions.
+  string[] macroNames; /// Macro names.
+  string[] macroTexts; /// Macro texts.
   this(string name, string text)
   {
     super(name, text);

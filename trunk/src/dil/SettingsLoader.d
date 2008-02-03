@@ -57,7 +57,7 @@ void loadSettings()
       {
         foreach (value; array.values)
           if (auto str = value.Is!(StringExpression))
-            GlobalSettings.ddocFilePaths ~= str.getString();
+            GlobalSettings.ddocFilePaths ~= resolvePath(execPath, str.getString());
       }
       else
         throw new Exception("import_paths variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");

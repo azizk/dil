@@ -151,6 +151,8 @@ Loop:
     switch (*p)
     {
     case ',':
+      if (level != 1) // Ignore comma if inside ().
+        break;
       // Add a new argument.
       args ~= makeString(argBegin, p);
       while (++p < textEnd && isspace(*p))
