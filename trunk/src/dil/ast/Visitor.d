@@ -45,17 +45,19 @@ template returnType(char[] className)
 }
 
 /++
-  Generate functions which do the second dispatch.
-  E.g.:
-    Expression visitCommaExpression(Visitor visitor, CommaExpression c)
-    { visitor.visit(c); }
+  Generate functions which do the second dispatch.$(BR)
+  E.g.:$(BR)
+    $(D_CODE
+Expression visitCommaExpression(Visitor visitor, CommaExpression c)
+{ visitor.visit(c); })
 
-  The equivalent in the traditional visitor pattern would be:
-    class CommaExpression : Expression
-    {
-      void accept(Visitor visitor)
-      { visitor.visit(this); }
-    }
+  The equivalent in the traditional visitor pattern would be:$(BR)
+    $(D_CODE
+class CommaExpression : Expression
+{
+  void accept(Visitor visitor)
+  { visitor.visit(this); }
+})
 +/
 char[] generateDispatchFunctions()
 {
@@ -79,6 +81,7 @@ char[] generateVTable()
 }
 // pragma(msg, generateVTable());
 
+/// The visitor pattern.
 abstract class Visitor
 {
   mixin(generateVisitMethods());

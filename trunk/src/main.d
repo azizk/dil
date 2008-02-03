@@ -28,12 +28,14 @@ import dil.File;
 import cmd.Generate;
 import cmd.Statistics;
 import cmd.ImportGraph;
+import cmd.DDoc;
 import common;
 
 import Integer = tango.text.convert.Integer;
 import tango.io.File;
 import tango.text.Util;
 import tango.time.StopWatch;
+import tango.text.Ascii : toLower;
 
 void main(char[][] args)
 {
@@ -81,6 +83,31 @@ void main(char[][] args)
     }
 
     printErrors(infoMan);
+    break;
+  case "ddoc", "d":
+    if (args.length < 4)
+      return printHelp("ddoc");
+
+    auto destination = args[2];
+    auto macroPaths = GlobalSettings.ddocFilePaths;
+    char[][] filePaths;
+    bool incUndoc;
+    // Parse arguments.
+    foreach (arg; args[3..$])
+    {
+      if (arg == "-i")
+        incUndoc = true;
+      else if (arg.length > 5 && toLower(arg[$-4..$]) == "ddoc")
+        macroPaths ~= arg;
+      else
+        filePaths ~= arg;
+    }
+
+    auto infoMan = new InfoManager();
+    // Execute command.
+    cmd.DDoc.execute(filePaths, destination, macroPaths, incUndoc, infoMan);
+    if (infoMan.info.length)
+      return printErrors(infoMan);
     break;
   case "gen", "generate":
     char[] fileName;
@@ -252,6 +279,7 @@ void main(char[][] args)
 
 const char[] COMMANDS =
   "  compile (c)\n"
+  "  ddoc (d)\n"
   "  generate (gen)\n"
   "  help (?)\n"
   "  importgraph (igraph)\n"
@@ -309,6 +337,20 @@ Options:
 
 Example:
   dil c src/main.d";
+    break;
+  case "ddoc", "d":
+    msg = `Generate documentation from DDoc comments in D source files.
+Usage:
+  dil ddoc Destination file.d [file2.d, ...] [Options]
+
+  Destination is the folder where the documentation files are written to.
+  Files with the extension .ddoc are recognized as macro definition files.
+
+Options:
+  -i               : include undocumented symbols
+
+Example:
+  dil d doc/ src/main.d mymacros.ddoc -i`;
     break;
   case "gen", "generate":
     msg = GetMsg(MID.HelpGenerate);
