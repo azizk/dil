@@ -11,14 +11,20 @@ import dil.Settings;
 public import dil.semantic.Module;
 import tango.text.Regex : RegExp = Regex;
 import tango.io.FilePath;
+import tango.io.FileSystem;
+import tango.core.Array : remove;
 import tango.text.Util;
+import docgen.misc.meta;
 debug import tango.io.Stdout;
 
 alias void delegate (char[] fqn, char[] path, Module module_) modDg;
 alias void delegate (Module imported, Module importer, bool isPublic, bool isStatic) importDg;
 
 class Parser {
-  private:
+  protected:
+
+//  ParserOptions m_options;
+
     
   static char[] findModuleFilePath(char[] moduleFQNPath, char[][] importPaths) {
     auto filePath = new FilePath();
@@ -29,6 +35,7 @@ class Parser {
       foreach (moduleSuffix; [".d", ".di"/*interface file*/])
       {
         filePath.suffix(moduleSuffix);
+        debug Stdout("Trying ")(filePath.toString()).newline;
         if (filePath.exists())
           return filePath.toString();
       }
@@ -91,6 +98,8 @@ class Parser {
     foreach (strRegexp; strRegexps)
       regexps ~= new RegExp(strRegexp);
 
+    importPaths ~= ".";
+
     // Add directory of file and global directories to import paths.
     foreach(filePath; filePaths) {
       auto fileDir = (new FilePath(filePath)).folder();
@@ -98,7 +107,7 @@ class Parser {
         importPaths ~= fileDir;
     }
 
-    importPaths ~= GlobalSettings.importPaths;
+//    importPaths ~= GlobalSettings.importPaths;
 
     debug foreach(path; importPaths) {
       Stdout("Import path: ")(path).newline;
@@ -125,8 +134,6 @@ class Parser {
         if (rx.test(FQN)) return null;
 
       auto moduleFilePath = findModuleFilePath(moduleFQNPath, importPaths);
-      //foreach(filePath; filePaths)
-        //if (moduleFQNPath == filePath) modulePath = filePath;
 
       debug Stdout("  FQN ")(FQN).newline;
       debug Stdout("  Module path ")(moduleFilePath).newline;
@@ -140,8 +147,37 @@ class Parser {
         mod = new Module(moduleFilePath);
         
         // Use lightweight ImportParser.
-        mod.parser = new ImportParser(loadFile(moduleFilePath), moduleFilePath);
+//        mod.parser = new ImportParser(loadFile(moduleFilePath), moduleFilePath);
         mod.parse();
+
+        debug Stdout("  Parsed FQN ")(mod.getFQN()).newline;
+
+        // autoinclude dirs (similar to Java)
+        // running docgen in foo/bar/abc/ also finds foo/xyz/zzz.d if module names are right
+        {
+          // foo.bar.mod -> [ "foo", "bar" ]
+          auto modPackage = split(mod.getFQN, ".")[0..$-1];
+          auto modDir = split(FileSystem.toAbsolute(new FilePath(moduleFilePath)).standard().folder(), "/");
+          auto modLocation = modDir[0..modDir.remove(".")];
+
+          bool matches = false;
+          int i;
+
+          for(i = 1; i <= min(modPackage.length, modLocation.length); i++) {
+            matches = true;
+            debug Stdout("  Decl: ")(modPackage[$-i]).newline;
+            debug Stdout("  Path: ")(modLocation[$-i]).newline;
+            if (modPackage[$-i] != modLocation[$-i]) {
+              matches = false;
+              break;
+            }
+          }
+          if (matches) {
+            auto loc = modLocation[0..$-i+1].join("/");
+            debug Stdout("  Autoadding import: ")(loc).newline;
+            importPaths ~= loc;
+          }
+        }
 
         mdg(FQN, moduleFQNPath, mod);
         loadedModules[moduleFQNPath] = mod;
@@ -152,10 +188,10 @@ class Parser {
 
             if (loaded_mod !is null) {
               idg(loaded_mod, mod, importDecl.isPublic(), importDecl.isStatic());
-            } else if (IncludeUnlocatableModules) {/* FIXME
-              auto tmp = new Module(null, true);
-              tmp.moduleFQN = replace(moduleFQN_.dup, dirSep, '.');
-              idg(tmp, mod, importList.isPublic());*/
+            } else if (IncludeUnlocatableModules) {
+              auto tmp = new Module(null);
+              tmp.setFQN(replace(moduleFQN_.dup, dirSep, '.'));
+              idg(tmp, mod, importDecl.isPublic(), importDecl.isStatic());
             }
           }
       }

@@ -11,8 +11,11 @@ import docgen.document.htmlgenerator;
 import docgen.document.xmlgenerator;
 import docgen.document.plaintextgenerator;
 
+//import dil.Settings;
+import dil.SettingsLoader;
+
 import tango.core.Array;
-import tango.text.Ascii;
+import tango.text.Text;
 import tango.io.Stdout;
 
 void usage() {
@@ -22,6 +25,8 @@ void usage() {
 }
 
 void main(char[][] args) {
+  dil.SettingsLoader.loadSettings();
+
   Stdout(docgen_version).newline.newline;
 
   if (args.length<3) {
@@ -84,9 +89,9 @@ void main(char[][] args) {
       modules
     );
 
-//    modules.sort(
-//      (Module a, Module b){ return icompare(a.moduleFQN, b.moduleFQN); }
-//    );
+    modules.sort(
+      (Module a, Module b) { return ((new Text!(char)(a.moduleFQN)).compare(b.moduleFQN)) < 0; }
+    );
 
     depGraph.edges = edges;
     depGraph.vertices = vertices.values;
