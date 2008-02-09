@@ -60,12 +60,14 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
 
     // Generate documentation.
     auto dest = new FilePath(destDir);
-    generateDocumentation(dest, mod, mtable, incUndoc, verbose);
+    dest.append(mod.getFQN() ~ ".html");
+    if (verbose)
+      Stdout.formatln("{} > {}", mod.filePath, dest);
+    writeDocFile(dest, mod, mtable, incUndoc);
   }
 }
 
-void generateDocumentation(FilePath dest, Module mod, MacroTable mtable,
-                           bool incUndoc, bool verbose)
+void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc)
 {
   // Create a macro environment for this module.
   mtable = new MacroTable(mtable);
@@ -76,7 +78,7 @@ void generateDocumentation(FilePath dest, Module mod, MacroTable mtable,
   time_t time_val;
   time(&time_val);
   char* str = ctime(&time_val);
-  char[] time_str = str[0 .. strlen(str)];
+  char[] time_str = str[0 .. strlen(str)-1]; // -1 removes trailing '\n'.
   mtable.insert("DATETIME", time_str.dup);
   mtable.insert("YEAR", time_str[20..24].dup);
 
@@ -87,9 +89,6 @@ void generateDocumentation(FilePath dest, Module mod, MacroTable mtable,
   // Do the macro expansion pass.
   auto fileText = expandMacros(mtable, "$(DDOC)");
   // Finally write the file out to the harddisk.
-  dest.append(mod.getFQN() ~ ".html");
-  if (verbose)
-    Stdout.formatln("{} > {}", mod.filePath, dest);
   auto file = new File(dest);
   file.write(fileText);
 }

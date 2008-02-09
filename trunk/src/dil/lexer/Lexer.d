@@ -142,7 +142,7 @@ class Lexer
       time_t time_val;
       time(&time_val);
       char* str = ctime(&time_val);
-      char[] time_str = str[0 .. strlen(str)];
+      char[] time_str = str[0 .. strlen(str)-1]; // -1 removes trailing '\n'.
       switch (t.kind)
       {
       case TOK.DATE:
