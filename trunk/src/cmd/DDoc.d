@@ -215,7 +215,7 @@ class DDocEmitter : DefaultVisitor
           auto ps = new ParamsSection(s.name, s.text);
           write("\n$(DDOC_PARAMS ");
           foreach (i, paramName; ps.paramNames)
-            write("$(DDOC_PARAM_ROW ",
+            write("\n$(DDOC_PARAM_ROW ",
                     "$(DDOC_PARAM_ID ", paramName, ")",
                     "$(DDOC_PARAM_DESC ", ps.paramDescs[i], ")",
                   ")");
@@ -254,9 +254,9 @@ class DDocEmitter : DefaultVisitor
   void writeFuncHeader(Declaration d, FuncBodyStatement s)
   {
     auto begin = d.begin;
-    auto end = d.end.prev;
+    auto end = d.end.prevNWS;
     if (!s.isEmpty)
-      end = s.begin.prev;
+      end = s.begin.prevNWS;
     text ~= textSpan(begin, end);
   }
 
@@ -395,7 +395,7 @@ override:
     DECL({
       write("template ");
       SYMBOL(d.name.str);
-      write(textSpan(d.begin.next.next, d.decls.begin.prev));
+      write(textSpan(d.begin.nextNWS.nextNWS, d.decls.begin.prevNWS));
     });
     DESC({
       writeComment();

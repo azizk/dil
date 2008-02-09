@@ -21,8 +21,8 @@ bool isValidChar(dchar d)
 }
 
 /++
-  Returns true if this is one of the
   There are a total of 66 noncharacters.
+  Returns: true if this is one of them.
   See_also: Chapter 16.7 Noncharacters in Unicode 5.0
 +/
 bool isNoncharacter(dchar d)

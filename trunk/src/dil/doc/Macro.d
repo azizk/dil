@@ -137,7 +137,7 @@ char[] expandMacros(MacroTable table, char[] text, char[][] args = null)
 }
 
 /// Scans until the closing ')' is found.
-/// Returns [$0, $1, $2 ...].
+/// Returns: [$0, $1, $2 ...].
 char[][] scanArguments(ref char* p, char* textEnd)
 out(args) { assert(args.length != 1); }
 body

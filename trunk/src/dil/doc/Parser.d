@@ -46,13 +46,29 @@ struct IdentValueParser
     // Continue.
     while (findNextIdent(nextIdent, nextBodyBegin))
     {
-      idvalues ~= new IdentValue(ident, makeString(bodyBegin, nextIdent.ptr));
+      idvalues ~= new IdentValue(ident, textBody(bodyBegin, nextIdent.ptr));
       ident = nextIdent;
       bodyBegin = nextBodyBegin;
     }
     // Add last ident value.
-    idvalues ~= new IdentValue(ident, makeString(bodyBegin, textEnd));
+    idvalues ~= new IdentValue(ident, textBody(bodyBegin, textEnd));
     return idvalues;
+  }
+
+  /// Removes trailing whitespace characters from the text body.
+  char[] textBody(char* begin, char* end)
+  {
+    // The body of A is empty, e.g.:
+    // A =
+    // B = some text
+    // ^- begin and end point to B (or to this.textEnd in the 2nd case.)
+    if (begin is end)
+      return null;
+    // Remove trailing whitespace.
+    while (isspace(*--end) || *end == '\n')
+    {}
+    end++;
+    return makeString(begin, end);
   }
 
   bool findNextIdent(ref string ident, ref char* bodyBegin)
