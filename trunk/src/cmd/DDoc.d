@@ -63,7 +63,7 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
     dest.append(mod.getFQN() ~ ".html");
     if (verbose)
       Stdout.formatln("{} > {}", mod.filePath, dest);
-    writeDocFile(dest, mod, mtable, incUndoc);
+    writeDocFile(dest.toString(), mod, mtable, incUndoc);
   }
 }
 
