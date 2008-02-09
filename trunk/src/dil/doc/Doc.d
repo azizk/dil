@@ -382,7 +382,7 @@ string sanitize(string comment, char commentChar)
     default:
       if (!isascii(result[i]) && i+2 < len && isUnicodeNewline(result.ptr + i))
       {
-        i++; i++;
+        i += 2;
         goto case '\n';
       }
     }

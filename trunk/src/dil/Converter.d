@@ -237,3 +237,61 @@ struct Converter
     return text;
   }
 }
+
+/// Replaces invalid UTF-8 sequences with U+FFFD (if there's enough space,)
+/// and Newlines with '\n'.
+string sanitizeText(string text)
+{
+  if (!text.length)
+    return null;
+
+  char* p = text.ptr;
+  char* end = p + text.length;
+  char* q = p;
+
+  for (; p < end; p++, q++)
+  {
+    assert(q <= p);
+    switch (*p)
+    {
+    case '\r':
+      if (p+1 < end && p[1] == '\n')
+        p++;
+    case '\n':
+      *q = '\n';
+      continue;
+    default:
+      if (isascii(*p))
+        break;
+      if (p+2 < end && isUnicodeNewline(p))
+      {
+        p += 2;
+        goto case '\n';
+      }
+      auto p2 = p; // Beginning of the UTF-8 sequence.
+      dchar c = decode(p, end);
+      if (c == ERROR_CHAR)
+      { // Skip to next ASCII character or valid UTF-8 sequence.
+        while (++p < end && isTrailByte(*p))
+        {}
+        alias REPLACEMENT_STR R;
+        if (q+2 < p) // Copy replacement char if there is enough space.
+          (*q = R[0]), (*++q = R[1]), (*++q = R[2]);
+        p--;
+      }
+      else
+      { // Copy the valid UTF-8 sequence.
+        while (p2 <= p) // p points to the last trail byte.
+          *q++ = *p2++; // Copy code units.
+        q--;
+      }
+      continue;
+    }
+    assert(isascii(*p));
+    *q = *p;
+  }
+  assert(p == end);
+  text.length = text.length - (p - q);
+  //text = text.ptr[0 .. q - text.ptr]; // Another way.
+  return text;
+}

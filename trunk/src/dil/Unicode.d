@@ -7,6 +7,7 @@ public import util.uni : isUniAlpha;
 
 /// U+FFFD = �. Used to replace invalid Unicode characters.
 const dchar REPLACEMENT_CHAR = '\uFFFD';
+const char[3] REPLACEMENT_STR = \uFFFD; /// Ditto
 /// Invalid character, returned on errors.
 const dchar ERROR_CHAR = 0xD800;
 

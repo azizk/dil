@@ -81,11 +81,7 @@ struct MacroParser
   }
 }
 
-char[] makeString(char* begin, char* end)
-{
-  return begin[0 .. end - begin];
-}
-
+/// Expands the macros from the table in text.
 char[] expandMacros(MacroTable table, char[] text, char[][] args = null)
 {
   char[] result;

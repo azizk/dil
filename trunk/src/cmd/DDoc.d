@@ -21,6 +21,7 @@ import dil.semantic.Symbol;
 import dil.semantic.Symbols;
 import dil.Information;
 import dil.File;
+import dil.Converter;
 import common;
 
 import tango.stdc.time : time_t, time, ctime;
@@ -37,7 +38,7 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
   MacroParser mparser;
   foreach (macroPath; macroPaths)
   {
-    auto macros = mparser.parse(loadFile(macroPath));
+    auto macros = mparser.parse(loadMacroFile(macroPath));
     mtable = new MacroTable(mtable);
     mtable.insert(macros);
   }
@@ -88,6 +89,11 @@ void generateDocumentation(FilePath dest, Module mod, MacroTable mtable, bool in
   dest.append(mod.getFQN() ~ ".html");
   auto file = new File(dest);
   file.write(fileText);
+}
+
+string loadMacroFile(string filePath)
+{
+  return sanitizeText(loadFile(filePath));
 }
 
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
