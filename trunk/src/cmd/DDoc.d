@@ -31,7 +31,7 @@ import tango.io.File;
 import tango.io.FilePath;
 
 void execute(string[] filePaths, string destDir, string[] macroPaths,
-             bool incUndoc, InfoManager infoMan)
+             bool incUndoc, bool verbose, InfoManager infoMan)
 {
   // Parse macro files.
   MacroTable mtable;
@@ -60,11 +60,12 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
 
     // Generate documentation.
     auto dest = new FilePath(destDir);
-    generateDocumentation(dest, mod, mtable, incUndoc);
+    generateDocumentation(dest, mod, mtable, incUndoc, verbose);
   }
 }
 
-void generateDocumentation(FilePath dest, Module mod, MacroTable mtable, bool incUndoc)
+void generateDocumentation(FilePath dest, Module mod, MacroTable mtable,
+                           bool incUndoc, bool verbose)
 {
   // Create a macro environment for this module.
   mtable = new MacroTable(mtable);
@@ -87,6 +88,8 @@ void generateDocumentation(FilePath dest, Module mod, MacroTable mtable, bool in
   auto fileText = expandMacros(mtable, "$(DDOC)");
   // Finally write the file out to the harddisk.
   dest.append(mod.getFQN() ~ ".html");
+  if (verbose)
+    Stdout.formatln("{} > {}", mod.filePath, dest);
   auto file = new File(dest);
   file.write(fileText);
 }

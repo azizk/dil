@@ -92,11 +92,14 @@ void main(char[][] args)
     auto macroPaths = GlobalSettings.ddocFilePaths;
     char[][] filePaths;
     bool incUndoc;
+    bool verbose;
     // Parse arguments.
     foreach (arg; args[3..$])
     {
       if (arg == "-i")
         incUndoc = true;
+      else if (arg == "-v")
+        verbose = true;
       else if (arg.length > 5 && toLower(arg[$-4..$].dup) == "ddoc")
         macroPaths ~= arg;
       else
@@ -105,7 +108,7 @@ void main(char[][] args)
 
     auto infoMan = new InfoManager();
     // Execute command.
-    cmd.DDoc.execute(filePaths, destination, macroPaths, incUndoc, infoMan);
+    cmd.DDoc.execute(filePaths, destination, macroPaths, incUndoc, verbose, infoMan);
     if (infoMan.info.length)
       return printErrors(infoMan);
     break;
@@ -348,6 +351,7 @@ Usage:
 
 Options:
   -i               : include undocumented symbols
+  -v               : verbose output
 
 Example:
   dil d doc/ src/main.d mymacros.ddoc -i`;
