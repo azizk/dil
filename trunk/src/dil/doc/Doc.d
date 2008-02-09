@@ -14,7 +14,7 @@ import tango.text.Ascii : toLower;
 
 class DDocComment
 {
-  Section[] sections;
+  Section[] sections; /// The sections of this comment.
   Section summary; /// Optional summary section.
   Section description; /// Optional description section.
 
@@ -25,13 +25,35 @@ class DDocComment
     this.description = description;
   }
 
-  Section getCopyright()
+  /// Removes the first copyright section and returns it.
+  Section takeCopyright()
   {
-    foreach (section; sections)
-      if (toLower(section.name) == "copyright")
+    foreach (i, section; sections)
+      if (section.Is("copyright"))
+      {
+        sections = sections[0..i] ~ sections[i+1..$];
         return section;
+      }
     return null;
   }
+
+  /// Returns: true if "ditto" is the only text in this comment.
+  bool isDitto()
+  {
+    if (summary && sections.length == 1 &&
+        toLower(strip(summary.text.dup)) == "ditto")
+      return true;
+    return false;
+  }
+
+//   MacrosSection[] getMacros()
+//   {
+//     MacrosSection[] macros;
+//     foreach (section; sections)
+//       if (section.Is("macros"))
+//         macros ~= new MacrosSection(section.name, section.text);
+//     return macros;
+//   }
 }
 
 /// Returns a node's DDocComment.
@@ -39,14 +61,37 @@ DDocComment getDDocComment(Node node)
 {
   DDocParser p;
   p.parse(getDDocText(getDocTokens(node)));
-  return new DDocComment(p.sections, p.summary, p.description);
+  if (p.sections.length)
+    return new DDocComment(p.sections, p.summary, p.description);
+  return null;
 }
 
+/// Strips leading and trailing whitespace characters.
+/// Whitespace: ' ', '\t', '\v', '\f' and '\n'
+char[] strip(char[] str)
+{
+  if (str.length == 0)
+    return null;
+  uint i;
+  for (; i < str.length; i++)
+    if (!isspace(str[i]) && str[i] != '\n')
+      break;
+  if (str.length == i)
+    return null;
+  str = str[i..$];
+  assert(str.length);
+  for (i = str.length; i; i--)
+    if (!isspace(str[i-1]) && str[i-1] != '\n')
+      break;
+  return str[0..i];
+}
+
+/// Parses a DDoc comment string.
 struct DDocParser
 {
   char* p;
   char* textEnd;
-  Section[] sections;
+  Section[] sections; /// Parsed sections.
   Section summary; /// Optional summary section.
   Section description; /// Optional description section.
 
@@ -55,8 +100,6 @@ struct DDocParser
   {
     if (!text.length)
       return null;
-    if (text[$-1] != '\0')
-      text ~= '\0';
     p = text.ptr;
     textEnd = p + text.length;
 
@@ -75,10 +118,11 @@ struct DDocParser
     else // There are no explicit sections.
     {
       scanSummaryAndDescription(summaryBegin, textEnd);
-      return null;
+      return sections;
     }
 
     assert(idBegin && idEnd);
+    // Continue parsing.
     while (findNextIdColon(nextIdBegin, nextIdEnd))
     {
       sections ~= new Section(makeString(idBegin, idEnd), makeString(idEnd+1, nextIdBegin));
@@ -95,16 +139,21 @@ struct DDocParser
     assert(p < end);
     char* sectionBegin = p;
     // Search for the end of the first paragraph.
+    end--; // Decrement end, so we can look ahead one character.
     while (p < end && !(*p == '\n' && p[1] == '\n'))
       p++;
+    end++;
+    if (p+1 >= end)
+      p = end;
+    assert(p == end || (*p == '\n' && p[1] == '\n'));
     // The first paragraph is the summary.
     summary = new Section("", makeString(sectionBegin, p));
     sections ~= summary;
     // The rest is the description section.
-    if (p != end)
+    if (p < end)
     {
-      sectionBegin = p;
       skipWhitespace(p);
+      sectionBegin = p;
       if (p < end)
       {
         description = new Section("", makeString(sectionBegin, end));
@@ -115,43 +164,39 @@ struct DDocParser
 
   void skipWhitespace(ref char* p)
   {
-    while (isspace(*p) || *p == '\n')
+    while (p < textEnd && (isspace(*p) || *p == '\n'))
       p++;
   }
 
   /// Find next "Identifier:".
   /// Params:
-  ///   p       = current character pointer
   ///   idBegin = set to the first character of the Identifier
   ///   idEnd   = set to the colon following the Identifier
   /// Returns: true if found
   bool findNextIdColon(ref char* ref_idBegin, ref char* ref_idEnd)
   {
-    auto p = this.p;
-    while (*p != '\0')
+    while (p < textEnd)
     {
-      auto idBegin = p;
+      skipWhitespace(p);
+      if (p >= textEnd)
+        break;
       assert(isascii(*p) || isLeadByte(*p));
+      auto idBegin = p;
       if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
       {
         do // IdChar*
           p++;
-        while (isident(*p) || isUnicodeAlpha(p, textEnd))
-        if (*p == ':') // :
+        while (p < textEnd && (isident(*p) || isUnicodeAlpha(p, textEnd)))
+        if (p < textEnd && *p == ':') // :
         {
           ref_idBegin = idBegin;
           ref_idEnd = p;
-          this.p = p;
           return true;
         }
       }
-      else if (!isascii(*p))
-      { // Skip UTF-8 sequences.
-        while (!isascii(*++p))
-        {}
-        continue;
-      }
-      p++;
+      // Skip this line.
+      while (p < textEnd && *p != '\n')
+        p++;
     }
     return false;
   }
@@ -165,6 +210,11 @@ class Section
   {
     this.name = name;
     this.text = text;
+  }
+
+  bool Is(char[] name2)
+  {
+    return toLower(name.dup) == name2;
   }
 }
 
@@ -277,13 +327,21 @@ bool isLineComment(Token* t)
 /// Extracts the text body of the comment tokens.
 string getDDocText(Token*[] tokens)
 {
+  if (tokens.length == 0)
+    return null;
   string result;
   foreach (token; tokens)
   {
     auto n = isLineComment(token) ? 0 : 2; // 0 for "//", 2 for "+/" and "*/".
     result ~= sanitize(token.srcText[3 .. $-n], token.start[1]);
+    assert(token.next);
+    if (token.next.kind == TOK.Newline)
+      result ~= \n;
+    else
+      result ~= ' ';
   }
-  return result;
+//   Stdout.formatln("→{}←", result);
+  return result[0..$-1]; // Remove \n or ' '
 }
 
 /// Sanitizes a DDoc comment string.
@@ -294,46 +352,50 @@ string getDDocText(Token*[] tokens)
 ///   commentChar = '/', '+', or '*'
 string sanitize(string comment, char commentChar)
 {
-  string result = comment.dup ~ '\0';
+  alias comment result;
 
-  assert(result[$-1] == '\0');
-  bool newline = true; // Indicates whether a newline has been encountered.
+  bool newline = true; // True when at the beginning of a new line.
   uint i, j;
-  for (; i < result.length; i++)
+  auto len = result.length;
+  for (; i < len; i++, j++)
   {
     if (newline)
     { // Ignore commentChars at the beginning of each new line.
       newline = false;
-      while (isspace(result[i]))
-      { i++; }
-      while (result[i] == commentChar)
-      { i++; }
+      while (i < len && isspace(result[i]))
+        i++;
+      while (i < len && result[i] == commentChar)
+        i++;
+      if (i >= len)
+        break;
     }
     // Check for Newline.
     switch (result[i])
     {
     case '\r':
-      if (result[i+1] == '\n')
+      if (i+1 < len && result[i+1] == '\n')
         i++;
     case '\n':
-      result[j++] = '\n'; // Copy Newline as '\n'.
+      result[j] = '\n'; // Copy Newline as '\n'.
       newline = true;
       continue;
     default:
-      if (isUnicodeNewline(result.ptr + i))
+      if (!isascii(result[i]) && i+2 < len && isUnicodeNewline(result.ptr + i))
       {
         i++; i++;
         goto case '\n';
       }
     }
     // Copy character.
-    result[j++] = result[i];
+    result[j] = result[i];
   }
-  result.length = j - 1; // Adjust length. -1 removes '\0'.
+  result.length = j; // Adjust length.
   // Lastly, strip trailing commentChars.
+  if (!result.length)
+    return null;
   i = result.length;
-  while (--i && result[i] == commentChar)
+  for (; i && result[i-1] == commentChar; i--)
   {}
-  result.length = i + 1;
+  result.length = i;
   return result;
 }

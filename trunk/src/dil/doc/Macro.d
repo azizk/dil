@@ -42,6 +42,18 @@ class MacroTable
       insert(macro_);
   }
 
+  void insert(string name, string text)
+  {
+    insert(new Macro(name, text));
+  }
+
+  void insert(string[] names, string[] texts)
+  {
+    assert(names.length == texts.length);
+    foreach (i, name; names)
+      insert(name, texts[i]);
+  }
+
   Macro search(string name)
   {
     auto pmacro = name in table;

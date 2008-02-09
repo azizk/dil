@@ -13,11 +13,12 @@ import dil.Messages;
 import dil.HtmlEntities;
 import dil.CompilerInfo;
 import dil.Unicode;
+import common;
+
 import tango.stdc.stdlib : strtof, strtod, strtold;
 import tango.stdc.errno : errno, ERANGE;
 import tango.stdc.time : time_t, time, ctime;
 import tango.stdc.string : strlen;
-import common;
 
 public import dil.lexer.Funcs;
 
@@ -2372,6 +2373,7 @@ version(D2)
 
   /++
     Insert an empty dummy token before t.
+
     Useful in the parsing phase for representing a node in the AST
     that doesn't consume an actual token from the source text.
   +/

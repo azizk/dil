@@ -24,4 +24,12 @@ abstract class TypeNode : Node
     addOptChild(next);
     this.next = next;
   }
+
+  TypeNode baseType()
+  {
+    auto type = this;
+    while (type.next)
+      type = type.next;
+    return type;
+  }
 }

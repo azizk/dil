@@ -97,7 +97,7 @@ void main(char[][] args)
     {
       if (arg == "-i")
         incUndoc = true;
-      else if (arg.length > 5 && toLower(arg[$-4..$]) == "ddoc")
+      else if (arg.length > 5 && toLower(arg[$-4..$].dup) == "ddoc")
         macroPaths ~= arg;
       else
         filePaths ~= arg;

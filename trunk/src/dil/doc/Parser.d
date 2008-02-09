@@ -60,6 +60,8 @@ struct IdentValueParser
     while (p < textEnd)
     {
       skipWhitespace();
+      if (p >= textEnd)
+        break;
       auto idBegin = p;
       if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
       {
@@ -69,7 +71,7 @@ struct IdentValueParser
         auto idEnd = p;
 
         skipWhitespace();
-        if (*p == '=')
+        if (p < textEnd && *p == '=')
         {
           p++;
           skipWhitespace();

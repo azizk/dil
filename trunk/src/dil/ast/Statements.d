@@ -56,6 +56,11 @@ class FuncBodyStatement : Statement
     addOptChild(inBody);
     addOptChild(outBody);
   }
+
+  bool isEmpty()
+  {
+    return funcBody is null;
+  }
 }
 
 class ScopeStatement : Statement

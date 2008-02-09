@@ -60,7 +60,7 @@ body
 /// index is set one past the last trail byte of the valid UTF-8 sequence.
 dchar decode(char[] str, ref size_t index)
 in { assert(str.length && index < str.length); }
-out(c) { assert(isValidChar(c)); }
+out(c) { assert(isValidChar(c) || c == ERROR_CHAR); }
 body
 {
   char* p = str.ptr + index;
@@ -74,7 +74,7 @@ body
 /// ref_p is set to the last trail byte of the valid UTF-8 sequence.
 dchar decode(ref char* ref_p, char* end)
 in { assert(ref_p && ref_p < end); }
-out(c) { assert(isValidChar(c)); }
+out(c) { assert(isValidChar(c) || c == ERROR_CHAR); }
 body
 {
   char* p = ref_p;
