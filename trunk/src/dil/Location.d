@@ -11,7 +11,7 @@ final class Location
 {
   char[] filePath;
   size_t lineNum;
-  char* lineBegin, to; // Used to calculate column.
+  char* lineBegin, to; /// Used to calculate column.
 
   this(char[] filePath, size_t lineNum)
   {

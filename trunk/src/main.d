@@ -311,6 +311,8 @@ void printErrors(InfoManager infoMan)
       errorFormat = GlobalSettings.parserErrorFormat;
     else if (info.classinfo is SemanticError.classinfo)
       errorFormat = GlobalSettings.semanticErrorFormat;
+    else if (info.classinfo is Warning.classinfo)
+      errorFormat = "{0}: Warning: {3}";
     else
       continue;
     auto err = cast(Problem)info;

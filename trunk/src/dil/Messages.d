@@ -105,6 +105,9 @@ static:
   auto InvalidUTF32Character = "invalid UTF-32 character '\\U{:X8}'.";
   auto UTF16FileMustBeDivisibleBy2 = "the byte length of a UTF-16 source file must be divisible by 2.";
   auto UTF32FileMustBeDivisibleBy4 = "the byte length of a UTF-32 source file must be divisible by 4.";
+  // DDoc macros:
+  auto UndefinedDDocMacro = "DDoc macro '{}' is undefined";
+  auto UnterminatedDDocMacro = "DDoc macro '{}' has no closing ')'";
   // Parser messages:
   auto ModuleDeclarationNotFirst = "a module declaration is only allowed as the first declaration in a file";
   auto StringPostfixMismatch = "string literal has mistmatching postfix character";

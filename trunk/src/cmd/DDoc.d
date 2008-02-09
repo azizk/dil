@@ -61,13 +61,20 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
     // Generate documentation.
     auto dest = new FilePath(destDir);
     dest.append(mod.getFQN() ~ ".html");
+    InfoManager infoMan2; // Collects warnings from the macro expander.
     if (verbose)
+    {
       Stdout.formatln("{} > {}", mod.filePath, dest);
-    writeDocFile(dest.toString(), mod, mtable, incUndoc);
+      infoMan2 = new InfoManager();
+    }
+    writeDocFile(dest.toString(), mod, mtable, incUndoc, infoMan2);
+    if (infoMan2)
+      infoMan ~= infoMan2.info;
   }
 }
 
-void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc)
+void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
+                  InfoManager infoMan)
 {
   // Create a macro environment for this module.
   mtable = new MacroTable(mtable);
@@ -87,7 +94,7 @@ void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc)
   // Set BODY macro to the text produced by the DDocEmitter.
   mtable.insert("BODY", doc.text);
   // Do the macro expansion pass.
-  auto fileText = expandMacros(mtable, "$(DDOC)");
+  auto fileText = MacroExpander.expand(mtable, "$(DDOC)", mod.filePath, infoMan);
   // Finally write the file out to the harddisk.
   auto file = new File(dest);
   file.write(fileText);
