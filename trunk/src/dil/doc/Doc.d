@@ -104,16 +104,16 @@ struct DDocParser
     textEnd = p + text.length;
 
     char* summaryBegin;
-    char* idBegin, idEnd;
-    char* nextIdBegin, nextIdEnd;
+    string ident, nextIdent;
+    char* bodyBegin, nextBodyBegin;
 
     skipWhitespace(p);
     summaryBegin = p;
 
-    if (findNextIdColon(idBegin, idEnd))
+    if (findNextIdColon(ident, bodyBegin))
     { // Check that this is not an explicit section.
-      if (summaryBegin != idBegin)
-        scanSummaryAndDescription(summaryBegin, idBegin);
+      if (summaryBegin != ident.ptr)
+        scanSummaryAndDescription(summaryBegin, ident.ptr);
     }
     else // There are no explicit sections.
     {
@@ -121,17 +121,33 @@ struct DDocParser
       return sections;
     }
 
-    assert(idBegin && idEnd);
+    assert(ident.length);
     // Continue parsing.
-    while (findNextIdColon(nextIdBegin, nextIdEnd))
+    while (findNextIdColon(nextIdent, nextBodyBegin))
     {
-      sections ~= new Section(makeString(idBegin, idEnd), makeString(idEnd+1, nextIdBegin));
-      idBegin = nextIdBegin;
-      idEnd = nextIdEnd;
+      sections ~= new Section(ident, textBody(bodyBegin, nextIdent.ptr));
+      ident = nextIdent;
+      bodyBegin = nextBodyBegin;
     }
     // Add last section.
-    sections ~= new Section(makeString(idBegin, idEnd), makeString(idEnd+1, textEnd));
+    sections ~= new Section(ident, textBody(bodyBegin, textEnd));
     return sections;
+  }
+
+  /// Removes trailing whitespace characters from the text body.
+  char[] textBody(char* begin, char* end)
+  {
+    // The body of A is empty, e.g.:
+    // A:
+    // B: some text
+    // ^- begin and end point to B (or to this.textEnd in the 2nd case.)
+    if (begin is end)
+      return "";
+    // Remove trailing whitespace.
+    while (isspace(*--end) || *end == '\n')
+    {}
+    end++;
+    return makeString(begin, end);
   }
 
   void scanSummaryAndDescription(char* p, char* end)
@@ -170,10 +186,10 @@ struct DDocParser
 
   /// Find next "Identifier:".
   /// Params:
-  ///   idBegin = set to the first character of the Identifier
-  ///   idEnd   = set to the colon following the Identifier
+  ///   ident = set to the Identifier
+  ///   bodyBegin = set to the beginning of the text body (whitespace skipped.)
   /// Returns: true if found
-  bool findNextIdColon(ref char* ref_idBegin, ref char* ref_idEnd)
+  bool findNextIdColon(ref char[] ident, ref char* bodyBegin)
   {
     while (p < textEnd)
     {
@@ -187,10 +203,13 @@ struct DDocParser
         do // IdChar*
           p++;
         while (p < textEnd && (isident(*p) || isUnicodeAlpha(p, textEnd)))
+        auto idEnd = p;
         if (p < textEnd && *p == ':') // :
         {
-          ref_idBegin = idBegin;
-          ref_idEnd = p;
+          p++;
+          skipWhitespace(p);
+          bodyBegin = p;
+          ident = makeString(idBegin, idEnd);
           return true;
         }
       }

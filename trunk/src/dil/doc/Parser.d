@@ -63,7 +63,7 @@ struct IdentValueParser
     // B = some text
     // ^- begin and end point to B (or to this.textEnd in the 2nd case.)
     if (begin is end)
-      return null;
+      return "";
     // Remove trailing whitespace.
     while (isspace(*--end) || *end == '\n')
     {}
