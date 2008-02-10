@@ -10,7 +10,7 @@ import dil.lexer.Funcs;
 import dil.Unicode;
 import common;
 
-import tango.text.Ascii : toLower;
+import tango.text.Ascii : icompare;
 
 class DDocComment
 {
@@ -41,7 +41,7 @@ class DDocComment
   bool isDitto()
   {
     if (summary && sections.length == 1 &&
-        toLower(strip(summary.text.dup)) == "ditto")
+        icompare(strip(summary.text), "ditto") == 0)
       return true;
     return false;
   }
@@ -68,6 +68,7 @@ DDocComment getDDocComment(Node node)
 
 /// Strips leading and trailing whitespace characters.
 /// Whitespace: ' ', '\t', '\v', '\f' and '\n'
+/// Returns: a slice into str.
 char[] strip(char[] str)
 {
   if (str.length == 0)
@@ -233,7 +234,7 @@ class Section
 
   bool Is(char[] name2)
   {
-    return toLower(name.dup) == name2;
+    return icompare(name, name2) == 0;
   }
 }
 

@@ -35,7 +35,7 @@ import Integer = tango.text.convert.Integer;
 import tango.io.File;
 import tango.text.Util;
 import tango.time.StopWatch;
-import tango.text.Ascii : toLower;
+import tango.text.Ascii : icompare;
 
 void main(char[][] args)
 {
@@ -100,7 +100,7 @@ void main(char[][] args)
         incUndoc = true;
       else if (arg == "-v")
         verbose = true;
-      else if (arg.length > 5 && toLower(arg[$-4..$].dup) == "ddoc")
+      else if (arg.length > 5 && icompare(arg[$-4..$], "ddoc") == 0)
         macroPaths ~= arg;
       else
         filePaths ~= arg;
