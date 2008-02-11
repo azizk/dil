@@ -396,7 +396,7 @@ class Parser
         { DeclDefs }
         DeclDef
   +/
-  Declaration parseDeclarationsBlock(bool noColon = false)
+  Declaration parseDeclarationsBlock(/+bool noColon = false+/)
   {
     Declaration d;
     switch (token.kind)
@@ -411,8 +411,8 @@ class Parser
       d = set(decls, begin);
       break;
     case T.Colon:
-      if (noColon == true)
-        goto default;
+      // if (noColon == true)
+      //   goto default;
       nT();
       auto begin = token;
       auto decls = new CompoundDeclaration;
@@ -427,10 +427,10 @@ class Parser
     return d;
   }
 
-  Declaration parseDeclarationsBlockNoColon()
-  {
-    return parseDeclarationsBlock(true);
-  }
+  // Declaration parseDeclarationsBlockNoColon()
+  // {
+  //   return parseDeclarationsBlock(true);
+  // }
 
   /++
     Parses either a VariableDeclaration or a FunctionDeclaration.
@@ -1265,10 +1265,10 @@ class Parser
       }
       // debug DeclarationsBlock
       // debug ( Condition ) DeclarationsBlock
-      decls = parseDeclarationsBlockNoColon();
+      decls = parseDeclarationsBlock();
       // else DeclarationsBlock
       if (skipped(T.Else))
-        elseDecls = parseDeclarationsBlockNoColon();
+        elseDecls = parseDeclarationsBlock();
     }
 
     return new DebugDeclaration(spec, cond, decls, elseDecls);
@@ -1295,10 +1295,10 @@ class Parser
       cond = parseIdentOrInt();
       require(T.RParen);
       // version ( Condition ) DeclarationsBlock
-      decls = parseDeclarationsBlockNoColon();
+      decls = parseDeclarationsBlock();
       // else DeclarationsBlock
       if (skipped(T.Else))
-        elseDecls = parseDeclarationsBlockNoColon();
+        elseDecls = parseDeclarationsBlock();
     }
 
     return new VersionDeclaration(spec, cond, decls, elseDecls);
@@ -1317,10 +1317,10 @@ class Parser
     condition = parseAssignExpression();
     require(T.RParen);
 
-    ifDecls = parseDeclarationsBlockNoColon();
+    ifDecls = parseDeclarationsBlock();
 
     if (skipped(T.Else))
-      elseDecls = parseDeclarationsBlockNoColon();
+      elseDecls = parseDeclarationsBlock();
 
     return new StaticIfDeclaration(condition, ifDecls, elseDecls);
   }
