@@ -31,13 +31,13 @@ bool isNoncharacter(dchar d)
          d <= 0x10FFFF && (d & 0xFFFF) >= 0xFFFE; // 34
 }
 
-/// Returns true if this is a trail byte of a UTF-8 sequence?
+/// Returns: true if this is a trail byte of a UTF-8 sequence.
 bool isTrailByte(ubyte b)
 {
   return (b & 0xC0) == 0x80; // 10xx_xxxx
 }
 
-/// Returns true if this is a lead byte of a UTF-8 sequence.
+/// Returns: true if this is a lead byte of a UTF-8 sequence.
 bool isLeadByte(ubyte b)
 {
   return (b & 0xC0) == 0xC0; // 11xx_xxxx

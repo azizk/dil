@@ -37,8 +37,14 @@ class Parameter : Node
     return !!(stc & StorageClass.Variadic);
   }
 
+  /// func(int[] values ...)
+  bool isDVariadic()
+  {
+    return isVariadic && !isCVariadic;
+  }
+
   /// func(...)
-  bool isOnlyVariadic()
+  bool isCVariadic()
   {
     return stc == StorageClass.Variadic &&
            type is null && name is null;
@@ -70,9 +76,9 @@ class Parameters : Node
   { return children.length; }
 }
 
-/*********************
-  Template parameters:
-*/
+/*~~~~~~~~~~~~~~~~~~~~~~
+~ Template parameters: ~
+~~~~~~~~~~~~~~~~~~~~~~*/
 
 abstract class TemplateParameter : Node
 {

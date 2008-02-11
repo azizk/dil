@@ -119,7 +119,7 @@ struct Token
     return tokToString[tok];
   }
 
-  /// Adds Flags.Whitespace to this token's flags.
+  /// Adds Flags. Whitespace to this token's flags.
   void setWhitespaceFlag()
   {
     this.flags |= Flags.Whitespace;

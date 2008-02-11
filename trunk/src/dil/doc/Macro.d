@@ -70,6 +70,7 @@ class MacroTable
   { return parent is null; }
 }
 
+/// Parses a text with macro definitions.
 struct MacroParser
 {
   Macro[] parse(string text)
@@ -81,16 +82,39 @@ struct MacroParser
       macros[i] = new Macro(idvalue.ident, idvalue.value);
     return macros;
   }
+
+  /// Scans for a macro invocation. E.g.: $&#40;DDOC&#41;
+  /// Returns: a pointer set to one char past the closing parenthesis,
+  /// or null if this isn't a macro invocation.
+  static char* scanMacro(char* p, char* textEnd)
+  {
+    assert(*p == '$');
+    if (p+2 < textEnd && p[1] == '(')
+    {
+      p += 2;
+      if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
+      {
+        do // IdChar*
+          p++;
+        while (p < textEnd && (isident(*p) || isUnicodeAlpha(p, textEnd)))
+        MacroExpander.scanArguments(p, textEnd);
+        p != textEnd && p++; // Skip ')'.
+        return p;
+      }
+    }
+    return null;
+  }
 }
 
+/// Expands DDoc macros in a text.
 struct MacroExpander
 {
   MacroTable mtable; /// Used to look up macros.
   InfoManager infoMan; /// Collects warning messages.
   char[] filePath; /// Used in warning messages.
 
-  static char[] expand(MacroTable mtable, char[] text,
-                       char[] filePath,
+  /// Starts expanding the macros.
+  static char[] expand(MacroTable mtable, char[] text, char[] filePath,
                        InfoManager infoMan = null)
   {
     MacroExpander me;
@@ -100,6 +124,7 @@ struct MacroExpander
     return me.expandMacros(text);
   }
 
+  /// Reports a warning message.
   void warning(char[] msg, char[] macroName)
   {
     msg = Format(msg, macroName);
@@ -107,9 +132,12 @@ struct MacroExpander
       infoMan ~= new Warning(new Location(filePath, 0), msg);
   }
 
-  /// Expands the macros from the table in text.
-  char[] expandMacros(char[] text, char[][] args = null)
+  /// Expands the macros from the table in the text.
+  char[] expandMacros(char[] text, char[] prevArg0 = null/+, uint depth = 1000+/)
   {
+    // if (depth == 0)
+    //   return  text;
+    // depth--;
     char[] result;
     char* p = text.ptr;
     char* textEnd = p + text.length;
@@ -119,7 +147,7 @@ struct MacroExpander
       if (*p == '$' && p[1] == '(')
       {
         // Copy string between macros.
-        if (macroEnd !is p)
+        if (macroEnd != p)
           result ~= makeString(macroEnd, p);
         p += 2;
         auto idBegin = p;
@@ -132,44 +160,49 @@ struct MacroExpander
           auto macroName = makeString(idBegin, p);
           // Get arguments.
           auto macroArgs = scanArguments(p, textEnd);
-          // TODO: still expand macro if no closing bracket was found?
           if (p == textEnd)
           {
             warning(MSG.UnterminatedDDocMacro, macroName);
-            break; // No closing bracket found.
+            result ~= "$(" ~ macroName ~ " ";
           }
-          assert(*p == ')');
-          p++;
-          macroEnd = p;
+          else
+            p++;
+          macroEnd = p; // Point past ')'.
 
           auto macro_ = mtable.search(macroName);
           if (macro_)
           { // Ignore recursive macro if:
+            auto macroArg0 = macroArgs.length ? macroArgs[0] : null;
             if (macro_.callLevel != 0 &&
-                (macroArgs.length == 0 || // Macro has no arguments.
-                  args.length && args[0] == macroArgs[0]) // arg0 == macroArg0.
-              )
-              continue;
+                (macroArgs.length == 0/+ || // Macro has no arguments.
+                 prevArg0 == macroArg0+/)) // macroArg0 equals previous arg0.
+            { continue; }
             macro_.callLevel++;
+            // Expand the arguments in the macro text.
             auto expandedText = expandArguments(macro_.text, macroArgs);
-            result ~= expandMacros(expandedText, macroArgs);
+            result ~= expandMacros(expandedText, macroArg0/+, depth+/);
             macro_.callLevel--;
           }
           else
+          {
             warning(MSG.UndefinedDDocMacro, macroName);
+            //result ~= makeString(macroName.ptr-2, macroEnd);
+          }
           continue;
         }
       }
       p++;
     }
+    if (macroEnd == text.ptr)
+      return text; // No macros found. Return original text.
     if (macroEnd < textEnd)
       result ~= makeString(macroEnd, textEnd);
     return result;
   }
 
-  /// Scans until the closing ')' is found.
-  /// Returns: ['$0', $1, $2 ...].
-  char[][] scanArguments(ref char* p, char* textEnd)
+  /// Scans until the closing parenthesis is found. Sets p to one char past it.
+  /// Returns: [arg0, arg1, arg2 ...].
+  static char[][] scanArguments(ref char* p, char* textEnd)
   out(args) { assert(args.length != 1); }
   body
   {
@@ -184,7 +217,7 @@ struct MacroExpander
 
     char* arg0Begin = p; // Whole argument list.
     char* argBegin = p;
-  Loop:
+  MainLoop:
     while (p < textEnd)
     {
       switch (*p)
@@ -203,7 +236,7 @@ struct MacroExpander
         break;
       case ')':
         if (--level == 0)
-          break Loop;
+          break MainLoop;
         break;
       case '"', '\'':
         auto c = *p;
@@ -211,33 +244,33 @@ struct MacroExpander
         {}
         assert(*p == c || p == textEnd);
         if (p == textEnd)
-          break Loop;
+          break MainLoop;
         break;
       case '<':
-        if (p+3 < textEnd && p[1] == '!' && p[2] == '-' && p[3] == '-') // <!--
+        p++;
+        if (p+2 < textEnd && *p == '!' && p[1] == '-' && p[2] == '-') // <!--
         {
-          p += 3;
+          p += 2; // Point to 2nd '-'.
           // Scan to closing "-->".
-          while (++p + 2 < textEnd)
-            if (*p == '-' && p[1] == '-' && p[2] == '>')
-            {
-              p += 3;
-              continue Loop;
-            }
-          p = textEnd; // p += 2;
+          while (++p < textEnd)
+            if (p+2 < textEnd && *p == '-' && p[1] == '-' && p[2] == '>')
+              p += 2; // Point to '>'.
         } // <tag ...> or </tag>
-        else if (p+1 < textEnd && (isalpha(p[1]) || p[1] == '/'))
+        else if (p < textEnd && (isalpha(*p) || *p == '/'))
           while (++p < textEnd && *p != '>') // Skip to closing '>'.
           {}
+        else
+          continue MainLoop;
         if (p == textEnd)
-          break Loop;
+          break MainLoop;
+        assert(*p == '>');
         break;
       default:
       }
       p++;
     }
     assert(*p == ')' && level == 0 || p == textEnd);
-    if (arg0Begin is p)
+    if (arg0Begin == p)
       return null;
     // arg0 spans the whole argument list.
     auto arg0 = makeString(arg0Begin, p);
@@ -246,7 +279,7 @@ struct MacroExpander
     return arg0 ~ args;
   }
 
-  /// Expands "$+", "$0" - "$9" with args[n] in text.
+  /// Expands "$ +", "$ 0" - "$ 9" with args[n] in text.
   /// Params:
   ///   text = the text to scan for argument placeholders.
   ///   args = the first element, args[0], is the whole argument string and
@@ -263,13 +296,12 @@ struct MacroExpander
 
     while (p+1 < textEnd)
     {
-      if (*p == '$' && (p[1] == '+' || isdigit(p[1])))
+      if (*p == '$' && (*++p == '+' || isdigit(*p)))
       {
         // Copy string between argument placeholders.
-        if (placeholderEnd !is p)
-          result ~= makeString(placeholderEnd, p);
-        p++;
-        placeholderEnd = p + 1; // Set new argument end.
+        if (placeholderEnd != p-1)
+          result ~= makeString(placeholderEnd, p-1);
+        placeholderEnd = p+1; // Set new placeholder end.
 
         if (args.length == 0)
           continue;
@@ -288,6 +320,8 @@ struct MacroExpander
       }
       p++;
     }
+    if (placeholderEnd == text.ptr)
+      return text; // No placeholders found. Return original text.
     if (placeholderEnd < textEnd)
       result ~= makeString(placeholderEnd, textEnd);
     return result;

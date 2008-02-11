@@ -24,7 +24,7 @@ class ScopeSymbol : Symbol
     super(sid, name, node);
   }
 
-  /// Look up ident in the table.
+  /// Look up name in the table.
   Symbol lookup(Identifier* name)
   {
     return symbolTable.lookup(name);

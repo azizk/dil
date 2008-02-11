@@ -26,7 +26,8 @@ import dil.CompilerInfo;
 import common;
 
 /++
-  The fist pass is the declaration pass.
+  The first pass is the declaration pass.
+
   The basic task of this class is to traverse the parse tree,
   find all kinds of declarations and add them
   to the symbol tables of their respective scopes.

@@ -15,6 +15,7 @@ import dil.ast.Declarations,
        dil.ast.Types;
 import dil.ast.DefaultVisitor;
 import dil.lexer.Token;
+import dil.lexer.Funcs;
 import dil.semantic.Module;
 import dil.semantic.Pass1;
 import dil.semantic.Symbol;
@@ -95,6 +96,7 @@ void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
   mtable.insert("BODY", doc.text);
   // Do the macro expansion pass.
   auto fileText = MacroExpander.expand(mtable, "$(DDOC)", mod.filePath, infoMan);
+//   fileText ~= "\n<pre>\n" ~ doc.text ~ "\n</pre>";
   // Finally write the file out to the harddisk.
   auto file = new File(dest);
   file.write(fileText);
@@ -236,8 +238,118 @@ class DDocEmitter : DefaultVisitor
         }
         else
           write("\n$(DDOC_SECTION $(DDOC_SECTION_H " ~ s.name ~ ":)");
-        write(s.text, ")");
+        write(scanCommentText(s.text), ")");
       }
+    write(")");
+  }
+
+  char[] scanCommentText(char[] text)
+  {
+    char* p = text.ptr;
+    char* end = p + text.length;
+    char[] result = new char[text.length]; // Reserve space.
+    result.length = 0;
+
+    while (p < end)
+    {
+      switch (*p)
+      {
+      case '$':
+        if (auto macroEnd = MacroParser.scanMacro(p, end))
+        {
+          result ~= makeString(p, macroEnd); // Copy macro invocation as is.
+          p = macroEnd;
+          continue;
+        }
+        goto default;
+      case '<':
+        auto begin = p;
+        p++;
+        if (p+2 < end && *p == '!' && p[1] == '-' && p[2] == '-') // <!--
+        {
+          p += 2; // Point to 2nd '-'.
+          // Scan to closing "-->".
+          while (++p < end)
+            if (p+2 < end && *p == '-' && p[1] == '-' && p[2] == '>')
+            {
+              p += 3; // Point one past '>'.
+              break;
+            }
+          result ~= makeString(begin, p);
+        } // <tag ...> or </tag>
+        else if (p < end && (isalpha(*p) || *p == '/'))
+        {
+          while (++p < end && *p != '>') // Skip to closing '>'.
+          {}
+          p != end && p++; // Skip '>'.
+          result ~= makeString(begin, p);
+        }
+        else
+          result ~= "&lt;";
+        continue;
+      case '(': result ~= "&#40;"; break;
+      case ')': result ~= "&#41;"; break;
+      case '\'': result ~= "&apos;"; break; // &#39;
+      case '"': result ~= "&quot;"; break;
+      case '>': result ~= "&gt;"; break;
+      case '&':
+        if (p+1 < end && (isalpha(p[1]) || p[1] == '#'))
+          goto default;
+        result ~= "&amp;";
+        break;
+      case '-':
+        if (p+2 < end && p[1] == '-' && p[2] == '-')
+        {
+          p += 2; // Point to 3rd '-'.
+          auto codeBegin = p + 1;
+          while (++p < end)
+            if (p+2 < end && *p == '-' && p[1] == '-' && p[2] == '-')
+            {
+              result ~= "$(D_CODE " ~ scanCodeSection(makeString(codeBegin, p)) ~ ")";
+              p += 3;
+              break;
+            }
+          continue;
+        }
+        //goto default;
+      default:
+        result ~= *p;
+      }
+      p++;
+    }
+    return result;
+  }
+
+  char[] scanCodeSection(char[] text)
+  {
+    return text;
+  }
+
+  void writeParams(Parameters params)
+  {
+    if (!params.items.length)
+      return write("()");
+    write("(");
+    auto lastParam = params.items[$-1];
+    foreach (param; params.items)
+    {
+      if (param.isCVariadic)
+        write("...");
+      else
+      {
+        assert(param.type);
+        // Write storage classes.
+        auto typeBegin = param.type.baseType.begin;
+        if (typeBegin !is param.begin)
+          write(textSpan(param.begin, typeBegin.prevNWS), " ");
+        write(textSpan(typeBegin, param.type.end));
+        write(" $(DDOC_PARAM ", param.name.str, ")");
+        if (param.isDVariadic)
+          write("...");
+      }
+      if (param !is lastParam)
+        write(", ");
+    }
     write(")");
   }
 
@@ -245,7 +357,7 @@ class DDocEmitter : DefaultVisitor
   {
     if (!isTemplatized)
       return;
-    text ~= "(" ~ (tparams ? textSpan(tparams.begin, tparams.end) : "") ~ ")";
+    write("(", (tparams ? textSpan(tparams.begin, tparams.end) : ""), ")");
     isTemplatized = false;
     tparams = null;
   }
@@ -440,7 +552,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ writeFuncHeader(d, d.funcBody); });
+    DECL({ write("this"); writeParams(d.params); });
     DESC({ writeComment(); });
     return d;
   }
@@ -476,7 +588,8 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ writeFuncHeader(d, d.funcBody); });
+    auto type = textSpan(d.returnType.baseType.begin, d.returnType.end);
+    DECL({ write(type, " "); SYMBOL(d.name.str); writeParams(d.params); });
     DESC({ writeComment(); });
     return d;
   }
@@ -485,7 +598,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ writeFuncHeader(d, d.funcBody); });
+    DECL({ write("new"); writeParams(d.params); });
     DESC({ writeComment(); });
     return d;
   }
