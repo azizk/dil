@@ -1921,7 +1921,8 @@ class Parser
     Expression e; // Aggregate or LwrExpression
 
     require(T.LParen);
-    while (1)
+    auto paramsBegin = token;
+    do
     {
       auto paramBegin = token;
       StorageClass stc;
@@ -1947,11 +1948,8 @@ class Parser
       }
 
       params ~= set(new Parameter(stc, type, ident, null), paramBegin);
-
-      if (token.kind != T.Comma)
-        break;
-      nT();
-    }
+    } while (skipped(T.Comma))
+    set(params, paramsBegin);
     require(T.Semicolon);
     e = parseExpression();
   version(D2)
@@ -3234,7 +3232,7 @@ class Parser
       if (!skipped(T.RBracket))
       {
         e = parseAssignExpression();
-        if (token.kind == T.Colon)
+        if (skipped(T.Colon))
           goto LparseAssocArray;
         if (skipped(T.Comma))
           values = [e] ~ parseExpressionList();
@@ -3245,22 +3243,16 @@ class Parser
       break;
 
     LparseAssocArray:
-      Expression[] keys;
+      Expression[] keys = [e];
 
-      keys ~= e;
-      nT(); // Skip colon.
       goto LenterLoop;
-
-      while (1)
+      do
       {
         keys ~= parseAssignExpression();
         require(T.Colon);
       LenterLoop:
         values ~= parseAssignExpression();
-        if (token.kind != T.Comma)
-          break;
-        nT();
-      }
+      } while (skipped(T.Comma))
       require(T.RBracket);
       e = new AArrayLiteralExpression(keys, values);
       break;
@@ -3779,11 +3771,10 @@ class Parser
     if (skipped(T.RParen))
       return set(params, begin);
 
-  Loop:
     while (1)
     {
       auto paramBegin = token;
-      StorageClass stc, tmp;
+      StorageClass stc, stc_;
       Type type;
       Identifier* ident;
       Expression defValue;
@@ -3797,77 +3788,76 @@ class Parser
       {
         stc = StorageClass.Variadic;
         pushParameter(); // type, ident and defValue will be null.
-        break Loop;
+        break;
       }
 
-    Lstc_loop:
-      switch (token.kind)
-      {
-    version(D2)
-    {
-      case T.Invariant: // D2.0
-        if (peekNext() == T.LParen)
-          goto default;
-        tmp = StorageClass.Invariant;
-        goto Lcommon;
-      case T.Const: // D2.0
-        if (peekNext() == T.LParen)
-          goto default;
-        tmp = StorageClass.Const;
-        goto Lcommon;
-      case T.Final: // D2.0
-        tmp = StorageClass.Final;
-        goto Lcommon;
-      case T.Scope: // D2.0
-        tmp = StorageClass.Scope;
-        goto Lcommon;
-      case T.Static: // D2.0
-        tmp = StorageClass.Static;
-        goto Lcommon;
-    }
-      case T.In:
-        tmp = StorageClass.In;
-        goto Lcommon;
-      case T.Out:
-        tmp = StorageClass.Out;
-        goto Lcommon;
-      case T.Inout, T.Ref:
-        tmp = StorageClass.Ref;
-        goto Lcommon;
-      case T.Lazy:
-        tmp = StorageClass.Lazy;
-        goto Lcommon;
-      Lcommon:
-        // Check for redundancy.
-        if (stc & tmp)
-          error(MID.RedundantStorageClass, token.srcText);
-        else
-          stc |= tmp;
-        nT();
-      version(D2)
-        goto Lstc_loop;
-      else
-        goto default; // In D1.0 only one stc per parameter is allowed.
-      default:
-        type = parseDeclarator(ident, true);
-
-        if (skipped(T.Assign))
-          defValue = parseAssignExpression();
-
-        if (skipped(T.Ellipses))
+      while (1)
+      { // Parse storage classes.
+        switch (token.kind)
         {
-          stc |= StorageClass.Variadic;
-          pushParameter();
-          break Loop;
-        }
-
-        pushParameter();
-
-        if (token.kind != T.Comma)
-          break Loop;
-        nT();
+      version(D2)
+      {
+        case T.Invariant: // D2.0
+          if (peekNext() == T.LParen)
+            break;
+          stc_ = StorageClass.Invariant;
+          goto Lcommon;
+        case T.Const: // D2.0
+          if (peekNext() == T.LParen)
+            break;
+          stc_ = StorageClass.Const;
+          goto Lcommon;
+        case T.Final: // D2.0
+          stc_ = StorageClass.Final;
+          goto Lcommon;
+        case T.Scope: // D2.0
+          stc_ = StorageClass.Scope;
+          goto Lcommon;
+        case T.Static: // D2.0
+          stc_ = StorageClass.Static;
+          goto Lcommon;
       }
-    }
+        case T.In:
+          stc_ = StorageClass.In;
+          goto Lcommon;
+        case T.Out:
+          stc_ = StorageClass.Out;
+          goto Lcommon;
+        case T.Inout, T.Ref:
+          stc_ = StorageClass.Ref;
+          goto Lcommon;
+        case T.Lazy:
+          stc_ = StorageClass.Lazy;
+          goto Lcommon;
+        Lcommon:
+          // Check for redundancy.
+          if (stc & stc_)
+            error(MID.RedundantStorageClass, token.srcText);
+          else
+            stc |= stc_;
+          nT();
+        version(D2)
+          continue;
+        else
+          break; // In D1.0 the grammar only allows one storage class.
+        default:
+        }
+        break; // Break out of inner loop.
+      }
+      type = parseDeclarator(ident, true);
+
+      if (skipped(T.Assign))
+        defValue = parseAssignExpression();
+
+      if (skipped(T.Ellipses))
+      {
+        stc |= StorageClass.Variadic;
+        pushParameter();
+        break;
+      }
+      pushParameter();
+
+    } while (skipped(T.Comma))
     require(T.RParen);
     return set(params, begin);
   }
@@ -3902,7 +3892,7 @@ version(D2)
   {
     auto begin = token;
     auto targs = new TemplateArguments;
-    while (1)
+    do
     {
       Type parseType_()
       {
@@ -3923,10 +3913,7 @@ version(D2)
         // TemplateArgument:
         //         AssignExpression
         targs ~= parseAssignExpression();
-      if (token.kind != T.Comma)
-        break; // Exit loop.
-      nT();
-    }
+    } while (skipped(T.Comma))
     set(targs, begin);
     return targs;
   }
@@ -3961,7 +3948,7 @@ version(D2)
     auto begin = token;
     auto tparams = new TemplateParameters;
 
-    while (1)
+    do
     {
       auto paramBegin = token;
       TemplateParameter tp;
@@ -4044,10 +4031,7 @@ version(D2)
       // Push template parameter.
       tparams ~= set(tp, paramBegin);
 
-      if (token.kind != T.Comma)
-        break;
-      nT();
-    }
+    } while (skipped(T.Comma))
     set(tparams, begin);
     return tparams;
   }
