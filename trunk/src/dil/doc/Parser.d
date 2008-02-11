@@ -119,5 +119,6 @@ struct IdentValueParser
 
 char[] makeString(char* begin, char* end)
 {
+  assert(begin <= end);
   return begin[0 .. end - begin];
 }

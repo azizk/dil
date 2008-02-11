@@ -73,15 +73,15 @@ class SemanticPass1 : Visitor
   }
 
   /// Insert a symbol into the current scope.
-  void insert(Symbol sym, Identifier* name)
+  void insert(Symbol symbol, Identifier* name)
   {
-    auto sym2 = scop.symbol.lookup(name);
-    if (sym2)
-      reportSymbolConflict(sym, sym2, name);
+    auto symX = scop.symbol.lookup(name);
+    if (symX)
+      reportSymbolConflict(symbol, symX, name);
     else
-      scop.symbol.insert(sym, name);
+      scop.symbol.insert(symbol, name);
     // Set the current scope symbol as the parent.
-    sym.parent = scop.symbol;
+    symbol.parent = scop.symbol;
   }
 
   /// Insert a symbol into scopeSym.

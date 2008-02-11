@@ -83,4 +83,15 @@ class Symbol
   mixin(isX!("Alias"));
   mixin(isX!("OverloadSet"));
 //   mixin(isX!("Type"));
+
+  /// Returns: the fully qualified name of this symbol.
+  /// E.g.: dil.semantic.Symbol.Symbol.getFQN
+  char[] getFQN()
+  {
+    if (!name)
+      return parent ? parent.getFQN() : "";
+    if (parent)
+      return parent.getFQN() ~ '.' ~ name.str;
+    return name.str;
+  }
 }

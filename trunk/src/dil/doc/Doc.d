@@ -153,7 +153,7 @@ struct DDocParser
 
   void scanSummaryAndDescription(char* p, char* end)
   {
-    assert(p < end);
+    assert(p <= end);
     char* sectionBegin = p;
     // Search for the end of the first paragraph.
     end--; // Decrement end, so we can look ahead one character.

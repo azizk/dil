@@ -227,7 +227,7 @@ struct MacroExpander
           break;
         // Add a new argument.
         args ~= makeString(argBegin, p);
-        while (++p < textEnd && isspace(*p))
+        while (++p < textEnd && isspace(*p)) // Skip spaces.
         {}
         argBegin = p;
         continue;
@@ -238,14 +238,15 @@ struct MacroExpander
         if (--level == 0)
           break MainLoop;
         break;
-      case '"', '\'':
-        auto c = *p;
-        while (++p < textEnd && *p != c) // Scan to next " or '.
-        {}
-        assert(*p == c || p == textEnd);
-        if (p == textEnd)
-          break MainLoop;
-        break;
+      // Commented out: causes too many problems in the expansion pass.
+      // case '"', '\'':
+      //   auto c = *p;
+      //   while (++p < textEnd && *p != c) // Scan to next " or '.
+      //   {}
+      //   assert(*p == c || p == textEnd);
+      //   if (p == textEnd)
+      //     break MainLoop;
+      //   break;
       case '<':
         p++;
         if (p+2 < textEnd && *p == '!' && p[1] == '-' && p[2] == '-') // <!--

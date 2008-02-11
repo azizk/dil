@@ -382,6 +382,12 @@ class FunctionDeclaration : Declaration
   {
     this.linkageType = linkageType;
   }
+
+  bool isTemplatized()
+  { // E.g.: void func(T)(T t)
+    //                  ^ params.begin.prevNWS
+    return params.begin.prevNWS.kind == TOK.RParen;
+  }
 }
 
 /// VariablesDeclaration := Type? Identifier ("=" Init)? ("," Identifier ("=" Init)?)* ";"

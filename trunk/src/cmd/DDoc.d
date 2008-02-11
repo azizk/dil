@@ -62,13 +62,16 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
     // Generate documentation.
     auto dest = new FilePath(destDir);
     dest.append(mod.getFQN() ~ ".html");
+
     InfoManager infoMan2; // Collects warnings from the macro expander.
     if (verbose)
     {
       Stdout.formatln("{} > {}", mod.filePath, dest);
       infoMan2 = new InfoManager();
     }
+
     writeDocFile(dest.toString(), mod, mtable, incUndoc, infoMan2);
+
     if (infoMan2)
       infoMan ~= infoMan2.info;
   }
@@ -96,7 +99,7 @@ void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
   mtable.insert("BODY", doc.text);
   // Do the macro expansion pass.
   auto fileText = MacroExpander.expand(mtable, "$(DDOC)", mod.filePath, infoMan);
-//   fileText ~= "\n<pre>\n" ~ doc.text ~ "\n</pre>";
+// fileText ~= "\n<pre>\n" ~ doc.text ~ "\n</pre>";
   // Finally write the file out to the harddisk.
   auto file = new File(dest);
   file.write(fileText);
@@ -161,19 +164,29 @@ class DDocEmitter : DefaultVisitor
   /// Keeps track of previous comments in each scope.
   scope class Scope
   {
-    DDocComment old_prevCmnt;
+    DDocComment saved_prevCmnt;
+    bool saved_cmntIsDitto;
+    uint saved_prevDeclOffset;
     this()
     { // Save the previous comment of the parent scope.
-      old_prevCmnt = this.outer.prevCmnt;
-      // Entering a new scope. Set to null.
+      saved_prevCmnt = this.outer.prevCmnt;
+      saved_cmntIsDitto = this.outer.cmntIsDitto;
+      saved_prevDeclOffset = this.outer.prevDeclOffset; 
+      // Entering a new scope. Clear variables.
       this.outer.prevCmnt = null;
+      this.outer.cmntIsDitto = false;
+      this.outer.prevDeclOffset = 0;
     }
 
     ~this()
     { // Restore the previous comment of the parent scope.
-      this.outer.prevCmnt = old_prevCmnt;
+      this.outer.prevCmnt = saved_prevCmnt;
+      this.outer.cmntIsDitto = saved_cmntIsDitto;
+      this.outer.prevDeclOffset = saved_prevDeclOffset;
     }
   }
+
+  bool cmntIsDitto;
 
   DDocComment ddoc(Node node)
   {
@@ -182,9 +195,13 @@ class DDocEmitter : DefaultVisitor
     if (c)
     {
       if (c.isDitto)
+      {
         this.cmnt = this.prevCmnt;
+        this.cmntIsDitto = true;
+      }
       else
       {
+        this.cmntIsDitto = false;
         this.cmnt = c;
         this.prevCmnt = c;
       }
@@ -224,7 +241,7 @@ class DDocEmitter : DefaultVisitor
           write("\n$(DDOC_PARAMS ");
           foreach (i, paramName; ps.paramNames)
             write("\n$(DDOC_PARAM_ROW ",
-                    "$(DDOC_PARAM_ID ", paramName, ")",
+                    "$(DDOC_PARAM_ID $(DDOC_PARAM ", paramName, "))",
                     "$(DDOC_PARAM_DESC ", ps.paramDescs[i], ")",
                   ")");
           write(")");
@@ -281,7 +298,13 @@ class DDocEmitter : DefaultVisitor
         {
           while (++p < end && *p != '>') // Skip to closing '>'.
           {}
-          p != end && p++; // Skip '>'.
+          if (p == end)
+          { // No closing '>' found.
+            p = begin + 1;
+            result ~= "&lt;";
+            continue;
+          }
+          p++; // Skip '>'.
           result ~= makeString(begin, p);
         }
         else
@@ -289,8 +312,8 @@ class DDocEmitter : DefaultVisitor
         continue;
       case '(': result ~= "&#40;"; break;
       case ')': result ~= "&#41;"; break;
-      case '\'': result ~= "&apos;"; break; // &#39;
-      case '"': result ~= "&quot;"; break;
+      // case '\'': result ~= "&apos;"; break; // &#39;
+      // case '"': result ~= "&quot;"; break;
       case '>': result ~= "&gt;"; break;
       case '&':
         if (p+1 < end && (isalpha(p[1]) || p[1] == '#'))
@@ -300,15 +323,16 @@ class DDocEmitter : DefaultVisitor
       case '-':
         if (p+2 < end && p[1] == '-' && p[2] == '-')
         {
-          p += 2; // Point to 3rd '-'.
-          auto codeBegin = p + 1;
+          while (p < end && *p == '-')
+            p++;
+          auto codeBegin = p;
+          p--;
           while (++p < end)
             if (p+2 < end && *p == '-' && p[1] == '-' && p[2] == '-')
-            {
-              result ~= "$(D_CODE " ~ scanCodeSection(makeString(codeBegin, p)) ~ ")";
-              p += 3;
               break;
-            }
+          result ~= "$(D_CODE " ~ scanCodeSection(makeString(codeBegin, p)) ~ ")";
+          while (p < end && *p == '-')
+            p++;
           continue;
         }
         //goto default;
@@ -322,6 +346,26 @@ class DDocEmitter : DefaultVisitor
 
   char[] scanCodeSection(char[] text)
   {
+    return text;
+  }
+
+  /// Escapes '<', '>' and '&' with named HTML entities.
+  char[] escape(char[] text)
+  {
+    char[] result = new char[text.length]; // Reserve space.
+    result.length = 0;
+    foreach(c; text)
+      switch(c)
+      {
+        case '<': result ~= "&lt;";  break;
+        case '>': result ~= "&gt;";  break;
+        case '&': result ~= "&amp;"; break;
+        default:  result ~= c;
+      }
+    if (result.length != text.length)
+      return result;
+    // Nothing escaped. Return original text.
+    delete result;
     return text;
   }
 
@@ -340,12 +384,15 @@ class DDocEmitter : DefaultVisitor
         assert(param.type);
         // Write storage classes.
         auto typeBegin = param.type.baseType.begin;
-        if (typeBegin !is param.begin)
+        if (typeBegin !is param.begin) // Write storage classes.
           write(textSpan(param.begin, typeBegin.prevNWS), " ");
-        write(textSpan(typeBegin, param.type.end));
-        write(" $(DDOC_PARAM ", param.name.str, ")");
+        write(escape(textSpan(typeBegin, param.type.end))); // Write type.
+        if (param.name)
+          write(" $(DDOC_PARAM ", param.name.str, ")");
         if (param.isDVariadic)
           write("...");
+        if (param.defValue)
+          write(" = ", escape(textSpan(param.defValue.begin, param.defValue.end)));
       }
       if (param !is lastParam)
         write(", ");
@@ -357,7 +404,7 @@ class DDocEmitter : DefaultVisitor
   {
     if (!isTemplatized)
       return;
-    write("(", (tparams ? textSpan(tparams.begin, tparams.end) : ""), ")");
+    write("(", (tparams ? escape(textSpan(tparams.begin, tparams.end)) : ""), ")");
     isTemplatized = false;
     tparams = null;
   }
@@ -366,7 +413,10 @@ class DDocEmitter : DefaultVisitor
   {
     if (bases.length == 0)
       return;
-    text ~= " : " ~ textSpan(bases[0].begin, bases[$-1].end);
+    auto basesBegin = bases[0].begin.prevNWS;
+    if (basesBegin.kind == TOK.Colon)
+      basesBegin = bases[0].begin;
+    text ~= " : " ~ escape(textSpan(basesBegin, bases[$-1].end));
   }
 
   void writeFuncHeader(Declaration d, FuncBodyStatement s)
@@ -384,22 +434,39 @@ class DDocEmitter : DefaultVisitor
       text ~= s;
   }
 
-  void SYMBOL(char[][] strings...)
+  void SYMBOL(char[] name)
   {
-    write("$(DDOC_PSYMBOL ");
-    write(strings);
-    write(")");
+    write("$(DDOC_PSYMBOL ", name, ")");
   }
 
-  void DECL(void delegate() dg)
+  uint prevDeclOffset;
+
+  void DECL(void delegate() dg, bool writeSemicolon = true)
   {
+    if (cmntIsDitto)
+    { alias prevDeclOffset offs;
+      assert(offs != 0);
+      auto savedText = text;
+      text = "";
+      write("\n$(DDOC_DECL ");
+      dg();
+      write(";)");
+      // Insert text at offset.
+      auto len = text.length;
+      text = savedText[0..offs] ~ text ~ savedText[offs..$];
+      offs += len; // Add length of the inserted text to the offset.
+      return;
+    }
     write("\n$(DDOC_DECL ");
     dg();
-    write(")");
+    write(writeSemicolon ? ";)" : ")");
+    prevDeclOffset = text.length;
   }
 
   void DESC(void delegate() dg)
   {
+    if (cmntIsDitto)
+      return;
     write("\n$(DDOC_DECL_DD ");
     dg();
     write(")");
@@ -416,7 +483,6 @@ class DDocEmitter : DefaultVisitor
   {
     if (!ddoc(d))
       return d;
-    scope s = new Scope();
     DECL({
       write(d.begin.srcText, " ");
       SYMBOL(d.name.str);
@@ -426,6 +492,7 @@ class DDocEmitter : DefaultVisitor
     DESC({
       writeComment();
       MEMBERS(is(T == ClassDeclaration) ? "CLASS" : "INTERFACE", {
+        scope s = new Scope();
         d.decls && super.visit(d.decls);
       });
     });
@@ -435,7 +502,6 @@ class DDocEmitter : DefaultVisitor
   {
     if (!ddoc(d))
       return d;
-    scope s = new Scope();
     DECL({
       write(d.begin.srcText, d.name ? " " : "");
       if (d.name)
@@ -445,6 +511,7 @@ class DDocEmitter : DefaultVisitor
     DESC({
       writeComment();
       MEMBERS(is(T == StructDeclaration) ? "STRUCT" : "UNION", {
+        scope s = new Scope();
         d.decls && super.visit(d.decls);
       });
     });
@@ -460,7 +527,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write(textSpan(d.begin, d.end)); });
+    DECL({ write(textSpan(d.begin, d.end)); }, false);
     DESC({ writeComment(); });
     return d;
   }
@@ -469,7 +536,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write(textSpan(d.begin, d.end)); });
+    DECL({ write(textSpan(d.begin, d.end)); }, false);
     DESC({ writeComment(); });
     return d;
   }
@@ -478,14 +545,13 @@ override:
   {
     if (!ddoc(d))
       return d;
-    scope s = new Scope();
     DECL({
       write("enum", d.name ? " " : "");
       d.name && SYMBOL(d.name.str);
     });
     DESC({
       writeComment();
-      MEMBERS("ENUM", { super.visit(d); });
+      MEMBERS("ENUM", { scope s = new Scope(); super.visit(d); });
     });
     return d;
   }
@@ -494,30 +560,29 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL(d.name.str); });
+    DECL({ SYMBOL(d.name.str); }, false);
     DESC({ writeComment(); });
     return d;
   }
 
   D visit(TemplateDeclaration d)
   {
+    this.isTemplatized = true;
+    this.tparams = d.tparams;
     if (d.begin.kind != TOK.Template)
-    { // This is a templatized class/interface/struct/union.
-      this.isTemplatized = true;
-      this.tparams = d.tparams;
+      // This is a templatized class/interface/struct/union.
       return super.visit(d.decls);
-    }
     if (!ddoc(d))
       return d;
-    scope s = new Scope();
     DECL({
       write("template ");
       SYMBOL(d.name.str);
-      write(textSpan(d.begin.nextNWS.nextNWS, d.decls.begin.prevNWS));
+      writeTemplateParams();
     });
     DESC({
       writeComment();
       MEMBERS("TEMPLATE", {
+        scope s = new Scope();
         super.visit(d.decls);
       });
     });
@@ -589,7 +654,14 @@ override:
     if (!ddoc(d))
       return d;
     auto type = textSpan(d.returnType.baseType.begin, d.returnType.end);
-    DECL({ write(type, " "); SYMBOL(d.name.str); writeParams(d.params); });
+    this.isTemplatized = d.isTemplatized();
+    this.tparams = d.tparams;
+    DECL({
+      write(escape(type), " ");
+      SYMBOL(d.name.str);
+      writeTemplateParams();
+      writeParams(d.params);
+    });
     DESC({ writeComment(); });
     return d;
   }
@@ -621,7 +693,7 @@ override:
       type = textSpan(d.typeNode.baseType.begin, d.typeNode.end);
     foreach (name; d.names)
     {
-      DECL({ write(type, " "); SYMBOL(name.str); });
+      DECL({ write(escape(type), " "); SYMBOL(name.str); });
       DESC({ writeComment(); });
     }
     return d;
