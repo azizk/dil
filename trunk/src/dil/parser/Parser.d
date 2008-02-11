@@ -3771,7 +3771,7 @@ class Parser
     if (skipped(T.RParen))
       return set(params, begin);
 
-    while (1)
+    do
     {
       auto paramBegin = token;
       StorageClass stc, stc_;
