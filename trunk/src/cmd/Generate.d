@@ -4,7 +4,12 @@
 +/
 module cmd.Generate;
 
-import dil.ast.Node;
+import dil.ast.DefaultVisitor;
+import dil.ast.Node,
+       dil.ast.Declaration,
+       dil.ast.Statement,
+       dil.ast.Expression,
+       dil.ast.Types;
 import dil.lexer.Lexer;
 import dil.parser.Parser;
 import dil.File;
@@ -43,7 +48,11 @@ char[] xml_escape(char[] text)
       case '&': result ~= "&amp;"; break;
       default:  result ~= c;
     }
-  return result;
+  if (result.length != text.length)
+    return result;
+  // Nothing escaped. Return original text.
+  delete result;
+  return text;
 }
 
 
@@ -78,7 +87,7 @@ int rfind(char[] subject, char object)
   return -1;
 }
 
-/// Returns the short class name of an instance descending from Node.
+/// Returns: the short class name of an instance descending from Node.
 char[] getShortClassName(Node node)
 {
   static char[][] name_table;
@@ -288,7 +297,111 @@ auto xml_tags = [
 static assert(html_tags.length == DocPart.max+1);
 static assert(xml_tags.length == DocPart.max+1);
 
-/// Prints the syntax tree of a source file using the buffer print.
+/// Extended token structure.
+struct TokenEx
+{
+  Token* token; /// The lexer token.
+  Node[] beginNodes; /// beginNodes[n].begin == token
+  Node[] endNodes; /// endNodes[n].end == token
+}
+
+/// Builds an array of TokenEx items.
+class TokenExBuilder : DefaultVisitor
+{
+  private TokenEx*[Token*] tokenTable;
+
+  TokenEx[] build(Node root, Token* first)
+  {
+    Token* token = first;
+
+    uint count;
+    while (token)
+    {
+      count++;
+      token = token.next;
+    }
+
+    auto toks = new TokenEx[count];
+    token = first;
+    foreach (ref tokEx; toks)
+    {
+      tokEx.token = token;
+      if (!token.isWhitespace)
+        tokenTable[token] = &tokEx;
+      token = token.next;
+    }
+
+    super.visitN(root);
+    tokenTable = null;
+    return toks;
+  }
+
+  TokenEx* getTokenEx()(Token* t)
+  {
+    auto p = t in tokenTable;
+    assert(p, t.srcText~" is not in tokenTable");
+    return *p;
+  }
+
+  void push()(Node n)
+  {
+    auto begin = n.begin;
+    if (begin)
+    { assert(n.end);
+      auto txbegin = getTokenEx(begin);
+      auto txend = getTokenEx(n.end);
+      txbegin.beginNodes ~= n;
+      txend.endNodes ~= n;
+    }
+  }
+
+  // Override dispatch functions.
+override:
+  Declaration visitD(Declaration n)
+  { return push(n), super.visitD(n); }
+  Statement visitS(Statement n)
+  { return push(n), super.visitS(n); }
+  Expression visitE(Expression n)
+  { return push(n), super.visitE(n); }
+  TypeNode visitT(TypeNode n)
+  { return push(n), super.visitT(n); }
+  Node visitN(Node n)
+  { return push(n), super.visitN(n); }
+}
+
+char getTag(NodeCategory nc)
+{
+  char tag;
+  switch (nc)
+  {
+  alias NodeCategory NC;
+  case NC.Declaration: tag = 'd'; break;
+  case NC.Statement:   tag = 's'; break;
+  case NC.Expression:  tag = 'e'; break;
+  case NC.Type:        tag = 't'; break;
+  case NC.Other:       tag = 'o'; break;
+  default:
+    assert(0);
+  }
+  return tag;
+}
+
+void printErrors(Lexer lx, string[] tags, Print!(char) print)
+{
+  foreach (error; lx.errors)
+  {
+    print.formatln(tags[DocPart.Error], "L", error.filePath, Format("{0},{1}", error.loc, error.col), "L", xml_escape(error.getMsg));
+  }
+}
+
+void printErrors(Parser parser, string[] tags, Print!(char) print)
+{
+  foreach (error; parser.errors)
+  {
+    print.formatln(tags[DocPart.Error], "P", error.filePath, Format("{0},{1}", error.loc, error.col), "P", xml_escape(error.getMsg));
+  }
+}
+
 void syntaxToDoc(string filePath, Print!(char) print, DocOption options)
 {
   auto tags = options & DocOption.HTML ? html_tags : xml_tags;
@@ -297,105 +410,38 @@ void syntaxToDoc(string filePath, Print!(char) print, DocOption options)
   auto root = parser.start();
   auto lx = parser.lexer;
 
-  auto token = lx.head;
+  auto builder = new TokenExBuilder();
+  auto tokenExList = builder.build(root, lx.firstToken());
 
   print(tags[DocPart.Head]~\n);
-  // Output error messages.
   if (lx.errors.length || parser.errors.length)
-  {
+  { // Output error messages.
     print(tags[DocPart.CompBegin]~\n);
-    foreach (error; lx.errors)
-    {
-      print.formatln(tags[DocPart.Error], "L", error.filePath, Format("{0},{1}", error.loc, error.col), "L", xml_escape(error.getMsg));
-    }
-    foreach (error; parser.errors)
-    {
-      print.formatln(tags[DocPart.Error], "P", error.filePath, Format("{0},{1}", error.loc, error.col), "P", xml_escape(error.getMsg));
-    }
+    printErrors(lx, tags, print);
+    printErrors(parser, tags, print);
     print(tags[DocPart.CompEnd]~\n);
   }
   print(tags[DocPart.SrcBegin]);
 
-  Node[][Token*] beginNodes, endNodes;
-
-  void populateAAs(Node[] nodes)
+  // Iterate over list of tokens.
+  foreach (ref tokenEx; tokenExList)
   {
-    foreach (node; nodes)
-    {
-      assert(delegate bool(){
-          foreach (child; node.children)
-            if (child is null)
-              return false;
-          return true;
-        }() == true, Format("Node '{0}' has a null child", node.classinfo.name)
-      );
-      auto begin = node.begin;
-      if (begin)
-      {
-        auto end = node.end;
-        assert(end);
-        beginNodes[begin] ~= node;
-        endNodes[end] ~= node;
-      }
-
-      if (node.children.length)
-        populateAAs(node.children);
-    }
-  }
-  assert(delegate bool(){
-      foreach (child; root.children)
-        if (child is null)
-          return false;
-      return true;
-    }() == true, Format("Root node has a null child")
-  );
-  populateAAs(root.children);
-
-  char[] getTag(NodeCategory nc)
-  {
-    char[] tag;
-    switch (nc)
-    {
-    alias NodeCategory NC;
-    case NC.Declaration: tag = "d"; break;
-    case NC.Statement:   tag = "s"; break;
-    case NC.Expression:  tag = "e"; break;
-    case NC.Type:        tag = "t"; break;
-    case NC.Other:       tag = "o"; break;
-    default:
-    }
-    return tag;
-  }
-
-  // Traverse linked list and print tokens.
-  while (token.kind != TOK.EOF)
-  {
-    token = token.next;
-
+    auto token = tokenEx.token;
     // Print whitespace.
     if (token.ws)
-      print(token.ws[0..token.start - token.ws]);
+      print(token.wsChars);
 
-    Node[]* nodes = token in beginNodes;
-
-    if (nodes)
-    {
-      foreach (node; *nodes)
-        print.format(tags[DocPart.SyntaxBegin], getTag(node.category), getShortClassName(node));
-    }
+    foreach (node; tokenEx.beginNodes)
+      print.format(tags[DocPart.SyntaxBegin], getTag(node.category), getShortClassName(node));
 
     printToken(token, tags, print);
 
-    nodes = token in endNodes;
-
-    if (nodes)
-    {
-      foreach_reverse (node; *nodes)
-        if (options & DocOption.HTML)
-          print(tags[DocPart.SyntaxEnd]);
-        else
-          print.format(tags[DocPart.SyntaxEnd], getTag(node.category));
-    }
+    if (options & DocOption.HTML)
+      foreach_reverse (node; tokenEx.endNodes)
+        print(tags[DocPart.SyntaxEnd]);
+    else
+      foreach_reverse (node; tokenEx.endNodes)
+        print.format(tags[DocPart.SyntaxEnd], getTag(node.category));
   }
   print(\n~tags[DocPart.SrcEnd])(\n~tags[DocPart.Tail]);
 }
@@ -406,30 +452,26 @@ void tokensToDoc(string filePath, Print!(char) print, DocOption options)
   auto tags = options & DocOption.HTML ? html_tags : xml_tags;
   auto sourceText = loadFile(filePath);
   auto lx = new Lexer(sourceText, filePath);
-
-  auto token = lx.getTokens();
+  lx.scanAll();
 
   print(tags[DocPart.Head]~\n);
-
   if (lx.errors.length)
   {
     print(tags[DocPart.CompBegin]~\n);
-    foreach (error; lx.errors)
-    {
-      print.formatln(tags[DocPart.Error], "L", error.filePath, Format("{0},{1}", error.loc, error.col), "L", xml_escape(error.getMsg));
-    }
+    printErrors(lx, tags, print);
     print(tags[DocPart.CompEnd]~\n);
   }
   print(tags[DocPart.SrcBegin]);
 
   // Traverse linked list and print tokens.
+  auto token = lx.firstToken();
   while (token.kind != TOK.EOF)
   {
-    token = token.next;
     // Print whitespace.
     if (token.ws)
-      print(token.ws[0..token.start - token.ws]);
+      print(token.wsChars);
     printToken(token, tags, print);
+    token = token.next;
   }
   print(\n~tags[DocPart.SrcEnd])(\n~tags[DocPart.Tail]);
 }
