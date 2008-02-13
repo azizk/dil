@@ -94,11 +94,17 @@ abstract class Visitor
   static assert(dispatch_vtable.length == classNames.length, "vtable length doesn't match number of classes");
 
   // Returns the dispatch function for n.
-  final T function(Visitor,T) getDispatchFunction(T)(T n)
+  Node function(Visitor, Node) getDispatchFunction()(Node n)
   {
-    return cast(T function(Visitor,T))dispatch_vtable[n.kind];
+    return cast(Node function(Visitor, Node))dispatch_vtable[n.kind];
   }
 
+  Node dispatch(Node n)
+  { // Do first dispatch. Second dispatch is done in the called function.
+    return getDispatchFunction(n)(this, n);
+  }
+
+final:
   Declaration visit(Declaration n)
   { return visitD(n); }
   Statement visit(Statement n)
@@ -112,27 +118,26 @@ abstract class Visitor
 
   Declaration visitD(Declaration n)
   {
-    // Do first dispatch. Second dispatch is done in the called function.
-    return getDispatchFunction(n)(this, n);
+    return cast(Declaration)cast(void*)dispatch(n);
   }
 
   Statement visitS(Statement n)
   {
-    return getDispatchFunction(n)(this, n);
+    return cast(Statement)cast(void*)dispatch(n);
   }
 
   Expression visitE(Expression n)
   {
-    return getDispatchFunction(n)(this, n);
+    return cast(Expression)cast(void*)dispatch(n);
   }
 
   TypeNode visitT(TypeNode n)
   {
-    return getDispatchFunction(n)(this, n);
+    return cast(TypeNode)cast(void*)dispatch(n);
   }
 
   Node visitN(Node n)
   {
-    return getDispatchFunction(n)(this, n);
+    return dispatch(n);
   }
 }

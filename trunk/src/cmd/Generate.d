@@ -356,18 +356,12 @@ class TokenExBuilder : DefaultVisitor
     }
   }
 
-  // Override dispatch functions.
-override:
-  Declaration visitD(Declaration n)
-  { return push(n), super.visitD(n); }
-  Statement visitS(Statement n)
-  { return push(n), super.visitS(n); }
-  Expression visitE(Expression n)
-  { return push(n), super.visitE(n); }
-  TypeNode visitT(TypeNode n)
-  { return push(n), super.visitT(n); }
-  Node visitN(Node n)
-  { return push(n), super.visitN(n); }
+  // Override dispatch function.
+  override Node dispatch(Node n)
+  {
+    push(n);
+    return super.dispatch(n);
+  }
 }
 
 char getTag(NodeCategory nc)
