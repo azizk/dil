@@ -33,6 +33,7 @@ import cmd.DDoc;
 import common;
 
 import Integer = tango.text.convert.Integer;
+import tango.stdc.stdio;
 import tango.io.File;
 import tango.text.Util;
 import tango.time.StopWatch;
@@ -195,18 +196,18 @@ void main(char[][] args)
     cmd.Statistics.execute(filePaths, printTokensTable, printNodesTable);
     break;
   case "tok", "tokenize":
-    char[] filePath;
     SourceText sourceText;
+    char[] filePath;
     char[] separator;
     bool ignoreWSToks;
     bool printWS;
 
     foreach (arg; args[2..$])
     {
-      if (strbeg(arg, "-t"))
-        sourceText = new SourceText("-t", arg[2..$]);
-      else if (strbeg(arg, "-s"))
+      if (strbeg(arg, "-s"))
         separator = arg[2..$];
+      else if (arg == "-")
+        sourceText = new SourceText("stdin", readStdin());
       else if (arg == "-i")
         ignoreWSToks = true;
       else if (arg == "-ws")
@@ -216,10 +217,11 @@ void main(char[][] args)
     }
 
     separator || (separator = "\n");
-    if (sourceText)
+    if (!sourceText)
       sourceText = new SourceText(filePath, true);
 
-    auto lx = new Lexer(sourceText, null);
+    auto infoMan = new InfoManager();
+    auto lx = new Lexer(sourceText, infoMan);
     lx.scanAll();
     auto token = lx.firstToken();
 
@@ -231,6 +233,8 @@ void main(char[][] args)
         Stdout(token.wsChars);
       Stdout(token.srcText)(separator);
     }
+
+    printErrors(infoMan);
     break;
   case "trans", "translate":
     if (args.length < 3)
@@ -280,6 +284,19 @@ void main(char[][] args)
     break;
   default:
   }
+}
+
+char[] readStdin()
+{
+  char[] text;
+  while (1)
+  {
+    auto c = getc(stdin);
+    if (c == EOF)
+      break;
+    text ~= c;
+  }
+  return text;
 }
 
 const char[] COMMANDS =
@@ -405,13 +422,13 @@ Usage:
   dil tok file.d [Options]
 
 Options:
-  -tTEXT          : tokenize TEXT instead of a file.
+  -               : reads text from the standard input.
   -sSEPARATOR     : print SEPARATOR instead of newline between tokens.
   -i              : ignore whitespace tokens (e.g. comments, shebang etc.)
   -ws             : print a token's preceding whitespace characters.
 
 Example:
-  dil tok -t"module foo; void func(){}"
+  echo "module foo; void func(){}" | dil tok -
   dil tok main.d | grep ^[0-9]`;
     break;
   case "stats", "statistics":
