@@ -8,6 +8,7 @@ import dil.parser.Parser;
 import dil.ast.Node;
 import dil.ast.Declarations;
 import dil.ast.Statements;
+import dil.SourceText;
 import dil.Enums;
 import common;
 
@@ -15,9 +16,9 @@ private alias TOK T;
 
 class ImportParser : Parser
 {
-  this(char[] srcText, string fileName)
+  this(SourceText srcText)
   {
-    super(srcText, fileName);
+    super(srcText);
   }
 
   override CompoundDeclaration start()

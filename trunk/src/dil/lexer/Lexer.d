@@ -13,6 +13,7 @@ import dil.Messages;
 import dil.HtmlEntities;
 import dil.CompilerInfo;
 import dil.Unicode;
+import dil.SourceText;
 import common;
 
 import tango.stdc.stdlib : strtof, strtod, strtold;
@@ -28,13 +29,13 @@ public import dil.lexer.Funcs;
 +/
 class Lexer
 {
-  Token* head;      /// The head of the doubly linked token list.
-  Token* tail;      /// The tail of the linked list. Set in scan().
-  Token* token;     /// Points to the current token in the token list.
-  string text;      /// The source text.
-  char[] filePath;  /// Path to the source text.
-  char* p;          /// Points to the current character in the source text.
-  char* end;        /// Points one character past the end of the source text.
+  SourceText srcText; /// The source text.
+  char* p;            /// Points to the current character in the source text.
+  char* end;          /// Points one character past the end of the source text.
+
+  Token* head;  /// The head of the doubly linked token list.
+  Token* tail;  /// The tail of the linked list. Set in scan().
+  Token* token; /// Points to the current token in the token list.
 
   // Members used for error messages:
   InfoManager infoMan;
@@ -50,24 +51,17 @@ class Lexer
   /++
     Construct a Lexer object.
     Params:
-      text     = the UTF-8 source code.
-      filePath = the path to the source code; used for error messages.
-      infoMan  = the information manager (for collecting error messages.)
+      srcText = the UTF-8 source code.
+      infoMan = used for collecting error messages.
   +/
-  this(string text, string filePath, InfoManager infoMan = null)
+  this(SourceText srcText, InfoManager infoMan = null)
   {
-    this.filePath = filePath;
+    this.srcText = srcText;
     this.infoMan = infoMan;
 
-    this.text = text;
-    if (text.length == 0 || text[$-1] != 0)
-    {
-      this.text.length = this.text.length + 1;
-      this.text[$-1] = 0;
-    }
-
-    this.p = this.text.ptr;
-    this.end = this.p + this.text.length;
+    assert(text.length && text[$-1] == 0, "source text has no sentinel character");
+    this.p = text.ptr;
+    this.end = this.p + text.length;
     this.lineBegin = this.p;
 
     this.head = new Token;
@@ -75,7 +69,7 @@ class Lexer
     this.head.start = this.head.end = this.p;
     this.token = this.head;
     // Initialize this.filePaths.
-    newFilePath(this.filePath);
+    newFilePath(this.srcText.filePath);
     // Add a newline as the first token after the head.
     auto newline = new Token;
     newline.kind = TOK.Newline;
@@ -102,6 +96,11 @@ class Lexer
       token = token.next;
     }
     delete tail;
+  }
+
+  char[] text()
+  {
+    return srcText.data;
   }
 
   /++
@@ -170,7 +169,7 @@ class Lexer
   void newFilePath(char[] newPath)
   {
     auto paths = new NewlineData.FilePaths;
-    paths.oriPath = this.filePath;
+    paths.oriPath = this.srcText.filePath;
     paths.setPath = newPath;
     this.filePaths = paths;
   }

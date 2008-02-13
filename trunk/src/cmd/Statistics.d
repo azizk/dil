@@ -9,6 +9,7 @@ import dil.lexer.Lexer;
 import dil.lexer.Token;
 import dil.parser.Parser;
 import dil.ast.NodesEnum;
+import dil.SourceText;
 import cmd.ASTStats;
 import common;
 
@@ -137,12 +138,12 @@ Statistics getStatistics(string filePath, bool printTokensTable, bool printNodes
   // Create a new record.
   auto stats = Statistics(printTokensTable);
 
-  auto sourceText = loadFile(filePath);
+  auto sourceText = new SourceText(filePath, true);
   Parser parser;
   Lexer lx;
   if (printNodesTable)
   {
-    parser = new Parser(sourceText, filePath);
+    parser = new Parser(sourceText);
     auto rootNode = parser.start();
     // Count nodes.
     stats.nodesTable = (new ASTStats).count(rootNode);
@@ -150,7 +151,7 @@ Statistics getStatistics(string filePath, bool printTokensTable, bool printNodes
   }
   else
   {
-    lx = new Lexer(sourceText, filePath);
+    lx = new Lexer(sourceText);
     lx.scanAll();
   }
 

@@ -12,9 +12,10 @@ import dil.ast.Node,
        dil.ast.Types;
 import dil.lexer.Lexer;
 import dil.parser.Parser;
-import dil.File;
-import tango.io.Print;
+import dil.SourceText;
 import common;
+
+import tango.io.Print;
 
 /// Options for the generate command.
 enum DocOption
@@ -405,8 +406,7 @@ void printErrors(Parser parser, string[] tags, Print!(char) print)
 void syntaxToDoc(string filePath, Print!(char) print, DocOption options)
 {
   auto tags = options & DocOption.HTML ? html_tags : xml_tags;
-  auto sourceText = loadFile(filePath);
-  auto parser = new Parser(sourceText, filePath);
+  auto parser = new Parser(new SourceText(filePath, true));
   auto root = parser.start();
   auto lx = parser.lexer;
 
@@ -450,8 +450,7 @@ void syntaxToDoc(string filePath, Print!(char) print, DocOption options)
 void tokensToDoc(string filePath, Print!(char) print, DocOption options)
 {
   auto tags = options & DocOption.HTML ? html_tags : xml_tags;
-  auto sourceText = loadFile(filePath);
-  auto lx = new Lexer(sourceText, filePath);
+  auto lx = new Lexer(new SourceText(filePath, true));
   lx.scanAll();
 
   print(tags[DocPart.Head]~\n);

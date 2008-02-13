@@ -12,15 +12,18 @@ import dil.File;
 import dil.semantic.Symbol;
 import dil.semantic.Symbols;
 import dil.Information;
+import dil.SourceText;
+import common;
+
 import tango.io.FilePath;
 import tango.io.FileConst;
-import common;
 
 alias FileConst.PathSeparatorChar dirSep;
 
+/// Represents a D module and source file.
 class Module : ScopeSymbol
 {
-  string filePath; /// Path to the source file.
+  SourceText sourceText; /// The source file of this module.
   string moduleFQN; /// Fully qualified name of the module. E.g. dil.ast.Node
   string packageName; /// E.g. dil.ast
   string moduleName; /// E.g. Node
@@ -39,37 +42,49 @@ class Module : ScopeSymbol
     super(SYM.Module, null, null);
   }
 
+  /// Params:
+  ///   filePath = file path to the source text; loaded in the constructor.
+  ///   infoMan = used for collecting error messages.
   this(string filePath, InfoManager infoMan = null)
   {
     this();
-    this.filePath = filePath;
+    this.sourceText = new SourceText(filePath);
     this.infoMan = infoMan;
+    this.sourceText.load(infoMan);
   }
 
+  string filePath()
+  {
+    return sourceText.filePath;
+  }
+
+  void setParser(Parser parser)
+  {
+    this.parser = parser;
+  }
+
+  /// Starts the parser.
   void parse()
   {
     if (this.parser is null)
-      this.parser = new Parser(loadFile(filePath), filePath, infoMan);
+      this.parser = new Parser(sourceText, infoMan);
 
     this.root = parser.start();
     this.imports = parser.imports;
 
     if (root.children.length)
-    {
-      // moduleDecl will be null if first node isn't a ModuleDeclaration.
+    { // moduleDecl will be null if first node isn't a ModuleDeclaration.
       this.moduleDecl = root.children[0].Is!(ModuleDeclaration);
       if (this.moduleDecl)
         this.setFQN(moduleDecl.getFQN());
     }
 
     if (!this.moduleFQN.length)
-    {
-      // Take base name of file path as module name.
+    { // Take base name of file path as module name.
       auto str = (new FilePath(filePath)).name();
-      if (!Lexer.isReservedIdentifier(str))
-        this.moduleFQN = this.moduleName = str;
-      else
-        throw new Exception("'"~str~"' is not a valid module name");
+      if (Lexer.isReservedIdentifier(str))
+        throw new Exception("'"~str~"' is not a valid module name; it's a reserved or invalid D identifier.");
+      this.moduleFQN = this.moduleName = str;
     }
   }
 

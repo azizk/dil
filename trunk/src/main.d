@@ -24,6 +24,7 @@ import dil.SettingsLoader;
 import dil.CompilerInfo;
 import dil.Information;
 import dil.File;
+import dil.SourceText;
 
 import cmd.Generate;
 import cmd.Statistics;
@@ -195,7 +196,7 @@ void main(char[][] args)
     break;
   case "tok", "tokenize":
     char[] filePath;
-    char[] sourceText;
+    SourceText sourceText;
     char[] separator;
     bool ignoreWSToks;
     bool printWS;
@@ -203,7 +204,7 @@ void main(char[][] args)
     foreach (arg; args[2..$])
     {
       if (strbeg(arg, "-t"))
-        sourceText = arg[2..$];
+        sourceText = new SourceText("-t", arg[2..$]);
       else if (strbeg(arg, "-s"))
         separator = arg[2..$];
       else if (arg == "-i")
@@ -214,8 +215,9 @@ void main(char[][] args)
         filePath = arg;
     }
 
-    separator  || (separator = "\n");
-    sourceText || (sourceText = loadFile(filePath));
+    separator || (separator = "\n");
+    if (sourceText)
+      sourceText = new SourceText(filePath, true);
 
     auto lx = new Lexer(sourceText, null);
     lx.scanAll();
@@ -265,7 +267,7 @@ void main(char[][] args)
     swatch.start;
 
     foreach (filePath; filePaths)
-      (new Lexer(loadFile(filePath), null)).scanAll();
+      (new Lexer(new SourceText(filePath, true))).scanAll();
 
     Stdout.formatln("Scanned in {:f10}s.", swatch.stop);
     break;

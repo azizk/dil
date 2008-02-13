@@ -16,6 +16,7 @@ import dil.Messages;
 import dil.Information;
 import dil.Enums;
 import dil.CompilerInfo;
+import dil.SourceText;
 import common;
 
 /++
@@ -47,13 +48,12 @@ class Parser
     Construct a Parser object.
     Params:
       text     = the UTF-8 source code.
-      filePath = the path to the source code; used for error messages.
       infoMan  = used for collecting error messages.
   +/
-  this(char[] srcText, string filePath, InfoManager infoMan = null)
+  this(SourceText srcText, InfoManager infoMan = null)
   {
     this.infoMan = infoMan;
-    lexer = new Lexer(srcText, filePath, infoMan);
+    lexer = new Lexer(srcText, infoMan);
   }
 
   /// Moves to the first token.

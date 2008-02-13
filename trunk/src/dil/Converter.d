@@ -178,7 +178,7 @@ struct Converter
   char[] data2UTF8(ubyte[] data)
   {
     if (data.length == 0)
-      return null;
+      return "";
 
     char[] text;
     BOM bom = tellBOM(data);

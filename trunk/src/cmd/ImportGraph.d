@@ -10,11 +10,13 @@ import dil.semantic.Module;
 import dil.parser.ImportParser;
 import dil.File;
 import dil.Settings;
+import dil.SourceText;
+import common;
+
 import tango.text.Regex : RegExp = Regex;
 import tango.io.FilePath;
 import tango.io.FileConst;
 import tango.text.Util;
-import common;
 
 alias FileConst.PathSeparatorChar dirSep;
 
@@ -198,7 +200,7 @@ class GraphBuilder
     {
       auto modul = new Module(moduleFilePath);
       // Use lightweight ImportParser.
-      modul.parser = new ImportParser(loadFile(moduleFilePath), moduleFilePath);
+      modul.setParser(new ImportParser(modul.sourceText));
       modul.parse();
 
       vertex = new Vertex;

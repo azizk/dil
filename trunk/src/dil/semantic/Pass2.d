@@ -20,6 +20,7 @@ import dil.semantic.Symbol,
        dil.semantic.Analysis,
        dil.semantic.Interpreter;
 import dil.parser.Parser;
+import dil.SourceText;
 import dil.Location;
 import dil.Information;
 import dil.Messages;
@@ -139,7 +140,8 @@ override
       { // Parse the declarations in the string.
         auto loc = md.begin.getErrorLocation();
         auto filePath = loc.filePath;
-        auto parser = new Parser(stringExpr.getString(), filePath, modul.infoMan);
+        auto sourceText = new SourceText(filePath, stringExpr.getString());
+        auto parser = new Parser(sourceText, modul.infoMan);
         md.decls = parser.start();
       }
     }
@@ -320,7 +322,8 @@ override
     {
       auto loc = me.begin.getErrorLocation();
       auto filePath = loc.filePath;
-      auto parser = new Parser(stringExpr.getString(), filePath, modul.infoMan);
+      auto sourceText = new SourceText(filePath, stringExpr.getString());
+      auto parser = new Parser(sourceText, modul.infoMan);
       expr = parser.start2();
       expr = visitE(expr); // Check expression.
     }
