@@ -11,6 +11,7 @@ import dil.Information;
 import dil.Messages;
 import common;
 
+/// The DDoc macro class.
 class Macro
 {
   string name; /// The name of the macro.
@@ -23,6 +24,10 @@ class Macro
   }
 }
 
+/// Maps macro names to Macro objects.
+///
+/// MacroTables can be chained so that they build a linear hierarchy.
+/// Macro definitions in the current table override the ones in the parent tables.
 class MacroTable
 {
   MacroTable parent;
@@ -33,22 +38,27 @@ class MacroTable
     this.parent = parent;
   }
 
-  void insert(Macro macro_)
+  /// Inserts the macro m into the table.
+  /// Overwrites the current macro if one exists.
+  void insert(Macro m)
   {
-    table[macro_.name] = macro_;
+    table[m.name] = m;
   }
 
+  /// Inserts an array of macros into the table.
   void insert(Macro[] macros)
   {
-    foreach (macro_; macros)
-      insert(macro_);
+    foreach (m; macros)
+      insert(m);
   }
 
+  /// Creates a macro using name and text and inserts that into the table.
   void insert(string name, string text)
   {
     insert(new Macro(name, text));
   }
 
+  /// Creates a macro using name[n] and text[n] and inserts that into the table.
   void insert(string[] names, string[] texts)
   {
     assert(names.length == texts.length);
@@ -56,16 +66,22 @@ class MacroTable
       insert(name, texts[i]);
   }
 
+  /// Searches for a macro.
+  ///
+  /// If the macro isn't found in this table the search
+  /// continues upwards in the table hierarchy.
+  /// Returns: the macro if found, or null if not.
   Macro search(string name)
   {
     auto pmacro = name in table;
     if (pmacro)
       return *pmacro;
-    if (parent)
+    if (!isRoot())
       return parent.search(name);
     return null;
   }
 
+  /// Returns: true if this is the root of the hierarchy.
   bool isRoot()
   { return parent is null; }
 }
