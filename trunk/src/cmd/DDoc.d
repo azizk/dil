@@ -320,6 +320,12 @@ class DDocEmitter : DefaultVisitor
           goto default;
         result ~= "&amp;";
         break;
+      case '\n':
+        if (!(p+1 < end && p[1] == '\n'))
+          goto default;
+        ++p;
+        result ~= "$(DDOC_BLANKLINE)";
+        break;
       case '-':
         if (p+2 < end && p[1] == '-' && p[2] == '-')
         {

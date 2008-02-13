@@ -62,7 +62,7 @@ class Interpreter : Visitor
          NK.BoolExpression, NK.StringExpression:
       return true;
     default:
-      return false;
     }
+    return false;
   }
 }

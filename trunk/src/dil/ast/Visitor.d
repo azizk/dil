@@ -94,7 +94,7 @@ abstract class Visitor
   static assert(dispatch_vtable.length == classNames.length, "vtable length doesn't match number of classes");
 
   // Returns the dispatch function for n.
-  T function(Visitor,T) getDispatchFunction(T)(T n)
+  final T function(Visitor,T) getDispatchFunction(T)(T n)
   {
     return cast(T function(Visitor,T))dispatch_vtable[n.kind];
   }

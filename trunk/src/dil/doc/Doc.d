@@ -382,10 +382,14 @@ string sanitize(string comment, char commentChar)
     if (newline)
     { // Ignore commentChars at the beginning of each new line.
       newline = false;
+      auto begin = i;
       while (i < len && isspace(result[i]))
         i++;
-      while (i < len && result[i] == commentChar)
-        i++;
+      if (i < len && result[i] == commentChar)
+        while (++i < len && result[i] == commentChar)
+        {}
+      else
+        i = begin; // Reset. No commentChar found.
       if (i >= len)
         break;
     }
