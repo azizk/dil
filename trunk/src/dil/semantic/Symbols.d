@@ -9,7 +9,7 @@ import dil.semantic.Symbol;
 import dil.semantic.SymbolTable;
 import dil.semantic.Types;
 import dil.ast.Node;
-import dil.lexer.Identifier;
+import dil.lexer.IdTable;
 import dil.Enums;
 import common;
 
@@ -28,6 +28,13 @@ class ScopeSymbol : Symbol
   Symbol lookup(Identifier* name)
   {
     return symbolTable.lookup(name);
+  }
+
+  /// Look up name in the table.
+  Symbol lookup(string name)
+  {
+    auto id = IdTable.lookup(name);
+    return id ? symbolTable.lookup(id) : null;
   }
 
   /// Insert a symbol into the table.

@@ -8,125 +8,120 @@ import dil.Settings;
 import dil.Messages;
 import dil.ast.Node, dil.ast.Declarations, dil.ast.Expressions;
 import dil.semantic.Module;
-import dil.File;
-import tango.io.FilePath;
+import dil.semantic.Pass1;
+import dil.semantic.Symbol;
+import dil.semantic.Symbols;
+import dil.Information;
 import common;
 
-void loadSettings()
+import tango.io.FilePath;
+
+struct SettingsLoader
 {
-  scope execPath = new FilePath(GetExecutableFilePath());
-  execPath = new FilePath(execPath.folder());
+  InfoManager infoMan;
+  Module mod; /// Current module.
 
-  // Load config.d
-  auto filePath = resolvePath(execPath, "config.d");
-  auto modul = new Module(filePath);
-  modul.parse();
-
-  if (modul.hasErrors)
-    throw new Exception("There are errors in " ~ filePath ~ ".");
-
-  foreach (decl; modul.root.children)
+  static SettingsLoader opCall(InfoManager infoMan)
   {
-    auto v = decl.Is!(VariablesDeclaration);
-    if (v is null)
-      continue;
-
-    auto variableName = v.names[0].str;
-    auto e = v.inits[0];
-    if (!e)
-      throw new Exception(variableName ~ " variable has no value set.");
-
-    switch (variableName)
-    {
-    case "langfile":
-      if (auto val = e.Is!(StringExpression))
-        GlobalSettings.langFile = val.getString();
-      break;
-    case "import_paths":
-      if (auto array = e.Is!(ArrayInitExpression))
-      {
-        foreach (value; array.values)
-          if (auto str = value.Is!(StringExpression))
-            GlobalSettings.importPaths ~= str.getString();
-      }
-      else
-        throw new Exception("import_paths variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");
-      break;
-    case "ddoc_files":
-      if (auto array = e.Is!(ArrayInitExpression))
-      {
-        foreach (value; array.values)
-          if (auto str = value.Is!(StringExpression))
-            GlobalSettings.ddocFilePaths ~= resolvePath(execPath, str.getString());
-      }
-      else
-        throw new Exception("import_paths variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");
-      break;
-    case "lexer_error":
-      if (auto val = e.Is!(StringExpression))
-        GlobalSettings.lexerErrorFormat = val.getString();
-      break;
-    case "parser_error":
-      if (auto val = e.Is!(StringExpression))
-        GlobalSettings.parserErrorFormat = val.getString();
-      break;
-    case "semantic_error":
-      if (auto val = e.Is!(StringExpression))
-        GlobalSettings.semanticErrorFormat = val.getString();
-      break;
-    default:
-    }
+    SettingsLoader sl;
+    sl.infoMan = infoMan;
+    return sl;
   }
 
-  // Load language file.
-  filePath = resolvePath(execPath, GlobalSettings.langFile);
-  modul = new Module(filePath);
-  modul.parse();
-
-  if (modul.hasErrors)
-    throw new Exception("There are errors in "~filePath~".");
-
-  char[][] messages;
-  foreach (decl; modul.root.children)
+  void error(Token* token, char[] formatMsg, ...)
   {
-    auto v = decl.Is!(VariablesDeclaration);
-    if (v is null)
-      continue;
-
-    auto variableName = v.names[0].str;
-    auto e = v.inits[0];
-    if (!e)
-      throw new Exception(variableName~" variable in "~filePath~" has no value set.");
-
-    switch (variableName)
-    {
-    case "messages":
-      if (auto array = e.Is!(ArrayInitExpression))
-      {
-        foreach (value; array.values)
-        {
-          if (auto str = value.Is!(StringExpression))
-            messages ~= str.getString();
-        }
-      }
-      else
-        throw new Exception("messages variable is set to "~e.classinfo.name~" instead of an ArrayInitializer.");
-      break;
-    case "lang_code":
-      if (auto str = e.Is!(StringExpression))
-          GlobalSettings.langCode = str.getString();
-      break;
-    default:
-    }
+    auto location = token.getErrorLocation();
+    auto msg = Format(_arguments, _argptr, formatMsg);
+    infoMan ~= new SemanticError(location, msg);
   }
-  if (messages.length != MID.max+1)
-    throw new Exception(
-      Format(
-        "messages table in {0} must exactly have {1} entries, but {2} were found.",
-        filePath, MID.max+1, messages.length)
-      );
-  GlobalSettings.messages = messages;
-  dil.Messages.SetMessages(messages);
+
+  T getValue(T)(char[] name)
+  {
+    auto var = mod.lookup(name);
+    if (!var) // Returning T.init instead of null, because dmd gives an error.
+      return error(mod.firstToken, "variable '{}' is not defined", name), T.init;
+    auto t = var.node.begin;
+    if (!var.isVariable)
+      return error(t, "'{}' is not a variable declaration", name), T.init;
+    auto value = var.to!(Variable).value;
+    if (!value)
+      return error(t, "'{}' variable has no value set", name), T.init;
+    T val = value.Is!(T); // Try casting to T.
+    if (!val)
+      error(value.begin, "the value of '{}' is not of type {}", name, typeof(T).stringof);
+    return val;
+  }
+
+  T castTo(T)(Node n)
+  {
+    char[] type;
+    is(T == StringExpression) && (type = "char[]");
+    if (!n.Is!(T))
+      error(n.begin, "expression is not of type {}", type);
+    return n.Is!(T);
+  }
+
+  void load()
+  {
+    scope execPath = new FilePath(GetExecutableFilePath());
+    execPath = new FilePath(execPath.folder());
+
+    // Load config.d
+    auto filePath = resolvePath(execPath, "config.d");
+    mod = new Module(filePath, infoMan);
+    mod.parse();
+
+    if (mod.hasErrors)
+      return;
+
+    auto pass1 = new SemanticPass1(mod);
+    pass1.start();
+
+    if (auto val = getValue!(StringExpression)("langfile"))
+      GlobalSettings.langFile = val.getString();
+
+    if (auto array = getValue!(ArrayInitExpression)("import_paths"))
+      foreach (value; array.values)
+        if (auto str = castTo!(StringExpression)(value))
+          GlobalSettings.importPaths ~= str.getString();
+    if (auto array = getValue!(ArrayInitExpression)("ddoc_files"))
+      foreach (value; array.values)
+        if (auto str = castTo!(StringExpression)(value))
+          GlobalSettings.ddocFilePaths ~= resolvePath(execPath, str.getString());
+    if (auto val = getValue!(StringExpression)("lexer_error"))
+      GlobalSettings.lexerErrorFormat = val.getString();
+    if (auto val = getValue!(StringExpression)("parser_error"))
+      GlobalSettings.parserErrorFormat = val.getString();
+    if (auto val = getValue!(StringExpression)("semantic_error"))
+      GlobalSettings.semanticErrorFormat = val.getString();
+
+    // Load language file.
+    filePath = resolvePath(execPath, GlobalSettings.langFile);
+    mod = new Module(filePath);
+    mod.parse();
+
+    if (mod.hasErrors)
+      return;
+
+    pass1 = new SemanticPass1(mod);
+    pass1.start();
+
+    if (auto array = getValue!(ArrayInitExpression)("messages"))
+    {
+      char[][] messages;
+      foreach (value; array.values)
+        if (auto str = castTo!(StringExpression)(value))
+          messages ~= str.getString();
+      if (messages.length != MID.max+1)
+        error(mod.firstToken,
+              "messages table in {} must exactly have {} entries, but not {}.",
+              filePath, MID.max+1, messages.length);
+      GlobalSettings.messages = messages;
+      dil.Messages.SetMessages(messages);
+    }
+    if (auto val = getValue!(StringExpression)("lang_code"))
+      GlobalSettings.langCode = val.getString();
+  }
 }
 
 string resolvePath(FilePath execPath, string filePath)
@@ -139,9 +134,7 @@ string resolvePath(FilePath execPath, string filePath)
 version(Windows)
 {
 private extern(Windows) uint GetModuleFileNameA(void*, char*, uint);
-/++
-  Get the fully qualified path to this executable.
-+/
+/// Get the fully qualified path to this executable.
 char[] GetExecutableFilePath()
 {
   alias GetModuleFileNameA GetModuleFileName;
@@ -171,9 +164,7 @@ char[] GetExecutableFilePath()
 else version(linux)
 {
 private extern(C) size_t readlink(char* path, char* buf, size_t bufsize);
-/++
-  Get the fully qualified path to this executable.
-+/
+/// Get the fully qualified path to this executable.
 char[] GetExecutableFilePath()
 {
   char[] buffer = new char[256];

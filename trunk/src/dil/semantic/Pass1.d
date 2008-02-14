@@ -324,9 +324,10 @@ override
       return error(vd.begin, MSG.InterfaceCantHaveVariables), vd;
 
     // Insert variable symbols in this declaration into the symbol table.
-    foreach (name; vd.names)
+    foreach (i, name; vd.names)
     {
       auto variable = new Variable(name, protection, storageClass, linkageType, vd);
+      variable.value = vd.inits[i];
       vd.variables ~= variable;
       insert(variable, name);
     }

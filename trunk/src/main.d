@@ -41,7 +41,10 @@ import tango.text.Ascii : icompare;
 
 void main(char[][] args)
 {
-  dil.SettingsLoader.loadSettings();
+  auto infoMan = new InfoManager();
+  SettingsLoader(infoMan).load();
+  if (infoMan.info.length)
+    return printErrors(infoMan);
 
   if (args.length <= 1)
     return Stdout(helpMain()).newline;
@@ -53,7 +56,7 @@ void main(char[][] args)
     if (args.length < 2)
       return printHelp("compile");
 
-    auto infoMan = new InfoManager();
+    infoMan = new InfoManager();
     auto filePaths = args[2..$];
     foreach (filePath; filePaths)
     {
@@ -108,7 +111,7 @@ void main(char[][] args)
         filePaths ~= arg;
     }
 
-    auto infoMan = new InfoManager();
+    infoMan = new InfoManager();
     // Execute command.
     cmd.DDoc.execute(filePaths, destination, macroPaths, incUndoc, verbose, infoMan);
     if (infoMan.info.length)
@@ -220,7 +223,7 @@ void main(char[][] args)
     if (!sourceText)
       sourceText = new SourceText(filePath, true);
 
-    auto infoMan = new InfoManager();
+    infoMan = new InfoManager();
     auto lx = new Lexer(sourceText, infoMan);
     lx.scanAll();
     auto token = lx.firstToken();
@@ -243,7 +246,7 @@ void main(char[][] args)
     if (args[2] != "German")
       return Stdout.formatln("Error: unrecognized target language \"{}\"", args[2]);
 
-    auto infoMan = new InfoManager();
+    infoMan = new InfoManager();
     auto filePath = args[3];
     auto mod = new Module(filePath, infoMan);
     // Parse the file.

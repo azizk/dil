@@ -84,6 +84,12 @@ class Symbol
   mixin(isX!("OverloadSet"));
 //   mixin(isX!("Type"));
 
+  Class to(Class)()
+  {
+    assert(mixin(`this.sid == mixin("SYM." ~ typeof(Class).stringof)`));
+    return cast(Class)cast(void*)this;
+  }
+
   /// Returns: the fully qualified name of this symbol.
   /// E.g.: dil.semantic.Symbol.Symbol.getFQN
   char[] getFQN()

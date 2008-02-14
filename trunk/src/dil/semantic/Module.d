@@ -88,6 +88,11 @@ class Module : ScopeSymbol
     }
   }
 
+  Token* firstToken()
+  {
+    return parser.lexer.firstToken();
+  }
+
   /// Returns true if there are errors in the source file.
   bool hasErrors()
   {
