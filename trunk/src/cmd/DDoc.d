@@ -4,6 +4,7 @@
 +/
 module cmd.DDoc;
 
+import cmd.Generate;
 import dil.doc.Parser;
 import dil.doc.Macro;
 import dil.doc.Doc;
@@ -47,6 +48,9 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
 //   foreach (k, v; mtable.table)
 //     Stdout(k)("=")(v.text);
 
+  auto tokenHL = new TokenHighlighter(infoMan); // For DDoc code sections.
+
+  // Process D files.
   foreach (filePath; filePaths)
   {
     auto mod = new Module(filePath, infoMan);
@@ -70,7 +74,7 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
       infoMan2 = new InfoManager();
     }
 
-    writeDocFile(dest.toString(), mod, mtable, incUndoc, infoMan2);
+    writeDocFile(dest.toString(), mod, mtable, incUndoc, tokenHL, infoMan2);
 
     if (infoMan2)
       infoMan ~= infoMan2.info;
@@ -78,7 +82,7 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
 }
 
 void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
-                  InfoManager infoMan)
+                  TokenHighlighter tokenHL, InfoManager infoMan)
 {
   // Create a macro environment for this module.
   mtable = new MacroTable(mtable);
@@ -93,8 +97,8 @@ void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
   mtable.insert("DATETIME", time_str.dup);
   mtable.insert("YEAR", time_str[20..24].dup);
 
-  auto doc = new DDocEmitter(mtable, incUndoc);
-  doc.emit(mod);
+  auto doc = new DDocEmitter(mtable, incUndoc, mod, tokenHL);
+  doc.emit();
   // Set BODY macro to the text produced by the DDocEmitter.
   mtable.insert("BODY", doc.text);
   // Do the macro expansion pass.
@@ -116,17 +120,22 @@ class DDocEmitter : DefaultVisitor
   char[] text;
   bool includeUndocumented;
   MacroTable mtable;
+  Module modul;
+  TokenHighlighter tokenHL;
 
-  this(MacroTable mtable, bool includeUndocumented)
+  this(MacroTable mtable, bool includeUndocumented, Module modul,
+       TokenHighlighter tokenHL)
   {
     this.mtable = mtable;
     this.includeUndocumented = includeUndocumented;
+    this.modul = modul;
+    this.tokenHL = tokenHL;
   }
 
   /// Entry method.
-  char[] emit(Module mod)
+  char[] emit()
   {
-    if (auto d = mod.moduleDecl)
+    if (auto d = modul.moduleDecl)
     {
       if (ddoc(d))
       {
@@ -135,7 +144,7 @@ class DDocEmitter : DefaultVisitor
         DESC({ writeComment(); });
       }
     }
-    MEMBERS("MODULE", { visitD(mod.root); });
+    MEMBERS("MODULE", { visitD(modul.root); });
     write(\n);
     return text;
   }
@@ -336,7 +345,8 @@ class DDocEmitter : DefaultVisitor
           while (++p < end)
             if (p+2 < end && *p == '-' && p[1] == '-' && p[2] == '-')
               break;
-          result ~= "$(D_CODE " ~ scanCodeSection(makeString(codeBegin, p)) ~ ")";
+          auto codeText = makeString(codeBegin, p);
+          result ~= tokenHL.highlight(codeText, modul.filePath);
           while (p < end && *p == '-')
             p++;
           continue;
@@ -348,11 +358,6 @@ class DDocEmitter : DefaultVisitor
       p++;
     }
     return result;
-  }
-
-  char[] scanCodeSection(char[] text)
-  {
-    return text;
   }
 
   /// Escapes '<', '>' and '&' with named HTML entities.
@@ -698,10 +703,8 @@ override:
     if (d.typeNode)
       type = textSpan(d.typeNode.baseType.begin, d.typeNode.end);
     foreach (name; d.names)
-    {
       DECL({ write(escape(type), " "); SYMBOL(name.str); });
-      DESC({ writeComment(); });
-    }
+    DESC({ writeComment(); });
     return d;
   }
 

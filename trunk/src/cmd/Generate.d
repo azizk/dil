@@ -12,6 +12,7 @@ import dil.ast.Node,
        dil.ast.Types;
 import dil.lexer.Lexer;
 import dil.parser.Parser;
+import dil.semantic.Module;
 import dil.SourceText;
 import dil.Information;
 import dil.SettingsLoader;
@@ -44,9 +45,9 @@ void execute(string filePath, DocOption options, InfoManager infoMan)
     return;
 
   if (options & DocOption.Syntax)
-    syntaxToDoc(filePath, tags, Stdout, options);
+    highlightSyntax(filePath, tags, Stdout, options);
   else
-    tokensToDoc(filePath, tags, Stdout, options);
+    highlightTokens(filePath, tags, Stdout);
 }
 
 /// Escapes the characters '<', '>' and '&' with named character entities.
@@ -193,15 +194,12 @@ class TokenExBuilder : DefaultVisitor
 
   TokenEx[] build(Node root, Token* first)
   {
-    Token* token = first;
+    auto token = first;
 
-    uint count;
-    while (token)
-    {
+    uint count; // Count tokens.
+    for (; token; token = token.next)
       count++;
-      token = token.next;
-    }
-
+    // Creat the exact number of TokenEx instances.
     auto toks = new TokenEx[count];
     token = first;
     foreach (ref tokEx; toks)
@@ -224,7 +222,8 @@ class TokenExBuilder : DefaultVisitor
     return *p;
   }
 
-  void push()(Node n)
+  // Override dispatch function.
+  override Node dispatch(Node n)
   {
     auto begin = n.begin;
     if (begin)
@@ -234,12 +233,6 @@ class TokenExBuilder : DefaultVisitor
       txbegin.beginNodes ~= n;
       txend.endNodes ~= n;
     }
-  }
-
-  // Override dispatch function.
-  override Node dispatch(Node n)
-  {
-    push(n);
     return super.dispatch(n);
   }
 }
@@ -256,7 +249,7 @@ void printErrors(Parser parser, TagMap tags, Print!(char) print)
     print.format(tags["ParserError"], e.filePath, e.loc, e.col, xml_escape(e.getMsg));
 }
 
-void syntaxToDoc(string filePath, TagMap tags, Print!(char) print, DocOption options)
+void highlightSyntax(string filePath, TagMap tags, Print!(char) print, DocOption options)
 {
   auto parser = new Parser(new SourceText(filePath, true));
   auto root = parser.start();
@@ -284,6 +277,10 @@ void syntaxToDoc(string filePath, TagMap tags, Print!(char) print, DocOption opt
     auto token = tokenEx.token;
 
     token.ws && print(token.wsChars); // Print preceding whitespace.
+    if (token.isWhitespace) {
+      printToken(token, tags, print);
+      continue;
+    }
     // <node>
     foreach (node; tokenEx.beginNodes)
       print.format(tagNodeBegin, tags.getTag(node.category), getShortClassName(node));
@@ -302,7 +299,7 @@ void syntaxToDoc(string filePath, TagMap tags, Print!(char) print, DocOption opt
 }
 
 /// Prints all tokens of a source file using the buffer print.
-void tokensToDoc(string filePath, TagMap tags, Print!(char) print, DocOption options)
+void highlightTokens(string filePath, TagMap tags, Print!(char) print)
 {
   auto lx = new Lexer(new SourceText(filePath, true));
   lx.scanAll();
@@ -315,21 +312,51 @@ void tokensToDoc(string filePath, TagMap tags, Print!(char) print, DocOption opt
     print(tags["CompEnd"]);
   }
   print(tags["SourceBegin"]);
-
   // Traverse linked list and print tokens.
-  auto token = lx.firstToken();
-  while (token)
-  {
+  for (auto token = lx.firstToken(); token; token = token.next) {
     token.ws && print(token.wsChars); // Print preceding whitespace.
     printToken(token, tags, print);
-    token = token.next;
   }
   print(tags["SourceEnd"]);
   print(tags["DocEnd"]);
 }
 
-void printToken(Token* token, string[] tags, Print!(char) print)
-{}
+class TokenHighlighter
+{
+  TagMap tags;
+  this(InfoManager infoMan, bool useHTML = true)
+  {
+    auto map = TagMapLoader(infoMan).load(GlobalSettings.htmlMapFile);
+    tags = new TagMap(map);
+  }
+
+  /// Highlights tokens in a DDoc code section.
+  /// Returns: a string with the highlighted tokens (in HTML tags.)
+  string highlight(string text, string filePath)
+  {
+    auto buffer = new GrowBuffer(text.length);
+    auto print = new Print!(char)(Format, buffer);
+
+    auto lx = new Lexer(new SourceText(filePath, text));
+    lx.scanAll();
+
+    // Traverse linked list and print tokens.
+    print("$(D_CODE\n");
+    if (lx.errors.length)
+    { // Output error messages.
+      print(tags["CompBegin"]);
+      printErrors(lx, tags, print);
+      print(tags["CompEnd"]);
+    }
+    // Traverse linked list and print tokens.
+    for (auto token = lx.firstToken(); token; token = token.next) {
+      token.ws && print(token.wsChars); // Print preceding whitespace.
+      printToken(token, tags, print);
+    }
+    print("\n)");
+    return cast(char[])buffer.slice();
+  }
+}
 
 /// Prints a token with tags using the buffer print.
 void printToken(Token* token, TagMap tags, Print!(char) print)
