@@ -4133,7 +4133,7 @@ version(D2)
     error_(this.token, GetMsg(mid), _arguments, _argptr);
   }
 
-  void error_(Token* token, char[] formatMsg, TypeInfo[] _arguments, void* _argptr)
+  void error_(Token* token, char[] formatMsg, TypeInfo[] _arguments, Arg _argptr)
   {
     if (trying)
     {

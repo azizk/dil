@@ -18,7 +18,7 @@ enum MID
   // #line
   ExpectedIdentifierSTLine,
   ExpectedIntegerAfterSTLine,
-  ExpectedFilespec,
+  ExpectedFilespec, // Deprecated.
   UnterminatedFilespec,
   UnterminatedSpecialToken,
   // ""

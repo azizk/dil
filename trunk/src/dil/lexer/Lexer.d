@@ -2272,10 +2272,10 @@ version(D2)
     t.setWhitespaceFlag();
 
     MID mid;
-    auto errorAtColumn = p;
+    char* errorAtColumn = p;
 
     ++p;
-    if (p[0] != 'l' || p[1] != 'i' || p[2] != 'n' || p[3] != 'e')
+    if (!(p[0] == 'l' && p[1] == 'i' && p[2] == 'n' && p[3] == 'e'))
     {
       mid = MID.ExpectedIdentifierSTLine;
       goto Lerr;
@@ -2288,7 +2288,7 @@ version(D2)
     { /+Space,+/ Integer, Filespec, End }
 
     State state = State.Integer;
-
+    char* tokenEnd = p + 1;
     while (!isEndOfLine(++p))
     {
       if (isspace(*p))
@@ -2303,6 +2303,7 @@ version(D2)
         }
         t.tokLineNum = new Token;
         scan(*t.tokLineNum);
+        tokenEnd = p;
         if (t.tokLineNum.kind != TOK.Int32 && t.tokLineNum.kind != TOK.Uint32)
         {
           errorAtColumn = t.tokLineNum.start;
@@ -2312,14 +2313,14 @@ version(D2)
         --p; // Go one back because scan() advanced p past the integer.
         state = State.Filespec;
       }
-      else if (state == State.Filespec)
-      {
-        if (*p != '"')
-        {
-          errorAtColumn = p;
-          mid = MID.ExpectedFilespec;
-          goto Lerr;
-        }
+      else if (state == State.Filespec && *p == '"')
+      { // MID.ExpectedFilespec is eprecated.
+        // if (*p != '"')
+        // {
+        //   errorAtColumn = p;
+        //   mid = MID.ExpectedFilespec;
+        //   goto Lerr;
+        // }
         t.tokLineFilespec = new Token;
         t.tokLineFilespec.start = p;
         t.tokLineFilespec.kind = TOK.Filespec;
@@ -2331,6 +2332,7 @@ version(D2)
             errorAtColumn = t.tokLineFilespec.start;
             mid = MID.UnterminatedFilespec;
             t.tokLineFilespec.end = p;
+            tokenEnd = p;
             goto Lerr;
           }
           isascii(*p) || decodeUTF8();
@@ -2338,6 +2340,7 @@ version(D2)
         auto start = t.tokLineFilespec.start +1; // +1 skips '"'
         t.tokLineFilespec.str = start[0 .. p - start];
         t.tokLineFilespec.end = p + 1;
+        tokenEnd = p + 1;
         state = State.End;
       }
       else/+ if (state == State.End)+/
@@ -2362,11 +2365,13 @@ version(D2)
       if (t.tokLineFilespec)
         newFilePath(t.tokLineFilespec.str);
     }
-    t.end = p;
+    p = tokenEnd;
+    t.end = tokenEnd;
 
     return;
   Lerr:
-    t.end = p;
+    p = tokenEnd;
+    t.end = tokenEnd;
     error(errorAtColumn, mid);
   }
 
@@ -2410,7 +2415,7 @@ version(D2)
   }
 
   void error_(uint lineNum, char* lineBegin, char* columnPos, MID mid,
-              TypeInfo[] _arguments, void* _argptr)
+              TypeInfo[] _arguments, Arg _argptr)
   {
     lineNum = this.errorLineNumber(lineNum);
     auto errorPath = this.filePaths.setPath;
