@@ -18,6 +18,11 @@ class InfoManager
 {
   Information[] info;
 
+  bool hasInfo()
+  {
+    return info.length != 0;
+  }
+
   void opCatAssign(Information info)
   {
     this.info ~= info;

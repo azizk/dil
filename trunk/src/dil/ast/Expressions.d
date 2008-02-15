@@ -777,10 +777,11 @@ class StringExpression : Expression
     this(cast(ubyte[])str, Types.Dchar);
   }
 
+  /// Returns the string excluding the terminating 0.
   char[] getString()
   {
     // TODO: convert to char[] if charType !is Types.Char.
-    return cast(char[])str;
+    return cast(char[])str[0..$-1];
   }
 }
 

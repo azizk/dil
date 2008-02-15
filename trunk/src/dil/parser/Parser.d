@@ -3214,6 +3214,7 @@ class Parser
             postfix = token.pf;
         else if (token.pf && token.pf != postfix)
           error(token, MSG.StringPostfixMismatch);
+        str.length = str.length - 1;
         str ~= token.str;
         nT();
       }

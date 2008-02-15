@@ -13,8 +13,12 @@ import dil.ast.Node,
 import dil.lexer.Lexer;
 import dil.parser.Parser;
 import dil.SourceText;
+import dil.Information;
+import dil.SettingsLoader;
+import dil.Settings;
 import common;
 
+import tango.io.GrowBuffer;
 import tango.io.Print;
 
 /// Options for the generate command.
@@ -28,13 +32,21 @@ enum DocOption
 }
 
 /// Executes the command.
-void execute(string filePath, DocOption options)
+void execute(string filePath, DocOption options, InfoManager infoMan)
 {
   assert(options != DocOption.Empty);
+  auto mapFilePath = options & DocOption.HTML ? GlobalSettings.htmlMapFile
+                                              : GlobalSettings.xmlMapFile;
+  auto map = TagMapLoader(infoMan).load(mapFilePath);
+  auto tags = new TagMap(map);
+
+  if (infoMan.hasInfo)
+    return;
+
   if (options & DocOption.Syntax)
-    syntaxToDoc(filePath, Stdout, options);
+    syntaxToDoc(filePath, tags, Stdout, options);
   else
-    tokensToDoc(filePath, Stdout, options);
+    tokensToDoc(filePath, tags, Stdout, options);
 }
 
 /// Escapes the characters '<', '>' and '&' with named character entities.
@@ -56,30 +68,66 @@ char[] xml_escape(char[] text)
   return text;
 }
 
-
-/// Find object in subject and return position.
-/// Returns -1 if no match was found.
-/+int find(char[] subject, char[] object)
+class TagMap
 {
-  if (object.length > subject.length)
-    return -1;
-  foreach (i, c; subject)
-  {
-    if (c == object[0])
-    {
-      if (object.length > (subject.length - i))
-        return -1;
-      if (object == subject[i..i+object.length])
-        return i;
-    }
-  }
-  return -1;
-}+/
+  string[string] table;
 
-/++
-  Find the last occurrence of object in subject.
-  Returns the index if found, or -1 if not.
-+/
+  this(string[string] table)
+  {
+    this.table = table;
+    Identifier   = this["Identifier", "{0}"];
+    String       = this["String", "{0}"];
+    Char         = this["Char", "{0}"];
+    Number       = this["Number", "{0}"];
+    Keyword      = this["Keyword", "{0}"];
+    LineC        = this["LineC", "{0}"];
+    BlockC       = this["BlockC", "{0}"];
+    NestedC      = this["NestedC", "{0}"];
+    Shebang      = this["Shebang", "{0}"];
+    HLine        = this["HLine", "{0}"];
+    Filespec     = this["Filespec", "{0}"];
+    Illegal      = this["Illegal", "{0}"];
+    Newline      = this["Newline", "{0}"];
+    SpecialToken = this["SpecialToken", "{0}"];
+    Declaration  = this["Declaration", "d"];
+    Statement    = this["Statement", "s"];
+    Expression   = this["Expression", "e"];
+    Type         = this["Type", "t"];
+    Other        = this["Other", "o"];
+    EOF          = this["EOF", ""];
+  }
+
+  string opIndex(string str, string fallback = "")
+  {
+    auto p = str in table;
+    if (p)
+      return *p;
+    return fallback;
+  }
+
+  string Identifier, String, Char, Number, Keyword, LineC, BlockC,
+         NestedC, Shebang, HLine, Filespec, Illegal, Newline, SpecialToken,
+         Declaration, Statement, Expression, Type, Other, EOF;
+
+  /// Returns the tag for the category 'nc'.
+  string getTag(NodeCategory nc)
+  {
+    string tag;
+    switch (nc)
+    { alias NodeCategory NC;
+    case NC.Declaration: tag = Declaration; break;
+    case NC.Statement:   tag = Statement; break;
+    case NC.Expression:  tag = Expression; break;
+    case NC.Type:        tag = Type; break;
+    case NC.Other:       tag = Other; break;
+    default: assert(0);
+    }
+    return tag;
+  }
+}
+
+/// Find the last occurrence of object in subject.
+/// Returns: the index if found, or -1 if not.
 int rfind(char[] subject, char object)
 {
   foreach_reverse(i, c; subject)
@@ -129,174 +177,6 @@ char[] getShortClassName(Node node)
   name_table[node.kind] = name;
   return name;
 }
-
-/// Indices into the XML and HTML tag arrays.
-enum DocPart
-{
-  Head,
-  CompBegin,
-  CompEnd,
-  Error,
-  SyntaxBegin,
-  SyntaxEnd,
-  SrcBegin,
-  SrcEnd,
-  Tail,
-  // Tokens:
-  Identifier,
-  Comment,
-  StringLiteral,
-  CharLiteral,
-  Operator,
-  LorG,
-  LessEqual,
-  GreaterEqual,
-  AndLogical,
-  OrLogical,
-  NotEqual,
-  Not,
-  Number,
-  Bracket,
-  SpecialToken,
-  Shebang,
-  Keyword,
-  HLineBegin,
-  HLineEnd,
-  Filespec,
-}
-
-auto html_tags = [
-  // Head
-  `<html>`\n
-  `<head>`\n
-  `<meta http-equiv="Content-Type" content="text/html; charset=utf-8">`\n
-  `<link href="html.css" rel="stylesheet" type="text/css">`\n
-  `</head>`\n
-  `<body>`[],
-  // CompBegin
-  `<div class="compilerinfo">`,
-  // CompEnd
-  `</div>`,
-  // Error
-  `<p class="error {0}">{1}({2}){3}: {4}</p>`,
-  // SyntaxBegin
-  `<span class="{0} {1}">`,
-  // SyntaxEnd
-  `</span>`,
-  // SrcBegin
-  `<pre class="sourcecode">`,
-  // SrcEnd
-  `</pre>`,
-  // Tail
-  `</html>`,
-  // Identifier
-  `<span class="i">{0}</span>`,
-  // Comment
-  `<span class="c{0}">{1}</span>`,
-  // StringLiteral
-  `<span class="sl">{0}</span>`,
-  // CharLiteral
-  `<span class="chl">{0}</span>`,
-  // Operator
-  `<span class="op">{0}</span>`,
-  // LorG
-  `<span class="oplg">&lt;&gt;</span>`,
-  // LessEqual
-  `<span class="ople">&lt;=</span>`,
-  // GreaterEqual
-  `<span class="opge">&gt;=</span>`,
-  // AndLogical
-  `<span class="opaa">&amp;&amp;</span>`,
-  // OrLogical
-  `<span class="opoo">||</span>`,
-  // NotEqual
-  `<span class="opne">!=</span>`,
-  // Not
-  `<span class="opn">!</span>`,
-  // Number
-  `<span class="n">{0}</span>`,
-  // Bracket
-  `<span class="br">{0}</span>`,
-  // SpecialToken
-  `<span class="st">{0}</span>`,
-  // Shebang
-  `<span class="shebang">{0}</span>`,
-  // Keyword
-  `<span class="k">{0}</span>`,
-  // HLineBegin
-  `<span class="hl">`,
-  // HLineEnd
-  "</span>",
-  // Filespec
-  `<span class="fs">{0}</span>`,
-];
-
-auto xml_tags = [
-  // Head
-  `<?xml version="1.0"?>`\n
-  `<?xml-stylesheet href="xml.css" type="text/css"?>`\n
-  `<root>`[],
-  // CompBegin
-  `<compilerinfo>`,
-  // CompEnd
-  `</compilerinfo>`,
-  // Error
-  `<error t="{0}">{1}({2}){3}: {4}</error>`,
-  // SyntaxBegin
-  `<{0} t="{1}">`,
-  // SyntaxEnd
-  `</{0}>`,
-  // SrcBegin
-  `<sourcecode>`,
-  // SrcEnd
-  `</sourcecode>`,
-  // Tail
-  `</root>`,
-  // Identifier
-  "<i>{0}</i>",
-  // Comment
-  `<c t="{0}">{1}</c>`,
-  // StringLiteral
-  "<sl>{0}</sl>",
-  // CharLiteral
-  "<cl>{0}</cl>",
-  // Operator
-  "<op>{0}</op>",
-  // LorG
-  `<op t="lg">&lt;&gt;</op>`,
-  // LessEqual
-  `<op t="le">&lt;=</op>`,
-  // GreaterEqual
-  `<op t="ge">&gt;=</op>`,
-  // AndLogical
-  `<op t="aa">&amp;&amp;</op>`,
-  // OrLogical
-  `<op t="oo">||</op>`,
-  // NotEqual
-  `<op t="ne">!=</op>`,
-  // Not
-  `<op t="n">!</op>`,
-  // Number
-  "<n>{0}</n>",
-  // Bracket
-  "<br>{0}</br>",
-  // SpecialToken
-  "<st>{0}</st>",
-  // Shebang
-  "<shebang>{0}</shebang>",
-  // Keyword
-  "<k>{0}</k>",
-  // HLineBegin
-  "<hl>",
-  // HLineEnd
-  "</hl>",
-  // Filespec
-  "<fs>{0}</fs>",
-];
-
-// The size of the arrays must equal the number of members in enum DocPart.
-static assert(html_tags.length == DocPart.max+1);
-static assert(xml_tags.length == DocPart.max+1);
 
 /// Extended token structure.
 struct TokenEx
@@ -364,42 +244,20 @@ class TokenExBuilder : DefaultVisitor
   }
 }
 
-char getTag(NodeCategory nc)
+void printErrors(Lexer lx, TagMap tags, Print!(char) print)
 {
-  char tag;
-  switch (nc)
-  {
-  alias NodeCategory NC;
-  case NC.Declaration: tag = 'd'; break;
-  case NC.Statement:   tag = 's'; break;
-  case NC.Expression:  tag = 'e'; break;
-  case NC.Type:        tag = 't'; break;
-  case NC.Other:       tag = 'o'; break;
-  default:
-    assert(0);
-  }
-  return tag;
+  foreach (e; lx.errors)
+    print.format(tags["LexerError"], e.filePath, e.loc, e.col, xml_escape(e.getMsg));
 }
 
-void printErrors(Lexer lx, string[] tags, Print!(char) print)
+void printErrors(Parser parser, TagMap tags, Print!(char) print)
 {
-  foreach (error; lx.errors)
-  {
-    print.formatln(tags[DocPart.Error], "L", error.filePath, Format("{0},{1}", error.loc, error.col), "L", xml_escape(error.getMsg));
-  }
+  foreach (e; parser.errors)
+    print.format(tags["ParserError"], e.filePath, e.loc, e.col, xml_escape(e.getMsg));
 }
 
-void printErrors(Parser parser, string[] tags, Print!(char) print)
+void syntaxToDoc(string filePath, TagMap tags, Print!(char) print, DocOption options)
 {
-  foreach (error; parser.errors)
-  {
-    print.formatln(tags[DocPart.Error], "P", error.filePath, Format("{0},{1}", error.loc, error.col), "P", xml_escape(error.getMsg));
-  }
-}
-
-void syntaxToDoc(string filePath, Print!(char) print, DocOption options)
-{
-  auto tags = options & DocOption.HTML ? html_tags : xml_tags;
   auto parser = new Parser(new SourceText(filePath, true));
   auto root = parser.start();
   auto lx = parser.lexer;
@@ -407,196 +265,156 @@ void syntaxToDoc(string filePath, Print!(char) print, DocOption options)
   auto builder = new TokenExBuilder();
   auto tokenExList = builder.build(root, lx.firstToken());
 
-  print(tags[DocPart.Head]~\n);
+  print(tags["DocHead"]);
   if (lx.errors.length || parser.errors.length)
   { // Output error messages.
-    print(tags[DocPart.CompBegin]~\n);
+    print(tags["CompBegin"]);
     printErrors(lx, tags, print);
     printErrors(parser, tags, print);
-    print(tags[DocPart.CompEnd]~\n);
+    print(tags["CompEnd"]);
   }
-  print(tags[DocPart.SrcBegin]);
+  print(tags["SourceBegin"]);
+
+  auto tagNodeBegin = tags["NodeBegin"];
+  auto tagNodeEnd = tags["NodeEnd"];
 
   // Iterate over list of tokens.
   foreach (ref tokenEx; tokenExList)
   {
     auto token = tokenEx.token;
-    // Print whitespace.
-    if (token.ws)
-      print(token.wsChars);
 
+    token.ws && print(token.wsChars); // Print preceding whitespace.
+    // <node>
     foreach (node; tokenEx.beginNodes)
-      print.format(tags[DocPart.SyntaxBegin], getTag(node.category), getShortClassName(node));
-
+      print.format(tagNodeBegin, tags.getTag(node.category), getShortClassName(node));
+    // Token text.
     printToken(token, tags, print);
-
+    // </node>
     if (options & DocOption.HTML)
       foreach_reverse (node; tokenEx.endNodes)
-        print(tags[DocPart.SyntaxEnd]);
+        print(tagNodeEnd);
     else
       foreach_reverse (node; tokenEx.endNodes)
-        print.format(tags[DocPart.SyntaxEnd], getTag(node.category));
+        print.format(tagNodeEnd, tags.getTag(node.category));
   }
-  print(\n~tags[DocPart.SrcEnd])(\n~tags[DocPart.Tail]);
+  print(tags["SourceEnd"]);
+  print(tags["DocEnd"]);
 }
 
 /// Prints all tokens of a source file using the buffer print.
-void tokensToDoc(string filePath, Print!(char) print, DocOption options)
+void tokensToDoc(string filePath, TagMap tags, Print!(char) print, DocOption options)
 {
-  auto tags = options & DocOption.HTML ? html_tags : xml_tags;
   auto lx = new Lexer(new SourceText(filePath, true));
   lx.scanAll();
 
-  print(tags[DocPart.Head]~\n);
+  print(tags["DocHead"]);
   if (lx.errors.length)
   {
-    print(tags[DocPart.CompBegin]~\n);
+    print(tags["CompBegin"]);
     printErrors(lx, tags, print);
-    print(tags[DocPart.CompEnd]~\n);
+    print(tags["CompEnd"]);
   }
-  print(tags[DocPart.SrcBegin]);
+  print(tags["SourceBegin"]);
 
   // Traverse linked list and print tokens.
   auto token = lx.firstToken();
-  while (token.kind != TOK.EOF)
+  while (token)
   {
-    // Print whitespace.
-    if (token.ws)
-      print(token.wsChars);
+    token.ws && print(token.wsChars); // Print preceding whitespace.
     printToken(token, tags, print);
     token = token.next;
   }
-  print(\n~tags[DocPart.SrcEnd])(\n~tags[DocPart.Tail]);
+  print(tags["SourceEnd"]);
+  print(tags["DocEnd"]);
 }
 
-/// Prints a token with tags using the buffer print.
 void printToken(Token* token, string[] tags, Print!(char) print)
-{
-  alias DocPart DP;
-  string srcText = xml_escape(token.srcText);
+{}
 
+/// Prints a token with tags using the buffer print.
+void printToken(Token* token, TagMap tags, Print!(char) print)
+{
   switch(token.kind)
   {
   case TOK.Identifier:
-    print.format(tags[DP.Identifier], srcText);
+    print.format(tags.Identifier, token.srcText);
     break;
   case TOK.Comment:
-    string t;
+    string formatStr;
     switch (token.start[1])
     {
-    case '/': t = "l"; break;
-    case '*': t = "b"; break;
-    case '+': t = "n"; break;
-    default:
-      assert(0);
+    case '/': formatStr = tags.LineC; break;
+    case '*': formatStr = tags.BlockC; break;
+    case '+': formatStr = tags.NestedC; break;
+    default: assert(0);
     }
-    print.format(tags[DP.Comment], t, srcText);
+    print.format(formatStr, xml_escape(token.srcText));
     break;
   case TOK.String:
-    print.format(tags[DP.StringLiteral], srcText);
+    print.format(tags.String, xml_escape(token.srcText));
     break;
   case TOK.CharLiteral:
-    print.format(tags[DP.CharLiteral], srcText);
-    break;
-  case TOK.Assign,        TOK.Equal,
-       TOK.Less,          TOK.Greater,
-       TOK.LShiftAssign,  TOK.LShift,
-       TOK.RShiftAssign,  TOK.RShift,
-       TOK.URShiftAssign, TOK.URShift,
-       TOK.OrAssign,      TOK.OrBinary,
-       TOK.AndAssign,     TOK.AndBinary,
-       TOK.PlusAssign,    TOK.PlusPlus,   TOK.Plus,
-       TOK.MinusAssign,   TOK.MinusMinus, TOK.Minus,
-       TOK.DivAssign,     TOK.Div,
-       TOK.MulAssign,     TOK.Mul,
-       TOK.ModAssign,     TOK.Mod,
-       TOK.XorAssign,     TOK.Xor,
-       TOK.CatAssign,
-       TOK.Tilde,
-       TOK.Unordered,
-       TOK.UorE,
-       TOK.UorG,
-       TOK.UorGorE,
-       TOK.UorL,
-       TOK.UorLorE,
-       TOK.LorEorG:
-    print.format(tags[DP.Operator], srcText);
-    break;
-  case TOK.LorG:
-    print(tags[DP.LorG]);
-    break;
-  case TOK.LessEqual:
-    print(tags[DP.LessEqual]);
-    break;
-  case TOK.GreaterEqual:
-    print(tags[DP.GreaterEqual]);
-    break;
-  case TOK.AndLogical:
-    print(tags[DP.AndLogical]);
-    break;
-  case TOK.OrLogical:
-    print(tags[DP.OrLogical]);
-    break;
-  case TOK.NotEqual:
-    print(tags[DP.NotEqual]);
-    break;
-  case TOK.Not:
-    // Check if this is part of a template instantiation.
-    if (token.prevNWS.kind == TOK.Identifier && token.nextNWS.kind == TOK.LParen)
-      goto default;
-    print(tags[DP.Not]);
+    print.format(tags.Char, xml_escape(token.srcText));
     break;
   case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
        TOK.Float32, TOK.Float64, TOK.Float80,
        TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
-    print.format(tags[DP.Number], srcText);
-    break;
-  case TOK.LParen, TOK.RParen, TOK.LBracket,
-       TOK.RBracket, TOK.LBrace, TOK.RBrace:
-    print.format(tags[DP.Bracket], srcText);
+    print.format(tags.Number, token.srcText);
     break;
   case TOK.Shebang:
-    print.format(tags[DP.Shebang], srcText);
+    print.format(tags.Shebang, xml_escape(token.srcText));
     break;
   case TOK.HashLine:
+    auto formatStr = tags.HLine;
+    // The text to be inserted into formatStr.
+    auto buffer = new GrowBuffer;
+    auto print2 = new Print!(char)(Format, buffer);
+
     void printWS(char* start, char* end)
     {
-      if (start != end)
-        print(start[0 .. end - start]);
+      start != end && print2(start[0 .. end - start]);
     }
-    print(tags[DP.HLineBegin]);
+
     auto num = token.tokLineNum;
     if (num is null)
-    {
-      print(token.srcText);
-      print(tags[DP.HLineEnd]);
+    { // Malformed #line
+      print.format(formatStr, token.srcText);
       break;
     }
-    // Print whitespace between #line and number
-    auto ptr = token.start;
-    printWS(ptr, num.start); // prints "#line" as well
-    printToken(num, tags, print);
-    if (token.tokLineFilespec)
-    {
-      auto filespec = token.tokLineFilespec;
-      // Print whitespace between number and filespec
-      printWS(num.end, filespec.start);
-      print.format(tags[DP.Filespec], xml_escape(filespec.srcText));
 
+    // Print whitespace between #line and number.
+    auto ptr = token.start;
+    printWS(ptr, num.start); // Prints "#line" as well.
+    printToken(num, tags, print2);
+
+    if (auto filespec = token.tokLineFilespec)
+    { // Print whitespace between number and filespec.
+      printWS(num.end, filespec.start);
+      print2.format(tags.Filespec, xml_escape(filespec.srcText));
       ptr = filespec.end;
     }
     else
       ptr = num.end;
     // Print remaining whitespace
     printWS(ptr, token.end);
-    print(tags[DP.HLineEnd]);
+    // Finally print the whole token.
+    print.format(formatStr, cast(char[])buffer.slice());
+    break;
+  case TOK.Illegal:
+    print.format(tags.Illegal, token.srcText());
+    break;
+  case TOK.Newline:
+    print.format(tags.Newline, token.srcText());
+    break;
+  case TOK.EOF:
+    print(tags.EOF);
     break;
   default:
     if (token.isKeyword())
-      print.format(tags[DP.Keyword], srcText);
+      print.format(tags.Keyword, token.srcText);
     else if (token.isSpecialToken)
-      print.format(tags[DP.SpecialToken], srcText);
+      print.format(tags.SpecialToken, token.srcText);
     else
-      print(srcText);
+      print(tags[token.srcText]);
   }
 }

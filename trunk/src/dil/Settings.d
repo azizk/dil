@@ -18,6 +18,8 @@ static:
   string[] importPaths;
   /// Array of DDoc macro file paths.
   string[] ddocFilePaths;
+  string xmlMapFile = "xml_map.d";
+  string htmlMapFile = "html_map.d";
   string lexerErrorFormat = "{0}({1},{2})L: {3}";
   string parserErrorFormat = "{0}({1},{2})P: {3}";
   string semanticErrorFormat = "{0}({1},{2})S: {3}";

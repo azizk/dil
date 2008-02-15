@@ -43,7 +43,7 @@ void main(char[][] args)
 {
   auto infoMan = new InfoManager();
   SettingsLoader(infoMan).load();
-  if (infoMan.info.length)
+  if (infoMan.hasInfo)
     return printErrors(infoMan);
 
   if (args.length <= 1)
@@ -114,8 +114,8 @@ void main(char[][] args)
     infoMan = new InfoManager();
     // Execute command.
     cmd.DDoc.execute(filePaths, destination, macroPaths, incUndoc, verbose, infoMan);
-    if (infoMan.info.length)
-      return printErrors(infoMan);
+    if (infoMan.hasInfo)
+      printErrors(infoMan);
     break;
   case "gen", "generate":
     char[] fileName;
@@ -136,7 +136,9 @@ void main(char[][] args)
     }
     if (!(options & (DocOption.XML | DocOption.HTML)))
       options |= DocOption.XML; // Default to XML.
-    cmd.Generate.execute(fileName, options);
+    cmd.Generate.execute(fileName, options, infoMan);
+    if (infoMan.hasInfo)
+      printErrors(infoMan);
     break;
   case "importgraph", "igraph":
     string filePath;

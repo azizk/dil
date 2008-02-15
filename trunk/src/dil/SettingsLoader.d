@@ -16,16 +16,19 @@ import common;
 
 import tango.io.FilePath;
 
-struct SettingsLoader
+class SettingsLoader
 {
   InfoManager infoMan;
   Module mod; /// Current module.
 
+  this(InfoManager infoMan)
+  {
+    this.infoMan = infoMan;
+  }
+
   static SettingsLoader opCall(InfoManager infoMan)
   {
-    SettingsLoader sl;
-    sl.infoMan = infoMan;
-    return sl;
+    return new SettingsLoader(infoMan);
   }
 
   void error(Token* token, char[] formatMsg, ...)
@@ -79,7 +82,6 @@ struct SettingsLoader
 
     if (auto val = getValue!(StringExpression)("langfile"))
       GlobalSettings.langFile = val.getString();
-
     if (auto array = getValue!(ArrayInitExpression)("import_paths"))
       foreach (value; array.values)
         if (auto str = castTo!(StringExpression)(value))
@@ -88,6 +90,10 @@ struct SettingsLoader
       foreach (value; array.values)
         if (auto str = castTo!(StringExpression)(value))
           GlobalSettings.ddocFilePaths ~= resolvePath(execPath, str.getString());
+    if (auto val = getValue!(StringExpression)("xml_map"))
+      GlobalSettings.xmlMapFile = val.getString();
+    if (auto val = getValue!(StringExpression)("html_map"))
+      GlobalSettings.htmlMapFile = val.getString();
     if (auto val = getValue!(StringExpression)("lexer_error"))
       GlobalSettings.lexerErrorFormat = val.getString();
     if (auto val = getValue!(StringExpression)("parser_error"))
@@ -121,6 +127,43 @@ struct SettingsLoader
     }
     if (auto val = getValue!(StringExpression)("lang_code"))
       GlobalSettings.langCode = val.getString();
+  }
+}
+
+class TagMapLoader : SettingsLoader
+{
+  this(InfoManager infoMan)
+  {
+    super(infoMan);
+  }
+
+  static TagMapLoader opCall(InfoManager infoMan)
+  {
+    return new TagMapLoader(infoMan);
+  }
+
+  string[string] load(string filePath)
+  {
+    mod = new Module(filePath, infoMan);
+    mod.parse();
+    if (mod.hasErrors)
+      return null;
+
+    auto pass1 = new SemanticPass1(mod);
+    pass1.start();
+
+    string[string] map;
+    if (auto array = getValue!(ArrayInitExpression)("map"))
+      foreach (i, value; array.values)
+      {
+        auto key = array.keys[i];
+        if (auto valExp = castTo!(StringExpression)(value))
+          if (!key)
+            error(value.begin, "expected key : value");
+          else if (auto keyExp = castTo!(StringExpression)(key))
+            map[keyExp.getString()] = valExp.getString();
+      }
+    return map;
   }
 }
 
