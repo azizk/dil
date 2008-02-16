@@ -65,7 +65,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
       visitS(d.funcBody);
     static if (is(D == FunctionDeclaration))
       visitT(d.returnType),
-      d.tparams && visitN(d.tparams),
+//       d.tparams && visitN(d.tparams),
       visitN(d.params),
       visitS(d.funcBody);
     static if (is(D == VariablesDeclaration))

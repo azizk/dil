@@ -484,10 +484,11 @@ class Parser
         assert(token.kind == T.LParen);
         // It's a function declaration
         TemplateParameters tparams;
+        bool isTemplate;
         if (tokenAfterParenIs(T.LParen))
-        {
-          // ( TemplateParameterList ) ( ParameterList )
+        { // ( TemplateParameterList ) ( ParameterList )
           tparams = parseTemplateParameterList();
+          isTemplate = true;
         }
 
         auto params = parseParameterList();
@@ -508,11 +509,18 @@ class Parser
       }
         // ReturnType FunctionName ( ParameterList )
         auto funcBody = parseFunctionBody();
-        auto d = new FunctionDeclaration(type, ident, tparams, params, funcBody);
-        d.setStorageClass(stc);
-        d.setLinkageType(linkType);
-        d.setProtection(protection);
-        return set(d, begin);
+        auto fd = new FunctionDeclaration(type, ident,/+ tparams,+/ params, funcBody);
+        fd.setStorageClass(stc);
+        fd.setLinkageType(linkType);
+        fd.setProtection(protection);
+        if (isTemplate)
+        {
+          auto d = putInsideTemplateDeclaration(begin, ident, fd, tparams);
+          d.setStorageClass(stc);
+          d.setProtection(protection);
+          return set(d, begin);
+        }
+        return set(fd, begin);
       }
       else
       {
@@ -1020,16 +1028,22 @@ class Parser
     return new EnumDeclaration(enumName, baseType, members, hasBody);
   }
 
-  /// Puts a declaration inside a template declaration.
-  Declaration putInsideTemplateDeclaration(Token* begin, Identifier* name,
-                                           Declaration aggregateDecl,
-                                           TemplateParameters tparams)
+  /// Wraps a declaration inside a template declaration.
+  /// Params:
+  ///   begin = begin token of decl.
+  ///   name = name of decl.
+  ///   decl = the declaration to be wrapped.
+  ///   tparams = the template parameters.
+  TemplateDeclaration putInsideTemplateDeclaration(Token* begin,
+                                                   Identifier* name,
+                                                   Declaration decl,
+                                                   TemplateParameters tparams)
   {
-    set(aggregateDecl, begin);
-    auto decls = new CompoundDeclaration;
-    decls ~= aggregateDecl;
-    set(decls, begin);
-    return new TemplateDeclaration(name, tparams, decls);
+    set(decl, begin);
+    auto cd = new CompoundDeclaration;
+    cd ~= decl;
+    set(cd, begin);
+    return new TemplateDeclaration(name, tparams, cd);
   }
 
   Declaration parseClassDeclaration()

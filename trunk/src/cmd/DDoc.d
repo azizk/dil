@@ -113,7 +113,8 @@ string loadMacroFile(string filePath, InfoManager infoMan)
 {
   auto src = new SourceText(filePath);
   src.load(infoMan);
-  return sanitizeText(src.data);
+  auto text = src.data[0..$-1]; // Exclude '\0'.
+  return sanitizeText(text);
 }
 
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
@@ -583,8 +584,12 @@ override:
     this.isTemplatized = true;
     this.tparams = d.tparams;
     if (d.begin.kind != TOK.Template)
-      // This is a templatized class/interface/struct/union.
-      return super.visit(d.decls);
+    { // This is a templatized class/interface/struct/union/function.
+      super.visit(d.decls);
+      this.isTemplatized = false;
+      this.tparams = null;
+      return d;
+    }
     if (!ddoc(d))
       return d;
     DECL({
@@ -667,8 +672,6 @@ override:
     if (!ddoc(d))
       return d;
     auto type = textSpan(d.returnType.baseType.begin, d.returnType.end);
-    this.isTemplatized = d.isTemplatized();
-    this.tparams = d.tparams;
     DECL({
       write(escape(type), " ");
       SYMBOL(d.name.str);

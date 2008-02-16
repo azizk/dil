@@ -357,23 +357,23 @@ class FunctionDeclaration : Declaration
 {
   TypeNode returnType;
   Identifier* name;
-  TemplateParameters tparams;
+//   TemplateParameters tparams;
   Parameters params;
   FuncBodyStatement funcBody;
   LinkageType linkageType;
-  this(TypeNode returnType, Identifier* name, TemplateParameters tparams,
+  this(TypeNode returnType, Identifier* name,/+ TemplateParameters tparams,+/
        Parameters params, FuncBodyStatement funcBody)
   {
     super.hasBody = funcBody.funcBody !is null;
     mixin(set_kind);
     addChild(returnType);
-    addOptChild(tparams);
+//     addOptChild(tparams);
     addChild(params);
     addChild(funcBody);
 
     this.returnType = returnType;
     this.name = name;
-    this.tparams = tparams;
+//     this.tparams = tparams;
     this.params = params;
     this.funcBody = funcBody;
   }

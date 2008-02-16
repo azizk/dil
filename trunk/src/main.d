@@ -86,7 +86,7 @@ void main(char[][] args)
       printSymbolTable(mod, "");
     }
 
-    printErrors(infoMan);
+    infoMan.hasInfo && printErrors(infoMan);
     break;
   case "ddoc", "d":
     if (args.length < 4)
@@ -113,8 +113,7 @@ void main(char[][] args)
     infoMan = new InfoManager();
     // Execute command.
     cmd.DDoc.execute(filePaths, destination, macroPaths, incUndoc, verbose, infoMan);
-    if (infoMan.hasInfo)
-      printErrors(infoMan);
+    infoMan.hasInfo && printErrors(infoMan);
     break;
   case "gen", "generate":
     char[] fileName;
@@ -136,8 +135,7 @@ void main(char[][] args)
     if (!(options & (DocOption.XML | DocOption.HTML)))
       options |= DocOption.XML; // Default to XML.
     cmd.Generate.execute(fileName, options, infoMan);
-    if (infoMan.hasInfo)
-      printErrors(infoMan);
+    infoMan.hasInfo && printErrors(infoMan);
     break;
   case "importgraph", "igraph":
     string filePath;
@@ -238,7 +236,7 @@ void main(char[][] args)
       Stdout(token.srcText)(separator);
     }
 
-    printErrors(infoMan);
+    infoMan.hasInfo && printErrors(infoMan);
     break;
   case "trans", "translate":
     if (args.length < 3)
