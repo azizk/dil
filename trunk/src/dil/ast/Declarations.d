@@ -205,7 +205,7 @@ class TemplateDeclaration : Declaration
   {
     super.hasBody = true;
     mixin(set_kind);
-    addOptChild(tparams);
+    addChild(tparams);
     addChild(decls);
 
     this.name = name;
@@ -237,7 +237,7 @@ class ClassDeclaration : AggregateDeclaration
   {
     super(name, /+tparams, +/decls);
     mixin(set_kind);
-//     addOptChild(tparams);
+//     addChild(tparams);
     addOptChildren(bases);
     addOptChild(decls);
 
@@ -254,7 +254,7 @@ class InterfaceDeclaration : AggregateDeclaration
   {
     super(name, /+tparams, +/decls);
     mixin(set_kind);
-//     addOptChild(tparams);
+//     addChild(tparams);
     addOptChildren(bases);
     addOptChild(decls);
 
@@ -273,7 +273,7 @@ class StructDeclaration : AggregateDeclaration
   {
     super(name, /+tparams, +/decls);
     mixin(set_kind);
-//     addOptChild(tparams);
+//     addChild(tparams);
     addOptChild(decls);
   }
 
@@ -291,7 +291,7 @@ class UnionDeclaration : AggregateDeclaration
   {
     super(name, /+tparams, +/decls);
     mixin(set_kind);
-//     addOptChild(tparams);
+//     addChild(tparams);
     addOptChild(decls);
   }
 
@@ -367,7 +367,7 @@ class FunctionDeclaration : Declaration
     super.hasBody = funcBody.funcBody !is null;
     mixin(set_kind);
     addChild(returnType);
-//     addOptChild(tparams);
+//     addChild(tparams);
     addChild(params);
     addChild(funcBody);
 

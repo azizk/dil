@@ -160,7 +160,6 @@ class DDocEmitter : DefaultVisitor
     return Token.textSpan(left, right);
   }
 
-  bool isTemplatized; /// True if an aggregate declaration is templatized.
   TemplateParameters tparams; /// The template parameters of the declaration.
 
   DDocComment cmnt; /// Current comment.
@@ -416,10 +415,9 @@ class DDocEmitter : DefaultVisitor
 
   void writeTemplateParams()
   {
-    if (!isTemplatized)
+    if (!tparams)
       return;
-    write("(", (tparams ? escape(textSpan(tparams.begin, tparams.end)) : ""), ")");
-    isTemplatized = false;
+    write(escape(textSpan(tparams.begin, tparams.end)));
     tparams = null;
   }
 
@@ -581,12 +579,10 @@ override:
 
   D visit(TemplateDeclaration d)
   {
-    this.isTemplatized = true;
     this.tparams = d.tparams;
     if (d.begin.kind != TOK.Template)
     { // This is a templatized class/interface/struct/union/function.
       super.visit(d.decls);
-      this.isTemplatized = false;
       this.tparams = null;
       return d;
     }

@@ -47,13 +47,13 @@ returnType!(T.stringof) visitDefault(T)(T t)
       d.value && visitE(d.value);
     static if (is(D == ClassDeclaration) || is( D == InterfaceDeclaration))
     {
-//       d.tparams && visitN(d.tparams);
+//       visitN(d.tparams);
       foreach (base; d.bases)
         visitT(base);
       d.decls && visitD(d.decls);
     }
     static if (is(D == StructDeclaration) || is(D == UnionDeclaration))
-//       d.tparams && visitN(d.tparams),
+//       visitN(d.tparams),
       d.decls && visitD(d.decls);
     static if (is(D == ConstructorDeclaration))
       visitN(d.params), visitS(d.funcBody);
@@ -65,7 +65,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
       visitS(d.funcBody);
     static if (is(D == FunctionDeclaration))
       visitT(d.returnType),
-//       d.tparams && visitN(d.tparams),
+//       visitN(d.tparams),
       visitN(d.params),
       visitS(d.funcBody);
     static if (is(D == VariablesDeclaration))
@@ -85,7 +85,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
       visitE(d.condition),
       d.message && visitE(d.message);
     static if (is(D == TemplateDeclaration))
-      d.tparams && visitN(d.tparams),
+      visitN(d.tparams),
       visitD(d.decls);
     static if (is(D == NewDeclaration) || is(D == DeleteDeclaration))
       visitN(d.params),

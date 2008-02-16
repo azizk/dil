@@ -484,12 +484,9 @@ class Parser
         assert(token.kind == T.LParen);
         // It's a function declaration
         TemplateParameters tparams;
-        bool isTemplate;
         if (tokenAfterParenIs(T.LParen))
-        { // ( TemplateParameterList ) ( ParameterList )
+          // ( TemplateParameterList ) ( ParameterList )
           tparams = parseTemplateParameterList();
-          isTemplate = true;
-        }
 
         auto params = parseParameterList();
       version(D2)
@@ -513,7 +510,7 @@ class Parser
         fd.setStorageClass(stc);
         fd.setLinkageType(linkType);
         fd.setProtection(protection);
-        if (isTemplate)
+        if (tparams)
         {
           auto d = putInsideTemplateDeclaration(begin, ident, fd, tparams);
           d.setStorageClass(stc);
@@ -1059,8 +1056,7 @@ class Parser
 
     className = requireIdentifier(MSG.ExpectedClassName);
 
-    bool isTemplate = token.kind == T.LParen;
-    if (isTemplate)
+    if (token.kind == T.LParen)
       tparams = parseTemplateParameterList();
 
     if (token.kind == T.Colon)
@@ -1074,7 +1070,7 @@ class Parser
       error(token, MSG.ExpectedClassBody, token.srcText);
 
     Declaration d = new ClassDeclaration(className, /+tparams, +/bases, decls);
-    if (isTemplate)
+    if (tparams)
       d = putInsideTemplateDeclaration(begin, className, d, tparams);
     return d;
   }
@@ -1125,8 +1121,7 @@ class Parser
 
     name = requireIdentifier(MSG.ExpectedInterfaceName);
 
-    bool isTemplate = token.kind == T.LParen;
-    if (isTemplate)
+    if (token.kind == T.LParen)
       tparams = parseTemplateParameterList();
 
     if (token.kind == T.Colon)
@@ -1140,7 +1135,7 @@ class Parser
       error(token, MSG.ExpectedInterfaceBody, token.srcText);
 
     Declaration d = new InterfaceDeclaration(name, /+tparams, +/bases, decls);
-    if (isTemplate)
+    if (tparams)
       d = putInsideTemplateDeclaration(begin, name, d, tparams);
     return d;
   }
@@ -1157,8 +1152,7 @@ class Parser
 
     name = optionalIdentifier();
 
-    bool isTemplate = name && token.kind == T.LParen;
-    if (isTemplate)
+    if (name && token.kind == T.LParen)
       tparams = parseTemplateParameterList();
 
     if (name && skipped(T.Semicolon))
@@ -1167,8 +1161,8 @@ class Parser
       decls = parseDeclarationDefinitionsBody();
     else
       error(token, begin.kind == T.Struct ?
-            MSG.ExpectedStructBody :
-            MSG.ExpectedUnionBody, token.srcText);
+                   MSG.ExpectedStructBody :
+                   MSG.ExpectedUnionBody, token.srcText);
 
     Declaration d;
     if (begin.kind == T.Struct)
@@ -1180,7 +1174,7 @@ class Parser
     else
       d = new UnionDeclaration(name, /+tparams, +/decls);
 
-    if (isTemplate)
+    if (tparams)
       d = putInsideTemplateDeclaration(begin, name, d, tparams);
     return d;
   }
@@ -3935,12 +3929,13 @@ version(D2)
 
   TemplateParameters parseTemplateParameterList()
   {
-    TemplateParameters tparams;
+    auto begin = token;
+    auto tparams = new TemplateParameters;
     require(T.LParen);
     if (token.kind != T.RParen)
-      tparams = parseTemplateParameterList_();
+      parseTemplateParameterList_(tparams);
     require(T.RParen);
-    return tparams;
+    return set(tparams, begin);
   }
 
 version(D2)
@@ -3949,20 +3944,18 @@ version(D2)
   {
     assert(token.kind == T.Comma);
     nT();
-    TemplateParameters tparams;
+    auto begin = token;
+    auto tparams = new TemplateParameters;
     if (token.kind != T.RParen)
-      tparams = parseTemplateParameterList_();
+      parseTemplateParameterList_(tparams);
     else
       error(token, MSG.ExpectedTemplateParameters);
-    return tparams;
+    return set(tparams, begin);
   }
 } // version(D2)
 
-  TemplateParameters parseTemplateParameterList_()
+  void parseTemplateParameterList_(TemplateParameters tparams)
   {
-    auto begin = token;
-    auto tparams = new TemplateParameters;
-
     do
     {
       auto paramBegin = token;
@@ -4047,8 +4040,6 @@ version(D2)
       tparams ~= set(tp, paramBegin);
 
     } while (skipped(T.Comma))
-    set(tparams, begin);
-    return tparams;
   }
 
   void expected(TOK tok)
