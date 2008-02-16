@@ -41,7 +41,7 @@ struct IdentValueParser
     IdentValue[] idvalues;
 
     string ident, nextIdent;
-    char* bodyBegin, nextBodyBegin;
+    char* bodyBegin = p, nextBodyBegin;
 
     // Init.
     findNextIdent(ident, bodyBegin);
