@@ -23,7 +23,6 @@ import dil.Settings;
 import dil.SettingsLoader;
 import dil.CompilerInfo;
 import dil.Information;
-import dil.File;
 import dil.SourceText;
 
 import cmd.Generate;

@@ -157,7 +157,7 @@ void encode(ref char[] str, dchar c)
   char[6] b = void;
   if (c < 0x80)
     str ~= c;
-  if (c < 0x800)
+  else if (c < 0x800)
   {
     b[0] = 0xC0 | (c >> 6);
     b[1] = 0x80 | (c & 0x3F);
@@ -211,8 +211,7 @@ body
   if (c < 0x10000)
     str ~= cast(wchar)c;
   else
-  {
-    // Encode with surrogate pair.
+  { // Encode with surrogate pair.
     wchar[2] pair = void;
     c -= 0x10000; // c'
     // higher10bits(c') | 0b1101_10xx_xxxx_xxxx
@@ -225,7 +224,7 @@ body
 
 /++
   Returns a decoded character from a UTF-16 sequence.
-  In case of an error in the sequence 0xD800 is returned.
+  In case of an error in the sequence ERROR_CHAR is returned.
   Params:
     str = the UTF-16 sequence.
     index = where to start from.
@@ -243,7 +242,7 @@ dchar decode(wchar[] str, ref size_t index)
   {
     wchar c2 = str[index+1];
     if (0xDC00 <= c2 && c2 <= 0xDFFF)
-    {
+    { // Decode surrogate pair.
       // (c - 0xD800) << 10 + 0x10000 ->
       // (c - 0xD800 + 0x40) << 10 ->
       c = (c - 0xD7C0) << 10;
@@ -257,7 +256,7 @@ dchar decode(wchar[] str, ref size_t index)
 
 /++
   Returns a decoded character from a UTF-16 sequence.
-  In case of an error in the sequence 0xD800 is returned.
+  In case of an error in the sequence ERROR_CHAR is returned.
   Params:
     p = start of the UTF-16 sequence.
     end = one past the end of the sequence.

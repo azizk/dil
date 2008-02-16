@@ -2740,7 +2740,7 @@ unittest
     else
       src ~= pair.tokenText ~ " ";
 
-  auto lx = new Lexer(src, "");
+  auto lx = new Lexer(new SourceText("", src));
   auto token = lx.getTokens();
 
   uint i;
@@ -2759,7 +2759,7 @@ unittest
 unittest
 {
   Stdout("Testing method Lexer.peek()\n");
-  string sourceText = "unittest { }";
+  auto sourceText = new SourceText("", "unittest { }");
   auto lx = new Lexer(sourceText, null);
 
   auto next = lx.head;
@@ -2774,7 +2774,7 @@ unittest
   lx.peek(next);
   assert(next.kind == TOK.EOF);
 
-  lx = new Lexer("", null);
+  lx = new Lexer(new SourceText("", ""));
   next = lx.head;
   lx.peek(next);
   assert(next.kind == TOK.Newline);

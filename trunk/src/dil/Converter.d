@@ -122,19 +122,19 @@ struct Converter
          end = text.ptr + text.length;
     char[] result;
     uint lineNum = 1;
-    dchar c = *p;
 
-    do
+    for (; p < end; p++)
     {
+      dchar c = *p;
       static if (isBigEndian)
         c = BEtoMachineWord(c);
       else
         c = LEtoMachineWord(c);
 
-      if (c < 0xD800 || 0xDFFF > c)
+      if (0xD800 > c || c > 0xDFFF)
       {}
       else if (c <= 0xDBFF && p+1 < end)
-      {
+      { // Decode surrogate pairs.
         wchar c2 = p[1];
         static if (isBigEndian)
           c2 = BEtoMachineWord(c2);
@@ -159,16 +159,14 @@ struct Converter
 
       if (isNewline(c))
         ++lineNum;
-      ++p;
       dil.Unicode.encode(result, c);
-    } while (p < end)
+    }
 
     if (data.length % 2)
       infoMan ~= new LexerError(
         new Location(filePath, lineNum),
         MSG.UTF16FileMustBeDivisibleBy2
       );
-
     return result;
   }
 
@@ -294,4 +292,33 @@ string sanitizeText(string text)
   text.length = text.length - (p - q);
   //text = text.ptr[0 .. q - text.ptr]; // Another way.
   return text;
+}
+
+unittest
+{
+  Stdout("Testing function Converter.\n");
+  struct Data2Text
+  {
+    char[] text;
+    char[] expected = "source";
+    ubyte[] data()
+    { return cast(ubyte[])text; }
+  }
+  const Data2Text[] map = [
+    // Without BOM
+    {"source"},
+    {"s\0o\0u\0r\0c\0e\0"},
+    {"\0s\0o\0u\0r\0c\0e"},
+    {"s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e\0\0\0"},
+    {"\0\0\0s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e"},
+    // With BOM
+    {"\xEF\xBB\xBFsource"},
+    {"\xFE\xFF\0s\0o\0u\0r\0c\0e"},
+    {"\xFF\xFEs\0o\0u\0r\0c\0e\0"},
+    {"\x00\x00\xFE\xFF\0\0\0s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e"},
+    {"\xFF\xFE\x00\x00s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e\0\0\0"},
+  ];
+  auto converter = Converter("", new InfoManager);
+  foreach (i, pair; map)
+    assert(converter.data2UTF8(pair.data) == pair.expected, Format("failed at item {}", i));
 }

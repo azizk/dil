@@ -8,7 +8,6 @@ import dil.ast.Node;
 import dil.ast.Declarations;
 import dil.parser.Parser;
 import dil.lexer.Lexer;
-import dil.File;
 import dil.semantic.Symbol;
 import dil.semantic.Symbols;
 import dil.Information;

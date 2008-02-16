@@ -4,13 +4,12 @@
 +/
 module cmd.Statistics;
 
-import dil.File;
+import cmd.ASTStats;
 import dil.lexer.Lexer;
 import dil.lexer.Token;
 import dil.parser.Parser;
 import dil.ast.NodesEnum;
 import dil.SourceText;
-import cmd.ASTStats;
 import common;
 
 struct Statistics

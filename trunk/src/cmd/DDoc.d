@@ -22,8 +22,8 @@ import dil.semantic.Pass1;
 import dil.semantic.Symbol;
 import dil.semantic.Symbols;
 import dil.Information;
-import dil.File;
 import dil.Converter;
+import dil.SourceText;
 import common;
 
 import tango.stdc.time : time_t, time, ctime;
@@ -40,7 +40,7 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
   MacroParser mparser;
   foreach (macroPath; macroPaths)
   {
-    auto macros = mparser.parse(loadMacroFile(macroPath));
+    auto macros = mparser.parse(loadMacroFile(macroPath, infoMan));
     mtable = new MacroTable(mtable);
     mtable.insert(macros);
   }
@@ -109,9 +109,11 @@ void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
   file.write(fileText);
 }
 
-string loadMacroFile(string filePath)
+string loadMacroFile(string filePath, InfoManager infoMan)
 {
-  return sanitizeText(loadFile(filePath));
+  auto src = new SourceText(filePath);
+  src.load(infoMan);
+  return sanitizeText(src.data);
 }
 
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
