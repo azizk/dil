@@ -2273,14 +2273,15 @@ version(D2)
 
     MID mid;
     char* errorAtColumn = p;
+    char* tokenEnd = ++p;
 
-    ++p;
     if (!(p[0] == 'l' && p[1] == 'i' && p[2] == 'n' && p[3] == 'e'))
     {
       mid = MID.ExpectedIdentifierSTLine;
       goto Lerr;
     }
     p += 3;
+    tokenEnd = p + 1;
 
     // TODO: #line58"path/file" is legal. Require spaces?
     //       State.Space could be used for that purpose.
@@ -2288,7 +2289,7 @@ version(D2)
     { /+Space,+/ Integer, Filespec, End }
 
     State state = State.Integer;
-    char* tokenEnd = p + 1;
+
     while (!isEndOfLine(++p))
     {
       if (isspace(*p))
@@ -2314,7 +2315,7 @@ version(D2)
         state = State.Filespec;
       }
       else if (state == State.Filespec && *p == '"')
-      { // MID.ExpectedFilespec is eprecated.
+      { // MID.ExpectedFilespec is deprecated.
         // if (*p != '"')
         // {
         //   errorAtColumn = p;

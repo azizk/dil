@@ -410,20 +410,14 @@ void printToken(Token* token, TagMap tags, Print!(char) print)
     }
 
     // Print whitespace between #line and number.
-    auto ptr = token.start;
-    printWS(ptr, num.start); // Prints "#line" as well.
-    printToken(num, tags, print2);
+    printWS(token.start, num.start); // Prints "#line" as well.
+    printToken(num, tags, print2); // Print the number.
 
     if (auto filespec = token.tokLineFilespec)
     { // Print whitespace between number and filespec.
       printWS(num.end, filespec.start);
       print2.format(tags.Filespec, xml_escape(filespec.srcText));
-      ptr = filespec.end;
     }
-    else
-      ptr = num.end;
-    // Print remaining whitespace
-    printWS(ptr, token.end);
     // Finally print the whole token.
     print.format(formatStr, cast(char[])buffer.slice());
     break;
