@@ -67,7 +67,8 @@ class ModuleScopeType : TypeNode
   }
 }
 
-/// "typeof" "(" Expression ")"
+/// "typeof" "(" Expression ")" or$(BR)
+/// "typeof" "(" "return" ")" (D2.0)
 class TypeofType : TypeNode
 {
   Expression e;
@@ -78,7 +79,7 @@ class TypeofType : TypeNode
     this.e = e;
   }
 
-  /// D2.0: "typeof" "(" "return" ")"
+  // For D2.0: "typeof" "(" "return" ")"
   this()
   {
     mixin(set_kind);
@@ -114,9 +115,9 @@ class PointerType : TypeNode
   }
 }
 
-/// Dynamic array: T[] or
-/// Static array: T[E] or
-/// Slice array (for tuples): T[E..E] or
+/// Dynamic array: T[] or$(BR)
+/// Static array: T[E] or$(BR)
+/// Slice array (for tuples): T[E..E] or$(BR)
 /// Associative array: T[T]
 class ArrayType : TypeNode
 {

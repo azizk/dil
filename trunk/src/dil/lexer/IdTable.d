@@ -12,6 +12,7 @@ import common;
 public import dil.lexer.Identifier;
 public import dil.lexer.IdentsEnum;
 
+/// A namespace for the predefined identifiers.
 struct Ident
 {
   const static
@@ -25,9 +26,7 @@ struct Ident
   }
 }
 
-/++
-  Global table for hoarding and retrieving identifiers.
-+/
+/// Global table for hoarding and retrieving identifiers.
 struct IdTable
 {
 static:

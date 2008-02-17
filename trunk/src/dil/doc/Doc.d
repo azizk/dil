@@ -189,7 +189,7 @@ struct DDocParser
   /// Params:
   ///   ident = set to the Identifier
   ///   bodyBegin = set to the beginning of the text body (whitespace skipped.)
-  /// Returns: true if found
+  /// Returns: true if found.
   bool findNextIdColon(ref char[] ident, ref char* bodyBegin)
   {
     while (p < textEnd)

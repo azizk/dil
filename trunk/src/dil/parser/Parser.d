@@ -707,11 +707,11 @@ class Parser
 
     auto identTok = requireId();
 
-    ID identID = identTok ? identTok.ident.identID : ID.Null;
+    IDK idKind = identTok ? identTok.ident.idKind : IDK.Null;
 
-    switch (identID)
+    switch (idKind)
     {
-    case ID.C:
+    case IDK.C:
       if (consumed(T.PlusPlus))
       {
         linkageType = LinkageType.Cpp;
@@ -719,16 +719,16 @@ class Parser
       }
       linkageType = LinkageType.C;
       break;
-    case ID.D:
+    case IDK.D:
       linkageType = LinkageType.D;
       break;
-    case ID.Windows:
+    case IDK.Windows:
       linkageType = LinkageType.Windows;
       break;
-    case ID.Pascal:
+    case IDK.Pascal:
       linkageType = LinkageType.Pascal;
       break;
-    case ID.System:
+    case IDK.System:
       linkageType = LinkageType.System;
       break;
     default:
@@ -2156,9 +2156,9 @@ class Parser
     nT();
     auto condition = requireIdentifier(MSG.ExpectedScopeIdentifier);
     if (condition)
-      switch (condition.identID)
+      switch (condition.idKind)
       {
-      case ID.exit, ID.success, ID.failure:
+      case IDK.exit, IDK.success, IDK.failure:
         break;
       default:
         error(this.prevToken, MSG.InvalidScopeIdentifier, this.prevToken.srcText);
@@ -2569,10 +2569,10 @@ class Parser
          T.Float, T.Double, T.Real:
       goto LAsmTypePrefix;
     case T.Identifier:
-      switch (token.ident.identID)
+      switch (token.ident.idKind)
       {
-      case ID.near, ID.far,/* "byte",  "short",  "int",*/
-           ID.word, ID.dword, ID.qword/*, "float", "double", "real"*/:
+      case IDK.near, IDK.far,/* "byte",  "short",  "int",*/
+           IDK.word, IDK.dword, IDK.qword/*, "float", "double", "real"*/:
       LAsmTypePrefix:
         nT();
         if (token.kind == T.Identifier && token.ident is Ident.ptr)
@@ -2581,11 +2581,11 @@ class Parser
           error(MID.ExpectedButFound, "ptr", token.srcText);
         e = new AsmTypeExpression(parseAsmExpression());
         break;
-      case ID.offset:
+      case IDK.offset:
         nT();
         e = new AsmOffsetExpression(parseAsmExpression());
         break;
-      case ID.seg:
+      case IDK.seg:
         nT();
         e = new AsmSegExpression(parseAsmExpression());
         break;
@@ -2652,15 +2652,15 @@ class Parser
       break;
     case T.Identifier:
       auto register = token.ident;
-      switch (register.identID)
+      switch (register.idKind)
       {
       // __LOCAL_SIZE
-      case ID.__LOCAL_SIZE:
+      case IDK.__LOCAL_SIZE:
         nT();
         e = new AsmLocalSizeExpression();
         break;
       // Register
-      case ID.ST:
+      case IDK.ST:
         nT();
         // (1) - (7)
         int number = -1;
@@ -2674,7 +2674,7 @@ class Parser
         }
         e = new AsmRegisterExpression(register, number);
         break;
-      case ID.FS:
+      case IDK.FS:
         nT();
         // TODO: is the colon-number part optional?
         int number = -1;
@@ -2688,20 +2688,20 @@ class Parser
         }
         e = new AsmRegisterExpression(register, number);
         break;
-      case ID.AL, ID.AH, ID.AX, ID.EAX,
-           ID.BL, ID.BH, ID.BX, ID.EBX,
-           ID.CL, ID.CH, ID.CX, ID.ECX,
-           ID.DL, ID.DH, ID.DX, ID.EDX,
-           ID.BP, ID.EBP, ID.SP, ID.ESP,
-           ID.DI, ID.EDI, ID.SI, ID.ESI,
-           ID.ES, ID.CS, ID.SS, ID.DS, ID.GS,
-           ID.CR0, ID.CR2, ID.CR3, ID.CR4,
-           ID.DR0, ID.DR1, ID.DR2, ID.DR3, ID.DR6, ID.DR7,
-           ID.TR3, ID.TR4, ID.TR5, ID.TR6, ID.TR7,
-           ID.MM0, ID.MM1, ID.MM2, ID.MM3,
-           ID.MM4, ID.MM5, ID.MM6, ID.MM7,
-           ID.XMM0, ID.XMM1, ID.XMM2, ID.XMM3,
-           ID.XMM4, ID.XMM5, ID.XMM6, ID.XMM7:
+      case IDK.AL, IDK.AH, IDK.AX, IDK.EAX,
+           IDK.BL, IDK.BH, IDK.BX, IDK.EBX,
+           IDK.CL, IDK.CH, IDK.CX, IDK.ECX,
+           IDK.DL, IDK.DH, IDK.DX, IDK.EDX,
+           IDK.BP, IDK.EBP, IDK.SP, IDK.ESP,
+           IDK.DI, IDK.EDI, IDK.SI, IDK.ESI,
+           IDK.ES, IDK.CS, IDK.SS, IDK.DS, IDK.GS,
+           IDK.CR0, IDK.CR2, IDK.CR3, IDK.CR4,
+           IDK.DR0, IDK.DR1, IDK.DR2, IDK.DR3, IDK.DR6, IDK.DR7,
+           IDK.TR3, IDK.TR4, IDK.TR5, IDK.TR6, IDK.TR7,
+           IDK.MM0, IDK.MM1, IDK.MM2, IDK.MM3,
+           IDK.MM4, IDK.MM5, IDK.MM6, IDK.MM7,
+           IDK.XMM0, IDK.XMM1, IDK.XMM2, IDK.XMM3,
+           IDK.XMM4, IDK.XMM5, IDK.XMM6, IDK.XMM7:
         nT();
         e = new AsmRegisterExpression(register);
         break;

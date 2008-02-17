@@ -11,6 +11,7 @@ const:
   char[] idStr; /// In table.
 }
 
+/// Array of predefined identifiers.
 static const StrPair[] identPairs = [
   // Predefined version identifiers:
   {"DigitalMars"}, {"X86"}, {"X86_64"},
@@ -65,11 +66,12 @@ static const StrPair[] identPairs = [
 ];
 
 /++
-  CTF for generating the members of the struct Ident.
-  The resulting string could look like this:
-  ---
+ CTF for generating the members of the struct Ident.
+
+ The resulting string looks like this:
+ ---
   private struct Ids {static const:
-    Identifier _str = {"str", TOK.Identifier, ID.str};
+    Identifier _str = {"str", TOK.Identifier, IDK.str};
     // more ...
   }
   Identifier* str = &Ids._str;
@@ -78,7 +80,7 @@ static const StrPair[] identPairs = [
     str,
     // more ...
   ]
-  ---
+ ---
 +/
 char[] generateIdentMembers()
 {
@@ -90,7 +92,7 @@ char[] generateIdentMembers()
   {
     // N.B.: Compiler cries for some reason when trying to access pair.idStr.
     // Identifier _str = {"str", TOK.Identifier, ID.str};
-    private_members ~= "Identifier _"~pair.str~` = {"`~pair.str~`", TOK.Identifier, ID.`~pair.str~"};\n";
+    private_members ~= "Identifier _"~pair.str~` = {"`~pair.str~`", TOK.Identifier, IDK.`~pair.str~"};\n";
     // Identifier* str = &_str;
     public_members ~= "Identifier* "~pair.str~" = &Ids._"~pair.str~";\n";
     array ~= pair.str~",";
@@ -102,7 +104,7 @@ char[] generateIdentMembers()
   return private_members ~ public_members ~ array;
 }
 
-/// CTF for generating the members of the enum ID.
+/// CTF for generating the members of the enum IDK.
 char[] generateIDMembers()
 {
   char[] members;

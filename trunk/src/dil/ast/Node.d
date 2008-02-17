@@ -9,16 +9,15 @@ import common;
 public import dil.lexer.Token;
 public import dil.ast.NodesEnum;
 
-/// This string is mixed into the constructor of a class that inherits from Node.
-const string set_kind = `this.kind = mixin("NodeKind." ~ typeof(this).stringof);`;
-
-class Node
+/// The root class of all nodes that can form a D syntax tree.
+abstract class Node
 {
-  NodeCategory category;
-  NodeKind kind;
+  NodeCategory category; /// The category of this node.
+  NodeKind kind; /// The kind of this node.
   Node[] children; // Will be probably removed sometime.
-  Token* begin, end;
+  Token* begin, end; /// The begin and end tokens of this node.
 
+  /// Constructs a node object.
   this(NodeCategory category)
   {
     assert(category != NodeCategory.Undefined);
@@ -65,6 +64,7 @@ class Node
     children is null || addChildren(children);
   }
 
+  /// Returns a pointer to Class if this node can be cast to it.
   Class Is(Class)()
   {
     if (kind == mixin("NodeKind." ~ typeof(Class).stringof))
@@ -72,8 +72,13 @@ class Node
     return null;
   }
 
+  /// Casts this node to Class.
   Class to(Class)()
   {
     return cast(Class)cast(void*)this;
   }
 }
+
+/// This string is mixed into the constructor of a class that inherits
+/// from Node. It sets the member kind.
+const string set_kind = `this.kind = mixin("NodeKind." ~ typeof(this).stringof);`;

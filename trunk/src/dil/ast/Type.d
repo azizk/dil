@@ -7,10 +7,10 @@ module dil.ast.Type;
 import dil.ast.Node;
 import dil.semantic.Types;
 
-/// The base class of all type nodes.
+/// The root class of all type nodes.
 abstract class TypeNode : Node
 {
-  TypeNode next;
+  TypeNode next; /// The next type in the type chain.
   Type type; /// The semantic type of this type node.
 
   this()
@@ -25,6 +25,7 @@ abstract class TypeNode : Node
     this.next = next;
   }
 
+  /// Returns the root type of the type chain.
   TypeNode baseType()
   {
     auto type = this;

@@ -11,7 +11,7 @@ import common;
 /// The root class of all expressions.
 abstract class Expression : Node
 {
-  Type type; /// The type of this expression.
+  Type type; /// The semantic type of this expression.
 
   this()
   {

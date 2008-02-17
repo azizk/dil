@@ -8,6 +8,7 @@ import dil.lexer.Funcs;
 import dil.Unicode;
 import common;
 
+/// A pair of strings.
 class IdentValue
 {
   string ident;
@@ -23,11 +24,11 @@ class IdentValue
 /// <pre>
 /// ident = value
 /// ident2 = value2
-////         more text
+///          more text
 /// </pre>
 struct IdentValueParser
 {
-  char* p;
+  char* p; /// Current pointer.
   char* textEnd;
 
   IdentValue[] parse(string text)
@@ -73,6 +74,11 @@ struct IdentValueParser
     return makeString(begin, end);
   }
 
+  /// Finds the next "Identifier =".
+  /// Params:
+  ///   ident = set to Identifier.
+  ///   bodyBegin = set to the beginning of the text body (whitespace skipped.)
+  /// Returns: true if found.
   bool findNextIdent(ref string ident, ref char* bodyBegin)
   {
     while (p < textEnd)
@@ -119,6 +125,6 @@ struct IdentValueParser
 
 char[] makeString(char* begin, char* end)
 {
-  assert(begin <= end);
+  assert(begin && end && begin <= end);
   return begin[0 .. end - begin];
 }

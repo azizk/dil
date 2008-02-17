@@ -11,20 +11,16 @@ const char[3] REPLACEMENT_STR = \uFFFD; /// Ditto
 /// Invalid character, returned on errors.
 const dchar ERROR_CHAR = 0xD800;
 
-/++
-  Returns true if this character is not a surrogate
-  code point and not higher than 0x10FFFF.
-+/
+/// Returns: true if this character is not a surrogate
+/// code point and not higher than 0x10FFFF.
 bool isValidChar(dchar d)
 {
   return d < 0xD800 || d > 0xDFFF && d <= 0x10FFFF;
 }
 
-/++
-  There are a total of 66 noncharacters.
-  Returns: true if this is one of them.
-  See_also: Chapter 16.7 Noncharacters in Unicode 5.0
-+/
+/// There are a total of 66 noncharacters.
+/// Returns: true if this is one of them.
+/// See_also: Chapter 16.7 Noncharacters in Unicode 5.0
 bool isNoncharacter(dchar d)
 {
   return 0xFDD0 <= d && d <= 0xFDEF || // 32
@@ -222,13 +218,11 @@ body
   }
 }
 
-/++
-  Returns a decoded character from a UTF-16 sequence.
-  In case of an error in the sequence ERROR_CHAR is returned.
-  Params:
-    str = the UTF-16 sequence.
-    index = where to start from.
-+/
+/// Returns a decoded character from a UTF-16 sequence.
+/// Returns: ERROR_CHAR in case of an error in the sequence.
+/// Params:
+///   str = the UTF-16 sequence.
+///   index = where to start from.
 dchar decode(wchar[] str, ref size_t index)
 {
   assert(str.length && index < str.length);
@@ -254,13 +248,11 @@ dchar decode(wchar[] str, ref size_t index)
   return ERROR_CHAR;
 }
 
-/++
-  Returns a decoded character from a UTF-16 sequence.
-  In case of an error in the sequence ERROR_CHAR is returned.
-  Params:
-    p = start of the UTF-16 sequence.
-    end = one past the end of the sequence.
-+/
+/// Returns a decoded character from a UTF-16 sequence.
+/// Returns: ERROR_CHAR in case of an error in the sequence.
+/// Params:
+///   p = start of the UTF-16 sequence.
+///   end = one past the end of the sequence.
 dchar decode(ref wchar* p, wchar* end)
 {
   assert(p && p < end);

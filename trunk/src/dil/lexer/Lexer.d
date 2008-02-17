@@ -304,7 +304,7 @@ class Lexer
         t.end = p;
 
         auto id = IdTable.lookup(t.srcText);
-        t.kind = id.type;
+        t.kind = id.kind;
         t.ident = id;
 
         if (t.kind == TOK.Identifier || t.isKeyword)
@@ -1054,7 +1054,7 @@ class Lexer
       t.end = p;
 
       auto id = IdTable.lookup(t.srcText);
-      t.kind = id.type;
+      t.kind = id.kind;
       t.ident = id;
 
       if (t.kind == TOK.Identifier || t.isKeyword)

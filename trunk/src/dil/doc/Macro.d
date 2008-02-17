@@ -15,7 +15,7 @@ import common;
 class Macro
 {
   string name; /// The name of the macro.
-  string text; /// Substitution text.
+  string text; /// The substitution text.
   uint callLevel;  /// Recursive call level.
   this (string name, string text)
   {
@@ -99,7 +99,7 @@ struct MacroParser
     return macros;
   }
 
-  /// Scans for a macro invocation. E.g.: $&#40;DDOC&#41;
+  /// Scans for a macro invocation. E.g.: &#36;(DDOC)
   /// Returns: a pointer set to one char past the closing parenthesis,
   /// or null if this isn't a macro invocation.
   static char* scanMacro(char* p, char* textEnd)
@@ -296,11 +296,11 @@ struct MacroExpander
     return arg0 ~ args;
   }
 
-  /// Expands "$ +", "$ 0" - "$ 9" with args[n] in text.
+  /// Expands "&#36;+", "&#36;0" - "&#36;9" with args[n] in text.
   /// Params:
   ///   text = the text to scan for argument placeholders.
   ///   args = the first element, args[0], is the whole argument string and
-  ///          the following elements are slices into it.
+  ///          the following elements are slices into it.$(BR)
   ///          The array is empty if there are no arguments.
   char[] expandArguments(char[] text, char[][] args)
   in { assert(args.length != 1, "zero or more than 1 args expected"); }

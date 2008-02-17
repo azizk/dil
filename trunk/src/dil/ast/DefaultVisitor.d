@@ -14,10 +14,8 @@ import dil.ast.Declarations,
        dil.ast.Parameters;
 import common;
 
-/++
-  This huge template function, when instantiated for a certain node class,
-  generates a body of visit method calls on the subnodes.
-+/
+/// This huge template function, when instantiated for a certain node class,
+/// generates a body of calls to visit() on the subnodes.
 returnType!(T.stringof) visitDefault(T)(T t)
 {
   assert(t !is null, "node passed to visitDefault() is null");
@@ -348,13 +346,14 @@ returnType!(T.stringof) visitDefault(T)(T t)
   return t;
 }
 
-/++
-  Generate default visit methods.
-  E.g:
-  private mixin .visitDefault!(ClassDeclaration) _ClassDeclaration;
-  override returnType!("ClassDeclaration") visit(ClassDeclaration node)
-  { return _ClassDeclaration.visitDefault(node); }
-+/
+/// Generates the default visit methods.
+///
+/// E.g:
+/// ---
+/// private mixin .visitDefault!(ClassDeclaration) _ClassDeclaration;
+/// override returnType!("ClassDeclaration") visit(ClassDeclaration node)
+/// { return _ClassDeclaration.visitDefault(node); }
+/// ---
 char[] generateDefaultVisitMethods()
 {
   char[] text;
@@ -365,9 +364,7 @@ char[] generateDefaultVisitMethods()
 }
 // pragma(msg, generateDefaultVisitMethods());
 
-/++
-  This class provides default methods for traversing nodes in a syntax tree.
-+/
+/// This class provides default methods for traversing nodes in a syntax tree.
 class DefaultVisitor : Visitor
 {
   // Comment out if too many errors are shown.

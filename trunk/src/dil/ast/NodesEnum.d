@@ -4,6 +4,7 @@
 +/
 module dil.ast.NodesEnum;
 
+/// Enumerates the categories of a node.
 enum NodeCategory : ushort
 {
   Undefined,
@@ -14,7 +15,7 @@ enum NodeCategory : ushort
   Other
 }
 
-/// Array of class names that inherit from Node.
+/// A list of all class names that inherit from Node.
 static const char[][] classNames = [
   // Declarations:
   "CompoundDeclaration",
@@ -211,6 +212,7 @@ static const char[][] classNames = [
   "TemplateArguments",
 ];
 
+/// Generates the members of enum NodeKind.
 char[] generateNodeKindMembers()
 {
   char[] text;

@@ -4,63 +4,55 @@
 +/
 module dil.lexer.Funcs;
 
-const char[3] LS = \u2028; /// Line separator.
-const char[3] PS = \u2029; /// Paragraph separator.
+const char[3] LS = \u2028; /// Unicode line separator.
+const char[3] PS = \u2029; /// Unicode paragraph separator.
 const dchar LSd = 0x2028;
 const dchar PSd = 0x2029;
 static assert(LS[0] == PS[0] && LS[1] == PS[1]);
 
 const uint _Z_ = 26; /// Control+Z
 
-/// Returns true if d is a Unicode line or paragraph separator.
+/// Returns: true if d is a Unicode line or paragraph separator.
 bool isUnicodeNewlineChar(dchar d)
 {
   return d == LSd || d == PSd;
 }
 
-/// Returns true if p points to a line or paragraph separator.
+/// Returns: true if p points to a line or paragraph separator.
 bool isUnicodeNewline(char* p)
 {
   return *p == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]);
 }
 
-/++
-  Returns true if p points to the start of a Newline.
-  Newline: \n | \r | \r\n | LS | PS
-+/
+/// Returns: true if p points to the start of a Newline.
+/// Newline: \n | \r | \r\n | LS | PS
 bool isNewline(char* p)
 {
   return *p == '\n' || *p == '\r' || isUnicodeNewline(p);
 }
 
-/// Returns if c is a Newline character.
+/// Returns: true if c is a Newline character.
 bool isNewline(dchar c)
 {
   return c == '\n' || c == '\r' || isUnicodeNewlineChar(c);
 }
 
-/++
-  Returns true if p points to an EOF character.
-  EOF: 0 | _Z_
-+/
+/// Returns: true if p points to an EOF character.
+/// EOF: 0 | _Z_
 bool isEOF(dchar c)
 {
   return c == 0 || c == _Z_;
 }
 
-/++
-  Returns true if p points to the first character of an EndOfLine.
-  EndOfLine: Newline | EOF
-+/
+/// Returns: true if p points to the first character of an EndOfLine.
+/// EndOfLine: Newline | EOF
 bool isEndOfLine(char* p)
 {
   return isNewline(p) || isEOF(*p);
 }
 
-/++
-  Scans a Newline and sets p one character past it.
-  Returns '\n' if scanned or 0 otherwise.
-+/
+/// Scans a Newline and sets p one character past it.
+/// Returns: '\n' if found or 0 otherwise.
 dchar scanNewline(ref char* p)
 {
   switch (*p)
@@ -114,15 +106,25 @@ enum CProperty
 const uint EVMask = 0xFF00; // Bit mask for escape value
 
 private alias CProperty CP;
+/// Returns: true if c is an octal digit.
 int isoctal(char c) { return ptable[c] & CP.Octal; }
+/// Returns: true if c is a decimal digit.
 int isdigit(char c) { return ptable[c] & CP.Digit; }
+/// Returns: true if c is a hexadecimal digit.
 int ishexad(char c) { return ptable[c] & CP.Hex; }
+/// Returns: true if c is a letter.
 int isalpha(char c) { return ptable[c] & CP.Alpha; }
+/// Returns: true if c is an alphanumeric.
 int isalnum(char c) { return ptable[c] & (CP.Alpha | CP.Digit); }
+/// Returns: true if c is the beginning of a D identifier (only ASCII.)
 int isidbeg(char c) { return ptable[c] & (CP.Alpha | CP.Underscore); }
+/// Returns: true if c is a D identifier character (only ASCII.)
 int isident(char c) { return ptable[c] & (CP.Alpha | CP.Underscore | CP.Digit); }
+/// Returns: true if c is a whitespace character.
 int isspace(char c) { return ptable[c] & CP.Whitespace; }
+/// Returns: the escape value for c.
 int char2ev(char c) { return ptable[c] >> 8; /*(ptable[c] & EVMask) >> 8;*/ }
+/// Returns: true if c is an ASCII character.
 int isascii(uint c) { return c < 128; }
 
 version(gen_ptable)

@@ -11,12 +11,13 @@ import dil.ast.Declarations,
        dil.ast.Types,
        dil.ast.Parameters;
 
-/++
-  Generate visit methods.
-  E.g.:
-    Declaration visit(ClassDeclaration){return null;};
-    Expression visit(CommaExpression){return null;};
-+/
+/// Generate visit methods.
+///
+/// E.g.:
+/// ---
+/// Declaration visit(ClassDeclaration){return null;};
+/// Expression visit(CommaExpression){return null;};
+/// ---
 char[] generateVisitMethods()
 {
   char[] text;
@@ -44,21 +45,21 @@ template returnType(char[] className)
     alias Node returnType;
 }
 
-/++
-  Generate functions which do the second dispatch.$(BR)
-  E.g.:$(BR)
-    $(D_CODE
-Expression visitCommaExpression(Visitor visitor, CommaExpression c)
-{ visitor.visit(c); })
-
-  The equivalent in the traditional visitor pattern would be:$(BR)
-    $(D_CODE
-class CommaExpression : Expression
-{
-  void accept(Visitor visitor)
-  { visitor.visit(this); }
-})
-+/
+/// Generate functions which do the second dispatch.
+///
+/// E.g.:
+/// ---
+/// Expression visitCommaExpression(Visitor visitor, CommaExpression c)
+/// { visitor.visit(c); /* Second dispatch. */ }
+/// ---
+/// The equivalent in the traditional visitor pattern would be:
+/// ---
+/// class CommaExpression : Expression
+/// {
+///   void accept(Visitor visitor)
+///   { visitor.visit(this); }
+/// }
+/// ---
 char[] generateDispatchFunctions()
 {
   char[] text;
@@ -70,7 +71,14 @@ char[] generateDispatchFunctions()
 // pragma(msg, generateDispatchFunctions());
 
 /++
-  The vtable holds a list of function pointers to the dispatch functions.
+ Generates an array of function pointers.
+
+ ---
+ [
+   cast(void*)&visitCommaExpression,
+   // etc.
+ ]
+ ---
 +/
 char[] generateVTable()
 {
@@ -81,7 +89,10 @@ char[] generateVTable()
 }
 // pragma(msg, generateVTable());
 
-/// The visitor pattern.
+/// Implements a variation of the visitor pattern.
+///
+/// Inherited by classes that need to traverse a D syntax tree
+/// and do computations, transformations and other things on it.
 abstract class Visitor
 {
   mixin(generateVisitMethods());
@@ -89,18 +100,19 @@ abstract class Visitor
   static
     mixin(generateDispatchFunctions());
 
-  /// The dispatch table.
+  /// The table holding function pointers to the second dispatch functions.
   static const void*[] dispatch_vtable = mixin(generateVTable());
   static assert(dispatch_vtable.length == classNames.length, "vtable length doesn't match number of classes");
 
-  // Returns the dispatch function for n.
+  /// Looks up the second dispatch function for n and returns that.
   Node function(Visitor, Node) getDispatchFunction()(Node n)
   {
     return cast(Node function(Visitor, Node))dispatch_vtable[n.kind];
   }
 
+  /// The main and first dispatch function.
   Node dispatch(Node n)
-  { // Do first dispatch. Second dispatch is done in the called function.
+  { // Second dispatch is done in the called function.
     return getDispatchFunction(n)(this, n);
   }
 

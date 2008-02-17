@@ -8,27 +8,36 @@ import dil.lexer.TokensEnum;
 import dil.lexer.IdentsEnum;
 import common;
 
+/// Represents an identifier as defined in the D specs.
+///
+///<pre>
+///  Identifier := IdStart IdChar*
+///  IdStart := "_" | Letter
+///  IdChar := Letter | "0"-"9"
+///  Letter := UniAlpha
+///</pre>
+///  Unicode alphas are defined in Unicode 5.0.0.
 align(1)
 struct Identifier
 {
-  string str;
-  TOK type;
-  ID identID;
+  string str; /// The UTF-8 string of the identifier.
+  TOK kind;   /// The token kind.
+  IDK idKind; /// Only for predefined identifiers.
 
-  static Identifier* opCall(string str, TOK type)
+  static Identifier* opCall(string str, TOK kind)
   {
     auto id = new Identifier;
     id.str = str;
-    id.type = type;
+    id.kind = kind;
     return id;
   }
 
-  static Identifier* opCall(string str, TOK type, ID identID)
+  static Identifier* opCall(string str, TOK kind, IDK idKind)
   {
     auto id = new Identifier;
     id.str = str;
-    id.type = type;
-    id.identID = identID;
+    id.kind = kind;
+    id.idKind = idKind;
     return id;
   }
 
