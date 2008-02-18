@@ -192,6 +192,11 @@ version(D2)
     return kind == kind2;
   }
 
+  int opCmp(Token* rhs)
+  {
+    return start < rhs.start;
+  }
+
   /// Returns the Location of this token.
   Location getLocation(bool realLocation)()
   {

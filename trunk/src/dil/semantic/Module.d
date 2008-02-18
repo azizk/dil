@@ -57,6 +57,14 @@ class Module : ScopeSymbol
     return sourceText.filePath;
   }
 
+  string fileExtension()
+  {
+    foreach_reverse(i, c; filePath)
+      if (c == '.')
+        return filePath[i+1..$];
+    return "";
+  }
+
   void setParser(Parser parser)
   {
     this.parser = parser;

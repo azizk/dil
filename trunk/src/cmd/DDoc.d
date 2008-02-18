@@ -144,11 +144,14 @@ class DDocEmitter : DefaultVisitor
       {
         if (auto copyright = cmnt.takeCopyright())
           mtable.insert(new Macro("COPYRIGHT", copyright.text));
-        DESC({ writeComment(); });
+        DESC({
+          writeComment();
+          MEMBERS("MODULE", { visitD(modul.root); });
+        });
       }
     }
-    MEMBERS("MODULE", { visitD(modul.root); });
-    write(\n);
+    else
+      MEMBERS("MODULE", { visitD(modul.root); });
     return text;
   }
 
@@ -440,7 +443,9 @@ class DDocEmitter : DefaultVisitor
   void SYMBOL(char[] name, Declaration d)
   {
     auto loc = d.begin.getRealLocation();
-    auto str = Format("$(SYMBOL {}, {}, {}.d, {})", name, modul.getFQN(), modul.getFQNPath(), loc.lineNum);
+    auto str = Format("$(SYMBOL {}, {}, {}.{}, {})",
+                      name, modul.getFQN(), modul.getFQNPath(),
+                      modul.fileExtension(), loc.lineNum);
     write(str);
     // write("$(DDOC_PSYMBOL ", name, ")");
   }
@@ -523,6 +528,21 @@ class DDocEmitter : DefaultVisitor
     });
   }
 
+  void writeAliasOrTypedef(T)(T d)
+  {
+    auto prefix = is(T == AliasDeclaration) ? "alias " : "typedef ";
+    if (auto vd = d.decl.Is!(VariablesDeclaration))
+    {
+      auto type = textSpan(vd.typeNode.baseType.begin, vd.typeNode.end);
+      foreach (name; vd.names)
+        DECL({ write(prefix); write(escape(type), " "); SYMBOL(name.str, d); });
+    }
+    else if (auto fd = d.decl.Is!(FunctionDeclaration))
+    {}
+    // DECL({ write(textSpan(d.begin, d.end)); }, false);
+    DESC({ writeComment(); });
+  }
+
   alias Declaration D;
 
 override:
@@ -533,13 +553,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    if (auto vd = d.decl.Is!(VariablesDeclaration))
-      foreach (name; vd.names)
-        DECL({ write("alias "); SYMBOL(name.str, d); });
-    else if (auto fd = d.decl.Is!(FunctionDeclaration))
-    {}
-    // DECL({ write(textSpan(d.begin, d.end)); }, false);
-    DESC({ writeComment(); });
+    writeAliasOrTypedef(d);
     return d;
   }
 
@@ -547,13 +561,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    if (auto vd = d.decl.Is!(VariablesDeclaration))
-      foreach (name; vd.names)
-        DECL({ write("typedef "); SYMBOL(name.str, d); });
-    else if (auto fd = d.decl.Is!(FunctionDeclaration))
-    {}
-    // DECL({ write(textSpan(d.begin, d.end)); }, false);
-    DESC({ writeComment(); });
+    writeAliasOrTypedef(d);
     return d;
   }
 
@@ -717,7 +725,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("invariant"); });
+    DECL({ SYMBOL("invariant", d); });
     DESC({ writeComment(); });
     return d;
   }
@@ -726,7 +734,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("unittest"); });
+    DECL({ SYMBOL("unittest", d); });
     DESC({ writeComment(); });
     return d;
   }
