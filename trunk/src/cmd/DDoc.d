@@ -446,9 +446,12 @@ class DDocEmitter : DefaultVisitor
       text ~= s;
   }
 
-  void SYMBOL(char[] name)
+  void SYMBOL(char[] name, Declaration d)
   {
-    write("$(DDOC_PSYMBOL ", name, ")");
+    auto loc = d.begin.getRealLocation();
+    auto str = Format("$(SYMBOL {}, {}, {}.d, {})", name, modul.getFQN(), modul.getFQNPath(), loc.lineNum);
+    write(str);
+    // write("$(DDOC_PSYMBOL ", name, ")");
   }
 
   uint prevDeclOffset;
@@ -497,7 +500,7 @@ class DDocEmitter : DefaultVisitor
       return d;
     DECL({
       write(d.begin.srcText, " ");
-      SYMBOL(d.name.str);
+      SYMBOL(d.name.str, d);
       writeTemplateParams();
       writeInheritanceList(d.bases);
     });
@@ -517,7 +520,7 @@ class DDocEmitter : DefaultVisitor
     DECL({
       write(d.begin.srcText, d.name ? " " : "");
       if (d.name)
-        SYMBOL(d.name.str);
+        SYMBOL(d.name.str, d);
       writeTemplateParams();
     });
     DESC({
@@ -539,7 +542,12 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write(textSpan(d.begin, d.end)); }, false);
+    if (auto vd = d.decl.Is!(VariablesDeclaration))
+      foreach (name; vd.names)
+        DECL({ write("alias "); SYMBOL(name.str, d); });
+    else if (auto fd = d.decl.Is!(FunctionDeclaration))
+    {}
+    // DECL({ write(textSpan(d.begin, d.end)); }, false);
     DESC({ writeComment(); });
     return d;
   }
@@ -548,7 +556,12 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write(textSpan(d.begin, d.end)); }, false);
+    if (auto vd = d.decl.Is!(VariablesDeclaration))
+      foreach (name; vd.names)
+        DECL({ write("typedef "); SYMBOL(name.str, d); });
+    else if (auto fd = d.decl.Is!(FunctionDeclaration))
+    {}
+    // DECL({ write(textSpan(d.begin, d.end)); }, false);
     DESC({ writeComment(); });
     return d;
   }
@@ -559,7 +572,7 @@ override:
       return d;
     DECL({
       write("enum", d.name ? " " : "");
-      d.name && SYMBOL(d.name.str);
+      d.name && SYMBOL(d.name.str, d);
     });
     DESC({
       writeComment();
@@ -572,7 +585,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL(d.name.str); }, false);
+    DECL({ SYMBOL(d.name.str, d); }, false);
     DESC({ writeComment(); });
     return d;
   }
@@ -590,7 +603,7 @@ override:
       return d;
     DECL({
       write("template ");
-      SYMBOL(d.name.str);
+      SYMBOL(d.name.str, d);
       writeTemplateParams();
     });
     DESC({
@@ -670,7 +683,7 @@ override:
     auto type = textSpan(d.returnType.baseType.begin, d.returnType.end);
     DECL({
       write(escape(type), " ");
-      SYMBOL(d.name.str);
+      SYMBOL(d.name.str, d);
       writeTemplateParams();
       writeParams(d.params);
     });
@@ -704,7 +717,7 @@ override:
     if (d.typeNode)
       type = textSpan(d.typeNode.baseType.begin, d.typeNode.end);
     foreach (name; d.names)
-      DECL({ write(escape(type), " "); SYMBOL(name.str); });
+      DECL({ write(escape(type), " "); SYMBOL(name.str, d); });
     DESC({ writeComment(); });
     return d;
   }

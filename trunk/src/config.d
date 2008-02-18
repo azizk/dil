@@ -10,7 +10,7 @@ var langfile = "lang_en.d";
 var import_paths = []; /// E.g.: ["src/", "import/"]
 
 /// DDoc macro file paths.
-var ddoc_files = []; /// E.g.: ["src/mymacros.ddoc", "othermacros.ddoc"]
+var ddoc_files = ["predefined.ddoc"]; /// E.g.: ["src/mymacros.ddoc", "othermacros.ddoc"]
 
 var xml_map = "xml_map.d";
 var html_map = "html_map.d";
