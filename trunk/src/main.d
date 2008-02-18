@@ -117,23 +117,25 @@ void main(char[][] args)
     break;
   case "gen", "generate":
     char[] fileName;
-    DocOption options = DocOption.Tokens;
+    GenOption options = GenOption.Tokens;
     foreach (arg; args[2..$])
     {
       switch (arg)
       {
       case "--syntax":
-        options |= DocOption.Syntax; break;
+        options |= GenOption.Syntax; break;
       case "--xml":
-        options |= DocOption.XML; break;
+        options |= GenOption.XML; break;
       case "--html":
-        options |= DocOption.HTML; break;
+        options |= GenOption.HTML; break;
+      case "--lines":
+        options |= GenOption.PrintLines; break;
       default:
         fileName = arg;
       }
     }
-    if (!(options & (DocOption.XML | DocOption.HTML)))
-      options |= DocOption.XML; // Default to XML.
+    if (!(options & (GenOption.XML | GenOption.HTML)))
+      options |= GenOption.XML; // Default to XML.
     cmd.Generate.execute(fileName, options, infoMan);
     infoMan.hasInfo && printErrors(infoMan);
     break;
@@ -380,7 +382,19 @@ Example:
   dil d doc/ src/main.d mymacros.ddoc -i`;
     break;
   case "gen", "generate":
-    msg = GetMsg(MID.HelpGenerate);
+//     msg = GetMsg(MID.HelpGenerate);
+    msg = `Generate an XML or HTML document from a D source file.
+Usage:
+  dil gen file.d [Options]
+
+Options:
+  --syntax         : generate tags for the syntax tree
+  --xml            : use XML format (default)
+  --html           : use HTML format
+  --lines          : print line numbers
+
+Example:
+  dil gen Parser.d --html --syntax > Parser.html`;
     break;
   case "importgraph", "igraph":
 //     msg = GetMsg(MID.HelpImportGraph);

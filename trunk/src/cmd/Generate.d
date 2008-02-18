@@ -23,20 +23,21 @@ import tango.io.GrowBuffer;
 import tango.io.Print;
 
 /// Options for the generate command.
-enum DocOption
+enum GenOption
 {
   Empty,
   Tokens = 1,
   Syntax = 1<<1,
   HTML   = 1<<2,
-  XML    = 1<<3
+  XML    = 1<<3,
+  PrintLines  = 1<<4
 }
 
 /// Executes the command.
-void execute(string filePath, DocOption options, InfoManager infoMan)
+void execute(string filePath, GenOption options, InfoManager infoMan)
 {
-  assert(options != DocOption.Empty);
-  auto mapFilePath = options & DocOption.HTML ? GlobalSettings.htmlMapFile
+  assert(options != GenOption.Empty);
+  auto mapFilePath = options & GenOption.HTML ? GlobalSettings.htmlMapFile
                                               : GlobalSettings.xmlMapFile;
   auto map = TagMapLoader(infoMan).load(mapFilePath);
   auto tags = new TagMap(map);
@@ -44,10 +45,10 @@ void execute(string filePath, DocOption options, InfoManager infoMan)
   if (infoMan.hasInfo)
     return;
 
-  if (options & DocOption.Syntax)
+  if (options & GenOption.Syntax)
     highlightSyntax(filePath, tags, Stdout, options);
   else
-    highlightTokens(filePath, tags, Stdout);
+    highlightTokens(filePath, tags, Stdout, options);
 }
 
 /// Escapes the characters '<', '>' and '&' with named character entities.
@@ -249,7 +250,18 @@ void printErrors(Parser parser, TagMap tags, Print!(char) print)
     print.format(tags["ParserError"], e.filePath, e.loc, e.col, xml_escape(e.getMsg));
 }
 
-void highlightSyntax(string filePath, TagMap tags, Print!(char) print, DocOption options)
+void printLines(uint lines, TagMap tags, Print!(char) print)
+{
+  auto lineNumberFormat = tags["LineNumber"];
+  for (auto lineNum = 1; lineNum <= lines; lineNum++)
+    print.format(lineNumberFormat, lineNum);
+}
+
+// void printMultiline(Token* token, TagMap tags, Print!(char) print)
+// {
+// }
+
+void highlightSyntax(string filePath, TagMap tags, Print!(char) print, GenOption options)
 {
   auto parser = new Parser(new SourceText(filePath, true));
   auto root = parser.start();
@@ -266,6 +278,14 @@ void highlightSyntax(string filePath, TagMap tags, Print!(char) print, DocOption
     printErrors(parser, tags, print);
     print(tags["CompEnd"]);
   }
+
+  if (options & GenOption.PrintLines)
+  {
+    print(tags["LineNumberBegin"]);
+    printLines(lx.lineNum, tags, print);
+    print(tags["LineNumberEnd"]);
+  }
+
   print(tags["SourceBegin"]);
 
   auto tagNodeBegin = tags["NodeBegin"];
@@ -287,7 +307,7 @@ void highlightSyntax(string filePath, TagMap tags, Print!(char) print, DocOption
     // Token text.
     printToken(token, tags, print);
     // </node>
-    if (options & DocOption.HTML)
+    if (options & GenOption.HTML)
       foreach_reverse (node; tokenEx.endNodes)
         print(tagNodeEnd);
     else
@@ -299,7 +319,7 @@ void highlightSyntax(string filePath, TagMap tags, Print!(char) print, DocOption
 }
 
 /// Prints all tokens of a source file using the buffer print.
-void highlightTokens(string filePath, TagMap tags, Print!(char) print)
+void highlightTokens(string filePath, TagMap tags, Print!(char) print, GenOption options)
 {
   auto lx = new Lexer(new SourceText(filePath, true));
   lx.scanAll();
@@ -311,6 +331,14 @@ void highlightTokens(string filePath, TagMap tags, Print!(char) print)
     printErrors(lx, tags, print);
     print(tags["CompEnd"]);
   }
+
+  if (options & GenOption.PrintLines)
+  {
+    print(tags["LineNumberBegin"]);
+    printLines(lx.lineNum, tags, print);
+    print(tags["LineNumberEnd"]);
+  }
+
   print(tags["SourceBegin"]);
   // Traverse linked list and print tokens.
   for (auto token = lx.firstToken(); token; token = token.next) {

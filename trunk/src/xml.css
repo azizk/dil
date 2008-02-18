@@ -1,9 +1,11 @@
 @charset "utf-8";
-compilerinfo, sourcecode {
-  display: block;
+compilerinfo, sourcecode, linescolumn {
   white-space: pre;
   font-family: Monospace;
   font-size: 0.8em;
+}
+compilerinfo, sourcecode {
+  display: block;
 }
 compilerinfo {
   white-space: normal;
@@ -12,14 +14,20 @@ compilerinfo {
   margin: 1em;
 }
 compilerinfo error { display: block; }
+linescolumn {
+  display: block;
+  float: left;
+  text-align: right;
+  margin-right: 0.2em;
+  border-right: 1px solid gray;
+}
+linescolumn a { display: block; color: #555; }
 /* Number */
 n { color: teal; }
 /* Keyword */
 k { color: darkblue; font-weight: bold; }
-/* Line and block comments */
-c[t=l], c[t=b] { color: green; }
-/* Nested comments */
-c[t=n] { color: darkgreen; }
+/* Line, block and nested comments */
+lc, bc, nc { color: green; }
 /* Identifier */
 i { color: black; }
 /* String literal */
@@ -36,16 +44,17 @@ hl { color: green; }
 fs { color: purple;}
 /* When the first line starts with #! it's a "shebang" */
 shebang { color: gray; }
+/* Deprecated styles. */
 /* Operator */
-op { color: royalblue; }
+/*op { color: royalblue; }*/
 /* Particular operators */
-op[t=aa] { content: "and"; } /*&& ∧*/
-op[t=oo] { content: "or"; } /*|| ∨*/
-op[t=n] { content: "¬"; } /*!*/
-op[t=ne] { content: "≠"; } /*!=*/
-op[t=le] { content: "≤"; } /*<=*/
-op[t=ge] { content: "≥"; } /*>=*/
-op[t=lg] { content: "≶"; } /*<>*/
+/*op[t=aa] { content: "and"; }*/ /*&& ∧*/
+/*op[t=oo] { content: "or"; }*/ /*|| ∨*/
+/*op[t=n] { content: "¬"; }*/ /*!*/
+/*op[t=ne] { content: "≠"; }*/ /*!=*/
+/*op[t=le] { content: "≤"; }*/ /*<=*/
+/*op[t=ge] { content: "≥"; }*/ /*>=*/
+/*op[t=lg] { content: "≶"; }*/ /*<>*/
 /*
 d = Declaration
 s = Statement
@@ -53,10 +62,6 @@ e = Expression
 t = Type
 o = Other
 */
-o[t=Linkage] i, o[t=Linkage] op
-{
-  color: red;
-}
 /* d { background-color: #FFDDDD; } */
 /* e { background-color: #DDDDFF; } */
 d[t=Illegal], s[t=Illegal] { background-color: #DD4422; }

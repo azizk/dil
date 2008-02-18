@@ -1,9 +1,11 @@
 @charset "utf-8";
-.compilerinfo, .sourcecode {
-  display: block;
+.compilerinfo, .sourcecode, .linescolumn {
   white-space: pre;
   font-family: Monospace;
   font-size: 0.8em;
+}
+.compilerinfo, .sourcecode {
+  display: block;
 }
 .compilerinfo {
   white-space: normal;
@@ -12,20 +14,25 @@
   margin: 1em;
 }
 .compilerinfo .error { display: block; }
+.linescolumn {
+  float: left;
+  text-align: right;
+  margin-right: 0.2em;
+  border-right: 1px solid gray;
+}
+.linescolumn a { display: block; }
 /* Number */
 .n { color: teal; }
 /* Keyword */
 .k { color: darkblue; font-weight: bold; }
-/* Line and block comments */
-.cl, .ct { color: green; }
-/* Nested comments */
-.cn { color: darkgreen; }
+/* Line, block and nested comments */
+.lc, .bc, .nc { color: green; }
 /* Identifier */
 .i { color: black; }
 /* String literal */
 .sl { color: red; }
 /* Character literal */
-.chl { color: purple; }
+.cl { color: purple; }
 /* All bracket types */
 .br { color: orange; }
 /* Special tokens */
@@ -37,15 +44,15 @@
 /* When the first line starts with #! it's a "shebang" */
 .shebang { color: gray; }
 /* Operator */
-.op { color: royalblue; }
+/*.op { color: royalblue; }*/
 /* Particular operators */
-.opaa { content: "and"; } /*&& ∧*/
-.opoo { content: "or"; } /*|| ∨*/
-.opn { content: "¬"; } /*!*/
-.opne { content: "≠"; } /*!=*/
-.ople { content: "≤"; } /*<=*/
-.opge { content: "≥"; } /*>=*/
-.oplg { content: "≶"; } /*<>*/
+/*.opaa { content: "and"; }*/ /*&& ∧*/
+/*.opoo { content: "or"; }*/ /*|| ∨*/
+/*.opn { content: "¬"; }*/ /*!*/
+/*.opne { content: "≠"; }*/ /*!=*/
+/*.ople { content: "≤"; }*/ /*<=*/
+/*.opge { content: "≥"; }*/ /*>=*/
+/*.oplg { content: "≶"; }*/ /*<>*/
 /*
 d = Declaration
 s = Statement
@@ -56,6 +63,6 @@ o = Other
 /* .d { background-color: #FFDDDD; } */
 /* .e { background-color: #DDDDFF; } */
 .d.Module .i, .d.Import .i { color: blue; }
-.t .i { color: #911; }
+.t .i, .TemplateTypeParameter .i { color: #911; }
 .t .br, .t .op { color: #911; }
 .t .k { color: #911; font-weight: normal; }

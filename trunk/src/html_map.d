@@ -14,6 +14,9 @@ string[string] map = [
   "CompEnd"     : "</div>\n",
   "LexerError"  : `<p class="error L">{0}({1},{2})L: {3}</p>`\n,
   "ParserError" : `<p class="error P">{0}({1},{2})P: {3}</p>`\n,
+  "LineNumberBegin" : `<div class="linescolumn">`,
+  "LineNumberEnd"   : `</div>`,
+  "LineNumber"      : `<a id="L{0}" href="#L{0}">{0}</a>`,
 
   // Node categories:
   "Declaration" : "d",

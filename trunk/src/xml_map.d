@@ -10,6 +10,9 @@ string[string] map = [
   "CompEnd"     : "</compiler>\n",
   "LexerError"  : `<error t="L">{0}({1},{2})L: {3}</error>`\n,
   "ParserError" : `<error t="P">{0}({1},{2})P: {3}</error>`\n,
+  "LineNumberBegin" : `<linescolumn>`,
+  "LineNumberEnd"   : `</linescolumn>`,
+  "LineNumber"      : `<a xml:id="L{0}">{0}</a>`,
 
   // Node categories:
   "Declaration" : "d",
