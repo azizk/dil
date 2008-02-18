@@ -24,6 +24,7 @@ import dil.semantic.Symbols;
 import dil.Information;
 import dil.Converter;
 import dil.SourceText;
+import dil.Enums;
 import common;
 
 import tango.stdc.time : time_t, time, ctime;
@@ -452,7 +453,7 @@ class DDocEmitter : DefaultVisitor
 
   uint prevDeclOffset;
 
-  void DECL(void delegate() dg, bool writeSemicolon = true)
+  void DECL(void delegate() dg, Declaration d, bool writeSemicolon = true)
   {
     if (cmntIsDitto)
     { alias prevDeclOffset offs;
@@ -461,7 +462,9 @@ class DDocEmitter : DefaultVisitor
       text = "";
       write("\n$(DDOC_DECL ");
       dg();
-      write(";)");
+      writeSemicolon && write(";");
+      writeAttributes(d);
+      write(")");
       // Insert text at offset.
       auto len = text.length;
       text = savedText[0..offs] ~ text ~ savedText[offs..$];
@@ -470,7 +473,9 @@ class DDocEmitter : DefaultVisitor
     }
     write("\n$(DDOC_DECL ");
     dg();
-    write(writeSemicolon ? ";)" : ")");
+    writeSemicolon && write(";");
+    writeAttributes(d);
+    write(")");
     prevDeclOffset = text.length;
   }
 
@@ -499,7 +504,7 @@ class DDocEmitter : DefaultVisitor
       SYMBOL(d.name.str, d);
       writeTemplateParams();
       writeInheritanceList(d.bases);
-    });
+    }, d);
     DESC({
       writeComment();
       MEMBERS(is(T == ClassDeclaration) ? "CLASS" : "INTERFACE", {
@@ -518,7 +523,7 @@ class DDocEmitter : DefaultVisitor
       if (d.name)
         SYMBOL(d.name.str, d);
       writeTemplateParams();
-    });
+    }, d);
     DESC({
       writeComment();
       MEMBERS(is(T == StructDeclaration) ? "STRUCT" : "UNION", {
@@ -535,12 +540,43 @@ class DDocEmitter : DefaultVisitor
     {
       auto type = textSpan(vd.typeNode.baseType.begin, vd.typeNode.end);
       foreach (name; vd.names)
-        DECL({ write(prefix); write(escape(type), " "); SYMBOL(name.str, d); });
+        DECL({ write(prefix); write(escape(type), " "); SYMBOL(name.str, d); }, d);
     }
     else if (auto fd = d.decl.Is!(FunctionDeclaration))
     {}
     // DECL({ write(textSpan(d.begin, d.end)); }, false);
     DESC({ writeComment(); });
+  }
+
+  void writeAttributes(Declaration d)
+  {
+    char[][] attributes;
+
+    if (d.prot != Protection.None)
+      attributes ~= "$(PROT " ~ .toString(d.prot) ~ ")";
+
+    auto stc = d.stc;
+    stc &= ~StorageClass.Auto; // Ignore auto.
+    foreach (stcStr; .toStrings(stc))
+      attributes ~= "$(STC " ~ stcStr ~ ")";
+
+    LinkageType ltype;
+    if (auto vd = d.Is!(VariablesDeclaration))
+      ltype = vd.linkageType;
+    else if (auto fd = d.Is!(FunctionDeclaration))
+      ltype = fd.linkageType;
+
+    if (ltype != LinkageType.None)
+      attributes ~= "$(LINKAGE extern(" ~ .toString(ltype) ~ "))";
+
+    if (!attributes.length)
+      return;
+
+    write(" $(ATTRIBUTES ");
+    write(attributes[0]);
+    foreach (attribute; attributes[1..$])
+      write(", ", attribute);
+    write(")");
   }
 
   alias Declaration D;
@@ -572,7 +608,7 @@ override:
     DECL({
       write("enum", d.name ? " " : "");
       d.name && SYMBOL(d.name.str, d);
-    });
+    }, d);
     DESC({
       writeComment();
       MEMBERS("ENUM", { scope s = new Scope(); super.visit(d); });
@@ -584,7 +620,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL(d.name.str, d); }, false);
+    DECL({ SYMBOL(d.name.str, d); }, d, false);
     DESC({ writeComment(); });
     return d;
   }
@@ -604,7 +640,7 @@ override:
       write("template ");
       SYMBOL(d.name.str, d);
       writeTemplateParams();
-    });
+    }, d);
     DESC({
       writeComment();
       MEMBERS("TEMPLATE", {
@@ -643,7 +679,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("this", d); writeParams(d.params); });
+    DECL({ SYMBOL("this", d); writeParams(d.params); }, d);
     DESC({ writeComment(); });
     return d;
   }
@@ -652,7 +688,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("static "); SYMBOL("this", d); write("()"); });
+    DECL({ write("static "); SYMBOL("this", d); write("()"); }, d);
     DESC({ writeComment(); });
     return d;
   }
@@ -661,7 +697,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("~"); SYMBOL("this", d); write("()"); });
+    DECL({ write("~"); SYMBOL("this", d); write("()"); }, d);
     DESC({ writeComment(); });
     return d;
   }
@@ -670,7 +706,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("static ~"); SYMBOL("this", d); write("()"); });
+    DECL({ write("static ~"); SYMBOL("this", d); write("()"); }, d);
     DESC({ writeComment(); });
     return d;
   }
@@ -685,7 +721,7 @@ override:
       SYMBOL(d.name.str, d);
       writeTemplateParams();
       writeParams(d.params);
-    });
+    }, d);
     DESC({ writeComment(); });
     return d;
   }
@@ -694,7 +730,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("new", d); writeParams(d.params); });
+    DECL({ SYMBOL("new", d); writeParams(d.params); }, d);
     DESC({ writeComment(); });
     return d;
   }
@@ -703,7 +739,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("delete", d); writeParams(d.params); });
+    DECL({ SYMBOL("delete", d); writeParams(d.params); }, d);
     DESC({ writeComment(); });
     return d;
   }
@@ -716,7 +752,7 @@ override:
     if (d.typeNode)
       type = textSpan(d.typeNode.baseType.begin, d.typeNode.end);
     foreach (name; d.names)
-      DECL({ write(escape(type), " "); SYMBOL(name.str, d); });
+      DECL({ write(escape(type), " "); SYMBOL(name.str, d); }, d);
     DESC({ writeComment(); });
     return d;
   }
@@ -725,7 +761,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("invariant", d); });
+    DECL({ SYMBOL("invariant", d); }, d);
     DESC({ writeComment(); });
     return d;
   }
@@ -734,7 +770,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("unittest", d); });
+    DECL({ SYMBOL("unittest", d); }, d);
     DESC({ writeComment(); });
     return d;
   }
