@@ -431,15 +431,6 @@ class DDocEmitter : DefaultVisitor
     text ~= " : " ~ escape(textSpan(basesBegin, bases[$-1].end));
   }
 
-  void writeFuncHeader(Declaration d, FuncBodyStatement s)
-  {
-    auto begin = d.begin;
-    auto end = d.end.prevNWS;
-    if (!s.isEmpty)
-      end = s.begin.prevNWS;
-    text ~= textSpan(begin, end);
-  }
-
   void write(char[][] strings...)
   {
     foreach (s; strings)
@@ -644,7 +635,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("this"); writeParams(d.params); });
+    DECL({ SYMBOL("this", d); writeParams(d.params); });
     DESC({ writeComment(); });
     return d;
   }
@@ -653,7 +644,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ writeFuncHeader(d, d.funcBody); });
+    DECL({ write("static "); SYMBOL("this", d); write("()"); });
     DESC({ writeComment(); });
     return d;
   }
@@ -662,7 +653,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ writeFuncHeader(d, d.funcBody); });
+    DECL({ write("~"); SYMBOL("this", d); write("()"); });
     DESC({ writeComment(); });
     return d;
   }
@@ -671,7 +662,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ writeFuncHeader(d, d.funcBody); });
+    DECL({ write("static ~"); SYMBOL("this", d); write("()"); });
     DESC({ writeComment(); });
     return d;
   }
@@ -695,7 +686,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("new"); writeParams(d.params); });
+    DECL({ SYMBOL("new", d); writeParams(d.params); });
     DESC({ writeComment(); });
     return d;
   }
@@ -704,7 +695,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ writeFuncHeader(d, d.funcBody); });
+    DECL({ SYMBOL("delete", d); writeParams(d.params); });
     DESC({ writeComment(); });
     return d;
   }
