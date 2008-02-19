@@ -25,10 +25,9 @@ import dil.Information;
 import dil.Converter;
 import dil.SourceText;
 import dil.Enums;
+import dil.Time;
 import common;
 
-import tango.stdc.time : time_t, time, ctime;
-import tango.stdc.string : strlen;
 import tango.text.Ascii : toUpper;
 import tango.io.File;
 import tango.io.FilePath;
@@ -88,15 +87,13 @@ void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
   // Create a macro environment for this module.
   mtable = new MacroTable(mtable);
   // Define runtime macros.
+  mtable.insert("MODPATH", mod.getFQNPath() ~ mod.fileExtension());
+
   mtable.insert("TITLE", mod.getFQN());
   mtable.insert("DOCFILENAME", mod.getFQN());
-
-  time_t time_val;
-  time(&time_val);
-  char* str = ctime(&time_val);
-  char[] time_str = str[0 .. strlen(str)-1]; // -1 removes trailing '\n'.
-  mtable.insert("DATETIME", time_str.dup);
-  mtable.insert("YEAR", time_str[20..24].dup);
+  auto timeStr = Time.toString();
+  mtable.insert("DATETIME", timeStr);
+  mtable.insert("YEAR", timeStr[20..24]);
 
   auto doc = new DDocEmitter(mtable, incUndoc, mod, tokenHL);
   doc.emit();

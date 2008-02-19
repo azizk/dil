@@ -14,19 +14,16 @@ import dil.HtmlEntities;
 import dil.CompilerInfo;
 import dil.Unicode;
 import dil.SourceText;
+import dil.Time;
 import common;
 
 import tango.stdc.stdlib : strtof, strtod, strtold;
 import tango.stdc.errno : errno, ERANGE;
-import tango.stdc.time : time_t, time, ctime;
-import tango.stdc.string : strlen;
 
 public import dil.lexer.Funcs;
 
-/++
-  The Lexer analyzes the characters of a source text and
-  produces a doubly-linked list of tokens.
-+/
+/// The Lexer analyzes the characters of a source text and
+/// produces a doubly-linked list of tokens.
 class Lexer
 {
   SourceText srcText; /// The source text.
@@ -48,12 +45,10 @@ class Lexer
   uint inTokenString; /// > 0 if inside q{ }
   NewlineData.FilePaths* filePaths;
 
-  /++
-    Construct a Lexer object.
-    Params:
-      srcText = the UTF-8 source code.
-      infoMan = used for collecting error messages.
-  +/
+  /// Construct a Lexer object.
+  /// Params:
+  ///   srcText = the UTF-8 source code.
+  ///   infoMan = used for collecting error messages.
   this(SourceText srcText, InfoManager infoMan = null)
   {
     this.srcText = srcText;
@@ -103,10 +98,8 @@ class Lexer
     return srcText.data;
   }
 
-  /++
-    The "shebang" may optionally appear once at the beginning of a file.
-    Regexp: #![^\EndOfLine]*
-  +/
+  /// The "shebang" may optionally appear once at the beginning of a file.
+  /// Regexp: #![^\EndOfLine]*
   void scanShebang()
   {
     if (*p == '#' && p[1] == '!')
@@ -138,20 +131,18 @@ class Lexer
     case TOK.DATE,
          TOK.TIME,
          TOK.TIMESTAMP:
-      time_t time_val;
-      time(&time_val);
-      char* str = ctime(&time_val);
-      char[] time_str = str[0 .. strlen(str)-1]; // -1 removes trailing '\n'.
+      auto time_str = Time.toString();
       switch (t.kind)
       {
       case TOK.DATE:
-        time_str = time_str[4..11] ~ time_str[20..24] ~ \0; break;
+        time_str = Time.month_day(time_str) ~ ' ' ~ Time.year(time_str); break;
       case TOK.TIME:
-        time_str = time_str[11..19] ~ \0; break;
+        time_str = Time.time(time_str); break;
       case TOK.TIMESTAMP:
-        time_str = time_str[0..24] ~ \0; break;
+        break; // time_str is the timestamp.
       default: assert(0);
       }
+      time_str ~= '\0'; // Terminate with a zero.
       t.str = time_str;
       break;
     case TOK.VENDOR:
