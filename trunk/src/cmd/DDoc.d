@@ -21,6 +21,7 @@ import dil.semantic.Module;
 import dil.semantic.Pass1;
 import dil.semantic.Symbol;
 import dil.semantic.Symbols;
+import dil.Compilation;
 import dil.Information;
 import dil.Converter;
 import dil.SourceText;
@@ -33,7 +34,8 @@ import tango.io.File;
 import tango.io.FilePath;
 
 void execute(string[] filePaths, string destDir, string[] macroPaths,
-             bool incUndoc, bool verbose, InfoManager infoMan)
+             bool incUndoc, bool verbose, CompilationContext context,
+             InfoManager infoMan)
 {
   // Parse macro files.
   MacroTable mtable;
@@ -60,7 +62,7 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
       continue;
 
     // Start semantic analysis.
-    auto pass1 = new SemanticPass1(mod);
+    auto pass1 = new SemanticPass1(mod, context);
     pass1.start();
 
     // Generate documentation.
@@ -771,8 +773,20 @@ override:
   }
 
   D visit(DebugDeclaration d)
-  { return d; }
+  {
+    d.compiledDecls && visitD(d.compiledDecls);
+    return d;
+  }
 
   D visit(VersionDeclaration d)
-  { return d; }
+  {
+    d.compiledDecls && visitD(d.compiledDecls);
+    return d;
+  }
+
+  D visit(StaticIfDeclaration d)
+  {
+    d.ifDecls && visitD(d.ifDecls);
+    return d;
+  }
 }

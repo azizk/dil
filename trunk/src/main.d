@@ -24,6 +24,7 @@ import dil.SettingsLoader;
 import dil.CompilerInfo;
 import dil.Information;
 import dil.SourceText;
+import dil.Compilation;
 
 import cmd.Generate;
 import cmd.Statistics;
@@ -55,8 +56,16 @@ void main(char[][] args)
     if (args.length < 2)
       return printHelp("compile");
 
+    string[] filePaths;
+    auto context = newCompilationContext();
+    foreach (arg; args[2..$])
+    {
+      if (parseDebugOrVersion(arg, context))
+      {}
+      else
+        filePaths ~= arg;
+    }
     infoMan = new InfoManager();
-    auto filePaths = args[2..$];
     foreach (filePath; filePaths)
     {
       auto mod = new Module(filePath, infoMan);
@@ -66,7 +75,7 @@ void main(char[][] args)
         continue;
 
       // Start semantic analysis.
-      auto pass1 = new SemanticPass1(mod);
+      auto pass1 = new SemanticPass1(mod, context);
       pass1.start();
 
       void printSymbolTable(ScopeSymbol scopeSym, char[] indent)
@@ -98,9 +107,12 @@ void main(char[][] args)
     bool incUndoc;
     bool verbose;
     // Parse arguments.
+    auto context = newCompilationContext();
     foreach (arg; args[3..$])
     {
-      if (arg == "-i")
+      if (parseDebugOrVersion(arg, context))
+      {}
+      else if (arg == "-i")
         incUndoc = true;
       else if (arg == "-v")
         verbose = true;
@@ -112,7 +124,7 @@ void main(char[][] args)
 
     infoMan = new InfoManager();
     // Execute command.
-    cmd.DDoc.execute(filePaths, destination, macroPaths, incUndoc, verbose, infoMan);
+    cmd.DDoc.execute(filePaths, destination, macroPaths, incUndoc, verbose, context, infoMan);
     infoMan.hasInfo && printErrors(infoMan);
     break;
   case "gen", "generate":
@@ -323,6 +335,49 @@ bool strbeg(char[] str, char[] begin)
   return false;
 }
 
+/// Creates the global compilation context.
+CompilationContext newCompilationContext()
+{
+  auto cc = new CompilationContext;
+  cc.importPaths = GlobalSettings.importPaths;
+  cc.addVersionId("dil");
+  cc.addVersionId("all");
+version(D2)
+  cc.addVersionId("D_Version2");
+  foreach (versionId; GlobalSettings.versionIds)
+    if (!Lexer.isReservedIdentifier(versionId))
+      cc.versionIds[versionId] = true;
+  return cc;
+}
+
+bool parseDebugOrVersion(string arg, CompilationContext context)
+{
+  if (strbeg(arg, "-debug"))
+  {
+    if (arg.length > 7)
+    {
+      auto val = arg[7..$];
+      if (isdigit(val[0]))
+        context.debugLevel = Integer.toInt(val);
+      else if (!Lexer.isReservedIdentifier(val))
+        context.addDebugId(val);
+    }
+    else
+      context.debugLevel = 1;
+  }
+  else if (arg.length > 9 && strbeg(arg, "-version="))
+  {
+    auto val = arg[9..$];
+    if (isdigit(val[0]))
+      context.versionLevel = Integer.toInt(val);
+    else if (!Lexer.isReservedIdentifier(val))
+      context.addVersionId(val);
+  }
+  else
+    return false;
+  return true;
+}
+
 void printErrors(InfoManager infoMan)
 {
   foreach (info; infoMan.info)
@@ -354,7 +409,7 @@ void printHelp(char[] command)
   switch (command)
   {
   case "c", "compile":
-    msg = "Compile D source files.
+    msg = `Compile D source files.
 Usage:
   dil compile file.d [file2.d, ...] [Options]
 
@@ -362,9 +417,14 @@ Usage:
   Errors are printed to standard error output.
 
 Options:
+  -debug           : include debug code
+  -debug=level     : include debug(l) code where l <= level
+  -debug=ident     : include debug(ident) code
+  -version=level   : include version(l) code where l >= level
+  -version=ident   : include version(ident) code
 
 Example:
-  dil c src/main.d";
+  dil c src/main.d`;
     break;
   case "ddoc", "d":
     msg = `Generate documentation from DDoc comments in D source files.
@@ -379,7 +439,7 @@ Options:
   -v               : verbose output
 
 Example:
-  dil d doc/ src/main.d mymacros.ddoc -i`;
+  dil d doc/ src/main.d src/macros_dil.ddoc -i`;
     break;
   case "gen", "generate":
 //     msg = GetMsg(MID.HelpGenerate);

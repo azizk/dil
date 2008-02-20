@@ -3,6 +3,10 @@
 /// Relative paths are resolved from the directory of the executable.
 module config;
 
+/// Predefined version identifiers.
+var version_ids = ["X86", "linux", "LittleEndian"];
+// "X86_64", "Windows", "Win32", "Win64", "BigEndian"
+
 /// Path to the language file.
 var langfile = "lang_en.d";
 

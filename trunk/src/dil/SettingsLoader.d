@@ -12,6 +12,7 @@ import dil.semantic.Pass1;
 import dil.semantic.Symbol;
 import dil.semantic.Symbols;
 import dil.Information;
+import dil.Compilation;
 import common;
 
 import tango.io.FilePath;
@@ -77,9 +78,14 @@ class SettingsLoader
     if (mod.hasErrors)
       return;
 
-    auto pass1 = new SemanticPass1(mod);
+    auto context = new CompilationContext;
+    auto pass1 = new SemanticPass1(mod, context);
     pass1.start();
 
+    if (auto array = getValue!(ArrayInitExpression)("version_ids"))
+      foreach (value; array.values)
+        if (auto str = castTo!(StringExpression)(value))
+          GlobalSettings.versionIds ~= str.getString();
     if (auto val = getValue!(StringExpression)("langfile"))
       GlobalSettings.langFile = val.getString();
     if (auto array = getValue!(ArrayInitExpression)("import_paths"))
@@ -109,7 +115,7 @@ class SettingsLoader
     if (mod.hasErrors)
       return;
 
-    pass1 = new SemanticPass1(mod);
+    pass1 = new SemanticPass1(mod, context);
     pass1.start();
 
     if (auto array = getValue!(ArrayInitExpression)("messages"))
@@ -149,7 +155,8 @@ class TagMapLoader : SettingsLoader
     if (mod.hasErrors)
       return null;
 
-    auto pass1 = new SemanticPass1(mod);
+    auto context = new CompilationContext;
+    auto pass1 = new SemanticPass1(mod, context);
     pass1.start();
 
     string[string] map;

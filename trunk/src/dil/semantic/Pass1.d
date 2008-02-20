@@ -18,6 +18,7 @@ import dil.semantic.Symbol,
        dil.semantic.Scope,
        dil.semantic.Module,
        dil.semantic.Analysis;
+import dil.Compilation;
 import dil.Location;
 import dil.Information;
 import dil.Messages;
@@ -25,32 +26,31 @@ import dil.Enums;
 import dil.CompilerInfo;
 import common;
 
-/++
-  The first pass is the declaration pass.
-
-  The basic task of this class is to traverse the parse tree,
-  find all kinds of declarations and add them
-  to the symbol tables of their respective scopes.
-+/
+/// The first pass is the declaration pass.
+///
+/// The basic task of this class is to traverse the parse tree,
+/// find all kinds of declarations and add them
+/// to the symbol tables of their respective scopes.
 class SemanticPass1 : Visitor
 {
   Scope scop; /// The current scope.
   Module modul; /// The module to be semantically checked.
+  CompilationContext context;
 
   // Attributes:
   LinkageType linkageType;
   Protection protection;
   StorageClass storageClass;
-  uint alignSize = DEFAULT_ALIGN_SIZE;
+  uint alignSize;
 
-  /++
-    Construct a SemanticPass1 object.
-    Params:
-      modul = the module to be processed.
-  +/
-  this(Module modul)
+  /// Construct a SemanticPass1 object.
+  /// Params:
+  ///   modul = the module to be processed.
+  this(Module modul, CompilationContext context)
   {
     this.modul = modul;
+    this.context = new CompilationContext(context);
+    this.alignSize = context.structAlign;
   }
 
   /// Start semantic analysis.
@@ -352,14 +352,40 @@ override
   {
     if (d.isSpecification)
     {
-
+      if (d.spec.kind == TOK.Identifier)
+        context.addDebugId(d.spec.ident.str);
+      else
+        context.debugLevel = d.spec.uint_;
     }
-    return null;
+    else
+    {
+      if (debugBranchChoice(d.cond, context))
+        d.compiledDecls = d.decls;
+      else
+        d.compiledDecls = d.elseDecls;
+      d.compiledDecls && visitD(d.compiledDecls);
+    }
+    return d;
   }
 
   D visit(VersionDeclaration d)
   {
-    return null;
+    if (d.isSpecification)
+    {
+      if (d.spec.kind == TOK.Identifier)
+        context.addVersionId(d.spec.ident.str);
+      else
+        context.versionLevel = d.spec.uint_;
+    }
+    else
+    {
+      if (versionBranchChoice(d.cond, context))
+        d.compiledDecls = d.decls;
+      else
+        d.compiledDecls = d.elseDecls;
+      d.compiledDecls && visitD(d.compiledDecls);
+    }
+    return d;
   }
 
   D visit(TemplateDeclaration d)

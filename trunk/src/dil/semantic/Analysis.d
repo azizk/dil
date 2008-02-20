@@ -8,6 +8,7 @@ import dil.ast.Node;
 import dil.ast.Expressions;
 import dil.semantic.Scope;
 import dil.lexer.IdTable;
+import dil.Compilation;
 import common;
 
 /// Common semantics for pragma declarations and statements.
@@ -68,4 +69,38 @@ void pragma_lib(Scope scop, Token* pragmaLoc, Expression[] args)
   {
     // scop.error(e.begin, "expression must evaluate to a string");
   }
+}
+
+/// Returns true if the first branch (of a debug declaration/statement) or
+/// false if the else-branch should be compiled in.
+bool debugBranchChoice(Token* cond, CompilationContext context)
+{
+  if (cond)
+  {
+    if (cond.kind == TOK.Identifier)
+    {
+      if (context.findDebugId(cond.ident.str))
+        return true;
+    }
+    else if (cond.uint_ <= context.debugLevel)
+      return true;
+  }
+  else if (1 <= context.debugLevel)
+    return true;
+  return false;
+}
+
+/// Returns true if the first branch (of a version declaration/statement) or
+/// false if the else-branch should be compiled in.
+bool versionBranchChoice(Token* cond, CompilationContext context)
+{
+  assert(cond);
+  if (cond.kind == TOK.Identifier)
+  {
+    if (context.findVersionId(cond.ident.str))
+      return true;
+  }
+  else if (cond.uint_ >= context.versionLevel)
+    return true;
+  return false;
 }
