@@ -121,7 +121,7 @@ alias TOK.FILE SpecialTokensBegin;
 alias TOK.VERSION SpecialTokensEnd;
 
 /// A table mapping each TOK to a string.
-const string[] tokToString = [
+const string[TOK.MAX] tokToString = [
   "Invalid",
 
   "Illegal",

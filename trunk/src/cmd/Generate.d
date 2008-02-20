@@ -73,6 +73,7 @@ char[] xml_escape(char[] text)
 class TagMap
 {
   string[string] table;
+  string[TOK.MAX] tokenTable;
 
   this(string[string] table)
   {
@@ -97,6 +98,10 @@ class TagMap
     Type         = this["Type", "t"];
     Other        = this["Other", "o"];
     EOF          = this["EOF", ""];
+
+    foreach (i, tokStr; tokToString)
+      if (auto pStr = tokStr in this.table)
+        tokenTable[i] = *pStr;
   }
 
   string opIndex(string str, string fallback = "")
@@ -105,6 +110,11 @@ class TagMap
     if (p)
       return *p;
     return fallback;
+  }
+
+  string opIndex(TOK tok)
+  {
+    return tokenTable[tok];
   }
 
   string Identifier, String, Char, Number, Keyword, LineC, BlockC,
@@ -464,6 +474,6 @@ void printToken(Token* token, TagMap tags, Print!(char) print)
     else if (token.isSpecialToken)
       print.format(tags.SpecialToken, token.srcText);
     else
-      print(tags[token.srcText]);
+      print(tags[token.kind]);
   }
 }
