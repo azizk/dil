@@ -24,7 +24,7 @@ class CompilationContext
     this.parent = parent;
     if (parent)
     {
-      this.importPaths = parent.importPaths;
+      this.importPaths = parent.importPaths.dup;
       this.debugLevel = parent.debugLevel;
       this.versionLevel = parent.versionLevel;
       this.releaseBuild = parent.releaseBuild;

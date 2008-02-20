@@ -9,6 +9,7 @@ import dil.ast.Declarations;
 import dil.semantic.Module;
 import dil.parser.ImportParser;
 import dil.SourceText;
+import dil.Compilation;
 import Settings;
 import common;
 
@@ -227,7 +228,7 @@ class GraphBuilder
   }
 }
 
-void execute(string filePathString, string[] importPaths, string[] strRegexps,
+void execute(string filePathString, CompilationContext context, string[] strRegexps,
              uint levels, string siStyle, string piStyle, IGraphOption options)
 {
   // Init regular expressions.
@@ -235,15 +236,14 @@ void execute(string filePathString, string[] importPaths, string[] strRegexps,
   foreach (strRegexp; strRegexps)
     regexps ~= new RegExp(strRegexp);
 
-  // Add directory of file and global directories to import paths.
+  // Add the directory of the file to the import paths.
   auto filePath = new FilePath(filePathString);
   auto fileDir = filePath.folder();
-  importPaths ~= fileDir;
-  importPaths ~= GlobalSettings.importPaths;
+  context.importPaths ~= fileDir;
 
   auto gbuilder = new GraphBuilder;
 
-  gbuilder.importPaths = importPaths;
+  gbuilder.importPaths = context.importPaths;
   gbuilder.options = options;
   gbuilder.filterPredicate = (string moduleFQNPath) {
     foreach (rx; regexps)

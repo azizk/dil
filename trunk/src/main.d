@@ -154,16 +154,18 @@ void main(char[][] args)
     break;
   case "importgraph", "igraph":
     string filePath;
-    string[] includePaths;
     string[] regexps;
     string siStyle = "dashed"; // static import style
     string piStyle = "bold";   // public import style
     uint levels;
     IGraphOption options;
+    auto context = newCompilationContext();
     foreach (arg; args[2..$])
     {
-      if (strbeg(arg, "-I"))
-        includePaths ~= arg[2..$];
+      if (parseDebugOrVersion(arg, context))
+      {}
+      else if (strbeg(arg, "-I"))
+        context.importPaths ~= arg[2..$];
       else if(strbeg(arg, "-r"))
         regexps ~= arg[2..$];
       else if(strbeg(arg, "-l"))
@@ -197,7 +199,7 @@ void main(char[][] args)
           filePath = arg;
         }
     }
-    cmd.ImportGraph.execute(filePath, includePaths, regexps, levels, siStyle, piStyle, options);
+    cmd.ImportGraph.execute(filePath, context, regexps, levels, siStyle, piStyle, options);
     break;
   case "stats", "statistics":
     char[][] filePaths;
