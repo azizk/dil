@@ -15,8 +15,8 @@ import dil.parser.Parser;
 import dil.semantic.Module;
 import dil.SourceText;
 import dil.Information;
-import dil.SettingsLoader;
-import dil.Settings;
+import SettingsLoader;
+import Settings;
 import common;
 
 import tango.io.GrowBuffer;

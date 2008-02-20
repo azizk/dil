@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.Settings;
+module Settings;
 import common;
 
 /// Global application settings.

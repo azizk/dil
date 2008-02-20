@@ -2,9 +2,9 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module dil.SettingsLoader;
+module SettingsLoader;
 
-import dil.Settings;
+import Settings;
 import dil.Messages;
 import dil.ast.Node, dil.ast.Declarations, dil.ast.Expressions;
 import dil.semantic.Module;
@@ -181,10 +181,15 @@ string resolvePath(FilePath execPath, string filePath)
   return execPath.dup.append(filePath).toString();
 }
 
-version(Windows)
+version(DDoc)
+{
+  /// Returns the fully qualified path to this executable.
+  char[] GetExecutableFilePath();
+}
+else version(Windows)
 {
 private extern(Windows) uint GetModuleFileNameA(void*, char*, uint);
-/// Get the fully qualified path to this executable.
+
 char[] GetExecutableFilePath()
 {
   alias GetModuleFileNameA GetModuleFileName;
@@ -214,7 +219,7 @@ char[] GetExecutableFilePath()
 else version(linux)
 {
 private extern(C) size_t readlink(char* path, char* buf, size_t bufsize);
-/// Get the fully qualified path to this executable.
+
 char[] GetExecutableFilePath()
 {
   char[] buffer = new char[256];

@@ -19,8 +19,6 @@ import dil.semantic.Pass1,
 import dil.translator.German;
 import dil.doc.Doc;
 import dil.Messages;
-import dil.Settings;
-import dil.SettingsLoader;
 import dil.CompilerInfo;
 import dil.Information;
 import dil.SourceText;
@@ -30,6 +28,9 @@ import cmd.Generate;
 import cmd.Statistics;
 import cmd.ImportGraph;
 import cmd.DDoc;
+
+import Settings;
+import SettingsLoader;
 import common;
 
 import Integer = tango.text.convert.Integer;
@@ -42,7 +43,7 @@ import tango.text.Ascii : icompare;
 void main(char[][] args)
 {
   auto infoMan = new InfoManager();
-  SettingsLoader(infoMan).load();
+  SettingsLoader.SettingsLoader(infoMan).load();
   if (infoMan.hasInfo)
     return printErrors(infoMan);
 

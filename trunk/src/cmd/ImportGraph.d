@@ -8,8 +8,8 @@ import dil.ast.Node;
 import dil.ast.Declarations;
 import dil.semantic.Module;
 import dil.parser.ImportParser;
-import dil.Settings;
 import dil.SourceText;
+import Settings;
 import common;
 
 import tango.text.Regex : RegExp = Regex;

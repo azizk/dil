@@ -79,7 +79,7 @@ static this()
   messages = new string[MID.max+1];
 }
 
-package void SetMessages(string[] msgs)
+void SetMessages(string[] msgs)
 {
   assert(MID.max+1 == msgs.length);
   messages = msgs;

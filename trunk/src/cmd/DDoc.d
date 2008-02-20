@@ -89,7 +89,7 @@ void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
   // Create a macro environment for this module.
   mtable = new MacroTable(mtable);
   // Define runtime macros.
-  mtable.insert("MODPATH", mod.getFQNPath() ~ mod.fileExtension());
+  mtable.insert("MODPATH", mod.getFQNPath() ~ "." ~ mod.fileExtension());
 
   mtable.insert("TITLE", mod.getFQN());
   mtable.insert("DOCFILENAME", mod.getFQN() ~ ".html");
