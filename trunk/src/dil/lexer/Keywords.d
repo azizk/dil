@@ -68,6 +68,7 @@ static const Identifier[] keywords = [
   {"mixin", TOK.Mixin},
   {"module", TOK.Module},
   {"new", TOK.New},
+  {"nothrow", TOK.Nothrow}, // D2.0
   {"null", TOK.Null},
   {"out", TOK.Out},
   {"override", TOK.Override},

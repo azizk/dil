@@ -13,7 +13,7 @@ import common;
 ///<pre>
 ///  Identifier := IdStart IdChar*
 ///  IdStart := "_" | Letter
-///  IdChar := Letter | "0"-"9"
+///  IdChar := IdStart | "0"-"9"
 ///  Letter := UniAlpha
 ///</pre>
 ///  Unicode alphas are defined in Unicode 5.0.0.

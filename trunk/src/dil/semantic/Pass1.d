@@ -348,10 +348,19 @@ override
     return d;
   }
 
-  D visit(DebugDeclaration)
-  { return null; }
-  D visit(VersionDeclaration)
-  { return null; }
+  D visit(DebugDeclaration d)
+  {
+    if (d.isSpecification)
+    {
+
+    }
+    return null;
+  }
+
+  D visit(VersionDeclaration d)
+  {
+    return null;
+  }
 
   D visit(TemplateDeclaration d)
   {

@@ -465,6 +465,19 @@ abstract class ConditionalCompilationDeclaration : Declaration
     this.decls = decls;
     this.elseDecls = elseDecls;
   }
+
+  bool isSpecification()
+  {
+    return decls is null;
+  }
+
+  bool isCondition()
+  {
+    return decls !is null;
+  }
+
+  /// The branch to be compiled in.
+  Declaration compiledDecls;
 }
 
 class DebugDeclaration : ConditionalCompilationDeclaration

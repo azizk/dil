@@ -90,10 +90,10 @@ void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
   mtable.insert("MODPATH", mod.getFQNPath() ~ mod.fileExtension());
 
   mtable.insert("TITLE", mod.getFQN());
-  mtable.insert("DOCFILENAME", mod.getFQN());
+  mtable.insert("DOCFILENAME", mod.getFQN() ~ ".html");
   auto timeStr = Time.toString();
   mtable.insert("DATETIME", timeStr);
-  mtable.insert("YEAR", timeStr[20..24]);
+  mtable.insert("YEAR", Time.year(timeStr));
 
   auto doc = new DDocEmitter(mtable, incUndoc, mod, tokenHL);
   doc.emit();
@@ -429,7 +429,7 @@ class DDocEmitter : DefaultVisitor
     auto basesBegin = bases[0].begin.prevNWS;
     if (basesBegin.kind == TOK.Colon)
       basesBegin = bases[0].begin;
-    text ~= " : " ~ escape(textSpan(basesBegin, bases[$-1].end));
+    write(" : ", escape(textSpan(basesBegin, bases[$-1].end)));
   }
 
   void write(char[][] strings...)
@@ -441,9 +441,7 @@ class DDocEmitter : DefaultVisitor
   void SYMBOL(char[] name, Declaration d)
   {
     auto loc = d.begin.getRealLocation();
-    auto str = Format("$(SYMBOL {}, {}, {}.{}, {})",
-                      name, modul.getFQN(), modul.getFQNPath(),
-                      modul.fileExtension(), loc.lineNum);
+    auto str = Format("$(SYMBOL {}, {})", name, loc.lineNum);
     write(str);
     // write("$(DDOC_PSYMBOL ", name, ")");
   }

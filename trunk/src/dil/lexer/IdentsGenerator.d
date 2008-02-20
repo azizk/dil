@@ -24,7 +24,7 @@ static const StrPair[] identPairs = [
   // scope:
   {"exit"}, {"success"}, {"failure"},
   // pragma:
-  {"msg"}, {"lib"},
+  {"msg"}, {"lib"}, {"startaddress"},
   // Linkage:
   {"C"}, {"D"}, {"Windows"}, {"Pascal"}, {"System"},
   // Con-/Destructor:

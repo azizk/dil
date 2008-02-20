@@ -19,7 +19,7 @@ import tango.io.FileConst;
 
 alias FileConst.PathSeparatorChar dirSep;
 
-/// Represents a D module and source file.
+/// Represents a semantic D module and a source file.
 class Module : ScopeSymbol
 {
   SourceText sourceText; /// The source file of this module.
