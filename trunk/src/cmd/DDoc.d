@@ -33,6 +33,7 @@ import tango.text.Ascii : toUpper;
 import tango.io.File;
 import tango.io.FilePath;
 
+/// Executes the doc generation command.
 void execute(string[] filePaths, string destDir, string[] macroPaths,
              bool incUndoc, bool verbose, CompilationContext context,
              InfoManager infoMan)
@@ -89,15 +90,15 @@ void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
   // Create a macro environment for this module.
   mtable = new MacroTable(mtable);
   // Define runtime macros.
+  // MODPATH is not in the specs.
   mtable.insert("MODPATH", mod.getFQNPath() ~ "." ~ mod.fileExtension());
-
   mtable.insert("TITLE", mod.getFQN());
   mtable.insert("DOCFILENAME", mod.getFQN() ~ ".html");
   auto timeStr = Time.toString();
   mtable.insert("DATETIME", timeStr);
   mtable.insert("YEAR", Time.year(timeStr));
 
-  auto doc = new DDocEmitter(mtable, incUndoc, mod, tokenHL);
+  auto doc = new DDocEmitter(mod, mtable, incUndoc, tokenHL);
   doc.emit();
   // Set BODY macro to the text produced by the DDocEmitter.
   mtable.insert("BODY", doc.text);
@@ -109,6 +110,7 @@ void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
   file.write(fileText);
 }
 
+/// Loads a macro file. Converts any Unicode encoding to UTF-8.
 string loadMacroFile(string filePath, InfoManager infoMan)
 {
   auto src = new SourceText(filePath);
@@ -120,13 +122,19 @@ string loadMacroFile(string filePath, InfoManager infoMan)
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
 class DDocEmitter : DefaultVisitor
 {
-  char[] text;
+  char[] text; /// The buffer that is written to.
   bool includeUndocumented;
   MacroTable mtable;
   Module modul;
   TokenHighlighter tokenHL;
 
-  this(MacroTable mtable, bool includeUndocumented, Module modul,
+  /// Constructs a DDocEmitter object.
+  /// Params:
+  ///   modul = the module to generate text for.
+  ///   mtable = the macro table.
+  ///   includeUndocumented = whether to include undocumented symbols.
+  ///   tokenHL = used to highlight code sections.
+  this(Module modul, MacroTable mtable, bool includeUndocumented,
        TokenHighlighter tokenHL)
   {
     this.mtable = mtable;
@@ -144,14 +152,10 @@ class DDocEmitter : DefaultVisitor
       {
         if (auto copyright = cmnt.takeCopyright())
           mtable.insert(new Macro("COPYRIGHT", copyright.text));
-        DESC({
-          writeComment();
-          MEMBERS("MODULE", { visitD(modul.root); });
-        });
+        writeComment();
       }
     }
-    else
-      MEMBERS("MODULE", { visitD(modul.root); });
+    MEMBERS("MODULE", { visitD(modul.root); });
     return text;
   }
 
@@ -163,13 +167,14 @@ class DDocEmitter : DefaultVisitor
     return Token.textSpan(left, right);
   }
 
-  TemplateParameters tparams; /// The template parameters of the declaration.
+  TemplateParameters tparams; /// The template parameters of the current declaration.
 
   DDocComment cmnt; /// Current comment.
   DDocComment prevCmnt; /// Previous comment in scope.
   /// An empty comment. Used for undocumented symbols.
   static const DDocComment emptyCmnt;
 
+  /// Initializes the empty comment.
   static this()
   {
     this.emptyCmnt = new DDocComment(null, null, null);
@@ -200,8 +205,9 @@ class DDocEmitter : DefaultVisitor
     }
   }
 
-  bool cmntIsDitto;
+  bool cmntIsDitto; /// True if current comment is "ditto".
 
+  /// Returns the DDocComment for node.
   DDocComment ddoc(Node node)
   {
     auto c = getDDocComment(node);
@@ -225,6 +231,7 @@ class DDocEmitter : DefaultVisitor
     return this.cmnt;
   }
 
+  /// List of predefined, special sections.
   static char[][char[]] specialSections;
   static this()
   {
@@ -234,6 +241,7 @@ class DDocEmitter : DefaultVisitor
       specialSections[name] = name;
   }
 
+  /// Writes the DDoc comment to the text buffer.
   void writeComment()
   {
     auto c = this.cmnt;
@@ -274,6 +282,14 @@ class DDocEmitter : DefaultVisitor
     write(")");
   }
 
+  /// Scans the comment text and:
+  /// $(UL
+  /// $(LI skips and leaves macro invocations unchanged)
+  /// $(LI skips HTML tags)
+  /// $(LI escapes '(', ')', '<', '>' and '&')
+  /// $(LI inserts $&#40;DDOC_BLANKLINE&#41; in place of \n\n)
+  /// $(LI highlights code in code sections)
+  /// )
   char[] scanCommentText(char[] text)
   {
     char* p = text.ptr;
@@ -385,6 +401,14 @@ class DDocEmitter : DefaultVisitor
     return text;
   }
 
+  /// Writes an array of strings to the text buffer.
+  void write(char[][] strings...)
+  {
+    foreach (s; strings)
+      text ~= s;
+  }
+
+  /// Writes params to the text buffer.
   void writeParams(Parameters params)
   {
     if (!params.items.length)
@@ -416,6 +440,7 @@ class DDocEmitter : DefaultVisitor
     write(")");
   }
 
+  /// Writes the current template parameters to the text buffer.
   void writeTemplateParams()
   {
     if (!tparams)
@@ -424,6 +449,7 @@ class DDocEmitter : DefaultVisitor
     tparams = null;
   }
 
+  /// Writes bases to the text buffer.
   void writeInheritanceList(BaseClassType[] bases)
   {
     if (bases.length == 0)
@@ -434,12 +460,7 @@ class DDocEmitter : DefaultVisitor
     write(" : ", escape(textSpan(basesBegin, bases[$-1].end)));
   }
 
-  void write(char[][] strings...)
-  {
-    foreach (s; strings)
-      text ~= s;
-  }
-
+  /// Writes a symbol to the text buffer. E.g: $&#40;SYMBOL Buffer, 123&#41;
   void SYMBOL(char[] name, Declaration d)
   {
     auto loc = d.begin.getRealLocation();
@@ -448,8 +469,10 @@ class DDocEmitter : DefaultVisitor
     // write("$(DDOC_PSYMBOL ", name, ")");
   }
 
+  /// Offset at which to insert a declaration which have a "ditto" comment.
   uint prevDeclOffset;
 
+  /// Writes a declaration to the text buffer.
   void DECL(void delegate() dg, Declaration d, bool writeSemicolon = true)
   {
     if (cmntIsDitto)
@@ -476,6 +499,7 @@ class DDocEmitter : DefaultVisitor
     prevDeclOffset = text.length;
   }
 
+  /// Wraps the DDOC_DECL_DD macro around the text written by dg().
   void DESC(void delegate() dg)
   {
     if (cmntIsDitto)
@@ -485,6 +509,7 @@ class DDocEmitter : DefaultVisitor
     write(")");
   }
 
+  /// Wraps the DDOC_kind_MEMBERS macro around the text written by dg().
   void MEMBERS(char[] kind, void delegate() dg)
   {
     write("\n$(DDOC_"~kind~"_MEMBERS ");
@@ -492,6 +517,7 @@ class DDocEmitter : DefaultVisitor
     write(")");
   }
 
+  /// Writes a class or interface declaration.
   void writeClassOrInterface(T)(T d)
   {
     if (!ddoc(d))
@@ -511,6 +537,7 @@ class DDocEmitter : DefaultVisitor
     });
   }
 
+  /// Writes a struct or union declaration.
   void writeStructOrUnion(T)(T d)
   {
     if (!ddoc(d))
@@ -530,6 +557,7 @@ class DDocEmitter : DefaultVisitor
     });
   }
 
+  /// Writes an alias or typedef declaration.
   void writeAliasOrTypedef(T)(T d)
   {
     auto prefix = is(T == AliasDeclaration) ? "alias " : "typedef ";
@@ -545,6 +573,7 @@ class DDocEmitter : DefaultVisitor
     DESC({ writeComment(); });
   }
 
+  /// Writes the attributes of a declaration in brackets.
   void writeAttributes(Declaration d)
   {
     char[][] attributes;

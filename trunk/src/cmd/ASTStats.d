@@ -11,10 +11,12 @@ import dil.ast.Node,
        dil.ast.Expression,
        dil.ast.Types;
 
+/// Counts the nodes in a syntax tree.
 class ASTStats : DefaultVisitor
 {
   uint[] table; /// Table for counting nodes.
 
+  /// Starts counting.
   uint[] count(Node root)
   {
     table = new uint[classNames.length];

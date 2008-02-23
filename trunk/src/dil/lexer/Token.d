@@ -13,11 +13,9 @@ import common;
 
 public import dil.lexer.TokensEnum;
 
-/++
-  A Token is a sequence of characters formed by the lexical analyzer.
-+/
+/// A Token is a sequence of characters formed by the lexical analyzer.
 struct Token
-{
+{ /// Flags set by the Lexer.
   enum Flags : ushort
   {
     None,
@@ -29,11 +27,14 @@ struct Token
   /// Pointers to the next and previous tokens (doubly-linked list.)
   Token* next, prev;
 
-  char* ws;    /// Start of whitespace characters before token. Null if no WS.
+  /// Start of whitespace characters before token. Null if no WS.
+  /// TODO: remove to save space; can be replaced by 'prev.end'.
+  char* ws;
   char* start; /// Start of token in source text.
   char* end;   /// Points one past the end of token in source text.
 
-  // Data associated with this token.
+  /// Data associated with this token.
+  /// TODO: move data structures out; use only pointers here to keep Token.sizeof small.
   union
   {
     /// For newline tokens.
@@ -47,7 +48,7 @@ struct Token
     /// For string tokens.
     struct
     {
-      string str;
+      string str; /// Zero-terminated string.
       char pf; /// Postfix 'c', 'w', 'd' or 0 for none.
     version(D2)
       Token* tok_str; /++ Points to the contents of a token string stored as a
@@ -55,7 +56,7 @@ struct Token
                           EOF in case end of source text is "q{" EOF.
                       +/
     }
-    Identifier* ident;
+    Identifier* ident; /// For keywords and identifiers.
     dchar  dchar_;
     long   long_;
     ulong  ulong_;
@@ -65,8 +66,6 @@ struct Token
     double double_;
     real   real_;
   }
-
-  alias srcText identifier;
 
   /// Returns the text of the token.
   string srcText()
@@ -114,6 +113,7 @@ struct Token
     return token;
   }
 
+  /// Returns the string for token kind tok.
   static string toString(TOK tok)
   {
     return tokToString[tok];
@@ -125,11 +125,9 @@ struct Token
     this.flags |= Flags.Whitespace;
   }
 
-  /++
-    Returns true if this is a token that can have newlines in it.
-    These can be block and nested comments and any string literal
-    except for escape string literals.
-  +/
+  /// Returns true if this is a token that can have newlines in it.
+  /// These can be block and nested comments and any string literal
+  /// except for escape string literals.
   bool isMultiline()
   {
     return kind == TOK.String && start[0] != '\\' ||
@@ -267,6 +265,7 @@ version(D2)
     return left.start[0 .. right.end - left.start];
   }
 
+  /// Uses malloc() to allocate memory for a token.
   new(size_t size)
   {
     void* p = malloc(size);
@@ -276,6 +275,7 @@ version(D2)
     return p;
   }
 
+  /// Deletes a token using free().
   delete(void* p)
   {
     auto token = cast(Token*)p;
