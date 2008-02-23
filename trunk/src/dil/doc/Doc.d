@@ -158,7 +158,21 @@ struct DDocParser
     // Search for the end of the first paragraph.
     end--; // Decrement end, so we can look ahead one character.
     while (p < end && !(*p == '\n' && p[1] == '\n'))
+    {
+      // Skip over code sections. This is unlike how dmd behaves.
+      if (p+2 < end && *p == '-' && p[1] == '-' && p[2] == '-')
+      {
+        while (p < end && *p == '-')
+          p++;
+        p--;
+        while (++p < end)
+          if (p+2 < end && *p == '-' && p[1] == '-' && p[2] == '-')
+            break;
+        if (p >= end)
+          break;
+      }
       p++;
+    }
     end++;
     if (p+1 >= end)
       p = end;
