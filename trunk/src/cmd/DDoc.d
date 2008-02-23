@@ -608,9 +608,6 @@ class DDocEmitter : DefaultVisitor
   alias Declaration D;
 
 override:
-//   D visit(ModuleDeclaration d)
-//   { return d; }
-
   D visit(AliasDeclaration d)
   {
     if (!ddoc(d))

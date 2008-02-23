@@ -12,6 +12,7 @@ import common;
 
 import tango.text.Ascii : icompare;
 
+/// Represents a sanitized and parsed DDoc comment.
 class DDocComment
 {
   Section[] sections; /// The sections of this comment.
@@ -37,7 +38,7 @@ class DDocComment
     return null;
   }
 
-  /// Returns: true if "ditto" is the only text in this comment.
+  /// Returns true if "ditto" is the only text in this comment.
   bool isDitto()
   {
     if (summary && sections.length == 1 &&
@@ -45,15 +46,6 @@ class DDocComment
       return true;
     return false;
   }
-
-//   MacrosSection[] getMacros()
-//   {
-//     MacrosSection[] macros;
-//     foreach (section; sections)
-//       if (section.Is("macros"))
-//         macros ~= new MacrosSection(section.name, section.text);
-//     return macros;
-//   }
 }
 
 /// Returns a node's DDocComment.
@@ -90,8 +82,8 @@ char[] strip(char[] str)
 /// Parses a DDoc comment string.
 struct DDocParser
 {
-  char* p;
-  char* textEnd;
+  char* p; /// Current character pointer.
+  char* textEnd; /// Points one character past the end of the text.
   Section[] sections; /// Parsed sections.
   Section summary; /// Optional summary section.
   Section description; /// Optional description section.
@@ -151,6 +143,8 @@ struct DDocParser
     return makeString(begin, end);
   }
 
+  /// Separates the text between p and end
+  /// into a summary and description section.
   void scanSummaryAndDescription(char* p, char* end)
   {
     assert(p <= end);
@@ -159,18 +153,8 @@ struct DDocParser
     end--; // Decrement end, so we can look ahead one character.
     while (p < end && !(*p == '\n' && p[1] == '\n'))
     {
-      // Skip over code sections. This is unlike how dmd behaves.
-      if (p+2 < end && *p == '-' && p[1] == '-' && p[2] == '-')
-      {
-        while (p < end && *p == '-')
-          p++;
-        p--;
-        while (++p < end)
-          if (p+2 < end && *p == '-' && p[1] == '-' && p[2] == '-')
-            break;
-        if (p >= end)
-          break;
-      }
+      if (isCodeSection(p, end))
+        skipCodeSection(p, end);
       p++;
     }
     end++;
@@ -193,6 +177,34 @@ struct DDocParser
     }
   }
 
+  /// Returns true if p points to "$(DDD)".
+  bool isCodeSection(char* p, char* end)
+  {
+    return p+2 < end && *p == '-' && p[1] == '-' && p[2] == '-';
+  }
+
+  /// Skips over a code section.
+  ///
+  /// Note that dmd apparently doesn't skip over code sections when
+  /// parsing DDoc sections. However, from experience it seems
+  /// to be a good idea to do that.
+  void skipCodeSection(ref char* p, char* end)
+  out { assert(p+1 == end || *p == '-'); }
+  body
+  {
+    assert(isCodeSection(p, end));
+
+    while (p < end && *p == '-')
+      p++;
+    p--;
+    while (++p < end)
+      if (p+2 < end && *p == '-' && p[1] == '-' && p[2] == '-')
+        break;
+    while (p < end && *p == '-')
+      p++;
+    p--;
+  }
+
   void skipWhitespace(ref char* p)
   {
     while (p < textEnd && (isspace(*p) || *p == '\n'))
@@ -201,7 +213,7 @@ struct DDocParser
 
   /// Find next "Identifier:".
   /// Params:
-  ///   ident = set to the Identifier
+  ///   ident = set to the Identifier.
   ///   bodyBegin = set to the beginning of the text body (whitespace skipped.)
   /// Returns: true if found.
   bool findNextIdColon(ref char[] ident, ref char* bodyBegin)
@@ -211,6 +223,12 @@ struct DDocParser
       skipWhitespace(p);
       if (p >= textEnd)
         break;
+      if (isCodeSection(p, textEnd))
+      {
+        skipCodeSection(p, textEnd);
+        p++;
+        continue;
+      }
       assert(isascii(*p) || isLeadByte(*p));
       auto idBegin = p;
       if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
@@ -236,6 +254,7 @@ struct DDocParser
   }
 }
 
+/// Represents a DDoc section.
 class Section
 {
   string name;
@@ -246,6 +265,7 @@ class Section
     this.text = text;
   }
 
+  /// Case-insensitively compares the section's name with name2.
   bool Is(char[] name2)
   {
     return icompare(name, name2) == 0;
@@ -290,21 +310,24 @@ class MacrosSection : Section
   }
 }
 
+/// Returns true if token is a Doxygen comment.
 bool isDoxygenComment(Token* token)
 { // Doxygen: '/+!' '/*!' '//!'
   return token.kind == TOK.Comment && token.start[2] == '!';
 }
 
+/// Returns true if token is a DDoc comment.
 bool isDDocComment(Token* token)
 { // DDOC: '/++' '/**' '///'
   return token.kind == TOK.Comment && token.start[1] == token.start[2];
 }
 
-/++
-  Returns the surrounding documentation comment tokens.
-  Note: this function works correctly only if
-        the source text is syntactically correct.
-+/
+/// Returns the surrounding documentation comment tokens.
+/// Params:
+///   node = the node to find doc comments for.
+///   isDocComment = a function predicate that checks for doc comment tokens.
+/// Note: this function works correctly only if
+///       the source text is syntactically correct.
 Token*[] getDocTokens(Node node, bool function(Token*) isDocComment = &isDDocComment)
 {
   Token*[] comments;
@@ -313,13 +336,12 @@ Token*[] getDocTokens(Node node, bool function(Token*) isDocComment = &isDDocCom
   auto token = node.begin;
   // Scan backwards until we hit another declaration.
 Loop:
-  while (1)
+  for (; token; token = token.prev)
   {
-    token = token.prev;
     if (token.kind == TOK.LBrace ||
         token.kind == TOK.RBrace ||
         token.kind == TOK.Semicolon ||
-        token.kind == TOK.HEAD ||
+        /+token.kind == TOK.HEAD ||+/
         (isEnumMember && token.kind == TOK.Comma))
       break;
 
@@ -379,6 +401,7 @@ string getDDocText(Token*[] tokens)
 }
 
 /// Sanitizes a DDoc comment string.
+///
 /// Leading "commentChar"s are removed from the lines.
 /// The various newline types are converted to '\n'.
 /// Params:

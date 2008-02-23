@@ -20,6 +20,7 @@ import tango.text.Util;
 
 alias FileConst.PathSeparatorChar dirSep;
 
+/// Options for the importgraph command.
 enum IGraphOption
 {
   None,
@@ -34,10 +35,11 @@ enum IGraphOption
   MarkCyclicModules         = 1<<8,
 }
 
+/// Represents a module dependency graph.
 class Graph
 {
-  Vertex[] vertices;
-  Edge[] edges;
+  Vertex[] vertices; /// The vertices or modules.
+  Edge[] edges; /// The edges or import statements.
 
   void addVertex(Vertex vertex)
   {
@@ -123,6 +125,8 @@ class Vertex
   Status status; /// Used by the cycle detection algorithm.
 }
 
+/// Searches for a module in the file system looking in importPaths.
+/// Returns: the file path to the module, or null if it wasn't found.
 string findModuleFilePath(string moduleFQNPath, string[] importPaths)
 {
   auto filePath = new FilePath();
@@ -140,6 +144,7 @@ string findModuleFilePath(string moduleFQNPath, string[] importPaths)
   return null;
 }
 
+/// Builds a module dependency graph.
 class GraphBuilder
 {
   Graph graph;
@@ -154,17 +159,18 @@ class GraphBuilder
   }
 
   /// Start building the graph and return that.
+  /// Params:
+  ///   fileName = the file name of the root module.
   Graph start(string fileName)
   {
     loadModule(fileName);
     return graph;
   }
 
-  /++
-    Loads all modules recursively and builds the graph at the same time.
-    Params:
-      moduleFQNPath = e.g.: dil/ast/Node (module FQN = dil.ast.Node)
-  +/
+  /// Loads all modules recursively and builds the graph at the same time.
+  /// Params:
+  ///   moduleFQNPath = the path version of the module FQN.$(BR)
+  ///                   E.g.: FQN = dil.ast.Node -> FQNPath = dil/ast/Node
   Vertex loadModule(string moduleFQNPath)
   {
     // Look up in table if the module is already loaded.
@@ -228,6 +234,7 @@ class GraphBuilder
   }
 }
 
+/// Executes the importgraph command.
 void execute(string filePathString, CompilationContext context, string[] strRegexps,
              uint levels, string siStyle, string piStyle, IGraphOption options)
 {
@@ -269,6 +276,7 @@ void execute(string filePathString, CompilationContext context, string[] strRege
     printDotDocument(graph, siStyle, piStyle, options);
 }
 
+/// Prints the file paths to the modules.
 void printModulePaths(Vertex[] vertices, uint level, char[] indent)
 {
   if (level == 0)
@@ -281,6 +289,7 @@ void printModulePaths(Vertex[] vertices, uint level, char[] indent)
   }
 }
 
+/// Prints a list of module FQNs.
 void printModuleList(Vertex[] vertices, uint level, char[] indent)
 {
   if (level == 0)
@@ -293,6 +302,7 @@ void printModuleList(Vertex[] vertices, uint level, char[] indent)
   }
 }
 
+/// Prints the graph as a graphviz dot document.
 void printDotDocument(Graph graph, string siStyle, string piStyle,
                       IGraphOption options)
 {

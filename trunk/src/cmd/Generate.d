@@ -33,7 +33,7 @@ enum GenOption
   PrintLines  = 1<<4
 }
 
-/// Executes the command.
+/// Executes the generate command.
 void execute(string filePath, GenOption options, InfoManager infoMan)
 {
   assert(options != GenOption.Empty);
@@ -70,6 +70,7 @@ char[] xml_escape(char[] text)
   return text;
 }
 
+/// Maps tokens to (format) strings.
 class TagMap
 {
   string[string] table;
@@ -104,6 +105,7 @@ class TagMap
         tokenTable[i] = *pStr;
   }
 
+  /// Returns the value for str, or 'fallback' if str is not in the table.
   string opIndex(string str, string fallback = "")
   {
     auto p = str in table;
@@ -112,11 +114,13 @@ class TagMap
     return fallback;
   }
 
+  /// Returns the value for tok in O(1) time.
   string opIndex(TOK tok)
   {
     return tokenTable[tok];
   }
 
+  /// Shortcuts for quick access.
   string Identifier, String, Char, Number, Keyword, LineC, BlockC,
          NestedC, Shebang, HLine, Filespec, Illegal, Newline, SpecialToken,
          Declaration, Statement, Expression, Type, Other, EOF;
@@ -148,7 +152,8 @@ int rfind(char[] subject, char object)
   return -1;
 }
 
-/// Returns: the short class name of an instance descending from Node.
+/// Returns the short class name of a class descending from Node.$(BR)
+/// E.g.: dil.ast.Declarations.ClassDeclaration -> Class
 char[] getShortClassName(Node node)
 {
   static char[][] name_table;
@@ -271,6 +276,7 @@ void printLines(uint lines, TagMap tags, Print!(char) print)
 // {
 // }
 
+/// Highlights the syntax in a source file.
 void highlightSyntax(string filePath, TagMap tags, Print!(char) print, GenOption options)
 {
   auto parser = new Parser(new SourceText(filePath, true));
@@ -328,7 +334,7 @@ void highlightSyntax(string filePath, TagMap tags, Print!(char) print, GenOption
   print(tags["DocEnd"]);
 }
 
-/// Prints all tokens of a source file using the buffer print.
+/// Highlights all tokens of a source file.
 void highlightTokens(string filePath, TagMap tags, Print!(char) print, GenOption options)
 {
   auto lx = new Lexer(new SourceText(filePath, true));
@@ -359,6 +365,7 @@ void highlightTokens(string filePath, TagMap tags, Print!(char) print, GenOption
   print(tags["DocEnd"]);
 }
 
+/// A token highlighter designed for DDoc.
 class TokenHighlighter
 {
   TagMap tags;
@@ -396,7 +403,7 @@ class TokenHighlighter
   }
 }
 
-/// Prints a token with tags using the buffer print.
+/// Prints a token to the stream print.
 void printToken(Token* token, TagMap tags, Print!(char) print)
 {
   switch(token.kind)
