@@ -72,6 +72,12 @@ class SemanticPass1 : Visitor
     scop = scop.exit();
   }
 
+  /// Returns true if this is the module scope.
+  bool isModuleScope()
+  {
+    return scop.symbol.isModule();
+  }
+
   /// Insert a symbol into the current scope.
   void insert(Symbol symbol, Identifier* name)
   {
@@ -352,7 +358,9 @@ override
   {
     if (d.isSpecification)
     {
-      if (d.spec.kind == TOK.Identifier)
+      if (!isModuleScope())
+        error(d.begin, MSG.DebugSpecModuleLevel, d.spec.srcText);
+      else if (d.spec.kind == TOK.Identifier)
         context.addDebugId(d.spec.ident.str);
       else
         context.debugLevel = d.spec.uint_;
@@ -372,7 +380,9 @@ override
   {
     if (d.isSpecification)
     {
-      if (d.spec.kind == TOK.Identifier)
+      if (!isModuleScope())
+        error(d.begin, MSG.VersionSpecModuleLevel, d.spec.srcText);
+      else if (d.spec.kind == TOK.Identifier)
         context.addVersionId(d.spec.ident.str);
       else
         context.versionLevel = d.spec.uint_;

@@ -150,4 +150,6 @@ static:
   auto VariableConflictsWithDecl = "variable '{}' conflicts with declaration @{}";
   auto InterfaceCantHaveVariables = "an interface can't have member variables";
   auto MixinArgumentMustBeString = "the mixin argument must evaluate to a string";
+  auto DebugSpecModuleLevel = "debug={} must be a module level";
+  auto VersionSpecModuleLevel = "version={} must be a module level";
 }
