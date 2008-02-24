@@ -6,12 +6,14 @@ module dil.HtmlEntities;
 
 import common;
 
+/// A named HTML entity.
 struct Entity
 {
   char[] name;
-  uint value;
+  dchar value;
 }
 
+/// The table of named HTML entities.
 static const Entity[] namedEntities = [
   {"Aacute", '\u00C1'},
   {"aacute", '\u00E1'},
@@ -289,7 +291,7 @@ char[] toString(uint x)
 char[] generateHashAndValueArrays()
 {
   uint[] hashes; // String hashes.
-  uint[] values; // Unicode codepoints.
+  dchar[] values; // Unicode codepoints.
   // Build arrays:
   foreach (entity; namedEntities)
   {
@@ -330,16 +332,19 @@ char[] generateHashAndValueArrays()
   return hashesText ~"\n"~ valuesText;
 }
 
-// Mixin:
-// private static const uint[] hashes;
-// private static const dchar[] values;
-mixin(generateHashAndValueArrays);
+version(DDoc)
+{
+  /// Table of hash values of the entities' names.
+  private static const uint[] hashes;
+  /// Table of Unicode codepoints.
+  private static const dchar[] values;
+}
+else
+  mixin(generateHashAndValueArrays);
 // pragma(msg, generateHashAndValueArrays());
 
-/++
-  Converts a named HTML entity into its equivalent Unicode codepoint.
-  Returns 0xFFFF if entity doesn't exist.
-+/
+/// Converts a named HTML entity into its equivalent Unicode codepoint.
+/// Returns: the entity's value or 0xFFFF if it doesn't exist.
 dchar entity2Unicode(char[] entity)
 {
   auto hash = stringToHash(entity);

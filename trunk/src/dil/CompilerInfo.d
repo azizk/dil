@@ -32,7 +32,7 @@ else
 const VERSION = FormatT!("%s.%s", VERSION_MAJOR, Pad!(VERSION_MINOR, 3));
 const VENDOR = "dil";
 
-/// Used in main help message.
+/// Used in the main help message.
 const COMPILED_WITH = __VENDOR__;
 /// ditto
 const COMPILED_VERSION = FormatT!("%s.%s", __VERSION__/1000, Pad!(__VERSION__%1000, 3));
@@ -42,11 +42,11 @@ const COMPILED_DATE = __TIMESTAMP__;
 /// The global, default alignment size for struct fields.
 const DEFAULT_ALIGN_SIZE = 4;
 
-version(X86_64)
-{
-  const PTR_SIZE = 8; /// Pointer size on 64-bit platforms.
-}
+version(DDoc)
+  const PTR_SIZE = 0; /// The pointer size depending on the platform.
 else
-{
+version(X86_64)
+  const PTR_SIZE = 8; /// Pointer size on 64-bit platforms.
+else
   const PTR_SIZE = 4; /// Pointer size on 32-bit platforms.
-}
+

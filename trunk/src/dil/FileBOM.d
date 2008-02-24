@@ -5,7 +5,7 @@
 module dil.FileBOM;
 import common;
 
-/// Byte Order Mark
+/// Enumeration of byte order marks.
 enum BOM
 {
   None,    /// No BOM
@@ -16,6 +16,7 @@ enum BOM
   UTF32LE  /// UTF-32 Little Endian: FF FE 00 00
 }
 
+/// Looks at the first bytes of data and returns the corresponding BOM.
 BOM tellBOM(ubyte[] data)
 {
   BOM bom = BOM.None;

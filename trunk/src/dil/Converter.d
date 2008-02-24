@@ -26,6 +26,7 @@ struct Converter
     return conv;
   }
 
+  /// Byte-swaps c.
   dchar swapBytes(dchar c)
   {
     return c = (c << 24) |
@@ -34,12 +35,14 @@ struct Converter
               (c >> 24);
   }
 
+  /// Byte-swaps c.
   wchar swapBytes(wchar c)
   {
     return (c << 8) | (c >> 8);
   }
 
-  wchar BEtoMachineDword(dchar c)
+  /// Swaps the bytes of c on a little-endian machine.
+  dchar BEtoMachineDword(dchar c)
   {
     version(LittleEndian)
       return swapBytes(c);
@@ -47,7 +50,8 @@ struct Converter
       return c;
   }
 
-  wchar LEtoMachineDword(dchar c)
+  /// Swaps the bytes of c on a big-endian machine.
+  dchar LEtoMachineDword(dchar c)
   {
     version(LittleEndian)
       return c;
@@ -55,6 +59,7 @@ struct Converter
       return swapBytes(c);
   }
 
+  /// Swaps the bytes of c on a little-endian machine.
   wchar BEtoMachineWord(wchar c)
   {
     version(LittleEndian)
@@ -63,6 +68,7 @@ struct Converter
       return c;
   }
 
+  /// Swaps the bytes of c on a big-endian machine.
   wchar LEtoMachineWord(wchar c)
   {
     version(LittleEndian)
@@ -71,6 +77,7 @@ struct Converter
       return swapBytes(c);
   }
 
+  /// Converts a UTF-32 text to UTF-8.
   char[] UTF32toUTF8(bool isBigEndian)(ubyte[] data)
   {
     if (data.length == 0)
@@ -109,9 +116,10 @@ struct Converter
     return result;
   }
 
-  alias UTF32toUTF8!(true) UTF32BEtoUTF8;
-  alias UTF32toUTF8!(false) UTF32LEtoUTF8;
+  alias UTF32toUTF8!(true) UTF32BEtoUTF8; /// Instantiation for UTF-32 BE.
+  alias UTF32toUTF8!(false) UTF32LEtoUTF8; /// Instantiation for UTF-32 LE.
 
+  /// Converts a UTF-16 text to UTF-8.
   char[] UTF16toUTF8(bool isBigEndian)(ubyte[] data)
   {
     if (data.length == 0)
@@ -170,9 +178,11 @@ struct Converter
     return result;
   }
 
-  alias UTF16toUTF8!(true) UTF16BEtoUTF8;
-  alias UTF16toUTF8!(false) UTF16LEtoUTF8;
+  alias UTF16toUTF8!(true) UTF16BEtoUTF8; /// Instantiation for UTF-16 BE.
+  alias UTF16toUTF8!(false) UTF16LEtoUTF8; /// Instantiation for UTF-16 LE.
 
+  /// Converts the text in data to UTF-8.
+  /// Leaves data unchanged if it is in UTF-8 already.
   char[] data2UTF8(ubyte[] data)
   {
     if (data.length == 0)

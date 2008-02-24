@@ -33,13 +33,11 @@ static:
   /// A set of common, predefined identifiers for fast lookups.
   private Identifier*[string] staticTable;
   /// A table that grows with every newly found, unique identifier.
-  /// Access must be synchronized.
   private Identifier*[string] growingTable;
 
-  /// Initializes the static table.
+  /// Loads keywords and predefined identifiers into the static table.
   static this()
   {
-    // Load keywords and pre-defined identifiers into the static table.
     foreach (ref k; keywords)
       staticTable[k.str] = &k;
     foreach (id; Ident.allIds())
@@ -47,7 +45,7 @@ static:
     staticTable.rehash;
   }
 
-  /// Looks in both tables.
+  /// Looks up idString in both tables.
   Identifier* lookup(string idString)
   {
     auto id = inStatic(idString);
@@ -56,7 +54,7 @@ static:
     return inGrowing(idString);
   }
 
-  /// Look up idString in the static table.
+  /// Looks up idString in the static table.
   Identifier* inStatic(string idString)
   {
     auto id = idString in staticTable;
@@ -64,27 +62,27 @@ static:
   }
 
   alias Identifier* function(string idString) LookupFunction;
-  /// Look up idString in the growing table.
+  /// Looks up idString in the growing table.
   LookupFunction inGrowing = &_inGrowing_unsafe; // Default to unsafe function.
 
-  /++
-    Set the thread safety mode of this table.
-    Call this function only if you can be sure
-    that this table is not being accessed
-    (like during lexing, parsing and semantic phase.)
-  +/
+  /// Sets the thread safety mode of the growing table.
   void setThreadsafe(bool b)
   {
     if (b)
-      IdTable.inGrowing = &_inGrowing_safe;
+      inGrowing = &_inGrowing_safe;
     else
-      IdTable.inGrowing = &_inGrowing_unsafe;
+      inGrowing = &_inGrowing_unsafe;
   }
 
-  /++
-    Returns the Identifier for idString.
-    Adds idString to the table if not found.
-  +/
+  /// Returns true if access to the growing table is thread-safe.
+  bool isThreadsafe()
+  {
+    return inGrowing is &_inGrowing_safe;
+  }
+
+  /// Looks up idString in the table.
+  ///
+  /// Adds idString to the table if not found.
   private Identifier* _inGrowing_unsafe(string idString)
   out(id)
   { assert(id !is null); }
@@ -98,11 +96,10 @@ static:
     return newID;
   }
 
-  /++
-    Returns the Identifier for idString.
-    Adds idString to the table if not found.
-    Access to the data structure is synchronized.
-  +/
+  /// Looks up idString in the table.
+  ///
+  /// Adds idString to the table if not found.
+  /// Access to the data structure is synchronized.
   private Identifier* _inGrowing_safe(string idString)
   {
     synchronized
@@ -127,8 +124,13 @@ static:
   }
   +/
 
-  static uint anonCount;
-  Identifier* genAnonymousID(char[] prefix)
+  static uint anonCount; /// Counter for anonymous identifiers.
+
+  /// Generates an anonymous identifier.
+  ///
+  /// Concatenates prefix with anonCount.
+  /// The identifier is not inserted into the table.
+  Identifier* genAnonymousID(string prefix)
   {
     ++anonCount;
     auto x = anonCount;
@@ -140,6 +142,7 @@ static:
     return Identifier(prefix ~ num, TOK.Identifier);
   }
 
+  /// Generates an identifier for an anonymous enum.
   Identifier* genAnonEnumID()
   {
     return genAnonymousID("__anonenum");

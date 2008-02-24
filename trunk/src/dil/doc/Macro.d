@@ -30,9 +30,11 @@ class Macro
 /// Macro definitions in the current table override the ones in the parent tables.
 class MacroTable
 {
+  /// The parent in the hierarchy. Or null if this is the root.
   MacroTable parent;
-  Macro[string] table;
+  Macro[string] table; /// The associative array that holds the macro definitions.
 
+  /// Constructs a MacroTable instance.
   this(MacroTable parent = null)
   {
     this.parent = parent;

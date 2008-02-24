@@ -127,7 +127,7 @@ struct DDocParser
     return sections;
   }
 
-  /// Removes trailing whitespace characters from the text body.
+  /// Returns the text body. Trailing whitespace characters are not included.
   char[] textBody(char* begin, char* end)
   {
     // The body of A is empty, e.g.:

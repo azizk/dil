@@ -17,7 +17,7 @@ abstract class Declaration : Node
   }
 
   // Members relevant to semantic phase.
-  StorageClass stc; /// The storage class of this declaration.
+  StorageClass stc; /// The storage classes of this declaration.
   Protection prot;  /// The protection attribute of this declaration.
 
   final bool isStatic()

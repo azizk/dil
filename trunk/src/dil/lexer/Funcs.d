@@ -5,12 +5,12 @@
 module dil.lexer.Funcs;
 
 const char[3] LS = \u2028; /// Unicode line separator.
+const dchar LSd = 0x2028;  /// ditto
 const char[3] PS = \u2029; /// Unicode paragraph separator.
-const dchar LSd = 0x2028;
-const dchar PSd = 0x2029;
+const dchar PSd = 0x2029;  /// ditto
 static assert(LS[0] == PS[0] && LS[1] == PS[1]);
 
-const uint _Z_ = 26; /// Control+Z
+const dchar _Z_ = 26; /// Control+Z.
 
 /// Returns: true if d is a Unicode line or paragraph separator.
 bool isUnicodeNewlineChar(dchar d)
@@ -93,17 +93,18 @@ static const int ptable[256] = [
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ];
 
+/// Enumeration of character property flags.
 enum CProperty
 {
-       Octal = 1,
-       Digit = 1<<1,
-         Hex = 1<<2,
-       Alpha = 1<<3,
-  Underscore = 1<<4,
-  Whitespace = 1<<5
+       Octal = 1,    /// 0-7
+       Digit = 1<<1, /// 0-9
+         Hex = 1<<2, /// 0-9a-fA-F
+       Alpha = 1<<3, /// a-zA-Z
+  Underscore = 1<<4, /// _
+  Whitespace = 1<<5  /// ' ' \t \v \f
 }
 
-const uint EVMask = 0xFF00; // Bit mask for escape value
+const uint EVMask = 0xFF00; // Bit mask for escape value.
 
 private alias CProperty CP;
 /// Returns: true if c is an octal digit.

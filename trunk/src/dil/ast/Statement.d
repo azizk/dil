@@ -6,6 +6,7 @@ module dil.ast.Statement;
 
 import dil.ast.Node;
 
+/// The root class of all statements.
 abstract class Statement : Node
 {
   this()

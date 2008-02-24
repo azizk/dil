@@ -9,7 +9,7 @@ import common;
 public import dil.lexer.Token;
 public import dil.ast.NodesEnum;
 
-/// The root class of all nodes that can form a D syntax tree.
+/// The root class of all D syntax tree elements.
 abstract class Node
 {
   NodeCategory category; /// The category of this node.
@@ -64,7 +64,7 @@ abstract class Node
     children is null || addChildren(children);
   }
 
-  /// Returns a pointer to Class if this node can be cast to it.
+  /// Returns a reference to Class if this node can be cast to it.
   Class Is(Class)()
   {
     if (kind == mixin("NodeKind." ~ typeof(Class).stringof))

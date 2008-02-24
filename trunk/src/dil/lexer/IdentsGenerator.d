@@ -11,7 +11,7 @@ const:
   char[] idStr; /// In table.
 }
 
-/// Array of predefined identifiers.
+/// Table of predefined identifiers.
 static const StrPair[] identPairs = [
   // Predefined version identifiers:
   {"DigitalMars"}, {"X86"}, {"X86_64"},

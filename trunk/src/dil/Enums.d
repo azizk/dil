@@ -6,6 +6,7 @@ module dil.Enums;
 
 import common;
 
+/// Enumeration of storage classes.
 enum StorageClass
 {
   None         = 0,
@@ -27,6 +28,7 @@ enum StorageClass
   Variadic     = 1<<16,
 }
 
+/// Enumeration of protection attributes.
 enum Protection
 {
   None,
@@ -37,6 +39,7 @@ enum Protection
   Export/+    = 1<<4+/
 }
 
+/// Enumeration of linkage types.
 enum LinkageType
 {
   None,
@@ -48,6 +51,7 @@ enum LinkageType
   System
 }
 
+/// Returns the string for prot.
 string toString(Protection prot)
 {
   switch (prot)
@@ -89,7 +93,7 @@ string toString(StorageClass stc)
   }
 }
 
-/// Returns the string . Any number of bits may be set.
+/// Returns the strings for stc. Any number of bits may be set.
 string[] toStrings(StorageClass stc)
 {
   string[] result;
@@ -99,6 +103,7 @@ string[] toStrings(StorageClass stc)
   return result;
 }
 
+/// Returns the string for ltype.
 string toString(LinkageType ltype)
 {
   switch (ltype)

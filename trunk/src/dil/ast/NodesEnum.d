@@ -222,7 +222,10 @@ char[] generateNodeKindMembers()
 }
 // pragma(msg, generateNodeKindMembers());
 
-// enum NodeKind;
+version(DDoc)
+  /// The node kind identifies every class that inherits from Node.
+  enum NodeKind : ushort;
+else
 mixin(
   "enum NodeKind : ushort"
   "{"

@@ -10,12 +10,13 @@ import dil.ast.Expression;
 import dil.lexer.Identifier;
 import dil.Enums;
 
+/// A function or foreach parameter.
 class Parameter : Node
 {
-  StorageClass stc;
-  TypeNode type;
-  Identifier* name;
-  Expression defValue;
+  StorageClass stc; /// The storage classes of the parameter.
+  TypeNode type; /// The parameter's type.
+  Identifier* name; /// The name of the parameter.
+  Expression defValue; /// The default initialization value.
 
   this(StorageClass stc, TypeNode type, Identifier* name, Expression defValue)
   {
@@ -31,26 +32,29 @@ class Parameter : Node
     this.defValue = defValue;
   }
 
-  /// func(...) or func(int[] values ...)
-  bool isVariadic()
-  {
-    return !!(stc & StorageClass.Variadic);
-  }
-
-  /// func(int[] values ...)
+  /// Returns true if this is a D-style variadic parameter.
+  /// E.g.: func(int[] values ...)
   bool isDVariadic()
   {
     return isVariadic && !isCVariadic;
   }
 
-  /// func(...)
+  /// Returns true if this is a C-style variadic parameter.
+  /// E.g.: func(...)
   bool isCVariadic()
   {
     return stc == StorageClass.Variadic &&
            type is null && name is null;
   }
+
+  /// Returns true if this is a D- or C-style variadic parameter.
+  bool isVariadic()
+  {
+    return !!(stc & StorageClass.Variadic);
+  }
 }
 
+/// Array of parameters.
 class Parameters : Node
 {
   this()
@@ -80,6 +84,7 @@ class Parameters : Node
 ~ Template parameters: ~
 ~~~~~~~~~~~~~~~~~~~~~~*/
 
+/// Abstract base class for all template parameters.
 abstract class TemplateParameter : Node
 {
   Identifier* ident;
@@ -90,6 +95,7 @@ abstract class TemplateParameter : Node
   }
 }
 
+/// E.g.: (alias T)
 class TemplateAliasParameter : TemplateParameter
 {
   TypeNode specType, defType;
@@ -105,6 +111,7 @@ class TemplateAliasParameter : TemplateParameter
   }
 }
 
+/// E.g.: (T t)
 class TemplateTypeParameter : TemplateParameter
 {
   TypeNode specType, defType;
@@ -122,6 +129,7 @@ class TemplateTypeParameter : TemplateParameter
 
 // version(D2)
 // {
+/// E.g.: (this T)
 class TemplateThisParameter : TemplateParameter
 {
   TypeNode specType, defType;
@@ -138,6 +146,7 @@ class TemplateThisParameter : TemplateParameter
 }
 // }
 
+/// E.g.: (T)
 class TemplateValueParameter : TemplateParameter
 {
   TypeNode valueType;
@@ -156,6 +165,7 @@ class TemplateValueParameter : TemplateParameter
   }
 }
 
+/// E.g.: (T...)
 class TemplateTupleParameter : TemplateParameter
 {
   this(Identifier* ident)
@@ -166,6 +176,7 @@ class TemplateTupleParameter : TemplateParameter
   }
 }
 
+/// Array of template parameters.
 class TemplateParameters : Node
 {
   this()
@@ -185,6 +196,7 @@ class TemplateParameters : Node
   }
 }
 
+/// Array of template arguments.
 class TemplateArguments : Node
 {
   this()

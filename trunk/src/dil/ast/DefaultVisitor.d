@@ -359,12 +359,14 @@ char[] generateDefaultVisitMethods()
   char[] text;
   foreach (className; classNames)
     text ~= "private mixin .visitDefault!("~className~") _"~className~";\n"
-            "override returnType!(\""~className~"\") visit("~className~" node){return _"~className~".visitDefault(node);}\n";
+            "override returnType!(\""~className~"\") visit("~className~" node)"
+            "{return _"~className~".visitDefault(node);}\n";
   return text;
 }
 // pragma(msg, generateDefaultVisitMethods());
 
-/// This class provides default methods for traversing nodes in a syntax tree.
+/// This class provides default methods for
+/// traversing nodes and their sub-nodes.
 class DefaultVisitor : Visitor
 {
   // Comment out if too many errors are shown.

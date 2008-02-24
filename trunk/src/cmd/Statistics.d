@@ -12,12 +12,13 @@ import dil.ast.NodesEnum;
 import dil.SourceText;
 import common;
 
+/// A group of statistics variables.
 struct Statistics
 {
   uint whitespaceCount; /// Counter for whitespace characters.
   uint wsTokenCount;    /// Counter for all whitespace tokens.
   uint keywordCount;    /// Counter for keywords.
-  uint identCount;      /// Counter for identifier.
+  uint identCount;      /// Counter for identifiers.
   uint numberCount;     /// Counter for number literals.
   uint commentCount;    /// Counter for comments.
   uint tokenCount;      /// Counter for all tokens produced by the Lexer.
@@ -52,6 +53,7 @@ struct Statistics
   }
 }
 
+/// Executes the statistics command.
 void execute(string[] filePaths, bool printTokensTable, bool printNodesTable)
 {
   Statistics[] stats;
@@ -132,6 +134,7 @@ void execute(string[] filePaths, bool printTokensTable, bool printNodesTable)
   }
 }
 
+/// Returns the statistics for a D source file.
 Statistics getStatistics(string filePath, bool printTokensTable, bool printNodesTable)
 {
   // Create a new record.
