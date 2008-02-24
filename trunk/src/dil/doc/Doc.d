@@ -52,10 +52,11 @@ class DDocComment
 DDocComment getDDocComment(Node node)
 {
   DDocParser p;
-  p.parse(getDDocText(getDocTokens(node)));
-  if (p.sections.length)
-    return new DDocComment(p.sections, p.summary, p.description);
-  return null;
+  auto docTokens = getDocTokens(node);
+  if (!docTokens.length)
+    return null;
+  p.parse(getDDocText(docTokens));
+  return new DDocComment(p.sections, p.summary, p.description);
 }
 
 /// Strips leading and trailing whitespace characters.
