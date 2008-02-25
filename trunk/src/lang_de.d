@@ -8,15 +8,15 @@ string lang_code = "de";
 string[] messages = [
   // Lexer messages:
   "illegales Zeichen gefunden: '{0}'",
-  "ungültiges Unicodezeichen.",
-  "ungültige UTF-8-Sequenz.",
+//   "ungültiges Unicodezeichen.",
+  "ungültige UTF-8-Sequenz: '{0}'",
   // ''
   "unterminiertes Zeichenliteral.",
   "leeres Zeichenliteral.",
   // #line
   "erwartete 'line' nach '#'.",
   "Ganzzahl nach #line erwartet.",
-  `erwartete Dateispezifikation (z.B. "pfad\zur\datei".)`,
+//   `erwartete Dateispezifikation (z.B. "pfad\zur\datei".)`,
   "unterminierte Dateispezifikation (filespec.)",
   "ein Special Token muss mit einem Zeilenumbruch abgeschlossen werden.",
   // ""
@@ -34,7 +34,7 @@ string[] messages = [
   // \x \u \U
   "undefinierte Escapesequenz '{0}' gefunden.",
   "ungültige Unicode-Escapesequenz '{0}' gefunden.",
-  "unzureichende Anzahl von Hexziffern in Escapesequenz.",
+  "unzureichende Anzahl von Hexziffern in Escapesequenz: '{0}'",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "undefinierte HTML-Entität '{0}'",
   "unterminierte HTML-Entität '{0}'.",
@@ -66,7 +66,7 @@ string[] messages = [
 
   // Help messages:
   `dil v{0}
-Copyright (c) 2007, Aziz Köksal. Lizensiert unter der GPL3.
+Copyright (c) 2007-2008, Aziz Köksal. Lizensiert unter der GPL3.
 
 Befehle:
 {1}

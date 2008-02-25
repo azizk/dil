@@ -17,12 +17,11 @@ import dil.Information;
 import dil.Enums;
 import dil.CompilerInfo;
 import dil.SourceText;
+import dil.Unicode;
 import common;
 
-/++
-  The Parser produces a full parse tree by examining
-  the list of tokens provided by the Lexer.
-+/
+/// The Parser produces a full parse tree by examining
+/// the list of tokens provided by the Lexer.
 class Parser
 {
   Lexer lexer; /// Used to lex the source code.
@@ -3160,20 +3159,29 @@ class Parser
       nT();
       while (token.kind == T.String)
       {
-        if (postfix == '\0')
+        /+if (postfix == 0)
             postfix = token.pf;
-        else if (token.pf && token.pf != postfix)
+        else+/
+        if (token.pf && token.pf != postfix)
           error(token, MSG.StringPostfixMismatch);
-        str.length = str.length - 1;
+        str.length = str.length - 1; // Exclude '\0'.
         str ~= token.str;
         nT();
       }
       switch (postfix)
-      { // TODO: convert string
-      case 'w': e = new StringExpression(/+toUTF16+/(str)); break;
-      case 'd': e = new StringExpression(/+toUTF32+/(str)); break;
+      {
+      case 'w':
+        if (checkString(begin, str))
+          goto default;
+        e = new StringExpression(dil.Unicode.toUTF16(str)); break;
+      case 'd':
+        if (checkString(begin, str))
+          goto default;
+        e = new StringExpression(dil.Unicode.toUTF32(str)); break;
       case 'c':
-      default: e = new StringExpression(str); break;
+      default:
+        // No checking done to allow for binary data.
+        e = new StringExpression(str); break;
       }
       break;
     case T.LBracket:
@@ -4054,6 +4062,15 @@ version(D2)
     else
       error(token, errorMsg, token.srcText);
     return idtok;
+  }
+
+  /// Returns true if the string str has an invalid UTF-8 sequence.
+  bool checkString(Token* begin, string str)
+  {
+    auto utf8Seq = Lexer.findInvalidUTF8Sequence(str);
+    if (utf8Seq.length)
+      error(begin, MSG.InvalidUTF8SequenceInString, utf8Seq);
+    return utf8Seq.length != 0;
   }
 
   /// Reports an error that has no message ID yet.

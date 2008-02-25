@@ -8,15 +8,15 @@ string lang_code = "tr";
 string[] messages = [
   // Lexer messages:
   "illegal karakter bulundu: '{0}'",
-  "geçersiz Unikod karakteri.",
-  "geçersiz UTF-8 serisi.",
+//   "geçersiz Unikod karakteri.",
+  "geçersiz UTF-8 serisi: '{0}'",
   // ''
   "kapanmamış karakter sabiti.",
   "boş karakter sabiti.",
   // #line
   "'#' karakter'den sonra 'line' beklendi.",
   "'#line''den sonra rakam beklendi.",
-  `filespec dizgisi beklendi (e.g. "yol\dosya".)`,
+//   `filespec dizgisi beklendi (e.g. "yol\dosya".)`,
   "kapanmamış filespec dizgisi.",
   "özel belirtici'den (special token) sonra yeni bir satır beklendi.",
   // ""
@@ -34,7 +34,7 @@ string[] messages = [
   // \x \u \U
   "tanımlanmamış çıkış serisi '{0}' bulundu.",
   "geçersiz Unikod çıkış serisi '{0}' bulundu.",
-  "heksadesimal çıkış serisi sayıları yeterli değil.",
+  "heksadesimal çıkış serisi sayıları yeterli değil: '{0}'",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "tanımlanmamış HTML varlık '{0}'",
   "kapanmamış HTML varlık '{0}'.",
@@ -66,7 +66,7 @@ string[] messages = [
 
   // Help messages:
   `dil v{0}
-Copyright (c) 2007, Aziz Köksal. Lisans GPL3.
+Copyright (c) 2007-2008, Aziz Köksal. Lisans GPL3.
 
 Komutlar:
 {1}

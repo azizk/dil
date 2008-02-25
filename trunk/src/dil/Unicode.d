@@ -54,34 +54,37 @@ body
   return true;
 }
 
-/// index is set one past the last trail byte of the valid UTF-8 sequence.
+/// Decodes a character from str at index.
+/// Params:
+///   index = set to one past the ASCII char or one past the last trail byte
+///           of the valid UTF-8 sequence.
 dchar decode(char[] str, ref size_t index)
 in { assert(str.length && index < str.length); }
-out(c) { assert(isValidChar(c) || c == ERROR_CHAR); }
+out { assert(index <= str.length); }
 body
 {
   char* p = str.ptr + index;
   char* end = str.ptr + str.length;
   dchar c = decode(p, end);
   if (c != ERROR_CHAR)
-    index = p - str.ptr + 1;
+    index = p - str.ptr;
   return c;
 }
 
-/// ref_p is set to the last trail byte of the valid UTF-8 sequence.
+/// Decodes a character starting at ref_p.
+/// Params:
+///   ref_p = set to one past the ASCII char or one past the last trail byte
+///           of the valid UTF-8 sequence.
 dchar decode(ref char* ref_p, char* end)
 in { assert(ref_p && ref_p < end); }
-out(c) { assert(isValidChar(c) || c == ERROR_CHAR); }
+out(c) { assert(ref_p <= end && (isValidChar(c) || c == ERROR_CHAR)); }
 body
 {
   char* p = ref_p;
   dchar c = *p;
 
   if (c < 0x80)
-  {
-    ref_p++;
-    return c;
-  }
+    return ref_p++, c;
 
   p++; // Move to second byte.
   if (!(p < end))
@@ -141,11 +144,11 @@ body
 
   if (!isValidChar(c))
     return ERROR_CHAR;
-  ref_p = p;
+  ref_p = p+1;
   return c;
 }
 
-/// Encodes a character and appends it to str.
+/// Encodes c and appends it to str.
 void encode(ref char[] str, dchar c)
 {
   assert(isValidChar(c), "check if character is valid before calling encode().");
@@ -199,7 +202,7 @@ void encode(ref char[] str, dchar c)
     assert(0);
 }
 
-/// Encodes a character and appends it to str.
+/// Encodes c and appends it to str.
 void encode(ref wchar[] str, dchar c)
 in { assert(isValidChar(c)); }
 body
@@ -218,11 +221,11 @@ body
   }
 }
 
-/// Returns a decoded character from a UTF-16 sequence.
-/// Returns: ERROR_CHAR in case of an error in the sequence.
+/// Decodes a character from a UTF-16 sequence.
 /// Params:
 ///   str = the UTF-16 sequence.
 ///   index = where to start from.
+/// Returns: ERROR_CHAR in case of an error in the sequence.
 dchar decode(wchar[] str, ref size_t index)
 {
   assert(str.length && index < str.length);
@@ -248,11 +251,11 @@ dchar decode(wchar[] str, ref size_t index)
   return ERROR_CHAR;
 }
 
-/// Returns a decoded character from a UTF-16 sequence.
-/// Returns: ERROR_CHAR in case of an error in the sequence.
+/// Decodes a character from a UTF-16 sequence.
 /// Params:
 ///   p = start of the UTF-16 sequence.
 ///   end = one past the end of the sequence.
+/// Returns: ERROR_CHAR in case of an error in the sequence.
 dchar decode(ref wchar* p, wchar* end)
 {
   assert(p && p < end);
@@ -276,7 +279,10 @@ dchar decode(ref wchar* p, wchar* end)
   return ERROR_CHAR;
 }
 
-/// Decode a character from a zero-terminated string.
+/// Decodes a character from a zero-terminated UTF-16 string.
+/// Params:
+///   p = start of the UTF-16 sequence.
+/// Returns: ERROR_CHAR in case of an error in the sequence.
 dchar decode(ref wchar* p)
 {
   assert(p);
@@ -298,4 +304,42 @@ dchar decode(ref wchar* p)
     }
   }
   return ERROR_CHAR;
+}
+
+/// Converts a UTF-8 string to a UTF-16 string.
+wchar[] toUTF16(char[] str)
+{
+  wchar[] result;
+  size_t idx;
+  while (idx < str.length)
+  {
+    auto c = decode(str, idx);
+    if (c == ERROR_CHAR)
+    { // Skip trail bytes.
+      while (++idx < str.length && isTrailByte(str[idx]))
+      {}
+      c = REPLACEMENT_CHAR;
+    }
+    encode(result, c);
+  }
+  return result;
+}
+
+/// Converts a UTF-8 string to a UTF-32 string.
+dchar[] toUTF32(char[] str)
+{
+  dchar[] result;
+  size_t idx;
+  while (idx < str.length)
+  {
+    auto c = decode(str, idx);
+    if (c == ERROR_CHAR)
+    { // Skip trail bytes.
+      while (++idx < str.length && isTrailByte(str[idx]))
+      {}
+      c = REPLACEMENT_CHAR;
+    }
+    result ~= c;
+  }
+  return result;
 }

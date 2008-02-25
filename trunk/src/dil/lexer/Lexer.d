@@ -355,8 +355,9 @@ class Lexer
         char[] buffer;
         do
         {
-          c = scanEscapeSequence();
-          if (isascii(c))
+          bool isBinary;
+          c = scanEscapeSequence(isBinary);
+          if (isascii(c) || isBinary)
             buffer ~= c;
           else
             encodeUTF8(buffer, c);
@@ -923,8 +924,9 @@ class Lexer
       char[] buffer;
       do
       {
-        c = scanEscapeSequence();
-        if (isascii(c))
+        bool isBinary;
+        c = scanEscapeSequence(isBinary);
+        if (isascii(c) || isBinary)
           buffer ~= c;
         else
           encodeUTF8(buffer, c);
@@ -1224,11 +1226,13 @@ class Lexer
         t.end = p;
         return;
       case '\\':
-        c = scanEscapeSequence();
+        bool isBinary;
+        c = scanEscapeSequence(isBinary);
         --p;
-        if (isascii(c))
-          break;
-        encodeUTF8(buffer, c);
+        if (isascii(c) || isBinary)
+          buffer ~= c;
+        else
+          encodeUTF8(buffer, c);
         continue;
       case '\r':
         if (p[1] == '\n')
@@ -1266,7 +1270,8 @@ class Lexer
     switch (*p)
     {
     case '\\':
-      t.dchar_ = scanEscapeSequence();
+      bool notused;
+      t.dchar_ = scanEscapeSequence(notused);
       break;
     case '\'':
       error(t.start, MID.EmptyCharacterLiteral);
@@ -1708,7 +1713,7 @@ version(D2)
   }
 } // version(D2)
 
-  dchar scanEscapeSequence()
+  dchar scanEscapeSequence(ref bool isBinary)
   out(result)
   { assert(isValidChar(result)); }
   body
@@ -1730,7 +1735,10 @@ version(D2)
     switch (*p)
     {
     case 'x':
+      isBinary = true;
+    case_Unicode:
       assert(c == 0);
+      assert(digits == 2 || digits == 4 || digits == 8);
       while (1)
       {
         ++p;
@@ -1744,31 +1752,34 @@ version(D2)
           else
             c += *p - 'a' + 10;
 
-          if (!--digits)
+          if (--digits == 0)
           {
             ++p;
             if (isValidChar(c))
               return c; // Return valid escape value.
 
-            error(sequenceStart, MID.InvalidUnicodeEscapeSequence, sequenceStart[0..p-sequenceStart]);
+            error(sequenceStart, MID.InvalidUnicodeEscapeSequence,
+                  sequenceStart[0..p-sequenceStart]);
             break;
           }
           continue;
         }
 
-        error(sequenceStart, MID.InsufficientHexDigits);
+        error(sequenceStart, MID.InsufficientHexDigits,
+              sequenceStart[0..p-sequenceStart]);
         break;
       }
       break;
     case 'u':
       digits = 4;
-      goto case 'x';
+      goto case_Unicode;
     case 'U':
       digits = 8;
-      goto case 'x';
+      goto case_Unicode;
     default:
       if (isoctal(*p))
       {
+        isBinary = true;
         assert(c == 0);
         c += *p - '0';
         ++p;
@@ -1782,7 +1793,7 @@ version(D2)
         c *= 8;
         c += *p - '0';
         ++p;
-        return c; // Return valid escape value.
+        return c & 0xFF; // Return valid escape value.
       }
       else if(*p == '&')
       {
@@ -2610,7 +2621,7 @@ version(D2)
       assert(!isTrailByte(p[1]));
     Lerr2:
       d = REPLACEMENT_CHAR;
-      error(this.p, MID.InvalidUTF8Sequence);
+      error(this.p, MID.InvalidUTF8Sequence, formatBytes(this.p, p));
     }
 
     this.p = p;
@@ -2667,6 +2678,39 @@ version(D2)
     +/
     else
      assert(0);
+  }
+
+  /// Formats the bytes between start and end.
+  /// Returns: e.g.: abc -> \x61\x62\x63
+  static char[] formatBytes(char* start, char* end)
+  {
+    auto strLen = end-start;
+    const formatLen = `\xXX`.length;
+    char[] result = new char[strLen*formatLen]; // Reserve space.
+    result.length = 0;
+    foreach (c; cast(ubyte[])start[0..strLen])
+      result ~= Format("\\x{:X}", c);
+    return result;
+  }
+
+  /// Searches for an invalid UTF-8 sequence in str.
+  /// Returns: a formatted string of the invalid sequence (e.g. \xC0\x80).
+  static string findInvalidUTF8Sequence(string str)
+  {
+    char* p = str.ptr, end = p + str.length;
+    while (p < end)
+    {
+      if (decode(p, end) == ERROR_CHAR)
+      {
+        auto begin = p;
+        // Skip trail-bytes.
+        while (++p < end && isTrailByte(*p))
+        {}
+        return Lexer.formatBytes(begin, p);
+      }
+    }
+    assert(p == end);
+    return "";
   }
 }
 

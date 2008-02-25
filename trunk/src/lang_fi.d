@@ -8,15 +8,15 @@ string lang_code = "fi";
 string[] messages = [
   // Lexer messages:
   "virheellinen merkki: '{0}'",
-  "virheellinen Unicode-merkki.",
-  "virheellinen UTF-8-merkkijono.",
+//   "virheellinen Unicode-merkki.",
+  "virheellinen UTF-8-merkkijono: '{0}'",
   // ''
   "päättämätön merkkiliteraali.",
   "tyhjä merkkiliteraali.",
   // #line
   "odotettiin rivinumeroa '#':n jälkeen.",
   "odotettiin kokonaislukua #line:n jälkeen",
-  `odotettiin tiedostomäärittelyn merkkijonoa (esim. "polku\tiedostoon")`,
+//   `odotettiin tiedostomäärittelyn merkkijonoa (esim. "polku\tiedostoon")`,
   "päättämätön tiedostomäärittely.",
   "odotettiin päättävää rivinvaihtoa erikoismerkin jälkeen.",
   // ""
@@ -34,7 +34,7 @@ string[] messages = [
   // \x \u \U
   "määrittelemätön escape-sekvenssi {0}.",
   "virheellinen Unicode escape-merkki '{0}'.",
-  "riittämätön määrä heksanumeroita escape-sekvenssissä.",
+  "riittämätön määrä heksanumeroita escape-sekvenssissä: '{0}'",
   // \&[a-zA-Z][a-zA-Z0-9]+;
   "määrittelemätön HTML-entiteetti '{0}'",
   "päättämätön HTML-entiteetti {0}.",
@@ -66,7 +66,7 @@ string[] messages = [
 
   // Help messages:
   `dil v{0}
-Copyright (c) 2007, Aziz Köksal. GPL3-lisensöity.
+Copyright (c) 2007-2008, Aziz Köksal. GPL3-lisensöity.
 
 Alikomennot:
 {1}

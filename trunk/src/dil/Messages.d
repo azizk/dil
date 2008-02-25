@@ -10,7 +10,7 @@ enum MID
 {
   // Lexer messages:
   IllegalCharacter,
-  InvalidUnicodeCharacter,
+//   InvalidUnicodeCharacter,
   InvalidUTF8Sequence,
   // ''
   UnterminatedCharacterLiteral,
@@ -18,7 +18,7 @@ enum MID
   // #line
   ExpectedIdentifierSTLine,
   ExpectedIntegerAfterSTLine,
-  ExpectedFilespec, // Deprecated.
+//   ExpectedFilespec,
   UnterminatedFilespec,
   UnterminatedSpecialToken,
   // ""
@@ -109,6 +109,7 @@ static:
   auto UndefinedDDocMacro = "DDoc macro '{}' is undefined";
   auto UnterminatedDDocMacro = "DDoc macro '{}' has no closing ')'";
   // Parser messages:
+  auto InvalidUTF8SequenceInString = "invalid UTF-8 sequence in string literal: '{0}'";
   auto ModuleDeclarationNotFirst = "a module declaration is only allowed as the first declaration in a file";
   auto StringPostfixMismatch = "string literal has mistmatching postfix character";
   auto ExpectedIdAfterTypeDot = "expected identifier after '(Type).', not '{}'";
