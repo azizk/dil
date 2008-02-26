@@ -7,6 +7,7 @@ module dil.ast.Parameters;
 import dil.ast.Node;
 import dil.ast.Type;
 import dil.ast.Expression;
+import dil.ast.NodeCopier;
 import dil.lexer.Identifier;
 import dil.Enums;
 
@@ -52,6 +53,8 @@ class Parameter : Node
   {
     return !!(stc & StorageClass.Variadic);
   }
+
+  mixin(copyMethod);
 }
 
 /// Array of parameters.
@@ -78,6 +81,8 @@ class Parameters : Node
 
   size_t length()
   { return children.length; }
+
+  mixin(copyMethod);
 }
 
 /*~~~~~~~~~~~~~~~~~~~~~~
@@ -93,6 +98,7 @@ abstract class TemplateParameter : Node
     super(NodeCategory.Other);
     this.ident = ident;
   }
+  override abstract TemplateParameter copy();
 }
 
 /// E.g.: (alias T)
@@ -109,6 +115,7 @@ class TemplateAliasParameter : TemplateParameter
     this.specType = specType;
     this.defType = defType;
   }
+  mixin(copyMethod);
 }
 
 /// E.g.: (T t)
@@ -125,6 +132,7 @@ class TemplateTypeParameter : TemplateParameter
     this.specType = specType;
     this.defType = defType;
   }
+  mixin(copyMethod);
 }
 
 // version(D2)
@@ -143,6 +151,7 @@ class TemplateThisParameter : TemplateParameter
     this.specType = specType;
     this.defType = defType;
   }
+  mixin(copyMethod);
 }
 // }
 
@@ -163,6 +172,7 @@ class TemplateValueParameter : TemplateParameter
     this.specValue = specValue;
     this.defValue = defValue;
   }
+  mixin(copyMethod);
 }
 
 /// E.g.: (T...)
@@ -174,6 +184,7 @@ class TemplateTupleParameter : TemplateParameter
     mixin(set_kind);
     this.ident = ident;
   }
+  mixin(copyMethod);
 }
 
 /// Array of template parameters.
@@ -194,6 +205,8 @@ class TemplateParameters : Node
   {
     return cast(TemplateParameter[])children;
   }
+
+  mixin(copyMethod);
 }
 
 /// Array of template arguments.
@@ -209,4 +222,6 @@ class TemplateArguments : Node
   {
     addChild(argument);
   }
+
+  mixin(copyMethod);
 }

@@ -25,6 +25,7 @@ class Interpreter : Visitor
 
   static class Result : Expression
   {
+    override Result copy(){return null;}
   }
 
   static const Result NAR; /// Not a Result. Similar to NAN in floating point arithmetics.

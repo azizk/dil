@@ -33,4 +33,6 @@ abstract class TypeNode : Node
       type = type.next;
     return type;
   }
+
+  override abstract TypeNode copy();
 }

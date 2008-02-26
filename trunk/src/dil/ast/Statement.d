@@ -13,4 +13,6 @@ abstract class Statement : Node
   {
     super(NodeCategory.Statement);
   }
+
+  override abstract Statement copy();
 }

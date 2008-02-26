@@ -10,6 +10,7 @@ import dil.ast.Types;
 import dil.ast.Declarations;
 import dil.ast.Statements;
 import dil.ast.Parameters;
+import dil.ast.NodeCopier;
 import dil.lexer.Identifier;
 import dil.semantic.Types;
 import common;
@@ -20,6 +21,7 @@ class IllegalExpression : Expression
   {
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 abstract class BinaryExpression : Expression
@@ -34,6 +36,7 @@ abstract class BinaryExpression : Expression
     this.rhs = rhs;
     this.tok = tok;
   }
+  mixin(copyMethod);
 }
 
 class CondExpression : BinaryExpression
@@ -46,6 +49,7 @@ class CondExpression : BinaryExpression
     mixin(set_kind);
     this.condition = condition;
   }
+  mixin(copyMethod);
 }
 
 class CommaExpression : BinaryExpression
@@ -355,6 +359,7 @@ abstract class UnaryExpression : Expression
     addChild(e);
     this.e = e;
   }
+  mixin(copyMethod);
 }
 
 class AddressExpression : UnaryExpression
@@ -478,6 +483,7 @@ class NewExpression : /*Unary*/Expression
     this.type = type;
     this.ctorArgs = ctorArgs;
   }
+  mixin(copyMethod);
 }
 
 class NewAnonClassExpression : /*Unary*/Expression
@@ -500,6 +506,7 @@ class NewAnonClassExpression : /*Unary*/Expression
     this.ctorArgs = ctorArgs;
     this.decls = decls;
   }
+  mixin(copyMethod);
 }
 
 class DeleteExpression : UnaryExpression
@@ -521,6 +528,7 @@ class CastExpression : UnaryExpression
     mixin(set_kind);
     this.type = type;
   }
+  mixin(copyMethod);
 }
 
 class IndexExpression : UnaryExpression
@@ -533,6 +541,7 @@ class IndexExpression : UnaryExpression
     addChildren(args);
     this.args = args;
   }
+  mixin(copyMethod);
 }
 
 class SliceExpression : UnaryExpression
@@ -549,6 +558,7 @@ class SliceExpression : UnaryExpression
     this.left = left;
     this.right = right;
   }
+  mixin(copyMethod);
 }
 
 /// Module scope operator: '.' (IdentifierExpression|TemplateInstanceExpression)
@@ -576,6 +586,7 @@ class IdentifierExpression : Expression
     mixin(set_kind);
     this.identifier = identifier;
   }
+  mixin(copyMethod);
 }
 
 class SpecialTokenExpression : Expression
@@ -588,6 +599,8 @@ class SpecialTokenExpression : Expression
   }
 
   Expression value; /// The expression created in the semantic phase.
+
+  mixin(copyMethod);
 }
 
 class TemplateInstanceExpression : Expression
@@ -601,6 +614,7 @@ class TemplateInstanceExpression : Expression
     this.ident = ident;
     this.targs = targs;
   }
+  mixin(copyMethod);
 }
 
 class ThisExpression : Expression
@@ -609,6 +623,7 @@ class ThisExpression : Expression
   {
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 class SuperExpression : Expression
@@ -617,6 +632,7 @@ class SuperExpression : Expression
   {
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 class NullExpression : Expression
@@ -631,6 +647,8 @@ class NullExpression : Expression
     this();
     this.type = type;
   }
+
+  mixin(copyMethod);
 }
 
 class DollarExpression : Expression
@@ -639,6 +657,7 @@ class DollarExpression : Expression
   {
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 class BoolExpression : Expression
@@ -655,6 +674,8 @@ class BoolExpression : Expression
   }
 
   Expression value; /// IntExpression of type int.
+
+  mixin(copyMethod);
 }
 
 class IntExpression : Expression
@@ -686,6 +707,8 @@ class IntExpression : Expression
     }
     this(token.ulong_, type);
   }
+
+  mixin(copyMethod);
 }
 
 class RealExpression : Expression
@@ -721,22 +744,23 @@ class RealExpression : Expression
     }
     this(token.real_, type);
   }
+
+  mixin(copyMethod);
 }
 
-/++
-  This expression holds a complex number.
-  It is only created in the semantic phase.
-+/
+
+/// This expression holds a complex number.
+/// It is only created in the semantic phase.
 class ComplexExpression : Expression
 {
   creal number;
-
   this(creal number, Type type)
   {
     mixin(set_kind);
     this.number = number;
     this.type = type;
   }
+  mixin(copyMethod);
 }
 
 class CharExpression : Expression
@@ -747,6 +771,7 @@ class CharExpression : Expression
     mixin(set_kind);
     this.character = character;
   }
+  mixin(copyMethod);
 }
 
 class StringExpression : Expression
@@ -783,6 +808,8 @@ class StringExpression : Expression
     // TODO: convert to char[] if charType !is Types.Char.
     return cast(char[])str[0..$-1];
   }
+
+  mixin(copyMethod);
 }
 
 class ArrayLiteralExpression : Expression
@@ -794,6 +821,7 @@ class ArrayLiteralExpression : Expression
     addOptChildren(values);
     this.values = values;
   }
+  mixin(copyMethod);
 }
 
 class AArrayLiteralExpression : Expression
@@ -808,6 +836,7 @@ class AArrayLiteralExpression : Expression
     this.keys = keys;
     this.values = values;
   }
+  mixin(copyMethod);
 }
 
 class AssertExpression : Expression
@@ -821,6 +850,7 @@ class AssertExpression : Expression
     this.expr = expr;
     this.msg = msg;
   }
+  mixin(copyMethod);
 }
 
 class MixinExpression : Expression
@@ -832,6 +862,7 @@ class MixinExpression : Expression
     addChild(expr);
     this.expr = expr;
   }
+  mixin(copyMethod);
 }
 
 class ImportExpression : Expression
@@ -843,6 +874,7 @@ class ImportExpression : Expression
     addChild(expr);
     this.expr = expr;
   }
+  mixin(copyMethod);
 }
 
 class TypeofExpression : Expression
@@ -854,6 +886,7 @@ class TypeofExpression : Expression
     addChild(type);
     this.type = type;
   }
+  mixin(copyMethod);
 }
 
 class TypeDotIdExpression : Expression
@@ -867,6 +900,7 @@ class TypeDotIdExpression : Expression
     this.type = type;
     this.ident = ident;
   }
+  mixin(copyMethod);
 }
 
 class TypeidExpression : Expression
@@ -878,6 +912,7 @@ class TypeidExpression : Expression
     addChild(type);
     this.type = type;
   }
+  mixin(copyMethod);
 }
 
 class IsExpression : Expression
@@ -902,6 +937,7 @@ class IsExpression : Expression
     this.specType = specType;
     this.tparams = tparams;
   }
+  mixin(copyMethod);
 }
 
 class FunctionLiteralExpression : Expression
@@ -931,6 +967,8 @@ class FunctionLiteralExpression : Expression
     this.funcBody = funcBody;
     this();
   }
+
+  mixin(copyMethod);
 }
 
 /// ParenthesisExpression := "(" Expression ")"
@@ -943,6 +981,7 @@ class ParenExpression : Expression
     addChild(next);
     this.next = next;
   }
+  mixin(copyMethod);
 }
 
 // version(D2)
@@ -958,6 +997,7 @@ class TraitsExpression : Expression
     this.ident = ident;
     this.targs = targs;
   }
+  mixin(copyMethod);
 }
 // }
 
@@ -967,6 +1007,7 @@ class VoidInitExpression : Expression
   {
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 class ArrayInitExpression : Expression
@@ -985,6 +1026,7 @@ class ArrayInitExpression : Expression
     this.keys = keys;
     this.values = values;
   }
+  mixin(copyMethod);
 }
 
 class StructInitExpression : Expression
@@ -998,6 +1040,7 @@ class StructInitExpression : Expression
     this.idents = idents;
     this.values = values;
   }
+  mixin(copyMethod);
 }
 
 class AsmTypeExpression : UnaryExpression
@@ -1037,6 +1080,7 @@ class AsmPostBracketExpression : UnaryExpression
     addChild(e2);
     this.e2 = e2;
   }
+  mixin(copyMethod);
 }
 
 class AsmBracketExpression : Expression
@@ -1048,6 +1092,7 @@ class AsmBracketExpression : Expression
     addChild(e);
     this.e = e;
   }
+  mixin(copyMethod);
 }
 
 class AsmLocalSizeExpression : Expression
@@ -1056,6 +1101,7 @@ class AsmLocalSizeExpression : Expression
   {
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 class AsmRegisterExpression : Expression
@@ -1068,4 +1114,5 @@ class AsmRegisterExpression : Expression
     this.register = register;
     this.number = number;
   }
+  mixin(copyMethod);
 }

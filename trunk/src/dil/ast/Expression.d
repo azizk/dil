@@ -17,4 +17,6 @@ abstract class Expression : Node
   {
     super(NodeCategory.Expression);
   }
+
+  override abstract Expression copy();
 }

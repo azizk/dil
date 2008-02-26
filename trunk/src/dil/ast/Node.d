@@ -77,6 +77,20 @@ abstract class Node
   {
     return cast(Class)cast(void*)this;
   }
+
+  /// Returns a deep copy of this node.
+  abstract Node copy();
+
+  /// Returns a shallow copy of this object.
+  final Node dup()
+  {
+    // Find out the size of this object.
+    alias typeof(this.classinfo.init[0]) byte_t;
+    size_t size = this.classinfo.init.length;
+    // Copy this object's data.
+    byte_t[] data = (cast(byte_t*)this)[0..size].dup;
+    return cast(Node)data.ptr;
+  }
 }
 
 /// This string is mixed into the constructor of a class that inherits

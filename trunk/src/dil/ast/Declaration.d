@@ -40,4 +40,5 @@ abstract class Declaration : Node
     this.prot = prot;
   }
 
+  override abstract Declaration copy();
 }

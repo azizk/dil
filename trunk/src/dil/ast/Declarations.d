@@ -6,10 +6,11 @@ module dil.ast.Declarations;
 
 public import dil.ast.Declaration;
 import dil.ast.Node;
-import dil.ast.Expressions;
+import dil.ast.Expression;
 import dil.ast.Types;
 import dil.ast.Statements;
 import dil.ast.Parameters;
+import dil.ast.NodeCopier;
 import dil.lexer.IdTable;
 import dil.semantic.Symbols;
 import dil.Enums;
@@ -37,6 +38,13 @@ class CompoundDeclaration : Declaration
   {
     return cast(Declaration[])this.children;
   }
+
+  void decls(Declaration[] decls)
+  {
+    this.children = decls;
+  }
+
+  mixin(copyMethod);
 }
 
 /// Single semicolon.
@@ -46,19 +54,19 @@ class EmptyDeclaration : Declaration
   {
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
-/++
-  Illegal declarations encompass all tokens that don't
-  start a DeclarationDefinition.
-  See_Also: dil.lexer.Token.isDeclDefStartToken()
-+/
+/// Illegal declarations encompass all tokens that don't
+/// start a DeclarationDefinition.
+/// See_Also: dil.lexer.Token.isDeclDefStartToken()
 class IllegalDeclaration : Declaration
 {
   this()
   {
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 /// FQN = fully qualified name
@@ -102,6 +110,8 @@ class ModuleDeclaration : Declaration
       pname = pname[0..$-1]; // Remove last separator
     return pname;
   }
+
+  mixin(copyMethod);
 }
 
 class ImportDeclaration : Declaration
@@ -136,6 +146,8 @@ class ImportDeclaration : Declaration
     }
     return FQNs;
   }
+
+  mixin(copyMethod);
 }
 
 class AliasDeclaration : Declaration
@@ -147,6 +159,7 @@ class AliasDeclaration : Declaration
     addChild(decl);
     this.decl = decl;
   }
+  mixin(copyMethod);
 }
 
 class TypedefDeclaration : Declaration
@@ -158,6 +171,7 @@ class TypedefDeclaration : Declaration
     addChild(decl);
     this.decl = decl;
   }
+  mixin(copyMethod);
 }
 
 class EnumDeclaration : Declaration
@@ -178,6 +192,8 @@ class EnumDeclaration : Declaration
   }
 
   Enum symbol;
+
+  mixin(copyMethod);
 }
 
 class EnumMemberDeclaration : Declaration
@@ -194,6 +210,8 @@ class EnumMemberDeclaration : Declaration
   }
 
   EnumMember symbol;
+
+  mixin(copyMethod);
 }
 
 class TemplateDeclaration : Declaration
@@ -214,6 +232,8 @@ class TemplateDeclaration : Declaration
   }
 
   Template symbol; /// The template symbol for this declaration.
+
+  mixin(copyMethod);
 }
 
 abstract class AggregateDeclaration : Declaration
@@ -228,6 +248,7 @@ abstract class AggregateDeclaration : Declaration
 //     this.tparams = tparams;
     this.decls = decls;
   }
+  mixin(copyMethod);
 }
 
 class ClassDeclaration : AggregateDeclaration
@@ -245,6 +266,8 @@ class ClassDeclaration : AggregateDeclaration
   }
 
   Class symbol; /// The class symbol for this declaration.
+
+  mixin(copyMethod);
 }
 
 class InterfaceDeclaration : AggregateDeclaration
@@ -264,6 +287,8 @@ class InterfaceDeclaration : AggregateDeclaration
   alias dil.semantic.Symbols.Interface Interface;
 
   Interface symbol; /// The interface symbol for this declaration.
+
+  mixin(copyMethod);
 }
 
 class StructDeclaration : AggregateDeclaration
@@ -283,6 +308,8 @@ class StructDeclaration : AggregateDeclaration
   }
 
   Struct symbol; /// The struct symbol for this declaration.
+
+  mixin(copyMethod);
 }
 
 class UnionDeclaration : AggregateDeclaration
@@ -296,6 +323,8 @@ class UnionDeclaration : AggregateDeclaration
   }
 
   Union symbol; /// The union symbol for this declaration.
+
+  mixin(copyMethod);
 }
 
 class ConstructorDeclaration : Declaration
@@ -312,6 +341,7 @@ class ConstructorDeclaration : Declaration
     this.params = params;
     this.funcBody = funcBody;
   }
+  mixin(copyMethod);
 }
 
 class StaticConstructorDeclaration : Declaration
@@ -325,6 +355,7 @@ class StaticConstructorDeclaration : Declaration
 
     this.funcBody = funcBody;
   }
+  mixin(copyMethod);
 }
 
 class DestructorDeclaration : Declaration
@@ -338,6 +369,7 @@ class DestructorDeclaration : Declaration
 
     this.funcBody = funcBody;
   }
+  mixin(copyMethod);
 }
 
 class StaticDestructorDeclaration : Declaration
@@ -351,6 +383,7 @@ class StaticDestructorDeclaration : Declaration
 
     this.funcBody = funcBody;
   }
+  mixin(copyMethod);
 }
 
 class FunctionDeclaration : Declaration
@@ -388,6 +421,8 @@ class FunctionDeclaration : Declaration
     //                  ^ params.begin.prevNWS
     return params.begin.prevNWS.kind == TOK.RParen;
   }
+
+  mixin(copyMethod);
 }
 
 /// VariablesDeclaration := Type? Identifier ("=" Init)? ("," Identifier ("=" Init)?)* ";"
@@ -420,6 +455,8 @@ class VariablesDeclaration : Declaration
   }
 
   Variable[] variables;
+
+  mixin(copyMethod);
 }
 
 class InvariantDeclaration : Declaration
@@ -433,6 +470,7 @@ class InvariantDeclaration : Declaration
 
     this.funcBody = funcBody;
   }
+  mixin(copyMethod);
 }
 
 class UnittestDeclaration : Declaration
@@ -446,6 +484,7 @@ class UnittestDeclaration : Declaration
 
     this.funcBody = funcBody;
   }
+  mixin(copyMethod);
 }
 
 abstract class ConditionalCompilationDeclaration : Declaration
@@ -487,6 +526,7 @@ class DebugDeclaration : ConditionalCompilationDeclaration
     super(spec, cond, decls, elseDecls);
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 class VersionDeclaration : ConditionalCompilationDeclaration
@@ -496,6 +536,7 @@ class VersionDeclaration : ConditionalCompilationDeclaration
     super(spec, cond, decls, elseDecls);
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 class StaticIfDeclaration : Declaration
@@ -514,6 +555,7 @@ class StaticIfDeclaration : Declaration
     this.ifDecls = ifDecls;
     this.elseDecls = elseDecls;
   }
+  mixin(copyMethod);
 }
 
 class StaticAssertDeclaration : Declaration
@@ -529,6 +571,7 @@ class StaticAssertDeclaration : Declaration
     this.condition = condition;
     this.message = message;
   }
+  mixin(copyMethod);
 }
 
 class NewDeclaration : Declaration
@@ -545,6 +588,7 @@ class NewDeclaration : Declaration
     this.params = params;
     this.funcBody = funcBody;
   }
+  mixin(copyMethod);
 }
 
 class DeleteDeclaration : Declaration
@@ -561,6 +605,7 @@ class DeleteDeclaration : Declaration
     this.params = params;
     this.funcBody = funcBody;
   }
+  mixin(copyMethod);
 }
 
 abstract class AttributeDeclaration : Declaration
@@ -583,6 +628,7 @@ class ProtectionDeclaration : AttributeDeclaration
     mixin(set_kind);
     this.prot = prot;
   }
+  mixin(copyMethod);
 }
 
 class StorageClassDeclaration : AttributeDeclaration
@@ -595,6 +641,7 @@ class StorageClassDeclaration : AttributeDeclaration
 
     this.storageClass = storageClass;
   }
+  mixin(copyMethod);
 }
 
 class LinkageDeclaration : AttributeDeclaration
@@ -607,6 +654,7 @@ class LinkageDeclaration : AttributeDeclaration
 
     this.linkageType = linkageType;
   }
+  mixin(copyMethod);
 }
 
 class AlignDeclaration : AttributeDeclaration
@@ -618,6 +666,7 @@ class AlignDeclaration : AttributeDeclaration
     mixin(set_kind);
     this.size = size;
   }
+  mixin(copyMethod);
 }
 
 class PragmaDeclaration : AttributeDeclaration
@@ -633,6 +682,7 @@ class PragmaDeclaration : AttributeDeclaration
     this.ident = ident;
     this.args = args;
   }
+  mixin(copyMethod);
 }
 
 class MixinDeclaration : Declaration
@@ -665,4 +715,6 @@ class MixinDeclaration : Declaration
   {
     return argument !is null;
   }
+
+  mixin(copyMethod);
 }

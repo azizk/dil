@@ -109,7 +109,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
     static if (is(E == IllegalExpression))
     {}
     else
-    static if (is(E : CondExpression))
+    static if (is(E == CondExpression))
       visitE(e.condition), visitE(e.lhs), visitE(e.rhs);
     else
     static if (is(E : BinaryExpression))
@@ -192,8 +192,8 @@ returnType!(T.stringof) visitDefault(T)(T t)
   {
     alias T S;
     static if (is(S == CompoundStatement))
-      foreach (node; s.children)
-        visitS(cast(Statement)cast(void*)node);
+      foreach (stmnt; s.stmnts)
+        visitS(stmnt);
     //IllegalStatement has no subnodes.
     static if (is(S == FuncBodyStatement))
       s.funcBody && visitS(s.funcBody),
@@ -265,7 +265,8 @@ returnType!(T.stringof) visitDefault(T)(T t)
     static if (is(S == AsmStatement))
       foreach (op; s.operands)
         visitE(op);
-    //AsmAlignStatement has no subnodes.
+    //AsmAlignStatement,
+    //IllegalAsmStatement have no subnodes.
     static if (is(S == PragmaStatement))
     {
       foreach (arg; s.args)
@@ -342,7 +343,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
     //TemplateTupleParameter has no subnodes.
   }
   else
-    assert(0, "Missing default visit method for: "~t.classinfo.name);
+    static assert(0, "Missing default visit method for: "~typeof(t).stringof);
   return t;
 }
 

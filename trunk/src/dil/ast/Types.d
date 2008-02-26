@@ -8,6 +8,7 @@ public import dil.ast.Type;
 import dil.ast.Node;
 import dil.ast.Expression;
 import dil.ast.Parameters;
+import dil.ast.NodeCopier;
 import dil.lexer.Identifier;
 import dil.semantic.Types;
 import dil.Enums;
@@ -19,6 +20,7 @@ class IllegalType : TypeNode
   {
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 /// char, int, float etc.
@@ -30,6 +32,7 @@ class IntegralType : TypeNode
     mixin(set_kind);
     this.tok = tok;
   }
+  mixin(copyMethod);
 }
 
 /// Identifier
@@ -41,6 +44,7 @@ class IdentifierType : TypeNode
     mixin(set_kind);
     this.ident = ident;
   }
+  mixin(copyMethod);
 }
 
 /// Type "." Type
@@ -55,6 +59,7 @@ class QualifiedType : TypeNode
     addChild(rhs);
     this.rhs = rhs;
   }
+  mixin(copyMethod);
 }
 
 /// "." Type
@@ -65,6 +70,7 @@ class ModuleScopeType : TypeNode
     super(next);
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 /// "typeof" "(" Expression ")" or$(BR)
@@ -89,6 +95,8 @@ class TypeofType : TypeNode
   {
     return e is null;
   }
+
+  mixin(copyMethod);
 }
 
 /// Identifier "!" "(" TemplateParameters? ")"
@@ -103,6 +111,7 @@ class TemplateInstanceType : TypeNode
     this.ident = ident;
     this.targs = targs;
   }
+  mixin(copyMethod);
 }
 
 /// Type *
@@ -113,6 +122,7 @@ class PointerType : TypeNode
     super(next);
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 /// Dynamic array: T[] or$(BR)
@@ -165,6 +175,8 @@ class ArrayType : TypeNode
   {
     return assocType !is null;
   }
+
+  mixin(copyMethod);
 }
 
 /// ReturnType "function" "(" Parameters? ")"
@@ -179,6 +191,7 @@ class FunctionType : TypeNode
     addChild(params);
     this.params = params;
   }
+  mixin(copyMethod);
 }
 
 /// ReturnType "delegate" "(" Parameters? ")"
@@ -193,6 +206,7 @@ class DelegateType : TypeNode
     addChild(params);
     this.params = params;
   }
+  mixin(copyMethod);
 }
 
 /// Type "(" BasicType2 Identifier ")" "(" Parameters? ")"
@@ -205,6 +219,7 @@ class CFuncPointerType : TypeNode
     mixin(set_kind);
     addOptChild(params);
   }
+  mixin(copyMethod);
 }
 
 /// "class" Identifier : BaseClasses
@@ -217,6 +232,7 @@ class BaseClassType : TypeNode
     mixin(set_kind);
     this.prot = prot;
   }
+  mixin(copyMethod);
 }
 
 // version(D2)
@@ -230,6 +246,7 @@ class ConstType : TypeNode
     super(next);
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 
 /// "invariant" "(" Type ")"
@@ -241,5 +258,6 @@ class InvariantType : TypeNode
     super(next);
     mixin(set_kind);
   }
+  mixin(copyMethod);
 }
 // } // version(D2)
