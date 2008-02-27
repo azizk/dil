@@ -3,50 +3,48 @@
   License: GPL3
 +/
 module dil.CompilerInfo;
-import util.metastrings : FormatT = Format, ToString;
-
-template Pad(char[] str, uint amount)
-{
-  static if (str.length >= amount)
-    const char[] Pad = str;
-  else
-    const char[] Pad = "0" ~ Pad!(str, amount-1);
-}
-
-template Pad(int num, uint amount)
-{
-  const char[] Pad = Pad!(ToString!(num), amount);
-}
 
 version(D2)
-{
-  const VERSION_MAJOR = 2;
-  const VERSION_MINOR = 0;
-}
+  /// The major version number of this compiler.
+  const uint VERSION_MAJOR = 2;
 else
+  /// The major version number of this compiler.
+  const uint VERSION_MAJOR = 1;
+
+/// The minor version number of this compiler.
+const uint VERSION_MINOR = 0;
+
+private char[] toString(uint x)
 {
-  const VERSION_MAJOR = 1;
-  const VERSION_MINOR = 0;
+  char[] str;
+  do
+    str = cast(char)('0' + (x % 10)) ~ str;
+  while (x /= 10)
+  return str;
 }
 
-const VERSION = FormatT!("%s.%s", VERSION_MAJOR, Pad!(VERSION_MINOR, 3));
-const VENDOR = "dil";
+private char[] toString(uint x, uint pad)
+{
+  char[] str = toString(x);
+  if (pad < str.length)
+    return str;
+  for (uint i = pad-str.length; i; i--)
+    str = "0" ~ str;
+  return str;
+}
 
-/// Used in the main help message.
-const COMPILED_WITH = __VENDOR__;
-/// ditto
-const COMPILED_VERSION = FormatT!("%s.%s", __VERSION__/1000, Pad!(__VERSION__%1000, 3));
-/// ditto
-const COMPILED_DATE = __TIMESTAMP__;
+/// The compiler version formatted as a string.
+const char[] VERSION = toString(VERSION_MAJOR)~"."~toString(VERSION_MINOR, 3);
+/// The name of the compiler.
+const char[] VENDOR = "dil";
 
 /// The global, default alignment size for struct fields.
-const DEFAULT_ALIGN_SIZE = 4;
+const uint DEFAULT_ALIGN_SIZE = 4;
 
 version(DDoc)
-  const PTR_SIZE = 0; /// The pointer size depending on the platform.
+  const uint PTR_SIZE = 0; /// The pointer size depending on the platform.
 else
 version(X86_64)
-  const PTR_SIZE = 8; /// Pointer size on 64-bit platforms.
+  const uint PTR_SIZE = 8; // Pointer size on 64-bit platforms.
 else
-  const PTR_SIZE = 4; /// Pointer size on 32-bit platforms.
-
+  const uint PTR_SIZE = 4; // Pointer size on 32-bit platforms.
