@@ -7,12 +7,12 @@
  * Macros:
  *	WIKI = Phobos/StdMetastrings
  * Copyright:
- *	Public Domain
+ *	Public Domain.
  */
 
-/*
+/**
  * Authors:
- *	Walter Bright, Digital Mars, www.digitalmars.com
+ *	Walter Bright, Digital Mars, www.digitalmars.com$(BR)
  *	Don Clugston
  */
 

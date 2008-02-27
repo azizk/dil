@@ -18,6 +18,8 @@
  *	$(LINK2 http://www.unicode.org, The Unicode Consortium)
  * Trademarks:
  *	Unicode(tm) is a trademark of Unicode, Inc.
+ * Copyright:
+ *	Public Domain.
  */
 
 
