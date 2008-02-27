@@ -91,8 +91,8 @@ abstract class Node
     byte_t[] data = (cast(byte_t*)this)[0..size].dup;
     return cast(Node)data.ptr;
   }
-}
 
-/// This string is mixed into the constructor of a class that inherits
-/// from Node. It sets the member kind.
-const string set_kind = `this.kind = mixin("NodeKind." ~ typeof(this).stringof);`;
+  /// This string is mixed into the constructor of a class that inherits
+  /// from Node. It sets the member kind.
+  const string set_kind = `this.kind = mixin("NodeKind." ~ typeof(this).stringof);`;
+}

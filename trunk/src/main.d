@@ -31,6 +31,7 @@ import cmd.DDoc;
 
 import Settings;
 import SettingsLoader;
+// import TypeRules;
 import common;
 
 import Integer = tango.text.convert.Integer;
@@ -468,7 +469,7 @@ Usage:
   The directory of file.d is implicitly added to the list of import paths.
 
 Format:
-  --dot            : generate a dot document
+  --dot            : generate a dot document (default)
   Options related to --dot:
   -gbp             : Group modules by package names
   -gbf             : Group modules by full package name
@@ -493,7 +494,8 @@ Options:
   -i               : include unlocatable modules
 
 Example:
-  dil igraph src/main.d`;
+  dil igraph src/main.d --list
+  dil igraph src/main.d | dot -Tpng > main.png`;
     break;
   case "tok", "tokenize":
     msg = `Print the tokens of a D source file.
