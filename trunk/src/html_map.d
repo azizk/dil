@@ -1,24 +1,28 @@
 /// A map of document elements and D tokens to format strings.
 string[string] map = [
-  "DocHead" : `<html>`\n
+  "DocHead" : `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">`\n
+              `<html>`\n
               `<head>`\n
               `  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">`\n
               `  <link href="html.css" rel="stylesheet" type="text/css">`\n
               `</head>`\n
               `<body>`\n
               `<table><tr>`\n,
+  "CompBegin"   : `<td><div class="compilerinfo">`\n,
+  "CompEnd"     : "</div>\n</td></tr><tr>",
+  "LexerError"  : `<p class="error L">{0}({1},{2})L: {3}</p>`\n,
+  "ParserError" : `<p class="error P">{0}({1},{2})P: {3}</p>`\n,
+
+  "LineNumberBegin" : `<td class="linescolumn">`,
+  "LineNumberEnd"   : "</td>\n<td>",
+  "LineNumber"      : `<a id="L{0}" href="#L{0}">{0}</a>`,
+
+  "SourceBegin" : `<td><pre class="sourcecode">`\n,
+  "SourceEnd"   : "\n</pre></td>",
+
   "DocEnd"  : "\n</tr></table>"
               "\n</body>"
               "\n</html>",
-  "SourceBegin" : `<td><pre class="sourcecode">`,
-  "SourceEnd"   : "\n</pre></td>",
-  "CompBegin"   : `<div class="compilerinfo">`\n,
-  "CompEnd"     : "</div>\n",
-  "LexerError"  : `<p class="error L">{0}({1},{2})L: {3}</p>`\n,
-  "ParserError" : `<p class="error P">{0}({1},{2})P: {3}</p>`\n,
-  "LineNumberBegin" : `<td class="linescolumn">`,
-  "LineNumberEnd"   : `</td><td>`,
-  "LineNumber"      : `<a id="L{0}" href="#L{0}">{0}</a>`,
 
   // Node categories:
   "Declaration" : "d",

@@ -11,8 +11,9 @@ import dil.CompilerInfo;
 
 abstract class Type/* : Symbol*/
 {
-  Type next;
-  TYP tid; /// The ID of the type.
+  Type next;     /// The next type in the type structure.
+  TYP tid;       /// The ID of the type.
+  Symbol symbol; /// Not null if this type has a symbol.
 
   this(){}
 
@@ -39,6 +40,11 @@ abstract class Type/* : Symbol*/
   size_t sizeOf_()
   {
     return sizeOf();
+  }
+
+  bool hasSymbol()
+  {
+    return symbol !is null;
   }
 }
 
@@ -99,11 +105,10 @@ class TypeReference : Type
 
 class TypeEnum : Type
 {
-  Symbol enumSymbol;
-  this(Symbol enumSymbol, Type baseType)
+  this(Symbol symbol, Type baseType)
   {
     super(baseType, TYP.Enum);
-    this.enumSymbol = enumSymbol;
+    this.symbol = symbol;
   }
 
   Type baseType()
@@ -114,17 +119,19 @@ class TypeEnum : Type
 
 class TypeStruct : Type
 {
-  this()
+  this(Symbol symbol)
   {
     super(null, TYP.Struct);
+    this.symbol = symbol;
   }
 }
 
 class TypeClass : Type
 {
-  this()
+  this(Symbol symbol)
   {
     super(null, TYP.Class);
+    this.symbol = symbol;
   }
 }
 
