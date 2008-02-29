@@ -5,17 +5,19 @@ string[string] map = [
               `  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">`\n
               `  <link href="html.css" rel="stylesheet" type="text/css">`\n
               `</head>`\n
-              `<body>`\n,
-  "DocEnd"  : "\n</body>"
+              `<body>`\n
+              `<table><tr>`\n,
+  "DocEnd"  : "\n</tr></table>"
+              "\n</body>"
               "\n</html>",
-  "SourceBegin" : `<pre class="sourcecode">`,
-  "SourceEnd"   : "\n</pre>",
+  "SourceBegin" : `<td><pre class="sourcecode">`,
+  "SourceEnd"   : "\n</pre></td>",
   "CompBegin"   : `<div class="compilerinfo">`\n,
   "CompEnd"     : "</div>\n",
   "LexerError"  : `<p class="error L">{0}({1},{2})L: {3}</p>`\n,
   "ParserError" : `<p class="error P">{0}({1},{2})P: {3}</p>`\n,
-  "LineNumberBegin" : `<div class="linescolumn">`,
-  "LineNumberEnd"   : `</div>`,
+  "LineNumberBegin" : `<td class="linescolumn">`,
+  "LineNumberEnd"   : `</td><td>`,
   "LineNumber"      : `<a id="L{0}" href="#L{0}">{0}</a>`,
 
   // Node categories:

@@ -3,9 +3,8 @@
   white-space: pre;
   font-family: Monospace;
   font-size: 0.8em;
-}
-.compilerinfo, .sourcecode {
-  display: block;
+  margin:0;
+  padding:0;
 }
 .compilerinfo {
   white-space: normal;
@@ -15,12 +14,15 @@
 }
 .compilerinfo .error { display: block; }
 .linescolumn {
-  float: left;
   text-align: right;
-  margin-right: 0.2em;
-  border-right: 1px solid gray;
+  padding-right: 0.3em;
+  border-right: 1px dotted gray;
 }
-.linescolumn a { display: block; }
+.linescolumn a {
+  display: block;
+  color: #44B;
+  text-decoration: none;
+}
 /* Number */
 .n { color: teal; }
 /* Keyword */
@@ -63,6 +65,6 @@ o = Other
 /* .d { background-color: #FFDDDD; } */
 /* .e { background-color: #DDDDFF; } */
 .d.Module .i, .d.Import .i { color: blue; }
-.t .i, .TemplateTypeParameter .i { color: #911; }
+ /*.t .i,*/ .t.Identifier .i, .TemplateTypeParameter .i { color: #911; } 
 .t .br, .t .op { color: #911; }
 .t .k { color: #911; font-weight: normal; }
