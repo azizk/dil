@@ -358,7 +358,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
 char[] generateDefaultVisitMethods()
 {
   char[] text;
-  foreach (className; classNames)
+  foreach (className; g_classNames)
     text ~= "private mixin .visitDefault!("~className~") _"~className~";\n"
             "override returnType!(\""~className~"\") visit("~className~" node)"
             "{return _"~className~".visitDefault(node);}\n";

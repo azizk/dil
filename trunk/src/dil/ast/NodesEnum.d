@@ -16,7 +16,7 @@ enum NodeCategory : ushort
 }
 
 /// A list of all class names that inherit from Node.
-static const char[][] classNames = [
+static const char[][] g_classNames = [
   // Declarations:
   "CompoundDeclaration",
   "EmptyDeclaration",
@@ -216,7 +216,7 @@ static const char[][] classNames = [
 char[] generateNodeKindMembers()
 {
   char[] text;
-  foreach (className; classNames)
+  foreach (className; g_classNames)
     text ~= className ~ ",";
   return text;
 }

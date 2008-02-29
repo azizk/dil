@@ -38,7 +38,7 @@ static:
   /// Loads keywords and predefined identifiers into the static table.
   static this()
   {
-    foreach (ref k; keywords)
+    foreach (ref k; g_reservedIds)
       staticTable[k.str] = &k;
     foreach (id; Ident.allIds())
       staticTable[id.str] = id;

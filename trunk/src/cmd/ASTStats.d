@@ -19,7 +19,7 @@ class ASTStats : DefaultVisitor
   /// Starts counting.
   uint[] count(Node root)
   {
-    table = new uint[classNames.length];
+    table = new uint[g_classNames.length];
     super.visitN(root);
     return table;
   }

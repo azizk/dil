@@ -17,4 +17,6 @@ COPYRIGHT = Copyright © 2007-$(YEAR), Aziz Köksal. All rights reserved.
 SYMBOL_ = <a href="http://hg.sharesource.org/dil/file/tip/trunk/src/$(MODPATH)#L$2">$1</a>
 SYMBOL = <a href="$(SRCFILE)#L$2">$1</a>
 
+PRE = <pre>$0</pre>
 DDD = ---
+DMDBUG = $(LINK2 http://d.puremagic.com/issues/show_bug.cgi?id=$1, $2)

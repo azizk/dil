@@ -43,6 +43,7 @@ class Lexer
   uint lineNum = 1;   /// Current, actual source text line number.
   uint lineNum_hline; /// Line number set by #line.
   uint inTokenString; /// > 0 if inside q{ }
+  /// Holds the original file path and the modified one (by #line.)
   NewlineData.FilePaths* filePaths;
 
   /// Construct a Lexer object.
@@ -81,6 +82,7 @@ class Lexer
     scanShebang();
   }
 
+  /// The destructor deletes the doubly-linked token list.
   ~this()
   {
     auto token = head.next;
@@ -117,6 +119,7 @@ class Lexer
     }
   }
 
+  /// Sets the value of the special token.
   void finalizeSpecialToken(ref Token t)
   {
     assert(t.srcText[0..2] == "__");
@@ -174,6 +177,9 @@ class Lexer
     this.lineBegin = p;
   }
 
+  /// Scans the next token in the source text.
+  ///
+  /// Creates a new token if t.next is null and appends it to the list.
   private void scanNext(ref Token* t)
   {
     assert(t !is null);
@@ -218,10 +224,9 @@ class Lexer
     return false;
   }
 
-  /++
-    This is the old scan method.
-    TODO: profile old and new to see which one is faster.
-  +/
+  /// The main method which recognizes the characters that make up a token.
+  ///
+  /// Complicated tokens are scanned in separate methods.
   public void scan(ref Token t)
   in
   {
@@ -641,6 +646,7 @@ class Lexer
     }
   }
 
+  /// Converts a string literal to an integer.
   template toUint(char[] T)
   {
     static assert(0 < T.length && T.length <= 4);
@@ -651,35 +657,45 @@ class Lexer
   }
   static assert(toUint!("\xAA\xBB\xCC\xDD") == 0xAABBCCDD);
 
-  // Can't use this yet due to a bug in DMD (bug id=1534).
-  template case_(char[] str, TOK tok, char[] label)
+  /// Constructs case statements. E.g.:
+  /// ---
+  //// // case_!("<", "Less", "Lcommon") ->
+  /// case 60u:
+  ///   t.kind = TOK.Less;
+  ///   goto Lcommon;
+  /// ---
+  /// Note:Can't use this yet due to a $(DMDBUG 1534, bug) in DMD.
+  template case_(char[] str, char[] kind, char[] label)
   {
     const char[] case_ =
-      `case `~toUint!(str).stringof~`:
-
-         goto `~label~`;`;
+      `case `~toUint!(str).stringof~`:`
+        `t.kind = TOK.`~kind~`;`
+        `goto `~label~`;`;
   }
+  //pragma(msg, case_!("<", "Less", "Lcommon"));
 
-  template case_L4(char[] str, TOK tok)
+  template case_L4(char[] str, TOK kind)
   {
-    const char[] case_L4 = case_!(str, tok, "Lcommon_4");
+    const char[] case_L4 = case_!(str, kind, "Lcommon_4");
   }
 
-  template case_L3(char[] str, TOK tok)
+  template case_L3(char[] str, TOK kind)
   {
-    const char[] case_L3 = case_!(str, tok, "Lcommon_3");
+    const char[] case_L3 = case_!(str, kind, "Lcommon_3");
   }
 
-  template case_L2(char[] str, TOK tok)
+  template case_L2(char[] str, TOK kind)
   {
-    const char[] case_L2 = case_!(str, tok, "Lcommon_2");
+    const char[] case_L2 = case_!(str, kind, "Lcommon_2");
   }
 
-  template case_L1(char[] str, TOK tok)
+  template case_L1(char[] str, TOK kind)
   {
-    const char[] case_L3 = case_!(str, tok, "Lcommon");
+    const char[] case_L3 = case_!(str, kind, "Lcommon");
   }
 
+  /// An alternative scan method.
+  /// Profiling shows it's a bit slower.
   public void scan_(ref Token t)
   in
   {
@@ -1095,6 +1111,9 @@ class Lexer
     return;
   }
 
+  /// Scans a block comment.
+  ///
+  /// BlockComment := "/*" AnyChar* "*/"
   void scanBlockComment(ref Token t)
   {
     assert(p[-1] == '/' && *p == '*');
@@ -1137,6 +1156,9 @@ class Lexer
     return;
   }
 
+  /// Scans a nested comment.
+  ///
+  /// NestedComment := "/+" (AnyChar* | NestedComment) "+/"
   void scanNestedComment(ref Token t)
   {
     assert(p[-1] == '/' && *p == '+');
@@ -1187,6 +1209,9 @@ class Lexer
     return;
   }
 
+  /// Scans the postfix character of a string literal.
+  ///
+  /// PostfixChar := "c" | "w" | "d"
   char scanPostfix()
   {
     assert(p[-1] == '"' || p[-1] == '`' ||
@@ -1205,6 +1230,9 @@ class Lexer
     assert(0);
   }
 
+  /// Scans a normal string literal.
+  ///
+  /// NormalStringLiteral := "\"" Char* "\""
   void scanNormalStringLiteral(ref Token t)
   {
     assert(*p == '"');
@@ -1262,6 +1290,9 @@ class Lexer
     assert(0);
   }
 
+  /// Scans a character literal.
+  ///
+  /// CharLiteral := "'" Char "'"
   void scanCharacterLiteral(ref Token t)
   {
     assert(*p == '\'');
@@ -1293,6 +1324,9 @@ class Lexer
     t.end = p;
   }
 
+  /// Scans a raw string literal.
+  ///
+  /// RawStringLiteral := "r\"" AnyChar* "\"" | "`" AnyChar* "`"
   void scanRawStringLiteral(ref Token t)
   {
     assert(*p == '`' || *p == '"' && p[-1] == 'r');
@@ -1348,6 +1382,9 @@ class Lexer
     assert(0);
   }
 
+  /// Scans a hexadecimal string literal.
+  ///
+  /// HexStringLiteral := "x\"" (HexChar HexChar)* "\""
   void scanHexStringLiteral(ref Token t)
   {
     assert(p[0] == 'x' && p[1] == '"');
@@ -1430,6 +1467,16 @@ class Lexer
     assert(0);
   }
 
+version(DDoc)
+{
+  /// Scans a delimited string literal.
+  void scanDelimitedStringLiteral(ref Token t);
+  /// Scans a token string literal.
+  ///
+  /// TokenStringLiteral := "q{" Token* "}"
+  void scanTokenStringLiteral(ref Token t);
+}
+else
 version(D2)
 {
   void scanDelimitedStringLiteral(ref Token t)
@@ -1713,6 +1760,15 @@ version(D2)
   }
 } // version(D2)
 
+  /// Scans an escape sequence.
+  ///
+  /// EscapeSequence := "\" (Octal{1,3} | ("x" Hex{2}) |
+  ///                       ("u" Hex{4}) | ("U" Hex{8}) |
+  ///                       "'" | "\"" | "\\" | "?" | "a" |
+  ///                       "b" | "f" | "n" | "r" | "t" | "v")
+  /// Params:
+  ///   isBinary = set to true for octal and hexadecimal escapes.
+  /// Returns: the escape value.
   dchar scanEscapeSequence(ref bool isBinary)
   out(result)
   { assert(isValidChar(result)); }
@@ -1837,17 +1893,17 @@ version(D2)
     return REPLACEMENT_CHAR; // Error: return replacement character.
   }
 
-  /*
-    IntegerLiteral:= (Dec|Hex|Bin|Oct)Suffix?
-    Dec:= (0|[1-9][0-9_]*)
-    Hex:= 0[xX] HexDigits
-    Bin:= 0[bB][01_]+
-    Oct:= 0[0-7_]+
-    Suffix:= (L[uU]?|[uU]L?)
-    HexDigits:= [0-9a-zA-Z_]+
-
-    Invalid: "0b_", "0x_", "._"
-  */
+  /// Scans a number literal.
+  ///
+  /// $(PRE
+  /// IntegerLiteral := (Dec|Hex|Bin|Oct)Suffix?
+  /// Dec := (0|[1-9][0-9_]*)
+  /// Hex := 0[xX][_]*[0-9a-zA-Z][0-9a-zA-Z_]*
+  /// Bin := 0[bB][_]*[01][01_]*
+  /// Oct := 0[0-7_]*
+  /// Suffix := (L[uU]?|[uU]L?)
+  /// )
+  /// Invalid: "0b_", "0x_", "._" etc.
   void scanNumber(ref Token t)
   {
     ulong ulong_;
@@ -2135,14 +2191,19 @@ version(D2)
     return;
   }
 
-  /*
-    FloatLiteral:= Float[fFL]?i?
-    Float:= DecFloat | HexFloat
-    DecFloat:= ([0-9][0-9_]*[.][0-9_]*DecExponent?) | [.][0-9][0-9_]*DecExponent? | [0-9][0-9_]*DecExponent
-    DecExponent:= [eE][+-]?[0-9][0-9_]*
-    HexFloat:= 0[xX](HexDigits[.]HexDigits | [.][0-9a-zA-Z]HexDigits? | HexDigits)HexExponent
-    HexExponent:= [pP][+-]?[0-9][0-9_]*
-  */
+  /// Scans a floating point number literal.
+  ///
+  /// $(PRE
+  /// FloatLiteral := Float[fFL]?i?
+  /// Float := DecFloat | HexFloat
+  /// DecFloat := ([0-9][0-9_]*[.][0-9_]*DecExponent?) |
+  ///             [.][0-9][0-9_]*DecExponent? | [0-9][0-9_]*DecExponent
+  /// DecExponent := [eE][+-]?[0-9][0-9_]*
+  /// HexFloat := 0[xX](HexDigits[.]HexDigits |
+  ///                   [.][0-9a-zA-Z]HexDigits? |
+  ///                   HexDigits)HexExponent
+  /// HexExponent := [pP][+-]?[0-9][0-9_]*
+  /// )
   void scanReal(ref Token t)
   {
     if (*p == '.')
@@ -2192,6 +2253,7 @@ version(D2)
     finalizeFloat(t, buffer);
   }
 
+  /// Scans a hexadecimal floating point number literal.
   void scanHexReal(ref Token t)
   {
     assert(*p == '.' || *p == 'p' || *p == 'P');
@@ -2233,6 +2295,10 @@ version(D2)
     error(t.start, mid);
   }
 
+  /// Sets the value of the token.
+  /// Params:
+  ///   t = receives the value.
+  ///   buffer = the well-formed float number.
   void finalizeFloat(ref Token t, string buffer)
   {
     assert(buffer[$-1] == 0);
@@ -2266,7 +2332,9 @@ version(D2)
     t.end = p;
   }
 
-  /// Scan special token: #line Integer [Filespec] EndOfLine
+  /// Scans a special token sequence.
+  ///
+  /// SpecialTokenSequence := "#line" Integer Filespec? EndOfLine
   void scanSpecialTokenSequence(ref Token t)
   {
     assert(*p == '#');
@@ -2378,12 +2446,10 @@ version(D2)
     error(errorAtColumn, mid);
   }
 
-  /++
-    Insert an empty dummy token before t.
-
-    Useful in the parsing phase for representing a node in the AST
-    that doesn't consume an actual token from the source text.
-  +/
+  /// Inserts an empty dummy token (TOK.Empty) before t.
+  ///
+  /// Useful in the parsing phase for representing a node in the AST
+  /// that doesn't consume an actual token from the source text.
   Token* insertEmptyTokenBefore(Token* t)
   {
     assert(t !is null && t.prev !is null);
@@ -2402,21 +2468,30 @@ version(D2)
     return new_t;
   }
 
+  /// Returns the error line number.
   uint errorLineNumber(uint lineNum)
   {
     return lineNum - this.lineNum_hline;
   }
 
+  /// Forwards error parameters.
   void error(char* columnPos, MID mid, ...)
   {
     error_(this.lineNum, this.lineBegin, columnPos, mid, _arguments, _argptr);
   }
 
+  /// Forwards error parameters.
   void error(uint lineNum, char* lineBegin, char* columnPos, MID mid, ...)
   {
     error_(lineNum, lineBegin, columnPos, mid, _arguments, _argptr);
   }
 
+  /// Creates an error report and appends it to a list.
+  /// Params:
+  ///   lineNum = the line number.
+  ///   lineBegin = points to the first character of the current line.
+  ///   columnPos = points to the character where the error is located.
+  ///   mid = the message ID.
   void error_(uint lineNum, char* lineBegin, char* columnPos, MID mid,
               TypeInfo[] _arguments, Arg _argptr)
   {
@@ -2430,30 +2505,19 @@ version(D2)
       infoMan ~= error;
   }
 
-  Token* getTokens()
-  {
-    while (nextToken() != TOK.EOF)
-    {}
-    return head;
-  }
-
-  /// Scan the whole text until EOF is encountered.
+  /// Scans the whole source text until EOF is encountered.
   void scanAll()
   {
     while (nextToken() != TOK.EOF)
     {}
   }
 
-  /// HEAD -> Newline -> First Token
+  /// Returns the first token of the source text.
+  /// This can be the EOF token.
+  /// Structure: HEAD -> Newline -> First Token
   Token* firstToken()
   {
     return this.head.next.next;
-  }
-
-  static void loadKeywords(ref Identifier[string] table)
-  {
-    foreach(k; keywords)
-      table[k.str] = k;
   }
 
   /// Returns true if str is a valid D identifier.
@@ -2474,24 +2538,20 @@ version(D2)
   /// Returns true if str is a keyword or a special token (__FILE__, __LINE__ etc.)
   static bool isReservedIdentifier(char[] str)
   {
-    if (str.length == 0)
-      return false;
-
-    static Identifier[string] reserved_ids_table;
-    if (reserved_ids_table is null)
-      Lexer.loadKeywords(reserved_ids_table);
-
     if (!isIdentifierString(str))
-      return false;
+      return false; // str is not a valid identifier.
 
-    return (str in reserved_ids_table) !is null;
+    auto id = IdTable.inStatic(str);
+    if (id is null || id.kind == TOK.Identifier)
+      return false; // str is not in the table or a normal identifier.
+
+    return true;
   }
 
-  /++
-    Returns true if the current character to be decoded is
-    a Unicode alpha character.
-    The current pointer 'p' is not advanced if false is returned.
-  +/
+  /// Returns true if the current character to be decoded is
+  /// a Unicode alpha character.
+  ///
+  /// The current pointer 'p' is not advanced if false is returned.
   bool isUnicodeAlpha()
   {
     assert(!isascii(*p), "check for ASCII char before calling decodeUTF8().");
@@ -2628,6 +2688,7 @@ version(D2)
     return d;
   }
 
+  /// Encodes the character d and appends it to str.
   static void encodeUTF8(ref char[] str, dchar d)
   {
     assert(!isascii(d), "check for ASCII char before calling encodeUTF8().");
@@ -2714,6 +2775,7 @@ version(D2)
   }
 }
 
+/// Tests the lexer with a list of tokens.
 unittest
 {
   Stdout("Testing Lexer.\n");
@@ -2791,6 +2853,7 @@ unittest
   } while (token.kind != TOK.EOF)
 }
 
+/// Tests the Lexer's peek() method.
 unittest
 {
   Stdout("Testing method Lexer.peek()\n");

@@ -8,7 +8,7 @@ import dil.lexer.Token;
 import dil.lexer.Identifier;
 
 /// Table of reserved identifiers.
-static const Identifier[] keywords = [
+static const Identifier[] g_reservedIds = [
   {"abstract", TOK.Abstract},
   {"alias", TOK.Alias},
   {"align", TOK.Align},

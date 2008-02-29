@@ -21,7 +21,7 @@ import dil.ast.Declarations,
 char[] generateVisitMethods()
 {
   char[] text;
-  foreach (className; classNames)
+  foreach (className; g_classNames)
     text ~= "returnType!(\""~className~"\") visit("~className~" node){return node;}\n";
   return text;
 }
@@ -63,7 +63,7 @@ template returnType(char[] className)
 char[] generateDispatchFunctions()
 {
   char[] text;
-  foreach (className; classNames)
+  foreach (className; g_classNames)
     text ~= "returnType!(\""~className~"\") visit"~className~"(Visitor visitor, "~className~" c)\n"
             "{ return visitor.visit(c); }\n";
   return text;
@@ -83,7 +83,7 @@ char[] generateDispatchFunctions()
 char[] generateVTable()
 {
   char[] text = "[";
-  foreach (className; classNames)
+  foreach (className; g_classNames)
     text ~= "cast(void*)&visit"~className~",\n";
   return text[0..$-2]~"]"; // slice away last ",\n"
 }
@@ -102,7 +102,7 @@ abstract class Visitor
 
   /// The table holding function pointers to the second dispatch functions.
   static const void*[] dispatch_vtable = mixin(generateVTable());
-  static assert(dispatch_vtable.length == classNames.length, "vtable length doesn't match number of classes");
+  static assert(dispatch_vtable.length == g_classNames.length, "vtable length doesn't match number of classes");
 
   /// Looks up the second dispatch function for n and returns that.
   Node function(Visitor, Node) getDispatchFunction()(Node n)
