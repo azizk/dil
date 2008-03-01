@@ -544,6 +544,18 @@ class DDocEmitter : DefaultVisitor
     });
   }
 
+  // templated decls are not virtual so we need these:
+
+  /// Writes a class declaration.
+  void writeClass(ClassDeclaration d) {
+    writeClassOrInterface(d);
+  }
+
+  /// Writes an interface declaration.
+  void writeInterface(InterfaceDeclaration d) {
+    writeClassOrInterface(d);
+  }
+
   /// Writes a struct or union declaration.
   void writeStructOrUnion(T)(T d)
   {
@@ -562,6 +574,18 @@ class DDocEmitter : DefaultVisitor
         d.decls && super.visit(d.decls);
       });
     });
+  }
+
+  // templated decls are not virtual so we need these:
+
+  /// Writes a struct declaration.
+  void writeStruct(StructDeclaration d) {
+    writeStructOrUnion(d);
+  }
+
+  /// Writes an union declaration.
+  void writeUnion(UnionDeclaration d) {
+    writeStructOrUnion(d);
   }
 
   /// Writes an alias or typedef declaration.
@@ -683,25 +707,25 @@ override:
 
   D visit(ClassDeclaration d)
   {
-    writeClassOrInterface(d);
+    writeClass(d);
     return d;
   }
 
   D visit(InterfaceDeclaration d)
   {
-    writeClassOrInterface(d);
+    writeInterface(d);
     return d;
   }
 
   D visit(StructDeclaration d)
   {
-    writeStructOrUnion(d);
+    writeStruct(d);
     return d;
   }
 
   D visit(UnionDeclaration d)
   {
-    writeStructOrUnion(d);
+    writeUnion(d);
     return d;
   }
 

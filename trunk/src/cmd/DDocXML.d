@@ -146,9 +146,21 @@ class DDocXMLEmitter : DDocEmitter
       writeComment();
       MEMBERS(is(T == ClassDeclaration) ? "CLASS" : "INTERFACE", {
         scope s = new Scope();
-/*FIXME*/        d.decls && DefaultVisitor.visit(d.decls);
+        d.decls && DefaultVisitor.visit(d.decls);
       });
     });
+  }
+
+  // templated decls are not virtual so we need these:
+
+  /// Writes a class declaration.
+  void writeClass(ClassDeclaration d) {
+    writeClassOrInterface(d);
+  }
+
+  /// Writes an interface declaration.
+  void writeInterface(InterfaceDeclaration d) {
+    writeClassOrInterface(d);
   }
 
   /// Writes a struct or union declaration.
@@ -166,9 +178,21 @@ class DDocXMLEmitter : DDocEmitter
       writeComment();
       MEMBERS(is(T == StructDeclaration) ? "STRUCT" : "UNION", {
         scope s = new Scope();
-/*FIXME*/        d.decls && DefaultVisitor.visit(d.decls);
+        d.decls && DefaultVisitor.visit(d.decls);
       });
     });
+  }
+
+  // templated decls are not virtual so we need these:
+
+  /// Writes a struct declaration.
+  void writeStruct(StructDeclaration d) {
+    writeStructOrUnion(d);
+  }
+
+  /// Writes an union declaration.
+  void writeUnion(UnionDeclaration d) {
+    writeStructOrUnion(d);
   }
 
   /// Writes an alias or typedef declaration.
@@ -186,6 +210,7 @@ class DDocXMLEmitter : DDocEmitter
     // DECL({ write(textSpan(d.begin, d.end)); }, false);
     DESC({ writeComment(); });
   }
+
 
   /// Writes the attributes of a declaration in brackets.
   void writeAttributes(Declaration d)
@@ -220,10 +245,11 @@ class DDocXMLEmitter : DDocEmitter
 
   alias Declaration D;
 
-//  alias DDocEmitter.visit visit;
+  alias DDocEmitter.visit visit;
 
   D visit(EnumDeclaration d)
   {
+      /+ FIXME: broken, infinite recursion :/
     if (!ddoc(d))
       return d;
     DECL({
@@ -232,8 +258,10 @@ class DDocXMLEmitter : DDocEmitter
     }, d);
     DESC({
       writeComment();
-/*FIXME*/      MEMBERS("ENUM", { scope s = new Scope(); DefaultVisitor.visit(d); });
+      Stdout("help\n");
+///*FIXME*/      MEMBERS("ENUM", { scope s = new Scope(); DDocEmitter.visit(d); });
     });
+    +/
     return d;
   }
 
@@ -251,7 +279,7 @@ class DDocXMLEmitter : DDocEmitter
     this.tparams = d.tparams;
     if (d.begin.kind != TOK.Template)
     { // This is a templatized class/interface/struct/union/function.
-/*FIXME*/      DefaultVisitor.visit(d.decls);
+      DefaultVisitor.visit(d.decls);
       this.tparams = null;
       return d;
     }
@@ -266,12 +294,11 @@ class DDocXMLEmitter : DDocEmitter
       writeComment();
       MEMBERS("TEMPLATE", {
         scope s = new Scope();
-/*FIXME*/        DefaultVisitor.visit(d.decls);
+        DefaultVisitor.visit(d.decls);
       });
     });
     return d;
   }
-
 
   D visit(ConstructorDeclaration d)
   {
@@ -375,4 +402,5 @@ class DDocXMLEmitter : DDocEmitter
     DESC({ writeComment(); });
     return d;
   }
+
 }
