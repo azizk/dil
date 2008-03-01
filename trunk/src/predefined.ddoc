@@ -106,3 +106,4 @@ ATTRIBUTES = [$0]
 PROT = $0
 STC = $0
 LINKAGE = $0
+SYMBOL = $1

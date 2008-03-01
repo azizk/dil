@@ -4,6 +4,7 @@
 +/
 module cmd.DDoc;
 
+import cmd.DDocXML;
 import cmd.Generate;
 import dil.doc.Parser;
 import dil.doc.Macro;
@@ -98,7 +99,7 @@ void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
   mtable.insert("DATETIME", timeStr);
   mtable.insert("YEAR", Time.year(timeStr));
 
-  auto doc = new DDocEmitter(mod, mtable, incUndoc, tokenHL);
+  auto doc = new DDocXMLEmitter(mod, mtable, incUndoc, tokenHL);
   doc.emit();
   // Set BODY macro to the text produced by the DDocEmitter.
   mtable.insert("BODY", doc.text);
