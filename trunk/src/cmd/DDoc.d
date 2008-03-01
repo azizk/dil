@@ -36,8 +36,8 @@ import tango.io.FilePath;
 
 /// Executes the doc generation command.
 void execute(string[] filePaths, string destDir, string[] macroPaths,
-             bool incUndoc, bool verbose, CompilationContext context,
-             InfoManager infoMan)
+             bool writeXML, bool incUndoc, bool verbose,
+             CompilationContext context, InfoManager infoMan)
 {
   // Parse macro files.
   MacroTable mtable;
@@ -52,7 +52,8 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
 //   foreach (k, v; mtable.table)
 //     Stdout(k)("=")(v.text);
 
-  auto tokenHL = new TokenHighlighter(infoMan); // For DDoc code sections.
+  // For DDoc code sections.
+  auto tokenHL = new TokenHighlighter(infoMan, writeXML == false);
 
   // Process D files.
   foreach (filePath; filePaths)
@@ -69,7 +70,7 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
 
     // Generate documentation.
     auto dest = new FilePath(destDir);
-    dest.append(mod.getFQN() ~ ".html");
+    dest.append(mod.getFQN() ~ (writeXML ? ".xml" : ".html"));
 
     InfoManager infoMan2; // Collects warnings from the macro expander.
     if (verbose)
@@ -78,14 +79,15 @@ void execute(string[] filePaths, string destDir, string[] macroPaths,
       infoMan2 = new InfoManager();
     }
 
-    writeDocFile(dest.toString(), mod, mtable, incUndoc, tokenHL, infoMan2);
+    writeDocFile(dest.toString(), mod, mtable, writeXML, incUndoc, tokenHL, infoMan2);
 
     if (infoMan2)
       infoMan ~= infoMan2.info;
   }
 }
 
-void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
+void writeDocFile(string dest, Module mod, MacroTable mtable,
+                  bool writeXML, bool incUndoc,
                   TokenHighlighter tokenHL, InfoManager infoMan)
 {
   // Create a macro environment for this module.
@@ -94,15 +96,19 @@ void writeDocFile(string dest, Module mod, MacroTable mtable, bool incUndoc,
   // MODPATH is not in the specs.
   mtable.insert("MODPATH", mod.getFQNPath() ~ "." ~ mod.fileExtension());
   mtable.insert("TITLE", mod.getFQN());
-  mtable.insert("DOCFILENAME", mod.getFQN() ~ ".html");
+  mtable.insert("DOCFILENAME", mod.getFQN() ~ (writeXML ? ".xml" : ".html"));
   auto timeStr = Time.toString();
   mtable.insert("DATETIME", timeStr);
   mtable.insert("YEAR", Time.year(timeStr));
 
-  auto doc = new DDocXMLEmitter(mod, mtable, incUndoc, tokenHL);
-  doc.emit();
+  DDocEmitter docEmitter;
+  if (writeXML)
+    docEmitter = new DDocXMLEmitter(mod, mtable, incUndoc, tokenHL);
+  else
+    docEmitter = new DDocEmitter(mod, mtable, incUndoc, tokenHL);
+  docEmitter.emit();
   // Set BODY macro to the text produced by the DDocEmitter.
-  mtable.insert("BODY", doc.text);
+  mtable.insert("BODY", docEmitter.text);
   // Do the macro expansion pass.
   auto fileText = MacroExpander.expand(mtable, "$(DDOC)", mod.filePath, infoMan);
 // fileText ~= "\n<pre>\n" ~ doc.text ~ "\n</pre>";

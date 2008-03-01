@@ -371,7 +371,10 @@ class TokenHighlighter
   TagMap tags;
   this(InfoManager infoMan, bool useHTML = true)
   {
-    auto map = TagMapLoader(infoMan).load(GlobalSettings.htmlMapFile);
+    string filePath = GlobalSettings.htmlMapFile;
+    if (!useHTML)
+      filePath = GlobalSettings.xmlMapFile;
+    auto map = TagMapLoader(infoMan).load(filePath);
     tags = new TagMap(map);
   }
 

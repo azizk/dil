@@ -108,6 +108,7 @@ void main(char[][] args)
     auto macroPaths = GlobalSettings.ddocFilePaths;
     char[][] filePaths;
     bool incUndoc;
+    bool writeXML;
     bool verbose;
     // Parse arguments.
     auto context = newCompilationContext();
@@ -115,6 +116,8 @@ void main(char[][] args)
     {
       if (parseDebugOrVersion(arg, context))
       {}
+      else if (arg == "--xml")
+        writeXML = true;
       else if (arg == "-i")
         incUndoc = true;
       else if (arg == "-v")
@@ -127,7 +130,8 @@ void main(char[][] args)
 
     infoMan = new InfoManager();
     // Execute command.
-    cmd.DDoc.execute(filePaths, destination, macroPaths, incUndoc, verbose, context, infoMan);
+    cmd.DDoc.execute(filePaths, destination, macroPaths, writeXML,
+                     incUndoc, verbose, context, infoMan);
     infoMan.hasInfo && printErrors(infoMan);
     break;
   case "gen", "generate":
@@ -303,6 +307,9 @@ void main(char[][] args)
   case "?", "help":
     printHelp(args.length >= 3 ? args[2] : "");
     break;
+  // case "typerules":
+  //   genHTMLTypeRulesTables();
+  //   break;
   default:
   }
 }
@@ -448,6 +455,7 @@ Usage:
   Files with the extension .ddoc are recognized as macro definition files.
 
 Options:
+  --xml            : write XML instead of HTML documents
   -i               : include undocumented symbols
   -v               : verbose output
 

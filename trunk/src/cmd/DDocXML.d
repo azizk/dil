@@ -1,5 +1,5 @@
 /++
-  Author: Aziz Köksal & Jari-Matti Mäkelä
+  Authors: Aziz Köksal & Jari-Matti Mäkelä
   License: GPL3
 +/
 module cmd.DDocXML;
