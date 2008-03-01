@@ -68,6 +68,7 @@ abstract class Aggregate : ScopeSymbol
   }
 }
 
+/// A class symbol.
 class Class : Aggregate
 {
   this(Identifier* name, Node classNode)
@@ -76,6 +77,7 @@ class Class : Aggregate
   }
 }
 
+/// An interface symbol.
 class Interface : Aggregate
 {
   this(Identifier* name, Node interfaceNode)
@@ -84,6 +86,7 @@ class Interface : Aggregate
   }
 }
 
+/// A union symbol.
 class Union : Aggregate
 {
   this(Identifier* name, Node unionNode)
@@ -92,6 +95,7 @@ class Union : Aggregate
   }
 }
 
+/// A struct symbol.
 class Struct : Aggregate
 {
   this(Identifier* name, Node structNode)
@@ -100,6 +104,7 @@ class Struct : Aggregate
   }
 }
 
+/// An enum symbol.
 class Enum : ScopeSymbol
 {
   TypeEnum type;
@@ -114,6 +119,7 @@ class Enum : ScopeSymbol
   }
 }
 
+/// A template symbol.
 class Template : ScopeSymbol
 {
   this(Identifier* name, Node templateNode)
@@ -122,6 +128,7 @@ class Template : ScopeSymbol
   }
 }
 
+/// A function symbol.
 class Function : ScopeSymbol
 {
   Protection prot; /// The protection.
@@ -137,6 +144,7 @@ class Function : ScopeSymbol
   }
 }
 
+/// A variable symbol.
 class Variable : Symbol
 {
   Protection prot; /// The protection.
@@ -158,6 +166,7 @@ class Variable : Symbol
   }
 }
 
+/// An enum member symbol.
 class EnumMember : Variable
 {
   this(Identifier* name,
@@ -169,6 +178,7 @@ class EnumMember : Variable
   }
 }
 
+/// An alias symbol.
 class Alias : Symbol
 {
   this(Identifier* name, Node aliasNode)
@@ -177,10 +187,9 @@ class Alias : Symbol
   }
 }
 
-/++
-  A list of symbols that share the same identifier.
-  These can be functions, templates and aggregates with template parameter lists.
-+/
+/// A list of symbols that share the same identifier.
+///
+/// These can be functions, templates and aggregates with template parameter lists.
 class OverloadSet : Symbol
 {
   Symbol[] symbols;

@@ -14,6 +14,8 @@ import common;
 
 private alias TOK T;
 
+/// A light-weight parser which looks only for import statements
+/// in the source text.
 class ImportParser : Parser
 {
   this(SourceText srcText)

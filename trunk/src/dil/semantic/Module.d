@@ -23,24 +23,25 @@ alias FileConst.PathSeparatorChar dirSep;
 class Module : ScopeSymbol
 {
   SourceText sourceText; /// The source file of this module.
-  string moduleFQN; /// Fully qualified name of the module. E.g. dil.ast.Node
-  string packageName; /// E.g. dil.ast
-  string moduleName; /// E.g. Node
+  string moduleFQN; /// Fully qualified name of the module. E.g.: dil.ast.Node
+  string packageName; /// E.g.: dil.ast
+  string moduleName; /// E.g.: Node
 
   CompoundDeclaration root; /// The root of the parse tree.
   ImportDeclaration[] imports; /// ImportDeclarations found in this file.
   ModuleDeclaration moduleDecl; /// The optional ModuleDeclaration in this file.
   Parser parser; /// The parser used to parse this file.
 
-  Module[] modules;
+  // Module[] modules;
 
-  InfoManager infoMan;
+  InfoManager infoMan; /// Collects error messages.
 
   this()
   {
     super(SYM.Module, null, null);
   }
 
+  /// Constructs a Module object.
   /// Params:
   ///   filePath = file path to the source text; loaded in the constructor.
   ///   infoMan = used for collecting error messages.
@@ -52,11 +53,13 @@ class Module : ScopeSymbol
     this.sourceText.load(infoMan);
   }
 
+  /// Returns the file path of the source text.
   string filePath()
   {
     return sourceText.filePath;
   }
 
+  /// Returns the file extension: "d" or "di".
   string fileExtension()
   {
     foreach_reverse(i, c; filePath)
@@ -65,12 +68,16 @@ class Module : ScopeSymbol
     return "";
   }
 
+  /// Sets the parser to be used for parsing the source text.
   void setParser(Parser parser)
   {
     this.parser = parser;
   }
 
-  /// Starts the parser.
+  /// Parses the module.
+  /// Throws:
+  ///   An Exception if the there's no ModuleDeclaration and
+  ///   the file name is an invalid or reserved D identifier.
   void parse()
   {
     if (this.parser is null)
@@ -95,6 +102,7 @@ class Module : ScopeSymbol
     }
   }
 
+  /// Returns the first token of the module's source text.
   Token* firstToken()
   {
     return parser.lexer.firstToken();
@@ -106,6 +114,8 @@ class Module : ScopeSymbol
     return parser.errors.length || parser.lexer.errors.length;
   }
 
+  /// Returns a list of import paths.
+  /// E.g.: ["dil/ast/Node", "dil/semantic/Module"]
   string[] getImportPaths()
   {
     string[] result;
@@ -121,6 +131,7 @@ class Module : ScopeSymbol
     return moduleFQN;
   }
 
+  /// Set's the module's FQN.
   void setFQN(string moduleFQN)
   {
     uint i = moduleFQN.length;
@@ -134,7 +145,7 @@ class Module : ScopeSymbol
     this.moduleName = moduleFQN[(i == 0 ? 0 : i+1) .. $];
   }
 
-  /// Returns e.g. the FQN with slashes instead of dots.
+  /// Returns the module's FQN with slashes instead of dots.
   /// E.g.: dil/ast/Node
   string getFQNPath()
   {

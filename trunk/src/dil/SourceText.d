@@ -18,6 +18,7 @@ final class SourceText
   string filePath; /// The file path to the source text. Mainly used for error messages.
   char[] data; /// The UTF-8, zero-terminated source text.
 
+  /// Constructs a SourceText object.
   /// Params:
   ///   filePath = file path to the source file.
   ///   loadFile = whether to load the file in the constructor.
@@ -27,6 +28,7 @@ final class SourceText
     loadFile && load();
   }
 
+  /// Constructs a SourceText object.
   /// Params:
   ///   filePath = file path for error messages.
   ///   data = memory buffer.
@@ -37,6 +39,7 @@ final class SourceText
     addSentinelCharacter();
   }
 
+  /// Loads the source text from a file.
   void load(InfoManager infoMan = null)
   {
     if (!infoMan)
@@ -50,6 +53,7 @@ final class SourceText
     addSentinelCharacter();
   }
 
+  /// Adds '\0' to the text (if not already there.)
   private void addSentinelCharacter()
   {
     if (data.length == 0 || data[$-1] != 0)

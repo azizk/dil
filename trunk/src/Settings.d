@@ -21,9 +21,9 @@ static:
   string[] importPaths;
   /// Array of DDoc macro file paths.
   string[] ddocFilePaths;
-  string xmlMapFile = "xml_map.d";
-  string htmlMapFile = "html_map.d";
-  string lexerErrorFormat = "{0}({1},{2})L: {3}";
-  string parserErrorFormat = "{0}({1},{2})P: {3}";
-  string semanticErrorFormat = "{0}({1},{2})S: {3}";
+  string xmlMapFile = "xml_map.d"; /// XML map file.
+  string htmlMapFile = "html_map.d"; /// HTML map file.
+  string lexerErrorFormat = "{0}({1},{2})L: {3}"; /// Lexer error.
+  string parserErrorFormat = "{0}({1},{2})P: {3}"; /// Parser error.
+  string semanticErrorFormat = "{0}({1},{2})S: {3}"; /// Semantic error.
 }

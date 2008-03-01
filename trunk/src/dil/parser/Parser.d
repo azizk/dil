@@ -33,22 +33,20 @@ class Parser
 
   ImportDeclaration[] imports; /// ImportDeclarations in the source text.
 
-  // Attributes are evaluated in the parsing phase.
-  // Will probably be moved to class SemanticPass1.
+  /// Attributes are evaluated in the parsing phase.
+  /// TODO: will be removed. SemanticPass1 takes care of attributes.
   LinkageType linkageType;
-  Protection protection;
-  StorageClass storageClass;
-  uint alignSize = DEFAULT_ALIGN_SIZE;
+  Protection protection; /// ditto
+  StorageClass storageClass; /// ditto
+  uint alignSize = DEFAULT_ALIGN_SIZE; /// ditto
 
-  private alias TOK T;
+  private alias TOK T; /// Used often in this class.
   private alias TypeNode Type;
 
-  /++
-    Construct a Parser object.
-    Params:
-      text     = the UTF-8 source code.
-      infoMan  = used for collecting error messages.
-  +/
+  /// Constructs a Parser object.
+  /// Params:
+  ///   text     = the UTF-8 source code.
+  ///   infoMan  = used for collecting error messages.
   this(SourceText srcText, InfoManager infoMan = null)
   {
     this.infoMan = infoMan;
@@ -97,10 +95,9 @@ class Parser
   uint trying; /// Greater than 0 if Parser is in try_().
   uint errorCount; /// Used to track nr. of errors while being in try_().
 
-  /++
-    This method executes the delegate parseMethod and when an error occurred
-    the state of the lexer and parser are restored.
-  +/
+  /// This method executes the delegate parseMethod and when an error occurred
+  /// the state of the lexer and parser are restored.
+  /// Returns: the return value of parseMethod().
   ReturnType try_(ReturnType)(ReturnType delegate() parseMethod, out bool success)
   {
     // Save members.
@@ -148,14 +145,14 @@ class Parser
     return next.kind;
   }
 
-  /// Returns the token kind of the token after 'next'.
-  TOK peekAfter(ref Token* next)
+  /// Returns the token kind of the token that comes after t.
+  TOK peekAfter(ref Token* t)
   {
-    assert(next !is null);
+    assert(t !is null);
     do
-      lexer.peek(next);
-    while (next.isWhitespace) // Skip whitespace
-    return next.kind;
+      lexer.peek(t);
+    while (t.isWhitespace) // Skip whitespace
+    return t.kind;
   }
 
   /// Consumes the current token if its kind matches k and returns true.
@@ -188,12 +185,12 @@ class Parser
     return set(new ModuleDeclaration(moduleFQN), begin);
   }
 
-  /++
-    Parse DeclarationDefinitions until the end of file is hit.
-    DeclDefs:
-      DeclDef
-      DeclDefs
-  +/
+  /// Parses DeclarationDefinitions until the end of file is hit.
+  /// $(PRE
+  /// DeclDefs :=
+  ///     DeclDef
+  ///     DeclDefs
+  /// )
   Declaration[] parseDeclarationDefinitions()
   {
     Declaration[] decls;
@@ -202,12 +199,12 @@ class Parser
     return decls;
   }
 
-  /++
-    Parse the body of a template, class, interface, struct or union.
-    DeclDefsBlock:
-        { }
-        { DeclDefs }
-  +/
+  /// Parse the body of a template, class, interface, struct or union.
+  /// $(PRE
+  /// DeclDefsBlock :=
+  ///     { }
+  ///     { DeclDefs }
+  /// )
   CompoundDeclaration parseDeclarationDefinitionsBody()
   {
     // Save attributes.
@@ -236,6 +233,7 @@ class Parser
     return decls;
   }
 
+  /// Parses a DeclarationDefinition.
   Declaration parseDeclarationDefinition()
   out(decl)
   { assert(isNodeSet(decl)); }
@@ -394,13 +392,14 @@ class Parser
     return decl;
   }
 
-  /++
-    DeclarationsBlock:
-        : DeclDefs
-        { }
-        { DeclDefs }
-        DeclDef
-  +/
+  /// Parses a DeclarationsBlock.
+  /// $(PRE
+  /// DeclarationsBlock :=
+  ///     : DeclDefs
+  ///     { }
+  ///     { DeclDefs }
+  ///     DeclDef
+  /// )
   Declaration parseDeclarationsBlock(/+bool noColon = false+/)
   {
     Declaration d;
@@ -437,15 +436,13 @@ class Parser
   //   return parseDeclarationsBlock(true);
   // }
 
-  /++
-    Parses either a VariableDeclaration or a FunctionDeclaration.
-    Params:
-      stc = previously parsed storage classes
-      protection = previously parsed protection attribute
-      linkType = previously parsed linkage type
-      testAutoDeclaration = whether to check for an AutoDeclaration
-      optionalParameterList = a hint for how to parse C-style function pointers
-  +/
+  /// Parses either a VariableDeclaration or a FunctionDeclaration.
+  /// Params:
+  ///   stc = previously parsed storage classes
+  ///   protection = previously parsed protection attribute
+  ///   linkType = previously parsed linkage type
+  ///   testAutoDeclaration = whether to check for an AutoDeclaration
+  ///   optionalParameterList = a hint for how to parse C-style function pointers
   Declaration parseVariableOrFunction(StorageClass stc = StorageClass.None,
                                       Protection protection = Protection.None,
                                       LinkageType linkType = LinkageType.None,
@@ -552,6 +549,7 @@ class Parser
     return set(d, begin);
   }
 
+  /// Parses a variable initializer.
   Expression parseInitializer()
   {
     if (token.kind == T.Void)
@@ -1372,14 +1370,15 @@ class Parser
     return type;
   }
 
-  /++
-    TemplateMixin:
-            mixin ( AssignExpression ) ;
-            mixin TemplateIdentifier ;
-            mixin TemplateIdentifier MixinIdentifier ;
-            mixin TemplateIdentifier !( TemplateArguments ) ;
-            mixin TemplateIdentifier !( TemplateArguments ) MixinIdentifier ;
-  +/
+  /// Parses a MixinDeclaration or MixinStatement.
+  /// $(PRE
+  /// TemplateMixin :=
+  ///         mixin ( AssignExpression ) ;
+  ///         mixin TemplateIdentifier ;
+  ///         mixin TemplateIdentifier MixinIdentifier ;
+  ///         mixin TemplateIdentifier !( TemplateArguments ) ;
+  ///         mixin TemplateIdentifier !( TemplateArguments ) MixinIdentifier ;
+  /// )
   Class parseMixin(Class)()
   {
   static assert(is(Class == MixinDeclaration) || is(Class == MixinStatement));
@@ -1429,6 +1428,7 @@ class Parser
     return set(statements, begin);
   }
 
+  /// Parses a Statement.
   Statement parseStatement()
   {
     auto begin = token;
@@ -1665,23 +1665,24 @@ class Parser
     return s;
   }
 
-  /++
-    ScopeStatement:
-        NoScopeStatement
-  +/
+  /// $(PRE
+  /// Parses a ScopeStatement.
+  /// ScopeStatement :=
+  ///     NoScopeStatement
+  /// )
   Statement parseScopeStatement()
   {
     return new ScopeStatement(parseNoScopeStatement());
   }
 
-  /++
-    NoScopeStatement:
-        NonEmptyStatement
-        BlockStatement
-    BlockStatement:
-        { }
-        { StatementList }
-  +/
+  /// $(PRE
+  /// NoScopeStatement :=
+  ///     NonEmptyStatement
+  ///     BlockStatement
+  /// BlockStatement :=
+  ///     { }
+  ///     { StatementList }
+  /// )
   Statement parseNoScopeStatement()
   {
     auto begin = token;
@@ -1705,11 +1706,11 @@ class Parser
     return s;
   }
 
-  /++
-    NoScopeOrEmptyStatement:
-        ;
-        NoScopeStatement
-  +/
+  /// $(PRE
+  /// NoScopeOrEmptyStatement :=
+  ///     ;
+  ///     NoScopeStatement
+  /// )
   Statement parseNoScopeOrEmptyStatement()
   {
     if (consumed(T.Semicolon))
@@ -2232,6 +2233,7 @@ class Parser
   |                         Assembler parsing methods                         |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
+  /// Parses an AsmBlockStatement.
   Statement parseAsmBlockStatement()
   {
     skip(T.Asm);
@@ -2672,6 +2674,7 @@ class Parser
   |                        Expression parsing methods                         |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
+  /// Parses an Expression.
   Expression parseExpression()
   {
     alias parseAssignExpression parseNext;
@@ -3079,13 +3082,13 @@ class Parser
     return e;
   }
 
-  /++
-    IdentifierExpression:
-            Identifier
-            TemplateInstance
-    TemplateInstance:
-            Identifier !( TemplateArguments )
-  +/
+  /// $(PRE
+  /// IdentifierExpression :=
+  ///         Identifier
+  ///         TemplateInstance
+  /// TemplateInstance :=
+  ///         Identifier !( TemplateArguments )
+  /// )
   Expression parseIdentifierExpression()
   {
     auto begin = token;
@@ -3406,6 +3409,7 @@ class Parser
     return set(new NewExpression(/*e, */newArguments, type, ctorArguments), begin);
   }
 
+  /// Parses a Type.
   Type parseType()
   {
     return parseBasicType2(parseBasicType());
@@ -3515,6 +3519,8 @@ class Parser
     assert(0);
   }
 
+  /// Returns true if the token after the closing parenthesis
+  /// is of kind tok.
   bool tokenAfterParenIs(TOK tok)
   {
     // We count nested parentheses tokens because template types
@@ -3548,7 +3554,7 @@ class Parser
     return next.kind == tok;
   }
 
-  /// Parse the C-style array types after the declarator.
+  /// Parse the array types after the declarator (C-style.) E.g.: int a[]
   Type parseDeclaratorSuffix(Type lhsType)
   {
     // The Type chain should be as follows:
@@ -3672,12 +3678,12 @@ class Parser
     return t;
   }
 
-  /++
-    Parse a list of AssignExpressions.
-    ExpressionList:
-      AssignExpression
-      AssignExpression , ExpressionList
-  +/
+  /// Parses a list of AssignExpressions.
+  /// $(PRE
+  /// ExpressionList :=
+  ///   AssignExpression
+  ///   AssignExpression , ExpressionList
+  /// )
   Expression[] parseExpressionList()
   {
     Expression[] expressions;
@@ -3687,11 +3693,12 @@ class Parser
     return expressions;
   }
 
-  /++
-    Arguments:
-      ( )
-      ( ExpressionList )
-  +/
+  /// Parses a list of Arguments.
+  /// $(PRE
+  /// Arguments :=
+  ///   ( )
+  ///   ( ExpressionList )
+  /// )
   Expression[] parseArguments()
   {
     skip(T.LParen);
@@ -3702,6 +3709,7 @@ class Parser
     return args;
   }
 
+  /// Parses a ParameterList.
   Parameters parseParameterList()
   out(params)
   {
@@ -3894,6 +3902,7 @@ version(D2)
   }
 } // version(D2)
 
+  /// Parses template parameters.
   void parseTemplateParameterList_(TemplateParameters tparams)
   {
     do
@@ -3981,12 +3990,9 @@ version(D2)
     } while (consumed(T.Comma))
   }
 
-  void expected(TOK tok)
-  {
-    if (token.kind != tok)
-      error(MID.ExpectedButFound, Token.toString(tok), token.srcText);
-  }
+  alias require expected;
 
+  /// Requires a token of kind tok.
   void require(TOK tok)
   {
     if (token.kind == tok)
@@ -3995,12 +4001,15 @@ version(D2)
       error(MID.ExpectedButFound, Token.toString(tok), token.srcText);
   }
 
+  /// Requires the next token to be of kind tok.
   void requireNext(TOK tok)
   {
     nT();
     require(tok);
   }
 
+  /// Optionally parses an identifier.
+  /// Returns: null or the identifier.
   Identifier* optionalIdentifier()
   {
     Identifier* id;
@@ -4019,8 +4028,10 @@ version(D2)
     return id;
   }
 
+  /// Reports an error if the current token is not an identifier.
   /// Params:
-  ///   errorMsg = an error that has no message ID yet.
+  ///   errorMsg = the error message to be used.
+  /// Returns: null or the identifier.
   Identifier* requireIdentifier(char[] errorMsg)
   {
     Identifier* id;
@@ -4031,6 +4042,10 @@ version(D2)
     return id;
   }
 
+  /// Reports an error if the current token is not an identifier.
+  /// Params:
+  ///   mid = the error message ID to be used.
+  /// Returns: null or the identifier.
   Identifier* requireIdentifier(MID mid)
   {
     Identifier* id;
@@ -4041,17 +4056,16 @@ version(D2)
     return id;
   }
 
+  /// Reports an error if the current token is not an identifier.
+  /// Returns: null or the token.
   Token* requireId()
   {
+    Token* idtok;
     if (token.kind == T.Identifier)
-    {
-      auto id = token;
-      nT();
-      return id;
-    }
+      (idtok = token), skip(T.Identifier);
     else
       error(MID.ExpectedButFound, "Identifier", token.srcText);
-    return null;
+    return idtok;
   }
 
   Token* requireIdToken(char[] errorMsg)
@@ -4060,7 +4074,11 @@ version(D2)
     if (token.kind == T.Identifier)
       (idtok = token), skip(T.Identifier);
     else
+    {
       error(token, errorMsg, token.srcText);
+      idtok = lexer.insertEmptyTokenBefore(token);
+      this.prevToken = idtok;
+    }
     return idtok;
   }
 
@@ -4073,17 +4091,22 @@ version(D2)
     return utf8Seq.length != 0;
   }
 
-  /// Reports an error that has no message ID yet.
+  /// Forwards error parameters.
   void error(Token* token, char[] formatMsg, ...)
   {
     error_(token, formatMsg, _arguments, _argptr);
   }
 
+  /// ditto
   void error(MID mid, ...)
   {
     error_(this.token, GetMsg(mid), _arguments, _argptr);
   }
 
+  /// Creates an error report and appends it to a list.
+  /// Params:
+  ///   token = used to get the location of where the error is.
+  ///   formatMsg = the compiler error message.
   void error_(Token* token, char[] formatMsg, TypeInfo[] _arguments, Arg _argptr)
   {
     if (trying)

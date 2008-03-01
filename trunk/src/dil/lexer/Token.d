@@ -30,8 +30,8 @@ struct Token
   /// Start of whitespace characters before token. Null if no WS.
   /// TODO: remove to save space; can be replaced by 'prev.end'.
   char* ws;
-  char* start; /// Start of token in source text.
-  char* end;   /// Points one past the end of token in source text.
+  char* start; /// Points to the first character of the token.
+  char* end;   /// Points one character past the end of the token.
 
   /// Data associated with this token.
   /// TODO: move data structures out; use only pointers here to keep Token.sizeof small.
@@ -45,11 +45,11 @@ struct Token
       Token* tokLineNum; /// #line number
       Token* tokLineFilespec; /// #line number filespec
     }
-    /// For string tokens.
+    /// The value of a string token.
     struct
     {
-      string str; /// Zero-terminated string.
-      char pf; /// Postfix 'c', 'w', 'd' or 0 for none.
+      string str; /// Zero-terminated string. (The zero is included in the length.)
+      char pf;    /// Postfix 'c', 'w', 'd' or 0 for none.
     version(D2)
       Token* tok_str; /++ Points to the contents of a token string stored as a
                           doubly linked list. The last token is always '}' or
@@ -57,14 +57,14 @@ struct Token
                       +/
     }
     Identifier* ident; /// For keywords and identifiers.
-    dchar  dchar_;
-    long   long_;
-    ulong  ulong_;
-    int    int_;
-    uint   uint_;
-    float  float_;
-    double double_;
-    real   real_;
+    dchar  dchar_;   /// A character value.
+    long   long_;    /// A long integer value.
+    ulong  ulong_;   /// An unsigned long integer value.
+    int    int_;     /// An integer value.
+    uint   uint_;    /// An unsigned integer value.
+    float  float_;   /// A float value.
+    double double_;  /// A double value.
+    real   real_;    /// A real value.
   }
 
   /// Returns the text of the token.
@@ -81,7 +81,8 @@ struct Token
     return ws[0 .. start - ws];
   }
 
-  /// Find next non-whitespace token. Returns 'this' token if the next token is TOK.EOF or null.
+  /// Finds the next non-whitespace token.
+  /// Returns: 'this' token if the next token is TOK.EOF or null.
   Token* nextNWS()
   out(token)
   {
@@ -97,7 +98,8 @@ struct Token
     return token;
   }
 
-  /// Find previous non-whitespace token. Returns 'this' token if the previous token is TOK.HEAD or null.
+  /// Finds the previous non-whitespace token.
+  /// Returns: 'this' token if the previous token is TOK.HEAD or null.
   Token* prevNWS()
   out(token)
   {
@@ -113,19 +115,20 @@ struct Token
     return token;
   }
 
-  /// Returns the string for token kind tok.
-  static string toString(TOK tok)
+  /// Returns the string for a token kind.
+  static string toString(TOK kind)
   {
-    return tokToString[tok];
+    return tokToString[kind];
   }
 
-  /// Adds Flags. Whitespace to this token's flags.
+  /// Adds Flags.Whitespace to this.flags.
   void setWhitespaceFlag()
   {
     this.flags |= Flags.Whitespace;
   }
 
   /// Returns true if this is a token that can have newlines in it.
+  ///
   /// These can be block and nested comments and any string literal
   /// except for escape string literals.
   bool isMultiline()
@@ -271,6 +274,8 @@ version(D2)
     void* p = malloc(size);
     if (p is null)
       throw new OutOfMemoryException(__FILE__, __LINE__);
+    // TODO: Token.init should be all zeros.
+    // Maybe use calloc() to avoid this line?
     *cast(Token*)p = Token.init;
     return p;
   }

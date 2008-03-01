@@ -9,6 +9,7 @@ import dil.semantic.TypesEnum;
 import dil.lexer.Identifier;
 import dil.CompilerInfo;
 
+/// The base type for all type structures.
 abstract class Type/* : Symbol*/
 {
   Type next;     /// The next type in the type structure.
@@ -17,6 +18,10 @@ abstract class Type/* : Symbol*/
 
   this(){}
 
+  /// Constructs a Type object.
+  /// Params:
+  ///   next = the type's next type.
+  ///   tid = the type's ID.
   this(Type next, TYP tid)
   {
 //     this.sid = SYM.Type;
@@ -25,12 +30,13 @@ abstract class Type/* : Symbol*/
     this.tid = tid;
   }
 
+  /// Returns a pointer type to this type.
   TypePointer ptrTo()
   {
     return new TypePointer(this);
   }
 
-  /// Get byte size of this type.
+  /// Returns the byte size of this type.
   final size_t sizeOf()
   {
     return MITable.getSize(this);
@@ -42,12 +48,14 @@ abstract class Type/* : Symbol*/
     return sizeOf();
   }
 
+  /// Returns true if this type has a symbol.
   bool hasSymbol()
   {
     return symbol !is null;
   }
 }
 
+/// All basic types. E.g.: int, char, real etc.
 class TypeBasic : Type
 {
   this(TYP typ)
@@ -56,7 +64,7 @@ class TypeBasic : Type
   }
 }
 
-/// Dynamic array.
+/// Dynamic array type.
 class TypeDArray : Type
 {
   this(Type next)
@@ -65,7 +73,7 @@ class TypeDArray : Type
   }
 }
 
-/// Associative array.
+/// Associative array type.
 class TypeAArray : Type
 {
   Type keyType;
@@ -76,7 +84,7 @@ class TypeAArray : Type
   }
 }
 
-/// Static array.
+/// Static array type.
 class TypeSArray : Type
 {
   size_t dimension;
@@ -87,6 +95,7 @@ class TypeSArray : Type
   }
 }
 
+/// Pointer type.
 class TypePointer : Type
 {
   this(Type next)
@@ -95,6 +104,7 @@ class TypePointer : Type
   }
 }
 
+/// Reference type.
 class TypeReference : Type
 {
   this(Type next)
@@ -103,6 +113,7 @@ class TypeReference : Type
   }
 }
 
+/// Enum type.
 class TypeEnum : Type
 {
   this(Symbol symbol, Type baseType)
@@ -117,6 +128,7 @@ class TypeEnum : Type
   }
 }
 
+/// Struct type.
 class TypeStruct : Type
 {
   this(Symbol symbol)
@@ -126,6 +138,7 @@ class TypeStruct : Type
   }
 }
 
+/// Class type.
 class TypeClass : Type
 {
   this(Symbol symbol)
@@ -135,6 +148,7 @@ class TypeClass : Type
   }
 }
 
+/// Typedef type.
 class TypeTypedef : Type
 {
   this(Type next)
@@ -143,6 +157,7 @@ class TypeTypedef : Type
   }
 }
 
+/// Function type.
 class TypeFunction : Type
 {
   this(Type next)
@@ -151,6 +166,7 @@ class TypeFunction : Type
   }
 }
 
+/// Delegate type.
 class TypeDelegate : Type
 {
   this(Type next)
@@ -159,6 +175,7 @@ class TypeDelegate : Type
   }
 }
 
+/// Identifier type.
 class TypeIdentifier : Type
 {
   Identifier* ident;
@@ -168,6 +185,7 @@ class TypeIdentifier : Type
   }
 }
 
+/// Template instantiation type.
 class TypeTemplInstance : Type
 {
   this()
@@ -176,6 +194,7 @@ class TypeTemplInstance : Type
   }
 }
 
+/// Template tuple type.
 class TypeTuple : Type
 {
   this(Type next)
@@ -184,6 +203,7 @@ class TypeTuple : Type
   }
 }
 
+/// Constant type. D2.0
 class TypeConst : Type
 {
   this(Type next)
@@ -192,6 +212,7 @@ class TypeConst : Type
   }
 }
 
+/// Invariant type. D2.0
 class TypeInvariant : Type
 {
   this(Type next)
@@ -200,7 +221,7 @@ class TypeInvariant : Type
   }
 }
 
-/// Represents a value related to a type.
+/// Represents a value related to a Type.
 union Value
 {
   void*  pvoid;
@@ -216,6 +237,7 @@ union Value
   creal  creal_;
 }
 
+/// Information related to a Type.
 struct TypeMetaInfo
 {
   char mangle; /// Mangle character of the type.
@@ -223,6 +245,7 @@ struct TypeMetaInfo
   Value* defaultInit; /// Default initialization value.
 }
 
+/// Namespace for the meta info table.
 struct MITable
 {
 static:
@@ -236,6 +259,7 @@ static:
   const Value VCNAN = {creal_:creal.nan}; /// Value complex NAN.
   private alias SIZE_NOT_AVAILABLE SNA;
   private alias PTR_SIZE PS;
+  /// The meta info table.
   private const TypeMetaInfo metaInfoTable[] = [
     {'?', SNA}, // Error
 
@@ -286,6 +310,7 @@ static:
   ];
   static assert(metaInfoTable.length == TYP.max+1);
 
+  /// Returns the size of a type.
   size_t getSize(Type type)
   {
     auto size = metaInfoTable[type.tid].size;
@@ -295,10 +320,11 @@ static:
   }
 }
 
-/// A set of pre-defined types.
+/// Namespace for a set of predefined types.
 struct Types
 {
 static:
+  /// Predefined basic types.
   TypeBasic Char,   Wchar,   Dchar, Bool,
             Byte,   Ubyte,   Short, Ushort,
             Int,    Uint,    Long,  Ulong,
@@ -307,9 +333,11 @@ static:
             Ifloat, Idouble, Ireal,
             Cfloat, Cdouble, Creal, Void;
 
-  TypeBasic Size_t, Ptrdiff_t;
-  TypePointer Void_ptr;
-  TypeBasic Error, Undefined;
+  TypeBasic Size_t; /// The size type.
+  TypeBasic Ptrdiff_t; /// The pointer difference type.
+  TypePointer Void_ptr; /// The void pointer type.
+  TypeBasic Error; /// The error type.
+  TypeBasic Undefined; /// The undefined type.
 
   /// Allocates an instance of TypeBasic and assigns it to typeName.
   template newTB(char[] typeName)
@@ -317,6 +345,7 @@ static:
     const newTB = mixin(typeName~" = new TypeBasic(TYP."~typeName~")");
   }
 
+  /// Initializes predefined types.
   static this()
   {
     newTB!("Char");

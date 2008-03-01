@@ -8,7 +8,7 @@ import dil.ast.Node;
 import dil.lexer.Identifier;
 import common;
 
-/// Symbol IDs.
+/// Enumeration of Symbol IDs.
 enum SYM
 {
   Module,
@@ -26,11 +26,9 @@ enum SYM
 //   Type,
 }
 
-/++
-  A symbol represents an object with semantic code information.
-+/
+/// A symbol represents an object with semantic code information.
 class Symbol
-{
+{ /// Enumeration of symbol statuses.
   enum Status : ushort
   {
     Declared,   /// The symbol has been declared.
@@ -46,6 +44,11 @@ class Symbol
   /// Useful for source code location info and retrieval of doc comments.
   Node node;
 
+  /// Constructs a Symbol object.
+  /// Params:
+  ///   sid = the symbol's ID.
+  ///   name = the symbol's name.
+  ///   node = the symbol's node.
   this(SYM sid, Identifier* name, Node node)
   {
     this.sid = sid;
@@ -53,19 +56,23 @@ class Symbol
     this.node = node;
   }
 
+  /// Change the status to Status.Completing.
   void setCompleting()
   { status = Status.Completing; }
 
+  /// Change the status to Status.Complete.
   void setComplete()
   { status = Status.Complete; }
 
+  /// Returns true if the symbol is being completed.
   bool isCompleting()
   { return status == Status.Completing; }
 
+  /// Returns true if the symbols is complete.
   bool isComplete()
   { return status == Status.Complete; }
 
-  // A template macro for building isXYZ() methods.
+  /// A template macro for building isXYZ() methods.
   private template isX(char[] kind)
   {
     const char[] isX = `bool is`~kind~`(){ return sid == SYM.`~kind~`; }`;
@@ -84,6 +91,7 @@ class Symbol
   mixin(isX!("OverloadSet"));
 //   mixin(isX!("Type"));
 
+  /// Casts the symbol to Class.
   Class to(Class)()
   {
     assert(mixin(`this.sid == mixin("SYM." ~ typeof(Class).stringof)`));

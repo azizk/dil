@@ -18,9 +18,10 @@ import dil.semantic.Symbol,
        dil.semantic.Types;
 import dil.Information;
 
+/// Used for compile-time evaluation of expressions.
 class Interpreter : Visitor
 {
-  Scope scop;
+  // Scope scop;
   InfoManager infoMan;
 
   static class Result : Expression
@@ -36,23 +37,27 @@ class Interpreter : Visitor
     NAR.type = Types.Error;
   }
 
-  static Expression interpret(Expression e, InfoManager infoMan, Scope scop)
+  /// Evaluates the expression e.
+  /// Returns: NAR or a value.
+  static Expression interpret(Expression e, InfoManager infoMan/+, Scope scop+/)
   {
-    return (new Interpreter(scop, infoMan)).start(e);
+    return (new Interpreter(/+scop,+/ infoMan)).eval(e);
   }
 
-  this(Scope scop, InfoManager infoMan)
+  /// Constructs an Interpreter object.
+  this(/+Scope scop, +/InfoManager infoMan)
   {
-    this.scop = scop;
+    // this.scop = scop;
     this.infoMan = infoMan;
   }
 
-  /// Start interpretation.
-  Expression start(Expression e)
+  /// Start evaluation.
+  Expression eval(Expression e)
   {
     return e;
   }
 
+  /// Returns true if e is immutable.
   bool isImmutable(Expression e)
   {
     switch (e.kind)

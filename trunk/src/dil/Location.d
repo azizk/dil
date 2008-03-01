@@ -3,29 +3,27 @@
   License: GPL3
 +/
 module dil.Location;
+
 import dil.lexer.Funcs;
 import dil.Unicode;
-import common;
 
+/// Represents a location in a source text.
 final class Location
 {
-  char[] filePath;
-  size_t lineNum;
-  char* lineBegin, to; /// Used to calculate column.
+  char[] filePath; /// The file path.
+  size_t lineNum; /// The line number.
+  char* lineBegin, to; /// Used to calculate the column.
 
+  /// Forwards the parameters to the second constructor.
   this(char[] filePath, size_t lineNum)
   {
     set(filePath, lineNum);
   }
 
+  /// Constructs a Location object.
   this(char[] filePath, size_t lineNum, char* lineBegin, char* to)
   {
     set(filePath, lineNum, lineBegin, to);
-  }
-
-  Location clone()
-  {
-    return new Location(filePath, lineNum, lineBegin, to);
   }
 
   void set(char[] filePath, size_t lineNum)
@@ -52,11 +50,9 @@ final class Location
     this.filePath = filePath;
   }
 
-  /++
-    This is a primitive method to count the number of characters in a string.
-    Unicode compound characters and other special characters are not
-    taken into account.
-  +/
+  /// This is a primitive method to count the number of characters in a string.
+  /// Note: Unicode compound characters and other special characters are not
+  /// taken into account. The tabulator character is counted as one.
   uint calculateColumn()
   {
     uint col;

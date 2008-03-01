@@ -35,17 +35,18 @@ class SemanticPass1 : Visitor
 {
   Scope scop; /// The current scope.
   Module modul; /// The module to be semantically checked.
-  CompilationContext context;
+  CompilationContext context; /// The compilation context.
 
   // Attributes:
-  LinkageType linkageType;
-  Protection protection;
-  StorageClass storageClass;
-  uint alignSize;
+  LinkageType linkageType; /// Current linkage type.
+  Protection protection; /// Current protection attribute.
+  StorageClass storageClass; /// Current storage classes.
+  uint alignSize; /// Current align size.
 
-  /// Construct a SemanticPass1 object.
+  /// Constructs a SemanticPass1 object.
   /// Params:
   ///   modul = the module to be processed.
+  ///   context = the compilation context.
   this(Module modul, CompilationContext context)
   {
     this.modul = modul;
@@ -53,7 +54,7 @@ class SemanticPass1 : Visitor
     this.alignSize = context.structAlign;
   }
 
-  /// Start semantic analysis.
+  /// Starts processing the module.
   void start()
   {
     assert(modul.root !is null);
@@ -62,11 +63,13 @@ class SemanticPass1 : Visitor
     visit(modul.root);
   }
 
+  /// Enters a new scope.
   void enterScope(ScopeSymbol s)
   {
     scop = scop.enter(s);
   }
 
+  /// Exits the current scope.
   void exitScope()
   {
     scop = scop.exit();
@@ -78,7 +81,7 @@ class SemanticPass1 : Visitor
     return scop.symbol.isModule();
   }
 
-  /// Insert a symbol into the current scope.
+  /// Inserts a symbol into the current scope.
   void insert(Symbol symbol, Identifier* name)
   {
     auto symX = scop.symbol.lookup(name);
@@ -90,7 +93,7 @@ class SemanticPass1 : Visitor
     symbol.parent = scop.symbol;
   }
 
-  /// Insert a symbol into scopeSym.
+  /// Inserts a symbol into scopeSym.
   void insert(Symbol symbol, ScopeSymbol scopeSym)
   {
     auto symX = scopeSym.lookup(symbol.name);
@@ -102,7 +105,7 @@ class SemanticPass1 : Visitor
     symbol.parent = scopeSym;
   }
 
-  /// Insert a symbol, overloading on the name, into the current scope.
+  /// Inserts a symbol, overloading on the name, into the current scope.
   void insertOverload(Symbol sym, Identifier* name)
   {
     auto sym2 = scop.symbol.lookup(name);
@@ -120,7 +123,7 @@ class SemanticPass1 : Visitor
     sym.parent = scop.symbol;
   }
 
-  /// Report error: new symbol s1 conflicts with existing symbol s2.
+  /// Reports an error: new symbol s1 conflicts with existing symbol s2.
   void reportSymbolConflict(Symbol s1, Symbol s2, Identifier* name)
   {
     auto loc = s2.node.begin.getErrorLocation();
@@ -128,6 +131,7 @@ class SemanticPass1 : Visitor
     error(s1.node.begin, MSG.DeclConflictsWithDecl, name.str, locString);
   }
 
+  /// Creates an error report.
   void error(Token* token, char[] formatMsg, ...)
   {
     if (!modul.infoMan)
@@ -138,6 +142,7 @@ class SemanticPass1 : Visitor
   }
 
 
+  /// Collects info about nodes which have to be evaluated later.
   static class Deferred
   {
     Node node;
@@ -149,11 +154,13 @@ class SemanticPass1 : Visitor
     uint alignSize;
   }
 
-  // List of mixin, static if, static assert and pragma(msg,...) declarations.
-  // Their analysis must be deferred because they entail
-  // evaluation of expressions.
+  /// List of mixin, static if, static assert and pragma(msg,...) declarations.
+  ///
+  /// Their analysis must be deferred because they entail
+  /// evaluation of expressions.
   Deferred[] deferred;
 
+  /// Adds a deferred node to the list.
   void addDeferred(Node node)
   {
     auto d = new Deferred;
@@ -166,7 +173,7 @@ class SemanticPass1 : Visitor
     deferred ~= d;
   }
 
-  private alias Declaration D;
+  private alias Declaration D; /// A handy alias. Saves typing.
 
 override
 {

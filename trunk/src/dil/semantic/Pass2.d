@@ -28,11 +28,16 @@ import dil.Enums;
 import dil.CompilerInfo;
 import common;
 
+/// The second pass determines the types of symbols and the types
+/// of expressions and also evaluates them.
 class SemanticPass2 : DefaultVisitor
 {
   Scope scop; /// The current scope.
   Module modul; /// The module to be semantically checked.
 
+  /// Constructs a SemanticPass2 object.
+  /// Params:
+  ///   modul = the module to be checked.
   this(Module modul)
   {
     this.modul = modul;
@@ -47,21 +52,25 @@ class SemanticPass2 : DefaultVisitor
     visit(modul.root);
   }
 
+  /// Enters a new scope.
   void enterScope(ScopeSymbol s)
   {
     scop = scop.enter(s);
   }
 
+  /// Exits the current scope.
   void exitScope()
   {
     scop = scop.exit();
   }
 
+  /// Evaluates e and returns the result.
   Expression interpret(Expression e)
   {
-    return Interpreter.interpret(e, modul.infoMan, scop);
+    return Interpreter.interpret(e, modul.infoMan/+, scop+/);
   }
 
+  /// Creates an error report.
   void error(Token* token, char[] formatMsg, ...)
   {
     auto location = token.getErrorLocation();
@@ -69,15 +78,16 @@ class SemanticPass2 : DefaultVisitor
     modul.infoMan ~= new SemanticError(location, msg);
   }
 
+  /// Some handy aliases.
   private alias Declaration D;
-  private alias Expression E;
-  private alias Statement S;
-  private alias TypeNode T;
+  private alias Expression E; /// ditto
+  private alias Statement S; /// ditto
+  private alias TypeNode T; /// ditto
 
   /// The scope symbol to use in identifier or template instance expressions.
   /// E.g.: object.method(); // After 'object' has been visited, dotIdScope is
   ///                        // set, and 'method' will be looked up there.
-  ScopeSymbol dotIdScope;
+  //ScopeSymbol dotIdScope;
 
 override
 {

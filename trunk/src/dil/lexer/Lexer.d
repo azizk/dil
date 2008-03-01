@@ -2480,7 +2480,7 @@ version(D2)
     error_(this.lineNum, this.lineBegin, columnPos, mid, _arguments, _argptr);
   }
 
-  /// Forwards error parameters.
+  /// ditto
   void error(uint lineNum, char* lineBegin, char* columnPos, MID mid, ...)
   {
     error_(lineNum, lineBegin, columnPos, mid, _arguments, _argptr);

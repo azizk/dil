@@ -17,9 +17,10 @@ import common;
 
 import tango.io.FilePath;
 
+/// Loads settings from a D module file.
 class SettingsLoader
 {
-  InfoManager infoMan;
+  InfoManager infoMan; /// Collects error messages.
   Module mod; /// Current module.
 
   this(InfoManager infoMan)
@@ -32,6 +33,10 @@ class SettingsLoader
     return new SettingsLoader(infoMan);
   }
 
+  /// Creates an error report.
+  /// Params:
+  ///   token = where the error occurred.
+  ///   formatMsg = error message.
   void error(Token* token, char[] formatMsg, ...)
   {
     auto location = token.getErrorLocation();
@@ -136,6 +141,7 @@ class SettingsLoader
   }
 }
 
+/// Loads an associative array from a D module file.
 class TagMapLoader : SettingsLoader
 {
   this(InfoManager infoMan)
@@ -174,6 +180,9 @@ class TagMapLoader : SettingsLoader
   }
 }
 
+/// Resolves the path to a file from the executable's dir path
+/// if it is relative.
+/// Returns: filePath if it is absolute or execPath + filePath.
 string resolvePath(FilePath execPath, string filePath)
 {
   if ((new FilePath(filePath)).isAbsolute())

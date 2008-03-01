@@ -9,6 +9,7 @@ import dil.semantic.Symbols;
 import dil.lexer.Identifier;
 import common;
 
+/// Builds a hierarchy of environments.
 class Scope
 {
   Scope parent; /// The surrounding scope, or null if this is the root scope.
@@ -21,27 +22,21 @@ class Scope
     this.symbol = symbol;
   }
 
-  /++
-    Find a symbol in this scope.
-    Params:
-      name = the name of the symbol.
-  +/
+  /// Find a symbol in this scope.
+  /// Params:
+  ///   name = the name of the symbol.
   Symbol lookup(Identifier* name)
   {
     return symbol.lookup(name);
   }
 
-  /++
-    Create a new inner scope and return that.
-  +/
+  /// Create a new inner scope and return that.
   Scope enter(ScopeSymbol symbol)
   {
     return new Scope(this, symbol);
   }
 
-  /++
-    Destroy this scope and return the outer scope.
-  +/
+  /// Destroy this scope and return the outer scope.
   Scope exit()
   {
     auto sc = parent;

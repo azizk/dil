@@ -6,6 +6,7 @@ module dil.lexer.TokensEnum;
 
 import common;
 
+/// Enumeration of token kinds.
 enum TOK : ushort
 {
   Invalid,
@@ -120,7 +121,7 @@ alias TOK.Void IntegralTypeEnd;
 alias TOK.FILE SpecialTokensBegin;
 alias TOK.VERSION SpecialTokensEnd;
 
-/// A table mapping each TOK to a string.
+/// A table that maps each token kind to a string.
 const string[TOK.MAX] tokToString = [
   "Invalid",
 

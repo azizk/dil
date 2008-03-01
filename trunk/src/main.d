@@ -41,6 +41,7 @@ import tango.text.Util;
 import tango.time.StopWatch;
 import tango.text.Ascii : icompare;
 
+/// Entry function of dil.
 void main(char[][] args)
 {
   auto infoMan = new InfoManager();
@@ -295,10 +296,10 @@ void main(char[][] args)
 
     Stdout.formatln("Scanned in {:f10}s.", swatch.stop);
     break;
-  case "parse":
-    if (args.length == 3)
-      parse(args[2]);
-    break;
+  // case "parse":
+  //   if (args.length == 3)
+  //     parse(args[2]);
+  //   break;
   case "?", "help":
     printHelp(args.length >= 3 ? args[2] : "");
     break;
@@ -319,6 +320,7 @@ char[] readStdin()
   return text;
 }
 
+/// Available commands.
 const char[] COMMANDS =
   "  compile (c)\n"
   "  ddoc (d)\n"
@@ -382,6 +384,7 @@ bool parseDebugOrVersion(string arg, CompilationContext context)
   return true;
 }
 
+/// Prints the errors collected in infoMan.
 void printErrors(InfoManager infoMan)
 {
   foreach (info; infoMan.info)
@@ -402,6 +405,7 @@ void printErrors(InfoManager infoMan)
   }
 }
 
+/// Prints the compiler's main help message.
 char[] helpMain()
 {
   auto COMPILED_WITH = __VENDOR__;
@@ -411,6 +415,7 @@ char[] helpMain()
                    COMPILED_VERSION, COMPILED_DATE);
 }
 
+/// Prints a help message for command.
 void printHelp(char[] command)
 {
   char[] msg;
@@ -545,7 +550,7 @@ Example:
   Stdout(msg).newline;
 }
 
-void parse(string fileName)
+/+void parse(string fileName)
 {
   auto mod = new Module(fileName);
   mod.parse();
@@ -560,4 +565,4 @@ void parse(string fileName)
     }
   }
   print(mod.root.children, "");
-}
+}+/

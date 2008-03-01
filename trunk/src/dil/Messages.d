@@ -3,9 +3,10 @@
   License: GPL3
 +/
 module dil.Messages;
+
 import common;
 
-/// Index into table of compiler messages.
+/// Enumeration of indices into the table of compiler messages.
 enum MID
 {
   // Lexer messages:
@@ -72,25 +73,29 @@ enum MID
   HelpImportGraph,
 }
 
-private string[] messages;
+/// The table of compiler messages.
+private string[] g_compilerMessages;
 
 static this()
 {
-  messages = new string[MID.max+1];
+  g_compilerMessages = new string[MID.max+1];
 }
 
+/// Sets the compiler messages.
 void SetMessages(string[] msgs)
 {
   assert(MID.max+1 == msgs.length);
-  messages = msgs;
+  g_compilerMessages = msgs;
 }
 
+/// Returns the compiler message for mid.
 string GetMsg(MID mid)
 {
-  assert(mid < messages.length);
-  return messages[mid];
+  assert(mid < g_compilerMessages.length);
+  return g_compilerMessages[mid];
 }
 
+/// Returns a formatted string.
 char[] FormatMsg(MID mid, ...)
 {
   return Format(_arguments, _argptr, GetMsg(mid));

@@ -14,9 +14,7 @@ import tango.io.Print;
 
 private alias Declaration D;
 
-/++
-  Traverses a D syntax tree and explains in German.
-+/
+/// Translates a syntax tree into German.
 class GermanTranslator : DefaultVisitor
 {
   Print!(char) put; /// Output buffer.
@@ -30,12 +28,10 @@ class GermanTranslator : DefaultVisitor
   bool pluralize; /// Whether to use the plural when printing the next types.
   bool pointer; /// Whether next types should consider the previous pointer.
 
-  /++
-    Construct a GermanTranslator.
-    Params:
-      put = buffer to print to.
-      indentStep = added at every indendation step.
-  +/
+  /// Construct a GermanTranslator.
+  /// Params:
+  ///   put = buffer to print to.
+  ///   indentStep = added at every indendation step.
   this(Print!(char) put, char[] indentStep)
   {
     this.put = put;
@@ -48,6 +44,8 @@ class GermanTranslator : DefaultVisitor
     visitN(root);
   }
 
+  /// Increases the indentation when instantiated.
+  /// The indentation is restored when the instance goes out of scope.
   scope class Indent
   {
     char[] old_indent;
@@ -64,6 +62,8 @@ class GermanTranslator : DefaultVisitor
     { return this.outer.indent; }
   }
 
+  /// Saves an outer member when instantiated.
+  /// It is restored when the instance goes out of scope.
   scope class Enter(T)
   {
     T t_save;
@@ -100,6 +100,7 @@ class GermanTranslator : DefaultVisitor
   alias Enter!(FunctionDeclaration) EnteredFunction;
   alias Enter!(ConstructorDeclaration) EnteredConstructor;
 
+  /// Prints the location of a node: @(lin,col)
   void printLoc(Node node)
   {
     auto loc = node.begin.getRealLocation();

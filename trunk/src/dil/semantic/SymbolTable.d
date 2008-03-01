@@ -8,14 +8,13 @@ import dil.semantic.Symbol;
 import dil.lexer.Identifier;
 import common;
 
-/++
-  Maps an identifier string to a Symbol.
-+/
+/// Maps an identifier string to a Symbol.
 struct SymbolTable
 {
-  Symbol[char[]] table;
+  Symbol[char[]] table; /// The table data structure.
 
-  /// Look up ident in the table.
+  /// Looks up ident in the table.
+  /// Returns: the symbol if there, otherwise null.
   Symbol lookup(Identifier* ident)
   {
     assert(ident !is null);
@@ -23,8 +22,9 @@ struct SymbolTable
     return psym ? *psym : null;
   }
 
-  void insert(Symbol s, Identifier* ident)
+  /// Inserts a symbol into the table.
+  void insert(Symbol symbol, Identifier* ident)
   {
-    table[ident.str] = s;
+    table[ident.str] = symbol;
   }
 }
