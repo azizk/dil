@@ -14,6 +14,8 @@ var langfile = "lang_en.d";
 var import_paths = []; /// E.g.: ["src/", "import/"]
 
 /// DDoc macro file paths.
+///
+/// Macro definitions in ddoc_files[n] override the ones in ddoc_files[n-1].
 var ddoc_files = ["predefined.ddoc"]; /// E.g.: ["src/mymacros.ddoc", "othermacros.ddoc"]
 
 var xml_map = "xml_map.d";

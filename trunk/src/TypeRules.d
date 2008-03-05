@@ -4,22 +4,10 @@
 +/
 module TypeRules;
 
+import cmd.Generate : xml_escape;
+
+import TypeRulesData;
 import common;
-
-template ExpressionType(char[] T1, char[] T2, char[] expression)
-{
-  mixin("alias "~T1~" X;");
-  mixin("alias "~T2~" Y;");
-  X x;
-  Y y;
-  static if(is(typeof(mixin(expression)) ResultType))
-    const char[] result = ResultType.stringof;
-  else
-    const char[] result = "Error";
-}
-alias ExpressionType EType;
-
-// pragma(msg, EType!("char", "int", "&x").result);
 
 static const string[] basicTypes = [
   "char"[],   "wchar",   "dchar", "bool",
@@ -72,100 +60,63 @@ static const string[] binaryExpressions = [
   "x,y"
 ];
 
-char[] genBinaryExpArray(char[] expression)
-{
-  char[] result = "[\n";
-  foreach (t1; basicTypes)
-  {
-    result ~= "[\n";
-    foreach (t2; basicTypes)
-      result ~= `EType!("`~t1~`", "`~t2~`", "`~expression~`").result,`\n;
-    result[result.length-2] = ']'; // Overwrite last comma.
-    result[result.length-1] = ','; // Overwrite last \n.
-  }
-  result[result.length-1] = ']'; // Overwrite last comma.
-  return result;
-}
-// pragma(msg, mixin(genBinaryExpArray("x%y")).stringof);
-
-char[] genBinaryExpsArray()
-{
-  char[] result = "[\n";
-  foreach (expression; binaryExpressions[0..42])
-  {
-//     pragma(msg, "asd");
-    result ~= genBinaryExpArray(expression)/+ ~ ",\n"+/;
-    result ~= ",\n";
-  }
-  result[result.length-2] = ']';
-  return result;
-}
-
-// pragma(msg, mixin(genBinaryExpsArray()).stringof);
-
-char[] genUnaryExpArray(char[] expression)
-{
-  char[] result = "[\n";
-  foreach (t1; basicTypes)
-    result ~= `EType!("`~t1~`", "int", "`~expression~`").result,`\n;
-  result[result.length-2] = ']'; // Overwrite last comma.
-  return result;
-}
-
-char[] genUnaryExpsArray()
-{
-  char[] result = "[\n";
-  foreach (expression; unaryExpressions)
-    result ~= genUnaryExpArray(expression) ~ ",\n";
-  result[result.length-2] = ']';
-  return result;
-}
-
-// pragma(msg, mixin(genUnaryExpsArray()).stringof);
-
 void genHTMLTypeRulesTables()
 {
-  auto unaryExpsResults = mixin(genUnaryExpsArray());
-//   auto binaryExpsResults = mixin(genBinaryExpsArray());
-
   Stdout(
     `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">`\n
     `<html>`\n
     `<head>`\n
     `  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">`\n
     `  <link href="" rel="stylesheet" type="text/css">`\n
+    `  <style type="text/css">`\n
+    `    .E { color: darkred; } /* Error */`\n
+    `    .R { font-size: 0.8em; } /* Result */`\n
+    `    .X { color: darkorange; }`\n
+    `    .Y { color: darkblue; }`\n
+    `  </style>`\n
     `</head>`\n
     `<body>`\n
+    `<p>These tables show what the type results of certain expressions are.</p>`\n
   );
 
-  Stdout.format("<table>\n<tr><th colspan=\"{}\">Unary Expressions</th></tr>", unaryExpressions.length);
+  Stdout.format("<table>\n<tr><th colspan=\"{}\">Unary Expressions</th></tr>\n", unaryExpressions.length);
   Stdout("<tr><td><!--typecol--></td>");
   foreach (unaryExpression; unaryExpressions)
-    Stdout.format("<td>{}</td>", unaryExpression);
+    Stdout.format("<td>{}</td>", {
+      if (unaryExpression[0] == 'x')
+        return `<span class="X">x</span>` ~ xml_escape(unaryExpression[1..$]);
+      else
+        return xml_escape(unaryExpression[0..$-1]) ~ `<span class="X">x</span>`;
+    }());
   Stdout("</tr>\n");
   foreach (i, basicType; basicTypes)
   {
-    Stdout.format("<tr>\n<td>{}</td>", basicType);
-    foreach (unaryExpResults; unaryExpsResults)
+    Stdout.format("<tr>\n"`<td class="X">{}</td>`, basicType);
+    foreach (expResults; unaryExpsResults)
     {
-      assert(unaryExpResults.length == basicTypes.length);
-      Stdout.format("<td>{}</td>", unaryExpResults[i]);
+      auto result =  expResults[i];
+      Stdout.format(`<td class="R">{}</td>`, result[0] == 'E' ? `<span class="E">Error</span>`[] : result);
     }
     Stdout("\n<tr>\n");
   }
   Stdout("</table>\n");
 
-  foreach (binaryExpression; binaryExpressions)
+  foreach (i, expResults; binaryExpsResults)
   {
-    Stdout.format("<table>\n<tr><th colspan=\"{}\">Binary Expression</th></tr>", basicTypes.length);
-    Stdout.format("<tr><td>{}</td>", binaryExpression);
+    auto binaryExpression = binaryExpressions[i];
+    binaryExpression = `<span class="X">x</span> ` ~
+                       xml_escape(binaryExpression[1..$-1]) ~
+                       ` <span class="Y">y</span>`;
+    Stdout.format("<table>\n<tr><th colspan=\"{}\">{}</th></tr>\n", basicTypes.length, binaryExpression);
+    Stdout.format("<tr><td><!--typecol--></td>");
+    foreach (basicType; basicTypes)
+      Stdout.format(`<td class="Y">{}</td>`, basicType);
     Stdout("\n<tr>\n");
-    foreach (i, basicType; basicTypes)
+    foreach (j, results; expResults)
     {
-      Stdout.format("<tr>\n<td>{}</td>", basicType);
-//       foreach (basicType; basicTypes)
-      {
-      }
+      Stdout.format("<tr>\n"`<td class="X">{}</td>`, basicTypes[j]);
+      foreach (result; results)
+        Stdout.format(`<td class="R">{}</td>`, result[0] == 'E' ? `<span class="E">Error</span>`[] : result);
       Stdout("\n<tr>\n");
     }
     Stdout("</table>\n");
