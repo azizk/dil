@@ -113,6 +113,8 @@ static:
   // DDoc macros:
   auto UndefinedDDocMacro = "DDoc macro '{}' is undefined";
   auto UnterminatedDDocMacro = "DDoc macro '{}' has no closing ')'";
+  // Lexer messages:
+  auto InvalidOctalEscapeSequence = "value of octal escape sequence is greater than 0xFF: '{}'";
   // Parser messages:
   auto InvalidUTF8SequenceInString = "invalid UTF-8 sequence in string literal: '{0}'";
   auto ModuleDeclarationNotFirst = "a module declaration is only allowed as the first declaration in a file";

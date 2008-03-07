@@ -3434,11 +3434,7 @@ class Parser
     if (consumed(T.Dot))
       type = set(new ModuleScopeType(parseIdentifierType()), begin);
     else if (token.kind == T.Typeof)
-    {
       type = parseTypeofType();
-      if (token.kind != T.Dot)
-        return type;
-    }
     else
       type = parseIdentifierType();
 

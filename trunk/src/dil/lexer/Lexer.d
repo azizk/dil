@@ -1849,7 +1849,10 @@ version(D2)
         c *= 8;
         c += *p - '0';
         ++p;
-        return c & 0xFF; // Return valid escape value.
+        if (c > 0xFF)
+          error(sequenceStart, MSG.InvalidOctalEscapeSequence,
+                sequenceStart[0..p-sequenceStart]);
+        return c; // Return valid escape value.
       }
       else if(*p == '&')
       {
@@ -2475,15 +2478,21 @@ version(D2)
   }
 
   /// Forwards error parameters.
+  void error(char* columnPos, char[] msg, ...)
+  {
+    error_(this.lineNum, this.lineBegin, columnPos, msg, _arguments, _argptr);
+  }
+
+  /// ditto
   void error(char* columnPos, MID mid, ...)
   {
-    error_(this.lineNum, this.lineBegin, columnPos, mid, _arguments, _argptr);
+    error_(this.lineNum, this.lineBegin, columnPos, GetMsg(mid), _arguments, _argptr);
   }
 
   /// ditto
   void error(uint lineNum, char* lineBegin, char* columnPos, MID mid, ...)
   {
-    error_(lineNum, lineBegin, columnPos, mid, _arguments, _argptr);
+    error_(lineNum, lineBegin, columnPos, GetMsg(mid), _arguments, _argptr);
   }
 
   /// Creates an error report and appends it to a list.
@@ -2491,14 +2500,14 @@ version(D2)
   ///   lineNum = the line number.
   ///   lineBegin = points to the first character of the current line.
   ///   columnPos = points to the character where the error is located.
-  ///   mid = the message ID.
-  void error_(uint lineNum, char* lineBegin, char* columnPos, MID mid,
+  ///   msg = the message.
+  void error_(uint lineNum, char* lineBegin, char* columnPos, char[] msg,
               TypeInfo[] _arguments, Arg _argptr)
   {
     lineNum = this.errorLineNumber(lineNum);
     auto errorPath = this.filePaths.setPath;
     auto location = new Location(errorPath, lineNum, lineBegin, columnPos);
-    auto msg = Format(_arguments, _argptr, GetMsg(mid));
+    msg = Format(_arguments, _argptr, msg);
     auto error = new LexerError(location, msg);
     errors ~= error;
     if (infoMan !is null)
