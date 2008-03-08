@@ -11,8 +11,8 @@ This software is a compiler written in D for the D programming language.
 How To Compile dil
 ==================
 In order to compile dil you need to have:
- *) DMD 1.027 (http://www.digitalmars.com/d/1.0/changelog.html)
- *) Tango 0.99.4 (http://dsource.org/projects/tango/)
+ *) DMD 1.028 (http://www.digitalmars.com/d/1.0/changelog.html)
+ *) Tango 0.99.5 (http://dsource.org/projects/tango/)
  *) DSSS 0.71 (http://dsource.org/projects/dsss/)
 
 If you can't compile dil because you have a newer version of these programs

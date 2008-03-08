@@ -65,9 +65,8 @@ class QualifiedType : TypeNode
 /// "." Type
 class ModuleScopeType : TypeNode
 {
-  this(TypeNode next)
+  this()
   {
-    super(next);
     mixin(set_kind);
   }
   mixin(copyMethod);

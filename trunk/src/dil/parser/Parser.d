@@ -129,6 +129,13 @@ class Parser
     return node;
   }
 
+  /// Sets the begin and end tokens of a syntax tree node.
+  Class set(Class)(Class node, Token* begin, Token* end)
+  {
+    node.setTokens(begin, end);
+    return node;
+  }
+
   /// Returns true if set() has been called on a node.
   static bool isNodeSet(Node node)
   {
@@ -3431,8 +3438,8 @@ class Parser
   {
     auto begin = token;
     Type type;
-    if (consumed(T.Dot))
-      type = set(new ModuleScopeType(parseIdentifierType()), begin);
+    if (token.kind == T.Dot)
+      type = set(new ModuleScopeType(), begin, begin);
     else if (token.kind == T.Typeof)
       type = parseTypeofType();
     else

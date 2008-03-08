@@ -36,6 +36,20 @@ abstract class Type/* : Symbol*/
     return new TypePointer(this);
   }
 
+  /// Returns a dynamic array type using this type as its base.
+  TypeDArray arrayOf()
+  {
+    return new TypeDArray(this);
+  }
+
+  /// Returns an associative array type using this type as its base.
+  /// Params:
+  ///   key = the key type.
+  TypeAArray arrayOf(Type key)
+  {
+    return new TypeAArray(this, key);
+  }
+
   /// Returns the byte size of this type.
   final size_t sizeOf()
   {

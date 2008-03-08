@@ -287,6 +287,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
   {
     //IllegalType,
     //IntegralType,
+    //ModuleScopeType,
     //IdentifierType have no subnodes.
     static if (is(T == QualifiedType))
       visitT(t.lhs), visitT(t.rhs);
@@ -308,8 +309,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
       visitT(t.returnType), visitN(t.params);
     static if (is(T == CFuncPointerType))
       visitT(t.next), t.params && visitN(t.params);
-    static if (is(T == ModuleScopeType) ||
-               is(T == BaseClassType) ||
+    static if (is(T == BaseClassType) ||
                is(T == ConstType) ||
                is(T == InvariantType))
       visitT(t.next);

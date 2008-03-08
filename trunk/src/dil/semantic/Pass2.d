@@ -84,10 +84,40 @@ class SemanticPass2 : DefaultVisitor
   private alias Statement S; /// ditto
   private alias TypeNode T; /// ditto
 
-  /// The scope symbol to use in identifier or template instance expressions.
-  /// E.g.: object.method(); // After 'object' has been visited, dotIdScope is
-  ///                        // set, and 'method' will be looked up there.
-  //ScopeSymbol dotIdScope;
+  /// The current scope symbol to use for looking up identifiers.
+  /// E.g.:
+  /// ---
+  /// object.method(); // *) object is looked up in the current scope.
+  ///                  // *) idScope is set if object is a ScopeSymbol.
+  ///                  // *) method will be looked up in idScope.
+  /// dil.ast.Node.Node node; // A fully qualified type.
+  /// ---
+  ScopeSymbol idScope;
+
+  /// Searches for a symbol.
+  Symbol search(Token* idTok)
+  {
+    assert(idTok.kind == TOK.Identifier);
+    auto id = idTok.ident;
+    Symbol symbol;
+
+    if (idScope is null)
+      for (auto sc = scop; sc; sc = sc.parent)
+      {
+        symbol = sc.lookup(id);
+        if (symbol)
+          return symbol;
+      }
+    else
+      symbol = idScope.lookup(id);
+
+    if (symbol is null)
+      error(idTok, MSG.UndefinedIdentifier, id.str);
+    else if (auto scopSymbol = cast(ScopeSymbol)symbol)
+      idScope = scopSymbol;
+
+    return symbol;
+  }
 
 override
 {
@@ -162,6 +192,8 @@ override
     return md.decls;
   }
 
+  // Type nodes:
+
   T visit(TypeofType t)
   {
     t.e = visitE(t.e);
@@ -171,12 +203,53 @@ override
 
   T visit(ArrayType t)
   {
+    auto baseType = visitT(t.next).type;
+    if (t.isAssociative)
+      t.type = baseType.arrayOf(visitT(t.assocType).type);
+    else if (t.isDynamic)
+      t.type = baseType.arrayOf();
+    else if (t.isStatic)
+    {}
+    else
+      assert(t.isSlice);
     return t;
   }
 
   T visit(PointerType t)
   {
     t.type = visitT(t.next).type.ptrTo();
+    return t;
+  }
+
+  T visit(QualifiedType t)
+  {
+    if (t.lhs.Is!(QualifiedType) is null)
+      idScope = null; // Reset at left-most type.
+    visitT(t.lhs);
+    visitT(t.rhs);
+    t.type = t.rhs.type;
+    return t;
+  }
+
+  T visit(IdentifierType t)
+  {
+    auto idToken = t.begin;
+    auto symbol = search(idToken);
+    // TODO: save symbol or its type in t.
+    return t;
+  }
+
+  T visit(TemplateInstanceType t)
+  {
+    auto idToken = t.begin;
+    auto symbol = search(idToken);
+    // TODO: save symbol or its type in t.
+    return t;
+  }
+
+  T visit(ModuleScopeType t)
+  {
+    idScope = modul;
     return t;
   }
 
@@ -196,6 +269,8 @@ override
     t.type = tok2Type[t.tok];
     return t;
   }
+
+  // Expression nodes:
 
   E visit(ParenExpression e)
   {

@@ -154,6 +154,7 @@ static:
   auto ExpectedIdentOrInt = "expected an identifier or an integer, not '{}'";
   auto MissingCatchOrFinally = "try statement is missing a catch or finally body.";
   // Semantic analysis:
+  auto UndefinedIdentifier = "undefined identifier '{}'";
   auto DeclConflictsWithDecl = "declaration '{}' conflicts with declaration @{}";
   auto VariableConflictsWithDecl = "variable '{}' conflicts with declaration @{}";
   auto InterfaceCantHaveVariables = "an interface can't have member variables";

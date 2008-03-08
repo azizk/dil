@@ -274,6 +274,7 @@ T copyNode(T)(T node)
   {
     //IllegalType,
     //IntegralType,
+    //ModuleScopeType,
     //IdentifierType have no subnodes.
     static if (is(T == QualifiedType))
       mixin(doCopy(["lhs", "rhs"]));
@@ -289,8 +290,7 @@ T copyNode(T)(T node)
       mixin(doCopy(["returnType", "params"]));
     static if (is(T == CFuncPointerType))
       mixin(doCopy(["next", "params?"]));
-    static if (is(T == ModuleScopeType) ||
-               is(T == BaseClassType) ||
+    static if (is(T == BaseClassType) ||
                is(T == ConstType) ||
                is(T == InvariantType))
       mixin(doCopy("next"));
