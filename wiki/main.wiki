@@ -1,9 +1,16 @@
-Note: the Subversion repository is out of date. The code was migrated to [http://hg.sharesource.org/dil/ Mercurial].
 =Purpose=
 dil is a hand-crafted compiler implementation for the D programming language written in D 1.0 using the [http://dsource.org/projects/tango Tango] standard library. The lexer and the parser are fully implemented. Semantic analysis is being worked on. The backend will most probably be gcc or [http://llvm.org LLVM].
 
-What dil can do at the moment:
+What dil can do at the present:
   * dil is fully internationalized and can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in config.d.
+  * Generate documentation from DDoc comments. In comparison to dmd, dil has fewer bugs and also offers a few goodies. Example: documentation of [http://dil.googlecode.com/files/Tango_doc_0.99.5.zip Tango].
+    * Unicode alphas are supported in macro, section and parameter names.
+    * Every symbol can be linked to its source location.
+    * Protection, linkage and storage class attributes are shown in brackets.
+    * Reports warnings for undefined macros and unterminated macros (missing closing ')'.)
+    * Every token in a code section is highlighted (customizable via html_map.d.)
+    * Undocumented symbols can be included in the documentation using the '-i'-switch.
+    * Shortcomings: symbols aren't highlighted in comment texts (rather for practical reasons;) variables/parameters with a !DeclaratorSuffix (e.g. `int a[]`) are slightly problematic; sometimes it shows that semantic info is lacking.
   * Generate XML or HTML documents. You can choose to generate tags for tokens only or you can also have the whole parse tree unparsed. The whitespace of the original source file is preserved. You can view the HTML documents in any browser you like. The XML documents can only be viewed in W3C-standards compatible browsers(`*`) in combination with an XML formatting CSS document. dil provides two ordinary CSS documents (for XML/HTML) which can be customized to one's heart's content. Example: dil's source code in [http://dil.googlecode.com/files/xml_rev709.zip XML] or [http://dil.googlecode.com/files/html_rev709.zip HTML]. (`*`Note: Internet Explorer is the only browser that spectacularly fails at this job.)
   * Produce module dependency graphs using the graphviz dot format. For example, see the [http://dil.googlecode.com/files/main.2.dot dot file] of dil: rendered in [http://dil.googlecode.com/files/main.2.svg SVG], [http://dil.googlecode.com/files/main.2.png PNG] (2.7MB) or [http://dil.googlecode.com/files/main.2.gif GIF]. Cyclic edges (import statements) and nodes (modules) are highlighted in red. The edges of public imports are bold.
   * Output code statistics (lines of code, count syntax tree nodes and tokens, number of whitespace characters etc.) When dil has advanced enough [http://www.aivosto.com/project/help/pm-oo-ck.html OO-metrics] will be supported. Example: [http://dil.googlecode.com/files/stats_dstress_r1835_2.txt dstress] (1.5MB text; totals are at the bottom)
@@ -24,7 +31,6 @@ What dil can do at the moment:
     * The identifier `__EOF__` is interpreted as the end of file.
 
 Features you will or might see in dil:
-  * Documentation generation ala doxygen (keeping ddoc in mind.)
   * Refactoring (renaming symbols, modules; changing the type of a symbol etc.)
   * Coding rules enforcement.
   * Code search.
@@ -35,12 +41,22 @@ Features you will or might see in dil:
 
 *Meaning:*
 
-The word dil comes from the Turkish language and means among other things a) tongue or b) language. It is a very fitting name for this project because of its meaning and because it starts with the letter d and for the reason that the project owner has Turkish origins.
+The word dil comes from the Turkish language and means among other things a) tongue or b) language.
+It is a very fitting name for this project because of its meaning and because it starts with the letter d and for the reason that the project owner has Turkish origins.
+
+===Contact===
+Feel free to join my channel, #dil, which I've set up on freenode.net.
+You can also send me a plain e-Mail if you have questions regarding my project.
+
+===License===
+Some people might not like the license under which dil is currently being developed.
+In fact, it could be off-putting for some programmers who would like to contribute to it or make use of it as a client.
+However, please keep in mind that a lot of hours were spent in order to come up with a compiler that is well documented and has a solid design.
+It is not unlikely that the author will put the project under a less restrictive license one time or another.
+It could be LGPL3 or even BSD.
+It very much depends on how many cookies and apple pies somebody might be willing to stuff the author with.
 
 ==Download==
-There are no binaries to download yet.
-If you want to get the sources you can either check it out via SVN (`svn co http://dil.googlecode.com/svn/trunk/ dil`) or you can use the fetch command of [http://dsource.org/projects/dsss DSSS] (dsss net fetch dil).
-
-Note: For practical and technical reasons I've decided to change the source code management system from Subversion (SVN) to Mercurial (hg).
-I managed converting the old svn repository to an hg repository with the help of two fine persons at irc.freenode.net/#mercurial.
-Since the Google Code services don't support Mercurial repositories yet (please see [http://code.google.com/p/support/issues/detail?id=415 bug report]), I have decided to register at [http://sharesource.org sharesource.org] and have my hg repository hosted there for the time being. From now on development will continue in the [http://hg.sharesource.org/dil/ new Mercurial repository].
+There are no downloadable binaries yet.
+If you have [http://dsource.org/projects/dsss DSSS] you can use the fetch command, "`dsss net fetch dil.zip`", to get the latest revision of the source code.
+Click the "Source"-tab to find out how to get the sources using Mercurial.

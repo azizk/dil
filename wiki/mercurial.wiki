@@ -1,0 +1,21 @@
+#summary Instructions on how to get the source code.
+For practical and technical reasons I've decided to change the source code management system from Subversion (SVN) to Mercurial (hg).
+I managed converting the old svn repository to an hg repository with the help of two fine persons at irc.freenode.net/#mercurial.
+Since the Google Code services don't support Mercurial repositories (see [http://code.google.com/p/support/issues/detail?id=415 bug report]), I have decided to register at [http://sharesource.org sharesource.org] and have my hg repository hosted there. From now on development will continue in the [http://hg.sharesource.org/dil/ new Mercurial repository].
+
+Use this command to anonymously check out the latest project source code:
+
+||`hg clone http://hg.sharesource.org/dil/ dil`||
+
+To update the repository type these commands:
+
+||`hg pull`||
+||`hg update`||
+
+or in one step:
+
+||`hg pull -u`||
+
+You can also [http://hg.sharesource.org/dil/file/tip browse] the repository or download the latest revision
+[http://hg.sharesource.org/dil/archive/tip.zip dil.zip] or
+[http://hg.sharesource.org/dil/archive/tip.tar.bz2 dil.tar.bz2].

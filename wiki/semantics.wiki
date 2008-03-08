@@ -1,21 +1,25 @@
 #summary Notes on the semantic rules of elements in the D programming language
+== Type Rules ==
+[http://dil.googlecode.com/files/typerules.html Tables] of type rules.
 
 == Classes ==
   * Inherits from Object (defined in module object) if no base class is specified.
   * May inherit only from one class (single inheritance.)
   * May inherit zero to any number of interfaces.
+  * The inheritance graph must not have any cycles.
   * All classes can be implicitly cast to object.Object.
   * Methods are "virtual" by default.
   * Is a reference type.
   * Instances are allocated on the heap (or on the stack; see attribute 'scope'.)
-  * Every class has a ClassInfo (from module object.)
+  * Every class has a !ClassInfo (from module object.)
   * Attributes:
     * abstract: class can't be instantiated.
     * final: disallows inheritance by other classes.
     * scope: instances are allocated on the stack. Variable declarations of this class must be marked with the scope attribute.
     * const, invariant: D2.0 feature. All declarations inside the class body are marked as const or invariant.
     * deprecated: using the class is an error.
-    * Meaningless: auto, extern, override, static, synchronized.
+    * static: if a nested class is static it cannot access variables in the surrounding scope.
+    * Meaningless: auto, extern, override, synchronized.
 == Structs ==
   * 'align' attribute has only a meaning for and in structs.
   * Can't inherit other structs.
@@ -29,7 +33,7 @@
   * Named enums have their own scopes.
   * The members of an anonymous enum are inserted into the scope that surrounds the enum declaration.
 == Functions ==
-  * Variable declarations may not shadow other variables in the surrounding scopes. E.g: `void f(){ int a; { int a;/* Error: shadows outer 'a'*/ } }`.
+  * Variable declarations may not shadow other variables in the surrounding scopes. E.g: `void f(){ int a; { int a;/* Error: shadows outer 'a'*/ } }`
 == Variables ==
   * Declarations are default initialized to Type.init.
 == Imports ==
