@@ -156,53 +156,52 @@ void main(char[][] args)
     infoMan.hasInfo && printErrors(infoMan);
     break;
   case "importgraph", "igraph":
-    string filePath;
-    string[] regexps;
-    string siStyle = "dashed"; // static import style
-    string piStyle = "bold";   // public import style
-    uint levels;
-    IGraphOption options;
-    auto context = newCompilationContext();
+    if (args.length < 3)
+      return printHelp("hl");
+
+    IGraphCommand cmd;
+    cmd.context = newCompilationContext();
+
     foreach (arg; args[2..$])
     {
-      if (parseDebugOrVersion(arg, context))
+      if (parseDebugOrVersion(arg, cmd.context))
       {}
       else if (strbeg(arg, "-I"))
-        context.importPaths ~= arg[2..$];
-      else if(strbeg(arg, "-r"))
-        regexps ~= arg[2..$];
+        cmd.context.importPaths ~= arg[2..$];
+      else if(strbeg(arg, "-x"))
+        cmd.regexps ~= arg[2..$];
       else if(strbeg(arg, "-l"))
-        levels = Integer.toInt(arg[2..$]);
+        cmd.levels = Integer.toInt(arg[2..$]);
       else if(strbeg(arg, "-si"))
-        siStyle = arg[3..$];
+        cmd.siStyle = arg[3..$];
       else if(strbeg(arg, "-pi"))
-        piStyle = arg[3..$];
+        cmd.piStyle = arg[3..$];
       else
         switch (arg)
         {
         case "--dot":
-          options |= IGraphOption.PrintDot; break;
+          cmd.add(IGraphCommand.Option.PrintDot); break;
         case "--paths":
-          options |= IGraphOption.PrintPaths; break;
+          cmd.add(IGraphCommand.Option.PrintPaths); break;
         case "--list":
-          options |= IGraphOption.PrintList; break;
+          cmd.add(IGraphCommand.Option.PrintList); break;
         case "-i":
-          options |= IGraphOption.IncludeUnlocatableModules; break;
+          cmd.add(IGraphCommand.Option.IncludeUnlocatableModules); break;
         case "-hle":
-          options |= IGraphOption.HighlightCyclicEdges; break;
+          cmd.add(IGraphCommand.Option.HighlightCyclicEdges); break;
         case "-hlv":
-          options |= IGraphOption.HighlightCyclicVertices; break;
+          cmd.add(IGraphCommand.Option.HighlightCyclicVertices); break;
         case "-gbp":
-          options |= IGraphOption.GroupByPackageNames; break;
+          cmd.add(IGraphCommand.Option.GroupByPackageNames); break;
         case "-gbf":
-          options |= IGraphOption.GroupByFullPackageName; break;
+          cmd.add(IGraphCommand.Option.GroupByFullPackageName); break;
         case "-m":
-          options |= IGraphOption.MarkCyclicModules; break;
+          cmd.add(IGraphCommand.Option.MarkCyclicModules); break;
         default:
-          filePath = arg;
+          cmd.filePath = arg;
         }
     }
-    cmd.ImportGraph.execute(filePath, context, regexps, levels, siStyle, piStyle, options);
+    cmd.run();
     break;
   case "stats", "statistics":
     char[][] filePaths;
@@ -503,7 +502,7 @@ Format:
 Options:
   -Ipath           : add 'path' to the list of import paths where modules are
                      looked for
-  -rREGEXP         : exclude modules whose names match the regular expression
+  -xREGEXP         : exclude modules whose names match the regular expression
                      REGEXP
   -i               : include unlocatable modules
 

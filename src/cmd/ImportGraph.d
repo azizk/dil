@@ -20,19 +20,79 @@ import tango.text.Util;
 
 alias FileConst.PathSeparatorChar dirSep;
 
-/// Options for the importgraph command.
-enum IGraphOption
+/// The importgraph command.
+struct IGraphCommand
 {
-  None,
-  IncludeUnlocatableModules = 1,
-  PrintDot                  = 1<<1,
-  HighlightCyclicEdges      = 1<<2,
-  HighlightCyclicVertices   = 1<<3,
-  GroupByPackageNames       = 1<<4,
-  GroupByFullPackageName    = 1<<5,
-  PrintPaths                = 1<<6,
-  PrintList                 = 1<<7,
-  MarkCyclicModules         = 1<<8,
+  /// Options for the command.
+  enum Option
+  {
+    None,
+    IncludeUnlocatableModules = 1,
+    PrintDot                  = 1<<1,
+    HighlightCyclicEdges      = 1<<2,
+    HighlightCyclicVertices   = 1<<3,
+    GroupByPackageNames       = 1<<4,
+    GroupByFullPackageName    = 1<<5,
+    PrintPaths                = 1<<6,
+    PrintList                 = 1<<7,
+    MarkCyclicModules         = 1<<8,
+  }
+  alias Option Options;
+
+  Options options; /// Command options.
+  string filePath; /// File path to the root module.
+  string[] regexps; /// Regular expressions.
+  string siStyle = "dashed"; /// Static import style.
+  string piStyle = "bold";   /// Public import style.
+  uint levels; /// How many levels to print.
+
+  CompilationContext context;
+
+  /// Adds o to the options.
+  void add(Option o)
+  {
+    options |= o;
+  }
+
+  void run()
+  {
+    // Init regular expressions.
+    RegExp[] regexps;
+    foreach (strRegexp; this.regexps)
+      regexps ~= new RegExp(strRegexp);
+
+    // Add the directory of the file to the import paths.
+    auto filePath = new FilePath(this.filePath);
+    auto fileDir = filePath.folder();
+    context.importPaths ~= fileDir;
+
+    auto gbuilder = new GraphBuilder;
+
+    gbuilder.importPaths = context.importPaths;
+    gbuilder.options = options;
+    gbuilder.filterPredicate = (string moduleFQNPath) {
+      foreach (rx; regexps)
+        // Replace slashes: dil/ast/Node -> dil.ast.Node
+        if (rx.test(replace(moduleFQNPath.dup, dirSep, '.')))
+          return true;
+      return false;
+    };
+
+    auto graph = gbuilder.start(filePath.name());
+
+    if (options & (Option.PrintList | Option.PrintPaths))
+    {
+      if (options & Option.MarkCyclicModules)
+        graph.detectCycles();
+
+      if (options & Option.PrintPaths)
+        printModulePaths(graph.vertices, levels+1, "");
+      else
+        printModuleList(graph.vertices, levels+1, "");
+    }
+    else
+      printDotDocument(graph, siStyle, piStyle, options);
+  }
 }
 
 /// Represents a module dependency graph.
@@ -148,7 +208,7 @@ string findModuleFilePath(string moduleFQNPath, string[] importPaths)
 class GraphBuilder
 {
   Graph graph;
-  IGraphOption options;
+  IGraphCommand.Options options;
   string[] importPaths; /// Where to look for modules.
   Vertex[string] loadedModulesTable; /// Maps FQN paths to modules.
   bool delegate(string) filterPredicate;
@@ -192,7 +252,7 @@ class GraphBuilder
 
     if (moduleFilePath is null)
     { // Module not found.
-      if (options & IGraphOption.IncludeUnlocatableModules)
+      if (options & IGraphCommand.Option.IncludeUnlocatableModules)
       { // Include module nevertheless.
         vertex = new Vertex;
         vertex.modul = new Module("");
@@ -234,48 +294,6 @@ class GraphBuilder
   }
 }
 
-/// Executes the importgraph command.
-void execute(string filePathString, CompilationContext context, string[] strRegexps,
-             uint levels, string siStyle, string piStyle, IGraphOption options)
-{
-  // Init regular expressions.
-  RegExp[] regexps;
-  foreach (strRegexp; strRegexps)
-    regexps ~= new RegExp(strRegexp);
-
-  // Add the directory of the file to the import paths.
-  auto filePath = new FilePath(filePathString);
-  auto fileDir = filePath.folder();
-  context.importPaths ~= fileDir;
-
-  auto gbuilder = new GraphBuilder;
-
-  gbuilder.importPaths = context.importPaths;
-  gbuilder.options = options;
-  gbuilder.filterPredicate = (string moduleFQNPath) {
-    foreach (rx; regexps)
-      // Replace slashes: dil/ast/Node -> dil.ast.Node
-      if (rx.test(replace(moduleFQNPath.dup, dirSep, '.')))
-        return true;
-    return false;
-  };
-
-  auto graph = gbuilder.start(filePath.name());
-
-  if (options & (IGraphOption.PrintList | IGraphOption.PrintPaths))
-  {
-    if (options & IGraphOption.MarkCyclicModules)
-      graph.detectCycles();
-
-    if (options & IGraphOption.PrintPaths)
-      printModulePaths(graph.vertices, levels+1, "");
-    else
-      printModuleList(graph.vertices, levels+1, "");
-  }
-  else
-    printDotDocument(graph, siStyle, piStyle, options);
-}
-
 /// Prints the file paths to the modules.
 void printModulePaths(Vertex[] vertices, uint level, char[] indent)
 {
@@ -304,15 +322,15 @@ void printModuleList(Vertex[] vertices, uint level, char[] indent)
 
 /// Prints the graph as a graphviz dot document.
 void printDotDocument(Graph graph, string siStyle, string piStyle,
-                      IGraphOption options)
+                      IGraphCommand.Options options)
 {
   Vertex[][string] verticesByPckgName;
-  if (options & IGraphOption.GroupByFullPackageName)
+  if (options & IGraphCommand.Option.GroupByFullPackageName)
     foreach (vertex; graph.vertices)
       verticesByPckgName[vertex.modul.packageName] ~= vertex;
 
-  if (options & (IGraphOption.HighlightCyclicVertices |
-                 IGraphOption.HighlightCyclicEdges))
+  if (options & (IGraphCommand.Option.HighlightCyclicVertices |
+                 IGraphCommand.Option.HighlightCyclicEdges))
     graph.detectCycles();
 
   // Output header of the dot document.
@@ -338,7 +356,7 @@ void printDotDocument(Graph graph, string siStyle, string piStyle,
     Stdout.formatln(`  n{} -> n{} {};`, edge.from.id, edge.to.id, edgeStyles);
   }
 
-  if (options & IGraphOption.GroupByFullPackageName)
+  if (options & IGraphCommand.Option.GroupByFullPackageName)
     foreach (packageName, vertices; verticesByPckgName)
     { // Output nodes in a cluster.
       Stdout.format(`  subgraph "cluster_{}" {`\n`    label="{}";color=blue;`"\n    ", packageName, packageName);
