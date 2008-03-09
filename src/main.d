@@ -24,7 +24,7 @@ import dil.Information;
 import dil.SourceText;
 import dil.Compilation;
 
-import cmd.Generate;
+import cmd.Highlight;
 import cmd.Statistics;
 import cmd.ImportGraph;
 import cmd.DDoc;
@@ -129,28 +129,30 @@ void main(char[][] args)
     cmd.run();
     infoMan.hasInfo && printErrors(infoMan);
     break;
-  case "gen", "generate":
-    char[] fileName;
-    GenOption options = GenOption.Tokens;
+  case "hl", "highlight":
+    if (args.length < 3)
+      return printHelp("hl");
+
+    HighlightCommand cmd;
+    cmd.infoMan = infoMan;
+
     foreach (arg; args[2..$])
     {
       switch (arg)
       {
       case "--syntax":
-        options |= GenOption.Syntax; break;
+        cmd.add(HighlightCommand.Option.Syntax); break;
       case "--xml":
-        options |= GenOption.XML; break;
+        cmd.add(HighlightCommand.Option.XML); break;
       case "--html":
-        options |= GenOption.HTML; break;
+        cmd.add(HighlightCommand.Option.HTML); break;
       case "--lines":
-        options |= GenOption.PrintLines; break;
+        cmd.add(HighlightCommand.Option.PrintLines); break;
       default:
-        fileName = arg;
+        cmd.filePath = arg;
       }
     }
-    if (!(options & (GenOption.XML | GenOption.HTML)))
-      options |= GenOption.XML; // Default to XML.
-    cmd.Generate.execute(fileName, options, infoMan);
+    cmd.run();
     infoMan.hasInfo && printErrors(infoMan);
     break;
   case "importgraph", "igraph":
@@ -326,8 +328,8 @@ char[] readStdin()
 const char[] COMMANDS =
   "  compile (c)\n"
   "  ddoc (d)\n"
-  "  generate (gen)\n"
   "  help (?)\n"
+  "  highlight (hl)\n"
   "  importgraph (igraph)\n"
   "  statistics (stats)\n"
   "  tokenize (tok)\n"
@@ -457,11 +459,11 @@ Options:
 Example:
   dil d doc/ src/main.d src/macros_dil.ddoc -i`;
     break;
-  case "gen", "generate":
+  case "hl", "highlight":
 //     msg = GetMsg(MID.HelpGenerate);
-    msg = `Generate an XML or HTML document from a D source file.
+    msg = `Highlight a D source file with XML or HTML tags.
 Usage:
-  dil gen file.d [Options]
+  dil hl file.d [Options]
 
 Options:
   --syntax         : generate tags for the syntax tree
@@ -470,7 +472,7 @@ Options:
   --lines          : print line numbers
 
 Example:
-  dil gen Parser.d --html --syntax > Parser.html`;
+  dil hl Parser.d --html --syntax > Parser.html`;
     break;
   case "importgraph", "igraph":
 //     msg = GetMsg(MID.HelpImportGraph);

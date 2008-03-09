@@ -5,7 +5,7 @@
 module cmd.DDocXML;
 
 import cmd.DDoc;
-import cmd.Generate;
+import cmd.Highlight;
 import dil.doc.Parser;
 import dil.doc.Macro;
 import dil.doc.Doc;

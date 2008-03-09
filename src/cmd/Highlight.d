@@ -2,7 +2,7 @@
   Author: Aziz Köksal
   License: GPL3
 +/
-module cmd.Generate;
+module cmd.Highlight;
 
 import dil.ast.DefaultVisitor;
 import dil.ast.Node,
@@ -22,33 +22,51 @@ import common;
 import tango.io.GrowBuffer;
 import tango.io.Print;
 
-/// Options for the generate command.
-enum GenOption
+/// The highlight command.
+struct HighlightCommand
 {
-  Empty,
-  Tokens = 1,
-  Syntax = 1<<1,
-  HTML   = 1<<2,
-  XML    = 1<<3,
-  PrintLines  = 1<<4
-}
+  /// Options for the command.
+  enum Option
+  {
+    None        = 0,
+    Tokens      = 1,
+    Syntax      = 1<<1,
+    HTML        = 1<<2,
+    XML         = 1<<3,
+    PrintLines  = 1<<4
+  }
+  alias Option Options;
 
-/// Executes the generate command.
-void execute(string filePath, GenOption options, InfoManager infoMan)
-{
-  assert(options != GenOption.Empty);
-  auto mapFilePath = options & GenOption.HTML ? GlobalSettings.htmlMapFile
-                                              : GlobalSettings.xmlMapFile;
-  auto map = TagMapLoader(infoMan).load(mapFilePath);
-  auto tags = new TagMap(map);
+  Options options; /// Command options.
+  string filePath; /// File path to the module to be highlighted.
+  InfoManager infoMan;
 
-  if (infoMan.hasInfo)
-    return;
+  /// Adds o to the options.
+  void add(Option o)
+  {
+    options |= o;
+  }
 
-  if (options & GenOption.Syntax)
-    highlightSyntax(filePath, tags, Stdout, options);
-  else
-    highlightTokens(filePath, tags, Stdout, options);
+  /// Executes the command.
+  void run()
+  {
+    add(HighlightCommand.Option.Tokens);
+    if (!(options & (Option.XML | Option.HTML)))
+      add(Option.XML); // Default to XML.
+
+    auto mapFilePath = options & Option.HTML ? GlobalSettings.htmlMapFile
+                                             : GlobalSettings.xmlMapFile;
+    auto map = TagMapLoader(infoMan).load(mapFilePath);
+    auto tags = new TagMap(map);
+
+    if (infoMan.hasInfo)
+      return;
+
+    if (options & Option.Syntax)
+      highlightSyntax(filePath, tags, Stdout, options);
+    else
+      highlightTokens(filePath, tags, Stdout, options);
+  }
 }
 
 /// Escapes the characters '<', '>' and '&' with named character entities.
@@ -272,12 +290,10 @@ void printLines(uint lines, TagMap tags, Print!(char) print)
     print.format(lineNumberFormat, lineNum);
 }
 
-// void printMultiline(Token* token, TagMap tags, Print!(char) print)
-// {
-// }
-
 /// Highlights the syntax in a source file.
-void highlightSyntax(string filePath, TagMap tags, Print!(char) print, GenOption options)
+void highlightSyntax(string filePath, TagMap tags,
+                     Print!(char) print,
+                     HighlightCommand.Options options)
 {
   auto parser = new Parser(new SourceText(filePath, true));
   auto root = parser.start();
@@ -295,7 +311,7 @@ void highlightSyntax(string filePath, TagMap tags, Print!(char) print, GenOption
     print(tags["CompEnd"]);
   }
 
-  if (options & GenOption.PrintLines)
+  if (options & HighlightCommand.Option.PrintLines)
   {
     print(tags["LineNumberBegin"]);
     printLines(lx.lineNum, tags, print);
@@ -323,7 +339,7 @@ void highlightSyntax(string filePath, TagMap tags, Print!(char) print, GenOption
     // Token text.
     printToken(token, tags, print);
     // </node>
-    if (options & GenOption.HTML)
+    if (options & HighlightCommand.Option.HTML)
       foreach_reverse (node; tokenEx.endNodes)
         print(tagNodeEnd);
     else
@@ -335,7 +351,9 @@ void highlightSyntax(string filePath, TagMap tags, Print!(char) print, GenOption
 }
 
 /// Highlights all tokens of a source file.
-void highlightTokens(string filePath, TagMap tags, Print!(char) print, GenOption options)
+void highlightTokens(string filePath, TagMap tags,
+                     Print!(char) print,
+                     HighlightCommand.Options options)
 {
   auto lx = new Lexer(new SourceText(filePath, true));
   lx.scanAll();
@@ -348,7 +366,7 @@ void highlightTokens(string filePath, TagMap tags, Print!(char) print, GenOption
     print(tags["CompEnd"]);
   }
 
-  if (options & GenOption.PrintLines)
+  if (options & HighlightCommand.Option.PrintLines)
   {
     print(tags["LineNumberBegin"]);
     printLines(lx.lineNum, tags, print);
