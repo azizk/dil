@@ -34,96 +34,102 @@ import tango.text.Ascii : toUpper;
 import tango.io.File;
 import tango.io.FilePath;
 
-/// Executes the doc generation command.
-void execute(string[] filePaths, string destDir, string[] macroPaths,
-             bool writeXML, bool incUndoc, bool verbose,
-             CompilationContext context, InfoManager infoMan)
+/// The ddoc command.
+struct DDocCommand
 {
-  // Parse macro files.
-  MacroTable mtable;
-  MacroParser mparser;
-  foreach (macroPath; macroPaths)
+  string destDirPath; /// Destination directory.
+  string[] macroPaths; /// Macro file paths.
+  string[] filePaths; /// Module file paths.
+  bool includeUndocumented; /// Whether to include undocumented symbols.
+  bool writeXML; /// Whether to write XML instead of HTML docs.
+  bool verbose; /// Whether to be verbose.
+
+  CompilationContext context;
+  InfoManager infoMan;
+  TokenHighlighter tokenHL; /// For DDoc code sections.
+
+  /// Executes the doc generation command.
+  void run()
   {
-    auto macros = mparser.parse(loadMacroFile(macroPath, infoMan));
-    mtable = new MacroTable(mtable);
-    mtable.insert(macros);
-  }
-
-//   foreach (k, v; mtable.table)
-//     Stdout(k)("=")(v.text);
-
-  // For DDoc code sections.
-  auto tokenHL = new TokenHighlighter(infoMan, writeXML == false);
-
-  // Process D files.
-  foreach (filePath; filePaths)
-  {
-    auto mod = new Module(filePath, infoMan);
-    // Parse the file.
-    mod.parse();
-    if (mod.hasErrors)
-      continue;
-
-    // Start semantic analysis.
-    auto pass1 = new SemanticPass1(mod, context);
-    pass1.start();
-
-    // Generate documentation.
-    auto dest = new FilePath(destDir);
-    dest.append(mod.getFQN() ~ (writeXML ? ".xml" : ".html"));
-
-    InfoManager infoMan2; // Collects warnings from the macro expander.
-    if (verbose)
+    // Parse macro files and build macro table hierarchy.
+    MacroTable mtable;
+    MacroParser mparser;
+    foreach (macroPath; macroPaths)
     {
-      Stdout.formatln("{} > {}", mod.filePath, dest);
-      infoMan2 = new InfoManager();
+      auto macros = mparser.parse(loadMacroFile(macroPath, infoMan));
+      mtable = new MacroTable(mtable);
+      mtable.insert(macros);
     }
 
-    writeDocFile(dest.toString(), mod, mtable, writeXML, incUndoc, tokenHL, infoMan2);
+    // For DDoc code sections.
+    tokenHL = new TokenHighlighter(infoMan, writeXML == false);
 
-    if (infoMan2)
-      infoMan ~= infoMan2.info;
+    // Process D files.
+    foreach (filePath; filePaths)
+    {
+      auto mod = new Module(filePath, infoMan);
+      // Parse the file.
+      mod.parse();
+      if (mod.hasErrors)
+        continue;
+
+      // Start semantic analysis.
+      auto pass1 = new SemanticPass1(mod, context);
+      pass1.start();
+
+      // Build destination file path.
+      auto destPath = new FilePath(destDirPath);
+      destPath.append(mod.getFQN() ~ (writeXML ? ".xml" : ".html"));
+
+      if (verbose)
+        Stdout.formatln("{} > {}", mod.filePath, destPath);
+
+      // Write the document file.
+      writeDocFile(destPath.toString(), mod, mtable);
+    }
   }
-}
 
-void writeDocFile(string dest, Module mod, MacroTable mtable,
-                  bool writeXML, bool incUndoc,
-                  TokenHighlighter tokenHL, InfoManager infoMan)
-{
-  // Create a macro environment for this module.
-  mtable = new MacroTable(mtable);
-  // Define runtime macros.
-  // MODPATH is not in the specs.
-  mtable.insert("MODPATH", mod.getFQNPath() ~ "." ~ mod.fileExtension());
-  mtable.insert("TITLE", mod.getFQN());
-  mtable.insert("DOCFILENAME", mod.getFQN() ~ (writeXML ? ".xml" : ".html"));
-  auto timeStr = Time.toString();
-  mtable.insert("DATETIME", timeStr);
-  mtable.insert("YEAR", Time.year(timeStr));
+  void writeDocFile(string destPath, Module mod, MacroTable mtable)
+  {
+    // Create this module's own macro environment.
+    mtable = new MacroTable(mtable);
+    // Define runtime macros.
+    // MODPATH is an extension by dil.
+    mtable.insert("MODPATH", mod.getFQNPath() ~ "." ~ mod.fileExtension());
+    mtable.insert("TITLE", mod.getFQN());
+    mtable.insert("DOCFILENAME", mod.getFQN() ~ (writeXML ? ".xml" : ".html"));
+    auto timeStr = Time.toString();
+    mtable.insert("DATETIME", timeStr);
+    mtable.insert("YEAR", Time.year(timeStr));
 
-  DDocEmitter docEmitter;
-  if (writeXML)
-    docEmitter = new DDocXMLEmitter(mod, mtable, incUndoc, tokenHL);
-  else
-    docEmitter = new DDocEmitter(mod, mtable, incUndoc, tokenHL);
-  docEmitter.emit();
-  // Set BODY macro to the text produced by the DDocEmitter.
-  mtable.insert("BODY", docEmitter.text);
-  // Do the macro expansion pass.
-  auto fileText = MacroExpander.expand(mtable, "$(DDOC)", mod.filePath, infoMan);
-// fileText ~= "\n<pre>\n" ~ doc.text ~ "\n</pre>";
-  // Finally write the file out to the harddisk.
-  auto file = new File(dest);
-  file.write(fileText);
-}
+    DDocEmitter docEmitter;
+    if (writeXML)
+      docEmitter = new DDocXMLEmitter(mod, mtable, includeUndocumented, tokenHL);
+    else
+      docEmitter = new DDocEmitter(mod, mtable, includeUndocumented, tokenHL);
+    docEmitter.emit();
 
-/// Loads a macro file. Converts any Unicode encoding to UTF-8.
-string loadMacroFile(string filePath, InfoManager infoMan)
-{
-  auto src = new SourceText(filePath);
-  src.load(infoMan);
-  auto text = src.data[0..$-1]; // Exclude '\0'.
-  return sanitizeText(text);
+    // Set BODY macro to the text produced by the emitter.
+    mtable.insert("BODY", docEmitter.text);
+    // Do the macro expansion pass.
+    auto fileText = MacroExpander.expand(mtable, "$(DDOC)",
+                                         mod.filePath,
+                                         verbose ? infoMan : null);
+    // fileText ~= "\n<pre>\n" ~ doc.text ~ "\n</pre>";
+
+    // Finally write the file out to the harddisk.
+    scope file = new File(destPath);
+    file.write(fileText);
+  }
+
+  /// Loads a macro file. Converts any Unicode encoding to UTF-8.
+  static string loadMacroFile(string filePath, InfoManager infoMan)
+  {
+    auto src = new SourceText(filePath);
+    src.load(infoMan);
+    auto text = src.data[0..$-1]; // Exclude '\0'.
+    return sanitizeText(text);
+  }
 }
 
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
@@ -583,7 +589,7 @@ class DDocEmitter : DefaultVisitor
     writeStructOrUnion(d);
   }
 
-  /// Writes an union declaration.
+  /// Writes a union declaration.
   void writeUnion(UnionDeclaration d) {
     writeStructOrUnion(d);
   }

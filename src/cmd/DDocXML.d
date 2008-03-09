@@ -190,7 +190,7 @@ class DDocXMLEmitter : DDocEmitter
     writeStructOrUnion(d);
   }
 
-  /// Writes an union declaration.
+  /// Writes a union declaration.
   void writeUnion(UnionDeclaration d) {
     writeStructOrUnion(d);
   }

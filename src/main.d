@@ -68,7 +68,7 @@ void main(char[][] args)
       else
         filePaths ~= arg;
     }
-    infoMan = new InfoManager();
+
     foreach (filePath; filePaths)
     {
       auto mod = new Module(filePath, infoMan);
@@ -104,34 +104,29 @@ void main(char[][] args)
     if (args.length < 4)
       return printHelp("ddoc");
 
-    auto destination = args[2];
-    auto macroPaths = GlobalSettings.ddocFilePaths;
-    char[][] filePaths;
-    bool incUndoc;
-    bool writeXML;
-    bool verbose;
+    DDocCommand cmd;
+    cmd.destDirPath = args[2];
+    cmd.macroPaths = GlobalSettings.ddocFilePaths;
+    cmd.context = newCompilationContext();
+    cmd.infoMan = infoMan;
+
     // Parse arguments.
-    auto context = newCompilationContext();
     foreach (arg; args[3..$])
     {
-      if (parseDebugOrVersion(arg, context))
+      if (parseDebugOrVersion(arg, cmd.context))
       {}
       else if (arg == "--xml")
-        writeXML = true;
+        cmd.writeXML = true;
       else if (arg == "-i")
-        incUndoc = true;
+        cmd.includeUndocumented = true;
       else if (arg == "-v")
-        verbose = true;
+        cmd.verbose = true;
       else if (arg.length > 5 && icompare(arg[$-4..$], "ddoc") == 0)
-        macroPaths ~= arg;
+        cmd.macroPaths ~= arg;
       else
-        filePaths ~= arg;
+        cmd.filePaths ~= arg;
     }
-
-    infoMan = new InfoManager();
-    // Execute command.
-    cmd.DDoc.execute(filePaths, destination, macroPaths, writeXML,
-                     incUndoc, verbose, context, infoMan);
+    cmd.run();
     infoMan.hasInfo && printErrors(infoMan);
     break;
   case "gen", "generate":
