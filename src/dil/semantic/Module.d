@@ -32,7 +32,13 @@ class Module : ScopeSymbol
   ModuleDeclaration moduleDecl; /// The optional ModuleDeclaration in this file.
   Parser parser; /// The parser used to parse this file.
 
-  // Module[] modules;
+  /// Indicates which passes have been run on this module.
+  ///
+  /// 0 = no pass$(BR)
+  /// 1 = semantic pass 1$(BR)
+  /// 2 = semantic pass 2
+  uint semanticPass;
+  Module[] modules; /// The imported modules.
 
   InfoManager infoMan; /// Collects error messages.
 

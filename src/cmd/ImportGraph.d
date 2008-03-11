@@ -10,6 +10,7 @@ import dil.semantic.Module;
 import dil.parser.ImportParser;
 import dil.SourceText;
 import dil.Compilation;
+import dil.ModuleManager;
 import Settings;
 import common;
 
@@ -185,25 +186,6 @@ class Vertex
   Status status; /// Used by the cycle detection algorithm.
 }
 
-/// Searches for a module in the file system looking in importPaths.
-/// Returns: the file path to the module, or null if it wasn't found.
-string findModuleFilePath(string moduleFQNPath, string[] importPaths)
-{
-  auto filePath = new FilePath();
-  foreach (importPath; importPaths)
-  {
-    filePath.set(importPath);
-    filePath.append(moduleFQNPath);
-    foreach (moduleSuffix; [".d", ".di"/*interface file*/])
-    {
-      filePath.suffix(moduleSuffix);
-      if (filePath.exists())
-        return filePath.toString();
-    }
-  }
-  return null;
-}
-
 /// Builds a module dependency graph.
 class GraphBuilder
 {
@@ -246,7 +228,10 @@ class GraphBuilder
     }
 
     // Locate the module in the file system.
-    auto moduleFilePath = findModuleFilePath(moduleFQNPath, importPaths);
+    auto moduleFilePath = ModuleManager.findModuleFilePath(
+      moduleFQNPath,
+      importPaths
+    );
 
     Vertex vertex;
 

@@ -26,6 +26,9 @@ import dil.Enums;
 import dil.CompilerInfo;
 import common;
 
+import tango.io.FileConst;
+alias FileConst.PathSeparatorChar dirSep;
+
 /// The first pass is the declaration pass.
 ///
 /// The basic task of this class is to traverse the parse tree,
@@ -36,6 +39,7 @@ class SemanticPass1 : Visitor
   Scope scop; /// The current scope.
   Module modul; /// The module to be semantically checked.
   CompilationContext context; /// The compilation context.
+  Module delegate(string) importModule; /// Called when importing a module.
 
   // Attributes:
   LinkageType linkageType; /// Current linkage type.
@@ -55,11 +59,12 @@ class SemanticPass1 : Visitor
   }
 
   /// Starts processing the module.
-  void start()
+  void run()
   {
     assert(modul.root !is null);
     // Create module scope.
     scop = new Scope(null, modul);
+    modul.semanticPass = 1;
     visit(modul.root);
   }
 
@@ -187,14 +192,23 @@ override
   D visit(IllegalDeclaration)
   { assert(0, "semantic pass on invalid AST"); return null; }
 
-  D visit(EmptyDeclaration ed)
-  { return ed; }
+  // D visit(EmptyDeclaration ed)
+  // { return ed; }
 
-  D visit(ModuleDeclaration)
-  { return null; }
+  // D visit(ModuleDeclaration)
+  // { return null; }
 
   D visit(ImportDeclaration d)
   {
+    if (importModule is null)
+      return d;
+    foreach (moduleFQNPath; d.getModuleFQNs(dirSep))
+    {
+      auto importedModule = importModule(moduleFQNPath);
+      if (importedModule is null)
+        error(d.begin, MSG.CouldntLoadModule, moduleFQNPath ~ ".d");
+      modul.modules ~= importedModule;
+    }
     return d;
   }
 

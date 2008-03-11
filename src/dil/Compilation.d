@@ -17,6 +17,7 @@ class CompilationContext
   bool[string] debugIds;
   bool[string] versionIds;
   bool releaseBuild;
+  bool unittestBuild;
   uint structAlign = 4;
 
   this(CC parent = null)

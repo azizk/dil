@@ -154,11 +154,12 @@ static:
   auto ExpectedIdentOrInt = "expected an identifier or an integer, not '{}'";
   auto MissingCatchOrFinally = "try statement is missing a catch or finally body.";
   // Semantic analysis:
+  auto CouldntLoadModule = "couldn't load module '{}'";
   auto UndefinedIdentifier = "undefined identifier '{}'";
   auto DeclConflictsWithDecl = "declaration '{}' conflicts with declaration @{}";
   auto VariableConflictsWithDecl = "variable '{}' conflicts with declaration @{}";
   auto InterfaceCantHaveVariables = "an interface can't have member variables";
   auto MixinArgumentMustBeString = "the mixin argument must evaluate to a string";
-  auto DebugSpecModuleLevel = "debug={} must be a module level";
-  auto VersionSpecModuleLevel = "version={} must be a module level";
+  auto DebugSpecModuleLevel = "debug={} must be at module level";
+  auto VersionSpecModuleLevel = "version={} must be at module level";
 }

@@ -75,7 +75,7 @@ struct DDocCommand
 
       // Start semantic analysis.
       auto pass1 = new SemanticPass1(mod, context);
-      pass1.start();
+      pass1.run();
 
       // Build destination file path.
       auto destPath = new FilePath(destDirPath);

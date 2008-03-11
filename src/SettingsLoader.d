@@ -85,7 +85,7 @@ class SettingsLoader
 
     auto context = new CompilationContext;
     auto pass1 = new SemanticPass1(mod, context);
-    pass1.start();
+    pass1.run();
 
     if (auto array = getValue!(ArrayInitExpression)("version_ids"))
       foreach (value; array.values)
@@ -121,7 +121,7 @@ class SettingsLoader
       return;
 
     pass1 = new SemanticPass1(mod, context);
-    pass1.start();
+    pass1.run();
 
     if (auto array = getValue!(ArrayInitExpression)("messages"))
     {
@@ -163,7 +163,7 @@ class TagMapLoader : SettingsLoader
 
     auto context = new CompilationContext;
     auto pass1 = new SemanticPass1(mod, context);
-    pass1.start();
+    pass1.run();
 
     string[string] map;
     if (auto array = getValue!(ArrayInitExpression)("map"))

@@ -24,6 +24,7 @@ import dil.Information;
 import dil.SourceText;
 import dil.Compilation;
 
+import cmd.Compile;
 import cmd.Highlight;
 import cmd.Statistics;
 import cmd.ImportGraph;
@@ -50,59 +51,38 @@ void main(char[][] args)
     return printErrors(infoMan);
 
   if (args.length <= 1)
-    return Stdout(helpMain()).newline;
+    return printHelp("main");
 
   string command = args[1];
   switch (command)
   {
   case "c", "compile":
-    if (args.length < 2)
-      return printHelp("compile");
+    if (args.length < 3)
+      return printHelp(command);
 
-    string[] filePaths;
-    auto context = newCompilationContext();
+    CompileCommand cmd;
+    cmd.context = newCompilationContext();
+    cmd.infoMan = infoMan;
+
     foreach (arg; args[2..$])
     {
-      if (parseDebugOrVersion(arg, context))
+      if (parseDebugOrVersion(arg, cmd.context))
       {}
+      else if (strbeg(arg, "-I"))
+        cmd.context.importPaths ~= arg[2..$];
+      else if (arg == "-release")
+        cmd.context.releaseBuild = true;
+      else if (arg == "-unittest")
+        cmd.context.unittestBuild = true;
       else
-        filePaths ~= arg;
+        cmd.filePaths ~= arg;
     }
-
-    foreach (filePath; filePaths)
-    {
-      auto mod = new Module(filePath, infoMan);
-      // Parse the file.
-      mod.parse();
-      if (mod.hasErrors)
-        continue;
-
-      // Start semantic analysis.
-      auto pass1 = new SemanticPass1(mod, context);
-      pass1.start();
-
-      void printSymbolTable(ScopeSymbol scopeSym, char[] indent)
-      {
-        foreach (member; scopeSym.members)
-        {
-          auto tokens = getDocTokens(member.node);
-          char[] docText;
-          foreach (token; tokens)
-            docText ~= token.srcText;
-          Stdout(indent).formatln("Id:{}, Symbol:{}, DocText:{}", member.name.str, member.classinfo.name, docText);
-          if (auto s = cast(ScopeSymbol)member)
-            printSymbolTable(s, indent ~ "→ ");
-        }
-      }
-
-      printSymbolTable(mod, "");
-    }
-
+    cmd.run();
     infoMan.hasInfo && printErrors(infoMan);
     break;
   case "ddoc", "d":
     if (args.length < 4)
-      return printHelp("ddoc");
+      return printHelp(command);
 
     DDocCommand cmd;
     cmd.destDirPath = args[2];
@@ -131,7 +111,7 @@ void main(char[][] args)
     break;
   case "hl", "highlight":
     if (args.length < 3)
-      return printHelp("hl");
+      return printHelp(command);
 
     HighlightCommand cmd;
     cmd.infoMan = infoMan;
@@ -157,7 +137,7 @@ void main(char[][] args)
     break;
   case "importgraph", "igraph":
     if (args.length < 3)
-      return printHelp("hl");
+      return printHelp(command);
 
     IGraphCommand cmd;
     cmd.context = newCompilationContext();
@@ -204,6 +184,8 @@ void main(char[][] args)
     cmd.run();
     break;
   case "stats", "statistics":
+    if (args.length < 3)
+      return printHelp(command);
     char[][] filePaths;
     bool printTokensTable;
     bool printNodesTable;
@@ -217,6 +199,8 @@ void main(char[][] args)
     cmd.Statistics.execute(filePaths, printTokensTable, printNodesTable);
     break;
   case "tok", "tokenize":
+    if (args.length < 3)
+      return printHelp(command);
     SourceText sourceText;
     char[] filePath;
     char[] separator;
@@ -259,7 +243,7 @@ void main(char[][] args)
     break;
   case "trans", "translate":
     if (args.length < 3)
-      return printHelp("trans");
+      return printHelp(command);
 
     if (args[2] != "German")
       return Stdout.formatln("Error: unrecognized target language \"{}\"", args[2]);
@@ -296,10 +280,6 @@ void main(char[][] args)
 
     Stdout.formatln("Scanned in {:f10}s.", swatch.stop);
     break;
-  // case "parse":
-  //   if (args.length == 3)
-  //     parse(args[2]);
-  //   break;
   case "?", "help":
     printHelp(args.length >= 3 ? args[2] : "");
     break;
@@ -307,6 +287,7 @@ void main(char[][] args)
   //   genHTMLTypeRulesTables();
   //   break;
   default:
+    printHelp("main");
   }
 }
 
@@ -408,16 +389,6 @@ void printErrors(InfoManager infoMan)
   }
 }
 
-/// Prints the compiler's main help message.
-char[] helpMain()
-{
-  auto COMPILED_WITH = __VENDOR__;
-  auto COMPILED_VERSION = Format("{}.{,:d3}", __VERSION__/1000, __VERSION__%1000);
-  auto COMPILED_DATE = __TIMESTAMP__;
-  return FormatMsg(MID.HelpMain, VERSION, COMMANDS, COMPILED_WITH,
-                   COMPILED_VERSION, COMPILED_DATE);
-}
-
 /// Prints a help message for command.
 void printHelp(char[] command)
 {
@@ -438,9 +409,12 @@ Options:
   -debug=ident     : include debug(ident) code
   -version=level   : include version(l) code where l >= level
   -version=ident   : include version(ident) code
+  -Ipath           : add 'path' to the list of import paths
+  -release         : compile a release build
+  -unittest        : compile a unittest build
 
 Example:
-  dil c src/main.d`;
+  dil c src/main.d -Isrc/`;
     break;
   case "ddoc", "d":
     msg = `Generate documentation from DDoc comments in D source files.
@@ -548,25 +522,13 @@ Usage:
 Example:
   dil trans German src/main.d`;
     break;
+  case "main":
   default:
-    msg = helpMain();
+    auto COMPILED_WITH = __VENDOR__;
+    auto COMPILED_VERSION = Format("{}.{,:d3}", __VERSION__/1000, __VERSION__%1000);
+    auto COMPILED_DATE = __TIMESTAMP__;
+    msg = FormatMsg(MID.HelpMain, VERSION, COMMANDS, COMPILED_WITH,
+                    COMPILED_VERSION, COMPILED_DATE);
   }
   Stdout(msg).newline;
 }
-
-/+void parse(string fileName)
-{
-  auto mod = new Module(fileName);
-  mod.parse();
-
-  void print(Node[] decls, char[] indent)
-  {
-    foreach(decl; decls)
-    {
-      assert(decl !is null);
-      Stdout.formatln("{}{}: begin={} end={}", indent, decl.classinfo.name, decl.begin ? decl.begin.srcText : "\33[31mnull\33[0m", decl.end ? decl.end.srcText : "\33[31mnull\33[0m");
-      print(decl.children, indent ~ "  ");
-    }
-  }
-  print(mod.root.children, "");
-}+/

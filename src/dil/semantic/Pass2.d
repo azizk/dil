@@ -44,11 +44,12 @@ class SemanticPass2 : DefaultVisitor
   }
 
   /// Start semantic analysis.
-  void start()
+  void run()
   {
     assert(modul.root !is null);
     // Create module scope.
     scop = new Scope(null, modul);
+    modul.semanticPass = 2;
     visit(modul.root);
   }
 
