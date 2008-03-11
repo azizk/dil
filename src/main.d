@@ -186,17 +186,16 @@ void main(char[][] args)
   case "stats", "statistics":
     if (args.length < 3)
       return printHelp(command);
-    char[][] filePaths;
-    bool printTokensTable;
-    bool printNodesTable;
+
+    StatsCommand cmd;
     foreach (arg; args[2..$])
       if (arg == "--toktable")
-        printTokensTable = true;
+        cmd.printTokensTable = true;
       else if (arg == "--asttable")
-        printNodesTable = true;
+        cmd.printNodesTable = true;
       else
-        filePaths ~= arg;
-    cmd.Statistics.execute(filePaths, printTokensTable, printNodesTable);
+        cmd.filePaths ~= arg;
+    cmd.run();
     break;
   case "tok", "tokenize":
     if (args.length < 3)

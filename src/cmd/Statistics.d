@@ -12,6 +12,95 @@ import dil.ast.NodesEnum;
 import dil.SourceText;
 import common;
 
+/// The statistics comman.
+struct StatsCommand
+{
+  string[] filePaths; /// Module file paths.
+  bool printTokensTable; /// Whether to print the tokens table.
+  bool printNodesTable; /// Whether to print the nodes table.
+
+  /// Execute the command.
+  void run()
+  {
+    Statistics[] stats;
+    foreach (filePath; filePaths)
+      stats ~= getStatistics(filePath, printTokensTable, printNodesTable);
+
+    auto total = Statistics(printTokensTable, printNodesTable);
+
+    foreach (i, ref stat; stats)
+    {
+      total += stat;
+      Stdout.formatln(
+        "----\n"
+        "File: {}\n"
+        "Whitespace character count: {}\n"
+        "Whitespace token count: {}\n"
+        "Keyword count: {}\n"
+        "Identifier count: {}\n"
+        "Number count: {}\n"
+        "Comment count: {}\n"
+        "All tokens count: {}\n"
+        "Lines of code: {}",
+        filePaths[i],
+        stat.whitespaceCount,
+        stat.wsTokenCount,
+        stat.keywordCount,
+        stat.identCount,
+        stat.numberCount,
+        stat.commentCount,
+        stat.tokenCount,
+        stat.linesOfCode
+      );
+    }
+
+    if (filePaths.length > 1)
+    {
+      Stdout.formatln(
+        "--------------------------------------------------------------------------------\n"
+        "Total of {} files:\n"
+        "Whitespace character count: {}\n"
+        "Whitespace token count: {}\n"
+        "Keyword count: {}\n"
+        "Identifier count: {}\n"
+        "Number count: {}\n"
+        "Comment count: {}\n"
+        "All tokens count: {}\n"
+        "Lines of code: {}",
+        filePaths.length,
+        total.whitespaceCount,
+        total.wsTokenCount,
+        total.keywordCount,
+        total.identCount,
+        total.numberCount,
+        total.commentCount,
+        total.tokenCount,
+        total.linesOfCode
+      );
+    }
+
+    if (printTokensTable)
+    {
+      Stdout("Table of tokens:").newline;
+      Stdout.formatln(" {,10} | {}", "Count", "Token kind");
+      Stdout("-----------------------------").newline;
+      foreach (i, count; total.tokensTable)
+        Stdout.formatln(" {,10} | {}", count, Token.toString(cast(TOK)i));
+      Stdout("// End of tokens table.").newline;
+    }
+
+    if(printNodesTable)
+    {
+      Stdout("Table of nodes:").newline;
+      Stdout.formatln(" {,10} | {}", "Count", "Node kind");
+      Stdout("-----------------------------").newline;
+      foreach (i, count; total.nodesTable)
+        Stdout.formatln(" {,10} | {}", count, g_classNames[i]);
+      Stdout("// End of nodes table.").newline;
+    }
+  }
+}
+
 /// A group of statistics variables.
 struct Statistics
 {
@@ -56,82 +145,7 @@ struct Statistics
 /// Executes the statistics command.
 void execute(string[] filePaths, bool printTokensTable, bool printNodesTable)
 {
-  Statistics[] stats;
-  foreach (filePath; filePaths)
-    stats ~= getStatistics(filePath, printTokensTable, printNodesTable);
 
-  auto total = Statistics(printTokensTable, printNodesTable);
-
-  foreach (i, ref stat; stats)
-  {
-    total += stat;
-    Stdout.formatln(
-      "----\n"
-      "File: {}\n"
-      "Whitespace character count: {}\n"
-      "Whitespace token count: {}\n"
-      "Keyword count: {}\n"
-      "Identifier count: {}\n"
-      "Number count: {}\n"
-      "Comment count: {}\n"
-      "All tokens count: {}\n"
-      "Lines of code: {}",
-      filePaths[i],
-      stat.whitespaceCount,
-      stat.wsTokenCount,
-      stat.keywordCount,
-      stat.identCount,
-      stat.numberCount,
-      stat.commentCount,
-      stat.tokenCount,
-      stat.linesOfCode
-    );
-  }
-
-  if (filePaths.length > 1)
-  {
-    Stdout.formatln(
-      "--------------------------------------------------------------------------------\n"
-      "Total of {} files:\n"
-      "Whitespace character count: {}\n"
-      "Whitespace token count: {}\n"
-      "Keyword count: {}\n"
-      "Identifier count: {}\n"
-      "Number count: {}\n"
-      "Comment count: {}\n"
-      "All tokens count: {}\n"
-      "Lines of code: {}",
-      filePaths.length,
-      total.whitespaceCount,
-      total.wsTokenCount,
-      total.keywordCount,
-      total.identCount,
-      total.numberCount,
-      total.commentCount,
-      total.tokenCount,
-      total.linesOfCode
-    );
-  }
-
-  if (printTokensTable)
-  {
-    Stdout("Table of tokens:").newline;
-    Stdout.formatln(" {,10} | {}", "Count", "Token kind");
-    Stdout("-----------------------------").newline;
-    foreach (i, count; total.tokensTable)
-      Stdout.formatln(" {,10} | {}", count, Token.toString(cast(TOK)i));
-    Stdout("// End of tokens table.").newline;
-  }
-
-  if(printNodesTable)
-  {
-    Stdout("Table of nodes:").newline;
-    Stdout.formatln(" {,10} | {}", "Count", "Node kind");
-    Stdout("-----------------------------").newline;
-    foreach (i, count; total.nodesTable)
-      Stdout.formatln(" {,10} | {}", count, g_classNames[i]);
-    Stdout("// End of nodes table.").newline;
-  }
 }
 
 /// Returns the statistics for a D source file.
