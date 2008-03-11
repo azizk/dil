@@ -155,6 +155,8 @@ static:
   auto MissingCatchOrFinally = "try statement is missing a catch or finally body.";
   // Semantic analysis:
   auto CouldntLoadModule = "couldn't load module '{}'";
+  auto ConflictingModuleFiles = "module is in conflict with '{}'";
+  auto ModuleNotInPackage = "expected module to be in package '{}'";
   auto UndefinedIdentifier = "undefined identifier '{}'";
   auto DeclConflictsWithDecl = "declaration '{}' conflicts with declaration @{}";
   auto VariableConflictsWithDecl = "variable '{}' conflicts with declaration @{}";

@@ -182,8 +182,8 @@ class Parser
 
   Declaration parseModuleDeclaration()
   {
-    skip(T.Module);
     auto begin = token;
+    skip(T.Module);
     ModuleFQN moduleFQN;
     do
       moduleFQN ~= requireIdentifier(MSG.ExpectedModuleIdentifier);
