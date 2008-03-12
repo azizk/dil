@@ -5,6 +5,7 @@
 module cmd.Compile;
 
 import dil.semantic.Module;
+import dil.semantic.Package;
 import dil.semantic.Pass1;
 import dil.semantic.Pass2;
 import dil.semantic.Symbols;
@@ -18,6 +19,8 @@ import common;
 struct CompileCommand
 {
   string[] filePaths; /// Explicitly specified modules (on the command line.)
+  bool printSymbolTree; /// Whether to print the symbol tree.
+  bool printModuleTree; /// Whether to print the module tree.
   ModuleManager moduleMan;
   SemanticPass1[] passes1;
 
@@ -32,7 +35,8 @@ struct CompileCommand
     {
       auto modul = moduleMan.loadModuleFile(filePath);
       runPass1(modul);
-      printSymbolTable(modul, "");
+      if (printSymbolTree)
+        printSymbolTable(modul, "");
     }
 
     // foreach (modul; moduleMan.loadedModules)
@@ -40,6 +44,18 @@ struct CompileCommand
     //   auto pass2 = new SemanticPass2(modul);
     //   pass2.run();
     // }
+
+    if (printModuleTree)
+      printMTree(moduleMan.rootPackage, "");
+  }
+
+  void printMTree(Package pckg, string indent)
+  {
+    Stdout(indent)(pckg.pckgName)("/").newline;
+    foreach (p; pckg.packages)
+      printMTree(p, indent ~ "  ");
+    foreach (m; pckg.modules)
+      Stdout(indent ~ "  ")(m.moduleName)(".d").newline;
   }
 
   /// Runs the first pass on modul.

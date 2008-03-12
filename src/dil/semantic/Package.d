@@ -20,7 +20,7 @@ class Package : ScopeSymbol
   /// Constructs a Package object.
   this(string pckgName)
   {
-    auto ident = IdTable.inStatic(pckgName);
+    auto ident = IdTable.lookup(pckgName);
     super(SYM.Package, ident, null);
     this.pckgName = pckgName;
   }
@@ -43,6 +43,7 @@ class Package : ScopeSymbol
   /// Adds a module to this package.
   void add(Module modul)
   {
+    modul.parent = this;
     modules ~= modul;
     insert(modul, modul.name);
   }
@@ -50,6 +51,7 @@ class Package : ScopeSymbol
   /// Adds a package to this package.
   void add(Package pckg)
   {
+    pckg.parent = this;
     packages ~= pckg;
     insert(pckg, pckg.name);
   }

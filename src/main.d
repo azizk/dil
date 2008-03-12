@@ -74,6 +74,10 @@ void main(char[][] args)
         cmd.context.releaseBuild = true;
       else if (arg == "-unittest")
         cmd.context.unittestBuild = true;
+      else if (arg == "-ps")
+        cmd.printSymbolTree = true;
+      else if (arg == "-pm")
+        cmd.printModuleTree = true;
       else
         cmd.filePaths ~= arg;
     }
@@ -411,6 +415,9 @@ Options:
   -Ipath           : add 'path' to the list of import paths
   -release         : compile a release build
   -unittest        : compile a unittest build
+
+  -ps              : print the symbol tree of the modules
+  -pm              : print the package/module tree
 
 Example:
   dil c src/main.d -Isrc/`;

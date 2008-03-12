@@ -20,6 +20,10 @@ alias FileConst.PathSeparatorChar dirSep;
 /// Manages loaded modules in a table.
 class ModuleManager
 {
+  /// The root package. Contains all other modules and packages.
+  Package rootPackage;
+  /// Maps full package names to packages. E.g.: dil.ast
+  Package[string] packageTable;
   /// Maps FQN paths to modules. E.g.: dil/ast/Node
   Module[string] moduleFQNPathTable;
   /// Maps absolute file paths to modules. E.g.: /home/user/dil/src/main.d
@@ -31,6 +35,8 @@ class ModuleManager
   /// Constructs a ModuleManager object.
   this(string[] importPaths, InfoManager infoMan)
   {
+    this.rootPackage = new Package(null);
+    packageTable[""] = this.rootPackage;
     this.importPaths = importPaths;
     this.infoMan = infoMan;
   }
@@ -58,16 +64,58 @@ class ModuleManager
     moduleFQNPathTable[moduleFQNPath] = newModule;
     absFilePathTable[absFilePath] = newModule;
     loadedModules ~= newModule;
+    // Add the module to its package.
+    auto pckg = getPackage(newModule.packageName);
+    pckg.add(newModule);
     return newModule;
+  }
+
+  /// Returns the package given a fully package name.
+  /// Returns the root package for an empty string.
+  Package getPackage(string pckgFQN)
+  {
+    auto pPckg = pckgFQN in packageTable;
+    if (pPckg)
+      return *pPckg;
+
+    string prevFQN, lastPckgName;
+    // E.g.: pckgFQN = 'dil.ast', prevFQN = 'dil', lastPckgName = 'ast'
+    splitPackageFQN(pckgFQN, prevFQN, lastPckgName);
+    // Recursively build package hierarchy.
+    auto parentPckg = getPackage(prevFQN); // E.g.: 'dil'
+    // Create a new package.
+    auto pckg = new Package(lastPckgName); // E.g.: 'ast'
+    parentPckg.add(pckg); // 'dil'.add('ast')
+    // Insert the package into the table.
+    packageTable[pckgFQN] = pckg;
+    return pckg;
+  }
+
+  /// Splits e.g. 'dil.ast.xyz' into 'dil.ast' and 'xyz'.
+  /// Params:
+  ///   pckgFQN = the full package name to be split.
+  ///   prevFQN = set to 'dil.ast' in the example.
+  ///   lastName = the last package name; set to 'xyz' in the example.
+  void splitPackageFQN(string pckgFQN, ref string prevFQN, ref string lastName)
+  {
+    uint lastDotIndex;
+    foreach_reverse (i, c; pckgFQN)
+      if (c == '.')
+      { lastDotIndex = i; break; } // Found last dot.
+    prevFQN = pckgFQN[0..lastDotIndex];
+    if (lastDotIndex == 0)
+      lastName = pckgFQN; // Special case - no dot found.
+    else
+      lastName = pckgFQN[lastDotIndex+1..$];
   }
 
   /// Loads a module given an FQN path.
   Module loadModule(string moduleFQNPath)
   {
     // Look up in table if the module is already loaded.
-    Module* pmodul = moduleFQNPath in moduleFQNPathTable;
-    if (pmodul)
-      return *pmodul;
+    Module* pModul = moduleFQNPath in moduleFQNPathTable;
+    if (pModul)
+      return *pModul;
     // Locate the module in the file system.
     auto moduleFilePath = findModuleFilePath(moduleFQNPath, importPaths);
     if (moduleFilePath.length)
@@ -76,7 +124,7 @@ class ModuleManager
       if (modul.getFQNPath() != moduleFQNPath)
       { // Error: the requested module is not in the correct package.
         auto location = modul.moduleDecl.begin.getErrorLocation();
-        auto msg = Format(MSG.ModuleNotInPackage, getPackage(moduleFQNPath));
+        auto msg = Format(MSG.ModuleNotInPackage, getPackageFQN(moduleFQNPath));
         infoMan ~= new SemanticError(location, msg);
       }
       return modul;
@@ -85,7 +133,7 @@ class ModuleManager
   }
 
   /// Returns e.g. 'dil.ast' for 'dil/ast/Node'.
-  string getPackage(string moduleFQNPath)
+  string getPackageFQN(string moduleFQNPath)
   {
     string pckg = moduleFQNPath.dup;
     uint lastDirSep;
