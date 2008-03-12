@@ -334,7 +334,7 @@ CompilationContext newCompilationContext()
 version(D2)
   cc.addVersionId("D_Version2");
   foreach (versionId; GlobalSettings.versionIds)
-    if (!Lexer.isReservedIdentifier(versionId))
+    if (Lexer.isValidUnreservedIdentifier(versionId))
       cc.versionIds[versionId] = true;
   return cc;
 }
@@ -348,7 +348,7 @@ bool parseDebugOrVersion(string arg, CompilationContext context)
       auto val = arg[7..$];
       if (isdigit(val[0]))
         context.debugLevel = Integer.toInt(val);
-      else if (!Lexer.isReservedIdentifier(val))
+      else if (Lexer.isValidUnreservedIdentifier(val))
         context.addDebugId(val);
     }
     else
@@ -359,7 +359,7 @@ bool parseDebugOrVersion(string arg, CompilationContext context)
     auto val = arg[9..$];
     if (isdigit(val[0]))
       context.versionLevel = Integer.toInt(val);
-    else if (!Lexer.isReservedIdentifier(val))
+    else if (Lexer.isValidUnreservedIdentifier(val))
       context.addVersionId(val);
   }
   else

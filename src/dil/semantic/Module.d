@@ -10,6 +10,8 @@ import dil.parser.Parser;
 import dil.lexer.Lexer;
 import dil.semantic.Symbol;
 import dil.semantic.Symbols;
+import dil.Location;
+import dil.Messages;
 import dil.Information;
 import dil.SourceText;
 import common;
@@ -102,8 +104,13 @@ class Module : ScopeSymbol
     if (!this.moduleFQN.length)
     { // Take base name of file path as module name.
       auto str = (new FilePath(filePath)).name();
-      if (Lexer.isReservedIdentifier(str))
-        throw new Exception("'"~str~"' is not a valid module name; it's a reserved or invalid D identifier.");
+      if (!Lexer.isValidUnreservedIdentifier(str))
+      {
+        auto location = parser.lexer.firstToken().getErrorLocation();
+        auto msg = Format(MSG.InvalidModuleName, str);
+        infoMan ~= new LexerError(location, msg);
+        str = "_";
+      }
       this.moduleFQN = this.moduleName = str;
     }
   }

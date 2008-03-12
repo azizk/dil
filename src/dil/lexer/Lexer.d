@@ -2547,14 +2547,16 @@ version(D2)
   /// Returns true if str is a keyword or a special token (__FILE__, __LINE__ etc.)
   static bool isReservedIdentifier(char[] str)
   {
-    if (!isIdentifierString(str))
-      return false; // str is not a valid identifier.
-
     auto id = IdTable.inStatic(str);
     if (id is null || id.kind == TOK.Identifier)
       return false; // str is not in the table or a normal identifier.
-
     return true;
+  }
+
+  /// Returns true if this is a valid identifier and if it's not reserved.
+  static bool isValidUnreservedIdentifier(char[] str)
+  {
+    return isIdentifierString(str) && !isReservedIdentifier(str);
   }
 
   /// Returns true if the current character to be decoded is
