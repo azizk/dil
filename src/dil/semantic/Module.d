@@ -124,6 +124,13 @@ class Module : ScopeSymbol
     return parser.lexer.firstToken();
   }
 
+  /// Returns the begin token of the module declaration
+  /// or, if it doesn't exist, the first token in the source text.
+  Token* getModuleDeclToken()
+  {
+    return moduleDecl ? moduleDecl.begin : firstToken();
+  }
+
   /// Returns true if there are errors in the source file.
   bool hasErrors()
   {
@@ -157,8 +164,13 @@ class Module : ScopeSymbol
     for (; i != 0 && moduleFQN[i] != '.'; i--)
     {}
     this.moduleFQN = moduleFQN;
-    this.packageName = moduleFQN[0..i];
-    this.moduleName = moduleFQN[(i == 0 ? 0 : i+1) .. $];
+    if (i == 0)
+      this.moduleName = moduleFQN; // No dot found.
+    else
+    {
+      this.packageName = moduleFQN[0..i];
+      this.moduleName = moduleFQN[i+1..$];
+    }
   }
 
   /// Returns the module's FQN with slashes instead of dots.

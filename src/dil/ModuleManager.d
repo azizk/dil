@@ -55,11 +55,12 @@ class ModuleManager
     auto moduleFQNPath = newModule.getFQNPath();
     if (auto existingModule = moduleFQNPath in moduleFQNPathTable)
     { // Error: two module files have the same f.q. module name.
-      auto location = newModule.moduleDecl.begin.getErrorLocation();
+      auto location = newModule.getModuleDeclToken().getErrorLocation();
       auto msg = Format(MSG.ConflictingModuleFiles, newModule.filePath());
       infoMan ~= new SemanticError(location, msg);
       return *existingModule;
     }
+
     // Insert new module.
     moduleFQNPathTable[moduleFQNPath] = newModule;
     absFilePathTable[absFilePath] = newModule;
@@ -67,6 +68,14 @@ class ModuleManager
     // Add the module to its package.
     auto pckg = getPackage(newModule.packageName);
     pckg.add(newModule);
+
+    if (auto p = newModule.getFQN() in packageTable)
+    { // Error: module and package share the same name.
+      auto location = newModule.getModuleDeclToken().getErrorLocation();
+      auto msg = Format(MSG.ConflictingModuleAndPackage, newModule.getFQN());
+      infoMan ~= new SemanticError(location, msg);
+    }
+
     return newModule;
   }
 
@@ -102,11 +111,13 @@ class ModuleManager
     foreach_reverse (i, c; pckgFQN)
       if (c == '.')
       { lastDotIndex = i; break; } // Found last dot.
-    prevFQN = pckgFQN[0..lastDotIndex];
     if (lastDotIndex == 0)
       lastName = pckgFQN; // Special case - no dot found.
     else
+    {
+      prevFQN = pckgFQN[0..lastDotIndex];
       lastName = pckgFQN[lastDotIndex+1..$];
+    }
   }
 
   /// Loads a module given an FQN path.
@@ -123,7 +134,7 @@ class ModuleManager
       auto modul = loadModuleFile(moduleFilePath);
       if (modul.getFQNPath() != moduleFQNPath)
       { // Error: the requested module is not in the correct package.
-        auto location = modul.moduleDecl.begin.getErrorLocation();
+        auto location = modul.getModuleDeclToken().getErrorLocation();
         auto msg = Format(MSG.ModuleNotInPackage, getPackageFQN(moduleFQNPath));
         infoMan ~= new SemanticError(location, msg);
       }
