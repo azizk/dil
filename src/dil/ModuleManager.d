@@ -5,6 +5,7 @@
 module dil.ModuleManager;
 
 import dil.semantic.Module;
+import dil.semantic.Package;
 import dil.Location;
 import dil.Information;
 import dil.Messages;

@@ -12,6 +12,7 @@ import common;
 enum SYM
 {
   Module,
+  Package,
   Class,
   Interface,
   Struct,
@@ -78,6 +79,7 @@ class Symbol
     const char[] isX = `bool is`~kind~`(){ return sid == SYM.`~kind~`; }`;
   }
   mixin(isX!("Module"));
+  mixin(isX!("Package"));
   mixin(isX!("Class"));
   mixin(isX!("Interface"));
   mixin(isX!("Struct"));

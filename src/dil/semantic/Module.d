@@ -8,6 +8,7 @@ import dil.ast.Node;
 import dil.ast.Declarations;
 import dil.parser.Parser;
 import dil.lexer.Lexer;
+import dil.lexer.IdTable;
 import dil.semantic.Symbol;
 import dil.semantic.Symbols;
 import dil.Location;
@@ -109,10 +110,12 @@ class Module : ScopeSymbol
         auto location = parser.lexer.firstToken().getErrorLocation();
         auto msg = Format(MSG.InvalidModuleName, str);
         infoMan ~= new LexerError(location, msg);
-        str = "_";
+        str = "__module_name";
       }
       this.moduleFQN = this.moduleName = str;
     }
+    // Set the symbol name.
+    this.name = IdTable.lookup(this.moduleName);
   }
 
   /// Returns the first token of the module's source text.
