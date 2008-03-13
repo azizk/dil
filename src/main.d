@@ -74,6 +74,8 @@ void main(char[][] args)
         cmd.context.releaseBuild = true;
       else if (arg == "-unittest")
         cmd.context.unittestBuild = true;
+      else if (arg == "-d")
+        cmd.context.acceptDeprecated = true;
       else if (arg == "-ps")
         cmd.printSymbolTree = true;
       else if (arg == "-pm")
@@ -407,6 +409,7 @@ Usage:
   Errors are printed to standard error output.
 
 Options:
+  -d               : accept deprecated code
   -debug           : include debug code
   -debug=level     : include debug(l) code where l <= level
   -debug=ident     : include debug(ident) code

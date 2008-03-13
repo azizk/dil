@@ -18,6 +18,7 @@ class CompilationContext
   bool[string] versionIds;
   bool releaseBuild;
   bool unittestBuild;
+  bool acceptDeprecated;
   uint structAlign = 4;
 
   this(CC parent = null)

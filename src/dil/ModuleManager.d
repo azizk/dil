@@ -79,7 +79,7 @@ class ModuleManager
     return newModule;
   }
 
-  /// Returns the package given a fully package name.
+  /// Returns the package given a f.q. package name.
   /// Returns the root package for an empty string.
   Package getPackage(string pckgFQN)
   {
