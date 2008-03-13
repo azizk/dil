@@ -95,25 +95,28 @@ class Module : ScopeSymbol
     this.root = parser.start();
     this.imports = parser.imports;
 
-    if (root.children.length)
+    // Set the fully qualified name of this module.
+    if (this.root.children.length)
     { // moduleDecl will be null if first node isn't a ModuleDeclaration.
-      this.moduleDecl = root.children[0].Is!(ModuleDeclaration);
+      this.moduleDecl = this.root.children[0].Is!(ModuleDeclaration);
       if (this.moduleDecl)
-        this.setFQN(moduleDecl.getFQN());
+        this.setFQN(moduleDecl.getFQN()); // E.g.: dil.ast.Node
     }
 
     if (!this.moduleFQN.length)
-    { // Take base name of file path as module name.
-      auto str = (new FilePath(filePath)).name();
+    { // Take the base name of the file as the module name.
+      auto str = (new FilePath(filePath)).name(); // E.g.: Node
       if (!Lexer.isValidUnreservedIdentifier(str))
       {
-        auto location = parser.lexer.firstToken().getErrorLocation();
+        auto location = this.firstToken().getErrorLocation();
         auto msg = Format(MSG.InvalidModuleName, str);
         infoMan ~= new LexerError(location, msg);
-        str = "__module_name";
+        str = IdTable.genModuleID().str;
       }
       this.moduleFQN = this.moduleName = str;
     }
+    assert(this.moduleFQN.length);
+
     // Set the symbol name.
     this.name = IdTable.lookup(this.moduleName);
   }

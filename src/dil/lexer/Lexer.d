@@ -2544,9 +2544,12 @@ version(D2)
     return true;
   }
 
-  /// Returns true if str is a keyword or a special token (__FILE__, __LINE__ etc.)
+  /// Returns true if str is a keyword or
+  /// a special token (__FILE__, __LINE__ etc.)
   static bool isReservedIdentifier(char[] str)
   {
+    if (str.length == 0)
+      return false;
     auto id = IdTable.inStatic(str);
     if (id is null || id.kind == TOK.Identifier)
       return false; // str is not in the table or a normal identifier.

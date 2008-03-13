@@ -147,6 +147,12 @@ static:
   {
     return genAnonymousID("__anonenum");
   }
+
+  /// Generates an identifier for a module which has got no valid name.
+  Identifier* genModuleID()
+  {
+    return genAnonymousID("__module");
+  }
 }
 
 unittest

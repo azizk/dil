@@ -92,11 +92,14 @@ class ModuleManager
     splitPackageFQN(pckgFQN, prevFQN, lastPckgName);
     // Recursively build package hierarchy.
     auto parentPckg = getPackage(prevFQN); // E.g.: 'dil'
+
     // Create a new package.
     auto pckg = new Package(lastPckgName); // E.g.: 'ast'
     parentPckg.add(pckg); // 'dil'.add('ast')
+
     // Insert the package into the table.
     packageTable[pckgFQN] = pckg;
+
     return pckg;
   }
 
@@ -127,20 +130,22 @@ class ModuleManager
     Module* pModul = moduleFQNPath in moduleFQNPathTable;
     if (pModul)
       return *pModul;
+
     // Locate the module in the file system.
     auto moduleFilePath = findModuleFilePath(moduleFQNPath, importPaths);
-    if (moduleFilePath.length)
-    { // Load the found module file.
-      auto modul = loadModuleFile(moduleFilePath);
-      if (modul.getFQNPath() != moduleFQNPath)
-      { // Error: the requested module is not in the correct package.
-        auto location = modul.getModuleDeclToken().getErrorLocation();
-        auto msg = Format(MSG.ModuleNotInPackage, getPackageFQN(moduleFQNPath));
-        infoMan ~= new SemanticError(location, msg);
-      }
-      return modul;
+    if (!moduleFilePath.length)
+      return null;
+
+    // Load the found module file.
+    auto modul = loadModuleFile(moduleFilePath);
+    if (modul.getFQNPath() != moduleFQNPath)
+    { // Error: the requested module is not in the correct package.
+      auto location = modul.getModuleDeclToken().getErrorLocation();
+      auto msg = Format(MSG.ModuleNotInPackage, getPackageFQN(moduleFQNPath));
+      infoMan ~= new SemanticError(location, msg);
     }
-    return null;
+
+    return modul;
   }
 
   /// Returns e.g. 'dil.ast' for 'dil/ast/Node'.

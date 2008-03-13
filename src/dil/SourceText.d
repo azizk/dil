@@ -6,9 +6,12 @@ module dil.SourceText;
 
 import dil.Converter;
 import dil.Information;
+import dil.Location;
+import dil.Messages;
 import common;
 
 import tango.io.File;
+import tango.io.FilePath;
 
 /// Represents D source code.
 ///
@@ -45,6 +48,19 @@ final class SourceText
     if (!infoMan)
       infoMan = new InfoManager;
     assert(filePath.length);
+
+    scope(failure)
+    {
+      if (!(new FilePath(this.filePath)).exists())
+        infoMan ~= new LexerError(new Location(filePath, 0),
+                                  MSG.InexistantFile);
+      else
+        infoMan ~= new LexerError(new Location(filePath, 0),
+                                  MSG.CantReadFile);
+      data = "\0";
+      return;
+    }
+
     // Read the file.
     auto rawdata = cast(ubyte[]) (new File(filePath)).read();
     // Convert the data.

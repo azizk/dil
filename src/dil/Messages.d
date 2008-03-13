@@ -114,6 +114,8 @@ static:
   auto UndefinedDDocMacro = "DDoc macro '{}' is undefined";
   auto UnterminatedDDocMacro = "DDoc macro '{}' has no closing ')'";
   // Lexer messages:
+  auto CantReadFile = "can't read module file";
+  auto InexistantFile = "module file doesn't exist";
   auto InvalidOctalEscapeSequence = "value of octal escape sequence is greater than 0xFF: '{}'";
   auto InvalidModuleName = "the file name '{}' can't be used a module name; it's an invalid or reserved D identifier.";
   // Parser messages:
@@ -155,7 +157,7 @@ static:
   auto ExpectedIdentOrInt = "expected an identifier or an integer, not '{}'";
   auto MissingCatchOrFinally = "try statement is missing a catch or finally body.";
   // Semantic analysis:
-  auto CouldntLoadModule = "couldn't load module '{}'";
+  auto CouldntLoadModule = "couldn't import module '{}'";
   auto ConflictingModuleFiles = "module is in conflict with module '{}'";
   auto ConflictingModuleAndPackage = "module is in conflict with package '{}'";
   auto ModuleNotInPackage = "expected module to be in package '{}'";
