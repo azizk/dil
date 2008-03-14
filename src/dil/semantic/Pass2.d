@@ -134,7 +134,10 @@ override
     Type type = Types.Int; // Default to int.
     if (d.baseType)
       type = visitT(d.baseType).type;
-    d.symbol.type = new TypeEnum(d.symbol, type);
+    // Set the enum's base type.
+    d.symbol.type.baseType = type;
+
+    // TODO: check base type. must be basic type or another enum.
 
     enterScope(d.symbol);
 
@@ -151,7 +154,6 @@ override
       }
       //else
         // TODO: increment a number variable and assign that to value.
-      member.symbol.type = d.symbol.type; // Assign TypeEnum.
       member.symbol.value = finalValue;
       member.symbol.setComplete();
     }

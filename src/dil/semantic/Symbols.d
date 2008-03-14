@@ -48,6 +48,7 @@ class ScopeSymbol : Symbol
 /// Aggregates have function and field members.
 abstract class Aggregate : ScopeSymbol
 {
+  Type type;
   Function[] funcs;
   Variable[] fields;
 
@@ -74,6 +75,7 @@ class Class : Aggregate
   this(Identifier* name, Node classNode)
   {
     super(SYM.Class, name, classNode);
+    this.type = new TypeClass(this);
   }
 }
 
@@ -83,24 +85,31 @@ class Interface : Aggregate
   this(Identifier* name, Node interfaceNode)
   {
     super(SYM.Interface, name, interfaceNode);
-  }
-}
-
-/// A union symbol.
-class Union : Aggregate
-{
-  this(Identifier* name, Node unionNode)
-  {
-    super(SYM.Union, name, unionNode);
+    this.type = new TypeClass(this);
   }
 }
 
 /// A struct symbol.
 class Struct : Aggregate
 {
+  bool isAnonymous;
   this(Identifier* name, Node structNode)
   {
     super(SYM.Struct, name, structNode);
+    this.type = new TypeStruct(this);
+    this.isAnonymous = name is null;
+  }
+}
+
+/// A union symbol.
+class Union : Aggregate
+{
+  bool isAnonymous;
+  this(Identifier* name, Node unionNode)
+  {
+    super(SYM.Union, name, unionNode);
+    this.type = new TypeStruct(this);
+    this.isAnonymous = name is null;
   }
 }
 
@@ -108,9 +117,12 @@ class Struct : Aggregate
 class Enum : ScopeSymbol
 {
   TypeEnum type;
+  bool isAnonymous;
   this(Identifier* name, Node enumNode)
   {
     super(SYM.Enum, name, enumNode);
+    this.type = new TypeEnum(this);
+    this.isAnonymous = name is null;
   }
 
   void setType(TypeEnum type)
