@@ -662,6 +662,8 @@ class DollarExpression : Expression
 
 class BoolExpression : Expression
 {
+  IntExpression value; /// IntExpression of type bool.
+  
   this()
   {
     mixin(set_kind);
@@ -672,8 +674,6 @@ class BoolExpression : Expression
     assert(begin !is null);
     return begin.kind == TOK.True ? true : false;
   }
-
-  Expression value; /// IntExpression of type int.
 
   mixin(copyMethod);
 }
@@ -765,11 +765,22 @@ class ComplexExpression : Expression
 
 class CharExpression : Expression
 {
-  dchar character;
+  IntExpression value; // IntExpression of type Char/Wchar/Dchar.
+//  dchar character;
   this(dchar character)
   {
     mixin(set_kind);
-    this.character = character;
+//    this.character = character;
+    if(character <= 0xFF)
+      this.value = new IntExpression(character, Types.Char);
+    else if(character <= 0xFFFF)
+      this.value = new IntExpression(character, Types.Wchar);
+    else
+      this.value = new IntExpression(character, Types.Dchar);
+
+    assert(this.value.type !is null);
+
+    this.type = this.value.type;
   }
   mixin(copyMethod);
 }

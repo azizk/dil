@@ -377,14 +377,6 @@ override
 
   E visit(CharExpression e)
   {
-    if (e.type)
-      return e;
-    if (e.character <= 0xFF)
-      e.type = Types.Char;
-    else if (e.character <= 0xFFFF)
-      e.type = Types.Wchar;
-    else
-      e.type = Types.Dchar;
     return e;
   }
 

@@ -53,6 +53,12 @@ class Parameter : Node
   {
     return !!(stc & StorageClass.Variadic);
   }
+  
+  /// Returns true if this parameter is lazy.
+  bool isLazy()
+  {
+    return !!(stc & StorageClass.Lazy);
+  }
 
   mixin(copyMethod);
 }
@@ -70,6 +76,14 @@ class Parameters : Node
   {
     if (children.length != 0)
       return items[$-1].isVariadic();
+    return false;
+  }
+  
+  bool hasLazy()
+  {
+    foreach(param; items)
+      if(param.isLazy())
+        return true;
     return false;
   }
 

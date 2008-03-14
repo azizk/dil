@@ -394,6 +394,7 @@ class FunctionDeclaration : Declaration
   Parameters params;
   FuncBodyStatement funcBody;
   LinkageType linkageType;
+  bool cantInterpret = false;
   this(TypeNode returnType, Identifier* name,/+ TemplateParameters tparams,+/
        Parameters params, FuncBodyStatement funcBody)
   {
