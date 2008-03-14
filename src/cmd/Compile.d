@@ -52,10 +52,10 @@ struct CompileCommand
   void printMTree(Package pckg, string indent)
   {
     Stdout(indent)(pckg.pckgName)("/").newline;
-    foreach (p; pckg.packages)
+    foreach (p; pckg.packages) // TODO: sort packages alphabetically by name?
       printMTree(p, indent ~ "  ");
-    foreach (m; pckg.modules)
-      Stdout(indent ~ "  ")(m.moduleName)(".d").newline;
+    foreach (m; pckg.modules) // TODO: sort modules alphabetically by name?
+      Stdout(indent ~ "  ")(m.moduleName)(".")(m.fileExtension()).newline;
   }
 
   /// Runs the first pass on modul.

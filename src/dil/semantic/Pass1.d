@@ -87,6 +87,12 @@ class SemanticPass1 : Visitor
   }
 
   /// Inserts a symbol into the current scope.
+  void insert(Symbol symbol)
+  {
+    insert(symbol, symbol.name);
+  }
+
+  /// Inserts a symbol into the current scope.
   void insert(Symbol symbol, Identifier* name)
   {
     auto symX = scop.symbol.lookup(name);
@@ -111,8 +117,9 @@ class SemanticPass1 : Visitor
   }
 
   /// Inserts a symbol, overloading on the name, into the current scope.
-  void insertOverload(Symbol sym, Identifier* name)
+  void insertOverload(Symbol sym)
   {
+    auto name = sym.name;
     auto sym2 = scop.symbol.lookup(name);
     if (sym2)
     {
@@ -224,21 +231,30 @@ override
 
   D visit(EnumDeclaration d)
   {
+    if (d.symbol)
+      return d;
+
     // Create the symbol.
     d.symbol = new Enum(d.name, d);
-    auto isAnonymous = d.name is null;
+
+    bool isAnonymous = d.symbol.isAnonymous;
     if (isAnonymous)
       d.symbol.name = IdTable.genAnonEnumID();
-    insert(d.symbol, d.symbol.name);
+
+    insert(d.symbol);
+
     auto parentScopeSymbol = scop.symbol;
+    auto enumSymbol = d.symbol;
     enterScope(d.symbol);
     // Declare members.
     foreach (member; d.members)
     {
       visitD(member);
+
       if (isAnonymous) // Also insert into parent scope if enum is anonymous.
         insert(member.symbol, parentScopeSymbol);
-      member.symbol.parent = d.symbol;
+
+      member.symbol.type = enumSymbol.type; // Assign TypeEnum.
     }
     exitScope();
     return d;
@@ -247,7 +263,7 @@ override
   D visit(EnumMemberDeclaration d)
   {
     d.symbol = new EnumMember(d.name, protection, storageClass, linkageType, d);
-    insert(d.symbol, d.symbol.name);
+    insert(d.symbol);
     return d;
   }
 
@@ -255,9 +271,10 @@ override
   {
     if (d.symbol)
       return d;
+    // Create the symbol.
     d.symbol = new Class(d.name, d);
     // Insert into current scope.
-    insert(d.symbol, d.name);
+    insert(d.symbol);
     enterScope(d.symbol);
     // Continue semantic analysis.
     d.decls && visitD(d.decls);
@@ -269,12 +286,13 @@ override
   {
     if (d.symbol)
       return d;
+    // Create the symbol.
     d.symbol = new dil.semantic.Symbols.Interface(d.name, d);
     // Insert into current scope.
-    insert(d.symbol, d.name);
+    insert(d.symbol);
     enterScope(d.symbol);
-    // Continue semantic analysis.
-    d.decls && visitD(d.decls);
+      // Continue semantic analysis.
+      d.decls && visitD(d.decls);
     exitScope();
     return d;
   }
@@ -283,14 +301,23 @@ override
   {
     if (d.symbol)
       return d;
+    // Create the symbol.
     d.symbol = new Struct(d.name, d);
+
+    if (d.symbol.isAnonymous)
+      d.symbol.name = IdTable.genAnonStructID();
     // Insert into current scope.
-    if (d.name)
-      insert(d.symbol, d.name);
+    insert(d.symbol);
+
     enterScope(d.symbol);
-    // Continue semantic analysis.
-    d.decls && visitD(d.decls);
+      // Continue semantic analysis.
+      d.decls && visitD(d.decls);
     exitScope();
+
+    if (d.symbol.isAnonymous)
+      // Insert members into parent scope as well.
+      foreach (member; d.symbol.members)
+        insert(member);
     return d;
   }
 
@@ -298,49 +325,59 @@ override
   {
     if (d.symbol)
       return d;
+    // Create the symbol.
     d.symbol = new Union(d.name, d);
+
+    if (d.symbol.isAnonymous)
+      d.symbol.name = IdTable.genAnonUnionID();
+
     // Insert into current scope.
-    if (d.name)
-      insert(d.symbol, d.name);
+    insert(d.symbol);
+
     enterScope(d.symbol);
-    // Continue semantic analysis.
-    d.decls && visitD(d.decls);
+      // Continue semantic analysis.
+      d.decls && visitD(d.decls);
     exitScope();
+
+    if (d.symbol.isAnonymous)
+      // Insert members into parent scope as well.
+      foreach (member; d.symbol.members)
+        insert(member);
     return d;
   }
 
   D visit(ConstructorDeclaration d)
   {
     auto func = new Function(Ident.__ctor, d);
-    insertOverload(func, func.name);
+    insertOverload(func);
     return d;
   }
 
   D visit(StaticConstructorDeclaration d)
   {
     auto func = new Function(Ident.__ctor, d);
-    insertOverload(func, func.name);
+    insertOverload(func);
     return d;
   }
 
   D visit(DestructorDeclaration d)
   {
     auto func = new Function(Ident.__dtor, d);
-    insertOverload(func, func.name);
+    insertOverload(func);
     return d;
   }
 
   D visit(StaticDestructorDeclaration d)
   {
     auto func = new Function(Ident.__dtor, d);
-    insertOverload(func, func.name);
+    insertOverload(func);
     return d;
   }
 
   D visit(FunctionDeclaration d)
   {
     auto func = new Function(d.name, d);
-    insertOverload(func, func.name);
+    insertOverload(func);
     return d;
   }
 
@@ -356,7 +393,7 @@ override
       auto variable = new Variable(name, protection, storageClass, linkageType, vd);
       variable.value = vd.inits[i];
       vd.variables ~= variable;
-      insert(variable, name);
+      insert(variable);
     }
     return vd;
   }
@@ -364,21 +401,21 @@ override
   D visit(InvariantDeclaration d)
   {
     auto func = new Function(Ident.__invariant, d);
-    insert(func, func.name);
+    insert(func);
     return d;
   }
 
   D visit(UnittestDeclaration d)
   {
     auto func = new Function(Ident.__unittest, d);
-    insertOverload(func, func.name);
+    insertOverload(func);
     return d;
   }
 
   D visit(DebugDeclaration d)
   {
     if (d.isSpecification)
-    {
+    { // debug = Id|Int
       if (!isModuleScope())
         error(d.begin, MSG.DebugSpecModuleLevel, d.spec.srcText);
       else if (d.spec.kind == TOK.Identifier)
@@ -400,7 +437,7 @@ override
   D visit(VersionDeclaration d)
   {
     if (d.isSpecification)
-    {
+    { // version = Id|Int
       if (!isModuleScope())
         error(d.begin, MSG.VersionSpecModuleLevel, d.spec.srcText);
       else if (d.spec.kind == TOK.Identifier)
@@ -423,27 +460,24 @@ override
   {
     if (d.symbol)
       return d;
+    // Create the symbol.
     d.symbol = new Template(d.name, d);
     // Insert into current scope.
-    insertOverload(d.symbol, d.name);
-    enterScope(d.symbol);
-    // Continue semantic analysis.
-    visitD(d.decls);
-    exitScope();
+    insertOverload(d.symbol);
     return d;
   }
 
   D visit(NewDeclaration d)
   {
     auto func = new Function(Ident.__new, d);
-    insert(func, func.name);
+    insert(func);
     return d;
   }
 
   D visit(DeleteDeclaration d)
   {
     auto func = new Function(Ident.__delete, d);
-    insert(func, func.name);
+    insert(func);
     return d;
   }
 

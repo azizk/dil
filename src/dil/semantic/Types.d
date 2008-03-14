@@ -130,12 +130,19 @@ class TypeReference : Type
 /// Enum type.
 class TypeEnum : Type
 {
-  this(Symbol symbol, Type baseType)
+  this(Symbol symbol)
   {
     super(baseType, TYP.Enum);
     this.symbol = symbol;
   }
 
+  /// Setter for the base type.
+  void baseType(Type type)
+  {
+    next = type;
+  }
+
+  /// Getter for the base type.
   Type baseType()
   {
     return next;

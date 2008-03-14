@@ -148,6 +148,24 @@ static:
     return genAnonymousID("__anonenum");
   }
 
+  /// Generates an identifier for an anonymous class.
+  Identifier* genAnonClassID()
+  {
+    return genAnonymousID("__anonclass");
+  }
+
+  /// Generates an identifier for an anonymous struct.
+  Identifier* genAnonStructID()
+  {
+    return genAnonymousID("__anonstruct");
+  }
+
+  /// Generates an identifier for an anonymous union.
+  Identifier* genAnonUnionID()
+  {
+    return genAnonymousID("__anonunion");
+  }
+
   /// Generates an identifier for a module which has got no valid name.
   Identifier* genModuleID()
   {
