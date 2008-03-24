@@ -1234,6 +1234,16 @@ class Parser
     return null;
   }
 
+  Token* parseVersionCondition()
+  {
+  version(D2)
+  {
+    if (consumed(T.Unittest))
+      return this.prevToken;
+  }
+    return parseIdentOrInt();
+  }
+
   Declaration parseDebugDeclaration()
   {
     skip(T.Debug);
@@ -1283,7 +1293,7 @@ class Parser
     else
     { // ( Condition )
       require(T.LParen);
-      cond = parseIdentOrInt();
+      cond = parseVersionCondition();
       require(T.RParen);
       // version ( Condition ) DeclarationsBlock
       decls = parseDeclarationsBlock();
@@ -2225,7 +2235,7 @@ class Parser
 
     // ( Condition )
     require(T.LParen);
-    cond = parseIdentOrInt();
+    cond = parseVersionCondition();
     require(T.RParen);
     // version ( Condition ) Statement
     versionBody = parseNoScopeStatement();

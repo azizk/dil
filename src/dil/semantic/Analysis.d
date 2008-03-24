@@ -95,7 +95,7 @@ bool debugBranchChoice(Token* cond, CompilationContext context)
 bool versionBranchChoice(Token* cond, CompilationContext context)
 {
   assert(cond);
-  if (cond.kind == TOK.Identifier)
+  if (cond.kind == TOK.Identifier || cond.kind == TOK.Unittest)
   {
     if (context.findVersionId(cond.ident.str))
       return true;

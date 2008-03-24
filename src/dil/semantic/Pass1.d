@@ -415,7 +415,7 @@ override
   D visit(DebugDeclaration d)
   {
     if (d.isSpecification)
-    { // debug = Id|Int
+    { // debug = Id | Int
       if (!isModuleScope())
         error(d.begin, MSG.DebugSpecModuleLevel, d.spec.srcText);
       else if (d.spec.kind == TOK.Identifier)
@@ -424,7 +424,7 @@ override
         context.debugLevel = d.spec.uint_;
     }
     else
-    {
+    { // debug ( Condition )
       if (debugBranchChoice(d.cond, context))
         d.compiledDecls = d.decls;
       else
@@ -437,7 +437,7 @@ override
   D visit(VersionDeclaration d)
   {
     if (d.isSpecification)
-    { // version = Id|Int
+    { // version = Id | Int
       if (!isModuleScope())
         error(d.begin, MSG.VersionSpecModuleLevel, d.spec.srcText);
       else if (d.spec.kind == TOK.Identifier)
@@ -446,7 +446,7 @@ override
         context.versionLevel = d.spec.uint_;
     }
     else
-    {
+    { // version ( Condition )
       if (versionBranchChoice(d.cond, context))
         d.compiledDecls = d.decls;
       else

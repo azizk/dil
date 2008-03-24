@@ -183,8 +183,9 @@ Statistics getStatistics(string filePath, bool printTokensTable, bool printNodes
     stats.tokensTable[TOK.HEAD] = 1;
     stats.tokensTable[TOK.Newline] = 1;
   }
+
   // Traverse linked list.
-  while (1)
+  for (; token.next; token = token.next)
   {
     stats.tokenCount += 1;
 
@@ -216,10 +217,6 @@ Statistics getStatistics(string filePath, bool printTokensTable, bool printNodes
       else if (token.isWhitespace)
         stats.wsTokenCount++;
     }
-
-    if (token.next is null)
-      break;
-    token = token.next;
   }
   assert(token.kind == TOK.EOF);
   return stats;
