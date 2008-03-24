@@ -73,7 +73,11 @@ void main(char[][] args)
       else if (arg == "-release")
         cmd.context.releaseBuild = true;
       else if (arg == "-unittest")
+      {
+      version(D2)
+        cmd.context.addVersionId("unittest");
         cmd.context.unittestBuild = true;
+      }
       else if (arg == "-d")
         cmd.context.acceptDeprecated = true;
       else if (arg == "-ps")
