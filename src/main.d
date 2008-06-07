@@ -345,7 +345,7 @@ version(D2)
   cc.addVersionId("D_Version2");
   foreach (versionId; GlobalSettings.versionIds)
     if (Lexer.isValidUnreservedIdentifier(versionId))
-      cc.versionIds[versionId] = true;
+      cc.addVersionId(versionId);
   return cc;
 }
 
@@ -398,7 +398,7 @@ void printErrors(InfoManager infoMan)
   }
 }
 
-/// Prints a help message for command.
+/// Prints the help message of a command.
 void printHelp(char[] command)
 {
   char[] msg;

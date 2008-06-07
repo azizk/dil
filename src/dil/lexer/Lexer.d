@@ -2851,20 +2851,17 @@ unittest
     else
       src ~= pair.tokenText ~ " ";
 
+  // Lex the constructed source text.
   auto lx = new Lexer(new SourceText("", src));
-  auto token = lx.getTokens();
+  lx.scanAll();
 
-  uint i;
-  assert(token == lx.head);
-  assert(token.next.kind == TOK.Newline);
-  token = token.next.next;
-  do
-  {
-    assert(i < pairs.length);
-    assert(token.srcText == pairs[i].tokenText, Format("Scanned '{0}' but expected '{1}'", token.srcText, pairs[i].tokenText));
-    ++i;
-    token = token.next;
-  } while (token.kind != TOK.EOF)
+  auto token = lx.firstToken();
+
+  for (uint i; i < pairs.length && token.kind != TOK.EOF;
+       ++i, (token = token.next))
+    if (token.srcText != pairs[i].tokenText)
+      assert(0, Format("Scanned '{0}' but expected '{1}'",
+                       token.srcText, pairs[i].tokenText));
 }
 
 /// Tests the Lexer's peek() method.
