@@ -12,7 +12,7 @@ How To Compile dil
 ==================
 In order to compile dil you need to have:
  *) DMD 1.030 (http://www.digitalmars.com/d/1.0/changelog.html)
- *) Tango 0.99.5 (http://dsource.org/projects/tango/)
+ *) Tango 0.99.6 (http://dsource.org/projects/tango/)
  *) DSSS 0.75 (http://dsource.org/projects/dsss/)
 
 If you can't compile dil because you have a newer version of these programs
