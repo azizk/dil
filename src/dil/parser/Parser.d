@@ -20,6 +20,8 @@ import dil.SourceText;
 import dil.Unicode;
 import common;
 
+import tango.core.Vararg;
+
 /// The Parser produces a full parse tree by examining
 /// the list of tokens provided by the Lexer.
 class Parser
@@ -4120,7 +4122,7 @@ version(D2)
   /// Params:
   ///   token = used to get the location of where the error is.
   ///   formatMsg = the compiler error message.
-  void error_(Token* token, char[] formatMsg, TypeInfo[] _arguments, Arg _argptr)
+  void error_(Token* token, char[] formatMsg, TypeInfo[] _arguments, va_list _argptr)
   {
     if (trying)
     {

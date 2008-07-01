@@ -19,6 +19,7 @@ import common;
 
 import tango.stdc.stdlib : strtof, strtod, strtold;
 import tango.stdc.errno : errno, ERANGE;
+import tango.core.Vararg;
 
 public import dil.lexer.Funcs;
 
@@ -2502,7 +2503,7 @@ version(D2)
   ///   columnPos = points to the character where the error is located.
   ///   msg = the message.
   void error_(uint lineNum, char* lineBegin, char* columnPos, char[] msg,
-              TypeInfo[] _arguments, Arg _argptr)
+              TypeInfo[] _arguments, va_list _argptr)
   {
     lineNum = this.errorLineNumber(lineNum);
     auto errorPath = this.filePaths.setPath;
