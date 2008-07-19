@@ -100,9 +100,13 @@ abstract class Visitor
   static
     mixin(generateDispatchFunctions());
 
+  // This is necessary so that the compiler puts
+  // the array into the static data segment.
+  mixin("private const _dispatch_vtable = " ~ generateVTable() ~ ";");
   /// The table holding function pointers to the second dispatch functions.
-  static const void*[] dispatch_vtable = mixin(generateVTable());
-  static assert(dispatch_vtable.length == g_classNames.length, "vtable length doesn't match number of classes");
+  static const dispatch_vtable = _dispatch_vtable;
+  static assert(dispatch_vtable.length == g_classNames.length,
+                "vtable length doesn't match number of classes");
 
   /// Looks up the second dispatch function for n and returns that.
   Node function(Visitor, Node) getDispatchFunction()(Node n)
