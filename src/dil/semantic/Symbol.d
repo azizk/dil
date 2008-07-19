@@ -96,7 +96,7 @@ class Symbol
   /// Casts the symbol to Class.
   Class to(Class)()
   {
-    assert(mixin(`this.sid == mixin("SYM." ~ typeof(Class).stringof)`));
+    assert(mixin(`this.sid == mixin("SYM." ~ Class.stringof)`));
     return cast(Class)cast(void*)this;
   }
 

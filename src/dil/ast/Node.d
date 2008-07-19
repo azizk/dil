@@ -67,7 +67,7 @@ abstract class Node
   /// Returns a reference to Class if this node can be cast to it.
   Class Is(Class)()
   {
-    if (kind == mixin("NodeKind." ~ typeof(Class).stringof))
+    if (kind == mixin("NodeKind." ~ Class.stringof))
       return cast(Class)cast(void*)this;
     return null;
   }

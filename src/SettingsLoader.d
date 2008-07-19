@@ -57,7 +57,7 @@ class SettingsLoader
       return error(t, "'{}' variable has no value set", name), T.init;
     T val = value.Is!(T); // Try casting to T.
     if (!val)
-      error(value.begin, "the value of '{}' is not of type {}", name, typeof(T).stringof);
+      error(value.begin, "the value of '{}' is not of type {}", name, T.stringof);
     return val;
   }
 
