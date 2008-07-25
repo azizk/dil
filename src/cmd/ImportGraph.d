@@ -16,7 +16,7 @@ import common;
 
 import tango.text.Regex : RegExp = Regex;
 import tango.io.FilePath;
-import tango.io.FileConst;
+import tango.io.model.IFile;
 import tango.text.Util;
 
 alias FileConst.PathSeparatorChar dirSep;

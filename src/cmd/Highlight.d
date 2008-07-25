@@ -19,7 +19,7 @@ import SettingsLoader;
 import Settings;
 import common;
 
-import tango.io.GrowBuffer;
+import tango.io.Buffer;
 import tango.io.Print;
 
 /// The highlight command.

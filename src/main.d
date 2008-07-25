@@ -458,7 +458,7 @@ Options:
   --lines          : print line numbers
 
 Example:
-  dil hl Parser.d --html --syntax > Parser.html`;
+  dil hl src/main.d --html --syntax > main.html`;
     break;
   case "importgraph", "igraph":
 //     msg = GetMsg(MID.HelpImportGraph);
@@ -510,7 +510,7 @@ Options:
 
 Example:
   echo "module foo; void func(){}" | dil tok -
-  dil tok main.d | grep ^[0-9]`;
+  dil tok src/main.d | grep ^[0-9]`;
     break;
   case "stats", "statistics":
     msg = "Gather statistics about D source files.
@@ -522,7 +522,7 @@ Options:
   --asttable      : print the count of all kinds of nodes in a table.
 
 Example:
-  dil stat src/dil/Parser.d src/dil/Lexer.d";
+  dil stat src/main.d src/dil/Unicode.d";
     break;
   case "trans", "translate":
     msg = `Translate a D source file to another language.

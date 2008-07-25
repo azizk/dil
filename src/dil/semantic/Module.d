@@ -18,7 +18,7 @@ import dil.SourceText;
 import common;
 
 import tango.io.FilePath;
-import tango.io.FileConst;
+import tango.io.model.IFile;
 
 alias FileConst.PathSeparatorChar dirSep;
 

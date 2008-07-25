@@ -26,7 +26,7 @@ import dil.Enums;
 import dil.CompilerInfo;
 import common;
 
-import tango.io.FileConst;
+import tango.io.model.IFile;
 alias FileConst.PathSeparatorChar dirSep;
 
 /// The first pass is the declaration pass.

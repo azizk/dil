@@ -6,25 +6,25 @@ Please, read the license file, COPYING, for further information.
 
 Description
 ===========
-This software is a compiler written in D for the D programming language.
+This software is a compiler written in D 1.0 for the D programming language.
 
 How To Compile dil
 ==================
 In order to compile dil you need to have:
- *) DMD 1.030 (http://www.digitalmars.com/d/1.0/changelog.html)
- *) Tango 0.99.6 (http://dsource.org/projects/tango/)
+ *) DMD 1.033 (http://www.digitalmars.com/d/1.0/changelog.html)
+ *) Tango 0.99.7 (http://dsource.org/projects/tango/)
  *) DSSS 0.75 (http://dsource.org/projects/dsss/)
 
 If you can't compile dil because you have a newer version of these programs
-then please report the problem to me (see Bugs section.)
+then report the problem to me please (see Bugs section.)
 
 Regarding DSSS 0.75:
 On Posix systems a correction in dsss/etc/rebuild/dmd-posix-tango is
-required. In the [link] section, remove "-L-lphobos" from the cmd option
+required. In the "[link]" section, remove "-L-lphobos" from the cmd option
 in order to avoid symbol conflicts.
 
 Before you run dil, make sure that the executable can find config.d and
-lang_en.d (which are located in trunk/src/.)
+lang_en.d (which are located in "<dil>/src/".)
 The language of the compiler messages can be configured in config.d.
 (Please, note that many messages are still untranslated.)
 
