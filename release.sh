@@ -80,14 +80,14 @@ fi
 # Copy source and other files.
 rm -rf $FRESH_REPOS
 hg archive -r tip -t files $FRESH_REPOS
-cp -r $FRESH_REPOS/trunk/* $DEST
+cp -r $FRESH_REPOS/* $DEST
 
-cp $FRESH_REPOS/trunk/src/config.d $DEST/bin/
-cp $FRESH_REPOS/trunk/src/lang_*.d $DEST/bin/
-cp $FRESH_REPOS/trunk/src/*_map.d $DEST/bin/
-cp $FRESH_REPOS/trunk/src/*.css $DEST/bin/
-cp $FRESH_REPOS/trunk/src/predefined.ddoc $DEST/bin/
-cp $FRESH_REPOS/trunk/src/html.css $HTMLSRC
+cp $FRESH_REPOS/src/config.d $DEST/bin/
+cp $FRESH_REPOS/src/lang_*.d $DEST/bin/
+cp $FRESH_REPOS/src/*_map.d $DEST/bin/
+cp $FRESH_REPOS/src/*.css $DEST/bin/
+cp $FRESH_REPOS/src/predefined.ddoc $DEST/bin/
+cp $FRESH_REPOS/src/html.css $HTMLSRC
 
 # Build archives
 # tar.gz doesn't compress well
