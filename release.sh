@@ -44,16 +44,17 @@ for filepath in $SRC_FILES;
 do
   htmlfile=`echo $filepath | sed -e 's@^src/@@' -e 's@/@.@g' -e 's@.d$@@'`.html
   echo "FILE: $filepath > $HTMLSRC/$htmlfile";
-  ./dil gen --lines --syntax --html $filepath > "$HTMLSRC/$htmlfile";
+  ./dil hl --lines --syntax --html $filepath > "$HTMLSRC/$htmlfile";
 done
 
-# Linux Debug
+# Linux Debug Binaries
 echo "***** Building Linux binaries *****"
 dsss build -clean -full -version=D2
 cp dil $DEST/bin/dil2_d
 dsss build -clean -full
 cp dil $DEST/bin/dil_d
-# Linux Release
+# Linux Release Binaries
+# N.B.: the -inline switch makes the binaries significantly larger.
 dsss build -clean -full -release -O -inline -version=D2
 cp dil $DEST/bin/dil2
 dsss build -clean -full -release -O -inline
@@ -65,12 +66,12 @@ if [ -s ~/bin/dmd.exe ]; then
   { # obj dir is winobj. -op = don't strip paths from obj files.
     wine ~/bin/dmd.exe -odwinobj -op -ofdil $* $SRC_FILES
   }
-  # Windows Debug
+  # Windows Debug Binaries
   winbuild -version=D2
   cp dil.exe $DEST/bin/dil2_d.exe
   winbuild
   cp dil.exe $DEST/bin/dil_d.exe
-  # Windows Release
+  # Windows Release Binaries
   winbuild -release -O -inline -version=D2
   cp dil.exe $DEST/bin/dil2.exe
   winbuild -release -O -inline
