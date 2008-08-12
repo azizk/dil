@@ -1,13 +1,19 @@
+#! /usr/bin/rdmd
 /++
   Author: Aziz Köksal
   License: GPL3
 +/
 module TypeRules;
-
-import cmd.Generate : xml_escape;
-
 import TypeRulesData;
+import cmd.Highlight : xml_escape;
+
+
 import common;
+
+void main(char[][] args)
+{
+  genHTMLTypeRulesTables();
+}
 
 static const string[] basicTypes = [
   "char"[],   "wchar",   "dchar", "bool",
@@ -76,7 +82,8 @@ void genHTMLTypeRulesTables()
     `  </style>`\n
     `</head>`\n
     `<body>`\n
-    `<p>These tables show what the type results of certain expressions are.</p>`\n
+    `<p>The following tables show the type results of different expressions. Compiler used: ` ~
+    compilerNameVersion ~ `.`
   );
 
   Stdout.format("<table>\n<tr><th colspan=\"{}\">Unary Expressions</th></tr>\n", unaryExpressions.length);

@@ -4,24 +4,24 @@
 +/
 module cmd.DDoc;
 
-import cmd.DDocXML;
-import cmd.Highlight;
-import dil.doc.Parser;
-import dil.doc.Macro;
-import dil.doc.Doc;
-import dil.ast.Node;
-import dil.ast.Declarations,
+import cmd.DDocXML,
+       cmd.Highlight;
+import dil.doc.Parser,
+       dil.doc.Macro,
+       dil.doc.Doc;
+import dil.ast.Node,
+       dil.ast.Declarations,
        dil.ast.Statements,
        dil.ast.Expression,
        dil.ast.Parameters,
-       dil.ast.Types;
-import dil.ast.DefaultVisitor;
-import dil.lexer.Token;
-import dil.lexer.Funcs;
-import dil.semantic.Module;
-import dil.semantic.Pass1;
-import dil.semantic.Symbol;
-import dil.semantic.Symbols;
+       dil.ast.Types,
+       dil.ast.DefaultVisitor;
+import dil.lexer.Token,
+       dil.lexer.Funcs;
+import dil.semantic.Module,
+       dil.semantic.Pass1,
+       dil.semantic.Symbol,
+       dil.semantic.Symbols;
 import dil.Compilation;
 import dil.Information;
 import dil.Converter;
@@ -203,7 +203,7 @@ class DDocEmitter : DefaultVisitor
     { // Save the previous comment of the parent scope.
       saved_prevCmnt = this.outer.prevCmnt;
       saved_cmntIsDitto = this.outer.cmntIsDitto;
-      saved_prevDeclOffset = this.outer.prevDeclOffset; 
+      saved_prevDeclOffset = this.outer.prevDeclOffset;
       // Entering a new scope. Clear variables.
       this.outer.prevCmnt = null;
       this.outer.cmntIsDitto = false;

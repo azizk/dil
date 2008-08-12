@@ -481,6 +481,8 @@ override
     return d;
   }
 
+  // Attributes:
+
   D visit(ProtectionDeclaration d)
   {
     auto saved = protection; // Save.

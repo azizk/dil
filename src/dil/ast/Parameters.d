@@ -53,7 +53,7 @@ class Parameter : Node
   {
     return !!(stc & StorageClass.Variadic);
   }
-  
+
   /// Returns true if this parameter is lazy.
   bool isLazy()
   {
@@ -78,7 +78,7 @@ class Parameters : Node
       return items[$-1].isVariadic();
     return false;
   }
-  
+
   bool hasLazy()
   {
     foreach(param; items)

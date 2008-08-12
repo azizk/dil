@@ -2053,7 +2053,7 @@ version(D2)
         ulong_ += *p - '0';
       }
       else if (*p == '_')
-        continue; 
+        continue;
       else
         break;
     }

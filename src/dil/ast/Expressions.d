@@ -663,7 +663,7 @@ class DollarExpression : Expression
 class BoolExpression : Expression
 {
   IntExpression value; /// IntExpression of type bool.
-  
+
   this()
   {
     mixin(set_kind);

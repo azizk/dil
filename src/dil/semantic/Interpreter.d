@@ -43,7 +43,7 @@ class Interpreter : Visitor
   {
     return (new Interpreter(/+scop,+/ infoMan)).eval(e);
   }
-  
+
   /// Executes the function at compile-time with the given arguments.
   /// Returns: NAR or a value.
   static Expression interpret(FunctionDeclaration fd, Expression[] args, InfoManager infoMan/+, Scope scop+/)
@@ -63,7 +63,7 @@ class Interpreter : Visitor
   {
     return e;
   }
-  
+
   /// Start evaluation of a function.
   Expression eval(FunctionDeclaration fd, Expression[] args)
   {
@@ -85,7 +85,7 @@ class Interpreter : Visitor
     assert(false);
     return NAR;
   }
-  
+
   alias Expression E;
 
 override
@@ -260,7 +260,7 @@ override
     switch(e.kind)
     {
     alias NodeKind NK;
-    
+
     case NK.IntExpression:
       auto num = (cast(IntExpression)e).number;
       return num ? value == true : value == false;

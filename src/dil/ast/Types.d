@@ -77,6 +77,7 @@ class ModuleScopeType : TypeNode
 class TypeofType : TypeNode
 {
   Expression e;
+  /// "typeof" "(" Expression ")"
   this(Expression e)
   {
     this();
@@ -84,12 +85,13 @@ class TypeofType : TypeNode
     this.e = e;
   }
 
-  // For D2.0: "typeof" "(" "return" ")"
+  /// For D2.0: "typeof" "(" "return" ")"
   this()
   {
     mixin(set_kind);
   }
 
+  /// Returns true if this is a "typeof(return)".
   bool isTypeofReturn()
   {
     return e is null;

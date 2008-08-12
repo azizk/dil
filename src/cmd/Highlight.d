@@ -4,8 +4,8 @@
 +/
 module cmd.Highlight;
 
-import dil.ast.DefaultVisitor;
-import dil.ast.Node,
+import dil.ast.DefaultVisitor,
+       dil.ast.Node,
        dil.ast.Declaration,
        dil.ast.Statement,
        dil.ast.Expression,
@@ -410,9 +410,10 @@ class TokenHighlighter
     print("$(D_CODE\n");
     if (lx.errors.length)
     { // Output error messages.
-      print(tags["CompBegin"]);
+      // FIXME: CompBegin and CompEnd break the table layout.
+//       print(tags["CompBegin"]);
       printErrors(lx, tags, print);
-      print(tags["CompEnd"]);
+//       print(tags["CompEnd"]);
     }
     // Traverse linked list and print tokens.
     for (auto token = lx.firstToken(); token; token = token.next) {
