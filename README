@@ -11,7 +11,7 @@ This software is a compiler written in D 1.0 for the D programming language.
 How To Compile dil
 ==================
 In order to compile dil you need to have:
- *) DMD 1.033 (http://www.digitalmars.com/d/1.0/changelog.html)
+ *) DMD 1.034 (http://www.digitalmars.com/d/1.0/changelog.html)
  *) Tango 0.99.7 (http://dsource.org/projects/tango/)
  *) DSSS 0.75 (http://dsource.org/projects/dsss/)
 
