@@ -30,6 +30,21 @@ class Scope
     return symbol.lookup(name);
   }
 
+  /// Searches for a symbol in this scope and all enclosing scopes.
+  /// Params:
+  ///   name = the name of the symbol.
+  Symbol search(Identifier* name)
+  {
+    Symbol symbol;
+    for (auto sc = this; sc; sc = sc.parent)
+    {
+      symbol = sc.lookup(name);
+      if (symbol !is null)
+        break;
+    }
+    return symbol;
+  }
+
   /// Create a new inner scope and return that.
   Scope enter(ScopeSymbol symbol)
   {

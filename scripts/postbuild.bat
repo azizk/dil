@@ -1,0 +1,2 @@
+copy src\config.d bin\
+copy src\html.css src\html_map.d src\lang_de.d src\lang_en.d src\lang_fi.d src\lang_tr.d src\macros_dil.ddoc src\predefined.ddoc src\predefined_xml.ddoc src\xml.css src\xml_map.d bin\data

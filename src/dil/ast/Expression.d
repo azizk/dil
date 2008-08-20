@@ -18,5 +18,11 @@ abstract class Expression : Node
     super(NodeCategory.Expression);
   }
 
+  /// Returns true if the member 'type' is not null.
+  bool hasType()
+  {
+    return type !is null;
+  }
+
   override abstract Expression copy();
 }

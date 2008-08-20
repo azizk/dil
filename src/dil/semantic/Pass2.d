@@ -103,12 +103,7 @@ class SemanticPass2 : DefaultVisitor
     Symbol symbol;
 
     if (idScope is null)
-      for (auto sc = scop; sc; sc = sc.parent)
-      {
-        symbol = sc.lookup(id);
-        if (symbol)
-          return symbol;
-      }
+      symbol = scop.search(id);
     else
       symbol = idScope.lookup(id);
 

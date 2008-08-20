@@ -359,6 +359,7 @@ static:
   TypePointer Void_ptr; /// The void pointer type.
   TypeBasic Error; /// The error type.
   TypeBasic Undefined; /// The undefined type.
+  TypeBasic DontKnowYet; /// The symbol is undefined but might be resolved.
 
   /// Allocates an instance of TypeBasic and assigns it to typeName.
   template newTB(char[] typeName)
@@ -406,5 +407,6 @@ static:
     Void_ptr = Void.ptrTo;
     Error = new TypeBasic(TYP.Error);
     Undefined = new TypeBasic(TYP.Error);
+    DontKnowYet = new TypeBasic(TYP.Error);
   }
 }
