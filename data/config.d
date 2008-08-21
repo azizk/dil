@@ -11,16 +11,14 @@
 ///
 /// The following variables are expanded inside strings (only where paths are expected):
 /// $(UL
-///   $(LI ${DATADIR} -> the data directory of dil (e.g. /home/user/dil/bin/data or C:\dil\bin\data).)
 ///   $(LI ${HOME} -> the home directory (e.g. /home/name or C:\Documents and Settings\name).)
-///   $(LI ${EXECDIR} -> the absolute path to the directory of dil's executable (e.g. /home/name/dil/bin).)
+///   $(LI ${BINDIR} -> the absolute path to the directory of dil's executable (e.g. /home/name/dil/bin).)
+///   $(LI ${DATADIR} -> the data directory of dil (e.g. /home/user/dil/data or C:\dil\data).)
 /// )
 module config;
 
 /// Files needed by dil are located in this directory.
-///
-/// A relative path is resolved from the directory of dil's executable.
-var DATADIR = "data/";
+var DATADIR = "${BINDIR}/../data/";
 
 /// Predefined version identifiers.
 var VERSION_IDS = ["X86", "linux", "LittleEndian"];

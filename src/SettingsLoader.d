@@ -83,6 +83,9 @@ class ConfigLoader : SettingsLoader
   this(InfoManager infoMan)
   {
     super(infoMan);
+    this.homePath = Environment.get("HOME");
+    this.executablePath = GetExecutableFilePath();
+    this.executableDir = (new FilePath(this.executablePath)).folder();
   }
 
   static ConfigLoader opCall(InfoManager infoMan)
@@ -94,16 +97,12 @@ class ConfigLoader : SettingsLoader
   {
      val = substitute(val, "${DATADIR}", dataDir);
      val = substitute(val, "${HOME}", homePath);
-     val = substitute(val, "${EXECDIR}", executableDir);
+     val = substitute(val, "${BINDIR}", executableDir);
      return val;
   }
 
   void load()
   {
-    homePath = Environment.get("HOME");
-    executablePath = GetExecutableFilePath();
-    executableDir = (new FilePath(executablePath)).folder();
-
     // Load the configuration file.
     auto filePath = findConfigurationFilePath();
     if (filePath is null)
@@ -124,9 +123,9 @@ class ConfigLoader : SettingsLoader
 
     // Initialize the dataDir member.
     if (auto val = getValue!(StringExpression)("DATADIR"))
-      dataDir = val.getString();
-    dataDir = resolvePath(executableDir, dataDir);
-    GlobalSettings.dataDir = dataDir;
+      this.dataDir = val.getString();
+    this.dataDir = expandVariables(this.dataDir);
+    GlobalSettings.dataDir = this.dataDir;
 
     if (auto array = getValue!(ArrayInitExpression)("VERSION_IDS"))
       foreach (value; array.values)

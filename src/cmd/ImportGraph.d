@@ -64,8 +64,7 @@ struct IGraphCommand
 
     // Add the directory of the file to the import paths.
     auto filePath = new FilePath(this.filePath);
-    auto fileDir = filePath.folder();
-    context.importPaths ~= fileDir;
+    context.importPaths ~= filePath.folder();
 
     auto gbuilder = new GraphBuilder;
 
