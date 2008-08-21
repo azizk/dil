@@ -46,7 +46,7 @@ import tango.text.Ascii : icompare;
 void main(char[][] args)
 {
   auto infoMan = new InfoManager();
-  SettingsLoader.SettingsLoader(infoMan).load();
+  ConfigLoader(infoMan).load();
   if (infoMan.hasInfo)
     return printErrors(infoMan);
 
@@ -391,6 +391,8 @@ void printErrors(InfoManager infoMan)
       errorFormat = GlobalSettings.semanticErrorFormat;
     else if (info.classinfo is Warning.classinfo)
       errorFormat = "{0}: Warning: {3}";
+    else if (info.classinfo is dil.Information.Error.classinfo)
+      errorFormat = "Error: {3}";
     else
       continue;
     auto err = cast(Problem)info;

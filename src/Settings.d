@@ -9,6 +9,8 @@ import common;
 struct GlobalSettings
 {
 static:
+  /// Path to the data directory.
+  string dataDir = "data/";
   /// Predefined version identifiers.
   string[] versionIds;
   /// Path to the language file.

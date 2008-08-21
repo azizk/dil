@@ -16,9 +16,11 @@ import dil.Compilation;
 import common;
 
 import tango.io.FilePath;
+import tango.sys.Environment;
+import tango.text.Util : substitute;
 
 /// Loads settings from a D module file.
-class SettingsLoader
+abstract class SettingsLoader
 {
   InfoManager infoMan; /// Collects error messages.
   Module mod; /// Current module.
@@ -26,11 +28,6 @@ class SettingsLoader
   this(InfoManager infoMan)
   {
     this.infoMan = infoMan;
-  }
-
-  static SettingsLoader opCall(InfoManager infoMan)
-  {
-    return new SettingsLoader(infoMan);
   }
 
   /// Creates an error report.
@@ -71,12 +68,50 @@ class SettingsLoader
   }
 
   void load()
-  {
-    scope execPath = new FilePath(GetExecutableFilePath());
-    execPath = new FilePath(execPath.folder());
+  {}
+}
 
-    // Load config.d
-    auto filePath = resolvePath(execPath, "config.d");
+/// Loads the configuration file of dil.
+class ConfigLoader : SettingsLoader
+{
+  static string configFileName = "config.d"; /// Name of the configuration file.
+  string executablePath; /// Absolute path to the executable of dil.
+  string executableDir; /// Absolte path to the directory of the executable of dil.
+  string dataDir; /// Absolute path to dil's data directory.
+  string homePath; /// Path to the home directory.
+
+  this(InfoManager infoMan)
+  {
+    super(infoMan);
+  }
+
+  static ConfigLoader opCall(InfoManager infoMan)
+  {
+    return new ConfigLoader(infoMan);
+  }
+
+  string expandVariables(string val)
+  {
+     val = substitute(val, "${DATADIR}", dataDir);
+     val = substitute(val, "${HOME}", homePath);
+     val = substitute(val, "${EXECDIR}", executableDir);
+     return val;
+  }
+
+  void load()
+  {
+    homePath = Environment.get("HOME");
+    executablePath = GetExecutableFilePath();
+    executableDir = (new FilePath(executablePath)).folder();
+
+    // Load the configuration file.
+    auto filePath = findConfigurationFilePath();
+    if (filePath is null)
+    {
+      infoMan ~= new Error(new Location("",0),
+        "the configuration file "~configFileName~" could not be found.");
+      return;
+    }
     mod = new Module(filePath, infoMan);
     mod.parse();
 
@@ -87,33 +122,40 @@ class SettingsLoader
     auto pass1 = new SemanticPass1(mod, context);
     pass1.run();
 
-    if (auto array = getValue!(ArrayInitExpression)("version_ids"))
+    // Initialize the dataDir member.
+    if (auto val = getValue!(StringExpression)("DATADIR"))
+      dataDir = val.getString();
+    dataDir = resolvePath(executableDir, dataDir);
+    GlobalSettings.dataDir = dataDir;
+
+    if (auto array = getValue!(ArrayInitExpression)("VERSION_IDS"))
       foreach (value; array.values)
-        if (auto str = castTo!(StringExpression)(value))
-          GlobalSettings.versionIds ~= str.getString();
-    if (auto val = getValue!(StringExpression)("langfile"))
-      GlobalSettings.langFile = val.getString();
-    if (auto array = getValue!(ArrayInitExpression)("import_paths"))
+        if (auto val = castTo!(StringExpression)(value))
+          GlobalSettings.versionIds ~= val.getString();
+    if (auto val = getValue!(StringExpression)("LANG_FILE"))
+      GlobalSettings.langFile = expandVariables(val.getString());
+    if (auto array = getValue!(ArrayInitExpression)("IMPORT_PATHS"))
       foreach (value; array.values)
-        if (auto str = castTo!(StringExpression)(value))
-          GlobalSettings.importPaths ~= str.getString();
-    if (auto array = getValue!(ArrayInitExpression)("ddoc_files"))
+        if (auto val = castTo!(StringExpression)(value))
+          GlobalSettings.importPaths ~= expandVariables(val.getString());
+    if (auto array = getValue!(ArrayInitExpression)("DDOC_FILES"))
       foreach (value; array.values)
-        if (auto str = castTo!(StringExpression)(value))
-          GlobalSettings.ddocFilePaths ~= resolvePath(execPath, str.getString());
-    if (auto val = getValue!(StringExpression)("xml_map"))
-      GlobalSettings.xmlMapFile = val.getString();
-    if (auto val = getValue!(StringExpression)("html_map"))
-      GlobalSettings.htmlMapFile = val.getString();
-    if (auto val = getValue!(StringExpression)("lexer_error"))
+        if (auto val = castTo!(StringExpression)(value))
+          GlobalSettings.ddocFilePaths ~= expandVariables(val.getString());
+    if (auto val = getValue!(StringExpression)("XML_MAP"))
+      GlobalSettings.xmlMapFile = expandVariables(val.getString());
+    if (auto val = getValue!(StringExpression)("HTML_MAP"))
+      GlobalSettings.htmlMapFile = expandVariables(val.getString());
+    if (auto val = getValue!(StringExpression)("LEXER_ERROR"))
       GlobalSettings.lexerErrorFormat = val.getString();
-    if (auto val = getValue!(StringExpression)("parser_error"))
+    if (auto val = getValue!(StringExpression)("PARSER_ERROR"))
       GlobalSettings.parserErrorFormat = val.getString();
-    if (auto val = getValue!(StringExpression)("semantic_error"))
+    if (auto val = getValue!(StringExpression)("SEMANTIC_ERROR"))
       GlobalSettings.semanticErrorFormat = val.getString();
 
     // Load language file.
-    filePath = resolvePath(execPath, GlobalSettings.langFile);
+    // TODO: create a separate class for this?
+    filePath = expandVariables(GlobalSettings.langFile);
     mod = new Module(filePath);
     mod.parse();
 
@@ -127,8 +169,8 @@ class SettingsLoader
     {
       char[][] messages;
       foreach (value; array.values)
-        if (auto str = castTo!(StringExpression)(value))
-          messages ~= str.getString();
+        if (auto val = castTo!(StringExpression)(value))
+          messages ~= val.getString();
       if (messages.length != MID.max+1)
         error(mod.firstToken,
               "messages table in {} must exactly have {} entries, but not {}.",
@@ -138,6 +180,31 @@ class SettingsLoader
     }
     if (auto val = getValue!(StringExpression)("lang_code"))
       GlobalSettings.langCode = val.getString();
+  }
+
+  /// Searches for the configuration file of dil.
+  /// Returns: the filePath or null if the file couldn't be found.
+  string findConfigurationFilePath()
+  {
+    // 1. Look in environment variable DILCONF.
+    auto filePath = new FilePath(Environment.get("DILCONF"));
+    if (filePath.exists())
+      return filePath.toString();
+    // 2. Look in the current working directory.
+    filePath.set(this.configFileName);
+    if (filePath.exists())
+      return filePath.toString();
+    // 3. Look in the directory set by HOME.
+    filePath.set(this.homePath);
+    filePath.append(this.configFileName);
+    if (filePath.exists())
+      return filePath.toString();
+    // 4. Look in the binary's directory.
+    filePath.set(this.executableDir);
+    filePath.append(this.configFileName);
+    if (filePath.exists())
+      return filePath.toString();
+    return null;
   }
 }
 
@@ -183,11 +250,13 @@ class TagMapLoader : SettingsLoader
 /// Resolves the path to a file from the executable's dir path
 /// if it is relative.
 /// Returns: filePath if it is absolute or execPath + filePath.
-string resolvePath(FilePath execPath, string filePath)
+string resolvePath(string execPath, string filePath)
 {
-  if ((new FilePath(filePath)).isAbsolute())
+  scope path = new FilePath(filePath);
+  if (path.isAbsolute())
     return filePath;
-  return execPath.dup.append(filePath).toString();
+  path.set(execPath).append(filePath);
+  return path.toString();
 }
 
 version(DDoc)
