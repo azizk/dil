@@ -16,15 +16,25 @@ In order to compile dil you need to have:
  *) DSSS 0.75 (http://dsource.org/projects/dsss/)
 
 If you can't compile dil because you have a newer version of these programs
-then report the problem to me please (see Bugs section.)
+then report the problem to me, please (see Bugs section.)
 
 Regarding DSSS 0.75:
 On Posix systems a correction in dsss/etc/rebuild/dmd-posix-tango is
 required. In the "[link]" section, remove "-L-lphobos" from the cmd option
 in order to avoid symbol conflicts.
 
-Before you run dil, make sure that the executable can find config.d and
-lang_en.d (which are located in "<dil>/src/".)
+Change to the directory where you extracted dil.
+$ cd ~/dil
+Type "dsss build".
+$ dsss build
+The executable of dil is put into the bin/ directory.
+$ ls bin/
+Output> config.d  data  dil
+Run like this:
+(Linux)$ bin/dil
+(Windows)> bin\dil.exe
+You should see the main help message printed in the console.
+
 The language of the compiler messages can be configured in config.d.
 (Please, note that many messages are still untranslated.)
 
