@@ -39,12 +39,16 @@ rm -rf $DEST
 mkdir -p $DEST/{bin,doc/htmlsrc,src}
 
 # Create documentation.
-$DIL ddoc $DEST/doc/ -v data/macros_dil.ddoc -version=DDoc data/config.d $SRC_FILES
-# Generate syntax highlighted HTML files.
+echo "***** Generating documentation *****"
+SRC_FILES2="data/config.d $SRC_FILES" # Include config.d in doc generation.
+$DIL ddoc $DEST/doc/ -v data/macros_dil.ddoc -version=DDoc $SRC_FILES2
+
+echo "***** Generating syntax highlighted HTML files *****"
 HTMLSRC="$DEST/doc/htmlsrc"
-for filepath in $SRC_FILES;
+for filepath in $SRC_FILES2;
 do
-  htmlfile=`echo $filepath | sed -e 's@^src/@@' -e 's@/@.@g' -e 's@.d$@@'`.html
+  # Use sed to remove 'src/' or 'data/' folder, convert '/' to '.' and remove the extension.
+  htmlfile=`echo $filepath | sed -e 's@^src/\|data/@@' -e 's@/@.@g' -e 's@.d$@@'`.html
   echo "FILE: $filepath > $HTMLSRC/$htmlfile";
   $DIL hl --lines --syntax --html $filepath > "$HTMLSRC/$htmlfile";
 done
