@@ -17,7 +17,6 @@ import common;
 
 import tango.io.FilePath;
 import tango.sys.Environment;
-import tango.text.Util : substitute;
 
 /// Loads settings from a D module file.
 abstract class SettingsLoader
@@ -75,8 +74,8 @@ abstract class SettingsLoader
 class ConfigLoader : SettingsLoader
 {
   static string configFileName = "config.d"; /// Name of the configuration file.
-  string executablePath; /// Absolute path to the executable of dil.
-  string executableDir; /// Absolte path to the directory of the executable of dil.
+  string executablePath; /// Absolute path to dil's executable.
+  string executableDir; /// Absolute path to the directory of dil's executable.
   string dataDir; /// Absolute path to dil's data directory.
   string homePath; /// Path to the home directory.
 
@@ -86,6 +85,7 @@ class ConfigLoader : SettingsLoader
     this.homePath = Environment.get("HOME");
     this.executablePath = GetExecutableFilePath();
     this.executableDir = (new FilePath(this.executablePath)).folder();
+    Environment.set("BINDIR", this.executableDir);
   }
 
   static ConfigLoader opCall(InfoManager infoMan)
@@ -93,12 +93,38 @@ class ConfigLoader : SettingsLoader
     return new ConfigLoader(infoMan);
   }
 
-  string expandVariables(string val)
+  static string expandVariables(string val)
   {
-     val = substitute(val, "${DATADIR}", dataDir);
-     val = substitute(val, "${HOME}", homePath);
-     val = substitute(val, "${BINDIR}", executableDir);
-     return val;
+    char[] makeString(char* begin, char* end)
+    {
+      assert(begin && end && begin <= end);
+      return begin[0 .. end - begin];
+    }
+
+    char[] result;
+    char* p = val.ptr, end = p + val.length;
+    char* pieceBegin = p; // Points to the piece of the string after a variable.
+
+    while (p+3 < end)
+    {
+      if (p[0] == '$' && p[1] == '{')
+      {
+        auto variableBegin = p;
+        while (p < end && *p != '}')
+          p++;
+        if (p == end)
+          break; // Don't expand unterminated variables.
+        result ~= makeString(pieceBegin, variableBegin);
+        variableBegin += 2; // Skip ${
+        // Get the environment variable and append it to the result.
+        result ~= Environment.get(makeString(variableBegin, p));
+        pieceBegin = p + 1; // Point to character after '}'.
+      }
+      p++;
+    }
+    if (pieceBegin < end)
+      result ~= makeString(pieceBegin, end);
+    return result;
   }
 
   void load()
@@ -126,11 +152,12 @@ class ConfigLoader : SettingsLoader
       this.dataDir = val.getString();
     this.dataDir = expandVariables(this.dataDir);
     GlobalSettings.dataDir = this.dataDir;
+    Environment.set("DATADIR", this.dataDir);
 
     if (auto array = getValue!(ArrayInitExpression)("VERSION_IDS"))
       foreach (value; array.values)
         if (auto val = castTo!(StringExpression)(value))
-          GlobalSettings.versionIds ~= val.getString();
+          GlobalSettings.versionIds ~= expandVariables(val.getString());
     if (auto val = getValue!(StringExpression)("LANG_FILE"))
       GlobalSettings.langFile = expandVariables(val.getString());
     if (auto array = getValue!(ArrayInitExpression)("IMPORT_PATHS"))
@@ -146,11 +173,11 @@ class ConfigLoader : SettingsLoader
     if (auto val = getValue!(StringExpression)("HTML_MAP"))
       GlobalSettings.htmlMapFile = expandVariables(val.getString());
     if (auto val = getValue!(StringExpression)("LEXER_ERROR"))
-      GlobalSettings.lexerErrorFormat = val.getString();
+      GlobalSettings.lexerErrorFormat = expandVariables(val.getString());
     if (auto val = getValue!(StringExpression)("PARSER_ERROR"))
-      GlobalSettings.parserErrorFormat = val.getString();
+      GlobalSettings.parserErrorFormat = expandVariables(val.getString());
     if (auto val = getValue!(StringExpression)("SEMANTIC_ERROR"))
-      GlobalSettings.semanticErrorFormat = val.getString();
+      GlobalSettings.semanticErrorFormat = expandVariables(val.getString());
 
     // Load language file.
     // TODO: create a separate class for this?

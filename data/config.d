@@ -2,18 +2,19 @@
 ///
 /// The file is searched for in the following order:
 /// $(OL
-///   $(LI The environment variable DILCONF.)
+///   $(LI The file path set in the environment variable DILCONF.)
 ///   $(LI The current working directory.)
 ///   $(LI The directory set in the environment variable HOME.)
 ///   $(LI The executable's directory.)
 /// )
-/// The program will fail with an error msg if the file couldn't be found.$(BR)
+/// The program will fail with an error msg if this file couldn't be found.$(BR)
 ///
-/// The following variables are expanded inside strings (only where paths are expected):
+/// Any environment variable used inside a string is expanded to its value.
+/// The variables BINDIR and DATADIR are set by dil. Examples:
 /// $(UL
-///   $(LI ${HOME} -> the home directory (e.g. /home/name or C:\Documents and Settings\name).)
-///   $(LI ${BINDIR} -> the absolute path to the directory of dil's executable (e.g. /home/name/dil/bin).)
-///   $(LI ${DATADIR} -> the data directory of dil (e.g. /home/user/dil/data or C:\dil\data).)
+///   $(LI ${HOME} -> the home directory (e.g. "/home/name" or "C:\Documents and Settings\name").)
+///   $(LI ${BINDIR} -> the absolute path to the directory of dil's executable (e.g. "/home/name/dil/bin" or "C:\dil\bin").)
+///   $(LI ${DATADIR} -> the data directory of dil (e.g. "/home/user/dil/data" or "C:\dil\data").)
 /// )
 module config;
 

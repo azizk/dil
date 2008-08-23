@@ -29,7 +29,7 @@ Type "dsss build".
 $ dsss build
 The executable of dil is put into the bin/ directory.
 $ ls bin/
-Output> config.d  data  dil
+Output> config.d  dil
 Run like this:
 (Linux)$ bin/dil
 (Windows)> bin\dil.exe

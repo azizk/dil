@@ -96,3 +96,5 @@ cp $DEST/data/html.css $HTMLSRC
 tar --owner root --group root -czf $DEST.tar.gz $DEST
 tar --owner root --group root --bzip2 -cf $DEST.tar.bz2 $DEST
 zip -q -9 -r $DEST.zip $DEST
+# Best compression provided by lzma algorithm.
+# 7zr a $DEST.7z $DEST
