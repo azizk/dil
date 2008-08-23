@@ -29,13 +29,13 @@ Type "dsss build".
 $ dsss build
 The executable of dil is put into the bin/ directory.
 $ ls bin/
-Output> config.d  dil
+Output> dilconf.d  dil
 Run like this:
 (Linux)$ bin/dil
 (Windows)> bin\dil.exe
 You should see the main help message printed in the console.
 
-The language of the compiler messages can be configured in config.d.
+The language of the compiler messages can be set in the configuration file.
 (Please, note that many messages are still untranslated.)
 
 Bugs And Patches

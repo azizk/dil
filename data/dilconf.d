@@ -14,9 +14,9 @@
 /// $(UL
 ///   $(LI ${HOME} -> the home directory (e.g. "/home/name" or "C:\Documents and Settings\name").)
 ///   $(LI ${BINDIR} -> the absolute path to the directory of dil's executable (e.g. "/home/name/dil/bin" or "C:\dil\bin").)
-///   $(LI ${DATADIR} -> the data directory of dil (e.g. "/home/user/dil/data" or "C:\dil\data").)
+///   $(LI ${DATADIR} -> the data directory of dil (e.g. "/home/name/dil/data" or "C:\dil\data").)
 /// )
-module config;
+module dilconf;
 
 /// Files needed by dil are located in this directory.
 var DATADIR = "${BINDIR}/../data/";

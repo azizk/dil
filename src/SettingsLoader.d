@@ -73,7 +73,7 @@ abstract class SettingsLoader
 /// Loads the configuration file of dil.
 class ConfigLoader : SettingsLoader
 {
-  static string configFileName = "config.d"; /// Name of the configuration file.
+  static string configFileName = "dilconf.d"; /// Name of the configuration file.
   string executablePath; /// Absolute path to dil's executable.
   string executableDir; /// Absolute path to the directory of dil's executable.
   string dataDir; /// Absolute path to dil's data directory.
@@ -129,7 +129,7 @@ class ConfigLoader : SettingsLoader
 
   void load()
   {
-    // Load the configuration file.
+    // Search for the configuration file.
     auto filePath = findConfigurationFilePath();
     if (filePath is null)
     {
@@ -137,6 +137,7 @@ class ConfigLoader : SettingsLoader
         "the configuration file "~configFileName~" could not be found.");
       return;
     }
+    // Load the file as a D module.
     mod = new Module(filePath, infoMan);
     mod.parse();
 

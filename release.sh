@@ -40,7 +40,7 @@ mkdir -p $DEST/{bin,doc/htmlsrc,src}
 
 # Create documentation.
 echo "***** Generating documentation *****"
-SRC_FILES2="data/config.d $SRC_FILES" # Include config.d in doc generation.
+SRC_FILES2="data/dilconf.d $SRC_FILES" # Include dilconf.d in doc generation.
 $DIL ddoc $DEST/doc/ -v data/macros_dil.ddoc -version=DDoc $SRC_FILES2
 
 echo "***** Generating syntax highlighted HTML files *****"
@@ -88,7 +88,7 @@ rm -rf $FRESH_REPOS
 hg archive -r tip -t files $FRESH_REPOS
 cp -r $FRESH_REPOS/* $DEST
 
-mv $DEST/data/config.d $DEST/bin/
+mv $DEST/data/dilconf.d $DEST/bin/
 cp $DEST/data/html.css $HTMLSRC
 
 # Build archives
