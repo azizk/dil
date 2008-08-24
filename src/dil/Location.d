@@ -14,6 +14,8 @@ final class Location
   size_t lineNum; /// The line number.
   char* lineBegin, to; /// Used to calculate the column.
 
+  static uint TAB_WIDTH = 4; /// The default width of the tabulator character.
+
   /// Forwards the parameters to the second constructor.
   this(char[] filePath, size_t lineNum)
   {
@@ -50,16 +52,19 @@ final class Location
     this.filePath = filePath;
   }
 
-  /// This is a primitive method to count the number of characters in a string.
+  /// Uses a simple method to count the number of characters in a string.
+  ///
   /// Note: Unicode compound characters and other special characters are not
-  /// taken into account. The tabulator character is counted as one.
-  uint calculateColumn()
+  /// taken into account.
+  /// Params:
+  ///   tabWidth = the width of the tabulator character.
+  uint calculateColumn(uint tabWidth = Location.TAB_WIDTH)
   {
     uint col;
     auto p = lineBegin;
     if (!p)
       return 0;
-    for (; p <= to; ++p)
+    for (; p <= to; p++)
     {
       assert(delegate ()
         {
@@ -76,8 +81,12 @@ final class Location
       // Skip this byte if it is a trail byte of a UTF-8 sequence.
       if (isTrailByte(*p))
         continue; // *p == 0b10xx_xxxx
+
       // Only count ASCII characters and the first byte of a UTF-8 sequence.
-      ++col;
+      if (*p == '\t')
+        col += tabWidth;
+      else
+        col++;
     }
     return col;
   }

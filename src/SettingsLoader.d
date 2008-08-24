@@ -53,17 +53,20 @@ abstract class SettingsLoader
       return error(t, "'{}' variable has no value set", name), T.init;
     T val = value.Is!(T); // Try casting to T.
     if (!val)
-      error(value.begin, "the value of '{}' is not of type {}", name, T.stringof);
+      error(value.begin, "the value of '{}' must be of type {}", name, T.stringof);
     return val;
   }
 
   T castTo(T)(Node n)
   {
-    char[] type;
-    is(T == StringExpression) && (type = "char[]");
-    if (!n.Is!(T))
-      error(n.begin, "expression is not of type {}", type);
-    return n.Is!(T);
+    if (auto result = n.Is!(T))
+      return result;
+    char[] type = T.stringof;
+    (is(T == StringExpression) && (type = "char[]").ptr) ||
+    (is(T == ArrayInitExpression) && (type = "[]").ptr) ||
+    (is(T == IntExpression) && (type = "int"));
+    error(n.begin, "expression is not of type {}", type);
+    return null;
   }
 
   void load()
@@ -179,6 +182,12 @@ class ConfigLoader : SettingsLoader
       GlobalSettings.parserErrorFormat = expandVariables(val.getString());
     if (auto val = getValue!(StringExpression)("SEMANTIC_ERROR"))
       GlobalSettings.semanticErrorFormat = expandVariables(val.getString());
+    if (auto val = getValue!(IntExpression)("TAB_WIDTH"))
+    {
+      GlobalSettings.tabWidth = val.number;
+      Location.TAB_WIDTH = val.number;
+    }
+
 
     // Load language file.
     // TODO: create a separate class for this?

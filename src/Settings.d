@@ -28,4 +28,5 @@ static:
   string lexerErrorFormat = "{0}({1},{2})L: {3}"; /// Lexer error.
   string parserErrorFormat = "{0}({1},{2})P: {3}"; /// Parser error.
   string semanticErrorFormat = "{0}({1},{2})S: {3}"; /// Semantic error.
+  uint tabWidth = 4; /// Tabulator character width.
 }

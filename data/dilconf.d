@@ -53,3 +53,8 @@ var HTML_MAP = "${DATADIR}/html_map.d";
 var LEXER_ERROR = "{0}({1},{2})L: {3}";
 var PARSER_ERROR = "{0}({1},{2})P: {3}"; /// ditto
 var SEMANTIC_ERROR = "{0}({1},{2})S: {3}"; /// ditto
+
+/// The width of the tabulator character set in your editor.
+///
+/// Important for calculating correct column numbers for compiler messages.
+var TAB_WIDTH = "";
