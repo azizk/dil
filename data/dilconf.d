@@ -57,4 +57,4 @@ var SEMANTIC_ERROR = "{0}({1},{2})S: {3}"; /// ditto
 /// The width of the tabulator character set in your editor.
 ///
 /// Important for calculating correct column numbers for compiler messages.
-var TAB_WIDTH = "";
+var TAB_WIDTH = 4;

@@ -19,7 +19,6 @@ import dil.semantic.Symbol,
        dil.semantic.Module,
        dil.semantic.Analysis;
 import dil.Compilation;
-import dil.Location;
 import dil.Information;
 import dil.Messages;
 import dil.Enums;

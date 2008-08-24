@@ -15,6 +15,7 @@ import dil.semantic.Module;
 import dil.semantic.Symbols;
 import dil.semantic.Pass1,
        dil.semantic.Pass2,
+       dil.semantic.Passes,
        dil.semantic.Interpreter;
 import dil.translator.German;
 import dil.doc.Doc;
