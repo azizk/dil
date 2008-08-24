@@ -14,6 +14,7 @@ import common;
 import tango.io.FilePath;
 import tango.io.FileSystem;
 import tango.io.model.IFile;
+import tango.util.PathUtil : pathNormalize = normalize;
 
 alias FileConst.PathSeparatorChar dirSep;
 
@@ -45,6 +46,8 @@ class ModuleManager
   Module loadModuleFile(string moduleFilePath)
   {
     auto absFilePath = FileSystem.toAbsolute(moduleFilePath);
+    // FIXME: normalize() doesn't simplify //. Handle the exception it throws.
+    absFilePath = pathNormalize(absFilePath); // Remove ./ /. ../ and /..
     if (auto existingModule = absFilePath in absFilePathTable)
       return *existingModule;
 
