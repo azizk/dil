@@ -200,7 +200,7 @@ static const char[][] g_classNames = [
   "ConstType", // D2.0
   "InvariantType", // D2.0
 
-  // Other:
+  // Parameters:
   "Parameter",
   "Parameters",
   "TemplateAliasParameter",

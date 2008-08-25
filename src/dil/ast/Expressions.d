@@ -667,6 +667,9 @@ class BoolExpression : Expression
   this()
   {
     mixin(set_kind);
+    // Some semantic computation here.
+    this.value = new IntExpression(e.toBool(), Types.Bool);
+    this.type = Types.Bool;
   }
 
   bool toBool()
@@ -691,6 +694,7 @@ class IntExpression : Expression
 
   this(Token* token)
   {
+    // Some semantic computation here.
     auto type = Types.Int; // Should be most common case.
     switch (token.kind)
     {
@@ -724,6 +728,7 @@ class RealExpression : Expression
 
   this(Token* token)
   {
+    // Some semantic computation here.
     auto type = Types.Double; // Most common case?
     switch (token.kind)
     {
@@ -766,21 +771,20 @@ class ComplexExpression : Expression
 class CharExpression : Expression
 {
   IntExpression value; // IntExpression of type Char/Wchar/Dchar.
-//  dchar character;
+//  dchar character; // Replaced by value.
   this(dchar character)
   {
     mixin(set_kind);
 //    this.character = character;
+    // Some semantic computation here.
     if(character <= 0xFF)
-      this.value = new IntExpression(character, Types.Char);
+      this.type = Types.Char;
     else if(character <= 0xFFFF)
-      this.value = new IntExpression(character, Types.Wchar);
+      this.type = Types.Wchar;
     else
-      this.value = new IntExpression(character, Types.Dchar);
+      this.type = Types.Dchar;
 
-    assert(this.value.type !is null);
-
-    this.type = this.value.type;
+    this.value = new IntExpression(character, this.type);
   }
   mixin(copyMethod);
 }
@@ -795,7 +799,7 @@ class StringExpression : Expression
     mixin(set_kind);
     this.str = str;
     this.charType = charType;
-    type = new TypeSArray(charType, str.length);
+    this.type = new TypeSArray(charType, str.length);
   }
 
   this(char[] str)

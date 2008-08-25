@@ -811,6 +811,12 @@ override
 
   E visit(CommaExpression e)
   {
+    if (!e.hasType)
+    {
+      e.lhs = visitE(e.lhs);
+      e.rhs = visitE(e.rhs);
+      e.type = e.rhs.type;
+    }
     return e;
   }
 
@@ -1061,7 +1067,21 @@ override
 
   E visit(SpecialTokenExpression e)
   {
-    return e;
+    if (e.hasType)
+      return e.value;
+    switch (e.specialToken.kind)
+    {
+    case TOK.LINE, TOK.VERSION:
+      e.value = new IntExpression(e.specialToken.uint_, Types.Uint);
+      break;
+    case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
+      e.value = new StringExpression(e.specialToken.str);
+      break;
+    default:
+      assert(0);
+    }
+    e.type = e.value.type;
+    return e.value;
   }
 
   E visit(DotExpression e)
@@ -1086,41 +1106,66 @@ override
 
   E visit(NullExpression e)
   {
+    if (!e.hasType)
+      e.type = Types.Void_ptr;
     return e;
   }
 
   E visit(DollarExpression e)
   {
+    if (e.hasType)
+      return e;
+    e.type = Types.Size_t;
+    // if (!inArraySubscript)
+    //   error("$ can only be in an array subscript.");
     return e;
   }
 
   E visit(BoolExpression e)
   {
-    return e;
+    assert(e.hasType);
+    return e.value;
   }
 
   E visit(IntExpression e)
   {
+    if (e.hasType)
+      return e;
+
+    if (e.number & 0x8000_0000_0000_0000)
+      e.type = Types.Ulong; // 0xFFFF_FFFF_FFFF_FFFF
+    else if (e.number & 0xFFFF_FFFF_0000_0000)
+      e.type = Types.Long; // 0x7FFF_FFFF_FFFF_FFFF
+    else if (e.number & 0x8000_0000)
+      e.type = Types.Uint; // 0xFFFF_FFFF
+    else
+      e.type = Types.Int; // 0x7FFF_FFFF
     return e;
   }
 
   E visit(RealExpression e)
   {
+    if (!e.hasType)
+      e.type = Types.Double;
     return e;
   }
 
   E visit(ComplexExpression e)
   {
+    if (!e.hasType)
+      e.type = Types.Cdouble;
     return e;
   }
 
   E visit(CharExpression e)
   {
-    return e;
+    assert(e.hasType);
+    return e.value;
   }
 
   E visit(StringExpression e)
   {
+    assert(e.hasType);
     return e;
   }
 
@@ -1171,6 +1216,11 @@ override
 
   E visit(ParenExpression e)
   {
+    if (!e.hasType)
+    {
+      e.next = visitE(e.next);
+      e.type = e.next.type;
+    }
     return e;
   }
 
