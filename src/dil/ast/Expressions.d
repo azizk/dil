@@ -668,7 +668,7 @@ class BoolExpression : Expression
   {
     mixin(set_kind);
     // Some semantic computation here.
-    this.value = new IntExpression(e.toBool(), Types.Bool);
+    this.value = new IntExpression(toBool(), Types.Bool);
     this.type = Types.Bool;
   }
 
