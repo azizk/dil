@@ -4,98 +4,122 @@
 +/
 module dil.lexer.IdentsGenerator;
 
-struct StrPair
+/// Table of predefined identifiers.
+///
+/// The format ('#' start comments):
+///<pre>
+///  PredefinedIdentifier := SourceCodeName (":" IdText)?
+///  SourceCodeName := Identifier # The name to be used in the source code.
+///  IdText := "" | Identifier # The actual text of the identifier.
+///  Identifier := see module dil.lexer.Identifier
+///</pre>
+/// If IdText is not defined SourceCodeName will be used.
+private static const char[][] predefIdents = [
+  // Special empty identifier:
+  "Empty:",
+  // Predefined version identifiers:
+  "DigitalMars", "X86", "X86_64",
+  /*"Windows", */"Win32", "Win64",
+  "Linux:linux", "LittleEndian", "BigEndian",
+  "D_Coverage", "D_InlineAsm_X86", "D_Version2",
+  "none", "all",
+  // Variadic parameters:
+  "Arguments:_arguments", "Argptr:_argptr",
+  // scope(Identifier):
+  "exit", "success", "failure",
+  // pragma:
+  "msg", "lib", "startaddress",
+  // Linkage:
+  "C", "D", "Windows", "Pascal", "System",
+  // Con-/Destructor:
+  "Ctor:__ctor", "Dtor:__dtor",
+  // new() and delete() methods.
+  "New:__new", "Delete:__delete",
+  // Unittest and invariant.
+  "Unittest:__unittest", "Invariant:__invariant",
+  // Operator methods:
+  "opNeg",
+  "opPos",
+  "opComp",
+  "opAddAssign",
+  "opSubAssign",
+  "opPostInc",
+  "opPostDec",
+  "opCall",
+  "opCast",
+  "opIndex",
+  "opSlice",
+  // ASM identifiers:
+  "near", "far", "word", "dword", "qword",
+  "ptr", "offset", "seg", "__LOCAL_SIZE",
+  "FS", "ST",
+  "AL", "AH", "AX", "EAX",
+  "BL", "BH", "BX", "EBX",
+  "CL", "CH", "CX", "ECX",
+  "DL", "DH", "DX", "EDX",
+  "BP", "EBP", "SP", "ESP",
+  "DI", "EDI", "SI", "ESI",
+  "ES", "CS", "SS", "DS", "GS",
+  "CR0", "CR2", "CR3", "CR4",
+  "DR0", "DR1", "DR2", "DR3", "DR6", "DR7",
+  "TR3", "TR4", "TR5", "TR6", "TR7",
+  "MM0", "MM1", "MM2", "MM3",
+  "MM4", "MM5", "MM6", "MM7",
+  "XMM0", "XMM1", "XMM2", "XMM3",
+  "XMM4", "XMM5", "XMM6", "XMM7",
+];
+
+char[][] getPair(char[] idText)
 {
-const:
-  char[] str;   /// Identifier string in code.
-  char[] idStr; /// In table.
+  foreach (i, c; idText)
+    if (c == ':')
+      return [idText[0..i], idText[i+1..idText.length]];
+  return [idText, idText];
 }
 
-/// Table of predefined identifiers.
-static const StrPair[] identPairs = [
-  // Predefined version identifiers:
-  {"DigitalMars"}, {"X86"}, {"X86_64"},
-  /*{"Windows"}, */{"Win32"}, {"Win64"},
-  {"linux"}, {"LittleEndian"}, {"BigEndian"},
-  {"D_Coverage"}, {"D_InlineAsm_X86"}, {"D_Version2"},
-  {"none"}, {"all"},
-  // Variadic parameters:
-  {"_arguments"}, {"_argptr"},
-  // scope:
-  {"exit"}, {"success"}, {"failure"},
-  // pragma:
-  {"msg"}, {"lib"}, {"startaddress"},
-  // Linkage:
-  {"C"}, {"D"}, {"Windows"}, {"Pascal"}, {"System"},
-  // Con-/Destructor:
-  {"__ctor"}, {"__dtor"},
-  // new() and delete() methods.
-  {"__new"}, {"__delete"},
-  // Unittest and invariant.
-  {"__unittest"}, {"__invariant"},
-  // Operator methods:
-  {"opNeg"},
-  {"opPos"},
-  {"opComp"},
-  {"opAddAssign"},
-  {"opSubAssign"},
-  {"opPostInc"},
-  {"opPostDec"},
-  {"opCall"},
-  {"opCast"},
-  {"opIndex"},
-  {"opSlice"},
-  // ASM identifiers:
-  {"near"}, {"far"}, {"word"}, {"dword"}, {"qword"},
-  {"ptr"}, {"offset"}, {"seg"}, {"__LOCAL_SIZE"},
-  {"FS"}, {"ST"},
-  {"AL"}, {"AH"}, {"AX"}, {"EAX"},
-  {"BL"}, {"BH"}, {"BX"}, {"EBX"},
-  {"CL"}, {"CH"}, {"CX"}, {"ECX"},
-  {"DL"}, {"DH"}, {"DX"}, {"EDX"},
-  {"BP"}, {"EBP"}, {"SP"}, {"ESP"},
-  {"DI"}, {"EDI"}, {"SI"}, {"ESI"},
-  {"ES"}, {"CS"}, {"SS"}, {"DS"}, {"GS"},
-  {"CR0"}, {"CR2"}, {"CR3"}, {"CR4"},
-  {"DR0"}, {"DR1"}, {"DR2"}, {"DR3"}, {"DR6"}, {"DR7"},
-  {"TR3"}, {"TR4"}, {"TR5"}, {"TR6"}, {"TR7"},
-  {"MM0"}, {"MM1"}, {"MM2"}, {"MM3"},
-  {"MM4"}, {"MM5"}, {"MM6"}, {"MM7"},
-  {"XMM0"}, {"XMM1"}, {"XMM2"}, {"XMM3"},
-  {"XMM4"}, {"XMM5"}, {"XMM6"}, {"XMM7"},
-];
+unittest
+{
+  static assert(
+    getPair("test") == ["test", "test"] &&
+    getPair("test:tset") == ["test", "tset"] &&
+    getPair("empty:") == ["empty", ""]
+  );
+}
 
 /++
  CTF for generating the members of the struct Ident.
 
- The resulting string looks like this:
+ The resulting string looks similar to this:
  ---
   private struct Ids {static const:
-    Identifier _str = {"str", TOK.Identifier, IDK.str};
-    // more ...
+    Identifier _name1 = {"name1", TOK.Identifier, IDK.name1};
+    Identifier _name2 = {"name2", TOK.Identifier, IDK.name2};
+    // etc.
   }
-  Identifier* str = &Ids._str;
-  // more ...
+  Identifier* name1 = &Ids._name1;
+  Identifier* name2 = &Ids._name2;
+  // etc.
   private Identifier*[] __allIds = [
-    str,
-    // more ...
+    name1,
+    name2,
+    // etc.
   ]
  ---
 +/
 char[] generateIdentMembers()
 {
   char[] private_members = "private struct Ids {static const:";
-
   char[] public_members = "";
   char[] array = "private Identifier*[] __allIds = [";
-  foreach (pair; identPairs)
+
+  foreach (ident; predefIdents)
   {
-    // N.B.: Compiler cries for some reason when trying to access pair.idStr.
-    // Identifier _str = {"str", TOK.Identifier, ID.str};
-    private_members ~= "Identifier _"~pair.str~` = {"`~pair.str~`", TOK.Identifier, IDK.`~pair.str~"};\n";
-    // Identifier* str = &_str;
-    public_members ~= "Identifier* "~pair.str~" = &Ids._"~pair.str~";\n";
-    array ~= pair.str~",";
+    char[][] pair = getPair(ident);
+    // Identifier _name = {"name", TOK.Identifier, ID.name};
+    private_members ~= "Identifier _"~pair[0]~` = {"`~pair[1]~`", TOK.Identifier, IDK.`~pair[0]~"};\n";
+    // Identifier* name = &_name;
+    public_members ~= "Identifier* "~pair[0]~" = &Ids._"~pair[0]~";\n";
+    array ~= pair[0]~",";
   }
 
   private_members ~= "}"; // Close private {
@@ -108,8 +132,8 @@ char[] generateIdentMembers()
 char[] generateIDMembers()
 {
   char[] members;
-  foreach (pair; identPairs)
-    members ~= pair.str ~ ",\n";
+  foreach (ident; predefIdents)
+    members ~= getPair(ident)[0] ~ ",\n";
   return members;
 }
 

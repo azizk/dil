@@ -580,25 +580,18 @@ class ModuleScopeExpression : UnaryExpression
 
 class IdentifierExpression : Expression
 {
-  Identifier* identifier;
-  this(Identifier* identifier)
+  Identifier* ident;
+  this(Identifier* ident)
   {
     mixin(set_kind);
-    this.identifier = identifier;
+    this.ident = ident;
   }
-  mixin(copyMethod);
-}
 
-class SpecialTokenExpression : Expression
-{
-  Token* specialToken;
-  this(Token* specialToken)
+  Token* idToken()
   {
-    mixin(set_kind);
-    this.specialToken = specialToken;
+    assert(begin !is null);
+    return begin;
   }
-
-  Expression value; /// The expression created in the semantic phase.
 
   mixin(copyMethod);
 }
@@ -614,6 +607,27 @@ class TemplateInstanceExpression : Expression
     this.ident = ident;
     this.targs = targs;
   }
+
+  Token* idToken()
+  {
+    assert(begin !is null);
+    return begin;
+  }
+
+  mixin(copyMethod);
+}
+
+class SpecialTokenExpression : Expression
+{
+  Token* specialToken;
+  this(Token* specialToken)
+  {
+    mixin(set_kind);
+    this.specialToken = specialToken;
+  }
+
+  Expression value; /// The expression created in the semantic phase.
+
   mixin(copyMethod);
 }
 

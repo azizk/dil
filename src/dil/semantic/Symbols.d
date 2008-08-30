@@ -19,9 +19,16 @@ class ScopeSymbol : Symbol
   SymbolTable symbolTable; /// The symbol table.
   Symbol[] members; /// The member symbols (in lexical order.)
 
+  /// Constructs a ScopeSymbol object.
   this(SYM sid, Identifier* name, Node node)
   {
     super(sid, name, node);
+  }
+
+  /// Constructs a ScopeSymbol object with the SYM.Scope ID.
+  this(Identifier* name = Ident.Empty, Node node = null)
+  {
+    super(SYM.Scope, name, node);
   }
 
   /// Look up name in the table.

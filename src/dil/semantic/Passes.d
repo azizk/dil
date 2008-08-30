@@ -138,6 +138,66 @@ abstract class SemanticPass : DefaultVisitor
     error(s1.node.begin, MSG.DeclConflictsWithDecl, name.str, locString);
   }
 
+  /// Error messages are reported for undefined identifiers if true.
+  bool reportUndefinedIds;
+
+  /// Incremented when an undefined identifier was found.
+  uint undefinedIdsCount;
+
+  /// The symbol that must be ignored an skipped during a symbol search.
+  Symbol ignoreSymbol;
+
+  /// The current scope symbol to use for looking up identifiers.
+  /// E.g.:
+  /// ---
+  /// object.method(); // *) object is looked up in the current scope.
+  ///                  // *) idScope is set if object is a ScopeSymbol.
+  ///                  // *) method will be looked up in idScope.
+  /// dil.ast.Node.Node node; // A fully qualified type.
+  /// ---
+  ScopeSymbol idScope;
+
+  /// This object is assigned to idScope when a symbol lookup
+  /// returned no valid symbol.
+  static const ScopeSymbol emptyIdScope;
+  static this()
+  {
+    this.emptyIdScope = new ScopeSymbol();
+  }
+
+  // Sets a new idScope symbol.
+  void setIdScope(Symbol symbol)
+  {
+    if (symbol)
+      if (auto scopSymbol = cast(ScopeSymbol)symbol)
+        return idScope = scopSymbol;
+    idScope = emptyIdScope;
+  }
+
+  /// Searches for a symbol.
+  Symbol search(Token* idTok)
+  {
+    assert(idTok.kind == TOK.Identifier);
+    auto id = idTok.ident;
+    Symbol symbol;
+
+    if (idScope is null)
+      // Search in the table of another symbol.
+      symbol = ignoreSymbol ?
+               scop.search(id, ignoreSymbol) :
+               scop.search(id);
+    else
+      symbol = idScope.lookup(id);
+
+    if (symbol)
+      return symbol;
+
+    if (reportUndefinedIds)
+      error(idTok, MSG.UndefinedIdentifier, id.str);
+    undefinedIdsCount++;
+    return null;
+  }
+
   /// Creates an error report.
   void error(Token* token, char[] formatMsg, ...)
   {
@@ -343,28 +403,28 @@ override
 
   D visit(ConstructorDeclaration d)
   {
-    auto func = new Function(Ident.__ctor, d);
+    auto func = new Function(Ident.Ctor, d);
     insertOverload(func);
     return d;
   }
 
   D visit(StaticConstructorDeclaration d)
   {
-    auto func = new Function(Ident.__ctor, d);
+    auto func = new Function(Ident.Ctor, d);
     insertOverload(func);
     return d;
   }
 
   D visit(DestructorDeclaration d)
   {
-    auto func = new Function(Ident.__dtor, d);
+    auto func = new Function(Ident.Dtor, d);
     insertOverload(func);
     return d;
   }
 
   D visit(StaticDestructorDeclaration d)
   {
-    auto func = new Function(Ident.__dtor, d);
+    auto func = new Function(Ident.Dtor, d);
     insertOverload(func);
     return d;
   }
@@ -395,14 +455,14 @@ override
 
   D visit(InvariantDeclaration d)
   {
-    auto func = new Function(Ident.__invariant, d);
+    auto func = new Function(Ident.Invariant, d);
     insert(func);
     return d;
   }
 
   D visit(UnittestDeclaration d)
   {
-    auto func = new Function(Ident.__unittest, d);
+    auto func = new Function(Ident.Unittest, d);
     insertOverload(func);
     return d;
   }
@@ -464,14 +524,14 @@ override
 
   D visit(NewDeclaration d)
   {
-    auto func = new Function(Ident.__new, d);
+    auto func = new Function(Ident.New, d);
     insert(func);
     return d;
   }
 
   D visit(DeleteDeclaration d)
   {
-    auto func = new Function(Ident.__delete, d);
+    auto func = new Function(Ident.Delete, d);
     insert(func);
     return d;
   }
@@ -1055,13 +1115,41 @@ override
     return e;
   }
 
+  E visit(DotExpression e)
+  {
+    if (e.hasType)
+      return e;
+    bool resetIdScope = idScope is null;
+    // TODO:
+    resetIdScope && (idScope = null);
+    return e;
+  }
+
   E visit(ModuleScopeExpression e)
   {
+    if (e.hasType)
+      return e;
+    bool resetIdScope = idScope is null;
+    idScope = modul;
+    e.e = visitE(e.e);
+    e.type = e.e.type;
+    resetIdScope && (idScope = null);
     return e;
   }
 
   E visit(IdentifierExpression e)
   {
+    debug(sema) Stdout.formatln("", e);
+    auto idToken = e.idToken();
+    e.symbol = search(idToken);
+    return e;
+  }
+
+  E visit(TemplateInstanceExpression e)
+  {
+    debug(sema) Stdout.formatln("", e);
+    auto idToken = e.idToken();
+    e.symbol = search(idToken);
     return e;
   }
 
@@ -1082,16 +1170,6 @@ override
     }
     e.type = e.value.type;
     return e.value;
-  }
-
-  E visit(DotExpression e)
-  {
-    return e;
-  }
-
-  E visit(TemplateInstanceExpression e)
-  {
-    return e;
   }
 
   E visit(ThisExpression e)
@@ -1289,36 +1367,6 @@ override
   |                                   Types                                   |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
-  /// The current scope symbol to use for looking up identifiers.
-  /// E.g.:
-  /// ---
-  /// object.method(); // *) object is looked up in the current scope.
-  ///                  // *) idScope is set if object is a ScopeSymbol.
-  ///                  // *) method will be looked up in idScope.
-  /// dil.ast.Node.Node node; // A fully qualified type.
-  /// ---
-  ScopeSymbol idScope;
-
-  /// Searches for a symbol.
-  Symbol search(Token* idTok)
-  {
-    assert(idTok.kind == TOK.Identifier);
-    auto id = idTok.ident;
-    Symbol symbol;
-
-    if (idScope is null)
-      symbol = scop.search(id);
-    else
-      symbol = idScope.lookup(id);
-
-    if (symbol is null)
-      error(idTok, MSG.UndefinedIdentifier, id.str);
-    else if (auto scopSymbol = cast(ScopeSymbol)symbol)
-      idScope = scopSymbol;
-
-    return symbol;
-  }
-
 override
 {
   T visit(IllegalType)
@@ -1343,11 +1391,20 @@ override
 
   T visit(QualifiedType t)
   {
-    if (t.lhs.Is!(QualifiedType) is null)
-      idScope = null; // Reset at left-most type.
+    // Reset idScope at the end if this the root QualifiedType.
+    bool resetIdScope = idScope is null;
+//     if (t.lhs.Is!(QualifiedType) is null)
+//       idScope = null; // Reset at left-most type.
     visitT(t.lhs);
+    // Assign the symbol of the left-hand side to idScope.
+    setIdScope(t.lhs.symbol);
     visitT(t.rhs);
+//     setIdScope(t.rhs.symbol);
+    // Assign members of the right-hand side to this type.
     t.type = t.rhs.type;
+    t.symbol = t.rhs.symbol;
+    // Reset idScope.
+    resetIdScope && (idScope = null);
     return t;
   }
 

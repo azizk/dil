@@ -347,28 +347,28 @@ override
 
   D visit(ConstructorDeclaration d)
   {
-    auto func = new Function(Ident.__ctor, d);
+    auto func = new Function(Ident.Ctor, d);
     insertOverload(func);
     return d;
   }
 
   D visit(StaticConstructorDeclaration d)
   {
-    auto func = new Function(Ident.__ctor, d);
+    auto func = new Function(Ident.Ctor, d);
     insertOverload(func);
     return d;
   }
 
   D visit(DestructorDeclaration d)
   {
-    auto func = new Function(Ident.__dtor, d);
+    auto func = new Function(Ident.Dtor, d);
     insertOverload(func);
     return d;
   }
 
   D visit(StaticDestructorDeclaration d)
   {
-    auto func = new Function(Ident.__dtor, d);
+    auto func = new Function(Ident.Dtor, d);
     insertOverload(func);
     return d;
   }
@@ -399,14 +399,14 @@ override
 
   D visit(InvariantDeclaration d)
   {
-    auto func = new Function(Ident.__invariant, d);
+    auto func = new Function(Ident.Invariant, d);
     insert(func);
     return d;
   }
 
   D visit(UnittestDeclaration d)
   {
-    auto func = new Function(Ident.__unittest, d);
+    auto func = new Function(Ident.Unittest, d);
     insertOverload(func);
     return d;
   }
@@ -468,14 +468,14 @@ override
 
   D visit(NewDeclaration d)
   {
-    auto func = new Function(Ident.__new, d);
+    auto func = new Function(Ident.New, d);
     insert(func);
     return d;
   }
 
   D visit(DeleteDeclaration d)
   {
-    auto func = new Function(Ident.__delete, d);
+    auto func = new Function(Ident.Delete, d);
     insert(func);
     return d;
   }

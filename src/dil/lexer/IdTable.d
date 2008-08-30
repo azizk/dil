@@ -20,6 +20,7 @@ struct Ident
     mixin(generateIdentMembers());
   }
 
+  /// Returns an array of all predefined identifiers.
   static Identifier*[] allIds()
   {
     return __allIds;

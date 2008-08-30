@@ -24,6 +24,7 @@ enum SYM
   Function,
   Alias,
   OverloadSet,
+  Scope,
 //   Type,
 }
 
@@ -91,6 +92,7 @@ class Symbol
   mixin(isX!("Function"));
   mixin(isX!("Alias"));
   mixin(isX!("OverloadSet"));
+  mixin(isX!("Scope"));
 //   mixin(isX!("Type"));
 
   /// Casts the symbol to Class.

@@ -45,6 +45,22 @@ class Scope
     return symbol;
   }
 
+  /// Searches for a symbol in this scope and all enclosing scopes.
+  /// Params:
+  ///   name = the name of the symbol.
+  ///   ignoreSymbol = the symbol that must be skipped.
+  Symbol search(Identifier* name, Symbol ignoreSymbol)
+  {
+    Symbol symbol;
+    for (auto sc = this; sc; sc = sc.parent)
+    {
+      symbol = sc.lookup(name);
+      if (symbol !is null && symbol !is ignoreSymbol)
+        break;
+    }
+    return symbol;
+  }
+
   /// Create a new inner scope and return that.
   Scope enter(ScopeSymbol symbol)
   {
