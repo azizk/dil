@@ -92,7 +92,7 @@ T copyNode(T)(T node)
                is(D == UnittestDeclaration))
       mixin(doCopy("funcBody"));
     static if (is(D == FunctionDeclaration))
-      mixin(doCopy(["returnType", "params", "funcBody"]));
+      mixin(doCopy(["returnType?", "params", "funcBody"]));
     static if (is(D == VariablesDeclaration))
     {
       mixin(doCopy("typeNode?"));

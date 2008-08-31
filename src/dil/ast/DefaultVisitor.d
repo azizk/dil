@@ -63,7 +63,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
                is(D == UnittestDeclaration))
       visitS(d.funcBody);
     static if (is(D == FunctionDeclaration))
-      visitT(d.returnType),
+      d.returnType && visitT(d.returnType),
 //       visitN(d.tparams),
       visitN(d.params),
       visitS(d.funcBody);

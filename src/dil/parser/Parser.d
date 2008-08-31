@@ -124,6 +124,13 @@ class Parser
     return result;
   }
 
+  /// Causes the current call to try_() to fail.
+  void try_fail()
+  {
+    assert(trying);
+    errorCount++;
+  }
+
   /// Sets the begin and end tokens of a syntax tree node.
   Class set(Class)(Class node, Token* begin)
   {
@@ -469,80 +476,96 @@ class Parser
     Identifier* name;
 
     // Check for AutoDeclaration: StorageClasses Identifier =
-    if (testAutoDeclaration &&
-        token.kind == T.Identifier &&
-        peekNext() == T.Assign)
+    if (testAutoDeclaration && token.kind == T.Identifier)
     {
-      name = token.ident;
-      skip(T.Identifier);
+      auto kind = peekNext();
+      if (kind == T.Assign)
+      { // Auto variable declaration.
+        name = token.ident;
+        skip(T.Identifier);
+        goto LparseVariables;
+      }
+      else version(D2) if (kind == T.LParen)
+      { // Check for auto return type template function.
+        // StorageClasses Name ( TemplateParameterList ) ( ParameterList )
+        name = token.ident;
+        auto next = token;
+        peekAfter(next);
+        if (tokenAfterParenIs(T.LParen, next))
+        {
+          skip(T.Identifier);
+          assert(token.kind == T.LParen);
+          goto LparseTPList; // Continue with parsing a template function.
+        }
+      }
+    }
+
+    type = parseType(); // VariableType or ReturnType
+
+    if (token.kind == T.LParen)
+    { // C-style function pointers make the grammar ambiguous.
+      // We have to treat them specially at function scope.
+      // Example:
+      //   void foo() {
+      //     // A pointer to a function taking an integer and returning 'some_type'.
+      //     some_type (*p_func)(int);
+      //     // In the following case precedence is given to a CallExpression.
+      //     something(*p); // 'something' may be a function/method or an object having opCall overloaded.
+      //   }
+      //   // A pointer to a function taking no parameters and returning 'something'.
+      //   something(*p);
+      type = parseCFunctionPointerType(type, name, optionalParameterList);
+    }
+    else if (peekNext() == T.LParen)
+    { // Type FunctionName ( ParameterList ) FunctionBody
+      name = requireIdentifier(MSG.ExpectedFunctionName);
+      name || nT(); // Skip non-identifier token.
+      assert(token.kind == T.LParen);
+      // It's a function declaration
+      TemplateParameters tparams;
+      if (tokenAfterParenIs(T.LParen))
+      LparseTPList:
+        // ( TemplateParameterList ) ( ParameterList )
+        tparams = parseTemplateParameterList();
+
+      auto params = parseParameterList();
+    version(D2)
+    {
+      switch (token.kind)
+      {
+      case T.Const:
+        stc |= StorageClass.Const;
+        nT();
+        break;
+      case T.Invariant:
+        stc |= StorageClass.Invariant;
+        nT();
+        break;
+      default:
+      }
+    }
+      // ReturnType FunctionName ( ParameterList )
+      auto funcBody = parseFunctionBody();
+      auto fd = new FunctionDeclaration(type, name,/+ tparams,+/ params, funcBody);
+      fd.setStorageClass(stc);
+      fd.setLinkageType(linkType);
+      fd.setProtection(protection);
+      if (tparams)
+      {
+        auto d = putInsideTemplateDeclaration(begin, name, fd, tparams);
+        d.setStorageClass(stc);
+        d.setProtection(protection);
+        return set(d, begin);
+      }
+      return set(fd, begin);
     }
     else
-    {
-      type = parseType(); // VariableType or ReturnType
-      if (token.kind == T.LParen)
-      {
-        // C-style function pointers make the grammar ambiguous.
-        // We have to treat them specially at function scope.
-        // Example:
-        //   void foo() {
-        //     // A pointer to a function taking an integer and returning 'some_type'.
-        //     some_type (*p_func)(int);
-        //     // In the following case precedence is given to a CallExpression.
-        //     something(*p); // 'something' may be a function/method or an object having opCall overloaded.
-        //   }
-        //   // A pointer to a function taking no parameters and returning 'something'.
-        //   something(*p);
-        type = parseCFunctionPointerType(type, name, optionalParameterList);
-      }
-      else if (peekNext() == T.LParen)
-      { // Type FunctionName ( ParameterList ) FunctionBody
-        name = requireIdentifier(MSG.ExpectedFunctionName);
-        name || nT(); // Skip non-identifier token.
-        assert(token.kind == T.LParen);
-        // It's a function declaration
-        TemplateParameters tparams;
-        if (tokenAfterParenIs(T.LParen))
-          // ( TemplateParameterList ) ( ParameterList )
-          tparams = parseTemplateParameterList();
-
-        auto params = parseParameterList();
-      version(D2)
-      {
-        switch (token.kind)
-        {
-        case T.Const:
-          stc |= StorageClass.Const;
-          nT();
-          break;
-        case T.Invariant:
-          stc |= StorageClass.Invariant;
-          nT();
-          break;
-        default:
-        }
-      }
-        // ReturnType FunctionName ( ParameterList )
-        auto funcBody = parseFunctionBody();
-        auto fd = new FunctionDeclaration(type, name,/+ tparams,+/ params, funcBody);
-        fd.setStorageClass(stc);
-        fd.setLinkageType(linkType);
-        fd.setProtection(protection);
-        if (tparams)
-        {
-          auto d = putInsideTemplateDeclaration(begin, name, fd, tparams);
-          d.setStorageClass(stc);
-          d.setProtection(protection);
-          return set(d, begin);
-        }
-        return set(fd, begin);
-      }
-      else
-      { // Type VariableName DeclaratorSuffix
-        name = requireIdentifier(MSG.ExpectedVariableName);
-        type = parseDeclaratorSuffix(type);
-      }
+    { // Type VariableName DeclaratorSuffix
+      name = requireIdentifier(MSG.ExpectedVariableName);
+      type = parseDeclaratorSuffix(type);
     }
 
+  LparseVariables:
     // It's a variables declaration.
     Identifier*[] names = [name]; // One identifier has been parsed already.
     Expression[] values;
@@ -1058,10 +1081,7 @@ version(D2)
           // Type Identifier = AssignExpression
           type = parseType(); // Set outer type variable.
           if (token.kind != T.Identifier)
-          {
-            errorCount++; // Cause try_() to fail.
-            type = null;
-          }
+            try_fail(), (type = null);
           return null;
         }, success);
       }
@@ -1879,7 +1899,7 @@ version(D2)
         nT();
         decl = new StorageClassDeclaration(stc_tmp, parse());
         break;
-      case T.Class, T.Interface, T.Struct, T.Union:
+      case T.Class, T.Interface, T.Struct, T.Union, T.Alias, T.Typedef:
         decl = parseDeclarationDefinition();
         decl.setProtection(Protection.None);
         decl.setStorageClass(StorageClass.None);
@@ -3617,38 +3637,45 @@ version(D2)
   }
 
   /// Returns true if the token after the closing parenthesis
-  /// is of kind tok.
-  bool tokenAfterParenIs(TOK tok)
+  /// matches the searched kind.
+  bool tokenAfterParenIs(TOK kind)
   {
-    // We count nested parentheses tokens because template types
-    // may appear inside parameter lists. E.g.: (int x, Foo!(int) y)
     assert(token.kind == T.LParen);
-    Token* next = token;
+    auto next = token;
+    return skipParens(next) == kind;
+  }
+
+  /// ditto
+  bool tokenAfterParenIs(TOK kind, ref Token* next)
+  {
+    assert(next !is null && next.kind == T.LParen);
+    return skipParens(next) == kind;
+  }
+
+  /// Skips to the token behind the closing parenthesis.
+  /// Takes nested parentheses into account.
+  TOK skipParens(ref Token* next)
+  {
+    assert(next !is null && next.kind == T.LParen);
+    // We count nested parentheses tokens because template types, typeof etc.
+    // may appear inside parameter lists. E.g.: (int x, Foo!(int) y)
     uint level = 1;
   Loop:
     while (1)
-    {
-      lexer.peek(next);
-      switch (next.kind)
+      switch (peekAfter(next))
       {
-      case T.RParen:
-        if (--level == 0)
-        { // Last, closing parentheses found.
-          do
-            lexer.peek(next);
-          while (next.isWhitespace)
-          break Loop;
-        }
-        break;
       case T.LParen:
         ++level;
         break;
+      case T.RParen:
+        if (--level == 0)
+          return peekAfter(next); // Closing parenthesis found.
+        break;
       case T.EOF:
-        break Loop;
+        return T.EOF;
       default:
       }
-    }
-    return next.kind == tok;
+    assert(0, "should be unreachable");
   }
 
   /// Parse the array types after the declarator (C-style.) E.g.: int a[]
@@ -3954,7 +3981,7 @@ version(D2)
         auto type = parseType();
         if (token.kind == T.Comma || token.kind == T.RParen)
           return type;
-        errorCount++; // Cause try_() to fail.
+        try_fail();
         return null;
       }
       bool success;
@@ -4208,7 +4235,7 @@ version(D2)
   {
     if (trying)
     {
-      ++errorCount;
+      errorCount++;
       return;
     }
     auto location = token.getErrorLocation();

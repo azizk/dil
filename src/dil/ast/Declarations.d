@@ -409,7 +409,7 @@ class FunctionDeclaration : Declaration
   {
     super.hasBody = funcBody.funcBody !is null;
     mixin(set_kind);
-    addChild(returnType);
+    addOptChild(returnType);
 //     addChild(tparams);
     addChild(params);
     addChild(funcBody);
