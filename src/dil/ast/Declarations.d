@@ -198,6 +198,7 @@ class EnumDeclaration : Declaration
 
 class EnumMemberDeclaration : Declaration
 {
+  TypeNode type; // D 2.0
   Identifier* name;
   Expression value;
   this(Identifier* name, Expression value)
@@ -207,6 +208,14 @@ class EnumMemberDeclaration : Declaration
 
     this.name = name;
     this.value = value;
+  }
+
+  // D 2.0
+  this(TypeNode type, Identifier* name, Expression value)
+  {
+    addOptChild(type);
+    this.type = type;
+    this(name, value);
   }
 
   EnumMember symbol;

@@ -49,6 +49,9 @@ private static const char[][] predefIdents = [
   "opCast",
   "opIndex",
   "opSlice",
+  "opStar", // D2
+  // Entry function:
+  "main",
   // ASM identifiers:
   "near", "far", "word", "dword", "qword",
   "ptr", "offset", "seg", "__LOCAL_SIZE",

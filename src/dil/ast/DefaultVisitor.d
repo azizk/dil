@@ -42,6 +42,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
         visitD(member);
     }
     static if (is(D == EnumMemberDeclaration))
+      d.type && visitT(d.type),
       d.value && visitE(d.value);
     static if (is(D == ClassDeclaration) || is( D == InterfaceDeclaration))
     {

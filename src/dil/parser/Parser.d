@@ -276,6 +276,7 @@ class Parser
          T.Scope:
     case_StaticAttribute:
     case_InvariantAttribute: // D 2.0
+    case_EnumAttribute: // D 2.0
       return parseStorageAttribute();
     case T.Alias:
       nT();
@@ -314,6 +315,11 @@ class Parser
       decl.setProtection(this.protection);
       return set(decl, begin);
     case T.Enum:
+    version(D2)
+    {
+      if (isEnumManifest())
+        goto case_EnumAttribute;
+    }
       decl = parseEnumDeclaration();
       break;
     case T.Class:
@@ -338,12 +344,12 @@ class Parser
       if (peekAfter(next) == T.LParen)
       {
         if (peekAfter(next) != T.RParen)
-          goto case_Declaration;
+          goto case_Declaration;  // invariant ( Type )
       }
       else
-        goto case_InvariantAttribute;
+        goto case_InvariantAttribute; // invariant as StorageClass.
     }
-      decl = parseInvariantDeclaration();
+      decl = parseInvariantDeclaration(); // invariant ( )
       break;
     case T.Unittest:
       decl = parseUnittestDeclaration();
@@ -818,14 +824,32 @@ class Parser
         {
           if (peekAfter(next) != T.RParen)
             goto case_Declaration; // invariant ( Type )
-          decl = parseDeclarationDefinition(); // invariant ( )
+          decl = parseInvariantDeclaration(); // invariant ( )
+          // NB: this must be similar to the code at the end of
+          //     parseDeclarationDefinition().
+          decl.setProtection(this.protection);
           decl.setStorageClass(stc);
+          set(decl, begin);
           break;
         }
         // invariant as StorageClass.
         stc_tmp = StorageClass.Invariant;
         goto Lcommon;
-      }
+      case T.Enum: // D 2.0
+        if (!isEnumManifest())
+        { // A normal enum declaration.
+          decl = parseEnumDeclaration();
+          // NB: this must be similar to the code at the end of
+          //     parseDeclarationDefinition().
+          decl.setProtection(this.protection);
+          decl.setStorageClass(stc);
+          set(decl, begin);
+          break;
+        }
+        // enum as StorageClass.
+        stc_tmp = StorageClass.Manifest;
+        goto Lcommon;
+      } // version(D2)
       case T.Auto:
         stc_tmp = StorageClass.Auto;
         goto Lcommon;
@@ -982,6 +1006,27 @@ class Parser
     return new ImportDeclaration(moduleFQNs, moduleAliases, bindNames, bindAliases, isStatic);
   }
 
+version(D2)
+{
+  /// Returns true if this is an enum manifest or
+  /// false if it's a normal enum declaration.
+  bool isEnumManifest()
+  {
+    assert(token.kind == T.Enum);
+    auto next = token;
+    auto kind = peekAfter(next);
+    if (kind == T.Colon || kind == T.LBrace)
+      return false; // Anonymous enum.
+    else if (kind == T.Identifier)
+    {
+      kind = peekAfter(next);
+      if (kind == T.Colon || kind == T.LBrace || kind == T.Semicolon)
+        return false; // Named enum.
+    }
+    return true; // Manifest enum.
+  }
+}
+
   Declaration parseEnumDeclaration()
   {
     skip(T.Enum);
@@ -1004,15 +1049,30 @@ class Parser
       while (token.kind != T.RBrace)
       {
         auto begin = token;
+
+        Type type;
+      version(D2)
+      {
+        bool success;
+        try_({
+          // Type Identifier = AssignExpression
+          type = parseType(); // Set outer type variable.
+          if (token.kind != T.Identifier)
+          {
+            errorCount++; // Cause try_() to fail.
+            type = null;
+          }
+          return null;
+        }, success);
+      }
+
         auto name = requireIdentifier(MSG.ExpectedEnumMember);
         Expression value;
 
         if (consumed(T.Assign))
           value = parseAssignExpression();
-        else
-          value = null;
 
-        members ~= set(new EnumMemberDeclaration(name, value), begin);
+        members ~= set(new EnumMemberDeclaration(type, name, value), begin);
 
         if (!consumed(T.Comma))
           break;
@@ -1603,6 +1663,11 @@ class Parser
       d = parseDeclarationDefinition();
       goto LreturnDeclarationStatement;
     case T.Enum:
+    version(D2)
+    {
+      if (isEnumManifest())
+        goto case_parseAttribute;
+    }
       d = parseEnumDeclaration();
       goto LreturnDeclarationStatement;
     case T.Class:
@@ -1746,7 +1811,7 @@ class Parser
     Declaration parse() // Nested function.
     {
       auto begin = token;
-      Declaration d;
+      Declaration decl;
       switch (token.kind)
       {
       case T.Extern:
@@ -1760,7 +1825,7 @@ class Parser
         auto linkageType = parseLinkageType();
         checkLinkageType(prev_linkageType, linkageType, begin);
 
-        d = new LinkageDeclaration(linkageType, parse());
+        decl = new LinkageDeclaration(linkageType, parse());
         break;
       case T.Static:
         stc_tmp = StorageClass.Static;
@@ -1783,6 +1848,20 @@ class Parser
           goto case_Declaration;
         stc_tmp = StorageClass.Invariant;
         goto Lcommon;
+      case T.Enum: // D 2.0
+        if (!isEnumManifest())
+        { // A normal enum declaration.
+          decl = parseEnumDeclaration();
+          // NB: this must be similar to the code at the end of
+          //     parseDeclarationDefinition().
+          decl.setProtection(this.protection);
+          decl.setStorageClass(stc);
+          set(decl, begin);
+          return decl;
+        }
+        // enum as StorageClass.
+        stc_tmp = StorageClass.Manifest;
+        goto Lcommon;
       }
       case T.Auto:
         stc_tmp = StorageClass.Auto;
@@ -1798,15 +1877,18 @@ class Parser
           stc |= stc_tmp;
 
         nT();
-        d = new StorageClassDeclaration(stc_tmp, parse());
+        decl = new StorageClassDeclaration(stc_tmp, parse());
         break;
-      // TODO: allow "scope class", "abstract scope class" in function bodies?
-      //case T.Class:
+      case T.Class, T.Interface, T.Struct, T.Union:
+        decl = parseDeclarationDefinition();
+        decl.setProtection(Protection.None);
+        decl.setStorageClass(StorageClass.None);
+        return decl;
       default:
       case_Declaration:
         return parseVariableOrFunction(stc, Protection.None, prev_linkageType, true);
       }
-      return set(d, begin);
+      return set(decl, begin);
     }
     return new DeclarationStatement(parse());
   }

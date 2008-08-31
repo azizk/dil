@@ -26,6 +26,7 @@ enum StorageClass
   Ref          = 1<<14,
   Lazy         = 1<<15,
   Variadic     = 1<<16,
+  Manifest     = 1<<17, // D 2.0 manifest using enum.
 }
 
 /// Enumeration of protection attributes.
@@ -88,6 +89,7 @@ string toString(StorageClass stc)
   case SC.Ref:          return "ref";
   case SC.Lazy:         return "lazy";
   case SC.Variadic:     return "variadic";
+  case SC.Manifest:     return "manifest";
   default:
     assert(0);
   }

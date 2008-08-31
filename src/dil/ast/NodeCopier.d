@@ -78,7 +78,7 @@ T copyNode(T)(T node)
     static if (is(D == EnumDeclaration))
       mixin(doCopy(["baseType?", "members[]"]));
     static if (is(D == EnumMemberDeclaration))
-      mixin(doCopy("value"));
+      mixin(doCopy(["type?", "value?"]));
     static if (is(D == ClassDeclaration) || is( D == InterfaceDeclaration))
       mixin(doCopy(["bases[]", "decls"]));
     static if (is(D == StructDeclaration) || is(D == UnionDeclaration))
