@@ -227,16 +227,19 @@ class TemplateDeclaration : Declaration
 {
   Identifier* name;
   TemplateParameters tparams;
+  Expression constraint; // D 2.0
   CompoundDeclaration decls;
-  this(Identifier* name, TemplateParameters tparams, CompoundDeclaration decls)
+  this(Identifier* name, TemplateParameters tparams, Expression constraint, CompoundDeclaration decls)
   {
     super.hasBody = true;
     mixin(set_kind);
     addChild(tparams);
+    addOptChild(constraint);
     addChild(decls);
 
     this.name = name;
     this.tparams = tparams;
+    this.constraint = constraint;
     this.decls = decls;
   }
 

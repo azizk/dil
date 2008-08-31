@@ -523,6 +523,8 @@ class Parser
       assert(token.kind == T.LParen);
       // It's a function declaration
       TemplateParameters tparams;
+      Expression constraint;
+
       if (tokenAfterParenIs(T.LParen))
       LparseTPList:
         // ( TemplateParameterList ) ( ParameterList )
@@ -531,6 +533,8 @@ class Parser
       auto params = parseParameterList();
     version(D2)
     {
+      if (tparams) // If ( ConstraintExpression )
+        constraint = parseOptionalConstraint();
       switch (token.kind)
       {
       case T.Const:
@@ -552,7 +556,7 @@ class Parser
       fd.setProtection(protection);
       if (tparams)
       {
-        auto d = putInsideTemplateDeclaration(begin, name, fd, tparams);
+        auto d = putInsideTemplateDeclaration(begin, name, fd, tparams, constraint);
         d.setStorageClass(stc);
         d.setProtection(protection);
         return set(d, begin);
@@ -1111,16 +1115,18 @@ version(D2)
   ///   name = name of decl.
   ///   decl = the declaration to be wrapped.
   ///   tparams = the template parameters.
+  ///   constraint = the constraint expression.
   TemplateDeclaration putInsideTemplateDeclaration(Token* begin,
                                                    Identifier* name,
                                                    Declaration decl,
-                                                   TemplateParameters tparams)
+                                                   TemplateParameters tparams,
+                                                   Expression constraint)
   {
     set(decl, begin);
     auto cd = new CompoundDeclaration;
     cd ~= decl;
     set(cd, begin);
-    return new TemplateDeclaration(name, tparams, cd);
+    return new TemplateDeclaration(name, tparams, constraint, cd);
   }
 
   Declaration parseClassDeclaration()
@@ -1130,13 +1136,17 @@ version(D2)
 
     Identifier* className;
     TemplateParameters tparams;
+    Expression constraint;
     BaseClassType[] bases;
     CompoundDeclaration decls;
 
     className = requireIdentifier(MSG.ExpectedClassName);
 
     if (token.kind == T.LParen)
+    {
       tparams = parseTemplateParameterList();
+      version(D2) constraint = parseOptionalConstraint();
+    }
 
     if (token.kind == T.Colon)
       bases = parseBaseClasses();
@@ -1150,7 +1160,7 @@ version(D2)
 
     Declaration d = new ClassDeclaration(className, /+tparams, +/bases, decls);
     if (tparams)
-      d = putInsideTemplateDeclaration(begin, className, d, tparams);
+      d = putInsideTemplateDeclaration(begin, className, d, tparams, constraint);
     return d;
   }
 
@@ -1189,13 +1199,17 @@ version(D2)
 
     Identifier* name;
     TemplateParameters tparams;
+    Expression constraint;
     BaseClassType[] bases;
     CompoundDeclaration decls;
 
     name = requireIdentifier(MSG.ExpectedInterfaceName);
 
     if (token.kind == T.LParen)
+    {
       tparams = parseTemplateParameterList();
+      version(D2) constraint = parseOptionalConstraint();
+    }
 
     if (token.kind == T.Colon)
       bases = parseBaseClasses();
@@ -1209,7 +1223,7 @@ version(D2)
 
     Declaration d = new InterfaceDeclaration(name, /+tparams, +/bases, decls);
     if (tparams)
-      d = putInsideTemplateDeclaration(begin, name, d, tparams);
+      d = putInsideTemplateDeclaration(begin, name, d, tparams, constraint);
     return d;
   }
 
@@ -1221,12 +1235,16 @@ version(D2)
 
     Identifier* name;
     TemplateParameters tparams;
+    Expression constraint;
     CompoundDeclaration decls;
 
     name = optionalIdentifier();
 
     if (name && token.kind == T.LParen)
+    {
       tparams = parseTemplateParameterList();
+      version(D2) constraint = parseOptionalConstraint();
+    }
 
     if (name && consumed(T.Semicolon))
     {}
@@ -1248,7 +1266,7 @@ version(D2)
       d = new UnionDeclaration(name, /+tparams, +/decls);
 
     if (tparams)
-      d = putInsideTemplateDeclaration(begin, name, d, tparams);
+      d = putInsideTemplateDeclaration(begin, name, d, tparams, constraint);
     return d;
   }
 
@@ -1426,8 +1444,9 @@ version(D2)
     skip(T.Template);
     auto templateName = requireIdentifier(MSG.ExpectedTemplateName);
     auto templateParams = parseTemplateParameterList();
+    auto constraint = parseOptionalConstraint();
     auto decls = parseDeclarationDefinitionsBody();
-    return new TemplateDeclaration(templateName, templateParams, decls);
+    return new TemplateDeclaration(templateName, templateParams, constraint, decls);
   }
 
   Declaration parseNewDeclaration()
@@ -3998,6 +4017,17 @@ version(D2)
     } while (consumed(T.Comma))
     set(targs, begin);
     return targs;
+  }
+
+  /// if ( ConstraintExpression )
+  Expression parseOptionalConstraint()
+  {
+    if (!consumed(T.If))
+      return null;
+    require(T.LParen);
+    auto e = parseExpression();
+    require(T.RParen);
+    return e;
   }
 
   TemplateParameters parseTemplateParameterList()

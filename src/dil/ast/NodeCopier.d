@@ -107,7 +107,7 @@ T copyNode(T)(T node)
     static if (is(D == StaticAssertDeclaration))
       mixin(doCopy(["condition","message?"]));
     static if (is(D == TemplateDeclaration))
-      mixin(doCopy(["tparams","decls"]));
+      mixin(doCopy(["tparams","constraint?","decls"]));
     static if (is(D == NewDeclaration) || is(D == DeleteDeclaration))
       mixin(doCopy(["params","funcBody"]));
     static if (is(D == ProtectionDeclaration) ||

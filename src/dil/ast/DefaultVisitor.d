@@ -85,6 +85,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
       d.message && visitE(d.message);
     static if (is(D == TemplateDeclaration))
       visitN(d.tparams),
+      d.constraint && visitE(d.constraint),
       visitD(d.decls);
     static if (is(D == NewDeclaration) || is(D == DeleteDeclaration))
       visitN(d.params),
