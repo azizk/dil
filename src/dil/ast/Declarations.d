@@ -260,7 +260,6 @@ abstract class AggregateDeclaration : Declaration
 //     this.tparams = tparams;
     this.decls = decls;
   }
-  mixin(copyMethod);
 }
 
 class ClassDeclaration : AggregateDeclaration

@@ -12,7 +12,7 @@ enum NodeCategory : ushort
   Statement,
   Expression,
   Type,
-  Other
+  Other // Parameter
 }
 
 /// A list of all class names that inherit from Node.
