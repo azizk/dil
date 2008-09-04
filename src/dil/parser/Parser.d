@@ -31,7 +31,7 @@ class Parser
   Token* prevToken; /// Previous non-whitespace token.
 
   InfoManager infoMan;
-  ParserError[] errors;
+  ParserError[] errors; /// Array of parser error messages.
 
   ImportDeclaration[] imports; /// ImportDeclarations in the source text.
 
@@ -47,8 +47,8 @@ class Parser
 
   /// Constructs a Parser object.
   /// Params:
-  ///   text     = the UTF-8 source code.
-  ///   infoMan  = used for collecting error messages.
+  ///   srcText = the UTF-8 source code.
+  ///   infoMan = used for collecting error messages.
   this(SourceText srcText, InfoManager infoMan = null)
   {
     this.infoMan = infoMan;
@@ -98,7 +98,7 @@ class Parser
   uint errorCount; /// Used to track nr. of errors while being in try_().
 
   /// This method executes the delegate parseMethod and when an error occurred
-  /// the state of the lexer and parser are restored.
+  /// the state of the lexer and parser is restored.
   /// Returns: the return value of parseMethod().
   ReturnType try_(ReturnType)(ReturnType delegate() parseMethod, out bool success)
   {
@@ -1442,11 +1442,11 @@ version(D2)
   Declaration parseTemplateDeclaration()
   {
     skip(T.Template);
-    auto templateName = requireIdentifier(MSG.ExpectedTemplateName);
-    auto templateParams = parseTemplateParameterList();
+    auto name = requireIdentifier(MSG.ExpectedTemplateName);
+    auto tparams = parseTemplateParameterList();
     auto constraint = parseOptionalConstraint();
     auto decls = parseDeclarationDefinitionsBody();
-    return new TemplateDeclaration(templateName, templateParams, constraint, decls);
+    return new TemplateDeclaration(name, tparams, constraint, decls);
   }
 
   Declaration parseNewDeclaration()
@@ -3277,7 +3277,7 @@ version(D2)
       break;
     case T.True, T.False:
       nT();
-      e = new BoolExpression();
+      e = new BoolExpression(token.kind == T.True);
       break;
     case T.Dollar:
       nT();

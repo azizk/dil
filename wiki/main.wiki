@@ -1,9 +1,9 @@
 =Purpose=
-dil is a hand-crafted compiler implementation for the D programming language written in D 1.0 using the [http://dsource.org/projects/tango Tango] standard library. The lexer and the parser are fully implemented. Semantic analysis is being worked on. The backend will most probably be gcc or [http://llvm.org LLVM].
+dil is a hand-crafted compiler implementation for the D programming language written in D 1.0 using the [http://dsource.org/projects/tango Tango] standard library. The lexer and the parser are fully implemented. Semantic analysis is being worked on. The backend will most probably be [http://llvm.org LLVM] (or gcc if LLVM fails.)
 
 What dil can do at the present:
-  * dil is fully internationalized and can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in config.d.
-  * Generate documentation from DDoc comments. In comparison to dmd, dil has fewer bugs and also offers a few goodies. Example: documentation of [http://dil.googlecode.com/files/Tango_doc_0.99.5.zip Tango].
+  * dil is fully internationalized and can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in the configuration file.
+  * Generate documentation from DDoc comments. In comparison to dmd, dil has fewer bugs and also offers a few goodies. Example: documentation of [http://dil.googlecode.com/files/Tango_doc_0.99.7.zip Tango v0.99.7].
     * Unicode alphas are supported in macro, section and parameter names.
     * Every symbol can be linked to its source location.
     * Protection, linkage and storage class attributes are shown in brackets.
@@ -16,11 +16,11 @@ What dil can do at the present:
   * Output code statistics (lines of code, count syntax tree nodes and tokens, number of whitespace characters etc.) When dil has advanced enough [http://www.aivosto.com/project/help/pm-oo-ck.html OO-metrics] will be supported. Example: [http://dil.googlecode.com/files/stats_dstress_r1835_2.txt dstress] (1.5MB text; totals are at the bottom)
 
   * dil can parse D 2.0 additions:
-    * Delimited and token [http://www.digitalmars.com/d/lex.html#StringLiteral string literals].
-    * [http://www.digitalmars.com/d/statement.html#ForeachRangeStatement ForeachRangeStatement].
-    * Optional [http://www.digitalmars.com/d/expression.html#IsExpression TemplateParameterList in IsExpression].
+    * Delimited and token [http://www.digitalmars.com/d/2.0/lex.html#StringLiteral string literals].
+    * [http://www.digitalmars.com/d/2.0/statement.html#ForeachRangeStatement ForeachRangeStatement].
+    * Optional [http://www.digitalmars.com/d/2.0/expression.html#IsExpression TemplateParameterList in IsExpression].
     * const and invariant in !IsExpressions.
-    * [http://www.digitalmars.com/d/template.html#TemplateThisParameter TemplateThisParameter].
+    * [http://www.digitalmars.com/d/2.0/template.html#TemplateThisParameter TemplateThisParameter].
     * Cast expressions: `cast(const)` and `cast(invariant)`.
     * Type constructors: `const(Type)` and `invariant(Type)`.
     * const and invariant attributes after the parameter list of a function (C++ style.)
@@ -29,6 +29,9 @@ What dil can do at the present:
     * const/invariant/final/scope/static as storage classes in parameter lists (e.g. `void func(ref const Foo f);`).
     * invariant as a storage class for declarations (e.g. `invariant Foo f;`).
     * The identifier `__EOF__` is interpreted as the end of file.
+    * [http://www.digitalmars.com/d/2.0/template.html#Constraint Template Constraints].
+    * `auto` return type for [http://www.digitalmars.com/d/2.0/template.html#function-templates Function Templates].
+    * Modified syntax for [http://www.digitalmars.com/d/2.0/enum.html Enums] (manifest constants.)
 
 Features you will or might see in dil:
   * Refactoring (renaming symbols, modules; changing the type of a symbol etc.)

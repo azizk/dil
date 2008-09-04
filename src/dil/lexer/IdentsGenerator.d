@@ -7,13 +7,14 @@ module dil.lexer.IdentsGenerator;
 /// Table of predefined identifiers.
 ///
 /// The format ('#' start comments):
-///<pre>
-///  PredefinedIdentifier := SourceCodeName (":" IdText)?
-///  SourceCodeName := Identifier # The name to be used in the source code.
-///  IdText := "" | Identifier # The actual text of the identifier.
-///  Identifier := see module dil.lexer.Identifier
-///</pre>
-/// If IdText is not defined SourceCodeName will be used.
+/// $(PRE
+/// PredefinedIdentifier := SourceCodeName (":" IdText)?
+/// SourceCodeName := Identifier # The name to be used in the source code.
+/// IdText := Empty | Identifier # The actual text of the identifier.
+/// Empty := ""                  # IdText may be empty.
+/// Identifier := see module $(MODLINK dil.lexer.Identifier).
+/// )
+/// If IdText is not defined it defaults to SourceCodeName.
 private static const char[][] predefIdents = [
   // Special empty identifier:
   "Empty:",
@@ -90,24 +91,24 @@ unittest
 }
 
 /++
- CTF for generating the members of the struct Ident.
+  CTF for generating the members of the struct Ident.
 
- The resulting string looks similar to this:
- ---
+  The resulting string looks similar to this:
+  ---
   private struct Ids {static const:
-    Identifier _name1 = {"name1", TOK.Identifier, IDK.name1};
-    Identifier _name2 = {"name2", TOK.Identifier, IDK.name2};
+    Identifier _Empty = {"", TOK.Identifier, IDK.Empty};
+    Identifier _main = {"main", TOK.Identifier, IDK.main};
     // etc.
   }
-  Identifier* name1 = &Ids._name1;
-  Identifier* name2 = &Ids._name2;
+  Identifier* Empty = &Ids._Empty;
+  Identifier* main = &Ids._main;
   // etc.
   private Identifier*[] __allIds = [
-    name1,
-    name2,
+    Empty,
+    main,
     // etc.
-  ]
- ---
+  ];
+  ---
 +/
 char[] generateIdentMembers()
 {

@@ -1,0 +1,12 @@
+#summary A list of things to do before the first release
+
+Aziz's TODO list:
+  * Write elementary semantic analysis sufficient for documentation generation.
+  * ~~Implement global !IdTable. Add list of pre-defined identifiers.~~
+  * ~~Adapt Parser to the syntax additions in DMD 2.008.~~
+  * ~~D2.0: Implement [http://www.digitalmars.com/d/2.0/template.html#Constraint Template Constraints]~~
+  * ~~D2.0: Implement `auto` return type for [http://www.digitalmars.com/d/2.0/template.html#function-templates Function Templates]~~
+  * ~~D2.0: Implement modified syntax for [http://www.digitalmars.com/d/2.0/enum.html Enums]~~
+Things of lesser priority:
+  * Develop !PyQt4 app [http://hg.sharesource.org/dil/file/tip/trunk/src/translator/ Translator] further until it is usable.
+  * Write Lexer unittest for number literals.

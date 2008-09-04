@@ -1,6 +1,6 @@
 #summary Notes on the semantic rules of elements in the D programming language
 == Type Rules ==
-[http://dil.googlecode.com/files/typerules.html Tables] of type rules.
+[http://dil.googlecode.com/files/typerules_dmd1.034.html Tables] of type rules.
 
 == Classes ==
   * Inherits from Object (defined in module object) if no base class is specified.

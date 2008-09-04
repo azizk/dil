@@ -12,6 +12,8 @@ $(BODY)
 </html>
 
 MODFQN = $(TITLE)
+MODLINK = <a href="$0.html">$0</a>
+MODLINK2 = <a href="$1.html">$+</a>
 SRCFILE = ./htmlsrc/$(MODFQN).html
 COPYRIGHT = Copyright © 2007-$(YEAR), Aziz Köksal. All rights reserved.
 SYMBOL_ = <a href="http://hg.sharesource.org/dil/file/tip/trunk/src/$(MODPATH)#L$2">$1</a>

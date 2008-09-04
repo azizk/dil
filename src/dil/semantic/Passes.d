@@ -1139,6 +1139,8 @@ override
 
   E visit(IdentifierExpression e)
   {
+    if (e.hasType)
+      return e;
     debug(sema) Stdout.formatln("", e);
     auto idToken = e.idToken();
     e.symbol = search(idToken);
@@ -1147,6 +1149,8 @@ override
 
   E visit(TemplateInstanceExpression e)
   {
+    if (e.hasType)
+      return e;
     debug(sema) Stdout.formatln("", e);
     auto idToken = e.idToken();
     e.symbol = search(idToken);

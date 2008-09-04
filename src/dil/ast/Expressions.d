@@ -353,7 +353,7 @@ class DotExpression : BinaryExpression
 
 abstract class UnaryExpression : Expression
 {
-  Expression e;
+  Expression e; // TODO: rename 'e' to 'next', 'unary', 'expr' or 'sube' etc.
   this(Expression e)
   {
     addChild(e);
@@ -678,11 +678,11 @@ class BoolExpression : Expression
 {
   IntExpression value; /// IntExpression of type bool.
 
-  this()
+  this(bool value)
   {
     mixin(set_kind);
     // Some semantic computation here.
-    this.value = new IntExpression(toBool(), Types.Bool);
+    this.value = new IntExpression(value, Types.Bool);
     this.type = Types.Bool;
   }
 
