@@ -36,7 +36,7 @@ abstract class BinaryExpression : Expression
     this.rhs = rhs;
     this.tok = tok;
   }
-  mixin(copyMethod);
+  mixin(copyMethodBinaryExpression);
 }
 
 class CondExpression : BinaryExpression
@@ -359,7 +359,7 @@ abstract class UnaryExpression : Expression
     addChild(e);
     this.e = e;
   }
-  mixin(copyMethod);
+  mixin(copyMethodUnaryExpression);
 }
 
 class AddressExpression : UnaryExpression
@@ -1064,6 +1064,7 @@ class StructInitExpression : Expression
   Expression[] values;
   this(Identifier*[] idents, Expression[] values)
   {
+    assert(idents.length == values.length);
     mixin(set_kind);
     addOptChildren(values);
     this.idents = idents;

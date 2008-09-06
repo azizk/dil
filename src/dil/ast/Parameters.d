@@ -112,7 +112,6 @@ abstract class TemplateParameter : Node
     super(NodeCategory.Other);
     this.ident = ident;
   }
-  override abstract TemplateParameter copy();
 }
 
 /// E.g.: (alias T)

@@ -180,7 +180,7 @@ returnType!(T.stringof) visitDefault(T)(T t)
         visitE(e.next);
       static if (is(E == TraitsExpression))
         visitN(e.targs);
-      // VoidInitializer has no subnodes.
+      // VoidInitExpression has no subnodes.
       static if (is(E == ArrayInitExpression))
         foreach (i, key; e.keys)
           key && visitE(key), visitE(e.values[i]);
