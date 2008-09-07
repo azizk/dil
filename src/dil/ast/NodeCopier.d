@@ -38,8 +38,8 @@ const string copyMethodUnaryExpression =
   "  return n;"
   "}";
 
-/// Generates the actual copying code for the provided members.
-private char[] createCode(string[] members)
+/// Generates the actual code for copying the provided members.
+private string createCode(string[] members)
 {
   string[2][] list = parseMembers(members);
   string code;
@@ -52,14 +52,19 @@ private char[] createCode(string[] members)
       // n.member = n.member.copy();
       code ~= "n."~name~" = n."~name~".copy();"\n;
       break;
-    case "[]": // Copy an array of nodes.
-      code ~= "n."~name~" = n."~name~".dup;"\n // n.member = n.member.dup;
-      "foreach (ref x; n."~name~")"\n          // foreach (ref x; n.member)
-      "  x = x.copy();\n";                     //   x = m_.copy();
-      break;
     case "?": // Copy a member, may be null.
       // n.member && (n.member = n.member.copy());
       code ~= "n."~name~" && (n."~name~" = n."~name~".copy());"\n;
+      break;
+    case "[]": // Copy an array of nodes.
+      code ~= "n."~name~" = n."~name~".dup;"\n // n.member = n.member.dup;
+              "foreach (ref x; n."~name~")"\n  // foreach (ref x; n.member)
+              "  x = x.copy();\n";             //   x = x.copy();
+      break;
+    case "[?]": // Copy an array of nodes, items may be null.
+      code ~= "n."~name~" = n."~name~".dup;"\n // n.member = n.member.dup;
+              "foreach (ref x; n."~name~")"\n  // foreach (ref x; n.member)
+              "  x && (x = x.copy());\n";      //   x && (x = x.copy());
       break;
     case "%": // Copy code verbatim.
       code ~= name ~ \n;
@@ -71,7 +76,7 @@ private char[] createCode(string[] members)
   return code;
 }
 
-// pragma(msg, writeCopyNode("decls?"));
+// pragma(msg, createCode(["expr?", "decls[]", "type"]));
 
 /// Generates code for copying a node.
 string genCopyCode(NodeKind nodeKind)
@@ -79,26 +84,11 @@ string genCopyCode(NodeKind nodeKind)
   string[] m; // Array of member names to be copied.
 
   // Handle special cases.
-  switch (nodeKind)
-  {
-  case NodeKind.VariablesDeclaration:
-    m = ["typeNode?",
-         "%n.inits = n.inits.dup;"
-         "foreach(ref init; n.inits)"
-         "  init && (init = init.copy());"];
-    break;
-  case NodeKind.ArrayInitExpression:
-    m = ["values[]",
-         "%n.keys = n.keys.dup;"
-         "foreach(ref key; n.keys)"
-         "  key && (key = key.copy());"];
-    break;
-  case NodeKind.StringExpression:
-    m = ["%n.str = n.str.dup;"]; break;
-  default:
+  if (nodeKind == NodeKind.StringExpression)
+    m = ["%n.str = n.str.dup;"];
+  else
     // Look up members for this kind of node in the table.
     m = g_membersTable[nodeKind];
-  }
 
   char[] code =
   // First do a shallow copy.

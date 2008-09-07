@@ -21,33 +21,25 @@ char[] genMembersTable()
   t[N.CompoundDeclaration] = ["decls[]"];
   t[N.EmptyDeclaration] = t[N.IllegalDeclaration] =
   t[N.ModuleDeclaration] = t[N.ImportDeclaration] = [];
-  t[N.AliasDeclaration] = ["decl"];
-  t[N.TypedefDeclaration] = ["decl"];
+  t[N.AliasDeclaration] = t[N.TypedefDeclaration] = ["decl"];
   t[N.EnumDeclaration] = ["baseType?", "members[]"];
   t[N.EnumMemberDeclaration] = ["type?", "value?"];
   t[N.ClassDeclaration] = ["bases[]", "decls"];
   t[N.InterfaceDeclaration] = ["bases[]", "decls"];
-  t[N.StructDeclaration] = ["decls"];
-  t[N.UnionDeclaration] = ["decls"];
+  t[N.StructDeclaration] = t[N.UnionDeclaration] = ["decls"];
   t[N.ConstructorDeclaration] = ["params", "funcBody"];
-  t[N.StaticConstructorDeclaration] = ["funcBody"];
-  t[N.DestructorDeclaration] = ["funcBody"];
-  t[N.StaticDestructorDeclaration] = ["funcBody"];
-  t[N.InvariantDeclaration] = ["funcBody"];
+  t[N.StaticConstructorDeclaration] = t[N.DestructorDeclaration] =
+  t[N.StaticDestructorDeclaration] = t[N.InvariantDeclaration] =
   t[N.UnittestDeclaration] = ["funcBody"];
   t[N.FunctionDeclaration] = ["returnType?", "params", "funcBody"];
-  t[N.VariablesDeclaration] = ["typeNode?", "inits[]"];
-  t[N.DebugDeclaration] = ["decls?", "elseDecls?"];
-  t[N.VersionDeclaration] = ["decls?", "elseDecls?"];
+  t[N.VariablesDeclaration] = ["typeNode?", "inits[?]"];
+  t[N.DebugDeclaration] = t[N.VersionDeclaration] = ["decls?", "elseDecls?"];
   t[N.StaticIfDeclaration] = ["condition", "ifDecls", "elseDecls?"];
   t[N.StaticAssertDeclaration] = ["condition", "message?"];
   t[N.TemplateDeclaration] = ["tparams", "constraint?", "decls"];
-  t[N.NewDeclaration] = ["params", "funcBody"];
-  t[N.DeleteDeclaration] = ["params", "funcBody"];
-  t[N.ProtectionDeclaration] = ["decls"];
-  t[N.StorageClassDeclaration] = ["decls"];
-  t[N.LinkageDeclaration] = ["decls"];
-  t[N.AlignDeclaration] = ["decls"];
+  t[N.NewDeclaration] = t[N.DeleteDeclaration] = ["params", "funcBody"];
+  t[N.ProtectionDeclaration] = t[N.StorageClassDeclaration] =
+  t[N.LinkageDeclaration] = t[N.AlignDeclaration] = ["decls"];
   t[N.PragmaDeclaration] = ["args[]", "decls"];
   t[N.MixinDeclaration] = ["templateExpr?", "argument?"];
   // Expressions:
@@ -91,16 +83,14 @@ char[] genMembersTable()
   t[N.ArrayLiteralExpression] = ["values[]"];
   t[N.AArrayLiteralExpression] = ["keys[]", "values[]"];
   t[N.AssertExpression] = ["expr", "msg?"];
-  t[N.MixinExpression] = ["expr"];
-  t[N.ImportExpression] = ["expr"];
-  t[N.TypeofExpression] = ["type"];
-  t[N.TypeDotIdExpression] = ["type"];
+  t[N.MixinExpression] = t[N.ImportExpression] = ["expr"];
+  t[N.TypeofExpression] = t[N.TypeDotIdExpression] =
   t[N.TypeidExpression] = ["type"];
   t[N.IsExpression] = ["type", "specType?", "tparams?"];
   t[N.FunctionLiteralExpression] = ["returnType?", "params?", "funcBody"];
   t[N.ParenExpression] = ["next"];
   t[N.TraitsExpression] = ["targs"];
-  t[N.ArrayInitExpression] = ["values[]", "keys[]"];
+  t[N.ArrayInitExpression] = ["keys[?]", "values[]"];
   t[N.StructInitExpression] = ["values[]"];
   t[N.StringExpression] = [],
   // Statements:
@@ -109,8 +99,7 @@ char[] genMembersTable()
   t[N.AsmAlignStatement] = t[N.IllegalAsmStatement] = [];
   t[N.CompoundStatement] = ["stmnts[]"];
   t[N.FuncBodyStatement] = ["funcBody?", "inBody?", "outBody?"];
-  t[N.ScopeStatement] = ["s"];
-  t[N.LabeledStatement] = ["s"];
+  t[N.ScopeStatement] = t[N.LabeledStatement] = ["s"];
   t[N.ExpressionStatement] = ["e"];
   t[N.DeclarationStatement] = ["decl"];
   t[N.IfStatement] = ["variable?", "condition?", "ifBody", "elseBody?"];
@@ -138,30 +127,24 @@ char[] genMembersTable()
   t[N.MixinStatement] = ["templateExpr"];
   t[N.StaticIfStatement] = ["condition", "ifBody", "elseBody?"];
   t[N.StaticAssertStatement] = ["condition", "message?"];
-  t[N.DebugStatement] = ["mainBody", "elseBody?"];
-  t[N.VersionStatement] = ["mainBody", "elseBody?"];
+  t[N.DebugStatement] = t[N.VersionStatement] = ["mainBody", "elseBody?"];
   // TypeNodes:
   t[N.IllegalType] = t[N.IntegralType] =
   t[N.ModuleScopeType] = t[N.IdentifierType] = [];
   t[N.QualifiedType] = ["lhs", "rhs"];
   t[N.TypeofType] = ["e"];
   t[N.TemplateInstanceType] = ["targs?"];
-  t[N.PointerType] = ["next"];
   t[N.ArrayType] = ["next", "assocType?", "e1?", "e2?"];
-  t[N.FunctionType] = ["returnType", "params"];
-  t[N.DelegateType] = ["returnType", "params"];
+  t[N.FunctionType] = t[N.DelegateType] = ["returnType", "params"];
   t[N.CFuncPointerType] = ["next", "params?"];
-  t[N.BaseClassType] = ["next"];
-  t[N.ConstType] = ["next"];
-  t[N.InvariantType] = ["next"];
+  t[N.PointerType] = t[N.BaseClassType] =
+  t[N.ConstType] = t[N.InvariantType] = ["next"];
   // Parameters:
   t[N.Parameter] = ["type?", "defValue?"];
-  t[N.Parameters] = ["children[]"];
-  t[N.TemplateParameters] = ["children[]"];
+  t[N.Parameters] = t[N.TemplateParameters] =
   t[N.TemplateArguments] = ["children[]"];
-  t[N.TemplateAliasParameter] = ["specType", "defType"];
-  t[N.TemplateTypeParameter] = ["specType", "defType"];
-  t[N.TemplateThisParameter] = ["specType", "defType"];
+  t[N.TemplateAliasParameter] = t[N.TemplateTypeParameter] =
+  t[N.TemplateThisParameter] = ["specType?", "defType?"];
   t[N.TemplateValueParameter] = ["valueType", "specValue?", "defValue?"];
   t[N.TemplateTupleParameter] = [];
 
@@ -190,24 +173,27 @@ static const char[][][/+NodeKind.max+1+/] g_membersTable = mixin(genMembersTable
 ///
 /// Basic syntax:
 /// $(PRE
-/// Member := Array | OptionalNode | Node | Code
+/// Member := Array | Array2 | OptionalNode | Node | Code
 /// Array := Identifier "[]"
+/// Array2 := Identifier "[?]"
 /// OptionalNode := Identifier "?"
 /// Node := Identifier
 /// Code := "%" AnyChar*
 /// $(MODLINK2 dil.lexer.Identifier, Identifier)
 /// )
 /// Params:
-///   members = the names of the members to be copied.
+///   members = the member strings to be parsed.
 /// Returns:
 ///   an array of tuples (Name, Type) where Name is the exact name of the member
-///   and Type may be one of these values: "[]", "?", "" or "%".
+///   and Type may be one of these values: "[]", "[?]", "?", "" or "%".
 char[][2][] parseMembers(char[][] members)
 {
   char[][2][] result;
   foreach (member; members)
     if (member.length > 2 && member[$-2..$] == "[]")
       result ~= [member[0..$-2], "[]"]; // Strip off trailing '[]'.
+    else if (member.length > 3 && member[$-3..$] == "[?]")
+      result ~= [member[0..$-3], "[?]"]; // Strip off trailing '[?]'.
     else if (member[$-1] == '?')
       result ~= [member[0..$-1], "?"]; // Strip off trailing '?'.
     else if (member[0] == '%')
