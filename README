@@ -13,26 +13,29 @@ How To Compile dil
 In order to compile dil you need to have:
  *) DMD 1.035 (http://www.digitalmars.com/d/1.0/changelog.html)
  *) Tango 0.99.7 (http://dsource.org/projects/tango/)
- *) DSSS 0.75 (http://dsource.org/projects/dsss/)
+ *) DSSS 0.77 (http://dsource.org/projects/dsss/)
 
 If you can't compile dil because you have a newer version of these programs
 then report the problem to me, please (see Bugs section.)
 
-Regarding DSSS 0.75:
-On Posix systems a correction in dsss/etc/rebuild/dmd-posix-tango is
-required. In the "[link]" section, remove "-L-lphobos" from the cmd option
-in order to avoid symbol conflicts.
+Regarding DSSS:
+You have to make sure that the correct config file is used.
+A default can be set in dsss/etc/rebuild/default.
+Use dmd-posix-tango, dmd-win-tango, gdc-posix-tango or gdc-win-tango.
 
-Change to the directory where you extracted dil.
-$ cd ~/dil
-Type "dsss build".
+# Change to the directory where you extracted dil.
+$ cd dil/
+# Type "dsss build".
 $ dsss build
-The executable of dil is put into the bin/ directory.
+# The executable of dil is put into the bin/ directory.
 $ ls bin/
-Output> dilconf.d  dil
-Run like this:
-(Linux)$ bin/dil
-(Windows)> bin\dil.exe
+# Output> dilconf.d  dil
+# Run like this:
+# On Linux:
+$ bin/dil
+# On Windows:
+> bin\dil.exe
+
 You should see the main help message printed in the console.
 
 The language of the compiler messages can be set in the configuration file.
