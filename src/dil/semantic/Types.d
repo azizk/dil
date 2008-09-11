@@ -9,6 +9,8 @@ import dil.semantic.TypesEnum;
 import dil.lexer.Identifier;
 import dil.CompilerInfo;
 
+import common;
+
 /// The base type for all type structures.
 abstract class Type/* : Symbol*/
 {
@@ -28,6 +30,13 @@ abstract class Type/* : Symbol*/
 
     this.next = next;
     this.tid = tid;
+  }
+
+  /// Returns true if this type equals the other one.
+  bool opEquals(Type other)
+  {
+    // TODO:
+    return false;
   }
 
   /// Returns a pointer type to this type.
@@ -67,6 +76,53 @@ abstract class Type/* : Symbol*/
   {
     return symbol !is null;
   }
+
+  /// Returns the type as a string.
+  abstract char[] toString();
+
+  /// Returns true if this type is a bool type.
+  bool isBool()
+  {
+    return tid == TYP.Bool;
+  }
+
+  /// Returns true if this type is an integral number type.
+  bool isIntegral()
+  {
+    switch (tid)
+    {
+    case TYP.Char, TYP.Wchar, TYP.Dchar, TYP.Bool, TYP.Byte, TYP.Ubyte,
+         TYP.Short, TYP.Ushort, TYP.Int, TYP.Uint, TYP.Long, TYP.Ulong,
+         TYP.Cent, TYP.Ucent:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  /// Returns true if this type is a floating point number type.
+  bool isFloating()
+  {
+    return isReal() || isImaginary() || isComplex();
+  }
+
+  /// Returns true if this type is a real number type.
+  bool isReal()
+  {
+    return tid == TYP.Float || tid == TYP.Double || tid == TYP.Real;
+  }
+
+  /// Returns true if this type is an imaginary number type.
+  bool isImaginary()
+  {
+    return tid == TYP.Ifloat || tid == TYP.Idouble || tid == TYP.Ireal;
+  }
+
+  /// Returns true if this type is a complex number type.
+  bool isComplex()
+  {
+    return tid == TYP.Cfloat || tid == TYP.Cdouble || tid == TYP.Creal;
+  }
 }
 
 /// All basic types. E.g.: int, char, real etc.
@@ -76,6 +132,20 @@ class TypeBasic : Type
   {
     super(null, typ);
   }
+
+  char[] toString()
+  {
+    return [
+      TYP.Char : "char"[], TYP.Wchar : "wchar", TYP.Dchar : "dchar",
+      TYP.Bool : "bool", TYP.Byte : "byte", TYP.Ubyte : "ubyte",
+      TYP.Short : "short", TYP.Ushort : "ushort", TYP.Int : "int",
+      TYP.Uint : "uint", TYP.Long : "long", TYP.Ulong : "ulong",
+      TYP.Cent : "cent", TYP.Ucent : "ucent", TYP.Float : "float",
+      TYP.Double : "double", TYP.Real : "real", TYP.Ifloat : "ifloat",
+      TYP.Idouble : "idouble", TYP.Ireal : "ireal", TYP.Cfloat : "cfloat",
+      TYP.Cdouble : "cdouble", TYP.Creal : "creal"
+    ][this.tid];
+  }
 }
 
 /// Dynamic array type.
@@ -84,6 +154,11 @@ class TypeDArray : Type
   this(Type next)
   {
     super(next, TYP.DArray);
+  }
+
+  char[] toString()
+  {
+    return next.toString() ~ "[]";
   }
 }
 
@@ -96,6 +171,11 @@ class TypeAArray : Type
     super(next, TYP.AArray);
     this.keyType = keyType;
   }
+
+  char[] toString()
+  {
+    return next.toString() ~ "[" ~ keyType.toString() ~ "]";
+  }
 }
 
 /// Static array type.
@@ -107,6 +187,11 @@ class TypeSArray : Type
     super(next, TYP.SArray);
     this.dimension = dimension;
   }
+
+  char[] toString()
+  {
+    return Format("%s[%d]", next.toString(), dimension);
+  }
 }
 
 /// Pointer type.
@@ -116,6 +201,11 @@ class TypePointer : Type
   {
     super(next, TYP.Pointer);
   }
+
+  char[] toString()
+  {
+    return next.toString() ~ "*";
+  }
 }
 
 /// Reference type.
@@ -124,6 +214,11 @@ class TypeReference : Type
   this(Type next)
   {
     super(next, TYP.Reference);
+  }
+
+  char[] toString()
+  { // FIXME: this is probably wrong.
+    return next.toString() ~ "&";
   }
 }
 
@@ -147,6 +242,11 @@ class TypeEnum : Type
   {
     return next;
   }
+
+  char[] toString()
+  {
+    return symbol.name.str;
+  }
 }
 
 /// Struct type.
@@ -156,6 +256,11 @@ class TypeStruct : Type
   {
     super(null, TYP.Struct);
     this.symbol = symbol;
+  }
+
+  char[] toString()
+  {
+    return symbol.name.str;
   }
 }
 
@@ -167,6 +272,11 @@ class TypeClass : Type
     super(null, TYP.Class);
     this.symbol = symbol;
   }
+
+  char[] toString()
+  {
+    return symbol.name.str;
+  }
 }
 
 /// Typedef type.
@@ -175,6 +285,11 @@ class TypeTypedef : Type
   this(Type next)
   {
     super(next, TYP.Typedef);
+  }
+
+  char[] toString()
+  { // TODO:
+    return "typedef";
   }
 }
 
@@ -185,6 +300,11 @@ class TypeFunction : Type
   {
     super(next, TYP.Function);
   }
+
+  char[] toString()
+  { // TODO:
+    return "function";
+  }
 }
 
 /// Delegate type.
@@ -193,6 +313,11 @@ class TypeDelegate : Type
   this(Type next)
   {
     super(next, TYP.Delegate);
+  }
+
+  char[] toString()
+  { // TODO:
+    return "delegate";
   }
 }
 
@@ -204,6 +329,11 @@ class TypeIdentifier : Type
   {
     super(null, TYP.Identifier);
   }
+
+  char[] toString()
+  {
+    return ident.str;
+  }
 }
 
 /// Template instantiation type.
@@ -212,6 +342,11 @@ class TypeTemplInstance : Type
   this()
   {
     super(null, TYP.TInstance);
+  }
+
+  char[] toString()
+  { // TODO:
+    return "tpl!()";
   }
 }
 
@@ -222,6 +357,11 @@ class TypeTuple : Type
   {
     super(next, TYP.Tuple);
   }
+
+  char[] toString()
+  { // TODO:
+    return "tuple";
+  }
 }
 
 /// Constant type. D2.0
@@ -231,6 +371,11 @@ class TypeConst : Type
   {
     super(next, TYP.Const);
   }
+
+  char[] toString()
+  {
+    return "const(" ~ next.toString() ~ ")";
+  }
 }
 
 /// Invariant type. D2.0
@@ -239,6 +384,11 @@ class TypeInvariant : Type
   this(Type next)
   {
     super(next, TYP.Const);
+  }
+
+  char[] toString()
+  {
+    return "invariant(" ~ next.toString() ~ ")";
   }
 }
 
