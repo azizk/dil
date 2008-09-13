@@ -117,7 +117,7 @@ static:
   auto CantReadFile = "can't read module file";
   auto InexistantFile = "module file doesn't exist";
   auto InvalidOctalEscapeSequence = "value of octal escape sequence is greater than 0xFF: '{}'";
-  auto InvalidModuleName = "the file name '{}' can't be used a module name; it's an invalid or reserved D identifier.";
+  auto InvalidModuleName = "the file name '{}' can't be used as a module name; it's an invalid or reserved D identifier.";
   // Parser messages:
   auto InvalidUTF8SequenceInString = "invalid UTF-8 sequence in string literal: '{0}'";
   auto ModuleDeclarationNotFirst = "a module declaration is only allowed as the first declaration in a file";

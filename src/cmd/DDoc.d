@@ -68,6 +68,8 @@ struct DDocCommand
     foreach (filePath; filePaths)
     {
       auto mod = new Module(filePath, infoMan);
+      // TODO: check if the first line of the module starts with Ddoc.
+
       // Parse the file.
       mod.parse();
       if (mod.hasErrors)
@@ -224,23 +226,23 @@ class DDocEmitter : DefaultVisitor
   DDocComment ddoc(Node node)
   {
     auto c = getDDocComment(node);
-    this.cmnt = null;
+    this.cmntIsDitto = false;
     if (c)
     {
       if (c.isDitto)
-      {
-        this.cmnt = this.prevCmnt;
+      { // A ditto comment.
+        c = this.prevCmnt;
         this.cmntIsDitto = true;
       }
-      else
-      {
-        this.cmntIsDitto = false;
-        this.cmnt = c;
+      else // A normal comment.
         this.prevCmnt = c;
-      }
     }
     else if (includeUndocumented)
-      this.cmnt = this.emptyCmnt;
+    {
+      c = this.emptyCmnt; // Assign special empty comment.
+      this.prevCmnt = this.emptyCmnt;
+    }
+    this.cmnt = c;
     return this.cmnt;
   }
 
@@ -259,8 +261,6 @@ class DDocEmitter : DefaultVisitor
   {
     auto c = this.cmnt;
     assert(c !is null);
-    if (c.sections.length == 0)
-      return;
     write("$(DDOC_SECTIONS ");
       foreach (s; c.sections)
       {
@@ -635,8 +635,7 @@ class DDocEmitter : DefaultVisitor
     if (!attributes.length)
       return;
 
-    write(" $(ATTRIBUTES ");
-    write(attributes[0]);
+    write(" $(ATTRIBUTES ", attributes[0]);
     foreach (attribute; attributes[1..$])
       write(", ", attribute);
     write(")");
