@@ -703,6 +703,7 @@ override
   {
     auto saved = setBS(s);
     // TODO:
+    // find overload opApply or opApplyReverse.
     restoreBS(saved);
     return s;
   }
@@ -859,6 +860,38 @@ override
   bool errorOnUndefinedSymbol;
   //bool errorOnUnknownSymbol;
 
+  /// Reports an error if 'e' is of type bool.
+  void errorIfBool(Expression e)
+  {
+    error(e.begin, "the operation is not defined for the type bool");
+  }
+
+  /// Returns a call expression if 'e' overrides
+  /// an operatorwith the name 'id'.
+  /// Params:
+  ///   e = the binary expression to be checked.
+  ///   id = the name of the overload function.
+  Expression findOverload(UnaryExpression e, Identifier* id)
+  {
+    // TODO:
+    // check e for struct or class
+    // search for function named id
+    // return call expression: e.opXYZ()
+    return null;
+  }
+
+  /// Returns a call expression if 'e' overrides
+  /// an operator with the name 'id' or 'id_r'.
+  /// Params:
+  ///   e = the binary expression to be checked.
+  ///   id = the name of the overload function.
+  ///   id_r = the name of the reverse overload function.
+  Expression findOverload(BinaryExpression e, Identifier* id, Identifier* id_r)
+  {
+    // TODO:
+    return null;
+  }
+
 override
 {
   E visit(IllegalExpression)
@@ -892,21 +925,29 @@ override
 
   E visit(OrExpression e)
   {
+    if (auto o = findOverload(e, Ident.opOr, Ident.opOr_r))
+      return o;
     return e;
   }
 
   E visit(XorExpression e)
   {
+    if (auto o = findOverload(e, Ident.opXor, Ident.opXor_r))
+      return o;
     return e;
   }
 
   E visit(AndExpression e)
   {
+    if (auto o = findOverload(e, Ident.opAnd, Ident.opAnd_r))
+      return o;
     return e;
   }
 
   E visit(EqualExpression e)
   {
+    if (auto o = findOverload(e, Ident.opEquals, null))
+      return o;
     return e;
   }
 
@@ -917,171 +958,297 @@ override
 
   E visit(RelExpression e)
   {
+    if (auto o = findOverload(e, Ident.opCmp, null))
+      return o;
     return e;
   }
 
   E visit(InExpression e)
   {
+    if (auto o = findOverload(e, Ident.opIn, Ident.opIn_r))
+      return o;
     return e;
   }
 
   E visit(LShiftExpression e)
   {
+    if (auto o = findOverload(e, Ident.opShl, Ident.opShl_r))
+      return o;
     return e;
   }
 
   E visit(RShiftExpression e)
   {
+    if (auto o = findOverload(e, Ident.opShr, Ident.opShr_r))
+      return o;
     return e;
   }
 
   E visit(URShiftExpression e)
   {
+    if (auto o = findOverload(e, Ident.opUShr, Ident.opUShr_r))
+      return o;
     return e;
   }
 
   E visit(PlusExpression e)
   {
+    if (auto o = findOverload(e, Ident.opAdd, Ident.opAdd_r))
+      return o;
     return e;
   }
 
   E visit(MinusExpression e)
   {
+    if (auto o = findOverload(e, Ident.opSub, Ident.opSub_r))
+      return o;
     return e;
   }
 
   E visit(CatExpression e)
   {
+    if (auto o = findOverload(e, Ident.opCat, Ident.opCat_r))
+      return o;
     return e;
   }
 
   E visit(MulExpression e)
   {
+    if (auto o = findOverload(e, Ident.opMul, Ident.opMul_r))
+      return o;
     return e;
   }
 
   E visit(DivExpression e)
   {
+    if (auto o = findOverload(e, Ident.opDiv, Ident.opDiv_r))
+      return o;
     return e;
   }
 
   E visit(ModExpression e)
   {
+    if (auto o = findOverload(e, Ident.opMod, Ident.opMod_r))
+      return o;
     return e;
   }
 
   E visit(AssignExpression e)
   {
+    if (auto o = findOverload(e, Ident.opAssign, null))
+      return o;
+    // TODO: also check for opIndexAssign and opSliceAssign.
     return e;
   }
 
   E visit(LShiftAssignExpression e)
   {
+    if (auto o = findOverload(e, Ident.opShlAssign, null))
+      return o;
     return e;
   }
 
   E visit(RShiftAssignExpression e)
   {
+    if (auto o = findOverload(e, Ident.opShrAssign, null))
+      return o;
     return e;
   }
 
   E visit(URShiftAssignExpression e)
   {
+    if (auto o = findOverload(e, Ident.opUShrAssign, null))
+      return o;
     return e;
   }
 
   E visit(OrAssignExpression e)
   {
+    if (auto o = findOverload(e, Ident.opOrAssign, null))
+      return o;
     return e;
   }
 
   E visit(AndAssignExpression e)
   {
+    if (auto o = findOverload(e, Ident.opAndAssign, null))
+      return o;
     return e;
   }
 
   E visit(PlusAssignExpression e)
   {
+    if (auto o = findOverload(e, Ident.opAddAssign, null))
+      return o;
     return e;
   }
 
   E visit(MinusAssignExpression e)
   {
+    if (auto o = findOverload(e, Ident.opSubAssign, null))
+      return o;
     return e;
   }
 
   E visit(DivAssignExpression e)
   {
+    auto o = findOverload(e, Ident.opDivAssign, null);
+    if (o)
+      return o;
     return e;
   }
 
   E visit(MulAssignExpression e)
   {
+    auto o = findOverload(e, Ident.opMulAssign, null);
+    if (o)
+      return o;
     return e;
   }
 
   E visit(ModAssignExpression e)
   {
+    auto o = findOverload(e, Ident.opModAssign, null);
+    if (o)
+      return o;
     return e;
   }
 
   E visit(XorAssignExpression e)
   {
+    auto o = findOverload(e, Ident.opXorAssign, null);
+    if (o)
+      return o;
     return e;
   }
 
   E visit(CatAssignExpression e)
   {
+    auto o = findOverload(e, Ident.opCatAssign, null);
+    if (o)
+      return o;
     return e;
   }
 
   E visit(AddressExpression e)
   {
+    if (e.hasType)
+      return e;
+    e.e = visitE(e.e);
+    e.type = e.e.type.ptrTo();
     return e;
   }
 
   E visit(PreIncrExpression e)
   {
+    if (e.hasType)
+      return e;
+    // TODO: rewrite to e+=1
+    e.e = visitE(e.e);
+    e.type = e.e.type;
+    errorIfBool(e.e);
     return e;
   }
 
   E visit(PreDecrExpression e)
   {
+    if (e.hasType)
+      return e;
+    // TODO: rewrite to e-=1
+    e.e = visitE(e.e);
+    e.type = e.e.type;
+    errorIfBool(e.e);
     return e;
   }
 
   E visit(PostIncrExpression e)
   {
+    if (e.hasType)
+      return e;
+    if (auto o = findOverload(e, Ident.opPostInc))
+      return o;
+    e.e = visitE(e.e);
+    e.type = e.e.type;
+    errorIfBool(e.e);
     return e;
   }
 
   E visit(PostDecrExpression e)
   {
+    if (e.hasType)
+      return e;
+    if (auto o = findOverload(e, Ident.opPostDec))
+      return o;
+    e.e = visitE(e.e);
+    e.type = e.e.type;
+    errorIfBool(e.e);
     return e;
   }
 
   E visit(DerefExpression e)
   {
+    if (e.hasType)
+      return e;
+  version(D2)
+    if (auto o = findOverload(e, Ident.opStar))
+      return o;
+    e.e = visitE(e.e);
+    e.type = e.e.type.next;
+    if (!e.e.type.isPointer)
+    {
+      error(e.e.begin,
+        "dereference operator '*x' not defined for expression of type '{}'",
+        e.e.type.toString());
+      e.type = Types.Error;
+    }
+    // TODO:
+    // if (e.e.type.isVoid)
+    //   error();
     return e;
   }
 
   E visit(SignExpression e)
   {
+    if (e.hasType)
+      return e;
+    if (auto o = findOverload(e, e.isNeg ? Ident.opNeg : Ident.opPos))
+      return o;
+    e.e = visitE(e.e);
+    e.type = e.e.type;
+    errorIfBool(e.e);
     return e;
   }
 
   E visit(NotExpression e)
   {
+    if (e.hasType)
+      return e;
+    e.e = visitE(e.e);
+    e.type = Types.Bool;
+    // TODO: e.e must be convertible to bool.
     return e;
   }
 
   E visit(CompExpression e)
   {
+    if (e.hasType)
+      return e;
+    if (auto o = findOverload(e, Ident.opCom))
+      return o;
+    e.e = visitE(e.e);
+    e.type = e.e.type;
+    if (e.type.isFloating || e.type.isBool)
+    {
+      error(e.begin, "the operator '~x' is not defined for the type '{}'", e.type.toString());
+      e.type = Types.Error;
+    }
     return e;
   }
 
   E visit(CallExpression e)
   {
+    if (auto o = findOverload(e, Ident.opCall))
+      return o;
     return e;
   }
 
@@ -1102,16 +1269,22 @@ override
 
   E visit(CastExpression e)
   {
+    if (auto o = findOverload(e, Ident.opCast))
+      return o;
     return e;
   }
 
   E visit(IndexExpression e)
   {
+    if (auto o = findOverload(e, Ident.opIndex))
+      return o;
     return e;
   }
 
   E visit(SliceExpression e)
   {
+    if (auto o = findOverload(e, Ident.opSlice))
+      return o;
     return e;
   }
 

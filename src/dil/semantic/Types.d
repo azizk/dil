@@ -86,6 +86,12 @@ abstract class Type/* : Symbol*/
     return tid == TYP.Bool;
   }
 
+  /// Returns true if this type is a pointer type.
+  bool isPointer()
+  {
+    return tid == TYP.Pointer;
+  }
+
   /// Returns true if this type is an integral number type.
   bool isIntegral()
   {

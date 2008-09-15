@@ -38,19 +38,31 @@ private static const char[][] predefIdents = [
   "New:__new", "Delete:__delete",
   // Unittest and invariant.
   "Unittest:__unittest", "Invariant:__invariant",
-  // Operator methods:
-  "opNeg",
-  "opPos",
-  "opComp",
-  "opAddAssign",
-  "opSubAssign",
+  // Operator overload methods:
+  "opNeg", "opPos", "opCom",
+  "opEquals", "opCmp",  "opAssign",
+  "opAdd",  "opAdd_r",  "opAddAssign",
+  "opSub",  "opSub_r",  "opSubAssign",
+  "opMul",  "opMul_r",  "opMulAssign",
+  "opDiv",  "opDiv_r",  "opDivAssign",
+  "opMod",  "opMod_r",  "opModAssign",
+  "opAnd",  "opAnd_r",  "opAndAssign",
+  "opOr",   "opOr_r",   "opOrAssign",
+  "opXor",  "opXor_r",  "opXorAssign",
+  "opShl",  "opShl_r",  "opShlAssign",
+  "opShr",  "opShr_r",  "opShrAssign",
+  "opUShr", "opUShr_r", "opUShrAssign",
+  "opCat",  "opCat_r",  "opCatAssign",
+  "opIn",   "opIn_r",
+  "opIndex", "opIndexAssign",
+  "opSlice", "opSliceAssign",
   "opPostInc",
   "opPostDec",
   "opCall",
   "opCast",
-  "opIndex",
-  "opSlice",
   "opStar", // D2
+  // foreach and foreach_reverse:
+  "opApply", "opApplyReverse",
   // Entry function:
   "main",
   // ASM identifiers:
