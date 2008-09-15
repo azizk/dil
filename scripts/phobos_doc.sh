@@ -23,7 +23,7 @@ open("data/phobos.ddoc", "w").write(ddoc)'
 
 # Destination of all documentation files.
 DOC="phobosdoc"
-
+# Create the destination folders.
 mkdir -p $DOC/htmlsrc
 
 # Some files needed from dmd's doc folder.

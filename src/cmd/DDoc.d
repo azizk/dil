@@ -68,7 +68,10 @@ struct DDocCommand
     foreach (filePath; filePaths)
     {
       auto mod = new Module(filePath, infoMan);
-      // TODO: check if the first line of the module starts with Ddoc.
+      if (isDDocFile(mod))
+      { // TODO: parse the whole file as a ddoc comment.
+        continue;
+      }
 
       // Parse the file.
       mod.parse();
@@ -117,11 +120,24 @@ struct DDocCommand
     auto fileText = MacroExpander.expand(mtable, "$(DDOC)",
                                          mod.filePath,
                                          verbose ? infoMan : null);
-    // fileText ~= "\n<pre>\n" ~ doc.text ~ "\n</pre>";
+    // debug fileText ~= "\n<pre>\n" ~ doc.text ~ "\n</pre>";
 
     // Finally write the file out to the harddisk.
     scope file = new File(destPath);
     file.write(fileText);
+  }
+
+  /// Returns true if the source text starts with "Ddoc\n" (ignores letter case.)
+  bool isDDocFile(Module mod)
+  {
+    auto data = mod.sourceText.data;
+    const ddoc = "ddoc";
+    // -1 due to '\0' and +1 due to newline.
+    if (data.length - 1 >= /+ddoc.length+/ 4 + 1 && // Check minimum length.
+        icompare(data[0..4], ddoc) && // Check first four characters.
+        isNewline(data.ptr + 4)) // Check newline.
+      return true;
+    return false;
   }
 
   /// Loads a macro file. Converts any Unicode encoding to UTF-8.
@@ -166,7 +182,7 @@ class DDocEmitter : DefaultVisitor
       if (ddoc(d))
       {
         if (auto copyright = cmnt.takeCopyright())
-          mtable.insert(new Macro("COPYRIGHT", copyright.text));
+          mtable.insert("COPYRIGHT", copyright.text);
         writeComment();
       }
     }
@@ -222,27 +238,19 @@ class DDocEmitter : DefaultVisitor
 
   bool cmntIsDitto; /// True if current comment is "ditto".
 
-  /// Returns the DDocComment for node.
+  /// Sets some members and returns the DDocComment for node.
   DDocComment ddoc(Node node)
   {
-    auto c = getDDocComment(node);
-    this.cmntIsDitto = false;
-    if (c)
+    this.cmnt = getDDocComment(node);
+    if (this.cmnt)
     {
-      if (c.isDitto)
-      { // A ditto comment.
-        c = this.prevCmnt;
-        this.cmntIsDitto = true;
-      }
+      if (this.cmnt.isDitto) // A ditto comment.
+        (this.cmnt = this.prevCmnt), (this.cmntIsDitto = true);
       else // A normal comment.
-        this.prevCmnt = c;
+        (this.prevCmnt = this.cmnt), (this.cmntIsDitto = false);
     }
     else if (includeUndocumented)
-    {
-      c = this.emptyCmnt; // Assign special empty comment.
-      this.prevCmnt = this.emptyCmnt;
-    }
-    this.cmnt = c;
+      this.cmnt = this.emptyCmnt; // Assign special empty comment.
     return this.cmnt;
   }
 
@@ -289,6 +297,7 @@ class DDocEmitter : DefaultVisitor
           continue;
         }
         else
+          // TODO: replace occurrences of '_' with ' ' in s.name.
           write("\n$(DDOC_SECTION $(DDOC_SECTION_H " ~ s.name ~ ":)");
         write(scanCommentText(s.text), ")");
       }
@@ -482,43 +491,59 @@ class DDocEmitter : DefaultVisitor
     // write("$(DDOC_PSYMBOL ", name, ")");
   }
 
-  /// Offset at which to insert a declaration which have a "ditto" comment.
+  /// Offset at which to insert a declaration with a "ditto" comment.
   uint prevDeclOffset;
 
   /// Writes a declaration to the text buffer.
   void DECL(void delegate() dg, Declaration d, bool writeSemicolon = true)
   {
-    if (cmntIsDitto)
-    { alias prevDeclOffset offs;
-      assert(offs != 0);
-      auto savedText = text;
-      text = "";
+    void writeDECL()
+    {
       write("\n$(DDOC_DECL ");
       dg();
       writeSemicolon && write(";");
       writeAttributes(d);
       write(")");
+    }
+
+    if (/+includeUndocumented &&+/ this.cmnt is this.emptyCmnt)
+    { // Handle undocumented symbols separately.
+      // This way they don't interrupt consolidated declarations.
+      writeDECL();
+      // Write an empty DDOC_DECL_DD.
+      // The method DESC() does not emit anything when cmntIsDitto is true.
+      cmntIsDitto && write("\n$(DDOC_DECL_DD)");
+    }
+    else if (cmntIsDitto)
+    { // The declaration has a ditto comment.
+      alias prevDeclOffset offs;
+      assert(offs != 0);
+      auto savedText = text;
+      text = "";
+      writeDECL();
       // Insert text at offset.
       auto len = text.length;
       text = savedText[0..offs] ~ text ~ savedText[offs..$];
       offs += len; // Add length of the inserted text to the offset.
-      return;
     }
-    write("\n$(DDOC_DECL ");
-    dg();
-    writeSemicolon && write(";");
-    writeAttributes(d);
-    write(")");
-    prevDeclOffset = text.length;
+    else
+    {
+      writeDECL();
+      // Set the offset. At this offset other declarations with a ditto
+      // comment will be inserted, if present.
+      prevDeclOffset = text.length;
+    }
   }
 
   /// Wraps the DDOC_DECL_DD macro around the text written by dg().
-  void DESC(void delegate() dg)
+  /// Writes the comment before dg() is called.
+  void DESC(void delegate() dg = null)
   {
     if (cmntIsDitto)
-      return;
+      return; // Don't write a description when we have a ditto declaration.
     write("\n$(DDOC_DECL_DD ");
-    dg();
+    writeComment();
+    dg && dg();
     write(")");
   }
 
@@ -542,7 +567,6 @@ class DDocEmitter : DefaultVisitor
       writeInheritanceList(d.bases);
     }, d);
     DESC({
-      writeComment();
       MEMBERS(is(T == ClassDeclaration) ? "CLASS" : "INTERFACE", {
         scope s = new Scope();
         d.decls && super.visit(d.decls);
@@ -574,7 +598,6 @@ class DDocEmitter : DefaultVisitor
       writeTemplateParams();
     }, d);
     DESC({
-      writeComment();
       MEMBERS(is(T == StructDeclaration) ? "STRUCT" : "UNION", {
         scope s = new Scope();
         d.decls && super.visit(d.decls);
@@ -607,7 +630,7 @@ class DDocEmitter : DefaultVisitor
     else if (auto fd = d.decl.Is!(FunctionDeclaration))
     {}
     // DECL({ write(textSpan(d.begin, d.end)); }, false);
-    DESC({ writeComment(); });
+    DESC();
   }
 
   /// Writes the attributes of a declaration in brackets.
@@ -668,10 +691,7 @@ override:
       write("enum", d.name ? " " : "");
       d.name && SYMBOL(d.name.str, d);
     }, d);
-    DESC({
-      writeComment();
-      MEMBERS("ENUM", { scope s = new Scope(); super.visit(d); });
-    });
+    DESC({ MEMBERS("ENUM", { scope s = new Scope(); super.visit(d); }); });
     return d;
   }
 
@@ -680,7 +700,7 @@ override:
     if (!ddoc(d))
       return d;
     DECL({ SYMBOL(d.name.str, d); }, d, false);
-    DESC({ writeComment(); });
+    DESC();
     return d;
   }
 
@@ -701,7 +721,6 @@ override:
       writeTemplateParams();
     }, d);
     DESC({
-      writeComment();
       MEMBERS("TEMPLATE", {
         scope s = new Scope();
         super.visit(d.decls);
@@ -739,7 +758,7 @@ override:
     if (!ddoc(d))
       return d;
     DECL({ SYMBOL("this", d); writeParams(d.params); }, d);
-    DESC({ writeComment(); });
+    DESC();
     return d;
   }
 
@@ -748,7 +767,7 @@ override:
     if (!ddoc(d))
       return d;
     DECL({ write("static "); SYMBOL("this", d); write("()"); }, d);
-    DESC({ writeComment(); });
+    DESC();
     return d;
   }
 
@@ -757,7 +776,7 @@ override:
     if (!ddoc(d))
       return d;
     DECL({ write("~"); SYMBOL("this", d); write("()"); }, d);
-    DESC({ writeComment(); });
+    DESC();
     return d;
   }
 
@@ -766,7 +785,7 @@ override:
     if (!ddoc(d))
       return d;
     DECL({ write("static ~"); SYMBOL("this", d); write("()"); }, d);
-    DESC({ writeComment(); });
+    DESC();
     return d;
   }
 
@@ -781,7 +800,7 @@ override:
       writeTemplateParams();
       writeParams(d.params);
     }, d);
-    DESC({ writeComment(); });
+    DESC();
     return d;
   }
 
@@ -790,7 +809,7 @@ override:
     if (!ddoc(d))
       return d;
     DECL({ SYMBOL("new", d); writeParams(d.params); }, d);
-    DESC({ writeComment(); });
+    DESC();
     return d;
   }
 
@@ -799,7 +818,7 @@ override:
     if (!ddoc(d))
       return d;
     DECL({ SYMBOL("delete", d); writeParams(d.params); }, d);
-    DESC({ writeComment(); });
+    DESC();
     return d;
   }
 
@@ -812,7 +831,7 @@ override:
       type = textSpan(d.typeNode.baseType.begin, d.typeNode.end);
     foreach (name; d.names)
       DECL({ write(escape(type), " "); SYMBOL(name.str, d); }, d);
-    DESC({ writeComment(); });
+    DESC();
     return d;
   }
 
@@ -821,7 +840,7 @@ override:
     if (!ddoc(d))
       return d;
     DECL({ SYMBOL("invariant", d); }, d);
-    DESC({ writeComment(); });
+    DESC();
     return d;
   }
 
@@ -830,7 +849,7 @@ override:
     if (!ddoc(d))
       return d;
     DECL({ SYMBOL("unittest", d); }, d);
-    DESC({ writeComment(); });
+    DESC();
     return d;
   }
 
