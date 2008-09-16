@@ -15,6 +15,7 @@ class Macro
   string name; /// The name of the macro.
   string text; /// The substitution text.
   uint callLevel;  /// Recursive call level.
+  /// Constructs a Macro object.
   this (string name, string text)
   {
     this.name = name;
