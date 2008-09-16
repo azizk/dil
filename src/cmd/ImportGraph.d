@@ -1,11 +1,9 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module cmd.ImportGraph;
 
-import dil.ast.Node;
-import dil.ast.Declarations;
+import dil.ast.Node,
+       dil.ast.Declarations;
 import dil.semantic.Module;
 import dil.parser.ImportParser;
 import dil.SourceText;

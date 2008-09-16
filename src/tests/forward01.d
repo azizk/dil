@@ -1,6 +1,5 @@
-/++
-  Author: Jari-Matti Mäkelä
-+/
+/// Author: Jari-Matti Mäkelä
+/// License: GPL3
 
 // Impossible circular composition.
 struct A { B b; }

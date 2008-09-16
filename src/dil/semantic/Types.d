@@ -1,11 +1,9 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.semantic.Types;
 
-import dil.semantic.Symbol;
-import dil.semantic.TypesEnum;
+import dil.semantic.Symbol,
+       dil.semantic.TypesEnum;
 import dil.lexer.Identifier;
 import dil.CompilerInfo;
 

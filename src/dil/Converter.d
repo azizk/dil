@@ -1,14 +1,12 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.Converter;
 
+import dil.lexer.Funcs;
 import dil.Information;
 import dil.Location;
 import dil.Unicode;
 import dil.FileBOM;
-import dil.lexer.Funcs;
 import dil.Messages;
 import common;
 

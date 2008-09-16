@@ -1,19 +1,17 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.ModuleManager;
 
-import dil.semantic.Module;
-import dil.semantic.Package;
+import dil.semantic.Module,
+       dil.semantic.Package;
 import dil.Location;
 import dil.Information;
 import dil.Messages;
 import common;
 
-import tango.io.FilePath;
-import tango.io.FileSystem;
-import tango.io.model.IFile;
+import tango.io.FilePath,
+       tango.io.FileSystem,
+       tango.io.model.IFile;
 import tango.util.PathUtil : pathNormalize = normalize;
 
 alias FileConst.PathSeparatorChar dirSep;

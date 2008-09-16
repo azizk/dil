@@ -1,8 +1,7 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module Settings;
+
 import common;
 
 /// Global application settings.

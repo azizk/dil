@@ -1,11 +1,9 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.lexer.Keywords;
 
-import dil.lexer.Token;
-import dil.lexer.Identifier;
+import dil.lexer.Token,
+       dil.lexer.Identifier;
 
 /// Table of reserved identifiers.
 static const Identifier[] g_reservedIds = [

@@ -1,14 +1,12 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module cmd.Compile;
 
-import dil.semantic.Module;
-import dil.semantic.Package;
-import dil.semantic.Pass1;
-import dil.semantic.Pass2;
-import dil.semantic.Symbols;
+import dil.semantic.Module,
+       dil.semantic.Package,
+       dil.semantic.Pass1,
+       dil.semantic.Pass2,
+       dil.semantic.Symbols;
 import dil.doc.Doc;
 import dil.Compilation;
 import dil.Information;

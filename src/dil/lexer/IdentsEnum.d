@@ -1,7 +1,5 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.lexer.IdentsEnum;
 
 import dil.lexer.IdentsGenerator;

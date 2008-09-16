@@ -1,7 +1,5 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.semantic.SymbolTable;
 
 import dil.semantic.Symbol;

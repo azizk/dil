@@ -1,12 +1,10 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module cmd.Statistics;
 
 import cmd.ASTStats;
-import dil.lexer.Lexer;
-import dil.lexer.Token;
+import dil.lexer.Lexer,
+       dil.lexer.Token;
 import dil.parser.Parser;
 import dil.ast.NodesEnum;
 import dil.SourceText;

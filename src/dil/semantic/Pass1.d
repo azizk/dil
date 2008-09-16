@@ -1,11 +1,9 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.semantic.Pass1;
 
-import dil.ast.Visitor;
-import dil.ast.Node,
+import dil.ast.Visitor,
+       dil.ast.Node,
        dil.ast.Declarations,
        dil.ast.Expressions,
        dil.ast.Statements,

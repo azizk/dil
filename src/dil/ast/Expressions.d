@@ -1,16 +1,14 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.ast.Expressions;
 
 public import dil.ast.Expression;
-import dil.ast.Node;
-import dil.ast.Types;
-import dil.ast.Declarations;
-import dil.ast.Statements;
-import dil.ast.Parameters;
-import dil.ast.NodeCopier;
+import dil.ast.Node,
+       dil.ast.Types,
+       dil.ast.Declarations,
+       dil.ast.Statements,
+       dil.ast.Parameters,
+       dil.ast.NodeCopier;
 import dil.lexer.Identifier;
 import dil.semantic.Types;
 import common;

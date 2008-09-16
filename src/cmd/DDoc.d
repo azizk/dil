@@ -1,7 +1,5 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module cmd.DDoc;
 
 import cmd.DDocXML,
@@ -9,13 +7,13 @@ import cmd.DDocXML,
 import dil.doc.Parser,
        dil.doc.Macro,
        dil.doc.Doc;
-import dil.ast.Node,
+import dil.ast.DefaultVisitor,
+       dil.ast.Node,
        dil.ast.Declarations,
        dil.ast.Statements,
        dil.ast.Expression,
        dil.ast.Parameters,
-       dil.ast.Types,
-       dil.ast.DefaultVisitor;
+       dil.ast.Types;
 import dil.lexer.Token,
        dil.lexer.Funcs;
 import dil.semantic.Module,

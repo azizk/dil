@@ -1,6 +1,5 @@
-/++
-  Author: Aziz Köksal
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 
 struct A
 { int a = B.x; }

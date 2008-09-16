@@ -1,27 +1,25 @@
-/++
-  Authors: Aziz Köksal & Jari-Matti Mäkelä
-  License: GPL3
-+/
+/// Authors: Aziz Köksal, Jari-Matti Mäkelä
+/// License: GPL3
 module cmd.DDocXML;
 
-import cmd.DDoc;
-import cmd.Highlight;
-import dil.doc.Parser;
-import dil.doc.Macro;
-import dil.doc.Doc;
-import dil.ast.Node;
-import dil.ast.Declarations,
+import cmd.DDoc,
+       cmd.Highlight;
+import dil.doc.Parser,
+       dil.doc.Macro,
+       dil.doc.Doc;
+import dil.ast.Node,
+       dil.ast.Declarations,
        dil.ast.Statements,
        dil.ast.Expression,
        dil.ast.Parameters,
-       dil.ast.Types;
-import dil.ast.DefaultVisitor;
-import dil.lexer.Token;
-import dil.lexer.Funcs;
-import dil.semantic.Module;
-import dil.semantic.Pass1;
-import dil.semantic.Symbol;
-import dil.semantic.Symbols;
+       dil.ast.Types,
+       dil.ast.DefaultVisitor;
+import dil.lexer.Token,
+       dil.lexer.Funcs;
+import dil.semantic.Module,
+       dil.semantic.Pass1,
+       dil.semantic.Symbol,
+       dil.semantic.Symbols;
 import dil.Compilation;
 import dil.Information;
 import dil.Converter;
@@ -31,8 +29,8 @@ import dil.Time;
 import common;
 
 import tango.text.Ascii : toUpper;
-import tango.io.File;
-import tango.io.FilePath;
+import tango.io.File,
+       tango.io.FilePath;
 
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
 class DDocXMLEmitter : DDocEmitter

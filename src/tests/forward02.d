@@ -1,6 +1,5 @@
-/++
-  Author: Jari-Matti Mäkelä
-+/
+/// Author: Jari-Matti Mäkelä
+/// License: GPL3
 
 // Valid circular composition because of pointer.
 struct A { B* b; }

@@ -1,12 +1,10 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.translator.German;
 
-import dil.ast.DefaultVisitor;
-import dil.ast.Node;
-import dil.ast.Declarations,
+import dil.ast.DefaultVisitor,
+       dil.ast.Node,
+       dil.ast.Declarations,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;

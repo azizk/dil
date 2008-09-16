@@ -1,7 +1,5 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.SourceText;
 
 import dil.Converter;
@@ -10,8 +8,8 @@ import dil.Location;
 import dil.Messages;
 import common;
 
-import tango.io.File;
-import tango.io.FilePath;
+import tango.io.File,
+       tango.io.FilePath;
 
 /// Represents D source code.
 ///

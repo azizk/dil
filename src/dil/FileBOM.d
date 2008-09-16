@@ -1,8 +1,7 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.FileBOM;
+
 import common;
 
 /// Enumeration of byte order marks.

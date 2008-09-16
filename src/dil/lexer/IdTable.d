@@ -1,16 +1,14 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.lexer.IdTable;
 
-import dil.lexer.TokensEnum;
-import dil.lexer.IdentsGenerator;
-import dil.lexer.Keywords;
+import dil.lexer.TokensEnum,
+       dil.lexer.IdentsGenerator,
+       dil.lexer.Keywords;
 import common;
 
-public import dil.lexer.Identifier;
-public import dil.lexer.IdentsEnum;
+public import dil.lexer.Identifier,
+              dil.lexer.IdentsEnum;
 
 /// A namespace for the predefined identifiers.
 struct Ident

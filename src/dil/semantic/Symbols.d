@@ -1,14 +1,12 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.semantic.Symbols;
 
-import dil.ast.Expression;
-import dil.semantic.Symbol;
-import dil.semantic.SymbolTable;
-import dil.semantic.Types;
-import dil.ast.Node;
+import dil.ast.Node,
+       dil.ast.Expression;
+import dil.semantic.Symbol,
+       dil.semantic.SymbolTable,
+       dil.semantic.Types;
 import dil.lexer.IdTable;
 import dil.Enums;
 import common;

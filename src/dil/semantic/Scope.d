@@ -1,11 +1,9 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.semantic.Scope;
 
-import dil.semantic.Symbol;
-import dil.semantic.Symbols;
+import dil.semantic.Symbol,
+       dil.semantic.Symbols;
 import dil.lexer.Identifier;
 import common;
 

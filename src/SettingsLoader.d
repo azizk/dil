@@ -1,18 +1,18 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module SettingsLoader;
 
-import Settings;
+import dil.ast.Node,
+       dil.ast.Declarations,
+       dil.ast.Expressions;
+import dil.semantic.Module,
+       dil.semantic.Pass1,
+       dil.semantic.Symbol,
+       dil.semantic.Symbols;
 import dil.Messages;
-import dil.ast.Node, dil.ast.Declarations, dil.ast.Expressions;
-import dil.semantic.Module;
-import dil.semantic.Pass1;
-import dil.semantic.Symbol;
-import dil.semantic.Symbols;
 import dil.Information;
 import dil.Compilation;
+import Settings;
 import common;
 
 import tango.io.FilePath;

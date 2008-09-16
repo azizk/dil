@@ -1,8 +1,7 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.Unicode;
+
 public import util.uni : isUniAlpha;
 
 /// U+FFFD = �. Used to replace invalid Unicode characters.

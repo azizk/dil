@@ -1,7 +1,5 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.doc.Parser;
 
 import dil.lexer.Funcs;
@@ -20,7 +18,7 @@ class IdentValue
   }
 }
 
-/// Parses text of the form:
+/// Parses text in the form of:
 /// <pre>
 /// ident = value
 /// ident2 = value2

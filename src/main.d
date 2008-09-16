@@ -1,7 +1,5 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module main;
 
 import dil.parser.Parser;
@@ -11,9 +9,9 @@ import dil.ast.Declarations,
        dil.ast.Expressions,
        dil.ast.Node,
        dil.ast.Visitor;
-import dil.semantic.Module;
-import dil.semantic.Symbols;
-import dil.semantic.Pass1,
+import dil.semantic.Module,
+       dil.semantic.Symbols,
+       dil.semantic.Pass1,
        dil.semantic.Pass2,
        dil.semantic.Passes,
        dil.semantic.Interpreter;
@@ -33,7 +31,6 @@ import cmd.DDoc;
 
 import Settings;
 import SettingsLoader;
-// import TypeRules;
 import common;
 
 import Integer = tango.text.convert.Integer;
@@ -293,14 +290,12 @@ void main(char[][] args)
   case "?", "help":
     printHelp(args.length >= 3 ? args[2] : "");
     break;
-  // case "typerules":
-  //   genHTMLTypeRulesTables();
-  //   break;
   default:
     printHelp("main");
   }
 }
 
+/// Reads the standard input and returns its contents.
 char[] readStdin()
 {
   char[] text;
@@ -350,6 +345,7 @@ version(D2)
   return cc;
 }
 
+/// Parses a debug or version command line option.
 bool parseDebugOrVersion(string arg, CompilationContext context)
 {
   if (strbeg(arg, "-debug"))
@@ -402,6 +398,7 @@ void printErrors(InfoManager infoMan)
 }
 
 /// Prints the help message of a command.
+/// If the command wasn't found, the main help message is printed.
 void printHelp(char[] command)
 {
   char[] msg;

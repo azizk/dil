@@ -1,6 +1,5 @@
-/++
-  Author: Aziz Köksal
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 
 // Impossible static circular reference.
 const x = y;

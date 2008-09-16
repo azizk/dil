@@ -1,24 +1,21 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.semantic.Interpreter;
 
-import dil.ast.Visitor;
-import dil.ast.Node,
+import dil.ast.Visitor,
+       dil.ast.Node,
        dil.ast.Declarations,
        dil.ast.Expressions,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
-
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
        dil.semantic.Scope,
        dil.semantic.Types;
 import dil.Information;
 
-/// Used for compile-time evaluation of expressions.
+/// Used for compile-time evaluation of D code.
 class Interpreter : Visitor
 {
   // Scope scop;

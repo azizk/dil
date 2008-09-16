@@ -1,7 +1,5 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.lexer.Funcs;
 
 const char[3] LS = \u2028; /// Unicode line separator.
@@ -25,7 +23,11 @@ bool isUnicodeNewline(char* p)
 }
 
 /// Returns: true if p points to the start of a Newline.
-/// Newline: \n | \r | \r\n | LS | PS
+/// $(PRE
+/// Newline := "\n" | "\r" | "\r\n" | LS | PS
+/// LS := "\u2028"
+/// PS := "\u2029"
+/// )
 bool isNewline(char* p)
 {
   return *p == '\n' || *p == '\r' || isUnicodeNewline(p);
@@ -38,14 +40,17 @@ bool isNewline(dchar c)
 }
 
 /// Returns: true if p points to an EOF character.
-/// EOF: 0 | _Z_
+/// $(PRE
+/// EOF := "\0" | _Z_
+/// _Z_ := "\x1A"
+/// )
 bool isEOF(dchar c)
 {
   return c == 0 || c == _Z_;
 }
 
 /// Returns: true if p points to the first character of an EndOfLine.
-/// EndOfLine: Newline | EOF
+/// $(PRE EndOfLine := Newline | EOF)
 bool isEndOfLine(char* p)
 {
   return isNewline(p) || isEOF(*p);

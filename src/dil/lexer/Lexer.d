@@ -1,13 +1,11 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.lexer.Lexer;
 
-import dil.lexer.Token;
-import dil.lexer.Keywords;
-import dil.lexer.Identifier;
-import dil.lexer.IdTable;
+import dil.lexer.Token,
+       dil.lexer.Keywords,
+       dil.lexer.Identifier,
+       dil.lexer.IdTable;
 import dil.Information;
 import dil.Messages;
 import dil.HtmlEntities;

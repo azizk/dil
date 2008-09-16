@@ -1,16 +1,14 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.semantic.Module;
 
-import dil.ast.Node;
-import dil.ast.Declarations;
+import dil.ast.Node,
+       dil.ast.Declarations;
 import dil.parser.Parser;
-import dil.lexer.Lexer;
-import dil.lexer.IdTable;
-import dil.semantic.Symbol;
-import dil.semantic.Symbols;
+import dil.lexer.Lexer,
+       dil.lexer.IdTable;
+import dil.semantic.Symbol,
+       dil.semantic.Symbols;
 import dil.Location;
 import dil.Messages;
 import dil.Information;

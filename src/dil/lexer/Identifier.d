@@ -1,21 +1,20 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.lexer.Identifier;
 
-import dil.lexer.TokensEnum;
-import dil.lexer.IdentsEnum;
+import dil.lexer.TokensEnum,
+       dil.lexer.IdentsEnum;
 import common;
 
 /// Represents an identifier as defined in the D specs.
 ///
-///<pre>
+/// $(PRE
 ///  Identifier := IdStart IdChar*
 ///  IdStart := "_" | Letter
 ///  IdChar := IdStart | "0"-"9"
 ///  Letter := UniAlpha
-///</pre>
+/// )
+/// See_Also:
 ///  Unicode alphas are defined in Unicode 5.0.0.
 align(1)
 struct Identifier

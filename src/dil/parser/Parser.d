@@ -1,17 +1,15 @@
-/++
-  Author: Aziz Köksal
-  License: GPL3
-+/
+/// Author: Aziz Köksal
+/// License: GPL3
 module dil.parser.Parser;
 
-import dil.lexer.Lexer;
-import dil.ast.Node;
-import dil.ast.Declarations;
-import dil.ast.Statements;
-import dil.ast.Expressions;
-import dil.ast.Types;
-import dil.ast.Parameters;
-import dil.lexer.IdTable;
+import dil.lexer.Lexer,
+       dil.lexer.IdTable;
+import dil.ast.Node,
+       dil.ast.Declarations,
+       dil.ast.Statements,
+       dil.ast.Expressions,
+       dil.ast.Types,
+       dil.ast.Parameters;
 import dil.Messages;
 import dil.Information;
 import dil.Enums;
