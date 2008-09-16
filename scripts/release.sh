@@ -55,7 +55,8 @@ done
 
 function linbuild
 { # The first argument is the path of the binary output file.
-  dsss build -clean -full ${@:2} && cp $DIL $1
+  dsss build -clean -full ${@:2}
+  cp $DIL $1 && ls -lc $1
 }
 
 # Linux Debug Binaries
@@ -73,7 +74,7 @@ if [ -s ~/bin/dmd.exe ]; then
   { # The first argument is the path of the binary output file.
     # obj dir is winobj. -op = don't strip paths from obj files.
     wine ~/bin/dmd.exe -odwinobj -op -ofdil.exe ${@:2} $SRC_FILES
-    cp dil.exe $1
+    cp dil.exe $1 && ls -lc $1
   }
   # Windows Debug Binaries
   winbuild $DEST/bin/dil_d.exe

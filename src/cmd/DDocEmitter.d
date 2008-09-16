@@ -328,7 +328,8 @@ abstract class DDocEmitter : DefaultVisitor
       }
       write(", ");
     }
-    text = text[0..$-2]; /// Slice off last ", ".
+    if (params.items)
+      text = text[0..$-2]; /// Slice off last ", ".
     write(")");
   }
 
@@ -337,7 +338,9 @@ abstract class DDocEmitter : DefaultVisitor
   {
     if (!tparams)
       return;
-    write("$(TEMPLATE_PARAMS ", escape(textSpan(tparams.begin.next, tparams.end.prev)), ")");
+    write("$(TEMPLATE_PARAMS ",
+          escape(textSpan(tparams.begin, tparams.end))[1..$-1], // Remove ().
+          ")");
     tparams = null;
   }
 
