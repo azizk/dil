@@ -84,11 +84,12 @@ abstract class DDocEmitter : DefaultVisitor
   }
 
   /// Keeps track of previous comments in each scope.
-  scope class Scope
+  scope class DDocScope
   {
     DDocComment saved_prevCmnt;
     bool saved_cmntIsDitto;
     uint saved_prevDeclOffset;
+    /// When constructed, variables are saved.
     this()
     { // Save the previous comment of the parent scope.
       saved_prevCmnt = this.outer.prevCmnt;
@@ -99,7 +100,7 @@ abstract class DDocEmitter : DefaultVisitor
       this.outer.cmntIsDitto = false;
       this.outer.prevDeclOffset = 0;
     }
-
+    /// When destructed variables are restored.
     ~this()
     { // Restore the previous comment of the parent scope.
       this.outer.prevCmnt = saved_prevCmnt;
@@ -437,7 +438,7 @@ abstract class DDocEmitter : DefaultVisitor
     }, d);
     DESC({
       MEMBERS(is(T == ClassDeclaration) ? "CLASS" : "INTERFACE", {
-        scope s = new Scope();
+        scope s = new DDocScope();
         d.decls && super.visit(d.decls);
       });
     });
@@ -456,7 +457,7 @@ abstract class DDocEmitter : DefaultVisitor
     }, d);
     DESC({
       MEMBERS(is(T == StructDeclaration) ? "STRUCT" : "UNION", {
-        scope s = new Scope();
+        scope s = new DDocScope();
         d.decls && super.visit(d.decls);
       });
     });
@@ -534,7 +535,7 @@ override:
       write("enum", d.name ? " " : "");
       d.name && SYMBOL(d.name.str, d);
     }, d);
-    DESC({ MEMBERS("ENUM", { scope s = new Scope(); super.visit(d); }); });
+    DESC({ MEMBERS("ENUM", { scope s = new DDocScope(); super.visit(d); }); });
     return d;
   }
 
@@ -565,7 +566,7 @@ override:
     }, d);
     DESC({
       MEMBERS("TEMPLATE", {
-        scope s = new Scope();
+        scope s = new DDocScope();
         super.visit(d.decls);
       });
     });
