@@ -52,7 +52,7 @@ abstract class DDocEmitter : DefaultVisitor
   {
     if (isDDocFile(modul))
     { // The module is actually a DDoc text file.
-      auto c = getDDocComment(getDDocText(modul));
+      auto c = DDocUtils.getDDocComment(getDDocText(modul));
       foreach (s; c.sections)
       {
         if (s.Is("macros"))
@@ -154,7 +154,7 @@ abstract class DDocEmitter : DefaultVisitor
   /// Sets some members and returns the DDocComment for node.
   DDocComment ddoc(Node node)
   {
-    this.cmnt = getDDocComment(node);
+    this.cmnt = DDocUtils.getDDocComment(node);
     if (this.cmnt)
     {
       if (this.cmnt.isDitto) // A ditto comment.
@@ -190,7 +190,7 @@ abstract class DDocEmitter : DefaultVisitor
         else if (s is c.description)
           write("\n$(DDOC_DESCRIPTION ");
         else if (auto name = toUpper(s.name.dup) in specialSections)
-          write("\n$(DDOC_" ~ *name ~ " ");
+          write("\n$(DDOC_", *name, " ");
         else if (s.Is("params"))
         { // Process parameters section.
           auto ps = new ParamsSection(s.name, s.text);
@@ -210,11 +210,18 @@ abstract class DDocEmitter : DefaultVisitor
           continue;
         }
         else
-          // TODO: replace occurrences of '_' with ' ' in s.name.
-          write("\n$(DDOC_SECTION $(DDOC_SECTION_H " ~ s.name ~ ":)");
+          write("\n$(DDOC_SECTION $(DDOC_SECTION_H ", replace_(s.name), ":)");
         write(scanCommentText(s.text), ")");
       }
     write(")");
+  }
+
+  /// Replaces occurrences of '_' with ' ' in str.
+  char[] replace_(char[] str)
+  {
+    foreach (ref c; str.dup)
+      if (c == '_') c = ' ';
+    return str;
   }
 
   /// Scans the comment text and:

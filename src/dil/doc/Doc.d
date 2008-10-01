@@ -40,51 +40,204 @@ class DDocComment
   bool isDitto()
   {
     if (summary && sections.length == 1 &&
-        icompare(strip(summary.text), "ditto") == 0)
+        icompare(DDocUtils.strip(summary.text), "ditto") == 0)
       return true;
     return false;
   }
 }
 
-/// Returns a node's DDocComment.
-DDocComment getDDocComment(Node node)
+/// A namespace for some utility functions.
+struct DDocUtils
 {
-  DDocParser p;
-  auto docTokens = getDocTokens(node);
-  if (!docTokens.length)
-    return null;
-  p.parse(getDDocText(docTokens));
-  return new DDocComment(p.sections, p.summary, p.description);
-}
+static:
+  /// Returns a node's DDocComment.
+  DDocComment getDDocComment(Node node)
+  {
+    DDocParser p;
+    auto docTokens = getDocTokens(node);
+    if (!docTokens.length)
+      return null;
+    p.parse(getDDocText(docTokens));
+    return new DDocComment(p.sections, p.summary, p.description);
+  }
 
-/// Returns a DDocComment created from a text.
-DDocComment getDDocComment(string text)
-{
-  text = sanitize(text, '\0'); // May be unnecessary.
-  DDocParser p;
-  p.parse(text);
-  return new DDocComment(p.sections, p.summary, p.description);
-}
+  /// Returns a DDocComment created from a text.
+  DDocComment getDDocComment(string text)
+  {
+    text = sanitize(text, '\0'); // May be unnecessary.
+    DDocParser p;
+    p.parse(text);
+    return new DDocComment(p.sections, p.summary, p.description);
+  }
 
-/// Strips leading and trailing whitespace characters.
-/// Whitespace: ' ', '\t', '\v', '\f' and '\n'
-/// Returns: a slice into str.
-char[] strip(char[] str)
-{
-  if (str.length == 0)
-    return null;
-  uint i;
-  for (; i < str.length; i++)
-    if (!isspace(str[i]) && str[i] != '\n')
-      break;
-  if (str.length == i)
-    return null;
-  str = str[i..$];
-  assert(str.length);
-  for (i = str.length; i; i--)
-    if (!isspace(str[i-1]) && str[i-1] != '\n')
-      break;
-  return str[0..i];
+  /// Strips leading and trailing whitespace characters.
+  /// Whitespace: ' ', '\t', '\v', '\f' and '\n'
+  /// Returns: a slice into str.
+  char[] strip(char[] str)
+  {
+    if (str.length == 0)
+      return null;
+    uint i;
+    for (; i < str.length; i++)
+      if (!isspace(str[i]) && str[i] != '\n')
+        break;
+    if (str.length == i)
+      return null;
+    str = str[i..$];
+    assert(str.length);
+    for (i = str.length; i; i--)
+      if (!isspace(str[i-1]) && str[i-1] != '\n')
+        break;
+    return str[0..i];
+  }
+
+  /// Returns true if token is a Doxygen comment.
+  bool isDoxygenComment(Token* token)
+  { // Doxygen: '/+!' '/*!' '//!'
+    return token.kind == TOK.Comment && token.start[2] == '!';
+  }
+
+  /// Returns true if token is a DDoc comment.
+  bool isDDocComment(Token* token)
+  { // DDOC: '/++' '/**' '///'
+    return token.kind == TOK.Comment && token.start[1] == token.start[2];
+  }
+
+  /// Returns the surrounding documentation comment tokens.
+  /// Params:
+  ///   node = the node to find doc comments for.
+  ///   isDocComment = a function predicate that checks for doc comment tokens.
+  /// Note: this function works correctly only if
+  ///       the source text is syntactically correct.
+  Token*[] getDocTokens(Node node, bool function(Token*) isDocComment = &isDDocComment)
+  {
+    Token*[] comments;
+    auto isEnumMember = node.kind == NodeKind.EnumMemberDeclaration;
+    // Get preceding comments.
+    auto token = node.begin;
+    // Scan backwards until we hit another declaration.
+  Loop:
+    for (; token; token = token.prev)
+    {
+      if (token.kind == TOK.LBrace ||
+          token.kind == TOK.RBrace ||
+          token.kind == TOK.Semicolon ||
+          /+token.kind == TOK.HEAD ||+/
+          (isEnumMember && token.kind == TOK.Comma))
+        break;
+
+      if (token.kind == TOK.Comment)
+      { // Check that this comment doesn't belong to the previous declaration.
+        switch (token.prev.kind)
+        {
+        case TOK.Semicolon, TOK.RBrace, TOK.Comma:
+          break Loop;
+        default:
+          if (isDocComment(token))
+            comments = [token] ~ comments;
+        }
+      }
+    }
+    // Get single comment to the right.
+    token = node.end.next;
+    if (token.kind == TOK.Comment && isDocComment(token))
+      comments ~= token;
+    else if (isEnumMember)
+    {
+      token = node.end.nextNWS;
+      if (token.kind == TOK.Comma)
+      {
+        token = token.next;
+        if (token.kind == TOK.Comment && isDocComment(token))
+          comments ~= token;
+      }
+    }
+    return comments;
+  }
+
+  bool isLineComment(Token* t)
+  {
+    assert(t.kind == TOK.Comment);
+    return t.start[1] == '/';
+  }
+
+  /// Extracts the text body of the comment tokens.
+  string getDDocText(Token*[] tokens)
+  {
+    if (tokens.length == 0)
+      return null;
+    string result;
+    foreach (token; tokens)
+    { // Determine how many characters to slice off from the end of the comment.
+      // 0 for "//", 2 for "+/" and "*/".
+      auto n = isLineComment(token) ? 0 : 2;
+      result ~= sanitize(token.srcText[3 .. $-n], token.start[1]);
+      assert(token.next);
+      result ~= (token.next.kind == TOK.Newline) ? '\n' : ' ';
+    }
+    return result[0..$-1]; // Slice off last '\n' or ' '.
+  }
+
+  /// Sanitizes a DDoc comment string.
+  ///
+  /// Leading "commentChar"s are removed from the lines.
+  /// The various newline types are converted to '\n'.
+  /// Params:
+  ///   comment = the string to be sanitized.
+  ///   commentChar = '/', '+', or '*'
+  string sanitize(string comment, char commentChar)
+  {
+    alias comment result;
+
+    bool newline = true; // True when at the beginning of a new line.
+    uint i, j;
+    auto len = result.length;
+    for (; i < len; i++, j++)
+    {
+      if (newline)
+      { // Ignore commentChars at the beginning of each new line.
+        newline = false;
+        auto begin = i;
+        while (i < len && isspace(result[i]))
+          i++;
+        if (i < len && result[i] == commentChar)
+          while (++i < len && result[i] == commentChar)
+          {}
+        else
+          i = begin; // Reset. No commentChar found.
+        if (i >= len)
+          break;
+      }
+      // Check for Newline.
+      switch (result[i])
+      {
+      case '\r':
+        if (i+1 < len && result[i+1] == '\n')
+          i++;
+      case '\n':
+        result[j] = '\n'; // Copy Newline as '\n'.
+        newline = true;
+        continue;
+      default:
+        if (!isascii(result[i]) && i+2 < len && isUnicodeNewline(result.ptr + i))
+        {
+          i += 2;
+          goto case '\n';
+        }
+      }
+      // Copy character.
+      result[j] = result[i];
+    }
+    result.length = j; // Adjust length.
+    // Lastly, strip trailing commentChars.
+    if (!result.length)
+      return null;
+    i = result.length;
+    for (; i && result[i-1] == commentChar; i--)
+    {}
+    result.length = i;
+    return result;
+  }
 }
 
 /// Parses a DDoc comment string.
@@ -324,152 +477,4 @@ class MacrosSection : Section
       this.macroTexts[i] = idvalue.value;
     }
   }
-}
-
-/// Returns true if token is a Doxygen comment.
-bool isDoxygenComment(Token* token)
-{ // Doxygen: '/+!' '/*!' '//!'
-  return token.kind == TOK.Comment && token.start[2] == '!';
-}
-
-/// Returns true if token is a DDoc comment.
-bool isDDocComment(Token* token)
-{ // DDOC: '/++' '/**' '///'
-  return token.kind == TOK.Comment && token.start[1] == token.start[2];
-}
-
-/// Returns the surrounding documentation comment tokens.
-/// Params:
-///   node = the node to find doc comments for.
-///   isDocComment = a function predicate that checks for doc comment tokens.
-/// Note: this function works correctly only if
-///       the source text is syntactically correct.
-Token*[] getDocTokens(Node node, bool function(Token*) isDocComment = &isDDocComment)
-{
-  Token*[] comments;
-  auto isEnumMember = node.kind == NodeKind.EnumMemberDeclaration;
-  // Get preceding comments.
-  auto token = node.begin;
-  // Scan backwards until we hit another declaration.
-Loop:
-  for (; token; token = token.prev)
-  {
-    if (token.kind == TOK.LBrace ||
-        token.kind == TOK.RBrace ||
-        token.kind == TOK.Semicolon ||
-        /+token.kind == TOK.HEAD ||+/
-        (isEnumMember && token.kind == TOK.Comma))
-      break;
-
-    if (token.kind == TOK.Comment)
-    { // Check that this comment doesn't belong to the previous declaration.
-      switch (token.prev.kind)
-      {
-      case TOK.Semicolon, TOK.RBrace, TOK.Comma:
-        break Loop;
-      default:
-        if (isDocComment(token))
-          comments = [token] ~ comments;
-      }
-    }
-  }
-  // Get single comment to the right.
-  token = node.end.next;
-  if (token.kind == TOK.Comment && isDocComment(token))
-    comments ~= token;
-  else if (isEnumMember)
-  {
-    token = node.end.nextNWS;
-    if (token.kind == TOK.Comma)
-    {
-      token = token.next;
-      if (token.kind == TOK.Comment && isDocComment(token))
-        comments ~= token;
-    }
-  }
-  return comments;
-}
-
-bool isLineComment(Token* t)
-{
-  assert(t.kind == TOK.Comment);
-  return t.start[1] == '/';
-}
-
-/// Extracts the text body of the comment tokens.
-string getDDocText(Token*[] tokens)
-{
-  if (tokens.length == 0)
-    return null;
-  string result;
-  foreach (token; tokens)
-  { // Determine how many characters to slice off from the end of the comment.
-    // 0 for "//", 2 for "+/" and "*/".
-    auto n = isLineComment(token) ? 0 : 2;
-    result ~= sanitize(token.srcText[3 .. $-n], token.start[1]);
-    assert(token.next);
-    result ~= (token.next.kind == TOK.Newline) ? '\n' : ' ';
-  }
-  return result[0..$-1]; // Slice off last '\n' or ' '.
-}
-
-/// Sanitizes a DDoc comment string.
-///
-/// Leading "commentChar"s are removed from the lines.
-/// The various newline types are converted to '\n'.
-/// Params:
-///   comment = the string to be sanitized.
-///   commentChar = '/', '+', or '*'
-string sanitize(string comment, char commentChar)
-{
-  alias comment result;
-
-  bool newline = true; // True when at the beginning of a new line.
-  uint i, j;
-  auto len = result.length;
-  for (; i < len; i++, j++)
-  {
-    if (newline)
-    { // Ignore commentChars at the beginning of each new line.
-      newline = false;
-      auto begin = i;
-      while (i < len && isspace(result[i]))
-        i++;
-      if (i < len && result[i] == commentChar)
-        while (++i < len && result[i] == commentChar)
-        {}
-      else
-        i = begin; // Reset. No commentChar found.
-      if (i >= len)
-        break;
-    }
-    // Check for Newline.
-    switch (result[i])
-    {
-    case '\r':
-      if (i+1 < len && result[i+1] == '\n')
-        i++;
-    case '\n':
-      result[j] = '\n'; // Copy Newline as '\n'.
-      newline = true;
-      continue;
-    default:
-      if (!isascii(result[i]) && i+2 < len && isUnicodeNewline(result.ptr + i))
-      {
-        i += 2;
-        goto case '\n';
-      }
-    }
-    // Copy character.
-    result[j] = result[i];
-  }
-  result.length = j; // Adjust length.
-  // Lastly, strip trailing commentChars.
-  if (!result.length)
-    return null;
-  i = result.length;
-  for (; i && result[i-1] == commentChar; i--)
-  {}
-  result.length = i;
-  return result;
 }

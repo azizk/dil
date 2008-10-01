@@ -80,7 +80,7 @@ struct CompileCommand
   {
     foreach (member; scopeSym.members)
     {
-      auto tokens = getDocTokens(member.node);
+      auto tokens = DDocUtils.getDocTokens(member.node);
       char[] docText;
       foreach (token; tokens)
         docText ~= token.srcText;
