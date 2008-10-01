@@ -17,10 +17,11 @@ import dil.lexer.Token,
        dil.lexer.Funcs;
 import dil.semantic.Module;
 import dil.Information;
+import dil.SourceText;
 import dil.Enums;
 import common;
 
-import tango.text.Ascii : toUpper;
+import tango.text.Ascii : toUpper, icompare;
 
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
 abstract class DDocEmitter : DefaultVisitor
@@ -49,6 +50,22 @@ abstract class DDocEmitter : DefaultVisitor
   /// Entry method.
   char[] emit()
   {
+    if (isDDocFile(modul))
+    { // The module is actually a DDoc text file.
+      auto c = getDDocComment(getDDocText(modul));
+      foreach (s; c.sections)
+      {
+        if (s.Is("macros"))
+        { // Declare the macros in this section.
+          auto ms = new MacrosSection(s.name, s.text);
+          mtable.insert(ms.macroNames, ms.macroTexts);
+        }
+        else
+          write(s.wholeText);
+      }
+      return text;
+    }
+    // Handle as a normal D module with declarations.
     if (auto d = modul.moduleDecl)
     {
       if (ddoc(d))
@@ -60,6 +77,29 @@ abstract class DDocEmitter : DefaultVisitor
     }
     MEMBERS("MODULE", { visitD(modul.root); });
     return text;
+  }
+
+  /// Returns true if the source text starts with "Ddoc\n" (ignores letter case.)
+  static bool isDDocFile(Module mod)
+  {
+    auto data = mod.sourceText.data;
+    // 5 = "ddoc\n".length; +1 = trailing '\0' in data.
+    if (data.length >= 5 + 1 && // Check for minimum length.
+        icompare(data[0..4], "ddoc") == 0 && // Check first four characters.
+        isNewline(data.ptr + 4)) // Check for a newline.
+      return true;
+    return false;
+  }
+
+  /// Returns the DDoc text of this module.
+  static char[] getDDocText(Module mod)
+  {
+    auto data = mod.sourceText.data;
+    char* p = data.ptr + "ddoc".length;
+    if (scanNewline(p)) // Skip the newline.
+      // Exclude preceding "Ddoc\n" and trailing '\0'.
+      return data[p-data.ptr .. $-1];
+    return null;
   }
 
   char[] textSpan(Token* left, Token* right)
@@ -100,7 +140,7 @@ abstract class DDocEmitter : DefaultVisitor
       this.outer.cmntIsDitto = false;
       this.outer.prevDeclOffset = 0;
     }
-    /// When destructed variables are restored.
+    /// When destructed, variables are restored.
     ~this()
     { // Restore the previous comment of the parent scope.
       this.outer.prevCmnt = saved_prevCmnt;

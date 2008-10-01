@@ -271,14 +271,17 @@ struct MacroExpander
           p += 2; // Point to 2nd '-'.
           // Scan to closing "-->".
           while (++p < textEnd)
-            if (p+2 < textEnd && *p == '-' && p[1] == '-' && p[2] == '>')
+            if (p+2 < textEnd && *p == '-' && p[1] == '-' && p[2] == '>') {
               p += 2; // Point to '>'.
+              break;
+            }
         } // <tag ...> or </tag>
         else if (p < textEnd && (isalpha(*p) || *p == '/'))
           while (++p < textEnd && *p != '>') // Skip to closing '>'.
           {}
         else
           continue MainLoop;
+        assert(p <= textEnd);
         if (p == textEnd)
           break MainLoop;
         assert(*p == '>');

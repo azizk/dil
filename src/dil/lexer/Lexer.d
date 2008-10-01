@@ -663,7 +663,7 @@ class Lexer
   ///   t.kind = TOK.Less;
   ///   goto Lcommon;
   /// ---
-  /// Note:Can't use this yet due to a $(DMDBUG 1534, bug) in DMD.
+  /// FIXME: Can't use this yet due to a $(DMDBUG 1534, bug) in DMD.
   template case_(char[] str, char[] kind, char[] label)
   {
     const char[] case_ =

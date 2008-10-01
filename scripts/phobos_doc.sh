@@ -35,13 +35,13 @@ cp $PHOBOS_HTML/erfc.gif $PHOBOS_HTML/erf.gif $PHOBOS_HTML/../style.css $PHOBOS_
 cp data/html.css $DOC/htmlsrc
 
 # Generate documenation files.
-dil ddoc $DOC/ -i -v data/phobos.ddoc data/phobos_overrides.ddoc -version=DDoc $FILES
+dil ddoc $DOC/ -i -v data/phobos.ddoc data/phobos_overrides.ddoc -version=DDoc $FILES $PHOBOS_SRC/phobos.d
 
 # Generate syntax highlighted files.
 HTMLSRC="$DOC/htmlsrc"
 for DFILE in $FILES; do
   # Use sed to remove part of the path, convert '/' to '.' and remove the extension.
   HTMLFILE=`echo $DFILE | sed -e "s@^$PHOBOS_SRC/*@@" -e 's@/@.@g' -e 's@\.d$@@'`.html
-  echo "FILE: $DFILE > $HTMLSRC/$HTMLFILE";
+  echo "dil hl $DFILE > $HTMLSRC/$HTMLFILE";
   dil hl --lines --syntax --html $DFILE > "$HTMLSRC/$HTMLFILE";
 done

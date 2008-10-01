@@ -57,6 +57,15 @@ DDocComment getDDocComment(Node node)
   return new DDocComment(p.sections, p.summary, p.description);
 }
 
+/// Returns a DDocComment created from a text.
+DDocComment getDDocComment(string text)
+{
+  text = sanitize(text, '\0'); // May be unnecessary.
+  DDocParser p;
+  p.parse(text);
+  return new DDocComment(p.sections, p.summary, p.description);
+}
+
 /// Strips leading and trailing whitespace characters.
 /// Whitespace: ' ', '\t', '\v', '\f' and '\n'
 /// Returns: a slice into str.
@@ -269,6 +278,14 @@ class Section
   {
     return icompare(name, name2) == 0;
   }
+
+  /// Returns the section's text including its name.
+  char[] wholeText()
+  {
+    if (name.length == 0)
+      return text;
+    return makeString(name.ptr, text.ptr+text.length);
+  }
 }
 
 class ParamsSection : Section
@@ -386,17 +403,14 @@ string getDDocText(Token*[] tokens)
     return null;
   string result;
   foreach (token; tokens)
-  {
-    auto n = isLineComment(token) ? 0 : 2; // 0 for "//", 2 for "+/" and "*/".
+  { // Determine how many characters to slice off from the end of the comment.
+    // 0 for "//", 2 for "+/" and "*/".
+    auto n = isLineComment(token) ? 0 : 2;
     result ~= sanitize(token.srcText[3 .. $-n], token.start[1]);
     assert(token.next);
-    if (token.next.kind == TOK.Newline)
-      result ~= \n;
-    else
-      result ~= ' ';
+    result ~= (token.next.kind == TOK.Newline) ? '\n' : ' ';
   }
-//   Stdout.formatln("→{}←", result);
-  return result[0..$-1]; // Remove \n or ' '
+  return result[0..$-1]; // Slice off last '\n' or ' '.
 }
 
 /// Sanitizes a DDoc comment string.

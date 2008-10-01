@@ -33,14 +33,14 @@ struct DDocCommand
   string destDirPath;   /// Destination directory.
   string[] macroPaths;  /// Macro file paths.
   string[] filePaths;   /// Module file paths.
-  string fileExtension; /// The extension of the output files.
+  string outFileExtension;  /// The extension of the output files.
   bool includeUndocumented; /// Whether to include undocumented symbols.
   bool writeXML; /// Whether to write XML instead of HTML docs.
-  bool verbose; /// Whether to be verbose.
+  bool verbose;  /// Whether to be verbose.
 
-  CompilationContext context;
-  InfoManager infoMan;
-  TokenHighlighter tokenHL; /// For highlighting tokens DDoc code sections.
+  CompilationContext context; /// Environment variables of the compilation.
+  InfoManager infoMan;        /// Collects error messages.
+  TokenHighlighter tokenHL;   /// For highlighting tokens DDoc code sections.
 
   /// Executes the doc generation command.
   void run()
@@ -57,59 +57,58 @@ struct DDocCommand
 
     // For DDoc code sections.
     tokenHL = new TokenHighlighter(infoMan, writeXML == false);
-    fileExtension = writeXML ? ".xml" : ".html";
+    outFileExtension = writeXML ? ".xml" : ".html";
 
     // Process D files.
     foreach (filePath; filePaths)
     {
       auto mod = new Module(filePath, infoMan);
-      if (isDDocFile(mod))
-      { // TODO: parse the whole file as a ddoc comment.
-        continue;
+
+      // Only parse if the file is not a "DDoc"-file.
+      if (!DDocEmitter.isDDocFile(mod))
+      {
+        mod.parse();
+        // No documentation for erroneous source files.
+        if (mod.hasErrors)
+          continue;
+        // Start semantic analysis.
+        auto pass1 = new SemanticPass1(mod, context);
+        pass1.run();
       }
+      else // Normally done in mod.parse().
+        mod.setFQN((new FilePath(filePath)).name());
 
-      // Parse the file.
-      mod.parse();
-      if (mod.hasErrors)
-        continue;
-
-      // Start semantic analysis.
-      auto pass1 = new SemanticPass1(mod, context);
-      pass1.run();
-
-      // Build destination file path.
-      auto destPath = new FilePath(destDirPath);
-      destPath.append(mod.getFQN() ~ fileExtension);
-
-      if (verbose)
-        Stdout.formatln("{} > {}", mod.filePath, destPath);
-
-      // Write the document file.
-      writeDocFile(destPath.toString(), mod, mtable);
+      // Write the documentation file.
+      writeDocumentationFile(mod, mtable);
     }
   }
 
-  void writeDocFile(string destPath, Module mod, MacroTable mtable)
+  /// Writes the documentation for a module to the disk.
+  /// Params:
+  ///   mod = the module to be processed.
+  ///   mtable = the main macro environment.
+  void writeDocumentationFile(Module mod, MacroTable mtable)
   {
-    // Create this module's own macro environment.
+    // Create an own macro environment for this module.
     mtable = new MacroTable(mtable);
     // Define runtime macros.
     // MODPATH is an extension by dil.
     mtable.insert("MODPATH", mod.getFQNPath() ~ "." ~ mod.fileExtension());
     mtable.insert("TITLE", mod.getFQN());
-    mtable.insert("DOCFILENAME", mod.getFQN() ~ fileExtension);
+    mtable.insert("DOCFILENAME", mod.getFQN() ~ outFileExtension);
     auto timeStr = Time.toString();
     mtable.insert("DATETIME", timeStr);
     mtable.insert("YEAR", Time.year(timeStr));
 
+    // Create the appropriate DDocEmitter.
     DDocEmitter ddocEmitter;
     if (writeXML)
       ddocEmitter = new DDocXMLEmitter(mod, mtable, includeUndocumented, tokenHL);
     else
       ddocEmitter = new DDocHTMLEmitter(mod, mtable, includeUndocumented, tokenHL);
+    // Start the emitter.
     auto ddocText = ddocEmitter.emit();
-
-    // Set BODY macro to the text produced by the emitter.
+    // Set the BODY macro to the text produced by the emitter.
     mtable.insert("BODY", ddocText);
     // Do the macro expansion pass.
     auto fileText = MacroExpander.expand(mtable, "$(DDOC)",
@@ -117,22 +116,15 @@ struct DDocCommand
                                          verbose ? infoMan : null);
     // debug fileText ~= "\n<pre>\n" ~ doc.text ~ "\n</pre>";
 
+    // Build destination file path.
+    auto destPath = new FilePath(destDirPath);
+    destPath.append(mod.getFQN() ~ outFileExtension);
+    // Verbose output of activity.
+    if (verbose) // TODO: create a setting for this format string in dilconf.d?
+      Stdout.formatln("ddoc {} > {}", mod.filePath, destPath);
     // Finally write the file out to the harddisk.
-    scope file = new File(destPath);
+    scope file = new File(destPath.toString());
     file.write(fileText);
-  }
-
-  /// Returns true if the source text starts with "Ddoc\n" (ignores letter case.)
-  bool isDDocFile(Module mod)
-  {
-    auto data = mod.sourceText.data;
-    const ddoc = "ddoc";
-    // -1 due to '\0' and +1 due to newline.
-    if (data.length - 1 >= /+ddoc.length+/ 4 + 1 && // Check minimum length.
-        icompare(data[0..4], ddoc) && // Check first four characters.
-        isNewline(data.ptr + 4)) // Check newline.
-      return true;
-    return false;
   }
 
   /// Loads a macro file. Converts any Unicode encoding to UTF-8.
