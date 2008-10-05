@@ -1,0 +1,9 @@
+syntax: glob
+*.orig
+*.pyc
+*.obj
+*.o
+*~
+
+syntax: regexp
+^build/
