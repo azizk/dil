@@ -28,11 +28,11 @@ def copy_files(DATA, TANGO_DIR, CANDYDOC, HTML_SRC, DEST):
   # Tango's license.
   copy(TANGO_DIR/"LICENSE", DEST/"License.txt")
 
-def generate_docs(DEST, FILES):
+def generate_docs(DEST, MODLIST, FILES):
   """ Generates documenation files. """
   files_str = ' '.join(FILES)
-  args = {'DEST':DEST, 'FILES':files_str}
-  os.system("dil ddoc %(DEST)s -v -version=Tango -version=Windows -version=DDoc %(FILES)s" % args)
+  args = {'DEST':DEST, 'FILES':files_str, 'MODLIST':MODLIST}
+  os.system("dil ddoc %(DEST)s -v -m=%(MODLIST)s -version=Tango -version=Windows -version=DDoc %(FILES)s" % args)
 
 def generate_modules_js():
   # TODO: generate DEST_JS/modules.js
@@ -52,9 +52,9 @@ def main():
     print "Usage: ./scripts/tango_doc.py /home/user/tango/ [tangodoc/]"
     return
 
-  # Root of the tango source code (from SVN.)
+  # Root of the Tango source code (from SVN.)
   TANGO_DIR = Path(argv[1])
-  # The source code folder of tango.
+  # The source code folder of Tango.
   TANGO_SRC = TANGO_DIR/"tango"
   # Destination of doc files.
   DEST      = Path(argv[2] if len(argv) > 2 else 'tangodoc')
@@ -62,10 +62,12 @@ def main():
   HTML_SRC  = DEST/"htmlsrc"
   # Dil's data/ directory.
   DATA      = Path('data')
+  # The list of module files (with info) that have been processed.
+  MODLIST   = DEST/"modules.txt"
   # Candydoc folder.
   CANDYDOC  = TANGO_DIR/"doc"/"html"/"candydoc"
   # The files to generate documentation for.
-  FILES = []
+  FILES     = []
 
   if not TANGO_DIR.exists:
     print "The path '%s' doesn't exist." % TANGO_DIR
@@ -78,11 +80,17 @@ def main():
   HTML_SRC.exists or HTML_SRC.mkdir()
 
   find_source_files(TANGO_SRC, FILES)
+
   generate_modules_js()
-  generate_docs(DEST, [CANDYDOC/"candy.ddoc"]+FILES)
-  for args in generate_shl_files(DEST, TANGO_SRC, FILES):
+
+  generate_docs(DEST, MODLIST, [CANDYDOC/"candy.ddoc"]+FILES)
+
+  for args in generate_shl_files(HTML_SRC, TANGO_SRC, FILES):
     print "dil hl %s > %s" % args;
+
   copy_files(DATA, TANGO_DIR, CANDYDOC, HTML_SRC, DEST)
+
+  MODLIST.rm()
 
 if __name__ == "__main__":
   main()
