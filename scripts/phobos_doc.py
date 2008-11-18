@@ -3,23 +3,33 @@ import os, re
 from sys import argv
 from shutil import copy
 
-D_VERSION="1.0" # TODO: Needs to be determined dynamically.
-PHOBOS_SRC = argv[1]
+class Path(unicode):
+  def __new__(cls, *paths): return unicode.__new__(cls, os.path.join(*paths) if len(paths) else '')
+  def __div__(self, path): return Path(self, path) # Concatenate.
+  @property
+  def ext(self): return os.path.splitext(self)[1]
+  def walk(self): return os.walk(self)
+  @property
+  def exists(self): return os.path.exists(self)
+
+D_VERSION = "1.0" # TODO: Needs to be determined dynamically.
+PHOBOS_SRC = Path(argv[1])
+DATA = Path("data") # dil's data/ directory.
 FILES = [] # List of D source files to be processed.
 IGNORE_LIST = ["phobos.d", "cast.d", "invariant.d", "switch.d", "unittest.d"]
 # Get a list of source files in the source directory of Phobos.
-for root, dirs, files in os.walk(PHOBOS_SRC):
+for root, dirs, files in PHOBOS_SRC.walk():
   for file in files:
-    if os.path.splitext(file)[1] in ['.d','.di'] and not file in IGNORE_LIST:
-      FILES.append(os.path.join(root, file))
+    if Path(file).ext.lower() in ('.d','.di') and file not in IGNORE_LIST:
+      FILES.append(Path(root, file))
   if root == PHOBOS_SRC and 'internal' in dirs:
       dirs.remove('internal')  # Don't visit "PHOBOS_SRC/internal".
 FILES.sort()
 
 # Modify std.ddoc and write it out to data/phobos.ddoc.
-ddoc = open("%s/std.ddoc" % PHOBOS_SRC).read() # Read the whole file.
+ddoc = open(PHOBOS_SRC/"std.ddoc").read() # Read the whole file.
 # Add a website icon.
-ddoc = re.sub(r"</head>", '<link rel="icon" type="image/gif" href="./holy.gif" />\r\n</head>', ddoc)
+ddoc = re.sub(r"</head>", '<link rel="icon" type="image/gif" href="./holy.gif">\r\n</head>', ddoc)
 # Make "../" to "./".
 ddoc = re.sub(r"\.\./(style.css|dmlogo.gif)", r"./\1", ddoc)
 # Make some relative paths to absolute ones.
@@ -35,39 +45,40 @@ ddoc = re.sub("<h1>\$\(TITLE\)</h1>", '<h1><a href="$(SRCFILE)">$(TITLE)</a></h1
 # Add a link to the index in the navigation sidebar.
 ddoc = re.sub('(NAVIGATION_PHOBOS=\r\n<div class="navblock">)', '\\1\r\n$(UL\r\n$(LI<a href="index.html" title="Index of all HTML files">Index</a>)\r\n)', ddoc)
 # Write new ddoc file.
-open("data/phobos.ddoc", "w").write(ddoc)
+open(DATA/"phobos.ddoc", "w").write(ddoc)
 
 # Destination of all documentation files.
-DOC = "phobosdoc"
-HTMLSRC = DOC+"/htmlsrc"
+DEST = Path("phobosdoc")
+HTML_SRC = DEST/"htmlsrc"
 # Create the destination folders.
-os.path.exists(HTMLSRC) or os.makedirs(HTMLSRC)
+HTML_SRC.exists or os.makedirs(HTML_SRC)
 
-# Returns the fully qualified module name of a d source file.
 def getModuleFQN(filepath):
-  filepath = re.sub("^%s/*" % PHOBOS_SRC, '', filepath)
-  filepath = re.sub(r'\.di?$', '', filepath)
-  return filepath.replace('/', '.')
+  """ Returns the fully qualified module name of a D source file. """
+  filepath = filepath[len(PHOBOS_SRC):].lstrip(os.path.sep) # Remove prefix and strip off path separator.
+  filepath = os.path.splitext(filepath)[0] # Remove the extension. E.g.: std/format.d - > std/format
+  return filepath.replace(os.path.sep, '.') # E.g.: std/format -> std.format
 
 # Create an index file.
 LIST = ""
 for filepath in FILES:
   LIST += '  <li><a href="%(fqn)s.html">%(fqn)s.html</a></li>\n' % {'fqn':getModuleFQN(filepath)}
-open('data/index.d', 'w').write("Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % LIST)
+open(DATA/"index.d", 'w').write("Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % LIST)
 
 # Some files needed from dmd's doc folder.
-PHOBOS_HTML = PHOBOS_SRC+"/../../html/d/phobos/"
-for file in ["erfc.gif", "erf.gif", "../style.css", "../holy.gif", "../dmlogo.gif"]:
-  copy(PHOBOS_HTML+file, DOC)
+PHOBOS_HTML = PHOBOS_SRC/".."/".."/"html"/"d"/"phobos"
+dotdot = Path("..")
+for file in ("erfc.gif", "erf.gif", dotdot/"style.css", dotdot/"holy.gif", dotdot/"dmlogo.gif"):
+  copy(PHOBOS_HTML/file, DEST)
 # Syntax highlighted files need html.css.
-copy("data/html.css", HTMLSRC)
+copy(DATA/"html.css", HTML_SRC)
 
 # Generate documenation files.
-FILES_STR = ' '.join(FILES + [PHOBOS_SRC+"/phobos.d", "data/index.d", "data/phobos.ddoc", "data/phobos_overrides.ddoc"])
-os.system("dil ddoc %(DOC)s/ -i -v -version=DDoc %(FILES)s" % {'DOC':DOC,'FILES':FILES_STR})
+FILES_STR = ' '.join(FILES + [PHOBOS_SRC/"phobos.d", DATA/"index.d", DATA/"phobos.ddoc", DATA/"phobos_overrides.ddoc"])
+os.system("dil ddoc %(DEST)s -i -v -version=DDoc %(FILES)s" % {'DEST':DEST,'FILES':FILES_STR})
 
-# Modify DOC/phobos.html.
-ddoc = open(DOC+"/phobos.html").read() # Read the whole file.
+# Modify DEST/phobos.html.
+ddoc = open(DEST/"phobos.html").read() # Read the whole file.
 # Make relative links to absolute links.
 ddoc = ddoc.replace("../", "http://www.digitalmars.com/d/%s/" % D_VERSION)
 # Make e.g. "std_string.html" to "std.string.html".
@@ -75,11 +86,10 @@ ddoc = re.sub("href=\"std_[^\"]+\"", lambda m: m.group(0).replace("_", "."), ddo
 # De-linkify the title.
 ddoc = re.sub("<h1><a[^>]+>(.+?)</a></h1>", "<h1>\\1</h1>", ddoc)
 # Write the contents back to the file.
-open(DOC+"/phobos.html", "w").write(ddoc)
+open(DEST/"phobos.html", "w").write(ddoc)
 
 # Generate syntax highlighted files.
-HTMLSRC = DOC+"/htmlsrc"
 for filepath in FILES:
   htmlfile = getModuleFQN(filepath) + ".html"
-  print "dil hl %s > %s/%s" % (filepath, HTMLSRC, htmlfile);
-  os.system('dil hl --lines --syntax --html %s > "%s/%s"' % (filepath, HTMLSRC, htmlfile))
+  print "dil hl %s > %s" % (filepath, HTML_SRC/htmlfile);
+  os.system('dil hl --lines --syntax --html %s > "%s"' % (filepath, HTML_SRC/htmlfile))
