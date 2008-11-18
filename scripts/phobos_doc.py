@@ -1,16 +1,11 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+# Author: Aziz Köksal
 import os, re
 from sys import argv
 from shutil import copy
-
-class Path(unicode):
-  def __new__(cls, *paths): return unicode.__new__(cls, os.path.join(*paths) if len(paths) else '')
-  def __div__(self, path): return Path(self, path) # Concatenate.
-  @property
-  def ext(self): return os.path.splitext(self)[1]
-  def walk(self): return os.walk(self)
-  @property
-  def exists(self): return os.path.exists(self)
+from path import Path
+from common import getModuleFQN
 
 D_VERSION = "1.0" # TODO: Needs to be determined dynamically.
 PHOBOS_SRC = Path(argv[1])
@@ -53,19 +48,14 @@ HTML_SRC = DEST/"htmlsrc"
 # Create the destination folders.
 HTML_SRC.exists or os.makedirs(HTML_SRC)
 
-def getModuleFQN(filepath):
-  """ Returns the fully qualified module name of a D source file. """
-  filepath = filepath[len(PHOBOS_SRC):].lstrip(os.path.sep) # Remove prefix and strip off path separator.
-  filepath = os.path.splitext(filepath)[0] # Remove the extension. E.g.: std/format.d - > std/format
-  return filepath.replace(os.path.sep, '.') # E.g.: std/format -> std.format
-
 # Create an index file.
 LIST = ""
 for filepath in FILES:
-  LIST += '  <li><a href="%(fqn)s.html">%(fqn)s.html</a></li>\n' % {'fqn':getModuleFQN(filepath)}
+  fqn = getModuleFQN(PHOBOS_SRC, filepath)
+  LIST += '  <li><a href="%(fqn)s.html">%(fqn)s.html</a></li>\n' % {'fqn':fqn}
 open(DATA/"index.d", 'w').write("Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % LIST)
 
-# Some files needed from dmd's doc folder.
+# Compy some files needed from dmd's doc folder.
 PHOBOS_HTML = PHOBOS_SRC/".."/".."/"html"/"d"/"phobos"
 dotdot = Path("..")
 for file in ("erfc.gif", "erf.gif", dotdot/"style.css", dotdot/"holy.gif", dotdot/"dmlogo.gif"):
@@ -90,6 +80,6 @@ open(DEST/"phobos.html", "w").write(ddoc)
 
 # Generate syntax highlighted files.
 for filepath in FILES:
-  htmlfile = getModuleFQN(filepath) + ".html"
+  htmlfile = getModuleFQN(PHOBOS_SRC, filepath) + ".html"
   print "dil hl %s > %s" % (filepath, HTML_SRC/htmlfile);
   os.system('dil hl --lines --syntax --html %s > "%s"' % (filepath, HTML_SRC/htmlfile))
