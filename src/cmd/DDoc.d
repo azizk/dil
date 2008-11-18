@@ -30,9 +30,10 @@ import tango.io.FilePath;
 /// The ddoc command.
 struct DDocCommand
 {
-  string destDirPath;   /// Destination directory.
-  string[] macroPaths;  /// Macro file paths.
-  string[] filePaths;   /// Module file paths.
+  string destDirPath;  /// Destination directory.
+  string[] macroPaths; /// Macro file paths.
+  string[] filePaths;  /// Module file paths.
+  string modsTxtPath;  /// Write list of modules to this file if specified.
   string outFileExtension;  /// The extension of the output files.
   bool includeUndocumented; /// Whether to include undocumented symbols.
   bool writeXML; /// Whether to write XML instead of HTML docs.
@@ -59,6 +60,9 @@ struct DDocCommand
     tokenHL = new TokenHighlighter(infoMan, writeXML == false);
     outFileExtension = writeXML ? ".xml" : ".html";
 
+    string[][] modFQNs; // List of tuples (filePath, moduleFQN).
+    bool generateModulesTextFile = modsTxtPath !is null;
+
     // Process D files.
     foreach (filePath; filePaths)
     {
@@ -78,9 +82,15 @@ struct DDocCommand
       else // Normally done in mod.parse().
         mod.setFQN((new FilePath(filePath)).name());
 
+      if (generateModulesTextFile)
+        modFQNs ~= [filePath, mod.getFQN()];
+
       // Write the documentation file.
       writeDocumentationFile(mod, mtable);
     }
+
+    if (generateModulesTextFile)
+      writeModulesTextFile(modFQNs);
   }
 
   /// Writes the documentation for a module to the disk.
@@ -127,7 +137,22 @@ struct DDocCommand
     file.write(fileText);
   }
 
+  /// Writes the list of processed modules to the disk.
+  /// Params:
+  ///   moduleList = the list of modules.
+  void writeModulesTextFile(string[][] moduleList)
+  {
+    char[] text;
+    foreach (mod; moduleList)
+      text ~= mod[0] ~ ", " ~ mod[1] ~ \n;
+    scope file = new File(modsTxtPath);
+    file.write(text);
+  }
+
   /// Loads a macro file. Converts any Unicode encoding to UTF-8.
+  /// Params:
+  ///   filePath = path to the macro file.
+  ///   infoMan  = for error messages.
   static string loadMacroFile(string filePath, InfoManager infoMan)
   {
     auto src = new SourceText(filePath);

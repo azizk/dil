@@ -109,6 +109,8 @@ void main(char[][] args)
         cmd.includeUndocumented = true;
       else if (arg == "-v")
         cmd.verbose = true;
+      else if (arg.length > 3 && strbeg(arg, "-m="))
+        cmd.modsTxtPath = arg[3..$];
       else if (arg.length > 5 && icompare(arg[$-4..$], "ddoc") == 0)
         cmd.macroPaths ~= arg;
       else
@@ -441,9 +443,10 @@ Options:
   --xml            : write XML instead of HTML documents
   -i               : include undocumented symbols
   -v               : verbose output
+  -m=PATH          : write list of processed modules to PATH
 
 Example:
-  dil d doc/ src/main.d src/macros_dil.ddoc -i`;
+  dil d doc/ src/main.d src/macros_dil.ddoc -i -m=doc/modules.txt`;
     break;
   case "hl", "highlight":
 //     msg = GetMsg(MID.HelpGenerate);
