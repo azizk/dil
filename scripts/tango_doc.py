@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
-import os
+import os, re
 from shutil import copy, copytree
 from path import Path
 from common import getModuleFQN
@@ -46,12 +46,23 @@ def generate_shl_files(dest, prefix_path, files):
     yield args
     os.system('dil hl --lines --syntax --html %s > "%s"' % args)
 
+def get_tango_version(path):
+  for line in open(path):
+    m = re.search("Major\s*=\s*(\d+)", line)
+    if m: major = int(m.group(1))
+    m = re.search("Minor\s*=\s*(\d+)", line)
+    if m: minor = int(m.group(1))
+  return "%s.%s.%s" % (major, minor/10, minor%10)
+
 def main():
   from sys import argv
+  from optparse import OptionParser
   if len(argv) <= 1:
     print "Usage: ./scripts/tango_doc.py /home/user/tango/ [tangodoc/]"
     return
 
+  # The version of Tango we're dealing with.
+  VERSION   = ""
   # Root of the Tango source code (from SVN.)
   TANGO_DIR = Path(argv[1])
   # The source code folder of Tango.
@@ -62,8 +73,10 @@ def main():
   HTML_SRC  = DEST/"htmlsrc"
   # Dil's data/ directory.
   DATA      = Path('data')
+  # Temporary directory, deleted in the end.
+  TMP        = DEST/"tmp"
   # The list of module files (with info) that have been processed.
-  MODLIST   = DEST/"modules.txt"
+  MODLIST   = TMP/"modules.txt"
   # Candydoc folder.
   CANDYDOC  = TANGO_DIR/"doc"/"html"/"candydoc"
   # The files to generate documentation for.
@@ -75,6 +88,8 @@ def main():
   if not CANDYDOC.exists:
     print "Warning: can't find candydoc folder, the path '%s' doesn't exist." % CANDYDOC
     return
+
+  VERSION = get_tango_version(TANGO_SRC/"core"/"Version.d")
 
   DEST.exists or DEST.makedirs()
   HTML_SRC.exists or HTML_SRC.mkdir()
@@ -90,7 +105,10 @@ def main():
 
   copy_files(DATA, TANGO_DIR, CANDYDOC, HTML_SRC, DEST)
 
-  MODLIST.rm()
+  TMP.rmtree()
+
+  #from zipfile import ZipFile, ZIP_DEFLATED
+  #zfile = ZipFile(DEST/".."/"Tango_doc_"+VERSION+".zip", "w", ZIP_DEFLATED)
 
 if __name__ == "__main__":
   main()

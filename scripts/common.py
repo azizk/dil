@@ -12,3 +12,6 @@ def getModuleFQN(prefix_path, filepath):
   filepath = os.path.splitext(filepath)[0]
   # Finally replace the path separators.
   return filepath.replace(os.path.sep, '.') # E.g.: std/format -> std.format
+
+def download_jquery(path):
+  pass

@@ -96,10 +96,10 @@ def main():
   HTML_SRC   = DEST/"htmlsrc"
   # Dil's data/ directory.
   DATA       = Path('data')
-  # The list of module files (with info) that have been processed.
-  MODLIST    = DEST/"modules.txt"
   # Temporary directory, deleted in the end.
   TMP        = DEST/"tmp"
+  # The list of module files (with info) that have been processed.
+  MODLIST    = TMP/"modules.txt"
   # List of files to ignore.
   IGNORE_LIST = ("phobos.d", "cast.d", "invariant.d", "switch.d", "unittest.d")
   # The files to generate documentation for.
@@ -133,7 +133,6 @@ def main():
   copy_files(DATA, PHOBOS_SRC, HTML_SRC, DEST)
 
   TMP.rmtree()
-  MODLIST.rm()
 
 if __name__ == "__main__":
   main()
