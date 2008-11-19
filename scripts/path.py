@@ -26,18 +26,30 @@ class Path(unicode):
   def ext(self):
     return os.path.splitext(self)[1]
 
-  def walk(self):
-    return os.walk(self)
-
   @property
   def exists(self):
     return os.path.exists(self)
 
-  def mkdir(self):
-    return os.mkdir(self)
+  @property
+  def atime(self):
+    return os.path.getatime(self)
 
-  def makedirs(self):
-    return os.makedirs(self)
+  @property
+  def mtime(self):
+    return os.path.getmtime(self)
+
+  @property
+  def ctime(self):
+    return os.path.getctime(self)
+
+  def walk(self):
+    return os.walk(self)
+
+  def mkdir(self, mode=0777):
+    return os.mkdir(self, mode)
+
+  def makedirs(self, mode=0777):
+    return os.makedirs(self, mode)
 
   def remove(self):
     return os.remove(self)

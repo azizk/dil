@@ -4,7 +4,7 @@
 import os, re
 from shutil import copy, copytree
 from path import Path
-from common import getModuleFQN
+from common import get_module_fqn, download_jquery
 
 def find_source_files(source, found):
   """ Finds the source files of Tango. """
@@ -41,7 +41,7 @@ def generate_modules_js():
 def generate_shl_files(dest, prefix_path, files):
   """ Generates syntax highlighted files. """
   for filepath in files:
-    htmlfile = getModuleFQN(prefix_path, filepath) + ".html"
+    htmlfile = get_module_fqn(prefix_path, filepath) + ".html"
     args = (filepath, dest/htmlfile)
     yield args
     os.system('dil hl --lines --syntax --html %s > "%s"' % args)
@@ -93,6 +93,7 @@ def main():
 
   DEST.exists or DEST.makedirs()
   HTML_SRC.exists or HTML_SRC.mkdir()
+  TMP.exists or TMP.mkdir()
 
   find_source_files(TANGO_SRC, FILES)
 
@@ -104,9 +105,11 @@ def main():
     print "dil hl %s > %s" % args;
 
   copy_files(DATA, TANGO_DIR, CANDYDOC, HTML_SRC, DEST)
+  download_jquery(DEST/"js"/"jquery.js")
 
   TMP.rmtree()
 
+  # TODO: create archive (optionally.)
   #from zipfile import ZipFile, ZIP_DEFLATED
   #zfile = ZipFile(DEST/".."/"Tango_doc_"+VERSION+".zip", "w", ZIP_DEFLATED)
 

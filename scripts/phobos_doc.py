@@ -5,7 +5,7 @@ import os, re
 from sys import argv
 from shutil import copy
 from path import Path
-from common import getModuleFQN
+from common import get_module_fqn
 
 def find_source_files(source, ignore_list, found):
   """ Finds the source files of Phobos. """
@@ -42,7 +42,7 @@ def modify_std_ddoc(std_ddoc, phobos_ddoc, version):
 def create_index_file(index_d, prefix_path, FILES):
   text = ""
   for filepath in FILES:
-    fqn = getModuleFQN(prefix_path, filepath)
+    fqn = get_module_fqn(prefix_path, filepath)
     text += '  <li><a href="%(fqn)s.html">%(fqn)s.html</a></li>\n' % {'fqn':fqn}
   text = "Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % text
   open(index_d, 'w').write(text)
@@ -76,7 +76,7 @@ def modify_phobos_html(phobos_html, version):
 def generate_shl_files(dest, prefix_path, files):
   """ Generates syntax highlighted files. """
   for filepath in files:
-    htmlfile = getModuleFQN(prefix_path, filepath) + ".html"
+    htmlfile = get_module_fqn(prefix_path, filepath) + ".html"
     args = (filepath, dest/htmlfile)
     yield args
     os.system('dil hl --lines --syntax --html %s > "%s"' % args)
