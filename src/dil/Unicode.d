@@ -39,6 +39,8 @@ bool isLeadByte(ubyte b)
 }
 
 /// Advances ref_p only if this is a valid Unicode alpha character.
+/// Params:
+///   ref_p = set to the last trail byte of the valid UTF-8 sequence.
 bool isUnicodeAlpha(ref char* ref_p, char* end)
 in { assert(ref_p && ref_p < end); }
 body
@@ -49,7 +51,7 @@ body
   auto c = decode(p, end);
   if (!isUniAlpha(c))
     return false;
-  ref_p = p;
+  ref_p = p-1; // Subtract 1 because of decode().
   return true;
 }
 
