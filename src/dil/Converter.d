@@ -28,9 +28,9 @@ struct Converter
   dchar swapBytes(dchar c)
   {
     return c = (c << 24) |
+               (c >> 24) |
               ((c >> 8) & 0xFF00) |
-              ((c << 8) & 0xFF0000) |
-              (c >> 24);
+              ((c << 8) & 0xFF0000);
   }
 
   /// Byte-swaps c.
@@ -246,36 +246,40 @@ struct Converter
 
 /// Replaces invalid UTF-8 sequences with U+FFFD (if there's enough space,)
 /// and Newlines with '\n'.
-string sanitizeText(string text)
+char[] sanitizeText(char[] text)
 {
   if (!text.length)
     return null;
 
-  char* p = text.ptr;
+  char* p = text.ptr; // Reader.
   char* end = p + text.length;
-  char* q = p;
+  char* q = p; // Writer.
 
   for (; p < end; p++, q++)
   {
     assert(q <= p);
+    if (isascii(*p)) {
+      *q = *p; // Just copy ASCII characters.
+      continue;
+    }
     switch (*p)
     {
     case '\r':
       if (p+1 < end && p[1] == '\n')
         p++;
     case '\n':
-      *q = '\n';
+      *q = '\n'; // Copy newlines as '\n'.
       continue;
     default:
-      if (isascii(*p))
-        break;
       if (p+2 < end && isUnicodeNewline(p))
       {
         p += 2;
         goto case '\n';
       }
-      auto p2 = p; // Beginning of the UTF-8 sequence.
+
+      auto p2 = p; // Remember beginning of the UTF-8 sequence.
       dchar c = decode(p, end);
+
       if (c == ERROR_CHAR)
       { // Skip to next ASCII character or valid UTF-8 sequence.
         while (++p < end && isTrailByte(*p))
@@ -287,18 +291,15 @@ string sanitizeText(string text)
       }
       else
       { // Copy the valid UTF-8 sequence.
-        while (p2 <= p) // p points to the last trail byte.
+        while (p2 < p) // p points to one past the last trail byte.
           *q++ = *p2++; // Copy code units.
         q--;
+        p--;
       }
-      continue;
     }
-    assert(isascii(*p));
-    *q = *p;
   }
   assert(p == end);
-  text.length = text.length - (p - q);
-  //text = text.ptr[0 .. q - text.ptr]; // Another way.
+  text.length = q - text.ptr;
   return text;
 }
 
