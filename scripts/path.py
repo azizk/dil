@@ -4,6 +4,8 @@ import os, shutil
 
 class Path(unicode):
   """ Models a path in an object oriented way. """
+  sep = os.path.sep
+
   def __new__(cls, *paths):
     return unicode.__new__(cls, os.path.join(*paths) if len(paths) else '')
 

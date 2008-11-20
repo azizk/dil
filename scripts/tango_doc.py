@@ -4,7 +4,7 @@
 import os, re
 from shutil import copy, copytree
 from path import Path
-from common import get_module_fqn, download_jquery
+from common import *
 
 def find_source_files(source, found):
   """ Finds the source files of Tango. """
@@ -12,7 +12,7 @@ def find_source_files(source, found):
     found += [root/file for file in map(Path, files) # Iter. over Path objects.
                           if file.ext.lower() in ('.d','.di')]
 
-def copy_files(DATA, TANGO_DIR, CANDYDOC, HTML_SRC, DEST):
+def copy_files(DATA, KANDIL, TANGO_DIR, CANDYDOC, HTML_SRC, DEST):
   """ Copies required files to the destination folder. """
   DEST_JS, DEST_CSS, DEST_IMG = DEST//("js","css","img")
   # Create the destination folders.
@@ -28,15 +28,14 @@ def copy_files(DATA, TANGO_DIR, CANDYDOC, HTML_SRC, DEST):
   # Tango's license.
   copy(TANGO_DIR/"LICENSE", DEST/"License.txt")
 
+  copy(KANDIL/"style.css", DEST_CSS)
+  copy(KANDIL/"navigation.js", DEST_JS)
+
 def generate_docs(DEST, MODLIST, FILES):
   """ Generates documenation files. """
   files_str = ' '.join(FILES)
   args = {'DEST':DEST, 'FILES':files_str, 'MODLIST':MODLIST}
   os.system("dil ddoc %(DEST)s -v -m=%(MODLIST)s -version=Tango -version=Windows -version=DDoc %(FILES)s" % args)
-
-def generate_modules_js():
-  # TODO: generate DEST_JS/modules.js
-  pass
 
 def generate_shl_files(dest, prefix_path, files):
   """ Generates syntax highlighted files. """
@@ -54,6 +53,22 @@ def get_tango_version(path):
     if m: minor = int(m.group(1))
   return "%s.%s.%s" % (major, minor/10, minor%10)
 
+def write_tango_ddoc(path):
+  open(path, "w").write(
+"""LICENSE = see $(LINK2 http://www.dsource.org/projects/tango/wiki/LibraryLicense, license.txt)
+CODEURL =
+MEMBERTABLE = <table>$0</table>
+ANCHOR = <a name="$0"></a>
+LP = (
+RP = )
+LB = [
+RB = ]
+SQRT = √
+NAN = NaN
+SUP = <sup>$0</sup>
+BR = <br/>"""
+  )
+
 def main():
   from sys import argv
   from optparse import OptionParser
@@ -69,12 +84,18 @@ def main():
   TANGO_SRC = TANGO_DIR/"tango"
   # Destination of doc files.
   DEST      = Path(argv[2] if len(argv) > 2 else 'tangodoc')
+  # The JavaScript folder.
+  DEST_JS   = DEST/"js"
   # Destination of syntax highlighted source files.
   HTML_SRC  = DEST/"htmlsrc"
   # Dil's data/ directory.
   DATA      = Path('data')
+  # Dil's fancy documentation format.
+  KANDIL    = Path("kandil")
   # Temporary directory, deleted in the end.
-  TMP        = DEST/"tmp"
+  TMP       = DEST/"tmp"
+  # Some DDoc macros for Tango.
+  TANGO_DDOC= TMP/"tango.ddoc"
   # The list of module files (with info) that have been processed.
   MODLIST   = TMP/"modules.txt"
   # Candydoc folder.
@@ -91,20 +112,25 @@ def main():
 
   VERSION = get_tango_version(TANGO_SRC/"core"/"Version.d")
 
+  # Create directories.
   DEST.exists or DEST.makedirs()
   HTML_SRC.exists or HTML_SRC.mkdir()
   TMP.exists or TMP.mkdir()
+  DEST_JS.exists or DEST_JS.mkdir()
 
   find_source_files(TANGO_SRC, FILES)
 
-  generate_modules_js()
+  write_tango_ddoc(TANGO_DDOC)
+  DOC_FILES = [KANDIL/"kandil.ddoc", TANGO_DDOC] + FILES
+  generate_docs(DEST, MODLIST, DOC_FILES)
 
-  generate_docs(DEST, MODLIST, [CANDYDOC/"candy.ddoc"]+FILES)
+  modlist = read_modules_list(MODLIST)
+  generate_modules_js(modlist, DEST_JS/"modules.js")
 
-  for args in generate_shl_files(HTML_SRC, TANGO_SRC, FILES):
+  for args in generate_shl_files(HTML_SRC, TANGO_DIR, FILES):
     print "dil hl %s > %s" % args;
 
-  copy_files(DATA, TANGO_DIR, CANDYDOC, HTML_SRC, DEST)
+  copy_files(DATA, KANDIL, TANGO_DIR, CANDYDOC, HTML_SRC, DEST)
   download_jquery(DEST/"js"/"jquery.js")
 
   TMP.rmtree()
