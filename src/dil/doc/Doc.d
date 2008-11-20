@@ -10,6 +10,8 @@ import common;
 
 import tango.text.Ascii : icompare;
 
+alias dil.doc.Parser.IdentValueParser.textBody textBody;
+
 /// Represents a sanitized and parsed DDoc comment.
 class DDocComment
 {
@@ -250,6 +252,7 @@ struct DDocParser
   Section description; /// Optional description section.
 
   /// Parses the DDoc text into sections.
+  /// All newlines in the text must be converted to '\n'.
   Section[] parse(string text)
   {
     if (!text.length)
@@ -261,7 +264,7 @@ struct DDocParser
     string ident, nextIdent;
     char* bodyBegin, nextBodyBegin;
 
-    skipWhitespace(p);
+    skipWhitespace();
     summaryBegin = p;
 
     if (findNextIdColon(ident, bodyBegin))
@@ -288,88 +291,50 @@ struct DDocParser
     return sections;
   }
 
-  /// Returns the text body. Trailing whitespace characters are not included.
-  char[] textBody(char* begin, char* end)
-  {
-    // The body of A is empty, e.g.:
-    // A:
-    // B: some text
-    // ^- begin and end point to B (or to this.textEnd in the 2nd case.)
-    if (begin is end)
-      return "";
-    // Remove trailing whitespace.
-    while (isspace(*--end) || *end == '\n')
-    {}
-    end++;
-    return makeString(begin, end);
-  }
-
   /// Separates the text between p and end
-  /// into a summary and description section.
+  /// into a summary and an optional description section.
   void scanSummaryAndDescription(char* p, char* end)
   {
     assert(p <= end);
     char* sectionBegin = p;
     // Search for the end of the first paragraph.
-    end--; // Decrement end, so we can look ahead one character.
-    while (p < end && !(*p == '\n' && p[1] == '\n'))
-    {
-      if (isCodeSection(p, end))
-        skipCodeSection(p, end);
-      p++;
-    }
-    end++;
-    if (p+1 >= end)
-      p = end;
+    while (p < end && !(*p == '\n' && p+1 < end && p[1] == '\n'))
+      if (skipCodeSection(p, end) == false)
+        p++;
     assert(p == end || (*p == '\n' && p[1] == '\n'));
     // The first paragraph is the summary.
-    summary = new Section("", makeString(sectionBegin, p));
+    summary = new Section("", textBody(sectionBegin, p));
     sections ~= summary;
     // The rest is the description section.
-    if (p < end)
-    {
-      skipWhitespace(p);
-      sectionBegin = p;
-      if (p < end)
-      {
-        description = new Section("", makeString(sectionBegin, end));
-        sections ~= description;
-      }
-    }
+    if (auto descText = textBody(p, end))
+      sections ~= (description = new Section("", descText));
   }
 
   /// Returns true if p points to "$(DDD)".
-  bool isCodeSection(char* p, char* end)
+  static bool isCodeSection(char* p, char* end)
   {
-    return p+2 < end && *p == '-' && p[1] == '-' && p[2] == '-';
+    return p < end && *p == '-' && p+2 < end && p[1] == '-' && p[2] == '-';
   }
 
-  /// Skips over a code section.
+  /// Skips over a code section and sets p one character past it.
   ///
-  /// Note that dmd apparently doesn't skip over code sections when
+  /// Note: apparently DMD doesn't skip over code sections when
   /// parsing DDoc sections. However, from experience it seems
   /// to be a good idea to do that.
-  void skipCodeSection(ref char* p, char* end)
-  out { assert(p+1 == end || *p == '-'); }
-  body
+  /// Returns: true if a code section was skipped.
+  static bool skipCodeSection(ref char* p, char* end)
   {
-    assert(isCodeSection(p, end));
-
+    if (!isCodeSection(p, end))
+      return false;
+    p += 3; // Skip "---".
     while (p < end && *p == '-')
       p++;
-    p--;
-    while (++p < end)
-      if (p+2 < end && *p == '-' && p[1] == '-' && p[2] == '-')
-        break;
+    while (p < end && !(*p == '-' && p+2 < end && p[1] == '-' && p[2] == '-'))
+      p++;
     while (p < end && *p == '-')
       p++;
-    p--;
-  }
-
-  void skipWhitespace(ref char* p)
-  {
-    while (p < textEnd && (isspace(*p) || *p == '\n'))
-      p++;
+    assert(p is end || p[-1] == '-');
+    return true;
   }
 
   /// Find next "Identifier:".
@@ -381,37 +346,47 @@ struct DDocParser
   {
     while (p < textEnd)
     {
-      skipWhitespace(p);
-      if (p >= textEnd)
+      skipWhitespace();
+      if (p is textEnd)
         break;
-      if (isCodeSection(p, textEnd))
-      {
-        skipCodeSection(p, textEnd);
-        p++;
+      if (skipCodeSection(p, textEnd))
         continue;
-      }
-      assert(isascii(*p) || isLeadByte(*p));
+      assert(p < textEnd && (isascii(*p) || isLeadByte(*p)));
       auto idBegin = p;
       if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
       {
         do // IdChar*
           p++;
         while (p < textEnd && (isident(*p) || isUnicodeAlpha(p, textEnd)))
+
         auto idEnd = p;
-        if (p < textEnd && *p == ':') // :
+        if (p < textEnd && *p == ':')
         {
           p++;
-          skipWhitespace(p);
           bodyBegin = p;
           ident = makeString(idBegin, idEnd);
+          skipLine();
           return true;
         }
       }
-      // Skip this line.
-      while (p < textEnd && *p != '\n')
-        p++;
+      skipLine();
     }
+    assert(p is textEnd);
     return false;
+  }
+
+  void skipWhitespace()
+  {
+    while (p < textEnd && isspace(*p))
+      p++;
+  }
+
+  void skipLine()
+  {
+    while (p < textEnd && *p != '\n')
+      p++;
+    while (p < textEnd && *p == '\n')
+      p++;
   }
 }
 

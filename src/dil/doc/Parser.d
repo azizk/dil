@@ -60,7 +60,7 @@ struct IdentValueParser
 
   /// Strips off leading and trailing whitespace characters.
   /// Returns: the text body.
-  char[] textBody(char* begin, char* end)
+  static char[] textBody(char* begin, char* end)
   {
     while (begin < end && (isspace(*begin) || *begin == '\n'))
       begin++;
@@ -96,8 +96,8 @@ struct IdentValueParser
         do // IdChar*
           p++;
         while (p < textEnd && (isident(*p) || isUnicodeAlpha(p, textEnd)))
-        auto idEnd = p;
 
+        auto idEnd = p;
         skipWhitespace();
         if (p < textEnd && *p == '=')
         {
