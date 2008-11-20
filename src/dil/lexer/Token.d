@@ -225,15 +225,13 @@ version(D2)
       {
         auto p = search_t.start, end = search_t.end;
         while (p != end)
-        {
-          if (scanNewline(p) == '\n')
+          if (scanNewline(p))
           {
             lineBegin = p;
             ++lineNum;
           }
           else
             ++p;
-        }
       }
     }
     return new Location(filePath, lineNum, lineBegin, this.start);

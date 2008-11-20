@@ -1519,18 +1519,18 @@ version(D2)
           ++p;
           ++lineNum;
           setLineBegin(p);
-          return '\n';
+          break;
         default:
-          if (isUnicodeNewline(p))
-          {
-            ++p; ++p;
+          if (isUnicodeNewline(p)) {
+            p += 2;
             goto case '\n';
           }
+          return false;
         }
-        return 0;
+        return true;
       }
       // Skip leading newlines:
-      while (scanNewline() != 0)
+      while (scanNewline())
       {}
       assert(!isNewline(p));
 
@@ -1554,7 +1554,7 @@ version(D2)
       // Store identifier
       str_delim = begin[0..p-begin];
       // Scan newline
-      if (scanNewline() == '\n')
+      if (scanNewline())
         --p; // Go back one because of "c = *++p;" in main loop.
       else
       {
@@ -2564,7 +2564,7 @@ version(D2)
   /// Returns true if the current character to be decoded is
   /// a Unicode alpha character.
   ///
-  /// The current pointer 'p' is not advanced if false is returned.
+  /// The current pointer 'p' is set to the last trailbyte if true is returned.
   bool isUnicodeAlpha()
   {
     assert(!isascii(*p), "check for ASCII char before calling decodeUTF8().");

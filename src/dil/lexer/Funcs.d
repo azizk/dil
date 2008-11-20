@@ -57,8 +57,10 @@ bool isEndOfLine(char* p)
 }
 
 /// Scans a Newline and sets p one character past it.
-/// Returns: '\n' if found or 0 otherwise.
-dchar scanNewline(ref char* p)
+/// Returns: true if found or false otherwise.
+bool scanNewline(ref char* p)
+in { assert(p); }
+body
 {
   switch (*p)
   {
@@ -67,15 +69,61 @@ dchar scanNewline(ref char* p)
       ++p;
   case '\n':
     ++p;
-    return '\n';
+    break;
   default:
     if (isUnicodeNewline(p))
-    {
       p += 3;
-      return '\n';
-    }
+    else
+      return false;
   }
-  return 0;
+  return true;
+}
+
+/// Scans a Newline and sets p one character past it.
+/// Returns: true if found or false otherwise.
+bool scanNewline(ref char* p, char* end)
+in { assert(p && p < end); }
+body
+{
+  switch (*p)
+  {
+  case '\r':
+    if (p+1 < end && p[1] == '\n')
+      ++p;
+  case '\n':
+    ++p;
+    break;
+  default:
+    if (p+2 < end && isUnicodeNewline(p))
+      p += 3;
+    else
+      return false;
+  }
+  return true;
+}
+
+/// Scans a Newline in reverse direction and sets end
+/// on the first character of the newline.
+/// Returns: true if found or false otherwise.
+bool scanNewlineReverse(char* begin, ref char* end)
+{
+  switch (*end)
+  {
+  case '\n':
+    if (begin <= end-1 && end[-1] == '\r')
+      end--;
+  case '\r':
+    break;
+  case LS[2], PS[2]:
+    if (begin <= end-2 && end[-1] == LS[1] && end[-2] == LS[0]) {
+      end -= 2;
+      break;
+    }
+  // fall through
+  default:
+    return false;
+  }
+  return true;
 }
 
 /// ASCII character properties table.
