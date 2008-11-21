@@ -38,3 +38,29 @@ dd {
 .attrs {
   font-size: 0.8em;
 }
+
+/* Code formatting */
+.d_code {
+  padding: 0.5em 0;
+  border: 1px dotted black;
+}
+/* Number */
+.d_code .n { color: teal; }
+/* Keyword */
+.d_code .k { color: darkblue; font-weight: bold; }
+/* Line, block and nested comments */
+.d_code .lc, .bc, .nc { color: green; }
+/* Identifier */
+.d_code .i { color: black; }
+/* String literal */
+.d_code .sl { color: red; }
+/* Character literal */
+.d_code .cl { color: purple; }
+/* Special tokens */
+.d_code .st { color: green; font-weight: bold; }
+/* #line, hash line */
+.d_code .hl { color: green; }
+/* filespec (e.g. #line number [filespec]) */
+.d_code .fs { color: purple;}
+/* When the first line starts with "#!" it's a "shebang" */
+.d_code .shebang { color: gray; }
