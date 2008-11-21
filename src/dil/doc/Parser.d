@@ -90,23 +90,13 @@ struct IdentValueParser
       if (p is textEnd)
         break;
       assert(p < textEnd && (isascii(*p) || isLeadByte(*p)));
-      auto idBegin = p;
-      if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
+      ident = scanIdentifier(p, textEnd);
+      skipWhitespace();
+      if (ident && p < textEnd && *p == '=')
       {
-        do // IdChar*
-          p++;
-        while (p < textEnd && (isident(*p) || isUnicodeAlpha(p, textEnd)))
-
-        auto idEnd = p;
-        skipWhitespace();
-        if (p < textEnd && *p == '=')
-        {
-          p++;
-          bodyBegin = p;
-          ident = makeString(idBegin, idEnd);
-          skipLine();
-          return true;
-        }
+        bodyBegin = ++p;
+        skipLine();
+        return true;
       }
       skipLine();
     }

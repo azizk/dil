@@ -109,11 +109,8 @@ struct MacroParser
     if (p+2 < textEnd && p[1] == '(')
     {
       p += 2;
-      if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
+      if (scanIdentifier(p, textEnd))
       {
-        do // IdChar*
-          p++;
-        while (p < textEnd && (isident(*p) || isUnicodeAlpha(p, textEnd)))
         MacroExpander.scanArguments(p, textEnd);
         p != textEnd && p++; // Skip ')'.
         return p;
@@ -167,14 +164,8 @@ struct MacroExpander
         if (macroEnd != p)
           result ~= makeString(macroEnd, p);
         p += 2;
-        auto idBegin = p;
-        if (isidbeg(*p) || isUnicodeAlpha(p, textEnd)) // IdStart
+        if (auto macroName = scanIdentifier(p, textEnd))
         {
-          do // IdChar*
-            p++;
-          while (p < textEnd && (isident(*p) || isUnicodeAlpha(p, textEnd)))
-          // Create macro name.
-          auto macroName = makeString(idBegin, p);
           // Get arguments.
           auto macroArgs = scanArguments(p, textEnd);
           if (p == textEnd)

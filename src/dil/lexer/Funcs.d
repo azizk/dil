@@ -2,6 +2,8 @@
 /// License: GPL3
 module dil.lexer.Funcs;
 
+import dil.Unicode : isUnicodeAlpha;
+
 const char[3] LS = \u2028; /// Unicode line separator.
 const dchar LSd = 0x2028;  /// ditto
 const char[3] PS = \u2029; /// Unicode paragraph separator.
@@ -124,6 +126,29 @@ bool scanNewlineReverse(char* begin, ref char* end)
     return false;
   }
   return true;
+}
+
+/// Scans a D identifier.
+/// Params:
+///   ref_p = where to start.
+///   end = where it ends.
+/// Returns: the identifier if valid (sets ref_p one past the id,) or
+///          null if invalid (leaves ref_p unchanged.)
+char[] scanIdentifier(ref char* ref_p, char* end)
+in { assert(ref_p && ref_p < end); }
+body
+{
+  auto p = ref_p;
+  if (isidbeg(*p) || isUnicodeAlpha(p, end)) // IdStart
+  {
+    do // IdChar*
+      p++;
+    while (p < end && (isident(*p) || isUnicodeAlpha(p, end)))
+    auto identifier = ref_p[0 .. p-ref_p];
+    ref_p = p;
+    return identifier;
+  }
+  return null;
 }
 
 /// ASCII character properties table.
