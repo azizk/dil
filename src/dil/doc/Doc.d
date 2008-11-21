@@ -264,7 +264,8 @@ struct DDocParser
     string ident, nextIdent;
     char* bodyBegin, nextBodyBegin;
 
-    skipWhitespace();
+    while (p < textEnd && (isspace(*p) || *p == '\n'))
+      p++;
     summaryBegin = p;
 
     if (findNextIdColon(ident, bodyBegin))

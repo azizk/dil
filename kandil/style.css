@@ -1,7 +1,40 @@
+body { margin: 0; }
 #navbar {
-  width: 200px;
+/*   width: 200px; */
 }
 
 #content {
-  width: 100%;
+/*   width: 100%; */
+}
+
+.sec_header {
+  font-weight: bold;
+  margin: 0.5em 0;
+}
+
+dt {
+  font-size: 1em;
+  font-weight: bold;
+}
+
+dd {
+  margin: 0.5em 2.5em;
+}
+
+.symbol {
+  color: ForestGreen;
+  text-decoration: none;
+}
+
+.summary {
+  margin: 0.5em 0;
+}
+
+.params em {
+  font-weight: normal;
+  color: #333;
+}
+
+.attrs {
+  font-size: 0.8em;
 }

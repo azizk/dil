@@ -46,10 +46,10 @@ def download_jquery(dest_path, force=False,
     request.add_header('If-Modified-Since', date_stamp)
 
   try:
-    print "Downloading '%s':" % url,
+    print "Downloading '%s':" % url
     js_file = urlopen(request)                 # Perform the request.
     open(dest_path, "w").write(js_file.read()) # Write to destination path.
-    print "Done"
+    print "Done >", dest_path
   except HTTPError, e:
     if e.code == 304: print "Not Modified"
     else:             print e

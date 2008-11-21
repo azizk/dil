@@ -5,9 +5,9 @@ DDOC = <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
   <title>$(TITLE)</title>
   <link href="./css/style.css" rel="stylesheet" type="text/css"/>
   <!-- <link href="./img/icon.png" rel="icon" type="image/png"/> -->
-  <script type="text/javascript" src="./js/jquery.js"/>
-  <script type="text/javascript" src="./js/modules.js"/>
-  <script type="text/javascript" src="./js/navigation.js"/>
+  <script type="text/javascript" src="./js/jquery.js"></script>
+  <script type="text/javascript" src="./js/modules.js"></script>
+  <script type="text/javascript" src="./js/navigation.js"></script>
 </head>
 <body>
 <table>
@@ -33,10 +33,58 @@ MODFQN = $(TITLE)
 MODLINK = <a href="$0.html">$0</a>
 MODLINK2 = <a href="$1.html">$+</a>
 SRCFILE = ./htmlsrc/$(MODFQN).html
-SYMBOL = <a href="$(SRCFILE)#L$2">$1</a>
+SYMBOL = <a class="symbol" href="$(SRCFILE)#L$2">$1</a>
 
 SUP = <sup>$0</sup>
-BR = <br/>
+EM  = <em>$0</em>
+BR  = <br/>
 PRE = <pre>$0</pre>
 DDD = ---
+SPAN = <span class="$1">$+</span>
 DMDBUG = $(LINK2 http://d.puremagic.com/issues/show_bug.cgi?id=$1, $2)
+
+RED    = $(SPAN red, $0)
+BLUE   = $(SPAN blue, $0)
+GREEN  = $(SPAN green, $0)
+YELLOW = $(SPAN yellow, $0)
+BLACK  = $(SPAN black, $0)
+WHITE  = $(SPAN white, $0)
+
+SECH = <p class="sec_header">$0</p>
+DDOC_DECL        = $(DT $0)
+DDOC_DITTO       = <p/>$0
+DDOC_SUMMARY     = <div class="summary">$0</div>
+DDOC_DESCRIPTION = $0
+DDOC_SECTION     = $0
+DDOC_SECTION_H   = $(SECH $0)
+DDOC_AUTHORS     = $(SECH Authors:)$0
+DDOC_BUGS        = $(SECH $(RED Bugs:)$0
+DDOC_COPYRIGHT   = $(SECH Copyright:)$0
+DDOC_DATE        = $(SECH Date:)$0
+DDOC_DEPRECATED  = $(SECH $(RED Deprecated:))$0
+DDOC_EXAMPLES    = $(SECH Examples:)$0
+DDOC_HISTORY     = $(SECH History:)$0
+DDOC_LICENSE     = $(SECH License:)$0
+DDOC_RETURNS     = $(SECH Returns:)$0
+DDOC_SEE_ALSO    = $(SECH See Also:)$0
+DDOC_STANDARDS   = $(SECH Standards:)$0
+DDOC_THROWS      = $(SECH Throws:)$0
+DDOC_VERSION     = $(SECH Version:)$0
+
+DDOC_PARAMS = $(SECH Params:)
+$(TABLE $0)
+DDOC_PARAM_ROW = $(TR $0)
+DDOC_PARAM_ID = $(TD $0)
+DDOC_PARAM_DESC = $(TD $0)
+DDOC_KEYWORD = $(SPAN kw, $0)
+
+DDOC_BLANKLINE = <p/>
+
+ATTRIBUTES      = $(SPAN attrs, [$0])
+PROT            = $(SPAN prot, $0)
+STC             = $(SPAN stc, $0)
+LINKAGE         = $(SPAN linkg, $0)
+PARAMS          = $(SPAN params, ($0))
+DDOC_PARAM      = $(EM $0)
+TEMPLATE_PARAMS = $(SPAN tparams, ($0))
+BASE_CLASSES    = : $0
