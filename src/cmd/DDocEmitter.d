@@ -300,17 +300,30 @@ abstract class DDocEmitter : DefaultVisitor
         break;
       case '-':
         if (p+2 < end && p[1] == '-' && p[2] == '-')
-        {
-          while (p < end && *p == '-')
+        { // Found "---".
+          while (p < end && *p == '-') // Skip leading dashes.
             p++;
           auto codeBegin = p;
-          p--;
-          while (++p < end)
-            if (p+2 < end && *p == '-' && p[1] == '-' && p[2] == '-')
-              break;
-          auto codeText = makeString(codeBegin, p);
-          result ~= tokenHL.highlight(codeText, modul.filePath);
-          while (p < end && *p == '-')
+          while (p < end && isspace(*p))
+            p++;
+          if (p < end && *p == '\n') // Skip first newline.
+            codeBegin = ++p;
+          // Find closing dashes.
+          while (p < end && !(*p == '-' && p+2 < end &&
+                            p[1] == '-' && p[2] == '-'))
+            p++;
+          // Remove last newline if present.
+          auto codeEnd = p;
+          while (isspace(*--codeEnd))
+          {}
+          if (*codeEnd != '\n') // Leaving the pointer on '\n' will exclude it.
+            codeEnd++; // Include the non-newline character.
+          if (codeBegin < codeEnd)
+          { // Highlight the extracted source code.
+            auto codeText = makeString(codeBegin, codeEnd);
+            result ~= tokenHL.highlight(codeText, modul.getFQN());
+          }
+          while (p < end && *p == '-') // Skip remaining dashes.
             p++;
           continue;
         }
@@ -320,6 +333,7 @@ abstract class DDocEmitter : DefaultVisitor
       }
       p++;
     }
+    assert(p is end);
     return result;
   }
 
@@ -406,9 +420,10 @@ abstract class DDocEmitter : DefaultVisitor
   void SYMBOL(char[] name, Declaration d)
   {
     auto loc = d.begin.getRealLocation();
-    auto str = Format("$(SYMBOL {}, {})", name, loc.lineNum);
+    auto loc_end = d.end.getRealLocation();
+    auto str = Format("$(SYMBOL {}, {}, {})", name, loc.lineNum, loc_end.lineNum);
     write(str);
-    // write("$(DDOC_PSYMBOL ", name, ")");
+    // write("$(DDOC_PSYMBOL ", name, ")"); // DMD's macro with no info.
   }
 
   /// Offset at which to insert a declaration with a "ditto" comment.
