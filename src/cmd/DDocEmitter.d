@@ -321,6 +321,7 @@ abstract class DDocEmitter : DefaultVisitor
           if (codeBegin < codeEnd)
           { // Highlight the extracted source code.
             auto codeText = makeString(codeBegin, codeEnd);
+            codeText = DDocUtils.unindentText(codeText);
             result ~= tokenHL.highlight(codeText, modul.getFQN());
           }
           while (p < end && *p == '-') // Skip remaining dashes.

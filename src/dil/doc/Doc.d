@@ -217,6 +217,59 @@ static:
     result.length = i;
     return result;
   }
+
+  /// Unindents all lines in text by the maximum amount possible.
+  /// Note: counts tabulators the same as single spaces.
+  /// Returns: the unindented text or the original text.
+  char[] unindentText(char[] text)
+  {
+    char* p = text.ptr, end = p + text.length;
+    uint indent = uint.max; // Start with the largest number.
+    char* lbegin = p; // The beginning of a line.
+    // First determine the maximum amount we may remove.
+    while (p < end)
+    {
+      while (p < end && isspace(*p)) // Skip leading whitespace.
+        p++;
+      if (p < end && *p != '\n') // Don't count blank lines.
+        if (p - lbegin < indent)
+        {
+          indent = p - lbegin;
+          if (indent == 0)
+            return text; // Nothing to unindent;
+        }
+      // Skip to the end of the line.
+      while (p < end && *p != '\n')
+        p++;
+      while (p < end && *p == '\n')
+        p++;
+      lbegin = p;
+    }
+
+    p = text.ptr, end = p + text.length;
+    lbegin = p;
+    char* q = p; // Writer.
+    // Remove the determined amount.
+    while (p < end)
+    {
+      while (p < end && isspace(*p)) // Skip leading whitespace.
+        *q++ = *p++;
+      if (p < end && *p == '\n') // Strip empty lines.
+        q -= p - lbegin; // Back up q by the amount of spaces on this line.
+      else {//if (indent <= p - lbegin)
+        assert(indent <= p - lbegin);
+        q -= indent; // Back up q by the indent amount.
+      }
+      // Skip to the end of the line.
+      while (p < end && *p != '\n')
+        *q++ = *p++;
+      while (p < end && *p == '\n')
+        *q++ = *p++;
+      lbegin = p;
+    }
+    text.length = q - text.ptr;
+    return text;
+  }
 }
 
 /// Parses a DDoc comment string.
