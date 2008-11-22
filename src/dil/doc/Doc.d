@@ -41,10 +41,8 @@ class DDocComment
   /// Returns true if "ditto" is the only text in this comment.
   bool isDitto()
   {
-    if (summary && sections.length == 1 &&
-        icompare(DDocUtils.strip(summary.text), "ditto") == 0)
-      return true;
-    return false;
+    return summary && sections.length == 1 &&
+           icompare(summary.text, "ditto") == 0;
   }
 }
 
@@ -70,27 +68,6 @@ static:
     DDocParser p;
     p.parse(text);
     return new DDocComment(p.sections, p.summary, p.description);
-  }
-
-  /// Strips leading and trailing whitespace characters.
-  /// Whitespace: ' ', '\t', '\v', '\f' and '\n'
-  /// Returns: a slice into str.
-  char[] strip(char[] str)
-  {
-    if (str.length == 0)
-      return null;
-    uint i;
-    for (; i < str.length; i++)
-      if (!isspace(str[i]) && str[i] != '\n')
-        break;
-    if (str.length == i)
-      return null;
-    str = str[i..$];
-    assert(str.length);
-    for (i = str.length; i; i--)
-      if (!isspace(str[i-1]) && str[i-1] != '\n')
-        break;
-    return str[0..i];
   }
 
   /// Returns true if token is a Doxygen comment.
@@ -309,6 +286,7 @@ struct DDocParser
     // The rest is the description section.
     if (auto descText = textBody(p, end))
       sections ~= (description = new Section("", descText));
+    assert(description ? description.text !is null : true);
   }
 
   /// Returns true if p points to "$(DDD)".

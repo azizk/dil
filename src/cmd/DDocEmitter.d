@@ -259,7 +259,7 @@ abstract class DDocEmitter : DefaultVisitor
           p += 2; // Point to 2nd '-'.
           // Scan to closing "-->".
           while (++p < end)
-            if (p+2 < end && *p == '-' && p[1] == '-' && p[2] == '>')
+            if (*p == '-' && p+2 < end && p[1] == '-' && p[2] == '>')
             {
               p += 3; // Point one past '>'.
               break;

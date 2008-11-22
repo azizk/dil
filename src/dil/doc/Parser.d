@@ -59,7 +59,7 @@ struct IdentValueParser
   }
 
   /// Strips off leading and trailing whitespace characters.
-  /// Returns: the text body.
+  /// Returns: the text body, or null if empty.
   static char[] textBody(char* begin, char* end)
   {
     while (begin < end && (isspace(*begin) || *begin == '\n'))
@@ -69,7 +69,7 @@ struct IdentValueParser
     // B = some text
     // ^- begin and end point to B (or to this.textEnd in the 2nd case.)
     if (begin is end)
-      return "";
+      return null;
     // Remove trailing whitespace.
     while (isspace(*--end) || *end == '\n')
     {}
