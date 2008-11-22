@@ -41,7 +41,7 @@ dd {
 
 /* Code formatting */
 .d_code {
-  padding: 0.5em 0;
+  padding: 0.5em;
   border: 1px dotted black;
 }
 /* Number */

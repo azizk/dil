@@ -60,5 +60,5 @@ class Path(unicode):
   def rmdir(self):
     return os.rmdir(self)
 
-  def rmtree(self, noerrors=False):
+  def rmtree(self, noerrors=True):
     return shutil.rmtree(self, ignore_errors=noerrors)

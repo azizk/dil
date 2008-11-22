@@ -33,7 +33,8 @@ MODFQN = $(TITLE)
 MODLINK = <a href="$0.html">$0</a>
 MODLINK2 = <a href="$1.html">$+</a>
 SRCFILE = ./htmlsrc/$(MODFQN).html
-SYMBOL = <a class="symbol" href="$(SRCFILE)#L$2">$1</a>
+SYMBOL = <a class="symbol" href="$(SRCFILE)#L$2" beg="$2" end="$3">$1</a>
+SYMLINK = <a title="Permalink to this symbol" href="#$0" class="symlink">¶</a>
 
 SUP = <sup>$0</sup>
 EM  = <em>$0</em>

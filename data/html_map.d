@@ -4,6 +4,7 @@ string[string] map = [
               `<html>`\n
               `<head>`\n
               `  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">`\n
+              `  <title>{0}</title>`\n
               `  <link href="html.css" rel="stylesheet" type="text/css">`\n
               `</head>`\n
               `<body>`\n

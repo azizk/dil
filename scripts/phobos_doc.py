@@ -126,7 +126,7 @@ def main():
                 [PHOBOS_SRC/"phobos.d", DATA/"phobos_overrides.ddoc"])
 
   for args in generate_shl_files(HTML_SRC, PHOBOS_SRC, FILES):
-    print "dil hl %s > %s" % args;
+    print "hl %s > %s" % args;
 
   modify_phobos_html(DEST/"phobos.html", D_VERSION)
 

@@ -22,6 +22,9 @@ def copy_files(DATA, KANDIL, TANGO_DIR, CANDYDOC, HTML_SRC, DEST):
   for f in ("decant", "ie56hack", "style"): copy(CANDYDOC/f+".css", DEST_CSS)
   # Avoid possible exception: only copy if the folder doesn't exist.
   not DEST_IMG.exists and copytree(CANDYDOC/"img", DEST_IMG)
+  # Remove .svn directories.
+  for path in ("", "outline", "package", "tree"):
+    (DEST_IMG/path/".svn").rmtree()
 
   # Syntax highlighted files need html.css.
   copy(DATA/"html.css", HTML_SRC)
@@ -128,7 +131,7 @@ def main():
   generate_modules_js(modlist, DEST_JS/"modules.js")
 
   for args in generate_shl_files(HTML_SRC, TANGO_DIR, FILES):
-    print "dil hl %s > %s" % args;
+    print "hl %s > %s" % args;
 
   copy_files(DATA, KANDIL, TANGO_DIR, CANDYDOC, HTML_SRC, DEST)
   download_jquery(DEST/"js"/"jquery.js")

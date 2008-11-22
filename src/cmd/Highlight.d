@@ -19,6 +19,7 @@ import common;
 
 import tango.io.Buffer;
 import tango.io.Print;
+import tango.io.FilePath;
 
 /// The highlight command.
 struct HighlightCommand
@@ -300,7 +301,7 @@ void highlightSyntax(string filePath, TagMap tags,
   auto builder = new TokenExBuilder();
   auto tokenExList = builder.build(root, lx.firstToken());
 
-  print(tags["DocHead"]);
+  print.format(tags["DocHead"], (new FilePath(filePath)).name());
   if (lx.errors.length || parser.errors.length)
   { // Output error messages.
     print(tags["CompBegin"]);
@@ -356,7 +357,7 @@ void highlightTokens(string filePath, TagMap tags,
   auto lx = new Lexer(new SourceText(filePath, true));
   lx.scanAll();
 
-  print(tags["DocHead"]);
+  print.format(tags["DocHead"], (new FilePath(filePath)).name());
   if (lx.errors.length)
   {
     print(tags["CompBegin"]);
