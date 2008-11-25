@@ -75,7 +75,7 @@ abstract class DDocEmitter : DefaultVisitor
         writeComment();
       }
     }
-    MEMBERS("MODULE", { visitD(modul.root); });
+    MEMBERS("MODULE", "", modul.root);
     return text;
   }
 
@@ -110,7 +110,48 @@ abstract class DDocEmitter : DefaultVisitor
     return Token.textSpan(left, right);
   }
 
-  TemplateParameters tparams; /// The template parameters of the current declaration.
+  /// The template parameters of the current declaration.
+  TemplateParameters tparams;
+
+  /// Reflects the fully qualified name of the current symbol's parent.
+  /// A push occurs when entering a scope, and a pop when exiting it.
+  string[] fqnStack;
+  /// Counts symbols with the same FQN.
+  /// This is useful for anchor names that require unique strings.
+  uint[string] fqnCount;
+
+  /// Pushes an identifier onto the stack.
+  void pushFQN(string fqn)
+  {
+    if (fqn.length)
+      fqnStack ~= fqn;
+  }
+  /// Pops an identifier from the stack.
+  void popFQN()
+  {
+    if (fqnStack.length)
+      fqnStack = fqnStack[0..$-1];
+  }
+
+  /// Returns a unique, identifying string for the current symbol.
+  string getSymbolFQN(string name)
+  {
+    char[] fqn;
+    foreach (name_part; fqnStack)
+      fqn ~= name_part ~ ".";
+    fqn ~= name;
+
+    uint count;
+    auto pfqn = fqn in fqnCount;
+    if (pfqn)
+      count = (*pfqn += 1); // Update counter.
+    else
+      fqnCount[fqn] = 1; // Start counting with 1.
+
+    if (count > 1) // Ignore unique suffix for the value 1.
+      fqn ~= Format(":{}", count);
+    return fqn;
+  }
 
   DDocComment cmnt; /// Current comment.
   DDocComment prevCmnt; /// Previous comment in scope.
@@ -130,11 +171,12 @@ abstract class DDocEmitter : DefaultVisitor
     bool saved_cmntIsDitto;
     uint saved_prevDeclOffset;
     /// When constructed, variables are saved.
-    this()
+    this(string name)
     { // Save the previous comment of the parent scope.
       saved_prevCmnt = this.outer.prevCmnt;
       saved_cmntIsDitto = this.outer.cmntIsDitto;
       saved_prevDeclOffset = this.outer.prevDeclOffset;
+      pushFQN(name);
       // Entering a new scope. Clear variables.
       this.outer.prevCmnt = null;
       this.outer.cmntIsDitto = false;
@@ -146,6 +188,7 @@ abstract class DDocEmitter : DefaultVisitor
       this.outer.prevCmnt = saved_prevCmnt;
       this.outer.cmntIsDitto = saved_cmntIsDitto;
       this.outer.prevDeclOffset = saved_prevDeclOffset;
+      popFQN();
     }
   }
 
@@ -173,7 +216,8 @@ abstract class DDocEmitter : DefaultVisitor
   {
     foreach (name; ["AUTHORS", "BUGS", "COPYRIGHT", "DATE", "DEPRECATED",
                     "EXAMPLES", "HISTORY", "LICENSE", "RETURNS", "SEE_ALSO",
-                    "STANDARDS", "THROWS", "VERSION"])
+                    "STANDARDS", "THROWS", "VERSION"] ~
+                   ["AUTHOR"]) // Addition by dil.
       specialSections[name] = name;
   }
 
@@ -420,9 +464,11 @@ abstract class DDocEmitter : DefaultVisitor
   /// Writes a symbol to the text buffer. E.g: $&#40;SYMBOL Buffer, 123&#41;
   void SYMBOL(char[] name, Declaration d)
   {
+    auto fqn = getSymbolFQN(name);
     auto loc = d.begin.getRealLocation();
     auto loc_end = d.end.getRealLocation();
-    auto str = Format("$(SYMBOL {}, {}, {})", name, loc.lineNum, loc_end.lineNum);
+    auto str = Format("$(SYMBOL {}, {}, {}, {})",
+                      name, fqn, loc.lineNum, loc_end.lineNum);
     write(str);
     // write("$(DDOC_PSYMBOL ", name, ")"); // DMD's macro with no info.
   }
@@ -483,11 +529,14 @@ abstract class DDocEmitter : DefaultVisitor
     write(")");
   }
 
-  /// Wraps the DDOC_kind_MEMBERS macro around the text written by dg().
-  void MEMBERS(char[] kind, void delegate() dg)
+  /// Wraps the DDOC_kind_MEMBERS macro around the text
+  /// written by visit(members).
+  void MEMBERS(D)(string kind, string name, D members)
   {
+    scope s = new DDocScope(name);
     write("\n$(DDOC_"~kind~"_MEMBERS ");
-    dg();
+    if (members !is null)
+      super.visit(members);
     write(")");
   }
 
@@ -502,12 +551,8 @@ abstract class DDocEmitter : DefaultVisitor
       writeTemplateParams();
       writeInheritanceList(d.bases);
     }, d);
-    DESC({
-      MEMBERS(is(T == ClassDeclaration) ? "CLASS" : "INTERFACE", {
-        scope s = new DDocScope();
-        d.decls && super.visit(d.decls);
-      });
-    });
+    const kind = is(T == ClassDeclaration) ? "CLASS" : "INTERFACE";
+    DESC({ MEMBERS(kind, d.name.str, d.decls); });
   }
 
   /// Writes a struct or union declaration.
@@ -521,12 +566,8 @@ abstract class DDocEmitter : DefaultVisitor
         SYMBOL(d.name.str, d);
       writeTemplateParams();
     }, d);
-    DESC({
-      MEMBERS(is(T == StructDeclaration) ? "STRUCT" : "UNION", {
-        scope s = new DDocScope();
-        d.decls && super.visit(d.decls);
-      });
-    });
+    const kind = is(T == StructDeclaration) ? "STRUCT" : "UNION";
+    DESC({ MEMBERS(kind, d.name ? d.name.str : "", d.decls); });
   }
 
   /// Writes an alias or typedef declaration.
@@ -601,7 +642,7 @@ override:
       write("enum", d.name ? " " : "");
       d.name && SYMBOL(d.name.str, d);
     }, d);
-    DESC({ MEMBERS("ENUM", { scope s = new DDocScope(); super.visit(d); }); });
+    DESC({ MEMBERS("ENUM", d.name ? d.name.str : "", d); });
     return d;
   }
 
@@ -630,12 +671,7 @@ override:
       SYMBOL(d.name.str, d);
       writeTemplateParams();
     }, d);
-    DESC({
-      MEMBERS("TEMPLATE", {
-        scope s = new DDocScope();
-        super.visit(d.decls);
-      });
-    });
+    DESC({ MEMBERS("TEMPLATE", d.name.str, d.decls); });
     return d;
   }
 

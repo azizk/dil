@@ -53,6 +53,8 @@ DDOC_DITTO     = $(BR)$0
 DDOC_SECTIONS  = $0
 DDOC_SUMMARY   = $0$(BR)$(BR)
 DDOC_DESCRIPTION = $0$(BR)$(BR)
+DDOC_AUTHOR    = $(B Author:)$(BR)
+$0$(BR)$(BR)
 DDOC_AUTHORS   = $(B Authors:)$(BR)
 $0$(BR)$(BR)
 DDOC_BUGS      = $(RED BUGS:)$(BR)

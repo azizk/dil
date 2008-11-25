@@ -1,11 +1,14 @@
 body { margin: 0; }
+
 #navbar {
-/*   width: 200px; */
+  width: 200px;
+  overflow: auto;
 }
 
 #content {
-/*   width: 100%; */
+  margin: 0.5em;
 }
+
 
 .sec_header {
   font-weight: bold;
@@ -15,10 +18,28 @@ body { margin: 0; }
 dt {
   font-size: 1em;
   font-weight: bold;
+  position: relative; /* for .symlink */
 }
 
 dd {
   margin: 0.5em 2.5em;
+  margin-right: 0;
+}
+
+dt .symlink {
+  display: none;
+}
+
+dt:hover .symlink, .symlink:focus {
+  display: inline;
+}
+
+.symlink {
+  position: absolute;
+  right: 0;
+  padding: 0em 0.2em;
+  text-decoration: none;
+  color: DarkRed;
 }
 
 .symbol {
@@ -32,24 +53,92 @@ dd {
 
 .params em {
   font-weight: normal;
-  color: #333;
+  color: OliveDrab;
 }
 
 .attrs {
   font-size: 0.8em;
 }
 
-/* Code formatting */
-.d_code {
-  padding: 0.5em;
-  border: 1px dotted black;
+table.params td {
+  vertical-align: top;
 }
+
+table.params td:first-child {
+  padding-right: 0.2em;
+  text-align: right;
+}
+
+.ajaxerror {
+  color: DarkRed;
+}
+
+/* Code formatting */
+pre.d_code {
+  padding: 0.2em;
+  border: 1px solid gray;
+}
+
+.loaded_code {
+  margin: 0.5em 2.5em;
+  border: 1px solid gray;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.loaded_code pre.d_code {
+  margin: 0;
+  border: none;
+}
+
+.loaded_code td {
+ vertical-align: top;
+ margin: 0;
+ padding: 0;
+}
+
+.loaded_code table {
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+.loaded_code td.lines {
+  text-align: right;
+  background-color: #F5F5F5;
+}
+
+.loaded_code .lines_column {
+  margin: 0;
+  padding: 0.2em 0.2em;
+  border-right: 1px dotted gray;
+}
+
+.loaded_code .lines_column a {
+  color: DimGray;
+  text-decoration: none;
+}
+
+.loaded_code .lines_column a:hover {
+  text-decoration: underline;
+}
+
+.loaded_code .d.Module .i, .loaded_code .d.Import .i
+{ color: blue; }
+.loaded_code .t.Identifier .i, .loaded_code .TemplateTypeParameter .i
+{ color: #911; }
+.loaded_code .t .k
+{ color: #911; font-weight: normal; }
+.loaded_code .d > .i
+{ color: ForestGreen !important; /*font-weight: normal; */}
+.loaded_code .o.Parameter > .i
+{ color: OliveDrab !important; font-style: italic; }
+
 /* Number */
 .d_code .n { color: teal; }
 /* Keyword */
 .d_code .k { color: darkblue; font-weight: bold; }
 /* Line, block and nested comments */
-.d_code .lc, .bc, .nc { color: green; }
+.d_code .lc, .bc, .nc { color: gray; }
 /* Identifier */
 .d_code .i { color: black; }
 /* String literal */

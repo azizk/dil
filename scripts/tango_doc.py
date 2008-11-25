@@ -33,6 +33,7 @@ def copy_files(DATA, KANDIL, TANGO_DIR, CANDYDOC, HTML_SRC, DEST):
 
   copy(KANDIL/"style.css", DEST_CSS)
   copy(KANDIL/"navigation.js", DEST_JS)
+  copy(KANDIL/"loading.gif", DEST_IMG)
 
 def generate_docs(DEST, MODLIST, FILES):
   """ Generates documenation files. """
