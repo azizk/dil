@@ -412,7 +412,7 @@ abstract class DDocEmitter : DefaultVisitor
   /// Writes params to the text buffer.
   void writeParams(Parameters params)
   {
-    write("$(PARAMS ");
+    write("$(DIL_PARAMS ");
     foreach (param; params.items)
     {
       if (param.isCVariadic)
@@ -444,9 +444,9 @@ abstract class DDocEmitter : DefaultVisitor
   {
     if (!tparams)
       return;
-    write("$(TEMPLATE_PARAMS ",
-          escape(textSpan(tparams.begin, tparams.end))[1..$-1], // Remove ().
-          ")");
+    auto text = textSpan(tparams.begin, tparams.end);
+    text = escape(text)[1..$-1]; // Escape and remove '(', ')'.
+    write("$(DIL_TEMPLATE_PARAMS ", text, ")");
     tparams = null;
   }
 
@@ -458,16 +458,18 @@ abstract class DDocEmitter : DefaultVisitor
     auto basesBegin = bases[0].begin.prevNWS;
     if (basesBegin.kind == TOK.Colon)
       basesBegin = bases[0].begin;
-    write(" $(BASE_CLASSES ", escape(textSpan(basesBegin, bases[$-1].end)), ")");
+    auto text = escape(textSpan(basesBegin, bases[$-1].end));
+    write(" $(DIL_BASE_CLASSES ", text, ")");
   }
 
-  /// Writes a symbol to the text buffer. E.g: $&#40;SYMBOL Buffer, 123&#41;
+  /// Writes a symbol to the text buffer.
+  /// E.g: &#36;(DIL_SYMBOL scan, Lexer.scan, 229, 646);
   void SYMBOL(char[] name, Declaration d)
   {
     auto fqn = getSymbolFQN(name);
     auto loc = d.begin.getRealLocation();
     auto loc_end = d.end.getRealLocation();
-    auto str = Format("$(SYMBOL {}, {}, {}, {})",
+    auto str = Format("$(DIL_SYMBOL {}, {}, {}, {})",
                       name, fqn, loc.lineNum, loc_end.lineNum);
     write(str);
     // write("$(DDOC_PSYMBOL ", name, ")"); // DMD's macro with no info.
@@ -592,12 +594,12 @@ abstract class DDocEmitter : DefaultVisitor
     char[][] attributes;
 
     if (d.prot != Protection.None)
-      attributes ~= "$(PROT " ~ .toString(d.prot) ~ ")";
+      attributes ~= "$(DIL_PROT " ~ .toString(d.prot) ~ ")";
 
     auto stc = d.stc;
     stc &= ~StorageClass.Auto; // Ignore auto.
     foreach (stcStr; .toStrings(stc))
-      attributes ~= "$(STC " ~ stcStr ~ ")";
+      attributes ~= "$(DIL_STC " ~ stcStr ~ ")";
 
     LinkageType ltype;
     if (auto vd = d.Is!(VariablesDeclaration))
@@ -606,12 +608,12 @@ abstract class DDocEmitter : DefaultVisitor
       ltype = fd.linkageType;
 
     if (ltype != LinkageType.None)
-      attributes ~= "$(LINKAGE extern(" ~ .toString(ltype) ~ "))";
+      attributes ~= "$(DIL_LINKAGE extern(" ~ .toString(ltype) ~ "))";
 
     if (!attributes.length)
       return;
 
-    write(" $(ATTRIBUTES ", attributes[0]);
+    write(" $(DIL_ATTRIBUTES ", attributes[0]);
     foreach (attribute; attributes[1..$])
       write(", ", attribute);
     write(")");

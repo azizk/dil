@@ -2,10 +2,16 @@ DDOC = <root>
 <module>$(TITLE)</module>
 $(BODY)
 <copyright>$(COPYRIGHT)</copyright>
-<generator>dil $(DDOC_VERSION) $(LINK http://code.google.com/p/dil)
+$(GENERATOR)
+</root>
+
+GENERATOR =
+<generator>
+  <name>dil</name>
+  <version><!--TODO:define runtime macro for this--></version>
+  <link>http://code.google.com/p/dil</link>
   <date>$(DATETIME)</date>
 </generator>
-</root>
 
 B = <b>$0</b>
 I = <i>$0</i>
@@ -23,16 +29,17 @@ UL = <ul>$0</ul>
 LI = <li>$0</li>
 BIG = <big>$0</big>
 SMALL = <small>$0</small>
-BR = <br />
+BR = <br/>
 LINK = <link href="$0">$0</link>
 LINK2 = <link href="$1">$+</link>
+SPAN = <span class="$1">$+</span>
 
-RED = <font color="red">$0</font>
-BLUE = <font color="blue">$0</font>
-GREEN = <font color="green">$0</font>
-YELLOW = <font color="yellow">$0</font>
-BLACK = <font color="black">$0</font>
-WHITE = <font color="white">$0</font>
+RED    = $(SPAN red, $0)
+BLUE   = $(SPAN blue, $0)
+GREEN  = $(SPAN green, $0)
+YELLOW = $(SPAN yellow, $0)
+BLACK  = $(SPAN black, $0)
+WHITE  = $(SPAN white, $0)
 
 D_CODE    = <dcode>$0</dcode>
 D_COMMENT = <dcomment>$0</dcomment>
@@ -85,14 +92,14 @@ DDOC_PSYMBOL = $(U $0)
 DDOC_KEYWORD = $(B $0)
 DDOC_PARAM   = $0
 
-ATTRIBUTES      = <attributes>$0</attributes>
-ATTRIBUTE       = <attribute type="$1">$2</attribute>
-PROT            = $(ATTRIBUTE protection, $0)
-STC             = $(ATTRIBUTE storage, $0)
-LINKAGE         = $(ATTRIBUTE linkage, $0)
-SYMBOL          = $1
-BASE_CLASSES    = <parents>$0</parents>
-TYPE            = <type>$0</type>
-PARAMS          = <params>$0</params>
-RETURNS         = <returns>$0</returns>
-TEMPLATE_PARAMS = <templateparams>$0</templateparams>
+ATTRIBUTE = <attribute type="$1">$2</attribute>
+TYPE      = <type>$0</type>
+RETURNS   = <returns>$0</returns>
+DIL_SYMBOL          = $1
+DIL_ATTRIBUTES      = <attributes>$0</attributes>
+DIL_PROT            = $(ATTRIBUTE protection, $0)
+DIL_STC             = $(ATTRIBUTE storage, $0)
+DIL_LINKAGE         = $(ATTRIBUTE linkage, $0)
+DIL_BASE_CLASSES    = <parents>$0</parents>
+DIL_PARAMS          = <params>$0</params>
+DIL_TEMPLATE_PARAMS = <templateparams>$0</templateparams>

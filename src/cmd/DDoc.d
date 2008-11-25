@@ -102,10 +102,11 @@ struct DDocCommand
     // Create an own macro environment for this module.
     mtable = new MacroTable(mtable);
     // Define runtime macros.
-    // MODPATH is an extension by dil.
-    mtable.insert("MODPATH", mod.getFQNPath() ~ "." ~ mod.fileExtension());
-    mtable.insert("TITLE", mod.getFQN());
-    mtable.insert("DOCFILENAME", mod.getFQN() ~ outFileExtension);
+    auto modFQN = mod.getFQN();
+    mtable.insert("DIL_MODPATH", mod.getFQNPath() ~ "." ~ mod.fileExtension());
+    mtable.insert("DIL_MODFQN", modFQN);
+    mtable.insert("DIL_DOCFILENAME", modFQN ~ outFileExtension);
+    mtable.insert("TITLE", modFQN);
     auto timeStr = Time.toString();
     mtable.insert("DATETIME", timeStr);
     mtable.insert("YEAR", Time.year(timeStr));
