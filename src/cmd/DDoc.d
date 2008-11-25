@@ -78,12 +78,12 @@ struct DDocCommand
         // Start semantic analysis.
         auto pass1 = new SemanticPass1(mod, context);
         pass1.run();
+
+        if (generateModulesTextFile)
+          modFQNs ~= [filePath, mod.getFQN()];
       }
       else // Normally done in mod.parse().
         mod.setFQN((new FilePath(filePath)).name());
-
-      if (generateModulesTextFile)
-        modFQNs ~= [filePath, mod.getFQN()];
 
       // Write the documentation file.
       writeDocumentationFile(mod, mtable);

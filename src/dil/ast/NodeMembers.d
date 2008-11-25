@@ -22,9 +22,8 @@ char[] genMembersTable()
   t[N.AliasDeclaration] = t[N.TypedefDeclaration] = ["decl"];
   t[N.EnumDeclaration] = ["baseType?", "members[]"];
   t[N.EnumMemberDeclaration] = ["type?", "value?"];
-  t[N.ClassDeclaration] = ["bases[]", "decls"];
-  t[N.InterfaceDeclaration] = ["bases[]", "decls"];
-  t[N.StructDeclaration] = t[N.UnionDeclaration] = ["decls"];
+  t[N.ClassDeclaration] = t[N.InterfaceDeclaration] = ["bases[]", "decls?"];
+  t[N.StructDeclaration] = t[N.UnionDeclaration] = ["decls?"];
   t[N.ConstructorDeclaration] = ["params", "funcBody"];
   t[N.StaticConstructorDeclaration] = t[N.DestructorDeclaration] =
   t[N.StaticDestructorDeclaration] = t[N.InvariantDeclaration] =

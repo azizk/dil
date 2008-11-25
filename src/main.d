@@ -518,14 +518,14 @@ Example:
   case "stats", "statistics":
     msg = "Gather statistics about D source files.
 Usage:
-  dil stat file.d [file2.d, ...] [Options]
+  dil stats file.d [file2.d, ...] [Options]
 
 Options:
   --toktable      : print the count of all kinds of tokens in a table.
   --asttable      : print the count of all kinds of nodes in a table.
 
 Example:
-  dil stat src/main.d src/dil/Unicode.d";
+  dil stats src/main.d src/dil/Unicode.d";
     break;
   case "trans", "translate":
     msg = `Translate a D source file to another language.

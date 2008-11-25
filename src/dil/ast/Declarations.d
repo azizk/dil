@@ -246,6 +246,10 @@ class TemplateDeclaration : Declaration
   mixin(copyMethod);
 }
 
+// Note: tparams is commented out because the Parser wraps declarations
+//       with template parameters inside a TemplateDeclaration.
+//       
+
 abstract class AggregateDeclaration : Declaration
 {
   Identifier* name;

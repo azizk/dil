@@ -257,7 +257,7 @@ class TokenExBuilder : DefaultVisitor
 
   // Override dispatch function.
   override Node dispatch(Node n)
-  {
+  { assert(n !is null);
     auto begin = n.begin;
     if (begin)
     { assert(n.end);
