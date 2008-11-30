@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 import os, re
-from shutil import copy, copytree
 from path import Path
 from common import *
 
@@ -12,42 +11,19 @@ def find_source_files(source, found):
     found += [root/file for file in map(Path, files) # Iter. over Path objects.
                           if file.ext.lower() in ('.d','.di')]
 
-def copy_files(DATA, KANDIL, TANGO_DIR, CANDYDOC, HTML_SRC, DEST):
+def copy_files(DATA, KANDIL, TANGO_DIR, HTML_SRC, DEST):
   """ Copies required files to the destination folder. """
   DEST_JS, DEST_CSS, DEST_IMG = DEST//("js","css","img")
   # Create the destination folders.
-  for path in (DEST_JS, DEST_CSS): path.exists or path.mkdir()
-  # Copy candydoc files.
-  for f in ("explorer", "tree", "util"):    copy(CANDYDOC/f+".js", DEST_JS)
-  for f in ("decant", "ie56hack", "style"): copy(CANDYDOC/f+".css", DEST_CSS)
-  # Avoid possible exception: only copy if the folder doesn't exist.
-  not DEST_IMG.exists and copytree(CANDYDOC/"img", DEST_IMG)
-  # Remove .svn directories.
-  for path in ("", "outline", "package", "tree"):
-    (DEST_IMG/path/".svn").rmtree()
+  map(Path.mkdir, (DEST_JS, DEST_CSS, DEST_IMG))
 
-  # Syntax highlighted files need html.css.
-  copy(DATA/"html.css", HTML_SRC)
-  # Tango's license.
-  copy(TANGO_DIR/"LICENSE", DEST/"License.txt")
-
-  copy(KANDIL/"style.css", DEST_CSS)
-  copy(KANDIL/"navigation.js", DEST_JS)
-  copy(KANDIL/"loading.gif", DEST_IMG)
-
-def generate_docs(DEST, MODLIST, FILES):
-  """ Generates documenation files. """
-  files_str = ' '.join(FILES)
-  args = {'DEST':DEST, 'FILES':files_str, 'MODLIST':MODLIST}
-  os.system("dil ddoc %(DEST)s -v -m=%(MODLIST)s -version=Tango -version=Windows -version=DDoc %(FILES)s" % args)
-
-def generate_shl_files(dest, prefix_path, files):
-  """ Generates syntax highlighted files. """
-  for filepath in files:
-    htmlfile = get_module_fqn(prefix_path, filepath) + ".html"
-    args = (filepath, dest/htmlfile)
-    yield args
-    os.system('dil hl --lines --syntax --html %s > "%s"' % args)
+  for FILE, DIR in (
+      (DATA/"html.css", HTML_SRC), # Syntax highlighted files need html.css.
+      (TANGO_DIR/"LICENSE", DEST/"License.txt"), # Tango's license.
+      (KANDIL/"style.css", DEST_CSS),
+      (KANDIL/"navigation.js", DEST_JS),
+      (KANDIL/"loading.gif", DEST_IMG)):
+    FILE.copy(DIR)
 
 def get_tango_version(path):
   for line in open(path):
@@ -58,8 +34,9 @@ def get_tango_version(path):
   return "%s.%s.%s" % (major, minor/10, minor%10)
 
 def write_tango_ddoc(path):
-  open(path, "w").write(
-"""LICENSE = see $(LINK2 http://www.dsource.org/projects/tango/wiki/LibraryLicense, license.txt)
+  open(path, "w").write("""
+LICENSE = see $(LINK2 http://www.dsource.org/projects/tango/wiki/LibraryLicense, license.txt)
+REPOFILE = http://www.dsource.org/projects/tango/browser/trunk/$(DIL_MODPATH)?rev=%s
 CODEURL =
 MEMBERTABLE = <table>$0</table>
 ANCHOR = <a name="$0"></a>
@@ -77,9 +54,11 @@ def main():
   from sys import argv
   from optparse import OptionParser
   if len(argv) <= 1:
-    print "Usage: ./scripts/tango_doc.py /home/user/tango/ [tangodoc/]"
+    print "Usage: scripts/tango_doc.py /home/user/tango/ [tangodoc/]"
     return
 
+  # Path to the executable of dil.
+  DIL_EXE   = Path("bin")/"dil"
   # The version of Tango we're dealing with.
   VERSION   = ""
   # Root of the Tango source code (from SVN.)
@@ -102,39 +81,33 @@ def main():
   TANGO_DDOC= TMP/"tango.ddoc"
   # The list of module files (with info) that have been processed.
   MODLIST   = TMP/"modules.txt"
-  # Candydoc folder.
-  CANDYDOC  = TANGO_DIR/"doc"/"html"/"candydoc"
   # The files to generate documentation for.
   FILES     = []
 
   if not TANGO_DIR.exists:
     print "The path '%s' doesn't exist." % TANGO_DIR
     return
-  if not CANDYDOC.exists:
-    print "Warning: can't find candydoc folder, the path '%s' doesn't exist." % CANDYDOC
-    return
 
   VERSION = get_tango_version(TANGO_SRC/"core"/"Version.d")
 
   # Create directories.
-  DEST.exists or DEST.makedirs()
-  HTML_SRC.exists or HTML_SRC.mkdir()
-  TMP.exists or TMP.mkdir()
-  DEST_JS.exists or DEST_JS.mkdir()
+  DEST.makedirs()
+  map(Path.mkdir, (HTML_SRC, TMP, DEST_JS))
 
   find_source_files(TANGO_SRC, FILES)
 
   write_tango_ddoc(TANGO_DDOC)
   DOC_FILES = [KANDIL/"kandil.ddoc", TANGO_DDOC] + FILES
-  generate_docs(DEST, MODLIST, DOC_FILES)
+  versions = ["Windows", "Tango", "DDoc"]
+  generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES, versions, options='-v')
 
   modlist = read_modules_list(MODLIST)
   generate_modules_js(modlist, DEST_JS/"modules.js")
 
-  for args in generate_shl_files(HTML_SRC, TANGO_DIR, FILES):
+  for args in generate_shl_files2(DIL_EXE, HTML_SRC, modlist):
     print "hl %s > %s" % args;
 
-  copy_files(DATA, KANDIL, TANGO_DIR, CANDYDOC, HTML_SRC, DEST)
+  copy_files(DATA, KANDIL, TANGO_DIR, HTML_SRC, DEST)
   download_jquery(DEST/"js"/"jquery.js")
 
   TMP.rmtree()
