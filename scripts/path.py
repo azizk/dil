@@ -4,7 +4,8 @@ import os, shutil
 
 class Path(unicode):
   """ Models a path in an object oriented way. """
-  sep = os.path.sep
+  sep = os.sep
+  pathsep = os.pathsep
 
   def __new__(cls, *paths):
     return unicode.__new__(cls, os.path.join(*paths) if len(paths) else '')
@@ -23,6 +24,12 @@ class Path(unicode):
   def __floordiv__(self, paths):
     """ Concatenates a list of paths. """
     return [self/path for path in paths]
+
+  def __add__(self, path):
+    return Path(unicode(self) + path)
+
+  def __radd__(self, path):
+    return Path(path + unicode(self))
 
   @property
   def ext(self):
@@ -48,13 +55,16 @@ class Path(unicode):
     return os.walk(self)
 
   def mkdir(self, mode=0777):
-    return os.mkdir(self, mode)
+    if not self.exists:
+      os.mkdir(self, mode)
 
   def makedirs(self, mode=0777):
-    return os.makedirs(self, mode)
+    """ Also creates parent directories. """
+    if not self.exists:
+      os.makedirs(self, mode)
 
   def remove(self):
-    return os.remove(self)
+    os.remove(self)
   rm = remove
 
   def rmdir(self):
@@ -62,3 +72,18 @@ class Path(unicode):
 
   def rmtree(self, noerrors=True):
     return shutil.rmtree(self, ignore_errors=noerrors)
+
+  def copy(self, to):
+    shutil.copy(self, to)
+
+  def copytree(self, to):
+    shutil.copytree(self, to)
+
+  def move(self, to):
+    shutil.move(self, to)
+
+  def rename(self, to):
+    os.rename(self, to)
+
+  def renames(self, to):
+    os.renames(self, to)
