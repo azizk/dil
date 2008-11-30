@@ -51,22 +51,28 @@ BR = <br/>"""
   )
 
 def main():
-  from sys import argv
   from optparse import OptionParser
-  if len(argv) <= 1:
-    print "Usage: scripts/tango_doc.py /home/user/tango/ [tangodoc/]"
-    return
+
+  usage = "Usage: scripts/tango_doc.py TANGO_DIR [DESTINATION_DIR]"
+  parser = OptionParser(usage=usage)
+  parser.add_option("--rev", dest="revision", metavar="REVISION", default=None,
+    type="int", help="set the repository REVISION to use in symbol links")
+
+  (options, args) = parser.parse_args()
+
+  if len(args) < 1:
+    return parser.print_help()
 
   # Path to the executable of dil.
   DIL_EXE   = Path("bin")/"dil"
   # The version of Tango we're dealing with.
   VERSION   = ""
   # Root of the Tango source code (from SVN.)
-  TANGO_DIR = Path(argv[1])
+  TANGO_DIR = Path(args[0])
   # The source code folder of Tango.
   TANGO_SRC = TANGO_DIR/"tango"
   # Destination of doc files.
-  DEST      = Path(argv[2] if len(argv) > 2 else 'tangodoc')
+  DEST      = Path(args[1] if len(args) > 1 else 'tangodoc')
   # The JavaScript folder.
   DEST_JS   = DEST/"js"
   # Destination of syntax highlighted source files.
