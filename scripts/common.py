@@ -90,3 +90,7 @@ def download_jquery(dest_path, force=False,
   except HTTPError, e:
     if e.code == 304: print "Not Modified"
     else:             print e
+
+def chunks(seq, n):
+  """ Returns chunks of a sequence of size n. """
+  return [seq[i:i+n] for i in xrange(0, len(seq), n)]
