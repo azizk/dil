@@ -2,27 +2,34 @@ dil
 ===
 Copyright (c) 2008 by Aziz Köksal <aziz.koeksal@gmail.com>
 This program is free software, licensed under the GPL3.
-Please, read the license file, COPYING, for further information.
+Please, read the license file "COPYING" for further information.
 
 Description
 ===========
-This software is a compiler written in D 1.0 for the D programming language.
+This software is a command line utility, a compiler written in D 1.0
+for the D programming language (1.0 and 2.0).
 
 How To Compile dil
 ==================
 In order to compile dil you need to have:
- *) DMD 1.035 (http://www.digitalmars.com/d/1.0/changelog.html)
+ *) DMD 1.037 (http://www.digitalmars.com/d/1.0/changelog.html)
  *) Tango 0.99.7 (http://dsource.org/projects/tango/)
  *) DSSS 0.77 (http://dsource.org/projects/dsss/)
 
 If you can't compile dil because you have a newer version of these programs
 then report the problem to me, please (see Bugs section.)
 
+Regarding Tango on Windows:
+There is a regression in the Path class of Tango. You'll have to wait for
+the next version, or try to compile with a previous version.
+
 Regarding DSSS:
 You have to make sure that the correct config file is used.
 A default can be set in dsss/etc/rebuild/default.
 Use dmd-posix-tango, dmd-win-tango, gdc-posix-tango or gdc-win-tango.
+Note: I will ad a Python script that can compile dil or generate a makefile.
 
+Compile dil:
 # Change to the directory where you extracted dil.
 $ cd dil/
 # Type "dsss build".
