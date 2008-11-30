@@ -27,7 +27,7 @@ n { color: teal; }
 /* Keyword */
 k { color: darkblue; font-weight: bold; }
 /* Line, block and nested comments */
-lc, bc, nc { color: green; }
+lc, bc, nc { color: gray; }
 /* Identifier */
 i { color: black; }
 /* String literal */
@@ -66,6 +66,8 @@ o = Other
 /* e { background-color: #DDDDFF; } */
 d[t=Illegal], s[t=Illegal] { background-color: #DD4422; }
 d[t=Module] i, d[t=Import] i { color: blue; }
-t > i { color: #911; }
-t > br, t > op { color: #911; }
-t[t=Integral] k { color: #911; font-weight: normal; }
+t > i { color: DarkRed; }
+t > br, t > op { color: DarkRed; }
+t[t=Integral] k { color: DarkRed; font-weight: normal; }
+d > i { color: ForestGreen; }
+o[t=Parameter] > i { color: OliveDrab; font-style: italic; }

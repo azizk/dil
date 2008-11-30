@@ -28,7 +28,7 @@
 /* Keyword */
 .k { color: darkblue; font-weight: bold; }
 /* Line, block and nested comments */
-.lc, .bc, .nc { color: green; }
+.lc, .bc, .nc { color: gray; }
 /* Identifier */
 .i { color: black; }
 /* String literal */
@@ -65,6 +65,8 @@ o = Other
 /* .d { background-color: #FFDDDD; } */
 /* .e { background-color: #DDDDFF; } */
 .d.Module .i, .d.Import .i { color: blue; }
- /*.t .i,*/ .t.Identifier .i, .TemplateTypeParameter .i { color: #911; } 
-.t .br, .t .op { color: #911; }
-.t .k { color: #911; font-weight: normal; }
+/*.t .i,*/ .t.Identifier .i, .TemplateTypeParameter .i { color: DarkRed; }
+.t .br, .t .op { color: DarkRed; }
+.t .k { color: DarkRed; font-weight: normal; }
+.d > .i { color: ForestGreen; }
+.o.Parameter > .i { color: OliveDrab; font-style: italic; }

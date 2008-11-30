@@ -122,17 +122,6 @@ pre.d_code {
   text-decoration: underline;
 }
 
-.loaded_code .d.Module .i, .loaded_code .d.Import .i
-{ color: blue; }
-.loaded_code .t.Identifier .i, .loaded_code .TemplateTypeParameter .i
-{ color: #911; }
-.loaded_code .t .k
-{ color: #911; font-weight: normal; }
-.loaded_code .d > .i
-{ color: ForestGreen !important; /*font-weight: normal; */}
-.loaded_code .o.Parameter > .i
-{ color: OliveDrab !important; font-style: italic; }
-
 /* Number */
 .d_code .n { color: teal; }
 /* Keyword */
@@ -153,3 +142,10 @@ pre.d_code {
 .d_code .fs { color: purple;}
 /* When the first line starts with "#!" it's a "shebang" */
 .d_code .shebang { color: gray; }
+
+.d_code .d.Module .i, .d_code .d.Import .i { color: blue; }
+.d_code .t.Identifier .i, .d_code .TemplateTypeParameter .i { color: DarkRed; }
+.d_code .t .k { color: DarkRed; font-weight: normal; }
+
+.d_code .d > .i { color: ForestGreen; }
+.d_code .o.Parameter > .i { color: OliveDrab; font-style: italic; }
