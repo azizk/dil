@@ -33,10 +33,11 @@ def get_tango_version(path):
     if m: minor = int(m.group(1))
   return "%s.%s.%s" % (major, minor/10, minor%10)
 
-def write_tango_ddoc(path):
+def write_tango_ddoc(path, revision):
+  revision = "?rev=" + revision if revision != None else ''
   open(path, "w").write("""
 LICENSE = see $(LINK2 http://www.dsource.org/projects/tango/wiki/LibraryLicense, license.txt)
-REPOFILE = http://www.dsource.org/projects/tango/browser/trunk/$(DIL_MODPATH)?rev=%s
+REPOFILE = http://www.dsource.org/projects/tango/browser/trunk/$(DIL_MODPATH)%s
 CODEURL =
 MEMBERTABLE = <table>$0</table>
 ANCHOR = <a name="$0"></a>
@@ -47,7 +48,7 @@ RB = ]
 SQRT = √
 NAN = NaN
 SUP = <sup>$0</sup>
-BR = <br/>"""
+BR = <br/>""" % revision
   )
 
 def main():
@@ -90,6 +91,10 @@ def main():
   # The files to generate documentation for.
   FILES     = []
 
+  if not DIL_EXE.exists:
+    # TODO: ask if the user wants to build dil.
+    pass
+
   if not TANGO_DIR.exists:
     print "The path '%s' doesn't exist." % TANGO_DIR
     return
@@ -102,7 +107,7 @@ def main():
 
   find_source_files(TANGO_SRC, FILES)
 
-  write_tango_ddoc(TANGO_DDOC)
+  write_tango_ddoc(TANGO_DDOC, options.revision)
   DOC_FILES = [KANDIL/"kandil.ddoc", TANGO_DDOC] + FILES
   versions = ["Windows", "Tango", "DDoc"]
   generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES, versions, options='-v')
