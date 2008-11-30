@@ -3,9 +3,8 @@
 # Author: Aziz Köksal
 import os, re
 from sys import argv
-from shutil import copy
 from path import Path
-from common import get_module_fqn
+from common import *
 
 def find_source_files(source, ignore_list, found):
   """ Finds the source files of Phobos. """
@@ -51,15 +50,9 @@ def copy_files(DATA, PHOBOS_SRC, HTML_SRC, DEST):
   """ Copies required files to the destination folder. """
   PHOBOS_HTML = PHOBOS_SRC/".."/".."/"html"/"d"/"phobos"
   for file in ["erfc.gif", "erf.gif"] + Path("..")//("style.css", "holy.gif", "dmlogo.gif"):
-    copy(PHOBOS_HTML/file, DEST)
+    (PHOBOS_HTML/file).copy(DEST)
   # Syntax highlighted files need html.css.
-  copy(DATA/"html.css", HTML_SRC)
-
-def generate_docs(DEST, MODLIST, FILES):
-  """ Generates documenation files. """
-  files_str = ' '.join(FILES)
-  args = {'DEST':DEST, 'FILES':files_str, 'MODLIST':MODLIST}
-  os.system("dil ddoc %(DEST)s -i -v -m=%(MODLIST)s -version=DDoc %(FILES)s" % args)
+  (DATA/"html.css").copy(HTML_SRC)
 
 def modify_phobos_html(phobos_html, version):
   """ Modifys DEST/phobos.html. """
@@ -73,20 +66,14 @@ def modify_phobos_html(phobos_html, version):
   # Write the contents back to the file.
   open(phobos_html, "w").write(ddoc)
 
-def generate_shl_files(dest, prefix_path, files):
-  """ Generates syntax highlighted files. """
-  for filepath in files:
-    htmlfile = get_module_fqn(prefix_path, filepath) + ".html"
-    args = (filepath, dest/htmlfile)
-    yield args
-    os.system('dil hl --lines --syntax --html %s > "%s"' % args)
-
 def main():
   from sys import argv
   if len(argv) <= 1:
-    print "Usage: ./scripts/phobos_doc.py /home/user/phobos/ [phobosdoc/]"
+    print "Usage: scripts/phobos_doc.py /home/user/phobos/ [phobosdoc/]"
     return
 
+  # Path to the executable of dil.
+  DIL_EXE   = Path("bin")/"dil"
   D_VERSION  = "1.0" # TODO: Needs to be determined dynamically.
   # The source code folder of Phobos.
   PHOBOS_SRC = Path(argv[1])
@@ -110,9 +97,8 @@ def main():
     return
 
   # Create the destination folders.
-  DEST.exists or DEST.makedirs()
-  HTML_SRC.exists or HTML_SRC.mkdir()
-  TMP.exists or TMP.mkdir()
+  DEST.makedirs()
+  map(Path.mkdir, (HTML_SRC, TMP))
 
   # Begin processing.
   find_source_files(PHOBOS_SRC, IGNORE_LIST, FILES)
@@ -122,10 +108,14 @@ def main():
 
   create_index_file(TMP/"index.d", PHOBOS_SRC, FILES)
 
-  generate_docs(DEST, MODLIST, FILES + TMP//("index.d", "phobos.ddoc") +
-                [PHOBOS_SRC/"phobos.d", DATA/"phobos_overrides.ddoc"])
+  DOC_FILES = FILES + TMP//("index.d", "phobos.ddoc") + \
+              [PHOBOS_SRC/"phobos.d", DATA/"phobos_overrides.ddoc"]
+  versions = ["DDoc"]
+  generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES, versions, options='-v -i')
 
-  for args in generate_shl_files(HTML_SRC, PHOBOS_SRC, FILES):
+  modlist = read_modules_list(MODLIST)
+
+  for args in generate_shl_files2(DIL_EXE, HTML_SRC, modlist):
     print "hl %s > %s" % args;
 
   modify_phobos_html(DEST/"phobos.html", D_VERSION)
