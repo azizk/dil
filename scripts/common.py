@@ -31,6 +31,43 @@ def generate_modules_js(modlist, dest_path):
   f.write('\n]')
   f.close()
 
+def generate_docs(dil_exe, dest, modlist, files, versions=[], options=''):
+  """ Generates documenation files. """
+  files = ' '.join(files)
+  versions = ' '.join(["-version=%s"%v for v in versions])
+  args = dict(locals())
+  os.system("%(dil_exe)s ddoc %(dest)s %(options)s %(versions)s -m=%(modlist)s %(files)s" % args)
+
+def generate_shl_files(dil_exe, dest, prefix, files):
+  """ Generates syntax highlighted files. """
+  for filepath in files:
+    htmlfile = get_module_fqn(prefix, filepath) + ".html"
+    yield (filepath, dest/htmlfile)
+    args = (dil_exe, filepath, dest/htmlfile)
+    os.system('%s hl --lines --syntax --html %s > "%s"' % args)
+
+def generate_shl_files2(dil_exe, dest, modlist):
+  """ Generates syntax highlighted files. """
+  for mod in modlist:
+    htmlfile = mod['fqn'] + ".html"
+    yield (mod['path'], dest/htmlfile)
+    args = (dil_exe, mod['path'], dest/htmlfile)
+    os.system('%s hl --lines --syntax --html %s > "%s"' % args)
+
+def locate_command(command):
+  """ Locates a command using the PATH environment variable. """
+  from path import Path
+  if 'PATH' in os.environ:
+    from sys import platform
+    if platform is 'win32' and Path(command).ext.lower() != ".exe":
+      command += ".exe" # Append extension if we're on Windows.
+    PATH = os.environ['PATH'].split(Path.pathsep)
+    for path in PATH:
+      path = Path(path, command)
+      if path.exists:
+        return path
+  return None
+
 def download_jquery(dest_path, force=False,
                     url="http://code.jquery.com/jquery-latest.pack.js"):
   """ Downloads the jquery library from "url".
@@ -47,7 +84,7 @@ def download_jquery(dest_path, force=False,
 
   try:
     print "Downloading '%s':" % url
-    js_file = urlopen(request)                 # Perform the request.
+    js_file = urlopen(request)      # Perform the request.
     open(dest_path, "w").write(js_file.read()) # Write to destination path.
     print "Done >", dest_path
   except HTTPError, e:
