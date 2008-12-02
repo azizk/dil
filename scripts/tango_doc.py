@@ -5,12 +5,6 @@ import os, re
 from path import Path
 from common import *
 
-def find_source_files(source, found):
-  """ Finds the source files of Tango. """
-  for root, dirs, files in source.walk():
-    found += [root/file for file in map(Path, files) # Iter. over Path objects.
-                          if file.ext.lower() in ('.d','.di')]
-
 def copy_files(DATA, KANDIL, TANGO_DIR, HTML_SRC, DEST):
   """ Copies required files to the destination folder. """
   DEST_JS, DEST_CSS, DEST_IMG = DEST//("js","css","img")
@@ -91,9 +85,7 @@ def main():
   # The files to generate documentation for.
   FILES     = []
 
-  if not DIL_EXE.exists:
-    # TODO: ask if the user wants to build dil.
-    pass
+  build_dil_if_inexistant(DIL_EXE)
 
   if not TANGO_DIR.exists:
     print "The path '%s' doesn't exist." % TANGO_DIR

@@ -7,13 +7,6 @@ from common import *
 from sys import platform
 from build import dmd_cmd
 
-# TODO: relocate to module common?
-def find_source_files(source, found):
-  """ Finds the source files of dil. """
-  for root, dirs, files in source.walk():
-    found += [root/file for file in map(Path, files) # Iter. over Path objects.
-                          if file.ext.lower() in ('.d','.di')]
-
 def copy_files(DIL):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
@@ -30,7 +23,7 @@ def writeMakefile():
   pass
 
 def build_dil(*args, **kwargs):
-  (cmd, args) = dmd_cmd(*args, **kwargs)
+  cmd, args = dmd_cmd(*args, **kwargs)
   print cmd % dict(args, files="(files...)")
   os.system(cmd % args)
 
@@ -149,9 +142,7 @@ def main():
                    DEST.CSS, DEST.IMG, DEST.JS, TMP))
 
   # Find the source code files.
-  find_source_files(DEST.SRC, FILES)
-  # Filter out files in "src/tests/".
-  FILES = [f for f in FILES if not f.startswith(DEST.SRC/"tests")]
+  FILES = find_dil_source_files(DEST.SRC)
 
   # Make a backup of the original.
   VERSION_D = DEST.SRC/"dil"/"Version.d"
@@ -161,9 +152,8 @@ def main():
   # Restore the original at the end of the build process.
 
   if options.docs:
-    if not DIL_EXE.exists and not locate_command('dil'):
-      # TODO: build dil.
-      pass
+    build_dil_if_inexistant(DIL_EXE)
+
     DOC_FILES = [DEST.KANDIL/"kandil.ddoc", DEST.DATA/"dilconf.d"] + FILES
     versions = ["DDoc"]
     print "***** Generating documentation *****"

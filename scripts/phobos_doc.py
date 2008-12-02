@@ -96,6 +96,8 @@ def main():
     print "The path '%s' doesn't exist." % PHOBOS_SRC
     return
 
+  build_dil_if_inexistant(DIL_EXE)
+
   # Create the destination folders.
   DEST.makedirs()
   map(Path.mkdir, (HTML_SRC, TMP))

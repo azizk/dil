@@ -1,6 +1,19 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 import os
+from path import Path
+
+def find_source_files(source, found):
+  """ Searches for source files (.d and .di). Appends file paths to found. """
+  for root, dirs, files in Path(source).walk():
+    found += [root/file for file in map(Path, files) # Iter. over Path objects.
+                          if file.ext.lower() in ('.d','.di')]
+
+def find_dil_source_files(source):
+  FILES = []
+  find_source_files(source, FILES)
+  # Filter out files in "src/tests/".
+  return [f for f in FILES if not f.startswith(source/"tests")]
 
 def get_module_fqn(prefix_path, filepath):
   """ Returns the fully qualified module name (FQN) of a D source file.
@@ -56,7 +69,6 @@ def generate_shl_files2(dil_exe, dest, modlist):
 
 def locate_command(command):
   """ Locates a command using the PATH environment variable. """
-  from path import Path
   if 'PATH' in os.environ:
     from sys import platform
     if platform is 'win32' and Path(command).ext.lower() != ".exe":
@@ -67,6 +79,17 @@ def locate_command(command):
       if path.exists:
         return path
   return None
+
+def build_dil_if_inexistant(dil_exe):
+  from sys import platform
+  if platform == 'win32': dil_exe += ".exe"
+  if not dil_exe.exists and not locate_command('dil'):
+    inp = raw_input("Executable %s doesn't exist. Build it? (Y/n) " % dil_exe)
+    if inp.lower() in ("y", "yes"):
+      from build import build_dil
+      build_dil()
+    else:
+      raise Exception("can't proceed without dil executable")
 
 def download_jquery(dest_path, force=False,
                     url="http://code.jquery.com/jquery-latest.pack.js"):
