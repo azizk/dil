@@ -5,6 +5,7 @@ import os, re
 from path import Path
 from common import *
 from sys import platform
+from build import dmd_cmd
 
 # TODO: relocate to module common?
 def find_source_files(source, found):
@@ -28,24 +29,8 @@ def writeMakefile():
   # TODO: implement.
   pass
 
-def build_dil(files, exe_path, dmd_exe='dmd', objdir='obj', release=False,
-              optimize=False, inline=False, debug_info=False, no_obj=False,
-              warnings=False, lnk_args=[], includes=[], versions=[]):
-  """ Calls the DMD compiler with the provided parameter. """
-  def escape(f): # Puts quotations around the string if it has spaces.
-    if '"' in f or "'" in f or ' ' in f or '\t' in f:
-      return '"%s"' % f.replace('"', r'\"')
-    else: return f
-  options = ((release, "-release"), (optimize, "-O"), (inline, "-inline"),
-             (objdir, "-od"+escape(objdir)), (True, "-op"), (warnings, "-w"),
-             (debug_info, "-g"), (no_obj, "-o-"))
-  options  = ''.join([" "+o for enabled, o in options if enabled])
-  lnk_args = ''.join([" -L+"+escape(l) for l in lnk_args])
-  includes = ''.join([" -I="+escape(i) for i in includes])
-  versions = ''.join([" -version="+v for v in versions])
-  files = ' '.join(map(escape, files))
-  args = dict(locals(), exe_path="-of"+escape(exe_path))
-  cmd = "%(dmd_exe)s%(options)s%(includes)s%(lnk_args)s %(files)s %(exe_path)s"
+def build_dil(*args, **kwargs):
+  (cmd, args) = dmd_cmd(*args, **kwargs)
   print cmd % dict(args, files="(files...)")
   os.system(cmd % args)
 
