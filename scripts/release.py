@@ -92,7 +92,7 @@ def main():
   DMD_EXE_W = DMD_EXE # Executable to use for Windows builds.
   # The version of dil to be built.
   VERSION, V_MAJOR = matched[:2]
-  V_MINOR, V_SUFFIX = map(notNone, matched[2:], ('0', '')) # Default values.
+  V_MINOR, V_SUFFIX = (matched[2], notNone(matched[3], ''))
 
   # Build folder.
   BUILD_DIR = Path(notNone("build", options.builddir))
@@ -216,7 +216,11 @@ def main():
   # Restore the original. NOTE: is this a good idea?
   (TMP/"Version.d").move(VERSION_D)
 
-  # Build archives
+  if not options.docs:
+    DEST.DOC.rmtree()
+  TMP.rmtree()
+
+  # Build archives.
   assert DEST[-1] != Path.sep
   opt = options
   for exec_cmd, cmd in zip((opt.tar_gz, opt.tar_bz2, opt.zip, opt._7z),
@@ -231,10 +235,6 @@ def main():
     cmd = cmd % dict(locals(), name=DEST, src=DEST)
     print cmd
     os.system(cmd)
-
-  if not options.docs:
-    DEST.DOC.rmtree()
-  TMP.rmtree()
 
 if __name__ == '__main__':
   main()

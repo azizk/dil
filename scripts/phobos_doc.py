@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 import os, re
-from sys import argv
 from path import Path
 from common import *
 
@@ -37,13 +36,13 @@ def create_index_file(index_d, prefix_path, FILES):
   text = "Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % text
   open(index_d, 'w').write(text)
 
-def copy_files(DATA, PHOBOS_SRC, HTML_SRC, DEST):
+def copy_files(DATA, PHOBOS_SRC, DEST):
   """ Copies required files to the destination folder. """
   PHOBOS_HTML = PHOBOS_SRC/".."/".."/"html"/"d"/"phobos"
   for file in ["erfc.gif", "erf.gif"] + Path("..")//("style.css", "holy.gif", "dmlogo.gif"):
     (PHOBOS_HTML/file).copy(DEST)
   # Syntax highlighted files need html.css.
-  (DATA/"html.css").copy(HTML_SRC)
+  (DATA/"html.css").copy(DEST.HTMLSRC)
 
 def modify_phobos_html(phobos_html, version):
   """ Modifys DEST/phobos.html. """
@@ -76,20 +75,38 @@ RANGE = <!-- undefined macro in std/math.d -->"""
 
 
 def main():
-  from sys import argv
-  if len(argv) <= 1:
-    print "Usage: scripts/phobos_doc.py /home/user/phobos/ [phobosdoc/]"
-    return
+  from optparse import OptionParser
+
+  usage = "Usage: scripts/phobos_doc.py VERSION PHOBOS_DIR [DESTINATION_DIR]"
+  parser = OptionParser(usage=usage)
+  #parser.add_option("--rev", dest="revision", metavar="REVISION", default=None,
+    #type="int", help="set the repository REVISION to use in symbol links")
+  parser.add_option("--zip", dest="zip", default=False, action="store_true",
+    help="create a zip archive")
+
+  (options, args) = parser.parse_args()
+
+  if len(args) < 2:
+    return parser.print_help()
+
+  # Validate the version argument.
+  m = re.match(r"((\d)\.(\d\d\d))", args[0])
+  if not m:
+    parser.error("invalid VERSION; format: /\d.\d\d\d/ E.g.: 1.123")
+  matched = m.groups()
+  # Extract the version strings.
+  VERSION, V_MAJOR = matched[:2]
+  V_MINOR = matched[2]
+  D_VERSION  = V_MAJOR + ".0" # E.g.: 1.0 or 2.0
 
   # Path to the executable of dil.
   DIL_EXE   = Path("bin")/"dil"
-  D_VERSION  = "1.0" # TODO: Needs to be determined dynamically.
   # The source code folder of Phobos.
-  PHOBOS_SRC = Path(argv[1])
+  PHOBOS_SRC = Path(args[1])
   # Destination of doc files.
-  DEST       = Path(argv[2] if len(argv) > 2 else 'phobosdoc')
+  DEST       = Path(max(args[2:3], 'phobosdoc'))
   # Destination of syntax highlighted source files.
-  HTML_SRC   = DEST/"htmlsrc"
+  DEST.HTMLSRC = DEST/"htmlsrc"
   # Dil's data/ directory.
   DATA       = Path('data')
   # Temporary directory, deleted in the end.
@@ -98,6 +115,7 @@ def main():
   MODLIST    = TMP/"modules.txt"
   # List of files to ignore.
   IGNORE_LIST = ("phobos.d", "cast.d", "invariant.d", "switch.d", "unittest.d")
+  IGNORE_LIST = [Path.sep+i for i in IGNORE_LIST] # Prepend with path separator.
   # The files to generate documentation for.
   FILES       = []
 
@@ -109,7 +127,7 @@ def main():
 
   # Create the destination folders.
   DEST.makedirs()
-  map(Path.mkdir, (HTML_SRC, TMP))
+  map(Path.mkdir, (DEST.HTMLSRC, TMP))
 
   # Begin processing.
   find_source_files(PHOBOS_SRC, FILES)
@@ -123,7 +141,6 @@ def main():
 
   create_index_file(TMP/"index.d", PHOBOS_SRC, FILES)
 
-
   DOC_FILES = FILES + [PHOBOS_SRC/"phobos.d"] + \
               TMP//("index.d", "phobos.ddoc", "overrides.ddoc")
   versions = ["DDoc"]
@@ -131,14 +148,20 @@ def main():
 
   modlist = read_modules_list(MODLIST)
 
-  for args in generate_shl_files2(DIL_EXE, HTML_SRC, modlist):
+  for args in generate_shl_files2(DIL_EXE, DEST.HTMLSRC, modlist):
     print "hl %s > %s" % args;
 
   modify_phobos_html(DEST/"phobos.html", D_VERSION)
 
-  copy_files(DATA, PHOBOS_SRC, HTML_SRC, DEST)
+  copy_files(DATA, PHOBOS_SRC, DEST)
 
   TMP.rmtree()
+
+  if options.zip:
+    name, src = "Phobos_doc_"+VERSION, DEST
+    cmd = "zip -q -9 -r %(name)s.zip %(src)s" % locals()
+    print cmd
+    os.system(cmd)
 
 if __name__ == "__main__":
   main()
