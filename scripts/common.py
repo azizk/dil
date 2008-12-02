@@ -85,7 +85,7 @@ def build_dil_if_inexistant(dil_exe):
   if platform == 'win32': dil_exe += ".exe"
   if not dil_exe.exists and not locate_command('dil'):
     inp = raw_input("Executable %s doesn't exist. Build it? (Y/n) " % dil_exe)
-    if inp.lower() in ("y", "yes"):
+    if inp.lower() in ("", "y", "yes"):
       from build import build_dil
       build_dil()
     else:
