@@ -462,19 +462,6 @@ abstract class DDocEmitter : DefaultVisitor
     write(" $(DIL_BASE_CLASSES ", text, ")");
   }
 
-  /// Writes a symbol to the text buffer.
-  /// E.g: &#36;(DIL_SYMBOL scan, Lexer.scan, 229, 646);
-  void SYMBOL(char[] name, Declaration d)
-  {
-    auto fqn = getSymbolFQN(name);
-    auto loc = d.begin.getRealLocation();
-    auto loc_end = d.end.getRealLocation();
-    auto str = Format("$(DIL_SYMBOL {}, {}, {}, {})",
-                      name, fqn, loc.lineNum, loc_end.lineNum);
-    write(str);
-    // write("$(DDOC_PSYMBOL ", name, ")"); // DMD's macro with no info.
-  }
-
   /// Offset at which to insert a declaration with a "ditto" comment.
   uint prevDeclOffset;
 
@@ -531,6 +518,19 @@ abstract class DDocEmitter : DefaultVisitor
     write(")");
   }
 
+  /// Writes a symbol to the text buffer.
+  /// E.g: &#36;(DIL_SYMBOL scan, Lexer.scan, func, 229, 646);
+  void SYMBOL(string name, string kind, Declaration d)
+  {
+    auto fqn = getSymbolFQN(name);
+    auto loc = d.begin.getRealLocation();
+    auto loc_end = d.end.getRealLocation();
+    auto str = Format("$(DIL_SYMBOL {}, {}, {}, {}, {})",
+                      name, fqn, kind, loc.lineNum, loc_end.lineNum);
+    write(str);
+    // write("$(DDOC_PSYMBOL ", name, ")"); // DMD's macro with no info.
+  }
+
   /// Wraps the DDOC_kind_MEMBERS macro around the text
   /// written by visit(members).
   void MEMBERS(D)(string kind, string name, D members)
@@ -548,8 +548,9 @@ abstract class DDocEmitter : DefaultVisitor
     if (!ddoc(d))
       return d;
     DECL({
-      write(is(T == ClassDeclaration) ? "class" : "interface", " ");
-      SYMBOL(d.name.str, d);
+      const kind = is(T == ClassDeclaration) ? "class" : "interface";
+      write(kind, " ");
+      SYMBOL(d.name.str, kind, d);
       writeTemplateParams();
       writeInheritanceList(d.bases);
     }, d);
@@ -563,9 +564,10 @@ abstract class DDocEmitter : DefaultVisitor
     if (!ddoc(d))
       return d;
     DECL({
-      write(is(T == StructDeclaration) ? "struct" : "union", d.name ? " " : "");
+      const kind = is(T == StructDeclaration) ? "struct" : "union";
+      write(kind, d.name ? " " : "");
       if (d.name)
-        SYMBOL(d.name.str, d);
+        SYMBOL(d.name.str, kind, d);
       writeTemplateParams();
     }, d);
     const kind = is(T == StructDeclaration) ? "STRUCT" : "UNION";
@@ -575,12 +577,14 @@ abstract class DDocEmitter : DefaultVisitor
   /// Writes an alias or typedef declaration.
   void writeAliasOrTypedef(T)(T d)
   {
-    auto prefix = is(T == AliasDeclaration) ? "alias " : "typedef ";
+    const kind = is(T == AliasDeclaration) ? "alias" : "typedef";
     if (auto vd = d.decl.Is!(VariablesDeclaration))
     {
       auto type = textSpan(vd.typeNode.baseType.begin, vd.typeNode.end);
       foreach (name; vd.names)
-        DECL({ write(prefix); write(escape(type), " "); SYMBOL(name.str, d); }, d);
+        DECL({ write(kind, " "); write(escape(type), " ");
+          SYMBOL(name.str, kind, d);
+        }, d);
     }
     else if (auto fd = d.decl.Is!(FunctionDeclaration))
     {}
@@ -642,7 +646,7 @@ override:
       return d;
     DECL({
       write("enum", d.name ? " " : "");
-      d.name && SYMBOL(d.name.str, d);
+      d.name && SYMBOL(d.name.str, "enum", d);
     }, d);
     DESC({ MEMBERS("ENUM", d.name ? d.name.str : "", d); });
     return d;
@@ -652,7 +656,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL(d.name.str, d); }, d, false);
+    DECL({ SYMBOL(d.name.str, "enummem", d); }, d, false);
     DESC();
     return d;
   }
@@ -670,7 +674,7 @@ override:
       return d;
     DECL({
       write("template ");
-      SYMBOL(d.name.str, d);
+      SYMBOL(d.name.str, "template", d);
       writeTemplateParams();
     }, d);
     DESC({ MEMBERS("TEMPLATE", d.name.str, d.decls); });
@@ -705,7 +709,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("this", d); writeParams(d.params); }, d);
+    DECL({ SYMBOL("this", "ctor", d); writeParams(d.params); }, d);
     DESC();
     return d;
   }
@@ -714,7 +718,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("static "); SYMBOL("this", d); write("()"); }, d);
+    DECL({ write("static "); SYMBOL("this", "sctor", d); write("()"); }, d);
     DESC();
     return d;
   }
@@ -723,7 +727,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("~"); SYMBOL("this", d); write("()"); }, d);
+    DECL({ write("~"); SYMBOL("this", "dtor", d); write("()"); }, d);
     DESC();
     return d;
   }
@@ -732,7 +736,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("static ~"); SYMBOL("this", d); write("()"); }, d);
+    DECL({ write("static ~"); SYMBOL("this", "sdtor", d); write("()"); }, d);
     DESC();
     return d;
   }
@@ -744,7 +748,7 @@ override:
     auto type = textSpan(d.returnType.baseType.begin, d.returnType.end);
     DECL({
       write(escape(type), " ");
-      SYMBOL(d.name.str, d);
+      SYMBOL(d.name.str, "function", d);
       writeTemplateParams();
       writeParams(d.params);
     }, d);
@@ -756,7 +760,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("new", d); writeParams(d.params); }, d);
+    DECL({ SYMBOL("new", "new", d); writeParams(d.params); }, d);
     DESC();
     return d;
   }
@@ -765,7 +769,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("delete", d); writeParams(d.params); }, d);
+    DECL({ SYMBOL("delete", "delete", d); writeParams(d.params); }, d);
     DESC();
     return d;
   }
@@ -778,7 +782,7 @@ override:
     if (d.typeNode)
       type = textSpan(d.typeNode.baseType.begin, d.typeNode.end);
     foreach (name; d.names)
-      DECL({ write(escape(type), " "); SYMBOL(name.str, d); }, d);
+      DECL({ write(escape(type), " "); SYMBOL(name.str, "variable", d); }, d);
     DESC();
     return d;
   }
@@ -787,7 +791,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("invariant", d); }, d);
+    DECL({ SYMBOL("invariant", "invariant", d); }, d);
     DESC();
     return d;
   }
@@ -796,7 +800,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("unittest", d); }, d);
+    DECL({ SYMBOL("unittest", "unittest", d); }, d);
     DESC();
     return d;
   }
