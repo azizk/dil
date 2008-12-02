@@ -20,8 +20,7 @@ import dil.semantic.Symbol,
        dil.semantic.Interpreter;
 import dil.Compilation;
 import dil.SourceText;
-import dil.Location;
-import dil.Information;
+import dil.Diagnostics;
 import dil.Messages;
 import dil.Enums;
 import dil.CompilerInfo;

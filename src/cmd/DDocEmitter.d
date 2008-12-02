@@ -16,7 +16,7 @@ import dil.ast.DefaultVisitor,
 import dil.lexer.Token,
        dil.lexer.Funcs;
 import dil.semantic.Module;
-import dil.Information;
+import dil.Diagnostics;
 import dil.SourceText;
 import dil.Enums;
 import common;

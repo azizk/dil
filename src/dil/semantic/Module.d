@@ -11,7 +11,7 @@ import dil.semantic.Symbol,
        dil.semantic.Symbols;
 import dil.Location;
 import dil.Messages;
-import dil.Information;
+import dil.Diagnostics;
 import dil.SourceText;
 import common;
 

@@ -19,7 +19,7 @@ import dil.semantic.Symbol,
        dil.semantic.Interpreter;
 import dil.parser.Parser;
 import dil.SourceText;
-import dil.Information;
+import dil.Diagnostics;
 import dil.Messages;
 import dil.Enums;
 import dil.CompilerInfo;

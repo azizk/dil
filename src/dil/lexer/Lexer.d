@@ -6,7 +6,7 @@ import dil.lexer.Token,
        dil.lexer.Keywords,
        dil.lexer.Identifier,
        dil.lexer.IdTable;
-import dil.Information;
+import dil.Diagnostics;
 import dil.Messages;
 import dil.HtmlEntities;
 import dil.CompilerInfo;

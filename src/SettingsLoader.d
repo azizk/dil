@@ -10,7 +10,7 @@ import dil.semantic.Module,
        dil.semantic.Symbol,
        dil.semantic.Symbols;
 import dil.Messages;
-import dil.Information;
+import dil.Diagnostics;
 import dil.Compilation;
 import Settings;
 import common;

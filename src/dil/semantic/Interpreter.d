@@ -12,7 +12,7 @@ import dil.ast.Visitor,
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
        dil.semantic.Types;
-import dil.Information;
+import dil.Diagnostics;
 
 /// Used for compile-time evaluation of D code.
 class Interpreter : Visitor

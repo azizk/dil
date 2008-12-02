@@ -3,7 +3,7 @@
 module dil.Converter;
 
 import dil.lexer.Funcs;
-import dil.Information;
+import dil.Diagnostics;
 import dil.Location;
 import dil.Unicode;
 import dil.FileBOM;

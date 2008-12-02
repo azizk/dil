@@ -4,8 +4,7 @@ module dil.ModuleManager;
 
 import dil.semantic.Module,
        dil.semantic.Package;
-import dil.Location;
-import dil.Information;
+import dil.Diagnostics;
 import dil.Messages;
 import common;
 

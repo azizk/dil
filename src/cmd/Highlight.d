@@ -12,7 +12,7 @@ import dil.lexer.Lexer;
 import dil.parser.Parser;
 import dil.semantic.Module;
 import dil.SourceText;
-import dil.Information;
+import dil.Diagnostics;
 import SettingsLoader;
 import Settings;
 import common;

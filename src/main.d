@@ -19,7 +19,7 @@ import dil.translator.German;
 import dil.doc.Doc;
 import dil.Messages;
 import dil.CompilerInfo;
-import dil.Information;
+import dil.Diagnostics;
 import dil.SourceText;
 import dil.Compilation;
 

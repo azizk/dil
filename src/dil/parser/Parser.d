@@ -11,7 +11,7 @@ import dil.ast.Node,
        dil.ast.Types,
        dil.ast.Parameters;
 import dil.Messages;
-import dil.Information;
+import dil.Diagnostics;
 import dil.Enums;
 import dil.CompilerInfo;
 import dil.SourceText;

@@ -3,8 +3,7 @@
 module dil.SourceText;
 
 import dil.Converter;
-import dil.Information;
-import dil.Location;
+import dil.Diagnostics;
 import dil.Messages;
 import common;
 

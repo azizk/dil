@@ -13,27 +13,6 @@ class Information
 
 }
 
-/// Collects information.
-class Diagnostics
-{
-  Information[] info;
-
-  bool hasInfo()
-  {
-    return info.length != 0;
-  }
-
-  void opCatAssign(Information info)
-  {
-    this.info ~= info;
-  }
-
-  void opCatAssign(Information[] info)
-  {
-    this.info ~= info;
-  }
-}
-
 /// For reporting a problem in the compilation process.
 class Problem : Information
 {

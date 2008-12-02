@@ -5,7 +5,7 @@ module dil.doc.Macro;
 import dil.doc.Parser;
 import dil.lexer.Funcs;
 import dil.Unicode;
-import dil.Information;
+import dil.Diagnostics;
 import dil.Messages;
 import common;
 
