@@ -6,15 +6,6 @@ from sys import argv
 from path import Path
 from common import *
 
-def find_source_files(source, ignore_list, found):
-  """ Finds the source files of Phobos. """
-  for root, dirs, files in source.walk():
-    found += [root/file for file in map(Path, files) # Iter. over Path objects.
-                          if file.ext.lower() in ('.d','.di') and \
-                             file not in ignore_list]
-    if root == source and 'internal' in dirs:
-      dirs.remove('internal')  # Don't visit "source/internal".
-
 def modify_std_ddoc(std_ddoc, phobos_ddoc, version):
   """ Modify std.ddoc and write it out to phobos.ddoc. """
   ddoc = open(std_ddoc).read() # Read the whole file.
@@ -121,7 +112,10 @@ def main():
   map(Path.mkdir, (HTML_SRC, TMP))
 
   # Begin processing.
-  find_source_files(PHOBOS_SRC, IGNORE_LIST, FILES)
+  find_source_files(PHOBOS_SRC, FILES)
+  # Filter out files in the internal/ folder and in the ignore list.
+  FILES = [f for f in FILES if not any(map(f.endswith, IGNORE_LIST)) and \
+                               not f.startswith(PHOBOS_SRC/"internal") ]
   FILES.sort() # Sort for index.
 
   modify_std_ddoc(PHOBOS_SRC/"std.ddoc", TMP/"phobos.ddoc", D_VERSION)
