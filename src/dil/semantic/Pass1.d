@@ -143,11 +143,11 @@ class SemanticPass1 : Visitor
   /// Creates an error report.
   void error(Token* token, char[] formatMsg, ...)
   {
-    if (!modul.infoMan)
+    if (!modul.diag)
       return;
     auto location = token.getErrorLocation();
     auto msg = Format(_arguments, _argptr, formatMsg);
-    modul.infoMan ~= new SemanticError(location, msg);
+    modul.diag ~= new SemanticError(location, msg);
   }
 
 

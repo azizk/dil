@@ -11,15 +11,13 @@ import dil.ast.Visitor,
        dil.ast.Parameters;
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
-       dil.semantic.Scope,
        dil.semantic.Types;
 import dil.Information;
 
 /// Used for compile-time evaluation of D code.
 class Interpreter : Visitor
 {
-  // Scope scop;
-  InfoManager infoMan;
+  Diagnostics diag;
 
   static class Result : Expression
   {
@@ -36,23 +34,22 @@ class Interpreter : Visitor
 
   /// Evaluates the expression e.
   /// Returns: NAR or a value.
-  static Expression interpret(Expression e, InfoManager infoMan/+, Scope scop+/)
+  static Expression interpret(Expression e, Diagnostics diag)
   {
-    return (new Interpreter(/+scop,+/ infoMan)).eval(e);
+    return (new Interpreter(diag)).eval(e);
   }
 
   /// Executes the function at compile-time with the given arguments.
   /// Returns: NAR or a value.
-  static Expression interpret(FunctionDeclaration fd, Expression[] args, InfoManager infoMan/+, Scope scop+/)
+  static Expression interpret(FunctionDeclaration fd, Expression[] args, Diagnostics diag)
   {
-    return (new Interpreter(/+scop,+/ infoMan)).eval(fd, args);
+    return (new Interpreter(diag)).eval(fd, args);
   }
 
   /// Constructs an Interpreter object.
-  this(/+Scope scop, +/InfoManager infoMan)
+  this(Diagnostics diag)
   {
-    // this.scop = scop;
-    this.infoMan = infoMan;
+    this.diag = diag;
   }
 
   /// Start evaluation.

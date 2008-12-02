@@ -41,19 +41,19 @@ final class SourceText
   }
 
   /// Loads the source text from a file.
-  void load(InfoManager infoMan = null)
+  void load(Diagnostics diag = null)
   {
-    if (!infoMan)
-      infoMan = new InfoManager;
+    if (!diag)
+      diag = new Diagnostics;
     assert(filePath.length);
 
     scope(failure)
     {
       if (!(new FilePath(this.filePath)).exists())
-        infoMan ~= new LexerError(new Location(filePath, 0),
+        diag ~= new LexerError(new Location(filePath, 0),
                                   MSG.InexistantFile);
       else
-        infoMan ~= new LexerError(new Location(filePath, 0),
+        diag ~= new LexerError(new Location(filePath, 0),
                                   MSG.CantReadFile);
       data = "\0";
       return;
@@ -62,7 +62,7 @@ final class SourceText
     // Read the file.
     auto rawdata = cast(ubyte[]) (new File(filePath)).read();
     // Convert the data.
-    auto converter = Converter(filePath, infoMan);
+    auto converter = Converter(filePath, diag);
     data = converter.data2UTF8(rawdata);
     addSentinelCharacter();
   }

@@ -14,13 +14,13 @@ import common;
 struct Converter
 {
   char[] filePath; /// For error messages.
-  InfoManager infoMan;
+  Diagnostics diag;
 
-  static Converter opCall(char[] filePath, InfoManager infoMan)
+  static Converter opCall(char[] filePath, Diagnostics diag)
   {
     Converter conv;
     conv.filePath = filePath;
-    conv.infoMan = infoMan;
+    conv.diag = diag;
     return conv;
   }
 
@@ -93,7 +93,7 @@ struct Converter
 
       if (!isValidChar(c))
       {
-        infoMan ~= new LexerError(
+        diag ~= new LexerError(
           new Location(filePath, lineNum),
           Format(MSG.InvalidUTF32Character, c)
         );
@@ -106,7 +106,7 @@ struct Converter
     }
 
     if (data.length % 4)
-      infoMan ~= new LexerError(
+      diag ~= new LexerError(
         new Location(filePath, lineNum),
         MSG.UTF32FileMustBeDivisibleBy4
       );
@@ -156,7 +156,7 @@ struct Converter
       }
       else
       {
-        infoMan ~= new LexerError(
+        diag ~= new LexerError(
           new Location(filePath, lineNum),
           Format(MSG.InvalidUTF16Character, c)
         );
@@ -169,7 +169,7 @@ struct Converter
     }
 
     if (data.length % 2)
-      infoMan ~= new LexerError(
+      diag ~= new LexerError(
         new Location(filePath, lineNum),
         MSG.UTF16FileMustBeDivisibleBy2
       );
@@ -327,7 +327,7 @@ unittest
     {"\x00\x00\xFE\xFF\0\0\0s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e"},
     {"\xFF\xFE\x00\x00s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e\0\0\0"},
   ];
-  auto converter = Converter("", new InfoManager);
+  auto converter = Converter("", new Diagnostics);
   foreach (i, pair; map)
     assert(converter.data2UTF8(pair.data) == pair.expected, Format("failed at item {}", i));
 }

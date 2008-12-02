@@ -38,7 +38,7 @@ struct HighlightCommand
 
   Options options; /// Command options.
   string filePath; /// File path to the module to be highlighted.
-  InfoManager infoMan;
+  Diagnostics diag;
 
   /// Adds o to the options.
   void add(Option o)
@@ -55,10 +55,10 @@ struct HighlightCommand
 
     auto mapFilePath = options & Option.HTML ? GlobalSettings.htmlMapFile
                                              : GlobalSettings.xmlMapFile;
-    auto map = TagMapLoader(infoMan).load(mapFilePath);
+    auto map = TagMapLoader(diag).load(mapFilePath);
     auto tags = new TagMap(map);
 
-    if (infoMan.hasInfo)
+    if (diag.hasInfo)
       return;
 
     if (options & Option.Syntax)
@@ -386,12 +386,12 @@ void highlightTokens(string filePath, TagMap tags,
 class TokenHighlighter
 {
   TagMap tags;
-  this(InfoManager infoMan, bool useHTML = true)
+  this(Diagnostics diag, bool useHTML = true)
   {
     string filePath = GlobalSettings.htmlMapFile;
     if (!useHTML)
       filePath = GlobalSettings.xmlMapFile;
-    auto map = TagMapLoader(infoMan).load(filePath);
+    auto map = TagMapLoader(diag).load(filePath);
     tags = new TagMap(map);
   }
 

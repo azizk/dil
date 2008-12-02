@@ -34,7 +34,7 @@ class Lexer
   Token* token; /// Points to the current token in the token list.
 
   // Members used for error messages:
-  InfoManager infoMan;
+  Diagnostics diag;
   LexerError[] errors;
   /// Always points to the first character of the current line.
   char* lineBegin;
@@ -48,11 +48,11 @@ class Lexer
   /// Construct a Lexer object.
   /// Params:
   ///   srcText = the UTF-8 source code.
-  ///   infoMan = used for collecting error messages.
-  this(SourceText srcText, InfoManager infoMan = null)
+  ///   diag = used for collecting error messages.
+  this(SourceText srcText, Diagnostics diag = null)
   {
     this.srcText = srcText;
-    this.infoMan = infoMan;
+    this.diag = diag;
 
     assert(text.length && text[$-1] == 0, "source text has no sentinel character");
     this.p = text.ptr;
@@ -2509,8 +2509,8 @@ version(D2)
     msg = Format(_arguments, _argptr, msg);
     auto error = new LexerError(location, msg);
     errors ~= error;
-    if (infoMan !is null)
-      infoMan ~= error;
+    if (diag !is null)
+      diag ~= error;
   }
 
   /// Scans the whole source text until EOF is encountered.

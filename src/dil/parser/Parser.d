@@ -28,7 +28,7 @@ class Parser
   Token* token; /// Current non-whitespace token.
   Token* prevToken; /// Previous non-whitespace token.
 
-  InfoManager infoMan;
+  Diagnostics diag;
   ParserError[] errors; /// Array of parser error messages.
 
   ImportDeclaration[] imports; /// ImportDeclarations in the source text.
@@ -46,11 +46,11 @@ class Parser
   /// Constructs a Parser object.
   /// Params:
   ///   srcText = the UTF-8 source code.
-  ///   infoMan = used for collecting error messages.
-  this(SourceText srcText, InfoManager infoMan = null)
+  ///   diag = used for collecting error messages.
+  this(SourceText srcText, Diagnostics diag = null)
   {
-    this.infoMan = infoMan;
-    lexer = new Lexer(srcText, infoMan);
+    this.diag = diag;
+    lexer = new Lexer(srcText, diag);
   }
 
   /// Moves to the first token.
@@ -4270,7 +4270,7 @@ version(D2)
     auto msg = Format(_arguments, _argptr, formatMsg);
     auto error = new ParserError(location, msg);
     errors ~= error;
-    if (infoMan !is null)
-      infoMan ~= error;
+    if (diag !is null)
+      diag ~= error;
   }
 }

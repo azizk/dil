@@ -65,7 +65,7 @@ class SemanticPass2 : DefaultVisitor
   /// Evaluates e and returns the result.
   Expression interpret(Expression e)
   {
-    return Interpreter.interpret(e, modul.infoMan/+, scop+/);
+    return Interpreter.interpret(e, modul.diag);
   }
 
   /// Creates an error report.
@@ -73,7 +73,7 @@ class SemanticPass2 : DefaultVisitor
   {
     auto location = token.getErrorLocation();
     auto msg = Format(_arguments, _argptr, formatMsg);
-    modul.infoMan ~= new SemanticError(location, msg);
+    modul.diag ~= new SemanticError(location, msg);
   }
 
   /// Some handy aliases.
@@ -176,7 +176,7 @@ override
         auto loc = md.begin.getErrorLocation();
         auto filePath = loc.filePath;
         auto sourceText = new SourceText(filePath, stringExpr.getString());
-        auto parser = new Parser(sourceText, modul.infoMan);
+        auto parser = new Parser(sourceText, modul.diag);
         md.decls = parser.start();
       }
     }
@@ -395,7 +395,7 @@ override
       auto loc = me.begin.getErrorLocation();
       auto filePath = loc.filePath;
       auto sourceText = new SourceText(filePath, stringExpr.getString());
-      auto parser = new Parser(sourceText, modul.infoMan);
+      auto parser = new Parser(sourceText, modul.diag);
       expr = parser.start2();
       expr = visitE(expr); // Check expression.
     }

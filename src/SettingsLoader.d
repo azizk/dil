@@ -21,12 +21,12 @@ import tango.sys.Environment;
 /// Loads settings from a D module file.
 abstract class SettingsLoader
 {
-  InfoManager infoMan; /// Collects error messages.
+  Diagnostics diag; /// Collects error messages.
   Module mod; /// Current module.
 
-  this(InfoManager infoMan)
+  this(Diagnostics diag)
   {
-    this.infoMan = infoMan;
+    this.diag = diag;
   }
 
   /// Creates an error report.
@@ -37,7 +37,7 @@ abstract class SettingsLoader
   {
     auto location = token.getErrorLocation();
     auto msg = Format(_arguments, _argptr, formatMsg);
-    infoMan ~= new SemanticError(location, msg);
+    diag ~= new SemanticError(location, msg);
   }
 
   T getValue(T)(char[] name)
@@ -82,18 +82,18 @@ class ConfigLoader : SettingsLoader
   string dataDir; /// Absolute path to dil's data directory.
   string homePath; /// Path to the home directory.
 
-  this(InfoManager infoMan)
+  this(Diagnostics diag)
   {
-    super(infoMan);
+    super(diag);
     this.homePath = Environment.get("HOME");
     this.executablePath = GetExecutableFilePath();
     this.executableDir = (new FilePath(this.executablePath)).folder();
     Environment.set("BINDIR", this.executableDir);
   }
 
-  static ConfigLoader opCall(InfoManager infoMan)
+  static ConfigLoader opCall(Diagnostics diag)
   {
-    return new ConfigLoader(infoMan);
+    return new ConfigLoader(diag);
   }
 
   static string expandVariables(string val)
@@ -136,12 +136,12 @@ class ConfigLoader : SettingsLoader
     auto filePath = findConfigurationFilePath();
     if (filePath is null)
     {
-      infoMan ~= new Error(new Location("",0),
+      diag ~= new Error(new Location("",0),
         "the configuration file "~configFileName~" could not be found.");
       return;
     }
     // Load the file as a D module.
-    mod = new Module(filePath, infoMan);
+    mod = new Module(filePath, diag);
     mod.parse();
 
     if (mod.hasErrors)
@@ -184,8 +184,8 @@ class ConfigLoader : SettingsLoader
       GlobalSettings.semanticErrorFormat = expandVariables(val.getString());
     if (auto val = getValue!(IntExpression)("TAB_WIDTH"))
     {
-      GlobalSettings.tabWidth = val.number;
-      Location.TAB_WIDTH = val.number;
+      GlobalSettings.tabWidth = cast(uint)val.number;
+      Location.TAB_WIDTH = cast(uint)val.number;
     }
 
 
@@ -247,19 +247,19 @@ class ConfigLoader : SettingsLoader
 /// Loads an associative array from a D module file.
 class TagMapLoader : SettingsLoader
 {
-  this(InfoManager infoMan)
+  this(Diagnostics diag)
   {
-    super(infoMan);
+    super(diag);
   }
 
-  static TagMapLoader opCall(InfoManager infoMan)
+  static TagMapLoader opCall(Diagnostics diag)
   {
-    return new TagMapLoader(infoMan);
+    return new TagMapLoader(diag);
   }
 
   string[string] load(string filePath)
   {
-    mod = new Module(filePath, infoMan);
+    mod = new Module(filePath, diag);
     mod.parse();
     if (mod.hasErrors)
       return null;

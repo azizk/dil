@@ -124,16 +124,16 @@ struct MacroParser
 struct MacroExpander
 {
   MacroTable mtable; /// Used to look up macros.
-  InfoManager infoMan; /// Collects warning messages.
+  Diagnostics diag; /// Collects warning messages.
   char[] filePath; /// Used in warning messages.
 
   /// Starts expanding the macros.
   static char[] expand(MacroTable mtable, char[] text, char[] filePath,
-                       InfoManager infoMan = null)
+                       Diagnostics diag = null)
   {
     MacroExpander me;
     me.mtable = mtable;
-    me.infoMan = infoMan;
+    me.diag = diag;
     me.filePath = filePath;
     return me.expandMacros(text);
   }
@@ -142,8 +142,8 @@ struct MacroExpander
   void warning(char[] msg, char[] macroName)
   {
     msg = Format(msg, macroName);
-    if (infoMan)
-      infoMan ~= new Warning(new Location(filePath, 0), msg);
+    if (diag)
+      diag ~= new Warning(new Location(filePath, 0), msg);
   }
 
   /// Expands the macros from the table in the text.

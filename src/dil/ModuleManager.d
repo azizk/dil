@@ -29,15 +29,15 @@ class ModuleManager
   Module[string] absFilePathTable;
   Module[] loadedModules; /// Loaded modules in sequential order.
   string[] importPaths; /// Where to look for module files.
-  InfoManager infoMan;
+  Diagnostics diag;
 
   /// Constructs a ModuleManager object.
-  this(string[] importPaths, InfoManager infoMan)
+  this(string[] importPaths, Diagnostics diag)
   {
     this.rootPackage = new Package(null);
     packageTable[""] = this.rootPackage;
     this.importPaths = importPaths;
-    this.infoMan = infoMan;
+    this.diag = diag;
   }
 
   /// Loads a module given a file path.
@@ -50,7 +50,7 @@ class ModuleManager
       return *existingModule;
 
     // Create a new module.
-    auto newModule = new Module(moduleFilePath, infoMan);
+    auto newModule = new Module(moduleFilePath, diag);
     newModule.parse();
 
     auto moduleFQNPath = newModule.getFQNPath();
@@ -58,7 +58,7 @@ class ModuleManager
     { // Error: two module files have the same f.q. module name.
       auto location = newModule.getModuleDeclToken().getErrorLocation();
       auto msg = Format(MSG.ConflictingModuleFiles, newModule.filePath());
-      infoMan ~= new SemanticError(location, msg);
+      diag ~= new SemanticError(location, msg);
       return *existingModule;
     }
 
@@ -74,7 +74,7 @@ class ModuleManager
     { // Error: module and package share the same name.
       auto location = newModule.getModuleDeclToken().getErrorLocation();
       auto msg = Format(MSG.ConflictingModuleAndPackage, newModule.getFQN());
-      infoMan ~= new SemanticError(location, msg);
+      diag ~= new SemanticError(location, msg);
     }
 
     return newModule;
@@ -143,7 +143,7 @@ class ModuleManager
     { // Error: the requested module is not in the correct package.
       auto location = modul.getModuleDeclToken().getErrorLocation();
       auto msg = Format(MSG.ModuleNotInPackage, getPackageFQN(moduleFQNPath));
-      infoMan ~= new SemanticError(location, msg);
+      diag ~= new SemanticError(location, msg);
     }
 
     return modul;

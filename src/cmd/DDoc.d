@@ -40,7 +40,7 @@ struct DDocCommand
   bool verbose;  /// Whether to be verbose.
 
   CompilationContext context; /// Environment variables of the compilation.
-  InfoManager infoMan;        /// Collects error messages.
+  Diagnostics diag;        /// Collects error messages.
   TokenHighlighter tokenHL;   /// For highlighting tokens DDoc code sections.
 
   /// Executes the doc generation command.
@@ -51,13 +51,13 @@ struct DDocCommand
     MacroParser mparser;
     foreach (macroPath; macroPaths)
     {
-      auto macros = mparser.parse(loadMacroFile(macroPath, infoMan));
+      auto macros = mparser.parse(loadMacroFile(macroPath, diag));
       mtable = new MacroTable(mtable);
       mtable.insert(macros);
     }
 
     // For DDoc code sections.
-    tokenHL = new TokenHighlighter(infoMan, writeXML == false);
+    tokenHL = new TokenHighlighter(diag, writeXML == false);
     outFileExtension = writeXML ? ".xml" : ".html";
 
     string[][] modFQNs; // List of tuples (filePath, moduleFQN).
@@ -66,7 +66,7 @@ struct DDocCommand
     // Process D files.
     foreach (filePath; filePaths)
     {
-      auto mod = new Module(filePath, infoMan);
+      auto mod = new Module(filePath, diag);
 
       // Only parse if the file is not a "DDoc"-file.
       if (!DDocEmitter.isDDocFile(mod))
@@ -124,7 +124,7 @@ struct DDocCommand
     // Do the macro expansion pass.
     auto fileText = MacroExpander.expand(mtable, "$(DDOC)",
                                          mod.filePath,
-                                         verbose ? infoMan : null);
+                                         verbose ? diag : null);
     // debug fileText ~= "\n<pre>\n" ~ doc.text ~ "\n</pre>";
 
     // Build destination file path.
@@ -153,11 +153,11 @@ struct DDocCommand
   /// Loads a macro file. Converts any Unicode encoding to UTF-8.
   /// Params:
   ///   filePath = path to the macro file.
-  ///   infoMan  = for error messages.
-  static string loadMacroFile(string filePath, InfoManager infoMan)
+  ///   diag  = for error messages.
+  static string loadMacroFile(string filePath, Diagnostics diag)
   {
     auto src = new SourceText(filePath);
-    src.load(infoMan);
+    src.load(diag);
     auto text = src.data[0..$-1]; // Exclude '\0'.
     return sanitizeText(text);
   }

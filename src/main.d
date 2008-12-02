@@ -43,10 +43,10 @@ import tango.text.Ascii : icompare;
 /// Entry function of dil.
 void main(char[][] args)
 {
-  auto infoMan = new InfoManager();
-  ConfigLoader(infoMan).load();
-  if (infoMan.hasInfo)
-    return printErrors(infoMan);
+  auto diag = new Diagnostics();
+  ConfigLoader(diag).load();
+  if (diag.hasInfo)
+    return printErrors(diag);
 
   if (args.length <= 1)
     return printHelp("main");
@@ -60,7 +60,7 @@ void main(char[][] args)
 
     CompileCommand cmd;
     cmd.context = newCompilationContext();
-    cmd.infoMan = infoMan;
+    cmd.diag = diag;
 
     foreach (arg; args[2..$])
     {
@@ -86,7 +86,7 @@ void main(char[][] args)
         cmd.filePaths ~= arg;
     }
     cmd.run();
-    infoMan.hasInfo && printErrors(infoMan);
+    diag.hasInfo && printErrors(diag);
     break;
   case "ddoc", "d":
     if (args.length < 4)
@@ -96,7 +96,7 @@ void main(char[][] args)
     cmd.destDirPath = args[2];
     cmd.macroPaths = GlobalSettings.ddocFilePaths;
     cmd.context = newCompilationContext();
-    cmd.infoMan = infoMan;
+    cmd.diag = diag;
 
     // Parse arguments.
     foreach (arg; args[3..$])
@@ -117,14 +117,14 @@ void main(char[][] args)
         cmd.filePaths ~= arg;
     }
     cmd.run();
-    infoMan.hasInfo && printErrors(infoMan);
+    diag.hasInfo && printErrors(diag);
     break;
   case "hl", "highlight":
     if (args.length < 3)
       return printHelp(command);
 
     HighlightCommand cmd;
-    cmd.infoMan = infoMan;
+    cmd.diag = diag;
 
     foreach (arg; args[2..$])
     {
@@ -143,7 +143,7 @@ void main(char[][] args)
       }
     }
     cmd.run();
-    infoMan.hasInfo && printErrors(infoMan);
+    diag.hasInfo && printErrors(diag);
     break;
   case "importgraph", "igraph":
     if (args.length < 3)
@@ -234,8 +234,8 @@ void main(char[][] args)
     if (!sourceText)
       sourceText = new SourceText(filePath, true);
 
-    infoMan = new InfoManager();
-    auto lx = new Lexer(sourceText, infoMan);
+    diag = new Diagnostics();
+    auto lx = new Lexer(sourceText, diag);
     lx.scanAll();
     auto token = lx.firstToken();
 
@@ -248,7 +248,7 @@ void main(char[][] args)
       Stdout(token.srcText)(separator);
     }
 
-    infoMan.hasInfo && printErrors(infoMan);
+    diag.hasInfo && printErrors(diag);
     break;
   case "trans", "translate":
     if (args.length < 3)
@@ -257,9 +257,9 @@ void main(char[][] args)
     if (args[2] != "German")
       return Stdout.formatln("Error: unrecognized target language \"{}\"", args[2]);
 
-    infoMan = new InfoManager();
+    diag = new Diagnostics();
     auto filePath = args[3];
-    auto mod = new Module(filePath, infoMan);
+    auto mod = new Module(filePath, diag);
     // Parse the file.
     mod.parse();
     if (!mod.hasErrors)
@@ -267,7 +267,7 @@ void main(char[][] args)
       auto german = new GermanTranslator(Stdout, "  ");
       german.translate(mod.root);
     }
-    printErrors(infoMan);
+    printErrors(diag);
     break;
   case "profile":
     if (args.length < 3)
@@ -313,9 +313,9 @@ char[] readStdin()
 
 /// Available commands.
 const char[] COMMANDS =
+  "  help (?)\n"
   "  compile (c)\n"
   "  ddoc (d)\n"
-  "  help (?)\n"
   "  highlight (hl)\n"
   "  importgraph (igraph)\n"
   "  statistics (stats)\n"
@@ -376,10 +376,10 @@ bool parseDebugOrVersion(string arg, CompilationContext context)
   return true;
 }
 
-/// Prints the errors collected in infoMan.
-void printErrors(InfoManager infoMan)
+/// Prints the errors collected in diag.
+void printErrors(Diagnostics diag)
 {
-  foreach (info; infoMan.info)
+  foreach (info; diag.info)
   {
     char[] errorFormat;
     if (info.classinfo is LexerError.classinfo)

@@ -23,12 +23,12 @@ struct CompileCommand
   SemanticPass1[] passes1;
 
   CompilationContext context;
-  InfoManager infoMan;
+  Diagnostics diag;
 
   /// Executes the compile command.
   void run()
   {
-    moduleMan = new ModuleManager(context.importPaths, infoMan);
+    moduleMan = new ModuleManager(context.importPaths, diag);
     foreach (filePath; filePaths)
     {
       auto modul = moduleMan.loadModuleFile(filePath);

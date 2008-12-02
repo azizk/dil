@@ -41,7 +41,7 @@ class Module : ScopeSymbol
   uint semanticPass;
   Module[] modules; /// The imported modules.
 
-  InfoManager infoMan; /// Collects error messages.
+  Diagnostics diag; /// Collects error messages.
 
   this()
   {
@@ -51,13 +51,13 @@ class Module : ScopeSymbol
   /// Constructs a Module object.
   /// Params:
   ///   filePath = file path to the source text; loaded in the constructor.
-  ///   infoMan = used for collecting error messages.
-  this(string filePath, InfoManager infoMan = null)
+  ///   diag = used for collecting error messages.
+  this(string filePath, Diagnostics diag = null)
   {
     this();
     this.sourceText = new SourceText(filePath);
-    this.infoMan = infoMan;
-    this.sourceText.load(infoMan);
+    this.diag = diag is null ? new Diagnostics() : diag;
+    this.sourceText.load(diag);
   }
 
   /// Returns the file path of the source text.
@@ -88,7 +88,7 @@ class Module : ScopeSymbol
   void parse()
   {
     if (this.parser is null)
-      this.parser = new Parser(sourceText, infoMan);
+      this.parser = new Parser(sourceText, diag);
 
     this.root = parser.start();
     this.imports = parser.imports;
@@ -108,7 +108,7 @@ class Module : ScopeSymbol
       {
         auto location = this.firstToken().getErrorLocation();
         auto msg = Format(MSG.InvalidModuleName, str);
-        infoMan ~= new LexerError(location, msg);
+        diag ~= new LexerError(location, msg);
         str = IdTable.genModuleID().str;
       }
       this.moduleFQN = this.moduleName = str;

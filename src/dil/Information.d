@@ -14,7 +14,7 @@ class Information
 }
 
 /// Collects information.
-class InfoManager
+class Diagnostics
 {
   Information[] info;
 
