@@ -34,7 +34,7 @@ override:
       writeTemplateParams();
       writeParams(d.params);
       write(")");
-      SYMBOL(d.name.str, d);
+      SYMBOL(d.name.str, "function", d);
     }, d);
     DESC();
     return d;
@@ -48,7 +48,9 @@ override:
     if (d.typeNode)
       type = textSpan(d.typeNode.baseType.begin, d.typeNode.end);
     foreach (name; d.names)
-      DECL({ write("variable, "); write("$(TYPE ", escape(type), ")"); SYMBOL(name.str, d); }, d);
+      DECL({ write("variable, "); write("$(TYPE ", escape(type), ")");
+        SYMBOL(name.str, "variable", d);
+      }, d);
     DESC();
     return d;
   }
