@@ -1,5 +1,8 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// Description: This module is here for testing
+/// a different algorithm to do semantic analysis
+/// compared to SemanticPass1 and SemanticPass2!
 module dil.semantic.Passes;
 
 import dil.ast.DefaultVisitor,
@@ -25,10 +28,6 @@ import dil.Messages;
 import dil.Enums;
 import dil.CompilerInfo;
 import common;
-
-// This module is here for testing out
-// a different algorithm to do semantic analysis
-// compared to SemanticPass1 and SemanticPass2!
 
 /// Some handy aliases.
 private alias Declaration D;
@@ -570,8 +569,6 @@ override
     alignSize = saved; // Restore.
     return d;
   }
-
-  // Deferred declarations:
 
   D visit(StaticAssertDeclaration d)
   {
