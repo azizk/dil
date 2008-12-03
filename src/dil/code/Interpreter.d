@@ -1,6 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
-module dil.semantic.Interpreter;
+module dil.code.Interpreter;
 
 import dil.ast.Visitor,
        dil.ast.Node,
@@ -168,70 +168,6 @@ override
 
     return res;
   }
-
-
-
-/*
-  "OrExpression",
-  "XorExpression",
-  "AndExpression",
-  "EqualExpression",
-  "IdentityExpression",
-  "RelExpression",
-  "InExpression",
-  "LShiftExpression",
-  "RShiftExpression",
-  "URShiftExpression",
-  "PlusExpression",
-  "MinusExpression",
-  "CatExpression",
-  "MulExpression",
-  "DivExpression",
-  "ModExpression",
-  "AddressExpression",
-  "DerefExpression",
-  "SignExpression",
-  "NotExpression",
-  "CompExpression",
-  "CallExpression",
-  "NewExpression",
-  "NewAnonClassExpression",
-  "DeleteExpression",
-  "CastExpression",
-  "IndexExpression",
-  "SliceExpression",
-  "ModuleScopeExpression",
-  "IdentifierExpression",
-  "SpecialTokenExpression",
-  "DotExpression",
-  "TemplateInstanceExpression",
-  "ThisExpression",
-  "SuperExpression",
-  "NullExpression",
-  "DollarExpression",
-  "BoolExpression",
-  "IntExpression",
-  "RealExpression",
-  "ComplexExpression",
-  "CharExpression",
-  "StringExpression",
-  "ArrayLiteralExpression",
-  "AArrayLiteralExpression",
-  "AssertExpression",
-  "MixinExpression",
-  "ImportExpression",
-  "TypeofExpression",
-  "TypeDotIdExpression",
-  "TypeidExpression",
-  "IsExpression",
-  "ParenExpression",
-  "FunctionLiteralExpression",
-  "TraitsExpression", // D2.0
-  "VoidInitExpression",
-  "ArrayInitExpression",
-  "StructInitExpression",
-*/
-}
 
   /// Returns true if e is immutable.
   bool isImmutable(Expression e)

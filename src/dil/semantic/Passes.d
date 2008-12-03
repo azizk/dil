@@ -16,8 +16,8 @@ import dil.semantic.Symbol,
        dil.semantic.Types,
        dil.semantic.Scope,
        dil.semantic.Module,
-       dil.semantic.Analysis,
-       dil.semantic.Interpreter;
+       dil.semantic.Analysis;
+import dil.code.Interpreter;
 import dil.Compilation;
 import dil.SourceText;
 import dil.Diagnostics;

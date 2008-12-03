@@ -13,10 +13,9 @@ import dil.semantic.Module,
        dil.semantic.Symbols,
        dil.semantic.Pass1,
        dil.semantic.Pass2,
-       dil.semantic.Passes,
-       dil.semantic.Interpreter;
+       dil.semantic.Passes;
+import dil.code.Interpreter;
 import dil.translator.German;
-import dil.doc.Doc;
 import dil.Messages;
 import dil.CompilerInfo;
 import dil.Diagnostics;
@@ -424,6 +423,9 @@ Options:
   -Ipath           : add 'path' to the list of import paths
   -release         : compile a release build
   -unittest        : compile a unittest build
+  -32              : produce 32 bit code (default)
+  -64              : produce 64 bit code
+  -ofPROG          : output program to PROG
 
   -ps              : print the symbol tree of the modules
   -pm              : print the package/module tree
