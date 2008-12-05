@@ -24,7 +24,7 @@ def writeMakefile():
 
 def build_dil(*args, **kwargs):
   cmd, args = dmd_cmd(*args, **kwargs)
-  print cmd % dict(args, files="(files...)")
+  print cmd % dict(args, files=" (files...)")
   os.system(cmd % args)
 
 def update_version(path, major, minor):
@@ -154,7 +154,8 @@ def main():
   if options.docs:
     build_dil_if_inexistant(DIL_EXE)
 
-    DOC_FILES = [DEST.KANDIL/"kandil.ddoc", DEST.DATA/"dilconf.d"] + FILES
+    DOC_FILES = [DEST.KANDIL/"kandil.ddoc"] + \
+                 DEST.DATA//("macros_dil.ddoc", "dilconf.d") + FILES
     versions = ["DDoc"]
     print "***** Generating documentation *****"
     generate_docs(DIL_EXE, DEST.DOC, MODLIST, DOC_FILES, versions, options='-v')

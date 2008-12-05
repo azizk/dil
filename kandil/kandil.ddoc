@@ -46,13 +46,14 @@ SRCFILE = ./htmlsrc/$(DIL_MODFQN).html
 SYMLINK = <a title="Permalink to this symbol" href="#$0" class="symlink">¶</a>
 DIL_SYMBOL = <a class="symbol _$3" name="$2" href="$(SRCFILE)#L$4" kind="$3" beg="$4" end="$5">$1</a>$(SYMLINK $2)
 
+DMDBUG = $(LINK2 http://d.puremagic.com/issues/show_bug.cgi?id=$1, $2)
+DDD = ---
+
 SUP = <sup>$0</sup>
 EM  = <em>$0</em>
 BR  = <br/>
 PRE = <pre>$0</pre>
-DDD = ---
 SPAN = <span class="$1">$+</span>
-DMDBUG = $(LINK2 http://d.puremagic.com/issues/show_bug.cgi?id=$1, $2)
 
 RED    = $(SPAN red, $0)
 BLUE   = $(SPAN blue, $0)
