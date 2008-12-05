@@ -87,3 +87,7 @@ class Path(unicode):
 
   def renames(self, to):
     os.renames(self, to)
+
+  def glob(self, pattern):
+    from glob import glob
+    return self // glob(unicode(self/pattern))
