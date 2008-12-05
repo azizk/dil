@@ -1,14 +1,72 @@
 body { margin: 0; }
 
-#navbar {
-  width: 200px;
-  overflow: auto;
-}
-
 #content {
   margin: 0.5em;
+  margin-left: 215px;
+}
+#footer {
+  margin: 0.5em;
+  margin-left: 215px;
 }
 
+#navbar {
+  width: 200px;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+#panels {
+  margin-left: 0.5em;
+  border: 2px outset DarkGreen;
+  border-left: none;
+  border-bottom: none;
+  height: 1px;
+  min-height: 92%;
+  font-size: 0.95em;
+  overflow: auto;
+  background-color: #EFE;
+}
+
+#panels ul {
+  margin-left: 0.5em;
+  padding-left: 0.5em;
+  list-style: none;
+}
+
+#panels div > ul {
+  margin: 0.5em;
+   padding: 0;
+}
+
+#navbar ul a {
+  text-decoration: none;
+  color: black;
+}
+
+#navtabs {
+  margin: 0.5em 0em 0em 0.5em;
+  text-align: center;
+}
+
+#navtabs span {
+  margin: 0.1em;
+  padding: 0.2em;
+  padding-bottom: 0;
+  border: 1px outset Green;
+  border-bottom: none;
+  color: Gray;
+  background-color: #EFE;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+#navtabs span.current, #navtabs span:hover {
+  padding-bottom: 2px;
+  color: GhostWhite;
+  background-color: #474;
+}
 
 .sec_header {
   font-weight: bold;

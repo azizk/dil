@@ -1,19 +1,110 @@
 $(function() {
-//   var list = "";
-//   for (i in modulesList)
-//     list += "<li>"+modulesList[i]+"</li>"
-//   $("#navbar").append($("<ul>"+list+"</ul>"))
   // Move permalinks to the end of the node list.
   $(".symlink").each(function() {
     $(this).appendTo(this.parentNode)
            .css({position: "static", right: ""});
   })
+
+  var symbols = $(".symbol");
   // Add code display functionality to symbol links.
-  $(".symbol").click(function(event) {
+  symbols.click(function(event) {
     event.preventDefault();
     showCode($(this));
   })
+
+
+  var header = symbols[0];
+  symbols = symbols.slice(1);
+
+  var itemlist = {}
+  itemlist.root = new SymbolItem(header.textContent, "module", header.textContent);
+  itemlist[''] = itemlist.root; // The empty string has to point to the root.
+  function insertIntoList()
+  {
+    [parentFQN, name] = rpartition(this.name, '.')
+    var sym = new SymbolItem(this.textContent, $(this).attr("kind"), this.name);
+    itemlist[parentFQN].sub.push(sym);
+    itemlist[sym.fqn] = sym;
+  }
+  symbols.each(insertIntoList);
+
+  $("#apilist").append(createSymbolsUL(itemlist.root.sub));
+
+//   $("#apilist > ul").treeview({
+//     animated: "fast",
+//     collapsed: true
+//   })
+
+  function makeCurrentTab() {
+    $("span.current", this.parentNode).removeClass('current');
+    $(this).addClass('current');
+  }
+
+  // Assign click event handlers for the tabs.
+  $("#apitab").click(makeCurrentTab)
+              .click(function() {
+    var container = $("#panels");
+    $("> div:visible", container).hide();
+    $("#apilist", container).show(); // Display the API list.
+  })
+  $("#modtab").click(makeCurrentTab)
+              .click(function() {
+    var container = $("#panels");
+    $("> div:visible", container).hide();
+    var list = $("#modlist:has(ul)", container);
+    if (!list.length) {
+      list = createModulesList();
+      container.append(list.hide()); // Append hidden.
+    }
+    list.show(); // Display the modules list.
+  })
 })
+
+/// A tree item for symbols.
+function SymbolItem(label, kind, fqn)
+{
+  this.name = name; /// The text to be displayed.
+  this.kind = kind; /// The kind of this symbol.
+  this.fqn = fqn; /// The fully qualified name.
+  this.sub = []; /// Sub-symbols.
+  return this;
+}
+
+/// Constructs an unordered list from the symbols data structure.
+function createSymbolsUL(symbols)
+{
+  var list = "<ul>";
+  for (i in symbols)
+  {
+    var sym = symbols[i];
+    list += "<li kind='"+sym.kind+"'><a href='#"+sym.fqn+"'>"+sym.name+"</a>";
+    if (sym.sub)
+      list += createSymbolsUL(sym.sub);
+    list += "</li>"
+  }
+  return list + "</ul>";
+}
+
+function createModulesUL(symbols)
+{
+  var list = "<ul>";
+  for (i in symbols)
+  {
+    var sym = symbols[i];
+    list += "<li kind='"+sym.kind+"'><a href='"+sym.fqn+".html'>"+sym.name+"</a>";
+    if (sym.sub)
+      list += createModulesUL(sym.sub);
+    list += "</li>"
+  }
+  return list + "</ul>";
+}
+
+/// Creates an unordered list from the global modules list and appends
+/// it to the modlist panel.
+function createModulesList()
+{
+  return $("#modlist").append(createModulesUL(g_moduleObjects));
+}
 
 /// An array of all the lines of this module's source code.
 var g_sourceCode = [];
@@ -105,4 +196,13 @@ function showCode(symbol)
 function reportBug()
 {
   // TODO: implement.
+}
+
+/// Splits a string returning a tuple (head, tail).
+function rpartition(str, sep)
+{
+  var sep_pos = str.lastIndexOf(sep);
+  var head = (sep_pos == -1) ? "" : str.slice(0, sep_pos);
+  var tail = str.slice(sep_pos+1);
+  return [head, tail];
 }
