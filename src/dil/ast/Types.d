@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity average)
 module dil.ast.Types;
 
 public import dil.ast.Type;

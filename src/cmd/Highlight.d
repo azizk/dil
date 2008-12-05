@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity average)
 module cmd.Highlight;
 
 import dil.ast.DefaultVisitor,

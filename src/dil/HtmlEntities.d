@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity very high)
 module dil.HtmlEntities;
 
 import common;
@@ -369,6 +370,7 @@ unittest
   alias entity2Unicode f;
   foreach (entity; namedEntities)
     assert(f(entity.name) == entity.value,
-      Format("'&{};' == \\u{:X4}, not \\u{:X4}", entity.name, entity.value, cast(uint)f(entity.name))
+      Format("'&{};' == \\u{:X4}, not \\u{:X4}",
+             entity.name, entity.value, cast(uint)f(entity.name))
     );
 }

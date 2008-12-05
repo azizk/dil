@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity high)
 module dil.lexer.IdTable;
 
 import dil.lexer.TokensEnum,

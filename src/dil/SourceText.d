@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity high)
 module dil.SourceText;
 
 import dil.Converter;
@@ -15,7 +16,8 @@ import tango.io.File,
 /// The source text may come from a file or from a memory buffer.
 final class SourceText
 {
-  string filePath; /// The file path to the source text. Mainly used for error messages.
+  /// The file path to the source text. Mainly used for error messages.
+  string filePath;
   char[] data; /// The UTF-8, zero-terminated source text.
 
   /// Constructs a SourceText object.

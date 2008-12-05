@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity high)
 module cmd.DDocHTML;
 
 import cmd.Highlight,

@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity low)
 module cmd.Compile;
 
 import dil.semantic.Module,

@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity high)
 module dil.ModuleManager;
 
 import dil.semantic.Module,
@@ -149,7 +150,7 @@ class ModuleManager
   }
 
   /// Returns e.g. 'dil.ast' for 'dil/ast/Node'.
-  string getPackageFQN(string moduleFQNPath)
+  static string getPackageFQN(string moduleFQNPath)
   {
     string pckg = moduleFQNPath.dup;
     uint lastDirSep;

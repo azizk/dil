@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity average)
 module dil.semantic.Package;
 
 import dil.semantic.Symbol,

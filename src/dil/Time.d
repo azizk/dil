@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity high)
 module dil.Time;
 
 import tango.stdc.time : time_t, time, ctime;

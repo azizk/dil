@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity low)
 /// Description: This module is here for testing
 /// a different algorithm to do semantic analysis
 /// compared to SemanticPass1 and SemanticPass2!

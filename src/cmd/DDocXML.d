@@ -1,5 +1,6 @@
 /// Authors: Aziz Köksal, Jari-Matti Mäkelä
 /// License: GPL3
+/// $(Maturity average)
 module cmd.DDocXML;
 
 import cmd.Highlight,

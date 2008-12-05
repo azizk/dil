@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity very high)
 module dil.Converter;
 
 import dil.lexer.Funcs;

@@ -1,5 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
+/// $(Maturity high)
 module dil.lexer.IdentsGenerator;
 
 /// Table of predefined identifiers.
