@@ -3313,11 +3313,11 @@ version(D2)
       switch (postfix)
       {
       case 'w':
-        if (checkString(begin, str))
+        if (hasInvalidUTF8(str, begin))
           goto default;
         e = new StringExpression(dil.Unicode.toUTF16(str)); break;
       case 'd':
-        if (checkString(begin, str))
+        if (hasInvalidUTF8(str, begin))
           goto default;
         e = new StringExpression(dil.Unicode.toUTF32(str)); break;
       case 'c':
@@ -4236,12 +4236,12 @@ version(D2)
   }
 
   /// Returns true if the string str has an invalid UTF-8 sequence.
-  bool checkString(Token* begin, string str)
+  bool hasInvalidUTF8(string str, Token* begin)
   {
-    auto utf8Seq = Lexer.findInvalidUTF8Sequence(str);
-    if (utf8Seq.length)
-      error(begin, MSG.InvalidUTF8SequenceInString, utf8Seq);
-    return utf8Seq.length != 0;
+    auto invalidUTF8Seq = Lexer.findInvalidUTF8Sequence(str);
+    if (invalidUTF8Seq.length)
+      error(begin, MSG.InvalidUTF8SequenceInString, invalidUTF8Seq);
+    return invalidUTF8Seq.length != 0;
   }
 
   /// Forwards error parameters.
