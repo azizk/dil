@@ -237,7 +237,7 @@ class Parser
     require(T.LBrace);
     while (token.kind != T.RBrace && token.kind != T.EOF)
       decls ~= parseDeclarationDefinition();
-    require(T.RBrace);
+    requireClosing(T.RBrace, begin);
     set(decls, begin);
 
     // Restore original values.
@@ -432,7 +432,7 @@ class Parser
       auto decls = new CompoundDeclaration;
       while (token.kind != T.RBrace && token.kind != T.EOF)
         decls ~= parseDeclarationDefinition();
-      require(T.RBrace);
+      requireClosing(T.RBrace, begin);
       d = set(decls, begin);
       break;
     case T.Colon:
@@ -637,7 +637,7 @@ class Parser
         if (!consumed(T.Comma))
           break;
       }
-      require(T.RBracket);
+      requireClosing(T.RBracket, begin);
       init = new ArrayInitExpression(keys, values);
       break;
     case T.LBrace:
@@ -668,7 +668,7 @@ class Parser
           if (!consumed(T.Comma))
             break;
         }
-        require(T.RBrace);
+        requireClosing(T.RBrace, begin);
         return new StructInitExpression(idents, values);
       }
 
@@ -714,8 +714,9 @@ class Parser
         nT();
         if (consumed(T.LParen))
         {
+          auto leftParen = this.prevToken;
           func.outIdent = requireIdentifier(MSG.ExpectedAnIdentifier);
-          require(T.RParen);
+          requireClosing(T.RParen, leftParen);
         }
         func.outBody = parseStatements();
         continue;
@@ -723,7 +724,7 @@ class Parser
         nT();
         goto case T.LBrace;
       default:
-        error(token, MSG.ExpectedFunctionBody, token.srcText);
+        error2(MSG.ExpectedFunctionBody, token);
       }
       break; // Exit loop.
     }
@@ -772,7 +773,7 @@ class Parser
       linkageType = LinkageType.System;
       break;
     default:
-      error(MID.UnrecognizedLinkageType, token.srcText);
+      error2(MID.UnrecognizedLinkageType, token);
     }
     require(T.RParen);
     return linkageType;
@@ -885,7 +886,7 @@ class Parser
       Lcommon:
         // Issue error if redundant.
         if (stc & stc_tmp)
-          error(MID.RedundantStorageClass, token.srcText);
+          error2(MID.RedundantStorageClass, token);
         else
           stc |= stc_tmp;
 
@@ -1071,6 +1072,7 @@ version(D2)
     {}
     else if (consumed(T.LBrace))
     {
+      auto leftBrace = this.prevToken;
       hasBody = true;
       while (token.kind != T.RBrace)
       {
@@ -1100,10 +1102,10 @@ version(D2)
         if (!consumed(T.Comma))
           break;
       }
-      require(T.RBrace);
+      requireClosing(T.RBrace, leftBrace);
     }
     else
-      error(token, MSG.ExpectedEnumBody, token.srcText);
+      error2(MSG.ExpectedEnumBody, token);
 
     return new EnumDeclaration(enumName, baseType, members, hasBody);
   }
@@ -1155,7 +1157,7 @@ version(D2)
     else if (token.kind == T.LBrace)
       decls = parseDeclarationDefinitionsBody();
     else
-      error(token, MSG.ExpectedClassBody, token.srcText);
+      error2(MSG.ExpectedClassBody, token);
 
     Declaration d = new ClassDeclaration(className, /+tparams, +/bases, decls);
     if (tparams)
@@ -1179,7 +1181,7 @@ version(D2)
       case T.Package:   prot = Protection.Package;   break;
       case T.Public:  /*prot = Protection.Public;*/  break;
       default:
-        error(MID.ExpectedBaseClasses, token.srcText);
+        error2(MID.ExpectedBaseClasses, token);
         return bases;
       }
       nT(); // Skip protection attribute.
@@ -1218,7 +1220,7 @@ version(D2)
     else if (token.kind == T.LBrace)
       decls = parseDeclarationDefinitionsBody();
     else
-      error(token, MSG.ExpectedInterfaceBody, token.srcText);
+      error2(MSG.ExpectedInterfaceBody, token);
 
     Declaration d = new InterfaceDeclaration(name, /+tparams, +/bases, decls);
     if (tparams)
@@ -1250,9 +1252,9 @@ version(D2)
     else if (token.kind == T.LBrace)
       decls = parseDeclarationDefinitionsBody();
     else
-      error(token, begin.kind == T.Struct ?
-                   MSG.ExpectedStructBody :
-                   MSG.ExpectedUnionBody, token.srcText);
+      error2(begin.kind == T.Struct ?
+             MSG.ExpectedStructBody :
+             MSG.ExpectedUnionBody, token);
 
     Declaration d;
     if (begin.kind == T.Struct)
@@ -1329,7 +1331,7 @@ version(D2)
   {
     if (consumed(T.Int32) || consumed(T.Identifier))
       return this.prevToken;
-    error(token, MSG.ExpectedIdentOrInt, token.srcText);
+    error2(MSG.ExpectedIdentOrInt, token);
     return null;
   }
 
@@ -1412,9 +1414,10 @@ version(D2)
     Expression condition;
     Declaration ifDecls, elseDecls;
 
+    auto leftParen = token;
     require(T.LParen);
     condition = parseAssignExpression();
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
 
     ifDecls = parseDeclarationsBlock();
 
@@ -1429,11 +1432,12 @@ version(D2)
     skip(T.Static);
     skip(T.Assert);
     Expression condition, message;
+    auto leftParen = token;
     require(T.LParen);
     condition = parseAssignExpression();
     if (consumed(T.Comma))
       message = parseAssignExpression();
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     require(T.Semicolon);
     return new StaticAssertDeclaration(condition, message);
   }
@@ -1468,6 +1472,7 @@ version(D2)
   {
     auto begin = token;
     skip(T.Typeof);
+    auto leftParen = token;
     require(T.LParen);
     Type type;
     switch (token.kind)
@@ -1482,7 +1487,7 @@ version(D2)
     default:
       type = new TypeofType(parseExpression());
     }
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     set(type, begin);
     return type;
   }
@@ -1505,8 +1510,9 @@ version(D2)
   {
     if (consumed(T.LParen))
     {
+      auto leftParen = token;
       auto e = parseAssignExpression();
-      require(T.RParen);
+      requireClosing(T.RParen, leftParen);
       require(T.Semicolon);
       return new MixinDeclaration(e);
     }
@@ -1541,7 +1547,7 @@ version(D2)
     auto statements = new CompoundStatement();
     while (token.kind != T.RBrace && token.kind != T.EOF)
       statements ~= parseStatement();
-    require(T.RBrace);
+    requireClosing(T.RBrace, begin);
     return set(statements, begin);
   }
 
@@ -1814,7 +1820,7 @@ version(D2)
       auto ss = new CompoundStatement();
       while (token.kind != T.RBrace && token.kind != T.EOF)
         ss ~= parseStatement();
-      require(T.RBrace);
+      requireClosing(T.RBrace, begin);
       s = set(ss, begin);
     }
     else if (token.kind == T.Semicolon)
@@ -1910,7 +1916,7 @@ version(D2)
       Lcommon:
         // Issue error if redundant.
         if (stc & stc_tmp)
-          error(MID.RedundantStorageClass, token.srcText);
+          error2(MID.RedundantStorageClass, token);
         else
           stc |= stc_tmp;
 
@@ -1939,6 +1945,7 @@ version(D2)
     Expression condition;
     Statement ifBody, elseBody;
 
+    auto leftParen = token;
     require(T.LParen);
 
     Identifier* ident;
@@ -1977,7 +1984,7 @@ version(D2)
       else
         condition = parseExpression();
     }
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     ifBody = parseScopeStatement();
     if (consumed(T.Else))
       elseBody = parseScopeStatement();
@@ -1987,9 +1994,10 @@ version(D2)
   Statement parseWhileStatement()
   {
     skip(T.While);
+    auto leftParen = token;
     require(T.LParen);
     auto condition = parseExpression();
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     return new WhileStatement(condition, parseScopeStatement());
   }
 
@@ -1998,9 +2006,10 @@ version(D2)
     skip(T.Do);
     auto doBody = parseScopeStatement();
     require(T.While);
+    auto leftParen = token;
     require(T.LParen);
     auto condition = parseExpression();
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     return new DoWhileStatement(condition, doBody);
   }
 
@@ -2011,6 +2020,7 @@ version(D2)
     Statement init, forBody;
     Expression condition, increment;
 
+    auto leftParen = token;
     require(T.LParen);
     if (!consumed(T.Semicolon))
       init = parseNoScopeStatement();
@@ -2019,7 +2029,7 @@ version(D2)
     require(T.Semicolon);
     if (token.kind != T.RParen)
       increment = parseExpression();
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     forBody = parseScopeStatement();
     return new ForStatement(init, condition, increment, forBody);
   }
@@ -2033,6 +2043,7 @@ version(D2)
     auto params = new Parameters;
     Expression e; // Aggregate or LwrExpression
 
+    auto leftParen = token;
     require(T.LParen);
     auto paramsBegin = token;
     do
@@ -2072,13 +2083,13 @@ version(D2)
       // if (params.length != 1)
         // error(MID.XYZ); // TODO: issue error msg
       auto upper = parseExpression();
-      require(T.RParen);
+      requireClosing(T.RParen, leftParen);
       auto forBody = parseScopeStatement();
       return new ForeachRangeStatement(tok, params, e, upper, forBody);
     }
   }
     // Foreach (ForeachTypeList; Aggregate) ScopeStatement
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     auto forBody = parseScopeStatement();
     return new ForeachStatement(tok, params, e, forBody);
   }
@@ -2086,9 +2097,10 @@ version(D2)
   Statement parseSwitchStatement()
   {
     skip(T.Switch);
+    auto leftParen = token;
     require(T.LParen);
     auto condition = parseExpression();
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     auto switchBody = parseScopeStatement();
     return new SwitchStatement(condition, switchBody);
   }
@@ -2179,9 +2191,10 @@ version(D2)
   Statement parseWithStatement()
   {
     skip(T.With);
+    auto leftParen = token;
     require(T.LParen);
     auto expr = parseExpression();
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     return new WithStatement(expr, parseScopeStatement());
   }
 
@@ -2191,8 +2204,9 @@ version(D2)
     Expression expr;
     if (consumed(T.LParen))
     {
+      auto leftParen = this.prevToken;
       expr = parseExpression();
-      require(T.RParen);
+      requireClosing(T.RParen, leftParen);
     }
     return new SynchronizedStatement(expr, parseScopeStatement());
   }
@@ -2252,7 +2266,7 @@ version(D2)
       case IDK.exit, IDK.success, IDK.failure:
         break;
       default:
-        error(this.prevToken, MSG.InvalidScopeIdentifier, this.prevToken.srcText);
+        error2(MSG.InvalidScopeIdentifier, this.prevToken);
       }
     require(T.RParen);
     Statement scopeBody;
@@ -2284,12 +2298,13 @@ version(D2)
     Expression[] args;
     Statement pragmaBody;
 
+    auto leftParen = token;
     require(T.LParen);
     ident = requireIdentifier(MSG.ExpectedPragmaIdentifier);
 
     if (consumed(T.Comma))
       args = parseExpressionList();
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
 
     pragmaBody = parseNoScopeOrEmptyStatement();
 
@@ -2303,9 +2318,10 @@ version(D2)
     Expression condition;
     Statement ifBody, elseBody;
 
+    auto leftParen = token;
     require(T.LParen);
     condition = parseExpression();
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     ifBody = parseNoScopeStatement();
     if (consumed(T.Else))
       elseBody = parseNoScopeStatement();
@@ -2376,11 +2392,12 @@ version(D2)
   Statement parseAsmBlockStatement()
   {
     skip(T.Asm);
+    auto leftBrace = token;
     require(T.LBrace);
     auto ss = new CompoundStatement;
     while (token.kind != T.RBrace && token.kind != T.EOF)
       ss ~= parseAsmStatement();
-    require(T.RBrace);
+    requireClosing(T.RBrace, leftBrace);
     return new AsmBlockStatement(ss);
   }
 
@@ -2425,7 +2442,7 @@ version(D2)
       if (token.kind == T.Int32)
         (number = token.int_), skip(T.Int32);
       else
-        error(token, MSG.ExpectedIntegerAfterAlign, token.srcText);
+        error2(MSG.ExpectedIntegerAfterAlign, token);
       require(T.Semicolon);
       s = new AsmAlignStatement(number);
       break;
@@ -2634,8 +2651,9 @@ version(D2)
     auto e = parseAsmUnaryExpression();
     while (consumed(T.LBracket))
     {
+      auto leftBracket = this.prevToken;
       e = new AsmPostBracketExpression(e, parseAsmExpression());
-      require(T.RBracket);
+      requireClosing(T.RBracket, leftBracket);
       set(e, begin);
     }
     return e;
@@ -2660,7 +2678,7 @@ version(D2)
         if (token.kind == T.Identifier && token.ident is Ident.ptr)
           skip(T.Identifier);
         else
-          error(MID.ExpectedButFound, "ptr", token.srcText);
+          error2(MID.ExpectedButFound, "ptr", token);
         e = new AsmTypeExpression(parseAsmExpression());
         break;
       case IDK.offset:
@@ -2727,9 +2745,10 @@ version(D2)
       break;
     case T.LBracket:
       // [ AsmExpression ]
+      auto leftBracket = token;
       nT();
       e = parseAsmExpression();
-      require(T.RBracket);
+      requireClosing(T.RBracket, leftBracket);
       e = new AsmBracketExpression(e);
       break;
     case T.Identifier:
@@ -2766,7 +2785,7 @@ version(D2)
           if (token.kind == T.Int32)
             (number = token.int_), skip(T.Int32);
           if (number != 0 && number != 4 && number != 8)
-            error(MID.ExpectedButFound, "0, 4 or 8", token.srcText);
+            error2(MID.ExpectedButFound, "0, 4 or 8", token);
         }
         e = new AsmRegisterExpression(register, number);
         break;
@@ -2797,7 +2816,7 @@ version(D2)
       } // end of switch
       break;
     default:
-      error(MID.ExpectedButFound, "Expression", token.srcText);
+      error2(MID.ExpectedButFound, "Expression", token);
       e = new IllegalExpression();
       if (!trying)
       { // Insert a dummy token and don't consume current one.
@@ -3088,6 +3107,7 @@ version(D2)
         goto Lset;
       case T.LBracket:
         // parse Slice- and IndexExpression
+        auto leftBracket = token;
         nT();
         // [] is a SliceExpression
         if (token.kind == T.RBracket)
@@ -3102,14 +3122,14 @@ version(D2)
         if (consumed(T.Slice))
         {
           e = new SliceExpression(e, es[0], parseAssignExpression());
-          require(T.RBracket);
+          requireClosing(T.RBracket, leftBracket);
           goto Lset;
         }
 
         // [ ExpressionList ]
         if (consumed(T.Comma))
            es ~= parseExpressionList();
-        require(T.RBracket);
+        requireClosing(T.RBracket, leftBracket);
 
         e = new IndexExpression(e, es);
         goto Lset;
@@ -3337,7 +3357,7 @@ version(D2)
           goto LparseAssocArray;
         if (consumed(T.Comma))
           values = [e] ~ parseExpressionList();
-        require(T.RBracket);
+        requireClosing(T.RBracket, begin);
       }
 
       e = new ArrayLiteralExpression(values);
@@ -3354,7 +3374,7 @@ version(D2)
       LenterLoop:
         values ~= parseAssignExpression();
       } while (consumed(T.Comma))
-      require(T.RBracket);
+      requireClosing(T.RBracket, begin);
       e = new AArrayLiteralExpression(keys, values);
       break;
     case T.LBrace:
@@ -3404,7 +3424,9 @@ version(D2)
       e = new TypeidExpression(type);
       break;
     case T.Is:
-      requireNext(T.LParen);
+      nT();
+      auto leftParen = token;
+      require(T.LParen);
 
       Type type, specType;
       Identifier* ident; // optional Identifier
@@ -3451,7 +3473,7 @@ version(D2)
       if (ident && specType && token.kind == T.Comma)
         tparams = parseTemplateParameterList2();
     }
-      require(T.RParen);
+      requireClosing(T.RParen, leftParen);
       e = new IsExpression(type, ident, opTok, specTok, specType, tparams);
       break;
     case T.LParen:
@@ -3463,9 +3485,10 @@ version(D2)
       }
       else
       { // ( Expression )
+        auto leftParen = token;
         skip(T.LParen);
         e = parseExpression();
-        require(T.RParen);
+        requireClosing(T.RParen, leftParen);
         e = new ParenExpression(e);
       }
       break;
@@ -3499,7 +3522,7 @@ version(D2)
       }
       else
       {
-        error(MID.ExpectedButFound, "Expression", token.srcText);
+        error2(MID.ExpectedButFound, "Expression", token);
         e = new IllegalExpression();
         if (!trying)
         { // Insert a dummy token and don't consume current one.
@@ -3616,7 +3639,7 @@ version(D2)
       break;
     } // version(D2)
     default:
-      error(MID.ExpectedButFound, "BasicType", token.srcText);
+      error2(MID.ExpectedButFound, "BasicType", token);
       t = new IllegalType();
       nT();
     }
@@ -3731,7 +3754,7 @@ version(D2)
           Expression e = parseExpression(), e2;
           if (consumed(T.Slice))
             e2 = parseExpression();
-          require(T.RBracket);
+          requireClosing(T.RBracket, begin);
           t = new ArrayType(parseNext(), e, e2); // [ Expression .. Expression ]
         }
       }
@@ -3764,7 +3787,7 @@ version(D2)
         Expression e = parseExpression(), e2;
         if (consumed(T.Slice))
           e2 = parseExpression();
-        require(T.RBracket);
+        requireClosing(T.RBracket, begin);
         t = new ArrayType(t, e, e2);
       }
     }
@@ -3789,7 +3812,7 @@ version(D2)
       nT();
       type = parseDeclaratorSuffix(type);
     }
-    require(T.RParen);
+    requireClosing(T.RParen, begin);
 
     Parameters params;
     if (optionalParamList)
@@ -3815,7 +3838,7 @@ version(D2)
     }
 
     if (ident is null && !identOptional)
-      error(token, MSG.ExpectedDeclaratorIdentifier, token.srcText);
+      error2(MSG.ExpectedDeclaratorIdentifier, token);
 
     return t;
   }
@@ -3843,11 +3866,12 @@ version(D2)
   /// )
   Expression[] parseArguments()
   {
+    auto leftParen = token;
     skip(T.LParen);
     Expression[] args;
     if (token.kind != T.RParen)
       args = parseExpressionList();
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     return args;
   }
 
@@ -3933,7 +3957,7 @@ version(D2)
         Lcommon:
           // Check for redundancy.
           if (stc & stc_)
-            error(MID.RedundantStorageClass, token.srcText);
+            error2(MID.RedundantStorageClass, token);
           else
             stc |= stc_;
           nT();
@@ -3959,17 +3983,18 @@ version(D2)
       pushParameter();
 
     } while (consumed(T.Comma))
-    require(T.RParen);
+    requireClosing(T.RParen, begin);
     return set(params, begin);
   }
 
   TemplateArguments parseTemplateArguments()
   {
     TemplateArguments targs;
+    auto leftParen = token;
     require(T.LParen);
     if (token.kind != T.RParen)
       targs = parseTemplateArguments_();
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     return targs;
   }
 
@@ -4036,7 +4061,7 @@ version(D2)
     require(T.LParen);
     if (token.kind != T.RParen)
       parseTemplateParameterList_(tparams);
-    require(T.RParen);
+    requireClosing(T.RParen, begin);
     return set(tparams, begin);
   }
 
@@ -4143,6 +4168,12 @@ version(D2)
     } while (consumed(T.Comma))
   }
 
+  /// Returns the string of a token printable to the client.
+  char[] getPrintable(Token* token)
+  { // TODO: there are some other tokens that have to be handled, e.g. strings.
+    return token.kind == T.EOF ? "EOF" : token.srcText;
+  }
+
   alias require expected;
 
   /// Requires a token of kind tok.
@@ -4151,7 +4182,7 @@ version(D2)
     if (token.kind == tok)
       nT();
     else
-      error(MID.ExpectedButFound, Token.toString(tok), token.srcText);
+      error2(MID.ExpectedButFound, Token.toString(tok), token);
   }
 
   /// Requires the next token to be of kind tok.
@@ -4235,6 +4266,20 @@ version(D2)
     return idtok;
   }
 
+  /// Reports an error if the closing counterpart of a token is not found.
+  void requireClosing(TOK closing, Token* opening)
+  {
+    assert(closing == T.RBrace || closing == T.RParen || closing == T.RBracket);
+    assert(opening !is null);
+    if (!consumed(closing))
+    {
+      auto loc = opening.getRealLocation();
+      auto openingLoc = Format("(opening @{},{})", loc.lineNum, loc.colNum);
+      error(token, MSG.ExpectedClosing,
+            Token.toString(closing), openingLoc, getPrintable(token));
+    }
+  }
+
   /// Returns true if the string str has an invalid UTF-8 sequence.
   bool hasInvalidUTF8(string str, Token* begin)
   {
@@ -4249,11 +4294,26 @@ version(D2)
   {
     error_(token, formatMsg, _arguments, _argptr);
   }
-
   /// ditto
   void error(MID mid, ...)
   {
     error_(this.token, GetMsg(mid), _arguments, _argptr);
+  }
+
+  /// ditto
+  void error2(char[] formatMsg, Token* token)
+  {
+    error(token, formatMsg, getPrintable(token));
+  }
+  /// ditto
+  void error2(MID mid, Token* token)
+  {
+    error(mid, getPrintable(token));
+  }
+  /// ditto
+  void error2(MID mid, char[] arg, Token* token)
+  {
+    error(mid, arg, getPrintable(token));
   }
 
   /// Creates an error report and appends it to a list.
