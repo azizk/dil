@@ -41,7 +41,7 @@ struct DDocCommand
   bool verbose;  /// Whether to be verbose.
 
   CompilationContext context; /// Environment variables of the compilation.
-  Diagnostics diag;        /// Collects error messages.
+  Diagnostics diag;           /// Collects error messages.
   TokenHighlighter tokenHL;   /// For highlighting tokens DDoc code sections.
 
   /// Executes the doc generation command.
@@ -123,11 +123,8 @@ struct DDocCommand
     // Set the BODY macro to the text produced by the emitter.
     mtable.insert("BODY", ddocText);
     // Do the macro expansion pass.
-    auto fileText = MacroExpander.expand(mtable, "$(DDOC)",
-                                         mod.filePath,
-                                         verbose ? diag : null);
-    // debug fileText ~= "\n<pre>\n" ~ doc.text ~ "\n</pre>";
-
+    auto dg = verbose ? this.diag : null;
+    auto fileText = MacroExpander.expand(mtable, "$(DDOC)", mod.filePath, dg);
     // Build destination file path.
     auto destPath = new FilePath(destDirPath);
     destPath.append(mod.getFQN() ~ outFileExtension);

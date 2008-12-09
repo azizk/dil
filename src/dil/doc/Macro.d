@@ -142,9 +142,8 @@ struct MacroExpander
   /// Reports a warning message.
   void warning(char[] msg, char[] macroName)
   {
-    msg = Format(msg, macroName);
-    if (diag)
-      diag ~= new Warning(new Location(filePath, 0), msg);
+    if (diag !is null)
+      diag ~= new Warning(new Location(filePath, 0), Format(msg, macroName));
   }
 
   /// Expands the macros from the table in the text.
