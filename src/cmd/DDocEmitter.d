@@ -341,7 +341,7 @@ abstract class DDocEmitter : DefaultVisitor
         if (!(p+1 < end && p[1] == '\n'))
           goto default;
         ++p;
-        result ~= "$(DDOC_BLANKLINE)";
+        result ~= "\n$(DDOC_BLANKLINE)\n";
         break;
       case '-':
         if (p+2 < end && p[1] == '-' && p[2] == '-')

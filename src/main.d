@@ -105,6 +105,8 @@ void main(char[][] args)
       {}
       else if (arg == "--xml")
         cmd.writeXML = true;
+      else if (arg == "--raw")
+        cmd.rawOutput = true;
       else if (arg == "-i")
         cmd.includeUndocumented = true;
       else if (arg == "-v")
@@ -444,6 +446,7 @@ Usage:
 
 Options:
   --xml            : write XML instead of HTML documents
+  --raw            : don't expand macros in the output (useful for debugging)
   -i               : include undocumented symbols
   -v               : verbose output
   -m=PATH          : write list of processed modules to PATH
