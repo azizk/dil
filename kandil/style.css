@@ -81,27 +81,27 @@ body { margin: 0; }
   margin: 0.5em 0;
 }
 
-dt {
+.decl {
   font-size: 1em;
   font-weight: bold;
   position: relative; /* for .symlink */
 }
 
-dt:target {
+.decl:target {
   background-color: yellowgreen;
   border-bottom: 1px solid darkgreen;
 }
 
-dd {
+.ddef {
   margin: 0.5em 2.5em;
   margin-right: 0;
 }
 
-dt .symlink {
+.decl .symlink {
   display: none;
 }
 
-dt:hover .symlink, .symlink:focus {
+.decl:hover .symlink, .symlink:focus {
   display: inline;
 }
 
