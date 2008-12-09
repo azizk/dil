@@ -1,0 +1,23 @@
+#summary Instructions on how to get the source code.
+Use this command to anonymously check out the latest project source code:
+
+This will download the whole repository and put it into the 'dil' folder.
+||`git clone git://github.com/azizk/dil.git dil`||
+
+To update the repository type these commands:
+
+||`git fetch`||
+||`git merge`||
+
+or in one step:
+
+||`git pull`||
+
+You can also [http://github.com/azizk/dil/ browse] the repository or download the latest revision
+[http://github.com/azizk/dil/zipball/master dil.zip] or
+[http://github.com/azizk/dil/tarball/master dil.tar.gz].
+
+Some interesting articles you might want to read to learn Git:
+  * [http://cworth.org/hgbook-git/tour/ A tour of git: the basics]
+  * [http://git.or.cz/course/svn.html Git - SVN Crash Course]
+  * [http://www.kernel.org/pub/software/scm/git/docs/everyday.html Everyday GIT With 20 Commands Or So]
