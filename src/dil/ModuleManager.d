@@ -13,6 +13,7 @@ import tango.io.FilePath,
        tango.io.FileSystem,
        tango.io.model.IFile;
 import tango.util.PathUtil : pathNormalize = normalize;
+import tango.core.Array : lbound;
 
 alias FileConst.PathSeparatorChar dirSep;
 
@@ -27,8 +28,14 @@ class ModuleManager
   Module[string] moduleFQNPathTable;
   /// Maps absolute file paths to modules. E.g.: /home/user/dil/src/main.d
   Module[string] absFilePathTable;
-  Module[] loadedModules; /// Loaded modules in sequential order.
-  string[] importPaths; /// Where to look for module files.
+  /// Loaded modules in sequential order.
+  Module[] loadedModules;
+  /// Loaded modules which are ordered according to the number of
+  /// import statements in each module (ascending order.)
+  Module[] orderedModules;
+  /// Where to look for module files.
+  string[] importPaths;
+  /// Collects error messages.
   Diagnostics diag;
 
   /// Constructs a ModuleManager object.
@@ -66,6 +73,8 @@ class ModuleManager
     moduleFQNPathTable[moduleFQNPath] = newModule;
     absFilePathTable[absFilePath] = newModule;
     loadedModules ~= newModule;
+    insertOrdered(newModule);
+
     // Add the module to its package.
     auto pckg = getPackage(newModule.packageName);
     pckg.add(newModule);
@@ -78,6 +87,23 @@ class ModuleManager
     }
 
     return newModule;
+  }
+
+  /// Compares the number of imports of two modules.
+  /// Returns: true if a imports less than b.
+  static bool compareImports(Module a, Module b)
+  {
+    return a.imports.length < b.imports.length;
+  }
+
+  /// Insert a module into the ordered list.
+  void insertOrdered(Module newModule)
+  {
+    auto i = orderedModules.lbound(newModule, &compareImports);
+    if (i == orderedModules.length)
+      orderedModules ~= newModule;
+    else
+      orderedModules = orderedModules[0..i] ~ newModule ~ orderedModules[i..$];
   }
 
   /// Returns the package given a f.q. package name.

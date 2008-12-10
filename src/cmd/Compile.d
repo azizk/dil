@@ -53,6 +53,8 @@ struct CompileCommand
     if (printModuleTree)
       printMTree(moduleMan.rootPackage.packages,
                  moduleMan.rootPackage.modules, "");
+    // foreach (mod; moduleMan.orderedModules)
+    //   Stdout(mod.moduleFQN, mod.imports.length).newline;
   }
 
   /// A predicate for sorting symbols in ascending order.
