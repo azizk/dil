@@ -7,12 +7,15 @@ import dil.semantic.Module,
        dil.semantic.Package,
        dil.semantic.Pass1,
        dil.semantic.Pass2,
+       dil.semantic.Symbol,
        dil.semantic.Symbols;
 import dil.doc.Doc;
 import dil.Compilation;
 import dil.Diagnostics;
 import dil.ModuleManager;
 import common;
+
+import tango.core.Array : sort;
 
 /// The compile command.
 struct CompileCommand
@@ -29,10 +32,13 @@ struct CompileCommand
   /// Executes the compile command.
   void run()
   {
+    // TODO: import object.d
     moduleMan = new ModuleManager(context.importPaths, diag);
     foreach (filePath; filePaths)
+      moduleMan.loadModuleFile(filePath);
+
+    foreach (modul; moduleMan.loadedModules)
     {
-      auto modul = moduleMan.loadModuleFile(filePath);
       runPass1(modul);
       if (printSymbolTree)
         printSymbolTable(modul, "");
@@ -45,16 +51,40 @@ struct CompileCommand
     // }
 
     if (printModuleTree)
-      printMTree(moduleMan.rootPackage, "");
+      printMTree(moduleMan.rootPackage.packages,
+                 moduleMan.rootPackage.modules, "");
   }
 
+  /// A predicate for sorting symbols in ascending order.
+  static bool sortSymbolPredicate(Symbol a, Symbol b) {
+    return a.name.str < b.name.str;
+  }
+
+  /// Prints the package/module tree including the root.
   void printMTree(Package pckg, string indent)
   {
-    Stdout(indent)(pckg.pckgName)("/").newline;
-    foreach (p; pckg.packages) // TODO: sort packages alphabetically by name?
-      printMTree(p, indent ~ "  ");
-    foreach (m; pckg.modules) // TODO: sort modules alphabetically by name?
+    Stdout(indent)(pckg.pckgName)("/").newline; // PackageName/
+    pckg.packages.sort(&sortSymbolPredicate); // Sort the packages.
+    foreach (p; pckg.packages)
+      printMTree(p, indent ~ "  "); // Print the sub-packages.
+    pckg.modules.sort(&sortSymbolPredicate); // Sort the modules.
+    foreach (m; pckg.modules) // Print the modules.
       Stdout(indent ~ "  ")(m.moduleName)(".")(m.fileExtension()).newline;
+  }
+
+  /// Prints the package/module tree excluding the root.
+  void printMTree(Package[] pckgs, Module[] mods, string indent)
+  {
+    pckgs.sort(&sortSymbolPredicate); // Sort the packages.
+    foreach (pckg; pckgs)
+    {
+      Stdout(indent)(pckg.pckgName)("/").newline; // PackageName/
+      // Print the sub-packages.
+      printMTree(pckg.packages, pckg.modules, indent ~ "  ");
+    }
+    mods.sort(&sortSymbolPredicate); // Sort the modules.
+    foreach (m; mods) // Print the modules.
+      Stdout(indent)(m.moduleName)(".")(m.fileExtension()).newline;
   }
 
   /// Runs the first pass on modul.
