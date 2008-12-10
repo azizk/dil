@@ -82,15 +82,21 @@ abstract class Type/* : Symbol*/
   abstract char[] toString();
 
   /// Returns true if this type is a bool type.
-  bool isBool()
+  final bool isBool()
   {
     return tid == TYP.Bool;
   }
 
   /// Returns true if this type is a pointer type.
-  bool isPointer()
+  final bool isPointer()
   {
     return tid == TYP.Pointer;
+  }
+
+  /// Returns true if this is a basic type.
+  bool isBasic()
+  {
+    return isIntegral() || isFloating();
   }
 
   /// Returns true if this type is an integral number type.
@@ -129,6 +135,14 @@ abstract class Type/* : Symbol*/
   bool isComplex()
   {
     return tid == TYP.Cfloat || tid == TYP.Cdouble || tid == TYP.Creal;
+  }
+
+  /// Returns true for scalar types.
+  bool isScalar()
+  {
+    if (tid == TYP.Enum || tid == TYP.Typedef)
+      return next.isScalar(); // Check base type.
+    return isPointer() || isBasic();
   }
 }
 
