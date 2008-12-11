@@ -73,7 +73,7 @@ abstract class Type/* : Symbol*/
   }
 
   /// Returns true if this type has a symbol.
-  bool hasSymbol()
+  final bool hasSymbol()
   {
     return symbol !is null;
   }
@@ -87,6 +87,14 @@ abstract class Type/* : Symbol*/
     return tid == TYP.Bool;
   }
 
+  /// Like isBool(). Also checks base types of typedef/enum.
+  final bool isBaseBool()
+  {
+    if (tid == TYP.Enum || tid == TYP.Typedef)
+      return next.isBool(); // Check base type.
+    return isBool();
+  }
+
   /// Returns true if this type is a pointer type.
   final bool isPointer()
   {
@@ -94,13 +102,13 @@ abstract class Type/* : Symbol*/
   }
 
   /// Returns true if this is a basic type.
-  bool isBasic()
+  final bool isBasic()
   {
     return isIntegral() || isFloating();
   }
 
   /// Returns true if this type is an integral number type.
-  bool isIntegral()
+  final bool isIntegral()
   {
     switch (tid)
     {
@@ -114,35 +122,53 @@ abstract class Type/* : Symbol*/
   }
 
   /// Returns true if this type is a floating point number type.
-  bool isFloating()
+  final bool isFloating()
   {
     return isReal() || isImaginary() || isComplex();
   }
 
+  /// Like isFloating(). Also checks base types of typedef/enum.
+  final bool isBaseFloating()
+  {
+    if (tid == TYP.Enum)
+      return false;
+    if (tid == TYP.Typedef)
+      return next.isBaseFloating();
+    return isReal() || isImaginary() || isComplex();
+  }
+
   /// Returns true if this type is a real number type.
-  bool isReal()
+  final bool isReal()
   {
     return tid == TYP.Float || tid == TYP.Double || tid == TYP.Real;
   }
 
   /// Returns true if this type is an imaginary number type.
-  bool isImaginary()
+  final bool isImaginary()
   {
     return tid == TYP.Ifloat || tid == TYP.Idouble || tid == TYP.Ireal;
   }
 
   /// Returns true if this type is a complex number type.
-  bool isComplex()
+  final bool isComplex()
   {
     return tid == TYP.Cfloat || tid == TYP.Cdouble || tid == TYP.Creal;
   }
 
   /// Returns true for scalar types.
-  bool isScalar()
+  final bool isScalar()
   {
-    if (tid == TYP.Enum || tid == TYP.Typedef)
-      return next.isScalar(); // Check base type.
     return isPointer() || isBasic();
+  }
+
+  /// Like isScalar(). Also checks base types of typedef/enum.
+  final bool isBaseScalar()
+  {
+    if (tid == TYP.Enum)
+      return true; // Base types of enum can only be scalar.
+    if (tid == TYP.Typedef)
+      return next.isScalar(); // Check base type.
+    return isScalar();
   }
 }
 
