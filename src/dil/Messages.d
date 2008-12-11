@@ -155,6 +155,7 @@ static:
   auto ExpectedNameForThisTempParam = "expected name for 'this' template parameter, not '{}'";
   auto ExpectedIdentOrInt = "expected an identifier or an integer, not '{}'";
   auto MissingCatchOrFinally = "try statement is missing a catch or finally body.";
+  auto ExpectedClosing = "expected closing '{}' {}, not '{}'";
   // Semantic analysis:
   auto CouldntLoadModule = "couldn't import module '{}'";
   auto ConflictingModuleFiles = "module is in conflict with module '{}'";

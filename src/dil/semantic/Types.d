@@ -34,6 +34,8 @@ abstract class Type/* : Symbol*/
   /// Returns true if this type equals the other one.
   bool opEquals(Type other)
   {
+    if (this.next is null && other.next is null)
+      return this.tid == other.tid;
     // TODO:
     return false;
   }

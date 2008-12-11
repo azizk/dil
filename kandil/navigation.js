@@ -12,7 +12,6 @@ $(function() {
     showCode($(this));
   })
 
-
   var header = symbols[0];
   symbols = symbols.slice(1);
 
@@ -61,7 +60,7 @@ $(function() {
 })
 
 /// A tree item for symbols.
-function SymbolItem(label, kind, fqn)
+function SymbolItem(name, kind, fqn)
 {
   this.name = name; /// The text to be displayed.
   this.kind = kind; /// The kind of this symbol.
@@ -77,10 +76,12 @@ function createSymbolsUL(symbols)
   for (i in symbols)
   {
     var sym = symbols[i];
-    list += "<li kind='"+sym.kind+"'><a href='#"+sym.fqn+"'>"+sym.name+"</a>";
-    if (sym.sub)
+    [fqn, count] = rpartition(sym.fqn, ':');
+    count = fqn ? "<sub>"+count+"</sub>" : ""; // An index.
+    list += "<li kind='"+sym.kind+"'><a href='#"+sym.fqn+"'>"+sym.name+count+"</a>";
+    if (sym.sub && sym.sub.length)
       list += createSymbolsUL(sym.sub);
-    list += "</li>"
+    list += "</li>";
   }
   return list + "</ul>";
 }
@@ -91,10 +92,12 @@ function createModulesUL(symbols)
   for (i in symbols)
   {
     var sym = symbols[i];
-    list += "<li kind='"+sym.kind+"'><a href='"+sym.fqn+".html'>"+sym.name+"</a>";
-    if (sym.sub)
-      list += createModulesUL(sym.sub);
-    list += "</li>"
+    list += "<li kind='"+sym.kind+"'>";
+    if (sym.sub && sym.sub.length)
+      list += sym.name + createModulesUL(sym.sub);
+    else
+      list += "<a href='"+sym.fqn+".html'>"+sym.name+"</a>"
+    list += "</li>";
   }
   return list + "</ul>";
 }

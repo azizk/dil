@@ -855,10 +855,17 @@ override
   bool errorOnUndefinedSymbol;
   //bool errorOnUnknownSymbol;
 
-  /// Reports an error if 'e' is of type bool.
+  /// Reports an error if e is of type bool.
   void errorIfBool(Expression e)
   {
+    // TODO:
     error(e.begin, "the operation is not defined for the type bool");
+  }
+
+  /// Reports an error if e's type is not convertible to bool.
+  void errorIfNonBool(Expression e)
+  {
+    // TODO:
   }
 
   /// Returns a call expression if 'e' overrides
@@ -910,11 +917,29 @@ override
 
   E visit(OrOrExpression e)
   {
+    if (!e.hasType)
+    {
+      e.lhs = visitE(e.lhs);
+      errorIfNonBool(e.lhs); // Left operand must be bool.
+      e.rhs = visitE(e.rhs);
+      e.type = Types.Bool; // Default type is bool.
+      if (e.rhs.type == Types.Void)
+        e.type = Types.Void; // According to spec.
+    }
     return e;
   }
 
   E visit(AndAndExpression e)
   {
+    if (!e.hasType)
+    {
+      e.lhs = visitE(e.lhs);
+      errorIfNonBool(e.lhs); // Left operand must be bool.
+      e.rhs = visitE(e.rhs);
+      e.type = Types.Bool; // Default type is bool.
+      if (e.rhs.type == Types.Void)
+        e.type = Types.Void; // According to spec.
+    }
     return e;
   }
 

@@ -69,6 +69,13 @@ body { margin: 0; }
   background-color: #474;
 }
 
+#apilist li sub {
+  font-size: small;
+  margin: 0.2em;
+  vertical-align: bottom;
+  color: #555;
+}
+
 .sec_header {
   font-weight: bold;
   margin: 0.5em 0;
@@ -78,6 +85,11 @@ dt {
   font-size: 1em;
   font-weight: bold;
   position: relative; /* for .symlink */
+}
+
+dt:target {
+  background-color: yellowgreen;
+  border-bottom: 1px solid darkgreen;
 }
 
 dd {
