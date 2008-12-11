@@ -855,11 +855,12 @@ override
   bool errorOnUndefinedSymbol;
   //bool errorOnUnknownSymbol;
 
-  /// Reports an error if e is of type bool.
+  /// Reports an error if the type of e is not bool.
   void errorIfBool(Expression e)
   {
-    // TODO:
-    error(e.begin, "the operation is not defined for the type bool");
+    assert(e.type !is null);
+    if (e.type.isBaseBool())
+      error(e.begin, "the operation is undefined for type bool");
   }
 
   /// Reports an error if e has no boolean result.
@@ -880,7 +881,7 @@ override
       errorIfNonBool(cond.rhs);
       break;
     default:
-      if (!e.type.isScalar()) // Only scalar types can be bool.
+      if (!e.type.isBaseScalar()) // Only scalar types can be bool.
         error(e.begin, "expression has no boolean result");
     }
   }
@@ -1278,9 +1279,10 @@ override
       return o;
     e.e = visitE(e.e);
     e.type = e.e.type;
-    if (e.type.isFloating || e.type.isBool)
+    if (e.type.isBaseFloating() || e.type.isBaseBool())
     {
-      error(e.begin, "the operator '~x' is not defined for the type '{}'", e.type.toString());
+      error(e.begin, "the operator '~x' is undefined for the type '{}'",
+            e.type.toString());
       e.type = Types.Error;
     }
     return e;
