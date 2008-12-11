@@ -5,7 +5,9 @@ module dil.semantic.Analysis;
 
 import dil.ast.Node,
        dil.ast.Expressions;
-import dil.semantic.Scope;
+import dil.semantic.Scope,
+       dil.semantic.Types,
+       dil.semantic.TypesEnum;
 import dil.lexer.IdTable;
 import dil.Compilation;
 import common;
@@ -102,4 +104,21 @@ bool versionBranchChoice(Token* cond, CompilationContext context)
   else if (cond.uint_ >= context.versionLevel)
     return true;
   return false;
+}
+
+/// Performs an integer promotion on the type of e, according to spec.
+void integerPromotion(Expression e)
+{
+  assert(e.type !is null);
+  switch (e.type.baseType().tid)
+  {
+  case TYP.Bool, TYP.Byte, TYP.Ubyte, TYP.Short,
+       TYP.Ushort, TYP.Char, TYP.Wchar:
+    e.type = Types.Int;
+    break;
+  case TYP.Dchar:
+    e.type = Types.Uint;
+    break;
+  default:
+  }
 }
