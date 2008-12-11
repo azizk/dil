@@ -7,12 +7,12 @@ module dil.lexer.IdentsGenerator;
 ///
 /// The format ('#' start comments):
 /// $(PRE
-/// PredefinedIdentifier := SourceCodeName (":" IdText)?
-/// SourceCodeName := Identifier # The name to be used in the source code.
-/// IdText := Empty | Identifier # The actual text of the identifier.
-/// Empty := ""                  # IdText may be empty.
-/// Identifier := see module $(MODLINK dil.lexer.Identifier).
-/// )
+////PredefinedIdentifier := SourceCodeName (":" IdText)?
+////SourceCodeName := Identifier # The name to be used in the source code.
+////IdText := Empty | Identifier # The actual text of the identifier.
+////Empty := ""                  # IdText may be empty.
+////Identifier := see module $(MODLINK dil.lexer.Identifier).
+////)
 /// If IdText is not defined it defaults to SourceCodeName.
 private static const char[][] predefIdents = [
   // Special empty identifier:
@@ -37,24 +37,24 @@ private static const char[][] predefIdents = [
   "New:__new", "Delete:__delete",
   // Unittest and invariant.
   "Unittest:__unittest", "Invariant:__invariant",
-  // Operator overload methods:
-  "opNeg", "opPos", "opCom",
-  "opEquals", "opCmp",  "opAssign",
-  "opAdd",  "opAdd_r",  "opAddAssign",
-  "opSub",  "opSub_r",  "opSubAssign",
-  "opMul",  "opMul_r",  "opMulAssign",
-  "opDiv",  "opDiv_r",  "opDivAssign",
-  "opMod",  "opMod_r",  "opModAssign",
-  "opAnd",  "opAnd_r",  "opAndAssign",
-  "opOr",   "opOr_r",   "opOrAssign",
-  "opXor",  "opXor_r",  "opXorAssign",
-  "opShl",  "opShl_r",  "opShlAssign",
-  "opShr",  "opShr_r",  "opShrAssign",
-  "opUShr", "opUShr_r", "opUShrAssign",
-  "opCat",  "opCat_r",  "opCatAssign",
-  "opIn",   "opIn_r",
-  "opIndex", "opIndexAssign",
-  "opSlice", "opSliceAssign",
+  // Operator overload names:
+  "opNeg",    "opPos",    "opCom",
+  "opEquals", "opCmp",    "opAssign",
+  "opAdd",    "opAdd_r",  "opAddAssign",
+  "opSub",    "opSub_r",  "opSubAssign",
+  "opMul",    "opMul_r",  "opMulAssign",
+  "opDiv",    "opDiv_r",  "opDivAssign",
+  "opMod",    "opMod_r",  "opModAssign",
+  "opAnd",    "opAnd_r",  "opAndAssign",
+  "opOr",     "opOr_r",   "opOrAssign",
+  "opXor",    "opXor_r",  "opXorAssign",
+  "opShl",    "opShl_r",  "opShlAssign",
+  "opShr",    "opShr_r",  "opShrAssign",
+  "opUShr",   "opUShr_r", "opUShrAssign",
+  "opCat",    "opCat_r",  "opCatAssign",
+  "opIn",     "opIn_r",
+  "opIndex",  "opIndexAssign",
+  "opSlice",  "opSliceAssign",
   "opPostInc",
   "opPostDec",
   "opCall",
@@ -64,6 +64,10 @@ private static const char[][] predefIdents = [
   "opApply", "opApplyReverse",
   // Entry function:
   "main",
+  // From object.d
+  "object", "Object", "ClassInfo", "TypeInfo",
+  "Exception", "Error", "Interface",
+  "ptrdiff_t", "size_t", "hash_t",
   // ASM identifiers:
   "near", "far", "word", "dword", "qword",
   "ptr", "offset", "seg", "__LOCAL_SIZE",

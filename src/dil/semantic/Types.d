@@ -31,6 +31,21 @@ abstract class Type/* : Symbol*/
     this.tid = tid;
   }
 
+  /// Returns the base type if this is an enum or typedef, or itself otherwise.
+  Type baseType()
+  {
+    auto t = this;
+    for (; t.hasBaseType(); t = t.next)
+      assert(t !is null);
+    return t;
+  }
+
+  /// Returns true if this type has a base type (enum or typedef.)
+  final bool hasBaseType()
+  {
+    return tid == TYP.Enum || tid == TYP.Typedef;
+  }
+
   /// Returns true if this type equals the other one.
   bool opEquals(Type other)
   {
@@ -73,7 +88,7 @@ abstract class Type/* : Symbol*/
   }
 
   /// Returns true if this type has a symbol.
-  bool hasSymbol()
+  final bool hasSymbol()
   {
     return symbol !is null;
   }
@@ -82,19 +97,33 @@ abstract class Type/* : Symbol*/
   abstract char[] toString();
 
   /// Returns true if this type is a bool type.
-  bool isBool()
+  final bool isBool()
   {
     return tid == TYP.Bool;
   }
 
+  /// Like isBool(). Also checks base types of typedef/enum.
+  final bool isBaseBool()
+  {
+    if (hasBaseType())
+      return next.isBool(); // Check base type.
+    return isBool();
+  }
+
   /// Returns true if this type is a pointer type.
-  bool isPointer()
+  final bool isPointer()
   {
     return tid == TYP.Pointer;
   }
 
+  /// Returns true if this is a basic type.
+  final bool isBasic()
+  {
+    return isIntegral() || isFloating();
+  }
+
   /// Returns true if this type is an integral number type.
-  bool isIntegral()
+  final bool isIntegral()
   {
     switch (tid)
     {
@@ -108,27 +137,53 @@ abstract class Type/* : Symbol*/
   }
 
   /// Returns true if this type is a floating point number type.
-  bool isFloating()
+  final bool isFloating()
   {
     return isReal() || isImaginary() || isComplex();
   }
 
+  /// Like isFloating(). Also checks base types of typedef/enum.
+  final bool isBaseFloating()
+  {
+    if (tid == TYP.Enum)
+      return false; // Base type of enum can't be floating.
+    if (tid == TYP.Typedef)
+      return next.isBaseFloating();
+    return isReal() || isImaginary() || isComplex();
+  }
+
   /// Returns true if this type is a real number type.
-  bool isReal()
+  final bool isReal()
   {
     return tid == TYP.Float || tid == TYP.Double || tid == TYP.Real;
   }
 
   /// Returns true if this type is an imaginary number type.
-  bool isImaginary()
+  final bool isImaginary()
   {
     return tid == TYP.Ifloat || tid == TYP.Idouble || tid == TYP.Ireal;
   }
 
   /// Returns true if this type is a complex number type.
-  bool isComplex()
+  final bool isComplex()
   {
     return tid == TYP.Cfloat || tid == TYP.Cdouble || tid == TYP.Creal;
+  }
+
+  /// Returns true for scalar types.
+  final bool isScalar()
+  {
+    return isPointer() || isBasic();
+  }
+
+  /// Like isScalar(). Also checks base types of typedef/enum.
+  final bool isBaseScalar()
+  {
+    if (tid == TYP.Enum)
+      return true; // Base type of enum can only be scalar.
+    if (tid == TYP.Typedef)
+      return next.isScalar(); // Check base type.
+    return isScalar();
   }
 }
 
@@ -234,7 +289,8 @@ class TypeEnum : Type
 {
   this(Symbol symbol)
   {
-    super(baseType, TYP.Enum);
+    // FIXME: pass int as the base type for the time being.
+    super(Types.Int, TYP.Enum);
     this.symbol = symbol;
   }
 
@@ -242,12 +298,6 @@ class TypeEnum : Type
   void baseType(Type type)
   {
     next = type;
-  }
-
-  /// Getter for the base type.
-  Type baseType()
-  {
-    return next;
   }
 
   char[] toString()

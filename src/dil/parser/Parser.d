@@ -202,10 +202,10 @@ class Parser
 
   /// Parses DeclarationDefinitions until the end of file is hit.
   /// $(PRE
-  /// DeclDefs :=
-  ///     DeclDef
-  ///     DeclDefs
-  /// )
+  ////DeclDefs :=
+  ////    DeclDef
+  ////    DeclDefs
+  ////)
   Declaration[] parseDeclarationDefinitions()
   {
     Declaration[] decls;
@@ -216,10 +216,10 @@ class Parser
 
   /// Parse the body of a template, class, interface, struct or union.
   /// $(PRE
-  /// DeclDefsBlock :=
-  ///     { }
-  ///     { DeclDefs }
-  /// )
+  ////DeclDefsBlock :=
+  ////    { }
+  ////    { DeclDefs }
+  ////)
   CompoundDeclaration parseDeclarationDefinitionsBody()
   {
     // Save attributes.
@@ -415,12 +415,12 @@ class Parser
 
   /// Parses a DeclarationsBlock.
   /// $(PRE
-  /// DeclarationsBlock :=
-  ///     : DeclDefs
-  ///     { }
-  ///     { DeclDefs }
-  ///     DeclDef
-  /// )
+  ////DeclarationsBlock :=
+  ////    : DeclDefs
+  ////    { }
+  ////    { DeclDefs }
+  ////    DeclDef
+  ////)
   Declaration parseDeclarationsBlock(/+bool noColon = false+/)
   {
     Declaration d;
@@ -1494,13 +1494,13 @@ version(D2)
 
   /// Parses a MixinDeclaration or MixinStatement.
   /// $(PRE
-  /// TemplateMixin :=
-  ///         mixin ( AssignExpression ) ;
-  ///         mixin TemplateIdentifier ;
-  ///         mixin TemplateIdentifier MixinIdentifier ;
-  ///         mixin TemplateIdentifier !( TemplateArguments ) ;
-  ///         mixin TemplateIdentifier !( TemplateArguments ) MixinIdentifier ;
-  /// )
+  ////TemplateMixin :=
+  ////        mixin ( AssignExpression ) ;
+  ////        mixin TemplateIdentifier ;
+  ////        mixin TemplateIdentifier MixinIdentifier ;
+  ////        mixin TemplateIdentifier !( TemplateArguments ) ;
+  ////        mixin TemplateIdentifier !( TemplateArguments ) MixinIdentifier ;
+  ////)
   Class parseMixin(Class)()
   {
   static assert(is(Class == MixinDeclaration) || is(Class == MixinStatement));
@@ -1794,23 +1794,23 @@ version(D2)
   }
 
   /// $(PRE
-  /// Parses a ScopeStatement.
-  /// ScopeStatement :=
-  ///     NoScopeStatement
-  /// )
+  ////Parses a ScopeStatement.
+  ////ScopeStatement :=
+  ////    NoScopeStatement
+  ////)
   Statement parseScopeStatement()
   {
     return new ScopeStatement(parseNoScopeStatement());
   }
 
   /// $(PRE
-  /// NoScopeStatement :=
-  ///     NonEmptyStatement
-  ///     BlockStatement
-  /// BlockStatement :=
-  ///     { }
-  ///     { StatementList }
-  /// )
+  ////NoScopeStatement :=
+  ////    NonEmptyStatement
+  ////    BlockStatement
+  ////BlockStatement :=
+  ////    { }
+  ////    { StatementList }
+  ////)
   Statement parseNoScopeStatement()
   {
     auto begin = token;
@@ -1835,10 +1835,10 @@ version(D2)
   }
 
   /// $(PRE
-  /// NoScopeOrEmptyStatement :=
-  ///     ;
-  ///     NoScopeStatement
-  /// )
+  ////NoScopeOrEmptyStatement :=
+  ////    ;
+  ////    NoScopeStatement
+  ////)
   Statement parseNoScopeOrEmptyStatement()
   {
     if (consumed(T.Semicolon))
@@ -3242,12 +3242,12 @@ version(D2)
   }
 
   /// $(PRE
-  /// IdentifierExpression :=
-  ///         Identifier
-  ///         TemplateInstance
-  /// TemplateInstance :=
-  ///         Identifier !( TemplateArguments )
-  /// )
+  ////IdentifierExpression :=
+  ////        Identifier
+  ////        TemplateInstance
+  ////TemplateInstance :=
+  ////        Identifier !( TemplateArguments )
+  ////)
   Expression parseIdentifierExpression()
   {
     auto begin = token;
@@ -3845,10 +3845,10 @@ version(D2)
 
   /// Parses a list of AssignExpressions.
   /// $(PRE
-  /// ExpressionList :=
-  ///   AssignExpression
-  ///   AssignExpression , ExpressionList
-  /// )
+  ////ExpressionList :=
+  ////  AssignExpression
+  ////  AssignExpression , ExpressionList
+  ////)
   Expression[] parseExpressionList()
   {
     Expression[] expressions;
@@ -3860,10 +3860,10 @@ version(D2)
 
   /// Parses a list of Arguments.
   /// $(PRE
-  /// Arguments :=
-  ///   ( )
-  ///   ( ExpressionList )
-  /// )
+  ////Arguments :=
+  ////  ( )
+  ////  ( ExpressionList )
+  ////)
   Expression[] parseArguments()
   {
     auto leftParen = token;

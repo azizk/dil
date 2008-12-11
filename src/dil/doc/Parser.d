@@ -20,11 +20,11 @@ class IdentValue
 }
 
 /// Parses text in the form of:
-/// <pre>
-/// ident = value
-/// ident2 = value2
-///          more text
-/// </pre>
+/// $(PRE
+////ident = value
+////ident2 = value2
+////         more text
+////)
 struct IdentValueParser
 {
   char* p; /// Current pointer.

@@ -76,7 +76,7 @@ abstract class DDocEmitter : DefaultVisitor
         writeComment();
       }
     }
-    MEMBERS("MODULE", "", modul.root);
+    MEMBERS("MODULE", "module", modul.root);
     return text;
   }
 
@@ -115,7 +115,7 @@ abstract class DDocEmitter : DefaultVisitor
   TemplateParameters tparams;
 
   /// Reflects the fully qualified name of the current symbol's parent.
-  /// A push occurs when entering a scope, and a pop when exiting it.
+  /// A push occurs when entering a scope and a pop when exiting it.
   string[] fqnStack;
   /// Counts symbols with the same FQN.
   /// This is useful for anchor names that require unique strings.
@@ -124,21 +124,21 @@ abstract class DDocEmitter : DefaultVisitor
   /// Pushes an identifier onto the stack.
   void pushFQN(string fqn)
   {
-    if (fqn.length)
-      fqnStack ~= fqn;
+    assert(fqn.length);
+    fqnStack ~= fqn;
   }
   /// Pops an identifier from the stack.
   void popFQN()
   {
-    if (fqnStack.length)
-      fqnStack = fqnStack[0..$-1];
+    assert(fqnStack.length);
+    fqnStack = fqnStack[0..$-1];
   }
 
   /// Returns a unique, identifying string for the current symbol.
   string getSymbolFQN(string name)
   {
     char[] fqn;
-    foreach (name_part; fqnStack)
+    foreach (name_part; fqnStack[1..$]) // Exclude first item (="module".)
       fqn ~= name_part ~ ".";
     fqn ~= name;
 
@@ -341,7 +341,7 @@ abstract class DDocEmitter : DefaultVisitor
         if (!(p+1 < end && p[1] == '\n'))
           goto default;
         ++p;
-        result ~= "$(DDOC_BLANKLINE)";
+        result ~= "\n$(DDOC_BLANKLINE)\n";
         break;
       case '-':
         if (p+2 < end && p[1] == '-' && p[2] == '-')
@@ -548,15 +548,15 @@ abstract class DDocEmitter : DefaultVisitor
   {
     if (!ddoc(d))
       return d;
+    const kind = is(T == ClassDeclaration) ? "class" : "interface";
+    const KIND = is(T == ClassDeclaration) ? "CLASS" : "INTERFACE";
     DECL({
-      const kind = is(T == ClassDeclaration) ? "class" : "interface";
       write(kind, " ");
       SYMBOL(d.name.str, kind, d);
       writeTemplateParams();
       writeInheritanceList(d.bases);
     }, d);
-    const kind = is(T == ClassDeclaration) ? "CLASS" : "INTERFACE";
-    DESC({ MEMBERS(kind, d.name.str, d.decls); });
+    DESC({ MEMBERS(KIND, d.name.str, d.decls); });
   }
 
   /// Writes a struct or union declaration.
@@ -564,15 +564,15 @@ abstract class DDocEmitter : DefaultVisitor
   {
     if (!ddoc(d))
       return d;
+    const kind = is(T == StructDeclaration) ? "struct" : "union";
+    const KIND = is(T == StructDeclaration) ? "STRUCT" : "UNION";
+    string name = d.name ? d.name.str : kind;
     DECL({
-      const kind = is(T == StructDeclaration) ? "struct" : "union";
-      write(kind, d.name ? " " : "");
-      if (d.name)
-        SYMBOL(d.name.str, kind, d);
+      d.name && write(kind, " ");
+      SYMBOL(name, kind, d);
       writeTemplateParams();
     }, d);
-    const kind = is(T == StructDeclaration) ? "STRUCT" : "UNION";
-    DESC({ MEMBERS(kind, d.name ? d.name.str : "", d.decls); });
+    DESC({ MEMBERS(KIND, name, d.decls); });
   }
 
   /// Writes an alias or typedef declaration.
@@ -645,11 +645,12 @@ override:
   {
     if (!ddoc(d))
       return d;
+    string name = d.name ? d.name.str : "enum";
     DECL({
-      write("enum", d.name ? " " : "");
-      d.name && SYMBOL(d.name.str, "enum", d);
+      d.name && write("enum ");
+      SYMBOL(name, "enum", d);
     }, d);
-    DESC({ MEMBERS("ENUM", d.name ? d.name.str : "", d); });
+    DESC({ MEMBERS("ENUM", name, d); });
     return d;
   }
 

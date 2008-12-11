@@ -37,8 +37,9 @@ struct DDocCommand
   string modsTxtPath;  /// Write list of modules to this file if specified.
   string outFileExtension;  /// The extension of the output files.
   bool includeUndocumented; /// Whether to include undocumented symbols.
-  bool writeXML; /// Whether to write XML instead of HTML docs.
-  bool verbose;  /// Whether to be verbose.
+  bool writeXML;  /// Whether to write XML instead of HTML docs.
+  bool rawOutput; /// Whether to expand macros or not.
+  bool verbose;   /// Whether to be verbose.
 
   CompilationContext context; /// Environment variables of the compilation.
   Diagnostics diag;           /// Collects error messages.
@@ -124,7 +125,8 @@ struct DDocCommand
     mtable.insert("BODY", ddocText);
     // Do the macro expansion pass.
     auto dg = verbose ? this.diag : null;
-    auto fileText = MacroExpander.expand(mtable, "$(DDOC)", mod.filePath, dg);
+    auto fileText = rawOutput ? ddocText :
+      MacroExpander.expand(mtable, "$(DDOC)", mod.filePath, dg);
     // Build destination file path.
     auto destPath = new FilePath(destDirPath);
     destPath.append(mod.getFQN() ~ outFileExtension);
