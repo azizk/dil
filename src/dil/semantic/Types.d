@@ -31,6 +31,22 @@ abstract class Type/* : Symbol*/
     this.tid = tid;
   }
 
+  /// Returns the base type if this is an enum or typedef, or null otherwise.
+  Type baseType()
+  {
+    if (hasBaseType())
+      for (auto t = this.next; ; t = t.next)
+        if (!t.hasBaseType())
+          return t;
+    return null;
+  }
+
+  /// Returns true if this type has a base type (enum or typedef.)
+  final bool hasBaseType()
+  {
+    return tid == TYP.Enum || tid == TYP.Typedef;
+  }
+
   /// Returns true if this type equals the other one.
   bool opEquals(Type other)
   {
@@ -90,7 +106,7 @@ abstract class Type/* : Symbol*/
   /// Like isBool(). Also checks base types of typedef/enum.
   final bool isBaseBool()
   {
-    if (tid == TYP.Enum || tid == TYP.Typedef)
+    if (hasBaseType())
       return next.isBool(); // Check base type.
     return isBool();
   }
@@ -131,7 +147,7 @@ abstract class Type/* : Symbol*/
   final bool isBaseFloating()
   {
     if (tid == TYP.Enum)
-      return false;
+      return false; // Base type of enum can't be floating.
     if (tid == TYP.Typedef)
       return next.isBaseFloating();
     return isReal() || isImaginary() || isComplex();
@@ -165,7 +181,7 @@ abstract class Type/* : Symbol*/
   final bool isBaseScalar()
   {
     if (tid == TYP.Enum)
-      return true; // Base types of enum can only be scalar.
+      return true; // Base type of enum can only be scalar.
     if (tid == TYP.Typedef)
       return next.isScalar(); // Check base type.
     return isScalar();
@@ -274,7 +290,8 @@ class TypeEnum : Type
 {
   this(Symbol symbol)
   {
-    super(baseType, TYP.Enum);
+    // FIXME: pass int as the base type for the time being.
+    super(Types.Int, TYP.Enum);
     this.symbol = symbol;
   }
 
@@ -282,12 +299,6 @@ class TypeEnum : Type
   void baseType(Type type)
   {
     next = type;
-  }
-
-  /// Getter for the base type.
-  Type baseType()
-  {
-    return next;
   }
 
   char[] toString()
