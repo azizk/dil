@@ -49,10 +49,8 @@ def main():
   add_option("--gz", dest="tar_gz", help="create a tar.gz archive")
   add_option("--bz2", dest="tar_bz2", help="create a tar.bz2 archive")
   add_option("--zip", dest="zip", help="create a zip archive")
-  add_option("--git", dest="git",
-    help="use git to check out a clean copy (default is hg)")
   parser.add_option("--src", dest="src", metavar="SRC", default=None,
-    help="use SRC folder instead of checking out code using hg or git")
+    help="use SRC folder instead of checking out code using git")
   parser.add_option("--dmd-exe", dest="dmd_exe", metavar="EXE_PATH",
     default="dmd", help="specify EXE_PATH if dmd is not in your PATH")
   parser.add_option("--builddir", dest="builddir", metavar="DIR", default=None,
@@ -127,16 +125,11 @@ def main():
   DEST.rmtree() # First remove the tree.
   if options.src != None:
     Path(options.src).copytree(DEST)
-  elif options.git:
-    if locate_command('git'):
-      os.system("git clone ./ %(DEST)s && cd %(DEST)s && git checkout"%locals())
-      (DEST/".git").rmtree() # Remove the .git folder.
-    else:
-      raise Exception("git is not in your PATH")
-  elif locate_command('hg'):
-    os.system("hg archive -r tip -t files " + DEST)
+  elif locate_command('git'):
+    os.system("git clone ./ '%s'" % DEST)
+    (DEST/".git").rmtree() # Remove the .git folder.
   else:
-    raise Exception("hg is not in your PATH; specify SRC or use git")
+    raise Exception("git is not in your PATH; specify --src instead")
   # Create other directories not available in a clean checkout.
   map(Path.mkdir, (DEST.BIN, DEST.DOC, DEST.HTMLSRC,
                    DEST.CSS, DEST.IMG, DEST.JS, TMP))
