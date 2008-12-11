@@ -31,14 +31,13 @@ abstract class Type/* : Symbol*/
     this.tid = tid;
   }
 
-  /// Returns the base type if this is an enum or typedef, or null otherwise.
+  /// Returns the base type if this is an enum or typedef, or itself otherwise.
   Type baseType()
   {
-    if (hasBaseType())
-      for (auto t = this.next; ; t = t.next)
-        if (!t.hasBaseType())
-          return t;
-    return null;
+    auto t = this;
+    for (; t.hasBaseType(); t = t.next)
+      assert(t !is null);
+    return t;
   }
 
   /// Returns true if this type has a base type (enum or typedef.)
