@@ -862,10 +862,27 @@ override
     error(e.begin, "the operation is not defined for the type bool");
   }
 
-  /// Reports an error if e's type is not convertible to bool.
+  /// Reports an error if e has no boolean result.
   void errorIfNonBool(Expression e)
   {
-    // TODO:
+    assert(e.type !is null);
+    switch (e.kind)
+    {
+    case NodeKind.DeleteExpression:
+      error(e.begin, "the delete operator has no boolean result");
+      break;
+    case NodeKind.AssignExpression:
+      error(e.begin, "the assignment operator '=' has no boolean result");
+      break;
+    case NodeKind.CondExpression:
+      auto cond = e.to!(CondExpression);
+      errorIfNonBool(cond.lhs);
+      errorIfNonBool(cond.rhs);
+      break;
+    default:
+      if (!e.type.isScalar()) // Only scalar types can be bool.
+        error(e.begin, "expression has no boolean result");
+    }
   }
 
   /// Returns a call expression if 'e' overrides
@@ -922,9 +939,11 @@ override
       e.lhs = visitE(e.lhs);
       errorIfNonBool(e.lhs); // Left operand must be bool.
       e.rhs = visitE(e.rhs);
-      e.type = Types.Bool; // Default type is bool.
       if (e.rhs.type == Types.Void)
         e.type = Types.Void; // According to spec.
+      else
+        (e.type = Types.Bool), // Otherwise type is bool and
+        errorIfNonBool(e.rhs); // right operand must be bool.
     }
     return e;
   }
@@ -936,9 +955,11 @@ override
       e.lhs = visitE(e.lhs);
       errorIfNonBool(e.lhs); // Left operand must be bool.
       e.rhs = visitE(e.rhs);
-      e.type = Types.Bool; // Default type is bool.
       if (e.rhs.type == Types.Void)
         e.type = Types.Void; // According to spec.
+      else
+        (e.type = Types.Bool), // Otherwise type is bool and
+        errorIfNonBool(e.rhs); // right operand must be bool.
     }
     return e;
   }
@@ -1245,7 +1266,7 @@ override
       return e;
     e.e = visitE(e.e);
     e.type = Types.Bool;
-    // TODO: e.e must be convertible to bool.
+    errorIfNonBool(e.e);
     return e;
   }
 
