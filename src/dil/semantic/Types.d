@@ -16,6 +16,7 @@ abstract class Type/* : Symbol*/
   Type next;     /// The next type in the type structure.
   TYP tid;       /// The ID of the type.
   Symbol symbol; /// Not null if this type has a symbol.
+  string mangled; /// The mangled identifier of the type.
 
   this(){}
 
@@ -29,6 +30,16 @@ abstract class Type/* : Symbol*/
 
     this.next = next;
     this.tid = tid;
+  }
+
+  /// Returns the unique version of this type from the type table.
+  /// Inserts this type into the table if not yet existant.
+  Type unique(/+TypeTable tt+/)
+  {
+    // TODO:
+    if (!mangled.length)
+    {}
+    return this;
   }
 
   /// Returns the base type if this is an enum or typedef, or itself otherwise.
