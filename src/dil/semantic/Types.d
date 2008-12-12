@@ -158,16 +158,46 @@ abstract class Type/* : Symbol*/
     return tid == TYP.Float || tid == TYP.Double || tid == TYP.Real;
   }
 
+  /// Like isReal(). Also checks base types of typedef/enum.
+  final bool isBaseReal()
+  {
+    if (tid == TYP.Enum)
+      return false; // Base type of enum can't be real.
+    if (tid == TYP.Typedef)
+      return next.isBaseReal();
+    return isReal();
+  }
+
   /// Returns true if this type is an imaginary number type.
   final bool isImaginary()
   {
     return tid == TYP.Ifloat || tid == TYP.Idouble || tid == TYP.Ireal;
   }
 
+  /// Like isImaginary(). Also checks base types of typedef/enum.
+  final bool isBaseImaginary()
+  {
+    if (tid == TYP.Enum)
+      return false; // Base type of enum can't be imaginary.
+    if (tid == TYP.Typedef)
+      return next.isBaseImaginary();
+    return isImaginary();
+  }
+
   /// Returns true if this type is a complex number type.
   final bool isComplex()
   {
     return tid == TYP.Cfloat || tid == TYP.Cdouble || tid == TYP.Creal;
+  }
+
+  /// Like isComplex(). Also checks base types of typedef/enum.
+  final bool isBaseComplex()
+  {
+    if (tid == TYP.Enum)
+      return false; // Base type of enum can't be complex.
+    if (tid == TYP.Typedef)
+      return next.isBaseComplex();
+    return isComplex();
   }
 
   /// Returns true for scalar types.
