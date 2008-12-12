@@ -44,6 +44,7 @@ abstract class SemanticPass : DefaultVisitor
   Scope scop; /// The current scope.
   Module modul; /// The module to be semantically checked.
   CompilationContext context; /// The compilation context.
+  Interpreter interp; /// Used to interpret ASTs.
 
   /// Constructs a SemanticPass object.
   /// Params:
@@ -53,6 +54,7 @@ abstract class SemanticPass : DefaultVisitor
   {
     this.modul = modul;
     this.context = context;
+    this.interp = new Interpreter(modul.diag);
   }
 
   void run()
