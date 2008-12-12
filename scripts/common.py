@@ -149,7 +149,8 @@ def build_dil_if_inexistant(dil_exe):
     inp = raw_input("Executable %s doesn't exist. Build it? (Y/n) " % dil_exe)
     if inp.lower() in ("", "y", "yes"):
       from build import build_dil
-      build_dil()
+      # TODO: Ask user about compiling with -version=D2?
+      build_dil_release()
     else:
       raise Exception("can't proceed without dil executable")
 

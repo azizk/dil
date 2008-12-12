@@ -22,7 +22,8 @@ def dmd_cmd(files, exe_path, dmd_exe='dmd', objdir='obj', release=False,
   cmd = "%(dmd_exe)s%(options)s%(includes)s%(lnk_args)s%(files)s%(exe_path)s"
   return (cmd, args)
 
-def build_dil(verbose=True):
+def build_dil(**kwargs):
+  """ Collects D source files and calls dmd. """
   import os
   from common import find_dil_source_files
   from path import Path
@@ -31,12 +32,35 @@ def build_dil(verbose=True):
   BIN.mkdir()
   if not (DATA/"dilconf.d").exists: (DATA/"dilconf.d").copy(BIN)
   FILES = find_dil_source_files(Path("src"))
-  cmd, args = dmd_cmd(FILES, BIN/"dil", release=1, optimize=1)
-  if verbose: print cmd % dict(args, files=' (files...)')
+  cmd, args = dmd_cmd(FILES, BIN/"dil", **kwargs)
+  print cmd % dict(args, files=' (files...)')
   os.system(cmd % args)
 
+def build_dil_release():
+  options = {'release':1, 'optimize':1, 'inline':1}
+  build_dil(**options)
+
+def build_dil_debug():
+  #{'debug_info':1} # Requires Tango compiled with -g.
+  options = {}
+  build_dil(**options)
+
 def main():
-  build_dil()
+  from optparse import OptionParser
+
+  usage = "Usage: scripts/build.py [Options]"
+  parser = OptionParser(usage=usage)
+  parser.add_option("--release", dest="release", action="store_true", default=False,
+    help="build a release version (default)")
+  parser.add_option("--debug", dest="debug", action="store_true", default=False,
+    help="build a debug version")
+
+  (options, args) = parser.parse_args()
+
+  if options.debug:
+    build_dil_debug()
+  else:
+    build_dil_release()
 
 if __name__ == '__main__':
   main()
