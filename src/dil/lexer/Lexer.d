@@ -1899,13 +1899,13 @@ version(D2)
   /// Scans a number literal.
   ///
   /// $(PRE
-  /// IntegerLiteral := (Dec|Hex|Bin|Oct)Suffix?
-  /// Dec := (0|[1-9][0-9_]*)
-  /// Hex := 0[xX][_]*[0-9a-zA-Z][0-9a-zA-Z_]*
-  /// Bin := 0[bB][_]*[01][01_]*
-  /// Oct := 0[0-7_]*
-  /// Suffix := (L[uU]?|[uU]L?)
-  /// )
+  ////IntegerLiteral := (Dec|Hex|Bin|Oct)Suffix?
+  ////Dec := (0|[1-9][0-9_]*)
+  ////Hex := 0[xX][_]*[0-9a-zA-Z][0-9a-zA-Z_]*
+  ////Bin := 0[bB][_]*[01][01_]*
+  ////Oct := 0[0-7_]*
+  ////Suffix := (L[uU]?|[uU]L?)
+  ////)
   /// Invalid: "0b_", "0x_", "._" etc.
   void scanNumber(ref Token t)
   {
@@ -2197,16 +2197,16 @@ version(D2)
   /// Scans a floating point number literal.
   ///
   /// $(PRE
-  /// FloatLiteral := Float[fFL]?i?
-  /// Float := DecFloat | HexFloat
-  /// DecFloat := ([0-9][0-9_]*[.][0-9_]*DecExponent?) |
-  ///             [.][0-9][0-9_]*DecExponent? | [0-9][0-9_]*DecExponent
-  /// DecExponent := [eE][+-]?[0-9][0-9_]*
-  /// HexFloat := 0[xX](HexDigits[.]HexDigits |
-  ///                   [.][0-9a-zA-Z]HexDigits? |
-  ///                   HexDigits)HexExponent
-  /// HexExponent := [pP][+-]?[0-9][0-9_]*
-  /// )
+  ////FloatLiteral := Float[fFL]?i?
+  ////Float := DecFloat | HexFloat
+  ////DecFloat := ([0-9][0-9_]*[.][0-9_]*DecExponent?) |
+  ////            [.][0-9][0-9_]*DecExponent? | [0-9][0-9_]*DecExponent
+  ////DecExponent := [eE][+-]?[0-9][0-9_]*
+  ////HexFloat := 0[xX](HexDigits[.]HexDigits |
+  ////                  [.][0-9a-zA-Z]HexDigits? |
+  ////                  HexDigits)HexExponent
+  ////HexExponent := [pP][+-]?[0-9][0-9_]*
+  ////)
   void scanReal(ref Token t)
   {
     if (*p == '.')

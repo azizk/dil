@@ -171,14 +171,14 @@ static const char[][][/+NodeKind.max+1+/] g_membersTable = mixin(genMembersTable
 ///
 /// Basic syntax:
 /// $(PRE
-/// Member := Array | Array2 | OptionalNode | Node | Code
-/// Array := Identifier "[]"
-/// Array2 := Identifier "[?]"
-/// OptionalNode := Identifier "?"
-/// Node := Identifier
-/// Code := "%" AnyChar*
-/// $(MODLINK2 dil.lexer.Identifier, Identifier)
-/// )
+////Member := Array | Array2 | OptionalNode | Node | Code
+////Array := Identifier "[]"
+////Array2 := Identifier "[?]"
+////OptionalNode := Identifier "?"
+////Node := Identifier
+////Code := "%" AnyChar*
+////$(MODLINK2 dil.lexer.Identifier, Identifier)
+////)
 /// Params:
 ///   members = the member strings to be parsed.
 /// Returns:
