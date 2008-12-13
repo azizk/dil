@@ -195,12 +195,14 @@ class ModuleManager
     {
       filePath.set(importPath); // E.g.: src/
       filePath.append(moduleFQNPath); // E.g.: dil/ast/Node
-      foreach (moduleSuffix; [".d", ".di"/*interface file*/])
+      filePath.suffix(".d"); // E.g.: src/dil/ast/Node.d
+      if (!filePath.exists())
       {
-        filePath.suffix(moduleSuffix);
-        if (filePath.exists()) // E.g.: src/dil/ast/Node.d
-          return filePath.toString();
+        filePath.suffix(".di"); // E.g.: src/dil/ast/Node.di
+        if (!filePath.exists())
+          continue;
       }
+      return filePath.toString();
     }
     return null;
   }
