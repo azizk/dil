@@ -4,7 +4,8 @@
 module dil.ModuleManager;
 
 import dil.semantic.Module,
-       dil.semantic.Package;
+       dil.semantic.Package,
+       dil.semantic.Symbol;
 import dil.Diagnostics;
 import dil.Messages;
 import common;
@@ -13,7 +14,8 @@ import tango.io.FilePath,
        tango.io.FileSystem,
        tango.io.model.IFile;
 import tango.util.PathUtil : pathNormalize = normalize;
-import tango.core.Array : lbound;
+import tango.core.Array : lbound, sort;
+import tango.text.Ascii : icompare;
 
 alias FileConst.PathSeparatorChar dirSep;
 
@@ -205,5 +207,27 @@ class ModuleManager
       return filePath.toString();
     }
     return null;
+  }
+
+  /// A predicate for sorting symbols in ascending order.
+  /// Compares symbol names ignoring case.
+  static bool compareSymbolNames(Symbol a, Symbol b)
+  {
+    return icompare(a.name.str, b.name.str) < 0;
+  }
+
+  /// Sorts the the subpackages and submodules of pckg.
+  void sortPackageTree(Package pckg)
+  {
+    pckg.packages.sort(&compareSymbolNames);
+    pckg.modules.sort(&compareSymbolNames);
+    foreach (subpckg; pckg.packages)
+      sortPackageTree(subpckg);
+  }
+
+  /// Calls sortPackageTree() with this.rootPackage.
+  void sortPackageTree()
+  {
+    sortPackageTree(rootPackage);
   }
 }
