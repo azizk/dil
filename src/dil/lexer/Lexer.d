@@ -101,7 +101,7 @@ class Lexer
   }
 
   /// The "shebang" may optionally appear once at the beginning of a file.
-  /// $(PRE Shebang := "#!" AnyChar* EndOfLine)
+  /// $(BNF Shebang := "#!" AnyChar* EndOfLine)
   void scanShebang()
   {
     if (*p == '#' && p[1] == '!')
@@ -1113,7 +1113,7 @@ class Lexer
 
   /// Scans a block comment.
   ///
-  /// $(PRE BlockComment := "/*" AnyChar* "*/")
+  /// $(BNF BlockComment := "/*" AnyChar* "*/")
   void scanBlockComment(ref Token t)
   {
     assert(p[-1] == '/' && *p == '*');
@@ -1158,7 +1158,7 @@ class Lexer
 
   /// Scans a nested comment.
   ///
-  /// $(PRE NestedComment := "/+" (AnyChar* | NestedComment) "+/")
+  /// $(BNF NestedComment := "/+" (AnyChar* | NestedComment) "+/")
   void scanNestedComment(ref Token t)
   {
     assert(p[-1] == '/' && *p == '+');
@@ -1211,7 +1211,7 @@ class Lexer
 
   /// Scans the postfix character of a string literal.
   ///
-  /// $(PRE PostfixChar := "c" | "w" | "d")
+  /// $(BNF PostfixChar := "c" | "w" | "d")
   char scanPostfix()
   {
     assert(p[-1] == '"' || p[-1] == '`' ||
@@ -1232,7 +1232,7 @@ class Lexer
 
   /// Scans a normal string literal.
   ///
-  /// $(PRE NormalStringLiteral := '"' AnyChar* '"')
+  /// $(BNF NormalStringLiteral := '"' AnyChar* '"')
   void scanNormalStringLiteral(ref Token t)
   {
     assert(*p == '"');
@@ -1292,7 +1292,7 @@ class Lexer
 
   /// Scans a character literal.
   ///
-  /// $(PRE CharLiteral := "'" AnyChar "'")
+  /// $(BNF CharLiteral := "'" AnyChar "'")
   void scanCharacterLiteral(ref Token t)
   {
     assert(*p == '\'');
@@ -1326,7 +1326,7 @@ class Lexer
 
   /// Scans a raw string literal.
   ///
-  /// $(PRE RawStringLiteral := 'r"' AnyChar* '"' | "`" AnyChar* "`")
+  /// $(BNF RawStringLiteral := 'r"' AnyChar* '"' | "`" AnyChar* "`")
   void scanRawStringLiteral(ref Token t)
   {
     assert(*p == '`' || *p == '"' && p[-1] == 'r');
@@ -1384,7 +1384,7 @@ class Lexer
 
   /// Scans a hexadecimal string literal.
   ///
-  /// $(PRE HexStringLiteral := 'x"' (HexChar HexChar)* '"')
+  /// $(BNF HexStringLiteral := 'x"' (HexChar HexChar)* '"')
   void scanHexStringLiteral(ref Token t)
   {
     assert(p[0] == 'x' && p[1] == '"');
@@ -1471,7 +1471,7 @@ version(DDoc)
 {
   /// Scans a delimited string literal.
   ///
-  /// $(PRE
+  /// $(BNF
   ////DelimitedStringLiteral := 'q"' OpeningDelim AnyChar* MatchingDelim '"'
   ////OpeningDelim  := "[" | "(" | "{" | "<" | Identifier EndOfLine
   ////MatchingDelim := "]" | ")" | "}" | ">" | EndOfLine Identifier
@@ -1479,7 +1479,7 @@ version(DDoc)
   void scanDelimitedStringLiteral(ref Token t);
   /// Scans a token string literal.
   ///
-  /// $(PRE TokenStringLiteral := "q{" Token* "}")
+  /// $(BNF TokenStringLiteral := "q{" Token* "}")
   void scanTokenStringLiteral(ref Token t);
 }
 else
@@ -1768,7 +1768,7 @@ version(D2)
 
   /// Scans an escape sequence.
   ///
-  /// $(PRE
+  /// $(BNF
   ////EscapeSequence := "\\" (Binary | C)
   ////Binary := Octal{1,3} | ("x" Hex{2}) | ("u" Hex{4}) | ("U" Hex{8})
   ////C := "'" | '"' | "?" | "\\" | "a" | "b" | "f" | "n" | "r" | "t" | "v"
@@ -1905,7 +1905,7 @@ version(D2)
 
   /// Scans a number literal.
   ///
-  /// $(PRE
+  /// $(BNF
   ////IntegerLiteral := (Dec | Hex | Bin | Oct) Suffix?
   ////Dec := ("0" | [1-9] [0-9_]*)
   ////Hex := "0" [xX] "_"* [0-9a-zA-Z] [0-9a-zA-Z_]*
@@ -2203,7 +2203,7 @@ version(D2)
 
   /// Scans a floating point number literal.
   ///
-  /// $(PRE
+  /// $(BNF
   ////FloatLiteral := Float [fFL]? i?
   ////Float        := DecFloat | HexFloat
   ////DecFloat     := ([0-9] [0-9_]* "." [0-9_]* DecExponent?) |
@@ -2345,7 +2345,7 @@ version(D2)
 
   /// Scans a special token sequence.
   ///
-  /// $(PRE SpecialTokenSequence := "#line" Integer Filespec? EndOfLine)
+  /// $(BNF SpecialTokenSequence := "#line" Integer Filespec? EndOfLine)
   void scanSpecialTokenSequence(ref Token t)
   {
     assert(*p == '#');

@@ -6,7 +6,7 @@ module dil.lexer.IdentsGenerator;
 /// Table of predefined identifiers.
 ///
 /// The format ('#' start comments):
-/// $(PRE
+/// $(BNF
 ////PredefinedIdentifier := SourceCodeName (":" IdText)?
 ////SourceCodeName := Identifier # The name to be used in the source code.
 ////IdText := Empty | Identifier # The actual text of the identifier.

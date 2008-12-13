@@ -170,7 +170,7 @@ static const char[][][/+NodeKind.max+1+/] g_membersTable = mixin(genMembersTable
 /// A helper function that parses the special strings in g_membersTable.
 ///
 /// Basic syntax:
-/// $(PRE
+/// $(BNF
 ////Member := Array | Array2 | OptionalNode | Node | Code
 ////Array := Identifier "[]"
 ////Array2 := Identifier "[?]"

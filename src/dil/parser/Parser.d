@@ -201,7 +201,7 @@ class Parser
   }
 
   /// Parses DeclarationDefinitions until the end of file is hit.
-  /// $(PRE
+  /// $(BNF
   ////DeclDefs :=
   ////    DeclDef
   ////    DeclDefs
@@ -215,7 +215,7 @@ class Parser
   }
 
   /// Parse the body of a template, class, interface, struct or union.
-  /// $(PRE
+  /// $(BNF
   ////DeclDefsBlock :=
   ////    { }
   ////    { DeclDefs }
@@ -414,7 +414,7 @@ class Parser
   }
 
   /// Parses a DeclarationsBlock.
-  /// $(PRE
+  /// $(BNF
   ////DeclarationsBlock :=
   ////    : DeclDefs
   ////    { }
@@ -1493,13 +1493,13 @@ version(D2)
   }
 
   /// Parses a MixinDeclaration or MixinStatement.
-  /// $(PRE
+  /// $(BNF
   ////TemplateMixin :=
-  ////        mixin ( AssignExpression ) ;
-  ////        mixin TemplateIdentifier ;
-  ////        mixin TemplateIdentifier MixinIdentifier ;
-  ////        mixin TemplateIdentifier !( TemplateArguments ) ;
-  ////        mixin TemplateIdentifier !( TemplateArguments ) MixinIdentifier ;
+  ////    mixin ( AssignExpression ) ;
+  ////    mixin TemplateIdentifier ;
+  ////    mixin TemplateIdentifier MixinIdentifier ;
+  ////    mixin TemplateIdentifier !( TemplateArguments ) ;
+  ////    mixin TemplateIdentifier !( TemplateArguments ) MixinIdentifier ;
   ////)
   Class parseMixin(Class)()
   {
@@ -1793,7 +1793,7 @@ version(D2)
     return s;
   }
 
-  /// $(PRE
+  /// $(BNF
   ////Parses a ScopeStatement.
   ////ScopeStatement :=
   ////    NoScopeStatement
@@ -1803,7 +1803,7 @@ version(D2)
     return new ScopeStatement(parseNoScopeStatement());
   }
 
-  /// $(PRE
+  /// $(BNF
   ////NoScopeStatement :=
   ////    NonEmptyStatement
   ////    BlockStatement
@@ -1834,7 +1834,7 @@ version(D2)
     return s;
   }
 
-  /// $(PRE
+  /// $(BNF
   ////NoScopeOrEmptyStatement :=
   ////    ;
   ////    NoScopeStatement
@@ -3241,7 +3241,7 @@ version(D2)
     return e;
   }
 
-  /// $(PRE
+  /// $(BNF
   ////IdentifierExpression :=
   ////        Identifier
   ////        TemplateInstance
@@ -3844,10 +3844,10 @@ version(D2)
   }
 
   /// Parses a list of AssignExpressions.
-  /// $(PRE
+  /// $(BNF
   ////ExpressionList :=
-  ////  AssignExpression
-  ////  AssignExpression , ExpressionList
+  ////    AssignExpression
+  ////    AssignExpression , ExpressionList
   ////)
   Expression[] parseExpressionList()
   {
@@ -3859,10 +3859,10 @@ version(D2)
   }
 
   /// Parses a list of Arguments.
-  /// $(PRE
+  /// $(BNF
   ////Arguments :=
-  ////  ( )
-  ////  ( ExpressionList )
+  ////    ( )
+  ////    ( ExpressionList )
   ////)
   Expression[] parseArguments()
   {
