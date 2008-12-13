@@ -46,7 +46,7 @@ class Lexer
   /// Holds the original file path and the modified one (by #line.)
   NewlineData.FilePaths* filePaths;
 
-  /// Construct a Lexer object.
+  /// Constructs a Lexer object.
   /// Params:
   ///   srcText = the UTF-8 source code.
   ///   diag = used for collecting error messages.
@@ -101,7 +101,7 @@ class Lexer
   }
 
   /// The "shebang" may optionally appear once at the beginning of a file.
-  /// Regexp: #![^\EndOfLine]*
+  /// $(PRE Shebang := "#!" AnyChar* EndOfLine)
   void scanShebang()
   {
     if (*p == '#' && p[1] == '!')
@@ -189,7 +189,7 @@ class Lexer
 //       if (t.kind == TOK.Newline)
 //         this.newline = t;
     }
-    else if (t != this.tail)
+    else if (t !is this.tail)
     {
       Token* new_t = new Token;
       scan(*new_t);
@@ -1113,7 +1113,7 @@ class Lexer
 
   /// Scans a block comment.
   ///
-  /// BlockComment := "/*" AnyChar* "*/"
+  /// $(PRE BlockComment := "/*" AnyChar* "*/")
   void scanBlockComment(ref Token t)
   {
     assert(p[-1] == '/' && *p == '*');
@@ -1158,7 +1158,7 @@ class Lexer
 
   /// Scans a nested comment.
   ///
-  /// NestedComment := "/+" (AnyChar* | NestedComment) "+/"
+  /// $(PRE NestedComment := "/+" (AnyChar* | NestedComment) "+/")
   void scanNestedComment(ref Token t)
   {
     assert(p[-1] == '/' && *p == '+');
@@ -1211,7 +1211,7 @@ class Lexer
 
   /// Scans the postfix character of a string literal.
   ///
-  /// PostfixChar := "c" | "w" | "d"
+  /// $(PRE PostfixChar := "c" | "w" | "d")
   char scanPostfix()
   {
     assert(p[-1] == '"' || p[-1] == '`' ||
@@ -1232,7 +1232,7 @@ class Lexer
 
   /// Scans a normal string literal.
   ///
-  /// NormalStringLiteral := "\"" Char* "\""
+  /// $(PRE NormalStringLiteral := '"' AnyChar* '"')
   void scanNormalStringLiteral(ref Token t)
   {
     assert(*p == '"');
@@ -1292,7 +1292,7 @@ class Lexer
 
   /// Scans a character literal.
   ///
-  /// CharLiteral := "'" Char "'"
+  /// $(PRE CharLiteral := "'" AnyChar "'")
   void scanCharacterLiteral(ref Token t)
   {
     assert(*p == '\'');
@@ -1326,7 +1326,7 @@ class Lexer
 
   /// Scans a raw string literal.
   ///
-  /// RawStringLiteral := "r\"" AnyChar* "\"" | "`" AnyChar* "`"
+  /// $(PRE RawStringLiteral := 'r"' AnyChar* '"' | "`" AnyChar* "`")
   void scanRawStringLiteral(ref Token t)
   {
     assert(*p == '`' || *p == '"' && p[-1] == 'r');
@@ -1384,7 +1384,7 @@ class Lexer
 
   /// Scans a hexadecimal string literal.
   ///
-  /// HexStringLiteral := "x\"" (HexChar HexChar)* "\""
+  /// $(PRE HexStringLiteral := 'x"' (HexChar HexChar)* '"')
   void scanHexStringLiteral(ref Token t)
   {
     assert(p[0] == 'x' && p[1] == '"');
@@ -1470,10 +1470,16 @@ class Lexer
 version(DDoc)
 {
   /// Scans a delimited string literal.
+  ///
+  /// $(PRE
+  ////DelimitedStringLiteral := 'q"' OpeningDelim AnyChar* MatchingDelim '"'
+  ////OpeningDelim  := "[" | "(" | "{" | "<" | Identifier EndOfLine
+  ////MatchingDelim := "]" | ")" | "}" | ">" | EndOfLine Identifier
+  ////)
   void scanDelimitedStringLiteral(ref Token t);
   /// Scans a token string literal.
   ///
-  /// TokenStringLiteral := "q{" Token* "}"
+  /// $(PRE TokenStringLiteral := "q{" Token* "}")
   void scanTokenStringLiteral(ref Token t);
 }
 else
@@ -1762,10 +1768,11 @@ version(D2)
 
   /// Scans an escape sequence.
   ///
-  /// EscapeSequence := "\" (Octal{1,3} | ("x" Hex{2}) |
-  ///                       ("u" Hex{4}) | ("U" Hex{8}) |
-  ///                       "'" | "\"" | "\\" | "?" | "a" |
-  ///                       "b" | "f" | "n" | "r" | "t" | "v")
+  /// $(PRE
+  ////EscapeSequence := "\\" (Binary | C)
+  ////Binary := Octal{1,3} | ("x" Hex{2}) | ("u" Hex{4}) | ("U" Hex{8})
+  ////C := "'" | '"' | "?" | "\\" | "a" | "b" | "f" | "n" | "r" | "t" | "v"
+  ////)
   /// Params:
   ///   isBinary = set to true for octal and hexadecimal escapes.
   /// Returns: the escape value.
@@ -1899,12 +1906,12 @@ version(D2)
   /// Scans a number literal.
   ///
   /// $(PRE
-  ////IntegerLiteral := (Dec|Hex|Bin|Oct)Suffix?
-  ////Dec := (0|[1-9][0-9_]*)
-  ////Hex := 0[xX][_]*[0-9a-zA-Z][0-9a-zA-Z_]*
-  ////Bin := 0[bB][_]*[01][01_]*
-  ////Oct := 0[0-7_]*
-  ////Suffix := (L[uU]?|[uU]L?)
+  ////IntegerLiteral := (Dec | Hex | Bin | Oct) Suffix?
+  ////Dec := ("0" | [1-9] [0-9_]*)
+  ////Hex := "0" [xX] "_"* [0-9a-zA-Z] [0-9a-zA-Z_]*
+  ////Bin := "0" [bB] "_"* [01] [01_]*
+  ////Oct := "0" [0-7_]*
+  ////Suffix := ("L" [uU]? | [uU] "L"?)
   ////)
   /// Invalid: "0b_", "0x_", "._" etc.
   void scanNumber(ref Token t)
@@ -2197,15 +2204,16 @@ version(D2)
   /// Scans a floating point number literal.
   ///
   /// $(PRE
-  ////FloatLiteral := Float[fFL]?i?
-  ////Float := DecFloat | HexFloat
-  ////DecFloat := ([0-9][0-9_]*[.][0-9_]*DecExponent?) |
-  ////            [.][0-9][0-9_]*DecExponent? | [0-9][0-9_]*DecExponent
-  ////DecExponent := [eE][+-]?[0-9][0-9_]*
-  ////HexFloat := 0[xX](HexDigits[.]HexDigits |
-  ////                  [.][0-9a-zA-Z]HexDigits? |
-  ////                  HexDigits)HexExponent
-  ////HexExponent := [pP][+-]?[0-9][0-9_]*
+  ////FloatLiteral := Float [fFL]? i?
+  ////Float        := DecFloat | HexFloat
+  ////DecFloat     := ([0-9] [0-9_]* "." [0-9_]* DecExponent?) |
+  ////                "." [0-9] [0-9_]* DecExponent? |
+  ////                [0-9] [0-9_]* DecExponent
+  ////DecExponent  := [eE] [+-]? [0-9] [0-9_]*
+  ////HexFloat     := "0" [xX] (HexDigits "." HexDigits |
+  ////                          "." [0-9a-zA-Z] HexDigits? |
+  ////                          HexDigits) HexExponent
+  ////HexExponent := [pP] [+-]? [0-9] [0-9_]*
   ////)
   void scanReal(ref Token t)
   {
@@ -2337,7 +2345,7 @@ version(D2)
 
   /// Scans a special token sequence.
   ///
-  /// SpecialTokenSequence := "#line" Integer Filespec? EndOfLine
+  /// $(PRE SpecialTokenSequence := "#line" Integer Filespec? EndOfLine)
   void scanSpecialTokenSequence(ref Token t)
   {
     assert(*p == '#');
@@ -2755,8 +2763,8 @@ version(D2)
      assert(0);
   }
 
-  /// Formats the bytes between start and end.
-  /// Returns: e.g.: abc -> \x61\x62\x63
+  /// Formats the bytes between start and end (excluding end.)
+  /// Returns: e.g.: "abc" -> "\x61\x62\x63"
   static char[] formatBytes(char* start, char* end)
   {
     auto strLen = end-start;
@@ -2769,7 +2777,7 @@ version(D2)
   }
 
   /// Searches for an invalid UTF-8 sequence in str.
-  /// Returns: a formatted string of the invalid sequence (e.g. \xC0\x80).
+  /// Returns: a formatted string of the invalid sequence (e.g. "\xC0\x80").
   static string findInvalidUTF8Sequence(string str)
   {
     char* p = str.ptr, end = p + str.length;
