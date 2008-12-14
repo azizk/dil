@@ -1,9 +1,9 @@
 /// Author: Aziz Köksal
 /// License: GPL3
 /// $(Maturity high)
-module cmd.DDocHTML;
+module dil.doc.DDocHTML;
 
-import cmd.DDocEmitter;
+import dil.doc.DDocEmitter;
 import dil.doc.Macro;
 import dil.semantic.Module;
 import dil.Highlighter;

@@ -3,10 +3,10 @@
 /// $(Maturity high)
 module cmd.DDoc;
 
-import cmd.DDocEmitter,
-       cmd.DDocHTML,
-       cmd.DDocXML;
-import dil.doc.Parser,
+import dil.doc.DDocEmitter,
+       dil.doc.DDocHTML,
+       dil.doc.DDocXML,
+       dil.doc.Parser,
        dil.doc.Macro,
        dil.doc.Doc;
 import dil.lexer.Token,

@@ -1,7 +1,7 @@
 /// Author: Aziz Köksal
 /// License: GPL3
 /// $(Maturity high)
-module cmd.DDocEmitter;
+module dil.doc.DDocEmitter;
 
 import dil.doc.Parser,
        dil.doc.Macro,

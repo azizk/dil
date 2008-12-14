@@ -1,9 +1,9 @@
 /// Authors: Aziz Köksal, Jari-Matti Mäkelä
 /// License: GPL3
 /// $(Maturity average)
-module cmd.DDocXML;
+module dil.doc.DDocXML;
 
-import cmd.DDocEmitter;
+import dil.doc.DDocEmitter;
 import dil.doc.Macro;
 import dil.ast.Declarations;
 import dil.semantic.Module;
