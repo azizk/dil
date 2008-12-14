@@ -5,8 +5,7 @@ module cmd.DDoc;
 
 import cmd.DDocEmitter,
        cmd.DDocHTML,
-       cmd.DDocXML,
-       cmd.Highlight;
+       cmd.DDocXML;
 import dil.doc.Parser,
        dil.doc.Macro,
        dil.doc.Doc;
@@ -16,6 +15,7 @@ import dil.semantic.Module,
        dil.semantic.Pass1,
        dil.semantic.Symbol,
        dil.semantic.Symbols;
+import dil.Highlighter;
 import dil.Compilation;
 import dil.Diagnostics;
 import dil.Converter;

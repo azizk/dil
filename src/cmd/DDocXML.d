@@ -3,11 +3,11 @@
 /// $(Maturity average)
 module cmd.DDocXML;
 
-import cmd.Highlight,
-       cmd.DDocEmitter;
+import cmd.DDocEmitter;
 import dil.doc.Macro;
 import dil.ast.Declarations;
 import dil.semantic.Module;
+import dil.Highlighter;
 import common;
 
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.

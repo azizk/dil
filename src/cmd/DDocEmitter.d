@@ -3,7 +3,6 @@
 /// $(Maturity high)
 module cmd.DDocEmitter;
 
-import cmd.Highlight;
 import dil.doc.Parser,
        dil.doc.Macro,
        dil.doc.Doc;
@@ -17,6 +16,7 @@ import dil.ast.DefaultVisitor,
 import dil.lexer.Token,
        dil.lexer.Funcs;
 import dil.semantic.Module;
+import dil.Highlighter;
 import dil.Diagnostics;
 import dil.SourceText;
 import dil.Enums;
