@@ -147,8 +147,8 @@ struct MacroExpander
   }
 
   /// Expands the macros from the table in the text.
-  char[] expandMacros(char[] text, char[] prevArg0 = null/+, uint depth = 1000+/)
-  {
+  char[] expandMacros(char[] text/+, char[] prevArg0 = null, uint depth = 1000+/)
+  { // prevArg0 and depth are commented out, causes problems with recursion.
     // if (depth == 0)
     //   return  text;
     // depth--;
@@ -188,7 +188,7 @@ struct MacroExpander
             macro_.callLevel++;
             // Expand the arguments in the macro text.
             auto expandedText = expandArguments(macro_.text, macroArgs);
-            result ~= expandMacros(expandedText, macroArg0/+, depth+/);
+            result ~= expandMacros(expandedText/+, macroArg0, depth+/);
             macro_.callLevel--;
           }
           else

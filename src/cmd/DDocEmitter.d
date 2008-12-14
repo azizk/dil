@@ -327,8 +327,8 @@ abstract class DDocEmitter : DefaultVisitor
         else
           result ~= "&lt;";
         continue;
-      case '(': result ~= "&#40;"; break;
-      case ')': result ~= "&#41;"; break;
+      case '(': result ~= "$(LP)"; break;
+      case ')': result ~= "$(RP)"; break;
       // case '\'': result ~= "&apos;"; break; // &#39;
       // case '"': result ~= "&quot;"; break;
       case '>': result ~= "&gt;"; break;
