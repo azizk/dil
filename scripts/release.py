@@ -49,8 +49,10 @@ def main():
   add_option("--gz", dest="tar_gz", help="create a tar.gz archive")
   add_option("--bz2", dest="tar_bz2", help="create a tar.bz2 archive")
   add_option("--zip", dest="zip", help="create a zip archive")
+  add_option("-m", dest="copy_modified",
+    help="copy modified files from the (git) working directory")
   parser.add_option("--src", dest="src", metavar="SRC", default=None,
-    help="use SRC folder instead of checking out code using git")
+    help="use SRC folder instead of checking out code with git")
   parser.add_option("--dmd-exe", dest="dmd_exe", metavar="EXE_PATH",
     default="dmd", help="specify EXE_PATH if dmd is not in your PATH")
   parser.add_option("--builddir", dest="builddir", metavar="DIR", default=None,
@@ -128,6 +130,10 @@ def main():
   elif locate_command('git'):
     os.system("git clone ./ '%s'" % DEST)
     (DEST/".git").rmtree() # Remove the .git folder.
+    if options.copy_modified:
+      modified_files = os.popen("git ls-files -m").read()[:-1].split("\n")
+      for f in modified_files:
+        Path(f).copy(DEST/f)
   else:
     raise Exception("git is not in your PATH; specify --src instead")
   # Create other directories not available in a clean checkout.
