@@ -5,7 +5,7 @@ import os, re
 from path import Path
 from common import *
 from sys import platform
-from build import dmd_cmd
+from build import DMDCommand
 
 def copy_files(DIL):
   """ Copies required files to the destination folder. """
@@ -22,16 +22,18 @@ def writeMakefile():
   # TODO: implement.
   pass
 
-def build_dil(*args, **kwargs):
-  cmd, args = dmd_cmd(*args, **kwargs)
-  print cmd % dict(args, files=" (files...)")
-  os.system(cmd % args)
+def build_dil(dmd_exe, *args, **kwargs):
+  kwargs.update(dmd_exe=dmd_exe)
+  cmd = DMDCommand(*args, **kwargs)
+  cmd.use_wine = dmd_exe.use_wine
+  print cmd
+  cmd.call()
 
 def update_version(path, major, minor):
   """ Updates the version info in the compiler's source code. """
   code = open(path).read()
-  code = re.sub(r"(VERSION_MAJOR\s*=\s*)[\w\d]+;", r"\g<1>%s;"%major, code)
-  code = re.sub(r"(VERSION_MINOR\s*=\s*)\d+;", r"\g<1>%s;"%minor, code)
+  code = re.sub(r"(VERSION_MAJOR\s*=\s*)[\w\d]+;",r"\g<1>%s;"%int(major), code)
+  code = re.sub(r"(VERSION_MINOR\s*=\s*)\d+;", r"\g<1>%s;"%int(minor), code)
   open(path, "w").write(code)
 
 def main():
@@ -80,16 +82,14 @@ def main():
   matched = m.groups()
 
   if not Path(options.dmd_exe).exists and not locate_command(options.dmd_exe):
-    print "The executable '%s' couldn't be located or does not exist." % \
-          options.dmd_exe
-    return
+    parser.error("The executable '%s' couldn't be located or does not exist." %
+      options.dmd_exe)
 
   notNone = max
   # Path of the executable of dil.
   DIL_EXE   = Path("bin")/"dil"
   # Name or path to the executable of dmd.
-  DMD_EXE   = options.dmd_exe
-  DMD_EXE_W = DMD_EXE # Executable to use for Windows builds.
+  DMD_EXE   = Path(options.dmd_exe)
   # The version of dil to be built.
   VERSION, V_MAJOR = matched[:2]
   V_MINOR, V_SUFFIX = (matched[2], notNone(matched[3], ''))
@@ -126,8 +126,15 @@ def main():
   # Check out a new working copy.
   DEST.rmtree() # First remove the tree.
   if options.src != None:
-    Path(options.src).copytree(DEST)
+    # Use the source folder specified by the user.
+    src = Path(options.src)
+    if not src.exists:
+      parser.error("the given SRC path (%s) doesn't exist" % src)
+    #if src.ext in ('.zip', '.gz', 'bz2'):
+      # TODO:
+    src.copytree(DEST)
   elif locate_command('git'):
+    # Use git to checkout a clean copy.
     os.system("git clone ./ '%s'" % DEST)
     (DEST/".git").rmtree() # Remove the .git folder.
     if options.copy_modified:
@@ -135,7 +142,7 @@ def main():
       for f in modified_files:
         Path(f).copy(DEST/f)
   else:
-    raise Exception("git is not in your PATH; specify --src instead")
+    parser.error("git is not in your PATH; specify --src instead")
   # Create other directories not available in a clean checkout.
   map(Path.mkdir, (DEST.BIN, DEST.DOC, DEST.HTMLSRC,
                    DEST.CSS, DEST.IMG, DEST.JS, TMP))
@@ -143,12 +150,9 @@ def main():
   # Find the source code files.
   FILES = find_dil_source_files(DEST.SRC)
 
-  # Make a backup of the original.
-  VERSION_D = DEST.SRC/"dil"/"Version.d"
-  VERSION_D.copy(TMP/"Version.d")
   # Update the version info.
-  update_version(VERSION_D, V_MAJOR, V_MINOR)
-  # Restore the original at the end of the build process.
+  VERSION_FILE = DEST.SRC/"dil"/"Version.d"
+  update_version(VERSION_FILE, V_MAJOR, V_MINOR)
 
   if options.docs:
     build_dil_if_inexistant(DIL_EXE)
@@ -167,6 +171,8 @@ def main():
       print "hl %s > %s" % args;
     download_jquery(DEST.JS/"jquery.js")
 
+  DMD_EXE.use_wine = False
+  use_wine = False
   if platform is 'win32':
     build_linux_binaries = False
     build_windows_binaries = True
@@ -179,16 +185,16 @@ def main():
         name = Path.__div__(self, name)
         return name if name.ext != '.exe' else name.replace("/", r"\\")
     BIN = BINPath(BIN)
-    DMD_EXE_W = "wine dmd.exe" # Use wine on Linux to build Windows binaries.
+    use_wine = True # Use wine on Linux to build Windows binaries.
     if not build_windows_binaries:
       print "Error: can't build windows binaries: "\
             "wine is not installed or not in PATH."
 
   # Create partial functions with common parameters.
   # Note: the -inline switch makes the binaries significantly larger on Linux.
-  build_dil_rls = func_partial(build_dil, FILES, dmd_exe=DMD_EXE,
+  build_dil_rls = func_partial(build_dil, DMD_EXE, FILES,
                                release=True, optimize=True, inline=True)
-  build_dil_dbg = func_partial(build_dil, FILES, dmd_exe=DMD_EXE,
+  build_dil_dbg = func_partial(build_dil, DMD_EXE, FILES,
                                debug_info=options.debug_symbols)
   if build_linux_binaries:
     print "***** Building Linux binaries *****"
@@ -201,8 +207,7 @@ def main():
 
   if build_windows_binaries:
     print "***** Building Windows binaries *****"
-    build_dil_dbg.keywords['dmd_exe'] = DMD_EXE_W
-    build_dil_rls.keywords['dmd_exe'] = DMD_EXE_W
+    DMD_EXE.use_wine = use_wine
     # Windows Debug Binaries
     build_dil_dbg(BIN/"dil_d.exe")
     build_dil_dbg(BIN/"dil2_d.exe", versions=["D2"])
@@ -213,11 +218,7 @@ def main():
   print "***** Copying files *****"
   copy_files(DEST)
 
-  # Restore the original. NOTE: is this a good idea?
-  (TMP/"Version.d").move(VERSION_D)
-
-  if not options.docs:
-    DEST.DOC.rmtree()
+  options.docs or DEST.DOC.rmtree()
   TMP.rmtree()
 
   # Build archives.
