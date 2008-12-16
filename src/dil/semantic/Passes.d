@@ -143,16 +143,23 @@ abstract class SemanticPass : DefaultVisitor
   /// Incremented when an undefined identifier was found.
   uint undefinedIdsCount;
 
-  /// The symbol that must be ignored an skipped during a symbol search.
+  /// The symbol that must be ignored and skipped during a symbol search.
   Symbol ignoreSymbol;
 
   /// The current scope symbol to use for looking up identifiers.
+  ///
   /// E.g.:
   /// ---
-  /// object.method(); // *) object is looked up in the current scope.
-  ///                  // *) idScope is set if object is a ScopeSymbol.
-  ///                  // *) method will be looked up in idScope.
-  /// dil.ast.Node.Node node; // A fully qualified type.
+  /// / // * "object" is looked up in the current scope.
+  /// / // * idScope is set if "object" is a ScopeSymbol.
+  /// / // * "method" will be looked up in idScope.
+  /// object.method();
+  /// / // * "dil" is looked up in the current scope
+  /// / // * idScope is set if "dil" is a ScopeSymbol.
+  /// / // * "ast" will be looked up in idScope.
+  /// / // * idScope is set if "ast" is a ScopeSymbol.
+  /// / // * etc.
+  /// dil.ast.Node.Node node;
   /// ---
   ScopeSymbol idScope;
 
