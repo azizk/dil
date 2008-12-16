@@ -475,7 +475,7 @@ abstract class DDocEmitter : DefaultVisitor
       dg();
       writeSemicolon && write(";");
       writeAttributes(d);
-      write(")");
+      write(" $(DIL_SYMEND ", currentSymbolParams, "))");
     }
 
     if (/+includeUndocumented &&+/ this.cmnt is this.emptyCmnt)
@@ -519,6 +519,9 @@ abstract class DDocEmitter : DefaultVisitor
     write(")");
   }
 
+  /// Saves the current symbol parameters.
+  string currentSymbolParams;
+
   /// Writes a symbol to the text buffer.
   /// E.g: &#36;(DIL_SYMBOL scan, Lexer.scan, func, 229, 646);
   void SYMBOL(string name, string kind, Declaration d)
@@ -526,9 +529,9 @@ abstract class DDocEmitter : DefaultVisitor
     auto fqn = getSymbolFQN(name);
     auto loc = d.begin.getRealLocation();
     auto loc_end = d.end.getRealLocation();
-    auto str = Format("$(DIL_SYMBOL {}, {}, {}, {}, {})",
-                      name, fqn, kind, loc.lineNum, loc_end.lineNum);
-    write(str);
+    currentSymbolParams = Format("{}, {}, {}, {}, {}",
+      name, fqn, kind, loc.lineNum, loc_end.lineNum);
+    write("$(DIL_SYMBOL ", currentSymbolParams, ")");
     // write("$(DDOC_PSYMBOL ", name, ")"); // DMD's macro with no info.
   }
 
@@ -729,7 +732,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("~"); SYMBOL("this", "dtor", d); write("()"); }, d);
+    DECL({ SYMBOL("~this", "dtor", d); write("()"); }, d);
     DESC();
     return d;
   }
@@ -738,7 +741,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("static ~"); SYMBOL("this", "sdtor", d); write("()"); }, d);
+    DECL({ write("static "); SYMBOL("~this", "sdtor", d); write("()"); }, d);
     DESC();
     return d;
   }

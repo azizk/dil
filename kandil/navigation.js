@@ -1,10 +1,4 @@
 $(function() {
-  // Move permalinks to the end of the node list.
-  $(".symlink").each(function() {
-    $(this).appendTo(this.parentNode)
-           .css({position: "static", right: ""});
-  })
-
   var symbols = $(".symbol");
   // Add code display functionality to symbol links.
   symbols.click(function(event) {

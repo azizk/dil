@@ -76,6 +76,10 @@ body { margin: 0; }
   color: #555;
 }
 
+#apilist li, #modlist li {
+  white-space: nowrap;
+}
+
 .sec_header {
   font-weight: bold;
   margin: 0.5em 0;
@@ -84,7 +88,6 @@ body { margin: 0; }
 .decl {
   font-size: 1em;
   font-weight: bold;
-  position: relative; /* for .symlink */
 }
 
 .decl:target {
@@ -97,20 +100,25 @@ body { margin: 0; }
   margin-right: 0;
 }
 
-.decl .symlink {
-  display: none;
-}
-
-.decl:hover .symlink, .symlink:focus {
-  display: inline;
-}
-
-.symlink {
-  position: absolute;
-  right: 0;
+.symlink, .srclink{
   padding: 0em 0.2em;
   text-decoration: none;
   color: DarkRed;
+}
+
+.decl .symlink, .decl .srclink {
+  display: none;
+}
+
+.decl:hover .symlink, .symlink:focus,
+.decl:hover .srclink, .srclink:focus {
+  display: inline;
+}
+
+.symlink:hover, .srclink:hover {
+  border: 1px outset #300;
+  color: white;
+  background-color: DarkRed;
 }
 
 .symbol {
