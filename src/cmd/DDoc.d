@@ -22,6 +22,8 @@ import dil.Converter;
 import dil.SourceText;
 import dil.Enums;
 import dil.Time;
+import SettingsLoader;
+import Settings;
 import common;
 
 import tango.text.Ascii : toUpper;
@@ -58,8 +60,14 @@ struct DDocCommand
       mtable.insert(macros);
     }
 
-    // For DDoc code sections.
-    tokenHL = new TokenHighlighter(diag, writeXML == false);
+    // For Ddoc code sections.
+    string mapFilePath = GlobalSettings.htmlMapFile;
+    if (writeXML)
+      mapFilePath = GlobalSettings.xmlMapFile;
+    auto map = TagMapLoader(diag).load(mapFilePath);
+    auto tags = new TagMap(map);
+    tokenHL = new TokenHighlighter(diag, tags);
+
     outFileExtension = writeXML ? ".xml" : ".html";
 
     string[][] modFQNs; // List of tuples (filePath, moduleFQN).
@@ -70,7 +78,7 @@ struct DDocCommand
     {
       auto mod = new Module(filePath, diag);
 
-      // Only parse if the file is not a "DDoc"-file.
+      // Only parse if the file is not a "Ddoc"-file.
       if (!DDocEmitter.isDDocFile(mod))
       {
         mod.parse();

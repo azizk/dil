@@ -14,8 +14,6 @@ import dil.parser.Parser;
 import dil.semantic.Module;
 import dil.SourceText;
 import dil.Diagnostics;
-import SettingsLoader;
-import Settings;
 import common;
 
 import tango.io.Buffer;
@@ -336,17 +334,14 @@ void highlightTokens(string filePath, TagMap tags,
   print(tags["DocEnd"]);
 }
 
-/// A token highlighter designed for DDoc.
+/// A token highlighter designed for Ddoc code sections.
 class TokenHighlighter
 {
   TagMap tags;
-  this(Diagnostics diag, bool useHTML = true)
+  /// Constructs a TokenHighlighter object.
+  this(Diagnostics diag, TagMap tags)
   {
-    string filePath = GlobalSettings.htmlMapFile;
-    if (!useHTML)
-      filePath = GlobalSettings.xmlMapFile;
-    auto map = TagMapLoader(diag).load(filePath);
-    tags = new TagMap(map);
+    this.tags = tags;
   }
 
   /// Highlights tokens in a DDoc code section.
