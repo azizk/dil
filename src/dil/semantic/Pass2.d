@@ -192,8 +192,8 @@ override
 
   T visit(TypeofType t)
   {
-    t.e = visitE(t.e);
-    t.type = t.e.type;
+    t.expr = visitE(t.expr);
+    t.type = t.expr.type;
     return t;
   }
 

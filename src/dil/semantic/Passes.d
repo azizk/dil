@@ -647,7 +647,7 @@ override
   S visit(ScopeStatement s)
   {
 //     enterScope();
-    visitS(s.s);
+    visitS(s.stmnt);
 //     exitScope();
     return s;
   }
@@ -1178,8 +1178,8 @@ override
   {
     if (e.hasType)
       return e;
-    e.e = visitE(e.e);
-    e.type = e.e.type.ptrTo();
+    e.una = visitE(e.una);
+    e.type = e.una.type.ptrTo();
     return e;
   }
 
@@ -1188,9 +1188,9 @@ override
     if (e.hasType)
       return e;
     // TODO: rewrite to e+=1
-    e.e = visitE(e.e);
-    e.type = e.e.type;
-    errorIfBool(e.e);
+    e.una = visitE(e.una);
+    e.type = e.una.type;
+    errorIfBool(e.una);
     return e;
   }
 
@@ -1199,9 +1199,9 @@ override
     if (e.hasType)
       return e;
     // TODO: rewrite to e-=1
-    e.e = visitE(e.e);
-    e.type = e.e.type;
-    errorIfBool(e.e);
+    e.una = visitE(e.una);
+    e.type = e.una.type;
+    errorIfBool(e.una);
     return e;
   }
 
@@ -1211,9 +1211,9 @@ override
       return e;
     if (auto o = findOverload(e, Ident.opPostInc))
       return o;
-    e.e = visitE(e.e);
-    e.type = e.e.type;
-    errorIfBool(e.e);
+    e.una = visitE(e.una);
+    e.type = e.una.type;
+    errorIfBool(e.una);
     return e;
   }
 
@@ -1223,9 +1223,9 @@ override
       return e;
     if (auto o = findOverload(e, Ident.opPostDec))
       return o;
-    e.e = visitE(e.e);
-    e.type = e.e.type;
-    errorIfBool(e.e);
+    e.una = visitE(e.una);
+    e.type = e.una.type;
+    errorIfBool(e.una);
     return e;
   }
 
@@ -1236,17 +1236,17 @@ override
   version(D2)
     if (auto o = findOverload(e, Ident.opStar))
       return o;
-    e.e = visitE(e.e);
-    e.type = e.e.type.next;
-    if (!e.e.type.isPointer)
+    e.una = visitE(e.una);
+    e.type = e.una.type.next;
+    if (!e.una.type.isPointer)
     {
-      error(e.e.begin,
+      error(e.una.begin,
         "dereference operator '*x' not defined for expression of type '{}'",
-        e.e.type.toString());
+        e.una.type.toString());
       e.type = Types.Error;
     }
     // TODO:
-    // if (e.e.type.isVoid)
+    // if (e.una.type.isVoid)
     //   error();
     return e;
   }
@@ -1257,9 +1257,9 @@ override
       return e;
     if (auto o = findOverload(e, e.isNeg ? Ident.opNeg : Ident.opPos))
       return o;
-    e.e = visitE(e.e);
-    e.type = e.e.type;
-    errorIfBool(e.e);
+    e.una = visitE(e.una);
+    e.type = e.una.type;
+    errorIfBool(e.una);
     return e;
   }
 
@@ -1267,9 +1267,9 @@ override
   {
     if (e.hasType)
       return e;
-    e.e = visitE(e.e);
+    e.una = visitE(e.una);
     e.type = Types.Bool;
-    errorIfNonBool(e.e);
+    errorIfNonBool(e.una);
     return e;
   }
 
@@ -1279,8 +1279,8 @@ override
       return e;
     if (auto o = findOverload(e, Ident.opCom))
       return o;
-    e.e = visitE(e.e);
-    e.type = e.e.type;
+    e.una = visitE(e.una);
+    e.type = e.una.type;
     if (e.type.isBaseFloating() || e.type.isBaseBool())
     {
       error(e.begin, "the operator '~x' is undefined for the type '{}'",
@@ -1349,8 +1349,8 @@ override
       return e;
     bool resetIdScope = idScope is null;
     idScope = modul;
-    e.e = visitE(e.e);
-    e.type = e.e.type;
+    e.una = visitE(e.una);
+    e.type = e.una.type;
     resetIdScope && (idScope = null);
     return e;
   }
@@ -1646,8 +1646,8 @@ override
 
   T visit(TypeofType t)
   {
-    t.e = visitE(t.e);
-    t.type = t.e.type;
+    t.expr = visitE(t.expr);
+    t.type = t.expr.type;
     return t;
   }
 

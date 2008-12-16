@@ -336,7 +336,7 @@ class CatAssignExpression : BinaryExpression
   }
 }
 
-/// DotExpression := Expression '.' Expression
+/// $(BNF DotExpression := Expression '.' Expression)
 class DotExpression : BinaryExpression
 {
   this(Expression left, Expression right)
@@ -352,11 +352,11 @@ class DotExpression : BinaryExpression
 
 abstract class UnaryExpression : Expression
 {
-  Expression e; // TODO: rename 'e' to 'next', 'unary', 'expr' or 'sube' etc.
+  Expression una;
   this(Expression e)
   {
     addChild(e);
-    this.e = e;
+    this.una = e;
   }
   mixin(copyMethodUnaryExpression);
 }
@@ -1101,25 +1101,25 @@ class AsmSegExpression : UnaryExpression
 
 class AsmPostBracketExpression : UnaryExpression
 {
-  Expression e2; /// Expression in brackets: e [ e2 ]
-  this(Expression e, Expression e2)
+  Expression index; /// Expression in brackets: una [ index ]
+  this(Expression e, Expression index)
   {
     super(e);
     mixin(set_kind);
-    addChild(e2);
-    this.e2 = e2;
+    addChild(index);
+    this.index = index;
   }
   mixin(copyMethod);
 }
 
 class AsmBracketExpression : Expression
 {
-  Expression e;
+  Expression expr;
   this(Expression e)
   {
     mixin(set_kind);
     addChild(e);
-    this.e = e;
+    this.expr = e;
   }
   mixin(copyMethod);
 }

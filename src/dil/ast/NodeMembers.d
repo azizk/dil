@@ -69,14 +69,14 @@ char[] genMembersTable()
   t[N.SignExpression] = t[N.NotExpression] = t[N.CompExpression] =
   t[N.CallExpression] = t[N.DeleteExpression] = t[N.ModuleScopeExpression] =
   t[N.AsmTypeExpression] = t[N.AsmOffsetExpression] =
-  t[N.AsmSegExpression] = ["e"];
-  t[N.CastExpression] = ["type", "e"];
-  t[N.IndexExpression] = ["e", "args[]"];
-  t[N.SliceExpression] = ["e", "left?", "right?"];
-  t[N.AsmPostBracketExpression] = ["e", "e2"];
+  t[N.AsmSegExpression] = ["una"];
+  t[N.CastExpression] = ["type", "una"];
+  t[N.IndexExpression] = ["una", "args[]"];
+  t[N.SliceExpression] = ["una", "left?", "right?"];
+  t[N.AsmPostBracketExpression] = ["una", "index"];
   t[N.NewExpression] = ["newArgs[]", "type", "ctorArgs[]"];
   t[N.NewAnonClassExpression] = ["newArgs[]", "bases[]", "ctorArgs[]", "decls"];
-  t[N.AsmBracketExpression] = ["e"];
+  t[N.AsmBracketExpression] = ["expr"];
   t[N.TemplateInstanceExpression] = ["targs?"];
   t[N.ArrayLiteralExpression] = ["values[]"];
   t[N.AArrayLiteralExpression] = ["keys[]", "values[]"];
@@ -90,15 +90,15 @@ char[] genMembersTable()
   t[N.TraitsExpression] = ["targs"];
   t[N.ArrayInitExpression] = ["keys[?]", "values[]"];
   t[N.StructInitExpression] = ["values[]"];
-  t[N.StringExpression] = [],
+  t[N.StringExpression] = [];
   // Statements:
   t[N.IllegalStatement] = t[N.EmptyStatement] =
   t[N.ContinueStatement] = t[N.BreakStatement] =
   t[N.AsmAlignStatement] = t[N.IllegalAsmStatement] = [];
   t[N.CompoundStatement] = ["stmnts[]"];
   t[N.FuncBodyStatement] = ["funcBody?", "inBody?", "outBody?"];
-  t[N.ScopeStatement] = t[N.LabeledStatement] = ["s"];
-  t[N.ExpressionStatement] = ["e"];
+  t[N.ScopeStatement] = t[N.LabeledStatement] = ["stmnt"];
+  t[N.ExpressionStatement] = ["expr"];
   t[N.DeclarationStatement] = ["decl"];
   t[N.IfStatement] = ["variable?", "condition?", "ifBody", "elseBody?"];
   t[N.WhileStatement] = ["condition", "whileBody"];
@@ -109,15 +109,15 @@ char[] genMembersTable()
   t[N.SwitchStatement] = ["condition", "switchBody"];
   t[N.CaseStatement] = ["values[]", "caseBody"];
   t[N.DefaultStatement] = ["defaultBody"];
-  t[N.ReturnStatement] = ["e?"];
+  t[N.ReturnStatement] = ["expr?"];
   t[N.GotoStatement] = ["caseExpr?"];
-  t[N.WithStatement] = ["e", "withBody"];
-  t[N.SynchronizedStatement] = ["e?", "syncBody"];
+  t[N.WithStatement] = ["expr", "withBody"];
+  t[N.SynchronizedStatement] = ["expr?", "syncBody"];
   t[N.TryStatement] = ["tryBody", "catchBodies[]", "finallyBody?"];
   t[N.CatchStatement] = ["param?", "catchBody"];
   t[N.FinallyStatement] = ["finallyBody"];
   t[N.ScopeGuardStatement] = ["scopeBody"];
-  t[N.ThrowStatement] = ["e"];
+  t[N.ThrowStatement] = ["expr"];
   t[N.VolatileStatement] = ["volatileBody?"];
   t[N.AsmBlockStatement] = ["statements"];
   t[N.AsmStatement] = ["operands[]"];
@@ -130,9 +130,9 @@ char[] genMembersTable()
   t[N.IllegalType] = t[N.IntegralType] =
   t[N.ModuleScopeType] = t[N.IdentifierType] = [];
   t[N.QualifiedType] = ["lhs", "rhs"];
-  t[N.TypeofType] = ["e"];
+  t[N.TypeofType] = ["expr"];
   t[N.TemplateInstanceType] = ["targs?"];
-  t[N.ArrayType] = ["next", "assocType?", "e1?", "e2?"];
+  t[N.ArrayType] = ["next", "assocType?", "index1?", "index2?"];
   t[N.FunctionType] = t[N.DelegateType] = ["returnType", "params"];
   t[N.CFuncPointerType] = ["next", "params?"];
   t[N.PointerType] = t[N.BaseClassType] =
