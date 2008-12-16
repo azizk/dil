@@ -83,9 +83,6 @@ class Module : ScopeSymbol
   }
 
   /// Parses the module.
-  /// Throws:
-  ///   An Exception if the there's no ModuleDeclaration and
-  ///   the file name is an invalid or reserved D identifier.
   void parse()
   {
     if (this.parser is null)

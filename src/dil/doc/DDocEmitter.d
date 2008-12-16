@@ -172,6 +172,8 @@ abstract class DDocEmitter : DefaultVisitor
     bool saved_cmntIsDitto;
     uint saved_prevDeclOffset;
     /// When constructed, variables are saved.
+    /// Params:
+    ///   name = the name of the current symbol.
     this(string name)
     { // Save the previous comment of the parent scope.
       saved_prevCmnt = this.outer.prevCmnt;
@@ -273,9 +275,10 @@ abstract class DDocEmitter : DefaultVisitor
   /// $(UL
   /// $(LI skips and leaves macro invocations unchanged)
   /// $(LI skips HTML tags)
-  /// $(LI escapes '(', ')', '<', '>' and '&')
-  /// $(LI inserts $&#40;DDOC_BLANKLINE&#41; in place of \n\n)
-  /// $(LI highlights code in code sections)
+  /// $(LI escapes '<', '>' and '&' with named HTML entities)
+  /// $(LI inserts $&#40;LP&#41;/$&#40;RP&#41; in place of '('/')')
+  /// $(LI inserts $&#40;DDOC_BLANKLINE&#41; in place of '\n\n')
+  /// $(LI highlights the tokens in code sections)
   /// )
   char[] scanCommentText(char[] text)
   {

@@ -27,7 +27,7 @@ class GermanTranslator : DefaultVisitor
   bool pluralize; /// Whether to use the plural when printing the next types.
   bool pointer; /// Whether next types should consider the previous pointer.
 
-  /// Construct a GermanTranslator.
+  /// Constructs a GermanTranslator.
   /// Params:
   ///   put = buffer to print to.
   ///   indentStep = added at every indendation step.
