@@ -124,8 +124,9 @@ override
   D visit(EnumDeclaration d)
   {
 
-    uint Number = 0;
+    uint number = 0;
     bool firstEnumValue = true;
+    bool enumAssignedAValue = false;
 
     //malformed EnumMember
     if(d.symbol is null)
@@ -160,7 +161,7 @@ override
     }
 
 
-    Number = 0;
+    number = 0;
     foreach (member; d.members)
     {
       Expression finalValue;
@@ -171,14 +172,15 @@ override
         finalValue = interpret(member.value);
 
 	//Check that each member evaluates to an integral or enum type D1.0
-	if(finalValue.type !is null)
+	if(finalValue.hasType())
 	{
-	  if (!finalValue.type.isIntegral() && !finalValue.type.isBaseScalar())
+	  if (!finalValue.type.isBaseScalar())
 	  {
 	    error(d.begin, MSG.EnumMemberTypeInvalid);
 	    return d;
 	  }
-	} else
+	} 
+	else
 	{
 	  //This section should be correct for enum {enumMember=enumType.enumMember}
 	  //once interpreter has been updated for enum basetypes
@@ -188,9 +190,12 @@ override
 
         if (finalValue is Interpreter.NAR)
           finalValue = new IntExpression(0, d.symbol.type);
-	else {
+	else 
+	{
+	  //TODO this conversion to IntExp is only valid for D1...need to change for D2
+	  //need to implement finalValue.castTo(type)
 	  if(finalValue !is null)
-	    Number = (cast(IntExpression)finalValue).number;
+	    number = finalValue.to!(IntExpression).number;
 	}
 
 	firstEnumValue = false;
@@ -202,52 +207,64 @@ override
 	{
           finalValue = new IntExpression(0, d.symbol.type);
 	  firstEnumValue = false;
-	} else
-	  finalValue = new IntExpression(Number, d.symbol.type);
+	} 
+	else
+	{
+	  finalValue = new IntExpression(number, d.symbol.type);
+	  enumAssignedAValue = true;
+	}
       }
 
+      if (enumAssignedAValue)
       switch (type.tid)
       {
-	case TYP.Bool :
-	  if (Number >= 2) goto valueOverflow;
+      case TYP.Bool :
+	  if (number >= 2) goto LvalueOverflow;
 	  break;
-	case TYP.Byte :
-	  if (Number >= 128) goto valueOverflow;
+      case TYP.Byte :
+	  if (number >= 128) goto LvalueOverflow;
 	  break;
-	case TYP.Char :
-	case TYP.Ubyte :
-	  if (Number >= 256) goto valueOverflow;
+      case TYP.Char :
+      case TYP.Ubyte :
+	  if (number >= 256) goto LvalueOverflow;
 	  break;
-	case TYP.Short :
-	  if (Number >= 0x9000) goto valueOverflow;
+      case TYP.Short :
+	  if (number >= 0x9000) goto LvalueOverflow;
 	  break;
-	case TYP.Wchar :
-	case TYP.Ushort :
-	  if (Number >= 0x10000) goto valueOverflow;
+      case TYP.Wchar :
+      case TYP.Ushort :
+	  if (number >= 0x10000) goto LvalueOverflow;
 	  break;
-	case TYP.Int :
-	  if (Number >= 0x80000000) goto valueOverflow;
+      case TYP.Int :
+	  if (number >= 0x80000000) goto LvalueOverflow;
 	  break;
-	case TYP.Dchar :
-	case TYP.Uint :
-	  if (Number >= 0x100000000) goto valueOverflow;
+      case TYP.Dchar :
+      case TYP.Uint :
+	  if (number >= 0x100000000) goto LvalueOverflow;
 	  break;
-	case TYP.Long :
-	  if (Number >= 0x8000000000000000) goto valueOverflow;
+      case TYP.Long :
+	  if (number >= 0x8000000000000000) goto LvalueOverflow;
 	  break;
-	case TYP.Ulong :
-	  if (Number >= 0xFFFFFFFFFFFFFFFF) goto valueOverflow;
+      case TYP.Ulong :
+	  if ((number == 0x0) && (enumAssignedAValue)) goto LvalueOverflow;
 	  break;
-	valueOverflow:
+      LvalueOverflow:
 	  error(d.begin, MSG.EnumOverflow);
 	  return d;
-	default:
+      default:
 	  break;
       }
+
+      debug(sema)
+      {
+        Stdout(finalValue.type.baseType);
+        Stdout(finalValue.to!(IntExpression).number).newline;
+      }
+
 
       member.symbol.value = finalValue;
       member.symbol.setComplete();
-      Number++;
+      number++;
     }
 
     exitScope();
