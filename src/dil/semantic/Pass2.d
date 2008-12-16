@@ -14,6 +14,7 @@ import dil.lexer.Identifier;
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
        dil.semantic.Types,
+       dil.semantic.TypesEnum,
        dil.semantic.Scope,
        dil.semantic.Module,
        dil.semantic.Analysis;
@@ -122,18 +123,44 @@ override
 
   D visit(EnumDeclaration d)
   {
+
+    uint Number = 0;
+    bool firstEnumValue = true;
+
+    //malformed EnumMember
+    if(d.symbol is null)
+      return d;
+
     d.symbol.setCompleting();
 
     Type type = Types.Int; // Default to int.
+
     if (d.baseType)
       type = visitT(d.baseType).type;
+
+    // TODO: Done...this works, but type is always defaulting to Int if the
+    //EnumBaseType is an Enum type. For D2.x the type doesn't have to be
+    //an integral type.
+    if (!type.isIntegral())
+    {
+      error(d.begin, MSG.EnumBaseTypeInvalid);
+      return d;
+    }
+
     // Set the enum's base type.
     d.symbol.type.baseType = type;
 
-    // TODO: check base type. must be basic type or another enum.
-
     enterScope(d.symbol);
 
+    //Enum must have at least one member
+    if (d.members is null)
+    {
+      error(d.begin, MSG.EnumMustHaveMember);
+      return d;
+    }
+
+
+    Number = 0;
     foreach (member; d.members)
     {
       Expression finalValue;
@@ -142,13 +169,85 @@ override
       {
         member.value = visitE(member.value);
         finalValue = interpret(member.value);
+
+	//Check that each member evaluates to an integral or enum type D1.0
+	if(finalValue.type !is null)
+	{
+	  if (!finalValue.type.isIntegral() && !finalValue.type.isBaseScalar())
+	  {
+	    error(d.begin, MSG.EnumMemberTypeInvalid);
+	    return d;
+	  }
+	} else
+	{
+	  //This section should be correct for enum {enumMember=enumType.enumMember}
+	  //once interpreter has been updated for enum basetypes
+	  error(d.begin, MSG.EnumIntegerExprExpected);
+	  return d;
+	}
+
         if (finalValue is Interpreter.NAR)
           finalValue = new IntExpression(0, d.symbol.type);
+	else {
+	  if(finalValue !is null)
+	    Number = (cast(IntExpression)finalValue).number;
+	}
+
+	firstEnumValue = false;
+
       }
-      //else
-        // TODO: increment a number variable and assign that to value.
+      else
+      {
+	if (firstEnumValue)
+	{
+          finalValue = new IntExpression(0, d.symbol.type);
+	  firstEnumValue = false;
+	} else
+	  finalValue = new IntExpression(Number, d.symbol.type);
+      }
+
+      switch (type.tid)
+      {
+	case TYP.Bool :
+	  if (Number >= 2) goto valueOverflow;
+	  break;
+	case TYP.Byte :
+	  if (Number >= 128) goto valueOverflow;
+	  break;
+	case TYP.Char :
+	case TYP.Ubyte :
+	  if (Number >= 256) goto valueOverflow;
+	  break;
+	case TYP.Short :
+	  if (Number >= 0x9000) goto valueOverflow;
+	  break;
+	case TYP.Wchar :
+	case TYP.Ushort :
+	  if (Number >= 0x10000) goto valueOverflow;
+	  break;
+	case TYP.Int :
+	  if (Number >= 0x80000000) goto valueOverflow;
+	  break;
+	case TYP.Dchar :
+	case TYP.Uint :
+	  if (Number >= 0x100000000) goto valueOverflow;
+	  break;
+	case TYP.Long :
+	  if (Number >= 0x8000000000000000) goto valueOverflow;
+	  break;
+	case TYP.Ulong :
+	  if (Number >= 0xFFFFFFFFFFFFFFFF) goto valueOverflow;
+	  break;
+	valueOverflow:
+	  error(d.begin, MSG.EnumOverflow);
+	  return d;
+	default:
+	  break;
+      }
+
       member.symbol.value = finalValue;
       member.symbol.setComplete();
+      Number++;
     }
 
     exitScope();
@@ -229,9 +328,12 @@ override
 
   T visit(IdentifierType t)
   {
+    Type typ = Types.Int;
     auto idToken = t.begin;
     auto symbol = search(idToken);
-    // TODO: save symbol or its type in t.
+    // TODO: save symbol or its type in t...this is defaulting to Int!! FIX
+
+    t.type = typ;
     return t;
   }
 
@@ -289,11 +391,117 @@ override
     return e;
   }
 
-  E visit(OrOrExpression)
-  { return null; }
+  E visit(OrOrExpression e)
+  {
+    if(!e.type)
+    {
+      e.lhs = visitE(e.lhs);
+      e.rhs = visitE(e.rhs);
+      e.type = e.rhs.type;
+    }
+    return e;
+  }
 
-  E visit(AndAndExpression)
-  { return null; }
+  E visit(AndAndExpression e)
+  {
+    if(!e.type)
+    {
+      e.lhs = visitE(e.lhs);
+      e.rhs = visitE(e.rhs);
+      e.type = e.rhs.type;
+    }
+    return e;
+  }
+
+  E visit(PlusExpression e)
+  {
+    if(!e.type)
+    {
+      e.lhs = visitE(e.lhs);
+      e.rhs = visitE(e.rhs);
+      if (e.lhs.type.isPointer && e.rhs.type.isIntegral())
+      {
+        e.type = e.lhs.type;
+	//TODO resulting value is the pointer plus e.rhs*(e.lhs.type.sizeof)
+      }
+      else if (e.rhs.type.isPointer && e.lhs.type.isIntegral())
+      {
+	e.type = e.rhs.type;
+	//TODO reverse operands then same as above
+	//TODO resulting value is the pointer plus e.rhs*(e.lhs.type.sizeof)
+      }
+      else if (e.rhs.type.isPointer && e.lhs.type.isPointer())
+      {
+        error(e.begin, MSG.CannotAddPointers);
+        return e;
+      }
+      else
+        e.type = e.rhs.type;
+    }
+    return e;
+  }
+
+  E visit(MinusExpression e)
+  {
+    if(!e.type)
+    {
+      e.lhs = visitE(e.lhs);
+      e.rhs = visitE(e.rhs);
+      if (e.lhs.type.isPointer && e.rhs.type.isIntegral())
+      {
+        e.type = e.lhs.type;
+      }
+      else if (e.rhs.type.isPointer && e.lhs.type.isIntegral())
+      {
+	//TODO error
+	return e;
+      }
+      else if (e.rhs.type.isPointer && e.lhs.type.isPointer())
+      {
+        if (e.rhs.type.tid != e.lhs.type.tid)
+	{
+	  //TODO error
+	  return e;
+	}
+      }
+      else
+        e.type = e.rhs.type;
+    }
+    return e;
+  }
+
+  E visit(MulExpression e)
+  {
+    if(!e.type)
+    {
+      e.lhs = visitE(e.lhs);
+      e.rhs = visitE(e.rhs);
+      e.type = e.rhs.type;
+    }
+    return e;
+  }
+
+  E visit(DivExpression e)
+  {
+    if(!e.type)
+    {
+      e.lhs = visitE(e.lhs);
+      e.rhs = visitE(e.rhs);
+      e.type = e.rhs.type;
+    }
+    return e;
+  }
+
+  E visit(ModExpression e)
+  {
+    if(!e.type)
+    {
+      e.lhs = visitE(e.lhs);
+      e.rhs = visitE(e.rhs);
+      e.type = e.rhs.type;
+    }
+    return e;
+  }
 
   E visit(SpecialTokenExpression e)
   {
@@ -376,6 +584,11 @@ override
   }
 
   E visit(StringExpression e)
+  {
+    return e;
+  }
+
+  E visit(IdentifierExpression e)
   {
     return e;
   }
