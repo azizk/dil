@@ -58,6 +58,7 @@ class Interpreter : Visitor
   /// Start evaluation.
   Expression eval(Expression e)
   {
+    e = visitE(e);
     return e;
   }
   // TODO: are eval() methods needed for other Nodes?
@@ -136,6 +137,40 @@ class Interpreter : Visitor
     }
     return false;
   }
+
+  int toInt(Expression e)
+  {
+    //TODO finish this off for all types
+    switch (e.kind)
+    {
+      case NodeKind.BoolExpression:
+        return e.to!(IntExpression).number != 0;
+      case NodeKind.IntExpression:
+        return e.to!(IntExpression).number;
+      case NodeKind.RealExpression:
+        return e.to!(IntExpression).number;
+      default:
+        //TODO proper error message
+        assert(0, "Unsupported integer conversion");
+    }
+  }
+
+
+  real toReal(Expression e)
+  {
+    //TODO finish this off for all types
+    switch (e.kind)
+    {
+      case NodeKind.RealExpression:
+        return e.to!(RealExpression).number;
+      case NodeKind.IntExpression:
+        return e.to!(RealExpression).number;
+      default:
+        //TODO proper error message
+        assert(0, "Unsupported real conversion");
+    }
+  }
+
 
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   |                                Declarations                               |
@@ -576,9 +611,9 @@ override
 
     if(r !is NAR)
     {
-      if(isBool(r, false))
+      if(isBool(r, false)) {
         r = new IntExpression(0, Types.Bool);
-      else if(isBool(r, true))
+      } else if(isBool(r, true))
       {
         r = visitE(e.rhs);
         if(r !is NAR)
@@ -649,12 +684,30 @@ override
 
   E visit(PlusExpression e)
   {
-    return e;
+    if (e.type.isIntegral())
+    {
+      auto res = new IntExpression(toInt(visitE(e.lhs)) + toInt(visitE(e.rhs)), e.type);
+      return res;
+    } else if (e.type.isReal())
+    {
+      auto res = new RealExpression(toReal(visitE(e.lhs)) + toReal(visitE(e.rhs)), e.type);
+      return res;
+    }
+    return NAR;
   }
 
   E visit(MinusExpression e)
   {
-    return e;
+    if (e.type.isIntegral())
+    {
+      auto res = new IntExpression(toInt(visitE(e.lhs)) - toInt(visitE(e.rhs)), e.type);
+      return res;
+    } else if (e.type.isReal())
+    {
+      auto res = new RealExpression(toReal(visitE(e.lhs)) - toReal(visitE(e.rhs)), e.type);
+      return res;
+    }
+    return NAR;
   }
 
   E visit(CatExpression e)
@@ -664,17 +717,48 @@ override
 
   E visit(MulExpression e)
   {
-    return e;
+    if (e.type.isIntegral())
+    {
+      auto res = new IntExpression(toInt(visitE(e.lhs)) * toInt(visitE(e.rhs)), e.type);
+      return res;
+    } else if (e.type.isReal())
+    {
+      auto res = new RealExpression(toReal(visitE(e.lhs)) * toReal(visitE(e.rhs)), e.type);
+      return res;
+    }
+    return NAR;
   }
 
   E visit(DivExpression e)
   {
-    return e;
+    if (e.type.isIntegral())
+    {
+      if (e.to!(IntExpression).number == 0)
+        {} //TODO throw exception here for div by zero 
+      auto res = new IntExpression(toInt(visitE(e.lhs)) / toInt(visitE(e.rhs)), e.type);
+      return res;
+    } else if (e.type.isReal())
+    {
+      auto res = new RealExpression(toReal(visitE(e.lhs)) / toReal(visitE(e.rhs)), e.type);
+      return res;
+    }
+    return NAR;
   }
 
   E visit(ModExpression e)
   {
-    return e;
+    if (e.type.isIntegral())
+    {
+      if (e.to!(IntExpression).number == 0)
+        {} //TODO throw exception here for div by zero 
+      auto res = new IntExpression(toInt(visitE(e.lhs)) % toInt(visitE(e.rhs)), e.type); 
+      return res;
+    } else if (e.type.isReal())
+    {
+      auto res = new RealExpression(toReal(visitE(e.lhs)) % toReal(visitE(e.rhs)), e.type);
+      return res;
+    }
+    return NAR;
   }
 
   E visit(AssignExpression e)
