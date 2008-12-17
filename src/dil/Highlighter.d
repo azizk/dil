@@ -246,14 +246,22 @@ void highlightSyntax(string filePath, TagMap tags,
                      Print!(char) print,
                      bool printHTML, bool opt_printLines)
 {
-  auto parser = new Parser(new SourceText(filePath, true));
-  auto root = parser.start();
+  auto modul = new Module(filePath, new Diagnostics());
+  modul.parse();
+  highlightSyntax(modul, tags, print, printHTML, opt_printLines);
+}
+
+/// ditto
+void highlightSyntax(Module modul, TagMap tags,
+                     Print!(char) print,
+                     bool printHTML, bool opt_printLines)
+{
+  auto parser = modul.parser;
   auto lx = parser.lexer;
-
   auto builder = new TokenExBuilder();
-  auto tokenExList = builder.build(root, lx.firstToken());
+  auto tokenExList = builder.build(modul.root, lx.firstToken());
 
-  print.format(tags["DocHead"], (new FilePath(filePath)).name());
+  print.format(tags["DocHead"], modul.getFQN());
   if (lx.errors.length || parser.errors.length)
   { // Output error messages.
     print(tags["CompBegin"]);
