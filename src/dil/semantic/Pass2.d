@@ -34,13 +34,6 @@ class SemanticPass2 : DefaultVisitor
   Scope scop; /// The current scope.
   Module modul; /// The module to be semantically checked.
 
-  // Attributes:
-  LinkageType linkageType; /// Current linkage type.
-  Protection protection; /// Current protection attribute.
-  StorageClass storageClass; /// Current storage classes.
-  uint alignSize; /// Current align size.
-
-
   /// Constructs a SemanticPass2 object.
   /// Params:
   ///   modul = the module to be checked.
@@ -69,54 +62,6 @@ class SemanticPass2 : DefaultVisitor
   void exitScope()
   {
     scop = scop.exit();
-  }
-
-  void insert(Symbol symbol)
-  {
-    insert(symbol, symbol.name);
-  }
-
-  /// Inserts a symbol into the current scope.
-  void insert(Symbol symbol, Identifier* name)
-  {
-    auto symX = scop.symbol.lookup(name);
-    if (symX)
-      reportSymbolConflict(symbol, symX, name);
-    else
-      scop.symbol.insert(symbol, name);
-    // Set the current scope symbol as the parent.
-    symbol.parent = scop.symbol;
-  }
-
-  /// Inserts a symbol into scopeSym.
-  void insert(Symbol symbol, ScopeSymbol scopeSym)
-  {
-    auto symX = scopeSym.lookup(symbol.name);
-    if (symX)
-      reportSymbolConflict(symbol, symX, symbol.name);
-    else
-      scopeSym.insert(symbol, symbol.name);
-    // Set the current scope symbol as the parent.
-    symbol.parent = scopeSym;
-  }
-
-  /// Inserts a symbol, overloading on the name, into the current scope.
-  void insertOverload(Symbol sym)
-  {
-    auto name = sym.name;
-    auto sym2 = scop.symbol.lookup(name);
-    if (sym2)
-    {
-      if (sym2.isOverloadSet)
-        (cast(OverloadSet)cast(void*)sym2).add(sym);
-      else
-        reportSymbolConflict(sym, sym2, name);
-    }
-    else
-      // Create a new overload set.
-      scop.symbol.insert(new OverloadSet(name, sym.node), name);
-    // Set the current scope symbol as the parent.
-    sym.parent = scop.symbol;
   }
 
   /// Reports an error: new symbol s1 conflicts with existing symbol s2.
@@ -209,6 +154,10 @@ class SemanticPass2 : DefaultVisitor
     }
   }
 
+
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                                Declarations                               |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
 override
 {
@@ -367,13 +316,6 @@ override
     return d;
   }
 
-  D visit(EnumMemberDeclaration d)
-  {
-    d.symbol = new EnumMember(d.name, protection, storageClass, linkageType, d);
-    insert(d.symbol);
-    return d;
-  }
-
   D visit(MixinDeclaration md)
   {
     if (md.decls)
@@ -406,7 +348,11 @@ override
     return md.decls;
   }
 
-  // Type nodes:
+
+
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                                   Types                                   |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   T visit(TypeofType t)
   {
@@ -451,7 +397,6 @@ override
     auto idToken = t.begin;
     auto symbol = search(idToken);
     // TODO: save symbol or its type in t...this is defaulting to Int!! FIX
-    
     t.type = typ;
     return t;
   }
@@ -487,7 +432,10 @@ override
     return t;
   }
 
-  // Expression nodes:
+
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                                Expressions                                |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   E visit(ParenExpression e)
   {
@@ -541,31 +489,6 @@ override
     }
     return e;
   }
-
-
-/*
-  E visit(OrOrExpression e)
-  {
-    if(!e.type)
-    {
-      e.lhs = visitE(e.lhs);
-      e.rhs = visitE(e.rhs);
-      e.type = e.rhs.type;
-    }
-    return e;
-  }
-
-  E visit(AndAndExpression e)
-  {
-    if(!e.type)
-    {
-      e.lhs = visitE(e.lhs);
-      e.rhs = visitE(e.rhs);
-      e.type = e.rhs.type;
-    }
-    return e;
-  }
-*/
 
   E visit(PlusExpression e)
   {
@@ -744,6 +667,11 @@ override
 
   E visit(IdentifierExpression e)
   {
+    if (e.hasType)
+      return e;
+    debug(sema) Stdout.formatln("", e);
+    auto idToken = e.idToken();
+    e.symbol = search(idToken);
     return e;
   }
 
@@ -787,5 +715,7 @@ override
     //ie.expr = new StringExpression(loadImportFile(stringExpr.getString()));
     return ie.expr;
   }
+
+
 }
 }
