@@ -51,8 +51,7 @@ struct CompileCommand
     if (printModuleTree)
     {
       moduleMan.sortPackageTree();
-      printMTree(moduleMan.rootPackage.packages,
-                 moduleMan.rootPackage.modules, "");
+      printMTree2(moduleMan.rootPackage, "");
     }
     // foreach (mod; moduleMan.orderedModules)
     //   Stdout(mod.moduleFQN, mod.imports.length).newline;
@@ -69,15 +68,14 @@ struct CompileCommand
   }
 
   /// Prints the package/module tree excluding the root.
-  void printMTree(Package[] pckgs, Module[] mods, string indent)
+  void printMTree2(Package pckg, string indent)
   {
-    foreach (pckg; pckgs)
+    foreach (p; pckg.packages)
     {
-      Stdout(indent)(pckg.pckgName)("/").newline; // PackageName/
-      // Print the sub-packages.
-      printMTree(pckg.packages, pckg.modules, indent ~ "  ");
+      Stdout(indent)(p.pckgName)("/").newline; // PackageName/
+      printMTree2(p, indent ~ "  "); // Print the sub-packages.
     }
-    foreach (m; mods) // Print the modules.
+    foreach (m; pckg.modules) // Print the modules.
       Stdout(indent)(m.moduleName)(".")(m.fileExtension()).newline;
   }
 
