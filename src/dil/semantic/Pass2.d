@@ -34,6 +34,13 @@ class SemanticPass2 : DefaultVisitor
   Scope scop; /// The current scope.
   Module modul; /// The module to be semantically checked.
 
+  // Attributes:
+  LinkageType linkageType; /// Current linkage type.
+  Protection protection; /// Current protection attribute.
+  StorageClass storageClass; /// Current storage classes.
+  uint alignSize; /// Current align size.
+
+
   /// Constructs a SemanticPass2 object.
   /// Params:
   ///   modul = the module to be checked.
@@ -63,6 +70,63 @@ class SemanticPass2 : DefaultVisitor
   {
     scop = scop.exit();
   }
+
+  void insert(Symbol symbol)
+  {
+    insert(symbol, symbol.name);
+  }
+
+  /// Inserts a symbol into the current scope.
+  void insert(Symbol symbol, Identifier* name)
+  {
+    auto symX = scop.symbol.lookup(name);
+    if (symX)
+      reportSymbolConflict(symbol, symX, name);
+    else
+      scop.symbol.insert(symbol, name);
+    // Set the current scope symbol as the parent.
+    symbol.parent = scop.symbol;
+  }
+
+  /// Inserts a symbol into scopeSym.
+  void insert(Symbol symbol, ScopeSymbol scopeSym)
+  {
+    auto symX = scopeSym.lookup(symbol.name);
+    if (symX)
+      reportSymbolConflict(symbol, symX, symbol.name);
+    else
+      scopeSym.insert(symbol, symbol.name);
+    // Set the current scope symbol as the parent.
+    symbol.parent = scopeSym;
+  }
+
+  /// Inserts a symbol, overloading on the name, into the current scope.
+  void insertOverload(Symbol sym)
+  {
+    auto name = sym.name;
+    auto sym2 = scop.symbol.lookup(name);
+    if (sym2)
+    {
+      if (sym2.isOverloadSet)
+        (cast(OverloadSet)cast(void*)sym2).add(sym);
+      else
+        reportSymbolConflict(sym, sym2, name);
+    }
+    else
+      // Create a new overload set.
+      scop.symbol.insert(new OverloadSet(name, sym.node), name);
+    // Set the current scope symbol as the parent.
+    sym.parent = scop.symbol;
+  }
+
+  /// Reports an error: new symbol s1 conflicts with existing symbol s2.
+  void reportSymbolConflict(Symbol s1, Symbol s2, Identifier* name)
+  {
+    auto loc = s2.node.begin.getErrorLocation();
+    auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
+    error(s1.node.begin, MSG.DeclConflictsWithDecl, name.str, locString);
+  }
+
 
   /// Evaluates e and returns the result.
   Expression interpret(Expression e)
@@ -114,6 +178,38 @@ class SemanticPass2 : DefaultVisitor
     return symbol;
   }
 
+  /// Reports an error if the type of e is not bool.
+  void errorIfBool(Expression e)
+  {
+    assert(e.type !is null);
+    if (e.type.isBaseBool())
+      error(e.begin, "the operation is undefined for type bool");
+  }
+
+  /// Reports an error if e has no boolean result.
+  void errorIfNonBool(Expression e)
+  {
+    assert(e.type !is null);
+    switch (e.kind)
+    {
+    case NodeKind.DeleteExpression:
+      error(e.begin, "the delete operator has no boolean result");
+      break;
+    case NodeKind.AssignExpression:
+      error(e.begin, "the assignment operator '=' has no boolean result");
+      break;
+    case NodeKind.CondExpression:
+      auto cond = e.to!(CondExpression);
+      errorIfNonBool(cond.lhs);
+      errorIfNonBool(cond.rhs);
+      break;
+    default:
+      if (!e.type.isBaseScalar()) // Only scalar types can be bool.
+        error(e.begin, "expression has no boolean result");
+    }
+  }
+
+
 override
 {
   D visit(CompoundDeclaration d)
@@ -123,7 +219,6 @@ override
 
   D visit(EnumDeclaration d)
   {
-
     uint number = 0;
     bool firstEnumValue = true;
     bool enumAssignedAValue = false;
@@ -272,6 +367,13 @@ override
     return d;
   }
 
+  D visit(EnumMemberDeclaration d)
+  {
+    d.symbol = new EnumMember(d.name, protection, storageClass, linkageType, d);
+    insert(d.symbol);
+    return d;
+  }
+
   D visit(MixinDeclaration md)
   {
     if (md.decls)
@@ -349,7 +451,7 @@ override
     auto idToken = t.begin;
     auto symbol = search(idToken);
     // TODO: save symbol or its type in t...this is defaulting to Int!! FIX
-
+    
     t.type = typ;
     return t;
   }
@@ -410,6 +512,40 @@ override
 
   E visit(OrOrExpression e)
   {
+    if (!e.hasType)
+    {
+      e.lhs = visitE(e.lhs);
+      errorIfNonBool(e.lhs); // Left operand must be bool.
+      e.rhs = visitE(e.rhs);
+      if (e.rhs.type == Types.Void)
+        e.type = Types.Void; // According to spec.
+      else
+        (e.type = Types.Bool), // Otherwise type is bool and
+        errorIfNonBool(e.rhs); // right operand must be bool.
+    }
+    return e;
+  }
+
+  E visit(AndAndExpression e)
+  {
+    if (!e.hasType)
+    {
+      e.lhs = visitE(e.lhs);
+      errorIfNonBool(e.lhs); // Left operand must be bool.
+      e.rhs = visitE(e.rhs);
+      if (e.rhs.type == Types.Void)
+        e.type = Types.Void; // According to spec.
+      else
+        (e.type = Types.Bool), // Otherwise type is bool and
+        errorIfNonBool(e.rhs); // right operand must be bool.
+    }
+    return e;
+  }
+
+
+/*
+  E visit(OrOrExpression e)
+  {
     if(!e.type)
     {
       e.lhs = visitE(e.lhs);
@@ -429,6 +565,7 @@ override
     }
     return e;
   }
+*/
 
   E visit(PlusExpression e)
   {
