@@ -49,18 +49,68 @@ class ModuleManager
     this.diag = diag;
   }
 
+  /// Looks up a module by its file path. E.g.: "src/dil/ModuleManager.d"
+  /// Relative paths are made absolute.
+  Module moduleByPath(string moduleFilePath)
+  {
+    auto absFilePath = absolutePath(moduleFilePath);
+    if (auto existingModule = absFilePath in absFilePathTable)
+      return *existingModule;
+    return null;
+  }
+
+  /// Looks up a module by its f.q.n. path. E.g.: "dil/ModuleManager"
+  Module moduleByFQN(string moduleFQNPath)
+  {
+    if (auto existingModule = moduleFQNPath in moduleFQNPathTable)
+      return *existingModule;
+    return null;
+  }
+
   /// Loads a module given a file path.
   Module loadModuleFile(string moduleFilePath)
   {
-    auto absFilePath = FileSystem.toAbsolute(moduleFilePath);
-    // FIXME: normalize() doesn't simplify //. Handle the exception it throws.
-    absFilePath = pathNormalize(absFilePath); // Remove ./ /. ../ and /..
-    if (auto existingModule = absFilePath in absFilePathTable)
-      return *existingModule;
+    if (auto existingModule = moduleByPath(moduleFilePath))
+      return existingModule;
 
     // Create a new module.
     auto newModule = new Module(moduleFilePath, diag);
     newModule.parse();
+
+    addModule(newModule);
+
+    return newModule;
+  }
+
+  /// Loads a module given an FQN path. Searches import paths.
+  Module loadModule(string moduleFQNPath)
+  {
+    // Look up in table if the module is already loaded.
+    if (auto existingModule = moduleByFQN(moduleFQNPath))
+      return existingModule;
+
+    // Locate the module in the file system.
+    auto moduleFilePath = findModuleFilePath(moduleFQNPath, importPaths);
+    if (!moduleFilePath.length)
+      return null; // No module found.
+
+    // Load the module file.
+    auto modul = loadModuleFile(moduleFilePath);
+
+    if (getPackageFQN(modul.getFQNPath()) != getPackageFQN(moduleFQNPath))
+    { // Error: the requested module is not in the correct package.
+      auto location = modul.getModuleDeclToken().getErrorLocation();
+      auto msg = Format(MSG.ModuleNotInPackage, getPackageFQN(moduleFQNPath));
+      diag ~= new SemanticError(location, msg);
+    }
+
+    return modul;
+  }
+
+  /// Inserts the given module into the tables.
+  void addModule(Module newModule)
+  {
+    auto absFilePath = absolutePath(newModule.filePath());
 
     auto moduleFQNPath = newModule.getFQNPath();
     if (auto existingModule = moduleFQNPath in moduleFQNPathTable)
@@ -68,10 +118,10 @@ class ModuleManager
       auto location = newModule.getModuleDeclToken().getErrorLocation();
       auto msg = Format(MSG.ConflictingModuleFiles, newModule.filePath());
       diag ~= new SemanticError(location, msg);
-      return *existingModule;
+      return; // Can't insert new module, so return.
     }
 
-    // Insert new module.
+    // Insert into the tables.
     moduleFQNPathTable[moduleFQNPath] = newModule;
     absFilePathTable[absFilePath] = newModule;
     loadedModules ~= newModule;
@@ -83,12 +133,12 @@ class ModuleManager
 
     if (auto p = newModule.getFQN() in packageTable)
     { // Error: module and package share the same name.
+      // Happens when: "src/dil/module.d", "src/dil.d"
+      // There's a package dil and a module dil.
       auto location = newModule.getModuleDeclToken().getErrorLocation();
       auto msg = Format(MSG.ConflictingModuleAndPackage, newModule.getFQN());
       diag ~= new SemanticError(location, msg);
     }
-
-    return newModule;
   }
 
   /// Compares the number of imports of two modules.
@@ -152,31 +202,6 @@ class ModuleManager
     }
   }
 
-  /// Loads a module given an FQN path.
-  Module loadModule(string moduleFQNPath)
-  {
-    // Look up in table if the module is already loaded.
-    Module* pModul = moduleFQNPath in moduleFQNPathTable;
-    if (pModul)
-      return *pModul;
-
-    // Locate the module in the file system.
-    auto moduleFilePath = findModuleFilePath(moduleFQNPath, importPaths);
-    if (!moduleFilePath.length)
-      return null;
-
-    // Load the found module file.
-    auto modul = loadModuleFile(moduleFilePath);
-    if (modul.getFQNPath() != moduleFQNPath)
-    { // Error: the requested module is not in the correct package.
-      auto location = modul.getModuleDeclToken().getErrorLocation();
-      auto msg = Format(MSG.ModuleNotInPackage, getPackageFQN(moduleFQNPath));
-      diag ~= new SemanticError(location, msg);
-    }
-
-    return modul;
-  }
-
   /// Returns e.g. 'dil.ast' for 'dil/ast/Node'.
   static string getPackageFQN(string moduleFQNPath)
   {
@@ -229,5 +254,15 @@ class ModuleManager
   void sortPackageTree()
   {
     sortPackageTree(rootPackage);
+  }
+
+  /// Returns a normalized, absolute path.
+  static string absolutePath(string path)
+  {
+    path = FileSystem.toAbsolute(path);
+    // FIXME: normalize() doesn't simplify 'a//path//' to 'a/path/'.
+    // Handle the exception it throws.
+    path = pathNormalize(path); // Remove ./ /. ../ and /..
+    return path;
   }
 }
