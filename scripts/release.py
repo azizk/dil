@@ -164,7 +164,7 @@ def main():
     versions = ["DDoc"]
     print "***** Generating documentation *****"
     generate_docs(DIL_EXE, DEST.DOC, MODLIST, DOC_FILES,
-                  versions, options='-v --kandil -hl')
+                  versions, options=['-v', '-hl', '--kandil'])
 
   DMD_EXE.use_wine = False
   use_wine = False

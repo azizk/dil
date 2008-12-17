@@ -174,7 +174,7 @@ def main():
                 [PHOBOS_SRC/"phobos.d"] + FILES
     versions = ["DDoc"]
     generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES,
-                  versions, options='-v -i -hl --kandil')
+                  versions, options='-v -i -hl --kandil'.split(' '))
     modify_phobos_html(DEST/"phobos.html", D_VERSION)
     copy_files2(DATA, KANDIL, DEST)
   else:
@@ -184,7 +184,7 @@ def main():
       TMP//("index.d", "phobos.ddoc", "missing.ddoc", "overrides.ddoc")
     versions = ["DDoc"]
     generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES,
-                  versions, options='-v -i -hl')
+                  versions, options=['-v', '-i', '-hl'])
     modify_phobos_html(DEST/"phobos.html", D_VERSION)
     copy_files(DATA, PHOBOS_SRC, DEST)
 

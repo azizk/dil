@@ -102,7 +102,7 @@ def main():
   DOC_FILES = [KANDIL/"kandil.ddoc", TANGO_DDOC] + FILES
   versions = ["Windows", "Tango", "DDoc"]
   generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES,
-                versions, options='-v -hl --kandil')
+                versions, options=['-v', '-hl', '--kandil'])
 
   copy_files(DATA, KANDIL, TANGO_DIR, DEST)
 

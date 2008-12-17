@@ -106,12 +106,11 @@ def generate_modules_js(modlist, dest_path, max_line_len=80):
 
   f.close()
 
-def generate_docs(dil_exe, dest, modlist, files, versions=[], options=''):
+def generate_docs(dil_exe, dest, modlist, files, versions=[], options=[]):
   """ Generates documenation files. """
-  files = ' '.join(files)
-  versions = ' '.join(["-version=%s"%v for v in versions])
-  args = dict(locals())
-  os.system("%(dil_exe)s ddoc %(dest)s %(options)s %(versions)s -m=%(modlist)s %(files)s" % args)
+  from subprocess import call
+  versions = ["-version="+v for v in versions]
+  call([dil_exe, "ddoc", dest, "-m="+modlist] + options + versions + files)
 
 def generate_shl_files(dil_exe, dest, prefix, files):
   """ Generates syntax highlighted files. """
