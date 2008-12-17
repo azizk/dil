@@ -8,11 +8,12 @@ from common import *
 def copy_files(DATA, KANDIL, TANGO_DIR, DEST):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
-      (DATA/"html.css", DEST.HTMLSRC), # For syntax highlighted files.
-      (TANGO_DIR/"LICENSE", DEST/"License.txt"), # Tango's license.
-      (KANDIL/"style.css", DEST.CSS),
+      (TANGO_DIR/"LICENSE",    DEST/"License.txt"), # Tango's license.
+      (DATA/"html.css",        DEST.HTMLSRC),
+      (KANDIL/"style.css",     DEST.CSS),
       (KANDIL/"navigation.js", DEST.JS),
-      (KANDIL/"loading.gif", DEST.IMG)):
+      (KANDIL/"jquery.js",     DEST.JS),
+      (KANDIL/"loading.gif",   DEST.IMG)):
     FILE.copy(DIR)
 
 def get_tango_version(path):
@@ -100,16 +101,10 @@ def main():
   write_tango_ddoc(TANGO_DDOC, options.revision)
   DOC_FILES = [KANDIL/"kandil.ddoc", TANGO_DDOC] + FILES
   versions = ["Windows", "Tango", "DDoc"]
-  generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES, versions, options='-v')
-
-  modlist = read_modules_list(MODLIST)
-  generate_modules_js(modlist, DEST.JS/"modules.js")
-
-  for args in generate_shl_files2(DIL_EXE, DEST.HTMLSRC, modlist):
-    print "hl %s > %s" % args;
+  generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES,
+                versions, options='-v -hl --kandil')
 
   copy_files(DATA, KANDIL, TANGO_DIR, DEST)
-  download_jquery(DEST.JS/"jquery.js")
 
   TMP.rmtree()
 

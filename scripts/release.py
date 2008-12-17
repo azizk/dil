@@ -10,11 +10,12 @@ from build import DMDCommand
 def copy_files(DIL):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
-      (DIL.DATA/"dilconf.d", DIL.BIN),
-      (DIL.DATA/"html.css", DIL.HTMLSRC),
-      (DIL.KANDIL/"style.css", DIL.CSS),
+      (DIL.DATA/"dilconf.d",       DIL.BIN),
+      (DIL.DATA/"html.css",        DIL.HTMLSRC),
+      (DIL.KANDIL/"style.css",     DIL.CSS),
       (DIL.KANDIL/"navigation.js", DIL.JS),
-      (DIL.KANDIL/"loading.gif", DIL.IMG)):
+      (DIL.KANDIL/"jquery.js",     DIL.JS),
+      (DIL.KANDIL/"loading.gif",   DIL.IMG)):
     FILE.copy(DIR)
 
 def writeMakefile():
@@ -31,9 +32,10 @@ def build_dil(dmd_exe, *args, **kwargs):
 
 def update_version(path, major, minor):
   """ Updates the version info in the compiler's source code. """
+  major, minor = int(major), int(minor)
   code = open(path).read()
-  code = re.sub(r"(VERSION_MAJOR\s*=\s*)[\w\d]+;",r"\g<1>%s;"%int(major), code)
-  code = re.sub(r"(VERSION_MINOR\s*=\s*)\d+;", r"\g<1>%s;"%int(minor), code)
+  code = re.sub(r"(VERSION_MAJOR\s*=\s*)[\w\d]+;", r"\g<1>%s;" % major, code)
+  code = re.sub(r"(VERSION_MINOR\s*=\s*)\d+;", r"\g<1>%s;" % minor, code)
   open(path, "w").write(code)
 
 def main():
@@ -161,15 +163,8 @@ def main():
                  DEST.DATA//("macros_dil.ddoc", "dilconf.d") + FILES
     versions = ["DDoc"]
     print "***** Generating documentation *****"
-    generate_docs(DIL_EXE, DEST.DOC, MODLIST, DOC_FILES, versions, options='-v')
-
-    modlist = read_modules_list(MODLIST)
-    generate_modules_js(modlist, DEST.JS/"modules.js")
-
-    print "***** Generating syntax highlighted HTML files *****"
-    for args in generate_shl_files2(DIL_EXE, DEST.HTMLSRC, modlist):
-      print "hl %s > %s" % args;
-    download_jquery(DEST.JS/"jquery.js")
+    generate_docs(DIL_EXE, DEST.DOC, MODLIST, DOC_FILES,
+                  versions, options='-v --kandil -hl')
 
   DMD_EXE.use_wine = False
   use_wine = False
