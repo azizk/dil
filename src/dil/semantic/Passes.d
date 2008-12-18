@@ -921,6 +921,13 @@ override
     return null;
   }
 
+  /// Visit the operands of a binary operator.
+  void visitBinary(BinaryExpression e)
+  {
+    e.lhs = visitE(e.lhs);
+    e.rhs = visitE(e.rhs);
+  }
+
 override
 {
   E visit(IllegalExpression)
@@ -937,7 +944,7 @@ override
     {
       e.lhs = visitE(e.lhs);
       e.rhs = visitE(e.rhs);
-      e.type = e.rhs.type;
+      e.type = e.rhs.type; // Take the type of the right hand side.
     }
     return e;
   }
@@ -997,8 +1004,11 @@ override
 
   E visit(EqualExpression e)
   {
+    visitBinary(e);
     if (auto o = findOverload(e, Ident.opEquals, null))
       return o;
+    // TODO:
+    e.type = Types.Bool;
     return e;
   }
 
@@ -1009,8 +1019,17 @@ override
 
   E visit(RelExpression e)
   {
+    visitBinary(e);
     if (auto o = findOverload(e, Ident.opCmp, null))
       return o;
+    // TODO: check for more errors?
+    if (e.lhs.type.isBaseComplex() || e.rhs.type.isBaseComplex())
+    {
+      auto whichOp = e.lhs.type.isBaseComplex() ? e.lhs.begin : e.rhs.begin;
+      error(whichOp, "the operator '{}' is undefined for complex numbers",
+            e.tok.text());
+    }
+    e.type = Types.Bool;
     return e;
   }
 
@@ -1018,6 +1037,7 @@ override
   {
     if (auto o = findOverload(e, Ident.opIn, Ident.opIn_r))
       return o;
+    // TODO: right operand must be an associative array.
     return e;
   }
 

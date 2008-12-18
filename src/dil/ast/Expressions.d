@@ -23,11 +23,17 @@ class IllegalExpression : Expression
   mixin(copyMethod);
 }
 
+/// The base class for every binary operator.
+///
+/// The copy method is mixed in here, not in any derived class.
+/// If a derived class has other nodes than lhs and rhs, then it has
+/// to have its own copy method which handles additional nodes.
 abstract class BinaryExpression : Expression
 {
   Expression lhs; /// Left-hand side expression.
   Expression rhs; /// Right-hand side expression.
-  Token* tok;
+  Token* tok;     /// The operator token.
+  /// Constructs a BinaryExpression object.
   this(Expression lhs, Expression rhs, Token* tok)
   {
     addChildren([lhs, rhs]);
@@ -105,6 +111,7 @@ class AndExpression : BinaryExpression
   }
 }
 
+/// This class isn't strictly needed, just here for clarity.
 abstract class CmpExpression : BinaryExpression
 {
   this(Expression left, Expression right, Token* tok)
