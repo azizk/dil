@@ -1035,9 +1035,17 @@ override
 
   E visit(InExpression e)
   {
+    visitBinary(e);
     if (auto o = findOverload(e, Ident.opIn, Ident.opIn_r))
       return o;
-    // TODO: right operand must be an associative array.
+    if (!e.rhs.type.baseType().isAArray())
+    {
+      error(e.rhs.begin, "right operand of 'in' operator must be an associative array");
+      e.type = e.rhs.type; // Don't use Types.Error. Cascading error msgs are irritating.
+    }
+    else
+      // Result type is pointer to element type of AA.
+      e.type = e.rhs.type.next.ptrTo();
     return e;
   }
 

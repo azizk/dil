@@ -32,6 +32,14 @@ abstract class Type/* : Symbol*/
     this.tid = tid;
   }
 
+  /// Casts the type to Class.
+  Class to(Class)()
+  { // [4..$] is there for slicing off "Type" from the class name.
+    assert(this.tid == mixin(`mixin("TYP." ~ Class.stringof[4..$])`) ||
+           Class.stringof == "TypeBasic" && this.isBasic());
+    return cast(Class)cast(void*)this;
+  }
+
   /// Returns the unique version of this type from the type table.
   /// Inserts this type into the table if not yet existant.
   Type unique(/+TypeTable tt+/)
@@ -107,6 +115,27 @@ abstract class Type/* : Symbol*/
   /// Returns the type as a string.
   abstract char[] toString();
 
+  /// Returns true if this type is a pointer type.
+  final bool isPointer()
+  {
+    return tid == TYP.Pointer;
+  }
+
+  final bool isDArray()
+  {
+    return tid == TYP.DArray;
+  }
+
+  final bool isSArray()
+  {
+    return tid == TYP.SArray;
+  }
+
+  final bool isAArray()
+  {
+    return tid == TYP.AArray;
+  }
+
   /// Returns true if this type is a bool type.
   final bool isBool()
   {
@@ -119,12 +148,6 @@ abstract class Type/* : Symbol*/
     if (hasBaseType())
       return next.isBool(); // Check base type.
     return isBool();
-  }
-
-  /// Returns true if this type is a pointer type.
-  final bool isPointer()
-  {
-    return tid == TYP.Pointer;
   }
 
   /// Returns true if this is a basic type.
