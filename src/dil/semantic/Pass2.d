@@ -237,7 +237,7 @@ override
 	else 
 	{
 	  //TODO this conversion to IntExp is only valid for D1...need to change for D2
-	  //need to implement finalValue.castTo(type)
+	  //need to implement finalValue.castTo!(type)
 	  if(finalValue !is null)
 	    number = finalValue.to!(IntExpression).number;
 	}
@@ -302,6 +302,7 @@ override
       debug(sema)
       {
         Stdout(finalValue.type.baseType);
+	Stdout(" - ");
         Stdout(finalValue.to!(IntExpression).number).newline;
       }
 

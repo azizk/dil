@@ -1028,7 +1028,7 @@ override
 
   E visit(ParenExpression e)
   {
-    return e;
+    return visitE(e.next);
   }
 
   E visit(FunctionLiteralExpression e)
