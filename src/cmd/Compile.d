@@ -44,11 +44,11 @@ struct CompileCommand
         printSymbolTable(modul, "");
     }
 
-    // foreach (modul; moduleMan.loadedModules)
-    // {
-    //   auto pass2 = new SemanticPass2(modul);
-    //   pass2.run();
-    // }
+    foreach (modul; moduleMan.loadedModules)
+    {
+      auto pass2 = new SemanticPass2(modul);
+      pass2.run();
+    }
 
     if (printModuleTree)
       printMTree(moduleMan.rootPackage.packages,
