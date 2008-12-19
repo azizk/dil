@@ -301,7 +301,7 @@ override
 
       debug(sema)
       {
-        Stdout(finalValue.type.baseType);
+        Stdout(type);
 	Stdout(" - ");
         Stdout(finalValue.to!(IntExpression).number).newline;
       }
@@ -578,6 +578,14 @@ override
       e.rhs = visitE(e.rhs);
       e.type = e.rhs.type;
     }
+    return e;
+  }
+
+  E visit(AssignExpression e)
+  {
+    if (e.type)
+      return e;
+    //TODO check for type mismatch
     return e;
   }
 
