@@ -121,19 +121,28 @@ abstract class Type/* : Symbol*/
     return tid == TYP.Pointer;
   }
 
+  // Returns true if this is a dynamic array type.
   final bool isDArray()
   {
     return tid == TYP.DArray;
   }
 
+  // Returns true if this is a static array type.
   final bool isSArray()
   {
     return tid == TYP.SArray;
   }
 
+  // Returns true if this is a associative array type.
   final bool isAArray()
   {
     return tid == TYP.AArray;
+  }
+
+  // Returns true if this is a dynamic or static array type.
+  final bool isDorSArray()
+  {
+    return tid == TYP.DArray || tid == TYP.SArray;
   }
 
   /// Returns true if this type is a bool type.

@@ -1086,8 +1086,25 @@ override
 
   E visit(CatExpression e)
   {
+    visitBinary(e);
     if (auto o = findOverload(e, Ident.opCat, Ident.opCat_r))
       return o;
+    // Need to check the base types if they are arrays.
+    // This will allow for concatenating typedef types:
+    // typedef Handle[] Handles; Handles hlist; hlist ~ element;
+    auto tl = e.lhs.type.baseType(),
+         tr = e.rhs.type.baseType();
+    if (tl.isDorSArray() || tr.isDorSArray())
+    {
+      // TODO:
+      // e.type = ;
+    }
+    else
+    {
+      error(e.tok, "concatenation operator '~' is undefined for: {} ~ {}",
+            e.lhs, e.rhs);
+      e.type = e.lhs.type; // Use Types.Error if e.lhs.type is not a good idea.
+    }
     return e;
   }
 
