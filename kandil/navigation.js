@@ -63,7 +63,22 @@ function SymbolItem(name, kind, fqn)
   return this;
 }
 
-/// Constructs an unordered list from the symbols data structure.
+/// Returns an image tag for the provided kind of symbol.
+function getPNGIcon(kind)
+{
+  var functionSet = {
+    "function":1,"unittest":1,"invariant":1,"new":1,"delete":1,
+    "invariant":1,"sctor":1,"sdtor":1,"ctor":1,"dtor":1,
+  };
+  // Other kinds: (they have their own PNG icons)
+  // "variable","enummem","alias","typedef","class",
+  // "interface","struct","union","template"
+  if (functionSet[kind])
+    kind = "function";
+  return "<img src='img/icon_"+kind+".png' width='16' height='16'/>";
+}
+
+/// Constructs a ul (enclosing nested ul's) from the symbols data structure.
 function createSymbolsUL(symbols)
 {
   var list = "<ul>";
@@ -72,7 +87,8 @@ function createSymbolsUL(symbols)
     var sym = symbols[i];
     [fqn, count] = rpartition(sym.fqn, ':');
     count = fqn ? "<sub>"+count+"</sub>" : ""; // An index.
-    list += "<li kind='"+sym.kind+"'><a href='#"+sym.fqn+"'>"+sym.name+count+"</a>";
+    list += "<li kind='"+sym.kind+"'>"+getPNGIcon(sym.kind)+
+            "<a href='#"+sym.fqn+"'>"+sym.name+count+"</a>";
     if (sym.sub && sym.sub.length)
       list += createSymbolsUL(sym.sub);
     list += "</li>";
@@ -80,13 +96,14 @@ function createSymbolsUL(symbols)
   return list + "</ul>";
 }
 
+/// Constructs a ul (enclosing nested ul's) from g_moduleObjects.
 function createModulesUL(symbols)
 {
   var list = "<ul>";
   for (i in symbols)
   {
     var sym = symbols[i];
-    list += "<li kind='"+sym.kind+"'>";
+    list += "<li kind='"+sym.kind+"'>"+getPNGIcon(sym.kind);
     if (sym.sub && sym.sub.length)
       list += sym.name + createModulesUL(sym.sub);
     else

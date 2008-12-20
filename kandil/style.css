@@ -80,6 +80,11 @@ body { margin: 0; }
   white-space: nowrap;
 }
 
+#apilist li img, #modlist li img {
+  vertical-align: top;
+  margin-right: 0.1em;
+}
+
 .sec_header {
   font-weight: bold;
   margin: 0.5em 0;
