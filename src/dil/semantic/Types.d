@@ -42,7 +42,7 @@ abstract class Type/* : Symbol*/
 
   /// Returns the unique version of this type from the type table.
   /// Inserts this type into the table if not yet existant.
-  Type unique(/+TypeTable tt+/)
+  Type unique(TypeTable tt)
   {
     // TODO:
     if (!mangled.length)
@@ -519,6 +519,27 @@ class TypeInvariant : Type
   char[] toString()
   {
     return "invariant(" ~ next.toString() ~ ")";
+  }
+}
+
+/// Maps mangled type identifiers to Type objects.
+class TypeTable
+{
+  Type[string] table; /// The table data structure.
+  /// Looks up ident in the table.
+  /// Returns: the symbol if there, otherwise null.
+  Type lookup(string mangled)
+  {
+    assert(mangled.length);
+    auto ptype = mangled in table;
+    return ptype ? *ptype : null;
+  }
+
+  /// Inserts a type into the table.
+  void insert(Type type)
+  {
+    assert(type.mangled.length);
+    table[type.mangled] = type;
   }
 }
 
