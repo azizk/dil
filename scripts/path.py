@@ -94,4 +94,4 @@ class Path(unicode):
 
   def glob(self, pattern):
     from glob import glob
-    return self // glob(unicode(self/pattern))
+    return map(Path, glob(unicode(self/pattern)))

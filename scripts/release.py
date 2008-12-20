@@ -14,9 +14,10 @@ def copy_files(DIL):
       (DIL.DATA/"html.css",        DIL.HTMLSRC),
       (DIL.KANDIL/"style.css",     DIL.CSS),
       (DIL.KANDIL/"navigation.js", DIL.JS),
-      (DIL.KANDIL/"jquery.js",     DIL.JS),
-      (DIL.KANDIL/"loading.gif",   DIL.IMG)):
+      (DIL.KANDIL/"jquery.js",     DIL.JS)):
     FILE.copy(DIR)
+  for img in DIL.KANDIL.IMG.glob("*.png") + [DIL.KANDIL.IMG/"loading.gif"]:
+    img.copy(DIL.IMG)
 
 def writeMakefile():
   """ Writes a Makefile for building dil to the disk. """
@@ -115,6 +116,7 @@ def main():
   DEST.DATA   = DEST/'data'
   # Dil's fancy documentation format.
   DEST.KANDIL = DEST/"kandil"
+  DEST.KANDIL.IMG = DEST.KANDIL/"img"
 
   # Temporary directory, deleted in the end.
   TMP       = DEST/"tmp"

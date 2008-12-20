@@ -12,9 +12,10 @@ def copy_files(DATA, KANDIL, TANGO_DIR, DEST):
       (DATA/"html.css",        DEST.HTMLSRC),
       (KANDIL/"style.css",     DEST.CSS),
       (KANDIL/"navigation.js", DEST.JS),
-      (KANDIL/"jquery.js",     DEST.JS),
-      (KANDIL/"loading.gif",   DEST.IMG)):
+      (KANDIL/"jquery.js",     DEST.JS)):
     FILE.copy(DIR)
+  for img in KANDIL.IMG.glob("*.png") + [KANDIL.IMG/"loading.gif"]:
+    img.copy(DEST.IMG)
 
 def get_tango_version(path):
   for line in open(path):
@@ -75,6 +76,7 @@ def main():
   DATA      = Path('data')
   # Dil's fancy documentation format.
   KANDIL    = Path("kandil")
+  KANDIL.IMG = KANDIL/"img"
   # Temporary directory, deleted in the end.
   TMP       = DEST/"tmp"
   # Some DDoc macros for Tango.

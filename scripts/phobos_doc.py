@@ -50,9 +50,10 @@ def copy_files2(DATA, KANDIL, DEST):
       (DATA/"html.css",        DEST.HTMLSRC),
       (KANDIL/"style.css",     DEST.CSS),
       (KANDIL/"navigation.js", DEST.JS),
-      (KANDIL/"jquery.js",     DEST.JS),
-      (KANDIL/"loading.gif",   DEST.IMG)):
+      (KANDIL/"jquery.js",     DEST.JS)):
     FILE.copy(DIR)
+  for img in KANDIL.IMG.glob("*.png") + [KANDIL.IMG/"loading.gif"]:
+    img.copy(DEST.IMG)
 
 def modify_phobos_html(phobos_html, version):
   """ Modifys DEST/phobos.html. """
@@ -136,6 +137,7 @@ def main():
   DATA       = Path("data")
   # Dil's fancy documentation format.
   KANDIL     = Path("kandil")
+  KANDIL.IMG = KANDIL/"img"
   # Temporary directory, deleted in the end.
   TMP        = DEST/"tmp"
   # The list of module files (with info) that have been processed.
