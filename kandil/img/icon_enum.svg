@@ -3,6 +3,7 @@
 <svg
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    version="1.0"
    width="100"
@@ -19,16 +20,6 @@
     </filter>
   </defs>
   <text
-     x="13.137228"
-     y="94"
-     id="text2851"
-     xml:space="preserve"
-     style="font-size:51.0512619px;font-style:normal;font-weight:normal;opacity:0.3;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter4981);font-family:Bitstream Vera Sans;-inkscape-font-specification:FreeSerif"><tspan
-       x="13.137228"
-       y="94"
-       id="tspan2853"
-       style="font-size:127.62815094px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#000000;font-family:FreeSerif;-inkscape-font-specification:FreeSerif">E</tspan></text>
-  <text
      x="11.137228"
      y="92"
      id="text2847"
@@ -38,4 +29,13 @@
        y="92"
        id="tspan2849"
        style="font-size:127.62815094px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSerif;-inkscape-font-specification:FreeSerif">E</tspan></text>
+  <use
+      transform="translate(2,2)"
+      id="use3175"
+      style="opacity:0.3;filter:url(#filter4981)"
+      x="0"
+      y="0"
+      width="100"
+      height="100"
+      xlink:href="#text2847" />
 </svg>
