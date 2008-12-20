@@ -23,6 +23,7 @@
   color: #44B;
   text-decoration: none;
 }
+.linescolumn a:target { background-color: yellow; }
 /* Number */
 .n { color: teal; }
 /* Keyword */

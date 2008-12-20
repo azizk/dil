@@ -22,6 +22,7 @@ linescolumn {
   border-right: 1px solid gray;
 }
 linescolumn a { display: block; color: #555; }
+linescolumn a:target { background-color: yellow; }
 /* Number */
 n { color: teal; }
 /* Keyword */
