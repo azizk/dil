@@ -571,49 +571,100 @@ static:
   /// Allocates an instance of TypeBasic and assigns it to typeName.
   template newTB(char[] typeName)
   {
+
+  version (LDC)
+  {
+    /// Initializes predefined types.
+    static this()
+    {
+      newTB!("Char");
+      newTB!("Wchar");
+      newTB!("Dchar");
+      newTB!("Bool");
+      newTB!("Byte");
+      newTB!("Ubyte");
+      newTB!("Short");
+      newTB!("Ushort");
+      newTB!("Int");
+      newTB!("Uint");
+      newTB!("Long");
+      newTB!("Ulong");
+      newTB!("Cent");
+      newTB!("Ucent");
+      newTB!("Float");
+      newTB!("Double");
+      newTB!("Real");
+      newTB!("Ifloat");
+      newTB!("Idouble");
+      newTB!("Ireal");
+      newTB!("Cfloat");
+      newTB!("Cdouble");
+      newTB!("Creal");
+      newTB!("Void");
+      version(X86_64)
+      {
+        Size_t = Ulong;
+        Ptrdiff_t = Long;
+      }
+      else
+      {
+        Size_t = Uint;
+        Ptrdiff_t = Int;
+      }
+      Void_ptr = Void.ptrTo;
+      Error = new TypeBasic(TYP.Error);
+      Undefined = new TypeBasic(TYP.Error);
+      DontKnowYet = new TypeBasic(TYP.Error);
+    }
+  }
+
     const newTB = mixin(typeName~" = new TypeBasic(TYP."~typeName~")");
   }
 
-  /// Initializes predefined types.
-  static this()
+  version (DigitalMars)
   {
-    newTB!("Char");
-    newTB!("Wchar");
-    newTB!("Dchar");
-    newTB!("Bool");
-    newTB!("Byte");
-    newTB!("Ubyte");
-    newTB!("Short");
-    newTB!("Ushort");
-    newTB!("Int");
-    newTB!("Uint");
-    newTB!("Long");
-    newTB!("Ulong");
-    newTB!("Cent");
-    newTB!("Ucent");
-    newTB!("Float");
-    newTB!("Double");
-    newTB!("Real");
-    newTB!("Ifloat");
-    newTB!("Idouble");
-    newTB!("Ireal");
-    newTB!("Cfloat");
-    newTB!("Cdouble");
-    newTB!("Creal");
-    newTB!("Void");
-    version(X86_64)
+    /// Initializes predefined types.
+    static this()
     {
-      Size_t = Ulong;
-      Ptrdiff_t = Long;
+      newTB!("Char");
+      newTB!("Wchar");
+      newTB!("Dchar");
+      newTB!("Bool");
+      newTB!("Byte");
+      newTB!("Ubyte");
+      newTB!("Short");
+      newTB!("Ushort");
+      newTB!("Int");
+      newTB!("Uint");
+      newTB!("Long");
+      newTB!("Ulong");
+      newTB!("Cent");
+      newTB!("Ucent");
+      newTB!("Float");
+      newTB!("Double");
+      newTB!("Real");
+      newTB!("Ifloat");
+      newTB!("Idouble");
+      newTB!("Ireal");
+      newTB!("Cfloat");
+      newTB!("Cdouble");
+      newTB!("Creal");
+      newTB!("Void");
+      version(X86_64)
+      {
+        Size_t = Ulong;
+        Ptrdiff_t = Long;
+      }
+      else
+      {
+        Size_t = Uint;
+        Ptrdiff_t = Int;
+      }
+      Void_ptr = Void.ptrTo;
+      Error = new TypeBasic(TYP.Error);
+      Undefined = new TypeBasic(TYP.Error);
+      DontKnowYet = new TypeBasic(TYP.Error);
     }
-    else
-    {
-      Size_t = Uint;
-      Ptrdiff_t = Int;
-    }
-    Void_ptr = Void.ptrTo;
-    Error = new TypeBasic(TYP.Error);
-    Undefined = new TypeBasic(TYP.Error);
-    DontKnowYet = new TypeBasic(TYP.Error);
   }
+
 }
