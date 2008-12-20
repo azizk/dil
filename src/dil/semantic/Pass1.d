@@ -269,6 +269,13 @@ override
   {
     if (d.symbol)
       return d;
+
+    if ((d.name.str == "sizeof") || (d.name.str == "alignof") || (d.name.str == "mangleof"))
+    {
+      error(d.begin, "Illegal class name {}", d.name.str);
+      return d;
+    }
+
     // Create the symbol.
     d.symbol = new Class(d.name, d);
     // Insert into current scope.
