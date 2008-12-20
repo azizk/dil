@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.0"
+   width="100"
+   height="100"
+   id="svg2">
+  <defs
+     id="defs4">
+    <filter
+       id="filter3873">
+      <feGaussianBlur
+         id="feGaussianBlur3875"
+         stdDeviation="0.71566685"
+         inkscape:collect="always" />
+    </filter>
+  </defs>
+  <text
+     x="20.215717"
+     y="85.986801"
+     transform="scale(0.9346391,1.0699317)"
+     id="text2847"
+     xml:space="preserve"
+     style="font-size:47.71450424px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans;-inkscape-font-specification:FreeSerif"><tspan
+       x="20.215717"
+       y="85.986801"
+       id="tspan2849"
+       style="font-size:119.28626251px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSerif;-inkscape-font-specification:FreeSerif">P</tspan></text>
+  <text
+     x="22.355581"
+     y="87.856079"
+     transform="scale(0.9346391,1.0699317)"
+     id="text3853"
+     xml:space="preserve"
+     style="font-size:47.71450424px;font-style:normal;font-weight:normal;opacity:0.3;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3873);font-family:Bitstream Vera Sans;-inkscape-font-specification:FreeSerif"><tspan
+       x="22.355581"
+       y="87.856079"
+       id="tspan3855"
+       style="font-size:119.28626251px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeSerif;-inkscape-font-specification:FreeSerif">P</tspan></text>
+</svg>
