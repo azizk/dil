@@ -374,8 +374,40 @@ override
 
   D visit(FunctionDeclaration d)
   {
+    if (d.isConst() || d.isAuto() || d.isScope())
+    {
+      error(d.begin, "functions cannot be const or auto");
+      return d;
+    }
+
+    /*TODO: add the isVirtual method to Declaration.d
+    if (d.isAbstract() && !d.isVirtual())
+    {
+      error(d.begin, "function cannot be both abstract and final");
+      return d;
+    }
+    */
+
+    if (d.isAbstract() && d.isFinal())
+    {
+      error(d.begin, "function cannot be both abstract and final");
+      return d;
+    }
+
+    if (d.isAbstract() && (d.funcBody !is null))
+    {
+      error(d.begin, "abstract functions cannot have bodies");
+      return d;
+    }
+
+
     auto func = new Function(d.name, d);
     insertOverload(func);
+    debug(sema)
+    {
+      Stdout("Function - ");
+      Stdout(d.name.str).newline;
+    }
     return d;
   }
 
