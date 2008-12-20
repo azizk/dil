@@ -397,6 +397,7 @@ override
     Type typ = Types.Int;
     auto idToken = t.begin;
     auto symbol = search(idToken);
+    idScope = null;
     // TODO: save symbol or its type in t...this is defaulting to Int!! FIX
     t.type = typ;
     return t;
