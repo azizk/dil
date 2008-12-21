@@ -408,19 +408,18 @@ override
       return d;
     }
 
-
     auto func = new Function(d.name, d);
     insertOverload(func);
-    if (d.funcBody !is null)
-    {
-	visitS(d.funcBody);
-    }
 
     debug(sema)
     {
       Stdout("Function - ");
       Stdout(d.name.str).newline;
     }
+
+    if (d.funcBody !is null)
+	visitS(d.funcBody);
+
     return d;
   }
 
@@ -632,7 +631,11 @@ override
   }
 
   S visit(FuncBodyStatement s)
-  {Stdout("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL").newline;
+  {
+    s.inBody &&  visitS(s.inBody);
+    if (!s.isEmpty())
+      visitS(s.funcBody);
+    s.outBody && visitS(s.outBody);
     return s;
   }
 
@@ -656,6 +659,7 @@ override
 
   S visit(DeclarationStatement s)
   {
+    s.decl && visitD(s.decl);
     return s;
   }
 
