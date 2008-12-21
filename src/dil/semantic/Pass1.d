@@ -184,6 +184,7 @@ class SemanticPass1 : Visitor
   }
 
   private alias Declaration D; /// A handy alias. Saves typing.
+  private alias Statement S;
 
 override
 {
@@ -410,6 +411,11 @@ override
 
     auto func = new Function(d.name, d);
     insertOverload(func);
+    if (d.funcBody !is null)
+    {
+	visitS(d.funcBody);
+    }
+
     debug(sema)
     {
       Stdout("Function - ");
@@ -586,6 +592,252 @@ override
       visitD(d.decls);
     }
     return d;
+  }
+} // override
+
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                                 Statements                                |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
+
+  /// The current surrounding, breakable statement.
+  S breakableStatement;
+
+  S setBS(S s)
+  {
+    auto old = breakableStatement;
+    breakableStatement = s;
+    return old;
+  }
+
+  void restoreBS(S s)
+  {
+    breakableStatement = s;
+  }
+
+override
+{
+  S visit(CompoundStatement s)
+  {
+    foreach (stmnt; s.stmnts)
+      visitS(stmnt);
+    return s;
+  }
+
+  S visit(IllegalStatement)
+  { assert(0, "semantic pass on invalid AST"); return null; }
+
+  S visit(EmptyStatement s)
+  {
+    return s;
+  }
+
+  S visit(FuncBodyStatement s)
+  {Stdout("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL").newline;
+    return s;
+  }
+
+  S visit(ScopeStatement s)
+  {
+//     enterScope();
+    visitS(s.s);
+//     exitScope();
+    return s;
+  }
+
+  S visit(LabeledStatement s)
+  {
+    return s;
+  }
+
+  S visit(ExpressionStatement s)
+  {
+    return s;
+  }
+
+  S visit(DeclarationStatement s)
+  {
+    return s;
+  }
+
+  S visit(IfStatement s)
+  {
+    return s;
+  }
+
+  S visit(WhileStatement s)
+  {
+    auto saved = setBS(s);
+    // TODO:
+    restoreBS(saved);
+    return s;
+  }
+
+  S visit(DoWhileStatement s)
+  {
+    auto saved = setBS(s);
+    // TODO:
+    restoreBS(saved);
+    return s;
+  }
+
+  S visit(ForStatement s)
+  {
+    auto saved = setBS(s);
+    // TODO:
+    restoreBS(saved);
+    return s;
+  }
+
+  S visit(ForeachStatement s)
+  {
+    auto saved = setBS(s);
+    // TODO:
+    // find overload opApply or opApplyReverse.
+    restoreBS(saved);
+    return s;
+  }
+
+  // D2.0
+  S visit(ForeachRangeStatement s)
+  {
+    auto saved = setBS(s);
+    // TODO:
+    restoreBS(saved);
+    return s;
+  }
+
+  S visit(SwitchStatement s)
+  {
+    auto saved = setBS(s);
+    // TODO:
+    restoreBS(saved);
+    return s;
+  }
+
+  S visit(CaseStatement s)
+  {
+    auto saved = setBS(s);
+    // TODO:
+    restoreBS(saved);
+    return s;
+  }
+
+  S visit(DefaultStatement s)
+  {
+    auto saved = setBS(s);
+    // TODO:
+    restoreBS(saved);
+    return s;
+  }
+
+  S visit(ContinueStatement s)
+  {
+    return s;
+  }
+
+  S visit(BreakStatement s)
+  {
+    return s;
+  }
+
+  S visit(ReturnStatement s)
+  {
+    return s;
+  }
+
+  S visit(GotoStatement s)
+  {
+    return s;
+  }
+
+  S visit(WithStatement s)
+  {
+    return s;
+  }
+
+  S visit(SynchronizedStatement s)
+  {
+    return s;
+  }
+
+  S visit(TryStatement s)
+  {
+    return s;
+  }
+
+  S visit(CatchStatement s)
+  {
+    return s;
+  }
+
+  S visit(FinallyStatement s)
+  {
+    return s;
+  }
+
+  S visit(ScopeGuardStatement s)
+  {
+    return s;
+  }
+
+  S visit(ThrowStatement s)
+  {
+    return s;
+  }
+
+  S visit(VolatileStatement s)
+  {
+    return s;
+  }
+
+  S visit(AsmBlockStatement s)
+  {
+    foreach (stmnt; s.statements.stmnts)
+      visitS(stmnt);
+    return s;
+  }
+
+  S visit(AsmStatement s)
+  {
+    return s;
+  }
+
+  S visit(AsmAlignStatement s)
+  {
+    return s;
+  }
+
+  S visit(IllegalAsmStatement)
+  { assert(0, "semantic pass on invalid AST"); return null; }
+
+  S visit(PragmaStatement s)
+  {
+    return s;
+  }
+
+  S visit(MixinStatement s)
+  {
+    return s;
+  }
+
+  S visit(StaticIfStatement s)
+  {
+    return s;
+  }
+
+  S visit(StaticAssertStatement s)
+  {
+    return s;
+  }
+
+  S visit(DebugStatement s)
+  {
+    return s;
+  }
+
+  S visit(VersionStatement s)
+  {
+    return s;
   }
 } // override
 }
