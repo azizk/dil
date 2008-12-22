@@ -95,11 +95,12 @@ body { margin: 0; }
   display: none;  /* Hide all by default */
 }
 .filtered li.match {
-  display: block !important; /* Make matches visible */
+  display: block; /* Make matches visible */
+  color: black;
 }
 .filtered li.parent_of_match {
-  display: block !important; /* Parent nodes of matches must be visible */
-  color: Gray !important; /* Make the text gray to indicate no match */
+  display: block; /* Parent nodes of matches must be visible */
+  color: Gray; /* Make the text gray to indicate no match */
 }
 .filtered li.parent_of_match > a {
   color: Gray !important; /* Make the text gray to indicate no match */

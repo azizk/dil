@@ -164,9 +164,9 @@ function quickSearchSymbols(qs)
         }
       // Visit subnodes.
       if (item.lastChild.tagName == "UL")
-        if (search(item.lastChild) && !hasMatches) // Recursive call.
+        if (search(item.lastChild) && item.className == "") // Recursive call.
           // Mark this if this item didn't match but children of it did.
-          (item.className = "parent_of_match"), hasMatches = true;
+          (item.className = "parent_of_match"), (hasMatches = true);
     }
     return hasMatches;
   }
