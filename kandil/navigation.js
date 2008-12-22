@@ -1,4 +1,12 @@
+/// Author: Aziz Köksal
+
+/// Execute when document is ready.
 $(function() {
+  $("#panels").prepend(new QuickSearch("apiqs", "#apilist", quickSearchSymbols).input)
+              .prepend(new QuickSearch("modqs", "#modlist", quickSearchSymbols).input);
+
+  $("#modqs").hide(); // Initially hidden.
+
   var symbols = $(".symbol");
   // Add code display functionality to symbol links.
   symbols.click(function(event) {
@@ -18,6 +26,7 @@ $(function() {
     var sym = new SymbolItem(this.textContent, $(this).attr("kind"), this.name);
     itemlist[parentFQN].sub.push(sym);
     itemlist[sym.fqn] = sym;
+    // TODO: add D attribute information.
   }
   symbols.each(insertIntoList);
 
@@ -37,21 +46,107 @@ $(function() {
   $("#apitab").click(makeCurrentTab)
               .click(function() {
     var container = $("#panels");
-    $("> div:visible", container).hide();
+    $("> *:visible", container).hide();
     $("#apilist", container).show(); // Display the API list.
+    $("#apiqs").show(); // Show the filter text box.
   })
   $("#modtab").click(makeCurrentTab)
               .click(function() {
     var container = $("#panels");
-    $("> div:visible", container).hide();
+    $("> *:visible", container).hide();
     var list = $("#modlist:has(ul)", container);
     if (!list.length) {
       list = createModulesList();
       container.append(list.hide()); // Append hidden.
     }
     list.show(); // Display the modules list.
+    $("#modqs").show(); // Show the filter text box.
   })
 })
+
+/// Constructs a QuickSearch object.
+function QuickSearch(id, symlist, callback)
+{
+  this.input = $("<input id='"+id+"' class='filterbox'"+
+                 " type='text' value='Filter...'/>");
+  this.input.callback = callback;
+  this.input.timeoutId = 0; // Initialize the id.
+  function delayCallback(input)
+  {
+    clearTimeout(input.timeoutId);
+    input.timeoutId = setTimeout(function() {
+      input.cancelSearch = false;
+      callback(input, $(symlist)[0]);
+    }, 500);
+  }
+  this.input.keyup(function(e) {
+    switch (e.keyCode) {
+    case 0:case 9:case 13:case 16:case 17:case 18:case 37:case 39:case 224:
+      break; // Ignore meta keys and other keys.
+    case 27: // Escape key.
+      clearTimeout(this.timeoutId);
+      this.cancelSearch = true;
+      break;
+    default:
+      delayCallback(this);
+    }
+  })
+  function clearInput(e) {
+    $(this).val("").unbind("mousedown", clearInput);
+  }
+  this.input.mousedown(clearInput)
+  return this;
+}
+
+function quickSearchSymbols(input, symlist)
+{
+  var str = input.value;
+  // Strip leading and trailing whitespace.
+  str = str.replace(/^\s+/, "").replace(/\s+$/, "");
+
+  // Select all descending list items.
+  var items = symlist.getElementsByTagName("li");
+  // Reset classes.
+  for (i in items)
+    items[i].className = "";
+
+  if (str.length == 0) {
+    $(symlist).removeClass("filtered");
+    return; // Nothing to do if query is empty.
+  }
+
+  // Parse the query.
+  var words = str.toLowerCase().split(/\s+/);
+  // var attributes = [];
+  // for (i in words)
+  //   if (words[i][0] == ':')
+  //     attributes = words[i];
+
+  // Iterate over the list in reverse.
+  // TODO: test forward iteration.
+  for (var i = items.length-1; i >= 0; i--)
+  {
+    if (input.cancelSearch)
+      return;
+    var match = false;
+    var item = items[i];
+    var parent_li = item.parentNode.parentNode;
+    // childNodes[1] is the <a/> tag or the text node (package names).
+    var text = item.childNodes[1].textContent.toLowerCase();
+    for (j in words)
+      if (text.search(words[j]) != -1)
+      {
+        match = true;
+        item.className = "match";
+        parent_li.className = "parent_of_match";
+        break;
+      }
+    // Propagate the class upward the tree.
+    if (!match && item.className == "parent_of_match")
+      parent_li.className = "parent_of_match";
+  }
+  symlist.className = "filtered";
+}
 
 /// A tree item for symbols.
 function SymbolItem(name, kind, fqn)
@@ -76,6 +171,13 @@ function getPNGIcon(kind)
   if (functionSet[kind])
     kind = "function";
   return "<img src='img/icon_"+kind+".png' width='16' height='16'/>";
+}
+
+function addDAttributes()
+{
+  $("#apilist li").each(function() {
+    // TODO:
+  })
 }
 
 /// Constructs a ul (enclosing nested ul's) from the symbols data structure.
