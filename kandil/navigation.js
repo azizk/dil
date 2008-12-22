@@ -128,8 +128,10 @@ function QuickSearch(id, symlist, callback, options)
 
 function quickSearchSymbols(qs)
 {
-  var words = qs.parse();
+  if ($(qs.symlist.lastChild).is("p.no_match"))
+    qs.symlist.removeChild(qs.symlist.lastChild);
 
+  var words = qs.parse();
   if (words.length == 0)
   {
     $(qs.symlist).removeClass("filtered");
@@ -170,7 +172,8 @@ function quickSearchSymbols(qs)
   }
 
   qs.symlist.className = "filtered";
-  search(qs.symlist.firstChild); // Start the search.
+  if (!search(qs.symlist.firstChild)) // Start the search.
+    $(qs.symlist).append("<p class='no_match'>No match...</p>");
 }
 
 /// A tree item for symbols.
