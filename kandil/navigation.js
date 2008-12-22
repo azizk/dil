@@ -65,60 +65,80 @@ $(function() {
 })
 
 /// Constructs a QuickSearch object.
-function QuickSearch(id, symlist, callback)
+function QuickSearch(id, symlist, callback, options)
 {
+  this.options = $.extend({
+    text: "Filter...",
+    delay: 500, // Delay time after key press until search kicks off.
+  }, options);
+
   this.input = $("<input id='"+id+"' class='filterbox'"+
-                 " type='text' value='Filter...'/>");
-  this.input.callback = callback;
-  this.input.timeoutId = 0; // Initialize the id.
-  function delayCallback(input)
-  {
-    clearTimeout(input.timeoutId);
-    input.timeoutId = setTimeout(function() {
-      input.cancelSearch = false;
-      callback(input, $(symlist)[0]);
-    }, 500);
-  }
+                 " type='text' value='"+this.options.text+"'/>");
+  this.symlist = $(symlist)[0];
+  this.cancelSearch = false;
+  this.timeoutId = 0;
+  this.callback = callback;
+  this.delayCallback = function() {
+    clearTimeout(this.timeoutId);
+    QS = this;
+    this.timeoutId = setTimeout(function() {
+      if (!QS.cancelSearch) QS.callback(QS);
+    }, this.options.delay);
+  };
+  this.input[0].qs = this;
   this.input.keyup(function(e) {
     switch (e.keyCode) {
-    case 0:case 9:case 13:case 16:case 17:case 18:case 37:case 39:case 224:
+    case 0:case 9:case 13:case 16:case 17:case 18:
+    case 20:case 35:case 36:case 37:case 39:
       break; // Ignore meta keys and other keys.
     case 27: // Escape key.
-      clearTimeout(this.timeoutId);
-      this.cancelSearch = true;
+      this.qs.cancelSearch = true;
+      clearTimeout(this.qs.timeoutId);
       break;
     default:
-      delayCallback(this);
+      this.qs.cancelSearch = false;
+      this.qs.delayCallback();
     }
-  })
-  function clearInput(e) {
+  });
+  this.input.mousedown(function clearInput(e) {
+    // Clear the text box when clicked the first time.
     $(this).val("").unbind("mousedown", clearInput);
-  }
-  this.input.mousedown(clearInput)
+  });
+
+  this.str = "";
+  this.parse = function() { // Parses the query.
+    this.sanitizeStr();
+    if (this.str.length == 0)
+      return []
+    var words = this.str.toLowerCase().split(/\s+/);
+    // var attributes = [];
+    // for (i in words)
+    //   if (words[i][0] == ':')
+    //     attributes = words[i];
+    return words;
+  };
+  this.sanitizeStr = function() {
+    // Strip leading and trailing whitespace.
+    this.str = this.input.val();
+    this.str = this.str.replace(/^\s+/, "").replace(/\s+$/, "");
+    return this.str;
+  };
   return this;
 }
 
-function quickSearchSymbols(input, symlist)
+function quickSearchSymbols(qs)
 {
-  var str = input.value;
-  // Strip leading and trailing whitespace.
-  str = str.replace(/^\s+/, "").replace(/\s+$/, "");
+  var words = qs.parse();
 
-  if (str.length == 0) {
-    $(symlist).removeClass("filtered");
+  if (words.length == 0)
+  {
+    $(qs.symlist).removeClass("filtered");
     // Reset classes. Not really needed.
     // var items = symlist.getElementsByTagName("li");
     // for (var i = 0; i < items.length; i++)
     //   items[i].className = "";
     return; // Nothing to do if query is empty.
   }
-
-  // Parse the query.
-  var words = str.toLowerCase().split(/\s+/);
-  // var attributes = [];
-  // for (i in words)
-  //   if (words[i][0] == ':')
-  //     attributes = words[i];
 
   // Recursively progresses down the "ul" tree.
   function search(ul)
@@ -127,7 +147,7 @@ function quickSearchSymbols(input, symlist)
     var hasMatches = false;
     for (var i = 0; i < items.length; i++)
     {
-      if (input.cancelSearch) // Did the user cancel?
+      if (qs.cancelSearch) // Did the user cancel?
         return hasMatches;
       var item = items[i];
       item.className = ""; // Reset class.
@@ -149,8 +169,8 @@ function quickSearchSymbols(input, symlist)
     return hasMatches;
   }
 
-  symlist.className = "filtered";
-  search(symlist.firstChild);
+  qs.symlist.className = "filtered";
+  search(qs.symlist.firstChild); // Start the search.
 }
 
 /// A tree item for symbols.
