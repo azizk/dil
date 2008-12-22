@@ -47,10 +47,10 @@ def copy_files(DATA, PHOBOS_SRC, DEST):
 def copy_files2(DATA, KANDIL, DEST):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
-      (DATA/"html.css",        DEST.HTMLSRC),
-      (KANDIL/"style.css",     DEST.CSS),
-      (KANDIL/"navigation.js", DEST.JS),
-      (KANDIL/"jquery.js",     DEST.JS)):
+      (DATA/"html.css", DEST.HTMLSRC),
+      (KANDIL.style,    DEST.CSS),
+      (KANDIL.navi,     DEST.JS),
+      (KANDIL.jquery,   DEST.JS)):
     FILE.copy(DIR)
   for img in KANDIL.IMG.glob("*.png") + [KANDIL.IMG/"loading.gif"]:
     img.copy(DEST.IMG)
@@ -136,8 +136,7 @@ def main():
   # Dil's data/ directory.
   DATA       = Path("data")
   # Dil's fancy documentation format.
-  KANDIL     = Path("kandil")
-  KANDIL.IMG = KANDIL/"img"
+  KANDIL     = get_kandil_path()
   # Temporary directory, deleted in the end.
   TMP        = DEST/"tmp"
   # The list of module files (with info) that have been processed.

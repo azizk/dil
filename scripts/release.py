@@ -10,11 +10,11 @@ from build import DMDCommand
 def copy_files(DIL):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
-      (DIL.DATA/"dilconf.d",       DIL.BIN),
-      (DIL.DATA/"html.css",        DIL.HTMLSRC),
-      (DIL.KANDIL/"style.css",     DIL.CSS),
-      (DIL.KANDIL/"navigation.js", DIL.JS),
-      (DIL.KANDIL/"jquery.js",     DIL.JS)):
+      (DIL.DATA/"dilconf.d", DIL.BIN),
+      (DIL.DATA/"html.css",  DIL.HTMLSRC),
+      (DIL.KANDIL.style,     DIL.CSS),
+      (DIL.KANDIL.navi,      DIL.JS),
+      (DIL.KANDIL.jquery,    DIL.JS)):
     FILE.copy(DIR)
   for img in DIL.KANDIL.IMG.glob("*.png") + [DIL.KANDIL.IMG/"loading.gif"]:
     img.copy(DIL.IMG)
@@ -115,8 +115,7 @@ def main():
   # Dil's data/ directory.
   DEST.DATA   = DEST/'data'
   # Dil's fancy documentation format.
-  DEST.KANDIL = DEST/"kandil"
-  DEST.KANDIL.IMG = DEST.KANDIL/"img"
+  DEST.KANDIL = get_kandil_path(DEST/"kandil")
 
   # Temporary directory, deleted in the end.
   TMP       = DEST/"tmp"
@@ -166,7 +165,7 @@ def main():
     versions = ["DDoc"]
     print "***** Generating documentation *****"
     generate_docs(DIL_EXE, DEST.DOC, MODLIST, DOC_FILES,
-                  versions, options=['-v', '-hl', '--kandil'])
+                  versions, options=['-v', '-i', '-hl', '--kandil'])
 
   DMD_EXE.use_wine = False
   use_wine = False

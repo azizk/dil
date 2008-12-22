@@ -8,11 +8,11 @@ from common import *
 def copy_files(DATA, KANDIL, TANGO_DIR, DEST):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
-      (TANGO_DIR/"LICENSE",    DEST/"License.txt"), # Tango's license.
-      (DATA/"html.css",        DEST.HTMLSRC),
-      (KANDIL/"style.css",     DEST.CSS),
-      (KANDIL/"navigation.js", DEST.JS),
-      (KANDIL/"jquery.js",     DEST.JS)):
+      (TANGO_DIR/"LICENSE", DEST/"License.txt"), # Tango's license.
+      (DATA/"html.css", DEST.HTMLSRC),
+      (KANDIL.style,    DEST.CSS),
+      (KANDIL.navi,     DEST.JS),
+      (KANDIL.jquery,   DEST.JS)):
     FILE.copy(DIR)
   for img in KANDIL.IMG.glob("*.png") + [KANDIL.IMG/"loading.gif"]:
     img.copy(DEST.IMG)
@@ -75,8 +75,7 @@ def main():
   # Dil's data/ directory.
   DATA      = Path('data')
   # Dil's fancy documentation format.
-  KANDIL    = Path("kandil")
-  KANDIL.IMG = KANDIL/"img"
+  KANDIL    = get_kandil_path()
   # Temporary directory, deleted in the end.
   TMP       = DEST/"tmp"
   # Some DDoc macros for Tango.

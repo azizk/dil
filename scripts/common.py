@@ -15,6 +15,16 @@ def find_dil_source_files(source):
   # Filter out files in "src/tests/".
   return [f for f in FILES if not f.startswith(source/"tests")]
 
+def get_kandil_path(where="kandil"):
+  P = Path(where)
+  P.IMG = P/"img"
+  P.CSS = P/"css"
+  P.JS  = P/"js"
+  P.style  = P.CSS/"style.css"
+  P.navi   = P.JS/"navigation.js"
+  P.jquery = P.JS/"jquery.js"
+  return P
+
 def get_module_fqn(prefix_path, filepath):
   """ Returns the fully qualified module name (FQN) of a D source file.
     Note: this might not match with the module declaration
