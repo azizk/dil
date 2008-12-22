@@ -104,14 +104,12 @@ function quickSearchSymbols(input, symlist)
   // Strip leading and trailing whitespace.
   str = str.replace(/^\s+/, "").replace(/\s+$/, "");
 
-  // Select all descending list items.
-  var items = symlist.getElementsByTagName("li");
-  // Reset classes.
-  for (i in items)
-    items[i].className = "";
-
   if (str.length == 0) {
     $(symlist).removeClass("filtered");
+    // Reset classes. Not really needed.
+    // var items = symlist.getElementsByTagName("li");
+    // for (var i = 0; i < items.length; i++)
+    //   items[i].className = "";
     return; // Nothing to do if query is empty.
   }
 
@@ -122,30 +120,37 @@ function quickSearchSymbols(input, symlist)
   //   if (words[i][0] == ':')
   //     attributes = words[i];
 
-  // Iterate over the list in reverse.
-  // TODO: test forward iteration.
-  for (var i = items.length-1; i >= 0; i--)
+  // Recursively progresses down the "ul" tree.
+  function search(ul)
   {
-    if (input.cancelSearch)
-      return;
-    var match = false;
-    var item = items[i];
-    var parent_li = item.parentNode.parentNode;
-    // childNodes[1] is the <a/> tag or the text node (package names).
-    var text = item.childNodes[1].textContent.toLowerCase();
-    for (j in words)
-      if (text.search(words[j]) != -1)
-      {
-        match = true;
-        item.className = "match";
-        parent_li.className = "parent_of_match";
-        break;
-      }
-    // Propagate the class upward the tree.
-    if (!match && item.className == "parent_of_match")
-      parent_li.className = "parent_of_match";
+    var items = ul.childNodes;
+    var hasMatches = false;
+    for (var i = 0; i < items.length; i++)
+    {
+      if (input.cancelSearch) // Did the user cancel?
+        return hasMatches;
+      var item = items[i];
+      item.className = ""; // Reset class.
+      // childNodes[1] is the <a/> tag or the text node (package names).
+      var text = item.childNodes[1].textContent.toLowerCase();
+      for (j in words)
+        if (text.search(words[j]) != -1)
+        {
+          hasMatches = true;
+          item.className = "match";
+          break;
+        }
+      // Visit subnodes.
+      if (item.lastChild.tagName == "UL")
+        if (search(item.lastChild) && !hasMatches) // Recursive call.
+          // Mark this if this item didn't match but children of it did.
+          (item.className = "parent_of_match"), hasMatches = true;
+    }
+    return hasMatches;
   }
+
   symlist.className = "filtered";
+  search(symlist.firstChild);
 }
 
 /// A tree item for symbols.
