@@ -20,21 +20,23 @@ $(function() {
     showCode($(this));
   })
 
-  var header = symbols[0];
-  symbols = symbols.slice(1);
+  // Prepare the symbol list.
+  var header = symbols[0]; // Header of the page.
+  symbols = symbols.slice(1); // Every other symbol.
 
   var itemlist = {}
   itemlist.root = new SymbolItem(header.textContent, "module", header.textContent);
   itemlist[''] = itemlist.root; // The empty string has to point to the root.
-  function insertIntoList()
+  for (var i = 0; i < symbols.length; i++)
   {
-    [parentFQN, name] = rpartition(this.name, '.')
-    var sym = new SymbolItem(this.textContent, $(this).attr("kind"), this.name);
-    itemlist[parentFQN].sub.push(sym);
-    itemlist[sym.fqn] = sym;
+    var symbol = symbols[i];
+    [parentFQN, name] = rpartition(symbol.name, '.')
+    var item = new SymbolItem(symbol.textContent, $(symbol).attr("kind"),
+                              symbol.name);
+    itemlist[parentFQN].sub.push(item);
+    itemlist[item.fqn] = item;
     // TODO: add D attribute information.
   }
-  symbols.each(insertIntoList);
 
   $("#apilist").append(createSymbolsUL(itemlist.root.sub));
 
