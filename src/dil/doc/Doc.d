@@ -388,11 +388,12 @@ struct DDocParser
       assert(p < textEnd && (isascii(*p) || isLeadByte(*p)));
       ident = scanIdentifier(p, textEnd);
       if (ident && p < textEnd && *p == ':')
-      {
-        bodyBegin = ++p;
-        skipLine();
-        return true;
-      }
+        if (!(++p < textEnd && *p == '/')) // Ignore links: http:// ftp:// etc.
+        {
+          bodyBegin = p;
+          skipLine();
+          return true;
+        }
       skipLine();
     }
     assert(p is textEnd);
