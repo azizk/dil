@@ -99,7 +99,7 @@ class Parser
   /// This method executes the delegate parseMethod and when an error occurred
   /// the state of the lexer and parser is restored.
   /// Returns: the return value of parseMethod().
-  ReturnType try_(ReturnType)(ReturnType delegate() parseMethod, out bool success)
+  RetType try_(RetType)(RetType delegate() parseMethod, out bool success)
   {
     // Save members.
     auto oldToken     = this.token;
@@ -377,7 +377,8 @@ class Parser
     // Declaration
     case T.Identifier, T.Dot, T.Typeof:
     case_Declaration:
-      return parseVariableOrFunction(this.storageClass, this.protection, this.linkageType);
+      return parseVariableOrFunction(this.storageClass, this.protection,
+                                     this.linkageType);
     default:
       if (token.isIntegralType)
         goto case_Declaration;
@@ -449,7 +450,8 @@ class Parser
   ///   protection = previously parsed protection attribute
   ///   linkType = previously parsed linkage type
   ///   testAutoDeclaration = whether to check for an AutoDeclaration
-  ///   optionalParameterList = a hint for how to parse C-style function pointers
+  ///   optionalParameterList = a hint for how to parse C-style
+  ///                           function pointers
   Declaration parseVariableOrFunction(StorageClass stc = StorageClass.None,
                                       Protection protection = Protection.None,
                                       LinkageType linkType = LinkageType.None,
@@ -492,12 +494,15 @@ class Parser
       // We have to treat them specially at function scope.
       // Example:
       //   void foo() {
-      //     // A pointer to a function taking an integer and returning 'some_type'.
+      //     // A pointer to a function taking an integer and
+      //     // returning 'some_type'.
       //     some_type (*p_func)(int);
       //     // In the following case precedence is given to a CallExpression.
-      //     something(*p); // 'something' may be a function/method or an object having opCall overloaded.
+      //     something(*p); // 'something' may be a function/method or an object
+      //                    // having opCall overloaded.
       //   }
-      //   // A pointer to a function taking no parameters and returning 'something'.
+      //   // A pointer to a function taking no parameters and
+      //   // returning 'something'.
       //   something(*p);
       type = parseCFunctionPointerType(type, name, optionalParameterList);
     }
@@ -535,13 +540,14 @@ class Parser
     }
       // ReturnType FunctionName ( ParameterList )
       auto funcBody = parseFunctionBody();
-      auto fd = new FunctionDeclaration(type, name,/+ tparams,+/ params, funcBody);
+      auto fd = new FunctionDeclaration(type, name, params, funcBody);
       fd.setStorageClass(stc);
       fd.setLinkageType(linkType);
       fd.setProtection(protection);
       if (tparams)
       {
-        auto d = putInsideTemplateDeclaration(begin, name, fd, tparams, constraint);
+        auto d = putInsideTemplateDeclaration(begin, name, fd, tparams,
+                                              constraint);
         d.setStorageClass(stc);
         d.setProtection(protection);
         return set(d, begin);
@@ -770,7 +776,7 @@ class Parser
     if (prev_lt == LinkageType.None)
       prev_lt = lt;
     else
-      error(begin, MSG.RedundantLinkageType, Token.textSpan(begin, this.prevToken));
+      error(begin, MSG.RedundantLinkageType, Token.textSpan(begin, prevToken));
   }
 
   Declaration parseStorageAttribute()
@@ -883,7 +889,8 @@ class Parser
       case T.Identifier:
       case_Declaration:
         // This could be a normal Declaration or an AutoDeclaration
-        decl = parseVariableOrFunction(stc, this.protection, prev_linkageType, true);
+        decl = parseVariableOrFunction(stc, this.protection, prev_linkageType,
+                                       true);
         break;
       default:
         this.storageClass = stc; // Set.
@@ -1016,7 +1023,8 @@ class Parser
     }
     require(T.Semicolon);
 
-    return new ImportDeclaration(moduleFQNs, moduleAliases, bindNames, bindAliases, isStatic);
+    return new ImportDeclaration(moduleFQNs, moduleAliases, bindNames,
+                                 bindAliases, isStatic);
   }
 
 version(D2)
@@ -1147,7 +1155,8 @@ version(D2)
 
     Declaration d = new ClassDeclaration(className, /+tparams, +/bases, decls);
     if (tparams)
-      d = putInsideTemplateDeclaration(begin, className, d, tparams, constraint);
+      d = putInsideTemplateDeclaration(begin, className, d, tparams,
+                                       constraint);
     return d;
   }
 
@@ -1564,7 +1573,9 @@ version(D2)
       else
         expected(T.Struct);
 
-      d = new AlignDeclaration(size, structDecl ? cast(Declaration)structDecl : new CompoundDeclaration);
+      d = new AlignDeclaration(size, structDecl ?
+                                     cast(Declaration)structDecl :
+                                     new CompoundDeclaration);
       goto LreturnDeclarationStatement;
       /+ Not applicable for statements.
          T.Private, T.Package, T.Protected, T.Public, T.Export,
@@ -1903,7 +1914,8 @@ version(D2)
         return decl;
       default:
       case_Declaration:
-        return parseVariableOrFunction(stc, Protection.None, prev_linkageType, true);
+        return parseVariableOrFunction(stc, Protection.None, prev_linkageType,
+                                       true);
       }
       return set(decl, begin);
     }
@@ -2205,7 +2217,8 @@ version(D2)
         set(param, begin2);
         require(T.RParen);
       }
-      catchBodies ~= set(new CatchStatement(param, parseNoScopeStatement()), begin);
+      catchBodies ~= set(new CatchStatement(param, parseNoScopeStatement()),
+                         begin);
       if (param is null)
         break; // This is a LastCatch
       begin = token;
@@ -2584,9 +2597,12 @@ version(D2)
       auto operator = token;
       switch (operator.kind)
       {
-      case T.LShift:  nT(); e = new LShiftExpression(e, parseNext(), operator); break;
-      case T.RShift:  nT(); e = new RShiftExpression(e, parseNext(), operator); break;
-      case T.URShift: nT(); e = new URShiftExpression(e, parseNext(), operator); break;
+      case T.LShift:
+        nT(); e = new LShiftExpression(e, parseNext(), operator); break;
+      case T.RShift:
+        nT(); e = new RShiftExpression(e, parseNext(), operator); break;
+      case T.URShift:
+        nT(); e = new URShiftExpression(e, parseNext(), operator); break;
       default:
         return e;
       }
@@ -2607,10 +2623,13 @@ version(D2)
       auto operator = token;
       switch (operator.kind)
       {
-      case T.Plus:  nT(); e = new PlusExpression(e, parseNext(), operator); break;
-      case T.Minus: nT(); e = new MinusExpression(e, parseNext(), operator); break;
+      case T.Plus:
+        nT(); e = new PlusExpression(e, parseNext(), operator); break;
+      case T.Minus:
+        nT(); e = new MinusExpression(e, parseNext(), operator); break;
       // Not allowed in asm
-      //case T.Tilde: nT(); e = new CatExpression(e, parseNext(), operator); break;
+      //case T.Tilde:
+      //  nT(); e = new CatExpression(e, parseNext(), operator); break;
       default:
         return e;
       }
@@ -3063,9 +3082,12 @@ version(D2)
       auto operator = token;
       switch (operator.kind)
       {
-      case T.LShift:  nT(); e = new LShiftExpression(e, parseNext(), operator); break;
-      case T.RShift:  nT(); e = new RShiftExpression(e, parseNext(), operator); break;
-      case T.URShift: nT(); e = new URShiftExpression(e, parseNext(), operator); break;
+      case T.LShift:
+        nT(); e = new LShiftExpression(e, parseNext(), operator); break;
+      case T.RShift:
+        nT(); e = new RShiftExpression(e, parseNext(), operator); break;
+      case T.URShift:
+        nT(); e = new URShiftExpression(e, parseNext(), operator); break;
       default:
         return e;
       }
@@ -3087,9 +3109,12 @@ version(D2)
       auto operator = token;
       switch (operator.kind)
       {
-      case T.Plus:  nT(); e = new PlusExpression(e, parseNext(), operator); break;
-      case T.Minus: nT(); e = new MinusExpression(e, parseNext(), operator); break;
-      case T.Tilde: nT(); e = new CatExpression(e, parseNext(), operator); break;
+      case T.Plus:
+        nT(); e = new PlusExpression(e, parseNext(), operator); break;
+      case T.Minus:
+        nT(); e = new MinusExpression(e, parseNext(), operator); break;
+      case T.Tilde:
+        nT(); e = new CatExpression(e, parseNext(), operator); break;
       default:
         return e;
       }
@@ -3139,7 +3164,9 @@ version(D2)
     {
       while (consumed(T.Dot))
       {
-        e = new DotExpression(e, parseNewOrIdentifierExpression());
+        e = new DotExpression(e, token.kind == T.New ?
+                                 parseNewExpression() :
+                                 parseIdentifierExpression());
         set(e, begin);
       }
 
@@ -3442,7 +3469,8 @@ version(D2)
       e = new FunctionLiteralExpression(funcBody);
       break;
     case T.Function, T.Delegate:
-      // FunctionLiteral := ("function"|"delegate") Type? "(" ArgumentList ")" FunctionBody
+      // FunctionLiteral := ("function" | "delegate")
+      //                    Type? "(" ArgumentList ")" FunctionBody
       nT(); // Skip function or delegate keyword.
       Type returnType;
       Parameters parameters;
@@ -3802,8 +3830,8 @@ version(D2)
     Type parseNext() // Nested function required to accomplish this.
     {
       if (token.kind != T.LBracket)
-        return lhsType; // Break recursion; return Type on the left hand side of the Identifier.
-
+        return lhsType; // Break recursion; return Type on
+                        // the left hand side of the Identifier.
       auto begin = token;
       Type t;
       skip(T.LBracket);
@@ -3867,7 +3895,8 @@ version(D2)
     return t;
   }
 
-  Type parseCFunctionPointerType(Type type, ref Identifier* ident, bool optionalParamList)
+  Type parseCFunctionPointerType(Type type, ref Identifier* ident,
+                                 bool optionalParamList)
   {
     assert(type !is null);
     auto begin = token;
@@ -3947,7 +3976,8 @@ version(D2)
       foreach (param; params.items[0..$-1])
       {
         if (param.isVariadic())
-          assert(0, "variadic arguments can only appear at the end of the parameter list.");
+          assert(0, "variadic arguments can only appear "
+                    "at the end of the parameter list.");
       }
   }
   body
@@ -4384,7 +4414,8 @@ version(D2)
   /// Params:
   ///   token = used to get the location of where the error is.
   ///   formatMsg = the compiler error message.
-  void error_(Token* token, char[] formatMsg, TypeInfo[] _arguments, va_list _argptr)
+  void error_(Token* token, char[] formatMsg,
+              TypeInfo[] _arguments, va_list _argptr)
   {
     if (trying)
     {
