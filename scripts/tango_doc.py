@@ -10,10 +10,10 @@ def copy_files(DATA, KANDIL, TANGO_DIR, DEST):
   for FILE, DIR in (
       (TANGO_DIR/"LICENSE", DEST/"License.txt"), # Tango's license.
       (DATA/"html.css", DEST.HTMLSRC),
-      (KANDIL.style,    DEST.CSS),
-      (KANDIL.navi,     DEST.JS),
-      (KANDIL.jquery,   DEST.JS)):
+      (KANDIL.style,    DEST.CSS)):
     FILE.copy(DIR)
+  for FILE in KANDIL.jsfiles:
+    FILE.copy(DEST.JS)
   for img in KANDIL.IMG.glob("*.png") + [KANDIL.IMG/"loading.gif"]:
     img.copy(DEST.IMG)
 

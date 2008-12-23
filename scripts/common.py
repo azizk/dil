@@ -20,9 +20,9 @@ def get_kandil_path(where="kandil"):
   P.IMG = P/"img"
   P.CSS = P/"css"
   P.JS  = P/"js"
-  P.style  = P.CSS/"style.css"
-  P.navi   = P.JS/"navigation.js"
-  P.jquery = P.JS/"jquery.js"
+  P.style   = P.CSS/"style.css"
+  P.jsfiles = (P.JS/"navigation.js", P.JS/"jquery.js", P.JS/"quicksearch.js")
+  P.navi, P.jquery, P.qsearch = P.jsfiles
   return P
 
 def get_module_fqn(prefix_path, filepath):

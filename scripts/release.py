@@ -12,10 +12,10 @@ def copy_files(DIL):
   for FILE, DIR in (
       (DIL.DATA/"dilconf.d", DIL.BIN),
       (DIL.DATA/"html.css",  DIL.HTMLSRC),
-      (DIL.KANDIL.style,     DIL.CSS),
-      (DIL.KANDIL.navi,      DIL.JS),
-      (DIL.KANDIL.jquery,    DIL.JS)):
+      (DIL.KANDIL.style,     DIL.CSS)):
     FILE.copy(DIR)
+  for FILE in DIL.KANDIL.jsfiles:
+    FILE.copy(DIL.JS)
   for img in DIL.KANDIL.IMG.glob("*.png") + [DIL.KANDIL.IMG/"loading.gif"]:
     img.copy(DIL.IMG)
 

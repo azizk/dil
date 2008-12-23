@@ -48,10 +48,10 @@ def copy_files2(DATA, KANDIL, DEST):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
       (DATA/"html.css", DEST.HTMLSRC),
-      (KANDIL.style,    DEST.CSS),
-      (KANDIL.navi,     DEST.JS),
-      (KANDIL.jquery,   DEST.JS)):
+      (KANDIL.style,    DEST.CSS)):
     FILE.copy(DIR)
+  for FILE in KANDIL.jsfiles:
+    FILE.copy(DEST.JS)
   for img in KANDIL.IMG.glob("*.png") + [KANDIL.IMG/"loading.gif"]:
     img.copy(DEST.IMG)
 
