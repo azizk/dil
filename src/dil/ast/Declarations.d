@@ -437,6 +437,8 @@ class FunctionDeclaration : Declaration
     return params.begin.prevNWS.kind == TOK.RParen;
   }
 
+  Function symbol;
+
   mixin(copyMethod);
 }
 

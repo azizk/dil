@@ -195,6 +195,8 @@ class TypeBasic : Type
     super(null, typ);
   }
 
+  //KELLY added void below because a function returnType defaults to integral
+  //type even when void...if this is wrong then we need to fix returnType
   char[] toString()
   {
     return [
@@ -205,7 +207,7 @@ class TypeBasic : Type
       TYP.Cent : "cent", TYP.Ucent : "ucent", TYP.Float : "float",
       TYP.Double : "double", TYP.Real : "real", TYP.Ifloat : "ifloat",
       TYP.Idouble : "idouble", TYP.Ireal : "ireal", TYP.Cfloat : "cfloat",
-      TYP.Cdouble : "cdouble", TYP.Creal : "creal"
+      TYP.Cdouble : "cdouble", TYP.Creal : "creal", TYP.Void : "void"
     ][this.tid];
   }
 }

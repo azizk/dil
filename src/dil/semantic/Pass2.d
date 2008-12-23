@@ -154,6 +154,48 @@ class SemanticPass2 : DefaultVisitor
     }
   }
 
+  bool checkParams(Parameter[] overLoadPars, Parameter[] pars)
+  {
+    int i = 0;
+    foreach(o; overLoadPars)
+      o.type = visitT(o.type.baseType);
+    foreach(p; pars)
+    {
+      p.type = visitT(p.type.baseType);
+      debug(sema)
+      {
+        Stdout(p.type.type);
+        Stdout("==");
+        Stdout(overLoadPars[i].type.type).newline;
+      }
+
+      if(!(p.type.type == overLoadPars[i].type.type))
+	return false;
+      i++;
+    }
+    return true;
+  }
+
+  bool OverloadConflict(Symbol[] overLoadsyms, Parameter[] pars)
+  {
+    bool foundItself = false;
+    foreach(s; overLoadsyms)
+    {
+      bool equalParams = false;
+      auto sParams = (cast(FunctionDeclaration)s.node).params.items();
+      if(pars.length == sParams.length)
+        equalParams = checkParams(sParams, pars);
+
+      if(equalParams == true)
+      {
+        if (foundItself)
+          return true;
+	foundItself = true;
+      }
+
+    }
+    return false;
+  }
 
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   |                                Declarations                               |
@@ -164,6 +206,30 @@ override
   D visit(CompoundDeclaration d)
   {
     return super.visit(d);
+  }
+
+  D visit(FunctionDeclaration d)
+  {
+    if(d.symbol is null)
+      return d;
+
+    debug(sema)
+      Stdout(d.symbol.name.str).newline;
+
+    auto pars = d.params.items();
+    auto sym = scop.symbol.lookup(d.symbol.name);
+
+    if (sym)
+      if(sym.isOverloadSet)
+      {
+        if(OverloadConflict((cast(OverloadSet)sym).symbols, pars))
+	{
+	  error(d.begin, "conflicting overload for the function: '{}'", d.symbol.name.str);
+	  return d;
+	}
+      }
+
+    return d;
   }
 
   D visit(EnumDeclaration d)

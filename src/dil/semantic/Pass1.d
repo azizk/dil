@@ -127,8 +127,12 @@ class SemanticPass1 : Visitor
         reportSymbolConflict(sym, sym2, name);
     }
     else
-      // Create a new overload set.
+    {
+      // Create a new overload set and add THIS symbol first
       scop.symbol.insert(new OverloadSet(name, sym.node), name);
+      auto sym2Internal = scop.symbol.lookup(name);
+      (cast(OverloadSet)cast(void*)sym2Internal).add(sym);
+    }
     // Set the current scope symbol as the parent.
     sym.parent = scop.symbol;
   }
@@ -185,6 +189,7 @@ class SemanticPass1 : Visitor
 
   private alias Declaration D; /// A handy alias. Saves typing.
   private alias Statement S;
+  private alias Node N;
 
 override
 {
@@ -282,8 +287,8 @@ override
     // Insert into current scope.
     insert(d.symbol);
     enterScope(d.symbol);
-    // Continue semantic analysis.
-    d.decls && visitD(d.decls);
+      // Continue semantic analysis.
+      d.decls && visitD(d.decls);
     exitScope();
     return d;
   }
@@ -382,6 +387,9 @@ override
 
   D visit(FunctionDeclaration d)
   {
+    if (d.symbol)
+      return d;
+
     if (d.isConst() || d.isAuto() || d.isScope())
     {
       error(d.begin, "functions cannot be const or auto");
@@ -408,17 +416,21 @@ override
       return d;
     }
 
-    auto func = new Function(d.name, d);
-    insertOverload(func);
-
     debug(sema)
     {
       Stdout("Function - ");
       Stdout(d.name.str).newline;
     }
 
-    if (d.funcBody !is null)
-	visitS(d.funcBody);
+    auto func = new Function(d.name, d);
+    insertOverload(func);
+
+    d.symbol = func;
+
+    enterScope(func);
+      d.params && visitN(d.params);
+      d.funcBody && visitS(d.funcBody);
+    exitScope();
 
     return d;
   }
@@ -632,10 +644,14 @@ override
 
   S visit(FuncBodyStatement s)
   {
+    if (s.symbol)
+      return s;
+
     s.inBody &&  visitS(s.inBody);
     if (!s.isEmpty())
       visitS(s.funcBody);
     s.outBody && visitS(s.outBody);
+
     return s;
   }
 
@@ -844,4 +860,62 @@ override
     return s;
   }
 } // override
+
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                                 Parameters                                |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
+
+override
+{
+  N visit(Parameter p)
+  {
+    return p;
+  }
+
+  N visit(Parameters p)
+  {
+    foreach(pItem; p.items)
+    {
+      pItem && visitN(pItem);
+    }
+
+    return p;
+  }
+
+  N visit(TemplateAliasParameter p)
+  {
+    return p;
+  }
+
+  N visit(TemplateTypeParameter p)
+  {
+    return p;
+  }
+
+  N visit(TemplateThisParameter p) // D2.0
+  {
+    return p;
+  }
+
+  N visit(TemplateValueParameter p)
+  {
+    return p;
+  }
+
+  N visit(TemplateTupleParameter p)
+  {
+    return p;
+  }
+
+  N visit(TemplateParameters p)
+  {
+    return p;
+  }
+
+  N visit(TemplateArguments p)
+  {
+    return p;
+  }
+} // override
+
 }

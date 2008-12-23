@@ -11,6 +11,7 @@ import dil.ast.Node,
        dil.ast.Parameters,
        dil.ast.NodeCopier;
 import dil.lexer.IdTable;
+import dil.semantic.Symbols;
 
 class CompoundStatement : Statement
 {
@@ -75,6 +76,8 @@ class FuncBodyStatement : Statement
   {
     return funcBody is null;
   }
+
+  Function symbol;
 
   mixin(copyMethod);
 }
