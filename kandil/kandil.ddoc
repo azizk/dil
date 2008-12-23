@@ -10,13 +10,6 @@ DDOC = <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
   <h1><a href="$(SRCFILE)" class="symbol">$(TITLE)</a></h1>
   $(BODY)
 </div>
-<div id="navbar">
-  <p id='navtabs'><span id='apitab' class='current'>API</span><span id='modtab'>Modules</span></p>
-  <div id="panels">
-    <div id="apilist"></div>
-    <div id="modlist"></div>
-  </div>
-</div>
 <div id="footer">
   <p>$(COPYRIGHT)</p>
   <p>$(GENERATED_BY)</p>

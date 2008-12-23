@@ -2,9 +2,15 @@
 
 /// Execute when document is ready.
 $(function() {
+  // Create the navigation bar.
+  var navbar = $("<div id='navbar'/>")
+    .append("<p id='navtabs'><span id='apitab' class='current'>API</span>"+
+                            "<span id='modtab'>Modules</span></p>")
+    .append("<div id='panels'><div id='apilist'/><div id='modlist'/></div>")
+  $("body").append(navbar)
+  // Create the quick search text boxes.
   $("#panels").prepend(new QuickSearch("apiqs", "#apilist", quickSearchSymbols).input)
               .prepend(new QuickSearch("modqs", "#modlist", quickSearchSymbols).input);
-
   $("#modqs").hide(); // Initially hidden.
 
   var symbols = $(".symbol");
