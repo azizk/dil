@@ -208,6 +208,10 @@ class SemanticPass1 : Visitor
 	else if (innerD.Is!(DeleteDeclaration))
           error(decl.begin, "dealloctor 'delete' not allowed for interface");
       }
+      
+      if (innerD.Is!(FunctionDeclaration))
+        if ((cast(FunctionDeclaration)innerD).funcBody)
+	  error(innerD.begin, "function body for '{}' is not abstract in interface", (cast(FunctionDeclaration)innerD).name.str);
     }
   }
 
