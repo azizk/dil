@@ -187,6 +187,31 @@ class SemanticPass1 : Visitor
     deferred ~= d;
   }
 
+  void checkCtorDtorSpecials(CompoundDeclaration decls, bool StructOrUnion)
+  {
+    foreach (Declaration decl; decls.decls)
+    {
+      Declaration innerD = visitD(decl);
+      if (innerD.Is!(ConstructorDeclaration))
+        error(decl.begin, "constructors are only allowed in a Class");
+      else if (innerD.Is!(DestructorDeclaration))
+        error(decl.begin, "destructors are only allowed in a Class");
+
+      if (!StructOrUnion)
+      {
+        if (innerD.Is!(InvariantDeclaration))
+          error(decl.begin, "invariant not allowed in interface");
+	else if (innerD.Is!(UnittestDeclaration))
+          error(decl.begin, "unittests not allowed in interface");
+	else if (innerD.Is!(NewDeclaration))
+          error(decl.begin, "alloctor 'new' not allowed for interface");
+	else if (innerD.Is!(DeleteDeclaration))
+          error(decl.begin, "dealloctor 'delete' not allowed for interface");
+      }
+    }
+  }
+
+
   private alias Declaration D; /// A handy alias. Saves typing.
   private alias Statement S;
   private alias Node N;
@@ -303,7 +328,7 @@ override
     insert(d.symbol);
     enterScope(d.symbol);
       // Continue semantic analysis.
-      d.decls && visitD(d.decls);
+      checkCtorDtorSpecials(d.decls, false);
     exitScope();
     return d;
   }
@@ -312,6 +337,7 @@ override
   {
     if (d.symbol)
       return d;
+
     // Create the symbol.
     d.symbol = new Struct(d.name, d);
 
@@ -322,7 +348,7 @@ override
 
     enterScope(d.symbol);
       // Continue semantic analysis.
-      d.decls && visitD(d.decls);
+      checkCtorDtorSpecials(d.decls, true);
     exitScope();
 
     if (d.symbol.isAnonymous)
@@ -347,7 +373,7 @@ override
 
     enterScope(d.symbol);
       // Continue semantic analysis.
-      d.decls && visitD(d.decls);
+      checkCtorDtorSpecials(d.decls, true);
     exitScope();
 
     if (d.symbol.isAnonymous)
