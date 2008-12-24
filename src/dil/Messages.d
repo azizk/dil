@@ -169,11 +169,11 @@ static:
   auto DebugSpecModuleLevel = "debug={} must be at module level";
   auto VersionSpecModuleLevel = "version={} must be at module level";
 
-  auto EnumBaseTypeInvalid = "Enum base type must be an integral type or enum";
-  auto EnumMustHaveMember = "Enums must have at least one member";
-  auto EnumIntegerExprExpected = "Integer expression expected";
-  auto EnumMemberTypeInvalid = "Enum member type must be an integral type or enum";
-  auto EnumOverflow = "The value assigned here overflows the enum type";
-  auto CannotAddPointers = "Cannot add a pointer to a pointer";
+  auto EnumBaseTypeInvalid = "enum base type must be an integral type or enum";
+  auto EnumMustHaveMember = "enums must have at least one member";
+  auto EnumIntegerExprExpected = "integer expression expected";
+  auto EnumMemberTypeInvalid = "enum member type must be an integral type or enum";
+  auto EnumOverflow = "the value assigned here overflows the enum type";
+  auto CannotAddPointers = "cannot add a pointer to a pointer";
 
 }

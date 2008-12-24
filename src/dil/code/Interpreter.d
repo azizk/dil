@@ -734,7 +734,7 @@ override
     if (e.type.isIntegral())
     {
       if (e.to!(IntExpression).number == 0)
-        {} //TODO throw exception here for div by zero 
+        {} //TODO diagnostic here for div by zero 
       auto res = new IntExpression(toInt(visitE(e.lhs)) / toInt(visitE(e.rhs)), e.type);
       return res;
     } else if (e.type.isReal())
