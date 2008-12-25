@@ -18,27 +18,19 @@ body { margin: 0; }
   position: fixed;
   top: 0;
   left: 0;
+  background-color: #CDC;
+  border-right: 2px outset DarkGreen;
 }
 
 #panels {
-  border: 2px outset DarkGreen;
-  border-left: none;
-  border-bottom: none;
-  height: 1px;
-  min-height: 92%;
+  border-top: 2px outset DarkGreen;
   font-size: 0.95em;
-  background-color: #EFE;
 }
 
 #panels ul {
   margin-left: 0.5em;
   padding-left: 0.5em;
   list-style: none;
-}
-
-#panels div > ul {
-  margin: 0.5em;
-   padding: 0;
 }
 
 #navbar ul a {
@@ -69,23 +61,30 @@ body { margin: 0; }
   background-color: #474;
 }
 
-#apilist, #modlist {
+/* Use absolute positioning so that > ul can show scrollbars on overflow. */
+#apipanel, #modpanel { position: absolute; height: 100%; width: 100%; }
+#apipanel > ul, #modpanel > ul {
+  max-height: 91%;
+  min-height: 91%;
   overflow: auto;
-  max-height: 100%;
+  margin: 0.1em;
+  padding: 0.1em;
+  border: 1px inset DarkGreen;
+  background-color: white;
 }
 
-#apilist li sub {
+#apipanel li sub {
   font-size: small;
   margin: 0.2em;
   vertical-align: bottom;
   color: #555;
 }
 
-#apilist li, #modlist li {
+#apipanel li, #modpanel li {
   white-space: nowrap;
 }
 
-#apilist li img, #modlist li img {
+#apipanel li img, #modpanel li img {
   vertical-align: top;
   margin-right: 0.1em;
 }
@@ -105,14 +104,14 @@ body { margin: 0; }
 .filtered li.parent_of_match > a {
   color: Gray !important; /* Make the text gray to indicate no match */
 }
-.filtered p.no_match {
-  margin: 0.5em;
+.filtered li.no_match_msg {
+  display: block;
 }
 
 input.filterbox {
-  margin: 0em 0.5%;
-  border: 1px solid DarkGreen;
-  width: 98%;
+  margin: 0.2em 0.2em 0em 0.2em;
+  border: 1px inset DarkGreen;
+  width: 97%;
 }
 
 /* Content */

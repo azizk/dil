@@ -10,7 +10,7 @@ function QuickSearch(id, symlist, callback, options)
 
   this.input = $("<input id='"+id+"' class='filterbox'"+
                  " type='text' value='"+this.options.text+"'/>");
-  this.symlist = $(symlist)[0];
+  this.symlist = symlist; // A selector string for jQuery.
   this.cancelSearch = false;
   this.timeoutId = 0;
   this.callback = callback;
@@ -64,14 +64,15 @@ function QuickSearch(id, symlist, callback, options)
 
 function quickSearchSymbols(qs)
 {
-  if ($(qs.symlist.lastChild).is("p.no_match"))
-    qs.symlist.removeChild(qs.symlist.lastChild);
+  var symlist = $(qs.symlist)[0]; // Get 'ul' tag.
+  // Remove the message if present.
+  $(symlist.lastChild).filter(".no_match_msg").remove();
 
   var words = qs.parse();
   if (words.length == 0)
   {
-    $(qs.symlist).removeClass("filtered");
-    // Reset classes. Not really needed.
+    $(symlist).removeClass("filtered");
+    // Reset classes. May be needed in the future.
     // var items = symlist.getElementsByTagName("li");
     // for (var i = 0; i < items.length; i++)
     //   items[i].className = "";
@@ -107,7 +108,7 @@ function quickSearchSymbols(qs)
     return hasMatches;
   }
 
-  qs.symlist.className = "filtered";
-  if (!search(qs.symlist.firstChild)) // Start the search.
-    $(qs.symlist).append("<p class='no_match'>No match...</p>");
+  $(symlist).addClass("filtered");
+  if (!search(symlist)) // Start the search.
+    $(symlist).append("<li class='no_match_msg'>No match...</li>");
 }

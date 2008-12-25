@@ -6,25 +6,26 @@ $(function() {
   var navbar = $("<div id='navbar'/>")
     .append("<p id='navtabs'><span id='apitab' class='current'>API</span>"+
                             "<span id='modtab'>Modules</span></p>")
-    .append("<div id='panels'><div id='apilist'/><div id='modlist'/></div>")
-  $("body").append(navbar)
+    .append("<div id='panels'><div id='apipanel'/><div id='modpanel'/>");
+  $("body").append(navbar);
   // Create the quick search text boxes.
-  $("#panels").prepend(new QuickSearch("apiqs", "#apilist", quickSearchSymbols).input)
-              .prepend(new QuickSearch("modqs", "#modlist", quickSearchSymbols).input);
-  $("#modqs").hide(); // Initially hidden.
+  var qs = [new QuickSearch("apiqs", "#apipanel>ul", quickSearchSymbols),
+            new QuickSearch("modqs", "#modpanel>ul", quickSearchSymbols)];
+  $("#apipanel").prepend(qs[0].input);
+  $("#modpanel").prepend(qs[1].input).hide(); // Initially hidden.
 
   var symbols = $(".symbol");
   // Add code display functionality to symbol links.
   symbols.click(function(event) {
     event.preventDefault();
     showCode($(this));
-  })
+  });
 
   // Prepare the symbol list.
   var header = symbols[0]; // Header of the page.
   symbols = symbols.slice(1); // Every other symbol.
 
-  var itemlist = {}
+  var itemlist = {};
   itemlist.root = new SymbolItem(header.textContent, "module", header.textContent);
   itemlist[''] = itemlist.root; // The empty string has to point to the root.
   for (var i = 0; i < symbols.length; i++)
@@ -38,47 +39,55 @@ $(function() {
     // TODO: add D attribute information.
   }
 
-  $("#apilist").append(createSymbolsUL(itemlist.root.sub));
+  $("#apipanel").append(createSymbolsUL(itemlist.root.sub));
 
-//   $("#apilist > ul").treeview({
+//   $("#apipanel > ul").treeview({
 //     animated: "fast",
 //     collapsed: true
 //   })
 
+  // Assign click event handlers for the tabs.
   function makeCurrentTab() {
     $("span.current", this.parentNode).removeClass('current');
     $(this).addClass('current');
+    $("#panels > *:visible").hide(); // Hide all panels.
   }
 
-  // Assign click event handlers for the tabs.
   $("#apitab").click(makeCurrentTab)
               .click(function() {
-    var container = $("#panels");
-    $("> *:visible", container).hide();
-    $("#apilist", container).show(); // Display the API list.
-    $("#apiqs").show(); // Show the filter text box.
-  })
+    $("#apipanel").show(); // Display the API list.
+  });
+
   $("#modtab").click(makeCurrentTab)
-              .click(function() {
-    var container = $("#panels");
-    $("> *:visible", container).hide();
-    var list = $("#modlist:has(ul)", container);
-    if (!list.length) {
-      list = createModulesList();
-      container.append(list.hide()); // Append hidden.
-    }
-    list.show(); // Display the modules list.
-    $("#modqs").show(); // Show the filter text box.
-  })
+              .click(function lazyLoad() {
+    // Create the list.
+    $("#modpanel").append(createModulesUL(g_moduleObjects));
+    $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
+  })          .click(function() { // Add the display handler.
+    $("#modpanel").show(); // Display the modules list.
+  });
+
+  // $(window).resize(function(){
+  //   $("#apipanel > ul").add("#modpanel > ul").each(setHeightOfPanel);
+  // });
 })
+
+/*/// Sets the height of a panel. Works with FF, but not Opera :(
+function setHeightOfPanel()
+{
+  var window_height = $(window).height();
+  var pos = $(this).offset();
+  $(this).css('max-height', window_height - pos.top - 10);
+}
+*/
 
 /// A tree item for symbols.
 function SymbolItem(name, kind, fqn)
 {
   this.name = name; /// The text to be displayed.
   this.kind = kind; /// The kind of this symbol.
-  this.fqn = fqn; /// The fully qualified name.
-  this.sub = []; /// Sub-symbols.
+  this.fqn = fqn;   /// The fully qualified name.
+  this.sub = [];    /// Sub-symbols.
   return this;
 }
 
@@ -99,7 +108,7 @@ function getPNGIcon(kind)
 
 function addDAttributes()
 {
-  $("#apilist li").each(function() {
+  $("#apipanel li").each(function() {
     // TODO:
   })
 }
@@ -137,13 +146,6 @@ function createModulesUL(symbols)
     list += "</li>";
   }
   return list + "</ul>";
-}
-
-/// Creates an unordered list from the global modules list and appends
-/// it to the modlist panel.
-function createModulesList()
-{
-  return $("#modlist").append(createModulesUL(g_moduleObjects));
 }
 
 /// An array of all the lines of this module's source code.
