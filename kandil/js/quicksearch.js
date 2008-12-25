@@ -68,8 +68,8 @@ function quickSearchSymbols(qs)
   // Remove the message if present.
   $(symlist.lastChild).filter(".no_match_msg").remove();
 
-  var words = qs.parse();
-  if (words.length == 0)
+  qs.words = qs.parse();
+  if (qs.words.length == 0)
   {
     $(symlist).removeClass("filtered");
     // Reset classes. May be needed in the future.
@@ -79,36 +79,76 @@ function quickSearchSymbols(qs)
     return; // Nothing to do if query is empty.
   }
 
-  // Recursively progresses down the "ul" tree.
-  function search(ul)
+  $(symlist).addClass("filtered");
+  if (!quick_search(qs, symlist)) // Start the search.
+    $(symlist).append("<li class='no_match_msg'>No match...</li>");
+}
+
+/// Recursively progresses down the "ul" tree.
+function quick_search(qs, main_ul)
+{
+  var items = main_ul.childNodes;
+  var hasMatches = false;
+  for (var i = 0; i < items.length; i++)
   {
+    if (qs.cancelSearch) // Did the user cancel?
+      return hasMatches;
+    var item = items[i];
+    item.className = ""; // Reset class.
+    // childNodes[1] is the <a/> tag or the text node (package names).
+    var text = item.childNodes[1].textContent.toLowerCase();
+    for (j in qs.words)
+      if (text.search(qs.words[j]) != -1)
+      {
+        hasMatches = true;
+        item.className = "match";
+        break;
+      }
+    // Visit subnodes.
+    if (item.lastChild.tagName == "UL")
+      if (quick_search(qs, item.lastChild) && item.className == "")
+        // Mark this if this item didn't match but children of it did.
+        (item.className = "parent_of_match"), (hasMatches = true);
+  }
+  return hasMatches;
+}
+
+/// Reverse iterates over the "ul" tags. No recursion needed.
+/// Profiling showed this method is sometimes a bit faster and
+/// sometimes a bit slower.
+function quick_search2(qs, main_ul)
+{
+  var words = qs.words;
+  var ul_tags = qs.ul_tags;
+  if (!ul_tags)
+    ul_tags = qs.ul_tags = [main_ul].concat($("ul", main_ul).get());
+  // Iterate over the list in reverse. Avoids function recursion.
+  for (var i = ul_tags.length-1; i >= 0; i--)
+  {
+    var ul = ul_tags[i];
     var items = ul.childNodes;
     var hasMatches = false;
-    for (var i = 0; i < items.length; i++)
+    // Iterate forward over the li items in this ul tag.
+    for (var j = 0; j < items.length; j++)
     {
       if (qs.cancelSearch) // Did the user cancel?
         return hasMatches;
-      var item = items[i];
+      var item = items[j];
       item.className = ""; // Reset class.
       // childNodes[1] is the <a/> tag or the text node (package names).
       var text = item.childNodes[1].textContent.toLowerCase();
-      for (j in words)
-        if (text.search(words[j]) != -1)
+      for (k in words)
+        if (text.search(words[k]) != -1)
         {
           hasMatches = true;
           item.className = "match";
           break;
         }
-      // Visit subnodes.
-      if (item.lastChild.tagName == "UL")
-        if (search(item.lastChild) && item.className == "") // Recursive call.
-          // Mark this if this item didn't match but children of it did.
-          (item.className = "parent_of_match"), (hasMatches = true);
+      if (item.className == "" && item.lastChild.hasMatches)
+        // Mark this if this item didn't match but children of it did.
+        (item.className = "parent_of_match"), (hasMatches = true);
     }
-    return hasMatches;
+    ul.hasMatches = hasMatches; // Whether this ul has any matches.
   }
-
-  $(symlist).addClass("filtered");
-  if (!search(symlist)) // Start the search.
-    $(symlist).append("<li class='no_match_msg'>No match...</li>");
+  return main_ul.hasMatches;
 }
