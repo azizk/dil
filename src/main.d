@@ -145,7 +145,10 @@ void main(char[][] args)
       case "--lines":
         cmd.add(HighlightCommand.Option.PrintLines); break;
       default:
-        cmd.filePath = arg;
+        if (!cmd.filePathSrc)
+          cmd.filePathSrc = arg;
+        else
+          cmd.filePathDest = arg;
       }
     }
     cmd.run();
@@ -464,16 +467,19 @@ Example:
 //     msg = GetMsg(MID.HelpGenerate);
     msg = `Highlight a D source file with XML or HTML tags.
 Usage:
-  dil hl file.d [Options]
+  dil hl file.d [Destination] [Options]
+
+  The file will be output to stdout if 'Destination' is not specified.
 
 Options:
   --syntax         : generate tags for the syntax tree
-  --xml            : use XML format (default)
-  --html           : use HTML format
+  --html           : use HTML format (default)
+  --xml            : use XML format
   --lines          : print line numbers
 
 Example:
-  dil hl src/main.d --html --syntax > main.html`;
+  dil hl src/main.d --syntax > main.html
+  dil hl --xml src/main.d main.xml`;
     break;
   case "importgraph", "igraph":
 //     msg = GetMsg(MID.HelpImportGraph);

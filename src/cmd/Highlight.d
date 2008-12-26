@@ -19,9 +19,10 @@ import SettingsLoader;
 import Settings;
 import common;
 
-import tango.io.Buffer;
-import tango.io.Print;
-import tango.io.FilePath;
+import tango.io.stream.FileStream,
+       tango.io.Buffer,
+       tango.io.Print,
+       tango.io.FilePath;
 
 /// The highlight command.
 struct HighlightCommand
@@ -39,8 +40,9 @@ struct HighlightCommand
   alias Option Options;
 
   Options options; /// Command options.
-  string filePath; /// File path to the module to be highlighted.
-  Diagnostics diag;
+  string filePathSrc; /// File path to the module to be highlighted.
+  string filePathDest; /// Where to write the highlighted file.
+  Diagnostics diag; /// Collects error messages.
 
   /// Adds o to the options.
   void add(Option o)
@@ -53,7 +55,7 @@ struct HighlightCommand
   {
     add(HighlightCommand.Option.Tokens);
     if (!(options & (Option.XML | Option.HTML)))
-      add(Option.XML); // Default to XML.
+      add(Option.HTML); // Default to HTML.
 
     auto mapFilePath = options & Option.HTML ? GlobalSettings.htmlMapFile
                                              : GlobalSettings.xmlMapFile;
@@ -63,13 +65,17 @@ struct HighlightCommand
     if (diag.hasInfo)
       return;
 
-    auto hl = new Highlighter(tags, Stdout, diag);
+    auto print = Stdout; // Default to stdout.
+    if (filePathDest.length)
+      print = new Print!(char)(Format, new FileOutput(filePathDest));
+
+    auto hl = new Highlighter(tags, print, diag);
 
     bool printLines = (options & Option.PrintLines) != 0;
     bool printHTML = (options & Option.HTML) != 0;
     if (options & Option.Syntax)
-      hl.highlightSyntax(filePath, printHTML, printLines);
+      hl.highlightSyntax(filePathSrc, printHTML, printLines);
     else
-      hl.highlightTokens(filePath, printLines);
+      hl.highlightTokens(filePathSrc, printLines);
   }
 }
