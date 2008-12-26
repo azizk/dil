@@ -51,6 +51,7 @@ def main():
   add_option("-s", "--dsymbols", dest="debug_symbols",
     help="generate debug symbols for debug builds")
   add_option("-d", "--docs", dest="docs", help="generate documentation")
+  add_option("-n", "--no-bin", dest="no_binaries", help="don't compile code")
   add_option("--7z", dest="_7z", help="create a 7z archive")
   add_option("--gz", dest="tar_gz", help="create a tar.gz archive")
   add_option("--bz2", dest="tar_bz2", help="create a tar.bz2 archive")
@@ -186,6 +187,9 @@ def main():
     if not build_windows_binaries:
       print "Error: can't build windows binaries: "\
             "wine is not installed or not in PATH."
+
+  if options.no_binaries:
+    build_linux_binaries = build_windows_binaries = False
 
   # Create partial functions with common parameters.
   # Note: the -inline switch makes the binaries significantly larger on Linux.
