@@ -106,7 +106,7 @@ function getPNGIcon(kind)
   return "<img src='img/icon_"+kind+".png' width='16' height='16'/>";
 }
 
-function addDAttributes()
+function addLIAttributes()
 {
   $("#apipanel li").each(function() {
     // TODO:
@@ -122,7 +122,7 @@ function createSymbolsUL(symbols)
     var sym = symbols[i];
     [fqn, count] = rpartition(sym.fqn, ':');
     count = fqn ? "<sub>"+count+"</sub>" : ""; // An index.
-    list += "<li kind='"+sym.kind+"'>"+getPNGIcon(sym.kind)+
+    list += "<li>"+getPNGIcon(sym.kind)+
             "<a href='#"+sym.fqn+"'>"+sym.name+count+"</a>";
     if (sym.sub && sym.sub.length)
       list += createSymbolsUL(sym.sub);
