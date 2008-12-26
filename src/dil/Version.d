@@ -31,7 +31,7 @@ const uint VERSION_MAJOR = VERSION_MAJOR_DEFAULT;
 /// The minor version number of this compiler.
 const uint VERSION_MINOR = 0;
 /// The optional suffix.
-const char[] VERSION_SUFFIX;
+const char[] VERSION_SUFFIX = "";
 /// The compiler version formatted as a string.
 const char[] VERSION = toString(VERSION_MAJOR)~"."~toString(VERSION_MINOR, 3)~
                        VERSION_SUFFIX;

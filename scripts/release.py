@@ -37,7 +37,7 @@ def update_version(path, major, minor, suffix):
   code = open(path).read()
   code = re.sub(r"(VERSION_MAJOR\s*=\s*)[\w\d]+;", r"\g<1>%s;" % major, code)
   code = re.sub(r"(VERSION_MINOR\s*=\s*)\d+;", r"\g<1>%s;" % minor, code)
-  code = re.sub(r"(VERSION_SUFFIX);", r'\g<1> = "%s";' % suffix, code)
+  code = re.sub(r'(VERSION_SUFFIX\s*=\s*)"";', r'\g<1>"%s";' % suffix, code)
   open(path, "w").write(code)
 
 def main():
