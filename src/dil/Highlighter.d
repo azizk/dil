@@ -20,6 +20,238 @@ import tango.io.Buffer;
 import tango.io.Print;
 import tango.io.FilePath;
 
+/// A token and syntax highlighter.
+class Highlighter
+{
+  TagMap tags; /// Which tag map to use.
+  /// Used to print formatted strings. Can be a file, stdout or buffer.
+  Print!(char) print;
+  Diagnostics diag; /// Collects error messages.
+
+  /// Constructs a TokenHighlighter object.
+  this(TagMap tags, Print!(char) print, Diagnostics diag)
+  {
+    this.tags = tags;
+    this.print = print;
+    this.diag = diag;
+  }
+
+  /// Highlights tokens in a text buffer.
+  /// Returns: a string with the highlighted tokens.
+  string highlightTokens(string text, string filePath)
+  {
+    auto buffer = new GrowBuffer(text.length);
+    auto print_saved = print; // Save;
+    print = new Print!(char)(Format, buffer);
+
+    auto lx = new Lexer(new SourceText(filePath, text), diag);
+    lx.scanAll();
+    // Traverse linked list and print tokens.
+    for (auto token = lx.firstToken(); token; token = token.next) {
+      token.ws && print(token.wsChars); // Print preceding whitespace.
+      printToken(token);
+    }
+
+    print = print_saved; // Restore.
+    return cast(char[])buffer.slice();
+  }
+
+  /// Highlights all tokens of a source file.
+  void highlightTokens(string filePath, bool opt_printLines)
+  {
+    auto lx = new Lexer(new SourceText(filePath, true), diag);
+    lx.scanAll();
+
+    print.format(tags["DocHead"], (new FilePath(filePath)).name());
+    if (lx.errors.length)
+    {
+      print(tags["CompBegin"]);
+      printErrors(lx);
+      print(tags["CompEnd"]);
+    }
+
+    if (opt_printLines)
+    {
+      print(tags["LineNumberBegin"]);
+      printLines(lx.lineNum);
+      print(tags["LineNumberEnd"]);
+    }
+
+    print(tags["SourceBegin"]);
+    // Traverse linked list and print tokens.
+    for (auto token = lx.firstToken(); token; token = token.next) {
+      token.ws && print(token.wsChars); // Print preceding whitespace.
+      printToken(token);
+    }
+    print(tags["SourceEnd"]);
+    print(tags["DocEnd"]);
+  }
+
+  /// Highlights the syntax in a source file.
+  void highlightSyntax(string filePath, bool printHTML, bool opt_printLines)
+  {
+    auto modul = new Module(filePath, diag);
+    modul.parse();
+    highlightSyntax(modul, printHTML, opt_printLines);
+  }
+
+  /// ditto
+  void highlightSyntax(Module modul, bool printHTML, bool opt_printLines)
+  {
+    auto parser = modul.parser;
+    auto lx = parser.lexer;
+    auto builder = new TokenExBuilder();
+    auto tokenExList = builder.build(modul.root, lx.firstToken());
+
+    print.format(tags["DocHead"], modul.getFQN());
+    if (lx.errors.length || parser.errors.length)
+    { // Output error messages.
+      print(tags["CompBegin"]);
+      printErrors(lx);
+      printErrors(parser);
+      print(tags["CompEnd"]);
+    }
+
+    if (opt_printLines)
+    {
+      print(tags["LineNumberBegin"]);
+      printLines(lx.lineNum);
+      print(tags["LineNumberEnd"]);
+    }
+
+    print(tags["SourceBegin"]);
+
+    auto tagNodeBegin = tags["NodeBegin"];
+    auto tagNodeEnd = tags["NodeEnd"];
+
+    // Iterate over list of tokens.
+    foreach (ref tokenEx; tokenExList)
+    {
+      auto token = tokenEx.token;
+
+      token.ws && print(token.wsChars); // Print preceding whitespace.
+      if (token.isWhitespace) {
+        printToken(token);
+        continue;
+      }
+      // <node>
+      foreach (node; tokenEx.beginNodes)
+        print.format(tagNodeBegin, tags.getTag(node.category), getShortClassName(node));
+      // Token text.
+      printToken(token);
+      // </node>
+      if (printHTML)
+        foreach_reverse (node; tokenEx.endNodes)
+          print(tagNodeEnd);
+      else
+        foreach_reverse (node; tokenEx.endNodes)
+          print.format(tagNodeEnd, tags.getTag(node.category));
+    }
+    print(tags["SourceEnd"]);
+    print(tags["DocEnd"]);
+  }
+
+  void printErrors(Lexer lx)
+  {
+    foreach (e; lx.errors)
+      print.format(tags["LexerError"], e.filePath,
+                   e.loc, e.col, xml_escape(e.getMsg));
+  }
+
+  void printErrors(Parser parser)
+  {
+    foreach (e; parser.errors)
+      print.format(tags["ParserError"], e.filePath,
+                   e.loc, e.col, xml_escape(e.getMsg));
+  }
+
+  void printLines(uint lines)
+  {
+    auto lineNumberFormat = tags["LineNumber"];
+    for (auto lineNum = 1; lineNum <= lines; lineNum++)
+      print.format(lineNumberFormat, lineNum);
+  }
+
+  /// Prints a token to the stream print.
+  void printToken(Token* token)
+  {
+    switch(token.kind)
+    {
+    case TOK.Identifier:
+      print.format(tags.Identifier, token.text);
+      break;
+    case TOK.Comment:
+      string formatStr;
+      switch (token.start[1])
+      {
+      case '/': formatStr = tags.LineC; break;
+      case '*': formatStr = tags.BlockC; break;
+      case '+': formatStr = tags.NestedC; break;
+      default: assert(0);
+      }
+      print.format(formatStr, xml_escape(token.text));
+      break;
+    case TOK.String:
+      print.format(tags.String, xml_escape(token.text));
+      break;
+    case TOK.CharLiteral:
+      print.format(tags.Char, xml_escape(token.text));
+      break;
+    case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
+        TOK.Float32, TOK.Float64, TOK.Float80,
+        TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
+      print.format(tags.Number, token.text);
+      break;
+    case TOK.Shebang:
+      print.format(tags.Shebang, xml_escape(token.text));
+      break;
+    case TOK.HashLine:
+      // The text to be inserted into formatStr.
+      char[] lineText;
+
+      void printWS(char* start, char* end)
+      {
+        if (start != end) lineText ~= start[0 .. end - start];
+      }
+
+      auto num = token.tokLineNum;
+      if (num is null) // Malformed #line
+        lineText = token.text;
+      else
+      {
+        // Print whitespace between #line and number.
+        printWS(token.start, num.start); // Prints "#line" as well.
+        lineText ~= Format(tags.Number, num.text); // Print the number.
+
+        if (auto filespec = token.tokLineFilespec)
+        { // Print whitespace between number and filespec.
+          printWS(num.end, filespec.start);
+          lineText ~= Format(tags.Filespec, xml_escape(filespec.text));
+        }
+      }
+      // Finally print the whole token.
+      print.format(tags.HLine, lineText);
+      break;
+    case TOK.Illegal:
+      print.format(tags.Illegal, token.text());
+      break;
+    case TOK.Newline:
+      print.format(tags.Newline, token.text());
+      break;
+    case TOK.EOF:
+      print(tags.EOF);
+      break;
+    default:
+      if (token.isKeyword())
+        print.format(tags.Keyword, token.text);
+      else if (token.isSpecialToken)
+        print.format(tags.SpecialToken, token.text);
+      else
+        print(tags[token.kind]);
+    }
+  }
+}
+
 /// Escapes the characters '<', '>' and '&' with named character entities.
 char[] xml_escape(char[] text)
 {
@@ -203,7 +435,7 @@ class TokenExBuilder : DefaultVisitor
   TokenEx* getTokenEx()(Token* t)
   {
     auto p = t in tokenTable;
-    assert(p, t.srcText~" is not in tokenTable");
+    assert(p, t.text~" is not in tokenTable");
     return *p;
   }
 
@@ -219,246 +451,5 @@ class TokenExBuilder : DefaultVisitor
       txend.endNodes ~= n;
     }
     return super.dispatch(n);
-  }
-}
-
-void printErrors(Lexer lx, TagMap tags, Print!(char) print)
-{
-  foreach (e; lx.errors)
-    print.format(tags["LexerError"], e.filePath, e.loc, e.col, xml_escape(e.getMsg));
-}
-
-void printErrors(Parser parser, TagMap tags, Print!(char) print)
-{
-  foreach (e; parser.errors)
-    print.format(tags["ParserError"], e.filePath, e.loc, e.col, xml_escape(e.getMsg));
-}
-
-void printLines(uint lines, TagMap tags, Print!(char) print)
-{
-  auto lineNumberFormat = tags["LineNumber"];
-  for (auto lineNum = 1; lineNum <= lines; lineNum++)
-    print.format(lineNumberFormat, lineNum);
-}
-
-/// Highlights the syntax in a source file.
-void highlightSyntax(string filePath, TagMap tags,
-                     Print!(char) print,
-                     bool printHTML, bool opt_printLines)
-{
-  auto modul = new Module(filePath, new Diagnostics());
-  modul.parse();
-  highlightSyntax(modul, tags, print, printHTML, opt_printLines);
-}
-
-/// ditto
-void highlightSyntax(Module modul, TagMap tags,
-                     Print!(char) print,
-                     bool printHTML, bool opt_printLines)
-{
-  auto parser = modul.parser;
-  auto lx = parser.lexer;
-  auto builder = new TokenExBuilder();
-  auto tokenExList = builder.build(modul.root, lx.firstToken());
-
-  print.format(tags["DocHead"], modul.getFQN());
-  if (lx.errors.length || parser.errors.length)
-  { // Output error messages.
-    print(tags["CompBegin"]);
-    printErrors(lx, tags, print);
-    printErrors(parser, tags, print);
-    print(tags["CompEnd"]);
-  }
-
-  if (opt_printLines)
-  {
-    print(tags["LineNumberBegin"]);
-    printLines(lx.lineNum, tags, print);
-    print(tags["LineNumberEnd"]);
-  }
-
-  print(tags["SourceBegin"]);
-
-  auto tagNodeBegin = tags["NodeBegin"];
-  auto tagNodeEnd = tags["NodeEnd"];
-
-  // Iterate over list of tokens.
-  foreach (ref tokenEx; tokenExList)
-  {
-    auto token = tokenEx.token;
-
-    token.ws && print(token.wsChars); // Print preceding whitespace.
-    if (token.isWhitespace) {
-      printToken(token, tags, print);
-      continue;
-    }
-    // <node>
-    foreach (node; tokenEx.beginNodes)
-      print.format(tagNodeBegin, tags.getTag(node.category), getShortClassName(node));
-    // Token text.
-    printToken(token, tags, print);
-    // </node>
-    if (printHTML)
-      foreach_reverse (node; tokenEx.endNodes)
-        print(tagNodeEnd);
-    else
-      foreach_reverse (node; tokenEx.endNodes)
-        print.format(tagNodeEnd, tags.getTag(node.category));
-  }
-  print(tags["SourceEnd"]);
-  print(tags["DocEnd"]);
-}
-
-/// Highlights all tokens of a source file.
-void highlightTokens(string filePath, TagMap tags,
-                     Print!(char) print,
-                     bool opt_printLines)
-{
-  auto lx = new Lexer(new SourceText(filePath, true));
-  lx.scanAll();
-
-  print.format(tags["DocHead"], (new FilePath(filePath)).name());
-  if (lx.errors.length)
-  {
-    print(tags["CompBegin"]);
-    printErrors(lx, tags, print);
-    print(tags["CompEnd"]);
-  }
-
-  if (opt_printLines)
-  {
-    print(tags["LineNumberBegin"]);
-    printLines(lx.lineNum, tags, print);
-    print(tags["LineNumberEnd"]);
-  }
-
-  print(tags["SourceBegin"]);
-  // Traverse linked list and print tokens.
-  for (auto token = lx.firstToken(); token; token = token.next) {
-    token.ws && print(token.wsChars); // Print preceding whitespace.
-    printToken(token, tags, print);
-  }
-  print(tags["SourceEnd"]);
-  print(tags["DocEnd"]);
-}
-
-/// A token highlighter designed for Ddoc code sections.
-class TokenHighlighter
-{
-  TagMap tags;
-  /// Constructs a TokenHighlighter object.
-  this(Diagnostics diag, TagMap tags)
-  {
-    this.tags = tags;
-  }
-
-  /// Highlights tokens in a DDoc code section.
-  /// Returns: a string with the highlighted tokens (in HTML tags.)
-  string highlight(string text, string filePath)
-  {
-    auto buffer = new GrowBuffer(text.length);
-    auto print = new Print!(char)(Format, buffer);
-
-    auto lx = new Lexer(new SourceText(filePath, text));
-    lx.scanAll();
-
-    // Traverse linked list and print tokens.
-    print("$(D_CODE\n");
-    if (lx.errors.length)
-    { // Output error messages.
-      // FIXME: CompBegin and CompEnd break the table layout.
-//       print(tags["CompBegin"]);
-      printErrors(lx, tags, print);
-//       print(tags["CompEnd"]);
-    }
-    // Traverse linked list and print tokens.
-    for (auto token = lx.firstToken(); token; token = token.next) {
-      token.ws && print(token.wsChars); // Print preceding whitespace.
-      printToken(token, tags, print);
-    }
-    print("\n)");
-    return cast(char[])buffer.slice();
-  }
-}
-
-/// Prints a token to the stream print.
-void printToken(Token* token, TagMap tags, Print!(char) print)
-{
-  switch(token.kind)
-  {
-  case TOK.Identifier:
-    print.format(tags.Identifier, token.srcText);
-    break;
-  case TOK.Comment:
-    string formatStr;
-    switch (token.start[1])
-    {
-    case '/': formatStr = tags.LineC; break;
-    case '*': formatStr = tags.BlockC; break;
-    case '+': formatStr = tags.NestedC; break;
-    default: assert(0);
-    }
-    print.format(formatStr, xml_escape(token.srcText));
-    break;
-  case TOK.String:
-    print.format(tags.String, xml_escape(token.srcText));
-    break;
-  case TOK.CharLiteral:
-    print.format(tags.Char, xml_escape(token.srcText));
-    break;
-  case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
-       TOK.Float32, TOK.Float64, TOK.Float80,
-       TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
-    print.format(tags.Number, token.srcText);
-    break;
-  case TOK.Shebang:
-    print.format(tags.Shebang, xml_escape(token.srcText));
-    break;
-  case TOK.HashLine:
-    auto formatStr = tags.HLine;
-    // The text to be inserted into formatStr.
-    auto buffer = new GrowBuffer;
-    auto print2 = new Print!(char)(Format, buffer);
-
-    void printWS(char* start, char* end)
-    {
-      start != end && print2(start[0 .. end - start]);
-    }
-
-    auto num = token.tokLineNum;
-    if (num is null)
-    { // Malformed #line
-      print.format(formatStr, token.srcText);
-      break;
-    }
-
-    // Print whitespace between #line and number.
-    printWS(token.start, num.start); // Prints "#line" as well.
-    printToken(num, tags, print2); // Print the number.
-
-    if (auto filespec = token.tokLineFilespec)
-    { // Print whitespace between number and filespec.
-      printWS(num.end, filespec.start);
-      print2.format(tags.Filespec, xml_escape(filespec.srcText));
-    }
-    // Finally print the whole token.
-    print.format(formatStr, cast(char[])buffer.slice());
-    break;
-  case TOK.Illegal:
-    print.format(tags.Illegal, token.srcText());
-    break;
-  case TOK.Newline:
-    print.format(tags.Newline, token.srcText());
-    break;
-  case TOK.EOF:
-    print(tags.EOF);
-    break;
-  default:
-    if (token.isKeyword())
-      print.format(tags.Keyword, token.srcText);
-    else if (token.isSpecialToken)
-      print.format(tags.SpecialToken, token.srcText);
-    else
-      print(tags[token.kind]);
   }
 }

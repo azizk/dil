@@ -51,7 +51,7 @@ struct DDocCommand
 
   CompilationContext context; /// Environment variables of the compilation.
   Diagnostics diag;           /// Collects error messages.
-  TokenHighlighter tokenHL;   /// For highlighting tokens DDoc code sections.
+  Highlighter hl; /// For highlighting source files or DDoc code sections.
 
   /// Executes the doc generation command.
   void run()
@@ -75,7 +75,8 @@ struct DDocCommand
       mapFilePath = GlobalSettings.xmlMapFile;
     auto map = TagMapLoader(diag).load(mapFilePath);
     auto tags = new TagMap(map);
-    tokenHL = new TokenHighlighter(diag, tags);
+
+    hl = new Highlighter(tags, null, diag);
 
     outFileExtension = writeXML ? ".xml" : ".html";
 
@@ -100,7 +101,7 @@ struct DDocCommand
         moduleManager.addModule(mod);
         // Write highlighted files before SA, since it mutates the tree.
         if (writeHLFiles)
-          writeSyntaxHighlightedFile(mod, tags);
+          writeSyntaxHighlightedFile(mod);
         // Start semantic analysis.
         auto pass1 = new SemanticPass1(mod, context);
         pass1.run();
@@ -117,7 +118,7 @@ struct DDocCommand
   }
 
   /// Writes a syntax highlighted file for mod.
-  void writeSyntaxHighlightedFile(Module mod, TagMap tags)
+  void writeSyntaxHighlightedFile(Module mod)
   {
     auto filePath = new FilePath(destDirPath);
     filePath.append("htmlsrc");
@@ -126,8 +127,10 @@ struct DDocCommand
     if (verbose)
       Stdout.formatln("hl {} > {}", mod.filePath(), filePath.toString());
     auto file = new FileOutput(filePath.toString());
-    auto print = new Print!(char)(Format, file);
-    highlightSyntax(mod, tags, print, !writeXML, true);
+    auto print = hl.print; // Save.
+    hl.print = new Print!(char)(Format, file); // New print object.
+    hl.highlightSyntax(mod, !writeXML, true);
+    hl.print = print; // Restore.
     file.close();
   }
 
@@ -159,9 +162,9 @@ struct DDocCommand
     // Create the appropriate DDocEmitter.
     DDocEmitter ddocEmitter;
     if (writeXML)
-      ddocEmitter = new DDocXMLEmitter(mod, mtable, includeUndocumented, tokenHL);
+      ddocEmitter = new DDocXMLEmitter(mod, mtable, includeUndocumented, hl);
     else
-      ddocEmitter = new DDocHTMLEmitter(mod, mtable, includeUndocumented, tokenHL);
+      ddocEmitter = new DDocHTMLEmitter(mod, mtable, includeUndocumented, hl);
     // Start the emitter.
     auto ddocText = ddocEmitter.emit();
     // Set the BODY macro to the text produced by the emitter.

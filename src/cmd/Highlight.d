@@ -63,11 +63,13 @@ struct HighlightCommand
     if (diag.hasInfo)
       return;
 
+    auto hl = new Highlighter(tags, Stdout, diag);
+
     bool printLines = (options & Option.PrintLines) != 0;
     bool printHTML = (options & Option.HTML) != 0;
     if (options & Option.Syntax)
-      highlightSyntax(filePath, tags, Stdout, printHTML, printLines);
+      hl.highlightSyntax(filePath, printHTML, printLines);
     else
-      highlightTokens(filePath, tags, Stdout, printLines);
+      hl.highlightTokens(filePath, printLines);
   }
 }

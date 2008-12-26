@@ -31,7 +31,7 @@ abstract class DDocEmitter : DefaultVisitor
   bool includeUndocumented;
   MacroTable mtable;
   Module modul;
-  TokenHighlighter tokenHL;
+  Highlighter tokenHL;
 
   /// Constructs a DDocEmitter object.
   /// Params:
@@ -40,7 +40,7 @@ abstract class DDocEmitter : DefaultVisitor
   ///   includeUndocumented = whether to include undocumented symbols.
   ///   tokenHL = used to highlight code sections.
   this(Module modul, MacroTable mtable, bool includeUndocumented,
-       TokenHighlighter tokenHL)
+       Highlighter tokenHL)
   {
     this.mtable = mtable;
     this.includeUndocumented = includeUndocumented;
@@ -370,7 +370,9 @@ abstract class DDocEmitter : DefaultVisitor
           { // Highlight the extracted source code.
             auto codeText = makeString(codeBegin, codeEnd);
             codeText = DDocUtils.unindentText(codeText);
-            result ~= tokenHL.highlight(codeText, modul.getFQN());
+            result ~= "$(D_CODE\n";
+            result ~= tokenHL.highlightTokens(codeText, modul.getFQN());
+            result ~= "\n)";
           }
           while (p < end && *p == '-') // Skip remaining dashes.
             p++;

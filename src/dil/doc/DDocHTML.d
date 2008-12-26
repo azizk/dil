@@ -14,7 +14,7 @@ class DDocHTMLEmitter : DDocEmitter
 {
   /// Constructs a DDocHTMLEmitter object.
   this(Module modul, MacroTable mtable, bool includeUndocumented,
-       TokenHighlighter tokenHL)
+       Highlighter tokenHL)
   {
     super(modul, mtable, includeUndocumented, tokenHL);
   }
