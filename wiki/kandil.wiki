@@ -8,8 +8,10 @@ Ddoc is used as the underlying system to generate the documentation.
 Dil improves upon Ddoc with unique features and introduces small differences:
 
 == Features ==
+  * Developed for W3C-standards compliant browsers, which doesn't include Internet Explorer.<br>A very important feature, which keeps my mind sane and my blood cool.
   * Display the source code of a symbol when clicked.
-  * Every symbol in the document is targetable using a URL fragment.<br>E.g.: `url/dil.doc.Macro.html#Macro.this`
+  * The symbol and module list in the navigation bar can be filtered.
+  * Every symbol in the document is targetable using a URL fragment.<br>E.g.: [http://dil.googlecode.com/svn/doc/dil/dil.doc.Macro.html#Macro.this url/dil.doc.Macro.html#Macro.this]
   * Superfluous indentation is removed from embedded code in comments.
   * Every symbol can be linked to its source location (a repository or a local HTML file.)
   * Protection, linkage and storage class attributes are shown in brackets.
@@ -19,6 +21,7 @@ Dil improves upon Ddoc with unique features and introduces small differences:
   * Unicode alphas are supported in macro, section and parameter names.
 
 == Macros ==
+This is a list of macros which are only defined by dil.
   * DIL_SYMBOL (replaces DDOC_PSYMBOL)<br>Five Parameters:
       # Symbol name (e.g. "this")
       # Fully qualified name excluding the module's FQN (e.g. "Macro.this", MODFQN = "dil.doc.Macro")

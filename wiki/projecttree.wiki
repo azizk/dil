@@ -6,7 +6,7 @@ As dil has grown quite a bit in its life time, it has become a necessity to docu
 
   * *`data/`*<br>Contains dilconf.d (the configuration file of dil,) language files and other files that are required by some subcommands in dil.
   * *`i18n/`*<br>Language catalogue files. Part of src/translator/. Not in use at the moment.
-  * *`kandil/`*<br>An XHTML/JS front-end for documentation of D source files.
+  * *`kandil/`*<br>An XHTML/JS front-end for documentation of D source files. See [http://code.google.com/p/dil/wiki/Kandil kandil's wiki page].
   * *`scripts/`*<br>Very useful utility scripts are located here.
     * `build.py`: Build dil with this if you don't have or want [http://dsource.org/projects/dsss DSSS].
     * `phobos_doc.py`: Generates documentation for Phobos and optionally creates a zip archive.
@@ -24,7 +24,9 @@ As dil has grown quite a bit in its life time, it has become a necessity to docu
         * `Doc.d`: Consists of classes and functions which find, sanitize and parse Ddoc comments into sections.
         * `Macro.d`: Implements Ddoc macro expansion.
       * *`lexer/`*<br>Everything related to the lexing process is present here.
-      * *`parser/`*<br>The place where the huge Parser resides. She's best friends with the Lexer.
+        * `Lexer.d`: The Lexer lives here.
+      * *`parser/`*
+        * `Parser.d`: The place where the huge Parser resides. She's best friends with the Lexer.
       * *`semantic/`*<br>The analytic system that tries to make sense of the code you throw at it. Throws it back if it doesn't.
         * `Passes.d`: The semantic passes that go over a module until all symbols are resolved.
         * `Symbols.d`: Classes, structs, variables, functions, templates etc. are symbols.

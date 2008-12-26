@@ -21,3 +21,7 @@ Some interesting articles you might want to read to learn Git:
   * [http://cworth.org/hgbook-git/tour/ A tour of git: the basics]
   * [http://git.or.cz/course/svn.html Git - SVN Crash Course]
   * [http://www.kernel.org/pub/software/scm/git/docs/everyday.html Everyday GIT With 20 Commands Or So]
+
+Useful applications:
+  * [http://cola.tuxfamily.org/ git-cola]: a GUI with extensive features for Git written in Python with !PyQt4.
+  * Gitk: a simple tool for viewing the repository history and its branches.
