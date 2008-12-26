@@ -31,12 +31,13 @@ def build_dil(dmd_exe, *args, **kwargs):
   print cmd
   cmd.call()
 
-def update_version(path, major, minor):
+def update_version(path, major, minor, suffix):
   """ Updates the version info in the compiler's source code. """
   major, minor = int(major), int(minor)
   code = open(path).read()
   code = re.sub(r"(VERSION_MAJOR\s*=\s*)[\w\d]+;", r"\g<1>%s;" % major, code)
   code = re.sub(r"(VERSION_MINOR\s*=\s*)\d+;", r"\g<1>%s;" % minor, code)
+  code = re.sub(r"(VERSION_SUFFIX);", r'\g<1> = "%s";' % suffix, code)
   open(path, "w").write(code)
 
 def main():
@@ -155,7 +156,7 @@ def main():
 
   # Update the version info.
   VERSION_FILE = DEST.SRC/"dil"/"Version.d"
-  update_version(VERSION_FILE, V_MAJOR, V_MINOR)
+  update_version(VERSION_FILE, V_MAJOR, V_MINOR, V_SUFFIX)
 
   if options.docs:
     build_dil_if_inexistant(DIL_EXE)
