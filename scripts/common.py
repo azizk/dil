@@ -189,3 +189,13 @@ def download_jquery(dest_path, force=False,
 def chunks(seq, n):
   """ Returns chunks of a sequence of size n. """
   return [seq[i:i+n] for i in xrange(0, len(seq), n)]
+
+def firstof(typ, *args):
+  """ Returns the first argument that is of type 'typ'. """
+  for arg in args:
+    if type(arg) == typ:
+      return arg
+
+def getitem(array, index, d=None):
+  """ Returns array[index] if the index exists, else d. """
+  return array[index] if index < len(array) else d

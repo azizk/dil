@@ -128,7 +128,7 @@ def main():
   # The source code folder of Phobos.
   PHOBOS_SRC = Path(args[1])
   # Destination of doc files.
-  DEST       = Path(max(args[2:3], 'phobosdoc'))
+  DEST       = Path(firstof(str, getitem(args, 2), 'phobosdoc'))
   # Destination of syntax highlighted source files.
   DEST.HTMLSRC = DEST/"htmlsrc"
   # The JavaScript, CSS and image folders.

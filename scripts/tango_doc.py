@@ -67,7 +67,7 @@ def main():
   # The source code folder of Tango.
   TANGO_SRC = TANGO_DIR/"tango"
   # Destination of doc files.
-  DEST      = Path(args[1] if len(args) > 1 else 'tangodoc')
+  DEST      = Path(firstof(str, getitem(args, 1), 'tangodoc'))
   # The JavaScript folder.
   DEST.JS, DEST.CSS, DEST.IMG = DEST//("js", "css", "img")
   # Destination of syntax highlighted source files.

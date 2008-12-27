@@ -90,17 +90,16 @@ def main():
     parser.error("The executable '%s' couldn't be located or does not exist." %
       options.dmd_exe)
 
-  notNone = max
   # Path of the executable of dil.
   DIL_EXE   = Path("bin")/"dil"
   # Name or path to the executable of dmd.
   DMD_EXE   = Path(options.dmd_exe)
   # The version of dil to be built.
   VERSION, V_MAJOR = matched[:2]
-  V_MINOR, V_SUFFIX = (matched[2], notNone(matched[3], ''))
+  V_MINOR, V_SUFFIX = (matched[2], firstof(str, matched[3], ''))
 
   # Build folder.
-  BUILD_DIR = Path(notNone("build", options.builddir))
+  BUILD_DIR = Path(firstof(str, options.builddir, "build"))
   # Destination of distributable files.
   DEST      = BUILD_DIR/("dil."+VERSION)
   # The destination of the binaries.
