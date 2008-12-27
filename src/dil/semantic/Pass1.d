@@ -187,6 +187,7 @@ class SemanticPass1 : Visitor
     deferred ~= d;
   }
 
+  //Check for special dissalowed functions in struct/union/interface
   void checkCtorDtorSpecials(CompoundDeclaration decls, bool StructOrUnion)
   {
     foreach (Declaration decl; decls.decls)
@@ -214,7 +215,6 @@ class SemanticPass1 : Visitor
 	  error(innerD.begin, "function body for '{}' is not abstract in interface", (cast(FunctionDeclaration)innerD).name.str);
     }
   }
-
 
   private alias Declaration D; /// A handy alias. Saves typing.
   private alias Statement S;
@@ -254,6 +254,19 @@ override
 
   D visit(AliasDeclaration ad)
   {
+    /*if (ad.symbol)
+    {
+      //if(ad.isTemplateInstance())
+        // return visitD(ad);
+    }
+
+    //This exists in dmd but then allows const...strange
+    if (ad.isConst())
+    {
+      error(ad.begin, "cannot be const");
+      return ad;
+    }*/
+
     return ad;
   }
 
