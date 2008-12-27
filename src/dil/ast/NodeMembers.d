@@ -130,6 +130,9 @@ char[] genMembersTable()
   t[N.IllegalType] = t[N.IntegralType] =
   t[N.ModuleScopeType] = t[N.IdentifierType] = [];
   t[N.QualifiedType] = ["lhs", "rhs"];
+version(D2)
+  t[N.TypeofType] = ["expr?"];
+else
   t[N.TypeofType] = ["expr"];
   t[N.TemplateInstanceType] = ["targs?"];
   t[N.ArrayType] = ["next", "assocType?", "index1?", "index2?"];
