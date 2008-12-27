@@ -1,9 +1,8 @@
 /// Author: Aziz Köksal
 /// License: GPL3
 /// $(Maturity high)
-module cmd.DDocEmitter;
+module dil.doc.DDocEmitter;
 
-import cmd.Highlight;
 import dil.doc.Parser,
        dil.doc.Macro,
        dil.doc.Doc;
@@ -17,6 +16,7 @@ import dil.ast.DefaultVisitor,
 import dil.lexer.Token,
        dil.lexer.Funcs;
 import dil.semantic.Module;
+import dil.Highlighter;
 import dil.Diagnostics;
 import dil.SourceText;
 import dil.Enums;
@@ -31,7 +31,7 @@ abstract class DDocEmitter : DefaultVisitor
   bool includeUndocumented;
   MacroTable mtable;
   Module modul;
-  TokenHighlighter tokenHL;
+  Highlighter tokenHL;
 
   /// Constructs a DDocEmitter object.
   /// Params:
@@ -40,7 +40,7 @@ abstract class DDocEmitter : DefaultVisitor
   ///   includeUndocumented = whether to include undocumented symbols.
   ///   tokenHL = used to highlight code sections.
   this(Module modul, MacroTable mtable, bool includeUndocumented,
-       TokenHighlighter tokenHL)
+       Highlighter tokenHL)
   {
     this.mtable = mtable;
     this.includeUndocumented = includeUndocumented;
@@ -172,6 +172,8 @@ abstract class DDocEmitter : DefaultVisitor
     bool saved_cmntIsDitto;
     uint saved_prevDeclOffset;
     /// When constructed, variables are saved.
+    /// Params:
+    ///   name = the name of the current symbol.
     this(string name)
     { // Save the previous comment of the parent scope.
       saved_prevCmnt = this.outer.prevCmnt;
@@ -273,9 +275,10 @@ abstract class DDocEmitter : DefaultVisitor
   /// $(UL
   /// $(LI skips and leaves macro invocations unchanged)
   /// $(LI skips HTML tags)
-  /// $(LI escapes '(', ')', '<', '>' and '&')
-  /// $(LI inserts $&#40;DDOC_BLANKLINE&#41; in place of \n\n)
-  /// $(LI highlights code in code sections)
+  /// $(LI escapes '<', '>' and '&' with named HTML entities)
+  /// $(LI inserts $&#40;LP&#41;/$&#40;RP&#41; in place of '('/')')
+  /// $(LI inserts $&#40;DDOC_BLANKLINE&#41; in place of '\n\n')
+  /// $(LI highlights the tokens in code sections)
   /// )
   char[] scanCommentText(char[] text)
   {
@@ -327,8 +330,8 @@ abstract class DDocEmitter : DefaultVisitor
         else
           result ~= "&lt;";
         continue;
-      case '(': result ~= "&#40;"; break;
-      case ')': result ~= "&#41;"; break;
+      case '(': result ~= "$(LP)"; break;
+      case ')': result ~= "$(RP)"; break;
       // case '\'': result ~= "&apos;"; break; // &#39;
       // case '"': result ~= "&quot;"; break;
       case '>': result ~= "&gt;"; break;
@@ -367,7 +370,9 @@ abstract class DDocEmitter : DefaultVisitor
           { // Highlight the extracted source code.
             auto codeText = makeString(codeBegin, codeEnd);
             codeText = DDocUtils.unindentText(codeText);
-            result ~= tokenHL.highlight(codeText, modul.getFQN());
+            result ~= "$(D_CODE\n";
+            result ~= tokenHL.highlightTokens(codeText, modul.getFQN());
+            result ~= "\n)";
           }
           while (p < end && *p == '-') // Skip remaining dashes.
             p++;
@@ -475,7 +480,7 @@ abstract class DDocEmitter : DefaultVisitor
       dg();
       writeSemicolon && write(";");
       writeAttributes(d);
-      write(")");
+      write(" $(DIL_SYMEND ", currentSymbolParams, "))");
     }
 
     if (/+includeUndocumented &&+/ this.cmnt is this.emptyCmnt)
@@ -519,6 +524,9 @@ abstract class DDocEmitter : DefaultVisitor
     write(")");
   }
 
+  /// Saves the current symbol parameters.
+  string currentSymbolParams;
+
   /// Writes a symbol to the text buffer.
   /// E.g: &#36;(DIL_SYMBOL scan, Lexer.scan, func, 229, 646);
   void SYMBOL(string name, string kind, Declaration d)
@@ -526,9 +534,9 @@ abstract class DDocEmitter : DefaultVisitor
     auto fqn = getSymbolFQN(name);
     auto loc = d.begin.getRealLocation();
     auto loc_end = d.end.getRealLocation();
-    auto str = Format("$(DIL_SYMBOL {}, {}, {}, {}, {})",
-                      name, fqn, kind, loc.lineNum, loc_end.lineNum);
-    write(str);
+    currentSymbolParams = Format("{}, {}, {}, {}, {}",
+      name, fqn, kind, loc.lineNum, loc_end.lineNum);
+    write("$(DIL_SYMBOL ", currentSymbolParams, ")");
     // write("$(DDOC_PSYMBOL ", name, ")"); // DMD's macro with no info.
   }
 
@@ -729,7 +737,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("~"); SYMBOL("this", "dtor", d); write("()"); }, d);
+    DECL({ SYMBOL("~this", "dtor", d); write("()"); }, d);
     DESC();
     return d;
   }
@@ -738,7 +746,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("static ~"); SYMBOL("this", "sdtor", d); write("()"); }, d);
+    DECL({ write("static "); SYMBOL("~this", "sdtor", d); write("()"); }, d);
     DESC();
     return d;
   }

@@ -5,6 +5,7 @@ module dil.semantic.Symbol;
 
 import dil.ast.Node;
 import dil.lexer.Identifier;
+import dil.lexer.IdTable;
 import common;
 
 /// Enumeration of Symbol IDs.
@@ -105,9 +106,12 @@ class Symbol
   /// E.g.: dil.semantic.Symbol.Symbol.getFQN
   char[] getFQN()
   {
-    if (!name)
-      return parent ? parent.getFQN() : "";
-    if (parent)
+    auto name = this.name;
+    if (name is null)
+      name = Ident.Empty; // Equals "".
+    // Check if the parent is the "root package", which has
+    // Ident.Empty as its name.
+    if (parent !is null && parent.name !is Ident.Empty)
       return parent.getFQN() ~ '.' ~ name.str;
     return name.str;
   }

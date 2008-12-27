@@ -1,75 +1,119 @@
+/// Author: Aziz Köksal
+
+/// Execute when document is ready.
 $(function() {
-  // Move permalinks to the end of the node list.
-  $(".symlink").each(function() {
-    $(this).appendTo(this.parentNode)
-           .css({position: "static", right: ""});
-  })
+  // Create the navigation bar.
+  var navbar = $("<div id='navbar'/>")
+    .append("<p id='navtabs'><span id='apitab' class='current'>API</span>"+
+                            "<span id='modtab'>Modules</span></p>")
+    .append("<div id='panels'><div id='apipanel'/><div id='modpanel'/>");
+  $("body").append(navbar);
+  // Create the quick search text boxes.
+  var qs = [new QuickSearch("apiqs", "#apipanel>ul", quickSearchSymbols),
+            new QuickSearch("modqs", "#modpanel>ul", quickSearchSymbols)];
+  $("#apipanel").prepend(qs[0].input);
+  $("#modpanel").prepend(qs[1].input).hide(); // Initially hidden.
 
   var symbols = $(".symbol");
   // Add code display functionality to symbol links.
   symbols.click(function(event) {
     event.preventDefault();
     showCode($(this));
-  })
+  });
 
-  var header = symbols[0];
-  symbols = symbols.slice(1);
+  // Prepare the symbol list.
+  var header = symbols[0]; // Header of the page.
+  symbols = symbols.slice(1); // Every other symbol.
 
-  var itemlist = {}
+  var itemlist = {};
   itemlist.root = new SymbolItem(header.textContent, "module", header.textContent);
   itemlist[''] = itemlist.root; // The empty string has to point to the root.
-  function insertIntoList()
+  for (var i = 0; i < symbols.length; i++)
   {
-    [parentFQN, name] = rpartition(this.name, '.')
-    var sym = new SymbolItem(this.textContent, $(this).attr("kind"), this.name);
-    itemlist[parentFQN].sub.push(sym);
-    itemlist[sym.fqn] = sym;
+    var symbol = symbols[i];
+    [parentFQN, name] = rpartition(symbol.name, '.')
+    var item = new SymbolItem(symbol.textContent, $(symbol).attr("kind"),
+                              symbol.name);
+    itemlist[parentFQN].sub.push(item);
+    itemlist[item.fqn] = item;
+    // TODO: add D attribute information.
   }
-  symbols.each(insertIntoList);
 
-  $("#apilist").append(createSymbolsUL(itemlist.root.sub));
+  $("#apipanel").append(createSymbolsUL(itemlist.root.sub));
 
-//   $("#apilist > ul").treeview({
+//   $("#apipanel > ul").treeview({
 //     animated: "fast",
 //     collapsed: true
 //   })
 
+  // Assign click event handlers for the tabs.
   function makeCurrentTab() {
     $("span.current", this.parentNode).removeClass('current');
     $(this).addClass('current');
+    $("#panels > *:visible").hide(); // Hide all panels.
   }
 
-  // Assign click event handlers for the tabs.
   $("#apitab").click(makeCurrentTab)
               .click(function() {
-    var container = $("#panels");
-    $("> div:visible", container).hide();
-    $("#apilist", container).show(); // Display the API list.
-  })
+    $("#apipanel").show(); // Display the API list.
+  });
+
   $("#modtab").click(makeCurrentTab)
-              .click(function() {
-    var container = $("#panels");
-    $("> div:visible", container).hide();
-    var list = $("#modlist:has(ul)", container);
-    if (!list.length) {
-      list = createModulesList();
-      container.append(list.hide()); // Append hidden.
-    }
-    list.show(); // Display the modules list.
-  })
+              .click(function lazyLoad() {
+    // Create the list.
+    $("#modpanel").append(createModulesUL(g_moduleObjects));
+    $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
+  })          .click(function() { // Add the display handler.
+    $("#modpanel").show(); // Display the modules list.
+  });
+
+  // $(window).resize(function(){
+  //   $("#apipanel > ul").add("#modpanel > ul").each(setHeightOfPanel);
+  // });
 })
+
+/*/// Sets the height of a panel. Works with FF, but not Opera :(
+function setHeightOfPanel()
+{
+  var window_height = $(window).height();
+  var pos = $(this).offset();
+  $(this).css('max-height', window_height - pos.top - 10);
+}
+*/
 
 /// A tree item for symbols.
 function SymbolItem(name, kind, fqn)
 {
   this.name = name; /// The text to be displayed.
   this.kind = kind; /// The kind of this symbol.
-  this.fqn = fqn; /// The fully qualified name.
-  this.sub = []; /// Sub-symbols.
+  this.fqn = fqn;   /// The fully qualified name.
+  this.sub = [];    /// Sub-symbols.
   return this;
 }
 
-/// Constructs an unordered list from the symbols data structure.
+/// Returns an image tag for the provided kind of symbol.
+function getPNGIcon(kind)
+{
+  var functionSet = {
+    "function":1,"unittest":1,"invariant":1,"new":1,"delete":1,
+    "invariant":1,"sctor":1,"sdtor":1,"ctor":1,"dtor":1,
+  };
+  // Other kinds: (they have their own PNG icons)
+  // "variable","enummem","alias","typedef","class",
+  // "interface","struct","union","template"
+  if (functionSet[kind])
+    kind = "function";
+  return "<img src='img/icon_"+kind+".png' width='16' height='16'/>";
+}
+
+function addLIAttributes()
+{
+  $("#apipanel li").each(function() {
+    // TODO:
+  })
+}
+
+/// Constructs a ul (enclosing nested ul's) from the symbols data structure.
 function createSymbolsUL(symbols)
 {
   var list = "<ul>";
@@ -78,7 +122,8 @@ function createSymbolsUL(symbols)
     var sym = symbols[i];
     [fqn, count] = rpartition(sym.fqn, ':');
     count = fqn ? "<sub>"+count+"</sub>" : ""; // An index.
-    list += "<li kind='"+sym.kind+"'><a href='#"+sym.fqn+"'>"+sym.name+count+"</a>";
+    list += "<li>"+getPNGIcon(sym.kind)+
+            "<a href='#"+sym.fqn+"'>"+sym.name+count+"</a>";
     if (sym.sub && sym.sub.length)
       list += createSymbolsUL(sym.sub);
     list += "</li>";
@@ -86,13 +131,14 @@ function createSymbolsUL(symbols)
   return list + "</ul>";
 }
 
+/// Constructs a ul (enclosing nested ul's) from g_moduleObjects.
 function createModulesUL(symbols)
 {
   var list = "<ul>";
   for (i in symbols)
   {
     var sym = symbols[i];
-    list += "<li kind='"+sym.kind+"'>";
+    list += "<li kind='"+sym.kind+"'>"+getPNGIcon(sym.kind);
     if (sym.sub && sym.sub.length)
       list += sym.name + createModulesUL(sym.sub);
     else
@@ -100,13 +146,6 @@ function createModulesUL(symbols)
     list += "</li>";
   }
   return list + "</ul>";
-}
-
-/// Creates an unordered list from the global modules list and appends
-/// it to the modlist panel.
-function createModulesList()
-{
-  return $("#modlist").append(createModulesUL(g_moduleObjects));
 }
 
 /// An array of all the lines of this module's source code.

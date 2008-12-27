@@ -107,10 +107,14 @@ void main(char[][] args)
         cmd.writeXML = true;
       else if (arg == "--raw")
         cmd.rawOutput = true;
+      else if (arg == "-hl")
+        cmd.writeHLFiles = true;
       else if (arg == "-i")
         cmd.includeUndocumented = true;
       else if (arg == "-v")
         cmd.verbose = true;
+      else if (arg == "--kandil")
+        cmd.useKandil = true;
       else if (arg.length > 3 && strbeg(arg, "-m="))
         cmd.modsTxtPath = arg[3..$];
       else if (arg.length > 5 && icompare(arg[$-4..$], "ddoc") == 0)
@@ -141,7 +145,10 @@ void main(char[][] args)
       case "--lines":
         cmd.add(HighlightCommand.Option.PrintLines); break;
       default:
-        cmd.filePath = arg;
+        if (!cmd.filePathSrc)
+          cmd.filePathSrc = arg;
+        else
+          cmd.filePathDest = arg;
       }
     }
     cmd.run();
@@ -445,8 +452,10 @@ Usage:
   Files with the extension .ddoc are recognized as macro definition files.
 
 Options:
+  --kandil         : use kandil as the documentation front-end
   --xml            : write XML instead of HTML documents
   --raw            : don't expand macros in the output (useful for debugging)
+  -hl              : write syntax highlighted files to Destination/htmlsrc
   -i               : include undocumented symbols
   -v               : verbose output
   -m=PATH          : write list of processed modules to PATH
@@ -458,16 +467,19 @@ Example:
 //     msg = GetMsg(MID.HelpGenerate);
     msg = `Highlight a D source file with XML or HTML tags.
 Usage:
-  dil hl file.d [Options]
+  dil hl file.d [Destination] [Options]
+
+  The file will be output to stdout if 'Destination' is not specified.
 
 Options:
   --syntax         : generate tags for the syntax tree
-  --xml            : use XML format (default)
-  --html           : use HTML format
+  --html           : use HTML format (default)
+  --xml            : use XML format
   --lines          : print line numbers
 
 Example:
-  dil hl src/main.d --html --syntax > main.html`;
+  dil hl src/main.d --syntax > main.html
+  dil hl --xml src/main.d main.xml`;
     break;
   case "importgraph", "igraph":
 //     msg = GetMsg(MID.HelpImportGraph);

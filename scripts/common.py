@@ -15,6 +15,16 @@ def find_dil_source_files(source):
   # Filter out files in "src/tests/".
   return [f for f in FILES if not f.startswith(source/"tests")]
 
+def get_kandil_path(where="kandil"):
+  P = Path(where)
+  P.IMG = P/"img"
+  P.CSS = P/"css"
+  P.JS  = P/"js"
+  P.style   = P.CSS/"style.css"
+  P.jsfiles = (P.JS/"navigation.js", P.JS/"jquery.js", P.JS/"quicksearch.js")
+  P.navi, P.jquery, P.qsearch = P.jsfiles
+  return P
+
 def get_module_fqn(prefix_path, filepath):
   """ Returns the fully qualified module name (FQN) of a D source file.
     Note: this might not match with the module declaration
@@ -106,12 +116,11 @@ def generate_modules_js(modlist, dest_path, max_line_len=80):
 
   f.close()
 
-def generate_docs(dil_exe, dest, modlist, files, versions=[], options=''):
+def generate_docs(dil_exe, dest, modlist, files, versions=[], options=[]):
   """ Generates documenation files. """
-  files = ' '.join(files)
-  versions = ' '.join(["-version=%s"%v for v in versions])
-  args = dict(locals())
-  os.system("%(dil_exe)s ddoc %(dest)s %(options)s %(versions)s -m=%(modlist)s %(files)s" % args)
+  from subprocess import call
+  versions = ["-version="+v for v in versions]
+  call([dil_exe, "ddoc", dest, "-m="+modlist] + options + versions + files)
 
 def generate_shl_files(dil_exe, dest, prefix, files):
   """ Generates syntax highlighted files. """
@@ -149,7 +158,8 @@ def build_dil_if_inexistant(dil_exe):
     inp = raw_input("Executable %s doesn't exist. Build it? (Y/n) " % dil_exe)
     if inp.lower() in ("", "y", "yes"):
       from build import build_dil
-      build_dil()
+      # TODO: Ask user about compiling with -version=D2?
+      build_dil_release()
     else:
       raise Exception("can't proceed without dil executable")
 

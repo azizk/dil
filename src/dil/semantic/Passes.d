@@ -44,6 +44,7 @@ abstract class SemanticPass : DefaultVisitor
   Scope scop; /// The current scope.
   Module modul; /// The module to be semantically checked.
   CompilationContext context; /// The compilation context.
+  Interpreter interp; /// Used to interpret ASTs.
 
   /// Constructs a SemanticPass object.
   /// Params:
@@ -53,6 +54,7 @@ abstract class SemanticPass : DefaultVisitor
   {
     this.modul = modul;
     this.context = context;
+    this.interp = new Interpreter(modul.diag);
   }
 
   void run()
@@ -141,16 +143,23 @@ abstract class SemanticPass : DefaultVisitor
   /// Incremented when an undefined identifier was found.
   uint undefinedIdsCount;
 
-  /// The symbol that must be ignored an skipped during a symbol search.
+  /// The symbol that must be ignored and skipped during a symbol search.
   Symbol ignoreSymbol;
 
   /// The current scope symbol to use for looking up identifiers.
+  ///
   /// E.g.:
   /// ---
-  /// object.method(); // *) object is looked up in the current scope.
-  ///                  // *) idScope is set if object is a ScopeSymbol.
-  ///                  // *) method will be looked up in idScope.
-  /// dil.ast.Node.Node node; // A fully qualified type.
+  /// / // * "object" is looked up in the current scope.
+  /// / // * idScope is set if "object" is a ScopeSymbol.
+  /// / // * "method" will be looked up in idScope.
+  /// object.method();
+  /// / // * "dil" is looked up in the current scope
+  /// / // * idScope is set if "dil" is a ScopeSymbol.
+  /// / // * "ast" will be looked up in idScope.
+  /// / // * idScope is set if "ast" is a ScopeSymbol.
+  /// / // * etc.
+  /// dil.ast.Node.Node node;
   /// ---
   ScopeSymbol idScope;
 
@@ -645,7 +654,7 @@ override
   S visit(ScopeStatement s)
   {
 //     enterScope();
-    visitS(s.s);
+    visitS(s.stmnt);
 //     exitScope();
     return s;
   }
@@ -912,6 +921,13 @@ override
     return null;
   }
 
+  /// Visit the operands of a binary operator.
+  void visitBinary(BinaryExpression e)
+  {
+    e.lhs = visitE(e.lhs);
+    e.rhs = visitE(e.rhs);
+  }
+
 override
 {
   E visit(IllegalExpression)
@@ -928,7 +944,7 @@ override
     {
       e.lhs = visitE(e.lhs);
       e.rhs = visitE(e.rhs);
-      e.type = e.rhs.type;
+      e.type = e.rhs.type; // Take the type of the right hand side.
     }
     return e;
   }
@@ -988,8 +1004,11 @@ override
 
   E visit(EqualExpression e)
   {
+    visitBinary(e);
     if (auto o = findOverload(e, Ident.opEquals, null))
       return o;
+    // TODO:
+    e.type = Types.Bool;
     return e;
   }
 
@@ -1000,15 +1019,33 @@ override
 
   E visit(RelExpression e)
   {
+    visitBinary(e);
     if (auto o = findOverload(e, Ident.opCmp, null))
       return o;
+    // TODO: check for more errors?
+    if (e.lhs.type.isBaseComplex() || e.rhs.type.isBaseComplex())
+    {
+      auto whichOp = e.lhs.type.isBaseComplex() ? e.lhs.begin : e.rhs.begin;
+      error(whichOp, "the operator '{}' is undefined for complex numbers",
+            e.tok.text());
+    }
+    e.type = Types.Bool;
     return e;
   }
 
   E visit(InExpression e)
   {
+    visitBinary(e);
     if (auto o = findOverload(e, Ident.opIn, Ident.opIn_r))
       return o;
+    if (!e.rhs.type.baseType().isAArray())
+    {
+      error(e.rhs.begin, "right operand of 'in' operator must be an associative array");
+      e.type = e.rhs.type; // Don't use Types.Error. Cascading error msgs are irritating.
+    }
+    else
+      // Result type is pointer to element type of AA.
+      e.type = e.rhs.type.next.ptrTo();
     return e;
   }
 
@@ -1049,8 +1086,25 @@ override
 
   E visit(CatExpression e)
   {
+    visitBinary(e);
     if (auto o = findOverload(e, Ident.opCat, Ident.opCat_r))
       return o;
+    // Need to check the base types if they are arrays.
+    // This will allow for concatenating typedef types:
+    // typedef Handle[] Handles; Handles hlist; hlist ~ element;
+    auto tl = e.lhs.type.baseType(),
+         tr = e.rhs.type.baseType();
+    if (tl.isDorSArray() || tr.isDorSArray())
+    {
+      // TODO:
+      // e.type = ;
+    }
+    else
+    {
+      error(e.tok, "concatenation operator '~' is undefined for: {} ~ {}",
+            e.lhs, e.rhs);
+      e.type = e.lhs.type; // Use Types.Error if e.lhs.type is not a good idea.
+    }
     return e;
   }
 
@@ -1176,8 +1230,8 @@ override
   {
     if (e.hasType)
       return e;
-    e.e = visitE(e.e);
-    e.type = e.e.type.ptrTo();
+    e.una = visitE(e.una);
+    e.type = e.una.type.ptrTo();
     return e;
   }
 
@@ -1186,9 +1240,9 @@ override
     if (e.hasType)
       return e;
     // TODO: rewrite to e+=1
-    e.e = visitE(e.e);
-    e.type = e.e.type;
-    errorIfBool(e.e);
+    e.una = visitE(e.una);
+    e.type = e.una.type;
+    errorIfBool(e.una);
     return e;
   }
 
@@ -1197,9 +1251,9 @@ override
     if (e.hasType)
       return e;
     // TODO: rewrite to e-=1
-    e.e = visitE(e.e);
-    e.type = e.e.type;
-    errorIfBool(e.e);
+    e.una = visitE(e.una);
+    e.type = e.una.type;
+    errorIfBool(e.una);
     return e;
   }
 
@@ -1209,9 +1263,9 @@ override
       return e;
     if (auto o = findOverload(e, Ident.opPostInc))
       return o;
-    e.e = visitE(e.e);
-    e.type = e.e.type;
-    errorIfBool(e.e);
+    e.una = visitE(e.una);
+    e.type = e.una.type;
+    errorIfBool(e.una);
     return e;
   }
 
@@ -1221,9 +1275,9 @@ override
       return e;
     if (auto o = findOverload(e, Ident.opPostDec))
       return o;
-    e.e = visitE(e.e);
-    e.type = e.e.type;
-    errorIfBool(e.e);
+    e.una = visitE(e.una);
+    e.type = e.una.type;
+    errorIfBool(e.una);
     return e;
   }
 
@@ -1234,17 +1288,17 @@ override
   version(D2)
     if (auto o = findOverload(e, Ident.opStar))
       return o;
-    e.e = visitE(e.e);
-    e.type = e.e.type.next;
-    if (!e.e.type.isPointer)
+    e.una = visitE(e.una);
+    e.type = e.una.type.next;
+    if (!e.una.type.isPointer)
     {
-      error(e.e.begin,
+      error(e.una.begin,
         "dereference operator '*x' not defined for expression of type '{}'",
-        e.e.type.toString());
+        e.una.type.toString());
       e.type = Types.Error;
     }
     // TODO:
-    // if (e.e.type.isVoid)
+    // if (e.una.type.isVoid)
     //   error();
     return e;
   }
@@ -1255,9 +1309,9 @@ override
       return e;
     if (auto o = findOverload(e, e.isNeg ? Ident.opNeg : Ident.opPos))
       return o;
-    e.e = visitE(e.e);
-    e.type = e.e.type;
-    errorIfBool(e.e);
+    e.una = visitE(e.una);
+    e.type = e.una.type;
+    errorIfBool(e.una);
     return e;
   }
 
@@ -1265,9 +1319,9 @@ override
   {
     if (e.hasType)
       return e;
-    e.e = visitE(e.e);
+    e.una = visitE(e.una);
     e.type = Types.Bool;
-    errorIfNonBool(e.e);
+    errorIfNonBool(e.una);
     return e;
   }
 
@@ -1277,8 +1331,8 @@ override
       return e;
     if (auto o = findOverload(e, Ident.opCom))
       return o;
-    e.e = visitE(e.e);
-    e.type = e.e.type;
+    e.una = visitE(e.una);
+    e.type = e.una.type;
     if (e.type.isBaseFloating() || e.type.isBaseBool())
     {
       error(e.begin, "the operator '~x' is undefined for the type '{}'",
@@ -1347,8 +1401,8 @@ override
       return e;
     bool resetIdScope = idScope is null;
     idScope = modul;
-    e.e = visitE(e.e);
-    e.type = e.e.type;
+    e.una = visitE(e.una);
+    e.type = e.una.type;
     resetIdScope && (idScope = null);
     return e;
   }
@@ -1644,8 +1698,8 @@ override
 
   T visit(TypeofType t)
   {
-    t.e = visitE(t.e);
-    t.type = t.e.type;
+    t.expr = visitE(t.expr);
+    t.type = t.expr.type;
     return t;
   }
 

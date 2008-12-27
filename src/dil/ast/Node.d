@@ -94,4 +94,29 @@ abstract class Node
   /// This string is mixed into the constructor of a class that inherits
   /// from Node. It sets the member kind.
   const string set_kind = `this.kind = mixin("NodeKind." ~ typeof(this).stringof);`;
+
+  final bool isDeclaration()
+  {
+    return category == NodeCategory.Declaration;
+  }
+
+  final bool isStatement()
+  {
+    return category == NodeCategory.Statement;
+  }
+
+  final bool isExpression()
+  {
+    return category == NodeCategory.Expression;
+  }
+
+  final bool isType()
+  {
+    return category == NodeCategory.Type;
+  }
+
+  final bool isParameter()
+  { // The only nodes in this category are parameter classes.
+    return category == NodeCategory.Other;
+  }
 }

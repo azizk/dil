@@ -16,6 +16,7 @@ abstract class Type/* : Symbol*/
   Type next;     /// The next type in the type structure.
   TYP tid;       /// The ID of the type.
   Symbol symbol; /// Not null if this type has a symbol.
+  string mangled; /// The mangled identifier of the type.
 
   this(){}
 
@@ -29,6 +30,24 @@ abstract class Type/* : Symbol*/
 
     this.next = next;
     this.tid = tid;
+  }
+
+  /// Casts the type to Class.
+  Class to(Class)()
+  { // [4..$] is there for slicing off "Type" from the class name.
+    assert(this.tid == mixin(`mixin("TYP." ~ Class.stringof[4..$])`) ||
+           Class.stringof == "TypeBasic" && this.isBasic());
+    return cast(Class)cast(void*)this;
+  }
+
+  /// Returns the unique version of this type from the type table.
+  /// Inserts this type into the table if not yet existant.
+  Type unique(TypeTable tt)
+  {
+    // TODO:
+    if (!mangled.length)
+    {}
+    return this;
   }
 
   /// Returns the base type if this is an enum or typedef, or itself otherwise.
@@ -96,6 +115,36 @@ abstract class Type/* : Symbol*/
   /// Returns the type as a string.
   abstract char[] toString();
 
+  /// Returns true if this type is a pointer type.
+  final bool isPointer()
+  {
+    return tid == TYP.Pointer;
+  }
+
+  // Returns true if this is a dynamic array type.
+  final bool isDArray()
+  {
+    return tid == TYP.DArray;
+  }
+
+  // Returns true if this is a static array type.
+  final bool isSArray()
+  {
+    return tid == TYP.SArray;
+  }
+
+  // Returns true if this is a associative array type.
+  final bool isAArray()
+  {
+    return tid == TYP.AArray;
+  }
+
+  // Returns true if this is a dynamic or static array type.
+  final bool isDorSArray()
+  {
+    return tid == TYP.DArray || tid == TYP.SArray;
+  }
+
   /// Returns true if this type is a bool type.
   final bool isBool()
   {
@@ -108,12 +157,6 @@ abstract class Type/* : Symbol*/
     if (hasBaseType())
       return next.isBool(); // Check base type.
     return isBool();
-  }
-
-  /// Returns true if this type is a pointer type.
-  final bool isPointer()
-  {
-    return tid == TYP.Pointer;
   }
 
   /// Returns true if this is a basic type.
@@ -158,16 +201,46 @@ abstract class Type/* : Symbol*/
     return tid == TYP.Float || tid == TYP.Double || tid == TYP.Real;
   }
 
+  /// Like isReal(). Also checks base types of typedef/enum.
+  final bool isBaseReal()
+  {
+    if (tid == TYP.Enum)
+      return false; // Base type of enum can't be real.
+    if (tid == TYP.Typedef)
+      return next.isBaseReal();
+    return isReal();
+  }
+
   /// Returns true if this type is an imaginary number type.
   final bool isImaginary()
   {
     return tid == TYP.Ifloat || tid == TYP.Idouble || tid == TYP.Ireal;
   }
 
+  /// Like isImaginary(). Also checks base types of typedef/enum.
+  final bool isBaseImaginary()
+  {
+    if (tid == TYP.Enum)
+      return false; // Base type of enum can't be imaginary.
+    if (tid == TYP.Typedef)
+      return next.isBaseImaginary();
+    return isImaginary();
+  }
+
   /// Returns true if this type is a complex number type.
   final bool isComplex()
   {
     return tid == TYP.Cfloat || tid == TYP.Cdouble || tid == TYP.Creal;
+  }
+
+  /// Like isComplex(). Also checks base types of typedef/enum.
+  final bool isBaseComplex()
+  {
+    if (tid == TYP.Enum)
+      return false; // Base type of enum can't be complex.
+    if (tid == TYP.Typedef)
+      return next.isBaseComplex();
+    return isComplex();
   }
 
   /// Returns true for scalar types.
@@ -448,6 +521,27 @@ class TypeInvariant : Type
   char[] toString()
   {
     return "invariant(" ~ next.toString() ~ ")";
+  }
+}
+
+/// Maps mangled type identifiers to Type objects.
+class TypeTable
+{
+  Type[string] table; /// The table data structure.
+  /// Looks up ident in the table.
+  /// Returns: the symbol if there, otherwise null.
+  Type lookup(string mangled)
+  {
+    assert(mangled.length);
+    auto ptype = mangled in table;
+    return ptype ? *ptype : null;
+  }
+
+  /// Inserts a type into the table.
+  void insert(Type type)
+  {
+    assert(type.mangled.length);
+    table[type.mangled] = type;
   }
 }
 

@@ -71,20 +71,19 @@ class ModuleScopeType : TypeNode
   mixin(copyMethod);
 }
 
-/// "typeof" "(" Expression ")" or$(BR)
-/// "typeof" "(" "return" ")" (D2.0)
+/// $(BNF TypeofType := "typeof" "(" (Expression | "return") ")")
 class TypeofType : TypeNode
 {
-  Expression e;
-  /// "typeof" "(" Expression ")"
+  Expression expr;
+  /// $(BNF "typeof" "(" Expression ")")
   this(Expression e)
   {
     this();
     addChild(e);
-    this.e = e;
+    this.expr = e;
   }
 
-  /// For D2.0: "typeof" "(" "return" ")"
+  /// For D2.0: $(BNF "typeof" "(" "return" ")")
   this()
   {
     mixin(set_kind);
@@ -93,7 +92,7 @@ class TypeofType : TypeNode
   /// Returns true if this is a "typeof(return)".
   bool isTypeofReturn()
   {
-    return e is null;
+    return expr is null;
   }
 
   mixin(copyMethod);
@@ -125,30 +124,36 @@ class PointerType : TypeNode
   mixin(copyMethod);
 }
 
-/// Dynamic array: T[] or$(BR)
-/// Static array: T[E] or$(BR)
-/// Slice array (for tuples): T[E..E] or$(BR)
-/// Associative array: T[T]
+/// $(BNF
+////ArrayType := DynamicArray | StaticArray | SliceArray | AssociativeArray
+////DynamicArray     := T "[" "]"
+////StaticArray      := T "[" E "]"
+////SliceArray       := T "[" E ".." E "]" # for slicing tuples
+////AssociativeArray := T "[" T "]"
+////)
 class ArrayType : TypeNode
 {
-  Expression e1, e2;
+  Expression index1, index2;
   TypeNode assocType;
 
+  /// DynamicArray.
   this(TypeNode t)
   {
     super(t);
     mixin(set_kind);
   }
 
-  this(TypeNode t, Expression e1, Expression e2)
+  /// StaticArray or SliceArray.
+  this(TypeNode t, Expression e1, Expression e2 = null)
   {
     this(t);
     addChild(e1);
     addOptChild(e2);
-    this.e1 = e1;
-    this.e2 = e2;
+    this.index1 = e1;
+    this.index2 = e2;
   }
 
+  /// AssociativeArray.
   this(TypeNode t, TypeNode assocType)
   {
     this(t);
@@ -158,17 +163,17 @@ class ArrayType : TypeNode
 
   bool isDynamic()
   {
-    return !assocType && !e1;
+    return assocType is null && index1 is null;
   }
 
   bool isStatic()
   {
-    return e1 && !e2;
+    return index1 !is null && index2 is null;
   }
 
   bool isSlice()
   {
-    return e1 && e2;
+    return index1 !is null && index2 !is null;
   }
 
   bool isAssociative()

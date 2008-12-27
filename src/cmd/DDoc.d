@@ -3,30 +3,36 @@
 /// $(Maturity high)
 module cmd.DDoc;
 
-import cmd.DDocEmitter,
-       cmd.DDocHTML,
-       cmd.DDocXML,
-       cmd.Highlight;
-import dil.doc.Parser,
+import dil.doc.DDocEmitter,
+       dil.doc.DDocHTML,
+       dil.doc.DDocXML,
+       dil.doc.Parser,
        dil.doc.Macro,
        dil.doc.Doc;
 import dil.lexer.Token,
        dil.lexer.Funcs;
 import dil.semantic.Module,
+       dil.semantic.Package,
        dil.semantic.Pass1,
        dil.semantic.Symbol,
        dil.semantic.Symbols;
-import dil.Compilation;
-import dil.Diagnostics;
-import dil.Converter;
-import dil.SourceText;
-import dil.Enums;
-import dil.Time;
+import dil.ModuleManager,
+       dil.Highlighter,
+       dil.Compilation,
+       dil.Diagnostics,
+       dil.Converter,
+       dil.SourceText,
+       dil.Enums,
+       dil.Time;
+import SettingsLoader;
+import Settings;
 import common;
 
 import tango.text.Ascii : toUpper;
-import tango.io.File;
-import tango.io.FilePath;
+import tango.io.stream.FileStream,
+       tango.io.FilePath,
+       tango.io.Print,
+       tango.io.File;
 
 /// The ddoc command.
 struct DDocCommand
@@ -37,17 +43,22 @@ struct DDocCommand
   string modsTxtPath;  /// Write list of modules to this file if specified.
   string outFileExtension;  /// The extension of the output files.
   bool includeUndocumented; /// Whether to include undocumented symbols.
-  bool writeXML;  /// Whether to write XML instead of HTML docs.
-  bool rawOutput; /// Whether to expand macros or not.
-  bool verbose;   /// Whether to be verbose.
+  bool useKandil;    /// Whether to use kandil.
+  bool writeXML;     /// Whether to write XML instead of HTML docs.
+  bool writeHLFiles; /// Whether to write syntax highlighted files.
+  bool rawOutput;    /// Whether to expand macros or not.
+  bool verbose;      /// Whether to be verbose.
 
   CompilationContext context; /// Environment variables of the compilation.
   Diagnostics diag;           /// Collects error messages.
-  TokenHighlighter tokenHL;   /// For highlighting tokens DDoc code sections.
+  Highlighter hl; /// For highlighting source files or DDoc code sections.
 
   /// Executes the doc generation command.
   void run()
   {
+    if (useKandil && writeXML)
+      return Stdout("Error: kandil uses only HTML at the moment.").newline;
+
     // Parse macro files and build macro table hierarchy.
     MacroTable mtable;
     MacroParser mparser;
@@ -58,31 +69,42 @@ struct DDocCommand
       mtable.insert(macros);
     }
 
-    // For DDoc code sections.
-    tokenHL = new TokenHighlighter(diag, writeXML == false);
+    // For Ddoc code sections.
+    string mapFilePath = GlobalSettings.htmlMapFile;
+    if (writeXML)
+      mapFilePath = GlobalSettings.xmlMapFile;
+    auto map = TagMapLoader(diag).load(mapFilePath);
+    auto tags = new TagMap(map);
+
+    hl = new Highlighter(tags, null, diag);
+
     outFileExtension = writeXML ? ".xml" : ".html";
 
-    string[][] modFQNs; // List of tuples (filePath, moduleFQN).
-    bool generateModulesTextFile = modsTxtPath !is null;
+    auto moduleManager = new ModuleManager(null, diag);
 
     // Process D files.
     foreach (filePath; filePaths)
     {
       auto mod = new Module(filePath, diag);
 
-      // Only parse if the file is not a "DDoc"-file.
+      // Only parse if the file is not a "Ddoc"-file.
       if (!DDocEmitter.isDDocFile(mod))
       {
+        if (moduleManager.moduleByPath(mod.filePath()))
+          continue; // The same file path was already loaded. TODO: warning?
         mod.parse();
-        // No documentation for erroneous source files.
+        if (moduleManager.moduleByFQN(mod.getFQNPath()))
+          continue; // Same FQN, but different file path. TODO: error?
         if (mod.hasErrors)
-          continue;
+          continue; // No documentation for erroneous source files.
+        // Add the module to the manager.
+        moduleManager.addModule(mod);
+        // Write highlighted files before SA, since it mutates the tree.
+        if (writeHLFiles)
+          writeSyntaxHighlightedFile(mod);
         // Start semantic analysis.
         auto pass1 = new SemanticPass1(mod, context);
         pass1.run();
-
-        if (generateModulesTextFile)
-          modFQNs ~= [filePath, mod.getFQN()];
       }
       else // Normally done in mod.parse().
         mod.setFQN((new FilePath(filePath)).name());
@@ -91,8 +113,25 @@ struct DDocCommand
       writeDocumentationFile(mod, mtable);
     }
 
-    if (generateModulesTextFile)
-      writeModulesTextFile(modFQNs);
+    if (useKandil)
+      writeModuleLists(moduleManager);
+  }
+
+  /// Writes a syntax highlighted file for mod.
+  void writeSyntaxHighlightedFile(Module mod)
+  {
+    auto filePath = new FilePath(destDirPath);
+    filePath.append("htmlsrc");
+    filePath.append(mod.getFQN());
+    filePath.cat(outFileExtension);
+    if (verbose)
+      Stdout.formatln("hl {} > {}", mod.filePath(), filePath.toString());
+    auto file = new FileOutput(filePath.toString());
+    auto print = hl.print; // Save.
+    hl.print = new Print!(char)(Format, file); // New print object.
+    hl.highlightSyntax(mod, !writeXML, true);
+    hl.print = print; // Restore.
+    file.close();
   }
 
   /// Writes the documentation for a module to the disk.
@@ -101,6 +140,13 @@ struct DDocCommand
   ///   mtable = the main macro environment.
   void writeDocumentationFile(Module mod, MacroTable mtable)
   {
+    // Build destination file path.
+    auto destPath = new FilePath(destDirPath);
+    destPath.append(mod.getFQN() ~ outFileExtension);
+    // Verbose output of activity.
+    if (verbose) // TODO: create a setting for this format string in dilconf.d?
+      Stdout.formatln("ddoc {} > {}", mod.filePath(), destPath);
+
     // Create an own macro environment for this module.
     mtable = new MacroTable(mtable);
     // Define runtime macros.
@@ -116,9 +162,9 @@ struct DDocCommand
     // Create the appropriate DDocEmitter.
     DDocEmitter ddocEmitter;
     if (writeXML)
-      ddocEmitter = new DDocXMLEmitter(mod, mtable, includeUndocumented, tokenHL);
+      ddocEmitter = new DDocXMLEmitter(mod, mtable, includeUndocumented, hl);
     else
-      ddocEmitter = new DDocHTMLEmitter(mod, mtable, includeUndocumented, tokenHL);
+      ddocEmitter = new DDocHTMLEmitter(mod, mtable, includeUndocumented, hl);
     // Start the emitter.
     auto ddocText = ddocEmitter.emit();
     // Set the BODY macro to the text produced by the emitter.
@@ -127,27 +173,75 @@ struct DDocCommand
     auto dg = verbose ? this.diag : null;
     auto fileText = rawOutput ? ddocText :
       MacroExpander.expand(mtable, "$(DDOC)", mod.filePath, dg);
-    // Build destination file path.
-    auto destPath = new FilePath(destDirPath);
-    destPath.append(mod.getFQN() ~ outFileExtension);
-    // Verbose output of activity.
-    if (verbose) // TODO: create a setting for this format string in dilconf.d?
-      Stdout.formatln("ddoc {} > {}", mod.filePath, destPath);
     // Finally write the file out to the harddisk.
     scope file = new File(destPath.toString());
     file.write(fileText);
   }
 
   /// Writes the list of processed modules to the disk.
+  /// Also writes DEST/js/modules.js if kandil is used.
   /// Params:
-  ///   moduleList = the list of modules.
-  void writeModulesTextFile(string[][] moduleList)
+  ///   mm = has the list of modules.
+  void writeModuleLists(ModuleManager mm)
   {
-    char[] text;
-    foreach (mod; moduleList)
-      text ~= mod[0] ~ ", " ~ mod[1] ~ \n;
-    scope file = new File(modsTxtPath);
-    file.write(text);
+    if (modsTxtPath.length)
+    {
+      scope file = new File(modsTxtPath);
+      foreach (modul; mm.loadedModules)
+        file.append(modul.filePath()).append(", ")
+            .append(modul.getFQN()).append(\n);
+    }
+
+    if (!useKandil)
+      return;
+
+    mm.sortPackageTree();
+    auto filePath = new FilePath(destDirPath);
+    filePath.append("js").append("modules.js");
+    scope file = new File(filePath.toString());
+
+    file.write("var g_modulesList = [\n "); // Write a flat list of FQNs.
+    uint max_line_len = 80;
+    uint line_len;
+    foreach (modul; mm.loadedModules)
+    {
+      auto fragment = ` "` ~ modul.getFQN() ~ `",`;
+      line_len += fragment.length;
+      if (line_len >= max_line_len) // See if we have to start a new line.
+      {
+        line_len = fragment.length + 1; // +1 for the space in "\n ".
+        fragment = "\n " ~ fragment;
+      }
+      file.append(fragment);
+    }
+    file.append("\n];\n\n"); // Closing ].
+
+    file.append(
+      "function M(name, fqn, sub)\n{\n"
+      "  sub = sub ? sub : [];\n"
+      "  return {\n"
+      "    name: name, fqn: fqn, sub: sub,\n"
+      "    kind : (sub && sub.length == 0) ? \"module\" : \"package\"\n"
+      "  };\n"
+      "}\nvar P = M;\n\n"
+    );
+
+    file.append("var g_moduleObjects = [\n");
+    writePackage(file, mm.rootPackage);
+    file.append("];");
+  }
+
+  /// Writes the sub-packages and sub-modules of a package to the disk.
+  static void writePackage(File f, Package pckg, string indent = "  ")
+  {
+    foreach (p; pckg.packages)
+    {
+      f.append(Format("{}P('{}','{}',[\n", indent, p.name.str, p.getFQN()));
+      writePackage(f, p, indent~"  ");
+      f.append(indent~"]),\n");
+    }
+    foreach (m; pckg.modules)
+      f.append(Format("{}M('{}','{}'),\n", indent, m.name.str, m.getFQN()));
   }
 
   /// Loads a macro file. Converts any Unicode encoding to UTF-8.

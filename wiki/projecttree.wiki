@@ -1,0 +1,47 @@
+#summary A walk through the directory structure of dil.
+
+= Project Tree =
+
+As dil has grown quite a bit in its life time, it has become a necessity to document its structure. Interested developers can view this guide and quickly gain a good understanding of the location of various components in the system.
+
+  * *`data/`*<br>Contains dilconf.d (the configuration file of dil,) language files and other files that are required by some subcommands in dil.
+  * *`i18n/`*<br>Language catalogue files. Part of src/translator/. Not in use at the moment.
+  * *`kandil/`*<br>An XHTML/JS front-end for documentation of D source files. See [http://code.google.com/p/dil/wiki/Kandil kandil's wiki page].
+  * *`scripts/`*<br>Very useful utility scripts are located here.
+    * `build.py`: Build dil with this if you don't have or want [http://dsource.org/projects/dsss DSSS].
+    * `phobos_doc.py`: Generates documentation for Phobos and optionally creates a zip archive.
+    * `tango_doc.py`: Like phobos_doc.py, but for Tango.
+    * `typerules.d`: Generates interesting tables of type rules in the compiler that compiles it.
+  * *`src/`*<br>The source folder which holds most of the source files.
+    * *`cmd/`*<br>Modules that implement the subcommands of the main application.
+    * *`dil/`*<br>The root package of the project.
+      * *`ast/`*<br>Includes modules for building (full) parse trees (not abstract syntax trees which have less information.)
+        * `Node.d`: Contains the abstract base class from which all other parse tree elements derive.
+        * `Visitor.d`: Implements an abstract base class for traversing parse trees.
+      * *`code/`*<br>Will contain or contains modules related to interpreting code and generating LLVM IR trees (Intermediate Representation.)
+      * *`doc/`*<br>Modules that allow for documentation generation are located here.
+        * `DDocEmitter.d`: Has a class that traverses a parse tree and emits macros with text to a buffer.
+        * `Doc.d`: Consists of classes and functions which find, sanitize and parse Ddoc comments into sections.
+        * `Macro.d`: Implements Ddoc macro expansion.
+      * *`lexer/`*<br>Everything related to the lexing process is present here.
+        * `Lexer.d`: The Lexer lives here.
+      * *`parser/`*
+        * `Parser.d`: The place where the huge Parser resides. She's best friends with the Lexer.
+      * *`semantic/`*<br>The analytic system that tries to make sense of the code you throw at it. Throws it back if it doesn't.
+        * `Passes.d`: The semantic passes that go over a module until all symbols are resolved.
+        * `Symbols.d`: Classes, structs, variables, functions, templates etc. are symbols.
+        * `Types.d`: All the semantic types are in this file.
+      * *`translator/`*
+        * `German.d`: A feeble attempt on a class that translates D code into German.
+      * `Compilation.d`: The !CompilationContext class encloses important parameters relevant to the compilation process. E.g.: debug/release build, finding modules, sizes of machine dependent types, 32/64Bit code generation etc.
+      * `Diagnostics.d`: Just a class that collects error messages to be printed to the console.
+      * `ModuleManager.d`: Searches for modules in include dirs, loads them and manages them in tables. Reports errors if modules conflict with packages or other modules.
+      * `Version.d`: Know the version of the compiler.
+    * *`tests/`*<br>Some test cases for the compiler.
+    * *`translator/`*<br>My failed attempt at writing a GUI app with !PyQt4 for managing language catalogues (using the YAML format.)
+    * `main.d`: The main application with a command-line interface that drives the functions of dil.
+  * *`wiki/`*<br>Contains the wiki pages, like this one you're reading.
+  * `AUTHORS`: Lists people contributing to this project. Contains my personal testament; just in case I get struck down by a lightning from Zeus (I keep having naughty thoughts of Aphrodite.)
+  * `COPYING`: The main license of this project (GPL3.)
+  * `dsss.conf`: A makefile used by DSSS to build dil.
+  * `README`: Mostly describes how to build dil.

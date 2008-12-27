@@ -3,6 +3,7 @@
 /// $(Maturity average)
 module dil.Compilation;
 
+import dil.semantic.Types;
 import common;
 
 /// A group of settings relevant to the compilation process.
@@ -19,6 +20,7 @@ class CompilationContext
   bool unittestBuild;
   bool acceptDeprecated;
   uint structAlign = 4;
+  TypeTable typeTable;
 
   this(CC parent = null)
   {
@@ -30,6 +32,12 @@ class CompilationContext
       this.versionLevel = parent.versionLevel;
       this.releaseBuild = parent.releaseBuild;
       this.structAlign = parent.structAlign;
+      this.typeTable = parent.typeTable;
+    }
+
+    if (isRoot())
+    {
+      typeTable = new TypeTable();
     }
   }
 

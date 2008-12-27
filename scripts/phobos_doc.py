@@ -47,11 +47,13 @@ def copy_files(DATA, PHOBOS_SRC, DEST):
 def copy_files2(DATA, KANDIL, DEST):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
-      (DATA/"html.css", DEST.HTMLSRC), # For syntax highlighted files.
-      (KANDIL/"style.css", DEST.CSS),
-      (KANDIL/"navigation.js", DEST.JS),
-      (KANDIL/"loading.gif", DEST.IMG)):
+      (DATA/"html.css", DEST.HTMLSRC),
+      (KANDIL.style,    DEST.CSS)):
     FILE.copy(DIR)
+  for FILE in KANDIL.jsfiles:
+    FILE.copy(DEST.JS)
+  for img in KANDIL.IMG.glob("*.png") + [KANDIL.IMG/"loading.gif"]:
+    img.copy(DEST.IMG)
 
 def modify_phobos_html(phobos_html, version):
   """ Modifys DEST/phobos.html. """
@@ -134,7 +136,7 @@ def main():
   # Dil's data/ directory.
   DATA       = Path("data")
   # Dil's fancy documentation format.
-  KANDIL     = Path("kandil")
+  KANDIL     = get_kandil_path()
   # Temporary directory, deleted in the end.
   TMP        = DEST/"tmp"
   # The list of module files (with info) that have been processed.
@@ -169,34 +171,22 @@ def main():
   if options.use_kandil:
     write_overrides_ddoc2(TMP/"overrides.ddoc")
     DOC_FILES = [TMP/"phobos.ddoc", KANDIL/"kandil.ddoc"] + \
-                TMP//("missing.ddoc", "overrides.ddoc") + \
+                 TMP//("missing.ddoc", "overrides.ddoc") + \
                 [PHOBOS_SRC/"phobos.d"] + FILES
     versions = ["DDoc"]
-    generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES, versions, options='-v -i')
-    modlist = read_modules_list(MODLIST)
-    generate_modules_js(modlist, DEST.JS/"modules.js")
-    for args in generate_shl_files2(DIL_EXE, DEST.HTMLSRC, modlist):
-      print "hl %s > %s" % args;
+    generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES,
+                  versions, options='-v -i -hl --kandil'.split(' '))
     modify_phobos_html(DEST/"phobos.html", D_VERSION)
     copy_files2(DATA, KANDIL, DEST)
-    download_jquery(DEST.JS/"jquery.js")
   else:
     write_overrides_ddoc(TMP/"overrides.ddoc")
-
     create_index_file(TMP/"index.d", PHOBOS_SRC, FILES)
-
     DOC_FILES = FILES + [PHOBOS_SRC/"phobos.d"] + \
       TMP//("index.d", "phobos.ddoc", "missing.ddoc", "overrides.ddoc")
     versions = ["DDoc"]
-    generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES, versions, options='-v -i')
-
-    modlist = read_modules_list(MODLIST)
-
-    for args in generate_shl_files2(DIL_EXE, DEST.HTMLSRC, modlist):
-      print "hl %s > %s" % args;
-
+    generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES,
+                  versions, options=['-v', '-i', '-hl'])
     modify_phobos_html(DEST/"phobos.html", D_VERSION)
-
     copy_files(DATA, PHOBOS_SRC, DEST)
 
   TMP.rmtree()

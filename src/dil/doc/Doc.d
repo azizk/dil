@@ -20,6 +20,7 @@ class DDocComment
   Section summary; /// Optional summary section.
   Section description; /// Optional description section.
 
+  /// Constructs a DDocComment object.
   this(Section[] sections, Section summary, Section description)
   {
     this.sections = sections;
@@ -387,23 +388,26 @@ struct DDocParser
       assert(p < textEnd && (isascii(*p) || isLeadByte(*p)));
       ident = scanIdentifier(p, textEnd);
       if (ident && p < textEnd && *p == ':')
-      {
-        bodyBegin = ++p;
-        skipLine();
-        return true;
-      }
+        if (!(++p < textEnd && *p == '/')) // Ignore links: http:// ftp:// etc.
+        {
+          bodyBegin = p;
+          skipLine();
+          return true;
+        }
       skipLine();
     }
     assert(p is textEnd);
     return false;
   }
 
+  /// Skips $(MODLINK3 dil.lexer.Funcs, CProperty.Whitespace, whitespace).
   void skipWhitespace()
   {
     while (p < textEnd && isspace(*p))
       p++;
   }
 
+  /// Skips to the beginning of the next non-blank line.
   void skipLine()
   {
     while (p < textEnd && *p != '\n')
@@ -418,6 +422,7 @@ class Section
 {
   string name;
   string text;
+  /// Constructs a Section object.
   this(string name, string text)
   {
     this.name = name;
@@ -443,6 +448,7 @@ class ParamsSection : Section
 {
   string[] paramNames; /// Parameter names.
   string[] paramDescs; /// Parameter descriptions.
+  /// Constructs a ParamsSection object.
   this(string name, string text)
   {
     super(name, text);
@@ -462,6 +468,7 @@ class MacrosSection : Section
 {
   string[] macroNames; /// Macro names.
   string[] macroTexts; /// Macro texts.
+  /// Constructs a MacrosSection object.
   this(string name, string text)
   {
     super(name, text);

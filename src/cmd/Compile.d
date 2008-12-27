@@ -15,8 +15,6 @@ import dil.Diagnostics;
 import dil.ModuleManager;
 import common;
 
-import tango.core.Array : sort;
-
 /// The compile command.
 struct CompileCommand
 {
@@ -51,41 +49,33 @@ struct CompileCommand
     }
 
     if (printModuleTree)
-      printMTree(moduleMan.rootPackage.packages,
-                 moduleMan.rootPackage.modules, "");
+    {
+      moduleMan.sortPackageTree();
+      printMTree2(moduleMan.rootPackage, "");
+    }
     // foreach (mod; moduleMan.orderedModules)
     //   Stdout(mod.moduleFQN, mod.imports.length).newline;
-  }
-
-  /// A predicate for sorting symbols in ascending order.
-  static bool sortSymbolPredicate(Symbol a, Symbol b) {
-    return a.name.str < b.name.str;
   }
 
   /// Prints the package/module tree including the root.
   void printMTree(Package pckg, string indent)
   {
     Stdout(indent)(pckg.pckgName)("/").newline; // PackageName/
-    pckg.packages.sort(&sortSymbolPredicate); // Sort the packages.
     foreach (p; pckg.packages)
       printMTree(p, indent ~ "  "); // Print the sub-packages.
-    pckg.modules.sort(&sortSymbolPredicate); // Sort the modules.
     foreach (m; pckg.modules) // Print the modules.
       Stdout(indent ~ "  ")(m.moduleName)(".")(m.fileExtension()).newline;
   }
 
   /// Prints the package/module tree excluding the root.
-  void printMTree(Package[] pckgs, Module[] mods, string indent)
+  void printMTree2(Package pckg, string indent)
   {
-    pckgs.sort(&sortSymbolPredicate); // Sort the packages.
-    foreach (pckg; pckgs)
+    foreach (p; pckg.packages)
     {
-      Stdout(indent)(pckg.pckgName)("/").newline; // PackageName/
-      // Print the sub-packages.
-      printMTree(pckg.packages, pckg.modules, indent ~ "  ");
+      Stdout(indent)(p.pckgName)("/").newline; // PackageName/
+      printMTree2(p, indent ~ "  "); // Print the sub-packages.
     }
-    mods.sort(&sortSymbolPredicate); // Sort the modules.
-    foreach (m; mods) // Print the modules.
+    foreach (m; pckg.modules) // Print the modules.
       Stdout(indent)(m.moduleName)(".")(m.fileExtension()).newline;
   }
 

@@ -15,6 +15,8 @@ In order to compile dil you need to have:
  *) DMD 1.037 (http://www.digitalmars.com/d/1.0/changelog.html)
  *) Tango 0.99.7 (http://dsource.org/projects/tango/)
  *) DSSS 0.77 (http://dsource.org/projects/dsss/)
+    or alternatively:
+    Python 2.5 and scripts/build.py
 
 If you can't compile dil because you have a newer version of these programs
 then report the problem to me, please (see Bugs section.)
@@ -27,7 +29,6 @@ Regarding DSSS:
 You have to make sure that the correct config file is used.
 A default can be set in dsss/etc/rebuild/default.
 Use dmd-posix-tango, dmd-win-tango, gdc-posix-tango or gdc-win-tango.
-Note: I will ad a Python script that can compile dil or generate a makefile.
 
 Compile dil:
 # Change to the directory where you extracted dil.
@@ -43,10 +44,21 @@ $ bin/dil
 # On Windows:
 > bin\dil.exe
 
-You should see the main help message printed in the console.
+Compile with Python:
+# Print help.
+$ scripts/build.py -h
+# Compile a release binary.
+$ scripts/build.py
+# Compile a debug binary.
+$ scripts/build.py --debug
+
+# On Windows you probably have to call python explicitly.
+> python scripts\build.py
+
+Executing dil without parameters will print the main help message.
 
 The language of the compiler messages can be set in the configuration file.
-(Please, note that many messages are still untranslated.)
+Many messages are still untranslated. This task has low priority at the moment.
 
 Bugs And Patches
 ================

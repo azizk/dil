@@ -84,12 +84,12 @@ class FuncBodyStatement : Statement
 
 class ScopeStatement : Statement
 {
-  Statement s;
+  Statement stmnt;
   this(Statement s)
   {
     mixin(set_kind);
     addChild(s);
-    this.s = s;
+    this.stmnt = s;
   }
   mixin(copyMethod);
 }
@@ -97,25 +97,25 @@ class ScopeStatement : Statement
 class LabeledStatement : Statement
 {
   Identifier* label;
-  Statement s;
+  Statement stmnt;
   this(Identifier* label, Statement s)
   {
     mixin(set_kind);
     addChild(s);
     this.label = label;
-    this.s = s;
+    this.stmnt = s;
   }
   mixin(copyMethod);
 }
 
 class ExpressionStatement : Statement
 {
-  Expression e;
+  Expression expr;
   this(Expression e)
   {
     mixin(set_kind);
     addChild(e);
-    this.e = e;
+    this.expr = e;
   }
   mixin(copyMethod);
 }
@@ -332,12 +332,12 @@ class BreakStatement : Statement
 
 class ReturnStatement : Statement
 {
-  Expression e;
+  Expression expr;
   this(Expression e)
   {
     mixin(set_kind);
     addOptChild(e);
-    this.e = e;
+    this.expr = e;
   }
   mixin(copyMethod);
 }
@@ -358,7 +358,7 @@ class GotoStatement : Statement
 
 class WithStatement : Statement
 {
-  Expression e;
+  Expression expr;
   Statement withBody;
   this(Expression e, Statement withBody)
   {
@@ -366,7 +366,7 @@ class WithStatement : Statement
     addChild(e);
     addChild(withBody);
 
-    this.e = e;
+    this.expr = e;
     this.withBody = withBody;
   }
   mixin(copyMethod);
@@ -374,7 +374,7 @@ class WithStatement : Statement
 
 class SynchronizedStatement : Statement
 {
-  Expression e;
+  Expression expr;
   Statement syncBody;
   this(Expression e, Statement syncBody)
   {
@@ -382,7 +382,7 @@ class SynchronizedStatement : Statement
     addOptChild(e);
     addChild(syncBody);
 
-    this.e = e;
+    this.expr = e;
     this.syncBody = syncBody;
   }
   mixin(copyMethod);
@@ -450,12 +450,12 @@ class ScopeGuardStatement : Statement
 
 class ThrowStatement : Statement
 {
-  Expression e;
+  Expression expr;
   this(Expression e)
   {
     mixin(set_kind);
     addChild(e);
-    this.e = e;
+    this.expr = e;
   }
   mixin(copyMethod);
 }

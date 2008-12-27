@@ -9,12 +9,12 @@ import common;
 
 /// Represents an identifier as defined in the D specs.
 ///
-/// $(PRE
-///  Identifier := IdStart IdChar*
-///  IdStart := "_" | Letter
-///  IdChar := IdStart | "0"-"9"
-///  Letter := UniAlpha
-/// )
+/// $(BNF
+////Identifier := IdStart IdChar*
+////IdStart    := "_" | Letter
+////IdChar     := IdStart | "0"-"9"
+////Letter     := UniAlpha
+////)
 /// See_Also:
 ///  Unicode alphas are defined in Unicode 5.0.0.
 align(1)

@@ -23,11 +23,17 @@ class IllegalExpression : Expression
   mixin(copyMethod);
 }
 
+/// The base class for every binary operator.
+///
+/// The copy method is mixed in here, not in any derived class.
+/// If a derived class has other nodes than lhs and rhs, then it has
+/// to have its own copy method which handles additional nodes.
 abstract class BinaryExpression : Expression
 {
   Expression lhs; /// Left-hand side expression.
   Expression rhs; /// Right-hand side expression.
-  Token* tok;
+  Token* tok;     /// The operator token.
+  /// Constructs a BinaryExpression object.
   this(Expression lhs, Expression rhs, Token* tok)
   {
     addChildren([lhs, rhs]);
@@ -105,6 +111,7 @@ class AndExpression : BinaryExpression
   }
 }
 
+/// This class isn't strictly needed, just here for clarity.
 abstract class CmpExpression : BinaryExpression
 {
   this(Expression left, Expression right, Token* tok)
@@ -336,7 +343,7 @@ class CatAssignExpression : BinaryExpression
   }
 }
 
-/// DotExpression := Expression '.' Expression
+/// $(BNF DotExpression := Expression '.' Expression)
 class DotExpression : BinaryExpression
 {
   this(Expression left, Expression right)
@@ -352,11 +359,11 @@ class DotExpression : BinaryExpression
 
 abstract class UnaryExpression : Expression
 {
-  Expression e; // TODO: rename 'e' to 'next', 'unary', 'expr' or 'sube' etc.
+  Expression una;
   this(Expression e)
   {
     addChild(e);
-    this.e = e;
+    this.una = e;
   }
   mixin(copyMethodUnaryExpression);
 }
@@ -1101,25 +1108,25 @@ class AsmSegExpression : UnaryExpression
 
 class AsmPostBracketExpression : UnaryExpression
 {
-  Expression e2; /// Expression in brackets: e [ e2 ]
-  this(Expression e, Expression e2)
+  Expression index; /// Expression in brackets: una [ index ]
+  this(Expression e, Expression index)
   {
     super(e);
     mixin(set_kind);
-    addChild(e2);
-    this.e2 = e2;
+    addChild(index);
+    this.index = index;
   }
   mixin(copyMethod);
 }
 
 class AsmBracketExpression : Expression
 {
-  Expression e;
+  Expression expr;
   this(Expression e)
   {
     mixin(set_kind);
     addChild(e);
-    this.e = e;
+    this.expr = e;
   }
   mixin(copyMethod);
 }

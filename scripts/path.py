@@ -36,6 +36,10 @@ class Path(unicode):
     return os.path.splitext(self)[1]
 
   @property
+  def abspath(self):
+    return Path(os.path.abspath(self))
+
+  @property
   def exists(self):
     return os.path.exists(self)
 
@@ -90,4 +94,4 @@ class Path(unicode):
 
   def glob(self, pattern):
     from glob import glob
-    return self // glob(unicode(self/pattern))
+    return map(Path, glob(unicode(self/pattern)))

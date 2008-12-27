@@ -26,11 +26,11 @@ bool isUnicodeNewline(char* p)
 }
 
 /// Returns: true if p points to the start of a Newline.
-/// $(PRE
-/// Newline := "\n" | "\r" | "\r\n" | LS | PS
-/// LS := "\u2028"
-/// PS := "\u2029"
-/// )
+/// $(BNF
+////Newline := "\n" | "\r" | "\r\n" | LS | PS
+////LS := "\u2028"
+////PS := "\u2029"
+////)
 bool isNewline(char* p)
 {
   return *p == '\n' || *p == '\r' || isUnicodeNewline(p);
@@ -43,17 +43,17 @@ bool isNewline(dchar c)
 }
 
 /// Returns: true if p points to an EOF character.
-/// $(PRE
-/// EOF := "\0" | _Z_
-/// _Z_ := "\x1A"
-/// )
+/// $(BNF
+////EOF := "\0" | _Z_
+////_Z_ := "\x1A"
+////)
 bool isEOF(dchar c)
 {
   return c == 0 || c == _Z_;
 }
 
 /// Returns: true if p points to the first character of an EndOfLine.
-/// $(PRE EndOfLine := Newline | EOF)
+/// $(BNF EndOfLine := Newline | EOF)
 bool isEndOfLine(char* p)
 {
   return isNewline(p) || isEOF(*p);

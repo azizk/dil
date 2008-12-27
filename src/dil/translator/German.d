@@ -27,7 +27,7 @@ class GermanTranslator : DefaultVisitor
   bool pluralize; /// Whether to use the plural when printing the next types.
   bool pointer; /// Whether next types should consider the previous pointer.
 
-  /// Construct a GermanTranslator.
+  /// Constructs a GermanTranslator.
   /// Params:
   ///   put = buffer to print to.
   ///   indentStep = added at every indendation step.
@@ -286,17 +286,15 @@ override:
     if (pluralize)
       (c1 = pointer ? ""[] : "n"), (c2 = "s");
     pointer = false;
-    if (n.assocType)
+    if (n.isAssociative)
       put.format("assoziative{} Array{} von ", c1, c2);
 //       visitT(n.assocType);
-    else if (n.e1)
-    {
-      if (n.e2)
+    else if (n.isStatic)
+      put.format("statische{} Array{} von ", c1, c2);
+//       visitE(n.index1);
+    else if (n.isSlice)
         put.format("gescheibte{} Array{} von ", c1, c2);
-      else
-        put.format("statische{} Array{} von ", c1, c2);
-//       visitE(n.e), n.e2 && visitE(n.e2);
-    }
+//       visitE(n.index1), visitE(n.index2);
     else
       put.format("dynamische{} Array{} von ", c1, c2);
     // Types following arrays should be in plural.
