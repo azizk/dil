@@ -51,7 +51,7 @@ def main():
   parser.add_option("--rev", dest="revision", metavar="REVISION", default=None,
     type="int", help="set the repository REVISION to use in symbol links")
   parser.add_option("--zip", dest="zip", default=False, action="store_true",
-    help="create a zip archive")
+    help="create a 7z archive")
 
   (options, args) = parser.parse_args()
 
@@ -110,8 +110,8 @@ def main():
   TMP.rmtree()
 
   if options.zip:
-    name, src = "Tango_doc_"+VERSION, DEST
-    cmd = "zip -q -9 -r %(name)s.zip %(src)s" % locals()
+    name, src = "Tango.%s_doc" % VERSION, DEST
+    cmd = "7zr a %(name)s.7z %(src)s" % locals()
     print cmd
     os.system(cmd)
 
