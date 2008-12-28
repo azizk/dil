@@ -505,6 +505,7 @@ class Parser
       //   // returning 'something'.
       //   something(*p);
       type = parseCFunctionPointerType(type, name, optionalParameterList);
+      // FIXME: name can be null. Is this a problem?
     }
     else if (peekNext() == T.LParen)
     { // Type FunctionName ( ParameterList ) FunctionBody
@@ -1463,6 +1464,9 @@ version(D2)
     return new DeleteDeclaration(parameters, funcBody);
   }
 
+  /// $(BNF TypeofType := "typeof" "(" Expression ")" | TypeofReturn
+  ////TypeofReturn := "typeof" "(" "return" ")"
+  ////)
   Type parseTypeofType()
   {
     auto begin = token;
@@ -2495,7 +2499,8 @@ version(D2)
     return e;
   }
 
-  /// $(BNF AsmAndAndExpression := AsmOrExpression ("&&" AsmOrExpression)* )
+  /// $(BNF AsmAndAndExpression :=
+  ////  AsmOrExpression ("&amp;&amp;" AsmOrExpression)* )
   Expression parseAsmAndAndExpression()
   {
     alias parseAsmOrExpression parseNext;
@@ -2543,7 +2548,7 @@ version(D2)
     return e;
   }
 
-  /// $(BNF AsmAndExpression := AsmCmpExpression ("&" AsmCmpExpression)* )
+  /// $(BNF AsmAndExpression := AsmCmpExpression ("&amp;" AsmCmpExpression)* )
   Expression parseAsmAndExpression()
   {
     alias parseAsmCmpExpression parseNext;
@@ -2560,7 +2565,7 @@ version(D2)
   }
 
   /// $(BNF AsmCmpExpression := AsmShiftExpression (Op AsmShiftExpression)*
-  ////Op := "==" | "!=" | "<" | "<=" | ">" | ">=" )
+  ////Op := "==" | "!=" | "&lt;" | "&lt;=" | "&gt;" | "&gt;=" )
   Expression parseAsmCmpExpression()
   {
     alias parseAsmShiftExpression parseNext;
@@ -2586,7 +2591,7 @@ version(D2)
   }
 
   /// $(BNF AsmShiftExpression := AsmAddExpression (Op AsmAddExpression)*
-  ////Op := "<<" | ">>" | ">>>" )
+  ////Op := "&lt;&lt;" | "&gt;&gt;" | "&gt;&gt;&gt;" )
   Expression parseAsmShiftExpression()
   {
     alias parseAsmAddExpression parseNext;
@@ -2884,8 +2889,8 @@ version(D2)
   }
 
   /// $(BNF AssignExpression := CondExpression (Op AssignExpression)*
-  ////Op := "=" | "<<=" | ">>=" | ">>>=" | "|=" | "&=" |
-  ////      "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~="
+  ////Op := "=" | "&lt;&lt;=" | "&gt;&gt;=" | "&gt;&gt;&gt;=" | "|=" |
+  ////      "&amp;=" | "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~="
   ////)
   Expression parseAssignExpression()
   {
@@ -2962,7 +2967,7 @@ version(D2)
     return e;
   }
 
-  /// $(BNF AndAndExpression := OrExpression ("&&" OrExpression)* )
+  /// $(BNF AndAndExpression := OrExpression ("&amp;&amp;" OrExpression)* )
   Expression parseAndAndExpression()
   {
     alias parseOrExpression parseNext;
@@ -3010,7 +3015,7 @@ version(D2)
     return e;
   }
 
-  /// $(BNF AndExpression := CmpExpression ("&" CmpExpression)* )
+  /// $(BNF AndExpression := CmpExpression ("&amp;" CmpExpression)* )
   Expression parseAndExpression()
   {
     alias parseCmpExpression parseNext;
@@ -3027,8 +3032,9 @@ version(D2)
   }
 
   /// $(BNF CmpExpression := ShiftExpression (Op ShiftExpression)?
-  ////Op := "is" | "!" "is" | "in" | "==" | "!=" | "<" | "<=" | ">" | ">="
-  ////      "!<>=" | "!<>" | "!<=" | "!<" | "!>=" | "!>" | "<>=" | "<>"
+  ////Op := "is" | "!" "is" | "in" | "==" | "!=" | "&lt;" | "&lt;=" | "&gt;" |
+  ////      "&gt;=" | "!&lt;&gt;=" | "!&lt;&gt;" | "!&lt;=" | "!&lt;" |
+  ////      "!&gt;=" | "!&gt;" | "&lt;&gt;=" | "&lt;&gt;"
   ////)
   Expression parseCmpExpression()
   {
@@ -3070,7 +3076,7 @@ version(D2)
   }
 
   /// $(BNF ShiftExpression := AddExpression (Op AddExpression)*
-  ////Op := "<<" | ">>" | ">>>"
+  ////Op := "&lt;&lt;" | "&gt;&gt;" | "&gt;&gt;&gt;"
   ////)
   Expression parseShiftExpression()
   {
@@ -3224,7 +3230,7 @@ version(D2)
   ////  PreIncrExpression | DerefExpression | SignExpression |
   ////  NotExpression | ComplementExpression | DeleteExpression |
   ////  CastExpression | TypeDotIdExpression | ModuleScopeExpression
-  ////AddressExpression     := "&" UnaryExpression
+  ////AddressExpression     := "&amp;" UnaryExpression
   ////PreIncrExpression     := "++" UnaryExpression
   ////PreDecrExpression     := "--" UnaryExpression
   ////DerefExpression       := "*" UnaryExpression
@@ -3864,6 +3870,8 @@ version(D2)
     return parseNext();
   }
 
+  /// $(BNF ArrayType := "[" (Type | Expression | SliceExpression ) "]"
+  ////SliceExpression := Expression ".." Expression )
   Type parseArrayType(Type t)
   {
     auto begin = token;
@@ -3895,6 +3903,9 @@ version(D2)
     return t;
   }
 
+  /// $(BNF CFunctionPointerType :=
+  ////  "(" BasicType2 (CFunctionPointerType | (Identifier DeclaratorSuffix)?)
+  ////  ")" ParameterList?)
   Type parseCFunctionPointerType(Type type, ref Identifier* ident,
                                  bool optionalParamList)
   {
@@ -3925,6 +3936,8 @@ version(D2)
     return set(type, begin);
   }
 
+  /// $(BNF Declarator := Type CFunctionPointerType |
+  ////              Type (Identifier DeclaratorSuffix)?)
   Type parseDeclarator(ref Identifier* ident, bool identOptional = false)
   {
     auto t = parseType();
@@ -4081,6 +4094,7 @@ version(D2)
     return set(params, begin);
   }
 
+  /// $(BNF TemplateArguments := "(" TemplateArguments? ")")
   TemplateArguments parseTemplateArguments()
   {
     TemplateArguments targs;
@@ -4092,9 +4106,10 @@ version(D2)
     return targs;
   }
 
-version(D2)
-{
+  /// $(BNF TemplateArguments2 := "," TemplateArguments "$(RP)")
   TemplateArguments parseTemplateArguments2()
+  {
+  version(D2)
   {
     skip(T.Comma);
     TemplateArguments targs;
@@ -4104,40 +4119,40 @@ version(D2)
       error(token, MSG.ExpectedTypeOrExpression);
     require(T.RParen);
     return targs;
+  } // version(D2)
+  else return null;
   }
-} // version(D2)
 
+  /// $(BNF TypeArgument := Type (?= "," | "$(RP)"))
+  Type parseTypeArgument()
+  {
+    auto type = parseType();
+    if (token.kind == T.Comma || token.kind == T.RParen)
+      return type;
+    try_fail();
+    return null;
+  }
+
+  /// $(BNF TemplateArguments := TemplateArgument ("," TemplateArgument)*
+  ////TemplateArgument := TypeArgument | AssignExpression)
   TemplateArguments parseTemplateArguments_()
   {
     auto begin = token;
     auto targs = new TemplateArguments;
     do
     {
-      Type parseType_()
-      {
-        auto type = parseType();
-        if (token.kind == T.Comma || token.kind == T.RParen)
-          return type;
-        try_fail();
-        return null;
-      }
       bool success;
-      auto typeArgument = try_(&parseType_, success);
-      if (success)
-        // TemplateArgument:
-        //         Type
-        //         Symbol
+      auto typeArgument = try_(&parseTypeArgument, success);
+      if (success) // TemplateArgument := Type | Symbol
         targs ~= typeArgument;
-      else
-        // TemplateArgument:
-        //         AssignExpression
+      else // TemplateArgument := AssignExpression
         targs ~= parseAssignExpression();
     } while (consumed(T.Comma))
     set(targs, begin);
     return targs;
   }
 
-  /// $(BNF "if" "(" ConstraintExpression ")" )
+  /// $(BNF Constraint := "if" "(" ConstraintExpression ")")
   Expression parseOptionalConstraint()
   {
     if (!consumed(T.If))
@@ -4148,6 +4163,7 @@ version(D2)
     return e;
   }
 
+  /// $(BNF TemplateParameterList := "(" TemplateParameters? ")")
   TemplateParameters parseTemplateParameterList()
   {
     auto begin = token;
@@ -4159,9 +4175,10 @@ version(D2)
     return set(tparams, begin);
   }
 
-version(D2)
-{
+  /// $(BNF TemplateParameterList2 := "," TemplateParameters "$(RP)")
   TemplateParameters parseTemplateParameterList2()
+  {
+  version(D2)
   {
     skip(T.Comma);
     auto begin = token;
@@ -4171,10 +4188,24 @@ version(D2)
     else
       error(token, MSG.ExpectedTemplateParameters);
     return set(tparams, begin);
+  } // version(D2)
+  else return null;
   }
-} // version(D2)
 
   /// Parses template parameters.
+  /// $(BNF TemplateParameters := TemplateParameter ("," TemplateParameter)
+  ////TemplateParameter := TemplateAliasParam | TemplateTypeParam |
+  ////                     TemplateTupleParam | TemplateValueParam |
+  ////                     TemplateThisParam
+  ////TemplateAliasParam := "alias" Identifier SpecOrDefaultType
+  ////TemplateTypeParam  := Identifier SpecOrDefaultType
+  ////TemplateTupleParam := Identifier "..."
+  ////TemplateValueParam := Declarator SpecOrDefaultValue
+  ////TemplateThisParam  := "this" Identifier SpecOrDefaultType # D2.0
+  ////SpecOrDefaultType  := (":" Type)? ("=" Type)?
+  ////SpecOrDefaultValue := (":" Value)? ("=" Value)?
+  ////Value := CondExpression
+  ////)
   void parseTemplateParameterList_(TemplateParameters tparams)
   {
     do
@@ -4186,19 +4217,16 @@ version(D2)
 
       void parseSpecAndOrDefaultType()
       {
-        // : SpecializationType
-        if (consumed(T.Colon))
+        if (consumed(T.Colon))  // ":" SpecializationType
           specType = parseType();
-        // = DefaultType
-        if (consumed(T.Assign))
+        if (consumed(T.Assign)) // "=" DefaultType
           defType = parseType();
       }
 
       switch (token.kind)
       {
       case T.Alias:
-        // TemplateAliasParameter:
-        //         alias Identifier
+        // TemplateAliasParameter := "alias" Identifier
         skip(T.Alias);
         ident = requireIdentifier(MSG.ExpectedAliasTemplateParam);
         parseSpecAndOrDefaultType();
@@ -4209,23 +4237,20 @@ version(D2)
         switch (peekNext())
         {
         case T.Ellipses:
-          // TemplateTupleParameter:
-          //         Identifier ...
+          // TemplateTupleParameter := Identifier "..."
           skip(T.Identifier); skip(T.Ellipses);
           if (token.kind == T.Comma)
             error(MID.TemplateTupleParameter);
           tp = new TemplateTupleParameter(ident);
           break;
         case T.Comma, T.RParen, T.Colon, T.Assign:
-          // TemplateTypeParameter:
-          //         Identifier
+          // TemplateTypeParameter := Identifier
           skip(T.Identifier);
           parseSpecAndOrDefaultType();
           tp = new TemplateTypeParameter(ident, specType, defType);
           break;
         default:
-          // TemplateValueParameter:
-          //         Declarator
+          // TemplateValueParameter := Declarator
           ident = null;
           goto LTemplateValueParameter;
         }
@@ -4233,8 +4258,7 @@ version(D2)
       version(D2)
       {
       case T.This:
-        // TemplateThisParameter
-        //         this TemplateTypeParameter
+        // TemplateThisParameter := "this" TemplateTypeParameter
         skip(T.This);
         ident = requireIdentifier(MSG.ExpectedNameForThisTempParam);
         parseSpecAndOrDefaultType();
@@ -4243,14 +4267,13 @@ version(D2)
       }
       default:
       LTemplateValueParameter:
-        // TemplateValueParameter:
-        //         Declarator
+        // TemplateValueParameter := Declarator
         Expression specValue, defValue;
         auto valueType = parseDeclarator(ident);
-        // : SpecializationValue
+        // ":" SpecializationValue
         if (consumed(T.Colon))
           specValue = parseCondExpression();
-        // = DefaultValue
+        // "=" DefaultValue
         if (consumed(T.Assign))
           defValue = parseCondExpression();
         tp = new TemplateValueParameter(valueType, ident, specValue, defValue);

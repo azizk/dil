@@ -113,7 +113,7 @@ abstract class TemplateParameter : Node
   }
 }
 
-/// E.g.: (alias T)
+/// $(BNF TemplateAliasParameter := "alias" Identifier SpecOrDefaultType)
 class TemplateAliasParameter : TemplateParameter
 {
   TypeNode specType, defType;
@@ -130,7 +130,7 @@ class TemplateAliasParameter : TemplateParameter
   mixin(copyMethod);
 }
 
-/// E.g.: (T t)
+/// $(BNF TemplateTypeParameter := Identifier SpecOrDefaultType)
 class TemplateTypeParameter : TemplateParameter
 {
   TypeNode specType, defType;
@@ -149,7 +149,7 @@ class TemplateTypeParameter : TemplateParameter
 
 // version(D2)
 // {
-/// E.g.: (this T)
+/// $(BNF TemplateThisParam  := "this" Identifier SpecOrDefaultType)
 class TemplateThisParameter : TemplateParameter
 {
   TypeNode specType, defType;
@@ -167,7 +167,7 @@ class TemplateThisParameter : TemplateParameter
 }
 // }
 
-/// E.g.: (T)
+/// $(BNF TemplateValueParamer := Declarator SpecOrDefaultValue)
 class TemplateValueParameter : TemplateParameter
 {
   TypeNode valueType;
@@ -187,7 +187,7 @@ class TemplateValueParameter : TemplateParameter
   mixin(copyMethod);
 }
 
-/// E.g.: (T...)
+/// $(BNF TemplateTupleParameter := Identifier "...")
 class TemplateTupleParameter : TemplateParameter
 {
   this(Identifier* ident)
