@@ -3239,7 +3239,7 @@ version(D2)
   ////NotExpression         := "!" UnaryExpression
   ////ComplementExpresson   := "~" UnaryExpression
   ////DeleteExpression      := "delete" UnaryExpression
-  ////CastExpression        := "cast" "(" ")" UnaryExpression
+  ////CastExpression        := "cast" "(" Type ")" UnaryExpression
   ////TypeDotIdExpression   := "(" Type ")" "." Identifier
   ////ModuleScopeExpression := "." IdentifierExpression
   ////)
@@ -3294,12 +3294,12 @@ version(D2)
       {
       auto begin2 = token;
       case T.Const:
-        if (token.kind != T.RParen)
+        if (peekNext() != T.RParen)
           goto default; // const ( Type )
         type = new ConstType(null); // cast ( const )
         goto Lcommon;
       case T.Invariant:
-        if (token.kind != T.RParen)
+        if (peekNext() != T.RParen)
           goto default; // invariant ( Type )
         type = new InvariantType(null); // cast ( invariant )
       Lcommon:
@@ -3554,7 +3554,8 @@ version(D2)
           nT();
           break;
         case T.Const, T.Invariant:
-          if (peekNext() != T.LParen)
+          auto next = peekNext();
+          if (next == T.RParen || next == T.Comma)
             goto case_Const_Invariant;
           // Fall through. It's a type.
         default:
