@@ -4229,6 +4229,25 @@ version(D2)
         // TemplateAliasParameter := "alias" Identifier
         skip(T.Alias);
         ident = requireIdentifier(MSG.ExpectedAliasTemplateParam);
+      version(D2)
+      {
+        Node parseExpOrType()
+        {
+          bool success;
+          auto typeArgument = try_(&parseTypeArgument, success);
+          return success ? typeArgument : parseCondExpression();
+        }
+        Node spec, def;
+        if (consumed(T.Colon))  // ":" SpecializationType
+          spec = parseExpOrType();
+        if (consumed(T.Assign)) // "=" DefaultType
+          def = parseExpOrType();
+        // TODO: expressions are not stored.
+        //       TemplateAliasParameter class has to be modified.
+        specType = spec && spec.isType() ? spec.to!(Type) : null;
+        defType = def && def.isType() ? def.to!(Type) : null;
+      }
+      else
         parseSpecAndOrDefaultType();
         tp = new TemplateAliasParameter(ident, specType, defType);
         break;
