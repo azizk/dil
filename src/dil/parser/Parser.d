@@ -3736,17 +3736,23 @@ version(D2)
     version(D2)
     {
     case T.Const:
-      // const ( Type )
-      requireNext(T.LParen);
-      t = parseType();
-      require(T.RParen);
+      nT();
+      if (consumed(T.LParen)) { // "const" "(" Type ")"
+        t = parseType();
+        require(T.RParen);
+      }
+      else // In Phobos2 we see e.g.: "const" Type
+        t = parseType();
       t = new ConstType(t);
       break;
     case T.Invariant:
-      // invariant ( Type )
-      requireNext(T.LParen);
-      t = parseType();
-      require(T.RParen);
+      nT();
+      if (consumed(T.LParen)) { // "invariant" "(" Type ")"
+        t = parseType();
+        require(T.RParen);
+      }
+      else // "invariant" Type
+        t = parseType();
       t = new InvariantType(t);
       break;
     } // version(D2)
