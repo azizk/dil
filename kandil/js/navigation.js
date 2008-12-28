@@ -21,25 +21,7 @@ $(function() {
     showCode($(this));
   });
 
-  // Prepare the symbol list.
-  var header = symbols[0]; // Header of the page.
-  symbols = symbols.slice(1); // Every other symbol.
-
-  var itemlist = {};
-  itemlist.root = new SymbolItem(header.textContent, "module", header.textContent);
-  itemlist[''] = itemlist.root; // The empty string has to point to the root.
-  for (var i = 0; i < symbols.length; i++)
-  {
-    var symbol = symbols[i];
-    [parentFQN, name] = rpartition(symbol.name, '.')
-    var item = new SymbolItem(symbol.textContent, $(symbol).attr("kind"),
-                              symbol.name);
-    itemlist[parentFQN].sub.push(item);
-    itemlist[item.fqn] = item;
-    // TODO: add D attribute information.
-  }
-
-  $("#apipanel").append(createSymbolsUL(itemlist.root.sub));
+  initializeSymbolsList(symbols);
 
 //   $("#apipanel > ul").treeview({
 //     animated: "fast",
@@ -80,6 +62,31 @@ function setHeightOfPanel()
   $(this).css('max-height', window_height - pos.top - 10);
 }
 */
+
+function initializeSymbolsList(symbols)
+{
+  if (!symbols.length)
+    return;
+  // Prepare the symbol list.
+  var header = symbols[0]; // Header of the page.
+  symbols = symbols.slice(1); // Every other symbol.
+
+  var itemlist = {};
+  itemlist.root = new SymbolItem(header.textContent, "module", header.textContent);
+  itemlist[''] = itemlist.root; // The empty string has to point to the root.
+  for (var i = 0; i < symbols.length; i++)
+  {
+    var symbol = symbols[i];
+    [parentFQN, name] = rpartition(symbol.name, '.')
+    var item = new SymbolItem(symbol.textContent, $(symbol).attr("kind"),
+                              symbol.name);
+    itemlist[parentFQN].sub.push(item);
+    itemlist[item.fqn] = item;
+    // TODO: add D attribute information.
+  }
+  // Create the HTML text and append it to the api panel.
+  $("#apipanel").append(createSymbolsUL(itemlist.root.sub));
+}
 
 /// A tree item for symbols.
 function SymbolItem(name, kind, fqn)
