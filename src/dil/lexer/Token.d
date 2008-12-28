@@ -346,12 +346,17 @@ bool isDeclDefStartToken(TOK tok)
   alias TOK T;
   case  T.Align, T.Pragma, T.Export, T.Private, T.Package, T.Protected,
         T.Public, T.Extern, T.Deprecated, T.Override, T.Abstract,
-        T.Synchronized, T.Static, T.Final, T.Const, T.Invariant/*D 2.0*/,
+        T.Synchronized, T.Static, T.Final, T.Const,
         T.Auto, T.Scope, T.Alias, T.Typedef, T.Import, T.Enum, T.Class,
         T.Interface, T.Struct, T.Union, T.This, T.Tilde, T.Unittest, T.Debug,
         T.Version, T.Template, T.New, T.Delete, T.Mixin, T.Semicolon,
         T.Identifier, T.Dot, T.Typeof:
     return true;
+  version(D2)
+  {
+  case T.Invariant:
+    return true;
+  }
   default:
     if (IntegralTypeBegin <= tok && tok <= IntegralTypeEnd)
       return true;
@@ -375,9 +380,14 @@ bool isStatementStartToken(TOK tok)
         T.Uint64, T.Float32, T.Float64, T.Float80, T.Imaginary32,
         T.Imaginary64, T.Imaginary80, T.CharLiteral, T.String, T.LBracket,
         T.Function, T.Delegate, T.Assert, T.Import, T.Typeid, T.Is, T.LParen,
-        T.Traits/*D2.0*/, T.AndBinary, T.PlusPlus, T.MinusMinus, T.Mul,
+        T.AndBinary, T.PlusPlus, T.MinusMinus, T.Mul,
         T.Minus, T.Plus, T.Not, T.Tilde, T.New, T.Delete, T.Cast:
     return true;
+  version(D2)
+  {
+  case T.Traits, T.Invariant:
+    return true;
+  }
   default:
     if (IntegralTypeBegin <= tok && tok <= IntegralTypeEnd ||
         SpecialTokensBegin <= tok && tok <= SpecialTokensEnd)
