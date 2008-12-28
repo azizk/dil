@@ -16,7 +16,7 @@ def copy_files(DIL):
     FILE.copy(DIR)
   for FILE in DIL.KANDIL.jsfiles:
     FILE.copy(DIL.JS)
-  for img in DIL.KANDIL.IMG.glob("*.png") + [DIL.KANDIL.IMG/"loading.gif"]:
+  for img in DIL.KANDIL.images:
     img.copy(DIL.IMG)
 
 def writeMakefile():

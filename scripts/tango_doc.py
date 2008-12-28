@@ -14,7 +14,7 @@ def copy_files(DATA, KANDIL, TANGO_DIR, DEST):
     FILE.copy(DIR)
   for FILE in KANDIL.jsfiles:
     FILE.copy(DEST.JS)
-  for img in KANDIL.IMG.glob("*.png") + [KANDIL.IMG/"loading.gif"]:
+  for img in KANDIL.images:
     img.copy(DEST.IMG)
 
 def get_tango_version(path):
