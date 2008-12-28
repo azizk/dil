@@ -1587,6 +1587,7 @@ version(D2)
     case T.Extern,
          T.Final,
          T.Const,
+         T.Invariant, // D2.0
          T.Auto:
          //T.Scope
          //T.Static
@@ -3293,11 +3294,15 @@ version(D2)
       {
       auto begin2 = token;
       case T.Const:
-        type = new ConstType(null);
-        goto case_break;
+        if (token.kind != T.RParen)
+          goto default; // const ( Type )
+        type = new ConstType(null); // cast ( const )
+        goto Lcommon;
       case T.Invariant:
-        type = new InvariantType(null);
-      case_break:
+        if (token.kind != T.RParen)
+          goto default; // invariant ( Type )
+        type = new InvariantType(null); // cast ( invariant )
+      Lcommon:
         nT();
         set(type, begin2);
         break;
