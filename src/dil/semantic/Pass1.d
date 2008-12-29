@@ -254,19 +254,15 @@ override
 
   D visit(AliasDeclaration ad)
   {
-    /*if (ad.symbol)
+    Declaration aliasDecl = visitD(ad.decl);
+
+    if (aliasDecl.Is!(VariablesDeclaration))
     {
-      //if(ad.isTemplateInstance())
-        // return visitD(ad);
+      if((cast(VariablesDeclaration)aliasDecl).typeNode.Is!(TemplateInstanceType))
+      {
+        return aliasDecl;
+      }
     }
-
-    //This exists in dmd but then allows const...strange
-    if (ad.isConst())
-    {
-      error(ad.begin, "cannot be const");
-      return ad;
-    }*/
-
     return ad;
   }
 
@@ -701,7 +697,7 @@ override
   S visit(ScopeStatement s)
   {
 //     enterScope();
-    visitS(s.s);
+    visitS(s.stmnt);
 //     exitScope();
     return s;
   }

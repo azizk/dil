@@ -215,6 +215,14 @@ override
     return super.visit(d);
   }
 
+  D visit(AliasDeclaration ad)
+  {
+    Declaration aliasDecl = visitD(ad.decl);
+    //TODO: insert aliased symbols, types, expressions and templateInstances
+    return ad;
+  }
+
+
   D visit(FunctionDeclaration d)
   {
     if(d.symbol is null)
@@ -256,9 +264,26 @@ override
     if (d.baseType)
       type = visitT(d.baseType).type;
 
-    // TODO: Done...this works, but type is always defaulting to Int if the
-    //EnumBaseType is an Enum type. For D2.x the type doesn't have to be
-    //an integral type.
+    //This gets the enum base type for 'named enums'
+    if (type is null)
+    {
+      type = (cast(Enum)d.baseType.symbol).type;
+      if (type)
+      {
+        if (!type.isIntegral())
+	{
+	  auto idToken = (cast(IdentifierType)d.baseType).begin;
+	  auto symbol = search(idToken);
+	  type = (cast(Type)(cast(Enum)symbol).type).baseType();
+	}
+	else
+          type = Types.Int;
+      }
+      else
+        assert(0);
+    }
+
+    //For D2.x the type doesn't have to be an integral type.
     if (!type.isIntegral())
     {
       error(d.begin, MSG.EnumBaseTypeInvalid);
@@ -467,12 +492,10 @@ override
 
   T visit(IdentifierType t)
   {
-    Type typ = Types.Int;
     auto idToken = t.begin;
     auto symbol = search(idToken);
     idScope = null;
-    // TODO: save symbol or its type in t...this is defaulting to Int!! FIX
-    t.type = typ;
+    t.symbol = symbol;
     return t;
   }
 
