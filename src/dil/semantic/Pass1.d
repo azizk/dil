@@ -415,7 +415,7 @@ override
     if (d.isSpecification)
     { // debug = Id | Int
       if (!isModuleScope())
-        error(d.begin, MSG.DebugSpecModuleLevel, d.spec.srcText);
+        error(d.begin, MSG.DebugSpecModuleLevel, d.spec.text);
       else if (d.spec.kind == TOK.Identifier)
         context.addDebugId(d.spec.ident.str);
       else
@@ -437,7 +437,7 @@ override
     if (d.isSpecification)
     { // version = Id | Int
       if (!isModuleScope())
-        error(d.begin, MSG.VersionSpecModuleLevel, d.spec.srcText);
+        error(d.begin, MSG.VersionSpecModuleLevel, d.spec.text);
       else if (d.spec.kind == TOK.Identifier)
         context.addVersionId(d.spec.ident.str);
       else

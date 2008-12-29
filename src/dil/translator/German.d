@@ -331,7 +331,7 @@ override:
     char[] c = pluralize ? "s"[] : "";
     if (n.tok == TOK.Void) // Avoid pluralizing "void"
       c = "";
-    put.format("{}{}", n.begin.srcText, c);
+    put.format("{}{}", n.begin.text, c);
     return n;
   }
 }

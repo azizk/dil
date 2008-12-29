@@ -180,7 +180,7 @@ class Parser
   /// and then moves to the next token.
   void skip()(TOK expectedKind)
   {
-    assert(token.kind == expectedKind /+|| *(int*).init+/, token.srcText());
+    assert(token.kind == expectedKind /+|| *(int*).init+/, token.text());
     nT();
   }
 
@@ -4319,7 +4319,7 @@ version(D2)
   /// Returns the string of a token printable to the client.
   char[] getPrintable(Token* token)
   { // TODO: there are some other tokens that have to be handled, e.g. strings.
-    return token.kind == T.EOF ? "EOF" : token.srcText;
+    return token.kind == T.EOF ? "EOF" : token.text;
   }
 
   alias require expected;
@@ -4356,7 +4356,7 @@ version(D2)
     if (token.kind == T.Identifier)
       (id = token.ident), skip(T.Identifier);
     else
-      error(MID.ExpectedButFound, "Identifier", token.srcText);
+      error(MID.ExpectedButFound, "Identifier", token.text);
     return id;
   }
 
@@ -4370,7 +4370,7 @@ version(D2)
     if (token.kind == T.Identifier)
       (id = token.ident), skip(T.Identifier);
     else
-      error(token, errorMsg, token.srcText);
+      error(token, errorMsg, token.text);
     return id;
   }
 
@@ -4384,7 +4384,7 @@ version(D2)
     if (token.kind == T.Identifier)
       (id = token.ident), skip(T.Identifier);
     else
-      error(mid, token.srcText);
+      error(mid, token.text);
     return id;
   }
 
@@ -4396,7 +4396,7 @@ version(D2)
     if (token.kind == T.Identifier)
       (idtok = token), skip(T.Identifier);
     else
-      error(MID.ExpectedButFound, "Identifier", token.srcText);
+      error(MID.ExpectedButFound, "Identifier", token.text);
     return idtok;
   }
 
@@ -4407,7 +4407,7 @@ version(D2)
       (idtok = token), skip(T.Identifier);
     else
     {
-      error(token, errorMsg, token.srcText);
+      error(token, errorMsg, token.text);
       idtok = lexer.insertEmptyTokenBefore(token);
       this.prevToken = idtok;
     }

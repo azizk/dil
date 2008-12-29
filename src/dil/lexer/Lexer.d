@@ -120,7 +120,7 @@ class Lexer
   /// Sets the value of the special token.
   void finalizeSpecialToken(ref Token t)
   {
-    assert(t.srcText[0..2] == "__");
+    assert(t.text[0..2] == "__");
     switch (t.kind)
     {
     case TOK.FILE:
@@ -292,7 +292,7 @@ class Lexer
 
         t.end = p;
 
-        auto id = IdTable.lookup(t.srcText);
+        auto id = IdTable.lookup(t.text);
         t.kind = id.kind;
         t.ident = id;
 
@@ -303,7 +303,7 @@ class Lexer
         else if (t.kind == TOK.EOF)
         {
           tail = &t;
-          assert(t.srcText == "__EOF__");
+          assert(t.text == "__EOF__");
         }
         else
           assert(0, "unexpected token type: " ~ Token.toString(t.kind));
@@ -1054,7 +1054,7 @@ class Lexer
 
       t.end = p;
 
-      auto id = IdTable.lookup(t.srcText);
+      auto id = IdTable.lookup(t.text);
       t.kind = id.kind;
       t.ident = id;
 
@@ -1065,7 +1065,7 @@ class Lexer
       else if (t.kind == TOK.EOF)
       {
         tail = &t;
-        assert(t.srcText == "__EOF__");
+        assert(t.text == "__EOF__");
       }
       else
         assert(0, "unexpected token type: " ~ Token.toString(t.kind));
@@ -1716,13 +1716,13 @@ version(D2)
     if (token.kind == TOK.EOF)
     {
       t.end = token.start;
-      buffer = t.srcText[2..$].dup ~ '\0';
+      buffer = t.text[2..$].dup ~ '\0';
     }
     else
     {
       // Assign to buffer before scanPostfix().
       t.end = p;
-      buffer = t.srcText[2..$-1].dup ~ '\0';
+      buffer = t.text[2..$-1].dup ~ '\0';
       t.pf = scanPostfix();
       t.end = p; // Assign again because of postfix.
     }
@@ -2859,9 +2859,9 @@ unittest
 
   for (uint i; i < pairs.length && token.kind != TOK.EOF;
        ++i, (token = token.next))
-    if (token.srcText != pairs[i].tokenText)
+    if (token.text != pairs[i].tokenText)
       assert(0, Format("Scanned '{0}' but expected '{1}'",
-                       token.srcText, pairs[i].tokenText));
+                       token.text, pairs[i].tokenText));
 }
 
 /// Tests the Lexer's peek() method.

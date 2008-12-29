@@ -254,7 +254,7 @@ void main(char[][] args)
         continue;
       if (printWS && token.ws)
         Stdout(token.wsChars);
-      Stdout(token.srcText)(separator);
+      Stdout(token.text)(separator);
     }
 
     diag.hasInfo && printErrors(diag);

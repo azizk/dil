@@ -68,14 +68,11 @@ struct Token
   }
 
   /// Returns the text of the token.
-  string srcText()
+  string text()
   {
     assert(start && end);
     return start[0 .. end - start];
   }
-
-  /// An alias for srcText. srcText will be removed in the future.
-  alias srcText text;
 
   /// Returns the preceding whitespace of the token.
   string wsChars()

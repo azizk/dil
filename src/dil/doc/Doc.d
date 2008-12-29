@@ -152,7 +152,7 @@ static:
     { // Determine how many characters to slice off from the end of the comment.
       // 0 for "//", 2 for "+/" and "*/".
       auto n = isLineComment(token) ? 0 : 2;
-      result ~= sanitize(token.srcText[3 .. $-n], token.start[1]);
+      result ~= sanitize(token.text[3 .. $-n], token.start[1]);
       assert(token.next);
       result ~= (token.next.kind == TOK.Newline) ? '\n' : ' ';
     }

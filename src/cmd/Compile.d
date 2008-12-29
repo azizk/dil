@@ -106,7 +106,7 @@ struct CompileCommand
       auto tokens = DDocUtils.getDocTokens(member.node);
       char[] docText;
       foreach (token; tokens)
-        docText ~= token.srcText;
+        docText ~= token.text;
       Stdout(indent).formatln("Id:{}, Symbol:{}, DocText:{}",
                               member.name.str, member.classinfo.name,
                               docText);
