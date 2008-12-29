@@ -6,13 +6,14 @@ module dil.lexer.Token;
 import dil.lexer.Identifier,
        dil.lexer.Funcs;
 import dil.Location;
+import common;
+
 import tango.stdc.stdlib : malloc, free;
 import tango.core.Exception;
-import common;
 
 public import dil.lexer.TokensEnum;
 
-/// A Token is a sequence of characters formed by the lexical analyzer.
+/// A Token is a sequence of characters recognized by the lexical analyzer.
 struct Token
 { /// Flags set by the Lexer.
   enum Flags : ushort
@@ -33,7 +34,8 @@ struct Token
   char* end;   /// Points one character past the end of the token.
 
   /// Data associated with this token.
-  /// TODO: move data structures out; use only pointers here to keep Token.sizeof small.
+  /// TODO: move data structures out;
+  /// use only pointers here to keep Token.sizeof small.
   union
   {
     /// For newline tokens.
@@ -47,13 +49,12 @@ struct Token
     /// The value of a string token.
     struct
     {
-      string str; /// Zero-terminated string. (The zero is included in the length.)
-      char pf;    /// Postfix 'c', 'w', 'd' or 0 for none.
+      string str; /// Zero-terminated string. The length includes '\0'.
+      char pf;    /// Postfix: 'c', 'w', 'd'. '\0' for none.
     version(D2)
-      Token* tok_str; /++ Points to the contents of a token string stored as a
-                          doubly linked list. The last token is always '}' or
-                          EOF in case end of source text is "q{" EOF.
-                      +/
+      Token* tok_str; /// Points to the contents of a token string stored as a
+                      /// doubly linked list. The last token is always '}' or
+                      /// EOF in case the string is not closed properly.
     }
     Identifier* ident; /// For keywords and identifiers.
     dchar  dchar_;   /// A character value.
@@ -207,28 +208,23 @@ version(D2)
     // Find previous newline token.
     while (search_t.kind != TOK.Newline)
       search_t = search_t.prev;
+    auto newline = search_t.newline;
     static if (realLocation)
     {
-      auto filePath  = search_t.newline.filePaths.oriPath;
-      auto lineNum   = search_t.newline.oriLineNum;
+      auto filePath  = newline.filePaths.oriPath;
+      auto lineNum   = newline.oriLineNum;
     }
     else
     {
-      auto filePath  = search_t.newline.filePaths.setPath;
-      auto lineNum   = search_t.newline.oriLineNum - search_t.newline.setLineNum;
+      auto filePath  = newline.filePaths.setPath;
+      auto lineNum   = newline.oriLineNum - newline.setLineNum;
     }
     auto lineBegin = search_t.end;
     // Determine actual line begin and line number.
-    while (1)
-    {
-      search_t = search_t.next;
-      if (search_t == this)
-        break;
+    for (; search_t != this; search_t = search_t.next)
       // Multiline tokens must be rescanned for newlines.
       if (search_t.isMultiline)
-      {
-        auto p = search_t.start, end = search_t.end;
-        while (p != end)
+        for (auto p = search_t.start, end = search_t.end; p < end;)
           if (scanNewline(p))
           {
             lineBegin = p;
@@ -236,8 +232,6 @@ version(D2)
           }
           else
             ++p;
-      }
-    }
     return new Location(filePath, lineNum, lineBegin, this.start);
   }
 

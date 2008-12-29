@@ -39,7 +39,6 @@ class Lexer
   LexerError[] errors;
   /// Always points to the first character of the current line.
   char* lineBegin;
-//   Token* newline;     /// Current newline token.
   uint lineNum = 1;   /// Current, actual source text line number.
   uint lineNum_hline; /// Line number set by #line.
   uint inTokenString; /// > 0 if inside q{ }
@@ -78,7 +77,6 @@ class Lexer
     this.token.next = newline;
     newline.prev = this.token;
     this.token = newline;
-//     this.newline = newline;
     scanShebang();
   }
 
@@ -184,11 +182,7 @@ class Lexer
   {
     assert(t !is null);
     if (t.next)
-    {
       t = t.next;
-//       if (t.kind == TOK.Newline)
-//         this.newline = t;
-    }
     else if (t !is this.tail)
     {
       Token* new_t = new Token;
@@ -262,7 +256,6 @@ class Lexer
         ++p;
         ++lineNum;
         setLineBegin(p);
-//         this.newline = &t;
         t.kind = TOK.Newline;
         t.setWhitespaceFlag();
         t.newline.filePaths = this.filePaths;
@@ -729,7 +722,6 @@ class Lexer
       ++p;
       ++lineNum;
       setLineBegin(p);
-//       this.newline = &t;
       t.kind = TOK.Newline;
       t.setWhitespaceFlag();
       t.newline.filePaths = this.filePaths;
