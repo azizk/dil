@@ -5,18 +5,20 @@ module cmd.ImportGraph;
 
 import dil.ast.Node,
        dil.ast.Declarations;
-import dil.semantic.Module;
-import dil.parser.ImportParser;
-import dil.SourceText;
-import dil.Compilation;
-import dil.ModuleManager;
+import dil.semantic.Module,
+       dil.semantic.Package;
+import dil.parser.ImportParser,
+       dil.SourceText,
+       dil.Compilation,
+       dil.ModuleManager,
+       dil.Diagnostics;
 import Settings;
 import common;
 
 import tango.text.Regex : RegExp = Regex;
-import tango.io.FilePath;
-import tango.io.model.IFile;
 import tango.text.Util;
+import tango.io.FilePath,
+       tango.io.model.IFile;
 
 alias FileConst.PathSeparatorChar dirSep;
 
@@ -54,6 +56,7 @@ struct IGraphCommand
     options |= o;
   }
 
+  /// Executes the command.
   void run()
   {
     // Init regular expressions.
@@ -100,12 +103,14 @@ class Graph
   Vertex[] vertices; /// The vertices or modules.
   Edge[] edges; /// The edges or import statements.
 
+  /// Adds a vertex to the graph.
   void addVertex(Vertex vertex)
   {
     vertex.id = vertices.length;
     vertices ~= vertex;
   }
 
+  /// Adds an edge between two vertices to the graph.
   Edge addEdge(Vertex from, Vertex to)
   {
     auto edge = new Edge(from, to);
@@ -163,6 +168,7 @@ class Edge
   bool isPublic; /// Public import.
   bool isStatic; /// Static import.
 
+  /// Constructs an Edge object between two vertices.
   this(Vertex from, Vertex to)
   {
     this.from = from;
@@ -177,7 +183,8 @@ class Vertex
   uint id;           /// The nth vertex in the graph.
   Vertex[] incoming; /// Also called predecessors.
   Vertex[] outgoing; /// Also called successors.
-  bool isCyclic;     /// Whether this vertex is in a cyclic relationship with other vertices.
+  bool isCyclic;     /// Whether this vertex is in a cyclic relationship
+                     /// with other vertices.
 
   enum Status : ubyte
   { None, Visiting, Visited }
@@ -193,6 +200,7 @@ class GraphBuilder
   Vertex[string] loadedModulesTable; /// Maps FQN paths to modules.
   bool delegate(string) filterPredicate;
 
+  /// Constructs a GraphBuilder object.
   this()
   {
     this.graph = new Graph;
@@ -307,10 +315,16 @@ void printModuleList(Vertex[] vertices, uint level, char[] indent)
 void printDotDocument(Graph graph, string siStyle, string piStyle,
                       IGraphCommand.Options options)
 {
-  Vertex[][string] verticesByPckgName;
-  if (options & IGraphCommand.Option.GroupByFullPackageName)
+  // Needed for grouping by package names.
+  ModuleManager mm;
+  uint groupModules = options & (IGraphCommand.Option.GroupByFullPackageName |
+                                 IGraphCommand.Option.GroupByPackageNames);
+  if (groupModules)
+  {
+    mm = new ModuleManager(null, new Diagnostics());
     foreach (vertex; graph.vertices)
-      verticesByPckgName[vertex.modul.packageName] ~= vertex;
+      mm.addModule(vertex.modul);
+  }
 
   if (options & (IGraphCommand.Option.HighlightCyclicVertices |
                  IGraphCommand.Option.HighlightCyclicEdges))
@@ -318,10 +332,14 @@ void printDotDocument(Graph graph, string siStyle, string piStyle,
 
   // Output header of the dot document.
   Stdout("Digraph ImportGraph\n{\n");
+  Stdout("  fontname = Verdana; /*fontsize = 10;*/\n");
   // Output nodes.
   // 'i' and vertex.id should be the same.
   foreach (i, vertex; graph.vertices)
-    Stdout.formatln(`  n{} [label="{}"{}];`, i, vertex.modul.getFQN(), (vertex.isCyclic ? ",style=filled,fillcolor=tomato" : ""));
+    Stdout.formatln(`  n{} [label="{}"{}];`, i, //, URL="{}.html"
+                    groupModules ? vertex.modul.moduleName :
+                                   vertex.modul.getFQN(),
+                    (vertex.isCyclic ? ",style=filled,fillcolor=tomato" : ""));
 
   // Output edges.
   foreach (edge; graph.edges)
@@ -332,7 +350,8 @@ void printDotDocument(Graph graph, string siStyle, string piStyle,
       edgeStyles = `[style="`;
       edge.isStatic && (edgeStyles ~= siStyle ~ ",");
       edge.isPublic && (edgeStyles ~= piStyle);
-      edgeStyles[$-1] == ',' && (edgeStyles = edgeStyles[0..$-1]); // Remove last comma.
+      if (edgeStyles[$-1] == ',')
+        edgeStyles = edgeStyles[0..$-1]; // Remove last comma.
       edgeStyles ~= `"]`;
     }
     edge.isCyclic && (edgeStyles ~= "[color=red]");
@@ -340,18 +359,52 @@ void printDotDocument(Graph graph, string siStyle, string piStyle,
   }
 
   if (options & IGraphCommand.Option.GroupByFullPackageName)
-    foreach (packageName, vertices; verticesByPckgName)
+  {
+    Vertex[][string] verticesByPckgName;
+    foreach (vertex; graph.vertices)
+      verticesByPckgName[vertex.modul.packageName] ~= vertex;
+    foreach (packageFQN, vertices; verticesByPckgName)
     { // Output nodes in a cluster.
-      Stdout.format(`  subgraph "cluster_{}" {`\n`    label="{}";color=blue;`"\n    ", packageName, packageName);
+      Stdout.format(`  subgraph "cluster_{0}" {{`\n
+                    `    label="{0}";color=blue;`"\n    ",
+                    packageFQN);
       foreach (vertex; vertices)
         Stdout.format(`n{};`, vertex.id);
       Stdout("\n  }\n");
     }
+  }
+  else if (options & IGraphCommand.Option.GroupByPackageNames)
+  {
+    Stdout("  // Warning: some nested clusters may crash dot.\n");
+    uint[Module] idTable;
+    foreach (vertex; graph.vertices)
+      idTable[vertex.modul] = vertex.id;
+    void printSubgraph(Package pckg, string indent)
+    { // Output nodes in a cluster.
+      foreach (p; pckg.packages)
+      {
+        Stdout.format(`{0}subgraph "cluster_{1}" {{`\n
+                      `{0}  label="{2}";color=blue;`\n
+                      "{0}  ",
+                      indent, p.getFQN(), p.pckgName);
+        foreach (modul; p.modules)
+          Stdout.format(`n{};`, idTable[modul]);
+        if (p.packages) {
+          Stdout.newline;
+          printSubgraph(p, indent~"  "); // Output nested clusters.
+        }
+        Stdout("\n  }\n");
+      }
+    }
+    printSubgraph(mm.rootPackage, "  ");
+  }
 
   Stdout("}\n");
 }
 
-// This is the old algorithm that was used to detect cycles in a directed graph.
+/// This is the old algorithm that is used
+/// to detect cycles in a directed graph.
+/// The new algorithm doesn't work (yet.)
 void analyzeGraph(Vertex[] vertices_init, Edge[] edges)
 {
   edges = edges.dup;
