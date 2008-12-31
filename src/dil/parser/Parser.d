@@ -184,10 +184,11 @@ class Parser
     nT();
   }
 
-  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  |                        Declaration parsing methods                        |
-   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                       Declaration parsing methods                       |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
+  /// $(BNF ModuleDeclaration := module Identifier ("." Identifier)* ";")
   Declaration parseModuleDeclaration()
   {
     auto begin = token;
@@ -445,6 +446,21 @@ class Parser
   // }
 
   /// Parses either a VariableDeclaration or a FunctionDeclaration.
+  /// $(BNF
+  ////VariableOrFunctionDeclaration :=
+  ////  AutoDeclaration | VariableDeclaration | FunctionDeclaration
+  ////AutoDeclaration := AutoVariable | AutoTemplate
+  ////AutoVariable := Name "=" Initializer MoreVariables? ";"
+  ////VariableDeclaration := Type Name TypeSuffix? ("=" Initializer)?
+  ////                       MoreVariables? ";"
+  ////CFunctionDeclaration := Type CFunctionPointer ("=" Initializer)?
+  ////                        MoreVariables? ";"
+  ////MoreVariables := ("," Name ("=" Initializer)?)*
+  ////FunctionDeclaration := Type Name TemplateParameterList?
+  ////                       ParameterList FunctionBody
+  ////AutoTemplate := Name TemplateParameterList ParameterList FunctionBody
+  ////Name := Identifier
+  ////)
   /// Params:
   ///   stc = previously parsed storage classes
   ///   protection = previously parsed protection attribute
@@ -584,6 +600,16 @@ class Parser
   }
 
   /// Parses a variable initializer.
+  /// $(BNF
+  ////Initializer := VoidInitializer | NonVoidInitializer
+  ////VoidInitializer := void
+  ////NonVoidInitializer := Expression | ArrayInitializer | StructInitializer
+  ////ArrayInitializer :=
+  ////  "[" ((NonVoidInitializer ":")? NonVoidInitializer)* "]"
+  ////StructInitializer :=
+  ////  "{" ((MemberName ":")? NonVoidInitializer)* "}"
+  ////MemberName := Identifier
+  ////)
   Expression parseInitializer()
   {
     if (token.kind == T.Void)
@@ -599,6 +625,9 @@ class Parser
     return parseNonVoidInitializer();
   }
 
+  /// Parses a NonVoidInitializer.
+  /// $(BNF NonVoidInitializer :=
+  ////  Expression | ArrayInitializer | StructInitializer)
   Expression parseNonVoidInitializer()
   {
     auto begin = token;
@@ -606,9 +635,7 @@ class Parser
     switch (token.kind)
     {
     case T.LBracket:
-      // ArrayInitializer:
-      //         [ ]
-      //         [ ArrayMemberInitializations ]
+      // ArrayInitializer := "[" ArrayMemberInitializations? "]"
       Expression[] keys;
       Expression[] values;
 
@@ -634,9 +661,7 @@ class Parser
       init = new ArrayInitExpression(keys, values);
       break;
     case T.LBrace:
-      // StructInitializer:
-      //         { }
-      //         { StructMemberInitializers }
+      // StructInitializer := "{" StructMemberInitializers? "}"
       Expression parseStructInitializer()
       {
         Identifier*[] idents;
@@ -681,6 +706,7 @@ class Parser
     return init;
   }
 
+  /// Parses the body of a function.
   FuncBodyStatement parseFunctionBody()
   {
     auto begin = token;
@@ -726,15 +752,16 @@ class Parser
     return func;
   }
 
-  LinkageType parseLinkageType()
+  /// $(BNF ExternLinkageType :=
+  ///  extern "(" ("C" | "C" "++" | "D" | "Windows" | "Pascal" | "System") ")")
+  LinkageType parseExternLinkageType()
   {
     LinkageType linkageType;
 
-    if (!consumed(T.LParen))
-      return linkageType;
+    skip(T.Extern), skip(T.LParen); // extern "("
 
     if (consumed(T.RParen))
-    { // extern()
+    { // extern "(" ")"
       error(MID.MissingLinkageType);
       return linkageType;
     }
@@ -767,11 +794,13 @@ class Parser
       break;
     default:
       error2(MID.UnrecognizedLinkageType, token);
+      nT();
     }
     require(T.RParen);
     return linkageType;
   }
 
+  /// Reports an error if a linkage type has already been parsed.
   void checkLinkageType(ref LinkageType prev_lt, LinkageType lt, Token* begin)
   {
     if (prev_lt == LinkageType.None)
@@ -780,6 +809,11 @@ class Parser
       error(begin, MSG.RedundantLinkageType, Token.textSpan(begin, prevToken));
   }
 
+  /// $(BNF
+  ////StorageAttribute := Attributes+ (DeclarationsBlock | Declaration)
+  ////Attributes := extern | ExternLinkageType | override | abstract | auto |
+  ////  synchronized | static | final | const | invariant | enum | scope
+  ////)
   Declaration parseStorageAttribute()
   {
     StorageClass stc, stc_tmp;
@@ -800,8 +834,7 @@ class Parser
           goto Lcommon;
         }
 
-        nT();
-        auto linkageType = parseLinkageType();
+        auto linkageType = parseExternLinkageType();
         checkLinkageType(prev_linkageType, linkageType, begin);
 
         auto saved = this.linkageType; // Save.
@@ -904,6 +937,7 @@ class Parser
     return parse();
   }
 
+  /// $(BNF AlignAttribute := align ("(" Integer ")")?)
   uint parseAlignAttribute()
   {
     skip(T.Align);
@@ -919,6 +953,9 @@ class Parser
     return size;
   }
 
+  /// $(BNF AttributeSpecifier := (AlignAttribute | ProtectionAttribute |
+  ////                             PragmaAttribtue) DeclarationsBlock
+  ////ProtectionAttribute := private | public | package | protected | export)
   Declaration parseAttributeSpecifier()
   {
     Declaration decl;
@@ -933,9 +970,7 @@ class Parser
       this.alignSize = saved; // Restore.
       break;
     case T.Pragma:
-      // Pragma:
-      //     pragma ( Identifier )
-      //     pragma ( Identifier , ExpressionList )
+      // Pragma := pragma "(" Identifier ("," ExpressionList)? ")"
       nT();
       Identifier* ident;
       Expression[] args;
@@ -976,6 +1011,15 @@ class Parser
     return decl;
   }
 
+  /// $(BNF ImportDeclaration := static? import
+  ////                           ImportModule ("," ImportModule)*
+  ////                           (":" ImportBind ("," ImportBind)*)?
+  ////                           ";"
+  ////ImportModule := (AliasName "=")? ModuleName
+  ////ImportBind := (AliasName "=")? BindName
+  ////ModuleName := Identifier ("." Identifier)*
+  ////AliasName := Identifier
+  ////BindName := Identifier)
   Declaration parseImportDeclaration()
   {
     bool isStatic = consumed(T.Static);
@@ -1006,8 +1050,8 @@ class Parser
     } while (consumed(T.Comma))
 
     if (consumed(T.Colon))
-    { // BindAlias "=" BindName ("," BindAlias "=" BindName)*;
-      // BindName ("," BindName)*;
+    { // ImportBind := (BindAlias "=")? BindName
+      // ":" ImportBind ("," ImportBind)*
       do
       {
         Identifier* bindAlias;
@@ -1028,11 +1072,11 @@ class Parser
                                  bindAliases, isStatic);
   }
 
-version(D2)
-{
   /// Returns true if this is an enum manifest or
   /// false if it's a normal enum declaration.
   bool isEnumManifest()
+  {
+  version(D2)
   {
     assert(token.kind == T.Enum);
     auto next = token;
@@ -1047,8 +1091,14 @@ version(D2)
     }
     return true; // Manifest enum.
   }
-}
+  else return false;
+  }
 
+  /// $(BNF EnumDeclaration := enum Name? (":" BasicType)? EnumBody |
+  ////                         enum Name ";"
+  ////EnumBody := "{" EnumMember ("," EnumMember)* ","? "}"
+  ////EnumBody2 := "{" Type? EnumMember ("," Type? EnumMember)* ","? "}" # D2.0
+  ////EnumMember := Identifier ("=" AssignExpression)?)
   Declaration parseEnumDeclaration()
   {
     skip(T.Enum);
@@ -1125,18 +1175,22 @@ version(D2)
     return new TemplateDeclaration(name, tparams, constraint, cd);
   }
 
+  /// $(BNF ClassDeclaration :=
+  ////  class Name TemplateParameterList? (":" BaseClasses) ClassBody |
+  ////  class Name ";"
+  ////ClassBody := DeclarationDefinitionsBody)
   Declaration parseClassDeclaration()
   {
     auto begin = token;
     skip(T.Class);
 
-    Identifier* className;
+    Identifier* name;
     TemplateParameters tparams;
     Expression constraint;
     BaseClassType[] bases;
     CompoundDeclaration decls;
 
-    className = requireIdentifier(MSG.ExpectedClassName);
+    name = requireIdentifier(MSG.ExpectedClassName);
 
     if (token.kind == T.LParen)
     {
@@ -1144,7 +1198,7 @@ version(D2)
       version(D2) constraint = parseOptionalConstraint();
     }
 
-    if (token.kind == T.Colon)
+    if (consumed(T.Colon))
       bases = parseBaseClasses();
 
     if (bases.length == 0 && consumed(T.Semicolon))
@@ -1154,17 +1208,17 @@ version(D2)
     else
       error2(MSG.ExpectedClassBody, token);
 
-    Declaration d = new ClassDeclaration(className, /+tparams, +/bases, decls);
+    Declaration d = new ClassDeclaration(name, /+tparams, +/bases, decls);
     if (tparams)
-      d = putInsideTemplateDeclaration(begin, className, d, tparams,
-                                       constraint);
+      d = putInsideTemplateDeclaration(begin, name, d, tparams, constraint);
     return d;
   }
 
-  BaseClassType[] parseBaseClasses(bool colonLeadsOff = true)
+  /// $(BNF BaseClasses := BaseClass ("," BaseClass)
+  ////BaseClass := Protection? BasicType
+  ////Protection := private | public | protected | package)
+  BaseClassType[] parseBaseClasses()
   {
-    colonLeadsOff && skip(T.Colon);
-
     BaseClassType[] bases;
     do
     {
@@ -1189,6 +1243,10 @@ version(D2)
     return bases;
   }
 
+  /// $(BNF InterfaceDeclaration :=
+  ////  interface Name TemplateParameterList? (":" BaseClasses) InterfaceBody |
+  ////  interface Name ";"
+  ////InterfaceBody := DeclarationDefinitionsBody)
   Declaration parseInterfaceDeclaration()
   {
     auto begin = token;
@@ -1208,7 +1266,7 @@ version(D2)
       version(D2) constraint = parseOptionalConstraint();
     }
 
-    if (token.kind == T.Colon)
+    if (consumed(T.Colon))
       bases = parseBaseClasses();
 
     if (bases.length == 0 && consumed(T.Semicolon))
@@ -1224,6 +1282,14 @@ version(D2)
     return d;
   }
 
+  /// $(BNF StructDeclaration :=
+  ////  struct Name? TemplateParameterList? StructBody |
+  ////  struct Name ";"
+  ////StructBody := DeclarationDefinitionsBody
+  ////UnionDeclaration :=
+  ////  union Name? TemplateParameterList? UnionBody |
+  ////  union Name ";"
+  ////UnionBody := DeclarationDefinitionsBody)
   Declaration parseStructOrUnionDeclaration()
   {
     assert(token.kind == T.Struct || token.kind == T.Union);
@@ -1267,6 +1333,7 @@ version(D2)
     return d;
   }
 
+  /// $(BNF ConstructorDeclaration := this ParameterList FunctionBody)
   Declaration parseConstructorDeclaration()
   {
     skip(T.This);
@@ -1275,6 +1342,7 @@ version(D2)
     return new ConstructorDeclaration(parameters, funcBody);
   }
 
+  /// $(BNF DestructorDeclaration := "~" this "(" ")" FunctionBody)
   Declaration parseDestructorDeclaration()
   {
     skip(T.Tilde);
@@ -1285,6 +1353,7 @@ version(D2)
     return new DestructorDeclaration(funcBody);
   }
 
+  /// $(BNF StaticConstructorDeclaration := static this "(" ")" FunctionBody)
   Declaration parseStaticConstructorDeclaration()
   {
     skip(T.Static);
@@ -1295,6 +1364,8 @@ version(D2)
     return new StaticConstructorDeclaration(funcBody);
   }
 
+  /// $(BNF
+  ////StaticDestructorDeclaration := static "~" this "(" ")" FunctionBody)
   Declaration parseStaticDestructorDeclaration()
   {
     skip(T.Static);
@@ -1306,6 +1377,7 @@ version(D2)
     return new StaticDestructorDeclaration(funcBody);
   }
 
+  /// $(BNF InvariantDeclaration := invariant ("(" ")")? FunctionBody)
   Declaration parseInvariantDeclaration()
   {
     skip(T.Invariant);
@@ -1316,6 +1388,7 @@ version(D2)
     return new InvariantDeclaration(funcBody);
   }
 
+  /// $(BNF UnittestDeclaration := unittest FunctionBody)
   Declaration parseUnittestDeclaration()
   {
     skip(T.Unittest);
@@ -1323,14 +1396,17 @@ version(D2)
     return new UnittestDeclaration(funcBody);
   }
 
+  /// Parses an identifier or an integer. Reports an error otherwise.
+  /// $(BNF IdentOrInt := Identifier | Integer)
   Token* parseIdentOrInt()
   {
-    if (consumed(T.Int32) || consumed(T.Identifier))
+    if (consumed(T.Identifier) || consumed(T.Int32))
       return this.prevToken;
     error2(MSG.ExpectedIdentOrInt, token);
     return null;
   }
 
+  /// $(BNF VersionCondition := unittest #*D2.0*# | IdentOrInt)
   Token* parseVersionCondition()
   {
   version(D2)
@@ -1341,6 +1417,10 @@ version(D2)
     return parseIdentOrInt();
   }
 
+  /// $(BNF DebugDeclaration := debug "=" IdentOrInt ";" |
+  ////                    debug Condition? DeclarationsBlock
+  ////                    (else DeclarationsBlock)?
+  ////Condition := "(" IdentOrInt ")")
   Declaration parseDebugDeclaration()
   {
     skip(T.Debug);
@@ -1356,7 +1436,7 @@ version(D2)
       require(T.Semicolon);
     }
     else
-    { // ( Condition )
+    { // "(" Condition ")"
       if (consumed(T.LParen))
       {
         cond = parseIdentOrInt();
@@ -1373,6 +1453,10 @@ version(D2)
     return new DebugDeclaration(spec, cond, decls, elseDecls);
   }
 
+  /// $(BNF VersionDeclaration := version "=" IdentOrInt ";" |
+  ////                      version Condition DeclarationsBlock
+  ////                      (else DeclarationsBlock)?
+  ////Condition := "(" IdentOrInt ")")
   Declaration parseVersionDeclaration()
   {
     skip(T.Version);
@@ -1402,6 +1486,9 @@ version(D2)
     return new VersionDeclaration(spec, cond, decls, elseDecls);
   }
 
+  /// $(BNF StaticIfDeclaration :=
+  ////  static if "(" AssignExpression ")" DeclarationsBlock
+  ////  (else DeclarationsBlock)?)
   Declaration parseStaticIfDeclaration()
   {
     skip(T.Static);
@@ -1423,6 +1510,9 @@ version(D2)
     return new StaticIfDeclaration(condition, ifDecls, elseDecls);
   }
 
+  /// $(BNF StaticAsserDeclaration :=
+  ////  static assert "(" AssignExpression ("," Message)? ")" ";"
+  ////Message := AssignExpression)
   Declaration parseStaticAssertDeclaration()
   {
     skip(T.Static);
@@ -1438,6 +1528,9 @@ version(D2)
     return new StaticAssertDeclaration(condition, message);
   }
 
+  /// $(BNF TemplateDeclaration :=
+  ////  template Name TemplateParameterList Constraint?
+  ////  DeclarationDefinitionsBody)
   Declaration parseTemplateDeclaration()
   {
     skip(T.Template);
@@ -1448,6 +1541,7 @@ version(D2)
     return new TemplateDeclaration(name, tparams, constraint, decls);
   }
 
+  /// $(BNF NewDeclaration := new ParameterList FunctionBody)
   Declaration parseNewDeclaration()
   {
     skip(T.New);
@@ -1456,6 +1550,7 @@ version(D2)
     return new NewDeclaration(parameters, funcBody);
   }
 
+  /// $(BNF DeleteDeclaration := delete ParameterList FunctionBody)
   Declaration parseDeleteDeclaration()
   {
     skip(T.Delete);
@@ -1464,9 +1559,8 @@ version(D2)
     return new DeleteDeclaration(parameters, funcBody);
   }
 
-  /// $(BNF TypeofType := "typeof" "(" Expression ")" | TypeofReturn
-  ////TypeofReturn := "typeof" "(" "return" ")"
-  ////)
+  /// $(BNF TypeofType := typeof "(" Expression ")" | TypeofReturn
+  ////TypeofReturn := typeof "(" "return" ")")
   Type parseTypeofType()
   {
     auto begin = token;
@@ -1494,10 +1588,9 @@ version(D2)
   /// Parses a MixinDeclaration or MixinStatement.
   /// $(BNF
   ////MixinDecl := (MixinExpression | MixinTemplate) ";"
-  ////MixinExpression := "mixin" "(" AssignExpression ")"
-  ////MixinTemplate := "mixin" TemplateIdentifier
-  ////                 ("!" "(" TemplateArguments ")")? MixinIdentifier?
-  ////)
+  ////MixinExpression := mixin "(" AssignExpression ")"
+  ////MixinTemplate := mixin TemplateIdentifier
+  ////                 ("!" "(" TemplateArguments ")")? MixinIdentifier?)
   Class parseMixin(Class)()
   {
   static assert(is(Class == MixinDeclaration) || is(Class == MixinStatement));
@@ -1533,10 +1626,11 @@ version(D2)
     return new Class(e, mixinIdent);
   }
 
-  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  |                         Statement parsing methods                         |
-   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                        Statement parsing methods                        |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
+  /// $(BNF Statements := "{" Statement* "}")
   CompoundStatement parseStatements()
   {
     auto begin = token;
@@ -1802,22 +1896,15 @@ version(D2)
 
   /// $(BNF
   ////NoScopeStatement := NonEmptyStatement | BlockStatement
-  ////BlockStatement   := "{" StatementList? "}"
-  ////)
+  ////BlockStatement   := Statements)
   Statement parseNoScopeStatement()
   {
-    auto begin = token;
     Statement s;
-    if (consumed(T.LBrace))
-    {
-      auto ss = new CompoundStatement();
-      while (token.kind != T.RBrace && token.kind != T.EOF)
-        ss ~= parseStatement();
-      requireClosing(T.RBrace, begin);
-      s = set(ss, begin);
-    }
+    if (token.kind == T.LBrace)
+      s = parseStatements();
     else if (token.kind == T.Semicolon)
     {
+      auto begin = token;
       error(token, MSG.ExpectedNonEmptyStatement);
       nT();
       s = set(new EmptyStatement(), begin);
@@ -1836,6 +1923,12 @@ version(D2)
       return parseNoScopeStatement();
   }
 
+  /// $(BNF
+  ////AttributeStatement := Attributes+
+  ////  (VariableOrFunctionDeclaration | DeclarationDefinition)
+  ////Attributes := extern | ExternLinkageType | auto | static |
+  ////              final | const | invariant | enum | scope
+  ////)
   Statement parseAttributeStatement()
   {
     StorageClass stc, stc_tmp;
@@ -1854,8 +1947,7 @@ version(D2)
           goto Lcommon;
         }
 
-        nT();
-        auto linkageType = parseLinkageType();
+        auto linkageType = parseExternLinkageType();
         checkLinkageType(prev_linkageType, linkageType, begin);
 
         decl = new LinkageDeclaration(linkageType, parse());
@@ -1927,6 +2019,9 @@ version(D2)
     return new DeclarationStatement(parse());
   }
 
+  /// $(BNF IfStatement := if "(" Condition ")" ScopeStatement
+  ////               (else ScopeStatement)?
+  ////Condition := AutoDeclaration | VariableDeclaration | Expression)
   Statement parseIfStatement()
   {
     skip(T.If);
@@ -1981,6 +2076,7 @@ version(D2)
     return new IfStatement(variable, condition, ifBody, elseBody);
   }
 
+  /// $(BNF WhileStatement := while "(" Expression ")" ScopeStatement)
   Statement parseWhileStatement()
   {
     skip(T.While);
@@ -1991,6 +2087,7 @@ version(D2)
     return new WhileStatement(condition, parseScopeStatement());
   }
 
+  /// $(BNF DoWhileStatement := do ScopeStatement while "(" Expression ")")
   Statement parseDoWhileStatement()
   {
     skip(T.Do);
@@ -2003,6 +2100,9 @@ version(D2)
     return new DoWhileStatement(condition, doBody);
   }
 
+  /// $(BNF ForStatement :=
+  ////  for "(" (NoScopeStatement | ";") Expression? ";" Expression? ")"
+  ////    ScopeStatement)
   Statement parseForStatement()
   {
     skip(T.For);
@@ -2024,6 +2124,15 @@ version(D2)
     return new ForStatement(init, condition, increment, forBody);
   }
 
+  /// $(BNF ForeachStatement :=
+  ////  Foreach "(" ForeachVarList ";" Aggregate ")"
+  ////    ScopeStatement
+  ////Foreach := foreach | foreach_reverse
+  ////ForeachVarList := ForeachVar ("," ForeachVar)*
+  ////ForeachVar := (ref | inout)? (Identifier | Declarator)
+  ////Aggregate := Expression | ForeachRange
+  ////ForeachRange := Expression ".." Expression # D2.0
+  ////)
   Statement parseForeachStatement()
   {
     assert(token.kind == T.Foreach || token.kind == T.Foreach_reverse);
@@ -2052,20 +2161,22 @@ version(D2)
       case T.Identifier:
         auto next = peekNext();
         if (next == T.Comma || next == T.Semicolon || next == T.RParen)
-        {
+        { // (ref|inout)? Identifier
           ident = requireIdentifier(MSG.ExpectedVariableName);
           break;
         }
         // fall through
-      default:
+      default: // (ref|inout)? Declarator
         type = parseDeclarator(ident);
       }
 
       params ~= set(new Parameter(stc, type, ident, null), paramBegin);
     } while (consumed(T.Comma))
     set(params, paramsBegin);
+
     require(T.Semicolon);
     e = parseExpression();
+
   version(D2)
   { //Foreach (ForeachType; LwrExpression .. UprExpression ) ScopeStatement
     if (consumed(T.Slice))
@@ -2084,6 +2195,7 @@ version(D2)
     return new ForeachStatement(tok, params, e, forBody);
   }
 
+  /// $(BNF SwitchStatement := switch "(" Expression ")" ScopeStatement)
   Statement parseSwitchStatement()
   {
     skip(T.Switch);
@@ -2096,6 +2208,7 @@ version(D2)
   }
 
   /// Helper function for parsing the body of a default or case statement.
+  /// $(BNF CaseOrDefaultBody := ScopeStatement)
   Statement parseCaseOrDefaultBody()
   {
     // This function is similar to parseNoScopeStatement()
@@ -2110,6 +2223,7 @@ version(D2)
     return set(new ScopeStatement(s), begin);
   }
 
+  /// $(BNF CaseStatement := case ExpressionList ":" CaseOrDefaultBody)
   Statement parseCaseStatement()
   {
     skip(T.Case);
@@ -2119,6 +2233,7 @@ version(D2)
     return new CaseStatement(values, caseBody);
   }
 
+  /// $(BNF DefaultStatement := default ":" CaseOrDefaultBody)
   Statement parseDefaultStatement()
   {
     skip(T.Default);
@@ -2127,6 +2242,7 @@ version(D2)
     return new DefaultStatement(defaultBody);
   }
 
+  /// $(BNF ContinueStatement := continue Identifier? ";")
   Statement parseContinueStatement()
   {
     skip(T.Continue);
@@ -2135,6 +2251,7 @@ version(D2)
     return new ContinueStatement(ident);
   }
 
+  /// $(BNF BreakStatement := break Identifier? ";")
   Statement parseBreakStatement()
   {
     skip(T.Break);
@@ -2143,6 +2260,7 @@ version(D2)
     return new BreakStatement(ident);
   }
 
+  /// $(BNF ReturnStatement := return Expression? ";")
   Statement parseReturnStatement()
   {
     skip(T.Return);
@@ -2153,6 +2271,8 @@ version(D2)
     return new ReturnStatement(expr);
   }
 
+  /// $(BNF GotoStatement := goto (case Expression? | default | Identifier) ";"
+  ////)
   Statement parseGotoStatement()
   {
     skip(T.Goto);
@@ -2178,6 +2298,7 @@ version(D2)
     return new GotoStatement(ident, caseExpr);
   }
 
+  /// $(BNF WithStatement := with "(" Expression ")" ScopeStatement)
   Statement parseWithStatement()
   {
     skip(T.With);
@@ -2188,6 +2309,8 @@ version(D2)
     return new WithStatement(expr, parseScopeStatement());
   }
 
+  /// $(BNF SynchronizedStatement :=
+  ////  synchronized ("(" Expression ")")? ScopeStatement)
   Statement parseSynchronizedStatement()
   {
     skip(T.Synchronized);
@@ -2201,6 +2324,12 @@ version(D2)
     return new SynchronizedStatement(expr, parseScopeStatement());
   }
 
+  /// $(BNF TryStatement :=
+  ////  try ScopeStatement
+  ////  CatchStatement* LastCatchStatement? FinallyStatement?
+  ////CatchStatement := catch "(" Declarator ")" NoScopeStatement
+  ////LastCatchStatement := catch NoScopeStatement
+  ////FinallyStatement := finally NoScopeStatement)
   Statement parseTryStatement()
   {
     auto begin = token;
@@ -2238,6 +2367,7 @@ version(D2)
     return new TryStatement(tryBody, catchBodies, finBody);
   }
 
+  /// $(BNF ThrowStatement := throw Expression ";")
   Statement parseThrowStatement()
   {
     skip(T.Throw);
@@ -2246,6 +2376,9 @@ version(D2)
     return new ThrowStatement(expr);
   }
 
+  /// $(BNF ScopeGuardStatement := scope "(" ScopeCondition ")" ScopeGuardBody
+  ////ScopeCondition := "exit" | "success" | "failure"
+  ////ScopeGuardBody := ScopeStatement | NoScopeStatement)
   Statement parseScopeGuardStatement()
   {
     skip(T.Scope);
@@ -2268,6 +2401,8 @@ version(D2)
     return new ScopeGuardStatement(condition, scopeBody);
   }
 
+  /// $(BNF VolatileStatement := volatile VolatileBody? ";"
+  ////VolatileBody := ScopeStatement | NoScopeStatement)
   Statement parseVolatileStatement()
   {
     skip(T.Volatile);
@@ -2281,6 +2416,8 @@ version(D2)
     return new VolatileStatement(volatileBody);
   }
 
+  /// $(BNF PragmaStatement :=
+  ////  pragma "(" PragmaName ("," ExpressionList) ")" NoScopeStatement)
   Statement parsePragmaStatement()
   {
     skip(T.Pragma);
@@ -2302,6 +2439,9 @@ version(D2)
     return new PragmaStatement(ident, args, pragmaBody);
   }
 
+  /// $(BNF StaticIfStatement :=
+  ////  static if "(" Expression ")" NoScopeStatement
+  ////  (else NoScopeStatement)?)
   Statement parseStaticIfStatement()
   {
     skip(T.Static);
@@ -2319,6 +2459,9 @@ version(D2)
     return new StaticIfStatement(condition, ifBody, elseBody);
   }
 
+  /// $(BNF StaticAssertStatement :=
+  ////  static assert "(" AssignExpression ("," Message) ")"
+  ////Message := AssignExpression)
   Statement parseStaticAssertStatement()
   {
     skip(T.Static);
@@ -2334,6 +2477,9 @@ version(D2)
     return new StaticAssertStatement(condition, message);
   }
 
+  /// $(BNF DebugStatement := debug Condition? NoScopeStatement
+  ////                  (else NoScopeStatement)?
+  ////Condition := "(" IdentOrInt ")")
   Statement parseDebugStatement()
   {
     skip(T.Debug);
@@ -2356,6 +2502,9 @@ version(D2)
     return new DebugStatement(cond, debugBody, elseBody);
   }
 
+  /// $(BNF VersionStatement := version Condition NoScopeStatement
+  ////                  (else NoScopeStatement)?
+  ////Condition := "(" IdentOrInt ")")
   Statement parseVersionStatement()
   {
     skip(T.Version);
@@ -2375,12 +2524,12 @@ version(D2)
     return new VersionStatement(cond, versionBody, elseBody);
   }
 
-  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  |                         Assembler parsing methods                         |
-   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                        Assembler parsing methods                        |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   /// Parses an AsmBlockStatement.
-  /// $(BNF AsmBlockStatement := "asm" "{" AsmStatement* "}" )
+  /// $(BNF AsmBlockStatement := asm "{" AsmStatement* "}" )
   Statement parseAsmBlockStatement()
   {
     skip(T.Asm);
@@ -2400,7 +2549,7 @@ version(D2)
   ////Opcode := Identifier
   ////Operands := AsmExpression ("," AsmExpression)*
   ////LabeledStatement := Identifier ":" AsmStatement
-  ////AsmAlignStatement := "align" Integer ";"
+  ////AsmAlignStatement := align Integer ";"
   ////EmptyStatement := ";"
   ////)
   Statement parseAsmStatement()
@@ -2868,9 +3017,9 @@ version(D2)
     return e;
   }
 
-  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  |                        Expression parsing methods                         |
-   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                       Expression parsing methods                        |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   /// The root method for parsing an Expression.
   /// $(BNF Expression := AssignExpression ("," AssignExpression)* )
@@ -3238,8 +3387,8 @@ version(D2)
   ////SignExpression        := ("-" | "+") UnaryExpression
   ////NotExpression         := "!" UnaryExpression
   ////ComplementExpresson   := "~" UnaryExpression
-  ////DeleteExpression      := "delete" UnaryExpression
-  ////CastExpression        := "cast" "(" Type ")" UnaryExpression
+  ////DeleteExpression      := delete UnaryExpression
+  ////CastExpression        := cast "(" Type ")" UnaryExpression
   ////TypeDotIdExpression   := "(" Type ")" "." Identifier
   ////ModuleScopeExpression := "." IdentifierExpression
   ////)
@@ -3635,10 +3784,10 @@ version(D2)
   }
 
   /// $(BNF NewExpression := NewAnonClassExpression | NewObjectExpression
-  ////NewAnonClassExpression := "new" NewArguments?
-  ////                          "class" NewArguments?
+  ////NewAnonClassExpression := new NewArguments?
+  ////                          class NewArguments?
   ////                          (SuperClass InterfaceClasses)? ClassBody
-  ////NewObjectExpression := "new" NewArguments? Type (NewArguments|NewArray)?
+  ////NewObjectExpression := new NewArguments? Type (NewArguments | NewArray)?
   ////NewArguments := "(" ArgumentList ")"
   ////NewArray     := "[" AssignExpression "]"
   ///)
@@ -3659,7 +3808,7 @@ version(D2)
 
       BaseClassType[] bases;
       if (token.kind != T.LBrace)
-        bases = parseBaseClasses(false);
+        bases = parseBaseClasses();
 
       auto decls = parseDeclarationDefinitionsBody();
       return set(new NewAnonClassExpression(/*e, */newArguments, bases,
@@ -4209,11 +4358,11 @@ version(D2)
   ////TemplateParameter := TemplateAliasParam | TemplateTypeParam |
   ////                     TemplateTupleParam | TemplateValueParam |
   ////                     TemplateThisParam
-  ////TemplateAliasParam := "alias" Identifier SpecOrDefaultType
+  ////TemplateAliasParam := alias Identifier SpecOrDefaultType
   ////TemplateTypeParam  := Identifier SpecOrDefaultType
   ////TemplateTupleParam := Identifier "..."
   ////TemplateValueParam := Declarator SpecOrDefaultValue
-  ////TemplateThisParam  := "this" Identifier SpecOrDefaultType # D2.0
+  ////TemplateThisParam  := this Identifier SpecOrDefaultType # D2.0
   ////SpecOrDefaultType  := (":" Type)? ("=" Type)?
   ////SpecOrDefaultValue := (":" Value)? ("=" Value)?
   ////Value := CondExpression
