@@ -23,7 +23,10 @@ def get_kandil_path(where="kandil"):
   P.style   = P.CSS/"style.css"
   P.jsfiles = (P.JS/"navigation.js", P.JS/"jquery.js", P.JS/"quicksearch.js")
   P.navi, P.jquery, P.qsearch = P.jsfiles
-  P.images = P.IMG.glob("icon_*.png") + [P.IMG/"loading.gif"]
+  png_names = ("alias class enummem enum function interface module package"
+               " struct template typedef union variable").split(" ")
+  png_names = ["icon_%s.png" % name for name in png_names]
+  P.images = P.IMG//png_names + [P.IMG/"loading.gif"]
   return P
 
 def get_module_fqn(prefix_path, filepath):
