@@ -440,7 +440,8 @@ class FunctionDeclaration : Declaration
   mixin(copyMethod);
 }
 
-/// VariablesDeclaration := Type? Identifier ("=" Init)? ("," Identifier ("=" Init)?)* ";"
+/// $(BNF VariablesDeclaration :=
+///  Type? Identifier ("=" Init)? ("," Identifier ("=" Init)?)* ";")
 class VariablesDeclaration : Declaration
 {
   TypeNode typeNode;
@@ -467,6 +468,15 @@ class VariablesDeclaration : Declaration
   void setLinkageType(LinkageType linkageType)
   {
     this.linkageType = linkageType;
+  }
+
+  /// Returns the first non-null init expression, or null if there is none.
+  Expression firstInit()
+  {
+    foreach (init; inits)
+      if (init !is null)
+        return init;
+    return null;
   }
 
   Variable[] variables;

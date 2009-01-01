@@ -279,7 +279,11 @@ class Parser
       return parseStorageAttribute();
     case T.Alias:
       nT();
-      decl = new AliasDeclaration(parseVariableOrFunction());
+      auto d = new AliasDeclaration(parseVariableOrFunction());
+      if (auto var = d.decl.Is!(VariablesDeclaration))
+        if (auto init = var.firstInit())
+          error(init.begin.prevNWS(), MSG.AliasHasInitializer);
+      decl = d;
       break;
     case T.Typedef:
       nT();
