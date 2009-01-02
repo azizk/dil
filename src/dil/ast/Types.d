@@ -71,11 +71,11 @@ class ModuleScopeType : TypeNode
   mixin(copyMethod);
 }
 
-/// $(BNF TypeofType := "typeof" "(" (Expression | "return") ")")
+/// $(BNF TypeofType := typeof "(" (Expression | return) ")")
 class TypeofType : TypeNode
 {
   Expression expr;
-  /// $(BNF "typeof" "(" Expression ")")
+  /// $(BNF typeof "(" Expression ")")
   this(Expression e)
   {
     this();
@@ -83,7 +83,7 @@ class TypeofType : TypeNode
     this.expr = e;
   }
 
-  /// For D2.0: $(BNF "typeof" "(" "return" ")")
+  /// For D2.0: $(BNF typeof "(" return ")")
   this()
   {
     mixin(set_kind);
@@ -113,7 +113,7 @@ class TemplateInstanceType : TypeNode
   mixin(copyMethod);
 }
 
-/// Type *
+/// $(BNF PointerType:= Type "*")
 class PointerType : TypeNode
 {
   this(TypeNode next)
@@ -184,7 +184,7 @@ class ArrayType : TypeNode
   mixin(copyMethod);
 }
 
-/// ReturnType "function" "(" Parameters? ")"
+/// $(BNF FunctionType := ReturnType function ParameterList?)
 class FunctionType : TypeNode
 {
   alias next returnType;
@@ -199,7 +199,7 @@ class FunctionType : TypeNode
   mixin(copyMethod);
 }
 
-/// ReturnType "delegate" "(" Parameters? ")"
+/// $(BNF DelegateType := ReturnType delegate ParameterList?)
 class DelegateType : TypeNode
 {
   alias next returnType;
@@ -214,7 +214,8 @@ class DelegateType : TypeNode
   mixin(copyMethod);
 }
 
-/// Type "(" BasicType2 Identifier ")" "(" Parameters? ")"
+/// $(BNF
+///CFuncPointerType := Type "(" BasicType2 Identifier ")" ParameterList?)
 class CFuncPointerType : TypeNode
 {
   Parameters params;
@@ -227,7 +228,7 @@ class CFuncPointerType : TypeNode
   mixin(copyMethod);
 }
 
-/// "class" Identifier : BaseClasses
+/// $(BNF BaseClassType := Protection? BasicType)
 class BaseClassType : TypeNode
 {
   Protection prot;
@@ -242,7 +243,7 @@ class BaseClassType : TypeNode
 
 // version(D2)
 // {
-/// "const" "(" Type ")"
+/// $(BNF ConstType := const "(" Type ")")
 class ConstType : TypeNode
 {
   this(TypeNode next)
@@ -254,7 +255,7 @@ class ConstType : TypeNode
   mixin(copyMethod);
 }
 
-/// "invariant" "(" Type ")"
+/// $(BNF InvariantType := invariant "(" Type ")")
 class InvariantType : TypeNode
 {
   this(TypeNode next)

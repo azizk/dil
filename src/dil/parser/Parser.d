@@ -202,7 +202,7 @@ class Parser
   }
 
   /// Parses DeclarationDefinitions until the end of file is hit.
-  /// $(BNF DeclDefs := DeclDef+ )
+  /// $(BNF DeclDefs := DeclDef* )
   Declaration[] parseDeclarationDefinitions()
   {
     Declaration[] decls;
@@ -604,16 +604,14 @@ class Parser
   }
 
   /// Parses a variable initializer.
-  /// $(BNF
-  ////Initializer := VoidInitializer | NonVoidInitializer
+  /// $(BNF Initializer := VoidInitializer | NonVoidInitializer
   ////VoidInitializer := void
-  ////NonVoidInitializer := Expression | ArrayInitializer | StructInitializer
+  ////NonVoidInitializer := ArrayInitializer | StructInitializer | Expression
   ////ArrayInitializer :=
   ////  "[" ((NonVoidInitializer ":")? NonVoidInitializer)* "]"
   ////StructInitializer :=
   ////  "{" ((MemberName ":")? NonVoidInitializer)* "}"
-  ////MemberName := Identifier
-  ////)
+  ////MemberName := Identifier)
   Expression parseInitializer()
   {
     if (token.kind == T.Void)
@@ -631,7 +629,7 @@ class Parser
 
   /// Parses a NonVoidInitializer.
   /// $(BNF NonVoidInitializer :=
-  ////  Expression | ArrayInitializer | StructInitializer)
+  ////  ArrayInitializer | StructInitializer | Expression)
   Expression parseNonVoidInitializer()
   {
     auto begin = token;
@@ -957,8 +955,11 @@ class Parser
     return size;
   }
 
-  /// $(BNF AttributeSpecifier := (AlignAttribute | ProtectionAttribute |
-  ////                             PragmaAttribtue) DeclarationsBlock
+  /// $(BNF
+  ////AttributeSpecifier := Attributes DeclarationsBlock
+  ////Attributes := AlignAttribute | PragmaAttribute | ProtectionAttribute
+  ////AlignAttribute := align ("(" Integer ")")?
+  ////PragmaAttribute := pragma "(" Identifier ("," ExpressionList)? ")"
   ////ProtectionAttribute := private | public | package | protected | export)
   Declaration parseAttributeSpecifier()
   {
@@ -1016,9 +1017,9 @@ class Parser
   }
 
   /// $(BNF ImportDeclaration := static? import
-  ////                           ImportModule ("," ImportModule)*
-  ////                           (":" ImportBind ("," ImportBind)*)?
-  ////                           ";"
+  ////                     ImportModule ("," ImportModule)*
+  ////                     (":" ImportBind ("," ImportBind)*)?
+  ////                     ";"
   ////ImportModule := (AliasName "=")? ModuleName
   ////ImportBind := (AliasName "=")? BindName
   ////ModuleName := Identifier ("." Identifier)*
@@ -1098,11 +1099,13 @@ class Parser
   else return false;
   }
 
-  /// $(BNF EnumDeclaration := enum Name? (":" BasicType)? EnumBody |
-  ////                         enum Name ";"
-  ////EnumBody := "{" EnumMember ("," EnumMember)* ","? "}"
-  ////EnumBody2 := "{" Type? EnumMember ("," Type? EnumMember)* ","? "}" # D2.0
-  ////EnumMember := Identifier ("=" AssignExpression)?)
+  /// $(BNF
+  ////EnumDeclaration := enum Name? (":" BasicType)? EnumBody |
+  ////                   enum Name ";"
+  ////EnumBody := "{" EnumMembers "}"
+  ////EnumMembers := EnumMember ("," EnumMember)* ","?
+  ////EnumMembers2 := Type? EnumMember ("," Type? EnumMember)* ","? # D2.0
+  ////EnumMember := Name ("=" AssignExpression)?)
   Declaration parseEnumDeclaration()
   {
     skip(T.Enum);
@@ -1564,7 +1567,7 @@ class Parser
   }
 
   /// $(BNF TypeofType := typeof "(" Expression ")" | TypeofReturn
-  ////TypeofReturn := typeof "(" "return" ")")
+  ////TypeofReturn := typeof "(" return ")")
   Type parseTypeofType()
   {
     auto begin = token;
@@ -1906,15 +1909,13 @@ class Parser
     Statement s;
     if (token.kind == T.LBrace)
       s = parseStatements();
-    else if (token.kind == T.Semicolon)
-    {
-      auto begin = token;
-      error(token, MSG.ExpectedNonEmptyStatement);
-      nT();
-      s = set(new EmptyStatement(), begin);
-    }
-    else
+    else if(!consumed(T.Semicolon))
       s = parseStatement();
+    else
+    { // ";"
+      error(prevToken, MSG.ExpectedNonEmptyStatement);
+      s = set(new EmptyStatement(), prevToken);
+    }
     return s;
   }
 
@@ -1927,12 +1928,10 @@ class Parser
       return parseNoScopeStatement();
   }
 
-  /// $(BNF
-  ////AttributeStatement := Attributes+
+  /// $(BNF AttributeStatement := Attributes+
   ////  (VariableOrFunctionDeclaration | DeclarationDefinition)
   ////Attributes := extern | ExternLinkageType | auto | static |
-  ////              final | const | invariant | enum | scope
-  ////)
+  ////              final | const | invariant | enum | scope)
   Statement parseAttributeStatement()
   {
     StorageClass stc, stc_tmp;
@@ -2133,10 +2132,9 @@ class Parser
   ////    ScopeStatement
   ////Foreach := foreach | foreach_reverse
   ////ForeachVarList := ForeachVar ("," ForeachVar)*
-  ////ForeachVar := (ref | inout)? (Identifier | Declarator)
+  ////ForeachVar := ref? (Identifier | Declarator)
   ////Aggregate := Expression | ForeachRange
-  ////ForeachRange := Expression ".." Expression # D2.0
-  ////)
+  ////ForeachRange := Expression ".." Expression # D2.0)
   Statement parseForeachStatement()
   {
     assert(token.kind == T.Foreach || token.kind == T.Foreach_reverse);
@@ -2275,8 +2273,8 @@ class Parser
     return new ReturnStatement(expr);
   }
 
-  /// $(BNF GotoStatement := goto (case Expression? | default | Identifier) ";"
-  ////)
+  /// $(BNF
+  ////GotoStatement := goto (case Expression? | default | Identifier) ";")
   Statement parseGotoStatement()
   {
     skip(T.Goto);
@@ -2330,8 +2328,9 @@ class Parser
 
   /// $(BNF TryStatement :=
   ////  try ScopeStatement
-  ////  CatchStatement* LastCatchStatement? FinallyStatement?
-  ////CatchStatement := catch "(" Declarator ")" NoScopeStatement
+  ////  (CatchStatement* LastCatchStatement? FinallyStatement? |
+  ////   CatchStatement)
+  ////CatchStatement := catch "(" BasicType Identifier ")" NoScopeStatement
   ////LastCatchStatement := catch NoScopeStatement
   ////FinallyStatement := finally NoScopeStatement)
   Statement parseTryStatement()
@@ -2554,8 +2553,7 @@ class Parser
   ////Operands := AsmExpression ("," AsmExpression)*
   ////LabeledStatement := Identifier ":" AsmStatement
   ////AsmAlignStatement := align Integer ";"
-  ////EmptyStatement := ";"
-  ////)
+  ////EmptyStatement := ";")
   Statement parseAsmStatement()
   {
     auto begin = token;
@@ -2916,7 +2914,17 @@ class Parser
     return e;
   }
 
-  /// $(BNF AsmPrimaryExpression := ... )
+  /// $(BNF AsmPrimaryExpression :=
+  ////  IntExpression | RealExpression | DollarExpression | DotExpression |
+  ////  AsmLocalSizeExpression | AsmRegisterExpression | AsmBracketExpression |
+  ////  IdentifierExpression
+  ////IntExpression := Integer
+  ////RealExpression := Float | Imaginary
+  ////DollarExpression := "$"
+  ////AsmBracketExpression :=  "[" AsmExpression "]"
+  ////AsmLocalSizeExpression := "__LOCAL_SIZE"
+  ////AsmRegisterExpression := ...
+  ////DotExpression := IdentifierExpression ("." IdentifierExpression)+)
   Expression parseAsmPrimaryExpression()
   {
     auto begin = token;
@@ -3188,8 +3196,7 @@ class Parser
   /// $(BNF CmpExpression := ShiftExpression (Op ShiftExpression)?
   ////Op := "is" | "!" "is" | "in" | "==" | "!=" | "&lt;" | "&lt;=" | "&gt;" |
   ////      "&gt;=" | "!&lt;&gt;=" | "!&lt;&gt;" | "!&lt;=" | "!&lt;" |
-  ////      "!&gt;=" | "!&gt;" | "&lt;&gt;=" | "&lt;&gt;"
-  ////)
+  ////      "!&gt;=" | "!&gt;" | "&lt;&gt;=" | "&lt;&gt;")
   Expression parseCmpExpression()
   {
     alias parseShiftExpression parseNext;
@@ -3230,8 +3237,7 @@ class Parser
   }
 
   /// $(BNF ShiftExpression := AddExpression (Op AddExpression)*
-  ////Op := "&lt;&lt;" | "&gt;&gt;" | "&gt;&gt;&gt;"
-  ////)
+  ////Op := "&lt;&lt;" | "&gt;&gt;" | "&gt;&gt;&gt;")
   Expression parseShiftExpression()
   {
     alias parseAddExpression parseNext;
@@ -3257,8 +3263,7 @@ class Parser
   }
 
   /// $(BNF AddExpression := MulExpression (Op MulExpression)*
-  ////Op := "+" | "-" | "~"
-  ////)
+  ////Op := "+" | "-" | "~")
   Expression parseAddExpression()
   {
     alias parseMulExpression parseNext;
@@ -3284,8 +3289,7 @@ class Parser
   }
 
   /// $(BNF MulExpression := PostExpression (Op PostExpression)*
-  ////Op := "*" | "/" | "%"
-  ////)
+  ////Op := "*" | "/" | "%")
   Expression parseMulExpression()
   {
     alias parsePostExpression parseNext;
@@ -3314,8 +3318,7 @@ class Parser
   ////IncOrDecExpression := "++" | "--"
   ////CallExpression := "(" Arguments? ")"
   ////SliceExpression := "[" (AssignExpression ".." AssignExpression )? "]"
-  ////IndexExpression := "[" ExpressionList "]"
-  ////)
+  ////IndexExpression := "[" ExpressionList "]")
   Expression parsePostExpression()
   {
     auto begin = token;
@@ -3394,8 +3397,7 @@ class Parser
   ////DeleteExpression      := delete UnaryExpression
   ////CastExpression        := cast "(" Type ")" UnaryExpression
   ////TypeDotIdExpression   := "(" Type ")" "." Identifier
-  ////ModuleScopeExpression := "." IdentifierExpression
-  ////)
+  ////ModuleScopeExpression := "." IdentifierExpression)
   Expression parseUnaryExpression()
   {
     auto begin = token;
@@ -3498,10 +3500,8 @@ class Parser
     return e;
   }
 
-  /// $(BNF
-  ////IdentifierExpression := Identifier | TemplateInstance
-  ////TemplateInstance :=  Identifier "!" "(" TemplateArguments ")"
-  ////)
+  /// $(BNF IdentifierExpression := Identifier | TemplateInstance
+  ////TemplateInstance :=  Identifier "!" "(" TemplateArguments ")")
   Expression parseIdentifierExpression()
   {
     auto begin = token;
@@ -3793,8 +3793,7 @@ class Parser
   ////                          (SuperClass InterfaceClasses)? ClassBody
   ////NewObjectExpression := new NewArguments? Type (NewArguments | NewArray)?
   ////NewArguments := "(" ArgumentList ")"
-  ////NewArray     := "[" AssignExpression "]"
-  ///)
+  ////NewArray     := "[" AssignExpression "]")
   Expression parseNewExpression(/*Expression e*/)
   {
     auto begin = token;
@@ -3837,7 +3836,7 @@ class Parser
   }
 
   /// $(BNF IdentifierType := Identifier |
-  ////                        Identifier "!" "(" TemplateArguments ")" )
+  ////                  Identifier "!" "(" TemplateArguments ")" )
   Type parseIdentifierType()
   {
     auto begin = token;
@@ -3851,7 +3850,7 @@ class Parser
   }
 
   /// $(BNF QualifiedType := (ModuleScopeType | TypeofType | IdentifierType)
-  ////                       ("." IdentifierType)* )
+  ////                 ("." IdentifierType)* )
   Type parseQualifiedType()
   {
     auto begin = token;
@@ -3869,7 +3868,7 @@ class Parser
   }
 
   /// $(BNF BasicType := IntegralType | QualifiedType |
-  ////                   ConstType | InvariantType # D2.0 )
+  ////             ConstType | InvariantType # D2.0 )
   Type parseBasicType()
   {
     auto begin = token;
@@ -3890,21 +3889,21 @@ class Parser
     {
     case T.Const:
       nT();
-      if (consumed(T.LParen)) { // "const" "(" Type ")"
+      if (consumed(T.LParen)) { // const "(" Type ")"
         t = parseType();
         require(T.RParen);
       }
-      else // In Phobos2 we see e.g.: "const" Type
+      else // In Phobos2 we see e.g.: const Type
         t = parseType();
       t = new ConstType(t);
       break;
     case T.Invariant:
       nT();
-      if (consumed(T.LParen)) { // "invariant" "(" Type ")"
+      if (consumed(T.LParen)) { // invariant "(" Type ")"
         t = parseType();
         require(T.RParen);
       }
-      else // "invariant" Type
+      else // invariant Type
         t = parseType();
       t = new InvariantType(t);
       break;
@@ -3917,6 +3916,11 @@ class Parser
     return set(t, begin);
   }
 
+  /// $(BNF BasicType2 := Type
+  ////              (PointerType | ArrayType | FunctionType | DelegateType)*
+  ////PointerType := "*"
+  ////FunctionType := function ParameterList
+  ////DelegateType := delegate ParameterList)
   Type parseBasicType2(Type t)
   {
     while (1)
@@ -4068,8 +4072,8 @@ class Parser
     return t;
   }
 
-  /// $(BNF CFunctionPointerType :=
-  ////  "(" BasicType2 (CFunctionPointerType | (Identifier DeclaratorSuffix)?)
+  /// $(BNF CFunctionPointerType := "("
+  ////    BasicType2 (CFunctionPointerType | (Identifier DeclaratorSuffix)?)
   ////  ")" ParameterList?)
   Type parseCFunctionPointerType(Type type, ref Identifier* ident,
                                  bool optionalParamList)
