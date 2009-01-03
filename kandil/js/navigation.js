@@ -77,7 +77,8 @@ function initializeSymbolsList(symbols)
   for (var i = 0; i < symbols.length; i++)
   {
     var symbol = symbols[i];
-    [parentFQN, name] = rpartition(symbol.name, '.')
+    var parts = rpartition(symbol.name, '.')
+    var parentFQN = parts[0], name = parts[1];
     var item = new SymbolItem(symbol.textContent, $(symbol).attr("kind"),
                               symbol.name);
     itemlist[parentFQN].sub.push(item);
@@ -127,7 +128,8 @@ function createSymbolsUL(symbols)
   for (i in symbols)
   {
     var sym = symbols[i];
-    [fqn, count] = rpartition(sym.fqn, ':');
+    var parts = rpartition(sym.fqn, ':')
+    var fqn = parts[0], count = parts[1];
     count = fqn ? "<sub>"+count+"</sub>" : ""; // An index.
     list += "<li>"+getPNGIcon(sym.kind)+
             "<a href='#"+sym.fqn+"'>"+sym.name+count+"</a>";
