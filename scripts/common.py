@@ -47,6 +47,45 @@ def read_modules_list(path):
   rx = compile(r"^(?P<path>[^,]+), (?P<fqn>\w+(?:\.\w+)*)$")
   return [match.groupdict() for match in map(rx.match, open(path)) if match]
 
+class Module:
+  def __init__(self, fqn):
+    self.pckg_fqn, sep, self.name = fqn.rpartition('.')
+    self.fqn = fqn
+  def __cmp__(self, other):
+    return cmp(self.name, other.name)
+
+class Package(Module): # Inherit for convenience.
+  def __init__(self, fqn):
+    Module.__init__(self, fqn)
+    self.packages, self.modules = ([], [])
+
+class PackageTree:
+  def __init__(self):
+    self.root = Package('')
+    self.packages = {'': self.root}
+
+  def addModule(self, module):
+    self.getPackage(module.pckg_fqn).modules += [module]
+
+  def getPackage(self, fqn):
+    """ Returns the package object for the fqn string. """
+    package = self.packages.get(fqn);
+    if not package:
+      parent_fqn, sep, name = fqn.rpartition('.')
+      parentPackage = self.getPackage(parent_fqn) # Get the parent recursively.
+      package = Package(fqn) # Create a new package.
+      parentPackage.packages += [package] # Add the new package to its parent.
+      self.packages[fqn] = package # Add the new package to the list.
+    return package;
+
+  def sortTree(self): self.sort(self.root)
+
+  def sort(self, pckg):
+    pckg.packages.sort();
+    pckg.modules.sort();
+    for subpckg in pckg.packages:
+      self.sort(subpckg);
+
 def generate_modules_js(modlist, dest_path, max_line_len=80):
   """ Generates a JavaScript file with a list of fully qual. module names. """
   if not len(modlist):
@@ -64,44 +103,20 @@ def generate_modules_js(modlist, dest_path, max_line_len=80):
     f.write(line)
   f.write('\n];\n\n') # Closing ].
 
-  class Module:
-    def __init__(self, name, fqn):
-      self.name, self.fqn = (name, fqn)
-    def __cmp__(self, other):
-      return cmp(self.name, other.name)
-
-  class Package(Module):
-    def __init__(self, name, fqn):
-      Module.__init__(self, name, fqn)
-      self.packages, self.modules = ([], [])
-
-  root_package = Package('root', '')
-  package_dict = {'': root_package}
-  def getPackage(fqn):
-    """ Returns the package object for the fqn string. """
-    package = package_dict.get(fqn);
-    if not package:
-      parentFQN, sep, name = fqn.rpartition('.')
-      parentPackage = getPackage(parentFQN) # Get the parent recursively.
-      package = Package(name, fqn) # Create a new package.
-      parentPackage.packages += [package] # Add the new package to its parent.
-      package_dict[fqn] = package # Add the new package to the list.
-    return package;
+  package_tree = PackageTree()
 
   # Construct the package tree with modules as leaves.
   for fqn in modlist:
-    packageFQN, sep, name = fqn.rpartition('.')
-    module = Module(name, fqn)
-    getPackage(packageFQN).modules += [module]
+    package_tree.addModule(Module(fqn))
+
+  package_tree.sortTree()
 
   def writePackage(package, indent='  '):
     """ Writes the sub-packages and sub-modules of a package to the disk. """
-    package.packages.sort()
     for p in package.packages:
       f.write("%sP('%s','%s',[\n" % (indent, p.name, p.fqn))
       writePackage(p, indent+'  ')
       f.write(indent+"]),\n")
-    package.modules.sort()
     for m in package.modules:
       f.write("%sM('%s','%s'),\n" % (indent, m.name, m.fqn))
 
@@ -115,7 +130,7 @@ def generate_modules_js(modlist, dest_path, max_line_len=80):
     '}\nvar P = M;\n\n')
   # Write the packages and modules as JavaScript objects.
   f.write('var g_moduleObjects = [\n')
-  writePackage(root_package)
+  writePackage(package_tree.root)
   f.write('];')
 
   f.close()
