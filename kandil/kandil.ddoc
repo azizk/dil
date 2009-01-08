@@ -7,7 +7,7 @@ DDOC = <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 </head>
 <body>
 <div id="content">
-  <h1><a href="$(SRCFILE)" class="symbol">$(TITLE)</a></h1>
+  <h1><a href="$(SRCFILE)" name="$(DIL_MODFQN)" class="symbol">$(TITLE)</a></h1>
   $(BODY)
 </div>
 <div id="footer">
@@ -101,3 +101,4 @@ DIL_PARAMS          = $(SPAN params, ($0))
 DDOC_PARAM          = $(EM $0)
 DIL_TEMPLATE_PARAMS = $(SPAN tparams, ($0))
 DIL_BASE_CLASSES    = : $0
+DIL_SC =

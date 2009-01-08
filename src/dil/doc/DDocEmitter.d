@@ -478,7 +478,7 @@ abstract class DDocEmitter : DefaultVisitor
     {
       write("\n$(DDOC_DECL ");
       dg();
-      writeSemicolon && write(";");
+      writeSemicolon && write("$(DIL_SC)");
       writeAttributes(d);
       write(" $(DIL_SYMEND ", currentSymbolParams, "))");
     }
