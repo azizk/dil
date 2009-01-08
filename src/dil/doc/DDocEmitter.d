@@ -245,7 +245,9 @@ abstract class DDocEmitter : DefaultVisitor
           foreach (i, paramName; ps.paramNames)
             write("\n$(DDOC_PARAM_ROW ",
                     "$(DDOC_PARAM_ID $(DDOC_PARAM ", paramName, "))",
-                    "$(DDOC_PARAM_DESC ", ps.paramDescs[i], ")",
+                    "$(DDOC_PARAM_DESC ",
+                      scanCommentText(ps.paramDescs[i]),
+                    ")",
                   ")");
           write(")");
           continue;
