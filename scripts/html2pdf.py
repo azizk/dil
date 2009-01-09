@@ -29,7 +29,8 @@ def generate_pdf(module_files, dest, tmp, params):
     "generator": "dil D compiler",
     "subject": "Programming API",
     "keywords": "D programming language",
-    "x_html": "html",
+    "x_html": "HTML",
+    "css_file": "pdf.css",
     "symlink": "",
     "nested_toc": False}
   params_default.update(params)
@@ -94,7 +95,7 @@ def generate_pdf(module_files, dest, tmp, params):
     params = dict(params, doctype=
       '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"'
       '  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">',
-      xmlns='xmlns="http://www.w3.org/1999/xhtml"')
+      xmlns=' xmlns="http://www.w3.org/1999/xhtml"')
   html_doc.write(u"""%(doctype)s<html%(xmlns)s>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -102,7 +103,7 @@ def generate_pdf(module_files, dest, tmp, params):
   <meta name="subject" content="%(subject)s"/>
   <meta name="keywords" content="%(keywords)s"/>
   <meta name="generator" content="%(generator)s"/>
-  <link href="pdf_prince.css" type="text/css" rel="stylesheet" media="all"/>
+  <link href="%(css_file)s" type="text/css" rel="stylesheet" media="all"/>
   <title>%(pdf_title)s</title>
 </head>
 <body>
@@ -167,8 +168,18 @@ def generate_pdf(module_files, dest, tmp, params):
   html_doc.close()
 
   # Finally write the PDF document.
-  print "Writing PDF document."
+  print "Writing PDF document to '%s'." % dest
   call_prince(html_src, dest)
 
 def call_prince(src, dest):
   call(["prince", src, "-o", dest, "-v"])
+
+class PDFGenerator:
+  def fetch_files(self, SRC, TMP):
+    (SRC.DATA/"pdf.css").copy(TMP)
+    (TMP/"img").mkdir()
+    for img in ("icon_module.png", "icon_package.png"):
+      (SRC.KANDIL.IMG/img).copy(TMP/"img")
+
+  def run(self, *args):
+    generate_pdf(*args)
