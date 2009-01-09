@@ -4,6 +4,7 @@
 import os, re
 from path import Path
 from common import *
+from html2pdf import PDFGenerator
 
 def modify_std_ddoc(std_ddoc, phobos_ddoc, version):
   """ Modify std.ddoc and write it out to phobos.ddoc. """
@@ -44,15 +45,15 @@ def copy_files(DATA, PHOBOS_SRC, DEST):
   # Syntax highlighted files need html.css.
   (DATA/"html.css").copy(DEST.HTMLSRC)
 
-def copy_files2(DATA, KANDIL, DEST):
+def copy_files2(DIL, DEST):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
-      (DATA/"html.css", DEST.HTMLSRC),
-      (KANDIL.style,    DEST.CSS)):
+      (DIL.DATA/"html.css", DEST.HTMLSRC),
+      (DIL.KANDIL.style,    DEST.CSS)):
     FILE.copy(DIR)
-  for FILE in KANDIL.jsfiles:
+  for FILE in DIL.KANDIL.jsfiles:
     FILE.copy(DEST.JS)
-  for img in KANDIL.images:
+  for img in DIL.KANDIL.images:
     img.copy(DEST.IMG)
 
 def modify_phobos_html(phobos_html, version):
@@ -92,9 +93,28 @@ DIL_SYMBOL = <a href="$(SRCFILE)#L$4" class="sym$3" name="$2" title="At line $4.
 def write_overrides_ddoc2(path):
   """ For kandil. """
   open(path, "w").write("""
-COPYRIGHT = Copyright © 1999-2008 by Digital Mars ®, All Rights Reserved.
+COPYRIGHT = Copyright © 1999-2009 by Digital Mars ®, All Rights Reserved.
 """
   )
+
+def write_PDF(DIL, SRC, VERSION, TMP):
+  pdf_gen = PDFGenerator()
+  pdf_gen.fetch_files(DIL, TMP)
+
+  for gif in SRC//("erf.gif", "erfc.gif"): gif.copy(TMP)
+  html_files = SRC.glob("*.html")
+  ignore_list = ("phobos.html", "std.c.windows.windows.html")
+  html_files = [f for f in html_files
+                    if not any(map(f.endswith, iter(ignore_list)))]
+  symbol_link = "http://dil.googlecode.com/svn/doc/Phobos_%s" % VERSION
+  params = {"pdf_title": "Phobos %s API" % VERSION,
+    "cover_title": "Phobos %s<br/><b>API</b>" % VERSION,
+    "author": "Walter Bright",
+    "subject": "Programming API",
+    "keywords": "Phobos D Standard Library",
+    "nested_toc": True,
+    "symlink": symbol_link}
+  pdf_gen.run(html_files, SRC/("Phobos.%s.API.pdf"%VERSION), TMP, params)
 
 def main():
   from optparse import OptionParser
@@ -105,6 +125,8 @@ def main():
     #type="int", help="set the repository REVISION to use in symbol links")
   parser.add_option("--zip", dest="zip", default=False, action="store_true",
     help="create a 7z archive")
+  parser.add_option("--pdf", dest="pdf", default=False, action="store_true",
+    help="create a PDF document")
   parser.add_option("--kandil", dest="use_kandil", action="store_true",
     default=False, help="use kandil as the documentation front-end")
 
@@ -123,8 +145,10 @@ def main():
   V_MINOR = matched[2]
   D_VERSION  = V_MAJOR + ".0" # E.g.: 1.0 or 2.0
 
+  # Path to dil's root folder.
+  DIL       = Path()
   # Path to the executable of dil.
-  DIL_EXE   = Path("bin")/"dil"
+  DIL.EXE   = DIL/"bin"/"dil"
   # The source code folder of Phobos.
   PHOBOS_SRC = Path(args[1])
   # Destination of doc files.
@@ -135,8 +159,10 @@ def main():
   DEST.JS, DEST.CSS, DEST.IMG = DEST//("js", "css", "img")
   # Dil's data/ directory.
   DATA       = Path("data")
+  DIL.DATA = DATA
   # Dil's fancy documentation format.
   KANDIL     = get_kandil_path()
+  DIL.KANDIL = KANDIL
   # Temporary directory, deleted in the end.
   TMP        = DEST/"tmp"
   # The list of module files (with info) that have been processed.
@@ -151,7 +177,7 @@ def main():
     print "The path '%s' doesn't exist." % PHOBOS_SRC
     return
 
-  build_dil_if_inexistant(DIL_EXE)
+  build_dil_if_inexistant(DIL.EXE)
 
   # Create the destination folders.
   DEST.makedirs()
@@ -174,20 +200,24 @@ def main():
                  TMP//("missing.ddoc", "overrides.ddoc") + \
                 [PHOBOS_SRC/"phobos.d"] + FILES
     versions = ["DDoc"]
-    generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES,
+    generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
                   versions, options='-v -i -hl --kandil'.split(' '))
     modify_phobos_html(DEST/"phobos.html", D_VERSION)
-    copy_files2(DATA, KANDIL, DEST)
+    copy_files2(DIL, DEST)
+    if options.pdf:
+      write_PDF(DIL, DEST, VERSION, TMP)
   else:
     write_overrides_ddoc(TMP/"overrides.ddoc")
     create_index_file(TMP/"index.d", PHOBOS_SRC, FILES)
     DOC_FILES = FILES + [PHOBOS_SRC/"phobos.d"] + \
       TMP//("index.d", "phobos.ddoc", "missing.ddoc", "overrides.ddoc")
     versions = ["DDoc"]
-    generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES,
+    generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
                   versions, options=['-v', '-i', '-hl'])
     modify_phobos_html(DEST/"phobos.html", D_VERSION)
     copy_files(DATA, PHOBOS_SRC, DEST)
+    if options.pdf:
+      print "Warning: can only create a PDF document from kandil HTML files."
 
   TMP.rmtree()
 
