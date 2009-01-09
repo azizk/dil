@@ -6,6 +6,7 @@ from path import Path
 from common import *
 from sys import platform
 from build import DMDCommand
+from html2pdf import PDFGenerator
 
 def copy_files(DIL):
   """ Copies required files to the destination folder. """
@@ -40,6 +41,25 @@ def update_version(path, major, minor, suffix):
   code = re.sub(r'(VERSION_SUFFIX\s*=\s*)"";', r'\g<1>"%s";' % suffix, code)
   open(path, "w").write(code)
 
+def write_PDF(DIL, SRC, VERSION, TMP):
+  # TODO: some links should be rewritten:
+  # E.g.: .) "dil.lexer.Funcs.html#CProperty.Whitespace" ->
+  #          "m-dil.lexer.Funcs:CProperty.Whitespace"
+  #       .) "dil.lexer.Identifier" -> "m-dil.lexer.Identifier"
+  pdf_gen = PDFGenerator()
+  pdf_gen.fetch_files(DIL, TMP)
+  html_files = SRC.glob("*.html")
+  symlink = "http://dil.googlecode.com/svn/doc/dil_%s" % VERSION
+  params = {"pdf_title": "dil %s API" % VERSION,
+    "cover_title": "dil %s<br/><b>API</b>" % VERSION,
+    "author": u"Aziz Köksal",
+    "subject": "Compiler API",
+    "keywords": "dil D compiler API documentation",
+    "x_html": "XHTML",
+    "nested_toc": True,
+    "symlink": symlink}
+  pdf_gen.run(html_files, SRC/("dil.%s.API.pdf"%VERSION), TMP, params)
+
 def main():
   from functools import partial as func_partial
   from optparse import OptionParser
@@ -56,6 +76,7 @@ def main():
   add_option("--gz", dest="tar_gz", help="create a tar.gz archive")
   add_option("--bz2", dest="tar_bz2", help="create a tar.bz2 archive")
   add_option("--zip", dest="zip", help="create a zip archive")
+  add_option("--pdf", dest="pdf", help="create a PDF document")
   add_option("-m", dest="copy_modified",
     help="copy modified files from the (git) working directory")
   parser.add_option("--src", dest="src", metavar="SRC", default=None,
@@ -167,6 +188,8 @@ def main():
     print "***** Generating documentation *****"
     generate_docs(DIL_EXE, DEST.DOC, MODLIST, DOC_FILES,
                   versions, options=['-v', '-i', '-hl', '--kandil'])
+    if options.pdf:
+      write_PDF(DEST, DEST.DOC, VERSION, TMP)
 
   DMD_EXE.use_wine = False
   use_wine = False
