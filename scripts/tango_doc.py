@@ -4,17 +4,18 @@
 import os, re
 from path import Path
 from common import *
+from html2pdf import PDFGenerator
 
-def copy_files(DATA, KANDIL, TANGO_DIR, DEST):
+def copy_files(DIL, TANGO_DIR, DEST):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
       (TANGO_DIR/"LICENSE", DEST/"License.txt"), # Tango's license.
-      (DATA/"html.css", DEST.HTMLSRC),
-      (KANDIL.style,    DEST.CSS)):
+      (DIL.DATA/"html.css", DEST.HTMLSRC),
+      (DIL.KANDIL.style,    DEST.CSS)):
     FILE.copy(DIR)
-  for FILE in KANDIL.jsfiles:
+  for FILE in DIL.KANDIL.jsfiles:
     FILE.copy(DEST.JS)
-  for img in KANDIL.images:
+  for img in DIL.KANDIL.images:
     img.copy(DEST.IMG)
 
 def get_tango_version(path):
@@ -43,6 +44,21 @@ SUP = <sup>$0</sup>
 BR = <br/>""" % revision
   )
 
+def write_PDF(DIL, SRC, VERSION, TMP):
+  pdf_gen = PDFGenerator()
+  pdf_gen.fetch_files(DIL, TMP)
+  html_files = SRC.glob("*.html")
+  symlink = "http://dil.googlecode.com/svn/doc/Tango_%s" % VERSION
+  params = {"pdf_title": "Tango %s API" % VERSION,
+    "cover_title": "TANGO %s<br/><b>API</b>" % VERSION,
+    "author": u"Tango Team",
+    "subject": "Programming API",
+    "keywords": "Tango standard library API documentation",
+    "x_html": "HTML",
+    "nested_toc": True,
+    "symlink": symlink}
+  pdf_gen.run(html_files, SRC/("Tango.%s.API.pdf"%VERSION), TMP, params)
+
 def main():
   from optparse import OptionParser
 
@@ -52,20 +68,24 @@ def main():
     type="int", help="set the repository REVISION to use in symbol links")
   parser.add_option("--zip", dest="zip", default=False, action="store_true",
     help="create a 7z archive")
+  parser.add_option("--pdf", dest="pdf", default=False, action="store_true",
+    help="create a PDF document")
 
   (options, args) = parser.parse_args()
 
   if len(args) < 1:
     return parser.print_help()
 
+  # Path to dil's root folder.
+  DIL       = Path()
   # Path to the executable of dil.
-  DIL_EXE   = Path("bin")/"dil"
+  DIL.EXE   = DIL/"bin"/"dil"
   # The version of Tango we're dealing with.
   VERSION   = ""
   # Root of the Tango source code (from SVN.)
   TANGO_DIR = Path(args[0])
   # The source code folder of Tango.
-  TANGO_SRC = TANGO_DIR/"tango"
+  TANGO_SRC = TANGO_DIR/"import"
   # Destination of doc files.
   DEST      = Path(firstof(str, getitem(args, 1), 'tangodoc'))
   # The JavaScript folder.
@@ -74,8 +94,10 @@ def main():
   DEST.HTMLSRC = DEST/"htmlsrc"
   # Dil's data/ directory.
   DATA      = Path('data')
+  DIL.DATA  = DATA
   # Dil's fancy documentation format.
   KANDIL    = get_kandil_path()
+  DIL.KANDIL = KANDIL
   # Temporary directory, deleted in the end.
   TMP       = DEST/"tmp"
   # Some DDoc macros for Tango.
@@ -85,13 +107,13 @@ def main():
   # The files to generate documentation for.
   FILES     = []
 
-  build_dil_if_inexistant(DIL_EXE)
+  build_dil_if_inexistant(DIL.EXE)
 
   if not TANGO_DIR.exists:
     print "The path '%s' doesn't exist." % TANGO_DIR
     return
 
-  VERSION = get_tango_version(TANGO_SRC/"core"/"Version.d")
+  VERSION = get_tango_version(TANGO_SRC/"tango"/"core"/"Version.d")
 
   # Create directories.
   DEST.makedirs()
@@ -102,10 +124,12 @@ def main():
   write_tango_ddoc(TANGO_DDOC, options.revision)
   DOC_FILES = [KANDIL/"kandil.ddoc", TANGO_DDOC] + FILES
   versions = ["Windows", "Tango", "DDoc"]
-  generate_docs(DIL_EXE, DEST, MODLIST, DOC_FILES,
+  generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
                 versions, options=['-v', '-hl', '--kandil'])
 
-  copy_files(DATA, KANDIL, TANGO_DIR, DEST)
+  copy_files(DIL, TANGO_DIR, DEST)
+  if options.pdf:
+      write_PDF(DIL, DEST, VERSION, TMP)
 
   TMP.rmtree()
 
