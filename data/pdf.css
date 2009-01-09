@@ -103,7 +103,7 @@ a {
 }
 
 /* Styles for the content: */
-h1 { /* Module header. */
+h1.module { /* Module header. */
   margin-top: 3em;
   font-size: 1.3em;
   border-bottom: 2px solid black;
@@ -111,7 +111,7 @@ h1 { /* Module header. */
   prince-bookmark-level: 1;
 }
 
-h1 > a {
+h1.module > a {
   string-set: module content();
 }
 
@@ -120,14 +120,14 @@ h1.package { /* Package header. */
   border-bottom: 2px solid black;
 }
 
-h1:before { content: "Module " }
+h1.module:before { content: "Module " }
 h1.package:before { content: "Package " }
 
-.module { /* Encompasses all elements of a module. */
+div.module { /* Encompasses all elements of a module. */
 /*   page-break-inside: avoid; */ /* Wastes too much space. */
 }
 
-.module > dl { /* Symbol list */
+div.module > dl { /* Symbol list */
   margin-top: 1em;
 }
 
@@ -158,7 +158,7 @@ dd.ddef { /* Definition, Explanation */
   color: DarkGreen;
 }
 
-h1>.symbol { prince-bookmark-level: none; }
+h1.module>.symbol { prince-bookmark-level: none; }
 
 /* 10 levels should be enough for all realistic cases. */
 dl .symbol { prince-bookmark-level: 2; }

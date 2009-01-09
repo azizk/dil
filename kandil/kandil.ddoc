@@ -7,8 +7,10 @@ DDOC = <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 </head>
 <body>
 <div id="content">
-  <h1><a href="$(SRCFILE)" name="$(DIL_MODFQN)" class="symbol">$(TITLE)</a></h1>
-  $(BODY)
+<div class="module">
+  <h1 class="module"><a href="$(SRCFILE)" name="m-$(DIL_MODFQN)" class="symbol">$(TITLE)</a></h1>
+$(BODY)
+</div>
 </div>
 <div id="footer">
   <p>$(COPYRIGHT)</p>

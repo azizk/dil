@@ -47,8 +47,8 @@ def generate_pdf(module_files, dest, tmp, params):
   # Matches the href attribute of a symbol link.
   symbol_href_rx = re.compile(r'(<a class="symbol[^"]+" name="[^"]+"'
                               r' href=)"./([^"]+)"')
-  # Matches the href and name attribute of "h1 > a".
-  h1_href_rx = re.compile(r'(<h1><a href=)"./([^"]+)"( name=)"([^"]+)"')
+  # Matches the href attribute of "h1.module > a".
+  h1_href_rx = re.compile(r'(<h1 class="module"><a href=)"./([^"]+)"')
 
   package_tree = PackageTree() # For Table of Contents.
 
@@ -60,14 +60,11 @@ def generate_pdf(module_files, dest, tmp, params):
     # Add symlink as a prefix to "a.symbol" tags.
     html_str = symbol_href_rx.sub(r'\1"%s/\2"' % symlink, html_str)
     # Add symlink as a prefix to the "h1>a.symbol" tag.
-    # Also add "m-" prefix to the name of the link to make targets unique.
-    html_str = h1_href_rx.sub(r'\1"%s/\2"\3"m-\4"' % symlink, html_str)
-    # Extract body>#content.
-    content_tag = '<div id="content">'
-    start = html_str.find(content_tag)
-    end = html_str.rfind('\n<div id="footer">')
-    content = html_str[start+len(content_tag):end]
-    content = '<div class="module">' + content # Replace with a class attr.
+    html_str = h1_href_rx.sub(r'\1"%s/\2"' % symlink, html_str)
+    # Extract "#content>.module".
+    start = html_str.find('<div class="module">')
+    end = html_str.rfind('</div>\n<div id="footer">')
+    content = html_str[start:end]
     # Extract module FQN.
     m = mod_fqn_rx.search(html_str[:start]) # Limit the text to search in.
     module_fqn = m.group(1)
