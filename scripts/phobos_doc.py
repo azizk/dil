@@ -37,13 +37,13 @@ def create_index_file(index_d, prefix_path, FILES):
   text = "Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % text
   open(index_d, 'w').write(text)
 
-def copy_files(DATA, PHOBOS_SRC, DEST):
+def copy_files(DIL, PHOBOS_SRC, DEST):
   """ Copies required files to the destination folder. """
   PHOBOS_HTML = PHOBOS_SRC/".."/".."/"html"/"d"/"phobos"
   for file in ["erfc.gif", "erf.gif"] + Path("..")//("style.css", "holy.gif", "dmlogo.gif"):
     (PHOBOS_HTML/file).copy(DEST)
   # Syntax highlighted files need html.css.
-  (DATA/"html.css").copy(DEST.HTMLSRC)
+  (DIL.DATA/"html.css").copy(DEST.HTMLSRC)
 
 def copy_files2(DIL, DEST):
   """ Copies required files to the destination folder. """
@@ -146,23 +146,11 @@ def main():
   D_VERSION  = V_MAJOR + ".0" # E.g.: 1.0 or 2.0
 
   # Path to dil's root folder.
-  DIL       = Path()
-  # Path to the executable of dil.
-  DIL.EXE   = DIL/"bin"/"dil"
+  DIL       = dil_path()
   # The source code folder of Phobos.
   PHOBOS_SRC = Path(args[1])
   # Destination of doc files.
-  DEST       = Path(firstof(str, getitem(args, 2), 'phobosdoc'))
-  # Destination of syntax highlighted source files.
-  DEST.HTMLSRC = DEST/"htmlsrc"
-  # The JavaScript, CSS and image folders.
-  DEST.JS, DEST.CSS, DEST.IMG = DEST//("js", "css", "img")
-  # Dil's data/ directory.
-  DATA       = Path("data")
-  DIL.DATA = DATA
-  # Dil's fancy documentation format.
-  KANDIL     = get_kandil_path()
-  DIL.KANDIL = KANDIL
+  DEST       = doc_path(firstof(str, getitem(args, 2), 'phobosdoc'))
   # Temporary directory, deleted in the end.
   TMP        = DEST/"tmp"
   # The list of module files (with info) that have been processed.
@@ -196,7 +184,7 @@ def main():
   write_missing_macros(TMP/"missing.ddoc")
   if options.use_kandil:
     write_overrides_ddoc2(TMP/"overrides.ddoc")
-    DOC_FILES = [TMP/"phobos.ddoc", KANDIL/"kandil.ddoc"] + \
+    DOC_FILES = [TMP/"phobos.ddoc", DIL.KANDIL.ddoc] + \
                  TMP//("missing.ddoc", "overrides.ddoc") + \
                 [PHOBOS_SRC/"phobos.d"] + FILES
     versions = ["DDoc"]
@@ -215,7 +203,7 @@ def main():
     generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
                   versions, options=['-v', '-i', '-hl'])
     modify_phobos_html(DEST/"phobos.html", D_VERSION)
-    copy_files(DATA, PHOBOS_SRC, DEST)
+    copy_files(DIL, PHOBOS_SRC, DEST)
     if options.pdf:
       print "Warning: can only create a PDF document from kandil HTML files."
 

@@ -12,13 +12,13 @@ def copy_files(DIL):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
       (DIL.DATA/"dilconf.d", DIL.BIN),
-      (DIL.DATA/"html.css",  DIL.HTMLSRC),
-      (DIL.KANDIL.style,     DIL.CSS)):
+      (DIL.DATA/"html.css",  DIL.DOC.HTMLSRC),
+      (DIL.KANDIL.style,     DIL.DOC.CSS)):
     FILE.copy(DIR)
   for FILE in DIL.KANDIL.jsfiles:
-    FILE.copy(DIL.JS)
+    FILE.copy(DIL.DOC.JS)
   for img in DIL.KANDIL.images:
-    img.copy(DIL.IMG)
+    img.copy(DIL.DOC.IMG)
 
 def writeMakefile():
   """ Writes a Makefile for building dil to the disk. """
@@ -111,8 +111,8 @@ def main():
     parser.error("The executable '%s' couldn't be located or does not exist." %
       options.dmd_exe)
 
-  # Path of the executable of dil.
-  DIL_EXE   = Path("bin")/"dil"
+  # Path to dil's root folder.
+  DIL       = dil_path()
   # Name or path to the executable of dmd.
   DMD_EXE   = Path(options.dmd_exe)
   # The version of dil to be built.
@@ -122,22 +122,9 @@ def main():
   # Build folder.
   BUILD_DIR = Path(firstof(str, options.builddir, "build"))
   # Destination of distributable files.
-  DEST      = BUILD_DIR/("dil."+VERSION)
-  # The destination of the binaries.
-  DEST.BIN  = DEST/"bin"
+  DEST      = dil_path(BUILD_DIR/("dil."+VERSION))
   BIN       = DEST.BIN # Shortcut to the bin/ folder.
-  # The source code folder of dil.
-  DEST.SRC  = DEST/"src"
-  # Documentation folder of dil.
-  DEST.DOC  = DEST/"doc"
-  # The JavaScript, CSS and image folders.
-  DEST.JS, DEST.CSS, DEST.IMG = DEST.DOC//("js", "css", "img")
-  # Destination of syntax highlighted source files.
-  DEST.HTMLSRC = DEST.DOC/"htmlsrc"
-  # Dil's data/ directory.
-  DEST.DATA   = DEST/'data'
-  # Dil's fancy documentation format.
-  DEST.KANDIL = get_kandil_path(DEST/"kandil")
+  DEST.DOC  = doc_path(DEST.DOC)
 
   # Temporary directory, deleted in the end.
   TMP       = DEST/"tmp"
@@ -169,8 +156,9 @@ def main():
   else:
     parser.error("git is not in your PATH; specify --src instead")
   # Create other directories not available in a clean checkout.
-  map(Path.mkdir, (DEST.BIN, DEST.DOC, DEST.HTMLSRC,
-                   DEST.CSS, DEST.IMG, DEST.JS, TMP))
+  DOC = DEST.DOC
+  map(Path.mkdir, (DEST.BIN, DOC, DOC.HTMLSRC,
+                   DOC.CSS, DOC.IMG, DOC.JS, TMP))
 
   # Find the source code files.
   FILES = find_dil_source_files(DEST.SRC)
@@ -180,13 +168,13 @@ def main():
   update_version(VERSION_FILE, V_MAJOR, V_MINOR, V_SUFFIX)
 
   if options.docs:
-    build_dil_if_inexistant(DIL_EXE)
+    build_dil_if_inexistant(DIL.EXE)
 
-    DOC_FILES = [DEST.KANDIL/"kandil.ddoc"] + \
+    DOC_FILES = [DEST.KANDIL.ddoc] + \
                  DEST.DATA//("macros_dil.ddoc", "dilconf.d") + FILES
-    versions = ["DDoc"]
     print "***** Generating documentation *****"
-    generate_docs(DIL_EXE, DEST.DOC, MODLIST, DOC_FILES,
+    versions = ["DDoc"]
+    generate_docs(DIL.EXE, DEST.DOC, MODLIST, DOC_FILES,
                   versions, options=['-v', '-i', '-hl', '--kandil'])
     if options.pdf:
       write_PDF(DEST, DEST.DOC, VERSION, TMP)

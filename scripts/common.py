@@ -15,18 +15,33 @@ def find_dil_source_files(source):
   # Filter out files in "src/tests/".
   return [f for f in FILES if not f.startswith(source/"tests")]
 
-def get_kandil_path(where="kandil"):
-  P = Path(where)
-  P.IMG = P/"img"
-  P.CSS = P/"css"
-  P.JS  = P/"js"
+def kandil_path(where="kandil"):
+  P = firstof(Path, where, Path(where))
+  P.IMG, P.CSS, P.JS = P//("img", "css", "js")
+  P.ddoc    = P/"kandil.ddoc"
   P.style   = P.CSS/"style.css"
-  P.jsfiles = (P.JS/"navigation.js", P.JS/"jquery.js", P.JS/"quicksearch.js")
+  P.jsfiles = P.JS//("navigation.js", "jquery.js", "quicksearch.js")
   P.navi, P.jquery, P.qsearch = P.jsfiles
   png_names = ("alias class enummem enum function interface module package"
                " struct template typedef union variable").split(" ")
   png_names = ["icon_%s.png" % name for name in png_names]
   P.images = P.IMG//png_names + [P.IMG/"loading.gif"]
+  return P
+
+def dil_path(where=""):
+  P = firstof(Path, where, Path(where))
+  P.BIN = P/"bin" # The destination of the binaries.
+  P.EXE = P.BIN/"dil" # The compiled binary.
+  P.SRC = P/"src" # The source code folder.
+  P.DOC = P/"doc" # Documentation folder.
+  P.DATA = P/"data" # The data folder with various files.
+  P.KANDIL = kandil_path(P/"kandil")
+  return P
+
+def doc_path(where):
+  P = firstof(Path, where, Path(where))
+  P.HTMLSRC = P/"htmlsrc" # Destination of syntax highlighted source files.
+  P.JS, P.CSS, P.IMG = P//("js", "css", "img")
   return P
 
 def get_module_fqn(prefix_path, filepath):

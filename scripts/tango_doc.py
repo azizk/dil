@@ -77,9 +77,7 @@ def main():
     return parser.print_help()
 
   # Path to dil's root folder.
-  DIL       = Path()
-  # Path to the executable of dil.
-  DIL.EXE   = DIL/"bin"/"dil"
+  DIL       = dil_path()
   # The version of Tango we're dealing with.
   VERSION   = ""
   # Root of the Tango source code (from SVN.)
@@ -87,17 +85,7 @@ def main():
   # The source code folder of Tango.
   TANGO_SRC = TANGO_DIR/"import"
   # Destination of doc files.
-  DEST      = Path(firstof(str, getitem(args, 1), 'tangodoc'))
-  # The JavaScript folder.
-  DEST.JS, DEST.CSS, DEST.IMG = DEST//("js", "css", "img")
-  # Destination of syntax highlighted source files.
-  DEST.HTMLSRC = DEST/"htmlsrc"
-  # Dil's data/ directory.
-  DATA      = Path('data')
-  DIL.DATA  = DATA
-  # Dil's fancy documentation format.
-  KANDIL    = get_kandil_path()
-  DIL.KANDIL = KANDIL
+  DEST      = doc_path(firstof(str, getitem(args, 1), 'tangodoc'))
   # Temporary directory, deleted in the end.
   TMP       = DEST/"tmp"
   # Some DDoc macros for Tango.
@@ -122,7 +110,7 @@ def main():
   find_source_files(TANGO_SRC, FILES)
 
   write_tango_ddoc(TANGO_DDOC, options.revision)
-  DOC_FILES = [KANDIL/"kandil.ddoc", TANGO_DDOC] + FILES
+  DOC_FILES = [DIL.KANDIL.ddoc, TANGO_DDOC] + FILES
   versions = ["Windows", "Tango", "DDoc"]
   generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
                 versions, options=['-v', '-hl', '--kandil'])
