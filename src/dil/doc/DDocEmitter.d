@@ -277,7 +277,7 @@ abstract class DDocEmitter : DefaultVisitor
   /// $(UL
   /// $(LI skips and leaves macro invocations unchanged)
   /// $(LI skips HTML tags)
-  /// $(LI escapes '<', '>' and '&' with named HTML entities)
+  /// $(LI escapes '&lt;', '&gt;' and '&amp;' with named HTML entities)
   /// $(LI inserts $&#40;LP&#41;/$&#40;RP&#41; in place of '('/')')
   /// $(LI inserts $&#40;DDOC_BLANKLINE&#41; in place of '\n\n')
   /// $(LI highlights the tokens in code sections)

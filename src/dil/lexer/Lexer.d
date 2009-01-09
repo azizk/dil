@@ -1465,8 +1465,8 @@ version(DDoc)
   ///
   /// $(BNF
   ////DelimitedStringLiteral := 'q"' OpeningDelim AnyChar* MatchingDelim '"'
-  ////OpeningDelim  := "[" | "(" | "{" | "<" | Identifier EndOfLine
-  ////MatchingDelim := "]" | ")" | "}" | ">" | EndOfLine Identifier
+  ////OpeningDelim  := "[" | "(" | "{" | "&lt;" | Identifier EndOfLine
+  ////MatchingDelim := "]" | ")" | "}" | "&gt;" | EndOfLine Identifier
   ////)
   void scanDelimitedStringLiteral(ref Token t);
   /// Scans a token string literal.
