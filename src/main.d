@@ -115,6 +115,8 @@ void main(char[][] args)
         cmd.verbose = true;
       else if (arg == "--kandil")
         cmd.useKandil = true;
+      else if (arg == "--report")
+        cmd.writeReport = true;
       else if (arg.length > 3 && strbeg(arg, "-m="))
         cmd.modsTxtPath = arg[3..$];
       else if (arg.length > 5 && icompare(arg[$-4..$], "ddoc") == 0)
@@ -453,6 +455,7 @@ Usage:
 
 Options:
   --kandil         : use kandil as the documentation front-end
+  --report         : write a problem report to Destination/report.txt
   --xml            : write XML instead of HTML documents
   --raw            : don't expand macros in the output (useful for debugging)
   -hl              : write syntax highlighted files to Destination/htmlsrc

@@ -43,6 +43,7 @@ struct DDocCommand
   string modsTxtPath;  /// Write list of modules to this file if specified.
   string outFileExtension;  /// The extension of the output files.
   bool includeUndocumented; /// Whether to include undocumented symbols.
+  bool writeReport;  /// Whether to write a problem report.
   bool useKandil;    /// Whether to use kandil.
   bool writeXML;     /// Whether to write XML instead of HTML docs.
   bool writeHLFiles; /// Whether to write syntax highlighted files.
@@ -51,11 +52,15 @@ struct DDocCommand
 
   CompilationContext context; /// Environment variables of the compilation.
   Diagnostics diag;           /// Collects error messages.
+  Diagnostics reportDiag;     /// Collectr problem messages.
   Highlighter hl; /// For highlighting source files or DDoc code sections.
 
   /// Executes the doc generation command.
   void run()
   {
+    // auto destDirPath = new FilePath(destDirPath);
+    // destDirPath.exists() || destDirPath.createFolder();
+
     if (useKandil && writeXML)
       return Stdout("Error: kandil uses only HTML at the moment.").newline;
 
@@ -68,6 +73,9 @@ struct DDocCommand
       mtable = new MacroTable(mtable);
       mtable.insert(macros);
     }
+
+    if (writeReport)
+      reportDiag = new Diagnostics();
 
     // For Ddoc code sections.
     string mapFilePath = GlobalSettings.htmlMapFile;
@@ -115,6 +123,8 @@ struct DDocCommand
 
     if (useKandil)
       writeModuleLists(moduleManager);
+    if (writeReport)
+      writeDDocReport();
   }
 
   /// Writes a syntax highlighted file for mod.
@@ -162,9 +172,11 @@ struct DDocCommand
     // Create the appropriate DDocEmitter.
     DDocEmitter ddocEmitter;
     if (writeXML)
-      ddocEmitter = new DDocXMLEmitter(mod, mtable, includeUndocumented, hl);
+      ddocEmitter = new DDocXMLEmitter(mod, mtable, includeUndocumented,
+        reportDiag, hl);
     else
-      ddocEmitter = new DDocHTMLEmitter(mod, mtable, includeUndocumented, hl);
+      ddocEmitter = new DDocHTMLEmitter(mod, mtable, includeUndocumented,
+        reportDiag, hl);
     // Start the emitter.
     auto ddocText = ddocEmitter.emit();
     // Set the BODY macro to the text produced by the emitter.
@@ -254,5 +266,107 @@ struct DDocCommand
     src.load(diag);
     auto text = src.data[0..$-1]; // Exclude '\0'.
     return sanitizeText(text);
+  }
+
+  /// Used for collecting data for the report.
+  class ModuleData
+  {
+    string name; /// Module name.
+    DDocProblem[] kind1, kind2, kind3, kind4;
+
+    static ModuleData[string] table;
+    static ModuleData get(string name)
+    {
+      auto mod = name in table;
+      if (mod)
+        return *mod;
+      auto md = new ModuleData();
+      md.name = name;
+      table[name] = md;
+      return md;
+    }
+  }
+
+  /// Writes the DDoc report.
+  void writeDDocReport()
+  {
+    assert(writeReport);
+    auto filePath = new FilePath(destDirPath);
+    filePath.append("report.txt");
+    scope file = new File(filePath.toString());
+
+    Stdout.formatln("Writing report to '{}'.", filePath.toString());
+
+    auto titles = ["Undocumented symbols"[], "Empty comments",
+                   "No params section", "Undocumented parameters"];
+
+    // Sort problems.
+    uint kind1Total, kind2Total, kind3Total, kind4Total;
+    foreach (info; reportDiag.info)
+    {
+      auto p = cast(DDocProblem)info;
+      auto mod = ModuleData.get(p.filePath);
+      switch (p.kind)
+      { alias DDocProblem P;
+      case P.Kind.UndocumentedSymbol:
+        kind1Total++; mod.kind1 ~= p; break;
+      case P.Kind.EmptyComment:
+        kind2Total++; mod.kind2 ~= p; break;
+      case P.Kind.NoParamsSection:
+        kind3Total++; mod.kind3 ~= p; break;
+      case P.Kind.UndocumentedParam:
+        kind4Total++; mod.kind4 ~= p; break;
+      }
+    }
+    // Write the legend.
+    file.append(Format("A = {}\nB = {}\nC = {}\nD = {}\n",
+      titles[0], titles[1], titles[2], titles[3]
+    ));
+
+    // Calculate the maximum module name length.
+    uint maxNameLength;
+    foreach (name; ModuleData.table.keys)
+      if (maxNameLength < name.length)
+        maxNameLength = name.length;
+
+    auto rowFormat = "{,-"~Format("{}",maxNameLength)~
+                     "} {,6} {,6} {,6} {,6}\n";
+    // Write the headers.
+    file.append(Format(rowFormat, "Module", "A", "B", "C", "D"));
+    // Write the table rows.
+    foreach (name, mod; ModuleData.table)
+    {
+      file.append(Format(rowFormat, name,
+        mod.kind1.length, mod.kind2.length, mod.kind3.length, mod.kind4.length
+      ));
+    }
+    // Write the totals.
+    file.append(Format(rowFormat, "Totals",
+      kind1Total, kind2Total, kind3Total, kind4Total
+    ));
+
+    // Write the list of locations.
+    file.append("\nList of locations:\n");
+    foreach (i, title; titles)
+    {
+      file.append("\n***** "~title~" ******\n");
+      foreach (name, mod; ModuleData.table)
+      {
+        // Print list of locations.
+        auto kind = ([mod.kind1, mod.kind2, mod.kind3, mod.kind4])[i];
+        if (!kind.length)
+          continue; // Nothing to print for this module.
+        file.append(name ~ ":\n"); // Module name:
+        char[] line;
+        foreach (p; kind)
+        { // (x,y) (x,y) etc.
+          line ~= Format("({},{}) ", p.loc, p.col);
+          if (line.length > 80)
+            file.append("  "~line[0..$-1]~\n), (line = "");
+        }
+        if (line.length)
+          file.append("  "~line[0..$-1]~\n);
+      }
+    }
   }
 }

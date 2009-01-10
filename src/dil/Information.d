@@ -55,9 +55,30 @@ class Problem : Information
   }
 }
 
+/// For DDoc reports.
+class DDocProblem : Problem
+{
+  /// Enumeration of problems.
+  enum Kind
+  {
+    UndocumentedSymbol, /// Undocumented symbol.
+    EmptyComment,       /// Empty DDoc comment.
+    NoParamsSection,    /// No params section for function parameters.
+    UndocumentedParam   /// An undocumented function parameter.
+  }
+  Kind kind; /// The kind of problem.
+  /// Constructs a DDocProblem object.
+  this(Location location, Kind kind, string message)
+  {
+    super(location, message);
+    this.kind = kind;
+  }
+}
+
 /// For reporting warnings.
 class Warning : Problem
 {
+  /// Constructs a Warning object.
   this(Location location, string message)
   {
     super(location, message);

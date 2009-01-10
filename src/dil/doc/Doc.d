@@ -46,6 +46,12 @@ class DDocComment
     return summary && sections.length == 1 &&
            icompare(summary.text, "ditto") == 0;
   }
+
+  /// Returns true when this comment has no text.
+  bool isEmpty()
+  {
+    return sections.length == 0 || sections[0].text.length == 0;
+  }
 }
 
 /// A namespace for some utility functions.
@@ -301,7 +307,7 @@ struct DDocParser
     summaryBegin = p;
 
     if (findNextIdColon(ident, bodyBegin))
-    { // Check that this is not an explicit section.
+    { // Check if there's text before the explicit section.
       if (summaryBegin != ident.ptr)
         scanSummaryAndDescription(summaryBegin, ident.ptr);
     }

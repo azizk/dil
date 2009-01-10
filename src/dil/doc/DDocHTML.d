@@ -3,10 +3,11 @@
 /// $(Maturity high)
 module dil.doc.DDocHTML;
 
-import dil.doc.DDocEmitter;
-import dil.doc.Macro;
+import dil.doc.DDocEmitter,
+       dil.doc.Macro;
 import dil.semantic.Module;
-import dil.Highlighter;
+import dil.Highlighter,
+       dil.Diagnostics;
 import common;
 
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
@@ -14,8 +15,8 @@ class DDocHTMLEmitter : DDocEmitter
 {
   /// Constructs a DDocHTMLEmitter object.
   this(Module modul, MacroTable mtable, bool includeUndocumented,
-       Highlighter tokenHL)
+       Diagnostics reportDiag, Highlighter tokenHL)
   {
-    super(modul, mtable, includeUndocumented, tokenHL);
+    super(modul, mtable, includeUndocumented, reportDiag, tokenHL);
   }
 }

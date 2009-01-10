@@ -109,9 +109,13 @@ static:
   auto InvalidUTF32Character = "invalid UTF-32 character '\\U{:X8}'.";
   auto UTF16FileMustBeDivisibleBy2 = "the byte length of a UTF-16 source file must be divisible by 2.";
   auto UTF32FileMustBeDivisibleBy4 = "the byte length of a UTF-32 source file must be divisible by 4.";
-  // DDoc macros:
+  // DDoc messages:
   auto UndefinedDDocMacro = "DDoc macro '{}' is undefined";
   auto UnterminatedDDocMacro = "DDoc macro '{}' has no closing ')'";
+  auto UndocumentedSymbol = "undocumented symbol";
+  auto EmptyDDocComment = "empty comment";
+  auto MissingParamsSection = "missing params section";
+  auto UndocumentedParam = "undocumented parameter '{}'";
   // Lexer messages:
   auto CantReadFile = "can't read module file";
   auto InexistantFile = "module file doesn't exist";

@@ -16,10 +16,11 @@ import dil.ast.DefaultVisitor,
 import dil.lexer.Token,
        dil.lexer.Funcs;
 import dil.semantic.Module;
-import dil.Highlighter;
-import dil.Diagnostics;
-import dil.SourceText;
-import dil.Enums;
+import dil.Highlighter,
+       dil.Diagnostics,
+       dil.SourceText,
+       dil.Messages,
+       dil.Enums;
 import common;
 
 import tango.text.Ascii : toUpper, icompare;
@@ -32,6 +33,7 @@ abstract class DDocEmitter : DefaultVisitor
   MacroTable mtable;
   Module modul;
   Highlighter tokenHL;
+  Diagnostics reportDiag; /// Collects problem messages.
 
   /// Constructs a DDocEmitter object.
   /// Params:
@@ -40,12 +42,13 @@ abstract class DDocEmitter : DefaultVisitor
   ///   includeUndocumented = whether to include undocumented symbols.
   ///   tokenHL = used to highlight code sections.
   this(Module modul, MacroTable mtable, bool includeUndocumented,
-       Highlighter tokenHL)
+       Diagnostics reportDiag, Highlighter tokenHL)
   {
     this.mtable = mtable;
     this.includeUndocumented = includeUndocumented;
     this.modul = modul;
     this.tokenHL = tokenHL;
+    this.reportDiag = reportDiag;
   }
 
   /// Entry method.
@@ -80,6 +83,91 @@ abstract class DDocEmitter : DefaultVisitor
     return text;
   }
 
+  /// Reports an undocumented symbol.
+  void reportUndocumented()
+  {
+    if (reportDiag is null)
+      return;
+    auto loc = currentDecl.begin.getRealLocation();
+    loc.setFilePath(modul.getFQN());
+    auto kind = DDocProblem.Kind.UndocumentedSymbol;
+    reportDiag ~= new DDocProblem(loc, kind, MSG.UndocumentedSymbol);
+  }
+
+  /// Reports an empty comment.
+  void reportEmptyComment()
+  {
+    if (reportDiag is null || !this.cmnt.isEmpty())
+      return;
+    auto loc = currentDecl.begin.getRealLocation();
+    loc.setFilePath(modul.getFQN());
+    auto kind = DDocProblem.Kind.EmptyComment;
+    reportDiag ~= new DDocProblem(loc, kind, MSG.EmptyDDocComment);
+  }
+
+  /// Reports a missing params section or undocumented parameters.
+  void reportParameters(Parameters params)
+  {
+    if (reportDiag is null || params.items.length == 0)
+      return;
+    string[] paramNames;
+    foreach (param; params.items)
+      if (param.name)
+        paramNames ~= param.name.str;
+    reportParameters(paramNames);
+  }
+
+  /// ditto
+  void reportParameters(TemplateParameters params)
+  {
+    if (reportDiag is null || params.items.length == 0)
+      return;
+    string[] paramNames;
+    foreach (param; params.items)
+      paramNames ~= param.ident.str;
+    reportParameters(paramNames);
+  }
+
+  /// ditto
+  void reportParameters(string[] params)
+  {
+    assert(currentDecl !is null);
+    // TODO: exclude some functions? like "new"?
+    Location loc;
+    Location getLoc()
+    { // Lazyly sets loc and returns it.
+      if (!loc)
+        (loc = currentDecl.begin.getRealLocation()),
+        loc.setFilePath(modul.getFQN());
+      return loc;
+    }
+    // Search for the params section.
+    Section paramsSection;
+    foreach (s; this.cmnt.sections)
+      if (s.Is("params"))
+        paramsSection = s;
+    if (paramsSection is null)
+    {
+      loc = getLoc();
+      auto kind = DDocProblem.Kind.NoParamsSection;
+      reportDiag ~= new DDocProblem(loc, kind, MSG.MissingParamsSection);
+      return;
+    }
+    // Search for undocumented parameters.
+    bool[string] documentedParams;
+    auto ps = new ParamsSection(paramsSection.name, paramsSection.text);
+    foreach (name; ps.paramNames) // Create set of documented parameters.
+      documentedParams[name] = true;
+    foreach (param; params) // Find undocumented parameters.
+      if (!(param in documentedParams))
+      {
+        loc = getLoc();
+        auto kind = DDocProblem.Kind.UndocumentedParam;
+        auto msg = Format(MSG.MissingParamsSection, param);
+        reportDiag ~= new DDocProblem(loc, kind, msg);
+      }
+  }
+
   /// Returns true if the source text starts with "Ddoc\n" (ignores letter case.)
   static bool isDDocFile(Module mod)
   {
@@ -110,6 +198,9 @@ abstract class DDocEmitter : DefaultVisitor
     //TODO: filter out whitespace tokens.
     return Token.textSpan(left, right);
   }
+
+  /// The current declaration.
+  Node currentDecl;
 
   /// The template parameters of the current declaration.
   TemplateParameters tparams;
@@ -197,20 +288,28 @@ abstract class DDocEmitter : DefaultVisitor
 
   bool cmntIsDitto; /// True if current comment is "ditto".
 
-  /// Sets some members and returns the DDocComment for node.
-  DDocComment ddoc(Node node)
+  /// Sets some members and returns true if a comment was found.
+  bool ddoc(Node node)
   {
+    this.currentDecl = node;
     this.cmnt = DDocUtils.getDDocComment(node);
     if (this.cmnt)
     {
       if (this.cmnt.isDitto) // A ditto comment.
         (this.cmnt = this.prevCmnt), (this.cmntIsDitto = true);
       else // A normal comment.
+      {
+        reportEmptyComment();
         (this.prevCmnt = this.cmnt), (this.cmntIsDitto = false);
+      }
     }
-    else if (includeUndocumented)
-      this.cmnt = this.emptyCmnt; // Assign special empty comment.
-    return this.cmnt;
+    else
+    {
+      reportUndocumented();
+      if (includeUndocumented)
+        this.cmnt = this.emptyCmnt; // Assign special empty comment.
+    }
+    return this.cmnt !is null;
   }
 
   /// List of predefined, special sections.
@@ -427,6 +526,7 @@ abstract class DDocEmitter : DefaultVisitor
   /// Writes params to the text buffer.
   void writeParams(Parameters params)
   {
+    reportParameters(params);
     write("$(DIL_PARAMS ");
     foreach (param; params.items)
     {
@@ -459,6 +559,7 @@ abstract class DDocEmitter : DefaultVisitor
   {
     if (!tparams)
       return;
+    reportParameters(tparams);
     write("$(DIL_TEMPLATE_PARAMS ");
     foreach (tparam; tparams.items)
     {
