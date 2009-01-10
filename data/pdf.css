@@ -175,7 +175,7 @@ dl dl dl dl dl dl dl dl dl .symbol { prince-bookmark-level: 10; }
   margin: 0.5em 0;
 }
 
-.params em { /* Function parameter */
+.params em, .tparams em { /* Function or template parameter name */
   font-weight: normal;
   font-style: italic;
   color: OliveDrab;

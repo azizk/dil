@@ -373,6 +373,7 @@ abstract class DDocEmitter : DefaultVisitor
             auto codeText = makeString(codeBegin, codeEnd);
             codeText = DDocUtils.unindentText(codeText);
             result ~= "$(D_CODE\n";
+            // TODO: line numbers?
             result ~= tokenHL.highlightTokens(codeText, modul.getFQN());
             result ~= "\n)";
           }
@@ -410,6 +411,12 @@ abstract class DDocEmitter : DefaultVisitor
     return text;
   }
 
+  /// Returns the escaped text between begin and end.
+  string escape(Token* begin, Token* end)
+  {
+    return this.escape(textSpan(begin, end));
+  }
+
   /// Writes an array of strings to the text buffer.
   void write(char[][] strings...)
   {
@@ -432,7 +439,7 @@ abstract class DDocEmitter : DefaultVisitor
         auto typeBegin = param.type.baseType.begin;
         if (typeBegin !is param.begin) // Write storage classes.
           write(textSpan(param.begin, typeBegin.prevNWS), " ");
-        write(escape(textSpan(typeBegin, param.type.end))); // Write type.
+        write(escape(typeBegin, param.type.end)); // Write type.
         if (param.name)
           write(" $(DDOC_PARAM ", param.name.str, ")");
         if (param.isDVariadic)
@@ -452,9 +459,44 @@ abstract class DDocEmitter : DefaultVisitor
   {
     if (!tparams)
       return;
-    auto text = textSpan(tparams.begin, tparams.end);
-    text = escape(text)[1..$-1]; // Escape and remove '(', ')'.
-    write("$(DIL_TEMPLATE_PARAMS ", text, ")");
+    write("$(DIL_TEMPLATE_PARAMS ");
+    foreach (tparam; tparams.items)
+    {
+      void writeSpecDef(TypeNode spec, TypeNode def)
+      {
+        if (spec) write(" : ", escape(spec.baseType.begin, spec.end));
+        if (def)  write(" = ", escape(def.baseType.begin, def.end));
+      }
+      void writeSpecDef2(Expression spec, Expression def)
+      {
+        if (spec) write(" : ", escape(spec.begin, spec.end));
+        if (def)  write(" = ", escape(def.begin, def.end));
+      }
+      if (auto p = tparam.Is!(TemplateAliasParameter))
+        write("$(DIL_TPALIAS $(DIL_TPID ", p.ident.str, ")"),
+        writeSpecDef(p.specType, p.defType),
+        write(")");
+      else if (auto p = tparam.Is!(TemplateTypeParameter))
+        write("$(DIL_TPTYPE $(DIL_TPID ", p.ident.str, ")"),
+        writeSpecDef(p.specType, p.defType),
+        write(")");
+      else if (auto p = tparam.Is!(TemplateTupleParameter))
+        write("$(DIL_TPTUPLE $(DIL_TPID ", p.ident.str, "))");
+      else if (auto p = tparam.Is!(TemplateValueParameter))
+        write("$(DIL_TPVALUE "),
+        write(escape(textSpan(p.valueType.begin, p.valueType.end))),
+        write(" $(DIL_TPID ", p.ident.str, ")"),
+        writeSpecDef2(p.specValue, p.defValue),
+        write(")");
+      else if (auto p = tparam.Is!(TemplateThisParameter))
+        write("$(DIL_TPTHIS $(DIL_TPID ", p.ident.str, ")"),
+        writeSpecDef(p.specType, p.defType),
+        write(")");
+      write(", ");
+    }
+    if (tparams.items)
+      text = text[0..$-2]; /// Slice off last ", ".
+    write(")");
     tparams = null;
   }
 
@@ -591,9 +633,9 @@ abstract class DDocEmitter : DefaultVisitor
     const kind = is(T == AliasDeclaration) ? "alias" : "typedef";
     if (auto vd = d.decl.Is!(VariablesDeclaration))
     {
-      auto type = textSpan(vd.typeNode.baseType.begin, vd.typeNode.end);
+      auto type = escape(vd.typeNode.baseType.begin, vd.typeNode.end);
       foreach (name; vd.names)
-        DECL({ write(kind, " "); write(escape(type), " ");
+        DECL({ write(kind, " "); write(type, " ");
           SYMBOL(name.str, kind, d);
         }, d);
     }
@@ -757,9 +799,9 @@ override:
   {
     if (!ddoc(d))
       return d;
-    auto type = textSpan(d.returnType.baseType.begin, d.returnType.end);
+    auto type = escape(d.returnType.baseType.begin, d.returnType.end);
     DECL({
-      write(escape(type), " ");
+      write("$(DIL_RETTYPE ", type, ") ");
       SYMBOL(d.name.str, "function", d);
       writeTemplateParams();
       writeParams(d.params);
@@ -792,9 +834,9 @@ override:
       return d;
     char[] type = "auto";
     if (d.typeNode)
-      type = textSpan(d.typeNode.baseType.begin, d.typeNode.end);
+      type = escape(d.typeNode.baseType.begin, d.typeNode.end);
     foreach (name; d.names)
-      DECL({ write(escape(type), " "); SYMBOL(name.str, "variable", d); }, d);
+      DECL({ write(type, " "); SYMBOL(name.str, "variable", d); }, d);
     DESC();
     return d;
   }

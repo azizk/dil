@@ -165,7 +165,7 @@ input.filterbox {
   margin: 0.5em 0;
 }
 
-.params em {
+.params em, .tparams em {
   font-weight: normal;
   color: OliveDrab;
 }
