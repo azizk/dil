@@ -37,16 +37,18 @@ def create_index_file(index_d, prefix_path, FILES):
   text = "Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % text
   open(index_d, 'w').write(text)
 
-def copy_files(DIL, PHOBOS_SRC, DEST):
+def copy_files(DIL, PHOBOS, DEST):
   """ Copies required files to the destination folder. """
-  PHOBOS_HTML = PHOBOS_SRC/".."/".."/"html"/"d"/"phobos"
-  for file in ["erfc.gif", "erf.gif"] + Path("..")//("style.css", "holy.gif", "dmlogo.gif"):
-    (PHOBOS_HTML/file).copy(DEST)
+  for f in ["erfc.gif", "erf.gif"] + \
+            Path("..")//("style.css", "holy.gif", "dmlogo.gif"):
+    (PHOBOS.HTML/f).copy(DEST)
   # Syntax highlighted files need html.css.
   (DIL.DATA/"html.css").copy(DEST.HTMLSRC)
 
-def copy_files2(DIL, DEST):
+def copy_files2(DIL, PHOBOS, DEST):
   """ Copies required files to the destination folder. """
+  for f in ("erfc.gif", "erf.gif"):
+    (PHOBOS.HTML/f).copy(DEST)
   for FILE, DIR in (
       (DIL.DATA/"html.css", DEST.HTMLSRC),
       (DIL.KANDIL.style,    DEST.CSS)):
@@ -149,6 +151,8 @@ def main():
   DIL       = dil_path()
   # The source code folder of Phobos.
   PHOBOS_SRC = Path(args[1])
+  # Path to the html folder of Phobos.
+  PHOBOS_SRC.HTML = PHOBOS_SRC/".."/".."/"html"/"d"/"phobos"
   # Destination of doc files.
   DEST       = doc_path(firstof(str, getitem(args, 2), 'phobosdoc'))
   # Temporary directory, deleted in the end.
@@ -191,7 +195,7 @@ def main():
     generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
                   versions, options='-v -i -hl --kandil'.split(' '))
     modify_phobos_html(DEST/"phobos.html", D_VERSION)
-    copy_files2(DIL, DEST)
+    copy_files2(DIL, PHOBOS_SRC, DEST)
     if options.pdf:
       write_PDF(DIL, DEST, VERSION, TMP)
   else:
