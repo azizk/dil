@@ -69,12 +69,12 @@ class IllegalDeclaration : Declaration
 }
 
 /// FQN = fully qualified name
-alias Identifier*[] ModuleFQN; // Identifier(.Identifier)*
+alias Token*[] ModuleFQN; // Identifier ("." Identifier)*
 
 class ModuleDeclaration : Declaration
 {
-  Identifier* moduleName;
-  Identifier*[] packages;
+  Token* moduleName;
+  Token*[] packages;
   this(ModuleFQN moduleFQN)
   {
     mixin(set_kind);
@@ -95,7 +95,7 @@ class ModuleDeclaration : Declaration
   char[] getName()
   {
     if (moduleName)
-      return moduleName.str;
+      return moduleName.ident.str;
     return null;
   }
 
@@ -104,7 +104,7 @@ class ModuleDeclaration : Declaration
     char[] pname;
     foreach (pckg; packages)
       if (pckg)
-        pname ~= pckg.str ~ separator;
+        pname ~= pckg.ident.str ~ separator;
     if (pname.length)
       pname = pname[0..$-1]; // Remove last separator
     return pname;
@@ -115,13 +115,14 @@ class ModuleDeclaration : Declaration
 
 class ImportDeclaration : Declaration
 {
-  private alias Identifier*[] Ids;
+  private alias Token*[] Ids;
   ModuleFQN[] moduleFQNs;
   Ids moduleAliases;
   Ids bindNames;
   Ids bindAliases;
 
-  this(ModuleFQN[] moduleFQNs, Ids moduleAliases, Ids bindNames, Ids bindAliases, bool isStatic)
+  this(ModuleFQN[] moduleFQNs, Ids moduleAliases, Ids bindNames,
+       Ids bindAliases, bool isStatic)
   {
     mixin(set_kind);
     this.moduleFQNs = moduleFQNs;
@@ -140,7 +141,7 @@ class ImportDeclaration : Declaration
       char[] FQN;
       foreach (ident; moduleFQN)
         if (ident)
-          FQN ~= ident.str ~ separator;
+          FQN ~= ident.ident.str ~ separator;
       FQNs ~= FQN[0..$-1]; // Remove last separator
     }
     return FQNs;
@@ -175,19 +176,25 @@ class TypedefDeclaration : Declaration
 
 class EnumDeclaration : Declaration
 {
-  Identifier* name;
+  Token* nametok;
   TypeNode baseType;
   EnumMemberDeclaration[] members;
-  this(Identifier* name, TypeNode baseType, EnumMemberDeclaration[] members, bool hasBody)
+  this(Token* name, TypeNode baseType, EnumMemberDeclaration[] members, bool hasBody)
   {
     super.hasBody = hasBody;
     mixin(set_kind);
     addOptChild(baseType);
     addOptChildren(members);
 
-    this.name = name;
+    this.nametok = name;
     this.baseType = baseType;
     this.members = members;
+  }
+
+  /// TODO: remove this and rename 'nametok' to 'name'.
+  Identifier* name()
+  {
+    return nametok ? nametok.ident : null;
   }
 
   Enum symbol;
@@ -198,23 +205,29 @@ class EnumDeclaration : Declaration
 class EnumMemberDeclaration : Declaration
 {
   TypeNode type; // D 2.0
-  Identifier* name;
+  Token* nametok;
   Expression value;
-  this(Identifier* name, Expression value)
+  this(Token* name, Expression value)
   {
     mixin(set_kind);
     addOptChild(value);
 
-    this.name = name;
+    this.nametok = name;
     this.value = value;
   }
 
   // D 2.0
-  this(TypeNode type, Identifier* name, Expression value)
+  this(TypeNode type, Token* name, Expression value)
   {
     addOptChild(type);
     this.type = type;
     this(name, value);
+  }
+
+  /// TODO: remove this and rename 'nametok' to 'name'.
+  Identifier* name()
+  {
+    return nametok.ident;
   }
 
   EnumMember symbol;
@@ -224,11 +237,12 @@ class EnumMemberDeclaration : Declaration
 
 class TemplateDeclaration : Declaration
 {
-  Identifier* name;
+  Token* nametok;
   TemplateParameters tparams;
   Expression constraint; // D 2.0
   CompoundDeclaration decls;
-  this(Identifier* name, TemplateParameters tparams, Expression constraint, CompoundDeclaration decls)
+  this(Token* name, TemplateParameters tparams, Expression constraint,
+       CompoundDeclaration decls)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -236,10 +250,16 @@ class TemplateDeclaration : Declaration
     addOptChild(constraint);
     addChild(decls);
 
-    this.name = name;
+    this.nametok = name;
     this.tparams = tparams;
     this.constraint = constraint;
     this.decls = decls;
+  }
+
+  /// TODO: remove this and rename 'nametok' to 'name'.
+  Identifier* name()
+  {
+    return nametok.ident;
   }
 
   Template symbol; /// The template symbol for this declaration.
@@ -253,22 +273,28 @@ class TemplateDeclaration : Declaration
 
 abstract class AggregateDeclaration : Declaration
 {
-  Identifier* name;
+  Token* nametok;
 //   TemplateParameters tparams;
   CompoundDeclaration decls;
-  this(Identifier* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
+  this(Token* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
   {
     super.hasBody = decls !is null;
-    this.name = name;
+    this.nametok = name;
 //     this.tparams = tparams;
     this.decls = decls;
+  }
+
+  /// TODO: remove this and rename 'nametok' to 'name'.
+  Identifier* name()
+  {
+    return nametok ? nametok.ident : null;
   }
 }
 
 class ClassDeclaration : AggregateDeclaration
 {
   BaseClassType[] bases;
-  this(Identifier* name, /+TemplateParameters tparams, +/BaseClassType[] bases, CompoundDeclaration decls)
+  this(Token* name, /+TemplateParameters tparams, +/BaseClassType[] bases, CompoundDeclaration decls)
   {
     super(name, /+tparams, +/decls);
     mixin(set_kind);
@@ -287,7 +313,7 @@ class ClassDeclaration : AggregateDeclaration
 class InterfaceDeclaration : AggregateDeclaration
 {
   BaseClassType[] bases;
-  this(Identifier* name, /+TemplateParameters tparams, +/BaseClassType[] bases, CompoundDeclaration decls)
+  this(Token* name, /+TemplateParameters tparams, +/BaseClassType[] bases, CompoundDeclaration decls)
   {
     super(name, /+tparams, +/decls);
     mixin(set_kind);
@@ -308,7 +334,7 @@ class InterfaceDeclaration : AggregateDeclaration
 class StructDeclaration : AggregateDeclaration
 {
   uint alignSize;
-  this(Identifier* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
+  this(Token* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
   {
     super(name, /+tparams, +/decls);
     mixin(set_kind);
@@ -328,7 +354,7 @@ class StructDeclaration : AggregateDeclaration
 
 class UnionDeclaration : AggregateDeclaration
 {
-  this(Identifier* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
+  this(Token* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
   {
     super(name, /+tparams, +/decls);
     mixin(set_kind);
@@ -403,13 +429,13 @@ class StaticDestructorDeclaration : Declaration
 class FunctionDeclaration : Declaration
 {
   TypeNode returnType;
-  Identifier* name;
+  Token* nametok;
 //   TemplateParameters tparams;
   Parameters params;
   FuncBodyStatement funcBody;
   LinkageType linkageType;
   bool cantInterpret = false;
-  this(TypeNode returnType, Identifier* name,/+ TemplateParameters tparams,+/
+  this(TypeNode returnType, Token* name,/+ TemplateParameters tparams,+/
        Parameters params, FuncBodyStatement funcBody)
   {
     super.hasBody = funcBody.funcBody !is null;
@@ -420,10 +446,16 @@ class FunctionDeclaration : Declaration
     addChild(funcBody);
 
     this.returnType = returnType;
-    this.name = name;
+    this.nametok = name;
 //     this.tparams = tparams;
     this.params = params;
     this.funcBody = funcBody;
+  }
+
+  /// TODO: remove this and rename 'nametok' to 'name'.
+  Identifier* name()
+  {
+    return nametok.ident;
   }
 
   void setLinkageType(LinkageType linkageType)
@@ -445,21 +477,25 @@ class FunctionDeclaration : Declaration
 class VariablesDeclaration : Declaration
 {
   TypeNode typeNode;
-  Identifier*[] names;
+  Token*[] nametoks;
+  Identifier*[] names; // TODO: will be removed.
   Expression[] inits;
-  this(TypeNode typeNode, Identifier*[] names, Expression[] inits)
+  this(TypeNode typeNode, Token*[] nametoks, Expression[] inits)
   {
     // No empty arrays allowed. Both arrays must be of same size.
-    assert(names.length != 0 && names.length == inits.length);
+    assert(nametoks.length != 0 && nametoks.length == inits.length);
     // If no type (in case of AutoDeclaration), first value mustn't be null.
     assert(typeNode ? 1 : inits[0] !is null);
     mixin(set_kind);
     addOptChild(typeNode);
-    foreach(init; inits)
+    foreach (init; inits)
       addOptChild(init);
 
+    foreach (nametok; nametoks)
+      names ~= nametok ? nametok.ident : null;
+
     this.typeNode = typeNode;
-    this.names = names;
+    this.nametoks = nametoks;
     this.inits = inits;
   }
 
@@ -696,17 +732,24 @@ class AlignDeclaration : AttributeDeclaration
 
 class PragmaDeclaration : AttributeDeclaration
 {
-  Identifier* ident;
+  Token* idtok;
   Expression[] args;
-  this(Identifier* ident, Expression[] args, Declaration decls)
+  this(Token* ident, Expression[] args, Declaration decls)
   {
     addOptChildren(args); // Add args before calling super().
     super(decls);
     mixin(set_kind);
 
-    this.ident = ident;
+    this.idtok = ident;
     this.args = args;
   }
+
+  /// TODO: remove this and rename 'idtok' to 'ident'.
+  Identifier* ident()
+  {
+    return idtok.ident;
+  }
+
   mixin(copyMethod);
 }
 

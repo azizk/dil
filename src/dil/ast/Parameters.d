@@ -15,10 +15,10 @@ class Parameter : Node
 {
   StorageClass stc; /// The storage classes of the parameter.
   TypeNode type; /// The parameter's type.
-  Identifier* name; /// The name of the parameter.
+  Token* name; /// The name of the parameter.
   Expression defValue; /// The default initialization value.
 
-  this(StorageClass stc, TypeNode type, Identifier* name, Expression defValue)
+  this(StorageClass stc, TypeNode type, Token* name, Expression defValue)
   {
     super(NodeCategory.Other);
     mixin(set_kind);
@@ -30,6 +30,19 @@ class Parameter : Node
     this.type = type;
     this.name = name;
     this.defValue = defValue;
+  }
+
+  /// Returns true if this parameter has a name.
+  bool hasName()
+  {
+    return name !is null;
+  }
+
+  /// Returns the name of the parameter as a string.
+  char[] nameStr()
+  {
+    assert(hasName);
+    return name.ident.str;
   }
 
   /// Returns true if this is a D-style variadic parameter.
@@ -105,11 +118,17 @@ class Parameters : Node
 /// Abstract base class for all template parameters.
 abstract class TemplateParameter : Node
 {
-  Identifier* ident;
-  this(Identifier* ident)
+  Token* name;
+  this(Token* name)
   {
     super(NodeCategory.Other);
-    this.ident = ident;
+    this.name = name;
+  }
+
+  /// Returns the name of the parameter as a string.
+  char[] nameStr()
+  {
+    return name.ident.str;
   }
 }
 
@@ -117,13 +136,13 @@ abstract class TemplateParameter : Node
 class TemplateAliasParameter : TemplateParameter
 {
   TypeNode specType, defType;
-  this(Identifier* ident, TypeNode specType, TypeNode defType)
+  this(Token* name, TypeNode specType, TypeNode defType)
   {
-    super(ident);
+    super(name);
     mixin(set_kind);
     addOptChild(specType);
     addOptChild(defType);
-    this.ident = ident;
+    this.name = name;
     this.specType = specType;
     this.defType = defType;
   }
@@ -134,13 +153,13 @@ class TemplateAliasParameter : TemplateParameter
 class TemplateTypeParameter : TemplateParameter
 {
   TypeNode specType, defType;
-  this(Identifier* ident, TypeNode specType, TypeNode defType)
+  this(Token* name, TypeNode specType, TypeNode defType)
   {
-    super(ident);
+    super(name);
     mixin(set_kind);
     addOptChild(specType);
     addOptChild(defType);
-    this.ident = ident;
+    this.name = name;
     this.specType = specType;
     this.defType = defType;
   }
@@ -153,13 +172,13 @@ class TemplateTypeParameter : TemplateParameter
 class TemplateThisParameter : TemplateParameter
 {
   TypeNode specType, defType;
-  this(Identifier* ident, TypeNode specType, TypeNode defType)
+  this(Token* name, TypeNode specType, TypeNode defType)
   {
-    super(ident);
+    super(name);
     mixin(set_kind);
     addOptChild(specType);
     addOptChild(defType);
-    this.ident = ident;
+    this.name = name;
     this.specType = specType;
     this.defType = defType;
   }
@@ -172,15 +191,15 @@ class TemplateValueParameter : TemplateParameter
 {
   TypeNode valueType;
   Expression specValue, defValue;
-  this(TypeNode valueType, Identifier* ident, Expression specValue, Expression defValue)
+  this(TypeNode valueType, Token* name, Expression specValue, Expression defValue)
   {
-    super(ident);
+    super(name);
     mixin(set_kind);
     addChild(valueType);
     addOptChild(specValue);
     addOptChild(defValue);
     this.valueType = valueType;
-    this.ident = ident;
+    this.name = name;
     this.specValue = specValue;
     this.defValue = defValue;
   }
@@ -190,11 +209,11 @@ class TemplateValueParameter : TemplateParameter
 /// $(BNF TemplateTupleParameter := Identifier "...")
 class TemplateTupleParameter : TemplateParameter
 {
-  this(Identifier* ident)
+  this(Token* name)
   {
-    super(ident);
+    super(name);
     mixin(set_kind);
-    this.ident = ident;
+    this.name = name;
   }
   mixin(copyMethod);
 }

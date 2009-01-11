@@ -58,7 +58,7 @@ class EmptyStatement : Statement
 class FuncBodyStatement : Statement
 {
   Statement funcBody, inBody, outBody;
-  Identifier* outIdent;
+  Token* outIdent; /// $(BNF "out" "(" Identifier ")")
   this()
   {
     mixin(set_kind);
@@ -517,10 +517,10 @@ class IllegalAsmStatement : IllegalStatement
 
 class PragmaStatement : Statement
 {
-  Identifier* ident;
+  Token* ident;
   Expression[] args;
   Statement pragmaBody;
-  this(Identifier* ident, Expression[] args, Statement pragmaBody)
+  this(Token* ident, Expression[] args, Statement pragmaBody)
   {
     mixin(set_kind);
     addOptChildren(args);

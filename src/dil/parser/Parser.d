@@ -480,26 +480,26 @@ class Parser
   {
     auto begin = token;
     Type type;
-    Identifier* name;
+    Token* name;
 
     // Check for AutoDeclaration: StorageClasses Identifier =
     if (testAutoDeclaration && token.kind == T.Identifier)
     {
-      auto kind = peekNext();
-      if (kind == T.Assign)
+      auto next_kind = peekNext();
+      if (next_kind == T.Assign)
       { // Auto variable declaration.
-        name = token.ident;
+        name = token;
         skip(T.Identifier);
         goto LparseVariables;
       }
-      else version(D2) if (kind == T.LParen)
+      else version(D2) if (next_kind == T.LParen)
       { // Check for auto return type template function.
         // StorageClasses Name ( TemplateParameterList ) ( ParameterList )
-        name = token.ident;
-        auto next = token;
-        peekAfter(next);
-        if (tokenAfterParenIs(T.LParen, next))
+        auto peek_token = token;
+        peekAfter(peek_token); // Move to the next token, after the Identifier.
+        if (tokenAfterParenIs(T.LParen, peek_token))
         {
+          name = token;
           skip(T.Identifier);
           assert(token.kind == T.LParen);
           goto LparseTPList; // Continue with parsing a template function.
@@ -525,12 +525,13 @@ class Parser
       //   // returning 'something'.
       //   something(*p);
       type = parseCFunctionPointerType(type, name, optionalParameterList);
-      // FIXME: name can be null. Is this a problem?
+      // FIXME: name can be null or Ident.Empty. Is this a problem?
     }
     else if (peekNext() == T.LParen)
     { // Type FunctionName ( ParameterList ) FunctionBody
       name = requireIdentifier(MSG.ExpectedFunctionName);
-      name || nT(); // Skip non-identifier token.
+      if (token.kind != T.LParen)
+        nT(); // Skip non-identifier token.
       assert(token.kind == T.LParen);
       // It's a function declaration
       TemplateParameters tparams;
@@ -583,7 +584,7 @@ class Parser
 
   LparseVariables:
     // It's a variables declaration.
-    Identifier*[] names = [name]; // One identifier has been parsed already.
+    Token*[] names = [name]; // One identifier has been parsed already.
     Expression[] values;
     goto LenterLoop; // Enter the loop and check for an initializer.
     while (consumed(T.Comma))
@@ -666,7 +667,7 @@ class Parser
       // StructInitializer := "{" StructMemberInitializers? "}"
       Expression parseStructInitializer()
       {
-        Identifier*[] idents;
+        Token*[] idents;
         Expression[] values;
 
         skip(T.LBrace);
@@ -676,7 +677,7 @@ class Parser
               // Peek for colon to see if this is a member identifier.
               peekNext() == T.Colon)
           {
-            idents ~= token.ident;
+            idents ~= token;
             skip(T.Identifier), skip(T.Colon);
           }
           else
@@ -768,9 +769,8 @@ class Parser
       return linkageType;
     }
 
-    auto identTok = requireId();
-
-    IDK idKind = identTok ? identTok.ident.idKind : IDK.Null;
+    auto idtok = requireIdentifier(MSG.ExpectedLinkageIdentifier);
+    IDK idKind = idtok ? idtok.ident.idKind : IDK.Null;
 
     switch (idKind)
     {
@@ -794,6 +794,7 @@ class Parser
     case IDK.System:
       linkageType = LinkageType.System;
       break;
+    case IDK.Empty: break; // Avoid reporting another error below.
     default:
       error2(MID.UnrecognizedLinkageType, token);
       nT();
@@ -977,7 +978,7 @@ class Parser
     case T.Pragma:
       // Pragma := pragma "(" Identifier ("," ExpressionList)? ")"
       nT();
-      Identifier* ident;
+      Token* ident;
       Expression[] args;
 
       require(T.LParen);
@@ -1031,14 +1032,14 @@ class Parser
     skip(T.Import);
 
     ModuleFQN[] moduleFQNs;
-    Identifier*[] moduleAliases;
-    Identifier*[] bindNames;
-    Identifier*[] bindAliases;
+    Token*[] moduleAliases;
+    Token*[] bindNames;
+    Token*[] bindAliases;
 
     do
     {
       ModuleFQN moduleFQN;
-      Identifier* moduleAlias;
+      Token* moduleAlias;
       // AliasName = ModuleName
       if (peekNext() == T.Assign)
       {
@@ -1059,7 +1060,7 @@ class Parser
       // ":" ImportBind ("," ImportBind)*
       do
       {
-        Identifier* bindAlias;
+        Token* bindAlias;
         // BindAlias = BindName
         if (peekNext() == T.Assign)
         {
@@ -1110,7 +1111,7 @@ class Parser
   {
     skip(T.Enum);
 
-    Identifier* enumName;
+    Token* enumName;
     Type baseType;
     EnumMemberDeclaration[] members;
     bool hasBody;
@@ -1149,7 +1150,8 @@ class Parser
         if (consumed(T.Assign))
           value = parseAssignExpression();
 
-        members ~= set(new EnumMemberDeclaration(type, name, value), begin);
+        auto member = new EnumMemberDeclaration(type, name, value);
+        members ~= set(member, begin);
 
         if (!consumed(T.Comma))
           break;
@@ -1170,7 +1172,7 @@ class Parser
   ///   tparams = the template parameters.
   ///   constraint = the constraint expression.
   TemplateDeclaration putInsideTemplateDeclaration(Token* begin,
-                                                   Identifier* name,
+                                                   Token* name,
                                                    Declaration decl,
                                                    TemplateParameters tparams,
                                                    Expression constraint)
@@ -1191,7 +1193,7 @@ class Parser
     auto begin = token;
     skip(T.Class);
 
-    Identifier* name;
+    Token* name;
     TemplateParameters tparams;
     Expression constraint;
     BaseClassType[] bases;
@@ -1259,7 +1261,7 @@ class Parser
     auto begin = token;
     skip(T.Interface);
 
-    Identifier* name;
+    Token* name;
     TemplateParameters tparams;
     Expression constraint;
     BaseClassType[] bases;
@@ -1283,7 +1285,7 @@ class Parser
     else
       error2(MSG.ExpectedInterfaceBody, token);
 
-    Declaration d = new InterfaceDeclaration(name, /+tparams, +/bases, decls);
+    Declaration d = new InterfaceDeclaration(name, bases, decls);
     if (tparams)
       d = putInsideTemplateDeclaration(begin, name, d, tparams, constraint);
     return d;
@@ -1303,7 +1305,7 @@ class Parser
     auto begin = token;
     skip(token.kind);
 
-    Identifier* name;
+    Token* name;
     TemplateParameters tparams;
     Expression constraint;
     CompoundDeclaration decls;
@@ -1627,7 +1629,7 @@ class Parser
     while (consumed(T.Dot))
       e = set(new DotExpression(e, parseIdentifierExpression()), begin);
 
-    mixinIdent = optionalIdentifier();
+    mixinIdent = optionalIdentifier2();
     require(T.Semicolon);
 
     return new Class(e, mixinIdent);
@@ -2036,7 +2038,7 @@ class Parser
     auto leftParen = token;
     require(T.LParen);
 
-    Identifier* ident;
+    Token* ident;
     auto begin = token; // For start of AutoDeclaration or normal Declaration.
     // auto Identifier = Expression
     if (consumed(T.Auto))
@@ -2152,7 +2154,7 @@ class Parser
       auto paramBegin = token;
       StorageClass stc;
       Type type;
-      Identifier* ident;
+      Token* ident;
 
       switch (token.kind)
       {
@@ -2248,7 +2250,7 @@ class Parser
   Statement parseContinueStatement()
   {
     skip(T.Continue);
-    auto ident = optionalIdentifier();
+    auto ident = optionalIdentifier2();
     require(T.Semicolon);
     return new ContinueStatement(ident);
   }
@@ -2257,7 +2259,7 @@ class Parser
   Statement parseBreakStatement()
   {
     skip(T.Break);
-    auto ident = optionalIdentifier();
+    auto ident = optionalIdentifier2();
     require(T.Semicolon);
     return new BreakStatement(ident);
   }
@@ -2294,7 +2296,7 @@ class Parser
       nT();
       break;
     default:
-      ident = requireIdentifier(MSG.ExpectedAnIdentifier);
+      ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
     }
     require(T.Semicolon);
     return new GotoStatement(ident, caseExpr);
@@ -2348,7 +2350,7 @@ class Parser
       if (consumed(T.LParen))
       {
         auto begin2 = token;
-        Identifier* ident;
+        Token* ident;
         auto type = parseDeclarator(ident, true);
         param = new Parameter(StorageClass.None, type, ident, null);
         set(param, begin2);
@@ -2386,12 +2388,12 @@ class Parser
   {
     skip(T.Scope);
     skip(T.LParen);
-    auto condition = requireIdentifier(MSG.ExpectedScopeIdentifier);
+    auto condition = requireIdentifier2(MSG.ExpectedScopeIdentifier);
     if (condition)
       switch (condition.idKind)
       {
-      case IDK.exit, IDK.success, IDK.failure:
-        break;
+      case IDK.exit, IDK.success, IDK.failure: break;
+      case IDK.Empty: break; // Error has already been reported if empty.
       default:
         error2(MSG.InvalidScopeIdentifier, this.prevToken);
       }
@@ -2425,13 +2427,13 @@ class Parser
   {
     skip(T.Pragma);
 
-    Identifier* ident;
+    Token* name;
     Expression[] args;
     Statement pragmaBody;
 
     auto leftParen = token;
     require(T.LParen);
-    ident = requireIdentifier(MSG.ExpectedPragmaIdentifier);
+    name = requireIdentifier(MSG.ExpectedPragmaIdentifier);
 
     if (consumed(T.Comma))
       args = parseExpressionList();
@@ -2439,7 +2441,7 @@ class Parser
 
     pragmaBody = parseNoScopeOrEmptyStatement();
 
-    return new PragmaStatement(ident, args, pragmaBody);
+    return new PragmaStatement(name, args, pragmaBody);
   }
 
   /// $(BNF StaticIfStatement :=
@@ -3482,7 +3484,7 @@ class Parser
       auto type = try_(&parseType_, success);
       if (success)
       {
-        auto ident = requireIdentifier(MSG.ExpectedIdAfterTypeDot);
+        auto ident = requireIdentifier2(MSG.ExpectedIdAfterTypeDot);
         e = new TypeDotIdExpression(type, ident);
         break;
       }
@@ -3505,7 +3507,7 @@ class Parser
   Expression parseIdentifierExpression()
   {
     auto begin = token;
-    auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
+    auto ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
     Expression e;
     // Peek for '(' to avoid matching: id !is id
     if (token.kind == T.Not && peekNext() == T.LParen)
@@ -3680,7 +3682,7 @@ class Parser
       require(T.LParen);
 
       Type type, specType;
-      Identifier* ident; // optional Identifier
+      Token* ident; // optional Identifier
       Token* opTok, specTok;
 
       type = parseDeclarator(ident, true);
@@ -3719,9 +3721,8 @@ class Parser
 
       TemplateParameters tparams;
     version(D2)
-    {
-      // is ( Type Identifier : TypeSpecialization , TemplateParameterList )
-      // is ( Type Identifier == TypeSpecialization , TemplateParameterList )
+    { // "is" "(" Type Identifier (":" | "==") TypeSpecialization ","
+      //          TemplateParameterList ")"
       if (ident && specType && token.kind == T.Comma)
         tparams = parseTemplateParameterList2();
     }
@@ -3748,13 +3749,13 @@ class Parser
     {
     case T.Traits:
       requireNext(T.LParen);
-      auto id = requireIdentifier(MSG.ExpectedAnIdentifier);
+      auto ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
       TemplateArguments args;
       if (token.kind == T.Comma)
         args = parseTemplateArguments2();
       else
         require(T.RParen);
-      e = new TraitsExpression(id, args);
+      e = new TraitsExpression(ident, args);
       break;
     }
     default:
@@ -3764,7 +3765,7 @@ class Parser
         nT();
         set(type, begin);
         require(T.Dot);
-        auto ident = requireIdentifier(MSG.ExpectedIdAfterTypeDot);
+        auto ident = requireIdentifier2(MSG.ExpectedIdAfterTypeDot);
         e = new TypeDotIdExpression(type, ident);
       }
       else if (token.isSpecialToken)
@@ -3840,7 +3841,7 @@ class Parser
   Type parseIdentifierType()
   {
     auto begin = token;
-    auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
+    auto ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
     Type t;
     if (consumed(T.Not)) // Identifier !( TemplateArguments )
       t = new TemplateInstanceType(ident, parseTemplateArguments());
@@ -4075,7 +4076,7 @@ class Parser
   /// $(BNF CFunctionPointerType := "("
   ////    BasicType2 (CFunctionPointerType | (Identifier DeclaratorSuffix)?)
   ////  ")" ParameterList?)
-  Type parseCFunctionPointerType(Type type, ref Identifier* ident,
+  Type parseCFunctionPointerType(Type type, ref Token* ident,
                                  bool optionalParamList)
   {
     assert(type !is null);
@@ -4084,15 +4085,11 @@ class Parser
 
     type = parseBasicType2(type);
     if (token.kind == T.LParen)
-    { // Can be nested.
-      type = parseCFunctionPointerType(type, ident, true);
-    }
-    else if (token.kind == T.Identifier)
-    { // The identifier of the function pointer and the declaration.
-      ident = token.ident;
-      nT();
-      type = parseDeclaratorSuffix(type);
-    }
+      type = parseCFunctionPointerType(type, ident, true); // Can be nested.
+    else if (consumed(T.Identifier))
+      (ident = prevToken),
+      // The identifier of the function pointer and the declaration.
+      (type = parseDeclaratorSuffix(type));
     requireClosing(T.RParen, begin);
 
     Parameters params;
@@ -4107,18 +4104,18 @@ class Parser
 
   /// $(BNF Declarator := Type CFunctionPointerType |
   ////              Type (Identifier DeclaratorSuffix)?)
-  Type parseDeclarator(ref Identifier* ident, bool identOptional = false)
+  /// Params:
+  ///   ident = receives the identifier of the declarator.
+  ///   identOptional = whether to report an error for a missing identifier.
+  Type parseDeclarator(ref Token* ident, bool identOptional = false)
   {
     auto t = parseType();
 
     if (token.kind == T.LParen)
       t = parseCFunctionPointerType(t, ident, true);
-    else if (token.kind == T.Identifier)
-    {
-      ident = token.ident;
-      nT();
-      t = parseDeclaratorSuffix(t);
-    }
+    else if (consumed(T.Identifier))
+      (ident = prevToken),
+      (t = parseDeclaratorSuffix(t));
 
     if (ident is null && !identOptional)
       error2(MSG.ExpectedDeclaratorIdentifier, token);
@@ -4177,7 +4174,7 @@ class Parser
       auto paramBegin = token;
       StorageClass stc, stc_;
       Type type;
-      Identifier* ident;
+      Token* ident;
       Expression defValue;
 
       void pushParameter()
@@ -4381,7 +4378,7 @@ class Parser
     {
       auto paramBegin = token;
       TemplateParameter tp;
-      Identifier* ident;
+      Token* ident;
       Type specType, defType;
 
       void parseSpecAndOrDefaultType()
@@ -4421,7 +4418,7 @@ class Parser
         tp = new TemplateAliasParameter(ident, specType, defType);
         break;
       case T.Identifier:
-        ident = token.ident;
+        ident = token;
         switch (peekNext())
         {
         case T.Ellipses:
@@ -4497,76 +4494,64 @@ class Parser
     require(tok);
   }
 
-  /// Optionally parses an identifier.
+  /// Parses an optional identifier.
   /// Returns: null or the identifier.
-  Identifier* optionalIdentifier()
+  Token* optionalIdentifier()
   {
-    Identifier* id;
+    Token* id;
     if (token.kind == T.Identifier)
-      (id = token.ident), skip(T.Identifier);
+      (id = token), nT();
     return id;
   }
 
-  Identifier* requireIdentifier()
+  /// ditto
+  Identifier* optionalIdentifier2()
   {
-    Identifier* id;
-    if (token.kind == T.Identifier)
-      (id = token.ident), skip(T.Identifier);
-    else
-      error(MID.ExpectedButFound, "Identifier", token.text);
-    return id;
+    auto idtok = optionalIdentifier();
+    return idtok ? idtok.ident : null;
   }
 
   /// Reports an error if the current token is not an identifier.
   /// Params:
   ///   errorMsg = the error message to be used.
-  /// Returns: null or the identifier.
-  Identifier* requireIdentifier(char[] errorMsg)
+  /// Returns: null or the identifier token.
+  Token* requireIdentifier(char[] errorMsg)
   {
-    Identifier* id;
-    if (token.kind == T.Identifier)
-      (id = token.ident), skip(T.Identifier);
-    else
-      error(token, errorMsg, token.text);
-    return id;
+    return requireIdToken(errorMsg);
+  }
+
+  /// ditto
+  Identifier* requireIdentifier2(char[] errorMsg)
+  {
+    auto idtok = requireIdToken(errorMsg);
+    return idtok ? idtok.ident : null;
   }
 
   /// Reports an error if the current token is not an identifier.
   /// Params:
   ///   mid = the error message ID to be used.
   /// Returns: null or the identifier.
-  Identifier* requireIdentifier(MID mid)
+  Token* requireIdentifier(MID mid)
   {
-    Identifier* id;
-    if (token.kind == T.Identifier)
-      (id = token.ident), skip(T.Identifier);
-    else
-      error(mid, token.text);
-    return id;
+    return requireIdToken(GetMsg(mid));
   }
 
-  /// Reports an error if the current token is not an identifier.
-  /// Returns: null or the token.
-  Token* requireId()
-  {
-    Token* idtok;
-    if (token.kind == T.Identifier)
-      (idtok = token), skip(T.Identifier);
-    else
-      error(MID.ExpectedButFound, "Identifier", token.text);
-    return idtok;
-  }
-
+  /// Returns an identifier token.
   Token* requireIdToken(char[] errorMsg)
   {
     Token* idtok;
     if (token.kind == T.Identifier)
-      (idtok = token), skip(T.Identifier);
+      (idtok = token), nT();
     else
     {
       error(token, errorMsg, token.text);
-      idtok = lexer.insertEmptyTokenBefore(token);
-      this.prevToken = idtok;
+      if (!trying)
+      {
+        idtok = lexer.insertEmptyTokenBefore(token);
+        idtok.kind = T.Identifier;
+        idtok.ident = Ident.Empty;
+        this.prevToken = idtok;
+      }
     }
     return idtok;
   }

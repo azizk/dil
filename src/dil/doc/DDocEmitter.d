@@ -108,39 +108,33 @@ abstract class DDocEmitter : DefaultVisitor
   /// Reports a missing params section or undocumented parameters.
   void reportParameters(Parameters params)
   {
-    if (reportDiag is null || params.items.length == 0)
+    if (reportDiag is null || cmntIsDitto || params.items.length == 0)
       return;
-    string[] paramNames;
+    Token*[] paramNames;
     foreach (param; params.items)
-      if (param.name)
-        paramNames ~= param.name.str;
-    reportParameters(paramNames);
+      if (param.hasName)
+        paramNames ~= param.name;
+    reportParameters(params.begin, paramNames);
   }
 
   /// ditto
   void reportParameters(TemplateParameters params)
   {
-    if (reportDiag is null || params.items.length == 0)
+    if (reportDiag is null || cmntIsDitto || params.items.length == 0)
       return;
-    string[] paramNames;
+    Token*[] paramNames;
     foreach (param; params.items)
-      paramNames ~= param.ident.str;
-    reportParameters(paramNames);
+      paramNames ~= param.name;
+    reportParameters(params.begin, paramNames);
   }
 
-  /// ditto
-  void reportParameters(string[] params)
+  /// Params:
+  ///   paramsBegin = the left parenthesis of the parameter list.
+  ///   params = the identifier tokens of the parameter names.
+  void reportParameters(Token* paramsBegin, Token*[] params)
   {
     assert(currentDecl !is null);
     // TODO: exclude some functions? like "new"?
-    Location loc;
-    Location getLoc()
-    { // Lazyly sets loc and returns it.
-      if (!loc)
-        (loc = currentDecl.begin.getRealLocation()),
-        loc.setFilePath(modul.getFQN());
-      return loc;
-    }
     // Search for the params section.
     Section paramsSection;
     foreach (s; this.cmnt.sections)
@@ -148,7 +142,8 @@ abstract class DDocEmitter : DefaultVisitor
         paramsSection = s;
     if (paramsSection is null)
     {
-      loc = getLoc();
+      auto loc = paramsBegin.getRealLocation();
+      loc.setFilePath(modul.getFQN());
       auto kind = DDocProblem.Kind.NoParamsSection;
       reportDiag ~= new DDocProblem(loc, kind, MSG.MissingParamsSection);
       return;
@@ -159,9 +154,10 @@ abstract class DDocEmitter : DefaultVisitor
     foreach (name; ps.paramNames) // Create set of documented parameters.
       documentedParams[name] = true;
     foreach (param; params) // Find undocumented parameters.
-      if (!(param in documentedParams))
+      if (!(param.ident.str in documentedParams))
       {
-        loc = getLoc();
+        auto loc = param.getRealLocation();
+        loc.setFilePath(modul.getFQN());
         auto kind = DDocProblem.Kind.UndocumentedParam;
         auto msg = Format(MSG.MissingParamsSection, param);
         reportDiag ~= new DDocProblem(loc, kind, msg);
@@ -540,8 +536,8 @@ abstract class DDocEmitter : DefaultVisitor
         if (typeBegin !is param.begin) // Write storage classes.
           write(textSpan(param.begin, typeBegin.prevNWS), " ");
         write(escape(typeBegin, param.type.end)); // Write type.
-        if (param.name)
-          write(" $(DDOC_PARAM ", param.name.str, ")");
+        if (param.hasName)
+          write(" $(DDOC_PARAM ", param.nameStr, ")");
         if (param.isDVariadic)
           write("...");
         if (param.defValue)
@@ -574,23 +570,23 @@ abstract class DDocEmitter : DefaultVisitor
         if (def)  write(" = ", escape(def.begin, def.end));
       }
       if (auto p = tparam.Is!(TemplateAliasParameter))
-        write("$(DIL_TPALIAS $(DIL_TPID ", p.ident.str, ")"),
+        write("$(DIL_TPALIAS $(DIL_TPID ", p.nameStr, ")"),
         writeSpecDef(p.specType, p.defType),
         write(")");
       else if (auto p = tparam.Is!(TemplateTypeParameter))
-        write("$(DIL_TPTYPE $(DIL_TPID ", p.ident.str, ")"),
+        write("$(DIL_TPTYPE $(DIL_TPID ", p.nameStr, ")"),
         writeSpecDef(p.specType, p.defType),
         write(")");
       else if (auto p = tparam.Is!(TemplateTupleParameter))
-        write("$(DIL_TPTUPLE $(DIL_TPID ", p.ident.str, "))");
+        write("$(DIL_TPTUPLE $(DIL_TPID ", p.nameStr, "))");
       else if (auto p = tparam.Is!(TemplateValueParameter))
         write("$(DIL_TPVALUE "),
         write(escape(textSpan(p.valueType.begin, p.valueType.end))),
-        write(" $(DIL_TPID ", p.ident.str, ")"),
+        write(" $(DIL_TPID ", p.nameStr, ")"),
         writeSpecDef2(p.specValue, p.defValue),
         write(")");
       else if (auto p = tparam.Is!(TemplateThisParameter))
-        write("$(DIL_TPTHIS $(DIL_TPID ", p.ident.str, ")"),
+        write("$(DIL_TPTHIS $(DIL_TPID ", p.nameStr, ")"),
         writeSpecDef(p.specType, p.defType),
         write(")");
       write(", ");

@@ -567,7 +567,8 @@ class SliceExpression : UnaryExpression
   mixin(copyMethod);
 }
 
-/// Module scope operator: '.' (IdentifierExpression|TemplateInstanceExpression)
+/// Module scope operator:
+/// $(BNF "." (IdentifierExpression | TemplateInstanceExpression))
 class ModuleScopeExpression : UnaryExpression
 {
   this(Expression e)
@@ -953,11 +954,11 @@ class TypeidExpression : Expression
 class IsExpression : Expression
 {
   TypeNode type;
-  Identifier* ident;
+  Token* ident;
   Token* opTok, specTok;
   TypeNode specType;
   TemplateParameters tparams; // D 2.0
-  this(TypeNode type, Identifier* ident, Token* opTok, Token* specTok,
+  this(TypeNode type, Token* ident, Token* opTok, Token* specTok,
        TypeNode specType, typeof(tparams) tparams)
   {
     mixin(set_kind);
@@ -1066,9 +1067,9 @@ class ArrayInitExpression : Expression
 
 class StructInitExpression : Expression
 {
-  Identifier*[] idents;
+  Token*[] idents;
   Expression[] values;
-  this(Identifier*[] idents, Expression[] values)
+  this(Token*[] idents, Expression[] values)
   {
     assert(idents.length == values.length);
     mixin(set_kind);
@@ -1142,8 +1143,8 @@ class AsmLocalSizeExpression : Expression
 
 class AsmRegisterExpression : Expression
 {
-  Identifier* register;
-  int number; // ST(0) - ST(7) or FS:0, FS:4, FS:8
+  Identifier* register; /// Name of the register.
+  int number; /// ST(0) - ST(7) or FS:0, FS:4, FS:8
   this(Identifier* register, int number = -1)
   {
     mixin(set_kind);
