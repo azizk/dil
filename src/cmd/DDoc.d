@@ -29,6 +29,7 @@ import Settings;
 import common;
 
 import tango.text.Ascii : toUpper;
+import tango.text.Regex : Regex;
 import tango.io.stream.FileStream,
        tango.io.FilePath,
        tango.io.Print,
@@ -42,6 +43,7 @@ struct DDocCommand
   string[] filePaths;  /// Module file paths.
   string modsTxtPath;  /// Write list of modules to this file if specified.
   string outFileExtension;  /// The extension of the output files.
+  Regex[] regexps; /// Regular expressions.
   bool includeUndocumented; /// Whether to include undocumented symbols.
   bool writeReport;  /// Whether to write a problem report.
   bool useKandil;    /// Whether to use kandil.
@@ -173,10 +175,10 @@ struct DDocCommand
     DDocEmitter ddocEmitter;
     if (writeXML)
       ddocEmitter = new DDocXMLEmitter(mod, mtable, includeUndocumented,
-        reportDiag, hl);
+        getReportDiag(modFQN), hl);
     else
       ddocEmitter = new DDocHTMLEmitter(mod, mtable, includeUndocumented,
-        reportDiag, hl);
+        getReportDiag(modFQN), hl);
     // Start the emitter.
     auto ddocText = ddocEmitter.emit();
     // Set the BODY macro to the text produced by the emitter.
@@ -268,6 +270,18 @@ struct DDocCommand
     return sanitizeText(text);
   }
 
+  // Report functions:
+
+  /// Returns the reportDiag for moduleName if it is not filtered
+  /// by the -rx=REGEXP option.
+  Diagnostics getReportDiag(string moduleName)
+  {
+    foreach (rx; regexps)
+      if (rx.test(moduleName))
+        return null;
+    return reportDiag;
+  }
+
   /// Used for collecting data for the report.
   class ModuleData
   {
@@ -294,6 +308,7 @@ struct DDocCommand
     auto filePath = new FilePath(destDirPath);
     filePath.append("report.txt");
     scope file = new File(filePath.toString());
+    file.write("");
 
     Stdout.formatln("Writing report to '{}'.", filePath.toString());
 

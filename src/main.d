@@ -37,6 +37,7 @@ import Integer = tango.text.convert.Integer;
 import tango.stdc.stdio;
 import tango.io.File;
 import tango.text.Util;
+import tango.text.Regex : Regex;
 import tango.time.StopWatch;
 import tango.text.Ascii : icompare;
 
@@ -117,6 +118,8 @@ void main(char[][] args)
         cmd.useKandil = true;
       else if (arg == "--report")
         cmd.writeReport = true;
+      else if(strbeg(arg, "-rx="))
+        cmd.regexps ~= new Regex(arg[4..$]);
       else if (arg.length > 3 && strbeg(arg, "-m="))
         cmd.modsTxtPath = arg[3..$];
       else if (arg.length > 5 && icompare(arg[$-4..$], "ddoc") == 0)
@@ -456,6 +459,7 @@ Usage:
 Options:
   --kandil         : use kandil as the documentation front-end
   --report         : write a problem report to Destination/report.txt
+  -rx=REGEXP       : exclude modules if their names match REGEXP
   --xml            : write XML instead of HTML documents
   --raw            : don't expand macros in the output (useful for debugging)
   -hl              : write syntax highlighted files to Destination/htmlsrc
