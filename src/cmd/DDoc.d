@@ -56,6 +56,8 @@ struct DDocCommand
   Diagnostics diag;           /// Collects error messages.
   Diagnostics reportDiag;     /// Collectr problem messages.
   Highlighter hl; /// For highlighting source files or DDoc code sections.
+  /// For managing loaded modules and getting a sorted list of them.
+  ModuleManager mm;
 
   /// Executes the doc generation command.
   void run()
@@ -90,7 +92,7 @@ struct DDocCommand
 
     outFileExtension = writeXML ? ".xml" : ".html";
 
-    auto moduleManager = new ModuleManager(null, diag);
+    mm = new ModuleManager(null, diag);
 
     // Process D files.
     foreach (filePath; filePaths)
@@ -100,15 +102,15 @@ struct DDocCommand
       // Only parse if the file is not a "Ddoc"-file.
       if (!DDocEmitter.isDDocFile(mod))
       {
-        if (moduleManager.moduleByPath(mod.filePath()))
+        if (mm.moduleByPath(mod.filePath()))
           continue; // The same file path was already loaded. TODO: warning?
         mod.parse();
-        if (moduleManager.moduleByFQN(mod.getFQNPath()))
+        if (mm.moduleByFQN(mod.getFQNPath()))
           continue; // Same FQN, but different file path. TODO: error?
         if (mod.hasErrors)
           continue; // No documentation for erroneous source files.
         // Add the module to the manager.
-        moduleManager.addModule(mod);
+        mm.addModule(mod);
         // Write highlighted files before SA, since it mutates the tree.
         if (writeHLFiles)
           writeSyntaxHighlightedFile(mod);
@@ -123,8 +125,10 @@ struct DDocCommand
       writeDocumentationFile(mod, mtable);
     }
 
+    if (useKandil || writeReport)
+      mm.sortPackageTree();
     if (useKandil)
-      writeModuleLists(moduleManager);
+      writeModuleLists();
     if (writeReport)
       writeDDocReport();
   }
@@ -196,7 +200,7 @@ struct DDocCommand
   /// Also writes DEST/js/modules.js if kandil is used.
   /// Params:
   ///   mm = has the list of modules.
-  void writeModuleLists(ModuleManager mm)
+  void writeModuleLists()
   {
     if (modsTxtPath.length)
     {
@@ -209,7 +213,6 @@ struct DDocCommand
     if (!useKandil)
       return;
 
-    mm.sortPackageTree();
     auto filePath = new FilePath(destDirPath);
     filePath.append("js").append("modules.js");
     scope file = new File(filePath.toString());
@@ -288,8 +291,12 @@ struct DDocCommand
     string name; /// Module name.
     DDocProblem[] kind1, kind2, kind3, kind4;
 
-    static ModuleData[string] table;
-    static ModuleData get(string name)
+  static:
+    ModuleData[string] table;
+    ModuleData[] sortedList;
+    /// Returns a ModuleData for name.
+    /// Inserts a new instance into the table if not present.
+    ModuleData get(string name)
     {
       auto mod = name in table;
       if (mod)
@@ -298,6 +305,14 @@ struct DDocCommand
       md.name = name;
       table[name] = md;
       return md;
+    }
+    /// Uses mm to set the member sortedList.
+    void sort(ModuleManager mm)
+    {
+      auto allModules = mm.rootPackage.getModuleList();
+      foreach (mod; allModules)
+        if (auto data = mod.getFQN() in table)
+          sortedList ~= *data;
     }
   }
 
@@ -333,6 +348,9 @@ struct DDocCommand
         kind4Total++; mod.kind4 ~= p; break;
       }
     }
+
+    ModuleData.sort(mm);
+
     // Write the legend.
     file.append(Format("A = {}\nB = {}\nC = {}\nD = {}\n",
       titles[0], titles[1], titles[2], titles[3]
@@ -340,21 +358,24 @@ struct DDocCommand
 
     // Calculate the maximum module name length.
     uint maxNameLength;
-    foreach (name; ModuleData.table.keys)
-      if (maxNameLength < name.length)
-        maxNameLength = name.length;
+    foreach (mod; ModuleData.sortedList)
+      if (maxNameLength < mod.name.length)
+        maxNameLength = mod.name.length;
 
-    auto rowFormat = "{,-"~Format("{}",maxNameLength)~
-                     "} {,6} {,6} {,6} {,6}\n";
+    auto maxStr = Format("{}", maxNameLength);
+    auto rowFormat = "{,-"~maxStr~"} | {,6} {,6} {,6} {,6}\n";
     // Write the headers.
     file.append(Format(rowFormat, "Module", "A", "B", "C", "D"));
+    auto ruler = new char[maxNameLength+2+4*7];
+    foreach (ref c; ruler)
+      c = '-';
+    file.append(ruler~\n);
     // Write the table rows.
-    foreach (name, mod; ModuleData.table)
-    {
-      file.append(Format(rowFormat, name,
+    foreach (mod; ModuleData.sortedList)
+      file.append(Format(rowFormat, mod.name,
         mod.kind1.length, mod.kind2.length, mod.kind3.length, mod.kind4.length
       ));
-    }
+    file.append(ruler~\n);
     // Write the totals.
     file.append(Format(rowFormat, "Totals",
       kind1Total, kind2Total, kind3Total, kind4Total
@@ -365,17 +386,17 @@ struct DDocCommand
     foreach (i, title; titles)
     {
       file.append("\n***** "~title~" ******\n");
-      foreach (name, mod; ModuleData.table)
+      foreach (mod; ModuleData.sortedList)
       {
         // Print list of locations.
         auto kind = ([mod.kind1, mod.kind2, mod.kind3, mod.kind4])[i];
         if (!kind.length)
           continue; // Nothing to print for this module.
-        file.append(name ~ ":\n"); // Module name:
+        file.append(mod.name ~ ":\n"); // Module name:
         char[] line;
         foreach (p; kind)
         { // (x,y) (x,y) etc.
-          line ~= Format("({},{}) ", p.loc, p.col);
+          line ~= p.location.str("({},{}) ");
           if (line.length > 80)
             file.append("  "~line[0..$-1]~\n), (line = "");
         }

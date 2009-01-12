@@ -54,4 +54,13 @@ class Package : ScopeSymbol
     packages ~= pckg;
     insert(pckg, pckg.name);
   }
+
+  /// Returns a list of all modules in this package tree.
+  Module[] getModuleList()
+  {
+    auto list = modules.dup;
+    foreach (pckg; packages)
+      list ~= pckg.getModuleList();
+    return list;
+  }
 }

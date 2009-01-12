@@ -5,6 +5,7 @@ module dil.Location;
 
 import dil.lexer.Funcs;
 import dil.Unicode;
+import common;
 
 /// Represents a location in a source text.
 final class Location
@@ -90,4 +91,9 @@ final class Location
     return col;
   }
   alias calculateColumn colNum;
+
+  char[] str(char[] format = "({},{})")
+  {
+    return Format(format, lineNum, colNum);
+  }
 }
