@@ -607,30 +607,30 @@ class Parser
   /// Parses a variable initializer.
   /// $(BNF Initializer := VoidInitializer | NonVoidInitializer
   ////VoidInitializer := void
-  ////NonVoidInitializer := ArrayInitializer | StructInitializer | Expression
+  ////NonVoidInitializer := ArrayInitializer | StructInitializer |
+  ////                      AssignExpression
   ////ArrayInitializer :=
-  ////  "[" ((NonVoidInitializer ":")? NonVoidInitializer)* "]"
+  ////  "[" (ArrayInitElement ("," ArrayInitElement)* ","?)? "]"
+  ////ArrayInitElement := (AssignExpression ":")? NonVoidInitializer
   ////StructInitializer :=
-  ////  "{" ((MemberName ":")? NonVoidInitializer)* "}"
+  ////  "{" (StructInitElement ("," StructInitElement)* ","?)? "}"
+  ////StructInitElement := (MemberName ":")? NonVoidInitializer
   ////MemberName := Identifier)
   Expression parseInitializer()
   {
-    if (token.kind == T.Void)
+    auto kind = token.kind;
+    if (kind == T.Void)
     {
-      auto begin = token;
       auto next = peekNext();
       if (next == T.Comma || next == T.Semicolon)
-      {
-        skip(T.Void);
-        return set(new VoidInitExpression(), begin);
-      }
+        return skip(T.Void), set(new VoidInitExpression(), prevToken);
     }
     return parseNonVoidInitializer();
   }
 
   /// Parses a NonVoidInitializer.
   /// $(BNF NonVoidInitializer :=
-  ////  ArrayInitializer | StructInitializer | Expression)
+  ////  ArrayInitializer | StructInitializer | AssignExpression)
   Expression parseNonVoidInitializer()
   {
     auto begin = token;
@@ -638,25 +638,24 @@ class Parser
     switch (token.kind)
     {
     case T.LBracket:
+      auto after_bracket = tokenAfterBracket(T.RBracket);
+      if (after_bracket != T.Comma && after_bracket != T.RBracket &&
+          after_bracket != T.RBrace && after_bracket != T.Semicolon)
+        goto default; // Parse as an AssignExpression.
       // ArrayInitializer := "[" ArrayMemberInitializations? "]"
-      Expression[] keys;
-      Expression[] values;
+      Expression[] keys, values;
 
       skip(T.LBracket);
       while (token.kind != T.RBracket)
       {
-        auto e = parseNonVoidInitializer();
+        Expression key;
+        auto value = parseNonVoidInitializer();
         if (consumed(T.Colon))
-        {
-          keys ~= e;
-          values ~= parseNonVoidInitializer();
-        }
-        else
-        {
-          keys ~= null;
-          values ~= e;
-        }
-
+          (key = value), // Switch roles.
+          assert(!(key.Is!(ArrayInitExpression) ||
+                   key.Is!(StructInitExpression))),
+          value = parseNonVoidInitializer(); // Parse actual value.
+        keys ~= key; values ~= value;
         if (!consumed(T.Comma))
           break;
       }
@@ -664,46 +663,32 @@ class Parser
       init = new ArrayInitExpression(keys, values);
       break;
     case T.LBrace:
+      auto after_bracket = tokenAfterBracket(T.RBrace);
+      if (after_bracket != T.Comma && after_bracket != T.RBrace &&
+          after_bracket != T.RBracket && after_bracket != T.Semicolon)
+        goto default; // Parse as an AssignExpression.
       // StructInitializer := "{" StructMemberInitializers? "}"
-      Expression parseStructInitializer()
-      {
-        Token*[] idents;
-        Expression[] values;
+      Token*[] idents;
+      Expression[] values;
 
-        skip(T.LBrace);
-        while (token.kind != T.RBrace)
-        {
-          if (token.kind == T.Identifier &&
-              // Peek for colon to see if this is a member identifier.
-              peekNext() == T.Colon)
-          {
-            idents ~= token;
-            skip(T.Identifier), skip(T.Colon);
-          }
-          else
-            idents ~= null;
-
-          // NonVoidInitializer
-          values ~= parseNonVoidInitializer();
-
-          if (!consumed(T.Comma))
-            break;
-        }
-        requireClosing(T.RBrace, begin);
-        return new StructInitExpression(idents, values);
+      skip(T.LBrace);
+      while (token.kind != T.RBrace)
+      { // Peek for colon to see if this is a member identifier.
+        if (token.kind == T.Identifier && peekNext() == T.Colon)
+          (idents ~= token),
+          skip(T.Identifier), skip(T.Colon); // Identifier ":"
+        else
+          idents ~= null;
+        // NonVoidInitializer
+        values ~= parseNonVoidInitializer();
+        if (!consumed(T.Comma))
+          break;
       }
-
-      bool success;
-      auto si = try_(&parseStructInitializer, success);
-      if (success)
-      {
-        init = si;
-        break;
-      }
-      assert(token.kind == T.LBrace);
-      //goto default;
+      requireClosing(T.RBrace, begin);
+      init = new StructInitExpression(idents, values);
+      break;
     default:
-      init = parseAssignExpression();
+      return parseAssignExpression();
     }
     set(init, begin);
     return init;
@@ -3955,44 +3940,46 @@ class Parser
 
   /// Returns true if the token after the closing parenthesis
   /// matches the searched kind.
+  /// Params:
+  ///   kind = the kind of token to test for.
   bool tokenAfterParenIs(TOK kind)
   {
-    assert(token.kind == T.LParen);
-    auto next = token;
-    return skipParens(next) == kind;
+    auto peek_token = token;
+    return tokenAfterParenIs(kind, peek_token);
   }
 
   /// ditto
-  bool tokenAfterParenIs(TOK kind, ref Token* next)
+  bool tokenAfterParenIs(TOK kind, ref Token* peek_token)
   {
-    assert(next !is null && next.kind == T.LParen);
-    return skipParens(next) == kind;
+    assert(peek_token !is null && peek_token.kind == T.LParen);
+    return skipParens(peek_token, T.RParen) == kind;
   }
 
-  /// Skips to the token behind the closing parenthesis.
-  /// Takes nested parentheses into account.
-  TOK skipParens(ref Token* next)
+  /// Returns the kind of the token behind the closing bracket.
+  TOK tokenAfterBracket(TOK closing)
   {
-    assert(next !is null && next.kind == T.LParen);
-    // We count nested parentheses tokens because template types, typeof etc.
-    // may appear inside parameter lists. E.g.: (int x, Foo!(int) y)
+    assert(token.kind == T.LBracket || token.kind == T.LBrace);
+    auto peek_token = token;
+    return skipParens(peek_token, closing);
+  }
+
+  /// Skips to the token behind the 'closing' token.
+  /// Takes nesting into account.
+  /// Params:
+  ///   peek_token = opening token to start from; used to peek further.
+  ///   closing = kind of the closing token.
+  /// Returns: the kind of the searched token or TOK.EOF.
+  TOK skipParens(ref Token* peek_token, TOK closing)
+  {
+    assert(peek_token !is null);
     uint level = 1;
-  Loop:
-    while (1)
-      switch (peekAfter(next))
-      {
-      case T.LParen:
+    TOK opening = peek_token.kind, current_kind;
+    while ((current_kind = peekAfter(peek_token)) != T.EOF)
+      if (current_kind == opening)
         ++level;
-        break;
-      case T.RParen:
-        if (--level == 0)
-          return peekAfter(next); // Closing parenthesis found.
-        break;
-      case T.EOF:
-        return T.EOF;
-      default:
-      }
-    assert(0, "should be unreachable");
+      else if (current_kind == closing && --level == 0)
+        return peekAfter(peek_token); // Closing token found.
+    return T.EOF;
   }
 
   /// Parse the array types after the declarator (C-style.) E.g.: int a[]
