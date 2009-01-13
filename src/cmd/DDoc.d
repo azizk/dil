@@ -352,7 +352,7 @@ struct DDocCommand
     ModuleData.sort(mm);
 
     // Write the legend.
-    file.append(Format("A = {}\nB = {}\nC = {}\nD = {}\n",
+    file.append(Format("US = {}\nEC = {}\nNP = {}\nUP = {}\n",
       titles[0], titles[1], titles[2], titles[3]
     ));
 
@@ -365,7 +365,7 @@ struct DDocCommand
     auto maxStr = Format("{}", maxNameLength);
     auto rowFormat = "{,-"~maxStr~"} | {,6} {,6} {,6} {,6}\n";
     // Write the headers.
-    file.append(Format(rowFormat, "Module", "A", "B", "C", "D"));
+    file.append(Format(rowFormat, "Module", "US", "EC", "NP", "UP"));
     auto ruler = new char[maxNameLength+2+4*7];
     foreach (ref c; ruler)
       c = '-';

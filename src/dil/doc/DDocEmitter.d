@@ -487,6 +487,7 @@ abstract class DDocEmitter : DefaultVisitor
   }
 
   /// Escapes '<', '>' and '&' with named HTML entities.
+  /// Also escapes '(' and ')' with $&#40;LP&#41; and $&#40;RP&#41;.
   char[] escape(char[] text)
   {
     char[] result = new char[text.length]; // Reserve space.
@@ -497,6 +498,8 @@ abstract class DDocEmitter : DefaultVisitor
         case '<': result ~= "&lt;";  break;
         case '>': result ~= "&gt;";  break;
         case '&': result ~= "&amp;"; break;
+        case '(': result ~= "$(LP)"; break;
+        case ')': result ~= "$(RP)"; break;
         default:  result ~= c;
       }
     if (result.length != text.length)
@@ -541,7 +544,8 @@ abstract class DDocEmitter : DefaultVisitor
         if (param.isDVariadic)
           write("...");
         if (param.defValue)
-          write(" = ", escape(textSpan(param.defValue.begin, param.defValue.end)));
+          write(" = $(DIL_DEFVAL ",
+                escape(param.defValue.begin, param.defValue.end), ")");
       }
       write(", ");
     }
@@ -562,12 +566,13 @@ abstract class DDocEmitter : DefaultVisitor
       void writeSpecDef(TypeNode spec, TypeNode def)
       {
         if (spec) write(" : ", escape(spec.baseType.begin, spec.end));
-        if (def)  write(" = ", escape(def.baseType.begin, def.end));
+        if (def)  write(" = $(DIL_DEFVAL ",
+                        escape(def.baseType.begin, def.end), ")");
       }
       void writeSpecDef2(Expression spec, Expression def)
       {
         if (spec) write(" : ", escape(spec.begin, spec.end));
-        if (def)  write(" = ", escape(def.begin, def.end));
+        if (def)  write(" = $(DIL_DEFVAL ", escape(def.begin, def.end), ")");
       }
       if (auto p = tparam.Is!(TemplateAliasParameter))
         write("$(DIL_TPALIAS $(DIL_TPID ", p.nameStr, ")"),
@@ -581,7 +586,7 @@ abstract class DDocEmitter : DefaultVisitor
         write("$(DIL_TPTUPLE $(DIL_TPID ", p.nameStr, "))");
       else if (auto p = tparam.Is!(TemplateValueParameter))
         write("$(DIL_TPVALUE "),
-        write(escape(textSpan(p.valueType.begin, p.valueType.end))),
+        write(escape(p.valueType.begin, p.valueType.end)),
         write(" $(DIL_TPID ", p.nameStr, ")"),
         writeSpecDef2(p.specValue, p.defValue),
         write(")");
@@ -605,7 +610,7 @@ abstract class DDocEmitter : DefaultVisitor
     auto basesBegin = bases[0].begin.prevNWS;
     if (basesBegin.kind == TOK.Colon)
       basesBegin = bases[0].begin;
-    auto text = escape(textSpan(basesBegin, bases[$-1].end));
+    auto text = escape(basesBegin, bases[$-1].end);
     write(" $(DIL_BASE_CLASSES ", text, ")");
   }
 
