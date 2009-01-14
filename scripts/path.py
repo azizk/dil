@@ -32,6 +32,14 @@ class Path(unicode):
     return Path(path + unicode(self))
 
   @property
+  def name(self):
+    return os.path.basename(self)
+
+  @property
+  def namebase(self):
+    return os.path.splitext(self.name)[0]
+
+  @property
   def ext(self):
     return os.path.splitext(self)[1]
 
