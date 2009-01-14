@@ -40,12 +40,17 @@ YELLOW = <font color="yellow">$0</font>
 BLACK = <font color="black">$0</font>
 WHITE = <font color="white">$0</font>
 
-D_CODE    = <pre class="d_code">$0</pre>
+D_CODE    = <table class="d_code">
+  <tr><td class="d_codelines">$1</td><td class="d_codetext">$2</td></tr>
+</table>
 D_COMMENT = $(GREEN $0)
 D_STRING  = $(RED $0)
 D_KEYWORD = $(BLUE $0)
 D_PSYMBOL = $(U $0)
 D_PARAM   = $(I $0)
+
+DIL_CODELINES = <pre>$0</pre>
+DIL_CODETEXT  = <pre>$0</pre>
 
 DDOC_COMMENT   = <!-- $0 -->
 DDOC_DECL      = $(DT $(BIG $0))

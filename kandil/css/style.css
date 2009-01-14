@@ -1,3 +1,4 @@
+@charset "utf-8";
 /* Author: Aziz Köksal */
 body { margin: 0; }
 
@@ -136,8 +137,9 @@ input.filterbox {
   margin-right: 0;
 }
 
-.nocmnt {
+.nocmnt { /* Empty comment for undocumented symbols */
   width: 2em;
+  margin-bottom: 0.5em;
   border-top: 1px dashed Gray;
 }
 
@@ -204,9 +206,21 @@ table.params td:first-child {
 }
 
 /* Code formatting */
-pre.d_code {
-  padding: 0.2em;
-  border: 1px solid gray;
+.d_code {
+  margin: 0.5em 0em;
+  border: 1px solid Gray;
+  border-collapse: collapse;
+}
+
+.d_code pre {
+  margin: 0.1em 0.2em;
+}
+
+.d_codelines {
+  border-right: 1px dotted Gray;
+  background-color: #F5F5F5;
+  text-align: right;
+  color: Gray;
 }
 
 .loaded_code {
@@ -217,30 +231,26 @@ pre.d_code {
 }
 
 .loaded_code pre.d_code {
-  margin: 0;
+  margin: 0.2em;
   border: none;
 }
 
 .loaded_code td {
- vertical-align: top;
- margin: 0;
- padding: 0;
+  vertical-align: top;
 }
 
 .loaded_code table {
-  border-spacing: 0;
   border-collapse: collapse;
 }
 
 .loaded_code td.lines {
   text-align: right;
   background-color: #F5F5F5;
+  border-right: 1px dotted gray;
 }
 
 .loaded_code .lines_column {
-  margin: 0;
-  padding: 0.2em 0.2em;
-  border-right: 1px dotted gray;
+  margin: 0.2em;
 }
 
 .loaded_code .lines_column a {

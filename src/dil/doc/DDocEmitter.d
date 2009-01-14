@@ -466,10 +466,16 @@ abstract class DDocEmitter : DefaultVisitor
           if (codeBegin < codeEnd)
           { // Highlight the extracted source code.
             auto codeText = makeString(codeBegin, codeEnd);
+            uint lines; // Number of lines in the code text.
+
             codeText = DDocUtils.unindentText(codeText);
+            codeText = tokenHL.highlightTokens(codeText, modul.getFQN(),
+                                               lines);
             result ~= "$(D_CODE\n";
-            // TODO: line numbers?
-            result ~= tokenHL.highlightTokens(codeText, modul.getFQN());
+              result ~= "$(DIL_CODELINES ";
+              for (auto line = 1; line <= lines; line++)
+                result ~= Format("{}\n", line);
+              result ~= "),$(DIL_CODETEXT " ~ codeText ~ ")";
             result ~= "\n)";
           }
           while (p < end && *p == '-') // Skip remaining dashes.

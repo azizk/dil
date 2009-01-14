@@ -95,7 +95,7 @@ DDOC_KEYWORD    = $(SPAN kw, $0)
 
 DDOC_BLANKLINE = <p class="bl"/>
 
-DIL_NOCMNT          = <div class="nocmnt"/>
+DIL_NOCMNT          = <div class="nocmnt"></div>
 DIL_ATTRIBUTES      = $(SPAN attrs, [$0])
 DIL_PROT            = $(SPAN prot, $0)
 DIL_STC             = $(SPAN stc, $0)

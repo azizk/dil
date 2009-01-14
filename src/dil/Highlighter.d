@@ -38,7 +38,7 @@ class Highlighter
 
   /// Highlights tokens in a text buffer.
   /// Returns: a string with the highlighted tokens.
-  string highlightTokens(string text, string filePath)
+  string highlightTokens(string text, string filePath, ref uint lines)
   {
     auto buffer = new GrowBuffer(text.length);
     auto print_saved = print; // Save;
@@ -46,6 +46,8 @@ class Highlighter
 
     auto lx = new Lexer(new SourceText(filePath, text), diag);
     lx.scanAll();
+    lines = lx.lineNum;
+
     // Traverse linked list and print tokens.
     for (auto token = lx.firstToken(); token; token = token.next) {
       token.ws && print(token.wsChars); // Print preceding whitespace.
