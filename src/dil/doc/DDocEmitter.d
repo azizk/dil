@@ -630,13 +630,9 @@ abstract class DDocEmitter : DefaultVisitor
     }
 
     if (/+includeUndocumented &&+/ this.cmnt is this.emptyCmnt)
-    { // Handle undocumented symbols separately.
-      // This way they don't interrupt consolidated declarations.
+      // Handle undocumented symbols separately.
+      // This way they don't interrupt consolidated declarations (via 'ditto'.)
       writeDECL();
-      // Write an empty DDOC_DECL_DD.
-      // The method DESC() does not emit anything when cmntIsDitto is true.
-      cmntIsDitto && write("\n$(DDOC_DECL_DD)");
-    }
     else if (cmntIsDitto)
     { // The declaration has a ditto comment.
       alias prevDeclOffset offs;
@@ -662,10 +658,14 @@ abstract class DDocEmitter : DefaultVisitor
   /// Writes the comment before dg() is called.
   void DESC(void delegate() dg = null)
   {
-    if (cmntIsDitto)
-      return; // Don't write a description when we have a ditto declaration.
+    auto isEmpty = this.cmnt is this.emptyCmnt;
+    if (cmntIsDitto && !isEmpty)
+      return; // Don't write a description when we have a ditto-comment.
     write("\n$(DDOC_DECL_DD ");
-    writeComment();
+    if (isEmpty)
+      write("\n$(DIL_NOCMNT)");
+    else
+      writeComment();
     dg && dg();
     write(")");
   }

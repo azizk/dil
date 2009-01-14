@@ -136,6 +136,11 @@ input.filterbox {
   margin-right: 0;
 }
 
+.nocmnt {
+  width: 2em;
+  border-top: 1px dashed Gray;
+}
+
 .symlink, .srclink{
   padding: 0em 0.2em;
   text-decoration: none;
