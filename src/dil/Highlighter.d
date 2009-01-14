@@ -323,6 +323,12 @@ class TagMap
     return tokenTable[tok];
   }
 
+  /// Assigns str to tokenTable[tok].
+  void opIndexAssign(string str, TOK tok)
+  {
+    tokenTable[tok] = str;
+  }
+
   /// Shortcuts for quick access.
   string Identifier, String, Char, Number, Keyword, LineC, BlockC,
          NestedC, Shebang, HLine, Filespec, Illegal, Newline, SpecialToken,

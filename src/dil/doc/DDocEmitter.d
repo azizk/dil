@@ -469,8 +469,14 @@ abstract class DDocEmitter : DefaultVisitor
             uint lines; // Number of lines in the code text.
 
             codeText = DDocUtils.unindentText(codeText);
+            auto tags = tokenHL.tags;
+            auto lparen = tags[TOK.LParen], rparen = tags[TOK.RParen];
+            tags[TOK.LParen] = "$(LP)"; // TODO: replace("(", "$(LP)", lparen)
+            tags[TOK.RParen] = "$(RP)"; // TODO: ditto
             codeText = tokenHL.highlightTokens(codeText, modul.getFQN(),
                                                lines);
+            tags[TOK.LParen] = lparen;
+            tags[TOK.RParen] = rparen;
             result ~= "$(D_CODE\n";
               result ~= "$(DIL_CODELINES ";
               for (auto line = 1; line <= lines; line++)
