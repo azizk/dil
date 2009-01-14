@@ -6,13 +6,13 @@ DDOC = <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
   $(DOC_HEAD_EXTRA)
 </head>
 <body>
-<div id="content">
+<div id="kandil-content">
 <div class="module">
-  <h1 class="module"><a href="$(SRCFILE)" name="m-$(DIL_MODFQN)" class="symbol">$(TITLE)</a></h1>
+  <h1 class="module" id="m-$(DIL_MODFQN)"><a href="$(SRCFILE)" class="symbol">$(TITLE)</a></h1>
 $(BODY)
 </div>
 </div>
-<div id="footer">
+<div id="kandil-footer">
   <p>$(COPYRIGHT)</p>
   <p>$(GENERATED_BY)</p>
 </div>

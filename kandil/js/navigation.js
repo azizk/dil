@@ -6,7 +6,7 @@ $(function() {
   var navbar = $("<div id='navbar'/>")
     .append("<p id='navtabs'><span id='apitab' class='current'>API</span>"+
                             "<span id='modtab'>Modules</span></p>")
-    .append("<div id='panels'><div id='apipanel'/><div id='modpanel'/>");
+    .append("<div id='panels'><div id='apipanel'/><div id='modpanel'/></div>");
   $("body").append(navbar);
   // Create the quick search text boxes.
   var qs = [new QuickSearch("apiqs", "#apipanel>ul", quickSearchSymbols),
@@ -14,14 +14,7 @@ $(function() {
   $("#apipanel").prepend(qs[0].input);
   $("#modpanel").prepend(qs[1].input).hide(); // Initially hidden.
 
-  var symbols = $(".symbol");
-  // Add code display functionality to symbol links.
-  symbols.click(function(event) {
-    event.preventDefault();
-    showCode($(this));
-  });
-
-  initializeSymbolsList(symbols);
+  initAPIList();
 
 //   $("#apipanel > ul").treeview({
 //     animated: "fast",
@@ -45,9 +38,16 @@ $(function() {
     // Create the list.
     $("#modpanel").append(createModulesUL(g_moduleObjects));
     $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
+    $("#modpanel > ul li[kind=module] > a").click(function(event) {
+      event.preventDefault();
+      var modFQN = this.href.slice(this.href.lastIndexOf("/")+1,
+                                   this.href.lastIndexOf(".html"));
+      loadNewModule(modFQN);
+    });
   })          .click(function() { // Add the display handler.
     $("#modpanel").show(); // Display the modules list.
   });
+
 
   // $(window).resize(function(){
   //   $("#apipanel > ul").add("#modpanel > ul").each(setHeightOfPanel);
@@ -63,7 +63,82 @@ function setHeightOfPanel()
 }
 */
 
-function initializeSymbolsList(symbols)
+/// Adds click handlers to symbols and inits the symbol list.
+function initAPIList()
+{
+  var symbols = $(".symbol");
+  // Add code display functionality to symbol links.
+  symbols.click(function(event) {
+    event.preventDefault();
+    showCode($(this));
+  });
+  initializeSymbolList(symbols);
+}
+
+/// Delays for 'delay' ms, fades out an element in 'fade' ms and removes it.
+function fadeOutRemove(tag, delay, fade)
+{
+  tag = $(tag);
+  setTimeout(function(){
+    tag.fadeOut(fade, function(){ tag.remove() });
+  }, delay);
+}
+
+/// Loads a new module and updates the API panel and the content pane.
+function loadNewModule(modFQN)
+{
+  // Load the module's file.
+  var doc_url = modFQN + ".html";
+
+  function errorHandler(request, error, exception)
+  {
+    var msg = $("<p class='ajaxerror'>Failed loading the module from '"+doc_url+"'.</p>");
+    $("body").after(msg);
+    fadeOutRemove(msg, 5000, 500);
+  }
+
+  function extractModule(text)
+  {
+    var start = text.indexOf('<div class="module">'),
+        end = text.lastIndexOf('</div>\n<div id="kandil-footer">');
+    return text.slice(start, end);
+  }
+
+  displayLoadingGif("Loading module...");
+  try {
+    $.ajax({url: doc_url, dataType: "text", error: errorHandler,
+      success: function(data) {
+        // Reset some global variables.
+        g_moduleFQN = modFQN;
+        g_sourceCode = [];
+        $("#kandil-content")[0].innerHTML = extractModule(data);
+        $("#apipanel > ul").remove(); // Delete old API list.
+        initAPIList();
+      }
+    });
+  }
+  catch(e){ errorHandler(); }
+  hideLoadingGif();
+}
+
+function displayLoadingGif(msg)
+{
+  if (!msg)
+    msg = "";
+  var loading = $("#kandil-loading");
+  if (!loading.length)
+    (loading = $("<div id='kandil-loading'><img src='img/loading.gif'/>&nbsp;<span/></div>")),
+    $("body").append(loading);
+  $("span", loading).html(msg);
+}
+
+function hideLoadingGif()
+{
+  fadeOutRemove($("#kandil-loading"), 1, 500);
+}
+
+/// Initializes the symbol list under the API tab.
+function initializeSymbolList(symbols)
 {
   if (!symbols.length)
     return;
@@ -226,10 +301,11 @@ function showCode(symbol)
     function errorHandler(request, error, exception)
     {
       var msg = $("<p class='ajaxerror'>Failed loading code from '"+doc_url+"'.</p>");
-      $(dt_tag).after(msg);
-      setTimeout(function(){msg.fadeOut(400, function(){$(this).remove()})}, 4000);
+      $("body").after(msg);
+      fadeOutRemove(msg, 5000, 500);
     }
 
+    displayLoadingGif("Loading source code...");
     try {
       $.ajax({url: doc_url, dataType: "text", error: errorHandler,
         success: function(data) {
@@ -239,6 +315,7 @@ function showCode(symbol)
       });
     }
     catch(e){ errorHandler(); }
+    hideLoadingGif();
   }
   else // Already loaded. Show the code.
     show();
