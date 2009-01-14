@@ -2,6 +2,7 @@
 
 /// Execute when document is ready.
 $(function() {
+  g_originalModuleFQN = g_moduleFQN;
   // Create the navigation bar.
   var navbar = $("<div id='navbar'/>")
     .append("<p id='navtabs'><span id='apitab' class='current'>API</span>"+
@@ -63,6 +64,9 @@ function setHeightOfPanel()
 }
 */
 
+/// The original module loaded normally by the browser (not JavaScript.)
+var g_originalModuleFQN = "";
+
 /// Adds click handlers to symbols and inits the symbol list.
 function initAPIList()
 {
@@ -73,6 +77,11 @@ function initAPIList()
     showCode($(this));
   });
   initializeSymbolList(symbols);
+  $(".symlink").click(function(event) {
+    if (g_originalModuleFQN != g_moduleFQN)
+      event.preventDefault();
+    this.scrollIntoView();
+  });
 }
 
 /// Delays for 'delay' ms, fades out an element in 'fade' ms and removes it.

@@ -42,7 +42,7 @@ MODLINK2 = <a href="$1.html">$+</a>
 MODLINK3 = <a href="$1.html#$2">$(SLICEARGS $+)</a>
 
 SRCFILE = ./htmlsrc/$(DIL_MODFQN).html
-SYMLINK = <a title="Permalink to this symbol" href="#$0" class="symlink">¶</a>
+SYMLINK = <a title="Permalink to this symbol" href="$(DIL_MODFQN).html#$0" class="symlink">¶</a>
 SRCLINK = <a title="Go to the HTML source file" class="srclink" href="$(SRCFILE)#L$0">#</a>
 DIL_SYMBOL = <a class="symbol _$3" name="$2" href="$(SRCFILE)#L$4" kind="$3" beg="$4" end="$5">$1</a>
 DIL_SYMEND = $(SYMLINK $2)$(SRCLINK $4)
