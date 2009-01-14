@@ -586,7 +586,7 @@ abstract class DDocEmitter : DefaultVisitor
         write("$(DIL_TPTUPLE $(DIL_TPID ", p.nameStr, "))");
       else if (auto p = tparam.Is!(TemplateValueParameter))
         write("$(DIL_TPVALUE "),
-        write(escape(p.valueType.begin, p.valueType.end)),
+        write(escape(p.valueType.baseType.begin, p.valueType.end)),
         write(" $(DIL_TPID ", p.nameStr, ")"),
         writeSpecDef2(p.specValue, p.defValue),
         write(")");
