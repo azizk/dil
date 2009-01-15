@@ -118,10 +118,23 @@ h1.module > a {
 h1.package { /* Package header. */
   font-size: 1.45em;
   border-bottom: 2px solid black;
+  page-break-before: always;
+  page-break-after: avoid;
+}
+
+h1.package + div + h1.package { /* Keep adjacent packages together */
+  page-break-before: avoid;
 }
 
 h1.module:before { content: "Module " }
 h1.package:before { content: "Package " }
+
+/* Apply module specific styles like this: */
+/*h1.module[id=m-tango.core.Array] {
+  page-break-before: always;
+}*/
+/* A place-holder used by the script. */
+/*MODULE_PAGE_BREAKS*/
 
 div.module { /* Encompasses all elements of a module. */
 /*   page-break-inside: avoid; */ /* Wastes too much space. */
