@@ -157,6 +157,12 @@ dt.decl { /* Declaration */
   page-break-after: avoid;
 }
 
+.nocmnt { /* Empty comment for undocumented symbols */
+  width: 2em;
+  margin-bottom: 0.5em;
+  border-top: 1px dashed Gray;
+}
+
 dd.ddef { /* Definition, Explanation */
   margin: 0.5em 2.5em;
   margin-right: 0;
@@ -210,8 +216,22 @@ table.params td:first-child {
 /* Code formatting */
 .d_code {
   font-size: 0.9em;
-  padding: 0.2em;
-  border: 1px solid gray;
+  margin: 0.5em 0em;
+/*   width: 100%; */
+  border: 1px solid Gray;
+  border-collapse: collapse;
+}
+.d_code pre {
+  margin: 0.1em 0.2em;
+}
+.d_codetext {
+  width: 100%;
+}
+.d_codelines {
+  border-right: 1px dotted Gray;
+  background-color: #F5F5F5;
+  text-align: right;
+  color: Gray;
 }
 /* Number */
 .d_code .n { color: teal; }
