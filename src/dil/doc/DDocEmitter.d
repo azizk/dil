@@ -469,19 +469,13 @@ abstract class DDocEmitter : DefaultVisitor
             uint lines; // Number of lines in the code text.
 
             codeText = DDocUtils.unindentText(codeText);
-            auto tags = tokenHL.tags;
-            auto lparen = tags[TOK.LParen], rparen = tags[TOK.RParen];
-            tags[TOK.LParen] = "$(LP)"; // TODO: replace("(", "$(LP)", lparen)
-            tags[TOK.RParen] = "$(RP)"; // TODO: ditto
             codeText = tokenHL.highlightTokens(codeText, modul.getFQN(),
                                                lines);
-            tags[TOK.LParen] = lparen;
-            tags[TOK.RParen] = rparen;
             result ~= "$(D_CODE\n";
               result ~= "$(DIL_CODELINES ";
               for (auto line = 1; line <= lines; line++)
                 result ~= Format("{}\n", line);
-              result ~= "),$(DIL_CODETEXT " ~ codeText ~ ")";
+              result ~= "),$(DIL_CODETEXT " ~ escapeLPRP(codeText) ~ ")";
             result ~= "\n)";
           }
           while (p < end && *p == '-') // Skip remaining dashes.
@@ -514,6 +508,25 @@ abstract class DDocEmitter : DefaultVisitor
         case ')': result ~= "$(RP)"; break;
         default:  result ~= c;
       }
+    if (result.length != text.length)
+      return result;
+    // Nothing escaped. Return original text.
+    delete result;
+    return text;
+  }
+
+  /// Escapes '(' and ')' with $&#40;LP&#41; and $&#40;RP&#41;.
+  char[] escapeLPRP(char[] text)
+  {
+    char[] result = new char[text.length]; // Reserve space.
+    result.length = 0;
+    foreach(c; text)
+      if (c == '(')
+        result ~= "$(LP)";
+      else if (c == ')')
+        result ~= "$(RP)";
+      else
+        result ~= c;
     if (result.length != text.length)
       return result;
     // Nothing escaped. Return original text.
