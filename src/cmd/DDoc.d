@@ -62,8 +62,8 @@ struct DDocCommand
   /// Executes the doc generation command.
   void run()
   {
-    // auto destDirPath = new FilePath(destDirPath);
-    // destDirPath.exists() || destDirPath.createFolder();
+    auto destDirPath = new FilePath(destDirPath);
+    destDirPath.exists || destDirPath.createFolder();
 
     if (useKandil && writeXML)
       return Stdout("Error: kandil uses only HTML at the moment.").newline;
@@ -213,6 +213,8 @@ struct DDocCommand
     if (!useKandil)
       return;
 
+    copyKandilFiles();
+
     auto filePath = new FilePath(destDirPath);
     filePath.append("js").append("modules.js");
     scope file = new File(filePath.toString());
@@ -246,6 +248,32 @@ struct DDocCommand
     file.append("var g_moduleObjects = [\n");
     writePackage(file, mm.rootPackage);
     file.append("];");
+  }
+
+  /// Creates sub-folders and copies kandil's files into them.
+  void copyKandilFiles()
+  { // Create folders if they do not exist yet.
+    FilePath destDir = new FilePath(destDirPath);
+    auto dir = destDir.dup;
+    foreach (path; ["css", "js", "img"])
+      dir.set(destDir.dup.append(path)).exists() || dir.createFolder();
+    // Copy kandil files.
+    auto kandil = new FilePath("kandil");
+    destDir.dup.append("css").append("style.css")
+           .copy(kandil.dup.append("css").append("style.css"));
+    foreach (file; ["navigation.js", "jquery.js", "quicksearch.js"])
+      destDir.dup.append("js").append(file)
+             .copy(kandil.dup.append("js").append(file));
+    foreach (file; ["alias", "class", "enummem", "enum", "function",
+                    "interface", "module", "package", "struct", "template",
+                    "typedef", "union", "variable"])
+    {
+      file = "icon_" ~ file ~ ".png";
+      destDir.dup.append("img").append(file)
+             .copy(kandil.dup.append("img").append(file));
+    }
+    destDir.dup.append("img").append("loading.gif")
+           .copy(kandil.dup.append("img").append("loading.gif"));
   }
 
   /// Writes the sub-packages and sub-modules of a package to the disk.
