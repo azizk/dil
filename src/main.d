@@ -459,16 +459,21 @@ Usage:
 Options:
   --kandil         : use kandil as the documentation front-end
   --report         : write a problem report to Destination/report.txt
-  -rx=REGEXP       : exclude modules if their names match REGEXP
+  -rx=REGEXP       : exclude modules from the report if their names
+                     match REGEXP (can be used many times)
   --xml            : write XML instead of HTML documents
   --raw            : don't expand macros in the output (useful for debugging)
   -hl              : write syntax highlighted files to Destination/htmlsrc
   -i               : include undocumented symbols
   -v               : verbose output
   -m=PATH          : write list of processed modules to PATH
+  -version=ident   : see "dil help compile" for more details
 
 Example:
-  dil d doc/ src/main.d src/macros_dil.ddoc -i -m=doc/modules.txt`;
+  dil d doc/ src/main.d data/macros_dil.ddoc -i -m=doc/modules.txt
+  dil d tangodoc/ -v -version=Windows -version=Tango -version=DDoc \
+      --kandil kandil/kandil.ddoc tangosrc/file_1.d tangosrc/file_n.d
+`;
     break;
   case "hl", "highlight":
 //     msg = GetMsg(MID.HelpGenerate);
