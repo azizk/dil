@@ -61,10 +61,11 @@ def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen.run(html_files, SRC/("Tango.%s.API.pdf"%VERSION), TMP, params)
 
 def create_index(dest, prefix_path, files):
+  files.sort()
   text = ""
   for filepath in files:
     fqn = get_module_fqn(prefix_path, filepath)
-    text += '  <li><a href="%(fqn)s.html">%(fqn)s.html</a></li>\n' % locals()
+    text += '  <li><a href="%(fqn)s.html">%(fqn)s</a></li>\n' % locals()
   text = "Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % text
   open(dest, 'w').write(text)
 
