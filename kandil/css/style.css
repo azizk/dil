@@ -170,6 +170,7 @@ input.filterbox {
 .symbol {
   color: ForestGreen;
   text-decoration: none;
+  font-weight: bold;
 }
 
 .summary {
@@ -211,12 +212,16 @@ table.params td:first-child {
 /* Code formatting */
 .d_code {
   margin: 0.5em 0em;
-  border: 1px solid Gray;
+  border: 1px dotted Gray;
   border-collapse: collapse;
 }
 
 .d_code pre {
   margin: 0.1em 0.2em;
+}
+
+.d_codetext {
+  width: 100%;
 }
 
 .d_codelines {
@@ -228,7 +233,7 @@ table.params td:first-child {
 
 .loaded_code {
   margin: 0.5em 2.5em;
-  border: 1px solid gray;
+  border: 1px dotted gray;
   max-height: 300px;
   overflow: auto;
 }

@@ -218,7 +218,7 @@ table.params td:first-child {
   font-size: 0.9em;
   margin: 0.5em 0em;
 /*   width: 100%; */
-  border: 1px solid Gray;
+  border: 1px dotted Gray;
   border-collapse: collapse;
 }
 .d_code pre {
