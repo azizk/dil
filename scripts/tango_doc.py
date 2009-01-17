@@ -66,7 +66,9 @@ def create_index(dest, prefix_path, files):
   for filepath in files:
     fqn = get_module_fqn(prefix_path, filepath)
     text += '  <li><a href="%(fqn)s.html">%(fqn)s</a></li>\n' % locals()
-  text = "Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % text
+  style = "list-style-image: url(img/icon_module.png)"
+  text = ("Ddoc\n<ul style='%s'>\n%s\n</ul>"
+          "\nMacros:\nTITLE = Index") % (style, text)
   open(dest, 'w').write(text)
 
 def get_tango_path(path):
