@@ -52,7 +52,7 @@ def build_dil(cmd_kwargs):
   DATA = Path("data")
   BIN.mkdir()
   # Copy the config file.
-  (DATA/"dilconf.d").exists or (DATA/"dilconf.d").copy(BIN)
+  (BIN/"dilconf.d").exists or (DATA/"dilconf.d").copy(BIN)
   # Find the source files.
   FILES = find_dil_source_files(Path("src"))
   # Execute dmd.
