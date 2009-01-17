@@ -48,6 +48,7 @@ def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen = PDFGenerator()
   pdf_gen.fetch_files(DIL, TMP)
   html_files = SRC.glob("*.html")
+  html_files = filter(lambda path: path.name != "index.html", html_files)
   symlink = "http://dil.googlecode.com/svn/doc/Tango_%s" % VERSION
   params = {"pdf_title": "Tango %s API" % VERSION,
     "cover_title": "TANGO %s<br/><b>API</b>" % VERSION,
@@ -58,6 +59,14 @@ def write_PDF(DIL, SRC, VERSION, TMP):
     "nested_toc": True,
     "symlink": symlink}
   pdf_gen.run(html_files, SRC/("Tango.%s.API.pdf"%VERSION), TMP, params)
+
+def create_index(dest, prefix_path, files):
+  text = ""
+  for filepath in files:
+    fqn = get_module_fqn(prefix_path, filepath)
+    text += '  <li><a href="%(fqn)s.html">%(fqn)s.html</a></li>\n' % locals()
+  text = "Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % text
+  open(dest, 'w').write(text)
 
 def main():
   from optparse import OptionParser
@@ -109,8 +118,9 @@ def main():
 
   find_source_files(TANGO_SRC, FILES)
 
+  create_index(TMP/"index.d", TANGO_SRC, FILES)
   write_tango_ddoc(TANGO_DDOC, options.revision)
-  DOC_FILES = [DIL.KANDIL.ddoc, TANGO_DDOC] + FILES
+  DOC_FILES = [DIL.KANDIL.ddoc, TANGO_DDOC, TMP/"index.d"] + FILES
   versions = ["Windows", "Tango", "DDoc"]
   generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
                 versions, options=['-v', '-hl', '--kandil'])
@@ -126,6 +136,8 @@ def main():
     cmd = "7zr a %(name)s.7z %(src)s" % locals()
     print cmd
     os.system(cmd)
+
+  print "Exiting normally."
 
 if __name__ == "__main__":
   main()
