@@ -65,8 +65,11 @@ body { margin: 0; }
 /* Use absolute positioning so that > ul can show scrollbars on overflow. */
 #apipanel, #modpanel { position: absolute; height: 100%; width: 100%; }
 #apipanel > ul, #modpanel > ul {
-  max-height: 91%;
-  min-height: 91%;
+  position: absolute;
+  top: 25px;
+  bottom: 27px;
+  left: 0; right: 0;
+
   overflow: auto;
   margin: 0.1em;
   padding: 0.1em;
