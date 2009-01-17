@@ -6,10 +6,10 @@ from path import Path
 from common import *
 from html2pdf import PDFGenerator
 
-def copy_files(DIL, TANGO_DIR, DEST):
+def copy_files(DIL, TANGO, DEST):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
-      (TANGO_DIR/"LICENSE", DEST/"License.txt"), # Tango's license.
+      (TANGO.license, DEST/"License.txt"), # Tango's license.
       (DIL.DATA/"html.css", DEST.HTMLSRC),
       (DIL.KANDIL.style,    DEST.CSS)):
     FILE.copy(DIR)
@@ -68,6 +68,18 @@ def create_index(dest, prefix_path, files):
   text = "Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % text
   open(dest, 'w').write(text)
 
+def get_tango_path(path):
+  path = firstof(Path, path, Path(path))
+  path.SRC = path/"import"
+  is_svn = not path.SRC.exists
+  if is_svn:
+    path.SRC.mkdir()
+    (path/"tango").copytree(path.SRC/"tango")
+    (path/"std").copytree(path.SRC/"std")
+    (path/"object.di").copy(path.SRC)
+  path.license = path/"LICENSE"
+  return path
+
 def main():
   from optparse import OptionParser
 
@@ -89,10 +101,8 @@ def main():
   DIL       = dil_path()
   # The version of Tango we're dealing with.
   VERSION   = ""
-  # Root of the Tango source code (from SVN.)
-  TANGO_DIR = Path(args[0])
-  # The source code folder of Tango.
-  TANGO_SRC = TANGO_DIR/"import"
+  # Root of the Tango source code (either svn or zip.)
+  TANGO     = get_tango_path(args[0])
   # Destination of doc files.
   DEST      = doc_path(firstof(str, getitem(args, 1), 'tangodoc'))
   # Temporary directory, deleted in the end.
@@ -106,26 +116,26 @@ def main():
 
   build_dil_if_inexistant(DIL.EXE)
 
-  if not TANGO_DIR.exists:
-    print "The path '%s' doesn't exist." % TANGO_DIR
+  if not TANGO.exists:
+    print "The path '%s' doesn't exist." % TANGO
     return
 
-  VERSION = get_tango_version(TANGO_SRC/"tango"/"core"/"Version.d")
+  VERSION = get_tango_version(TANGO.SRC/"tango"/"core"/"Version.d")
 
   # Create directories.
   DEST.makedirs()
   map(Path.mkdir, (DEST.HTMLSRC, DEST.JS, DEST.CSS, DEST.IMG, TMP))
 
-  find_source_files(TANGO_SRC, FILES)
+  find_source_files(TANGO.SRC, FILES)
 
-  create_index(TMP/"index.d", TANGO_SRC, FILES)
+  create_index(TMP/"index.d", TANGO.SRC, FILES)
   write_tango_ddoc(TANGO_DDOC, options.revision)
   DOC_FILES = [DIL.KANDIL.ddoc, TANGO_DDOC, TMP/"index.d"] + FILES
   versions = ["Windows", "Tango", "DDoc"]
   generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
                 versions, options=['-v', '-hl', '--kandil'])
 
-  copy_files(DIL, TANGO_DIR, DEST)
+  copy_files(DIL, TANGO, DEST)
   if options.pdf:
       write_PDF(DIL, DEST, VERSION, TMP)
 
