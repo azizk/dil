@@ -24,6 +24,11 @@ abstract class Declaration : Node
     return !!(stc & StorageClass.Static);
   }
 
+  final bool isConst()
+  {
+    return !!(stc & StorageClass.Const);
+  }
+
   final bool isPublic()
   {
     return !!(prot & Protection.Public);
