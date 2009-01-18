@@ -3,6 +3,9 @@
 /// Execute when document is ready.
 $(function() {
   g_originalModuleFQN = g_moduleFQN;
+
+  $("#kandil-content").add("#kandil-footer").addClass("left_margin");
+
   // Create the navigation bar.
   var navbar = $("<div id='navbar'/>")
     .append("<p id='navtabs'><span id='apitab' class='current'>API</span>"+

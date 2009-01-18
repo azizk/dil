@@ -4,13 +4,15 @@ body { margin: 0; }
 
 #kandil-content {
   margin: 0.5em;
-  margin-left: 260px;
 }
 
 #kandil-footer {
   margin: 0.5em;
-  margin-left: 260px;
   font-size: 0.9em;
+}
+
+.left_margin { /* To make place for the navbar. */
+  margin-left: 260px !important;
 }
 
 #navbar {
