@@ -79,6 +79,7 @@ def get_tango_path(path):
   is_svn = not path.SRC.exists
   if is_svn:
     path.SRC.mkdir()
+    print "Copying tango/, std/ and object.di to import/."
     (path/"tango").copytree(path.SRC/"tango")
     (path/"std").copytree(path.SRC/"std")
     (path/"object.di").copy(path.SRC)
@@ -91,7 +92,10 @@ def main():
   usage = "Usage: scripts/tango_doc.py TANGO_DIR [DESTINATION_DIR]"
   parser = OptionParser(usage=usage)
   parser.add_option("--rev", dest="revision", metavar="REVISION", default=None,
-    type="int", help="set the repository REVISION to use in symbol links")
+    type="int", help="set the repository REVISION to use in symbol links"
+                     " (unused atm)")
+  parser.add_option("--posix", dest="posix", default=False, action="store_true",
+    help="define version Posix instead of Win32 and Windows")
   parser.add_option("--zip", dest="zip", default=False, action="store_true",
     help="create a 7z archive")
   parser.add_option("--pdf", dest="pdf", default=False, action="store_true",
@@ -136,7 +140,8 @@ def main():
   create_index(TMP/"index.d", TANGO.SRC, FILES)
   write_tango_ddoc(TANGO_DDOC, options.revision)
   DOC_FILES = [DIL.KANDIL.ddoc, TANGO_DDOC, TMP/"index.d"] + FILES
-  versions = ["Windows", "Tango", "DDoc"]
+  versions = ["Tango", "DDoc"]
+  versions += ["Posix"] if options.posix else ["Windows", "Win32"]
   generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
                 versions, options=['-v', '-hl', '--kandil'])
 
