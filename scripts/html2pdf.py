@@ -34,6 +34,8 @@ def generate_pdf(module_files, dest, tmp, params):
     "css_file": "pdf.css",
     "symlink": "", # Prefix for symbol links.
     "nested_toc": False, # Use nested or flat ToC.
+    "first_toc": "", # (X)HTML code to put first in the ToC.
+    "last_toc": "",  # (X)HTML code to put last in the ToC.
     "before_files": [], # Files to put before module pages.
     "after_files": [],  # Files to put after module pages.
     "newpage_modules": [] # Which modules should force a page break.
@@ -47,6 +49,8 @@ def generate_pdf(module_files, dest, tmp, params):
   newpage_modules = params["newpage_modules"]
   before_files = params["before_files"]
   after_files = params["after_files"]
+  first_toc = params["first_toc"]
+  last_toc = params["last_toc"]
 
   # Define some regular expressions.
   # --------------------------------
@@ -141,6 +145,9 @@ def generate_pdf(module_files, dest, tmp, params):
                      (m.fqn, m.name))
     html_doc.write("</ul>\n")
 
+  if first_toc:
+    html_doc.write(first_toc)
+
   html_doc.write("<p>Module list:</p>")
   if nested_TOC: # Write a nested list of modules.
     html_doc.write("<div class='modlist nested'>")
@@ -151,6 +158,10 @@ def generate_pdf(module_files, dest, tmp, params):
     for html_fragment, mod_fqn, symbols in html_fragments:
       html_doc.write("<li><a href='#m-%s'>%s</a></li>" % ((mod_fqn,)*2))
     html_doc.write("</ul></div>")
+
+  if last_toc:
+    html_doc.write(last_toc)
+
   # Close <div id="toc">
   html_doc.write("</div>\n")
 
