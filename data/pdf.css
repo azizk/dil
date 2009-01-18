@@ -109,6 +109,7 @@ h1.module { /* Module header. */
   border-bottom: 2px solid black;
   line-height: 1.2em;
   prince-bookmark-level: 1;
+  prince-bookmark-state: closed;
 }
 
 h1.module > a {
@@ -180,8 +181,8 @@ dd.ddef { /* Definition, Explanation */
 h1.module>.symbol { prince-bookmark-level: none; }
 
 /* 10 levels should be enough for all realistic cases. */
-dl .symbol { prince-bookmark-level: 2; }
-dl dl .symbol { prince-bookmark-level: 3; }
+dl .symbol { prince-bookmark-level: 2; /*prince-bookmark-state: closed;*/ }
+dl dl .symbol { prince-bookmark-level: 3; /*prince-bookmark-state: closed;*/ }
 dl dl dl .symbol { prince-bookmark-level: 4; }
 dl dl dl dl .symbol { prince-bookmark-level: 5; }
 dl dl dl dl dl .symbol { prince-bookmark-level: 6; }
@@ -217,7 +218,6 @@ table.params td:first-child {
 .d_code {
   font-size: 0.9em;
   margin: 0.5em 0em;
-/*   width: 100%; */
   border: 1px dotted Gray;
   border-collapse: collapse;
 }

@@ -50,14 +50,16 @@ def write_PDF(DIL, SRC, VERSION, TMP):
   html_files = SRC.glob("*.html")
   html_files = filter(lambda path: path.name != "index.html", html_files)
   symlink = "http://dil.googlecode.com/svn/doc/Tango_%s" % VERSION
-  params = {"pdf_title": "Tango %s API" % VERSION,
-    "cover_title": "TANGO %s<br/><b>API</b>" % VERSION,
-    "author": u"Tango Team",
+  params = {
+    "pdf_title": "Tango %s API" % VERSION,
+    "cover_title": "Tango %s<br/><b>API</b>" % VERSION,
+    "author": "Tango Team",
     "subject": "Programming API",
     "keywords": "Tango standard library API documentation",
     "x_html": "HTML",
     "nested_toc": True,
-    "symlink": symlink}
+    "symlink": symlink
+  }
   pdf_gen.run(html_files, SRC/("Tango.%s.API.pdf"%VERSION), TMP, params)
 
 def create_index(dest, prefix_path, files):
