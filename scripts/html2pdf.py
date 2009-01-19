@@ -4,6 +4,7 @@ import os, re
 from path import Path
 from subprocess import call
 from common import *
+from symbols import *
 
 def generate_pdf(module_files, dest, tmp, params):
   params_default = {
@@ -73,12 +74,13 @@ def generate_pdf(module_files, dest, tmp, params):
     # Extract module FQN.
     module_fqn = Path(html_file).namebase
     # Extract symbols list.
-    symbols = get_symbols(content, module_fqn)
+    symbols, cat_dict = get_symbols(content, module_fqn)
     # Push a tuple.
     html_fragments += [(content, module_fqn, symbols)]
     # Add a new module to the tree.
     module = Module(module_fqn)
     module.symbols = symbols
+    module.cat_dict = cat_dict
     module.html_str = content
     package_tree.addModule(module)
   # Sort the list of packages and modules.

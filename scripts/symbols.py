@@ -48,7 +48,10 @@ class Symbol:
     self.parent_fqn, sep, self.name = self.fqn.rpartition('.')
     self.sub = []
 
-def get_symbols(html_str, module_fqn):
+  def __repr__(self):
+    return self.fqn
+
+def get_symbols(html_str, module_fqn, categorize=True):
   """ Extracts the symbols from an HTML document. """
   rx = re.compile(r'<a class="symbol [^"]+" name="(?P<fqn>[^"]+)"'
                   r' href="(?P<srclnk>[^"]+)" kind="(?P<kind>[^"]+)"'
@@ -56,8 +59,12 @@ def get_symbols(html_str, module_fqn):
                   r'(?P<name>[^<]+)</a>')
   root = dict(fqn=module_fqn, src="", kind="module", beg="", end="")
   symbol_dict = {"" : Symbol(root)}
+  cat_dict = {}
   for m in rx.finditer(html_str):
     symbol = Symbol(m.groupdict())
     symbol_dict[symbol.parent_fqn].sub += [symbol]
     symbol_dict[symbol.fqn] = symbol
-  return symbol_dict
+    if categorize:
+      kinds = cat_dict.setdefault(symbol.kind, [])
+      kinds += [symbol]
+  return symbol_dict, cat_dict
