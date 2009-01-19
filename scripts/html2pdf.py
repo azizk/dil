@@ -5,23 +5,6 @@ from path import Path
 from subprocess import call
 from common import *
 
-def get_symbols(html_str, module_fqn):
-  """ Extracts the symbols from a HTML document. """
-  rx = re.compile(r'<a class="symbol [^"]+" name="(?P<fqn>[^"]+)"'
-                  r' href="(?P<src>[^"]+)" kind="(?P<kind>[^"]+)"'
-                  r' beg="(?P<beg>\d+)" end="(?P<end>\d+)">'
-                  r'(?P<name>[^<]+)</a>')
-  root = dict(fqn=module_fqn, src="", kind="module", beg="", end="", sub=[])
-  symbol_list = {"" : root}
-  for m in rx.finditer(html_str):
-    symbol = m.groupdict()
-    symbol["sub"] = []
-    sym_fqn = symbol["fqn"]
-    parent_fqn, sep, name = sym_fqn.rpartition('.')
-    symbol_list[parent_fqn]["sub"] += [symbol]
-    symbol_list[sym_fqn] = symbol
-  return symbol_list
-
 def generate_pdf(module_files, dest, tmp, params):
   params_default = {
     "pdf_title": "",
