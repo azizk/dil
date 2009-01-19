@@ -66,7 +66,7 @@ def generate_modules_js(modlist, dest_path, max_line_len=80):
   """ Generates a JavaScript file with a list of fully qual. module names. """
   if not len(modlist):
     raise Exception("modlist must not be empty")
-  from symbols import *
+  from symbols import Module, Package, PackageTree
   modlist = [m['fqn'] for m in modlist] # Get list of the fully qual. names.
   f = open(dest_path, "w")
   f.write('var g_modulesList = [\n ') # Write a flat list of FQNs.
