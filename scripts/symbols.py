@@ -48,6 +48,13 @@ class Symbol:
     self.parent_fqn, sep, self.name = self.fqn.rpartition('.')
     self.sub = []
 
+  @property
+  def link(self):
+    return "#m-%s:%s" % (self.modfqn, self.fqn)
+
+  def __cmp__(self, other):
+    return cmp(self.name, other.name)
+
   def __repr__(self):
     return self.fqn
 
@@ -61,7 +68,7 @@ def get_symbols(html_str, module_fqn, categorize=True):
   symbol_dict = {"" : Symbol(root)}
   cat_dict = {}
   for m in rx.finditer(html_str):
-    symbol = Symbol(m.groupdict())
+    symbol = Symbol(dict(m.groupdict(), modfqn=module_fqn))
     symbol_dict[symbol.parent_fqn].sub += [symbol]
     symbol_dict[symbol.fqn] = symbol
     if categorize:

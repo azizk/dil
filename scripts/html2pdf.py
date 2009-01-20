@@ -38,9 +38,9 @@ def generate_pdf(module_files, dest, tmp, params):
 
   # Define some regular expressions.
   # --------------------------------
-  # Matches the href attribute of a symbol link.
-  symbol_href_rx = re.compile(r'(<a class="symbol[^"]+" name="[^"]+"'
-                              r' href=)"./([^"]+)"')
+  # Matches the name and href attributes of a symbol link.
+  symbol_rx = re.compile(r'(<a class="symbol[^"]+" name=)"([^"]+)"'
+                         r' href="./([^"]+)"')
   # Matches the href attribute of "h1.module > a".
   h1_href_rx = re.compile(r'(<h1 class="module"[^>]+><a href=)"./([^"]+)"')
 
@@ -61,30 +61,42 @@ def generate_pdf(module_files, dest, tmp, params):
   # Prepare the HTML fragments.
   # ---------------------------
   html_fragments = []
+  sym_dict_all = {} # Group symbols by their kind, e.g. class, struct etc.
   for html_file in module_files:
     html_str = open(html_file).read()
+    # Extract module FQN.
+    module_fqn = Path(html_file).namebase
+    # Extract symbols list, before symbol_rx.
+    sym_dict, cat_dict = get_symbols(html_str, module_fqn)
     # Add symlink as a prefix to "a.symbol" tags.
-    html_str = symbol_href_rx.sub(r'\1"%s/\2"' % symlink, html_str)
+    html_str = symbol_rx.sub(r'\1"m-%s:\2" href="%s/\3"' %
+                             (module_fqn, symlink), html_str)
     # Add symlink as a prefix to the "h1>a.symbol" tag.
     html_str = h1_href_rx.sub(r'\1"%s/\2"' % symlink, html_str)
     # Extract "#content>.module".
     start = html_str.find('<div class="module">')
     end = html_str.rfind('</div>\n<div id="kandil-footer">')
     content = html_str[start:end]
-    # Extract module FQN.
-    module_fqn = Path(html_file).namebase
-    # Extract symbols list.
-    symbols, cat_dict = get_symbols(content, module_fqn)
     # Push a tuple.
-    html_fragments += [(content, module_fqn, symbols)]
+    html_fragments += [(content, module_fqn, sym_dict)]
     # Add a new module to the tree.
     module = Module(module_fqn)
-    module.symbols = symbols
+    module.sym_dict = sym_dict
     module.cat_dict = cat_dict
     module.html_str = content
     package_tree.addModule(module)
+    # Group the symbols in this module.
+    for kind, sym_list in cat_dict.iteritems():
+      items = sym_dict_all.setdefault(kind, [])
+      items += sym_list
   # Sort the list of packages and modules.
   package_tree.sortTree()
+  # Sort the list of symbols.
+  map(list.sort, sym_dict_all.itervalues())
+
+  # Used for indices and ToC.
+  kind_title_list = "Classes Interfaces Structs Unions".split(" ")
+  kind_list = "class interface struct union".split(" ")
 
   # Join the HTML fragments.
   # ------------------------
@@ -118,34 +130,41 @@ def generate_pdf(module_files, dest, tmp, params):
 
   # Write the Table of Contents.
   # ----------------------------
-  def write_nested_TOC(pckg):
-    html_doc.write("<ul>")
+  def write_module_tree(pckg):
+    html_doc.write("\n<ul>")
     for p in pckg.packages:
       html_doc.write("<li kind='p'><a href='#p-%s'>%s</a>" % (p.fqn, p.name))
       if len(p.packages) or len(p.modules):
-        write_nested_TOC(p)
+        write_module_tree(p)
       html_doc.write("</li>\n")
     for m in pckg.modules:
-      html_doc.write("<li kind='m'><a href='#m-%s'>%s</a></li>\n" %
+      html_doc.write("<li kind='m'><a href='#m-%s'>%s</a></li>" %
                      (m.fqn, m.name))
     html_doc.write("</ul>\n")
 
   if first_toc:
     html_doc.write(first_toc)
 
-  html_doc.write("<p>Module list:</p>")
+  html_doc.write("<p>Module list:</p>\n")
   if nested_TOC: # Write a nested list of modules.
     html_doc.write("<div class='modlist nested'>")
-    write_nested_TOC(package_tree.root)
+    write_module_tree(package_tree.root)
     html_doc.write("</div>")
   else: # Write a flat list of modules.
     html_doc.write("<div class='modlist flat'><ul>")
-    for html_fragment, mod_fqn, symbols in html_fragments:
+    for html_fragment, mod_fqn, sym_dict in html_fragments:
       html_doc.write("<li><a href='#m-%s'>%s</a></li>" % ((mod_fqn,)*2))
     html_doc.write("</ul></div>")
 
   if last_toc:
     html_doc.write(last_toc)
+
+  html_doc.write("<p>Indices:</p>\n")
+  html_doc.write("<ul>\n")
+  for label, kind in zip(kind_title_list, kind_list):
+    if kind in sym_dict_all:
+      html_doc.write("<li><a href='#index-%s'>%s</a></li>\n" % (kind, label))
+  html_doc.write("</ul>\n")
 
   # Close <div id="toc">
   html_doc.write("</div>\n")
@@ -175,11 +194,13 @@ def generate_pdf(module_files, dest, tmp, params):
       html_doc.write(open(f).read())
     html_doc.write("</div>")
 
+  html_doc.write("<div id='module-pages'>\n")
   if nested_TOC:
     write_nested_fragments(package_tree.root)
   else:
-    for html_fragment, mod_fqn, symbols in html_fragments:
+    for html_fragment, mod_fqn, sym_dict in html_fragments:
       html_doc.write(html_fragment.encode("utf-8"))
+  html_doc.write("</div>\n")
 
   if after_files:
     html_doc.write("<div class='after_pages'>")
@@ -187,6 +208,91 @@ def generate_pdf(module_files, dest, tmp, params):
       html_doc.write(open(f).read())
     html_doc.write("</div>")
 
+  # Write the bookmarks tree.
+  # -------------------------
+  def write_symbol_list(kind, symlist, index):
+    letter_dict, letter_list = index
+    html_doc.write("\n<ul>")
+    for letter in letter_list:
+      html_doc.write("<li><a href='#index-%s-%s' label='%s'></a>" %
+                     (kind, letter, letter))
+      html_doc.write("\n<ul>")
+      for s in letter_dict[letter]:
+        html_doc.write("<li><a href='%s' label='%s'></a></li>" %
+                       (s.link, s.name))
+      html_doc.write("</ul>\n</li>")
+    html_doc.write("</ul>\n")
+
+  def write_symbol_tree(symbol):
+    html_doc.write("\n<ul>")
+    for s in symbol.sub:
+      html_doc.write("<li><a href='%s' label='%s'></a>" %
+                     (s.link, s.name))
+      if len(s.sub): write_symbol_tree(s)
+      html_doc.write("</li>")
+    html_doc.write("</ul>\n")
+
+  def write_module_tree(pckg):
+    html_doc.write("\n<ul>")
+    for p in pckg.packages:
+      html_doc.write("<li><a href='#p-%s' label='%s'></a>" %
+                     (p.fqn, p.name))
+      if len(p.packages) or len(p.modules):
+        write_module_tree(p)
+      html_doc.write("</li>\n")
+    for m in pckg.modules:
+      html_doc.write("<li><a href='#m-%s' label='%s'></a>" %
+                     (m.fqn, m.name))
+      write_symbol_tree(m.sym_dict[""])
+      html_doc.write("</li>")
+    html_doc.write("</ul>\n")
+
+  def get_index(symbols):
+    letter_dict = {} # Sort index by the symbol's initial letter.
+    for sym in symbols:
+      items = letter_dict.setdefault(unicode(sym.name)[0].upper(), [])
+      items += [sym]
+    letter_list = letter_dict.keys()
+    letter_list.sort()
+    return letter_dict, letter_list
+
+  # Get {"class": index, "interface": index, ...}.
+  indices = dict([(kind, get_index(sym_dict_all[kind]))
+                   for kind in kind_list
+                     if kind in sym_dict_all])
+
+  html_doc.write("<ul id='bookmarks'>\n")
+  for label, kind in zip(kind_title_list, kind_list):
+    if kind in sym_dict_all:
+      html_doc.write("<li><a href='#index-%s' label='%s'></a>" % (kind, label))
+      write_symbol_list(kind, sym_dict_all[kind], indices[kind])
+      html_doc.write("</li>\n")
+  html_doc.write("<li><a href='#module-pages' label='Modules'></a>")
+  write_module_tree(package_tree.root)
+  html_doc.write("</li>\n")
+  html_doc.write("</ul>")
+
+
+  # Write the indices.
+  # ------------------
+  html_doc.write("<div id='indices'>\n")
+  for title, kind in (("Class index", "class"),
+      ("Interface index", "interface"), ("Struct index", "struct"),
+      ("Union index", "union")):
+    if kind in sym_dict_all:
+      letter_dict, letter_list = indices[kind]
+      html_doc.write("<h1 id='index-%s'>%s</h1>\n" % (kind, title))
+      html_doc.write("<dl>\n")
+      for letter in letter_list:
+        html_doc.write("<dt id='index-%s-%s'>%s</dt>\n" %
+                       (kind, letter, letter))
+        for sym in letter_dict[letter]:
+          html_doc.write("<dd><a href='%s'>%s</a></dd>\n" %
+                         (sym.link, sym.name))
+      html_doc.write("</dl>\n")
+  html_doc.write("</div>\n")
+
+  # Close the document.
   html_doc.write("</body></html>")
   html_doc.flush()
   html_doc.close()
