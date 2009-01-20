@@ -120,27 +120,27 @@ a {
   display: none; /* Don't appear in the document. Presumably, a bug or
                     shortcoming in PrinceXML doesn't allow generating
                     bookmarks from invisible elements. */
-  display: inline; /* Therefore make everything inline. */
+  display: inline; /* Therefore make everything inline to occupy no space. */
 /*   position: absolute; */
 /*   right: 10000px; */
 }
-#bookmarks a {
-  prince-bookmark-target: attr(href);
+#bookmarks li {
+  prince-bookmark-target: attr(link);
   prince-bookmark-label: attr(label);
 }
-#bookmarks li a, #bookmarks li li a { /* Keep first two levels closed. */
+#bookmarks li, #bookmarks li li { /* Keep first two levels closed. */
   prince-bookmark-state: closed;
 }
-#bookmarks li a { prince-bookmark-level: 1; }
-#bookmarks li li a { prince-bookmark-level: 2; }
-#bookmarks li li li a { prince-bookmark-level: 3; }
-#bookmarks li li li li a { prince-bookmark-level: 4; }
-#bookmarks li li li li li a { prince-bookmark-level: 5; }
-#bookmarks li li li li li li a { prince-bookmark-level: 6; }
-#bookmarks li li li li li li li a { prince-bookmark-level: 7; }
-#bookmarks li li li li li li li li a { prince-bookmark-level: 8; }
-#bookmarks li li li li li li li li li a { prince-bookmark-level: 9; }
-#bookmarks li li li li li li li li li li a { prince-bookmark-level: 10; }
+#bookmarks li { prince-bookmark-level: 1; }
+#bookmarks li li { prince-bookmark-level: 2; }
+#bookmarks li li li { prince-bookmark-level: 3; }
+#bookmarks li li li li { prince-bookmark-level: 4; }
+#bookmarks li li li li li { prince-bookmark-level: 5; }
+#bookmarks li li li li li li { prince-bookmark-level: 6; }
+#bookmarks li li li li li li li { prince-bookmark-level: 7; }
+#bookmarks li li li li li li li li { prince-bookmark-level: 8; }
+#bookmarks li li li li li li li li li { prince-bookmark-level: 9; }
+#bookmarks li li li li li li li li li li { prince-bookmark-level: 10; }
 
 #indices { page: indices; }
 #indices a { color: black; }
@@ -149,7 +149,7 @@ a {
 }
 #indices dl { column-count: 2; }
 #indices dd { margin-bottom: 0.2em; }
-#indices h1 { string-set: index_header content(); }
+#indices h1 { string-set: index_header attr(label); }
 
 /* Styles for the content: */
 h1.module { /* Module header. */
@@ -174,8 +174,8 @@ h1.package + div + h1.package { /* Keep adjacent packages together */
   page-break-before: avoid;
 }
 
-h1.module:before { content: "Module " }
-h1.package:before { content: "Package " }
+h1.module:before { content: "Module "; }
+h1.package:before { content: "Package "; }
 
 /* Apply module specific styles like this: */
 /*h1.module[id=m-tango.core.Array] {

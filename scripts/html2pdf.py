@@ -8,53 +8,69 @@ from symbols import *
 
 def write_bookmarks(html_doc, package_tree, sym_dict_all,
                     kind_title_list, kind_list, indices):
+  # Notice how the li-tag has only the link and label attribute
+  # with no content between the tag itself.
+  # The purpose of this is to avoid inflating the size of the PDF, because
+  # PrinceXML cannot generate bookmarks from elements which have the style
+  # "display:none;".
+  # Using this technique it is possible to work around this shortcoming.
   def write_symbol_list(kind, symlist, index):
     letter_dict, letter_list = index
-    html_doc.write("\n<ul>")
+    html_doc.write("<ul>\n")
+    # A list of all symbols under the item 'All'.
+    html_doc.write("<li link='#index-%s' label='All'>\n" % kind)
+    html_doc.write("<ul>\n")
+    for s in symlist:
+      html_doc.write("<li link='%s' label='%s'></li>\n" %
+                     (s.link, s.name))
+    html_doc.write("</ul>\n</li>\n")
+    # A list of all symbols categorized by their initial letter.
     for letter in letter_list:
-      html_doc.write("<li><a href='#index-%s-%s' label='%s'></a>" %
+      html_doc.write("<li link='#index-%s-%s' label='%s'>" %
                      (kind, letter, letter))
-      html_doc.write("\n<ul>")
+      html_doc.write("<ul>\n")
       for s in letter_dict[letter]:
-        html_doc.write("<li><a href='%s' label='%s'></a></li>" %
+        html_doc.write("<li link='%s' label='%s'></li>" %
                        (s.link, s.name))
-      html_doc.write("</ul>\n</li>")
+      html_doc.write("</ul>\n</li>\n")
     html_doc.write("</ul>\n")
 
   def write_symbol_tree(symbol):
-    html_doc.write("\n<ul>")
+    html_doc.write("<ul>\n")
     for s in symbol.sub:
-      html_doc.write("<li><a href='%s' label='%s'></a>" %
+      html_doc.write("<li link='%s' label='%s'>" %
                      (s.link, s.name))
       if len(s.sub): write_symbol_tree(s)
-      html_doc.write("</li>")
+      html_doc.write("</li>\n")
     html_doc.write("</ul>\n")
 
   def write_module_tree(pckg):
-    html_doc.write("\n<ul>")
+    html_doc.write("<ul>\n")
     for p in pckg.packages:
-      html_doc.write("<li><a href='#p-%s' label='%s'></a>" %
+      html_doc.write("<li link='#p-%s' label='%s'>" %
                      (p.fqn, p.name))
       if len(p.packages) or len(p.modules):
         write_module_tree(p)
       html_doc.write("</li>\n")
     for m in pckg.modules:
-      html_doc.write("<li><a href='#m-%s' label='%s'></a>" %
+      html_doc.write("<li link='#m-%s' label='%s'>" %
                      (m.fqn, m.name))
       write_symbol_tree(m.sym_dict[""])
-      html_doc.write("</li>")
+      html_doc.write("</li>\n")
     html_doc.write("</ul>\n")
 
   html_doc.write("<ul id='bookmarks'>\n")
-  for label, kind in zip(kind_title_list, kind_list):
-    if kind in sym_dict_all:
-      html_doc.write("<li><a href='#index-%s' label='%s'></a>" % (kind, label))
-      write_symbol_list(kind, sym_dict_all[kind], indices[kind])
-      html_doc.write("</li>\n")
-  html_doc.write("<li><a href='#module-pages' label='Modules'></a>")
+  # Modules.
+  html_doc.write("<li link='#module-pages' label='Modules'>")
   write_module_tree(package_tree.root)
   html_doc.write("</li>\n")
-  html_doc.write("</ul>")
+  # Indices.
+  for label, kind in zip(kind_title_list, kind_list):
+    if kind in sym_dict_all:
+      html_doc.write("<li link='#index-%s' label='%s'>" % (kind, label))
+      write_symbol_list(kind, sym_dict_all[kind], indices[kind])
+      html_doc.write("</li>\n")
+  html_doc.write("</ul>\n")
 
 def generate_pdf(module_files, dest, tmp, params):
   params_default = {
