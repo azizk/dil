@@ -6,6 +6,56 @@ from subprocess import call
 from common import *
 from symbols import *
 
+def write_bookmarks(html_doc, package_tree, sym_dict_all,
+                    kind_title_list, kind_list, indices):
+  def write_symbol_list(kind, symlist, index):
+    letter_dict, letter_list = index
+    html_doc.write("\n<ul>")
+    for letter in letter_list:
+      html_doc.write("<li><a href='#index-%s-%s' label='%s'></a>" %
+                     (kind, letter, letter))
+      html_doc.write("\n<ul>")
+      for s in letter_dict[letter]:
+        html_doc.write("<li><a href='%s' label='%s'></a></li>" %
+                       (s.link, s.name))
+      html_doc.write("</ul>\n</li>")
+    html_doc.write("</ul>\n")
+
+  def write_symbol_tree(symbol):
+    html_doc.write("\n<ul>")
+    for s in symbol.sub:
+      html_doc.write("<li><a href='%s' label='%s'></a>" %
+                     (s.link, s.name))
+      if len(s.sub): write_symbol_tree(s)
+      html_doc.write("</li>")
+    html_doc.write("</ul>\n")
+
+  def write_module_tree(pckg):
+    html_doc.write("\n<ul>")
+    for p in pckg.packages:
+      html_doc.write("<li><a href='#p-%s' label='%s'></a>" %
+                     (p.fqn, p.name))
+      if len(p.packages) or len(p.modules):
+        write_module_tree(p)
+      html_doc.write("</li>\n")
+    for m in pckg.modules:
+      html_doc.write("<li><a href='#m-%s' label='%s'></a>" %
+                     (m.fqn, m.name))
+      write_symbol_tree(m.sym_dict[""])
+      html_doc.write("</li>")
+    html_doc.write("</ul>\n")
+
+  html_doc.write("<ul id='bookmarks'>\n")
+  for label, kind in zip(kind_title_list, kind_list):
+    if kind in sym_dict_all:
+      html_doc.write("<li><a href='#index-%s' label='%s'></a>" % (kind, label))
+      write_symbol_list(kind, sym_dict_all[kind], indices[kind])
+      html_doc.write("</li>\n")
+  html_doc.write("<li><a href='#module-pages' label='Modules'></a>")
+  write_module_tree(package_tree.root)
+  html_doc.write("</li>\n")
+  html_doc.write("</ul>")
+
 def generate_pdf(module_files, dest, tmp, params):
   params_default = {
     "pdf_title": "",
@@ -208,45 +258,8 @@ def generate_pdf(module_files, dest, tmp, params):
       html_doc.write(open(f).read())
     html_doc.write("</div>")
 
-  # Write the bookmarks tree.
-  # -------------------------
-  def write_symbol_list(kind, symlist, index):
-    letter_dict, letter_list = index
-    html_doc.write("\n<ul>")
-    for letter in letter_list:
-      html_doc.write("<li><a href='#index-%s-%s' label='%s'></a>" %
-                     (kind, letter, letter))
-      html_doc.write("\n<ul>")
-      for s in letter_dict[letter]:
-        html_doc.write("<li><a href='%s' label='%s'></a></li>" %
-                       (s.link, s.name))
-      html_doc.write("</ul>\n</li>")
-    html_doc.write("</ul>\n")
-
-  def write_symbol_tree(symbol):
-    html_doc.write("\n<ul>")
-    for s in symbol.sub:
-      html_doc.write("<li><a href='%s' label='%s'></a>" %
-                     (s.link, s.name))
-      if len(s.sub): write_symbol_tree(s)
-      html_doc.write("</li>")
-    html_doc.write("</ul>\n")
-
-  def write_module_tree(pckg):
-    html_doc.write("\n<ul>")
-    for p in pckg.packages:
-      html_doc.write("<li><a href='#p-%s' label='%s'></a>" %
-                     (p.fqn, p.name))
-      if len(p.packages) or len(p.modules):
-        write_module_tree(p)
-      html_doc.write("</li>\n")
-    for m in pckg.modules:
-      html_doc.write("<li><a href='#m-%s' label='%s'></a>" %
-                     (m.fqn, m.name))
-      write_symbol_tree(m.sym_dict[""])
-      html_doc.write("</li>")
-    html_doc.write("</ul>\n")
-
+  # Prepare indices:
+  # ----------------
   def get_index(symbols):
     letter_dict = {} # Sort index by the symbol's initial letter.
     for sym in symbols:
@@ -261,27 +274,21 @@ def generate_pdf(module_files, dest, tmp, params):
                    for kind in kind_list
                      if kind in sym_dict_all])
 
-  html_doc.write("<ul id='bookmarks'>\n")
-  for label, kind in zip(kind_title_list, kind_list):
-    if kind in sym_dict_all:
-      html_doc.write("<li><a href='#index-%s' label='%s'></a>" % (kind, label))
-      write_symbol_list(kind, sym_dict_all[kind], indices[kind])
-      html_doc.write("</li>\n")
-  html_doc.write("<li><a href='#module-pages' label='Modules'></a>")
-  write_module_tree(package_tree.root)
-  html_doc.write("</li>\n")
-  html_doc.write("</ul>")
-
+  # Write the bookmarks tree.
+  # -------------------------
+  write_bookmarks(html_doc, package_tree, sym_dict_all,
+                  kind_title_list, kind_list, indices)
 
   # Write the indices.
   # ------------------
   html_doc.write("<div id='indices'>\n")
-  for title, kind in (("Class index", "class"),
-      ("Interface index", "interface"), ("Struct index", "struct"),
-      ("Union index", "union")):
+  index_titles= ("Class index,Interface index,"
+                 "Struct index,Union index").split(",")
+  for title, kind, label in zip(index_titles, kind_list, kind_title_list):
     if kind in sym_dict_all:
       letter_dict, letter_list = indices[kind]
-      html_doc.write("<h1 id='index-%s'>%s</h1>\n" % (kind, title))
+      html_doc.write("<h1 id='index-%s' label='%s'>%s</h1>\n" %
+                     (kind, label, title))
       html_doc.write("<dl>\n")
       for letter in letter_list:
         html_doc.write("<dt id='index-%s-%s'>%s</dt>\n" %
