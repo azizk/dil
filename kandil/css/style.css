@@ -130,6 +130,7 @@ input.filterbox {
   font-family: monospace;
   font-size: 1em;
   font-weight: normal;
+  margin: 0.5em 0;
 }
 
 .decl:target { /* Highlight targetted decls */

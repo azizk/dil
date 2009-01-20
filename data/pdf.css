@@ -202,6 +202,7 @@ dt.decl { /* Declaration */
   font-family: monospace;
   font-size: 1.1em;
   font-weight: normal;
+  margin: 0.5em 0;
   page-break-after: avoid;
 }
 
