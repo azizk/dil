@@ -1,5 +1,12 @@
 /// Author: Aziz Köksal
 
+/// The original module loaded normally by the browser (not JavaScript.)
+var g_originalModuleFQN = "";
+/// A dictionary that maps fully qual. names to a SymbolItem object.
+var g_symbolDict = {};
+/// An array of all the lines of this module's source code.
+var g_sourceCode = [];
+
 /// Execute when document is ready.
 $(function() {
   g_originalModuleFQN = g_moduleFQN;
@@ -20,11 +27,6 @@ $(function() {
 
   initAPIList();
 
-//   $("#apipanel > ul").treeview({
-//     animated: "fast",
-//     collapsed: true
-//   })
-
   // Assign click event handlers for the tabs.
   function makeCurrentTab() {
     $("span.current", this.parentNode).removeClass('current');
@@ -39,24 +41,40 @@ $(function() {
 
   $("#modtab").click(makeCurrentTab)
               .click(function lazyLoad() {
-    // Create the list.
-    $("#modpanel").append(createModulesUL(g_moduleObjects));
     $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
-    $("#modpanel > ul li[kind=module] > a").click(function(event) {
-      event.preventDefault();
-      var modFQN = this.href.slice(this.href.lastIndexOf("/")+1,
-                                   this.href.lastIndexOf(".html"));
-      loadNewModule(modFQN);
-    });
-  })          .click(function() { // Add the display handler.
+    var modpanel = $("#modpanel");
+    modpanel.append(createModulesUL(g_moduleObjects)); // Create the list.
+    makeTreeview($("#modpanel > ul"));
+    $("li[kind=module] a", modpanel).click(handleLoadingModule);
+  }).click(function() { // Add the display handler.
     $("#modpanel").show(); // Display the modules list.
   });
-
 
   // $(window).resize(function(){
   //   $("#apipanel > ul").add("#modpanel > ul").each(setHeightOfPanel);
   // });
 })
+
+/// Adds treeview functionality to ul. Expects special markup.
+function makeTreeview(ul)
+{
+  ul.addClass("tview");
+  function handleItemClick(e)
+  {
+    $(this.parentNode).toggleClass("closed");
+  }
+  // The i-tag represents the icon of the tree node.
+  $("li > i", ul).click(handleItemClick);
+}
+
+// Handles a mouse click on a module list item.
+function handleLoadingModule(event)
+{
+  event.preventDefault();
+  var modFQN = this.href.slice(this.href.lastIndexOf("/")+1,
+                               this.href.lastIndexOf(".html"));
+  loadNewModule(modFQN);
+}
 
 /*/// Sets the height of a panel. Works with FF, but not Opera :(
 function setHeightOfPanel()
@@ -67,9 +85,6 @@ function setHeightOfPanel()
 }
 */
 
-/// The original module loaded normally by the browser (not JavaScript.)
-var g_originalModuleFQN = "";
-
 /// Adds click handlers to symbols and inits the symbol list.
 function initAPIList()
 {
@@ -79,7 +94,10 @@ function initAPIList()
     event.preventDefault();
     showCode($(this));
   });
+
   initializeSymbolList(symbols);
+  makeTreeview($("#apipanel > ul"));
+
   $(".symlink").click(function(event) {
     if (g_originalModuleFQN != g_moduleFQN)
       event.preventDefault();
@@ -116,6 +134,12 @@ function loadNewModule(modFQN)
     return text.slice(start, end);
   }
 
+  function extractTitle(text)
+  {
+    var start = text.indexOf('<title>'), end = text.indexOf('</title>');
+    return text.slice(start+7, end); // '<title>'.length = 7
+  }
+
   displayLoadingGif("Loading module...");
   try {
     $.ajax({url: doc_url, dataType: "text", error: errorHandler,
@@ -123,6 +147,8 @@ function loadNewModule(modFQN)
         // Reset some global variables.
         g_moduleFQN = modFQN;
         g_sourceCode = [];
+        g_symbolDict = {};
+        document.title = extractTitle(data);
         $("#kandil-content")[0].innerHTML = extractModule(data);
         $("#apipanel > ul").remove(); // Delete old API list.
         initAPIList();
@@ -174,6 +200,7 @@ function initializeSymbolList(symbols)
   }
   // Create the HTML text and append it to the api panel.
   $("#apipanel").append(createSymbolsUL(itemlist.root.sub));
+  g_symbolDict = itemlist;
 }
 
 /// A tree item for symbols.
@@ -217,10 +244,12 @@ function createSymbolsUL(symbols)
     var sym = symbols[i];
     var parts = rpartition(sym.fqn, ':')
     var fqn = parts[0], count = parts[1];
+    var hasSubSymbols = sym.sub && sym.sub.length;
+    var leafClass = hasSubSymbols ? '' : ' class="leaf"';
     count = fqn ? "<sub>"+count+"</sub>" : ""; // An index.
-    list += "<li>"+getPNGIcon(sym.kind)+
-            "<a href='#"+sym.fqn+"'>"+sym.name+count+"</a>";
-    if (sym.sub && sym.sub.length)
+    list += "<li"+leafClass+"><i/><div>"+getPNGIcon(sym.kind)+
+            "<a href='#"+sym.fqn+"'>"+sym.name+count+"</a></div>";
+    if (hasSubSymbols)
       list += createSymbolsUL(sym.sub);
     list += "</li>";
   }
@@ -234,18 +263,18 @@ function createModulesUL(symbols)
   for (i in symbols)
   {
     var sym = symbols[i];
-    list += "<li kind='"+sym.kind+"'>"+getPNGIcon(sym.kind);
-    if (sym.sub && sym.sub.length)
-      list += sym.name + createModulesUL(sym.sub);
+    var hasSubSymbols = sym.sub && sym.sub.length;
+    var leafClass = hasSubSymbols ? '' : ' class="leaf"';
+    list += "<li kind='"+sym.kind+"'"+leafClass+">"+
+            "<i/><div>"+getPNGIcon(sym.kind);
+    if (hasSubSymbols)
+      list += sym.name + "</div>" + createModulesUL(sym.sub);
     else
-      list += "<a href='"+sym.fqn+".html'>"+sym.name+"</a>"
+      list += "<a href='"+sym.fqn+".html'>"+sym.name+"</a></div>"
     list += "</li>";
   }
   return list + "</ul>";
 }
-
-/// An array of all the lines of this module's source code.
-var g_sourceCode = [];
 
 /// Extracts the code from the HTML file and sets g_sourceCode.
 function setSourceCode(html_code)

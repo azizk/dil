@@ -120,6 +120,28 @@ input.filterbox {
   width: 97%;
 }
 
+/* Treeview */
+.tview i {
+  float: left;
+  width: 16px;
+  height: 16px;
+}
+.tview i { /* Use minus for expanded state (default.) */
+  background-image: url(../img/icon_tv_minus.png);
+}
+.tview .closed i { /* Use plus for the collapsed state. */
+  background-image: url(../img/icon_tv_plus.png);
+}
+.tview .leaf > i { /* No icon for leafs. */
+  background-image: none;
+}
+.tview .closed > ul {
+  display: none;
+}
+.tview .selected > div > a {
+  background-color: YellowGreen;
+}
+
 /* Content */
 .sec_header {
   font-weight: bold;

@@ -26,7 +26,6 @@ DOC_HEAD = <title>$(TITLE)</title>
   <script type="text/javascript" src="./js/modules.js"></script>
   <script type="text/javascript" src="./js/quicksearch.js"></script>
   <script type="text/javascript" src="./js/navigation.js"></script>
-  <!--<script type="text/javascript" src="./js/jquery.treeview.js"></script>-->
   <script type="text/javascript">
     var g_moduleFQN = "$(DIL_MODFQN)";
   </script>
