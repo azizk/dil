@@ -248,8 +248,24 @@ function addLIAttributes()
   })
 }
 
-/// Constructs a ul (enclosing nested ul's) from the symbols data structure.
 function createSymbolsUL(symbols)
+{
+  return "<ul class='tview'><li class='root'>"+
+         "<i/><div>"+getPNGIcon("module")+g_moduleFQN+"</div>"+
+         createSymbolsUL_(symbols)+
+         "</li></ul>";
+}
+
+function createModulesUL(symbols)
+{
+  return "<ul class='tview'><li class='root'>"+
+         "<i/><div>"+getPNGIcon("package")+"/</div>"+
+         createModulesUL_(symbols)+
+         "</li></ul>";
+}
+
+/// Constructs a ul (enclosing nested ul's) from the symbols data structure.
+function createSymbolsUL_(symbols)
 {
   var list = "<ul>";
   for (i in symbols)
@@ -263,14 +279,14 @@ function createSymbolsUL(symbols)
     list += "<li"+leafClass+"><i/><div>"+getPNGIcon(sym.kind)+
             "<a href='#"+sym.fqn+"'>"+sym.name+count+"</a></div>";
     if (hasSubSymbols)
-      list += createSymbolsUL(sym.sub);
+      list += createSymbolsUL_(sym.sub);
     list += "</li>";
   }
   return list + "</ul>";
 }
 
 /// Constructs a ul (enclosing nested ul's) from g_moduleObjects.
-function createModulesUL(symbols)
+function createModulesUL_(symbols)
 {
   var list = "<ul>";
   for (i in symbols)
@@ -281,7 +297,7 @@ function createModulesUL(symbols)
     list += "<li kind='"+sym.kind+"'"+leafClass+">"+
             "<i/><div>"+getPNGIcon(sym.kind);
     if (hasSubSymbols)
-      list += sym.name + "</div>" + createModulesUL(sym.sub);
+      list += sym.name + "</div>" + createModulesUL_(sym.sub);
     else
       list += "<a href='"+sym.fqn+".html'>"+sym.name+"</a></div>"
     list += "</li>";
