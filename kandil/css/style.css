@@ -31,8 +31,8 @@ body { margin: 0; }
 }
 
 #panels ul {
-  margin-left: 0.5em;
-  padding-left: 0.5em;
+  margin-left: 16px;
+  padding-left: 0;
   list-style: none;
 }
 
@@ -99,18 +99,24 @@ body { margin: 0; }
 .filtered li {
   display: none;  /* Hide all by default */
 }
-.filtered li.match {
-  display: block; /* Make matches visible */
-  color: black;
-}
 .filtered li.parent_of_match {
   display: block; /* Parent nodes of matches must be visible */
-  color: Gray; /* Make the text gray to indicate no match */
 }
-.filtered li.parent_of_match > a {
+.filtered li, .filtered li > div > a {
+  /* The "!important" qualifier is required to override
+     the stronger rule "#navbar ul a" (notice the id selector.) */
   color: Gray !important; /* Make the text gray to indicate no match */
 }
+.filtered li.match {
+  display: block; /* Make matches visible */
+}
+.filtered li.match, .filtered li.match > div > a {
+  color: Black !important;
+}
 .filtered li.no_match_msg {
+  display: block;
+}
+.filtered li.show_hidden > ul > li {
   display: block;
 }
 
@@ -126,14 +132,25 @@ input.filterbox {
   width: 16px;
   height: 16px;
 }
+.tview ul {
+  clear: both;
+}
 .tview i { /* Use minus for expanded state (default.) */
   background-image: url(../img/icon_tv_minus.png);
 }
 .tview .closed i { /* Use plus for the collapsed state. */
   background-image: url(../img/icon_tv_plus.png);
 }
+
+.filtered.tview .has_hidden > i {
+  background-image: url(../img/icon_tv_dot.png);
+}
+.filtered.tview .has_hidden.closed > i {
+  background-image: url(../img/icon_tv_plus.png);
+}
+
 .tview .leaf > i { /* No icon for leafs. */
-  background-image: none;
+  display: none;
 }
 .tview .closed > ul {
   display: none;
@@ -141,6 +158,7 @@ input.filterbox {
 .tview .selected > div > a {
   background-color: YellowGreen;
 }
+
 
 /* Content */
 .sec_header {

@@ -66,7 +66,7 @@ function QuickSearch(id, symlist, callback, options)
 function removeClasses(node, classes)
 {
   classes = classes.split(" ").join("\\b|\\s*\\b");
-  rx = RegExp("\\s*\\b"+classes+"\\b");
+  rx = RegExp("\\s*\\b"+classes+"\\b", "g");
   node.className = node.className.replace(rx, "");
 }
 
@@ -87,8 +87,8 @@ function quickSearchSymbols(qs)
     return; // Nothing to do if query is empty.
   }
 
-  $(symlist).addClass("filtered");
-  if (!quick_search(qs, symlist)) // Start the search.
+  symlist.className += " filtered";
+  if (!quick_search(qs, symlist)[0]) // Start the search.
     $(symlist).append("<li class='no_match_msg'>No match...</li>");
 }
 
@@ -97,13 +97,14 @@ function quick_search(qs, ul)
 {
   var items = ul.childNodes;
   var hasMatches = false; // Whether any item in the tree matched.
+  var hasUnmatched = false; // Whether any item in the tree didn't match.
   for (var i = 0; i < items.length; i++)
   {
     if (qs.cancelSearch) // Did the user cancel?
       return hasMatches;
     var item = items[i];
     var itemMatched = false; // Whether the current item matched.
-    removeClasses(item, "match parent_of_match"); // Reset classes.
+    removeClasses(item, "match parent_of_match has_hidden"); // Reset classes.
     // childNodes[1] is the <a/> tag or the text node (package names).
     var text = item.firstChild.nextSibling.childNodes[1].textContent.toLowerCase();
     for (j in qs.words)
@@ -113,13 +114,19 @@ function quick_search(qs, ul)
         item.className += " match";
         break;
       }
+    hasUnmatched |= !itemMatched;
     // Visit subnodes.
     if (item.lastChild.tagName == "UL")
-      if (quick_search(qs, item.lastChild) && !itemMatched)
+    {
+      var res = quick_search(qs, item.lastChild);
+      if (res[0] && !itemMatched)
         // Mark this if this item didn't match but children of it did.
         (item.className += " parent_of_match"), (hasMatches = true);
+      if (res[1])
+        item.className += " has_hidden";
+    }
   }
-  return hasMatches;
+  return [hasMatches, hasUnmatched];
 }
 
 /// Reverse iterates over the "ul" tags. No recursion needed.
@@ -137,6 +144,7 @@ function quick_search2(qs, main_ul)
     var ul = ul_tags[i];
     var items = ul.childNodes;
     var hasMatches = false; // Whether any item in the tree matched.
+    var hasUnmatched = false; // Whether any item in the tree didn't match.
     // Iterate forward over the li items in this ul tag.
     for (var j = 0; j < items.length; j++)
     {
@@ -144,7 +152,8 @@ function quick_search2(qs, main_ul)
         return hasMatches;
       var item = items[j];
       var itemMatched = false; // Whether the current item matched.
-      removeClasses(item, "match parent_of_match"); // Reset classes.
+      // Reset classes.
+      removeClasses(item, "match parent_of_match has_hidden");
       // childNodes[1] is the <a/> tag or the text node (package names).
       var text = item.firstChild.nextSibling.childNodes[1].textContent.toLowerCase();
       for (k in words)
@@ -154,11 +163,15 @@ function quick_search2(qs, main_ul)
           item.className += " match";
           break;
         }
+      hasUnmatched |= !itemMatched;
       if (!itemMatched && item.lastChild.hasMatches)
         // Mark this if this item didn't match but children of it did.
         (item.className += " parent_of_match"), (hasMatches = true);
+      if (item.lastChild.hasUnmatched)
+        item.className += " has_hidden";
     }
     ul.hasMatches = hasMatches; // Whether this ul has any matches.
+    ul.hasUnmatched = hasUnmatched; // Whether this ul has any non-matches.
   }
   return main_ul.hasMatches;
 }

@@ -61,7 +61,20 @@ function makeTreeview(ul)
   ul.addClass("tview");
   function handleItemClick(e)
   {
-    $(this.parentNode).toggleClass("closed");
+    var li = $(this.parentNode);
+    // First two if-statements are for filtered treeviews.
+    // Go from [.] -> [-] -> [+] -> [.]
+    if (li.hasClass("has_hidden"))
+    {
+      if (li.hasClass("closed")) // [+] -> [.]
+        li.removeClass("closed");
+      else // [.] -> [-]
+        li.addClass("show_hidden").removeClass("has_hidden");
+    }
+    else if (li.hasClass("show_hidden")) // [-] -> [+]
+      li.addClass("has_hidden").removeClass("show_hidden").addClass("closed");
+    else // Normal node. [-] <-> [+]
+      li.toggleClass("closed");
   }
   // The i-tag represents the icon of the tree node.
   $("li > i", ul).click(handleItemClick);
