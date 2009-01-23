@@ -116,7 +116,7 @@ body { margin: 0; }
 .tview .selected > div > a {
   background-color: YellowGreen;
 }
-.tview ul {
+.tview, .tview ul {
   margin-left: 16px;
   padding-left: 0;
   list-style: none;
@@ -124,6 +124,9 @@ body { margin: 0; }
 .tview a {
   text-decoration: none;
   color: Black;
+}
+.tview .root > ul { /* Less indentation for the first list. */
+  margin-left: 8px;
 }
 
 /* Quick search */
