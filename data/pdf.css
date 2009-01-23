@@ -121,12 +121,15 @@ a {
                     shortcoming in PrinceXML doesn't allow generating
                     bookmarks from invisible elements. */
   display: inline; /* Therefore make everything inline to occupy no space. */
-/*   position: absolute; */
-/*   right: 10000px; */
 }
 #bookmarks li {
   prince-bookmark-target: attr(link);
   prince-bookmark-label: attr(label);
+}
+#bookmarks li[link^="#p-"] {
+  /* Since PDF documents don't support custom icons for bookmarks
+     we append a suffix to make packages distinguishable from modules. */
+  prince-bookmark-label: attr(label) "/";
 }
 #bookmarks li, #bookmarks li li { /* Keep first two levels closed. */
   prince-bookmark-state: closed;
