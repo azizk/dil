@@ -30,17 +30,6 @@ body { margin: 0; }
   font-size: 0.95em;
 }
 
-#panels ul {
-  margin-left: 16px;
-  padding-left: 0;
-  list-style: none;
-}
-
-#navbar ul a {
-  text-decoration: none;
-  color: black;
-}
-
 #navtabs {
   margin: 0.5em 0em 0em 0.5em;
   text-align: center;
@@ -95,37 +84,6 @@ body { margin: 0; }
   margin-right: 0.1em;
 }
 
-/* Quick search */
-.filtered li {
-  display: none;  /* Hide all by default */
-}
-.filtered li.parent_of_match {
-  display: block; /* Parent nodes of matches must be visible */
-}
-.filtered li, .filtered li > div > a {
-  /* The "!important" qualifier is required to override
-     the stronger rule "#navbar ul a" (notice the id selector.) */
-  color: Gray !important; /* Make the text gray to indicate no match */
-}
-.filtered li.match {
-  display: block; /* Make matches visible */
-}
-.filtered li.match, .filtered li.match > div > a {
-  color: Black !important;
-}
-.filtered li.no_match_msg {
-  display: block;
-}
-.filtered li.show_hidden > ul > li {
-  display: block;
-}
-
-input.filterbox {
-  margin: 0.2em 0.2em 0em 0.2em;
-  border: 1px inset DarkGreen;
-  width: 97%;
-}
-
 /* Treeview */
 .tview i {
   float: left;
@@ -157,6 +115,44 @@ input.filterbox {
 }
 .tview .selected > div > a {
   background-color: YellowGreen;
+}
+.tview ul {
+  margin-left: 16px;
+  padding-left: 0;
+  list-style: none;
+}
+.tview a {
+  text-decoration: none;
+  color: Black;
+}
+
+/* Quick search */
+.filtered li {
+  display: none;  /* Hide all by default */
+}
+.filtered li.parent_of_match {
+  display: block; /* Parent nodes of matches must be visible */
+}
+.filtered li, .filtered a {
+  color: Gray; /* Make the text gray to indicate no match */
+}
+.filtered li.match {
+  display: block; /* Make matches visible */
+}
+.filtered li.match, .filtered li.match > div > a {
+  color: Black;
+}
+.filtered li.no_match_msg {
+  display: block;
+}
+.filtered li.show_hidden > ul > li {
+  display: block;
+}
+
+input.filterbox {
+  margin: 0.2em 0.2em 0em 0.2em;
+  border: 1px inset DarkGreen;
+  width: 97%;
 }
 
 
