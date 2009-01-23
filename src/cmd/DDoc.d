@@ -245,9 +245,9 @@ struct DDocCommand
       "}\nvar P = M;\n\n"
     );
 
-    file.append("var g_moduleObjects = [\n");
+    file.append("var g_moduleObjects = {\n  'root': P('/', '', [\n");
     writePackage(file, mm.rootPackage);
-    file.append("];");
+    file.append("])\n};");
   }
 
   /// Creates sub-folders and copies kandil's files into them.

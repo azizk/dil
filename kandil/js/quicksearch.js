@@ -1,19 +1,21 @@
 /// Author: Aziz Köksal
 
 /// Constructs a QuickSearch object.
-function QuickSearch(id, symlist, callback, options)
+function QuickSearch(id, tag, symbols, options)
 {
   this.options = $.extend({
     text: "Filter...",
     delay: 500, // Delay time after key press until search kicks off.
+    callback: quickSearchSymbols,
   }, options);
 
   this.input = $("<input id='"+id+"' class='filterbox'"+
                  " type='text' value='"+this.options.text+"'/>");
-  this.symlist = symlist; // A selector string for jQuery.
+  this.tag = tag; // A selector string for jQuery.
+  this.symbols = symbols;
   this.cancelSearch = false;
   this.timeoutId = 0;
-  this.callback = callback;
+  this.callback = this.options.callback;
   this.delayCallback = function() {
     clearTimeout(this.timeoutId);
     QS = this;
@@ -36,10 +38,15 @@ function QuickSearch(id, symlist, callback, options)
       this.qs.delayCallback();
     }
   });
-  this.input.mousedown(function clearInput(e) {
+  function firstClickHandler(e) {
     // Clear the text box when clicked the first time.
-    $(this).val("").unbind("mousedown", clearInput);
-  });
+    $(this).val("").unbind("mousedown", firstClickHandler);
+    prepareSymbols($(tag)[0], symbols);
+  }
+  this.resetFirstClickHandler = function() {
+    this.input.mousedown(firstClickHandler);
+  };
+  this.resetFirstClickHandler();
 
   this.str = "";
   this.parse = function() { // Parses the query.
@@ -70,68 +77,78 @@ function removeClasses(node, classes)
   node.className = node.className.replace(rx, "");
 }
 
+/// Prepares the symbols data structure for the search algorithm.
+function prepareSymbols(ul, symbols)
+{
+  var symlist = symbols.list;
+  var li_s = ul.getElementsByTagName("li");
+  if (li_s.length != symlist.length)
+    throw "The number of symbols ("+li_s.length+") doesn't match the number "+
+          "of list items ("+symlist.length+")!";
+  for (var i = 0; i < symlist.length; i++)
+    symlist[i].li = li_s[i]; // Assign a new property to the symbol.
+}
+
 function quickSearchSymbols(qs)
 {
-  var symlist = $(qs.symlist)[0]; // Get 'ul' tag.
+  var ul = $(qs.tag)[0]; // Get 'ul' tag.
+  var symbols = [qs.symbols.root];
   // Remove the message if present.
-  $(symlist.lastChild).filter(".no_match_msg").remove();
+  $(ul.lastChild).filter(".no_match_msg").remove();
 
   qs.words = qs.parse();
   if (qs.words.length == 0)
   {
-    removeClasses(symlist, "filtered");
-    // Reset classes. May be needed in the future.
-    // var items = symlist.getElementsByTagName("li");
-    // for (var i = 0; i < items.length; i++)
-    //   items[i].className = "";
+    removeClasses(ul, "filtered");
     return; // Nothing to do if query is empty.
   }
 
-  symlist.className += " filtered";
-  if (!quick_search(qs, symlist)[0]) // Start the search.
-    $(symlist).append("<li class='no_match_msg'>No match...</li>");
+  ul.className += " filtered";
+  if (!(quick_search(qs, symbols) & 1)) // Start the search.
+    $(ul).append("<li class='no_match_msg'>No match...</li>");
 }
 
 /// Recursively progresses down the "ul" tree.
-function quick_search(qs, ul)
+function quick_search(qs, symbols)
 {
-  var items = ul.childNodes;
   var hasMatches = false; // Whether any item in the tree matched.
   var hasUnmatched = false; // Whether any item in the tree didn't match.
-  for (var i = 0; i < items.length; i++)
+  for (var i = 0; i < symbols.length; i++)
   {
     if (qs.cancelSearch) // Did the user cancel?
-      return hasMatches;
-    var item = items[i];
+      return hasMatches | (hasUnmatched << 1);
+    var symbol = symbols[i];
     var itemMatched = false; // Whether the current item matched.
-    removeClasses(item, "match parent_of_match has_hidden"); // Reset classes.
-    // childNodes[1] is the <a/> tag or the text node (package names).
-    var text = item.firstChild.nextSibling.childNodes[1].textContent.toLowerCase();
+    var li = symbol.li; // The associated list item.
+    // Reset classes.
+    removeClasses(li, "match parent_of_match has_hidden");
+    var text = symbol.name.toLowerCase();
     for (j in qs.words)
       if (text.search(qs.words[j]) != -1)
       {
         itemMatched = hasMatches = true;
-        item.className += " match";
+        li.className += " match";
         break;
       }
     hasUnmatched |= !itemMatched;
     // Visit subnodes.
-    if (item.lastChild.tagName == "UL")
+    if (symbol.sub)
     {
-      var res = quick_search(qs, item.lastChild);
-      if (res[0] && !itemMatched)
+      var res = quick_search(qs, symbol.sub);
+      if ((res & 1) && !itemMatched)
         // Mark this if this item didn't match but children of it did.
-        (item.className += " parent_of_match"), (hasMatches = true);
-      if (res[1])
-        item.className += " has_hidden";
+        (li.className += " parent_of_match"), (hasMatches = true);
+      if (res & 2)
+        li.className += " has_hidden";
     }
   }
-  return [hasMatches, hasUnmatched];
+  return hasMatches | (hasUnmatched << 1);
 }
 
 /// Reverse iterates over the "ul" tags. No recursion needed.
 /// Profiling showed this method is sometimes a bit faster and
 /// sometimes a bit slower.
+/// TODO: doesn't work atm, needs to be refactored.
 function quick_search2(qs, main_ul)
 {
   var words = qs.words;

@@ -2,8 +2,8 @@
 
 /// The original module loaded normally by the browser (not JavaScript.)
 var g_originalModuleFQN = "";
-/// A dictionary that maps fully qual. names to a SymbolItem object.
-var g_symbolDict = {};
+/// An object that represents the symbol tree.
+var g_symbolTree = {};
 /// An array of all the lines of this module's source code.
 var g_sourceCode = [];
 
@@ -13,6 +13,17 @@ $(function() {
 
   $("#kandil-content").add("#kandil-footer").addClass("left_margin");
 
+  // Create a flat list from the package tree.
+  var list = [];
+  (function visit(syms) {
+    for (var i = 0; i < syms.length; i++) {
+      var sym = syms[i];
+      list = list.concat(sym);
+      if (sym.sub) visit(sym.sub);
+    }
+  })([g_moduleObjects.root]);
+  g_moduleObjects.list = list;
+
   // Create the navigation bar.
   var navbar = $("<div id='navbar'/>")
     .append("<p id='navtabs'><span id='apitab' class='current'>API</span>"+
@@ -20,8 +31,8 @@ $(function() {
     .append("<div id='panels'><div id='apipanel'/><div id='modpanel'/></div>");
   $("body").append(navbar);
   // Create the quick search text boxes.
-  var qs = [new QuickSearch("apiqs", "#apipanel>ul", quickSearchSymbols),
-            new QuickSearch("modqs", "#modpanel>ul", quickSearchSymbols)];
+  var qs = [new QuickSearch("apiqs", "#apipanel>ul", g_symbolTree),
+            new QuickSearch("modqs", "#modpanel>ul", g_moduleObjects)];
   $("#apipanel").prepend(qs[0].input);
   $("#modpanel").prepend(qs[1].input).hide(); // Initially hidden.
 
@@ -43,7 +54,7 @@ $(function() {
               .click(function lazyLoad() {
     $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
     var modpanel = $("#modpanel");
-    modpanel.append(createModulesUL(g_moduleObjects)); // Create the list.
+    modpanel.append(createModulesUL(g_moduleObjects.root)); // Create the list.
     makeTreeview($("#modpanel > ul"));
     $("li[kind=module] a", modpanel).click(handleLoadingModule);
   }).click(function() { // Add the display handler.
@@ -160,11 +171,11 @@ function loadNewModule(modFQN)
         // Reset some global variables.
         g_moduleFQN = modFQN;
         g_sourceCode = [];
-        g_symbolDict = {};
         document.title = extractTitle(data);
         $("#kandil-content")[0].innerHTML = extractModule(data);
         $("#apipanel > ul").remove(); // Delete old API list.
         initAPIList();
+        $("#apiqs")[0].qs.resetFirstClickHandler();
       }
     });
   }
@@ -197,23 +208,25 @@ function initializeSymbolList(symbols)
   var header = symbols[0]; // Header of the page.
   symbols = symbols.slice(1); // Every other symbol.
 
-  var itemlist = {};
-  itemlist.root = new SymbolItem(header.textContent, "module", header.textContent);
-  itemlist[''] = itemlist.root; // The empty string has to point to the root.
+  var symDict = {};
+  var root = new SymbolItem(rpartition(g_moduleFQN)[1], "module", g_moduleFQN);
+  var list = [root];
+  symDict[''] = root; // The empty string has to point to the root.
   for (var i = 0; i < symbols.length; i++)
   {
     var symbol = symbols[i];
     var parts = rpartition(symbol.name, '.')
     var parentFQN = parts[0], name = parts[1];
-    var item = new SymbolItem(symbol.textContent, $(symbol).attr("kind"),
+    var item = new SymbolItem(symbol.textContent, symbol.getAttribute("kind"),
                               symbol.name);
-    itemlist[parentFQN].sub.push(item);
-    itemlist[item.fqn] = item;
-    // TODO: add D attribute information.
+    list.push(item);
+    symDict[parentFQN].sub.push(item);
+    symDict[item.fqn] = item;
   }
+  g_symbolTree.root = root;
+  g_symbolTree.list = list;
   // Create the HTML text and append it to the api panel.
-  $("#apipanel").append(createSymbolsUL(itemlist.root.sub));
-  g_symbolDict = itemlist;
+  $("#apipanel").append(createSymbolsUL(root));
 }
 
 /// A tree item for symbols.
@@ -241,26 +254,19 @@ function getPNGIcon(kind)
   return "<img src='img/icon_"+kind+".png' width='16' height='16'/>";
 }
 
-function addLIAttributes()
-{
-  $("#apipanel li").each(function() {
-    // TODO:
-  })
-}
-
-function createSymbolsUL(symbols)
+function createSymbolsUL(root)
 {
   return "<ul class='tview'><li class='root'>"+
          "<i/><div>"+getPNGIcon("module")+g_moduleFQN+"</div>"+
-         createSymbolsUL_(symbols)+
+         createSymbolsUL_(root.sub)+
          "</li></ul>";
 }
 
-function createModulesUL(symbols)
+function createModulesUL(root)
 {
   return "<ul class='tview'><li class='root'>"+
          "<i/><div>"+getPNGIcon("package")+"/</div>"+
-         createModulesUL_(symbols)+
+         createModulesUL_(root.sub)+
          "</li></ul>";
 }
 
