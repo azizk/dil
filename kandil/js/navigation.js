@@ -401,12 +401,3 @@ function reportBug()
 {
   // TODO: implement.
 }
-
-/// Splits a string returning a tuple (head, tail).
-function rpartition(str, sep)
-{
-  var sep_pos = str.lastIndexOf(sep);
-  var head = (sep_pos == -1) ? "" : str.slice(0, sep_pos);
-  var tail = str.slice(sep_pos+1);
-  return [head, tail];
-}

@@ -69,14 +69,6 @@ function QuickSearch(id, tag, symbols, options)
   return this;
 }
 
-/// Removes one or more CSS classes (separated by ' ') from a node.
-function removeClasses(node, classes)
-{
-  classes = classes.split(" ").join("\\b|\\s*\\b");
-  rx = RegExp("\\s*\\b"+classes+"\\b", "g");
-  node.className = node.className.replace(rx, "");
-}
-
 /// Prepares the symbols data structure for the search algorithm.
 function prepareSymbols(ul, symbols)
 {

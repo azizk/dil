@@ -20,8 +20,9 @@ def kandil_path(where="kandil"):
   P.IMG, P.CSS, P.JS = P//("img", "css", "js")
   P.ddoc    = P/"kandil.ddoc"
   P.style   = P.CSS/"style.css"
-  P.jsfiles = P.JS//("navigation.js", "jquery.js", "quicksearch.js")
-  P.navi, P.jquery, P.qsearch = P.jsfiles
+  P.jsfiles = P.JS//("navigation.js", "jquery.js", "quicksearch.js",
+    "utilities.js")
+  P.navi, P.jquery, P.qsearch, P.utils = P.jsfiles
   png_names = ("alias class enummem enum function interface module package "
                "struct template typedef union variable "
                "tv_plus tv_minus tv_dot").split(" ")
