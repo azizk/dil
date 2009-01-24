@@ -212,13 +212,14 @@ function initializeSymbolList(symbols)
   symbols = symbols.slice(1); // Every other symbol.
 
   var symDict = {};
-  var root = new SymbolItem(rpartition(g_moduleFQN)[1], "module", g_moduleFQN);
+  var moduleName = g_moduleFQN.rpartition('.')[1];
+  var root = new SymbolItem(moduleName, "module", g_moduleFQN);
   var list = [root];
   symDict[''] = root; // The empty string has to point to the root.
   for (var i = 0; i < symbols.length; i++)
   {
     var symbol = symbols[i];
-    var parts = rpartition(symbol.name, '.')
+    var parts = symbol.name.rpartition('.');
     var parentFQN = parts[0], name = parts[1];
     var item = new SymbolItem(symbol.textContent, symbol.getAttribute("kind"),
                               symbol.name);
@@ -260,7 +261,8 @@ function getPNGIcon(kind)
 function createSymbolsUL(root)
 {
   return "<ul class='tview'><li class='root'>"+
-         "<i/><div>"+getPNGIcon("module")+g_moduleFQN+"</div>"+
+         "<i/><div>"+getPNGIcon("module")+
+         "<a href='#m-"+root.fqn+"'>"+root.fqn+"</a></div>"+
          createSymbolsUL_(root.sub)+
          "</li></ul>";
 }
@@ -280,7 +282,7 @@ function createSymbolsUL_(symbols)
   for (i in symbols)
   {
     var sym = symbols[i];
-    var parts = rpartition(sym.fqn, ':')
+    var parts = sym.fqn.rpartition(':');
     var fqn = parts[0], count = parts[1];
     var hasSubSymbols = sym.sub && sym.sub.length;
     var leafClass = hasSubSymbols ? '' : ' class="leaf"';

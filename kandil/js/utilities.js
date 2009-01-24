@@ -9,10 +9,14 @@ function removeClasses(node, classes)
 }
 
 /// Splits a string by 'sep' returning a tuple (head, tail).
-function rpartition(str, sep)
+String.prototype.rpartition = function(sep)
 {
-  var sep_pos = str.lastIndexOf(sep);
-  var head = (sep_pos == -1) ? "" : str.slice(0, sep_pos);
-  var tail = str.slice(sep_pos+1);
+  var sep_pos = this.lastIndexOf(sep);
+  var head = (sep_pos == -1) ? "" : this.slice(0, sep_pos);
+  var tail = this.slice(sep_pos+1);
   return [head, tail];
+}
+
+RegExp.escape = function(str) {
+  return str.replace(/([\\.*+?^${}()|[\]/])/g, '\\$1');
 }
