@@ -70,9 +70,9 @@ $(function() {
 function makeTreeview(ul)
 {
   ul.addClass("tview");
-  function handleItemClick(e)
+  function handleIconClick(icon)
   {
-    var li = $(this.parentNode);
+    var li = $(icon.parentNode);
     // First two if-statements are for filtered treeviews.
     // Go from [.] -> [-] -> [+] -> [.]
     if (li.hasClass("has_hidden"))
@@ -87,8 +87,11 @@ function makeTreeview(ul)
     else // Normal node. [-] <-> [+]
       li.toggleClass("closed");
   }
-  // The i-tag represents the icon of the tree node.
-  $("li > i", ul).click(handleItemClick);
+  ul.mousedown(function(e) {
+    // The i-tag represents the icon of the tree node.
+    if (e.target.tagName == "I")
+      handleIconClick(e.target);
+  });
 }
 
 // Handles a mouse click on a module list item.
