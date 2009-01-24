@@ -52,13 +52,32 @@ function QuickSearch(id, tag, symbols, options)
   this.parse = function() { // Parses the query.
     this.sanitizeStr();
     if (this.str.length == 0)
-      return []
-    var words = this.str.toLowerCase().split(/\s+/);
-    // var attributes = [];
-    // for (i in words)
-    //   if (words[i][0] == ':')
-    //     attributes = words[i];
-    return words;
+      return false;
+    function makeRegExp(term) {
+      term = RegExp.escape(term).replace(/\\\?/g, ".").replace(/\\\*/g, ".*?");
+      return RegExp(term, "i");
+    }
+    var terms = this.str.split(/\s+/);
+    var query = {regexps: [], attributes: [], fqn_regexps: []};
+    try
+    {
+      for (i in terms)
+        if (terms[i][0] == ':')
+          query.attributes.push("^"+terms[i].slice(1));
+        //else if (terms[i][0] == '/')
+        //  query.regexps.push(RegExp(terms[i].slice(1,-1), "i"));
+        else if (terms[i].indexOf(".") != -1)
+          query.fqn_regexps.push(makeRegExp(terms[i]));
+        else if (terms[i].indexOf("*") != -1)
+          query.regexps.push(makeRegExp(terms[i]));
+        else
+          query.regexps.push(RegExp(RegExp.escape(terms[i]), "i"));
+    }
+    catch(e) {
+      return false;
+    }
+    this.query = query;
+    return terms.length != 0;
   };
   this.sanitizeStr = function() {
     // Strip leading and trailing whitespace.
@@ -75,8 +94,8 @@ function prepareSymbols(ul, symbols)
   var symlist = symbols.list;
   var li_s = ul.getElementsByTagName("li");
   if (li_s.length != symlist.length)
-    throw "The number of symbols ("+li_s.length+") doesn't match the number "+
-          "of list items ("+symlist.length+")!";
+    throw new Error("The number of symbols ("+li_s.length+") doesn't match "+
+          "the number of list items ("+symlist.length+")!");
   for (var i = 0; i < symlist.length; i++)
     symlist[i].li = li_s[i]; // Assign a new property to the symbol.
 }
@@ -88,8 +107,7 @@ function quickSearchSymbols(qs)
   // Remove the message if present.
   $(ul.lastChild).filter(".no_match_msg").remove();
 
-  qs.words = qs.parse();
-  if (qs.words.length == 0)
+  if (!qs.parse())
   {
     removeClasses(ul, "filtered");
     return; // Nothing to do if query is empty.
@@ -113,16 +131,23 @@ function quick_search(qs, symbols)
     var itemMatched = false; // Whether the current item matched.
     var li = symbol.li; // The associated list item.
     // Reset classes.
-    removeClasses(li, "match parent_of_match has_hidden");
-    var text = symbol.name.toLowerCase();
-    for (j in qs.words)
-      if (text.search(qs.words[j]) != -1)
-      {
-        itemMatched = hasMatches = true;
-        li.className += " match";
-        break;
-      }
-    hasUnmatched |= !itemMatched;
+    removeClasses(li, "match parent_of_match has_hidden show_hidden");
+    var texts = [symbol.name, symbol.fqn, symbol.kind];
+    var tlist = [qs.query.regexps, qs.query.fqn_regexps, qs.query.attributes];
+  SearchLoop:
+    for (var j=0; j < 3; j++)
+    {
+      var text = texts[j], terms = tlist[j];
+      for (k in terms)
+        if (text.search(terms[k]) != -1) {
+          itemMatched = true;
+          break SearchLoop;
+        }
+    }
+    if (itemMatched)
+      (li.className += " match"), (hasMatches = true);
+    else
+      hasUnmatched = true;
     // Visit subnodes.
     if (symbol.sub)
     {
@@ -164,9 +189,9 @@ function quick_search2(qs, main_ul)
       // Reset classes.
       removeClasses(item, "match parent_of_match has_hidden");
       // childNodes[1] is the <a/> tag or the text node (package names).
-      var text = item.firstChild.nextSibling.childNodes[1].textContent.toLowerCase();
+      var text = item.firstChild.nextSibling.childNodes[1].textContent;
       for (k in words)
-        if (text.search(words[k]) != -1)
+        if (text.search(words[k], "i") != -1)
         {
           itemMatched = hasMatches = true;
           item.className += " match";
