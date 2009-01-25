@@ -57,7 +57,7 @@ $(function() {
     var modpanel = $("#modpanel");
     modpanel.append(createModulesUL(g_moduleObjects.root)); // Create the list.
     makeTreeview($("#modpanel > ul"));
-    $("li[kind=module] a", modpanel).click(handleLoadingModule);
+    $(".tview a", modpanel).click(handleLoadingModule);
   }).click(function() { // Add the display handler.
     $("#modpanel").show(); // Display the modules list.
   });
@@ -88,10 +88,28 @@ function makeTreeview(ul)
     else // Normal node. [-] <-> [+]
       li.toggleClass("closed");
   }
+  var selected_li = $(">li", ul)[0]; // Default to first li.
+  function setSelected(new_li)
+  {
+    $(new_li).addClass("selected");
+    if (new_li == selected_li)
+      return;
+    $(selected_li).removeClass("selected");
+    selected_li = new_li;
+  }
+
   ul.mousedown(function(e) {
+    var tagName = e.target.tagName;
     // The i-tag represents the icon of the tree node.
-    if (e.target.tagName == "I")
+    if (tagName == "I")
       handleIconClick(e.target);
+    else if (tagName == "A" || tagName == "LABEL" || tagName == "SUB")
+    {
+      var li = e.target;
+      for (; li && li.tagName != "LI";)
+        li = li.parentNode;
+      if (li) setSelected(li);
+    }
   });
 }
 
@@ -262,8 +280,8 @@ function getPNGIcon(kind)
 function createSymbolsUL(root)
 {
   return "<ul class='tview'><li class='root'>"+
-         "<i/><div>"+getPNGIcon("module")+
-         "<a href='#m-"+root.fqn+"'>"+root.fqn+"</a></div>"+
+         "<i/>"+getPNGIcon("module")+
+         "<label><a href='#m-"+root.fqn+"'>"+root.fqn+"</a></label>"+
          createSymbolsUL_(root.sub)+
          "</li></ul>";
 }
@@ -271,7 +289,7 @@ function createSymbolsUL(root)
 function createModulesUL(root)
 {
   return "<ul class='tview'><li class='root'>"+
-         "<i/><div>"+getPNGIcon("package")+"/</div>"+
+         "<i/>"+getPNGIcon("package")+"<label>/</label>"+
          createModulesUL_(root.sub)+
          "</li></ul>";
 }
@@ -288,8 +306,8 @@ function createSymbolsUL_(symbols)
     var hasSubSymbols = sym.sub && sym.sub.length;
     var leafClass = hasSubSymbols ? '' : ' class="leaf"';
     count = fqn ? "<sub>"+count+"</sub>" : ""; // An index.
-    list += "<li"+leafClass+"><i/><div>"+getPNGIcon(sym.kind)+
-            "<a href='#"+sym.fqn+"'>"+sym.name+count+"</a></div>";
+    list += "<li"+leafClass+"><i/>"+getPNGIcon(sym.kind)+
+            "<label><a href='#"+sym.fqn+"'>"+sym.name+count+"</a></label>";
     if (hasSubSymbols)
       list += createSymbolsUL_(sym.sub);
     list += "</li>";
@@ -306,12 +324,12 @@ function createModulesUL_(symbols)
     var sym = symbols[i];
     var hasSubSymbols = sym.sub && sym.sub.length;
     var leafClass = hasSubSymbols ? '' : ' class="leaf"';
-    list += "<li kind='"+sym.kind+"'"+leafClass+">"+
-            "<i/><div>"+getPNGIcon(sym.kind);
+    list += "<li"+leafClass+">"+ //  kind='"+sym.kind+"'
+            "<i/>"+getPNGIcon(sym.kind)+"<label>";
     if (hasSubSymbols)
-      list += sym.name + "</div>" + createModulesUL_(sym.sub);
+      list += sym.name + "</label>" + createModulesUL_(sym.sub);
     else
-      list += "<a href='"+sym.fqn+".html'>"+sym.name+"</a></div>"
+      list += "<a href='"+sym.fqn+".html'>"+sym.name+"</a></label>"
     list += "</li>";
   }
   return list + "</ul>";

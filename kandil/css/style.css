@@ -82,13 +82,14 @@ body { margin: 0; }
   white-space: nowrap;
 }
 
-#apipanel li img, #modpanel li img {
-  vertical-align: top;
-  margin-right: 0.1em;
-}
-
 /* Treeview */
-.tview i {
+.tview label { /* The treeview label. */
+  padding: 0em 0.1em;
+}
+.tview img { /* The label's icon. */
+  vertical-align: top;
+}
+.tview i { /* The treeview icon. */
   float: left;
   width: 16px;
   height: 16px;
@@ -116,7 +117,7 @@ body { margin: 0; }
 .tview .closed > ul {
   display: none;
 }
-.tview .selected > div > a {
+.tview .selected > label {
   background-color: YellowGreen;
 }
 .tview, .tview ul {
@@ -145,7 +146,7 @@ body { margin: 0; }
 .filtered li.match {
   display: block; /* Make matches visible */
 }
-.filtered li.match, .filtered li.match > div > a {
+.filtered li.match, .filtered li.match > label a {
   color: Black;
 }
 .filtered li.no_match_msg {
