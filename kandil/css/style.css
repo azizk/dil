@@ -46,6 +46,9 @@ body { margin: 0; }
   white-space: nowrap;
   cursor: pointer;
 }
+#navtabs span > img {
+  vertical-align: top;
+}
 
 #navtabs span.current, #navtabs span:hover {
   padding-bottom: 2px;

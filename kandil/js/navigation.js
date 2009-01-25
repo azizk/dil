@@ -26,8 +26,9 @@ $(function() {
 
   // Create the navigation bar.
   var navbar = $("<div id='navbar'/>")
-    .append("<p id='navtabs'><span id='apitab' class='current'>API</span>"+
-                            "<span id='modtab'>Modules</span></p>")
+    .append("<p id='navtabs'><span id='apitab' class='current'>"+
+                             getPNGIcon("variable")+"Symbols</span>"+
+            "<span id='modtab'>"+getPNGIcon("module")+"Modules</span></p>")
     .append("<div id='panels'><div id='apipanel'/><div id='modpanel'/></div>");
   $("body").append(navbar);
   // Create the quick search text boxes.
