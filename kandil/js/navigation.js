@@ -377,13 +377,12 @@ function showCode(symbol)
     var code = g_sourceCode.slice(line_beg, line_end+1);
     code = code.join("\n");
     // Create the lines column.
-    var lines = "";
-    for (var i = line_beg; i <= line_end; i++)
-      lines += '<a href="'+getSourceCodeURL()+'#L'+i+'">' + i + '</a>\n';
-    lines = '<pre class="lines_column">'+lines+'</pre>';
-    // Create the code block.
-    var block = '<pre class="d_code">'+code+'</pre>';
-    var table = $('<table/>').append('<tr><td class="lines">'+lines+'</td><td>'+block+'</td></tr>');
+    var lines = "", srcURL = getSourceCodeURL();
+    for (var num = line_beg; num <= line_end; num++)
+      lines += '<a href="' + srcURL + '#L' + num + '">' + num + '</a>\n';
+    var table = $('<table class="d_code"/>');
+    table.append('<tr><td class="d_codelines"><pre>'+lines+'</pre></td>'+
+                 '<td class="d_codetext"><pre>'+code+'</pre></td></tr>');
     // Create a container div.
     var div = $('<div class="loaded_code"/>');
     div.append(table);
