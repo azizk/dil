@@ -55,7 +55,7 @@ def write_bookmarks(html_doc, package_tree, sym_dict_all,
     for m in pckg.modules:
       html_doc.write("<li link='#m-%s' label='%s'>" %
                      (m.fqn, m.name))
-      write_symbol_tree(m.sym_dict[""])
+      write_symbol_tree(m.symbolTree)
       html_doc.write("</li>\n")
     html_doc.write("</ul>\n")
 
@@ -90,8 +90,7 @@ def generate_pdf(module_files, dest, tmp, params):
     "after_files": [],  # Files to put after module pages.
     "newpage_modules": [] # Which modules should force a page break.
   }
-  params_default.update(params)
-  params = params_default
+  params = dict(params_default, **params)
 
   x_html = params["x_html"]
   symlink = params["symlink"]
@@ -276,15 +275,6 @@ def generate_pdf(module_files, dest, tmp, params):
 
   # Prepare indices:
   # ----------------
-  def get_index(symbols):
-    letter_dict = {} # Sort index by the symbol's initial letter.
-    for sym in symbols:
-      items = letter_dict.setdefault(unicode(sym.name)[0].upper(), [])
-      items += [sym]
-    letter_list = letter_dict.keys()
-    letter_list.sort()
-    return letter_dict, letter_list
-
   # Get {"class": index, "interface": index, ...}.
   indices = dict([(kind, get_index(sym_dict_all[kind]))
                    for kind in kind_list

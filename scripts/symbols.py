@@ -6,8 +6,12 @@ class Module:
   def __init__(self, fqn):
     self.pckg_fqn, sep, self.name = fqn.rpartition('.')
     self.fqn = fqn
+    self.sym_dict = {}
   def __cmp__(self, other):
     return cmp(self.name, other.name)
+  @property
+  def symbolTree(self):
+    return self.sym_dict['']
 
 class Package(Module): # Inherit for convenience.
   def __init__(self, fqn):
@@ -75,3 +79,12 @@ def get_symbols(html_str, module_fqn, categorize=True):
       kinds = cat_dict.setdefault(symbol.kind, [])
       kinds += [symbol]
   return symbol_dict, cat_dict
+
+def get_index(symbols):
+  letter_dict = {} # Sort index by the symbol's initial letter.
+  for sym in symbols:
+    items = letter_dict.setdefault(unicode(sym.name)[0].upper(), [])
+    items += [sym]
+  letter_list = letter_dict.keys()
+  letter_list.sort()
+  return letter_dict, letter_list
