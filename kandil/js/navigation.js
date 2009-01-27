@@ -11,7 +11,7 @@ var g_sourceCode = [];
 $(function() {
   g_originalModuleFQN = g_moduleFQN;
 
-  $("#kandil-content").add("#kandil-footer").addClass("left_margin");
+  $("#kandil-content").addClass("left_margin");
 
   // Create a flat list from the package tree.
   var list = [];
@@ -173,10 +173,10 @@ function loadNewModule(modFQN)
     fadeOutRemove(msg, 5000, 500);
   }
 
-  function extractModule(text)
+  function extractContent(text)
   {
     var start = text.indexOf('<div class="module">'),
-        end = text.lastIndexOf('</div>\n<div id="kandil-footer">');
+        end = text.lastIndexOf('</div>\n</body>');
     return text.slice(start, end);
   }
 
@@ -194,7 +194,7 @@ function loadNewModule(modFQN)
         g_moduleFQN = modFQN;
         g_sourceCode = [];
         document.title = extractTitle(data);
-        $("#kandil-content")[0].innerHTML = extractModule(data);
+        $("#kandil-content")[0].innerHTML = extractContent(data);
         $("#apipanel > ul").remove(); // Delete old API list.
         initAPIList();
         $("#apiqs")[0].qs.resetFirstClickHandler();
@@ -390,8 +390,6 @@ function showCode(symbol)
     // Store the created div.
     dt_tag.code_div = div;
   }
-
-  var showCodeHandler;
 
   if (g_sourceCode.length == 0)
   { // Load the HTML source code file.

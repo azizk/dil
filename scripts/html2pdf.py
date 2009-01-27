@@ -140,7 +140,7 @@ def generate_pdf(module_files, dest, tmp, params):
     html_str = h1_href_rx.sub(r'\1"%s/\2"' % symlink, html_str)
     # Extract "#content>.module".
     start = html_str.find('<div class="module">')
-    end = html_str.rfind('</div>\n<div id="kandil-footer">')
+    end = html_str.rfind('<div id="kandil-footer">')
     content = html_str[start:end]
     # Push a tuple.
     html_fragments += [(content, module_fqn, sym_dict)]
