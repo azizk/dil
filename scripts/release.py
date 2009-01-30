@@ -150,9 +150,10 @@ def main():
     os.system("git clone ./ '%s'" % DEST)
     (DEST/".git").rmtree() # Remove the .git folder.
     if options.copy_modified:
-      modified_files = os.popen("git ls-files -m").read()[:-1].split("\n")
-      for f in modified_files:
-        Path(f).copy(DEST/f)
+      modified_files = os.popen("git ls-files -m").read()[:-1]
+      if modified_files != "":
+        for f in modified_files.split("\n"):
+          Path(f).copy(DEST/f)
   else:
     parser.error("git is not in your PATH; specify --src instead")
   # Create other directories not available in a clean checkout.
