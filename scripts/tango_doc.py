@@ -13,6 +13,8 @@ def copy_files(DIL, TANGO, DEST):
       (DIL.DATA/"html.css", DEST.HTMLSRC),
       (DIL.KANDIL.style,    DEST.CSS)):
     FILE.copy(DIR)
+  if TANGO.favicon.exists:
+    TANGO.favicon.copy(DEST.IMG/"favicon.png")
   for FILE in DIL.KANDIL.jsfiles:
     FILE.copy(DEST.JS)
   for img in DIL.KANDIL.images:
@@ -26,11 +28,13 @@ def get_tango_version(path):
     if m: minor = int(m.group(1))
   return "%s.%s.%s" % (major, minor/10, minor%10)
 
-def write_tango_ddoc(path, revision):
+def write_tango_ddoc(path, favicon, revision):
   revision = "?rev=" + revision if revision != None else ''
+  favicon = "" if not favicon.exists else \
+    'FAVICON = <link href="./img/favicon.png" rel="icon" type="image/png"/>'
   open(path, "w").write("""
 LICENSE = see $(LINK2 http://www.dsource.org/projects/tango/wiki/LibraryLicense, license.txt)
-REPOFILE = http://www.dsource.org/projects/tango/browser/trunk/$(DIL_MODPATH)%s
+REPOFILE = http://www.dsource.org/projects/tango/browser/trunk/$(DIL_MODPATH)%(revision)s
 CODEURL =
 MEMBERTABLE = <table>$0</table>
 ANCHOR = <a name="$0"></a>
@@ -39,7 +43,9 @@ RB = ]
 SQRT = √
 NAN = NaN
 SUP = <sup>$0</sup>
-BR = <br/>""" % revision
+BR = <br/>
+%(favicon)s
+""" % locals()
   )
 
 def write_PDF(DIL, SRC, VERSION, TMP):
@@ -94,6 +100,7 @@ def get_tango_path(path):
     (path/"std").copytree(path.SRC/"std")
     (path/"object.di").copy(path.SRC)
   path.license = path/"LICENSE"
+  path.favicon = Path("tango_favicon.png") # Look in CWD atm.
   return path
 
 def main():
@@ -148,7 +155,7 @@ def main():
   find_source_files(TANGO.SRC, FILES)
 
   create_index(TMP/"index.d", TANGO.SRC, FILES)
-  write_tango_ddoc(TANGO_DDOC, options.revision)
+  write_tango_ddoc(TANGO_DDOC, TANGO.favicon, options.revision)
   DOC_FILES = [DIL.KANDIL.ddoc, TANGO_DDOC, TMP/"index.d"] + FILES
   versions = ["Tango", "DDoc"]
   versions += ["Posix"] if options.posix else ["Windows", "Win32"]
