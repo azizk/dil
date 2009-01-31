@@ -34,8 +34,6 @@ REPOFILE = http://www.dsource.org/projects/tango/browser/trunk/$(DIL_MODPATH)%s
 CODEURL =
 MEMBERTABLE = <table>$0</table>
 ANCHOR = <a name="$0"></a>
-LP = (
-RP = )
 LB = [
 RB = ]
 SQRT = √
@@ -45,14 +43,26 @@ BR = <br/>""" % revision
   )
 
 def write_PDF(DIL, SRC, VERSION, TMP):
+  TMP = TMP/"pdf"
+  TMP.exists or TMP.mkdir()
+
   pdf_gen = PDFGenerator()
   pdf_gen.fetch_files(DIL, TMP)
   html_files = SRC.glob("*.html")
   html_files = filter(lambda path: path.name != "index.html", html_files)
+  # Get the logo if present.
+  logo_png = Path("logo_tango.png")
+  if logo_png.exists:
+    logo_png.copy(TMP)
+    logo = "<br/>"*2 + "<img src='%s'/>" % logo_png.name
+    #logo_svg = open(logo_svg).read()
+    #logo_svg = "<br/>"*2 + logo_svg[logo_svg.index("\n"):]
+  else:
+    logo = ''
   symlink = "http://dil.googlecode.com/svn/doc/Tango_%s" % VERSION
   params = {
     "pdf_title": "Tango %s API" % VERSION,
-    "cover_title": "Tango %s<br/><b>API</b>" % VERSION,
+    "cover_title": "Tango %s<br/><b>API</b>%s" % (VERSION, logo),
     "author": "Tango Team",
     "subject": "Programming API",
     "keywords": "Tango standard library API documentation",
