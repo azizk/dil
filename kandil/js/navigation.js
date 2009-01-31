@@ -42,7 +42,7 @@ $(function() {
   // Assign click event handlers for the tabs.
   function makeCurrentTab() {
     $("span.current", this.parentNode).removeClass('current');
-    $(this).addClass('current');
+    this.addClass('current');
     $("#panels > *:visible").hide(); // Hide all panels.
   }
 
@@ -73,7 +73,7 @@ function makeTreeview(ul)
   ul.addClass("tview");
   function handleIconClick(icon)
   {
-    var li = $(icon.parentNode);
+    var li = icon.parentNode;
     // First two if-statements are for filtered treeviews.
     // Go from [.] -> [-] -> [+] -> [.]
     if (li.hasClass("has_hidden"))
@@ -84,17 +84,17 @@ function makeTreeview(ul)
         li.addClass("show_hidden").removeClass("has_hidden");
     }
     else if (li.hasClass("show_hidden")) // [-] -> [+]
-      li.addClass("has_hidden").removeClass("show_hidden").addClass("closed");
+      li.addClass("has_hidden|closed").removeClass("show_hidden");
     else // Normal node. [-] <-> [+]
       li.toggleClass("closed");
   }
   var selected_li = $(">li", ul)[0]; // Default to first li.
   function setSelected(new_li)
   {
-    $(new_li).addClass("selected");
+    new_li.addClass("selected");
     if (new_li == selected_li)
       return;
-    $(selected_li).removeClass("selected");
+    selected_li.removeClass("selected");
     selected_li = new_li;
   }
 
@@ -298,7 +298,7 @@ function createModulesUL(root)
 function createSymbolsUL_(symbols)
 {
   var list = "<ul>";
-  for (i in symbols)
+  for (var i = 0, len = symbols.length; i < len; i++)
   {
     var sym = symbols[i];
     var parts = sym.fqn.rpartition(':');
@@ -319,7 +319,7 @@ function createSymbolsUL_(symbols)
 function createModulesUL_(symbols)
 {
   var list = "<ul>";
-  for (i in symbols)
+  for (var i = 0, len = symbols.length; i < len; i++)
   {
     var sym = symbols[i];
     var hasSubSymbols = sym.sub && sym.sub.length;

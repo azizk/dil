@@ -61,7 +61,7 @@ function QuickSearch(id, tag, symbols, options)
     var query = {regexps: [], attributes: [], fqn_regexps: []};
     try
     {
-      for (i in terms)
+      for (var i = 0, len = terms.length; i < len; i++)
         if (terms[i][0] == ':')
           query.attributes.push("^"+terms[i].slice(1));
         //else if (terms[i][0] == '/')
@@ -109,11 +109,11 @@ function quickSearchSymbols(qs)
 
   if (!qs.parse())
   {
-    removeClasses(ul, "filtered");
+    ul.removeClass("filtered");
     return; // Nothing to do if query is empty.
   }
 
-  ul.className += " filtered";
+  ul.addClass("filtered");
   if (!(quick_search(qs, symbols) & 1)) // Start the search.
     $(ul).append("<li class='no_match_msg'>No match...</li>");
 }
@@ -123,7 +123,7 @@ function quick_search(qs, symbols)
 {
   var hasMatches = false; // Whether any item in the tree matched.
   var hasUnmatched = false; // Whether any item in the tree didn't match.
-  for (var i = 0; i < symbols.length; i++)
+  for (var i = 0, len = symbols.length; i < len; i++)
   {
     if (qs.cancelSearch) // Did the user cancel?
       return hasMatches | (hasUnmatched << 1);
@@ -131,14 +131,14 @@ function quick_search(qs, symbols)
     var itemMatched = false; // Whether the current item matched.
     var li = symbol.li; // The associated list item.
     // Reset classes.
-    removeClasses(li, "match parent_of_match has_hidden show_hidden");
+    li.removeClass("match|parent_of_match|has_hidden|show_hidden");
     var texts = [symbol.name, symbol.fqn, symbol.kind];
     var tlist = [qs.query.regexps, qs.query.fqn_regexps, qs.query.attributes];
   SearchLoop:
-    for (var j=0; j < 3; j++)
+    for (var j = 0; j < 3; j++)
     {
       var text = texts[j], terms = tlist[j];
-      for (k in terms)
+      for (var k = 0, len2 = terms.length; k < len2; k++)
         if (text.search(terms[k]) != -1) {
           itemMatched = true;
           break SearchLoop;
@@ -180,14 +180,14 @@ function quick_search2(qs, main_ul)
     var hasMatches = false; // Whether any item in the tree matched.
     var hasUnmatched = false; // Whether any item in the tree didn't match.
     // Iterate forward over the li items in this ul tag.
-    for (var j = 0; j < items.length; j++)
+    for (var j = 0, len = items.length; j < len; j++)
     {
       if (qs.cancelSearch) // Did the user cancel?
         return hasMatches;
       var item = items[j];
       var itemMatched = false; // Whether the current item matched.
       // Reset classes.
-      removeClasses(item, "match parent_of_match has_hidden");
+      item.removeClass("match|parent_of_match|has_hidden|show_hidden");
       // childNodes[1] is the <a/> tag or the text node (package names).
       var text = item.firstChild.nextSibling.childNodes[1].textContent;
       for (k in words)
