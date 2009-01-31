@@ -219,7 +219,7 @@ struct DDocCommand
     filePath.append("js").append("modules.js");
     scope file = new File(filePath.toString());
 
-    file.write("var g_modulesList = [\n "); // Write a flat list of FQNs.
+    file.write("var g_moduleList = [\n "); // Write a flat list of FQNs.
     uint max_line_len = 80;
     uint line_len;
     foreach (modul; mm.loadedModules)
@@ -235,19 +235,9 @@ struct DDocCommand
     }
     file.append("\n];\n\n"); // Closing ].
 
-    file.append(
-      "function M(name, fqn, sub)\n{\n"
-      "  sub = sub ? sub : [];\n"
-      "  return {\n"
-      "    name: name, fqn: fqn, sub: sub,\n"
-      "    kind : (sub && sub.length == 0) ? \"module\" : \"package\"\n"
-      "  };\n"
-      "}\nvar P = M;\n\n"
-    );
-
-    file.append("var g_moduleObjects = {\n  'root': P('/', '', [\n");
+    file.append("var g_packageTree = new PackageTree(P('', [\n");
     writePackage(file, mm.rootPackage);
-    file.append("])\n};");
+    file.append("])\n);\n");
   }
 
   /// Creates sub-folders and copies kandil's files into them.
@@ -281,12 +271,12 @@ struct DDocCommand
   {
     foreach (p; pckg.packages)
     {
-      f.append(Format("{}P('{}','{}',[\n", indent, p.name.str, p.getFQN()));
+      f.append(Format("{}P('{}',[\n", indent, p.getFQN()));
       writePackage(f, p, indent~"  ");
       f.append(indent~"]),\n");
     }
     foreach (m; pckg.modules)
-      f.append(Format("{}M('{}','{}'),\n", indent, m.name.str, m.getFQN()));
+      f.append(Format("{}M('{}'),\n", indent, m.getFQN()));
   }
 
   /// Loads a macro file. Converts any Unicode encoding to UTF-8.

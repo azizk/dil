@@ -24,6 +24,7 @@ DOC_HEAD = <title>$(TITLE)</title>
   <!-- <link href="./img/icon.png" rel="icon" type="image/png"/> -->
   <script type="text/javascript" src="./js/jquery.js"></script>
   <script type="text/javascript" src="./js/utilities.js"></script>
+  <script type="text/javascript" src="./js/symbols.js"></script>
   <script type="text/javascript" src="./js/modules.js"></script>
   <script type="text/javascript" src="./js/quicksearch.js"></script>
   <script type="text/javascript" src="./js/navigation.js"></script>

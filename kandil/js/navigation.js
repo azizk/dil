@@ -13,17 +13,6 @@ $(function() {
 
   $("#kandil-content").addClass("left_margin");
 
-  // Create a flat list from the package tree.
-  var list = [];
-  (function visit(syms) {
-    for (var i = 0; i < syms.length; i++) {
-      var sym = syms[i];
-      list = list.concat(sym);
-      if (sym.sub) visit(sym.sub);
-    }
-  })([g_moduleObjects.root]);
-  g_moduleObjects.list = list;
-
   // Create the navigation bar.
   var navbar = $("<div id='navbar'/>")
     .append("<p id='navtabs'><span id='apitab' class='current'>"+
@@ -33,7 +22,7 @@ $(function() {
   $("body").append(navbar);
   // Create the quick search text boxes.
   var qs = [new QuickSearch("apiqs", "#apipanel>ul", g_symbolTree),
-            new QuickSearch("modqs", "#modpanel>ul", g_moduleObjects)];
+            new QuickSearch("modqs", "#modpanel>ul", g_packageTree)];
   $("#apipanel").prepend(qs[0].input);
   $("#modpanel").prepend(qs[1].input).hide(); // Initially hidden.
 
@@ -55,9 +44,10 @@ $(function() {
               .click(function lazyLoad() {
     $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
     var modpanel = $("#modpanel");
-    modpanel.append(createModulesUL(g_moduleObjects.root)); // Create the list.
+    modpanel.append(createModulesUL(g_packageTree.root)); // Create the list.
     makeTreeview($("#modpanel > ul"));
     $(".tview a", modpanel).click(handleLoadingModule);
+    g_packageTree.initList(); // Init the list property.
   }).click(function() { // Add the display handler.
     $("#modpanel").show(); // Display the modules list.
   });
@@ -222,44 +212,30 @@ function hideLoadingGif()
 }
 
 /// Initializes the symbol list under the API tab.
-function initializeSymbolList(symbols)
+function initializeSymbolList(sym_tags)
 {
-  if (!symbols.length)
+  if (!sym_tags.length)
     return;
   // Prepare the symbol list.
-  var header = symbols[0]; // Header of the page.
-  symbols = symbols.slice(1); // Every other symbol.
+  var header = sym_tags[0]; // Header of the page.
+  sym_tags = sym_tags.slice(1); // Every other symbol.
 
   var symDict = {};
-  var moduleName = g_moduleFQN.rpartition('.')[1];
-  var root = new SymbolItem(moduleName, "module", g_moduleFQN);
+  var root = new M(g_moduleFQN);
   var list = [root];
   symDict[''] = root; // The empty string has to point to the root.
-  for (var i = 0; i < symbols.length; i++)
+  for (var i = 0, len = sym_tags.length; i < len; i++)
   {
-    var symbol = symbols[i];
-    var parts = symbol.name.rpartition('.');
-    var parentFQN = parts[0], name = parts[1];
-    var item = new SymbolItem(symbol.textContent, symbol.getAttribute("kind"),
-                              symbol.name);
-    list.push(item);
-    symDict[parentFQN].sub.push(item);
-    symDict[item.fqn] = item;
+    var sym_tag = sym_tags[i];
+    var sym = new Symbol(sym_tag.name, sym_tag.getAttribute("kind"));
+    list.push(sym); // Append to flat list.
+    symDict[sym.parent_fqn].sub.push(sym); // Append to parent.
+    symDict[sym.fqn] = sym; // Insert the symbol itself.
   }
   g_symbolTree.root = root;
   g_symbolTree.list = list;
   // Create the HTML text and append it to the api panel.
   $("#apipanel").append(createSymbolsUL(root));
-}
-
-/// A tree item for symbols.
-function SymbolItem(name, kind, fqn)
-{
-  this.name = name; /// The text to be displayed.
-  this.kind = kind; /// The kind of this symbol.
-  this.fqn = fqn;   /// The fully qualified name.
-  this.sub = [];    /// Sub-symbols.
-  return this;
 }
 
 /// Returns an image tag for the provided kind of symbol.
@@ -315,7 +291,7 @@ function createSymbolsUL_(symbols)
   return list + "</ul>";
 }
 
-/// Constructs a ul (enclosing nested ul's) from g_moduleObjects.
+/// Constructs a ul (enclosing nested ul's) from the package tree.
 function createModulesUL_(symbols)
 {
   var list = "<ul>";
