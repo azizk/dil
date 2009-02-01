@@ -279,9 +279,9 @@ function createSymbolsUL_(symbols)
     var sym = symbols[i];
     var hasSubSymbols = sym.sub && sym.sub.length;
     var leafClass = hasSubSymbols ? '' : ' class="leaf"';
-    var parts = sym.name.rpartition(':');
-    var label = parts[0];
-    label = label ? label+"<sub>"+parts[1]+"</sub>" : parts[1]; // An index.
+    var parts = sym.name.partition(':');
+    var label = parts[0], number = parts[1];
+    label = number ? label+"<sub>"+number+"</sub>" : label; // An index.
     list += "<li"+leafClass+"><i/>"+getPNGIcon(sym.kind)+
             "<label><a href='#"+sym.fqn+"'>"+label+"</a></label>";
     if (hasSubSymbols)

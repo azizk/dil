@@ -6,6 +6,16 @@ RegExp.escape = function(str) {
 };
 
 /// Splits a string by 'sep' returning a tuple (head, tail).
+/// Returns (this, "") if sep is not found.
+String.prototype.partition = function(sep) {
+  var sep_pos = this.indexOf(sep), head = this, tail = "";
+  if (sep_pos != -1)
+    (head = this.slice(0, sep_pos)), (tail = this.slice(sep_pos+1));
+  return [head, tail];
+};
+
+/// Splits a string by 'sep' returning a tuple (head, tail).
+/// Returns ("", this) if sep is not found.
 String.prototype.rpartition = function(sep) {
   var sep_pos = this.lastIndexOf(sep);
   var head = (sep_pos == -1) ? "" : this.slice(0, sep_pos);
