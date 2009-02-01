@@ -2331,7 +2331,8 @@ version(D2)
              t.kind == TOK.Imaginary80);
     }
     if (errno() == ERANGE)
-      error(t.start, MID.OverflowFloatNumber);
+      error(t.start, MID.OverflowFloatNumber),
+      errno(0); // Important: reset the error number.
     t.end = p;
   }
 
