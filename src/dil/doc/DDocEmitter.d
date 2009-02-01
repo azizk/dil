@@ -446,10 +446,21 @@ abstract class DDocEmitter : DefaultVisitor
       // case '"': result ~= "&quot;"; break;
       case '>': result ~= "&gt;"; break;
       case '&':
-        if (p+1 < end && (isalpha(p[1]) || p[1] == '#'))
-          goto default;
+        auto entityBegin = p;
+        if (++p < end && (isalpha(*p) || *p == '#'))
+        {
+          if (*p == '#')
+            while (++p < end && isdigit(*p)){} // Numerical entity.
+          else
+            while (++p < end && isalpha(*p)){} // Named entity.
+          if (p < end && *p == ';') {
+            result ~= makeString(entityBegin, ++p); // Copy valid entity.
+            continue;
+          }
+          p = entityBegin + 1; // Reset. It's not a valid entity.
+        }
         result ~= "&amp;";
-        break;
+        continue;
       case '\n':
         if (!(p+1 < end && p[1] == '\n'))
           goto default;
