@@ -370,7 +370,6 @@ abstract class DDocEmitter : DefaultVisitor
 
   /// Scans the comment text and:
   /// $(UL
-  /// $(LI skips and leaves macro invocations unchanged)
   /// $(LI skips HTML tags)
   /// $(LI escapes '&lt;', '&gt;' and '&amp;' with named HTML entities)
   /// $(LI inserts $&#40;LP&#41;/$&#40;RP&#41; in place of '('/')')
@@ -383,18 +382,22 @@ abstract class DDocEmitter : DefaultVisitor
     char* end = p + text.length;
     char[] result = new char[text.length]; // Reserve space.
     result.length = 0;
-
+    uint level = 0; // Nesting level of macro invocations and
+                    // the parentheses inside of them.
     while (p < end)
     {
       switch (*p)
       {
       case '$':
-        if (auto macroEnd = MacroParser.scanMacro(p, end))
-        {
-          result ~= makeString(p, macroEnd); // Copy macro invocation as is.
-          p = macroEnd;
-          continue;
-        }
+        auto macroBegin = p;
+        if (p+2 < end && p[1] == '(')
+          if ((p += 2), scanIdentifier(p, end))
+          {
+            level++;
+            result ~= makeString(macroBegin, p); // Copy "$(MacroName".
+            continue;
+          }
+        p = macroBegin;
         goto default;
       case '<':
         auto begin = p;
@@ -427,8 +430,18 @@ abstract class DDocEmitter : DefaultVisitor
         else
           result ~= "&lt;";
         continue;
-      case '(': result ~= "$(LP)"; break;
-      case ')': result ~= "$(RP)"; break;
+      case '(':
+        if (level)
+          ++level, result ~= "(";
+        else
+          result ~= "$(LP)";
+        break;
+      case ')':
+        if (level)
+          --level, result ~= ")";
+        else
+          result ~= "$(RP)";
+        break;
       // case '\'': result ~= "&apos;"; break; // &#39;
       // case '"': result ~= "&quot;"; break;
       case '>': result ~= "&gt;"; break;
