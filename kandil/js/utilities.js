@@ -110,6 +110,30 @@ jQuery.extend(jQuery.fn, function(p/*rototype*/){ return {
   }
 }}(Element.prototype));
 
+
+/// Sets a cookie to a value.
+function setCookie(name, value, days) {
+  var expires = "";
+  if (days) {
+    var date = new Date();
+    date.setTime(date.getTime() + (days*24*60*60*1000));
+    expires = "; expires=" + date.toGMTString();
+  }
+  value = setCookie.escape(String(value)); // Escape semicolons.
+  document.cookie = name + "=" + value + expires + "; path=/";
+}
+setCookie.escape = function(value) { return value.replace(/;/g, "\1") }
+setCookie.unescape = function(value) { return value.replace(/\1/g, ";") }
+/// Returns the value of a cookie.
+function getCookie(name) {
+  var m = document.cookie.match(RegExp("\\b"+name+"=([^;]*)"));
+  return m ? setCookie.unescape(m[1]) : null;
+}
+/// Deletes a cookie.
+function delCookie(name) {
+  writeCookie(name, "", -1);
+}
+
 /*// Create "console" variable for browsers that don't support it.
 var emptyFunc = function(){};
 if (window.opera)
