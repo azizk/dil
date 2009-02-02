@@ -69,15 +69,16 @@ function makeTreeview(ul)
     var li = icon.parentNode;
     // First two if-statements are for filtered treeviews.
     // Go from [.] -> [-] -> [+] -> [.]
-    if (li.hasClass("has_hidden"))
-    {
-      if (li.hasClass("closed")) // [+] -> [.]
-        li.removeClass("closed");
-      else // [.] -> [-]
-        li.addClass("show_hidden").removeClass("has_hidden");
+    if (ul.hasClass("filtered")) {
+      if (li.hasClass("has_hidden")) {
+        if (li.hasClass("closed")) // [+] -> [.]
+          li.removeClass("closed");
+        else // [.] -> [-]
+          li.addClass("show_hidden").removeClass("has_hidden");
+      }
+      else if (li.hasClass("show_hidden")) // [-] -> [+]
+        li.addClass("has_hidden|closed").removeClass("show_hidden");
     }
-    else if (li.hasClass("show_hidden")) // [-] -> [+]
-      li.addClass("has_hidden|closed").removeClass("show_hidden");
     else // Normal node. [-] <-> [+]
       li.toggleClass("closed");
   }
