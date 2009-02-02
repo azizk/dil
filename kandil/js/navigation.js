@@ -19,6 +19,7 @@ $(function() {
                              getPNGIcon("variable")+"Symbols</span>"+
             "<span id='modtab'>"+getPNGIcon("module")+"Modules</span></p>")
     .append("<div id='panels'><div id='apipanel'/><div id='modpanel'/></div>");
+
   $("body").append(navbar);
   // Create the quick search text boxes.
   var qs = [new QuickSearch("apiqs", "#apipanel>ul", g_symbolTree),
@@ -27,6 +28,8 @@ $(function() {
   $("#modpanel").prepend(qs[1].input).hide(); // Initially hidden.
 
   initAPIList();
+
+  createSplitbar();
 
   // Assign click event handlers for the tabs.
   function makeCurrentTab() {
@@ -101,6 +104,39 @@ function makeTreeview(ul)
       if (li) setSelected(li);
     }
   });
+}
+
+// Creates the split bar for resizing the navigation panel.
+function createSplitbar()
+{
+  var splitbar = $("<div class='splitbar'><div class='handle'/></div>")[0];
+  splitbar.isMoving = false; // Moving status of the splitbar.
+  var navbar = $("#navbar"), content = $("#kandil-content"),
+      body = $("body")[0];
+  navbar.prepend(splitbar); // Insert the splitbar into the document.
+  // The margin between the navbar and the content.
+  var margin = parseInt(content.css("margin-left")) - navbar.width();
+  function mouseMoveHandler(e) {
+    navbar.css("width", e.pageX);
+    content.css("margin-left", e.pageX + margin);
+  }
+  function mouseUpHandler(e) {
+    if (splitbar.isMoving)
+      (splitbar.isMoving = false),
+      splitbar.removeClass("moving"),
+      body.removeClass("moving_splitbar"),
+      $(document).unbind("mousemove", mouseMoveHandler)
+                 .unbind("mouseup", mouseUpHandler);
+  }
+  function mouseDownHandler(e) {
+    if (!splitbar.isMoving)
+      (splitbar.isMoving = true),
+      splitbar.addClass("moving"),
+      body.addClass("moving_splitbar"),
+      $(document).mousemove(mouseMoveHandler).mouseup(mouseUpHandler);
+    e.preventDefault();
+  }
+  $(splitbar).mousedown(mouseDownHandler);
 }
 
 // Handles a mouse click on a module list item.

@@ -11,8 +11,35 @@ body { margin: 0; }
   font-size: 0.9em;
 }
 
-.left_margin { /* To make place for the navbar. */
-  margin-left: 260px !important;
+#kandil-content.left_margin { /* To make place for the navbar. */
+  margin-left: 265px;
+}
+
+.splitbar {
+  width: 4px;
+  height: 100%;
+  position: absolute;
+  right: -4px;
+  top: 0;
+  background-color: #308430;
+}
+
+.splitbar, body.moving_splitbar {
+  cursor: e-resize; /* '<->' cursor for Opera, Konqui ... */
+  cursor: ew-resize; /* Make FF display '<->' instead of '->|' */
+}
+
+.splitbar > .handle {
+  border: 1px dotted #00DD00;
+  height: 15%;
+  position: absolute;
+  top: 42.5%;
+  bottom: 42.5%;
+  margin-left: 1px;
+}
+
+.splitbar:hover, .splitbar.moving {
+  background-color: #60A460;
 }
 
 #navbar {
@@ -22,7 +49,6 @@ body { margin: 0; }
   top: 0;
   left: 0;
   background-color: #CDC;
-  border-right: 2px outset DarkGreen;
 }
 
 #panels {
@@ -31,7 +57,7 @@ body { margin: 0; }
 }
 
 #navtabs {
-  margin: 0.5em 0em 0em 0.5em;
+  margin: 0.5em 0em 0em 0em;
   text-align: center;
 }
 
@@ -60,12 +86,12 @@ body { margin: 0; }
 #apipanel, #modpanel { position: absolute; height: 100%; width: 100%; }
 #apipanel > ul, #modpanel > ul {
   position: absolute;
-  top: 25px;
-  bottom: 27px;
+  top: 23px;
+  bottom: 26px;
   left: 0; right: 0;
 
   overflow: auto;
-  margin: 0.1em;
+  margin: 1px;
   padding: 0.1em;
   border: 1px inset DarkGreen;
   background-color: white;
@@ -78,11 +104,10 @@ body { margin: 0; }
   color: #555;
 }
 
-#apipanel li, #modpanel li {
+/* Treeview */
+.tview li {
   white-space: nowrap;
 }
-
-/* Treeview */
 .tview label { /* The treeview label. */
   padding: 0em 0.1em;
 }
@@ -157,9 +182,9 @@ body { margin: 0; }
 }
 
 input.filterbox {
-  margin: 0.2em 0.2em 0em 0.2em;
+  margin: 1px;
   border: 1px inset DarkGreen;
-  width: 97%;
+  width: 98.2%;
 }
 
 
