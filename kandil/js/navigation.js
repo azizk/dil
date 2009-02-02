@@ -1,15 +1,24 @@
 /// Author: Aziz Köksal
 
-/// The original module loaded normally by the browser (not JavaScript.)
-var g_originalModuleFQN = "";
-/// An object that represents the symbol tree.
-var g_symbolTree = {};
-/// An array of all the lines of this module's source code.
-var g_sourceCode = [];
+/// A global object to access various properties of the application.
+var kandil = {
+  /// The original module loaded normally by the browser (not JavaScript.)
+  originalModuleFQN: "",
+  /// An object that represents the symbol tree.
+  symbolTree: {},
+  /// An array of all the lines of this module's source code.
+  sourceCode: [],
+  /// Represents the package tree (located in generated modules.js).
+  packageTree: g_packageTree,
+  /// Application settings.
+  settings: {
+    navbar_width: 250 /// Initial navigation bar width.
+  },
+};
 
 /// Execute when document is ready.
 $(function() {
-  g_originalModuleFQN = g_moduleFQN;
+  kandil.originalModuleFQN = kandil.moduleFQN = g_moduleFQN;
 
   $("#kandil-content").addClass("left_margin");
 
@@ -22,8 +31,8 @@ $(function() {
 
   $("body").append(navbar);
   // Create the quick search text boxes.
-  var qs = [new QuickSearch("apiqs", "#apipanel>ul", g_symbolTree),
-            new QuickSearch("modqs", "#modpanel>ul", g_packageTree)];
+  var qs = [new QuickSearch("apiqs", "#apipanel>ul", kandil.symbolTree),
+            new QuickSearch("modqs", "#modpanel>ul", kandil.packageTree)];
   $("#apipanel").prepend(qs[0].input);
   $("#modpanel").prepend(qs[1].input).hide(); // Initially hidden.
 
@@ -47,10 +56,11 @@ $(function() {
               .click(function lazyLoad() {
     $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
     var modpanel = $("#modpanel");
-    modpanel.append(createModulesUL(g_packageTree.root)); // Create the list.
+    // Create the list.
+    modpanel.append(createModulesUL(kandil.packageTree.root));
     makeTreeview($("#modpanel > ul"));
     $(".tview a", modpanel).click(handleLoadingModule);
-    g_packageTree.initList(); // Init the list property.
+    kandil.packageTree.initList(); // Init the list property.
   }).click(function() { // Add the display handler.
     $("#modpanel").show(); // Display the modules list.
   });
@@ -172,7 +182,7 @@ function initAPIList()
   makeTreeview($("#apipanel > ul"));
 
   $(".symlink").click(function(event) {
-    if (g_originalModuleFQN != g_moduleFQN)
+    if (kandil.originalModuleFQN != kandil.moduleFQN)
       event.preventDefault();
     this.scrollIntoView();
   });
@@ -218,8 +228,8 @@ function loadNewModule(modFQN)
     $.ajax({url: doc_url, dataType: "text", error: errorHandler,
       success: function(data) {
         // Reset some global variables.
-        g_moduleFQN = modFQN;
-        g_sourceCode = [];
+        kandil.moduleFQN = modFQN;
+        kandil.sourceCode = [];
         document.title = extractTitle(data);
         $("#kandil-content")[0].innerHTML = extractContent(data);
         $("#apipanel > ul").remove(); // Delete old API list.
@@ -258,7 +268,7 @@ function initializeSymbolList(sym_tags)
   sym_tags = sym_tags.slice(1); // Every other symbol.
 
   var symDict = {};
-  var root = new M(g_moduleFQN);
+  var root = new M(kandil.moduleFQN);
   var list = [root];
   symDict[''] = root; // The empty string has to point to the root.
   for (var i = 0, len = sym_tags.length; i < len; i++)
@@ -269,8 +279,8 @@ function initializeSymbolList(sym_tags)
     symDict[sym.parent_fqn].sub.push(sym); // Append to parent.
     symDict[sym.fqn] = sym; // Insert the symbol itself.
   }
-  g_symbolTree.root = root;
-  g_symbolTree.list = list;
+  kandil.symbolTree.root = root;
+  kandil.symbolTree.list = list;
   // Create the HTML text and append it to the api panel.
   $("#apipanel").append(createSymbolsUL(root));
 }
@@ -348,7 +358,7 @@ function createModulesUL_(symbols)
   return list + "</ul>";
 }
 
-/// Extracts the code from the HTML file and sets g_sourceCode.
+/// Extracts the code from the HTML file and sets kandil.sourceCode.
 function setSourceCode(html_code)
 {
   html_code = html_code.split(/<pre class="sourcecode">|<\/pre>/);
@@ -356,14 +366,14 @@ function setSourceCode(html_code)
   { // Get the code between the pre tags.
     var code = html_code[1];
     // Split on newline.
-    g_sourceCode = code.split(/\n|\r\n?|\u2028|\u2029/);
+    kandil.sourceCode = code.split(/\n|\r\n?|\u2028|\u2029/);
   }
 }
 
 /// Returns the relative URL to the source code of this module.
 function getSourceCodeURL()
 {
-  return "./htmlsrc/" + g_moduleFQN + ".html";
+  return "./htmlsrc/" + kandil.moduleFQN + ".html";
 }
 
 /// Shows the code for a symbol in a div tag beneath it.
@@ -384,10 +394,10 @@ function showCode(symbol)
   { // The function that actually displays the code.
     if ($(dt_tag).is("h1")) { // Special case.
       line_beg = 1;
-      line_end = g_sourceCode.length -2;
+      line_end = kandil.sourceCode.length -2;
     }
     // Get the code lines.
-    var code = g_sourceCode.slice(line_beg, line_end+1);
+    var code = kandil.sourceCode.slice(line_beg, line_end+1);
     code = code.join("\n");
     // Create the lines column.
     var lines = "", srcURL = getSourceCodeURL();
@@ -404,7 +414,7 @@ function showCode(symbol)
     dt_tag.code_div = div;
   }
 
-  if (g_sourceCode.length == 0)
+  if (kandil.sourceCode.length == 0)
   { // Load the HTML source code file.
     var doc_url = getSourceCodeURL();
 
