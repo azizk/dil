@@ -40,6 +40,15 @@ String.prototype.strip = function(chars) {
   return str.substring(0, i+1);*/
 };
 
+/// Returns a formatted string filled in with the provided arguments.
+String.prototype.format = function(args) {
+  if (!(typeof args == typeof [] || typeof args == typeof {}))
+    args = Array.prototype.slice.call(arguments); // Convert to propery array.
+  return this.replace(/\{\{|\{[^{}]+\}/g, function(m) {
+    return m.length == 2 ? m : args[m.slice(1, -1)];
+  });
+}
+
 /// Prepends and appends chars to each element and returns a joined string.
 // Array.prototype.surround = function(chars) {
 //   return chars+this.join(chars+chars)+chars;
