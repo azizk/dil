@@ -15,6 +15,8 @@ var kandil = {
     navbar_width: 250,    /// Initial navigation bar width.
     navbar_minwidth: 180, /// Minimum resizable width.
     default_tab: "#apitab", /// Initial, active tab ("#apitab", "#modtab").
+    apitab_label: getPNGIcon("variable")+"Symbols",
+    modtab_label: getPNGIcon("module")+"Modules",
   },
   saved: {
     splitbar_pos: function(pos) {
@@ -33,8 +35,8 @@ $(function() {
   // Create the navigation bar.
   var navbar = $("<div id='navbar'/>")
     .append("<p id='navtabs'><span id='apitab' class='current'>"+
-                             getPNGIcon("variable")+"Symbols</span>"+
-            "<span id='modtab'>"+getPNGIcon("module")+"Modules</span></p>")
+            kandil.settings.apitab_label+"</span>"+
+            "<span id='modtab'>"+kandil.settings.modtab_label+"</span></p>")
     .append("<div id='panels'><div id='apipanel'/><div id='modpanel'/></div>");
 
   $("body").append(navbar);
