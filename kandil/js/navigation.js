@@ -24,6 +24,11 @@ var kandil = {
                                 (cookie("splitbar_pos", pos, 30), pos);
     }
   },
+  msg: {
+    failed_module: "Failed loading the module from",
+    failed_code: "Failed loading code from",
+    loading_code: "Loading source code...",
+  },
 };
 
 /// Execute when document is ready.
@@ -224,7 +229,8 @@ function loadNewModule(modFQN)
 
   function errorHandler(request, error, exception)
   {
-    var msg = $("<p class='ajaxerror'>Failed loading the module from '"+doc_url+"'.</p>");
+    var msg = $("<p class='ajaxerror'>'"+kandil.msg.failed_module+
+                " '"+doc_url+"'.</p>");
     $("body").after(msg);
     fadeOutRemove(msg, 5000, 500);
   }
@@ -445,12 +451,13 @@ function showCode(symbol)
 
     function errorHandler(request, error, exception)
     {
-      var msg = $("<p class='ajaxerror'>Failed loading code from '"+doc_url+"'.</p>");
+      var msg = $("<p class='ajaxerror'>"+kandil.msg.failed_code+
+                  " '"+doc_url+"'.</p>");
       $("body").after(msg);
       fadeOutRemove(msg, 5000, 500);
     }
 
-    displayLoadingGif("Loading source code...");
+    displayLoadingGif(kandil.msg.loading_code);
     try {
       $.ajax({url: doc_url, dataType: "text", error: errorHandler,
         success: function(data) {
