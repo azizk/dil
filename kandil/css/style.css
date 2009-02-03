@@ -186,6 +186,8 @@ input.filterbox {
   margin: 1px;
   border: 1px inset DarkGreen;
   width: 98.2%;
+  text-indent: 17px;
+  background: white url("../img/icon_funnel.png") no-repeat;
 }
 
 

@@ -25,6 +25,7 @@ def kandil_path(where="kandil"):
   P.navi, P.jquery, P.qsearch, P.utils, P.syms = P.jsfiles
   png_names = ("alias class enummem enum function interface module package "
                "struct template typedef union variable "
+               "funnel "
                "tv_plus tv_minus tv_dot").split(" ")
   png_names = ["icon_%s.png" % name for name in png_names]
   P.images = P.IMG//png_names + [P.IMG/"loading.gif"]
@@ -65,7 +66,8 @@ def read_modules_list(path):
   return [match.groupdict() for match in map(rx.match, open(path)) if match]
 
 def generate_modules_js(modlist, dest_path, max_line_len=80):
-  """ Generates a JavaScript file with a list of fully qual. module names. """
+  """ Generates a JavaScript file with a list of fully qual. module names.
+      Note: This function is obsolete. See src/cmd/DDoc.d. """
   if not len(modlist):
     raise Exception("modlist must not be empty")
   from symbols import Module, Package, PackageTree
@@ -84,7 +86,7 @@ def generate_modules_js(modlist, dest_path, max_line_len=80):
 
   package_tree = PackageTree()
 
-  # Construct the package tree with modules as leaves.
+  # Construct the package tree with modules as leafs.
   for fqn in modlist:
     package_tree.addModule(Module(fqn))
 
