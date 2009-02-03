@@ -14,6 +14,7 @@ var kandil = {
   settings: {
     navbar_width: 250,    /// Initial navigation bar width.
     navbar_minwidth: 180, /// Minimum resizable width.
+    default_tab: "#apitab", /// Initial, active tab ("#apitab", "#modtab").
   },
   saved: {
     splitbar_pos: function(pos) {
@@ -72,6 +73,7 @@ $(function() {
     $("#modpanel").show(); // Display the modules list.
   });
 
+  $(kandil.settings.default_tab).trigger("click");
   // $(window).resize(function(){
   //   $("#apipanel > ul").add("#modpanel > ul").each(setHeightOfPanel);
   // });
