@@ -25,9 +25,10 @@ var kandil = {
     }
   },
   msg: {
-    failed_module: "Failed loading the module from",
-    failed_code: "Failed loading code from",
+    failed_module: "Failed loading the module from '{0}'!",
+    failed_code: "Failed loading code from '{0}'!",
     loading_code: "Loading source code...",
+    filter: "Filter...", /// Initial text in the filter boxes.
   },
 };
 
@@ -46,8 +47,11 @@ $(function() {
 
   $("body").append(navbar);
   // Create the quick search text boxes.
-  var qs = [new QuickSearch("apiqs", "#apipanel>ul", kandil.symbolTree),
-            new QuickSearch("modqs", "#modpanel>ul", kandil.packageTree)];
+  var options = {text: kandil.msg.filter};
+  var qs = [
+    new QuickSearch("apiqs", "#apipanel>ul", kandil.symbolTree, options),
+    new QuickSearch("modqs", "#modpanel>ul", kandil.packageTree, options)
+  ];
   $("#apipanel").prepend(qs[0].input);
   $("#modpanel").prepend(qs[1].input).hide(); // Initially hidden.
 
@@ -229,8 +233,8 @@ function loadNewModule(modFQN)
 
   function errorHandler(request, error, exception)
   {
-    var msg = $("<p class='ajaxerror'>'"+kandil.msg.failed_module+
-                " '"+doc_url+"'.</p>");
+    var msg = kandil.msg.failed_module.format(doc_url);
+    msg = $("<p class='ajaxerror'>'"+msg+"</p>");
     $("body").after(msg);
     fadeOutRemove(msg, 5000, 500);
   }
@@ -451,8 +455,8 @@ function showCode(symbol)
 
     function errorHandler(request, error, exception)
     {
-      var msg = $("<p class='ajaxerror'>"+kandil.msg.failed_code+
-                  " '"+doc_url+"'.</p>");
+      var msg = kandil.msg.failed_code.format(doc_url);
+      msg = $("<p class='ajaxerror'>"+msg+"</p>");
       $("body").after(msg);
       fadeOutRemove(msg, 5000, 500);
     }
