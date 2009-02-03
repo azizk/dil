@@ -65,7 +65,7 @@ $(function() {
     $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
     var modpanel = $("#modpanel");
     // Create the list.
-    modpanel.append(createModulesUL(kandil.packageTree.root));
+    createModulesUL(modpanel);
     makeTreeview($("#modpanel > ul"));
     $(".tview a", modpanel).click(handleLoadingModule);
     kandil.packageTree.initList(); // Init the list property.
@@ -299,7 +299,7 @@ function initializeSymbolList(sym_tags)
   kandil.symbolTree.root = root;
   kandil.symbolTree.list = list;
   // Create the HTML text and append it to the api panel.
-  $("#apipanel").append(createSymbolsUL(root));
+  createSymbolsUL($("#apipanel"));
 }
 
 /// Returns an image tag for the provided kind of symbol.
@@ -317,21 +317,27 @@ function getPNGIcon(kind)
   return "<img src='img/icon_"+kind+".png' width='16' height='16'/>";
 }
 
-function createSymbolsUL(root)
-{
-  return "<ul class='tview'><li class='root'>"+
-         "<i/>"+getPNGIcon("module")+
-         "<label><a href='#m-"+root.fqn+"'>"+root.fqn+"</a></label>"+
-         createSymbolsUL_(root.sub)+
-         "</li></ul>";
+function createSymbolsUL(panel)
+{ // TODO: put loading.gif in the center of ul and animate showing/hiding?
+  var root = kandil.symbolTree.root;
+  var ul = $("<ul class='tview'><li class='root'><i/>"+getPNGIcon("module")+
+    "<label><a href='#m-"+root.fqn+"'>"+root.fqn+"</a></label></li>"+
+    "<li><img src='img/loading.gif'/></li></ul>");
+  panel.append(ul);
+  if (root.sub.length)
+    $(ul[0].firstChild).append(createSymbolsUL_(root.sub));
+  $(ul[0].lastChild).remove();
 }
 
-function createModulesUL(root)
+function createModulesUL(panel)
 {
-  return "<ul class='tview'><li class='root'>"+
-         "<i/>"+getPNGIcon("package")+"<label>/</label>"+
-         createModulesUL_(root.sub)+
-         "</li></ul>";
+  var root = kandil.packageTree.root;
+  var ul = $("<ul class='tview'><li class='root'><i/>"+getPNGIcon("package")+
+    "<label>/</label></li><li><img src='img/loading.gif'/></li></ul>");
+  panel.append(ul);
+  if (root.sub.length)
+    $(ul[0].firstChild).append(createModulesUL_(root.sub));
+  $(ul[0].lastChild).remove();
 }
 
 /// Constructs a ul (enclosing nested ul's) from the symbols data structure.
