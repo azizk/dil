@@ -111,28 +111,32 @@ jQuery.extend(jQuery.fn, function(p/*rototype*/){ return {
 }}(Element.prototype));
 
 
-/// Sets a cookie to a value.
-function setCookie(name, value, days) {
-  var expires = "";
-  if (days) {
-    var date = new Date();
-    date.setTime(date.getTime() + (days*24*60*60*1000));
-    expires = "; expires=" + date.toGMTString();
+/// Gets a cookie or sets it to a value.
+function cookie(name, value, expires, path, domain, secure)
+{ // Get the cookie.
+  if (value == undefined) {
+    var m = document.cookie.match(RegExp("\\b"+name+"=([^;]*)"));
+    return m ? cookie.unescape(m[1]) : null;
   }
-  value = setCookie.escape(String(value)); // Escape semicolons.
-  document.cookie = name + "=" + value + expires + "; path=/";
+  // Set the cookie.
+  value = cookie.escape(String(value)); // Escape semicolons.
+  if (expires != undefined) {
+    var date = expires;
+    if (!date.toUTCString) // 86400000 = 24h*60m*60s*1000ms
+      (date = new Date()),
+      date.setTime(date.getTime() + expires*86400000);
+    value += "; expires=" + date.toUTCString();
+  }
+  value += (path ? "; path="+path : "")+(domain ? "; domain="+domain : "")+
+           (secure ? "; secure" : "");
+  document.cookie = name + "=" + value;
 }
-setCookie.escape = function(value) { return value.replace(/;/g, "\1") }
-setCookie.unescape = function(value) { return value.replace(/\1/g, ";") }
-/// Returns the value of a cookie.
-function getCookie(name) {
-  var m = document.cookie.match(RegExp("\\b"+name+"=([^;]*)"));
-  return m ? setCookie.unescape(m[1]) : null;
-}
+/// Escapes semicolons with the hex value 0x01.
+cookie.escape = function(value) { return value.replace(/;/g, "\x01") }
+/// Replaces hex values 0x01 with a semicolon.
+cookie.unescape = function(value) { return value.replace(/\x01/g, ";") }
 /// Deletes a cookie.
-function delCookie(name) {
-  writeCookie(name, "", -1);
-}
+cookie.del = function(name) { cookie(name, "", -1) }
 
 /*// Create "console" variable for browsers that don't support it.
 var emptyFunc = function(){};
