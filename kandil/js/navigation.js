@@ -14,6 +14,7 @@ var kandil = {
   settings: {
     navbar_width: 250,    /// Initial navigation bar width.
     navbar_minwidth: 180, /// Minimum resizable width.
+    navbar_collapsewidth : 50, /// Hide the navbar at this width.
     default_tab: "#apitab", /// Initial, active tab ("#apitab", "#modtab").
     apitab_label: getPNGIcon("variable")+"Symbols",
     modtab_label: getPNGIcon("module")+"Modules",
@@ -144,17 +145,21 @@ function createSplitbar()
   splitbar.isMoving = false; // Moving status of the splitbar.
   var navbar = $("#navbar"), content = $("#kandil-content"),
       body = $("body")[0];
-  navbar.prepend(splitbar); // Insert the splitbar into the document.
+  body.appendChild(splitbar); // Insert the splitbar into the document.
   // The margin between the navbar and the content.
   var margin = parseInt(content.css("margin-left")) - navbar.width(),
-      minwidth = kandil.settings.navbar_minwidth;
+      minwidth = kandil.settings.navbar_minwidth,
+      collapsewidth = kandil.settings.navbar_collapsewidth;
   splitbar.setPos = function(x) {
-    if (x < minwidth)
+    if (x < collapsewidth)
+      x = 0;
+    else if (x < minwidth)
       x = minwidth;
     if (x+50 > window.innerWidth)
       x = window.innerWidth - 50;
     navbar.css("width", x);
     content.css("margin-left", x + margin);
+    $(splitbar).css("left", x);
   };
   function mouseMoveHandler(e) { splitbar.setPos(e.pageX); }
   function mouseUpHandler(e) {

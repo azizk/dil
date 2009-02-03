@@ -18,9 +18,9 @@ body { margin: 0; }
 .splitbar {
   width: 4px;
   height: 100%;
-  position: absolute;
-  right: -4px;
+  position: fixed;
   top: 0;
+  left: 250px;
   background-color: #308430;
 }
 
@@ -49,6 +49,7 @@ body { margin: 0; }
   top: 0;
   left: 0;
   background-color: #CDC;
+  overflow: hidden;
 }
 
 #panels {
