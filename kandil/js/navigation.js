@@ -12,7 +12,14 @@ var kandil = {
   packageTree: g_packageTree,
   /// Application settings.
   settings: {
-    navbar_width: 250 /// Initial navigation bar width.
+    navbar_width: 250,    /// Initial navigation bar width.
+    navbar_minwidth: 180, /// Minimum resizable width.
+  },
+  saved: {
+    splitbar_pos: function(pos) {
+      return pos == undefined ? parseInt(cookie("splitbar_pos")) :
+                                (cookie("splitbar_pos", pos, 30), pos);
+    }
   },
 };
 
@@ -126,28 +133,36 @@ function createSplitbar()
       body = $("body")[0];
   navbar.prepend(splitbar); // Insert the splitbar into the document.
   // The margin between the navbar and the content.
-  var margin = parseInt(content.css("margin-left")) - navbar.width();
-  function mouseMoveHandler(e) {
-    navbar.css("width", e.pageX);
-    content.css("margin-left", e.pageX + margin);
-  }
+  var margin = parseInt(content.css("margin-left")) - navbar.width(),
+      minwidth = kandil.settings.navbar_minwidth;
+  splitbar.setPos = function(x) {
+    if (x < minwidth)
+      x = minwidth;
+    if (x+50 > window.innerWidth)
+      x = window.innerWidth - 50;
+    navbar.css("width", x);
+    content.css("margin-left", x + margin);
+  };
+  function mouseMoveHandler(e) { splitbar.setPos(e.pageX); }
   function mouseUpHandler(e) {
     if (splitbar.isMoving)
       (splitbar.isMoving = false),
-      splitbar.removeClass("moving"),
-      body.removeClass("moving_splitbar"),
+      splitbar.removeClass("moving"), body.removeClass("moving_splitbar"),
+      kandil.saved.splitbar_pos(e.pageX), // Save the position.
       $(document).unbind("mousemove", mouseMoveHandler)
                  .unbind("mouseup", mouseUpHandler);
   }
   function mouseDownHandler(e) {
     if (!splitbar.isMoving)
       (splitbar.isMoving = true),
-      splitbar.addClass("moving"),
-      body.addClass("moving_splitbar"),
+      splitbar.addClass("moving"), body.addClass("moving_splitbar"),
       $(document).mousemove(mouseMoveHandler).mouseup(mouseUpHandler);
     e.preventDefault();
   }
   $(splitbar).mousedown(mouseDownHandler);
+  // Set initial position.
+  splitbar.setPos(kandil.saved.splitbar_pos() || kandil.navbar_width);
+  return splitbar;
 }
 
 // Handles a mouse click on a module list item.
