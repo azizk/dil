@@ -280,7 +280,7 @@ table.params td:first-child {
 /* Identifier */
 .d_code .i { color: black; }
 /* String literal */
-.d_code .sl { color: red; }
+.d_code .sl { color: firebrick; }
 /* Character literal */
 .d_code .cl { color: purple; }
 /* Special tokens */
