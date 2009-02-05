@@ -18,6 +18,8 @@ var kandil = {
     default_tab: "#apitab", /// Initial, active tab ("#apitab", "#modtab").
     apitab_label: getPNGIcon("variable")+"Symbols",
     modtab_label: getPNGIcon("module")+"Modules",
+    tview_save_delay: 10*1000, /// Delay for saving a treeview's state after
+                               /// each collapse and expand event of a node.
     tooltip: {
       delay: 1000, /// Delay in milliseconds before a tooltip is shown.
       delay2: 200, /// Delay before the next tooltip is shown.
@@ -85,7 +87,12 @@ $(function() {
     var modpanel = $("#modpanel");
     // Create the list.
     createModulesUL(modpanel);
-    makeTreeview($("#modpanel > ul"));
+    var ul = $("#modpanel > ul");
+    Treeview(ul);
+    Treeview.loadState(ul[0], "module_tree");
+    ul.bind("save_state", function() {
+      Treeview.saveState(this, "module_tree");
+    });
     $(".tview a", modpanel).click(handleLoadingModule);
     kandil.packageTree.initList(); // Init the list property.
   }).click(function() { // Add the display handler.
@@ -144,7 +151,8 @@ function installTooltipHandlers()
 }
 
 /// Adds treeview functionality to ul. Expects special markup.
-function makeTreeview(ul)
+/// TODO: make this a proper class.
+function Treeview(ul)
 {
   ul.addClass("tview");
   function handleIconClick(icon)
@@ -163,7 +171,8 @@ function makeTreeview(ul)
         li.addClass("has_hidden|closed").removeClass("show_hidden");
     }
     else // Normal node. [-] <-> [+]
-      li.toggleClass("closed");
+      li.toggleClass("closed"),
+      ul.trigger("state_toggled");
   }
   var selected_li = $(">li", ul)[0]; // Default to first li.
   function setSelected(new_li)
@@ -188,6 +197,39 @@ function makeTreeview(ul)
       if (li) setSelected(li);
     }
   });
+
+  ul.bind("state_toggled", function() {
+    this.savedState = false;
+    clearTimeout(ul.saveTID);
+    ul.saveTID = setTimeout(function() {
+      ul.trigger("save_state");
+    }, kandil.settings.tview_save_delay);
+  });
+}
+
+/// Saves the state of a treeview in a cookie.
+Treeview.saveState = function(ul, cookie_name) {
+  if (ul.savedState)
+    return;
+  var ul_tags = ul.getElementsByTagName("ul"), list = "";
+  for (var i = 0, len = ul_tags.length; i < len; i++)
+    if (ul_tags[i].parentNode.hasClass("closed"))
+      list += i + ",";
+  if (list)
+    cookie(cookie_name, list.slice(0, -1), 30);
+  else
+    cookie.del(cookie_name);
+  ul.savedState = true;
+}
+/// Loads the state of a treeview from a cookie.
+Treeview.loadState = function(ul, cookie_name) {
+  var list = cookie(cookie_name);
+  if (!list)
+    return;
+  var ul_tags = ul.getElementsByTagName("ul");
+  list = list.split(",");
+  for (var i = 0, len = list.length; i < len; i++)
+    ul_tags[list[i]].parentNode.addClass("closed");
 }
 
 // Creates the split bar for resizing the navigation panel.
@@ -255,14 +297,19 @@ function initAPIList()
   });
 
   initializeSymbolList(symbols);
-  makeTreeview($("#apipanel > ul"));
-
-  $(".symlink").click(function(event) {
-    if (kandil.originalModuleFQN != kandil.moduleFQN)
-      event.preventDefault();
-    this.scrollIntoView();
+  var ul = $("#apipanel > ul");
+  Treeview(ul);
+  Treeview.loadState(ul[0], kandil.moduleFQN);
+  ul.bind("save_state", function() {
+    Treeview.saveState(this, kandil.moduleFQN);
   });
   installTooltipHandlers();
+
+  if (kandil.originalModuleFQN != kandil.moduleFQN)
+    $(".symlink").click(function(event) {
+      event.preventDefault();
+      this.scrollIntoView();
+    });
 }
 
 /// Delays for 'delay' ms, fades out an element in 'fade' ms and removes it.
