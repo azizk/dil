@@ -190,6 +190,11 @@ input.filterbox {
   background: white url("../img/icon_funnel.png") no-repeat;
 }
 
+.tooltip {
+  padding: 0.3em;
+  background-color: LightGoldenRodYellow;
+  border: 1px solid PaleGoldenRod;
+}
 
 /* Content */
 .sec_header {

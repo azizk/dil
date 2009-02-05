@@ -1,6 +1,6 @@
 /// Author: Aziz Köksal
 
-/// A global object to access various properties of the application.
+/// A global object for accessing various properties of the application.
 var kandil = {
   /// The original module loaded normally by the browser (not JavaScript.)
   originalModuleFQN: "",
@@ -18,12 +18,19 @@ var kandil = {
     default_tab: "#apitab", /// Initial, active tab ("#apitab", "#modtab").
     apitab_label: getPNGIcon("variable")+"Symbols",
     modtab_label: getPNGIcon("module")+"Modules",
+    tooltip: {
+      delay: 1000, /// Delay in milliseconds before a tooltip is shown.
+      delay2: 200, /// Delay before the next tooltip is shown.
+      fadein: 200, /// Fade-in speed in ms.
+      fadeout: 200, /// Fade-out speed in ms.
+      offset: {x:16, y:16}, /// (x, y) offsets from the mouse position.
+    },
   },
   saved: {
-    splitbar_pos: function(pos) {
+    splitbar_pos: function(pos) { /// Saves or retrieves the splitbar position.
       return pos == undefined ? parseInt(cookie("splitbar_pos")) :
                                 (cookie("splitbar_pos", pos, 30), pos);
-    }
+    },
   },
   msg: {
     failed_module: "Failed loading the module from '{0}'!",
@@ -84,12 +91,57 @@ $(function() {
   }).click(function() { // Add the display handler.
     $("#modpanel").show(); // Display the modules list.
   });
-
+  // Activate the default tab.
   $(kandil.settings.default_tab).trigger("click");
-  // $(window).resize(function(){
-  //   $("#apipanel > ul").add("#modpanel > ul").each(setHeightOfPanel);
-  // });
 })
+
+/// Installs event handlers to show tooltips for symbols.
+function installTooltipHandlers()
+{
+  var ul = $("#apipanel > ul.tview");
+  var tooltip = $.extend({
+    current: null, // Current tooltip.
+    target: null, // The target to show a tooltip for.
+    TID: null, // Timeout-ID for delays.
+  }, kandil.settings.tooltip); // Add tooltip settings.
+  // Shows the tooltip at a calculated position.
+  function showTooltip(e)
+  { // Get the content of the tooltip.
+    var a_tag = tooltip.target,
+        a_tag_name = a_tag.href.slice(a_tag.href.lastIndexOf("#")+1),
+        sym_tag = $(document.getElementsByName(a_tag_name)[0]);
+    sym_tag = sym_tag.parent().clone();
+    $(".symlink, .srclink", sym_tag).remove();
+    // Create the tooltip.
+    var tt = tooltip.current = $("<div class='tooltip'/>");
+    tt.append(sym_tag[0].childNodes); // Contents of the tooltip.
+    // Substract scrollTop because we need viewport coordinates.
+    var top = e.pageY + tooltip.offset.y - $(window).scrollTop(),
+        left = e.pageX + tooltip.offset.x;
+    // First insert hidden to get a height.
+    tt.css({visibility: "hidden", position: "fixed"})
+      .appendTo(document.body);
+    // Correct the position if the tooltip is not inside the viewport.
+    var overflow = (top + tt[0].offsetHeight) - window.innerHeight;
+    if (overflow > 0)
+      top -= overflow;
+    tt.css({display: "none", visibility: "", top: top, left: left})
+      .fadeIn(tooltip.fadein);
+  };
+  // TODO: try implementing this with a single mousemove event handler on ul.
+  $(">.root>ul a", ul).mouseover(function(e) {
+    clearTimeout(tooltip.TID);
+    tooltip.target = this;
+    // Delay normally if this is the first tooltip being displayed, then
+    // delay for a fraction of the normal time in subsequent mouseovers.
+    var delay = !tooltip.current ? tooltip.delay : tooltip.delay2;
+    tooltip.TID = setTimeout(function(){ showTooltip(e); }, delay);
+  }).mouseout(function(e) {
+    clearTimeout(tooltip.TID);
+    if (tooltip.current) fadeOutRemove(tooltip.current, 0, tooltip.fadeout);
+    tooltip.TID = setTimeout(function() { tooltip.current = null; }, 100);
+  });
+}
 
 /// Adds treeview functionality to ul. Expects special markup.
 function makeTreeview(ul)
@@ -159,7 +211,7 @@ function createSplitbar()
       x = window.innerWidth - 50;
     navbar.css("width", x);
     content.css("margin-left", x + margin);
-    $(splitbar).css("left", x);
+    splitbar.style.left = x+"px";
   };
   function mouseMoveHandler(e) { splitbar.setPos(e.pageX); }
   function mouseUpHandler(e) {
@@ -192,15 +244,6 @@ function handleLoadingModule(event)
   loadNewModule(modFQN);
 }
 
-/*/// Sets the height of a panel. Works with FF, but not Opera :(
-function setHeightOfPanel()
-{
-  var window_height = $(window).height();
-  var pos = $(this).offset();
-  $(this).css('max-height', window_height - pos.top - 10);
-}
-*/
-
 /// Adds click handlers to symbols and inits the symbol list.
 function initAPIList()
 {
@@ -219,6 +262,7 @@ function initAPIList()
       event.preventDefault();
     this.scrollIntoView();
   });
+  installTooltipHandlers();
 }
 
 /// Delays for 'delay' ms, fades out an element in 'fade' ms and removes it.
