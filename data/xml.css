@@ -32,7 +32,7 @@ lc, bc, nc { color: gray; }
 /* Identifier */
 i { color: black; }
 /* String literal */
-sl { color: red; }
+sl { color: firebrick; }
 /* Character literal */
 cl { color: purple; }
 /* All bracket types */
