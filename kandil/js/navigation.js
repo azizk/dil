@@ -12,14 +12,19 @@ var kandil = {
   packageTree: g_packageTree,
   /// Application settings.
   settings: {
+    navbar_html: "<div id='navbar'><p id='navtabs'>\
+<span id='apitab' class='current'>{apitab_label}</span>\
+<span id='modtab'>{modtab_label}</span></p>\
+<div id='panels'><div id='apipanel'/><div id='modpanel'/></div>\
+</div>", /// The navbar HTML code prepended to the body.
     navbar_width: 250,    /// Initial navigation bar width.
     navbar_minwidth: 180, /// Minimum resizable width.
     navbar_collapsewidth : 50, /// Hide the navbar at this width.
     default_tab: "#apitab", /// Initial, active tab ("#apitab", "#modtab").
     apitab_label: getPNGIcon("variable")+"Symbols",
     modtab_label: getPNGIcon("module")+"Modules",
-    tview_save_delay: 10*1000, /// Delay for saving a treeview's state after
-                               /// each collapse and expand event of a node.
+    tview_save_delay: 5*1000, /// Delay for saving a treeview's state after
+                              /// each collapse and expand event of a node.
     tooltip: {
       delay: 1000, /// Delay in milliseconds before a tooltip is shown.
       delay2: 200, /// Delay before the next tooltip is shown.
@@ -54,13 +59,9 @@ $(function() {
   $("#kandil-content").addClass("left_margin");
 
   // Create the navigation bar.
-  var navbar = $("<div id='navbar'/>")
-    .append("<p id='navtabs'><span id='apitab' class='current'>"+
-            kandil.settings.apitab_label+"</span>"+
-            "<span id='modtab'>"+kandil.settings.modtab_label+"</span></p>")
-    .append("<div id='panels'><div id='apipanel'/><div id='modpanel'/></div>");
+  var navbar = $(kandil.settings.navbar_html.format(kandil.settings));
+  $(document.body).prepend(navbar);
 
-  $("body").append(navbar);
   // Create the quick search text boxes.
   var options = {text: kandil.msg.filter};
   var qs = [
@@ -76,7 +77,7 @@ $(function() {
 
   // Assign click event handlers for the tabs.
   function makeCurrentTab() {
-    $("span.current", this.parentNode).removeClass('current');
+    $(".current", this.parentNode).removeClass('current');
     this.addClass('current');
     $("#panels > *:visible").hide(); // Hide all panels.
   }
@@ -243,7 +244,7 @@ function createSplitbar()
   var splitbar = $("<div class='splitbar'><div class='handle'/></div>")[0];
   splitbar.isMoving = false; // Moving status of the splitbar.
   var navbar = $("#navbar"), content = $("#kandil-content"),
-      body = $("body")[0];
+      body = document.body;
   body.appendChild(splitbar); // Insert the splitbar into the document.
   // The margin between the navbar and the content.
   var margin = parseInt(content.css("margin-left")) - navbar.width(),
@@ -282,7 +283,7 @@ function createSplitbar()
   return splitbar;
 }
 
-// Handles a mouse click on a module list item.
+/// Handles a mouse click on a module list item.
 function handleLoadingModule(event)
 {
   event.preventDefault();
@@ -336,7 +337,7 @@ function loadNewModule(modFQN)
   {
     var msg = kandil.msg.failed_module.format(doc_url);
     msg = $("<p class='ajaxerror'>'"+msg+"</p>");
-    $("body").after(msg);
+    $(document.body).append(msg);
     fadeOutRemove(msg, 5000, 500);
   }
 
@@ -379,7 +380,7 @@ function displayLoadingGif(msg)
   var loading = $("#kandil-loading");
   if (!loading.length)
     (loading = $("<div id='kandil-loading'><img src='img/loading.gif'/>&nbsp;<span/></div>")),
-    $("body").append(loading);
+    $(document.body).append(loading);
   $("span", loading).html(msg);
 }
 
@@ -558,7 +559,7 @@ function showCode(symbol)
     {
       var msg = kandil.msg.failed_code.format(doc_url);
       msg = $("<p class='ajaxerror'>"+msg+"</p>");
-      $("body").after(msg);
+      $(document.body).append(msg);
       fadeOutRemove(msg, 5000, 500);
     }
 
