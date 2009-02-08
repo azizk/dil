@@ -44,6 +44,11 @@ var kandil = {
 
 /// Execute when document is ready.
 $(function() {
+  if (navigator.vendor == "KDE")
+    document.body.addClass("konqueror");
+//   else if (window.opera) // Not needed atm.
+//     document.body.addClass("opera");
+
   kandil.originalModuleFQN = kandil.moduleFQN = g_moduleFQN;
 
   $("#kandil-content").addClass("left_margin");
@@ -359,7 +364,7 @@ function loadNewModule(modFQN)
         $("#kandil-content")[0].innerHTML = extractContent(data);
         $("#apipanel > ul").remove(); // Delete old API list.
         initAPIList();
-        $("#apiqs")[0].qs.resetFirstClickHandler();
+        $("#apiqs")[0].qs.resetFirstFocusHandler();
       }
     });
   }

@@ -9,21 +9,22 @@ function QuickSearch(id, tag, symbols, options)
     callback: quickSearchSymbols,
   }, options);
 
-  this.input = $("<input id='"+id+"' class='filterbox'"+
-                 " type='text' value='"+this.options.text+"'/>");
+  this.input = $("<input class='filterbox' type='text'/>");
+  this.input.val(this.options.text).attr("id", id);
   this.tag = tag; // A selector string for jQuery.
   this.symbols = symbols;
   this.cancelSearch = false;
   this.timeoutId = 0;
   this.callback = this.options.callback;
   this.delayCallback = function() {
+    this.cancelSearch = false;
     clearTimeout(this.timeoutId);
     QS = this;
     this.timeoutId = setTimeout(function() {
       if (!QS.cancelSearch) QS.callback(QS);
     }, this.options.delay);
   };
-  this.input[0].qs = this;
+  this.input[0].qs = this; // Needed inside event handlers.
   this.input.keyup(function(e) {
     switch (e.keyCode) {
     case 0:case 9:case 13:case 16:case 17:case 18:
@@ -34,19 +35,19 @@ function QuickSearch(id, tag, symbols, options)
       clearTimeout(this.qs.timeoutId);
       break;
     default:
-      this.qs.cancelSearch = false;
       this.qs.delayCallback();
     }
   });
-  function firstClickHandler(e) {
-    // Clear the text box when clicked the first time.
-    $(this).val("").unbind("mousedown", firstClickHandler);
+
+  function firstFocusHandler(e) {
+    // Clear the text box when focused for the first time.
+    $(this).val("").unbind("focus", firstFocusHandler);
     prepareSymbols($(tag)[0], symbols);
   }
-  this.resetFirstClickHandler = function() {
-    this.input.mousedown(firstClickHandler);
+  this.resetFirstFocusHandler = function() {
+    this.input.focus(firstFocusHandler);
   };
-  this.resetFirstClickHandler();
+  this.resetFirstFocusHandler();
 
   this.str = "";
   this.parse = function() { // Parses the query.
@@ -82,7 +83,7 @@ function QuickSearch(id, tag, symbols, options)
   this.sanitizeStr = function() {
     // Strip leading and trailing whitespace.
     this.str = this.input.val();
-    this.str = this.str.replace(/^\s+/, "").replace(/\s+$/, "");
+    this.str = this.str.strip();
     return this.str;
   };
   return this;

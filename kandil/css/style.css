@@ -185,10 +185,18 @@ body { margin: 0; }
 
 input.filterbox {
   margin: 1px;
+  padding-left: 17px;
   border: 1px inset DarkGreen;
-  width: 98.2%;
-  text-indent: 17px;
+  width: 91.2%;
+  color: black;
   background: white url("../img/icon_funnel.png") no-repeat;
+}
+
+.konqueror input.filterbox {
+  /* Konqueror doesn't support background images for inputs properly. */
+  padding-left: 0;
+  width: 98.2%;
+  background: white;
 }
 
 .tooltip {
