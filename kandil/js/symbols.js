@@ -1,4 +1,5 @@
 /// Author: Aziz Köksal
+/// License: zlib/libpng
 
 /// An enumeration of symbol kinds.
 var SymbolKind = (function(){

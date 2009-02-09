@@ -1,4 +1,5 @@
 /// Author: Aziz Köksal
+/// License: zlib/libpng
 
 /// A global object for accessing various properties of the application.
 var kandil = {

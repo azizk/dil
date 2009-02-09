@@ -1,4 +1,5 @@
 /// Author: Aziz Köksal
+/// License: zlib/libpng
 
 /// Escapes the regular expression meta characters in str.
 RegExp.escape = function(str) {

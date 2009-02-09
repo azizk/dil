@@ -1,4 +1,5 @@
 /// Author: Aziz Köksal
+/// License: zlib/libpng
 
 /// Constructs a QuickSearch object.
 function QuickSearch(id, tag, symbols, options)
