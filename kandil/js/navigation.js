@@ -17,6 +17,8 @@ var kandil = {
 <span id='modtab'>{modtab_label}</span></p>\
 <div id='panels'><div id='apipanel'/><div id='modpanel'/></div>\
 </div>", /// The navbar HTML code prepended to the body.
+    splitbar_html: "<div title='{splitbar_title}' class='splitbar'>\
+<div class='handle'/></div>", /// The splitbar's HTML code.
     navbar_width: 250,    /// Initial navigation bar width.
     navbar_minwidth: 180, /// Minimum resizable width.
     navbar_collapsewidth : 50, /// Hide the navbar at this width.
@@ -32,11 +34,18 @@ var kandil = {
       fadeout: 200, /// Fade-out speed in ms.
       offset: {x:16, y:16}, /// (x, y) offsets from the mouse position.
     },
+    cookie_life: 30, /// Life-time of cookies in days.
   },
   saved: {
     splitbar_pos: function(pos) { /// Saves or retrieves the splitbar position.
+      var days = kandil.settings.cookie_life;
       return pos == undefined ? parseInt(cookie("splitbar_pos")) :
-                                (cookie("splitbar_pos", pos, 30), pos);
+                                (cookie("splitbar_pos", pos, days), pos);
+    },
+    splitbar_collapsed: function(val) { /// The collapse state.
+      var days = kandil.settings.cookie_life;
+      return val == undefined ? cookie("splitbar_collapsed") == "true" :
+                               (cookie("splitbar_collapsed", val, days), val);
     },
   },
   msg: {
@@ -44,6 +53,7 @@ var kandil = {
     failed_code: "Failed loading code from '{0}'!",
     loading_code: "Loading source code...",
     filter: "Filter...", /// Initial text in the filter boxes.
+    splitbar_title: "Drag to resize. Double-click to close or open.",
   },
 };
 
@@ -238,35 +248,44 @@ Treeview.loadState = function(ul, cookie_name) {
     ul_tags[list[i]].parentNode.addClass("closed");
 }
 
-// Creates the split bar for resizing the navigation panel.
+/// Creates the split bar for resizing the navigation panel and content.
 function createSplitbar()
 {
-  var splitbar = $("<div class='splitbar'><div class='handle'/></div>")[0];
+  var settings = kandil.settings, saved = kandil.saved;
+  var splitbar = $(settings.splitbar_html.format(kandil.msg))[0];
   splitbar.isMoving = false; // Moving status of the splitbar.
   var navbar = $("#navbar"), content = $("#kandil-content"),
       body = document.body;
   body.appendChild(splitbar); // Insert the splitbar into the document.
   // The margin between the navbar and the content.
   var margin = parseInt(content.css("margin-left")) - navbar.width(),
-      minwidth = kandil.settings.navbar_minwidth,
-      collapsewidth = kandil.settings.navbar_collapsewidth;
+      minwidth = settings.navbar_minwidth,
+      collapsewidth = settings.navbar_collapsewidth;
   splitbar.setPos = function(x) {
+    this.collapsed = false;
     if (x < collapsewidth)
+      (this.collapsed = true),
       x = 0;
     else if (x < minwidth)
       x = minwidth;
     if (x+50 > window.innerWidth)
       x = window.innerWidth - 50;
+    if (x)
+      this.openPos = x;
     navbar.css("width", x);
     content.css("margin-left", x + margin);
     splitbar.style.left = x+"px";
+  };
+  splitbar.save = function() {
+    saved.splitbar_pos(this.openPos); // Save the position.
+    saved.splitbar_collapsed(this.collapsed); // Save the state.
   };
   function mouseMoveHandler(e) { splitbar.setPos(e.pageX); }
   function mouseUpHandler(e) {
     if (splitbar.isMoving)
       (splitbar.isMoving = false),
       splitbar.removeClass("moving"), body.removeClass("moving_splitbar"),
-      kandil.saved.splitbar_pos(e.pageX), // Save the position.
+      splitbar.save(),
       $(document).unbind("mousemove", mouseMoveHandler)
                  .unbind("mouseup", mouseUpHandler);
   }
@@ -277,9 +296,19 @@ function createSplitbar()
       $(document).mousemove(mouseMoveHandler).mouseup(mouseUpHandler);
     e.preventDefault();
   }
-  $(splitbar).mousedown(mouseDownHandler);
+  $(splitbar).mousedown(mouseDownHandler)
+             .dblclick(function(e) {
+    var pos = this.collapsed ? this.openPos : 0; // Toggle the position.
+    this.setPos(pos);
+    this.save();
+  });
   // Set initial position.
-  splitbar.setPos(kandil.saved.splitbar_pos() || kandil.navbar_width);
+  var pos = saved.splitbar_pos() || kandil.navbar_width;
+  splitbar.openPos = pos;
+  splitbar.collapsed = !!saved.splitbar_collapsed();
+  if (splitbar.collapsed)
+    pos = 0;
+  splitbar.setPos(pos);
   return splitbar;
 }
 
