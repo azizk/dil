@@ -2,31 +2,28 @@
 /// License: zlib/libpng
 
 /// Constructs a QuickSearch object.
-function QuickSearch(id, tag, symbols, options)
+function QuickSearch(id, options)
 {
   this.options = $.extend({
     text: "Filter...",
     delay: 500, // Delay time after key press until search kicks off.
-    callback: quickSearchSymbols,
   }, options);
 
-  this.input = $("<input class='filterbox' type='text'/>");
-  this.input.val(this.options.text).attr("id", id);
-  this.tag = tag; // A selector string for jQuery.
-  this.symbols = symbols;
+  this.$input = $("<input class='filterbox' type='text'/>");
+  this.$input.attr({value: this.options.text, id: id});
+  this.input = this.$input[0];
   this.cancelSearch = false;
   this.timeoutId = 0;
-  this.callback = this.options.callback;
-  this.delayCallback = function() {
+  this.delaySearch = function() {
     this.cancelSearch = false;
     clearTimeout(this.timeoutId);
-    QS = this;
+    qs = this;
     this.timeoutId = setTimeout(function() {
-      if (!QS.cancelSearch) QS.callback(QS);
+      if (!qs.cancelSearch) qs.$input.trigger("start_search", qs);
     }, this.options.delay);
   };
-  this.input[0].qs = this; // Needed inside event handlers.
-  this.input.keyup(function(e) {
+  this.input.qs = this; // Needed inside event handlers.
+  this.$input.keyup(function(e) {
     switch (e.keyCode) {
     case 0:case 9:case 13:case 16:case 17:case 18:
     case 20:case 35:case 36:case 37:case 39:
@@ -36,17 +33,17 @@ function QuickSearch(id, tag, symbols, options)
       clearTimeout(this.qs.timeoutId);
       break;
     default:
-      this.qs.delayCallback();
+      this.qs.delaySearch();
     }
   });
 
   function firstFocusHandler(e) {
     // Clear the text box when focused for the first time.
-    $(this).val("").unbind("focus", firstFocusHandler);
-    prepareSymbols($(tag)[0], symbols);
+    $(this).val("").unbind("focus", firstFocusHandler)
+           .trigger("first_focus", this.qs);
   }
   this.resetFirstFocusHandler = function() {
-    this.input.focus(firstFocusHandler);
+    this.$input.focus(firstFocusHandler);
   };
   this.resetFirstFocusHandler();
 
@@ -65,7 +62,7 @@ function QuickSearch(id, tag, symbols, options)
     {
       for (var i = 0, len = terms.length; i < len; i++)
         if (terms[i][0] == ':')
-          query.attributes.push("^"+terms[i].slice(1));
+          query.attributes.push(RegExp("^(?:"+terms[i].slice(1)+")", "m"));
         //else if (terms[i][0] == '/')
         //  query.regexps.push(RegExp(terms[i].slice(1,-1), "i"));
         else if (terms[i].indexOf(".") != -1)
@@ -83,41 +80,49 @@ function QuickSearch(id, tag, symbols, options)
   };
   this.sanitizeStr = function() {
     // Strip leading and trailing whitespace.
-    this.str = this.input.val();
+    this.str = this.$input.val();
     this.str = this.str.strip();
     return this.str;
   };
   return this;
 }
 
-/// Prepares the symbols data structure for the search algorithm.
-function prepareSymbols(ul, symbols)
+/// Prepares symbols for the search algorithm.
+function extendSymbols(ul, symbols)
 {
   var symlist = symbols.list;
   var li_s = ul.getElementsByTagName("li");
   if (li_s.length != symlist.length)
-    throw new Error("The number of symbols ("+li_s.length+") doesn't match "+
-          "the number of list items ("+symlist.length+")!");
-  for (var i = 0; i < symlist.length; i++)
-    symlist[i].li = li_s[i]; // Assign a new property to the symbol.
-}
+    throw new Error("The number of symbols ({0}) doesn't match the number of \
+list items ({1})!".format(li_s.length, symlist.length));
+  // Add the property 'li', so we can modify its CSS classes.
+  for (var i = 0, len = symlist.length; i < len; i++)
+    symlist[i].li = li_s[i];
 
-function quickSearchSymbols(qs)
-{
-  var ul = $(qs.tag)[0]; // Get 'ul' tag.
-  var symbols = [qs.symbols.root];
-  // Remove the message if present.
-  $(ul.lastChild).filter(".no_match_msg").remove();
-
-  if (!qs.parse())
-  {
-    ul.removeClass("filtered");
-    return; // Nothing to do if query is empty.
+  // Add the property 'attributes' to all symbol objects.
+  if (symbols.symbol_tags)
+  { // D symbols.
+    symlist[0].attributes = "module";
+    var sym_tags = symbols.symbol_tags;
+    for (var i = 0, len = sym_tags.length; i < len; i++)
+    {
+      var attrs = $("> .attrs", sym_tags[i].parentNode)[0],
+          symbol = symlist[i+1];
+      // E.g. "[protected, override]" -> ["protected", "override"]
+      attrs = attrs ? attrs.textContent.slice(1, -1).split(", ") : [];
+      if (SymbolKind.isFunction(symbol.kind) && symbol.kind != "function")
+         attrs.push("function");
+      attrs.push(symbol.kind);
+      attrs = attrs.join("\n"); // Make searchable for RegExps like /^func/m.
+      if (!/p(?:rivate|rotect|ackage)|export/.test(attrs) &&
+          attrs.indexOf("public") == -1)
+        attrs += "\npublic";
+      symbol.attributes = attrs;
+    }
   }
-
-  ul.addClass("filtered");
-  if (!(quick_search(qs, symbols) & 1)) // Start the search.
-    $(ul).append("<li class='no_match_msg'>No match...</li>");
+  else // Packages and modules.
+    for (var i = 0, len = symlist.length; i < len; i++)
+      symlist[i].attributes = symlist[i].kind;
 }
 
 /// Recursively progresses down the "ul" tree.
@@ -134,7 +139,7 @@ function quick_search(qs, symbols)
     var li = symbol.li; // The associated list item.
     // Reset classes.
     li.removeClass("match|parent_of_match|has_hidden|show_hidden");
-    var texts = [symbol.name, symbol.fqn, symbol.kind];
+    var texts = [symbol.name, symbol.fqn, symbol.attributes];
     var tlist = [qs.query.regexps, qs.query.fqn_regexps, qs.query.attributes];
   SearchLoop:
     for (var j = 0; j < 3; j++)

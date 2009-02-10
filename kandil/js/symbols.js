@@ -4,11 +4,16 @@
 /// An enumeration of symbol kinds.
 var SymbolKind = (function(){
   var kinds = "package module template class interface struct union alias \
-typedef enum enummem function variable invariant new delete unittest ctor \
+typedef enum enummem variable function invariant new delete unittest ctor \
 dtor sctor sdtor".split(" ");
-  var dict = {str:kinds};
+  var dict = {str: kinds};
   for (var i = 0, len = kinds.length; i < len; i++)
     dict[kinds[i]] = i; // E.g.: dict.package = 0
+  dict.isFunction = function(key) {
+    if (typeof key == typeof "")
+      key = this[key]; // Get the index.
+    return 12 <= key && key <= 20; // 12-20 index range.
+  };
   return dict;
 }());
 

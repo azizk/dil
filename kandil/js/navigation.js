@@ -36,6 +36,7 @@ var kandil = {
       offset: {x:16, y:16}, /// (x, y) offsets from the mouse position.
     },
     cookie_life: 30, /// Life-time of cookies in days.
+    qs_delay: 500, /// Delay after last key press before quick search starts.
   },
   saved: {
     splitbar_pos: function(pos) { /// Saves or retrieves the splitbar position.
@@ -55,6 +56,7 @@ var kandil = {
     loading_code: "Loading source code...",
     filter: "Filter...", /// Initial text in the filter boxes.
     splitbar_title: "Drag to resize. Double-click to close or open.",
+    no_match: "No match...",
   },
 };
 
@@ -73,14 +75,7 @@ $(function() {
   var navbar = $(kandil.settings.navbar_html.format(kandil.settings));
   $(document.body).prepend(navbar);
 
-  // Create the quick search text boxes.
-  var options = {text: kandil.msg.filter};
-  var qs = [
-    new QuickSearch("apiqs", "#apipanel>ul", kandil.symbolTree, options),
-    new QuickSearch("modqs", "#modpanel>ul", kandil.packageTree, options)
-  ];
-  $("#apipanel").prepend(qs[0].input);
-  $("#modpanel").prepend(qs[1].input).hide(); // Initially hidden.
+  createQuickSearchInputs();
 
   initAPIList();
 
@@ -117,7 +112,42 @@ $(function() {
   });
   // Activate the default tab.
   $(kandil.settings.default_tab).trigger("click");
-})
+});
+
+/// Creates the quick search text inputs.
+function createQuickSearchInputs()
+{
+  var options = {text: kandil.msg.filter, delay: kandil.settings.qs_delay};
+  var qs = [
+    new QuickSearch("apiqs", options), new QuickSearch("modqs", options)
+  ];
+  $("#apipanel").prepend(qs[0].input);
+  $("#modpanel").prepend(qs[1].input);
+  $.extend(qs[0].input,
+    {tag_selector: "#apipanel>ul", symbols: kandil.symbolTree});
+  $.extend(qs[1].input,
+    {tag_selector: "#modpanel>ul", symbols: kandil.packageTree});
+  function handleFirstFocus(e, qs) {
+    extendSymbols($(this.tag_selector)[0], this.symbols);
+  }
+  function handleSearch(e, qs)
+  {
+    var ul = $(this.tag_selector)[0]; // Get 'ul' tag.
+    var symbols = [this.symbols.root];
+    // Remove the message if present.
+    $(ul.lastChild).filter(".no_match_msg").remove();
+    if (!qs.parse()) // Nothing to do if query is empty.
+      return ul.removeClass("filtered"), undefined;
+    ul.addClass("filtered");
+    // Start the search.
+    if (!(quick_search(qs, symbols) & 1))
+      $(ul).append("<li class='no_match_msg'>{0}</li>"
+                   .format(kandil.msg.no_match));
+  }
+  qs[0].$input.add(qs[1].$input)
+    .bind("first_focus", handleFirstFocus).bind("start_search", handleSearch);
+  qs[0].input.tabIndex = qs[1].input.tabIndex = 0;
+}
 
 /// Installs event handlers to show tooltips for symbols.
 function installTooltipHandlers()
@@ -325,14 +355,18 @@ function handleLoadingModule(event)
 /// Adds click handlers to symbols and inits the symbol list.
 function initAPIList()
 {
-  var symbols = $(".symbol");
+  var symbol_tags = $(".symbol");
   // Add code display functionality to symbol links.
-  symbols.click(function(event) {
+  symbol_tags.click(function(event) {
     event.preventDefault();
     showCode($(this));
   });
 
-  initializeSymbolList(symbols);
+  initializeSymbolTree(symbol_tags);
+
+  // Create the HTML text and append it to the api panel.
+  createSymbolsUL($("#apipanel"));
+
   var ul = $("#apipanel > ul");
   Treeview(ul);
   Treeview.loadState(ul[0], kandil.moduleFQN);
@@ -420,7 +454,7 @@ function hideLoadingGif()
 }
 
 /// Initializes the symbol list under the API tab.
-function initializeSymbolList(sym_tags)
+function initializeSymbolTree(sym_tags)
 {
   if (!sym_tags.length)
     return;
@@ -442,23 +476,15 @@ function initializeSymbolList(sym_tags)
   }
   kandil.symbolTree.root = root;
   kandil.symbolTree.list = list;
-  // Create the HTML text and append it to the api panel.
-  createSymbolsUL($("#apipanel"));
+  kandil.symbolTree.symbol_tags = sym_tags;
 }
 
 /// Returns an image tag for the provided kind of symbol.
 function getPNGIcon(kind)
 {
-  var functionSet = {
-    "function":1,"unittest":1,"invariant":1,"new":1,"delete":1,
-    "invariant":1,"sctor":1,"sdtor":1,"ctor":1,"dtor":1,
-  };
-  // Other kinds: (they have their own PNG icons)
-  // "variable","enummem","alias","typedef","class",
-  // "interface","struct","union","template"
-  if (functionSet[kind])
+  if (SymbolKind.isFunction(kind))
     kind = "function";
-  return "<img src='img/icon_"+kind+".png' width='16' height='16'/>";
+  return "<img src='img/icon_"+kind+".png'/>";
 }
 
 function createSymbolsUL(panel)
