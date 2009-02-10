@@ -86,7 +86,9 @@ body { margin: 0; }
 
 /* Use absolute positioning so that > ul can show scrollbars on overflow. */
 #apipanel, #modpanel { position: absolute; height: 100%; width: 100%; }
-#apipanel > ul, #modpanel > ul {
+
+/* Treeview */
+#panels .tview {
   position: absolute;
   top: 23px;
   bottom: 26px;
@@ -99,14 +101,13 @@ body { margin: 0; }
   background-color: white;
 }
 
-#apipanel li sub {
+.tview li sub {
   font-size: small;
   margin: 0.2em;
   vertical-align: bottom;
   color: #555;
 }
 
-/* Treeview */
 .tview li {
   white-space: nowrap;
 }
@@ -167,13 +168,13 @@ body { margin: 0; }
 .filtered li.parent_of_match {
   display: block; /* Parent nodes of matches must be visible */
 }
-.filtered li, .filtered a {
+.filtered label, .filtered a {
   color: Gray; /* Make the text gray to indicate no match */
 }
 .filtered li.match {
   display: block; /* Make matches visible */
 }
-.filtered li.match, .filtered li.match > label a {
+.filtered li.match > label, .filtered li.match > label a {
   color: Black;
 }
 .filtered li.no_match_msg {
