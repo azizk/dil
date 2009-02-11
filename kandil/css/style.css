@@ -190,7 +190,7 @@ input.filterbox {
   border: 1px inset DarkGreen;
   width: 91.2%;
   color: black;
-  background: white url("../img/icon_funnel.png") no-repeat;
+  background: white url("../img/icon_magnifier.png") no-repeat;
 }
 
 .konqueror input.filterbox {
