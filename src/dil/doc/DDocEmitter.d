@@ -79,7 +79,7 @@ abstract class DDocEmitter : DefaultVisitor
         writeComment();
       }
     }
-    MEMBERS("MODULE", "module", modul.root);
+    MEMBERS("MODULE", "", modul.root);
     return text;
   }
 
@@ -202,31 +202,39 @@ abstract class DDocEmitter : DefaultVisitor
   TemplateParameters tparams;
 
   /// Reflects the fully qualified name of the current symbol's parent.
-  /// A push occurs when entering a scope and a pop when exiting it.
-  string[] fqnStack;
+  string parentFQN;
   /// Counts symbols with the same FQN.
   /// This is useful for anchor names that require unique strings.
   uint[string] fqnCount;
 
-  /// Pushes an identifier onto the stack.
-  void pushFQN(string fqn)
+  static char[] toString(uint x)
   {
-    assert(fqn.length);
-    fqnStack ~= fqn;
+    char[] str;
+    do
+      str = cast(char)('0' + (x % 10)) ~ str;
+    while (x /= 10)
+    return str;
   }
-  /// Pops an identifier from the stack.
-  void popFQN()
+
+  /// Appends to parentFQN.
+  void pushFQN(string name)
   {
-    assert(fqnStack.length);
-    fqnStack = fqnStack[0..$-1];
+    if (parentFQN.length)
+      parentFQN ~= ".";
+    parentFQN ~= name;
+
+    auto pfqn = parentFQN in fqnCount;
+    uint count = pfqn ? *pfqn : 0;
+    if (count > 1) // Start adding suffixes with 2.
+      parentFQN ~= ":" ~ toString(count);
   }
 
   /// Returns a unique, identifying string for the current symbol.
   string getSymbolFQN(string name)
   {
-    char[] fqn;
-    foreach (name_part; fqnStack[1..$]) // Exclude first item (="module".)
-      fqn ~= name_part ~ ".";
+    char[] fqn = parentFQN;
+    if (fqn.length)
+      fqn ~= ".";
     fqn ~= name;
 
     uint count;
@@ -236,8 +244,8 @@ abstract class DDocEmitter : DefaultVisitor
     else
       fqnCount[fqn] = 1; // Start counting with 1.
 
-    if (count > 1) // Ignore unique suffix for the value 1.
-      fqn ~= Format(":{}", count);
+    if (count > 1) // Start adding suffixes with 2.
+      fqn ~= ":" ~ toString(count);
     return fqn;
   }
 
@@ -258,6 +266,7 @@ abstract class DDocEmitter : DefaultVisitor
     DDocComment saved_prevCmnt;
     bool saved_cmntIsDitto;
     uint saved_prevDeclOffset;
+    char[] saved_parentFQN;
     /// When constructed, variables are saved.
     /// Params:
     ///   name = the name of the current symbol.
@@ -266,6 +275,7 @@ abstract class DDocEmitter : DefaultVisitor
       saved_prevCmnt = this.outer.prevCmnt;
       saved_cmntIsDitto = this.outer.cmntIsDitto;
       saved_prevDeclOffset = this.outer.prevDeclOffset;
+      saved_parentFQN = this.outer.parentFQN;
       pushFQN(name);
       // Entering a new scope. Clear variables.
       this.outer.prevCmnt = null;
@@ -278,7 +288,7 @@ abstract class DDocEmitter : DefaultVisitor
       this.outer.prevCmnt = saved_prevCmnt;
       this.outer.cmntIsDitto = saved_cmntIsDitto;
       this.outer.prevDeclOffset = saved_prevDeclOffset;
-      popFQN();
+      this.outer.parentFQN = saved_parentFQN;
     }
   }
 
