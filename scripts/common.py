@@ -27,15 +27,6 @@ def kandil_path(where="kandil"):
   P.jsfiles = P.JS//("navigation.js", "jquery.js", "quicksearch.js",
     "utilities.js", "symbols.js")
   P.navi, P.jquery, P.qsearch, P.utils, P.syms = P.jsfiles
-  # Explicit listing (don't remember why I was using this):
-  #png_names = ("alias class enummem enum function interface module package "
-               #"struct template typedef union variable "
-               #"funnel " # Not used atm.
-               #"magnifier "
-               #"tv_plus tv_minus tv_dot").split(" ")
-  #png_names = ["icon_%s.png" % name for name in png_names]
-  #P.images = P.IMG//png_names + [P.IMG/"loading.gif"]
-  # Wildcard search:
   P.images = P.IMG.glob("*.png") + P.IMG.glob("*.gif")
   return P
 

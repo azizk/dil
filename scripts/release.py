@@ -163,6 +163,9 @@ def main():
   map(Path.mkdir, (DEST.BIN, DOC, DOC.HTMLSRC,
                    DOC.CSS, DOC.IMG, DOC.JS, TMP))
 
+  # Rebuild the path object for kandil. (Images are globbed.)
+  DEST.KANDIL = kandil_path(DEST/"kandil")
+
   # Find the source code files.
   FILES = find_dil_source_files(DEST.SRC)
 
