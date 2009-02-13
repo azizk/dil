@@ -101,6 +101,8 @@ def main():
   if len(args) > 1:
     print "Warning! Arguments ignored: " + " ".join(args[1:])
 
+  change_cwd(__file__)
+
   # Validate the version argument.
   m = re.match(r"((\d)\.(\d\d\d)(-\w+)?)", args[0])
   if not m:

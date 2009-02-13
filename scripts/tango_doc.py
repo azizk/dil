@@ -123,6 +123,8 @@ def main():
   if len(args) < 1:
     return parser.print_help()
 
+  change_cwd(__file__)
+
   # Path to dil's root folder.
   DIL       = dil_path()
   # The version of Tango we're dealing with.

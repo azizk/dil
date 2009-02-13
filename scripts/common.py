@@ -15,6 +15,10 @@ def find_dil_source_files(source):
   # Filter out files in "src/tests/".
   return [f for f in FILES if not f.startswith(source/"tests")]
 
+def change_cwd(script_path):
+  """ Changes the current working directory to "script_dir/.." """
+  os.chdir(Path(script_path).realpath.folder/"..")
+
 def kandil_path(where="kandil"):
   P = firstof(Path, where, Path(where))
   P.IMG, P.CSS, P.JS = P//("img", "css", "js")

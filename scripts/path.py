@@ -48,6 +48,14 @@ class Path(unicode):
     return Path(os.path.abspath(self))
 
   @property
+  def realpath(self):
+    return Path(os.path.realpath(self))
+
+  @property
+  def folder(self):
+    return Path(os.path.dirname(self))
+
+  @property
   def exists(self):
     return os.path.exists(self)
 

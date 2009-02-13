@@ -137,6 +137,8 @@ def main():
   if len(args) < 2:
     return parser.print_help()
 
+  change_cwd(__file__)
+
   # Validate the version argument.
   m = re.match(r"((\d)\.(\d\d\d))", args[0])
   if not m:
