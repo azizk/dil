@@ -71,6 +71,7 @@ def build_dil_debug(versions=[]):
 
 def main():
   from optparse import OptionParser
+  from common import change_cwd
 
   usage = "Usage: scripts/build.py [Options]"
   parser = OptionParser(usage=usage)
@@ -82,6 +83,8 @@ def main():
     help="build with -version=D2")
 
   (options, args) = parser.parse_args()
+
+  change_cwd(__file__)
 
   versions = ["D2"] if options.d2 else []
   if options.debug:
