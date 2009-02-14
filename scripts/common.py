@@ -15,9 +15,12 @@ def find_dil_source_files(source):
   # Filter out files in "src/tests/".
   return [f for f in FILES if not f.startswith(source/"tests")]
 
+def script_parent_folder(script_path):
+  return Path(script_path).realpath.folder.folder
+
 def change_cwd(script_path):
   """ Changes the current working directory to "script_dir/.." """
-  os.chdir(Path(script_path).realpath.folder/"..")
+  os.chdir(script_parent_folder(script_path))
 
 def kandil_path(where="kandil"):
   P = firstof(Path, where, Path(where))
@@ -115,11 +118,13 @@ def generate_modules_js(modlist, dest_path, max_line_len=80):
 
   f.close()
 
-def generate_docs(dil_exe, dest, modlist, files, versions=[], options=[]):
+def generate_docs(dil_exe, dest, modlist, files,
+                  versions=[], options=[], cwd=None):
   """ Generates documenation files. """
   from subprocess import call
   versions = ["-version="+v for v in versions]
-  call([dil_exe, "ddoc", dest, "-m="+modlist] + options + versions + files)
+  call([dil_exe, "ddoc", dest, "-m="+modlist] + options + versions + files,
+       cwd=cwd)
 
 def generate_shl_files(dil_exe, dest, prefix, files):
   """ Generates syntax highlighted files. """

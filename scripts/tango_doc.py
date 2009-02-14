@@ -123,10 +123,9 @@ def main():
   if len(args) < 1:
     return parser.print_help()
 
-  change_cwd(__file__)
-
   # Path to dil's root folder.
-  DIL       = dil_path()
+  dil_dir    = script_parent_folder(__file__) # Assumed dil path.
+  DIL       = dil_path(dil_dir)
   # The version of Tango we're dealing with.
   VERSION   = ""
   # Root of the Tango source code (either svn or zip.)
@@ -134,7 +133,7 @@ def main():
   # Destination of doc files.
   DEST      = doc_path(firstof(str, getitem(args, 1), 'tangodoc'))
   # Temporary directory, deleted in the end.
-  TMP       = DEST/"tmp"
+  TMP       = (DEST/"tmp").abspath
   # Some DDoc macros for Tango.
   TANGO_DDOC= TMP/"tango.ddoc"
   # The list of module files (with info) that have been processed.
@@ -162,7 +161,7 @@ def main():
   versions = ["Tango", "DDoc"]
   versions += ["Posix"] if options.posix else ["Windows", "Win32"]
   generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
-                versions, options=['-v', '-hl', '--kandil'])
+                versions, options=['-v', '-hl', '--kandil'], cwd=DIL)
 
   copy_files(DIL, TANGO, DEST)
   if options.pdf:
