@@ -160,7 +160,7 @@ def main():
   DOC_FILES = [DIL.KANDIL.ddoc, TANGO_DDOC, TMP/"index.d"] + FILES
   versions = ["Tango", "DDoc"]
   versions += ["Posix"] if options.posix else ["Windows", "Win32"]
-  generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
+  generate_docs(DIL.EXE, DEST.abspath, MODLIST, DOC_FILES,
                 versions, options=['-v', '-hl', '--kandil'], cwd=DIL)
 
   copy_files(DIL, TANGO, DEST)
