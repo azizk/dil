@@ -41,7 +41,7 @@
        id="filter3419">
       <feGaussianBlur
          id="feGaussianBlur3421"
-         stdDeviation="1.5"
+         stdDeviation="1.0"
          inkscape:collect="always" />
     </filter>
     <filter
