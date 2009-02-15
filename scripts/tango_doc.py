@@ -129,7 +129,7 @@ def main():
   # The version of Tango we're dealing with.
   VERSION   = ""
   # Root of the Tango source code (either svn or zip.)
-  TANGO     = get_tango_path(args[0])
+  TANGO     = get_tango_path(Path(args[0]).abspath)
   # Destination of doc files.
   DEST      = doc_path(firstof(str, getitem(args, 1), 'tangodoc'))
   # Temporary directory, deleted in the end.
