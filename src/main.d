@@ -39,7 +39,7 @@ import tango.io.File;
 import tango.text.Util;
 import tango.text.Regex : Regex;
 import tango.time.StopWatch;
-import tango.text.Ascii : icompare;
+import tango.text.Ascii : icompare, toUpper;
 
 /// Entry function of dil.
 void main(char[][] args)
@@ -303,6 +303,38 @@ void main(char[][] args)
 
     Stdout.formatln("Scanned in {:f10}s.", swatch.stop);
     break;
+  case "settings", "set":
+    alias GlobalSettings GS;
+    char[] versionIds, importPaths, ddocPaths;
+    foreach (item; GS.versionIds)
+      versionIds ~= item ~ ";";
+    foreach (item; GS.importPaths)
+      importPaths ~= item ~ ";";
+    foreach (item; GS.ddocFilePaths)
+      ddocPaths ~= item ~ ";";
+    string[string] settings = ["DATADIR"[]:GS.dataDir, "VERSION_IDS":versionIds,
+      "IMPORT_PATHS":importPaths, "DDOC_FILES":ddocPaths,
+      "LANG_FILE":GS.langFile, "XML_MAP":GS.xmlMapFile,
+      "HTML_MAP":GS.htmlMapFile, "LEXER_ERROR":GS.lexerErrorFormat,
+      "PARSER_ERROR":GS.parserErrorFormat,
+      "SEMANTIC_ERROR":GS.semanticErrorFormat,
+      "TAB_WIDTH":Format("{}", GS.tabWidth)
+    ];
+    string[] retrieve_settings;
+    if (args.length > 2)
+      retrieve_settings = args[2..$];
+    if (retrieve_settings.length) // Print select settings.
+      foreach (name; retrieve_settings) {
+        name = toUpper(name);
+        if (name in settings)
+          Stdout.formatln("{}={}", name, settings[name]);
+      }
+    else // Print all settings.
+      foreach (name; ["DATADIR", "VERSION_IDS", "IMPORT_PATHS", "DDOC_FILES",
+          "LANG_FILE", "XML_MAP", "HTML_MAP", "LEXER_ERROR",
+          "PARSER_ERROR", "SEMANTIC_ERROR", "TAB_WIDTH"])
+        Stdout.formatln("{}={}", name, settings[name]);
+    break;
   case "?", "help":
     printHelp(args.length >= 3 ? args[2] : "");
     break;
@@ -334,7 +366,8 @@ const char[] COMMANDS =
   "  importgraph (igraph)\n"
   "  statistics (stats)\n"
   "  tokenize (tok)\n"
-  "  translate (trans)\n";
+  "  translate (trans)\n"
+  "  settings (set)\n";
 
 bool strbeg(char[] str, char[] begin)
 {
@@ -567,6 +600,16 @@ Usage:
 
 Example:
   dil trans German src/main.d`;
+    break;
+  case "settings", "set":
+    msg = "Print the value of a settings variable.
+Usage:
+  dil set [name, name2...]
+
+  The names have to match the setting names in dilconf.d.
+
+Example:
+  dil set import_paths datadir";
     break;
   case "main":
   default:

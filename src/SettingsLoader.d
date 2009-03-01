@@ -18,6 +18,7 @@ import common;
 
 import tango.io.FilePath;
 import tango.sys.Environment;
+import tango.util.PathUtil : normalize;
 
 /// Loads settings from a D module file.
 abstract class SettingsLoader
@@ -155,7 +156,8 @@ class ConfigLoader : SettingsLoader
     // Initialize the dataDir member.
     if (auto val = getValue!(StringExpression)("DATADIR"))
       this.dataDir = val.getString();
-    this.dataDir = expandVariables(this.dataDir);
+    // FIXME: normalize doesn't work properly, so it's commented out.
+    this.dataDir = /+normalize+/(expandVariables(this.dataDir));
     GlobalSettings.dataDir = this.dataDir;
     Environment.set("DATADIR", this.dataDir);
 
@@ -164,19 +166,19 @@ class ConfigLoader : SettingsLoader
         if (auto val = castTo!(StringExpression)(value))
           GlobalSettings.versionIds ~= expandVariables(val.getString());
     if (auto val = getValue!(StringExpression)("LANG_FILE"))
-      GlobalSettings.langFile = expandVariables(val.getString());
+      GlobalSettings.langFile = /+normalize+/(expandVariables(val.getString()));
     if (auto array = getValue!(ArrayInitExpression)("IMPORT_PATHS"))
       foreach (value; array.values)
         if (auto val = castTo!(StringExpression)(value))
-          GlobalSettings.importPaths ~= expandVariables(val.getString());
+          GlobalSettings.importPaths ~= /+normalize+/(expandVariables(val.getString()));
     if (auto array = getValue!(ArrayInitExpression)("DDOC_FILES"))
       foreach (value; array.values)
         if (auto val = castTo!(StringExpression)(value))
-          GlobalSettings.ddocFilePaths ~= expandVariables(val.getString());
+          GlobalSettings.ddocFilePaths ~= /+normalize+/(expandVariables(val.getString()));
     if (auto val = getValue!(StringExpression)("XML_MAP"))
-      GlobalSettings.xmlMapFile = expandVariables(val.getString());
+      GlobalSettings.xmlMapFile = /+normalize+/(expandVariables(val.getString()));
     if (auto val = getValue!(StringExpression)("HTML_MAP"))
-      GlobalSettings.htmlMapFile = expandVariables(val.getString());
+      GlobalSettings.htmlMapFile = /+normalize+/(expandVariables(val.getString()));
     if (auto val = getValue!(StringExpression)("LEXER_ERROR"))
       GlobalSettings.lexerErrorFormat = expandVariables(val.getString());
     if (auto val = getValue!(StringExpression)("PARSER_ERROR"))
