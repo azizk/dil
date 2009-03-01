@@ -52,6 +52,10 @@ class Path(unicode):
     return Path(os.path.realpath(self))
 
   @property
+  def normpath(self):
+    return Path(os.path.normpath(self))
+
+  @property
   def folder(self):
     return Path(os.path.dirname(self))
 

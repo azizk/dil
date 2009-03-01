@@ -130,8 +130,12 @@ def main():
   if len(args) < 1:
     return parser.print_help()
 
+  if not Path(args[0]).exists:
+    print "The path '%s' doesn't exist." % args[0]
+    return
+
   # Path to dil's root folder.
-  dil_dir    = script_parent_folder(__file__) # Assumed dil path.
+  dil_dir   = script_parent_folder(__file__) # Look here for dil by default.
   DIL       = dil_path(dil_dir)
   # The version of Tango we're dealing with.
   VERSION   = ""
@@ -149,10 +153,6 @@ def main():
   FILES     = []
 
   build_dil_if_inexistant(DIL.EXE)
-
-  if not TANGO.exists:
-    print "The path '%s' doesn't exist." % TANGO
-    return
 
   VERSION = get_tango_version(TANGO.SRC/"tango"/"core"/"Version.d")
 

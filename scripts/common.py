@@ -33,14 +33,29 @@ def kandil_path(where="kandil"):
   P.images = P.IMG.glob("*.png") + P.IMG.glob("*.gif")
   return P
 
-def dil_path(where=""):
+def dil_path(where="", dilconf=True):
   P = firstof(Path, where, Path(where))
   P.BIN = P/"bin" # The destination of the binaries.
   P.EXE = P.BIN/"dil" # The compiled binary.
   P.SRC = P/"src" # The source code folder.
   P.DOC = P/"doc" # Documentation folder.
+  # Default to these values:
   P.DATA = P/"data" # The data folder with various files.
-  P.KANDIL = kandil_path(P/"kandil")
+  P.KANDIL = P/"kandil" # Kandil's folder.
+  # Paths might differ because of the settings in dilconf.
+  if dilconf:
+    exe_path = P.EXE if P.EXE.exists else locate_command("dil")
+    if exe_path:
+      P.BIN = exe_path.folder # Update binary folder.
+      P.EXE = exe_path # Update exe path.
+      # Get the DATADIR from dil.
+      dil_command = exe_path + " set datadir"
+      datadir = os.popen(dil_command).read()[:-1] # Remove \n.
+      P.DATA = Path(datadir.partition("=")[2]).normpath
+      P.KANDIL = P.DATA.folder/"kandil"
+      if not P.KANDIL.exists:      # If not a sibling folder,
+        P.KANDIL = P.DATA/"kandil" # assume kandil/ is in data/.
+  P.KANDIL = kandil_path(P.KANDIL) # Extend the path object.
   return P
 
 def doc_path(where):

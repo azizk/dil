@@ -124,7 +124,7 @@ def main():
   # Build folder.
   BUILD_DIR = Path(firstof(str, options.builddir, "build"))
   # Destination of distributable files.
-  DEST      = dil_path(BUILD_DIR/("dil."+VERSION))
+  DEST      = dil_path(BUILD_DIR/("dil."+VERSION), dilconf=False)
   BIN       = DEST.BIN # Shortcut to the bin/ folder.
   DEST.DOC  = doc_path(DEST.DOC)
 
