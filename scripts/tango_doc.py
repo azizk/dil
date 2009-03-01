@@ -95,10 +95,17 @@ def get_tango_path(path):
   is_svn = not path.SRC.exists
   if is_svn:
     path.SRC.mkdir()
-    print "Copying tango/, std/ and object.di to import/."
-    (path/"tango").copytree(path.SRC/"tango")
-    (path/"std").copytree(path.SRC/"std")
-    (path/"object.di").copy(path.SRC)
+    from sys import platform
+    if platform == "win32" or PyVersion < 2.6:
+      # Can't use symlinks. Copy everything.
+      print "Copying tango/, std/ and object.di to import/."
+      (path/"tango").copytree(path.SRC/"tango")
+      (path/"std").copytree(path.SRC/"std")
+      (path/"object.di").copy(path.SRC)
+    else: # Use symbolic links on Unix platforms.
+      print "Symlinking to tango/, std/ and object.di in import/."
+      for name in ("tango", "std", "object.di"):
+        os.symlink((path/name), path.SRC/name)
   path.license = path/"LICENSE"
   path.favicon = Path("tango_favicon.png") # Look in CWD atm.
   return path

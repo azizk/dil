@@ -5,7 +5,7 @@ from path import Path
 
 def find_source_files(source, found):
   """ Searches for source files (.d and .di). Appends file paths to found. """
-  for root, dirs, files in Path(source).walk():
+  for root, dirs, files in Path(source).walk(followlinks=True):
     found += [root/file for file in map(Path, files) # Iter. over Path objects.
                           if file.ext.lower() in ('.d','.di')]
 
@@ -167,6 +167,7 @@ def build_dil_if_inexistant(dil_exe):
     else:
       raise Exception("can't proceed without dil executable")
 
+# Not in use atm.
 def download_jquery(dest_path, force=False,
                     url="http://code.jquery.com/jquery-latest.pack.js"):
   """ Downloads the jquery library from "url".
@@ -189,6 +190,19 @@ def download_jquery(dest_path, force=False,
   except HTTPError, e:
     if e.code == 304: print "Not Modified"
     else:             print e
+
+class VersionInfo:
+  from sys import version_info as vi
+  vi = vi
+  f = float("%d.%d%d" % vi[:3])
+  i = int(f*100)
+  def __lt__(self, other): return self.f < other
+  def __le__(self, other): return self.f <= other
+  def __eq__(self, other): return self.f == other
+  def __ne__(self, other): return self.f != other
+  def __gt__(self, other): return self.f > other
+  def __ge__(self, other): return self.f >= other
+PyVersion = VersionInfo()
 
 def chunks(seq, n):
   """ Returns chunks of a sequence of size n. """

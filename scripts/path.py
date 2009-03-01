@@ -71,8 +71,12 @@ class Path(unicode):
   def ctime(self):
     return os.path.getctime(self)
 
-  def walk(self):
-    return os.walk(self)
+  def walk(self, **kwargs):
+    if "followlinks" in kwargs:
+      from sys import version_info as vi
+      if vi[0]+vi[1] < 26: # Only Python 2.6 or newer supports followlinks.
+        del kwargs["followlinks"]
+    return os.walk(self, **kwargs)
 
   def mkdir(self, mode=0777):
     if not self.exists:
