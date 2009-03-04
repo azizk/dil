@@ -662,39 +662,22 @@ static:
   TypeBasic Undefined; /// The undefined type.
   TypeBasic DontKnowYet; /// The symbol is undefined but might be resolved.
 
-  /// Allocates an instance of TypeBasic and assigns it to typeName.
-  template newTB(char[] typeName)
+  /// Creates a list of statements for creating and initializing types.
+  char[] createTypes(char[][] typeNames)
   {
-    const newTB = mixin(typeName~" = new TypeBasic(TYP."~typeName~")");
+    char[] result;
+    foreach (typeName; typeNames)
+      result ~= typeName~" = new TypeBasic(TYP."~typeName~");";
+    return result;
   }
 
   /// Initializes predefined types.
   static this()
   {
-    newTB!("Char");
-    newTB!("Wchar");
-    newTB!("Dchar");
-    newTB!("Bool");
-    newTB!("Byte");
-    newTB!("Ubyte");
-    newTB!("Short");
-    newTB!("Ushort");
-    newTB!("Int");
-    newTB!("Uint");
-    newTB!("Long");
-    newTB!("Ulong");
-    newTB!("Cent");
-    newTB!("Ucent");
-    newTB!("Float");
-    newTB!("Double");
-    newTB!("Real");
-    newTB!("Ifloat");
-    newTB!("Idouble");
-    newTB!("Ireal");
-    newTB!("Cfloat");
-    newTB!("Cdouble");
-    newTB!("Creal");
-    newTB!("Void");
+    mixin(createTypes(["Char", "Wchar", "Dchar", "Bool", "Byte", "Ubyte",
+      "Short", "Ushort", "Int", "Uint", "Long", "Ulong", "Cent", "Ucent",
+      "Float", "Double", "Real", "Ifloat", "Idouble", "Ireal", "Cfloat",
+      "Cdouble", "Creal", "Void"]));
     version(X86_64)
     {
       Size_t = Ulong;
