@@ -618,8 +618,7 @@ class Parser
   ////MemberName := Identifier)
   Expression parseInitializer()
   {
-    auto kind = token.kind;
-    if (kind == T.Void)
+    if (token.kind == T.Void)
     {
       auto next = peekNext();
       if (next == T.Comma || next == T.Semicolon)
@@ -2639,7 +2638,7 @@ class Parser
   }
 
   /// $(BNF AsmAndAndExpression :=
-  ////  AsmOrExpression ("&amp;&amp;" AsmOrExpression)* )
+  ////  AsmOrExpression ("&&" AsmOrExpression)* )
   Expression parseAsmAndAndExpression()
   {
     alias parseAsmOrExpression parseNext;
@@ -2687,7 +2686,7 @@ class Parser
     return e;
   }
 
-  /// $(BNF AsmAndExpression := AsmCmpExpression ("&amp;" AsmCmpExpression)* )
+  /// $(BNF AsmAndExpression := AsmCmpExpression ("&" AsmCmpExpression)* )
   Expression parseAsmAndExpression()
   {
     alias parseAsmCmpExpression parseNext;
@@ -2704,7 +2703,7 @@ class Parser
   }
 
   /// $(BNF AsmCmpExpression := AsmShiftExpression (Op AsmShiftExpression)*
-  ////Op := "==" | "!=" | "&lt;" | "&lt;=" | "&gt;" | "&gt;=" )
+  ////Op := "==" | "!=" | "<" | "<=" | ">" | ">=" )
   Expression parseAsmCmpExpression()
   {
     alias parseAsmShiftExpression parseNext;
@@ -2730,7 +2729,7 @@ class Parser
   }
 
   /// $(BNF AsmShiftExpression := AsmAddExpression (Op AsmAddExpression)*
-  ////Op := "&lt;&lt;" | "&gt;&gt;" | "&gt;&gt;&gt;" )
+  ////Op := "<<" | ">>" | ">>>" )
   Expression parseAsmShiftExpression()
   {
     alias parseAsmAddExpression parseNext;
@@ -3038,8 +3037,8 @@ class Parser
   }
 
   /// $(BNF AssignExpression := CondExpression (Op AssignExpression)*
-  ////Op := "=" | "&lt;&lt;=" | "&gt;&gt;=" | "&gt;&gt;&gt;=" | "|=" |
-  ////      "&amp;=" | "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~="
+  ////Op := "=" | "<<=" | ">>=" | ">>>=" | "|=" |
+  ////      "&=" | "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~="
   ////)
   Expression parseAssignExpression()
   {
@@ -3116,7 +3115,7 @@ class Parser
     return e;
   }
 
-  /// $(BNF AndAndExpression := OrExpression ("&amp;&amp;" OrExpression)* )
+  /// $(BNF AndAndExpression := OrExpression ("&&" OrExpression)* )
   Expression parseAndAndExpression()
   {
     alias parseOrExpression parseNext;
@@ -3164,7 +3163,7 @@ class Parser
     return e;
   }
 
-  /// $(BNF AndExpression := CmpExpression ("&amp;" CmpExpression)* )
+  /// $(BNF AndExpression := CmpExpression ("&" CmpExpression)* )
   Expression parseAndExpression()
   {
     alias parseCmpExpression parseNext;
@@ -3181,9 +3180,9 @@ class Parser
   }
 
   /// $(BNF CmpExpression := ShiftExpression (Op ShiftExpression)?
-  ////Op := "is" | "!" "is" | "in" | "==" | "!=" | "&lt;" | "&lt;=" | "&gt;" |
-  ////      "&gt;=" | "!&lt;&gt;=" | "!&lt;&gt;" | "!&lt;=" | "!&lt;" |
-  ////      "!&gt;=" | "!&gt;" | "&lt;&gt;=" | "&lt;&gt;")
+  ////Op := "is" | "!" "is" | "in" | "==" | "!=" | "<" | "<=" | ">" |
+  ////      ">=" | "!<>=" | "!<>" | "!<=" | "!<" |
+  ////      "!>=" | "!>" | "<>=" | "<>")
   Expression parseCmpExpression()
   {
     alias parseShiftExpression parseNext;
@@ -3224,7 +3223,7 @@ class Parser
   }
 
   /// $(BNF ShiftExpression := AddExpression (Op AddExpression)*
-  ////Op := "&lt;&lt;" | "&gt;&gt;" | "&gt;&gt;&gt;")
+  ////Op := "<<" | ">>" | ">>>")
   Expression parseShiftExpression()
   {
     alias parseAddExpression parseNext;
@@ -3374,7 +3373,7 @@ class Parser
   ////  PreIncrExpression | DerefExpression | SignExpression |
   ////  NotExpression | ComplementExpression | DeleteExpression |
   ////  CastExpression | TypeDotIdExpression | ModuleScopeExpression
-  ////AddressExpression     := "&amp;" UnaryExpression
+  ////AddressExpression     := "&" UnaryExpression
   ////PreIncrExpression     := "++" UnaryExpression
   ////PreDecrExpression     := "--" UnaryExpression
   ////DerefExpression       := "*" UnaryExpression
