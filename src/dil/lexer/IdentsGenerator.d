@@ -70,7 +70,7 @@ private static const char[][] predefIdents = [
   "ptrdiff_t", "size_t", "hash_t",
   // ASM identifiers:
   "near", "far", "word", "dword", "qword",
-  "ptr", "offset", "seg", "__LOCAL_SIZE",
+  "ptr", "offsetof", "seg", "__LOCAL_SIZE",
   "FS", "ST",
   "AL", "AH", "AX", "EAX",
   "BL", "BH", "BX", "EBX",
@@ -86,8 +86,17 @@ private static const char[][] predefIdents = [
   "MM4", "MM5", "MM6", "MM7",
   "XMM0", "XMM1", "XMM2", "XMM3",
   "XMM4", "XMM5", "XMM6", "XMM7",
+  // ASM jump opcodes:
+  "ja", "jae", "jb", "jbe", "jc",
+  "jcxz", "je", "jecxz", "jg", "jge",
+  "jl", "jle", "jmp", "jna", "jnae",
+  "jnb", "jnbe", "jnc", "jne", "jng",
+  "jnge", "jnl", "jnle", "jno", "jnp",
+  "jns", "jnz", "jo", "jp", "jpe",
+  "jpo", "js", "jz",
 ];
 
+/// Splits idText at ':' and returns a tuple.
 char[][] getPair(char[] idText)
 {
   foreach (i, c; idText)

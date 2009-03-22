@@ -2560,6 +2560,26 @@ class Parser
         break;
       }
 
+      // JumpOpcode (short | (near | far) ptr)?
+      if (Ident.isJumpOpcode(ident.idKind))
+      {
+        auto jmptype = token.ident;
+        if (token.kind == T.Short)
+          nT();
+        else if (token.kind == T.Identifier &&
+                 (jmptype is Ident.near || jmptype is Ident.far))
+        {
+          nT();
+          if (token.kind == T.Identifier && token.ident is Ident.ptr)
+            skip(T.Identifier);
+          else
+            error2(MID.ExpectedButFound, "ptr", token);
+        }
+      }
+
+      // TODO: Handle opcodes db, ds, di, dl, df, dd, de.
+      //       They accept string operands.
+
     LOpcode:
       // Opcode Operands? ";"
       Expression[] es;
@@ -2571,7 +2591,7 @@ class Parser
       s = new AsmStatement(ident, es);
       break;
     case T.Align:
-      // align Integer;
+      // align Integer ";"
       nT();
       int number = -1;
       if (token.kind == T.Int32)
@@ -2857,7 +2877,7 @@ class Parser
           error2(MID.ExpectedButFound, "ptr", token);
         e = new AsmTypeExpression(parseAsmExpression());
         break;
-      case IDK.offset:
+      case IDK.offsetof:
         nT();
         e = new AsmOffsetExpression(parseAsmExpression());
         break;

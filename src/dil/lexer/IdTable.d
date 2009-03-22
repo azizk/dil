@@ -24,6 +24,12 @@ struct Ident
   {
     return __allIds;
   }
+
+  /// Returns true for assembler jump opcode identifiers.
+  static bool isJumpOpcode(IDK kind)
+  {
+    return IDK.ja <= kind && kind <= IDK.jz;
+  }
 }
 
 /// Global table for hoarding and retrieving identifiers.
