@@ -53,6 +53,7 @@ var kandil = {
   msg: {
     failed_module: "Failed loading the module from '{0}'!",
     failed_code: "Failed loading code from '{0}'!",
+    loading_module: "Loading module...",
     loading_code: "Loading source code...",
     filter: "Filter...", /// Initial text in the filter boxes.
     splitbar_title: "Drag to resize. Double-click to close or open.",
@@ -399,6 +400,7 @@ function loadNewModule(modFQN)
 
   function errorHandler(request, error, exception)
   {
+    hideLoadingGif();
     var msg = kandil.msg.failed_module.format(doc_url);
     msg = $("<p class='ajaxerror'>'"+msg+"</p>");
     $(document.body).append(msg);
@@ -418,7 +420,7 @@ function loadNewModule(modFQN)
     return text.slice(start+7, end); // '<title>'.length = 7
   }
 
-  displayLoadingGif("Loading module...");
+  showLoadingGif(kandil.msg.loading_module);
   try {
     $.ajax({url: doc_url, dataType: "text", error: errorHandler,
       success: function(data) {
@@ -430,14 +432,14 @@ function loadNewModule(modFQN)
         $("#apipanel > ul").remove(); // Delete old API list.
         initAPIList();
         $("#apiqs")[0].qs.resetFirstFocusHandler();
+        hideLoadingGif();
       }
     });
   }
   catch(e){ errorHandler(); }
-  hideLoadingGif();
 }
 
-function displayLoadingGif(msg)
+function showLoadingGif(msg)
 {
   if (!msg)
     msg = "";
@@ -579,9 +581,11 @@ function showCode(symbol)
   if (dt_tag.code_div)
   { // Remove the displayed code div.
     dt_tag.code_div.remove();
-    delete dt_tag.code_div;
+    dt_tag.code_div = null;
     return;
   }
+  // Assign a dummy tag to block quick, multiple clicks while loading.
+  dt_tag.code_div = $("<div/>");
 
   function show()
   { // The function that actually displays the code.
@@ -613,23 +617,24 @@ function showCode(symbol)
 
     function errorHandler(request, error, exception)
     {
+      hideLoadingGif();
       var msg = kandil.msg.failed_code.format(doc_url);
       msg = $("<p class='ajaxerror'>"+msg+"</p>");
       $(document.body).append(msg);
       fadeOutRemove(msg, 5000, 500);
     }
 
-    displayLoadingGif(kandil.msg.loading_code);
+    showLoadingGif(kandil.msg.loading_code);
     try {
       $.ajax({url: doc_url, dataType: "text", error: errorHandler,
         success: function(data) {
           setSourceCode(data);
           show();
+          hideLoadingGif();
         }
       });
     }
     catch(e){ errorHandler(); }
-    hideLoadingGif();
   }
   else // Already loaded. Show the code.
     show();
