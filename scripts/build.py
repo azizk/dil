@@ -3,7 +3,8 @@
 # Author: Aziz Köksal
 
 class DMDCommand:
-  def __init__(self, files, out_exe, dmd_exe="dmd", objdir='obj',
+  exe = "dmd" # Default.
+  def __init__(self, files, out_exe, dmd_exe=exe, objdir='obj',
                release=False, optimize=False, inline=False, debug_info=False,
                no_obj=False, warnings=False, strip_paths=False,
                lnk_args=[], includes=[], versions=[]):
@@ -51,7 +52,7 @@ def build_dil(cmd_kwargs):
   BIN = Path("bin")
   DATA = Path("data")
   BIN.mkdir()
-  # Copy the config file.
+  # Copy the config file if non-existent.
   (BIN/"dilconf.d").exists or (DATA/"dilconf.d").copy(BIN)
   # Find the source files.
   FILES = find_dil_source_files(Path("src"))
@@ -60,14 +61,13 @@ def build_dil(cmd_kwargs):
   print cmd
   cmd.call()
 
-def build_dil_release(versions=[]):
-  options = {'release':1, 'optimize':1, 'inline':1, 'versions':versions}
-  build_dil(options)
+def build_dil_release(**kwargs):
+  options = {'release':1, 'optimize':1, 'inline':1}
+  build_dil(dict(kwargs, **options))
 
-def build_dil_debug(versions=[]):
-  #{'debug_info':1} # Requires Tango compiled with -g.
-  options = {'versions':versions}
-  build_dil(options)
+def build_dil_debug(**kwargs):
+  #options = {'debug_info':1} # FIXME: Requires Tango compiled with -g.
+  build_dil(kwargs)
 
 def main():
   from optparse import OptionParser
@@ -81,16 +81,17 @@ def main():
     help="build a debug version")
   parser.add_option("-2", dest="d2", action="store_true", default=False,
     help="build with -version=D2")
+  parser.add_option("--ldc", dest="ldc", action="store_true", default=False,
+    help="use ldc instead of dmd")
 
   (options, args) = parser.parse_args()
 
   change_cwd(__file__)
 
+  dmd_exe = "ldc" if options.ldc else DMDCommand.exe
   versions = ["D2"] if options.d2 else []
-  if options.debug:
-    build_dil_debug(versions)
-  else:
-    build_dil_release(versions)
+  build_func = (build_dil_release, build_dil_debug)[options.debug]
+  build_func(dmd_exe=dmd_exe, versions=versions)
 
 if __name__ == '__main__':
   main()
