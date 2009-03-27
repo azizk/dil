@@ -35,7 +35,7 @@ import common;
 
 import Integer = tango.text.convert.Integer;
 import tango.stdc.stdio;
-import tango.io.File;
+import tango.io.device.File;
 import tango.text.Util;
 import tango.text.Regex : Regex;
 import tango.time.StopWatch;
@@ -289,7 +289,7 @@ void main(char[][] args)
     char[][] filePaths;
     if (args[2] == "dstress")
     {
-      auto text = cast(char[])(new File("dstress_files")).read();
+      auto text = cast(char[]) File.get("dstress_files");
       filePaths = split(text, "\0");
     }
     else

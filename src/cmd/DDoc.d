@@ -30,10 +30,8 @@ import common;
 
 import tango.text.Ascii : toUpper;
 import tango.text.Regex : Regex;
-import tango.io.stream.FileStream,
-       tango.io.FilePath,
-       tango.io.Print,
-       tango.io.File;
+import tango.io.FilePath,
+       tango.io.device.File;
 
 /// The ddoc command.
 struct DDocCommand
@@ -142,9 +140,9 @@ struct DDocCommand
     filePath.cat(outFileExtension);
     if (verbose)
       Stdout.formatln("hl {} > {}", mod.filePath(), filePath.toString());
-    auto file = new FileOutput(filePath.toString());
+    auto file = new File(filePath.toString(), File.WriteCreate);
     auto print = hl.print; // Save.
-    hl.print = new Print!(char)(Format, file); // New print object.
+    hl.print = new FormatOut(Format, file); // New print object.
     hl.highlightSyntax(mod, !writeXML, true);
     hl.print = print; // Restore.
     file.close();
@@ -192,7 +190,7 @@ struct DDocCommand
     auto fileText = rawOutput ? ddocText :
       MacroExpander.expand(mtable, "$(DDOC)", mod.filePath, dg);
     // Finally write the file out to the harddisk.
-    scope file = new File(destPath.toString());
+    scope file = new File(destPath.toString(), File.WriteCreate);
     file.write(fileText);
   }
 
@@ -204,10 +202,9 @@ struct DDocCommand
   {
     if (modsTxtPath.length)
     {
-      scope file = new File(modsTxtPath);
+      scope file = new File(modsTxtPath, File.WriteCreate);
       foreach (modul; mm.loadedModules)
-        file.append(modul.filePath()).append(", ")
-            .append(modul.getFQN()).append(\n);
+        file.write(modul.filePath() ~ ", " ~ modul.getFQN() ~ \n);
     }
 
     if (!useKandil)
@@ -217,7 +214,7 @@ struct DDocCommand
 
     auto filePath = new FilePath(destDirPath);
     filePath.append("js").append("modules.js");
-    scope file = new File(filePath.toString());
+    scope file = new File(filePath.toString(), File.WriteCreate);
 
     file.write("var g_moduleList = [\n "); // Write a flat list of FQNs.
     uint max_line_len = 80;
@@ -231,13 +228,13 @@ struct DDocCommand
         line_len = fragment.length + 1; // +1 for the space in "\n ".
         fragment = "\n " ~ fragment;
       }
-      file.append(fragment);
+      file.write(fragment);
     }
-    file.append("\n];\n\n"); // Closing ].
+    file.write("\n];\n\n"); // Closing ].
 
-    file.append("var g_packageTree = new PackageTree(P('', [\n");
+    file.write("var g_packageTree = new PackageTree(P('', [\n");
     writePackage(file, mm.rootPackage);
-    file.append("])\n);\n");
+    file.write("])\n);\n");
   }
 
   /// Creates sub-folders and copies kandil's files into them.
@@ -271,12 +268,12 @@ struct DDocCommand
   {
     foreach (p; pckg.packages)
     {
-      f.append(Format("{}P('{}',[\n", indent, p.getFQN()));
+      f.write(Format("{}P('{}',[\n", indent, p.getFQN()));
       writePackage(f, p, indent~"  ");
-      f.append(indent~"]),\n");
+      f.write(indent~"]),\n");
     }
     foreach (m; pckg.modules)
-      f.append(Format("{}M('{}'),\n", indent, m.getFQN()));
+      f.write(Format("{}M('{}'),\n", indent, m.getFQN()));
   }
 
   /// Loads a macro file. Converts any Unicode encoding to UTF-8.
@@ -340,7 +337,7 @@ struct DDocCommand
     assert(writeReport);
     auto filePath = new FilePath(destDirPath);
     filePath.append("report.txt");
-    scope file = new File(filePath.toString());
+    scope file = new File(filePath.toString(), File.WriteCreate);
     file.write("");
 
     Stdout.formatln("Writing report to '{}'.", filePath.toString());
@@ -370,7 +367,7 @@ struct DDocCommand
     ModuleData.sort(mm);
 
     // Write the legend.
-    file.append(Format("US = {}\nEC = {}\nNP = {}\nUP = {}\n",
+    file.write(Format("US = {}\nEC = {}\nNP = {}\nUP = {}\n",
       titles[0], titles[1], titles[2], titles[3]
     ));
 
@@ -383,43 +380,43 @@ struct DDocCommand
     auto maxStr = Format("{}", maxNameLength);
     auto rowFormat = "{,-"~maxStr~"} | {,6} {,6} {,6} {,6}\n";
     // Write the headers.
-    file.append(Format(rowFormat, "Module", "US", "EC", "NP", "UP"));
+    file.write(Format(rowFormat, "Module", "US", "EC", "NP", "UP"));
     auto ruler = new char[maxNameLength+2+4*7];
     foreach (ref c; ruler)
       c = '-';
-    file.append(ruler~\n);
+    file.write(ruler~\n);
     // Write the table rows.
     foreach (mod; ModuleData.sortedList)
-      file.append(Format(rowFormat, mod.name,
+      file.write(Format(rowFormat, mod.name,
         mod.kind1.length, mod.kind2.length, mod.kind3.length, mod.kind4.length
       ));
-    file.append(ruler~\n);
+    file.write(ruler~\n);
     // Write the totals.
-    file.append(Format(rowFormat, "Totals",
+    file.write(Format(rowFormat, "Totals",
       kind1Total, kind2Total, kind3Total, kind4Total
     ));
 
     // Write the list of locations.
-    file.append("\nList of locations:\n");
+    file.write("\nList of locations:\n");
     foreach (i, title; titles)
     {
-      file.append("\n***** "~title~" ******\n");
+      file.write("\n***** "~title~" ******\n");
       foreach (mod; ModuleData.sortedList)
       {
         // Print list of locations.
         auto kind = ([mod.kind1, mod.kind2, mod.kind3, mod.kind4])[i];
         if (!kind.length)
           continue; // Nothing to print for this module.
-        file.append(mod.name ~ ":\n"); // Module name:
+        file.write(mod.name ~ ":\n"); // Module name:
         char[] line;
         foreach (p; kind)
         { // (x,y) (x,y) etc.
           line ~= p.location.str("({},{}) ");
           if (line.length > 80)
-            file.append("  "~line[0..$-1]~\n), (line = "");
+            file.write("  "~line[0..$-1]~\n), (line = "");
         }
         if (line.length)
-          file.append("  "~line[0..$-1]~\n);
+          file.write("  "~line[0..$-1]~\n);
       }
     }
   }

@@ -3,26 +3,13 @@
 /// $(Maturity average)
 module cmd.Highlight;
 
-import dil.ast.DefaultVisitor,
-       dil.ast.Node,
-       dil.ast.Declaration,
-       dil.ast.Statement,
-       dil.ast.Expression,
-       dil.ast.Types;
-import dil.lexer.Lexer;
-import dil.parser.Parser;
-import dil.semantic.Module;
 import dil.Highlighter;
-import dil.SourceText;
 import dil.Diagnostics;
 import SettingsLoader;
 import Settings;
 import common;
 
-import tango.io.stream.FileStream,
-       tango.io.Buffer,
-       tango.io.Print,
-       tango.io.FilePath;
+import tango.io.device.File;
 
 /// The highlight command.
 struct HighlightCommand
@@ -67,7 +54,7 @@ struct HighlightCommand
 
     auto print = Stdout; // Default to stdout.
     if (filePathDest.length)
-      print = new Print!(char)(Format, new FileOutput(filePathDest));
+      print = new FormatOut(Format, new File(filePathDest, File.WriteCreate));
 
     auto hl = new Highlighter(tags, print, diag);
 

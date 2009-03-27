@@ -8,7 +8,7 @@ import dil.Diagnostics;
 import dil.Messages;
 import common;
 
-import tango.io.File,
+import tango.io.device.File,
        tango.io.FilePath;
 
 /// Represents D source code.
@@ -61,7 +61,7 @@ final class SourceText
     }
 
     // Read the file.
-    auto rawdata = cast(ubyte[]) (new File(filePath)).read();
+    auto rawdata = cast(ubyte[]) File.get(filePath);
     // Convert the data.
     auto converter = Converter(filePath, diag);
     data = converter.data2UTF8(rawdata);

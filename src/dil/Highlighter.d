@@ -16,8 +16,7 @@ import dil.SourceText;
 import dil.Diagnostics;
 import common;
 
-import tango.io.Buffer;
-import tango.io.Print;
+import tango.io.device.Array;
 import tango.io.FilePath;
 
 /// A token and syntax highlighter.
@@ -25,11 +24,11 @@ class Highlighter
 {
   TagMap tags; /// Which tag map to use.
   /// Used to print formatted strings. Can be a file, stdout or buffer.
-  Print!(char) print;
+  FormatOut print;
   Diagnostics diag; /// Collects error messages.
 
   /// Constructs a TokenHighlighter object.
-  this(TagMap tags, Print!(char) print, Diagnostics diag)
+  this(TagMap tags, FormatOut print, Diagnostics diag)
   {
     this.tags = tags;
     this.print = print;
@@ -40,9 +39,9 @@ class Highlighter
   /// Returns: a string with the highlighted tokens.
   string highlightTokens(string text, string filePath, ref uint lines)
   {
-    auto buffer = new GrowBuffer(text.length);
+    auto buffer = new Array(text.length, 1024);
     auto print_saved = print; // Save;
-    print = new Print!(char)(Format, buffer);
+    print = new FormatOut(Format, buffer);
 
     auto lx = new Lexer(new SourceText(filePath, text), diag);
     lx.scanAll();

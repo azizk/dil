@@ -9,14 +9,14 @@ import dil.ast.DefaultVisitor,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
-import tango.io.Print;
+import common;
 
 private alias Declaration D;
 
 /// Translates a syntax tree into German.
 class GermanTranslator : DefaultVisitor
 {
-  Print!(char) put; /// Output buffer.
+  FormatOut put; /// Output buffer.
 
   char[] indent; /// Current indendation string.
   char[] indentStep; /// Appended to indent at each indendation level.
@@ -31,7 +31,7 @@ class GermanTranslator : DefaultVisitor
   /// Params:
   ///   put = buffer to print to.
   ///   indentStep = added at every indendation step.
-  this(Print!(char) put, char[] indentStep)
+  this(FormatOut put, char[] indentStep)
   {
     this.put = put;
     this.indentStep = indentStep;
