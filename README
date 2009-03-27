@@ -13,20 +13,13 @@ How To Compile Dil
 ==================
 In order to compile dil you need to have:
  *) DMD 1.041 (http://www.digitalmars.com/d/1.0/changelog.html)
- *) Tango 0.99.7 (http://dsource.org/projects/tango/)
+ *) Tango 0.99.8 (http://dsource.org/projects/tango/)
  *) DSSS 0.77 (http://dsource.org/projects/dsss/)
     or alternatively:
     Python 2.5 and scripts/build.py
 
 If you can't compile dil because you have a newer version of these programs
 then report the problem to me, please (see Bugs section.)
-
-Regarding Tango on Windows:
-There is a regression in the Path class of Tango. You'll have to wait for
-the next version, or try to compile with a previous version.
-
-Comment out the following in "tango/io/FilePath.d" at line 285:
-  final /*override*/ int opEquals (char[] s)
 
 Regarding DSSS:
 You have to make sure that the correct config file is used.
