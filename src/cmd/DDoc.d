@@ -60,6 +60,8 @@ struct DDocCommand
   /// Executes the doc generation command.
   void run()
   {
+    context.addVersionId("D_Ddoc"); // Define D_Ddoc version identifier.
+
     auto destDirPath = new FilePath(destDirPath);
     destDirPath.exists || destDirPath.createFolder();
 
