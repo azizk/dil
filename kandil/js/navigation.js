@@ -7,6 +7,8 @@ var kandil = {
   originalModuleFQN: "",
   /// An object that represents the symbol tree.
   symbolTree: {},
+  /// The tags with the symbol CSS class.
+  symbolTags: null,
   /// An array of all the lines of this module's source code.
   sourceCode: [],
   /// Represents the package tree (located in generated modules.js).
@@ -78,9 +80,9 @@ $(function() {
 
   createQuickSearchInputs();
 
-  initAPIList();
-
   createSplitbar();
+
+  initSymbolTags();
 
   // Assign click event handlers for the tabs.
   function makeCurrentTab() {
@@ -90,7 +92,10 @@ $(function() {
   }
 
   $("#apitab").click(makeCurrentTab)
-              .click(function() {
+              .click(function lazyLoad() {
+    $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
+    initAPIList();
+  }).click(function() {
     $("#apipanel").show(); // Display the API list.
   });
 
@@ -270,17 +275,27 @@ function handleLoadingModule(event)
   loadNewModule(modFQN);
 }
 
-/// Adds click handlers to symbols and inits the symbol list.
-function initAPIList()
+function initSymbolTags()
 {
-  var symbol_tags = $(".symbol");
+  kandil.symbolTags = $(".symbol");
   // Add code display functionality to symbol links.
-  symbol_tags.click(function(event) {
+  kandil.symbolTags.click(function(event) {
     event.preventDefault();
     showCode($(this));
   });
+  // Prevent permalinks from loading a new page,
+  // in case a different module is loaded.
+  if (kandil.originalModuleFQN != kandil.moduleFQN)
+    $(".symlink").click(function(event) {
+      event.preventDefault();
+      this.scrollIntoView();
+    });
+}
 
-  initializeSymbolTree(symbol_tags);
+/// Adds click handlers to symbols and inits the symbol list.
+function initAPIList()
+{
+  initializeSymbolTree(kandil.symbolTags);
 
   // Create the HTML text and append it to the api panel.
   var ul = createSymbolsUL($("#apipanel"));
@@ -290,12 +305,6 @@ function initAPIList()
     tv.saveState(kandil.moduleFQN);
   });
   installTooltipHandlers();
-
-  if (kandil.originalModuleFQN != kandil.moduleFQN)
-    $(".symlink").click(function(event) {
-      event.preventDefault();
-      this.scrollIntoView();
-    });
 }
 
 /// Delays for 'delay' ms, fades out an element in 'fade' ms and removes it.
@@ -345,7 +354,14 @@ function loadNewModule(modFQN)
         document.title = extractTitle(data);
         $("#kandil-content")[0].innerHTML = extractContent(data);
         $("#apipanel > ul").remove(); // Delete old API list.
-        initAPIList();
+        if ($("#apitab").hasClass("current"))
+          initAPIList();
+        else
+          $("#apitab").click(function lazyLoad() {
+            $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
+            initAPIList();
+          });
+        initSymbolTags();
         $("#apiqs")[0].qs.resetFirstFocusHandler();
         hideLoadingGif();
       }
@@ -371,8 +387,9 @@ function hideLoadingGif()
 }
 
 /// Initializes the symbol list under the API tab.
-function initializeSymbolTree(sym_tags)
+function initializeSymbolTree()
 {
+  var sym_tags = kandil.symbolTags;
   if (!sym_tags.length)
     return;
   // Prepare the symbol list.
