@@ -12,7 +12,7 @@ for the D programming language (1.0 and 2.0).
 How To Compile Dil
 ==================
 In order to compile dil you need to have:
- *) DMD 1.041 (http://www.digitalmars.com/d/1.0/changelog.html)
+ *) DMD 1.042 (http://www.digitalmars.com/d/1.0/changelog.html)
  *) Tango 0.99.8 (http://dsource.org/projects/tango/)
  *) DSSS 0.77 (http://dsource.org/projects/dsss/)
     or alternatively:
