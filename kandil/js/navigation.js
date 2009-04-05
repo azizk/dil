@@ -28,6 +28,7 @@ var kandil = {
     default_tab: "#apitab", /// Initial, active tab ("#apitab", "#modtab").
     apitab_label: getPNGIcon("variable")+"Symbols",
     modtab_label: getPNGIcon("module")+"Modules",
+    dynamic_mod_loading: true, /// Load modules with JavaScript?
     tview_save_delay: 5*1000, /// Delay for saving a treeview's state after
                               /// each collapse and expand event of a node.
     tooltip: {
@@ -110,7 +111,8 @@ $(function() {
     tv.bind("save_state", function() {
       tv.saveState("module_tree");
     });
-    $(".tview a", modpanel).click(handleLoadingModule);
+    if (kandil.settings.dynamic_mod_loading)
+      $(".tview a", modpanel).click(handleLoadingModule);
     kandil.packageTree.initList(); // Init the list property.
   }).click(function() { // Add the display handler.
     $("#modpanel").show(); // Display the modules list.
