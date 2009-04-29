@@ -3449,11 +3449,12 @@ class Parser
     case T.Cast:
       requireNext(T.LParen);
       Type type;
+    version(D2)
+      auto begin2 = token;
       switch (token.kind)
       {
       version(D2)
       {
-      auto begin2 = token;
       case T.Const:
         if (peekNext() != T.RParen)
           goto default; // const ( Type )
