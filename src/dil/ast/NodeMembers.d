@@ -47,7 +47,8 @@ char[] genMembersTable()
   t[N.DollarExpression] = t[N.BoolExpression] =
   t[N.IntExpression] = t[N.RealExpression] = t[N.ComplexExpression] =
   t[N.CharExpression] = t[N.VoidInitExpression] =
-  t[N.AsmLocalSizeExpression] = t[N.AsmRegisterExpression] = [];
+  t[N.AsmLocalSizeExpression] = [];
+  t[N.AsmRegisterExpression] = ["number?"];
   // BinaryExpressions:
   t[N.CondExpression] = ["condition", "lhs", "rhs"];
   t[N.CommaExpression] = t[N.OrOrExpression] = t[N.AndAndExpression] =

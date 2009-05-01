@@ -2970,30 +2970,17 @@ class Parser
       // Register
       case IDK.ST:
         nT();
-        // (1) - (7)
-        int number = -1;
+        Expression number; // (1) - (7)
         if (consumed(T.LParen))
-        {
-          if (token.kind == T.Int32)
-            (number = token.int_), skip(T.Int32);
-          else
-            expected(T.Int32);
+          (number = parseAsmExpression()),
           require(T.RParen);
-        }
         e = new AsmRegisterExpression(register, number);
         break;
-      case IDK.FS:
+      case IDK.ES, IDK.CS, IDK.SS, IDK.DS, IDK.GS, IDK.FS:
         nT();
-        // TODO: is the colon-number part optional?
-        int number = -1;
-        if (consumed(T.Colon))
-        {
-          // :0, :4, :8
-          if (token.kind == T.Int32)
-            (number = token.int_), skip(T.Int32);
-          if (number != 0 && number != 4 && number != 8)
-            error2(MID.ExpectedButFound, "0, 4 or 8", token);
-        }
+        Expression number;
+        if (consumed(T.Colon)) // Segment := XX ":" AsmExpression
+          number = parseAsmExpression();
         e = new AsmRegisterExpression(register, number);
         break;
       case IDK.AL, IDK.AH, IDK.AX, IDK.EAX,
@@ -3002,7 +2989,6 @@ class Parser
            IDK.DL, IDK.DH, IDK.DX, IDK.EDX,
            IDK.BP, IDK.EBP, IDK.SP, IDK.ESP,
            IDK.DI, IDK.EDI, IDK.SI, IDK.ESI,
-           IDK.ES, IDK.CS, IDK.SS, IDK.DS, IDK.GS,
            IDK.CR0, IDK.CR2, IDK.CR3, IDK.CR4,
            IDK.DR0, IDK.DR1, IDK.DR2, IDK.DR3, IDK.DR6, IDK.DR7,
            IDK.TR3, IDK.TR4, IDK.TR5, IDK.TR6, IDK.TR7,

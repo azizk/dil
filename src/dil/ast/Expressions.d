@@ -1144,8 +1144,8 @@ class AsmLocalSizeExpression : Expression
 class AsmRegisterExpression : Expression
 {
   Identifier* register; /// Name of the register.
-  int number; /// ST(0) - ST(7) or FS:0, FS:4, FS:8
-  this(Identifier* register, int number = -1)
+  Expression number; /// ST(0) - ST(7) or FS:0, FS:4, FS:8
+  this(Identifier* register, Expression number = null)
   {
     mixin(set_kind);
     this.register = register;
