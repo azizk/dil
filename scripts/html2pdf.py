@@ -128,7 +128,7 @@ def generate_pdf(module_files, dest, tmp, params):
   html_fragments = []
   sym_dict_all = {} # Group symbols by their kind, e.g. class, struct etc.
   for html_file in module_files:
-    html_str = open(html_file).read()
+    html_str = open(html_file).read().decode("utf-8")
     # Extract module FQN.
     module_fqn = Path(html_file).namebase
     # Extract symbols list, before symbol_rx.
