@@ -44,6 +44,12 @@ SQRT = √
 NAN = NaN
 SUP = <sup>$0</sup>
 BR = <br/>
+SUB = $1<sub>$2</sub>
+POW = $1<sup>$2</sup>
+_PI = $(PI $0)
+D = <span class="inlcode">$0</span>
+LE = <=
+GT = <
 %(favicon)s
 """ % locals()
   )
@@ -95,6 +101,8 @@ def get_tango_path(path):
   is_svn = not path.SRC.exists
   if is_svn:
     path.SRC.mkdir()
+    tango_core_path = path/"lib"/"common"/"tango"/"core"
+    tango_core_files = tango_core_path.glob("*.d")
     from sys import platform
     if platform == "win32" or PyVersion < 2.6:
       # Can't use symlinks. Copy everything.
@@ -102,10 +110,18 @@ def get_tango_path(path):
       (path/"tango").copytree(path.SRC/"tango")
       (path/"std").copytree(path.SRC/"std")
       (path/"object.di").copy(path.SRC)
+      for f in tango_core_files:
+        f.copy(path.SRC/"tango"/"core")
     else: # Use symbolic links on Unix platforms.
       print "Symlinking to tango/, std/ and object.di in import/."
       for name in ("tango", "std", "object.di"):
-        os.symlink((path/name), path.SRC/name)
+        os.symlink(path/name, path.SRC/name)
+      print "Symlinking to files in %s." % tango_core_path
+      for f in tango_core_files:
+        try:
+          os.symlink(f, path.SRC/"tango"/"core"/f.name)
+        except OSError, e:
+          print "Symlink already exists: " + f
   path.license = path/"LICENSE"
   path.favicon = Path("tango_favicon.png") # Look in CWD atm.
   return path
