@@ -42,17 +42,14 @@ var kandil = {
     qs_delay: 500, /// Delay after last key press before quick search starts.
   },
   saved: {
-    splitbar_pos: function(pos) { /// Saves or retrieves the splitbar position.
-      var days = kandil.settings.cookie_life;
-      return pos == undefined ? parseInt(cookie("splitbar_pos")) :
-                                (cookie("splitbar_pos", pos, days), pos);
-    },
-    splitbar_collapsed: function(val) { /// The collapse state.
-      var days = kandil.settings.cookie_life;
-      return val == undefined ? cookie("splitbar_collapsed") == "true" :
-                               (cookie("splitbar_collapsed", val, days), val);
-    },
+    /// The position of the splitbar.
+    splitbar_pos: cookie.func("splitbar_pos", parseInt),
+    /// The collapse state.
+    splitbar_collapsed: cookie.func("splitbar_collapsed",
+                                    function(v){return v == "true"}),
+    active_tab: cookie.func("active_tab"), /// Last active tab.
   },
+  save: null, /// An alias for "saved".
   msg: {
     failed_module: "Failed loading the module from '{0}'!",
     failed_code: "Failed loading code from '{0}'!",
@@ -63,6 +60,7 @@ var kandil = {
     no_match: "No match...",
   },
 };
+kandil.save = kandil.saved;
 
 /// Execute when document is ready.
 $(function() {
@@ -90,6 +88,7 @@ $(function() {
     $(".current", this.parentNode).removeClass('current');
     this.addClass('current');
     $("#panels > *:visible").hide(); // Hide all panels.
+    kandil.save.active_tab("#"+this.id);
   }
 
   $("#apitab").click(makeCurrentTab)
@@ -117,8 +116,9 @@ $(function() {
   }).click(function() { // Add the display handler.
     $("#modpanel").show(); // Display the modules list.
   });
-  // Activate the default tab.
-  $(kandil.settings.default_tab).trigger("click");
+  // Activate the tab that has been saved or activate the default tab.
+  var tab = kandil.saved.active_tab() || kandil.settings.default_tab;
+  $(tab).trigger("click");
 });
 
 /// Creates the quick search text inputs.
