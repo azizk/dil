@@ -1459,8 +1459,6 @@ class Lexer
     assert(0);
   }
 
-version(DDoc)
-{
   /// Scans a delimited string literal.
   ///
   /// $(BNF
@@ -1468,16 +1466,9 @@ version(DDoc)
   ////OpeningDelim  := "[" | "(" | "{" | "&lt;" | Identifier EndOfLine
   ////MatchingDelim := "]" | ")" | "}" | "&gt;" | EndOfLine Identifier
   ////)
-  void scanDelimitedStringLiteral(ref Token t);
-  /// Scans a token string literal.
-  ///
-  /// $(BNF TokenStringLiteral := "q{" Token* "}")
-  void scanTokenStringLiteral(ref Token t);
-}
-else
-version(D2)
-{
   void scanDelimitedStringLiteral(ref Token t)
+  {
+  version(D2)
   {
     assert(p[0] == 'q' && p[1] == '"');
     t.kind = TOK.String;
@@ -1653,9 +1644,15 @@ version(D2)
   Lreturn3: // Error.
     t.str = buffer ~ '\0';
     t.end = p;
+  } // version(D2)
   }
 
+  /// Scans a token string literal.
+  ///
+  /// $(BNF TokenStringLiteral := "q{" Token* "}")
   void scanTokenStringLiteral(ref Token t)
+  {
+  version(D2)
   {
     assert(p[0] == 'q' && p[1] == '{');
     t.kind = TOK.String;
@@ -1755,8 +1752,8 @@ version(D2)
     t.str = buffer;
 
     --inTokenString;
+  } // version(D2)
   }
-} // version(D2)
 
   /// Scans an escape sequence.
   ///
