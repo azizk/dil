@@ -308,10 +308,10 @@ dchar decode(ref wchar* p)
   return ERROR_CHAR;
 }
 
-/// Converts a UTF-8 string to a UTF-16 string.
-wchar[] toUTF16(char[] str)
+/// Converts a string from type A to B.
+B[] convertString(A, B)(A[] str)
 {
-  wchar[] result;
+  B[] result;
   size_t idx;
   while (idx < str.length)
   {
@@ -322,26 +322,17 @@ wchar[] toUTF16(char[] str)
       {}
       c = REPLACEMENT_CHAR;
     }
-    encode(result, c);
+    static if(is(B == dchar))
+      result ~= c; // Just append. No need for an encoding function.
+    else
+      encode(result, c);
   }
   return result;
 }
 
+/// Converts a UTF-8 string to a UTF-16 string.
+alias convertString!(char, wchar) toUTF16;
 /// Converts a UTF-8 string to a UTF-32 string.
-dchar[] toUTF32(char[] str)
-{
-  dchar[] result;
-  size_t idx;
-  while (idx < str.length)
-  {
-    auto c = decode(str, idx);
-    if (c == ERROR_CHAR)
-    { // Skip trail bytes.
-      while (++idx < str.length && isTrailByte(str[idx]))
-      {}
-      c = REPLACEMENT_CHAR;
-    }
-    result ~= c;
-  }
-  return result;
-}
+alias convertString!(char, dchar) toUTF32;
+/// Converts a UTF-16 string to a UTF-8 string.
+alias convertString!(wchar, char) toUTF8;
