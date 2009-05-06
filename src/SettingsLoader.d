@@ -13,6 +13,7 @@ import dil.semantic.Module,
 import dil.Messages;
 import dil.Diagnostics;
 import dil.Compilation;
+import dil.Unicode;
 import Settings;
 import common;
 
@@ -299,27 +300,20 @@ string resolvePath(string execPath, string filePath)
   return path.toString();
 }
 
-version(DDoc)
-{
-  /// Returns the fully qualified path to this executable.
-  char[] GetExecutableFilePath();
-}
-else version(Windows)
-{
-private extern(Windows) uint GetModuleFileNameA(void*, char*, uint);
+extern(Windows) uint GetModuleFileNameW(void*, wchar*, uint);
+extern(C) size_t readlink(char* path, char* buf, size_t bufsize);
 
+/// Returns the fully qualified path to this executable.
 char[] GetExecutableFilePath()
 {
-  alias GetModuleFileNameA GetModuleFileName;
-  char[] buffer = new char[256];
+  version(Windows)
+  {
+  wchar[] buffer = new wchar[256];
   uint count;
 
   while (1)
   {
-    if (buffer is null)
-      return null;
-
-    count = GetModuleFileName(null, buffer.ptr, buffer.length);
+    count = GetModuleFileNameW(null, buffer.ptr, buffer.length);
     if (count == 0)
       return null;
     if (buffer.length != count && buffer[count] == 0)
@@ -329,17 +323,11 @@ char[] GetExecutableFilePath()
   }
   assert(buffer[count] == 0);
   // Reduce buffer to the actual length of the string (excluding '\0'.)
-  if (count < buffer.length)
-    buffer.length = count;
-  return buffer;
-}
-}
-else version(linux)
-{
-private extern(C) size_t readlink(char* path, char* buf, size_t bufsize);
-
-char[] GetExecutableFilePath()
-{
+  buffer.length = count;
+  return toUTF8(buffer);
+  } // version(Windows)
+  else version(linux)
+  {
   char[] buffer = new char[256];
   size_t count;
 
@@ -355,7 +343,11 @@ char[] GetExecutableFilePath()
   }
   buffer.length = count;
   return buffer;
+  } // version(linux)
+  else
+  {
+  static assert(0,
+    "GetExecutableFilePath() is not implemented on this platform.");
+  return "";
+  }
 }
-}
-else
-  static assert(0, "GetExecutableFilePath() is not implemented on this platform.");
