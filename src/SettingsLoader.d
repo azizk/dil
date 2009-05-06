@@ -27,6 +27,7 @@ abstract class SettingsLoader
   Diagnostics diag; /// Collects error messages.
   Module mod; /// Current module.
 
+  /// Constructs a SettingsLoader object.
   this(Diagnostics diag)
   {
     this.diag = diag;
@@ -85,12 +86,13 @@ class ConfigLoader : SettingsLoader
   string dataDir; /// Absolute path to dil's data directory.
   string homePath; /// Path to the home directory.
 
+  /// Constructs a ConfigLoader object.
   this(Diagnostics diag)
   {
     super(diag);
     this.homePath = Environment.get("HOME");
     this.executablePath = GetExecutableFilePath();
-    this.executableDir = (new FilePath(this.executablePath)).folder();
+    this.executableDir = (new FilePath(this.executablePath)).path();
     Environment.set("BINDIR", this.executableDir);
   }
 
@@ -99,6 +101,7 @@ class ConfigLoader : SettingsLoader
     return new ConfigLoader(diag);
   }
 
+  /// Expands environment variables such as ${HOME} in a string.
   static string expandVariables(string val)
   {
     char[] makeString(char* begin, char* end)
@@ -133,6 +136,7 @@ class ConfigLoader : SettingsLoader
     return result;
   }
 
+  /// Loads the configuration file.
   void load()
   {
     // Search for the configuration file.
@@ -252,6 +256,7 @@ class ConfigLoader : SettingsLoader
 /// Loads an associative array from a D module file.
 class TagMapLoader : SettingsLoader
 {
+  /// Constructs a TagMapLoader object.
   this(Diagnostics diag)
   {
     super(diag);
