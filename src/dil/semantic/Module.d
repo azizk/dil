@@ -43,6 +43,7 @@ class Module : ScopeSymbol
   Module[] modules; /// The imported modules.
 
   Diagnostics diag; /// Collects error messages.
+  bool failedLoading; /// True if loading the source file failed.
 
   this()
   {
@@ -58,7 +59,7 @@ class Module : ScopeSymbol
     this();
     this.sourceText = new SourceText(filePath);
     this.diag = diag is null ? new Diagnostics() : diag;
-    this.sourceText.load(diag);
+    this.failedLoading = !this.sourceText.load(diag);
   }
 
   /// Returns the file path of the source text.
@@ -133,7 +134,7 @@ class Module : ScopeSymbol
   /// Returns true if there are errors in the source file.
   bool hasErrors()
   {
-    return parser.errors.length || parser.lexer.errors.length;
+    return parser.errors.length || parser.lexer.errors.length || failedLoading;
   }
 
   /// Returns a list of import paths.

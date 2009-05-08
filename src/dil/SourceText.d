@@ -42,7 +42,8 @@ final class SourceText
   }
 
   /// Loads the source text from a file.
-  void load(Diagnostics diag = null)
+  /// Returns: true for success, false on failure.
+  bool load(Diagnostics diag = null)
   {
     if (!diag)
       diag = new Diagnostics;
@@ -51,13 +52,11 @@ final class SourceText
     scope(failure)
     {
       if (!(new FilePath(this.filePath)).exists())
-        diag ~= new LexerError(new Location(filePath, 0),
-                                  MSG.InexistantFile);
+        diag ~= new LexerError(new Location(filePath, 0), MSG.InexistantFile);
       else
-        diag ~= new LexerError(new Location(filePath, 0),
-                                  MSG.CantReadFile);
+        diag ~= new LexerError(new Location(filePath, 0), MSG.CantReadFile);
       data = "\0";
-      return;
+      return false;
     }
 
     // Read the file.
@@ -66,6 +65,7 @@ final class SourceText
     auto converter = Converter(filePath, diag);
     data = converter.data2UTF8(rawdata);
     addSentinelCharacter();
+    return true;
   }
 
   /// Adds '\0' to the text (if not already there.)
