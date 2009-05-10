@@ -1148,6 +1148,7 @@ class AsmRegisterExpression : Expression
   this(Identifier* register, Expression number = null)
   {
     mixin(set_kind);
+    addOptChild(number);
     this.register = register;
     this.number = number;
   }
