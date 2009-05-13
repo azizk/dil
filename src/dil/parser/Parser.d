@@ -1816,7 +1816,7 @@ class Parser
       break;
     case T.LBrace:
       s = parseScopeStatement();
-      break;
+      return s;
     case T.Semicolon:
       nT();
       s = new EmptyStatement();
@@ -1884,7 +1884,8 @@ class Parser
   /// $(BNF ScopeStatement := NoScopeStatement )
   Statement parseScopeStatement()
   {
-    return new ScopeStatement(parseNoScopeStatement());
+    auto s = parseNoScopeStatement();
+    return set(new ScopeStatement(s), s.begin);
   }
 
   /// $(BNF
