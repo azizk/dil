@@ -362,7 +362,7 @@ bool isStatementStartToken(TOK tok)
   {
   alias TOK T;
   case  T.Align, T.Extern, T.Final, T.Const, T.Auto, T.Identifier, T.Dot,
-        T.Typeof, T.If, T.While, T.Do, T.For, T.Foreach, T.Foreach_reverse,
+        T.Typeof, T.If, T.While, T.Do, T.For, T.Foreach, T.ForeachReverse,
         T.Switch, T.Case, T.Default, T.Continue, T.Break, T.Return, T.Goto,
         T.With, T.Synchronized, T.Try, T.Throw, T.Scope, T.Volatile, T.Asm,
         T.Pragma, T.Mixin, T.Static, T.Debug, T.Version, T.Alias, T.Semicolon,

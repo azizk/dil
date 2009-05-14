@@ -228,7 +228,7 @@ class ForeachStatement : Statement
   /// Returns true if this is a foreach_reverse statement.
   bool isReverse()
   {
-    return tok == TOK.Foreach_reverse;
+    return tok == TOK.ForeachReverse;
   }
 
   mixin(copyMethod);

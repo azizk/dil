@@ -1715,7 +1715,7 @@ class Parser
     case T.For:
       s = parseForStatement();
       break;
-    case T.Foreach, T.Foreach_reverse:
+    case T.Foreach, T.ForeachReverse:
       s = parseForeachStatement();
       break;
     case T.Switch:
@@ -2124,7 +2124,7 @@ class Parser
   ////ForeachRange := Expression ".." Expression # D2.0)
   Statement parseForeachStatement()
   {
-    assert(token.kind == T.Foreach || token.kind == T.Foreach_reverse);
+    assert(token.kind == T.Foreach || token.kind == T.ForeachReverse);
     TOK tok = token.kind;
     nT();
 

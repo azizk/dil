@@ -8,6 +8,10 @@ import dil.lexer.Token,
 
 /// Table of reserved identifiers.
 static const Identifier[] g_reservedIds = [
+  {"__gshared", TOK.Gshared}, // D2.0
+  {"__overloadset", TOK.OverloadSet}, // D2.0
+  {"__thread", TOK.Thread}, // D2.0
+  {"__traits", TOK.Traits}, // D2.0
   {"abstract", TOK.Abstract},
   {"alias", TOK.Alias},
   {"align", TOK.Align},
@@ -47,12 +51,13 @@ static const Identifier[] g_reservedIds = [
   {"float", TOK.Float},
   {"for", TOK.For},
   {"foreach", TOK.Foreach},
-  {"foreach_reverse", TOK.Foreach_reverse},
+  {"foreach_reverse", TOK.ForeachReverse},
   {"function", TOK.Function},
   {"goto", TOK.Goto},
   {"idouble", TOK.Idouble},
   {"if", TOK.If},
   {"ifloat", TOK.Ifloat},
+  {"immutable", TOK.Immutable}, // D2.0
   {"import", TOK.Import},
   {"in", TOK.In},
   {"inout", TOK.Inout},
@@ -81,6 +86,7 @@ static const Identifier[] g_reservedIds = [
   {"ref", TOK.Ref},
   {"return", TOK.Return},
   {"scope", TOK.Scope},
+  {"shared", TOK.Shared}, // D2.0
   {"short", TOK.Short},
   {"static", TOK.Static},
   {"struct", TOK.Struct},
@@ -90,7 +96,6 @@ static const Identifier[] g_reservedIds = [
   {"template", TOK.Template},
   {"this", TOK.This},
   {"throw", TOK.Throw},
-  {"__traits", TOK.Traits}, // D2.0
   {"true", TOK.True},
   {"try", TOK.Try},
   {"typedef", TOK.Typedef},
