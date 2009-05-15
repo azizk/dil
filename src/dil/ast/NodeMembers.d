@@ -19,7 +19,8 @@ char[] genMembersTable()
 
   t[N.CompoundDeclaration] = ["decls[]"];
   t[N.EmptyDeclaration] = t[N.IllegalDeclaration] =
-  t[N.ModuleDeclaration] = t[N.ImportDeclaration] = [];
+  t[N.ModuleDeclaration] = t[N.ImportDeclaration] =
+  t[N.AliasThisDeclaration] = [];
   t[N.AliasDeclaration] = t[N.TypedefDeclaration] = ["decl"];
   t[N.EnumDeclaration] = ["baseType?", "members[]"];
   t[N.EnumMemberDeclaration] = ["type?", "value?"];
@@ -110,8 +111,7 @@ char[] genMembersTable()
   t[N.SwitchStatement] = ["condition", "switchBody"];
   t[N.CaseStatement] = ["values[]", "caseBody"];
   t[N.DefaultStatement] = ["defaultBody"];
-  t[N.ReturnStatement] = ["expr?"];
-  t[N.GotoStatement] = ["caseExpr?"];
+  t[N.ReturnStatement] = t[N.GotoStatement] = ["expr?"];
   t[N.WithStatement] = ["expr", "withBody"];
   t[N.SynchronizedStatement] = ["expr?", "syncBody"];
   t[N.TryStatement] = ["tryBody", "catchBodies[]", "finallyBody?"];

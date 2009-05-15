@@ -10,7 +10,7 @@ import dil.ast.DefaultVisitor,
        dil.ast.Node,
        dil.ast.Declarations,
        dil.ast.Statements,
-       dil.ast.Expression,
+       dil.ast.Expressions,
        dil.ast.Parameters,
        dil.ast.Types;
 import dil.lexer.Token,

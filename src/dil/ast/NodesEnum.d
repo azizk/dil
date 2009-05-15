@@ -23,6 +23,7 @@ static const char[][] g_classNames = [
   "ModuleDeclaration",
   "ImportDeclaration",
   "AliasDeclaration",
+  "AliasThisDeclaration",
   "TypedefDeclaration",
   "EnumDeclaration",
   "EnumMemberDeclaration",

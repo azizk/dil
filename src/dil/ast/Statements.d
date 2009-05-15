@@ -342,13 +342,13 @@ class ReturnStatement : Statement
 class GotoStatement : Statement
 {
   Identifier* ident;
-  Expression caseExpr;
-  this(Identifier* ident, Expression caseExpr)
+  Expression expr;
+  this(Identifier* ident, Expression expr)
   {
     mixin(set_kind);
-    addOptChild(caseExpr);
+    addOptChild(expr);
     this.ident = ident;
-    this.caseExpr = caseExpr;
+    this.expr = expr;
   }
   mixin(copyMethod);
 }

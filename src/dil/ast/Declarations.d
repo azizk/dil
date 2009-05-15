@@ -73,12 +73,14 @@ alias Token*[] ModuleFQN; // Identifier ("." Identifier)*
 
 class ModuleDeclaration : Declaration
 {
+  Token* typeIdent;
   Token* moduleName;
   Token*[] packages;
-  this(ModuleFQN moduleFQN)
+  this(Token* ident, ModuleFQN moduleFQN)
   {
     mixin(set_kind);
     assert(moduleFQN.length != 0);
+    this.typeIdent = ident;
     this.moduleName = moduleFQN[$-1];
     this.packages = moduleFQN[0..$-1];
   }
@@ -158,6 +160,17 @@ class AliasDeclaration : Declaration
     mixin(set_kind);
     addChild(decl);
     this.decl = decl;
+  }
+  mixin(copyMethod);
+}
+
+class AliasThisDeclaration : Declaration
+{
+  Token* ident;
+  this(Token* ident)
+  {
+    mixin(set_kind);
+    this.ident = ident;
   }
   mixin(copyMethod);
 }

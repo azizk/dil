@@ -64,6 +64,8 @@ private static const char[][] predefIdents = [
   "opApply", "opApplyReverse",
   // Entry function:
   "main",
+  // D2 module (system|safe)
+  "system", "safe",
   // From object.d
   "object", "Object", "ClassInfo", "TypeInfo",
   "Exception", "Error", "Interface",

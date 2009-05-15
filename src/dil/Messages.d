@@ -128,6 +128,7 @@ static:
   auto ExpectedIdAfterTypeDot = "expected identifier after '(Type).', not '{}'";
   auto ExpectedModuleIdentifier = "expected module identifier, not '{}'";
   auto IllegalDeclaration = "illegal declaration found: {}";
+  auto ExpectedModuleType = "expected 'system' or 'safe', not '{}'";
   auto ExpectedFunctionName = "expected function name, not '{}'";
   auto ExpectedVariableName = "expected variable name, not '{}'";
   auto ExpectedFunctionBody = "expected function body, not '{}'";

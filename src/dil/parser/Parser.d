@@ -194,11 +194,23 @@ class Parser
     auto begin = token;
     skip(T.Module);
     ModuleFQN moduleFQN;
+    Token* typeId;
+    version(D2)
+    {
+    if (consumed(T.LParen))
+    {
+      typeId = requireIdentifier(MSG.ExpectedModuleType);
+      if (typeId && typeId.ident !is Ident.safe &&
+                    typeId.ident !is Ident.system)
+        error(typeId, MSG.ExpectedModuleType);
+      require(T.RParen);
+    }
+    }
     do
       moduleFQN ~= requireIdentifier(MSG.ExpectedModuleIdentifier);
     while (consumed(T.Dot))
     require(T.Semicolon);
-    return set(new ModuleDeclaration(moduleFQN), begin);
+    return set(new ModuleDeclaration(typeId, moduleFQN), begin);
   }
 
   /// Parses DeclarationDefinitions until the end of file is hit.
@@ -279,6 +291,18 @@ class Parser
       return parseStorageAttribute();
     case T.Alias:
       nT();
+      version (D2)
+      {
+      if (token.kind == T.Identifier && peekNext() == T.This)
+      {
+        auto ident = token;
+        skip(T.Identifier);
+        skip(T.This);
+        require(T.Semicolon);
+        decl = new AliasThisDeclaration(ident);
+        break;
+      }
+      }
       auto d = new AliasDeclaration(parseVariableOrFunction());
       if (auto var = d.decl.Is!(VariablesDeclaration))
         if (auto init = var.firstInit())
@@ -1680,7 +1704,7 @@ class Parser
          //T.Static
     case_parseAttribute:
       s = parseAttributeStatement();
-      return s;
+      break;
     case T.Identifier:
       if (peekNext() == T.Colon)
       {
