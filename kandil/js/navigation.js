@@ -190,7 +190,8 @@ function installTooltipHandlers()
       .fadeIn(tooltip.fadein);
   };
   // TODO: try implementing this with a single mousemove event handler on ul.
-  $(">.root>ul a", ul).mouseover(function(e) {
+  // For some reason $(">.root>ul a", ul) doesn't produce correct results.
+  $("a", $(">.root>ul", ul)).mouseover(function(e) {
     clearTimeout(tooltip.TID);
     tooltip.target = this;
     // Delay normally if this is the first tooltip being displayed, then
