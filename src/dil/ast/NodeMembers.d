@@ -47,7 +47,7 @@ char[] genMembersTable()
   t[N.SuperExpression] = t[N.NullExpression] =
   t[N.DollarExpression] = t[N.BoolExpression] =
   t[N.IntExpression] = t[N.RealExpression] = t[N.ComplexExpression] =
-  t[N.CharExpression] = t[N.VoidInitExpression] =
+  t[N.CharExpression] = t[N.StringExpression] = t[N.VoidInitExpression] =
   t[N.AsmLocalSizeExpression] = [];
   t[N.AsmRegisterExpression] = ["number?"];
   // BinaryExpressions:
@@ -92,7 +92,6 @@ char[] genMembersTable()
   t[N.TraitsExpression] = ["targs"];
   t[N.ArrayInitExpression] = ["keys[?]", "values[]"];
   t[N.StructInitExpression] = ["values[]"];
-  t[N.StringExpression] = [];
   // Statements:
   t[N.IllegalStatement] = t[N.EmptyStatement] =
   t[N.ContinueStatement] = t[N.BreakStatement] =

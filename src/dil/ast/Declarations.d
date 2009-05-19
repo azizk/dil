@@ -771,11 +771,11 @@ class MixinDeclaration : Declaration
   /// IdExpression := IdentifierExpression | TemplateInstanceExpression
   /// MixinTemplate := IdExpression ("." IdExpression)*
   Expression templateExpr;
-  Identifier* mixinIdent; /// Optional mixin identifier.
+  Token* mixinIdent; /// Optional mixin identifier.
   Expression argument; /// "mixin" "(" AssignExpression ")"
   Declaration decls; /// Initialized in the semantic phase.
 
-  this(Expression templateExpr, Identifier* mixinIdent)
+  this(Expression templateExpr, Token* mixinIdent)
   {
     mixin(set_kind);
     addChild(templateExpr);

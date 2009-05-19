@@ -1627,7 +1627,7 @@ class Parser
 
     auto begin = token;
     Expression e;
-    Identifier* mixinIdent;
+    Token* mixinIdent;
 
     if (consumed(T.Dot))
       e = set(new ModuleScopeExpression(parseIdentifierExpression()), begin);
@@ -1637,7 +1637,7 @@ class Parser
     while (consumed(T.Dot))
       e = set(new DotExpression(e, parseIdentifierExpression()), begin);
 
-    mixinIdent = optionalIdentifier2();
+    mixinIdent = optionalIdentifier();
     require(T.Semicolon);
 
     return new Class(e, mixinIdent);
@@ -2259,7 +2259,7 @@ class Parser
   Statement parseContinueStatement()
   {
     skip(T.Continue);
-    auto ident = optionalIdentifier2();
+    auto ident = optionalIdentifier();
     require(T.Semicolon);
     return new ContinueStatement(ident);
   }
@@ -2268,7 +2268,7 @@ class Parser
   Statement parseBreakStatement()
   {
     skip(T.Break);
-    auto ident = optionalIdentifier2();
+    auto ident = optionalIdentifier();
     require(T.Semicolon);
     return new BreakStatement(ident);
   }
@@ -2289,23 +2289,21 @@ class Parser
   Statement parseGotoStatement()
   {
     skip(T.Goto);
-    Identifier* ident;
+    auto ident = token;
     Expression caseExpr;
     switch (token.kind)
     {
     case T.Case:
-      ident = token.ident;
       nT();
       if (token.kind == T.Semicolon)
         break;
       caseExpr = parseExpression();
       break;
     case T.Default:
-      ident = token.ident;
       nT();
       break;
     default:
-      ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
+      ident = requireIdentifier(MSG.ExpectedAnIdentifier);
     }
     require(T.Semicolon);
     return new GotoStatement(ident, caseExpr);
@@ -2397,21 +2395,18 @@ class Parser
   {
     skip(T.Scope);
     skip(T.LParen);
-    auto condition = requireIdentifier2(MSG.ExpectedScopeIdentifier);
+    auto condition = requireIdentifier(MSG.ExpectedScopeIdentifier);
     if (condition)
-      switch (condition.idKind)
+      switch (condition.ident.idKind)
       {
       case IDK.exit, IDK.success, IDK.failure: break;
-      case IDK.Empty: break; // Error has already been reported if empty.
       default:
-        error2(MSG.InvalidScopeIdentifier, this.prevToken);
+        if (condition.ident != Ident.Empty) // Don't report error twice.
+          error2(MSG.InvalidScopeIdentifier, condition);
       }
     require(T.RParen);
-    Statement scopeBody;
-    if (token.kind == T.LBrace)
-      scopeBody = parseScopeStatement();
-    else
-      scopeBody = parseNoScopeStatement();
+    auto scopeBody = (token.kind == T.LBrace) ?
+                      parseScopeStatement() : parseNoScopeStatement();
     return new ScopeGuardStatement(condition, scopeBody);
   }
 
@@ -3765,7 +3760,7 @@ class Parser
     {
     case T.Traits:
       requireNext(T.LParen);
-      auto ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
+      auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
       TemplateArguments args;
       if (token.kind == T.Comma)
         args = parseTemplateArguments2();
@@ -4523,10 +4518,19 @@ class Parser
   }
 
   /// ditto
-  Identifier* optionalIdentifier2()
+  Identifier* requireIdentifier2(char[] errorMsg)
   {
-    auto idtok = optionalIdentifier();
+    auto idtok = requireIdentifier(errorMsg);
     return idtok ? idtok.ident : null;
+  }
+
+  /// Reports an error if the current token is not an identifier.
+  /// Params:
+  ///   mid = the error message ID to be used.
+  /// Returns: null or the identifier token.
+  Token* requireIdentifier(MID mid)
+  {
+    return requireIdentifier(GetMsg(mid));
   }
 
   /// Reports an error if the current token is not an identifier.
@@ -4534,28 +4538,6 @@ class Parser
   ///   errorMsg = the error message to be used.
   /// Returns: null or the identifier token.
   Token* requireIdentifier(char[] errorMsg)
-  {
-    return requireIdToken(errorMsg);
-  }
-
-  /// ditto
-  Identifier* requireIdentifier2(char[] errorMsg)
-  {
-    auto idtok = requireIdToken(errorMsg);
-    return idtok ? idtok.ident : null;
-  }
-
-  /// Reports an error if the current token is not an identifier.
-  /// Params:
-  ///   mid = the error message ID to be used.
-  /// Returns: null or the identifier.
-  Token* requireIdentifier(MID mid)
-  {
-    return requireIdToken(GetMsg(mid));
-  }
-
-  /// Returns an identifier token.
-  Token* requireIdToken(char[] errorMsg)
   {
     Token* idtok;
     if (token.kind == T.Identifier)

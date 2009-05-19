@@ -1024,7 +1024,7 @@ class ParenExpression : Expression
 // {
 class TraitsExpression : Expression
 {
-  Identifier* ident;
+  Token* ident;
   TemplateArguments targs;
   this(typeof(ident) ident, typeof(targs) targs)
   {

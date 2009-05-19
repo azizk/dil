@@ -307,8 +307,8 @@ class DefaultStatement : Statement
 
 class ContinueStatement : Statement
 {
-  Identifier* ident;
-  this(Identifier* ident)
+  Token* ident;
+  this(Token* ident)
   {
     mixin(set_kind);
     this.ident = ident;
@@ -318,8 +318,8 @@ class ContinueStatement : Statement
 
 class BreakStatement : Statement
 {
-  Identifier* ident;
-  this(Identifier* ident)
+  Token* ident;
+  this(Token* ident)
   {
     mixin(set_kind);
     this.ident = ident;
@@ -341,9 +341,9 @@ class ReturnStatement : Statement
 
 class GotoStatement : Statement
 {
-  Identifier* ident;
+  Token* ident;
   Expression expr;
-  this(Identifier* ident, Expression expr)
+  this(Token* ident, Expression expr)
   {
     mixin(set_kind);
     addOptChild(expr);
@@ -433,9 +433,9 @@ class FinallyStatement : Statement
 
 class ScopeGuardStatement : Statement
 {
-  Identifier* condition;
+  Token* condition;
   Statement scopeBody;
-  this(Identifier* condition, Statement scopeBody)
+  this(Token* condition, Statement scopeBody)
   {
     mixin(set_kind);
     addChild(scopeBody);
@@ -536,8 +536,8 @@ class PragmaStatement : Statement
 class MixinStatement : Statement
 {
   Expression templateExpr;
-  Identifier* mixinIdent;
-  this(Expression templateExpr, Identifier* mixinIdent)
+  Token* mixinIdent;
+  this(Expression templateExpr, Token* mixinIdent)
   {
     mixin(set_kind);
     addChild(templateExpr);
