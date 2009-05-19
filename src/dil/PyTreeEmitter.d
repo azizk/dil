@@ -261,13 +261,16 @@ class PyTreeEmitter : Visitor
   /// Writes the list of nodes separated by commas.
   void write(Node[] nodes)
   {
-    if (!nodes.length)
-      return;
-    visitN(nodes[0]);
-    foreach (n; nodes[1..$])
-      write(","), visitN(n);
-    if (nodes.length == 1)
-      write(","); // Trailing comma for single element tuples.
+    write("(");
+    if (nodes.length)
+    {
+      visitN(nodes[0]);
+      foreach (n; nodes[1..$])
+        write(","), visitN(n);
+      if (nodes.length == 1)
+        write(","); // Trailing comma for single element tuples.
+    }
+    write(")");
   }
 
 
@@ -288,9 +291,7 @@ override
   D visit(CompoundDeclaration d)
   {
     begin(d);
-    write("(");
     write(d.decls);
-    write(")");
     end(d);
     return d;
   }
@@ -372,9 +373,8 @@ override
   {
     begin(d);
     d.baseType ? visitT(d.baseType) : write("None");
-    write(",(");
+    write(",");
     write(d.members);
-    write(")");
     end(d);
     return d;
   }
@@ -392,9 +392,8 @@ override
   D visit(ClassDeclaration d)
   {
     begin(d);
-    write("(");
     write(d.bases);
-    write("),");
+    write(",");
     d.decls ? visitD(d.decls) : write("None");
     end(d);
     return d;
@@ -403,9 +402,8 @@ override
   D visit(InterfaceDeclaration d)
   {
     begin(d);
-    write("(");
     write(d.bases);
-    write("),");
+    write(",");
     d.decls ? visitD(d.decls) : write("None");
     end(d);
     return d;
@@ -638,9 +636,9 @@ override
   {
     begin(d);
     write(indexOf(d.idtok));
-    write(",(");
+    write(",");
     write(d.args);
-    write("),");
+    write(",");
     visitD(d.decls);
     end(d);
     return d;
@@ -658,9 +656,7 @@ override
   S visit(CompoundStatement s)
   {
     begin(s);
-    write("(");
     write(s.stmnts);
-    write(")");
     end(s);
     return s;
   }
@@ -809,9 +805,8 @@ override
   S visit(CaseStatement s)
   {
     begin(s);
-    write("(");
     write(s.values);
-    write("),");
+    write(",");
     visitS(s.caseBody);
     end(s);
     return s;
@@ -883,9 +878,9 @@ override
   {
     begin(s);
     visitS(s.tryBody);
-    write(",(");
+    write(",");
     write(s.catchBodies);
-    write("),");
+    write(",");
     s.finallyBody ? visitS(s.finallyBody) : write("None");
     end(s);
     return s;
@@ -947,9 +942,8 @@ override
   {
     begin(s);
     s.ident ? write(indexOf(s.begin)) : write("None");
-    write(",(");
+    write(",");
     write(s.operands);
-    write(")");
     end(s);
     return s;
   }
@@ -969,9 +963,9 @@ override
   {
     begin(s);
     s.ident ? write(indexOf(s.ident)) : write("None");
-    write(",(");
+    write(",");
     write(s.args);
-    write("),");
+    write(",");
     visitS(s.pragmaBody);
     end(s);
     return s;
@@ -1455,13 +1449,11 @@ override
   E visit(NewExpression e)
   {
     begin(e);
-    write("(");
     write(e.newArgs);
-    write("),");
+    write(",");
     visitT(e.type);
-    write(",(");
+    write(",");
     write(e.ctorArgs);
-    write(")");
     end(e);
     return e;
   }
@@ -1469,13 +1461,12 @@ override
   E visit(NewAnonClassExpression e)
   {
     begin(e);
-    write("(");
     write(e.newArgs);
-    write("),(");
+    write(",");
     write(e.bases);
-    write("),(");
+    write(",");
     write(e.ctorArgs);
-    write("),");
+    write(",");
     visitD(e.decls);
     end(e);
     return e;
@@ -1503,9 +1494,8 @@ override
   {
     begin(e);
     visitE(e.una);
-    write(",(");
+    write(",");
     write(e.args);
-    write(")");
     end(e);
     return e;
   }
@@ -1639,9 +1629,7 @@ override
   E visit(ArrayLiteralExpression e)
   {
     begin(e);
-    write("(");
     write(e.values);
-    write(")");
     end(e);
     return e;
   }
@@ -1649,11 +1637,9 @@ override
   E visit(AArrayLiteralExpression e)
   {
     begin(e);
-    write("(");
     write(e.keys);
-    write("),(");
+    write(",");
     write(e.values);
-    write(")");
     end(e);
     return e;
   }
@@ -1762,9 +1748,8 @@ override
     write("(");
     foreach (k; e.keys)
       (k ? visitE(k) : write("None")), write(",");
-    write("),(");
+    write("),");
     write(e.values);
-    write(")");
     end(e);
     return e;
   }
@@ -1775,9 +1760,8 @@ override
     write("(");
     foreach (i; e.idents)
       write(indexOf(i)~",");
-    write("),(");
+    write("),");
     write(e.values);
-    write(")");
     end(e);
     return e;
   }
@@ -1996,9 +1980,7 @@ override
   N visit(Parameters p)
   {
     begin(p);
-    write("(");
     write(p.children);
-    write(")");
     end(p);
     return p;
   }
@@ -2055,9 +2037,7 @@ override
   N visit(TemplateParameters p)
   {
     begin(p);
-    write("(");
     write(p.children);
-    write(")");
     end(p);
     return p;
   }
@@ -2065,9 +2045,7 @@ override
   N visit(TemplateArguments p)
   {
     begin(p);
-    write("(");
     write(p.children);
-    write(")");
     end(p);
     return p;
   }
