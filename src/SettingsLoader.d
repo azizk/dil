@@ -20,6 +20,7 @@ import common;
 import tango.io.FilePath;
 import tango.sys.Environment;
 import tango.util.PathUtil : normalize;
+import tango.stdc.stringz : fromStringz;
 
 /// Loads settings from a D module file.
 abstract class SettingsLoader
@@ -307,6 +308,7 @@ string resolvePath(string execPath, string filePath)
 
 extern(Windows) uint GetModuleFileNameW(void*, wchar*, uint);
 extern(C) size_t readlink(char* path, char* buf, size_t bufsize);
+extern(C) char* realpath(char* base, char* dest);
 
 /// Returns the fully qualified path to this executable,
 /// or arg0 on failure or when a platform is unsupported.
@@ -351,6 +353,13 @@ char[] GetExecutableFilePath(char[] arg0)
   buffer.length = count;
   return buffer;
   } // version(linux)
+  else version(darwin)
+  {
+  char[] buffer = new char[1024];  // 1024 = PATH_MAX on Mac OS X 10.5
+  if (!realpath(program_name.ptr, buffer.ptr))
+    return arg0;
+  return fromStringz(buffer.ptr);
+  } // version(darwin)
   else
   {
   pragma(msg, "Warning: GetExecutableFilePath() is not implemented on this platform.");
