@@ -28,6 +28,7 @@ import cmd.Highlight;
 import cmd.Statistics;
 import cmd.ImportGraph;
 import cmd.DDoc;
+import dil.PyTreeEmitter;
 
 import Settings;
 import SettingsLoader;
@@ -87,6 +88,52 @@ void main(char[][] args)
         cmd.filePaths ~= arg;
     }
     cmd.run();
+    diag.hasInfo && printErrors(diag);
+    break;
+  case "pytree", "py":
+    if (args.length < 4)
+      return printHelp(command);
+    auto dest = args[2];
+    string[] filePaths;
+    string format = "d_{0}.py";
+    bool verbose;
+    // Parse arguments.
+    bool skip;
+    args = args[3..$];
+    foreach (i, arg; args)
+    {
+      if (skip)
+        skip = false;
+      else if (strbeg(arg, "--fmt="))
+        format = arg[6..$];
+      else if (arg == "--fmt" && i+1 != args.length) {
+        format = args[i+1];
+        skip = true; // Skip next argument.
+      }
+      else if (arg == "-v")
+        verbose = true;
+      else
+        filePaths ~= arg;
+    }
+
+    // Execute the command.
+    foreach (path; filePaths)
+    {
+      auto modul = new Module(path, diag);
+      modul.parse();
+      if (!modul.hasErrors)
+      {
+        auto py = new PyTreeEmitter(modul);
+        auto modFQN = replace(modul.getFQN(), '.', '_');
+        auto pckgName = replace(modul.packageName, '.', '_');
+        auto modName = modul.moduleName;
+        auto fileName = Format(format, modFQN, pckgName, modName);
+        if (verbose)
+          Stdout(path~" > "~dest~"/"~fileName).newline;
+        auto f = new File(dest~"/"~fileName, File.WriteCreate);
+        f.write(py.emit());
+      }
+    }
     diag.hasInfo && printErrors(diag);
     break;
   case "ddoc", "d":
@@ -364,10 +411,11 @@ const char[] COMMANDS =
   "  ddoc (d)\n"
   "  highlight (hl)\n"
   "  importgraph (igraph)\n"
+  "  python (py)\n"
+  "  settings (set)\n"
   "  statistics (stats)\n"
   "  tokenize (tok)\n"
-  "  translate (trans)\n"
-  "  settings (set)\n";
+  "  translate (trans)\n";
 
 bool strbeg(char[] str, char[] begin)
 {
@@ -481,6 +529,23 @@ Options:
 Example:
   dil c src/main.d -Isrc/`;
     break;
+  case "py", "python":
+    msg = `Write a D parse tree to a Python source file.
+Usage:
+  dil python Destination file.d [file2.d, ...] [Options]
+
+Options:
+  --tokens         : only emit a list of the tokens (N/A yet)
+  --fmt            : the format string for the destination file names
+                     Default: d_{0}.py
+                     {0} = fully qualified module name (e.g. dil_PyTreeEmitter)
+                     {1} package name (e.g. dil, dil_ast, dil_lexer etc.)
+                     {2} module name (e.g. PyTreeEmitter)
+  -v               : verbose output
+
+Example:
+  dil py pyfiles/ src/dil/PyTreeEmitter.d`;
+    break;
   case "ddoc", "d":
     msg = `Generate documentation from DDoc comments in D source files.
 Usage:
@@ -505,8 +570,7 @@ Options:
 Example:
   dil d doc/ src/main.d data/macros_dil.ddoc -i -m=doc/modules.txt
   dil d tangodoc/ -v -version=Windows -version=Tango -version=DDoc \
-      --kandil kandil/kandil.ddoc tangosrc/file_1.d tangosrc/file_n.d
-`;
+        --kandil kandil/kandil.ddoc tangosrc/file_1.d tangosrc/file_n.d`;
     break;
   case "hl", "highlight":
 //     msg = GetMsg(MID.HelpGenerate);
