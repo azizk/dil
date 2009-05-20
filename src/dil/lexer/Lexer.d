@@ -14,6 +14,7 @@ import dil.CompilerInfo;
 import dil.Unicode;
 import dil.SourceText;
 import dil.Time;
+import util.uni;
 import common;
 
 import tango.stdc.stdlib : strtof, strtod, strtold;
