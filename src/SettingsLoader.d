@@ -87,18 +87,18 @@ class ConfigLoader : SettingsLoader
   string homePath; /// Path to the home directory.
 
   /// Constructs a ConfigLoader object.
-  this(Diagnostics diag)
+  this(Diagnostics diag, char[] arg0)
   {
     super(diag);
     this.homePath = Environment.get("HOME");
-    this.executablePath = GetExecutableFilePath();
+    this.executablePath = GetExecutableFilePath(arg0);
     this.executableDir = (new FilePath(this.executablePath)).path();
     Environment.set("BINDIR", this.executableDir);
   }
 
-  static ConfigLoader opCall(Diagnostics diag)
+  static ConfigLoader opCall(Diagnostics diag, char[] arg0)
   {
-    return new ConfigLoader(diag);
+    return new ConfigLoader(diag, arg0);
   }
 
   /// Expands environment variables such as ${HOME} in a string.
@@ -308,8 +308,11 @@ string resolvePath(string execPath, string filePath)
 extern(Windows) uint GetModuleFileNameW(void*, wchar*, uint);
 extern(C) size_t readlink(char* path, char* buf, size_t bufsize);
 
-/// Returns the fully qualified path to this executable.
-char[] GetExecutableFilePath()
+/// Returns the fully qualified path to this executable,
+/// or arg0 on failure or when a platform is unsupported.
+/// Params:
+///   arg0 = argv[0] from main(char[][] argv).
+char[] GetExecutableFilePath(char[] arg0)
 {
   version(Windows)
   {
@@ -320,7 +323,7 @@ char[] GetExecutableFilePath()
   {
     count = GetModuleFileNameW(null, buffer.ptr, buffer.length);
     if (count == 0)
-      return null;
+      return arg0;
     if (buffer.length != count && buffer[count] == 0)
       break;
     // Increase size of buffer
@@ -337,11 +340,10 @@ char[] GetExecutableFilePath()
   size_t count;
 
   while (1)
-  {
-    // This won't work on very old Linux systems.
+  { // This won't work on very old Linux systems.
     count = readlink("/proc/self/exe".ptr, buffer.ptr, buffer.length);
     if (count == -1)
-      return null;
+      return arg0;
     if (count < buffer.length)
       break;
     buffer.length = buffer.length * 2;
@@ -351,8 +353,7 @@ char[] GetExecutableFilePath()
   } // version(linux)
   else
   {
-  static assert(0,
-    "GetExecutableFilePath() is not implemented on this platform.");
-  return "";
+  pragma(msg, "Warning: GetExecutableFilePath() is not implemented on this platform.");
+  return arg0;
   }
 }

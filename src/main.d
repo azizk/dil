@@ -45,7 +45,7 @@ import tango.text.Ascii : icompare, toUpper;
 void main(char[][] args)
 {
   auto diag = new Diagnostics();
-  ConfigLoader(diag).load();
+  ConfigLoader(diag, args[0]).load();
   if (diag.hasInfo)
     return printErrors(diag);
 
