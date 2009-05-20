@@ -78,7 +78,7 @@ class Path(unicode):
   def walk(self, **kwargs):
     if "followlinks" in kwargs:
       from sys import version_info as vi
-      if vi[0]+vi[1]*10 < 26: # Only Python 2.6 or newer supports followlinks.
+      if vi[0]*10+vi[1] < 26: # Only Python 2.6 or newer supports followlinks.
         del kwargs["followlinks"]
     return os.walk(self, **kwargs)
 
