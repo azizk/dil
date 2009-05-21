@@ -2232,6 +2232,8 @@ class Parser
            token.kind != T.RBrace &&
            token.kind != T.EOF)
       s ~= parseStatement();
+    if (begin is token) // Nothing consumed.
+      begin = this.prevToken;
     set(s, begin);
     return set(new ScopeStatement(s), begin);
   }
@@ -2548,7 +2550,7 @@ class Parser
     while (token.kind != T.RBrace && token.kind != T.EOF)
       ss ~= parseAsmStatement();
     requireClosing(T.RBrace, leftBrace);
-    return new AsmBlockStatement(ss);
+    return new AsmBlockStatement(set(ss, leftBrace));
   }
 
   /// $(BNF
@@ -4527,7 +4529,7 @@ class Parser
   /// Reports an error if the current token is not an identifier.
   /// Params:
   ///   mid = the error message ID to be used.
-  /// Returns: null or the identifier token.
+  /// Returns: the identifier token or null.
   Token* requireIdentifier(MID mid)
   {
     return requireIdentifier(GetMsg(mid));
@@ -4536,7 +4538,7 @@ class Parser
   /// Reports an error if the current token is not an identifier.
   /// Params:
   ///   errorMsg = the error message to be used.
-  /// Returns: null or the identifier token.
+  /// Returns: the identifier token or null.
   Token* requireIdentifier(char[] errorMsg)
   {
     Token* idtok;

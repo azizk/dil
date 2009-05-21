@@ -220,7 +220,7 @@ class PyTreeEmitter : Visitor
     text ~= writeTokenList(modul.firstToken(), index);
     text ~= "tokens = token.create_tokens(token_list)\n\n";
     text ~= "def t(beg,end):\n"
-            "  return (tokens[beg], tokens[end])\n"
+            "  return (tokens[beg], tokens[beg+end])\n"
             "def tl(*args):\n"
             "  return [tokens[i] for i in args]\n"
             "  #return map(tokens.__getitem__, args)\n"
@@ -283,7 +283,9 @@ class PyTreeEmitter : Visitor
   void end(Node n)
   {
     assert(n !is null && n.begin !is null && n.end !is null);
-    write(",t("~toString(index[n.begin])~","~toString(index[n.end])~"))");
+    auto i1 = index[n.begin], i2 = index[n.end];
+    assert(i1 <= i2, Format("ops, Parser or AST buggy? {}@{},i1={},i2={}", g_classNames[n.kind], n.begin.getRealLocation().str(), i1, i2));
+    write(",t("~toString(i1)~","~toString(i2-i1)~"))");
   }
 
 override
@@ -1759,7 +1761,7 @@ override
     begin(e);
     write("(");
     foreach (i; e.idents)
-      write(indexOf(i)~",");
+      (i ? write(indexOf(i)) : write("None")), write(",");
     write("),");
     write(e.values);
     end(e);
@@ -1898,7 +1900,7 @@ override
     visitT(t.next);
     t.assocType ? visitT(t.assocType) : write("None");
     write(",");
-    t.index1 ? visitE(t.index2) : write("None");
+    t.index1 ? visitE(t.index1) : write("None");
     write(",");
     t.index2 ? visitE(t.index2) : write("None");
     end(t);
