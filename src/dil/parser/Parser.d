@@ -1629,8 +1629,8 @@ class Parser
     Expression e;
     Token* mixinIdent;
 
-    if (consumed(T.Dot))
-      e = set(new ModuleScopeExpression(parseIdentifierExpression()), begin);
+    if (token.kind == T.Dot)
+      e = set(new ModuleScopeExpression(), begin, begin);
     else
       e = parseIdentifierExpression();
 
@@ -2864,8 +2864,7 @@ class Parser
   /// $(BNF
   ////AsmUnaryExpression := AsmPrimaryExpression |
   ////  AsmTypeExpression | AsmOffsetExpression | AsmSegExpression |
-  ////  SignExpression | NotExpression | ComplementExpression |
-  ////  DotExpression
+  ////  SignExpression | NotExpression | ComplementExpression
   ////AsmTypeExpression := TypePrefix "ptr" AsmExpression
   ////TypePrefix := "byte" | "shor" | "int" | "float" | "double" | "real"
   ////              "near" | "far" | "word" | "dword" | "qword"
@@ -2874,8 +2873,6 @@ class Parser
   ////SignExpression := ("+" | "-") AsmUnaryExpression
   ////NotExpression := "!" AsmUnaryExpression
   ////ComplementExpression := "~" AsmUnaryExpression
-  ////ModuleScopeExpression := "." IdentifierExpression
-  ////DotExpression := ModuleScopeExpression ("." IdentifierExpression)*
   ////)
   Expression parseAsmUnaryExpression()
   {
@@ -2924,15 +2921,6 @@ class Parser
       nT();
       e = new CompExpression(parseAsmUnaryExpression());
       break;
-    case T.Dot:
-      nT();
-      e = new ModuleScopeExpression(parseIdentifierExpression());
-      while (consumed(TOK.Dot))
-      {
-        e = new DotExpression(e, parseIdentifierExpression());
-        set(e, begin);
-      }
-      break;
     default:
     LparseAsmPrimaryExpression:
       e = parseAsmPrimaryExpression();
@@ -2952,7 +2940,9 @@ class Parser
   ////AsmBracketExpression :=  "[" AsmExpression "]"
   ////AsmLocalSizeExpression := "__LOCAL_SIZE"
   ////AsmRegisterExpression := ...
-  ////DotExpression := IdentifierExpression ("." IdentifierExpression)+)
+  ////DotExpression := (ModuleScopeExpression | IdentifierExpression)
+  ////                 ("." IdentifierExpression)+
+  ////ModuleScopeExpression := ".")
   Expression parseAsmPrimaryExpression()
   {
     auto begin = token;
@@ -3023,12 +3013,14 @@ class Parser
         break;
       default:
         e = parseIdentifierExpression();
-        while (consumed(TOK.Dot))
-        {
-          e = new DotExpression(e, parseIdentifierExpression());
-          set(e, begin);
-        }
+        while (consumed(T.Dot))
+          e = set(new DotExpression(e, parseIdentifierExpression()), begin);
       } // end of switch
+      break;
+    case T.Dot:
+      e = set(new ModuleScopeExpression(), begin, begin);
+      while (consumed(T.Dot))
+        e = set(new DotExpression(e, parseIdentifierExpression()), begin);
       break;
     default:
       error2(MID.ExpectedButFound, "Expression", token);
@@ -3400,7 +3392,7 @@ class Parser
   ////  NewExpression | AddressExpression | PreIncrExpression |
   ////  PreIncrExpression | DerefExpression | SignExpression |
   ////  NotExpression | ComplementExpression | DeleteExpression |
-  ////  CastExpression | TypeDotIdExpression | ModuleScopeExpression
+  ////  CastExpression | TypeDotIdExpression
   ////AddressExpression     := "&" UnaryExpression
   ////PreIncrExpression     := "++" UnaryExpression
   ////PreDecrExpression     := "--" UnaryExpression
@@ -3410,8 +3402,7 @@ class Parser
   ////ComplementExpresson   := "~" UnaryExpression
   ////DeleteExpression      := delete UnaryExpression
   ////CastExpression        := cast "(" Type ")" UnaryExpression
-  ////TypeDotIdExpression   := "(" Type ")" "." Identifier
-  ////ModuleScopeExpression := "." IdentifierExpression)
+  ////TypeDotIdExpression   := "(" Type ")" "." Identifier)
   Expression parseUnaryExpression()
   {
     auto begin = token;
@@ -3502,10 +3493,6 @@ class Parser
         break;
       }
       goto default;
-    case T.Dot:
-      nT();
-      e = new ModuleScopeExpression(parseIdentifierExpression());
-      break;
     default:
       e = parsePrimaryExpression();
       return e;
@@ -3534,7 +3521,8 @@ class Parser
     return set(e, begin);
   }
 
-  /// $(BNF PrimaryExpression := ...)
+  /// $(BNF PrimaryExpression := ... | ModuleScopeExpression
+  ////ModuleScopeExpression := ".")
   Expression parsePrimaryExpression()
   {
     auto begin = token;
@@ -3547,6 +3535,10 @@ class Parser
     case T.Typeof:
       e = new TypeofExpression(parseTypeofType());
       break;
+    case T.Dot:
+      // No nT() because we want a DotExpression to be parsed afterwards.
+      e = set(new ModuleScopeExpression(), begin, begin);
+      return e;
     case T.This:
       nT();
       e = new ThisExpression();

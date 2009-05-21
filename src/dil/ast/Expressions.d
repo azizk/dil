@@ -567,20 +567,6 @@ class SliceExpression : UnaryExpression
   mixin(copyMethod);
 }
 
-/// Module scope operator:
-/// $(BNF "." (IdentifierExpression | TemplateInstanceExpression))
-class ModuleScopeExpression : UnaryExpression
-{
-  this(Expression e)
-  {
-    super(e);
-    assert(e.kind == NodeKind.IdentifierExpression ||
-           e.kind == NodeKind.TemplateInstanceExpression
-    );
-    mixin(set_kind);
-  }
-}
-
 /*++++++++++++++++++++++
 + Primary Expressions: +
 ++++++++++++++++++++++*/
@@ -600,6 +586,17 @@ class IdentifierExpression : Expression
     return begin;
   }
 
+  mixin(copyMethod);
+}
+
+/// Module scope operator:
+/// $(BNF ModuleScopeExpression := ".")
+class ModuleScopeExpression : Expression
+{
+  this()
+  {
+    mixin(set_kind);
+  }
   mixin(copyMethod);
 }
 

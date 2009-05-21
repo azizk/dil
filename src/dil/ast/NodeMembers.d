@@ -48,7 +48,7 @@ char[] genMembersTable()
   t[N.DollarExpression] = t[N.BoolExpression] =
   t[N.IntExpression] = t[N.RealExpression] = t[N.ComplexExpression] =
   t[N.CharExpression] = t[N.StringExpression] = t[N.VoidInitExpression] =
-  t[N.AsmLocalSizeExpression] = [];
+  t[N.ModuleScopeExpression] = t[N.AsmLocalSizeExpression] = [];
   t[N.AsmRegisterExpression] = ["number?"];
   // BinaryExpressions:
   t[N.CondExpression] = ["condition", "lhs", "rhs"];
@@ -69,7 +69,7 @@ char[] genMembersTable()
   t[N.AddressExpression] = t[N.PreIncrExpression] = t[N.PreDecrExpression] =
   t[N.PostIncrExpression] = t[N.PostDecrExpression] = t[N.DerefExpression] =
   t[N.SignExpression] = t[N.NotExpression] = t[N.CompExpression] =
-  t[N.CallExpression] = t[N.DeleteExpression] = t[N.ModuleScopeExpression] =
+  t[N.CallExpression] = t[N.DeleteExpression] =
   t[N.AsmTypeExpression] = t[N.AsmOffsetExpression] =
   t[N.AsmSegExpression] = ["una"];
   t[N.CastExpression] = ["type", "una"];

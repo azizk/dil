@@ -61,7 +61,7 @@ class QualifiedType : TypeNode
   mixin(copyMethod);
 }
 
-/// "." Type
+/// $(BNF ModuleScopeType := ".")
 class ModuleScopeType : TypeNode
 {
   this()

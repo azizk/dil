@@ -1527,7 +1527,6 @@ override
   E visit(ModuleScopeExpression e)
   {
     begin(e);
-    visitE(e.una);
     end(e);
     return e;
   }

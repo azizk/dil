@@ -1399,11 +1399,6 @@ override
   {
     if (e.hasType)
       return e;
-    bool resetIdScope = idScope is null;
-    idScope = modul;
-    e.una = visitE(e.una);
-    e.type = e.una.type;
-    resetIdScope && (idScope = null);
     return e;
   }
 
