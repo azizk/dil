@@ -356,7 +356,7 @@ char[] GetExecutableFilePath(char[] arg0)
   else version(darwin)
   {
   char[] buffer = new char[1024];  // 1024 = PATH_MAX on Mac OS X 10.5
-  if (!realpath(program_name.ptr, buffer.ptr))
+  if (!realpath(arg0.ptr, buffer.ptr))
     return arg0;
   return fromStringz(buffer.ptr);
   } // version(darwin)
