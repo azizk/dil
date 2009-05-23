@@ -210,7 +210,8 @@ class PyTreeEmitter : Visitor
       d_version = "2.0";
     text = Format("# -*- coding: utf-8 -*-\n"
                   "from __future__ import unicode_literals\n"
-                  "import dil.token\n\n"
+                  "import dil.token\n"
+                  "from dil.nodes import *\n\n"
                   "generated_by = 'dil'\n"
                   "format_version = '1.0'\n"
                   "d_version= '{}'\n"
@@ -218,16 +219,18 @@ class PyTreeEmitter : Visitor
                   d_version, Time.toString());
 
     text ~= writeTokenList(modul.firstToken(), index);
-    text ~= "tokens = token.create_tokens(token_list)\n\n";
-    text ~= "def t(beg,end):\n"
+    text ~= "t = tokens = token.create_tokens(token_list)\n\n";
+    text ~= "def p(beg,end):\n"
             "  return (tokens[beg], tokens[beg+end])\n"
             "def tl(*args):\n"
             "  return [tokens[i] for i in args]\n"
             "  #return map(tokens.__getitem__, args)\n"
-            "def N(id, *args):\n"
-            "  return NodeTable[id](*args)\n\n";
+            "n = None\n\n"
+            /+"def N(id, *args):\n"+/
+            /+"  return NodeTable[id](*args)\n\n"+/;
     text ~= `module = Module(tokens=tokens, fqn="` ~ modul.getFQN() ~
             `",ext="` ~ modul.fileExtension() ~ `",root=`\n;
+
     visitD(modul.root);
     if (line.length)
       text ~= line ~ "\n";
@@ -248,7 +251,7 @@ class PyTreeEmitter : Visitor
   /// Returns the index number of a token as a string.
   char[] indexOf(Token* token)
   {
-    return toString(index[token]);
+    return "t["~toString(index[token])~"]";
   }
 
   void write(char[] str)
@@ -273,19 +276,18 @@ class PyTreeEmitter : Visitor
     write(")");
   }
 
-
   void begin(Node n)
   {
 //     write(g_classNames[n.kind]~"(");
-    write("N("~toString(n.kind)~",");
+    write("N"~toString(n.kind)~"(");
   }
 
-  void end(Node n)
+  void end(Node n, bool writeComma = true)
   {
     assert(n !is null && n.begin !is null && n.end !is null);
     auto i1 = index[n.begin], i2 = index[n.end];
     assert(i1 <= i2, Format("ops, Parser or AST buggy? {}@{},i1={},i2={}", g_classNames[n.kind], n.begin.getRealLocation().str(), i1, i2));
-    write(",t("~toString(i1)~","~toString(i2-i1)~"))");
+    write((writeComma ? ",":"") ~ "p("~toString(i1)~","~toString(i2-i1)~"))");
   }
 
 override
@@ -304,14 +306,14 @@ override
   D visit(EmptyDeclaration d)
   {
     begin(d);
-    end(d);
+    end(d, false);
     return d;
   }
 
   D visit(ModuleDeclaration d)
   {
     begin(d);
-    d.typeIdent ? write(indexOf(d.typeIdent)) : write("None");
+    d.typeIdent ? write(indexOf(d.typeIdent)) : write("n");
     write(",");
     write(indexOf(d.moduleName)~",");
     write("tl(");
@@ -335,13 +337,13 @@ override
     }
     write("),tl(");
     foreach(tok; d.moduleAliases)
-      tok ? write(indexOf(tok)~",") : write("-1,");
+      tok ? write(indexOf(tok)~",") : write("n,");
     write("),(");
     foreach(tok; d.bindNames)
       write(indexOf(tok)~",");
     write("),tl(");
     foreach(tok; d.bindAliases)
-      tok ? write(indexOf(tok)~",") : write("-1,");
+      tok ? write(indexOf(tok)~",") : write("n,");
     write(")");
     end(d);
     return d;
@@ -374,7 +376,7 @@ override
   D visit(EnumDeclaration d)
   {
     begin(d);
-    d.baseType ? visitT(d.baseType) : write("None");
+    d.baseType ? visitT(d.baseType) : write("n");
     write(",");
     write(d.members);
     end(d);
@@ -384,9 +386,9 @@ override
   D visit(EnumMemberDeclaration d)
   {
     begin(d);
-    d.type ? visitT(d.type) : write("None");
+    d.type ? visitT(d.type) : write("n");
     write(",");
-    d.value ? visitE(d.value) : write("None");
+    d.value ? visitE(d.value) : write("n");
     end(d);
     return d;
   }
@@ -396,7 +398,7 @@ override
     begin(d);
     write(d.bases);
     write(",");
-    d.decls ? visitD(d.decls) : write("None");
+    d.decls ? visitD(d.decls) : write("n");
     end(d);
     return d;
   }
@@ -406,7 +408,7 @@ override
     begin(d);
     write(d.bases);
     write(",");
-    d.decls ? visitD(d.decls) : write("None");
+    d.decls ? visitD(d.decls) : write("n");
     end(d);
     return d;
   }
@@ -414,7 +416,7 @@ override
   D visit(StructDeclaration d)
   {
     begin(d);
-    d.decls ? visitD(d.decls) : write("None");
+    d.decls ? visitD(d.decls) : write("n");
     end(d);
     return d;
   }
@@ -422,7 +424,7 @@ override
   D visit(UnionDeclaration d)
   {
     begin(d);
-    d.decls ? visitD(d.decls) : write("None");
+    d.decls ? visitD(d.decls) : write("n");
     end(d);
     return d;
   }
@@ -464,7 +466,7 @@ override
   D visit(FunctionDeclaration d)
   {
     begin(d);
-    d.returnType ? visitT(d.returnType) : write("None");
+    d.returnType ? visitT(d.returnType) : write("n");
     write(",");
     write(indexOf(d.nametok));
     write(",");
@@ -517,9 +519,9 @@ override
   D visit(DebugDeclaration d)
   {
     begin(d);
-    d.decls ? visitD(d.decls) : write("None");
+    d.decls ? visitD(d.decls) : write("n");
     write(",");
-    d.elseDecls ? visitD(d.elseDecls) : write("None");
+    d.elseDecls ? visitD(d.elseDecls) : write("n");
     end(d);
     return d;
   }
@@ -527,9 +529,9 @@ override
   D visit(VersionDeclaration d)
   {
     begin(d);
-    d.decls ? visitD(d.decls) : write("None");
+    d.decls ? visitD(d.decls) : write("n");
     write(",");
-    d.elseDecls ? visitD(d.elseDecls) : write("None");
+    d.elseDecls ? visitD(d.elseDecls) : write("n");
     end(d);
     return d;
   }
@@ -539,7 +541,7 @@ override
     begin(d);
     visitN(d.tparams);
     write(",");
-    d.constraint ? visitE(d.constraint) : write("None");
+    d.constraint ? visitE(d.constraint) : write("n");
     write(",");
     visitD(d.decls);
     end(d);
@@ -605,7 +607,7 @@ override
     begin(d);
     visitE(d.condition);
     write(",");
-    d.message ? visitE(d.message) : write("None");
+    d.message ? visitE(d.message) : write("n");
     end(d);
     return d;
   }
@@ -617,7 +619,7 @@ override
     write(",");
     visitD(d.ifDecls);
     write(",");
-    d.elseDecls ? visitD(d.elseDecls) : write("None");
+    d.elseDecls ? visitD(d.elseDecls) : write("n");
     end(d);
     return d;
   }
@@ -625,11 +627,11 @@ override
   D visit(MixinDeclaration d)
   {
     begin(d);
-    d.mixinIdent ? write(indexOf(d.mixinIdent)) : write("None");
+    d.mixinIdent ? write(indexOf(d.mixinIdent)) : write("n");
     write(",");
-    d.templateExpr ? visitE(d.templateExpr) : write("None");
+    d.templateExpr ? visitE(d.templateExpr) : write("n");
     write(",");
-    d.argument ? visitE(d.argument) : write("None");
+    d.argument ? visitE(d.argument) : write("n");
     end(d);
     return d;
   }
@@ -669,20 +671,20 @@ override
   S visit(EmptyStatement s)
   {
     begin(s);
-    end(s);
+    end(s, false);
     return s;
   }
 
   S visit(FuncBodyStatement s)
   {
     begin(s);
-    s.funcBody ? visitS(s.funcBody) : write("None");
+    s.funcBody ? visitS(s.funcBody) : write("n");
     write(",");
-    s.inBody ? visitS(s.inBody) : write("None");
+    s.inBody ? visitS(s.inBody) : write("n");
     write(",");
-    s.outBody ? visitS(s.outBody) : write("None");
+    s.outBody ? visitS(s.outBody) : write("n");
     write(",");
-    s.outIdent ? write(indexOf(s.outIdent)) : write("None");
+    s.outIdent ? write(indexOf(s.outIdent)) : write("n");
     end(s);
     return s;
   }
@@ -722,13 +724,13 @@ override
   S visit(IfStatement s)
   {
     begin(s);
-    s.variable ? visitS(s.variable) : write("None");
+    s.variable ? visitS(s.variable) : write("n");
     write(",");
-    s.condition ? visitE(s.condition) : write("None");
+    s.condition ? visitE(s.condition) : write("n");
     write(",");
     visitS(s.ifBody);
     write(",");
-    s.elseBody ? visitS(s.elseBody) : write("None");
+    s.elseBody ? visitS(s.elseBody) : write("n");
     end(s);
     return s;
   }
@@ -756,13 +758,13 @@ override
   S visit(ForStatement s)
   {
     begin(s);
-    s.init ? visitS(s.init) : write("None");
+    s.init ? visitS(s.init) : write("n");
     write(",");
-    s.condition ? visitE(s.condition) : write("None");
+    s.condition ? visitE(s.condition) : write("n");
     write(",");
-    s.increment ? visitE(s.increment) : write("None");
+    s.increment ? visitE(s.increment) : write("n");
     write(",");
-    s.forBody ? visitS(s.forBody) : write("None");
+    s.forBody ? visitS(s.forBody) : write("n");
     end(s);
     return s;
   }
@@ -825,7 +827,7 @@ override
   S visit(ContinueStatement s)
   {
     begin(s);
-    s.ident ? write(indexOf(s.ident)) : write("None");
+    s.ident ? write(indexOf(s.ident)) : write("n");
     end(s);
     return s;
   }
@@ -833,7 +835,7 @@ override
   S visit(BreakStatement s)
   {
     begin(s);
-    s.ident ? write(indexOf(s.ident)) : write("None");
+    s.ident ? write(indexOf(s.ident)) : write("n");
     end(s);
     return s;
   }
@@ -841,7 +843,7 @@ override
   S visit(ReturnStatement s)
   {
     begin(s);
-    s.expr ? visitE(s.expr) : write("None");
+    s.expr ? visitE(s.expr) : write("n");
     end(s);
     return s;
   }
@@ -849,9 +851,9 @@ override
   S visit(GotoStatement s)
   {
     begin(s);
-    s.ident ? write(indexOf(s.ident)) : write("None");
+    s.ident ? write(indexOf(s.ident)) : write("n");
     write(",");
-    s.expr ? visitE(s.expr) : write("None");
+    s.expr ? visitE(s.expr) : write("n");
     end(s);
     return s;
   }
@@ -869,7 +871,7 @@ override
   S visit(SynchronizedStatement s)
   {
     begin(s);
-    s.expr ? visitE(s.expr) : write("None");
+    s.expr ? visitE(s.expr) : write("n");
     write(",");
     visitS(s.syncBody);
     end(s);
@@ -883,7 +885,7 @@ override
     write(",");
     write(s.catchBodies);
     write(",");
-    s.finallyBody ? visitS(s.finallyBody) : write("None");
+    s.finallyBody ? visitS(s.finallyBody) : write("n");
     end(s);
     return s;
   }
@@ -891,7 +893,7 @@ override
   S visit(CatchStatement s)
   {
     begin(s);
-    s.param ? visitN(s.param) : write("None");
+    s.param ? visitN(s.param) : write("n");
     write(",");
     visitS(s.catchBody);
     end(s);
@@ -927,7 +929,7 @@ override
   S visit(VolatileStatement s)
   {
     begin(s);
-    s.volatileBody ? visitS(s.volatileBody) : write("None");
+    s.volatileBody ? visitS(s.volatileBody) : write("n");
     end(s);
     return s;
   }
@@ -943,7 +945,7 @@ override
   S visit(AsmStatement s)
   {
     begin(s);
-    s.ident ? write(indexOf(s.begin)) : write("None");
+    s.ident ? write(indexOf(s.begin)) : write("n");
     write(",");
     write(s.operands);
     end(s);
@@ -964,7 +966,7 @@ override
   S visit(PragmaStatement s)
   {
     begin(s);
-    s.ident ? write(indexOf(s.ident)) : write("None");
+    s.ident ? write(indexOf(s.ident)) : write("n");
     write(",");
     write(s.args);
     write(",");
@@ -978,7 +980,7 @@ override
     begin(s);
     visitE(s.templateExpr);
     write(",");
-    s.mixinIdent ? write(indexOf(s.mixinIdent)) : write("None");
+    s.mixinIdent ? write(indexOf(s.mixinIdent)) : write("n");
     end(s);
     return s;
   }
@@ -990,7 +992,7 @@ override
     write(",");
     visitS(s.ifBody);
     write(",");
-    s.elseBody ? visitS(s.elseBody) : write("None");
+    s.elseBody ? visitS(s.elseBody) : write("n");
     end(s);
     return s;
   }
@@ -1000,7 +1002,7 @@ override
     begin(s);
     visitE(s.condition);
     write(",");
-    s.message ? visitE(s.message) : write("None");
+    s.message ? visitE(s.message) : write("n");
     end(s);
     return s;
   }
@@ -1010,7 +1012,7 @@ override
     begin(s);
     visitS(s.mainBody);
     write(",");
-    s.elseBody ? visitS(s.elseBody) : write("None");
+    s.elseBody ? visitS(s.elseBody) : write("n");
     end(s);
     return s;
   }
@@ -1020,7 +1022,7 @@ override
     begin(s);
     visitS(s.mainBody);
     write(",");
-    s.elseBody ? visitS(s.elseBody) : write("None");
+    s.elseBody ? visitS(s.elseBody) : write("n");
     end(s);
     return s;
   }
@@ -1507,9 +1509,9 @@ override
     begin(e);
     visitE(e.una);
     write(",");
-    e.left ? visitE(e.left) : write("None");
+    e.left ? visitE(e.left) : write("n");
     write(",");
-    e.right ? visitE(e.right) : write("None");
+    e.right ? visitE(e.right) : write("n");
     end(e);
     return e;
   }
@@ -1527,7 +1529,7 @@ override
   E visit(ModuleScopeExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e;
   }
 
@@ -1544,7 +1546,7 @@ override
     begin(e);
     write(indexOf(e.idToken));
     write(",");
-    e.targs ? visitN(e.targs) : write("None");
+    e.targs ? visitN(e.targs) : write("n");
     end(e);
     return e;
   }
@@ -1560,70 +1562,70 @@ override
   E visit(ThisExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e;
   }
 
   E visit(SuperExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e;
   }
 
   E visit(NullExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e;
   }
 
   E visit(DollarExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e;
   }
 
   E visit(BoolExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e.value;
   }
 
   E visit(IntExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e;
   }
 
   E visit(RealExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e;
   }
 
   E visit(ComplexExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e;
   }
 
   E visit(CharExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e;
   }
 
   E visit(StringExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e;
   }
 
@@ -1650,7 +1652,7 @@ override
     begin(e);
     visitE(e.expr);
     write(",");
-    e.msg ? visitE(e.msg) : write("None");
+    e.msg ? visitE(e.msg) : write("n");
     end(e);
     return e;
   }
@@ -1700,9 +1702,9 @@ override
     begin(e);
     visitT(e.type);
     write(",");
-    e.specType ? visitT(e.specType) : write("None");
+    e.specType ? visitT(e.specType) : write("n");
     write(",");
-    e.tparams ? visitN(e.tparams) : write("None");
+    e.tparams ? visitN(e.tparams) : write("n");
     end(e);
     return e;
   }
@@ -1718,9 +1720,9 @@ override
   E visit(FunctionLiteralExpression e)
   {
     begin(e);
-    e.returnType ? visitT(e.returnType) : write("None");
+    e.returnType ? visitT(e.returnType) : write("n");
     write(",");
-    e.params ? visitN(e.params) : write("None");
+    e.params ? visitN(e.params) : write("n");
     write(",");
     visitS(e.funcBody);
     end(e);
@@ -1739,7 +1741,7 @@ override
   E visit(VoidInitExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e;
   }
 
@@ -1748,7 +1750,7 @@ override
     begin(e);
     write("(");
     foreach (k; e.keys)
-      (k ? visitE(k) : write("None")), write(",");
+      (k ? visitE(k) : write("n")), write(",");
     write("),");
     write(e.values);
     end(e);
@@ -1760,7 +1762,7 @@ override
     begin(e);
     write("(");
     foreach (i; e.idents)
-      (i ? write(indexOf(i)) : write("None")), write(",");
+      (i ? write(indexOf(i)) : write("n")), write(",");
     write("),");
     write(e.values);
     end(e);
@@ -1812,14 +1814,14 @@ override
   E visit(AsmLocalSizeExpression e)
   {
     begin(e);
-    end(e);
+    end(e, false);
     return e;
   }
 
   E visit(AsmRegisterExpression e)
   {
     begin(e);
-    e.number ? visitE(e.number) : write("None");
+    e.number ? visitE(e.number) : write("n");
     end(e);
     return e;
   }
@@ -1855,7 +1857,7 @@ override
   T visit(ModuleScopeType t)
   {
     begin(t);
-    end(t);
+    end(t, false);
     return t;
   }
 
@@ -1870,7 +1872,7 @@ override
   T visit(TypeofType t)
   {
     begin(t);
-    t.expr ? visitE(t.expr) : write("None");
+    t.expr ? visitE(t.expr) : write("n");
     end(t);
     return t;
   }
@@ -1880,7 +1882,7 @@ override
     begin(t);
     write(indexOf(t.begin));
     write(",");
-    t.targs ? visitN(t.targs) : write("None");
+    t.targs ? visitN(t.targs) : write("n");
     end(t);
     return t;
   }
@@ -1897,11 +1899,11 @@ override
   {
     begin(t);
     visitT(t.next);
-    t.assocType ? visitT(t.assocType) : write("None");
+    t.assocType ? visitT(t.assocType) : write("n");
     write(",");
-    t.index1 ? visitE(t.index1) : write("None");
+    t.index1 ? visitE(t.index1) : write("n");
     write(",");
-    t.index2 ? visitE(t.index2) : write("None");
+    t.index2 ? visitE(t.index2) : write("n");
     end(t);
     return t;
   }
@@ -1931,7 +1933,7 @@ override
     begin(t);
     visitT(t.next);
     write(",");
-    t.params ? visitN(t.params) : write("None");
+    t.params ? visitN(t.params) : write("n");
     end(t);
     return t;
   }
@@ -1971,9 +1973,9 @@ override
   N visit(Parameter p)
   {
     begin(p);
-    p.type ? visitT(p.type) : write("None");
+    p.type ? visitT(p.type) : write("n");
     write(",");
-    p.defValue ? visitE(p.defValue) : write("None");
+    p.defValue ? visitE(p.defValue) : write("n");
     end(p);
     return p;
   }
@@ -1989,9 +1991,9 @@ override
   N visit(TemplateAliasParameter p)
   {
     begin(p);
-    p.specType ? visitT(p.specType) : write("None");
+    p.specType ? visitT(p.specType) : write("n");
     write(",");
-    p.defType ? visitT(p.defType) : write("None");
+    p.defType ? visitT(p.defType) : write("n");
     end(p);
     return p;
   }
@@ -1999,9 +2001,9 @@ override
   N visit(TemplateTypeParameter p)
   {
     begin(p);
-    p.specType ? visitT(p.specType) : write("None");
+    p.specType ? visitT(p.specType) : write("n");
     write(",");
-    p.defType ? visitT(p.defType) : write("None");
+    p.defType ? visitT(p.defType) : write("n");
     end(p);
     return p;
   }
@@ -2009,9 +2011,9 @@ override
   N visit(TemplateThisParameter p) // D2.0
   {
     begin(p);
-    p.specType ? visitT(p.specType) : write("None");
+    p.specType ? visitT(p.specType) : write("n");
     write(",");
-    p.defType ? visitT(p.defType) : write("None");
+    p.defType ? visitT(p.defType) : write("n");
     end(p);
     return p;
   }
@@ -2019,11 +2021,11 @@ override
   N visit(TemplateValueParameter p)
   {
     begin(p);
-    p.valueType ? visitT(p.valueType) : write("None");
+    p.valueType ? visitT(p.valueType) : write("n");
     write(",");
-    p.specValue ? visitE(p.specValue) : write("None");
+    p.specValue ? visitE(p.specValue) : write("n");
     write(",");
-    p.defValue ? visitE(p.defValue) : write("None");
+    p.defValue ? visitE(p.defValue) : write("n");
     end(p);
     return p;
   }
@@ -2031,7 +2033,7 @@ override
   N visit(TemplateTupleParameter p)
   {
     begin(p);
-    end(p);
+    end(p, false);
     return p;
   }
 
