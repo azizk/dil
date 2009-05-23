@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
-import os, re
+import os, re, sys
 from path import Path
 
 def find_source_files(source, found):
@@ -140,6 +140,21 @@ def generate_docs(dil_exe, dest, modlist, files,
   versions = ["-version="+v for v in versions]
   call([dil_exe, "ddoc", dest, "-m="+modlist] + options + versions + files,
        cwd=cwd)
+
+def generate_pymodules(dil_exe, dest, files, options=[], cwd=None):
+  """ Generates Python source files. """
+  from subprocess import call
+  call([dil_exe, "py", dest] + options + files, cwd=cwd)
+
+def load_pymodules(folder):
+  """ Loads all python modules (names matching 'd_*.py') from a folder. """
+  # Add the folder to the system import path.
+  sys.path = [folder] + sys.path
+  files = folder.glob("d_*.py")
+  modules = [__import__(f.name, level=0) for f in files]
+  # Reset the path variable.
+  sys.path = sys.path[1:]
+  return modules
 
 def generate_shl_files(dil_exe, dest, prefix, files):
   """ Generates syntax highlighted files. """
