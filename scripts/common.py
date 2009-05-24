@@ -151,7 +151,7 @@ def load_pymodules(folder):
   # Add the folder to the system import path.
   sys.path = [folder] + sys.path
   files = folder.glob("d_*.py")
-  modules = [__import__(f.name, level=0) for f in files]
+  modules = [__import__(f.namebase, level=0) for f in files]
   # Reset the path variable.
   sys.path = sys.path[1:]
   return modules
