@@ -201,7 +201,8 @@ class Parser
     {
       typeId = requireIdentifier(MSG.ExpectedModuleType);
       if (typeId && typeId.ident !is Ident.safe &&
-                    typeId.ident !is Ident.system)
+                    typeId.ident !is Ident.system &&
+                    typeId.ident !is Ident.Empty)
         error(typeId, MSG.ExpectedModuleType);
       require(T.RParen);
     }
@@ -3826,7 +3827,8 @@ class Parser
     // NewObjectExpression
     auto type = parseType();
 
-    if (token.kind == T.LParen) // NewArguments
+    // Don't parse arguments if an array type was parsed previously.
+    if (prevToken.kind != T.RBracket && token.kind == T.LParen) // NewArguments
       ctorArguments = parseArguments();
 
     return set(new NewExpression(/*e, */newArguments, type, ctorArguments),
