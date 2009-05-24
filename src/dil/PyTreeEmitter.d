@@ -37,7 +37,7 @@ char[] toString(uint x)
 char[] countWhitespace(char[] ws)
 {
   foreach (c; ws)
-    if (c != ' ') return ws;
+    if (c != ' ') return "'"~ws~"'";
   return toString(ws.length);
 }
 
@@ -211,6 +211,7 @@ class PyTreeEmitter : Visitor
     text = Format("# -*- coding: utf-8 -*-\n"
                   "from __future__ import unicode_literals\n"
                   "import dil.token\n"
+                  "from dil.module import Module\n"
                   "from dil.nodes import *\n\n"
                   "generated_by = 'dil'\n"
                   "format_version = '1.0'\n"
@@ -219,12 +220,12 @@ class PyTreeEmitter : Visitor
                   d_version, Time.toString());
 
     text ~= writeTokenList(modul.firstToken(), index);
-    text ~= "t = tokens = token.create_tokens(token_list)\n\n";
+    text ~= "t = tokens = dil.token.create_tokens(token_list)\n\n";
     text ~= "def p(beg,end):\n"
             "  return (tokens[beg], tokens[beg+end])\n"
-            "def tl(*args):\n"
+            /+"def tl(*args):\n"
             "  return [tokens[i] for i in args]\n"
-            "  #return map(tokens.__getitem__, args)\n"
+            "  #return map(tokens.__getitem__, args)\n"+/
             "n = None\n\n"
             /+"def N(id, *args):\n"+/
             /+"  return NodeTable[id](*args)\n\n"+/;
@@ -316,9 +317,9 @@ override
     d.typeIdent ? write(indexOf(d.typeIdent)) : write("n");
     write(",");
     write(indexOf(d.moduleName)~",");
-    write("tl(");
-    foreach (pckg; d.packages)
-      write(toString(index[pckg])~",");
+    write("(");
+    foreach (tok; d.packages)
+      write(indexOf(tok)~",");
     write(")");
     end(d);
     return d;
@@ -330,18 +331,18 @@ override
     write("(");
     foreach(moduleFQN; d.moduleFQNs)
     {
-      write("tl(");
+      write("(");
       foreach(tok; moduleFQN)
         write(indexOf(tok)~",");
       write("),");
     }
-    write("),tl(");
+    write("),(");
     foreach(tok; d.moduleAliases)
       tok ? write(indexOf(tok)~",") : write("n,");
     write("),(");
     foreach(tok; d.bindNames)
       write(indexOf(tok)~",");
-    write("),tl(");
+    write("),(");
     foreach(tok; d.bindAliases)
       tok ? write(indexOf(tok)~",") : write("n,");
     write(")");
@@ -1899,6 +1900,7 @@ override
   {
     begin(t);
     visitT(t.next);
+    write(",");
     t.assocType ? visitT(t.assocType) : write("n");
     write(",");
     t.index1 ? visitE(t.index1) : write("n");
