@@ -124,8 +124,8 @@ void main(char[][] args)
       if (!modul.hasErrors)
       {
         auto py = new PyTreeEmitter(modul);
-        auto modFQN = replace(modul.getFQN(), '.', '_');
-        auto pckgName = replace(modul.packageName, '.', '_');
+        auto modFQN = replace(modul.getFQN().dup, '.', '_');
+        auto pckgName = replace(modul.packageName.dup, '.', '_');
         auto modName = modul.moduleName;
         auto fileName = Format(format, modFQN, pckgName, modName);
         if (verbose)
