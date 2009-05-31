@@ -1420,10 +1420,8 @@ class Lexer
         {
           if (c <= '9')
             c -= '0';
-          else if (c <= 'F')
-            c -= 'A' - 10;
           else
-            c -= 'a' - 10;
+            c = (c|0x20) - 87; // ('a'-10) = 87
 
           if (n & 1)
           {
@@ -1800,10 +1798,8 @@ class Lexer
           c *= 16;
           if (*p <= '9')
             c += *p - '0';
-          else if (*p <= 'F')
-            c += *p - 'A' + 10;
           else
-            c += *p - 'a' + 10;
+            c += (*p|0x20) - 87; // ('a'-10) = 87
 
           if (--digits == 0)
           {
@@ -1913,8 +1909,8 @@ class Lexer
 
     if (*p != '0')
       goto LscanInteger;
-    ++p; // skip zero
-    // check for xX bB ...
+    ++p; // Skip zero.
+    // Check for xX bB ...
     switch (*p)
     {
     case 'x','X':
@@ -2008,10 +2004,8 @@ class Lexer
       ulong_ *= 16;
       if (*p <= '9')
         ulong_ += *p - '0';
-      else if (*p <= 'F')
-        ulong_ += *p - 'A' + 10;
       else
-        ulong_ += *p - 'a' + 10;
+        ulong_ += (*p|0x20) - 87; // ('a'-10) = 87
     }
 
     assert(ishexad(p[-1]) || p[-1] == '_' || p[-1] == 'x' || p[-1] == 'X');
@@ -2122,27 +2116,25 @@ class Lexer
 
     // Scan optional suffix: L, Lu, LU, u, uL, U or UL.
     Suffix suffix;
+  Loop:
     while (1)
-    {
       switch (*p)
       {
       case 'L':
         if (suffix & Suffix.Long)
-          break;
+          break Loop;
         suffix |= Suffix.Long;
         ++p;
         continue;
       case 'u', 'U':
         if (suffix & Suffix.Unsigned)
-          break;
+          break Loop;
         suffix |= Suffix.Unsigned;
         ++p;
         continue;
       default:
-        break;
+        break Loop;
       }
-      break;
-    }
 
     // Determine type of Integer.
     switch (suffix)
