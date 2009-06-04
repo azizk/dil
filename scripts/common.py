@@ -3,17 +3,20 @@
 import os, re, sys
 from path import Path
 
-def find_source_files(source, found):
+def find_source_files(source, filter_pred=lambda x: False):
   """ Searches for source files (.d and .di). Appends file paths to found. """
+  found = []
   for root, dirs, files in Path(source).walk(followlinks=True):
-    found += [root/file for file in map(Path, files) # Iter. over Path objects.
-                          if file.ext.lower() in ('.d','.di')]
+    for f in files:
+      f = Path(root, f) # Join the root and the file name.
+      if f.ext.lower() in ('.d','.di') and not filter_pred(f):
+        found.append(f)
+  return found
 
 def find_dil_source_files(source):
-  FILES = []
-  find_source_files(source, FILES)
-  # Filter out files in "src/tests/".
-  return [f for f in FILES if not f.startswith(source/"tests")]
+  """ Filters out files in "src/tests/". """
+  filter_func = lambda f: f.startswith(source/"tests")
+  return find_source_files(source, filter_func)
 
 def script_parent_folder(script_path):
   return Path(script_path).realpath.folder.folder

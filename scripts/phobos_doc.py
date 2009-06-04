@@ -180,10 +180,11 @@ def main():
     map(Path.mkdir, (DEST.JS, DEST.CSS, DEST.IMG))
 
   # Begin processing.
-  find_source_files(PHOBOS_SRC, FILES)
+
   # Filter out files in the internal/ folder and in the ignore list.
-  FILES = [f for f in FILES if not any(map(f.endswith, IGNORE_LIST)) and \
-                               not f.startswith(PHOBOS_SRC/"internal")]
+  filter_func = lambda f: any(f.endswith(i) for i in IGNORE_LIST) or \
+                          f.startswith(PHOBOS_SRC/"internal")
+  FILES = find_source_files(PHOBOS_SRC, filter_func)
   FILES.sort() # Sort for index.
 
   modify_std_ddoc(PHOBOS_SRC/"std.ddoc", TMP/"phobos.ddoc", D_VERSION)
