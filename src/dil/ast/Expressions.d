@@ -34,12 +34,12 @@ abstract class BinaryExpression : Expression
   Expression rhs; /// Right-hand side expression.
   Token* tok;     /// The operator token.
   /// Constructs a BinaryExpression object.
-  this(Expression lhs, Expression rhs, Token* tok)
+  this(Expression lhs, Expression rhs, Token* tok=null)
   {
     addChildren([lhs, rhs]);
     this.lhs = lhs;
     this.rhs = rhs;
-    this.tok = tok;
+    this.tok = tok ? tok : lhs.end.nextNWS;
   }
   mixin(copyMethodBinaryExpression);
 }
@@ -47,12 +47,15 @@ abstract class BinaryExpression : Expression
 class CondExpression : BinaryExpression
 {
   Expression condition;
-  this(Expression condition, Expression left, Expression right, Token* tok)
+  Token* ctok; // Colon token.
+  this(Expression condition, Expression left, Expression right,
+       Token* qtok, Token* ctok)
   {
     addChild(condition);
-    super(left, right, tok);
+    super(left, right, qtok);
     mixin(set_kind);
     this.condition = condition;
+    this.ctok = ctok;
   }
   mixin(copyMethod);
 }
@@ -242,7 +245,7 @@ class AssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -250,7 +253,7 @@ class LShiftAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -258,7 +261,7 @@ class RShiftAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -266,7 +269,7 @@ class URShiftAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -274,7 +277,7 @@ class OrAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -282,7 +285,7 @@ class AndAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -290,7 +293,7 @@ class PlusAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -298,7 +301,7 @@ class MinusAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -306,7 +309,7 @@ class DivAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -314,7 +317,7 @@ class MulAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -322,7 +325,7 @@ class ModAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -330,7 +333,7 @@ class XorAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -338,7 +341,7 @@ class CatAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }
@@ -348,7 +351,7 @@ class DotExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {
-    super(left, right, null);
+    super(left, right);
     mixin(set_kind);
   }
 }

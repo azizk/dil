@@ -59,16 +59,17 @@ class FuncBodyStatement : Statement
 {
   Statement funcBody, inBody, outBody;
   Token* outIdent; /// $(BNF "out" "(" Identifier ")")
-  this()
+  this(Statement funcBody, Statement inBody, Statement outBody,
+       Token* outIdent)
   {
     mixin(set_kind);
-  }
-
-  void finishConstruction()
-  {
     addOptChild(funcBody);
     addOptChild(inBody);
     addOptChild(outBody);
+    this.funcBody = funcBody;
+    this.inBody = inBody;
+    this.outBody = outBody;
+    this.outIdent = outIdent;
   }
 
   bool isEmpty()
@@ -93,9 +94,9 @@ class ScopeStatement : Statement
 
 class LabeledStatement : Statement
 {
-  Identifier* label;
+  Token* label;
   Statement stmnt;
-  this(Identifier* label, Statement s)
+  this(Token* label, Statement s)
   {
     mixin(set_kind);
     addChild(s);
@@ -483,9 +484,9 @@ class AsmBlockStatement : Statement
 
 class AsmStatement : Statement
 {
-  Identifier* ident;
+  Token* ident;
   Expression[] operands;
-  this(Identifier* ident, Expression[] operands)
+  this(Token* ident, Expression[] operands)
   {
     mixin(set_kind);
     addOptChildren(operands);
@@ -498,10 +499,12 @@ class AsmStatement : Statement
 class AsmAlignStatement : Statement
 {
   int number;
-  this(int number)
+  Token* numtok;
+  this(Token* numtok)
   {
     mixin(set_kind);
-    this.number = number;
+    this.numtok = numtok;
+    this.number = numtok.int_;
   }
   mixin(copyMethod);
 }

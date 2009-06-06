@@ -722,46 +722,44 @@ class Parser
   FuncBodyStatement parseFunctionBody()
   {
     auto begin = token;
-    auto func = new FuncBodyStatement;
+    Statement funcBody, inBody, outBody;
+    Token* outIdent;
+  Loop:
     while (1)
-    {
       switch (token.kind)
       {
       case T.LBrace:
-        func.funcBody = parseStatements();
-        break;
+        funcBody = parseStatements();
+        break Loop;
       case T.Semicolon:
         nT();
-        break;
+        break Loop;
       case T.In:
-        if (func.inBody)
+        if (inBody)
           error(MID.InContract);
         nT();
-        func.inBody = parseStatements();
-        continue;
+        inBody = parseStatements();
+        break;
       case T.Out:
-        if (func.outBody)
+        if (outBody)
           error(MID.OutContract);
         nT();
         if (consumed(T.LParen))
-        {
-          auto leftParen = this.prevToken;
-          func.outIdent = requireIdentifier(MSG.ExpectedAnIdentifier);
-          requireClosing(T.RParen, leftParen);
-        }
-        func.outBody = parseStatements();
-        continue;
+          (outIdent = requireIdentifier(MSG.ExpectedAnIdentifier)),
+          require(T.RParen);
+        outBody = parseStatements();
+        break;
       case T.Body:
+        // if (!outBody || !inBody) // TODO:
+        //   error2(MSG.ExpectedInOutBody, token);
         nT();
         goto case T.LBrace;
       default:
         error2(MSG.ExpectedFunctionBody, token);
+        break Loop;
       }
-      break; // Exit loop.
-    }
-    set(func, begin);
-    func.finishConstruction();
-    return func;
+    auto func = new FuncBodyStatement(funcBody, inBody, outBody, outIdent);
+    return set(func, begin);
   }
 
   /// $(BNF ExternLinkageType :=
@@ -1709,9 +1707,8 @@ class Parser
     case T.Identifier:
       if (peekNext() == T.Colon)
       {
-        auto ident = token.ident;
         skip(T.Identifier); skip(T.Colon);
-        s = new LabeledStatement(ident, parseNoScopeOrEmptyStatement());
+        s = new LabeledStatement(begin, parseNoScopeOrEmptyStatement());
         break;
       }
       goto case T.Dot;
@@ -2567,15 +2564,13 @@ class Parser
   {
     auto begin = token;
     Statement s;
-    Identifier* ident;
+    alias begin ident;
     switch (token.kind)
     {
     case T.In, T.Int, T.Out: // Keywords that are valid opcodes.
-      ident = token.ident;
       nT();
-      goto LOpcode;
+      goto LparseOperands;
     case T.Identifier:
-      ident = token.ident;
       nT();
       if (consumed(T.Colon))
       { // Identifier ":" AsmStatement
@@ -2584,7 +2579,7 @@ class Parser
       }
 
       // JumpOpcode (short | (near | far) ptr)?
-      if (Ident.isJumpOpcode(ident.idKind))
+      if (Ident.isJumpOpcode(ident.ident.idKind))
       {
         auto jmptype = token.ident;
         if (token.kind == T.Short)
@@ -2603,7 +2598,7 @@ class Parser
       // TODO: Handle opcodes db, ds, di, dl, df, dd, de.
       //       They accept string operands.
 
-    LOpcode:
+    LparseOperands:
       // Opcode Operands? ";"
       Expression[] es;
       if (token.kind != T.Semicolon)
@@ -2616,10 +2611,8 @@ class Parser
     case T.Align:
       // align Integer ";"
       nT();
-      int number = -1;
-      if (token.kind == T.Int32)
-        (number = token.int_), skip(T.Int32);
-      else
+      auto number = token;
+      if (!consumed(T.Int32))
         error2(MSG.ExpectedIntegerAfterAlign, token);
       require(T.Semicolon);
       s = new AsmAlignStatement(number);
@@ -2652,11 +2645,12 @@ class Parser
     auto e = parseAsmOrOrExpression();
     if (consumed(T.Question))
     {
-      auto tok = this.prevToken;
+      auto tok = this.prevToken; // "?"
       auto iftrue = parseAsmExpression();
+      auto ctok = token; // ":"
       require(T.Colon);
       auto iffalse = parseAsmExpression();
-      e = new CondExpression(e, iftrue, iffalse, tok);
+      e = new CondExpression(e, iftrue, iffalse, tok, ctok);
       set(e, begin);
     }
     // TODO: create AsmExpression that contains e?
@@ -3107,14 +3101,14 @@ class Parser
   {
     auto begin = token;
     auto e = parseOrOrExpression();
-    if (token.kind == T.Question)
+    if (consumed(T.Question))
     {
-      auto tok = token;
-      nT();
+      auto tok = this.prevToken; // "?"
       auto iftrue = parseExpression();
+      auto ctok = token; // ":"
       require(T.Colon);
       auto iffalse = parseCondExpression();
-      e = new CondExpression(e, iftrue, iffalse, tok);
+      e = new CondExpression(e, iftrue, iffalse, tok, ctok);
       set(e, begin);
     }
     return e;
