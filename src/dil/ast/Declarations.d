@@ -282,7 +282,6 @@ class TemplateDeclaration : Declaration
 
 // Note: tparams is commented out because the Parser wraps declarations
 //       with template parameters inside a TemplateDeclaration.
-//       
 
 abstract class AggregateDeclaration : Declaration
 {
@@ -734,11 +733,14 @@ class LinkageDeclaration : AttributeDeclaration
 class AlignDeclaration : AttributeDeclaration
 {
   int size;
+  Token* sizetok;
   this(int size, Declaration decls)
   {
     super(decls);
     mixin(set_kind);
     this.size = size;
+    auto sizetok = begin.nextNWS.nextNWS;
+    this.sizetok = sizetok.kind == TOK.Int32 ? sizetok : null;
   }
   mixin(copyMethod);
 }

@@ -142,7 +142,6 @@ class TemplateAliasParameter : TemplateParameter
     mixin(set_kind);
     addOptChild(specType);
     addOptChild(defType);
-    this.name = name;
     this.specType = specType;
     this.defType = defType;
   }
@@ -159,7 +158,6 @@ class TemplateTypeParameter : TemplateParameter
     mixin(set_kind);
     addOptChild(specType);
     addOptChild(defType);
-    this.name = name;
     this.specType = specType;
     this.defType = defType;
   }
@@ -178,7 +176,6 @@ class TemplateThisParameter : TemplateParameter
     mixin(set_kind);
     addOptChild(specType);
     addOptChild(defType);
-    this.name = name;
     this.specType = specType;
     this.defType = defType;
   }
@@ -199,7 +196,6 @@ class TemplateValueParameter : TemplateParameter
     addOptChild(specValue);
     addOptChild(defValue);
     this.valueType = valueType;
-    this.name = name;
     this.specValue = specValue;
     this.defValue = defValue;
   }
@@ -213,7 +209,6 @@ class TemplateTupleParameter : TemplateParameter
   {
     super(name);
     mixin(set_kind);
-    this.name = name;
   }
   mixin(copyMethod);
 }

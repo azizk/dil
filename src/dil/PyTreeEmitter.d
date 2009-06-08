@@ -377,6 +377,8 @@ override
   D visit(EnumDeclaration d)
   {
     begin(d);
+    write(indexOf(d.nametok));
+    write(",");
     d.baseType ? visitT(d.baseType) : write("n");
     write(",");
     write(d.members);
@@ -389,6 +391,8 @@ override
     begin(d);
     d.type ? visitT(d.type) : write("n");
     write(",");
+    write(indexOf(d.nametok));
+    write(",");
     d.value ? visitE(d.value) : write("n");
     end(d);
     return d;
@@ -397,6 +401,8 @@ override
   D visit(ClassDeclaration d)
   {
     begin(d);
+    write(indexOf(d.nametok));
+    write(",");
     write(d.bases);
     write(",");
     d.decls ? visitD(d.decls) : write("n");
@@ -407,6 +413,8 @@ override
   D visit(InterfaceDeclaration d)
   {
     begin(d);
+    write(indexOf(d.nametok));
+    write(",");
     write(d.bases);
     write(",");
     d.decls ? visitD(d.decls) : write("n");
@@ -417,6 +425,8 @@ override
   D visit(StructDeclaration d)
   {
     begin(d);
+    write(indexOf(d.nametok));
+    write(",");
     d.decls ? visitD(d.decls) : write("n");
     end(d);
     return d;
@@ -425,6 +435,8 @@ override
   D visit(UnionDeclaration d)
   {
     begin(d);
+    write(indexOf(d.nametok));
+    write(",");
     d.decls ? visitD(d.decls) : write("n");
     end(d);
     return d;
@@ -520,6 +532,10 @@ override
   D visit(DebugDeclaration d)
   {
     begin(d);
+    d.spec ? write(indexOf(d.spec)) : write("n");
+    write(",");
+    d.cond ? write(indexOf(d.cond)) : write("n");
+    write(",");
     d.decls ? visitD(d.decls) : write("n");
     write(",");
     d.elseDecls ? visitD(d.elseDecls) : write("n");
@@ -530,6 +546,10 @@ override
   D visit(VersionDeclaration d)
   {
     begin(d);
+    d.spec ? write(indexOf(d.spec)) : write("n");
+    write(",");
+    d.cond ? write(indexOf(d.cond)) : write("n");
+    write(",");
     d.decls ? visitD(d.decls) : write("n");
     write(",");
     d.elseDecls ? visitD(d.elseDecls) : write("n");
@@ -540,6 +560,8 @@ override
   D visit(TemplateDeclaration d)
   {
     begin(d);
+    write(indexOf(d.nametok));
+    write(",");
     visitN(d.tparams);
     write(",");
     d.constraint ? visitE(d.constraint) : write("n");
@@ -598,6 +620,8 @@ override
   D visit(AlignDeclaration d)
   {
     begin(d);
+    d.sizetok ? write(indexOf(d.sizetok)) : write("n");
+    write(",");
     visitD(d.decls);
     end(d);
     return d;
@@ -628,11 +652,11 @@ override
   D visit(MixinDeclaration d)
   {
     begin(d);
-    d.mixinIdent ? write(indexOf(d.mixinIdent)) : write("n");
-    write(",");
     d.templateExpr ? visitE(d.templateExpr) : write("n");
     write(",");
     d.argument ? visitE(d.argument) : write("n");
+    write(",");
+    d.mixinIdent ? write(indexOf(d.mixinIdent)) : write("n");
     end(d);
     return d;
   }
@@ -701,6 +725,8 @@ override
   S visit(LabeledStatement s)
   {
     begin(s);
+    write(indexOf(s.label));
+    write(",");
     visitS(s.stmnt);
     end(s);
     return s;
@@ -956,7 +982,7 @@ override
   S visit(AsmAlignStatement s)
   {
     begin(s);
-    write(toString(s.number));
+    write(indexOf(s.numtok));
     end(s);
     return s;
   }
@@ -1047,408 +1073,238 @@ override
     visitE(e.lhs);
     write(",");
     visitE(e.rhs);
+    write(",");
+    write(indexOf(e.tok));
+    write(",");
+    write(indexOf(e.ctok));
     end(e);
     return e;
   }
 
-  E visit(CommaExpression e)
-  {
+  const binaryExpr = `
     begin(e);
     visitE(e.lhs);
     write(",");
     visitE(e.rhs);
+    write(",");
+    write(indexOf(e.tok));
     end(e);
-    return e;
+    return e;`;
+
+  const unaryExpr = `
+    begin(e);
+    visitE(e.una);
+    end(e);
+    return e;`;
+
+  E visit(CommaExpression e)
+  {
+    mixin(binaryExpr);
   }
 
   E visit(OrOrExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(AndAndExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(OrExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(XorExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(AndExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(EqualExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(IdentityExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(RelExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(InExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(LShiftExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(RShiftExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(URShiftExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(PlusExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(MinusExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(CatExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(MulExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(DivExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(ModExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(AssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(LShiftAssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(RShiftAssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(URShiftAssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(OrAssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(AndAssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(PlusAssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(MinusAssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(DivAssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(MulAssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(ModAssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(XorAssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(CatAssignExpression e)
   {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
+    mixin(binaryExpr);
   }
 
   E visit(AddressExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(PreIncrExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(PreDecrExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(PostIncrExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(PostDecrExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(DerefExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(SignExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(NotExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(CompExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(CallExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(NewExpression e)
@@ -1479,10 +1335,7 @@ override
 
   E visit(DeleteExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(CastExpression e)
@@ -1772,26 +1625,17 @@ override
 
   E visit(AsmTypeExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(AsmOffsetExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(AsmSegExpression e)
   {
-    begin(e);
-    visitE(e.una);
-    end(e);
-    return e;
+    mixin(unaryExpr);
   }
 
   E visit(AsmPostBracketExpression e)
