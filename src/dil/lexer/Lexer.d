@@ -274,8 +274,8 @@ class Lexer
       // Identifier or string literal.
       if (isidbeg(c))
       {
-        if (c == 'r' && p[1] == '"' && ++p)
-          return scanRawStringLiteral(t);
+        if (c == 'r' && p[1] == '"')
+          return ++p, scanRawStringLiteral(t);
         if (c == 'x' && p[1] == '"')
           return scanHexStringLiteral(t);
       version(D2)
@@ -328,7 +328,7 @@ class Lexer
           return scanNestedComment(t);
         case '*':
           return scanBlockComment(t);
-        case '/':
+        case '/': // LineComment.
           while (!isEndOfLine(++p))
             isascii(*p) || decodeUTF8();
           t.kind = TOK.Comment;
@@ -351,21 +351,7 @@ class Lexer
       case '"':
         return scanNormalStringLiteral(t);
       case '\\':
-        char[] buffer;
-        do
-        {
-          bool isBinary;
-          c = scanEscapeSequence(isBinary);
-          if (isascii(c) || isBinary)
-            buffer ~= c;
-          else
-            encodeUTF8(buffer, c);
-        } while (*p == '\\')
-        buffer ~= 0;
-        t.kind = TOK.String;
-        t.str = buffer;
-        t.end = p;
-        return;
+        return scanEscapeStringLiteral(t);
       case '>': /* >  >=  >>  >>=  >>>  >>>= */
         c = *++p;
         switch (c)
@@ -378,17 +364,14 @@ class Lexer
           {
             ++p;
             if (p[1] == '=')
-            { ++p;
+              ++p,
               t.kind = TOK.URShiftAssign;
-            }
             else
               t.kind = TOK.URShift;
           }
           else if (p[1] == '=')
-          {
-            ++p;
+            ++p,
             t.kind = TOK.RShiftAssign;
-          }
           else
             t.kind = TOK.RShift;
           goto Lcommon;
@@ -405,18 +388,16 @@ class Lexer
           t.kind = TOK.LessEqual;
           goto Lcommon;
         case '<':
-          if (p[1] == '=') {
-            ++p;
+          if (p[1] == '=')
+            ++p,
             t.kind = TOK.LShiftAssign;
-          }
           else
             t.kind = TOK.LShift;
           goto Lcommon;
         case '>':
-          if (p[1] == '=') {
-            ++p;
+          if (p[1] == '=')
+            ++p,
             t.kind = TOK.LorEorG;
-          }
           else
             t.kind = TOK.LorG;
           goto Lcommon;
@@ -433,17 +414,14 @@ class Lexer
           c = *++p;
           if (c == '>')
           {
-            if (p[1] == '=') {
-              ++p;
+            if (p[1] == '=')
+              ++p,
               t.kind = TOK.Unordered;
-            }
             else
               t.kind = TOK.UorE;
           }
           else if (c == '=')
-          {
             t.kind = TOK.UorG;
-          }
           else {
             t.kind = TOK.UorGorE;
             goto Lcommon2;
@@ -451,10 +429,8 @@ class Lexer
           goto Lcommon;
         case '>':
           if (p[1] == '=')
-          {
-            ++p;
+            ++p,
             t.kind = TOK.UorL;
-          }
           else
             t.kind = TOK.UorLorE;
           goto Lcommon;
@@ -470,17 +446,14 @@ class Lexer
         if (p[1] == '.')
         {
           ++p;
-          if (p[1] == '.') {
-            ++p;
+          if (p[1] == '.')
+            ++p,
             t.kind = TOK.Ellipses;
-          }
           else
             t.kind = TOK.Slice;
         }
         else if (isdigit(p[1]))
-        {
           return scanReal(t);
-        }
         else
           t.kind = TOK.Dot;
         goto Lcommon;
@@ -529,42 +502,37 @@ class Lexer
         }
         goto Lcommon;
       case '=': /* =  == */
-        if (p[1] == '=') {
-          ++p;
+        if (p[1] == '=')
+          ++p,
           t.kind = TOK.Equal;
-        }
         else
           t.kind = TOK.Assign;
         goto Lcommon;
       case '~': /* ~  ~= */
-         if (p[1] == '=') {
-           ++p;
+         if (p[1] == '=')
+           ++p,
            t.kind = TOK.CatAssign;
-         }
          else
            t.kind = TOK.Tilde;
          goto Lcommon;
       case '*': /* *  *= */
-         if (p[1] == '=') {
-           ++p;
+         if (p[1] == '=')
+           ++p,
            t.kind = TOK.MulAssign;
-         }
          else
            t.kind = TOK.Mul;
          goto Lcommon;
       case '^': /* ^  ^= */
-         if (p[1] == '=') {
-           ++p;
+         if (p[1] == '=')
+           ++p,
            t.kind = TOK.XorAssign;
-         }
          else
            t.kind = TOK.Xor;
          goto Lcommon;
       case '%': /* %  %= */
-         if (p[1] == '=') {
-           ++p;
+         if (p[1] == '=')
+           ++p,
            t.kind = TOK.ModAssign;
-         }
          else
            t.kind = TOK.Mod;
          goto Lcommon;
@@ -622,12 +590,8 @@ class Lexer
         return;
       }
 
-      if (!isascii(c))
-      {
-        c = decodeUTF8();
-        if (isUniAlpha(c))
-          goto Lidentifier;
-      }
+      if (!isascii(c) && isUniAlpha(c = decodeUTF8()))
+        goto Lidentifier;
 
       error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
@@ -831,7 +795,7 @@ class Lexer
     case toUint!("/*"):
       ++p; // Skip /
       return scanBlockComment(t);
-    case toUint!("//"):
+    case toUint!("//"): // LineComment.
       ++p; // Skip /
       assert(*p == '/');
       while (!isEndOfLine(++p))
@@ -915,12 +879,28 @@ class Lexer
     default:
     }
 
+    static TOK[127] char2tok = [
+      '<':TOK.Greater, '>':TOK.Less, '^':TOK.Xor, '!':TOK.Not,
+      '&':TOK.AndBinary, '|':TOK.OrBinary, '+':TOK.Plus, '-':TOK.Minus,
+      '=':TOK.Assign, '~':TOK.Tilde, '*':TOK.Mul, '/':TOK.Div,
+      '%':TOK.Mod, '(':TOK.LParen, ')':TOK.RParen, '[':TOK.LBracket,
+      ']':TOK.RBracket, '{':TOK.LBrace, '}':TOK.RBrace, ':':TOK.Colon,
+      ';':TOK.Semicolon, '?':TOK.Question, ',':TOK.Comma, '$':TOK.Dollar
+    ];
+
     c >>>= 8;
   L1character:
     assert(p == t.start);
     assert(*p == c, Format("p={0},c={1}", *p, cast(dchar)c));
     // 1 character tokens.
     // TODO: consider storing the token type in ptable.
+    if (c < 127)
+      if (auto kind = char2tok[c])
+      {
+        t.kind = kind;
+        t.end = ++p;
+        return;
+      }
     switch (c)
     {
     case '\'':
@@ -930,98 +910,11 @@ class Lexer
     case '"':
       return scanNormalStringLiteral(t);
     case '\\':
-      char[] buffer;
-      do
-      {
-        bool isBinary;
-        c = scanEscapeSequence(isBinary);
-        if (isascii(c) || isBinary)
-          buffer ~= c;
-        else
-          encodeUTF8(buffer, c);
-      } while (*p == '\\')
-      buffer ~= 0;
-      t.kind = TOK.String;
-      t.str = buffer;
-      t.end = p;
-      return;
-    case '<':
-      t.kind = TOK.Greater;
-      goto Lcommon;
-    case '>':
-      t.kind = TOK.Less;
-      goto Lcommon;
-    case '^':
-      t.kind = TOK.Xor;
-      goto Lcommon;
-    case '!':
-      t.kind = TOK.Not;
-      goto Lcommon;
+      return scanEscapeStringLiteral(t);
     case '.':
       if (isdigit(p[1]))
         return scanReal(t);
       t.kind = TOK.Dot;
-      goto Lcommon;
-    case '&':
-      t.kind = TOK.AndBinary;
-      goto Lcommon;
-    case '|':
-      t.kind = TOK.OrBinary;
-      goto Lcommon;
-    case '+':
-      t.kind = TOK.Plus;
-      goto Lcommon;
-    case '-':
-      t.kind = TOK.Minus;
-      goto Lcommon;
-    case '=':
-      t.kind = TOK.Assign;
-      goto Lcommon;
-    case '~':
-      t.kind = TOK.Tilde;
-      goto Lcommon;
-    case '*':
-      t.kind = TOK.Mul;
-      goto Lcommon;
-    case '/':
-      t.kind = TOK.Div;
-      goto Lcommon;
-    case '%':
-      t.kind = TOK.Mod;
-      goto Lcommon;
-    case '(':
-      t.kind = TOK.LParen;
-      goto Lcommon;
-    case ')':
-      t.kind = TOK.RParen;
-      goto Lcommon;
-    case '[':
-      t.kind = TOK.LBracket;
-      goto Lcommon;
-    case ']':
-      t.kind = TOK.RBracket;
-      goto Lcommon;
-    case '{':
-      t.kind = TOK.LBrace;
-      goto Lcommon;
-    case '}':
-      t.kind = TOK.RBrace;
-      goto Lcommon;
-    case ':':
-      t.kind = TOK.Colon;
-      goto Lcommon;
-    case ';':
-      t.kind = TOK.Semicolon;
-      goto Lcommon;
-    case '?':
-      t.kind = TOK.Question;
-      goto Lcommon;
-    case ',':
-      t.kind = TOK.Comma;
-      goto Lcommon;
-    case '$':
-      t.kind = TOK.Dollar;
-    Lcommon:
       ++p;
       t.end = p;
       return;
@@ -1036,8 +929,8 @@ class Lexer
     // TODO: consider moving isidbeg() and isdigit() up.
     if (isidbeg(c))
     {
-      if (c == 'r' && p[1] == '"' && ++p)
-        return scanRawStringLiteral(t);
+      if (c == 'r' && p[1] == '"')
+        return ++p, scanRawStringLiteral(t);
       if (c == 'x' && p[1] == '"')
         return scanHexStringLiteral(t);
     version(D2)
@@ -1087,12 +980,8 @@ class Lexer
       return;
     }
 
-    if (!isascii(c))
-    {
-      c = decodeUTF8();
-      if (isUniAlpha(c))
-        goto Lidentifier;
-    }
+    if (!isascii(c) && isUniAlpha(c = decodeUTF8()))
+      goto Lidentifier;
 
     error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
@@ -1281,6 +1170,28 @@ class Lexer
       buffer ~= c;
     }
     assert(0);
+  }
+
+  /// Scans an escape string literal.
+  ///
+  /// $(BNF EscapeStringLiteral := EscapeSequence+ )
+  void scanEscapeStringLiteral(ref Token t)
+  {
+    assert(*p == '\\');
+    char[] buffer;
+    do
+    {
+      bool isBinary;
+      auto c = scanEscapeSequence(isBinary);
+      if (isascii(c) || isBinary)
+        buffer ~= c;
+      else
+        encodeUTF8(buffer, c);
+    } while (*p == '\\')
+    buffer ~= 0;
+    t.kind = TOK.String;
+    t.str = buffer;
+    t.end = p;
   }
 
   /// Scans a character literal.
@@ -1757,9 +1668,10 @@ class Lexer
   /// Scans an escape sequence.
   ///
   /// $(BNF
-  ////EscapeSequence := "\\" (Binary | C)
-  ////Binary := Octal{1,3} | ("x" Hex{2}) | ("u" Hex{4}) | ("U" Hex{8})
-  ////C := "'" | '"' | "?" | "\\" | "a" | "b" | "f" | "n" | "r" | "t" | "v"
+  ////EscapeSequence := "\\" (BinaryEsc | UnicodeEsc | CEsc)
+  ////BinaryEsc := Octal{1,3} | "x" Hex{2}
+  ////UnicodeEsc := "u" Hex{4} | "U" Hex{8}
+  ////CEsc := "'" | '"' | "?" | "\\" | "a" | "b" | "f" | "n" | "r" | "t" | "v"
   ////)
   /// Params:
   ///   isBinary = set to true for octal and hexadecimal escapes.
