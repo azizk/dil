@@ -16,11 +16,11 @@ toks = (
 ids = (
   "Invalid","Illegal","Comment","Shebang","HashLine","Filespec","Newline",
   "Empty","Identifier","String","CharLiteral","FILE","LINE","DATE","TIME",
-  "TIMESTAMP","VENDOR","VERSION","Int32", "Int64", "Uint32", "Uint64",
-  "Float32", "Float64", "Float80","Imaginary32", "Imaginary64", "Imaginary80",
+  "TIMESTAMP","VENDOR","VERSION","Int32","Int64","Uint32","Uint64",
+  "Float32","Float64","Float80","Imaginary32","Imaginary64","Imaginary80",
   "LParen","RParen","LBracket","RBracket","LBrace","RBrace","Dot","Slice",
   "Ellipses","Unordered","UorE","UorG","UorGorE","UorL","UorLorE","LorEorG",
-  "LorG","Assign", "Equal", "NotEqual", "Not","LessEqual","Less",
+  "LorG","Assign","Equal","NotEqual","Not","LessEqual","Less",
   "GreaterEqual","Greater","LShiftAssign","LShift","RShiftAssign","RShift",
   "URShiftAssign","URShift","OrAssign","OrLogical","OrBinary","AndAssign",
   "AndLogical","AndBinary","PlusAssign","PlusPlus","Plus","MinusAssign",
@@ -64,6 +64,7 @@ def main():
     write('%s,' % tok, 76, "\\\n  ")
   write(tokens[-1][0]+" = range(0,%s)" % len(tokens))
   write("", flush=True)
+  print "  MAX = %s" % len(tokens)
 
   stdout.write("  str = (\n    ")
   for tok, tokstr in tokens:
