@@ -4,15 +4,39 @@ from __future__ import unicode_literals
 import re
 
 class Macro:
-  rx = re.compile(r"^\s*([^\W0-9]\w*)\s*=", re.M | re.U)
-  def __init__(self, pos, name, text, src=""):
+  rx = re.compile(r"^([^\W0-9]\w*)\s*=" "|^", re.M | re.U)
+  def __init__(self, name, text, pos, src=""):
     self.pos = pos
     self.name = name
     self.text = text
     self.src = src
   def __repr__(self):
-    return self.name + "@%d,%d" % self.pos + "='" + self.text[:5] + "'"
+    return self.name + "@(%d,%d)" % self.pos + "='" + self.text[:5] + "'"
   __unicode__ = __str__ = __repr__
+
+  @staticmethod
+  def parse(text, src, skip=1):
+    """ Parses a text and returns a list of macros. """
+    prev_end = 0
+    prev_name = ""
+    prev_pos = (1, 1)
+    macros = []
+    macros_add = macros.append
+    linnum = 0
+    for m in Macro.rx.finditer(text):
+      linnum += 1 # Increment line number.
+      whole_match = m.group() # Whole matched text.
+      if not whole_match: # Empty only when a newline was matched.
+        continue
+      # value = text[prev_end : m.start()]
+      macros_add(Macro(prev_name, text[prev_end:m.start()], prev_pos, src))
+      # Update variables.
+      prev_end = m.end()
+      prev_name = m.group(1)
+      # column = whole_match.find(prev_name[0]) + 1
+      prev_pos = (linnum, whole_match.find(prev_name[0]) + 1)
+    macros_add(Macro(prev_name, text[prev_end:], prev_pos, src))
+    return macros[skip:]
 
 class MacroTable:
   def __init__(self, parent=None):
@@ -22,36 +46,7 @@ class MacroTable:
     macro = self.table.get(name, None)
     if not macro and self.parent: self.parent.search(name)
     return macro
-
-def parse_macros_v1(text, src):
-  """ Note: doesn't produce correct (row,column) info. """
-  rx_iter = Macro.rx.finditer(text)
-  macros = []
-  ms = [m.span()+m.groups() for m in rx_iter]
-  ms += [(len(text), len(text), "")]
-
-  for i in xrange(0, len(ms)-1):
-    m = ms[i]
-    name = m[2]
-    pos = (text.find(name[0], m[0]), m[1])
-    macro_text = text[m[1] : ms[i+1][0]]
-    macros.append(Macro(pos, name, macro_text, src))
-  return macros
-
-def parse_macros_v2(text, src):
-  rx = Macro.rx
-  macros = []
-  i = 0 # Line number.
-  macro = Macro((1, 1), "", "", src) # First dummy macro.
-  for line in text.splitlines(True):
-    i += 1
-    m = rx.match(line)
-    if m:
-      name = m.group(1)
-      column = line.find(name[0]) + 1
-      macro = Macro((i, column), name, line[m.end():], src)
-      macros.append(macro)
-    else:
-      macro.text += line
-  macros += [macro]
-  return macros
+  def insert(self, macro):
+    self.table[macro.name] = macro
+  def insert2(self, name, text, pos=(0,0), src=""):
+    self.insert(Macro(name, text, pos, src))
