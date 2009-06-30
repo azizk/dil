@@ -1578,6 +1578,7 @@ class Lexer
     uint level = 1;
 
     ++p; ++p; // Skip q{
+    char* str_begin = p, str_end = void;
 
     auto prev_t = &t;
     Token* token;
@@ -1618,47 +1619,44 @@ class Lexer
     assert(token.kind == TOK.RBrace && t.next is null ||
            token.kind == TOK.EOF && t.next !is null);
 
-    char[] buffer;
-    // token points to } or EOF
+    // token is "}" or EOF.
     if (token.kind == TOK.EOF)
-    {
-      t.end = token.start;
-      buffer = t.text[2..$].dup ~ '\0';
-    }
+      str_end = t.end = token.start;
     else
     {
-      // Assign to buffer before scanPostfix().
-      t.end = p;
-      buffer = t.text[2..$-1].dup ~ '\0';
+      str_end = p-1;
       t.pf = scanPostfix();
-      t.end = p; // Assign again because of postfix.
+      t.end = p;
     }
+    auto buffer = str_begin[0..str_end-str_begin+1]; // +1 for '\0'.
     // Convert newlines to '\n'.
     if (lineNum != this.lineNum)
-    {
-      assert(buffer[$-1] == '\0');
-      uint i, j;
-      for (; i < buffer.length; ++i)
-        switch (buffer[i])
+    { // Copy the string to the buffer and convert the newlines.
+      buffer = new char[buffer.length];
+      auto q = str_begin, s = buffer.ptr;
+      for (; q < str_end; ++q)
+        switch (*q)
         {
         case '\r':
-          if (buffer[i+1] == '\n')
-            ++i;
+          if (q[1] == '\n')
+            ++q;
         case '\n':
-          assert(isNewlineEnd(buffer.ptr + i));
-          buffer[j++] = '\n'; // Convert Newline to '\n'.
+          assert(isNewlineEnd(q));
+          *s++ = '\n'; // Convert Newline to '\n'.
           break;
         default:
-          if (isUnicodeNewline(buffer.ptr + i))
+          if (isUnicodeNewline(q))
           {
-            ++i; ++i;
+            ++q; ++q;
             goto case '\n';
           }
-          buffer[j++] = buffer[i]; // Copy.
+          *s++ = *q; // Copy.
         }
-      buffer.length = j; // Adjust length.
+      buffer.length = s - buffer.ptr +1;
     }
-    assert(buffer[$-1] == '\0');
+    else // Just duplicate the string, no conversion needed.
+      buffer = buffer.dup;
+    buffer[$-1] = 0;
     t.str = buffer;
 
     --inTokenString;
