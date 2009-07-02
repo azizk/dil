@@ -14,9 +14,10 @@ How To Compile Dil
 In order to compile dil you need to have:
  *) DMD 1.042 (http://www.digitalmars.com/d/1.0/changelog.html)
  *) Tango 0.99.8 (http://dsource.org/projects/tango/)
+ *) MPFR 2.4.0 (http://mpfr.org)
  *) DSSS 0.77 (http://dsource.org/projects/dsss/)
     or alternatively:
-    Python 2.5 and scripts/build.py
+    Python 2.6.2 (2.5 might work too) and scripts/build.py
 
 If you can't compile dil because you have a newer version of these programs
 then report the problem to me, please (see Bugs section.)

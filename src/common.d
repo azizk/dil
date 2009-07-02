@@ -5,7 +5,7 @@ module common;
 
 import tango.io.stream.Format;
 public import tango.io.Stdout;
-public import tango.text.convert.Layout;
+public import tango.text.convert.Layout : Layout;
 
 /// String aliases.
 alias char[] string;
