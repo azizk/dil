@@ -5,7 +5,7 @@ import os, re
 from path import Path
 from common import *
 from sys import platform
-from build import DMDCommand
+from build import DMDCommand, LDCCommand
 from html2pdf import PDFGenerator
 
 def copy_files(DIL):
@@ -25,10 +25,10 @@ def writeMakefile():
   # TODO: implement.
   pass
 
-def build_dil(dmd_exe, *args, **kwargs):
-  kwargs.update(dmd_exe=dmd_exe)
-  cmd = DMDCommand(*args, **kwargs)
-  cmd.use_wine = dmd_exe.use_wine
+def build_dil(COMPILER, *args, **kwargs):
+  kwargs.update(exe=COMPILER)
+  cmd = COMPILER.cmd(*args, **kwargs)
+  cmd.use_wine = COMPILER.use_wine
   print cmd
   cmd.call()
 
@@ -81,8 +81,9 @@ def main():
     help="copy modified files from the (git) working directory")
   parser.add_option("--src", dest="src", metavar="SRC", default=None,
     help="use SRC folder instead of checking out code with git")
-  parser.add_option("--dmd-exe", dest="dmd_exe", metavar="EXE_PATH",
-    default="dmd", help="specify EXE_PATH if dmd is not in your PATH")
+  parser.add_option("--cmp-exe", dest="cmp_exe", metavar="EXE_PATH",
+    help="specify EXE_PATH if dmd/ldc is not in your PATH")
+  add_option("--ldc", dest="ldc", help="use ldc instead of dmd")
   parser.add_option("--builddir", dest="builddir", metavar="DIR", default=None,
     help="where to build the release and archives (default is build/)")
   parser.add_option("--winpath", dest="winpath", metavar="P", default=None,
@@ -109,14 +110,16 @@ def main():
     parser.error("invalid VERSION; format: /\d.\d\d\d(-\w+)?/ E.g.: 1.123")
   matched = m.groups()
 
-  if not Path(options.dmd_exe).exists and not locate_command(options.dmd_exe):
+  # Pick a compiler for compiling dil.
+  CmdClass = (DMDCommand, LDCCommand)[options.ldc]
+  COMPILER = Path(options.cmp_exe if options.cmp_exe else CmdClass.cmd)
+  COMPILER.cmd = CmdClass
+  if not COMPILER.exists and not locate_command(COMPILER):
     parser.error("The executable '%s' couldn't be located or does not exist." %
-      options.dmd_exe)
+                 COMPILER)
 
   # Path to dil's root folder.
   DIL       = dil_path()
-  # Name or path to the executable of dmd.
-  DMD_EXE   = Path(options.dmd_exe)
   # The version of dil to be built.
   VERSION, V_MAJOR = matched[:2]
   V_MINOR, V_SUFFIX = (matched[2], firstof(str, matched[3], ''))
@@ -185,7 +188,7 @@ def main():
     if options.pdf:
       write_PDF(DEST, DEST.DOC, VERSION, TMP)
 
-  DMD_EXE.use_wine = False
+  COMPILER.use_wine = False
   use_wine = False
   if platform is 'win32':
     build_linux_binaries = False
@@ -209,12 +212,13 @@ def main():
 
   # Create partial functions with common parameters.
   # Note: the -inline switch makes the binaries significantly larger on Linux.
-  build_dil_rls = func_partial(build_dil, DMD_EXE, FILES,
-                               release=True, optimize=True, inline=True)
-  build_dil_dbg = func_partial(build_dil, DMD_EXE, FILES,
-                               debug_info=options.debug_symbols)
+  linker_args = ["-lmpfr"]
+  build_dil_rls = func_partial(build_dil, COMPILER, FILES,
+    release=True, optimize=True, inline=True, lnk_args=linker_args)
+  build_dil_dbg = func_partial(build_dil, COMPILER, FILES,
+    debug_info=options.debug_symbols, lnk_args=linker_args)
   if build_linux_binaries:
-    print "***** Building Linux binaries *****"
+    print "\n***** Building Linux binaries *****\n"
     # Linux Debug Binaries
     build_dil_dbg(BIN/"dil_d")
     build_dil_dbg(BIN/"dil2_d", versions=["D2"])
@@ -223,8 +227,8 @@ def main():
     build_dil_rls(BIN/"dil2", versions=["D2"])
 
   if build_windows_binaries:
-    print "***** Building Windows binaries *****"
-    DMD_EXE.use_wine = use_wine
+    print "\n***** Building Windows binaries *****\n"
+    COMPILER.use_wine = use_wine
     # Windows Debug Binaries
     build_dil_dbg(BIN/"dil_d.exe")
     build_dil_dbg(BIN/"dil2_d.exe", versions=["D2"])

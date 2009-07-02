@@ -1,49 +1,91 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
+import subprocess
 
-class DMDCommand:
-  exe = "dmd" # Default.
-  def __init__(self, files, out_exe, dmd_exe=exe, objdir='obj',
+class Command:
+  def __init__(self, exe):
+    self.use_wine = False
+    self.exe = exe
+  def args(self):
+    return []
+  def call(self):
+    """ Executes the dmd executable. """
+    args = self.args()
+    exe = self.exe
+    if self.use_wine:
+      args = [exe] + args
+      exe = "wine"
+    try:
+      subprocess.call([exe] + args)
+    except OSError as e:
+      e.exe = exe
+      raise e
+
+class CmdParameters(dict):
+  def __getattr__(self, name): return self[name]
+  def __setattr__(self, name, value): self[name] = value
+  def __delattr__(self, name): del self[name]
+
+class DMDCommand(Command):
+  cmd = "dmd"
+  P = CmdParameters( # Parameter template strings.
+    I = "-I%s", # Include-directory.
+    L = "-L%s", # Linker option.
+    version = "-version=%s", # Version level or identifier.
+    of = "-of%s", # Output file path.
+    od = "-od%s", # Object directory.
+    inline = "-inline", # Inline code.
+    release = "-release", # Compile release code.
+    O = "-O", # Optimize code.
+    g = "-g", # Debug symbols.
+    w = "-w", # Enable warnings.
+    op = "-op", # Don't strip paths from source files.
+    o_ = "-o-" # Don't output object file.
+  )
+  def __init__(self, files, out_exe, exe=cmd, objdir='obj',
                release=False, optimize=False, inline=False, debug_info=False,
                no_obj=False, warnings=False, strip_paths=False,
-               lnk_args=[], includes=[], versions=[]):
-    """ Returns a tuple of the string arguments and the local variables:
-        (args, locals()). """
-    self.use_wine = False
+               lnk_args=[], includes=[], versions=[], other=[]):
+    Command.__init__(self, exe)
+    P = self.P
     self.files = files
-    self.dmd_exe = dmd_exe
-    self.out_exe = "-of"+out_exe
-    options = ((release, "-release"), (optimize, "-O"), (inline, "-inline"),
-              (objdir, "-od"+objdir), (warnings, "-w"), (debug_info, "-g"),
-              (not strip_paths, "-op"), (no_obj, "-o-"))
+    self.out_exe = P.of%out_exe
+    options = ((release, P.release), (optimize, P.O), (inline, P.inline),
+              (objdir, P.od%objdir), (warnings, P.w), (debug_info, P.g),
+              (not strip_paths, P.op), (no_obj, P.o_))
     self.options  = [o for enabled, o in options if enabled]
-    self.lnk_args = ["-L+"+l for l in lnk_args]
-    self.includes = ["-I"+i for i in includes]
-    self.versions = ["-version="+v for v in versions]
+    self.lnk_args = [P.L%l for l in lnk_args]
+    self.includes = [P.I%i for i in includes]
+    self.versions = [P.version%v for v in versions]
+    self.other_args = other
 
   def args(self):
     """ Returns all command arguments as a list of strings. """
     return self.options + self.lnk_args + self.includes + \
-           self.versions + self.files + [self.out_exe]
-
-  def call(self):
-    """ Executes the dmd executable. """
-    args = self.args()
-    dmd_exe = self.dmd_exe
-    if self.use_wine:
-      args = [dmd_exe] + args
-      dmd_exe = "wine"
-    from subprocess import call
-    call([dmd_exe] + args)
+           self.versions + self.files + [self.out_exe] + self.other_args
 
   def __str__(self):
     """ Returns the cmd as a string, but doesn't include the file paths. """
     files_saved = self.files
-    self.files = ["(sourcefiles...)"] # Don't flood cmd line with file paths.
-    cmd_str = " ".join([self.dmd_exe]+self.args())
+    # Don't flood cmd line with file paths.
+    self.files = ["(%d source files...)"%len(files_saved)]
+    cmd_str = " ".join([self.exe]+self.args())
     self.files = files_saved
     return cmd_str
+
+class LDCCommand(DMDCommand):
+  cmd = "ldc"
+  P = CmdParameters(DMDCommand.P,
+    I = "-I=%s",
+    L = "-L=%s",
+    of = "-of=%s",
+    od = "-od=%s",
+    inline = "-enable-inlining",
+    version = "-d-version=%s",
+  )
+  def __init__(self, files, out_exe, exe=cmd, **kwargs):
+    DMDCommand.__init__(self, files, out_exe, exe=exe, **kwargs)
 
 def build_dil(cmd_kwargs):
   """ Collects D source files and calls dmd. """
@@ -56,18 +98,26 @@ def build_dil(cmd_kwargs):
   (BIN/"dilconf.d").exists or (DATA/"dilconf.d").copy(BIN)
   # Find the source files.
   FILES = find_dil_source_files(Path("src"))
-  # Execute dmd.
-  cmd = DMDCommand(FILES, BIN/"dil", **cmd_kwargs)
+  # Pick a compiler class.
+  Command = cmd_kwargs.get("CMDCLASS", DMDCommand)
+  del cmd_kwargs["CMDCLASS"]
+  # Run the compiler.
+  cmd = Command(FILES, BIN/"dil", **cmd_kwargs)
   print cmd
-  cmd.call()
+  try:
+    cmd.call()
+  except OSError as e:
+    if e.errno == 2:
+      print "Error: command not found: '%s'" % e.exe
+
 
 def build_dil_release(**kwargs):
   options = {'release':1, 'optimize':1, 'inline':1}
   build_dil(dict(kwargs, **options))
 
 def build_dil_debug(**kwargs):
-  #options = {'debug_info':1} # FIXME: Requires Tango compiled with -g.
-  build_dil(kwargs)
+  options = {'debug_info':1}
+  build_dil(dict(kwargs, **options))
 
 def main():
   from optparse import OptionParser
@@ -88,10 +138,11 @@ def main():
 
   change_cwd(__file__)
 
-  dmd_exe = "ldc" if options.ldc else DMDCommand.exe
+  command = (DMDCommand, LDCCommand)[options.ldc]
   versions = ["D2"] if options.d2 else []
+  lnk_args = ["-lmpfr"]
   build_func = (build_dil_release, build_dil_debug)[options.debug]
-  build_func(dmd_exe=dmd_exe, versions=versions)
+  build_func(CMDCLASS=command, versions=versions, lnk_args=lnk_args)
 
 if __name__ == '__main__':
   main()
