@@ -14,11 +14,11 @@ import dil.CompilerInfo;
 import dil.Unicode;
 import dil.SourceText;
 import dil.Time;
-import util.uni;
+import dil.Float : Float;
+import util.uni : isUniAlpha;
+import util.mpfr : mpfr_t, mpfr_strtofr, mpfr_init;
 import common;
 
-import tango.stdc.stdlib : strtof, strtod, strtold;
-import tango.stdc.errno : errno, ERANGE;
 import tango.core.Vararg;
 
 public import dil.lexer.Funcs;
@@ -2093,6 +2093,21 @@ class Lexer
     return;
   }
 
+  /// Returns a zero-terminated copy of the string where all
+  /// underscores are removed.
+  static char[] copySansUnderscores(char* begin, char* end)
+  {
+    assert(begin && begin < end);
+    auto str = new char[end-begin+1]; // +1 for '\0'.
+    auto p = begin, s = str.ptr;
+    for (; p < end; ++p)
+      if (*p != '_')
+        *s++ = *p;
+    *s = 0;
+    str.length = s - str.ptr +1; // Adjust length.
+    return str;
+  }
+
   /// Scans a floating point number literal.
   ///
   /// $(BNF
@@ -2102,10 +2117,6 @@ class Lexer
   ////                "." [0-9] [0-9_]* DecExponent? |
   ////                [0-9] [0-9_]* DecExponent
   ////DecExponent  := [eE] [+-]? [0-9] [0-9_]*
-  ////HexFloat     := "0" [xX] (HexDigits "." HexDigits |
-  ////                          "." [0-9a-zA-Z] HexDigits? |
-  ////                          HexDigits) HexExponent
-  ////HexExponent := [pP] [+-]? [0-9] [0-9_]*
   ////)
   void scanReal(ref Token t)
   {
@@ -2115,10 +2126,8 @@ class Lexer
       // This function was called by scan() or scanNumber().
       while (isdigit(*++p) || *p == '_') {}
     }
-    else
-      // This function was called by scanNumber().
-      assert(delegate ()
-        {
+    else // This function was called by scanNumber().
+      assert(delegate () {
           switch (*p)
           {
           case 'L':
@@ -2141,35 +2150,28 @@ class Lexer
       if (isdigit(*p))
         while (isdigit(*++p) || *p == '_') {}
       else
-        error(t.start, MID.FloatExpMustStartWithDigit);
+        error(p, MID.FloatExpMustStartWithDigit);
     }
 
-    // Copy whole number and remove underscores from buffer.
-    char[] buffer = t.start[0..p-t.start].dup;
-    uint j;
-    foreach (c; buffer)
-      if (c != '_')
-        buffer[j++] = c;
-    buffer.length = j; // Adjust length.
-    buffer ~= 0; // Terminate for C functions.
-
-    finalizeFloat(t, buffer);
+    finalizeFloat(t, copySansUnderscores(t.start, p));
   }
 
   /// Scans a hexadecimal floating point number literal.
+  /// $(BNF
+  ////HexFloat := "0" [xX] (HexDigits "." HexDigits |
+  ////                      "." [0-9a-fA-F] HexDigits? |
+  ////                      HexDigits) HexExponent
+  ////HexExponent := [pP] [+-]? [0-9] [0-9_]*
+  ////)
   void scanHexReal(ref Token t)
   {
     assert(*p == '.' || *p == 'p' || *p == 'P');
-    MID mid;
+    MID mid = MID.HexFloatExponentRequired;
     if (*p == '.')
-      while (ishexad(*++p) || *p == '_')
-      {}
+      while (ishexad(*++p) || *p == '_') {}
     // Decimal exponent is required.
     if (*p != 'p' && *p != 'P')
-    {
-      mid = MID.HexFloatExponentRequired;
       goto Lerr;
-    }
     // Scan exponent
     assert(*p == 'p' || *p == 'P');
     ++p;
@@ -2182,58 +2184,59 @@ class Lexer
     }
     while (isdigit(*++p) || *p == '_')
     {}
-    // Copy whole number and remove underscores from buffer.
-    char[] buffer = t.start[0..p-t.start].dup;
-    uint j;
-    foreach (c; buffer)
-      if (c != '_')
-        buffer[j++] = c;
-    buffer.length = j; // Adjust length.
-    buffer ~= 0; // Terminate for C functions.
-    finalizeFloat(t, buffer);
+
+    finalizeFloat(t, copySansUnderscores(t.start, p));
     return;
   Lerr:
     t.kind = TOK.Float32;
     t.end = p;
-    error(t.start, mid);
+    error(p, mid);
   }
 
   /// Sets the value of the token.
   /// Params:
   ///   t = receives the value.
-  ///   buffer = the well-formed float number.
+  ///   buffer = the well-formed float string.
   void finalizeFloat(ref Token t, string buffer)
   {
-    assert(buffer[$-1] == 0);
-    // Float number is well-formed. Check suffixes and do conversion.
-    switch (*p)
-    {
-    case 'f', 'F':
-      t.kind = TOK.Float32;
-      t.float_ = strtof(buffer.ptr, null);
-      ++p;
-      break;
-    case 'L':
-      t.kind = TOK.Float80;
-      t.real_ = strtold(buffer.ptr, null);
-      ++p;
-      break;
-    default:
-      t.kind = TOK.Float64;
-      t.double_ = strtod(buffer.ptr, null);
-    }
+    assert(buffer.length && buffer[$-1] == 0);
+    // Finally check suffixes.
+    TOK kind = void;
+    if (*p == 'f' || *p == 'F')
+      ++p, kind = TOK.Float32;
+    else if (*p == 'L')
+      ++p, kind = TOK.Float80;
+    else
+      kind = TOK.Float64;
+    // Convert to multiprecision float.
+    mpfr_t mpfloat;
+    mpfr_init(&mpfloat);
+    int res = mpfr_strtofr(&mpfloat, buffer.ptr, null, 0, Float.RND);
+    // if (res == 0) // Exact precision.
+    // else if (res < 0) // Lower precision.
+    // {}
+    // else /*if (res > 0)*/ // Higher precision.
+    // {}
     if (*p == 'i')
     {
       ++p;
-      t.kind += 3; // Switch to imaginary counterpart.
-      assert(t.kind == TOK.Imaginary32 ||
-             t.kind == TOK.Imaginary64 ||
-             t.kind == TOK.Imaginary80);
+      kind += 3; // Switch to imaginary counterpart.
+      assert(kind == TOK.Imaginary32 || kind == TOK.Imaginary64 ||
+             kind == TOK.Imaginary80);
     }
-    if (errno() == ERANGE)
-      error(t.start, MID.OverflowFloatNumber),
-      errno(0); // Important: reset the error number.
+    // TODO: test for overflow/underflow according to target platform.
+    //       CompilationContext must be passed to Lexer for this.
+    auto f = new Float(&mpfloat);
+    if (f.isPInf())
+      error(t.start, MID.OverflowFloatNumber);
+    // else if (f.isNInf())
+      // error(t.start, MSG.UnderflowFloatNumber);
+    // else if (f.isNaN())
+      // error(t.start, MSG.NaNFloat);
+    t.mpfloat = f;
+    t.kind = kind;
     t.end = p;
+    return;
   }
 
   /// Scans a special token sequence.

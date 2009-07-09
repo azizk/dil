@@ -738,6 +738,7 @@ class IntExpression : Expression
 
 class RealExpression : Expression
 {
+  // TODO: switch to 'dil.Float'.
   real number;
 
   this(real number, Type type)
@@ -768,7 +769,7 @@ class RealExpression : Expression
     default:
       assert(token.kind == TOK.Float64);
     }
-    this(token.real_, type);
+    this(0.0, type);
   }
 
   mixin(copyMethod);

@@ -6,6 +6,7 @@ module dil.lexer.Token;
 import dil.lexer.Identifier,
        dil.lexer.Funcs;
 import dil.Location;
+import dil.Float : Float;
 import common;
 
 import tango.stdc.stdlib : malloc, free;
@@ -62,9 +63,10 @@ struct Token
     ulong  ulong_;   /// An unsigned long integer value.
     int    int_;     /// An integer value.
     uint   uint_;    /// An unsigned integer value.
-    float  float_;   /// A float value.
-    double double_;  /// A double value.
-    real   real_;    /// A real value.
+//     float  float_;   /// A float value.
+//     double double_;  /// A double value.
+//     real   real_;    /// A real value.
+    Float mpfloat;   /// A multiple precision float value.
   }
 
   /// Returns the text of the token.
