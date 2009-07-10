@@ -122,6 +122,8 @@ def build_dil_debug(**kwargs):
 def main():
   from optparse import OptionParser
   from common import change_cwd
+  from sys import platform
+  is_win32 = platform == win32
 
   usage = "Usage: scripts/build.py [Options]"
   parser = OptionParser(usage=usage)
@@ -140,7 +142,7 @@ def main():
 
   command = (DMDCommand, LDCCommand)[options.ldc]
   versions = ["D2"] if options.d2 else []
-  lnk_args = ["-lmpfr"]
+  lnk_args = ["+mpfr"] if is_win32 else ["-lmpfr"]
   build_func = (build_dil_release, build_dil_debug)[options.debug]
   build_func(CMDCLASS=command, versions=versions, lnk_args=lnk_args)
 
