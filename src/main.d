@@ -22,13 +22,13 @@ import dil.CompilerInfo;
 import dil.Diagnostics;
 import dil.SourceText;
 import dil.Compilation;
+import dil.PyTreeEmitter;
 
 import cmd.Compile;
 import cmd.Highlight;
 import cmd.Statistics;
 import cmd.ImportGraph;
 import cmd.DDoc;
-import dil.PyTreeEmitter;
 
 import Settings;
 import SettingsLoader;
