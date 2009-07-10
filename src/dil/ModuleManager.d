@@ -260,9 +260,7 @@ class ModuleManager
   static string absolutePath(string path)
   {
     path = FileSystem.toAbsolute(path);
-    // FIXME: normalize() doesn't simplify 'a//path//' to 'a/path/'.
-    // Handle the exception it throws.
-    path = pathNormalize(path); // Remove ./ /. ../ and /..
-    return path;
+    // FIXME: Handle the exception it throws.
+    return pathNormalize(path); // Remove ./ /. ../ and /..
   }
 }

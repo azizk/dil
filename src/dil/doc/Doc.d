@@ -426,8 +426,8 @@ struct DDocParser
 /// Represents a DDoc section.
 class Section
 {
-  string name;
-  string text;
+  string name; /// The name of the section.
+  string text; /// The text of the section.
   /// Constructs a Section object.
   this(string name, string text)
   {
@@ -450,6 +450,7 @@ class Section
   }
 }
 
+/// Represents a params section.
 class ParamsSection : Section
 {
   string[] paramNames; /// Parameter names.
@@ -470,6 +471,7 @@ class ParamsSection : Section
   }
 }
 
+/// Represents a macros section.
 class MacrosSection : Section
 {
   string[] macroNames; /// Macro names.
