@@ -123,7 +123,7 @@ def main():
   from optparse import OptionParser
   from common import change_cwd
   from sys import platform
-  is_win32 = platform == win32
+  is_win32 = platform == "win32"
 
   usage = "Usage: scripts/build.py [Options]"
   parser = OptionParser(usage=usage)
