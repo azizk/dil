@@ -39,6 +39,7 @@ abstract class BinaryExpression : Expression
     addChildren([lhs, rhs]);
     this.lhs = lhs;
     this.rhs = rhs;
+    assert(lhs.end !is null);
     this.tok = tok ? tok : lhs.end.nextNWS;
   }
   mixin(copyMethodBinaryExpression);
@@ -780,6 +781,7 @@ class RealExpression : Expression
 /// It is only created in the semantic phase.
 class ComplexExpression : Expression
 {
+  // Complex number; // TODO: switch to this class.
   creal number;
   this(creal number, Type type)
   {

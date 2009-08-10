@@ -81,7 +81,7 @@ struct Token
   }
 
   /// Finds the next non-whitespace token.
-  /// Returns: 'this' token if the next token is TOK.EOF or null.
+  /// Returns: 'this' token if the next token is inexistant or TOK.EOF.
   Token* nextNWS()
   out(token)
   {
@@ -98,7 +98,7 @@ struct Token
   }
 
   /// Finds the previous non-whitespace token.
-  /// Returns: 'this' token if the previous token is TOK.HEAD or null.
+  /// Returns: 'this' token if the previous token is inexistent or TOK.HEAD.
   Token* prevNWS()
   out(token)
   {

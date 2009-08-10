@@ -948,14 +948,14 @@ class Parser
   }
 
   /// $(BNF AlignAttribute := align ("(" Integer ")")?)
-  uint parseAlignAttribute()
+  uint parseAlignAttribute(ref Token* sizetok)
   {
     skip(T.Align);
     uint size = DEFAULT_ALIGN_SIZE; // Global default.
     if (consumed(T.LParen))
     {
       if (token.kind == T.Int32)
-        (size = token.int_), skip(T.Int32);
+        (sizetok = token), (size = token.int_), skip(T.Int32);
       else
         expected(T.Int32);
       require(T.RParen);
@@ -976,10 +976,11 @@ class Parser
     switch (token.kind)
     {
     case T.Align:
-      uint alignSize = parseAlignAttribute();
+      Token* sizetok;
+      uint alignSize = parseAlignAttribute(sizetok);
       auto saved = this.alignSize; // Save.
       this.alignSize = alignSize; // Set.
-      decl = new AlignDeclaration(alignSize, parseDeclarationsBlock());
+      decl = new AlignDeclaration(sizetok, parseDeclarationsBlock());
       this.alignSize = saved; // Restore.
       break;
     case T.Pragma:
@@ -1674,7 +1675,8 @@ class Parser
     switch (token.kind)
     {
     case T.Align:
-      uint size = parseAlignAttribute();
+      Token* sizetok;
+      uint size = parseAlignAttribute(sizetok);
       // Restrict align attribute to structs in parsing phase.
       StructDeclaration structDecl;
       if (token.kind == T.Struct)
@@ -1687,9 +1689,8 @@ class Parser
       else
         expected(T.Struct);
 
-      d = new AlignDeclaration(size, structDecl ?
-                                     cast(Declaration)structDecl :
-                                     new CompoundDeclaration);
+      d = structDecl ? cast(Declaration)structDecl : new CompoundDeclaration;
+      d = new AlignDeclaration(sizetok, d);
       goto LreturnDeclarationStatement;
       /+ Not applicable for statements.
          T.Private, T.Package, T.Protected, T.Public, T.Export,

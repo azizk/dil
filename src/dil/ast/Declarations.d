@@ -734,13 +734,12 @@ class AlignDeclaration : AttributeDeclaration
 {
   int size;
   Token* sizetok;
-  this(int size, Declaration decls)
+  this(Token* sizetok, Declaration decls)
   {
     super(decls);
     mixin(set_kind);
-    this.size = size;
-    auto sizetok = begin.nextNWS.nextNWS;
-    this.sizetok = sizetok.kind == TOK.Int32 ? sizetok : null;
+    this.size = sizetok ? sizetok.int_ : -1;
+    this.sizetok = sizetok;
   }
   mixin(copyMethod);
 }
