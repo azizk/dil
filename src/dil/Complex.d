@@ -428,7 +428,7 @@ class Complex
     return exp(); // e^z
   }
 
-  /// Calculates e^z.
+  /// Calculates e^z. Returns itself.
   Complex exp()
   { // e^z = e^(a+bi) = e^a * e^bi = e^a (cos(b) + i.sin(b))
     re.exp(); // r = e^Re(z)  φ = Im(z)
@@ -446,7 +446,7 @@ class Complex
   /// Calculates log_a+bi(z) = ln(z)/ln(a+bi). Returns itself.
   Complex logz(Complex z)
   {
-    return z.ln() /= ln();
+    return z.dup().ln() /= dup().ln();
   }
 
   /// Conjugates this number. Returns itself. conj(z) = Re(z) - Im(z)
