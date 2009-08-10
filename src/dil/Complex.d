@@ -443,13 +443,13 @@ class Complex
     return this;
   }
 
-  /// Calculates log_a+bi(z) = ln(z)/ln(a+bi). Returns itself.
+  /// Calculates log_a+bi(z) = ln(z)/ln(a+bi). Returns a new number.
   Complex logz(Complex z)
   {
     return z.dup().ln() /= dup().ln();
   }
 
-  /// Conjugates this number. Returns itself. conj(z) = Re(z) - Im(z)
+  /// Conjugates this number, conj(z) = Re(z) - Im(z). Returns itself.
   Complex conjugate()
   {
     im = -im;
