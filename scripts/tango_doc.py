@@ -100,28 +100,7 @@ def get_tango_path(path):
   path.SRC = path/"import"
   is_svn = not path.SRC.exists
   if is_svn:
-    path.SRC.mkdir()
-    tango_core_path = path/"lib"/"common"/"tango"/"core"
-    tango_core_files = tango_core_path.glob("*.d")
-    from sys import platform
-    if platform == "win32" or PyVersion < 2.6:
-      # Can't use symlinks. Copy everything.
-      print "Copying tango/, std/ and object.di to import/."
-      (path/"tango").copytree(path.SRC/"tango")
-      (path/"std").copytree(path.SRC/"std")
-      (path/"object.di").copy(path.SRC)
-      for f in tango_core_files:
-        f.copy(path.SRC/"tango"/"core")
-    else: # Use symbolic links on Unix platforms.
-      print "Symlinking to tango/, std/ and object.di in import/."
-      for name in ("tango", "std", "object.di"):
-        os.symlink(path/name, path.SRC/name)
-      print "Symlinking to files in %s." % tango_core_path
-      for f in tango_core_files:
-        try:
-          os.symlink(f, path.SRC/"tango"/"core"/f.name)
-        except OSError, e:
-          print "Symlink already exists: " + f
+    path.SRC = path/"user"
   path.license = path/"LICENSE"
   path.favicon = Path("tango_favicon.png") # Look in CWD atm.
   return path
@@ -176,10 +155,7 @@ def main():
   DEST.makedirs()
   map(Path.mkdir, (DEST.HTMLSRC, DEST.JS, DEST.CSS, DEST.IMG, TMP))
 
-  std = Path("std")
-  EXCLUDES = [std/"intrinsic.di", std/"stdarg.di", std/"c"/"stdarg.di"]
-  filter_func = lambda f: any(f.endswith(x) for x in EXCLUDES)
-  FILES = find_source_files(TANGO.SRC, filter_func)
+  FILES = find_source_files(TANGO.SRC)
 
   create_index(TMP/"index.d", TANGO.SRC, FILES)
   write_tango_ddoc(TANGO_DDOC, TANGO.favicon, options.revision)
