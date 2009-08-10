@@ -119,6 +119,8 @@ def main():
     help="create a 7z archive")
   parser.add_option("--pdf", dest="pdf", default=False, action="store_true",
     help="create a PDF document")
+  parser.add_option("--pykandil", dest="pykandil", default=False, action="store_true",
+    help="use Python code to handle kandil, don't pass --kandil to dil")
 
   (options, args) = parser.parse_args()
 
@@ -162,8 +164,15 @@ def main():
   DOC_FILES = [DIL.KANDIL.ddoc, TANGO_DDOC, TMP/"index.d"] + FILES
   versions = ["Tango", "DDoc"]
   versions += ["Posix"] if options.posix else ["Windows", "Win32"]
-  generate_docs(DIL.EXE, DEST.abspath, MODLIST, DOC_FILES,
-                versions, options=['-v', '-hl', '--kandil'], cwd=DIL)
+  dil_options = ['-v', '-hl']
+  if not options.pykandil:
+    dil_options += ['--kandil']
+  dil_retcode = generate_docs(DIL.EXE, DEST.abspath, MODLIST,
+    DOC_FILES, versions, dil_options, cwd=DIL)
+
+  if options.pykandil:
+    MODULES_JS = (DEST/"js"/"modules.js").abspath
+    generate_modules_js(read_modules_list(MODLIST), MODULES_JS)
 
   copy_files(DIL, TANGO, DEST)
   if options.pdf:
@@ -171,13 +180,18 @@ def main():
 
   TMP.rmtree()
 
+  if dil_retcode != 0:
+    print "Error: dil return code: %d" % dil_retcode
+    return
+
   if options.zip:
     name, src = "Tango.%s_doc" % VERSION, DEST
     cmd = "7zr a %(name)s.7z %(src)s" % locals()
     print cmd
     os.system(cmd)
 
-  print "Exiting normally."
+  if dil_retcode == 0:
+    print "Finished. Exiting normally."
 
 if __name__ == "__main__":
   main()

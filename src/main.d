@@ -169,7 +169,7 @@ void main(char[][] args)
         cmd.regexps ~= new Regex(arg[4..$]);
       else if (arg.length > 3 && strbeg(arg, "-m="))
         cmd.modsTxtPath = arg[3..$];
-      else if (arg.length > 5 && icompare(arg[$-4..$], "ddoc") == 0)
+      else if (arg.length > 6 && icompare(arg[$-5..$], ".ddoc") == 0)
         cmd.macroPaths ~= arg;
       else
         cmd.filePaths ~= arg;

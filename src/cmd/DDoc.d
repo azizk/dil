@@ -127,7 +127,7 @@ struct DDocCommand
 
     if (useKandil || writeReport)
       mm.sortPackageTree();
-    if (useKandil)
+    if (useKandil || modsTxtPath.length)
       writeModuleLists();
     if (writeReport)
       writeDDocReport();

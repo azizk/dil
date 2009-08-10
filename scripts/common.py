@@ -87,52 +87,44 @@ def read_modules_list(path):
 
 def generate_modules_js(modlist, dest_path, max_line_len=80):
   """ Generates a JavaScript file with a list of fully qual. module names.
-      Note: This function is obsolete. See src/cmd/DDoc.d. """
+      Note: This function is also in "src/cmd/DDoc.d". """
   if not len(modlist):
     raise Exception("modlist must not be empty")
-  from symbols import Module, Package, PackageTree
-  modlist = [m['fqn'] for m in modlist] # Get list of the fully qual. names.
+  from symbols import Module, PackageTree
+  # Create a new PackageTree.
+  package_tree = PackageTree()
+  # Open the file and begin writing to it.
   f = open(dest_path, "w")
-  f.write('var g_modulesList = [\n ') # Write a flat list of FQNs.
+  f.write('var g_moduleList = [\n ') # Write a flat list of FQNs.
   line_len = 0
   for mod in modlist:
+    mod = mod['fqn']
     line = ' "%s",' % mod
     line_len += len(line)
     if line_len >= max_line_len: # See if we have to start a new line.
       line_len = len(line)+1 # +1 for the space in "\n ".
       line = "\n " + line
     f.write(line)
+
+    # Construct the package tree with modules as leafs.
+    package_tree.addModule(Module(mod))
   f.write('\n];\n\n') # Closing ].
-
-  package_tree = PackageTree()
-
-  # Construct the package tree with modules as leafs.
-  for fqn in modlist:
-    package_tree.addModule(Module(fqn))
-
-  package_tree.sortTree()
 
   def writePackage(package, indent='  '):
     """ Writes the sub-packages and sub-modules of a package to the disk. """
     for p in package.packages:
-      f.write("%sP('%s','%s',[\n" % (indent, p.name, p.fqn))
+      f.write("%sP('%s',[\n" % (indent, p.fqn))
       writePackage(p, indent+'  ')
       f.write(indent+"]),\n")
     for m in package.modules:
-      f.write("%sM('%s','%s'),\n" % (indent, m.name, m.fqn))
+      f.write("%sM('%s'),\n" % (indent, m.fqn))
 
-  # Write a function that constructs a module/package object.
-  f.write('function M(name, fqn, sub)\n{\n'
-    '  sub = sub ? sub : [];\n'
-    '  return {\n'
-    '    name: name, fqn: fqn, sub: sub,\n'
-    '    kind : (sub && sub.length == 0) ? "module" : "package"\n'
-    '  };\n'
-    '}\nvar P = M;\n\n')
+  # Sort the tree.
+  package_tree.sortTree()
   # Write the packages and modules as JavaScript objects.
-  f.write('var g_moduleObjects = [\n')
+  f.write("var g_packageTree = new PackageTree(P('', [\n");
   writePackage(package_tree.root)
-  f.write('];')
+  f.write('])\n);\n')
 
   f.close()
 
@@ -141,8 +133,8 @@ def generate_docs(dil_exe, dest, modlist, files,
   """ Generates documenation files. """
   from subprocess import call
   versions = ["-version="+v for v in versions]
-  call([dil_exe, "ddoc", dest, "-m="+modlist] + options + versions + files,
-       cwd=cwd)
+  args = ["ddoc", dest, "-m="+modlist] + options + versions + files
+  return call([dil_exe] + args, cwd=cwd)
 
 def generate_pymodules(dil_exe, dest, files, options=[], cwd=None):
   """ Generates Python source files. """
