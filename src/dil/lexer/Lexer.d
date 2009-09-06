@@ -84,14 +84,8 @@ class Lexer
   /// The destructor deletes the doubly-linked token list.
   ~this()
   {
-    auto token = head.next;
-    while (token !is null)
-    {
-      assert(token.kind == TOK.EOF ? token == tail && token.next is null : 1);
-      delete token.prev;
-      token = token.next;
-    }
-    delete tail;
+    head.deleteList();
+    head = tail = token = null;
   }
 
   char[] text()

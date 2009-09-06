@@ -258,6 +258,18 @@ version(D2)
     return left.start[0 .. right.end - left.start];
   }
 
+  /// Deletes a linked list beginning from this token.
+  void deleteList()
+  {
+    auto token_iter = this;
+    while (token_iter !is null)
+    {
+      auto token = token_iter; // Remember current token to be deleted.
+      token_iter = token_iter.next;
+      delete token;
+    }
+  }
+
   /// Uses malloc() to allocate memory for a token.
   new(size_t size)
   {
