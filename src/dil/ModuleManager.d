@@ -11,11 +11,11 @@ import dil.Messages;
 import common;
 
 import tango.io.FilePath,
-       tango.io.FileSystem,
        tango.io.model.IFile;
-import tango.util.PathUtil : pathNormalize = normalize;
+import tango.io.Path : pathNormalize = normalize;
 import tango.core.Array : lbound, sort;
 import tango.text.Ascii : icompare;
+import tango.sys.Environment;
 
 alias FileConst.PathSeparatorChar dirSep;
 
@@ -259,8 +259,7 @@ class ModuleManager
   /// Returns a normalized, absolute path.
   static string absolutePath(string path)
   {
-    path = FileSystem.toAbsolute(path);
-    // FIXME: Handle the exception it throws.
-    return pathNormalize(path); // Remove ./ /. ../ and /..
+    path = Environment.toAbsolute(path);
+    return pathNormalize(path); // Remove './' and '../' parts.
   }
 }

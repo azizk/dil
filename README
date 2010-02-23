@@ -1,6 +1,6 @@
 dil
 ===
-Copyright (c) 2007-2009 by Aziz Köksal <aziz.koeksal@gmail.com>
+Copyright (c) 2007-2010 by Aziz Köksal <aziz.koeksal@gmail.com>
 This program is free software, licensed under the GPL3.
 Please, read the license file "COPYING" for further information.
 
@@ -11,46 +11,48 @@ for the D programming language (1.0 and 2.0).
 
 How To Compile Dil
 ==================
-In order to compile dil you need to have:
- *) DMD 1.042 (http://www.digitalmars.com/d/1.0/changelog.html)
- *) Tango 0.99.8 (http://dsource.org/projects/tango/)
- *) MPFR 2.4.0 (http://mpfr.org)
+In order to compile dil you must have:
+ *) DMD 1.056 (http://www.digitalmars.com/d/1.0/changelog.html)
+ *) Tango 0.99.9 (http://dsource.org/projects/tango/)
+ *) MPFR 2.4.1 (http://mpfr.org)
  *) DSSS 0.77 (http://dsource.org/projects/dsss/)
     or alternatively:
-    Python 2.6.2 (2.5 might work too) and scripts/build.py
+    Python 2.6.4 (2.5 might work too) and scripts/build.py
 
 If you can't compile dil because you have a newer version of these programs
 then report the problem to me, please (see Bugs section.)
+I hope you won't find it frustrating to successfully compile this software,
+and apologize if you do.
 
 Regarding DSSS:
 You have to make sure that the correct config file is used.
-A default can be set in dsss/etc/rebuild/default.
+A default can be set in "dsss/etc/rebuild/default".
 Use dmd-posix-tango, dmd-win-tango, gdc-posix-tango or gdc-win-tango.
 
 Compile dil:
 # Change to the directory where you extracted dil.
-$ cd dil/
+  $ cd dil/
 # Type "dsss build".
-$ dsss build
+  $ dsss build
 # The executable of dil is put into the bin/ directory.
-$ ls bin/
+  $ ls bin/
 # Output> dilconf.d  dil
 # Run like this:
 # On Linux:
-$ bin/dil
+  $ bin/dil
 # On Windows:
-> bin\dil.exe
+  > bin\dil.exe
 
 Compile with Python:
 # Print help.
-$ scripts/build.py -h
+  $ scripts/build.py -h
 # Compile a release binary.
-$ scripts/build.py
+  $ scripts/build.py
 # Compile a debug binary.
-$ scripts/build.py --debug
+  $ scripts/build.py --debug
 
 # On Windows you probably have to call python explicitly.
-> python scripts\build.py
+  > python scripts\build.py
 
 Executing dil without parameters will print the main help message.
 

@@ -760,7 +760,7 @@ abstract class DDocEmitter : DefaultVisitor
   void writeClassOrInterface(T)(T d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     const kind = is(T == ClassDeclaration) ? "class" : "interface";
     const KIND = is(T == ClassDeclaration) ? "CLASS" : "INTERFACE";
     DECL({
@@ -776,7 +776,7 @@ abstract class DDocEmitter : DefaultVisitor
   void writeStructOrUnion(T)(T d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     const kind = is(T == StructDeclaration) ? "struct" : "union";
     const KIND = is(T == StructDeclaration) ? "STRUCT" : "UNION";
     string name = d.name ? d.name.str : kind;

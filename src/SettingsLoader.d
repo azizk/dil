@@ -19,7 +19,7 @@ import common;
 
 import tango.io.FilePath;
 import tango.sys.Environment;
-import tango.util.PathUtil : normalize;
+import tango.io.Path : normalize;
 import tango.stdc.stringz : fromStringz;
 
 /// Loads settings from a D module file.
