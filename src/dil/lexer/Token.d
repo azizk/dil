@@ -261,6 +261,8 @@ version(D2)
   /// Deletes a linked list beginning from this token.
   void deleteList()
   {
+    version(token_malloc)
+    {
     auto token_iter = this;
     while (token_iter !is null)
     {
@@ -268,7 +270,12 @@ version(D2)
       token_iter = token_iter.next;
       delete token;
     }
+    }
   }
+
+version(token_malloc)
+{ // Don't use custom allocation by default.
+  // See: http://code.google.com/p/dil/issues/detail?id=11
 
   /// Uses malloc() to allocate memory for a token.
   new(size_t size)
@@ -324,6 +331,7 @@ version(D2)
       tok_del = tok_it;
     }
   }
+}
 }
 }
 
@@ -404,6 +412,7 @@ bool isAsmStatementStartToken(TOK tok)
   switch(tok)
   {
   alias TOK T;
+  // TODO: need to add all opcodes.
   case T.In, T.Int, T.Out, T.Identifier, T.Align, T.Semicolon:
     return true;
   default:
