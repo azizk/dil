@@ -42,13 +42,27 @@ String.prototype.strip = function(chars) {
 };
 
 /// Returns a formatted string filled in with the provided arguments.
-String.prototype.format = function(args) {
-  if (!(typeof args == typeof [] || typeof args == typeof {}))
-    args = Array.prototype.slice.call(arguments); // Convert to propery array.
-  return this.replace(/\{\{|\{[^{}]+\}/g, function(m) {
-    return m.length == 2 ? m : args[m.slice(1, -1)];
+String.prototype.format = function format(args) {
+  if (!(arguments.length == 1 && format.rx_type.test(typeof args)))
+    args = format.toArray.call(arguments); // Convert to proper array.
+  return this.replace(format.rx, function(m) {
+    if (m.length == 2) return '{'; // Escape '{{'.
+    // Split e.g.: "0.member1.m2"
+    var indices = m.slice(1, -1).split('.'), obj = args;
+    for (var i=0, len=indices.length; i < len; i++)
+      if ((index = indices[i]) in obj)
+        obj = obj[index];
+      else // Intelligent and helpful error message:
+        return format.error.format(indices.slice(0, i+1).join('.'));
+    return obj;
   });
-}
+};
+(function(format_func) {
+  format_func.rx_type = /^array|object$/;
+  format_func.rx = /\{\{|\{[^{}]+\}/g;
+  format_func.toArray = Array.prototype.slice;
+  format_func.error = "{{FormatIndexError:{0}}";
+})(String.prototype.format);
 
 /// Prepends and appends chars to each element and returns a joined string.
 // Array.prototype.surround = function(chars) {

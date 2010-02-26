@@ -55,6 +55,7 @@ var kandil = {
     failed_code: "Failed loading code from '{0}'!",
     loading_module: "Loading module...",
     loading_code: "Loading source code...",
+    got_empty_file: "Received an empty file.",
     filter: "Filter...", /// Initial text in the filter boxes.
     splitbar_title: "Drag to resize. Double-click to close or open.",
     no_match: "No match...",
@@ -325,11 +326,11 @@ function loadNewModule(modFQN)
   // Load the module's file.
   var doc_url = modFQN + ".html";
 
-  function errorHandler(request, error, exception)
+  function errorHandler(request, error, e)
   {
     hideLoadingGif();
     var msg = kandil.msg.failed_module.format(doc_url);
-    msg = $("<p class='ajaxerror'>'"+msg+"</p>");
+    msg = $("<p class='ajaxerror'>{0}<br/><br/>{1.name}: {1.message}</p>".format(msg, e));
     $(document.body).append(msg);
     fadeOutRemove(msg, 5000, 500);
   }
@@ -351,6 +352,8 @@ function loadNewModule(modFQN)
   try {
     $.ajax({url: doc_url, dataType: "text", error: errorHandler,
       success: function(data) {
+        if (data == "")
+          return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
         // Reset some global variables.
         kandil.moduleFQN = modFQN;
         kandil.sourceCode = [];
@@ -370,7 +373,7 @@ function loadNewModule(modFQN)
       }
     });
   }
-  catch(e){ errorHandler(); }
+  catch(e){ errorHandler(0, 0, e); }
 }
 
 function showLoadingGif(msg)
@@ -552,11 +555,11 @@ function showCode(symbol)
   { // Load the HTML source code file.
     var doc_url = getSourceCodeURL();
 
-    function errorHandler(request, error, exception)
+    function errorHandler(request, error, e)
     {
       hideLoadingGif();
       var msg = kandil.msg.failed_code.format(doc_url);
-      msg = $("<p class='ajaxerror'>"+msg+"</p>");
+      msg = $("<p class='ajaxerror'>{0}<br/><br/>{1.name}: {1.message}</p>".format(msg, e));
       $(document.body).append(msg);
       fadeOutRemove(msg, 5000, 500);
     }
@@ -565,13 +568,15 @@ function showCode(symbol)
     try {
       $.ajax({url: doc_url, dataType: "text", error: errorHandler,
         success: function(data) {
+          if (data == "")
+            return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
           setSourceCode(data);
           show();
           hideLoadingGif();
         }
       });
     }
-    catch(e){ errorHandler(); }
+    catch(e){ errorHandler(0, 0, e); }
   }
   else // Already loaded. Show the code.
     show();

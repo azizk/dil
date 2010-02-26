@@ -43,7 +43,8 @@ function QuickSearch(id, options)
            .trigger("first_focus", this.qs);
   }
   this.resetFirstFocusHandler = function() {
-    this.$input.focus(firstFocusHandler);
+    this.$input.focus(firstFocusHandler)
+               .val(this.options.text);
   };
   this.resetFirstFocusHandler();
 
@@ -62,7 +63,7 @@ function QuickSearch(id, options)
     {
       for (var i = 0, len = terms.length; i < len; i++)
         if (terms[i][0] == ':')
-          query.attributes.push(RegExp("^(?:"+terms[i].slice(1)+")", "m"));
+          query.attributes.push(RegExp("^(?:"+terms[i].slice(1)+")", "mi"));
         //else if (terms[i][0] == '/')
         //  query.regexps.push(RegExp(terms[i].slice(1,-1), "i"));
         else if (terms[i].indexOf(".") != -1)
