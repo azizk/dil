@@ -5,6 +5,7 @@ from path import Path
 from subprocess import call
 from common import *
 from symbols import *
+from time import gmtime, strftime
 
 def write_bookmarks(html_doc, package_tree, sym_dict_all,
                     kind_title_list, kind_list, indices):
@@ -76,6 +77,7 @@ def generate_pdf(module_files, dest, tmp, params):
   params_default = {
     "pdf_title": "",
     "cover_title": "Cover Title",
+    "creation_date" : "",
     "author": "",
     "generator": "dil D compiler",
     "subject": "Programming API",
@@ -91,6 +93,8 @@ def generate_pdf(module_files, dest, tmp, params):
     "newpage_modules": [] # Which modules should force a page break.
   }
   params = dict(params_default, **params)
+  if params["creation_date"] == "":
+    params["creation_date"] = strftime("%Y-%m-%dT%H:%M:%S+00:00", gmtime())
 
   x_html = params["x_html"]
   symlink = params["symlink"]
@@ -182,6 +186,7 @@ def generate_pdf(module_files, dest, tmp, params):
   <meta name="author" content="%(author)s"/>
   <meta name="subject" content="%(subject)s"/>
   <meta name="keywords" content="%(keywords)s"/>
+  <meta name="date" content="%(creation_date)s"/>
   <meta name="generator" content="%(generator)s"/>
   <link href="%(css_file)s" type="text/css" rel="stylesheet" media="all"/>
   <title>%(pdf_title)s</title>

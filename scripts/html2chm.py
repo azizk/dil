@@ -91,7 +91,7 @@ Title=%(title)s
   def to_num_entity(m):
     return "&#%d;" % ord(m.group(0))
   # Matches any non-ASCII character.
-  non_ascii_rx = re.compile(u"[\u0080-\U0010FFFF]")
+  non_ascii_rx = re.compile(u"[^\x00-\x7F]") #\u0080-\U0010FFFF
 
   for f in module_files:
     text = unicode(open(f).read())
