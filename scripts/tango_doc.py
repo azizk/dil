@@ -60,17 +60,16 @@ def write_PDF(DIL, SRC, VERSION, TMP):
 
   pdf_gen = PDFGenerator()
   pdf_gen.fetch_files(DIL, TMP)
+  # Get a list of the HTML files.
   html_files = SRC.glob("*.html")
   html_files = filter(lambda path: path.name != "index.html", html_files)
   # Get the logo if present.
-  logo_png = Path("logo_tango.png")
-  if logo_png.exists:
-    logo_png.copy(TMP)
-    logo = "<br/>"*2 + "<img src='%s'/>" % logo_png.name
-    #logo_svg = open(logo_svg).read()
-    #logo_svg = "<br/>"*2 + logo_svg[logo_svg.index("\n"):]
-  else:
-    logo = ''
+  logo_file = Path("logo_tango.png")
+  logo = ''
+  if logo_file.exists:
+    logo_file.copy(TMP)
+    logo = "<br/><br/><img src='%s'/>" % logo_file.name
+  # Go to this URL when a D symbol is clicked.
   symlink = "http://dil.googlecode.com/svn/doc/Tango_%s" % VERSION
   params = {
     "pdf_title": "Tango %s API" % VERSION,
@@ -82,7 +81,8 @@ def write_PDF(DIL, SRC, VERSION, TMP):
     "nested_toc": True,
     "symlink": symlink
   }
-  pdf_gen.run(html_files, SRC/("Tango.%s.API.pdf"%VERSION), TMP, params)
+  pdf_file = SRC/("Tango.%s.API.pdf" % VERSION)
+  pdf_gen.run(html_files, pdf_file, TMP, params)
 
 def create_index(dest, prefix_path, files):
   files.sort()
@@ -98,10 +98,12 @@ def create_index(dest, prefix_path, files):
 def get_tango_path(path):
   path = firstof(Path, path, Path(path))
   path.SRC = path/"import"
-  is_svn = not path.SRC.exists
-  if is_svn:
-    path.SRC = path/"user"
-  path.license = path/"LICENSE"
+  path.is_svn = not path.SRC.exists
+  if path.is_svn:
+    path.SRC = path/"tango"
+    path.SRC.ROOT = path
+  path.SRC.object_di = path/"object.di"
+  path.license = path/"LICENSE.txt"
   path.favicon = Path("tango_favicon.png") # Look in CWD atm.
   return path
 
@@ -131,6 +133,7 @@ def main():
     print "The path '%s' doesn't exist." % args[0]
     return
 
+  # 1. Initialize some path variables.
   # Path to dil's root folder.
   dil_dir   = script_parent_folder(__file__) # Look here for dil by default.
   DIL       = dil_path(dil_dir)
@@ -151,39 +154,49 @@ def main():
 
   build_dil_if_inexistant(DIL.EXE)
 
-  VERSION = get_tango_version(TANGO.SRC/"tango"/"core"/"Version.d")
+  VERSION = get_tango_version(TANGO.SRC.ROOT/"tango"/"core"/"Version.d")
 
-  # Create directories.
+  # 2. Create directories.
   DEST.makedirs()
   map(Path.mkdir, (DEST.HTMLSRC, DEST.JS, DEST.CSS, DEST.IMG, TMP))
 
-  FILES = find_source_files(TANGO.SRC)
+  # 3. Find source files.
+  def filter_func(path):
+    return path.folder.name in (".svn", "vendor", "rt")
+  FILES = [TANGO.SRC.object_di] + find_source_files(TANGO.SRC, filter_func)
 
-  create_index(TMP/"index.d", TANGO.SRC, FILES)
+  # 4. Prepare files and options to call generate_docs().
+  create_index(TMP/"index.d", TANGO.SRC.ROOT, FILES)
   write_tango_ddoc(TANGO_DDOC, TANGO.favicon, options.revision)
   DOC_FILES = [DIL.KANDIL.ddoc, TANGO_DDOC, TMP/"index.d"] + FILES
-  versions = ["Tango", "DDoc"]
+
+  versions = ["Tango", "TangoDoc"]
   versions += ["Posix"] if options.posix else ["Windows", "Win32"]
-  dil_options = ['-v', '-hl']
-  if not options.pykandil:
-    dil_options += ['--kandil']
+  dil_options = ['-v', '-hl', '--kandil']
+  options.pykandil and dil_options.pop() # Removes '--kandil'.
+
+  # 5. Generate the documentation.
   dil_retcode = generate_docs(DIL.EXE, DEST.abspath, MODLIST,
     DOC_FILES, versions, dil_options, cwd=DIL)
-
-  if options.pykandil:
-    MODULES_JS = (DEST/"js"/"modules.js").abspath
-    generate_modules_js(read_modules_list(MODLIST), MODULES_JS)
-
-  copy_files(DIL, TANGO, DEST)
-  if options.pdf:
-      write_PDF(DIL, DEST, VERSION, TMP)
-
-  TMP.rmtree()
 
   if dil_retcode != 0:
     print "Error: dil return code: %d" % dil_retcode
     return
 
+  # 6. Use Python code to do some stuff for 'kandil'.
+  if options.pykandil:
+    MODULES_JS = (DEST/"js"/"modules.js").abspath
+    generate_modules_js(read_modules_list(MODLIST), MODULES_JS)
+
+  copy_files(DIL, TANGO, DEST)
+
+  # 7. Optionally generate a PDF document.
+  if options.pdf:
+    write_PDF(DIL, DEST, VERSION, TMP)
+
+  TMP.rmtree()
+
+  # 8. Optionally create an archive.
   if options.zip:
     name, src = "Tango.%s_doc" % VERSION, DEST
     cmd = "7zr a %(name)s.7z %(src)s" % locals()
