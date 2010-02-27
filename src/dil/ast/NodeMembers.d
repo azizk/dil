@@ -7,15 +7,10 @@ import dil.ast.NodesEnum;
 
 private alias NodeKind N;
 
+/// CTF: Returns a table of Node class members as a string.
 char[] genMembersTable()
-{ //pragma(msg, "genMembersTable()");
-  char[][][] t = [];
-  // t.length = g_classNames.length;
-  // Setting the length doesn't work in CTFs. This is a workaround:
-  // FIXME: remove this when dmd issue #2337 has been resolved.
-  for (uint i; i < g_classNames.length; i++)
-    t ~= [[]];
-  assert(t.length == g_classNames.length);
+{
+  char[][][g_classNames.length] t;
 
   t[N.CompoundDeclaration] = ["decls[]"];
   t[N.EmptyDeclaration] = t[N.IllegalDeclaration] =
@@ -149,21 +144,17 @@ else
   t[N.TemplateValueParameter] = ["valueType", "specValue?", "defValue?"];
   t[N.TemplateTupleParameter] = [];
 
-  char[] code = "[";
+  char[] code = "[ ";
   // Iterate over the elements in the table and create an array.
   foreach (m; t)
   {
-    if (!m.length) {
-      code ~= "[],";
-      continue; // No members, append "[]," and continue.
-    }
-    code ~= '[';
+    code ~= "[ ";
     foreach (n; m)
       code ~= `"` ~ n ~ `",`;
-    code[code.length-1] = ']'; // Overwrite last comma.
+    code[$-1] = ']'; // Overwrite last comma or space.
     code ~= ',';
   }
-  code[code.length-1] = ']'; // Overwrite last comma.
+  code[$-1] = ']'; // Overwrite last comma.
   return code;
 }
 
