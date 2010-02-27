@@ -122,10 +122,11 @@ def build_dil_debug(**kwargs):
 def main():
   from optparse import OptionParser
   from common import change_cwd
-  from sys import platform
-  is_win32 = platform == "win32"
+  import sys
 
-  usage = "Usage: scripts/build.py [Options]"
+  usage = """Usage: scripts/build.py [Options]
+
+    Options after the string '--' are forwarded to the compiler."""
   parser = OptionParser(usage=usage)
   parser.add_option("--release", dest="release", action="store_true", default=False,
     help="build a release version (default)")
@@ -136,15 +137,25 @@ def main():
   parser.add_option("--ldc", dest="ldc", action="store_true", default=False,
     help="use ldc instead of dmd")
 
-  (options, args) = parser.parse_args()
+  args = sys.argv[1:]
+  try:
+    i = args.index("--")
+    args, other_args = args[:i], args[i+1:]
+  except Exception: pass
+
+  (options, args) = parser.parse_args(args)
 
   change_cwd(__file__)
 
+  is_win32 = (sys.platform == "win32")
+
   command = (DMDCommand, LDCCommand)[options.ldc]
-  versions = ["D2"] if options.d2 else []
-  lnk_args = ["+mpfr"] if is_win32 else ["-lmpfr"]
+  versions = ([], ["D2"])[options.d2]
+  lnk_args = (["-lmpfr"], ["+mpfr"])[is_win32]
   build_func = (build_dil_release, build_dil_debug)[options.debug]
-  build_func(CMDCLASS=command, versions=versions, lnk_args=lnk_args)
+  # Call the compiler with the provided options.
+  build_func(CMDCLASS=command, versions=versions,
+    lnk_args=lnk_args, other=other_args)
 
 if __name__ == '__main__':
   main()
