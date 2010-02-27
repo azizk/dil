@@ -531,38 +531,13 @@ class Lexer
            t.kind = TOK.Mod;
          goto Lcommon;
       // Single character tokens:
-      case '(':
-        t.kind = TOK.LParen;
-        goto Lcommon;
-      case ')':
-        t.kind = TOK.RParen;
-        goto Lcommon;
-      case '[':
-        t.kind = TOK.LBracket;
-        goto Lcommon;
-      case ']':
-        t.kind = TOK.RBracket;
-        goto Lcommon;
-      case '{':
-        t.kind = TOK.LBrace;
-        goto Lcommon;
-      case '}':
-        t.kind = TOK.RBrace;
-        goto Lcommon;
-      case ':':
-        t.kind = TOK.Colon;
-        goto Lcommon;
-      case ';':
-        t.kind = TOK.Semicolon;
-        goto Lcommon;
-      case '?':
-        t.kind = TOK.Question;
-        goto Lcommon;
-      case ',':
-        t.kind = TOK.Comma;
-        goto Lcommon;
-      case '$':
-        t.kind = TOK.Dollar;
+      mixin(cases(
+        "(", "LParen",   ")", "RParen",
+        "[", "LBracket", "]", "RBracket",
+        "{", "LBrace",   "}", "RBrace",
+        ":", "Colon",    ";", "Semicolon",
+        "?", "Question", ",", "Comma", "$", "Dollar"
+      ));
       Lcommon:
         ++p;
       Lcommon2:
@@ -598,53 +573,44 @@ class Lexer
     }
   }
 
-  /// Converts a string literal to an integer.
-  template toUint(char[] T)
+  /// CTF: Casts a string literal to an integer.
+  static uint toUint(char[] s)
   {
-    static assert(0 < T.length && T.length <= 4);
-    static if (T.length == 1)
-      const uint toUint = T[0];
-    else
-      const uint toUint = (T[0] << ((T.length-1)*8)) | toUint!(T[1..$]);
+    assert(0 < s.length && s.length <= 4);
+    int x = 0;
+    for (int i = 0; i < s.length; i++)
+      x = x << 8 | s[i];
+    return x;
   }
-  static assert(toUint!("\xAA\xBB\xCC\xDD") == 0xAABBCCDD);
+  static assert(toUint("\xAA\xBB\xCC\xDD") == 0xAABBCCDD);
 
-  /// Constructs case statements. E.g.:
+  /// CTF: Constructs case statements. E.g.:
   /// ---
-  //// // case_!("<", "Less", "Lcommon") ->
+  //// // case_("<", "Less") ->
   /// case 60u:
   ///   t.kind = TOK.Less;
   ///   goto Lcommon;
   /// ---
-  /// FIXME: Can't use this yet due to a $(DMDBUG 1534, bug) in DMD.
-  template case_(char[] str, char[] kind, char[] label)
+  static char[] case_(char[] str, char[] kind)
   {
-    const char[] case_ =
-      `case `~toUint!(str).stringof~`:`
-        `t.kind = TOK.`~kind~`;`
-        `goto `~label~`;`;
+    char[] label_str = "Lcommon";
+    if (str.length != 1) // Append length as a suffix.
+      label_str ~= '0' + str.length;
+    return "case toUint(\""~str~"\"): t.kind = TOK."~kind~";"
+             "goto "~label_str~";\n";
   }
-  //pragma(msg, case_!("<", "Less", "Lcommon"));
+  // pragma(msg, case_("<", "Less"));
 
-  template case_L4(char[] str, TOK kind)
+  /// CTF: Maps a flat list to case_().
+  static char[] cases(char[][] cs ...)
   {
-    const char[] case_L4 = case_!(str, kind, "Lcommon_4");
+    assert(cs.length % 2 == 0);
+    char[] result;
+    for (int i = 0; i < cs.length; i += 2)
+      result ~= case_(cs[i], cs[i+1]);
+    return result;
   }
-
-  template case_L3(char[] str, TOK kind)
-  {
-    const char[] case_L3 = case_!(str, kind, "Lcommon_3");
-  }
-
-  template case_L2(char[] str, TOK kind)
-  {
-    const char[] case_L2 = case_!(str, kind, "Lcommon_2");
-  }
-
-  template case_L1(char[] str, TOK kind)
-  {
-    const char[] case_L3 = case_!(str, kind, "Lcommon");
-  }
+  // pragma(msg, cases("<", "Less", ">", "Greater"));
 
   /// An alternative scan method.
   /// Profiling shows it's a bit slower.
@@ -729,12 +695,8 @@ class Lexer
     // 4 character tokens.
     switch (c)
     {
-    case toUint!(">>>="):
-      t.kind = TOK.RShiftAssign;
-      goto Lcommon_4;
-    case toUint!("!<>="):
-      t.kind = TOK.Unordered;
-    Lcommon_4:
+    mixin(cases(">>>=", "RShiftAssign", "!<>=", "Unordered"));
+    Lcommon4:
       p += 4;
       t.end = p;
       return;
@@ -747,30 +709,13 @@ class Lexer
     // 3 character tokens.
     switch (c)
     {
-    case toUint!(">>="):
-      t.kind = TOK.RShiftAssign;
-      goto Lcommon_3;
-    case toUint!(">>>"):
-      t.kind = TOK.URShift;
-      goto Lcommon_3;
-    case toUint!("<>="):
-      t.kind = TOK.LorEorG;
-      goto Lcommon_3;
-    case toUint!("<<="):
-      t.kind = TOK.LShiftAssign;
-      goto Lcommon_3;
-    case toUint!("!<="):
-      t.kind = TOK.UorG;
-      goto Lcommon_3;
-    case toUint!("!>="):
-      t.kind = TOK.UorL;
-      goto Lcommon_3;
-    case toUint!("!<>"):
-      t.kind = TOK.UorE;
-      goto Lcommon_3;
-    case toUint!("..."):
-      t.kind = TOK.Ellipses;
-    Lcommon_3:
+    mixin(cases(
+      "<<=", "LShiftAssign", ">>=", "RShiftAssign",
+      ">>>", "URShift", "...", "Ellipses",
+      "!<=", "UorG", "!>=", "UorL",
+      "!<>", "UorE", "<>=", "LorEorG"
+    ));
+    Lcommon3:
       p += 3;
       t.end = p;
       return;
@@ -783,13 +728,13 @@ class Lexer
     // 2 character tokens.
     switch (c)
     {
-    case toUint!("/+"):
+    case toUint("/+"):
       ++p; // Skip /
       return scanNestedComment(t);
-    case toUint!("/*"):
+    case toUint("/*"):
       ++p; // Skip /
       return scanBlockComment(t);
-    case toUint!("//"): // LineComment.
+    case toUint("//"): // LineComment.
       ++p; // Skip /
       assert(*p == '/');
       while (!isEndOfLine(++p))
@@ -798,75 +743,21 @@ class Lexer
       t.setWhitespaceFlag();
       t.end = p;
       return;
-    case toUint!(">="):
-      t.kind = TOK.GreaterEqual;
-      goto Lcommon_2;
-    case toUint!(">>"):
-      t.kind = TOK.RShift;
-      goto Lcommon_2;
-    case toUint!("<<"):
-      t.kind = TOK.LShift;
-      goto Lcommon_2;
-    case toUint!("<="):
-      t.kind = TOK.LessEqual;
-      goto Lcommon_2;
-    case toUint!("<>"):
-      t.kind = TOK.LorG;
-      goto Lcommon_2;
-    case toUint!("!<"):
-      t.kind = TOK.UorGorE;
-      goto Lcommon_2;
-    case toUint!("!>"):
-      t.kind = TOK.UorLorE;
-      goto Lcommon_2;
-    case toUint!("!="):
-      t.kind = TOK.NotEqual;
-      goto Lcommon_2;
-    case toUint!(".."):
-      t.kind = TOK.Slice;
-      goto Lcommon_2;
-    case toUint!("&&"):
-      t.kind = TOK.AndLogical;
-      goto Lcommon_2;
-    case toUint!("&="):
-      t.kind = TOK.AndAssign;
-      goto Lcommon_2;
-    case toUint!("||"):
-      t.kind = TOK.OrLogical;
-      goto Lcommon_2;
-    case toUint!("|="):
-      t.kind = TOK.OrAssign;
-      goto Lcommon_2;
-    case toUint!("++"):
-      t.kind = TOK.PlusPlus;
-      goto Lcommon_2;
-    case toUint!("+="):
-      t.kind = TOK.PlusAssign;
-      goto Lcommon_2;
-    case toUint!("--"):
-      t.kind = TOK.MinusMinus;
-      goto Lcommon_2;
-    case toUint!("-="):
-      t.kind = TOK.MinusAssign;
-      goto Lcommon_2;
-    case toUint!("=="):
-      t.kind = TOK.Equal;
-      goto Lcommon_2;
-    case toUint!("~="):
-      t.kind = TOK.CatAssign;
-      goto Lcommon_2;
-    case toUint!("*="):
-      t.kind = TOK.MulAssign;
-      goto Lcommon_2;
-    case toUint!("/="):
-      t.kind = TOK.DivAssign;
-      goto Lcommon_2;
-    case toUint!("^="):
-      t.kind = TOK.XorAssign;
-      goto Lcommon_2;
-    case toUint!("%="):
-      t.kind = TOK.ModAssign;
-    Lcommon_2:
+    mixin(cases(
+      "<=", "LessEqual",  ">=", "GreaterEqual",
+      "<<", "LShift",     ">>", "RShift",
+      "==", "Equal",      "!=", "NotEqual",
+      "!<", "UorGorE",    "!>", "UorLorE",
+      "<>", "LorG",       "..", "Slice",
+      "&&", "AndLogical", "&=", "AndAssign",
+      "||", "OrLogical",  "|=", "OrAssign",
+      "++", "PlusPlus",   "+=", "PlusAssign",
+      "--", "MinusMinus", "-=", "MinusAssign",
+      "*=", "MulAssign",  "/=", "DivAssign",
+      "%=", "ModAssign",  "^=", "XorAssign",
+      "~=", "CatAssign"
+    ));
+    Lcommon2:
       p += 2;
       t.end = p;
       return;
