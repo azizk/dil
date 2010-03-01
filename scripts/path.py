@@ -50,17 +50,17 @@ class Path(unicode):
   @property
   def namebase(self):
     """ '/home/a/bc.d' -> 'bc' """
-    return self.root.name
+    return self.noext.name
 
   @property
   def noext(self):
     """ '/home/a/bc.d' -> '/home/a/bc' """
-    return os.path.splitext(self)[0]
+    return Path(os.path.splitext(self)[0])
 
   @property
   def ext(self):
     """ '/home/a/bc.d' -> '.d' """
-    return os.path.splitext(self)[1]
+    return Path(os.path.splitext(self)[1])
 
   @property
   def abspath(self):
