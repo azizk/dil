@@ -20,14 +20,14 @@ $(BODY)
 </html>
 
 DOC_HEAD = <title>$(TITLE)</title>
-  <link href="./css/style.css" rel="stylesheet" type="text/css"/>
+  <link href="css/style.css" rel="stylesheet" type="text/css"/>
   $(FAVICON)
-  <script type="text/javascript" src="./js/jquery.js"></script>
-  <script type="text/javascript" src="./js/utilities.js"></script>
-  <script type="text/javascript" src="./js/symbols.js"></script>
-  <script type="text/javascript" src="./js/modules.js"></script>
-  <script type="text/javascript" src="./js/quicksearch.js"></script>
-  <script type="text/javascript" src="./js/navigation.js"></script>
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/utilities.js"></script>
+  <script type="text/javascript" src="js/symbols.js"></script>
+  <script type="text/javascript" src="js/modules.js"></script>
+  <script type="text/javascript" src="js/quicksearch.js"></script>
+  <script type="text/javascript" src="js/navigation.js"></script>
   <script type="text/javascript">
     var g_moduleFQN = "$(DIL_MODFQN)";
   </script>
@@ -44,7 +44,7 @@ MODLINK = <a href="$0.html">$0</a>
 MODLINK2 = <a href="$1.html">$+</a>
 MODLINK3 = <a href="$1.html#$2">$(SLICEARGS $+)</a>
 
-SRCFILE = ./htmlsrc/$(DIL_MODFQN).html
+SRCFILE = htmlsrc/$(DIL_MODFQN).html
 SYMLINK = <a title="Permalink to this symbol" href="$(DIL_MODFQN).html#$0" class="symlink">¶</a>
 SRCLINK = <a title="Go to the HTML source file" class="srclink" href="$(SRCFILE)#L$0">#</a>
 DIL_SYMBOL = <a class="symbol _$3" name="$2" href="$(SRCFILE)#L$4" kind="$3" beg="$4" end="$5">$1</a>
@@ -96,7 +96,7 @@ DDOC_PARAM_ID   = $(TD $0)
 DDOC_PARAM_DESC = $(TD $0)
 DDOC_KEYWORD    = $(SPAN kw, $0)
 
-DDOC_BLANKLINE = <p class="bl"/>
+DDOC_BLANKLINE = <p class="bl"></p>
 
 DIL_NOCMNT          = <div class="nocmnt"></div>
 DIL_ATTRIBUTES      = $(SPAN attrs, [$0])

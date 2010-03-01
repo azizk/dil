@@ -508,7 +508,7 @@ function setSourceCode(html_code)
 /// Returns the relative URL to the source code of this module.
 function getSourceCodeURL()
 {
-  return "./htmlsrc/" + kandil.moduleFQN + ".html";
+  return "htmlsrc/" + kandil.moduleFQN + ".html";
 }
 
 /// Shows the code for a symbol in a div tag beneath it.

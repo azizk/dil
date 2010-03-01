@@ -109,9 +109,9 @@ def generate_pdf(module_files, dest, tmp, params):
   # --------------------------------
   # Matches the name and href attributes of a symbol link.
   symbol_rx = re.compile(r'(<a class="symbol[^"]+" name=)"([^"]+)"'
-                         r' href="./([^"]+)"')
+                         r' href="([^"]+)"')
   # Matches the href attribute of "h1.module > a".
-  h1_href_rx = re.compile(r'(<h1 class="module"[^>]+><a href=)"./([^"]+)"')
+  h1_href_rx = re.compile(r'(<h1 class="module"[^>]+><a href=)"([^"]+)"')
 
   package_tree = PackageTree() # For Table of Contents.
 
