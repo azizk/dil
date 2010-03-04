@@ -45,8 +45,10 @@ String.prototype.strip = function(chars) {
 String.prototype.format = function format(args) {
   if (!(arguments.length == 1 && format.rx_type.test(typeof args)))
     args = format.toArray.call(arguments); // Convert to proper array.
+  var implicit_idx = 0;
   return this.replace(format.rx, function(m) {
-    if (m.length == 2) return '{'; // Escape '{{'.
+    if (m[1] == '{') return '{'; // Escape '{{'.
+    if (m[1] == '}') return args[implicit_idx++]; // '{}'.
     // Split e.g.: "0.member1.m2"
     var indices = m.slice(1, -1).split('.'), obj = args;
     for (var i=0, len=indices.length; i < len; i++)
@@ -59,7 +61,7 @@ String.prototype.format = function format(args) {
 };
 (function(format_func) {
   format_func.rx_type = /^array|object$/;
-  format_func.rx = /\{\{|\{[^{}]+\}/g;
+  format_func.rx = /\{\{|\{[^{}]*\}/g;
   format_func.toArray = Array.prototype.slice;
   format_func.error = "{{FormatIndexError:{0}}";
 })(String.prototype.format);
