@@ -137,7 +137,7 @@ def main():
   parser.add_option("--ldc", dest="ldc", action="store_true", default=False,
     help="use ldc instead of dmd")
 
-  args = sys.argv[1:]
+  args, other_args = sys.argv[1:], []
   try:
     i = args.index("--")
     args, other_args = args[:i], args[i+1:]
