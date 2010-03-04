@@ -5,6 +5,7 @@ import os, re
 from path import Path
 from common import *
 from html2pdf import PDFGenerator
+from doc_funcs import *
 
 def copy_files(DIL, TANGO, DEST):
   """ Copies required files to the destination folder. """
@@ -31,7 +32,7 @@ def get_tango_version(path):
 def write_tango_ddoc(path, favicon, revision):
   revision = "?rev=" + revision if revision != None else ''
   favicon = "" if not favicon.exists else \
-    'FAVICON = <link href="./img/favicon.png" rel="icon" type="image/png"/>'
+    'FAVICON = <link href="img/favicon.png" rel="icon" type="image/png"/>'
   open(path, "w").write("""
 LICENSE = see $(LINK2 http://www.dsource.org/projects/tango/wiki/LibraryLicense, license.txt)
 REPOFILE = http://www.dsource.org/projects/tango/browser/trunk/$(DIL_MODPATH)%(revision)s
@@ -56,7 +57,7 @@ GT = <
 
 def write_PDF(DIL, SRC, VERSION, TMP):
   TMP = TMP/"pdf"
-  TMP.exists or TMP.mkdir()
+  TMP.mkdir()
 
   pdf_gen = PDFGenerator()
   pdf_gen.fetch_files(DIL, TMP)
@@ -115,6 +116,8 @@ def main():
   parser.add_option("--rev", dest="revision", metavar="REVISION", default=None,
     type="int", help="set the repository REVISION to use in symbol links"
                      " (unused atm)")
+  parser.add_option("--docs", dest="docs", default=False, action="store_true",
+    help="also generate docs if --zip/--pdf specified")
   parser.add_option("--posix", dest="posix", default=False, action="store_true",
     help="define version Posix instead of Win32 and Windows")
   parser.add_option("--zip", dest="zip", default=False, action="store_true",
@@ -132,6 +135,9 @@ def main():
   if not Path(args[0]).exists:
     print "The path '%s' doesn't exist." % args[0]
     return
+
+  # True if --docs is given, or neither of --pdf and --zip is true.
+  options.docs = options.docs or not (options.pdf or options.zip)
 
   # 1. Initialize some path variables.
   # Path to dil's root folder.
@@ -154,49 +160,57 @@ def main():
 
   build_dil_if_inexistant(DIL.EXE)
 
+  # 2. Read the version number.
   VERSION = get_tango_version(TANGO.SRC.ROOT/"tango"/"core"/"Version.d")
 
-  # 2. Create directories.
+  # 3. Create directories.
   DEST.makedirs()
   map(Path.mkdir, (DEST.HTMLSRC, DEST.JS, DEST.CSS, DEST.IMG, TMP))
 
-  # 3. Find source files.
-  def filter_func(path):
-    return path.folder.name in (".svn", "vendor", "rt")
-  FILES = [TANGO.SRC.object_di] + find_source_files(TANGO.SRC, filter_func)
+  dil_retcode = 0
+  if options.docs:
+    # 1. Find source files.
+    def filter_func(path):
+      return path.folder.name in (".svn", "vendor", "rt")
+    FILES = [TANGO.SRC.object_di] + find_source_files(TANGO.SRC, filter_func)
 
-  # 4. Prepare files and options to call generate_docs().
-  create_index(TMP/"index.d", TANGO.SRC.ROOT, FILES)
-  write_tango_ddoc(TANGO_DDOC, TANGO.favicon, options.revision)
-  DOC_FILES = [DIL.KANDIL.ddoc, TANGO_DDOC, TMP/"index.d"] + FILES
+    # 2. Prepare files and options to call generate_docs().
+    create_index(TMP/"index.d", TANGO.SRC.ROOT, FILES)
+    write_tango_ddoc(TANGO_DDOC, TANGO.favicon, options.revision)
+    DOC_FILES = [DIL.KANDIL.ddoc, TANGO_DDOC, TMP/"index.d"] + FILES
 
-  versions = ["Tango", "TangoDoc"]
-  versions += ["Posix"] if options.posix else ["Windows", "Win32"]
-  dil_options = ['-v', '-hl', '--kandil']
-  options.pykandil and dil_options.pop() # Removes '--kandil'.
+    versions = ["Tango", "TangoDoc"] + \
+               [["Windows", "Win32"], ["Posix"]][options.posix]
+    dil_options = ['-v', '-hl', '--kandil']
+    options.pykandil and dil_options.pop() # Removes '--kandil'.
 
-  # 5. Generate the documentation.
-  dil_retcode = generate_docs(DIL.EXE, DEST.abspath, MODLIST,
-    DOC_FILES, versions, dil_options, cwd=DIL)
+    # 3. Generate the documentation.
+    dil_retcode = generate_docs(DIL.EXE, DEST.abspath, MODLIST,
+      DOC_FILES, versions, dil_options, cwd=DIL)
 
-  if dil_retcode != 0:
-    print "Error: dil return code: %d" % dil_retcode
-    return
+    if dil_retcode != 0:
+      print "Error: dil return code: %d" % dil_retcode
+      return
 
-  # 6. Use Python code to do some stuff for 'kandil'.
-  if options.pykandil:
-    MODULES_JS = (DEST/"js"/"modules.js").abspath
-    generate_modules_js(read_modules_list(MODLIST), MODULES_JS)
+    # 4. Post processing.
+    processed_files = read_modules_list(MODLIST)
+    if TANGO.is_svn:
+      insert_svn_info(processed_files, TANGO.SRC.ROOT, DEST)
 
-  copy_files(DIL, TANGO, DEST)
+    # Use Python code to do some stuff for 'kandil'.
+    if options.pykandil:
+      MODULES_JS = (DEST/"js"/"modules.js").abspath
+      generate_modules_js(processed_files, MODULES_JS)
 
-  # 7. Optionally generate a PDF document.
+    copy_files(DIL, TANGO, DEST)
+
+  # Optionally generate a PDF document.
   if options.pdf:
     write_PDF(DIL, DEST, VERSION, TMP)
 
   TMP.rmtree()
 
-  # 8. Optionally create an archive.
+  # Optionally create an archive.
   if options.zip:
     name, src = "Tango.%s_doc" % VERSION, DEST
     cmd = "7zr a %(name)s.7z %(src)s" % locals()
