@@ -7,7 +7,7 @@ Please, read the license file "COPYING" for further information.
 Description
 ===========
 This software is a command line utility, a compiler written in D 1.0
-for the D programming language (1.0 and 2.0).
+for the D programming languages, version 1.0 and 2.0.
 
 How To Compile Dil
 ==================
@@ -15,27 +15,19 @@ In order to compile dil you must have:
  *) DMD 1.056 (http://www.digitalmars.com/d/1.0/changelog.html)
  *) Tango 0.99.9 (http://dsource.org/projects/tango/)
  *) MPFR 2.4.1 (http://mpfr.org)
- *) DSSS 0.77 (http://dsource.org/projects/dsss/)
-    or alternatively:
-    Python 2.6.4 (2.5 might work too) and scripts/build.py
+ *) Python 2.6.4 (2.5 might work too)
+    (DSSS ist unmaintained and can't compile dil anymore.)
 
-If you can't compile dil because you have a newer version of these programs
+If you can't compile dil because you have newer versions of these programs
 then report the problem to me, please (see Bugs section.)
 I hope you won't find it frustrating to successfully compile this software,
 and apologize if you do.
 
-Regarding DSSS:
-You have to make sure that the correct config file is used.
-A default can be set in "dsss/etc/rebuild/default".
-Use dmd-posix-tango, dmd-win-tango, gdc-posix-tango or gdc-win-tango.
-
-Note: DSSS can't compile dil anymore (due to some source files in Tango).
-Please use build.py instead. I'm sorry if that doesn't work also.
-
 Regarding MPFR:
 Windows users have to use Visual C/C++ or Cygwin in order to compile
 the MPFR library for their system. Precompiled libraries are available here:
-http://holoborodko.com/pavel/downloads/win32_gmp_mpfr.zip
+
+  http://holoborodko.com/pavel/downloads/win32_gmp_mpfr.zip
 
 I have not tested compiling a Windows binary yet. Dil should compile
 if you put one of the debug or release mpfr.lib files into a path
@@ -43,30 +35,28 @@ where the linker can find them. E.g.: pass the following to build.py:
   > python scripts\build.py -- -L+C:\downloads\mpfr\Win32\Release\
 
 
-Compile dil:
-# Change to the directory where you extracted dil.
-  $ cd dil/
-# Type "dsss build".
-  $ dsss build
-# The executable of dil is put into the bin/ directory.
-  $ ls bin/
-# Output> dilconf.d  dil
-# Run like this:
-# On Linux:
-  $ bin/dil
-# On Windows:
-  > bin\dil.exe
+==Compile dil with Python==
+# Note: The binary is placed in the bin/ folder.
 
-Compile with Python:
+# Change to the root directory of dil. E.g.:
+  $ cd git/dil/
 # Print help.
   $ scripts/build.py -h
 # Compile a release binary.
   $ scripts/build.py
 # Compile a debug binary.
   $ scripts/build.py --debug
+# Pass additional parameters to the compiler like this:
+  $ scripts/build.py -- -unittest
 
 # On Windows you probably have to call python explicitly.
   > python scripts\build.py
+
+# Run like this:
+# On Linux:
+  $ bin/dil
+# On Windows:
+  > bin\dil.exe
 
 Executing dil without parameters will print the main help message.
 
