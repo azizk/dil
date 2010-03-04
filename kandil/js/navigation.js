@@ -59,12 +59,13 @@ var kandil = {
     filter: "Filter...", /// Initial text in the filter boxes.
     splitbar_title: "Drag to resize. Double-click to close or open.",
     no_match: "No match...",
+    symboltitle: "Show source code", /// The title attribute of symbols.
   },
 };
 kandil.save = kandil.saved;
 
 /// Execute when document is ready.
-$(function() {
+$(function main() {
   if (navigator.vendor == "KDE")
     document.body.addClass("konqueror");
 //   else if (window.opera) // Not needed atm.
@@ -84,26 +85,34 @@ $(function() {
 
   initSymbolTags();
 
+  initTabs();
+});
+
+function initTabs()
+{
   // Assign click event handlers for the tabs.
-  function makeCurrentTab() {
-    $(".current", this.parentNode).removeClass('current');
-    this.addClass('current');
-    $("#panels > *:visible").hide(); // Hide all panels.
-    kandil.save.active_tab("#"+this.id);
+  function makeCurrentTab(panel) {
+    var tab = this;
+    $(".current", tab.parentNode).removeClass('current');
+    tab.addClass('current');
+    $("#panels > *").hide(); // Hide all panels.
+    $(tab.panel).show(); // Show the activated panel.
+    kandil.save.active_tab("#"+tab.id); // Save name of the active tab.
   }
 
-  $("#apitab").click(makeCurrentTab)
+  var apitab = $("#apitab"), modtab = $("#modtab");
+  apitab[0].panel = "#apipanel";
+  apitab.click(makeCurrentTab)
               .click(function lazyLoad() {
     $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
     initAPIList();
-  }).click(function() {
-    $("#apipanel").show(); // Display the API list.
   });
 
-  $("#modtab").click(makeCurrentTab)
+  modtab[0].panel = "#modpanel";
+  modtab.click(makeCurrentTab)
               .click(function lazyLoad() {
     $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
-    var modpanel = $("#modpanel");
+    var modpanel = $(this.panel);
     // Create the list.
     var ul = createModulesUL(modpanel);
     var tv = new Treeview(ul);
@@ -114,13 +123,11 @@ $(function() {
     if (kandil.settings.dynamic_mod_loading)
       $(".tview a", modpanel).click(handleLoadingModule);
     kandil.packageTree.initList(); // Init the list property.
-  }).click(function() { // Add the display handler.
-    $("#modpanel").show(); // Display the modules list.
   });
   // Activate the tab that has been saved or activate the default tab.
   var tab = kandil.saved.active_tab() || kandil.settings.default_tab;
   $(tab).trigger("click");
-});
+}
 
 /// Creates the quick search text inputs.
 function createQuickSearchInputs()
@@ -280,7 +287,11 @@ function handleLoadingModule(event)
 }
 
 function initSymbolTags()
-{
+{ // Give the header a '#' source link.
+  var h1 = $("h1.module");
+  h1.append(" ", h1.find(">a").clone()
+    .attr({"class":"srclink", "title":"Go to the HTML source file"}).html("#"));
+
   kandil.symbolTags = $(".symbol");
   // Add code display functionality to symbol links.
   kandil.symbolTags.click(function(event) {
@@ -294,6 +305,10 @@ function initSymbolTags()
       event.preventDefault();
       this.scrollIntoView();
     });
+  // Set the title attribute of the symbol tags.
+  setTimeout(function(){ // Can be delayed. Not so important.
+    kandil.symbolTags.attr("title", kandil.msg.symboltitle);
+  }, 1000);
 }
 
 /// Adds click handlers to symbols and inits the symbol list.
