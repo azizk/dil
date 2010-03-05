@@ -567,34 +567,38 @@ function showCode(symbol)
   }
 
   if (kandil.sourceCode.length == 0)
-  { // Load the HTML source code file.
-    var doc_url = getSourceCodeURL();
-
-    function errorHandler(request, error, e)
-    {
-      hideLoadingGif();
-      var msg = kandil.msg.failed_code.format(doc_url);
-      msg = $("<p class='ajaxerror'>{0}<br/><br/>{1.name}: {1.message}</p>".format(msg, e));
-      $(document.body).append(msg);
-      fadeOutRemove(msg, 5000, 500);
-    }
-
-    showLoadingGif(kandil.msg.loading_code);
-    try {
-      $.ajax({url: doc_url, dataType: "text", error: errorHandler,
-        success: function(data) {
-          if (data == "")
-            return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
-          setSourceCode(data);
-          show();
-          hideLoadingGif();
-        }
-      });
-    }
-    catch(e){ errorHandler(0, 0, e); }
-  }
+    loadHTMLCode(show);
   else // Already loaded. Show the code.
     show();
+}
+
+/// Loads the HTML source code file and keeps it cached.
+function loadHTMLCode(finished_func)
+{
+  var doc_url = getSourceCodeURL();
+
+  function errorHandler(request, error, e)
+  { // Appends a p-tag to the document. Can be styled with CSS.
+    hideLoadingGif();
+    var msg = kandil.msg.failed_code.format(doc_url);
+    msg = $("<p class='ajaxerror'>{0}<br/><br/>{1.name}: {1.message}</p>".format(msg, e));
+    $(document.body).append(msg);
+    fadeOutRemove(msg, 5000, 500);
+  }
+
+  showLoadingGif(kandil.msg.loading_code);
+  try {
+    $.ajax({url: doc_url, dataType: "text", error: errorHandler,
+      success: function(data) {
+        if (data == "")
+          return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
+        setSourceCode(data);
+        finished_func();
+        hideLoadingGif();
+      }
+    });
+  }
+  catch(e){ errorHandler(0, 0, e); }
 }
 
 function reportBug()
