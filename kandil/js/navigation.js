@@ -73,15 +73,13 @@ $(function main() {
 
   kandil.originalModuleFQN = kandil.moduleFQN = g_moduleFQN;
 
-  $("#kandil-content").addClass("left_margin");
-
   // Create the navigation bar.
-  var navbar = $(kandil.settings.navbar_html.format(kandil.settings));
+  var navbar = kandil.settings.navbar_html.format(kandil.settings);
   $(document.body).prepend(navbar);
 
-  createQuickSearchInputs();
+  createSplitbar(); // Create first, so the width of the navbar is set.
 
-  createSplitbar();
+  createQuickSearchInputs();
 
   initSymbolTags();
 
@@ -218,14 +216,15 @@ function createSplitbar()
 {
   var settings = kandil.settings, saved = kandil.saved;
   var splitbar = $(settings.splitbar_html.format(kandil.msg))[0];
-  splitbar.isMoving = false; // Moving status of the splitbar.
-  var navbar = $("#navbar"), content = $("#kandil-content"),
-      body = document.body;
-  body.appendChild(splitbar); // Insert the splitbar into the document.
-  // The margin between the navbar and the content.
-  var margin = parseInt(content.css("margin-left")) - navbar.width(),
-      minwidth = settings.navbar_minwidth,
+  var navbar = $("#navbar"), content = $("#kandil-content");
+  var minwidth = settings.navbar_minwidth,
       collapsewidth = settings.navbar_collapsewidth;
+
+  var body = document.body;
+  body.appendChild(splitbar); // Insert the splitbar into the document.
+
+  // Event handlers and other functions:
+  splitbar.isMoving = false; // Moving status of the splitbar.
   splitbar.setPos = function(x) {
     this.collapsed = false;
     if (x < collapsewidth)
@@ -238,7 +237,7 @@ function createSplitbar()
     if (x)
       this.openPos = x;
     navbar.css("width", x);
-    content.css("margin-left", x + margin);
+    content.css("margin-left", x);
     splitbar.style.left = x+"px";
   };
   splitbar.save = function() {
@@ -261,6 +260,7 @@ function createSplitbar()
       $(document).mousemove(mouseMoveHandler).mouseup(mouseUpHandler);
     e.preventDefault();
   }
+  // Register event handlers.
   $(splitbar).mousedown(mouseDownHandler)
              .dblclick(function(e) {
     var pos = this.collapsed ? this.openPos : 0; // Toggle the position.
@@ -268,7 +268,7 @@ function createSplitbar()
     this.save();
   });
   // Set initial position.
-  var pos = saved.splitbar_pos() || kandil.navbar_width;
+  var pos = saved.splitbar_pos() || settings.navbar_width;
   splitbar.openPos = pos;
   splitbar.collapsed = !!saved.splitbar_collapsed();
   if (splitbar.collapsed)

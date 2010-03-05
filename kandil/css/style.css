@@ -4,16 +4,12 @@
 body { margin: 0; }
 
 #kandil-content {
-  margin: 0.5em;
+  padding: 0em 1.2em;
 }
 
 #kandil-footer {
   margin: 0.5em 0;
   font-size: 0.9em;
-}
-
-#kandil-content.left_margin { /* To make place for the navbar. */
-  margin-left: 265px;
 }
 
 .splitbar {
@@ -241,12 +237,13 @@ input.filterbox {
   color: DarkRed;
 }
 
-.decl .symlink, .decl .srclink {
+/*.decl */.symlink, /*.decl */.srclink {
   display: none;
 }
 
 .decl:hover .symlink, .symlink:focus,
-.decl:hover .srclink, .srclink:focus {
+.decl:hover .srclink, .srclink:focus,
+h1.module:hover .srclink {
   display: inline;
 }
 
