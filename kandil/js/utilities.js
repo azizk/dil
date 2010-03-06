@@ -136,6 +136,14 @@ jQuery.extend(jQuery.fn, function(p/*rototype*/){ return {
   }
 }}(Element.prototype));
 
+// Use standardized function.
+if (!Object.defineProperty)
+  Object.defineProperty = function(o, p, f) {
+    f.set && o.__defineSetter__(p, f.set);
+    f.get && o.__defineGetter__(p, f.get);
+  };
+
+
 /// Gets a cookie or sets it to a value.
 function cookie(name, value, expires, path, domain, secure)
 { // Get the cookie.

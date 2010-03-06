@@ -7,8 +7,6 @@ var kandil = {
   originalModuleFQN: "",
   /// An object that represents the symbol tree.
   symbolTree: {},
-  /// The tags with the symbol CSS class.
-  symbolTags: null,
   /// An array of all the lines of this module's source code.
   sourceCode: [],
   /// Represents the package tree (located in generated modules.js).
@@ -50,6 +48,27 @@ var kandil = {
     active_tab: cookie.func("active_tab"), /// Last active tab.
   },
   save: null, /// An alias for "saved".
+  $: { /// Cache of jQuery objects. E.g.: kandil.$.navbar = $("#navbar")
+    selectors: { /// VariableName : CSS Selector
+      navbar: "#navbar",
+      content: "#kandil-content",
+      apitab: "#apitab", modtab: "#modtab",
+      apipanel: "#apipanel", modpanel: "#modpanel",
+    },
+    initialize: function() { // This is a lazy load mechanism.
+      // Getters are removed and replaced with a jQuery object.
+      S = kandil.$;
+      for (varname in S.selectors) {
+        var getter = function f() {
+          delete this[f.varname]; // Remove the getter.
+          return this[f.varname] = window.jQuery(f.selector);
+        };
+        getter.varname = varname;
+        getter.selector = S.selectors[varname];
+        Object.defineProperty(S, varname, {'get':getter});
+      }
+    }
+  },
   msg: {
     failed_module: "Failed loading the module from '{0}'!",
     failed_code: "Failed loading code from '{0}'!",
@@ -63,6 +82,7 @@ var kandil = {
   },
 };
 kandil.save = kandil.saved;
+kandil.$.initialize();
 
 /// Execute when document is ready.
 $(function main() {
@@ -89,39 +109,39 @@ $(function main() {
 function initTabs()
 {
   // Assign click event handlers for the tabs.
-  function makeCurrentTab(panel) {
+  function makeCurrentTab() {
     var tab = this;
     $(".current", tab.parentNode).removeClass('current');
     tab.addClass('current');
     $("#panels > *").hide(); // Hide all panels.
-    $(tab.panel).show(); // Show the activated panel.
+    tab.panel.show(); // Show the panel under this tab.
     kandil.save.active_tab("#"+tab.id); // Save name of the active tab.
   }
 
-  var apitab = $("#apitab"), modtab = $("#modtab");
-  apitab[0].panel = "#apipanel";
-  apitab.click(makeCurrentTab)
-              .click(function lazyLoad() {
-    $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
-    initAPIList();
-  });
+  var apitab = kandil.$.apitab, modtab = kandil.$.modtab;
 
-  modtab[0].panel = "#modpanel";
-  modtab.click(makeCurrentTab)
-              .click(function lazyLoad() {
-    $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
-    var modpanel = $(this.panel);
+  apitab[0].panel = kandil.$.apipanel;
+  apitab.lazyLoad = function _() {
+    apitab.unbind("click", _); // Remove the lazyLoad handler.
+    initAPIList();
+  };
+  apitab.click(makeCurrentTab).click(apitab.lazyLoad);
+
+  modtab[0].panel = kandil.$.modpanel;
+  modtab.lazyLoad = function _() {
+    modtab.unbind("click", _); // Remove the lazyLoad handler.
     // Create the list.
-    var ul = createModulesUL(modpanel);
+    var ul = createModulesUL(this.panel);
     var tv = new Treeview(ul);
     tv.loadState("module_tree");
     tv.bind("save_state", function() {
       tv.saveState("module_tree");
     });
     if (kandil.settings.dynamic_mod_loading)
-      $(".tview a", modpanel).click(handleLoadingModule);
+      this.panel.find(".tview a").click(handleLoadingModule);
     kandil.packageTree.initList(); // Init the list property.
-  });
+  };
+  modtab.click(makeCurrentTab).click(modtab.lazyLoad);
   // Activate the tab that has been saved or activate the default tab.
   var tab = kandil.saved.active_tab() || kandil.settings.default_tab;
   $(tab).trigger("click");
@@ -134,8 +154,8 @@ function createQuickSearchInputs()
   var qs = [
     new QuickSearch("apiqs", options), new QuickSearch("modqs", options)
   ];
-  $("#apipanel").prepend(qs[0].input);
-  $("#modpanel").prepend(qs[1].input);
+  kandil.$.apipanel.prepend(qs[0].input);
+  kandil.$.modpanel.prepend(qs[1].input);
   $.extend(qs[0].input,
     {tag_selector: "#apipanel>ul", symbols: kandil.symbolTree});
   $.extend(qs[1].input,
@@ -165,7 +185,7 @@ function createQuickSearchInputs()
 /// Installs event handlers to show tooltips for symbols.
 function installTooltipHandlers()
 {
-  var ul = $("#apipanel > ul.tview");
+  var ul = kandil.$.apipanel.find("> ul.tview");
   var tooltip = $.extend({
     current: null, // Current tooltip.
     target: null, // The target to show a tooltip for.
@@ -178,7 +198,7 @@ function installTooltipHandlers()
         a_tag_name = a_tag.href.slice(a_tag.href.lastIndexOf("#")+1),
         sym_tag = $(document.getElementsByName(a_tag_name)[0]);
     sym_tag = sym_tag.parent().clone();
-    $(".symlink, .srclink", sym_tag).remove();
+    sym_tag.find(".symlink, .srclink").remove();
     // Create the tooltip.
     var tt = tooltip.current = $("<div class='tooltip'/>");
     tt.append(sym_tag[0].childNodes); // Contents of the tooltip.
@@ -197,7 +217,7 @@ function installTooltipHandlers()
   };
   // TODO: try implementing this with a single mousemove event handler on ul.
   // For some reason $(">.root>ul a", ul) doesn't produce correct results.
-  $("a", $(">.root>ul", ul)).mouseover(function(e) {
+  ul.find(">.root>ul").find("a").mouseover(function(e) {
     clearTimeout(tooltip.TID);
     tooltip.target = this;
     // Delay normally if this is the first tooltip being displayed, then
@@ -216,7 +236,7 @@ function createSplitbar()
 {
   var settings = kandil.settings, saved = kandil.saved;
   var splitbar = $(settings.splitbar_html.format(kandil.msg))[0];
-  var navbar = $("#navbar"), content = $("#kandil-content");
+  var navbar = kandil.$.navbar, content = kandil.$.content;
   var minwidth = settings.navbar_minwidth,
       collapsewidth = settings.navbar_collapsewidth;
 
@@ -292,9 +312,9 @@ function initSymbolTags()
   h1.append(" ", h1.find(">a").clone()
     .attr({"class":"srclink", "title":"Go to the HTML source file"}).html("#"));
 
-  kandil.symbolTags = $(".symbol");
+  kandil.$.symbols = $(".symbol");
   // Add code display functionality to symbol links.
-  kandil.symbolTags.click(function(event) {
+  kandil.$.symbols.click(function(event) {
     event.preventDefault();
     showCode($(this));
   });
@@ -307,17 +327,17 @@ function initSymbolTags()
     });
   // Set the title attribute of the symbol tags.
   setTimeout(function(){ // Can be delayed. Not so important.
-    kandil.symbolTags.attr("title", kandil.msg.symboltitle);
+    kandil.$.symbols.attr("title", kandil.msg.symboltitle);
   }, 1000);
 }
 
 /// Adds click handlers to symbols and inits the symbol list.
 function initAPIList()
 {
-  initializeSymbolTree(kandil.symbolTags);
+  initializeSymbolTree();
 
   // Create the HTML text and append it to the api panel.
-  var ul = createSymbolsUL($("#apipanel"));
+  var ul = createSymbolsUL(kandil.$.apipanel);
   var tv = new Treeview(ul);
   tv.loadState(kandil.moduleFQN);
   tv.bind("save_state", function() {
@@ -336,10 +356,10 @@ function fadeOutRemove(tag, delay, fade)
 }
 
 /// Loads a new module and updates the API panel and the content pane.
-function loadNewModule(modFQN)
+function loadNewModule(moduleFQN)
 {
   // Load the module's file.
-  var doc_url = modFQN + ".html";
+  var doc_url = moduleFQN + ".html";
 
   function errorHandler(request, error, e)
   {
@@ -370,19 +390,17 @@ function loadNewModule(modFQN)
         if (data == "")
           return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
         // Reset some global variables.
-        kandil.moduleFQN = modFQN;
+        kandil.moduleFQN = moduleFQN;
         kandil.sourceCode = [];
         document.title = extractTitle(data);
-        $("#kandil-content")[0].innerHTML = extractContent(data);
-        $("#apipanel > ul").remove(); // Delete old API list.
-        if ($("#apitab").hasClass("current"))
-          initAPIList();
-        else
-          $("#apitab").click(function lazyLoad() {
-            $(this).unbind("click", lazyLoad); // Remove the lazyLoad handler.
-            initAPIList();
-          });
+        $("html")[0].scrollTop = 0; // Scroll the document to the top.
+        kandil.$.content[0].innerHTML = extractContent(data);
         initSymbolTags();
+        // Update the API panel.
+        kandil.$.apipanel.find("> ul").remove(); // Delete old API list.
+        kandil.$.apitab.click(kandil.$.apitab.lazyLoad);
+        if (kandil.$.apitab.hasClass("current")) // Is the API tab selected?
+          kandil.$.apitab.lazyLoad(); // Load the contents then.
         $("#apiqs")[0].qs.resetFirstFocusHandler();
         hideLoadingGif();
       }
@@ -410,7 +428,7 @@ function hideLoadingGif()
 /// Initializes the symbol list under the API tab.
 function initializeSymbolTree()
 {
-  var sym_tags = kandil.symbolTags;
+  var sym_tags = kandil.$.symbols;
   if (!sym_tags.length)
     return;
   // Prepare the symbol list.
