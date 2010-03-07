@@ -527,16 +527,17 @@ function createModulesUL_(symbols)
   return list + "</ul>";
 }
 
-/// Extracts the code from the HTML file and sets kandil.sourceCode.
+/// Extracts the code from the HTML file. Cached in kandil.sourceCode.
 function setSourceCode(html_code)
-{
-  html_code = html_code.split(/<pre class="sourcecode">|<\/pre>/);
-  if (html_code.length == 3)
-  { // Get the code between the pre tags.
-    var code = html_code[1];
-    // Split on newline.
-    kandil.sourceCode = code.split(/\n|\r\n?|\u2028|\u2029/);
-  }
+{ // NB: Profiled code.
+  var start = html_code.indexOf('<pre class="sourcecode">'),
+      end = html_code.lastIndexOf('</pre>');
+  if (start < 0 || end < 0)
+    return;
+  // Get the code between the pre tags.
+  var code = html_code.slice(start, end);
+  // Split on newline.
+  kandil.sourceCode = code.split(/\n|\r\n|\r|\u2028|\u2029/);
 }
 
 /// Returns the relative URL to the source code of this module.
