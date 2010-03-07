@@ -160,7 +160,7 @@ function cookie(name, value, expires, path, domain, secure)
     return m ? cookie.unescape(m[1]) : null;
   }
   // Set the cookie.
-  value = cookie.escape(String(value)); // Escape semicolons.
+  value = cookie.escape(new String(value)); // Escape semicolons.
   if (expires != undefined) {
     var date = expires;
     if (!date.toUTCString) // 86400000 = 24h*60m*60s*1000ms
@@ -172,6 +172,7 @@ function cookie(name, value, expires, path, domain, secure)
            (secure ? "; secure" : "");
   document.cookie = name + "=" + value;
 }
+cookie.life = 30; /// Life time in days.
 /// Escapes semicolons with the hex value 0x01.
 cookie.escape = function(value) { return value.replace(/;/g, "\x01") }
 /// Replaces hex values 0x01 with a semicolon.
@@ -183,8 +184,9 @@ cookie.default_converter = function(val) { return val }
 /// apply a converter function to its value, it can also write to the cookie.
 cookie.func = function (name, convert) {
   convert = convert || cookie.default_converter;
-  return function(val) { return val == undefined ? convert(cookie(name)) :
-    (cookie(name, val, kandil.settings.cookie_life), val)
+  return function(val) {
+    return val === undefined ?
+       convert(cookie(name)) : (cookie(name, val, cookie.life), val);
   };
 }
 

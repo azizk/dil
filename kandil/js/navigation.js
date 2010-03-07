@@ -36,7 +36,7 @@ var kandil = {
       fadeout: 200, /// Fade-out speed in ms.
       offset: {x:16, y:16}, /// (x, y) offsets from the mouse position.
     },
-    cookie_life: 30, /// Life-time of cookies in days.
+    cookie_life: 30, /// Life time of cookies in days.
     qs_delay: 500, /// Delay after last key press before quick search starts.
   },
   saved: { /// Functions for saving and getting data.
@@ -83,6 +83,7 @@ var kandil = {
 };
 kandil.save = kandil.saved;
 kandil.$.initialize();
+cookie.life = kandil.settings.cookie_life;
 
 /// Execute when document is ready.
 $(function main() {
