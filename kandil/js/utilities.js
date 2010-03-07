@@ -8,20 +8,26 @@ RegExp.escape = function(str) {
 
 /// Splits a string by 'sep' returning a tuple (head, tail).
 /// Returns (this, "") if sep is not found.
-String.prototype.partition = function(sep) {
-  var sep_pos = this.indexOf(sep), head = this, tail = "";
-  if (sep_pos != -1)
-    (head = this.slice(0, sep_pos)), (tail = this.slice(sep_pos+1));
-  return [head, tail];
+String.prototype.partition = function(sep, part) {
+  var sep_pos = this.indexOf(sep);
+  if (sep_pos < 0) sep_pos = this.length;
+  if (part != undefined)
+    return new String(part == 0 ? this.slice(0, sep_pos) :
+                      this.slice(sep_pos+sep.length));
+  return [new String(this.slice(0, sep_pos)),
+          new String(this.slice(sep_pos+sep.length))];
 };
 
 /// Splits a string by 'sep' returning a tuple (head, tail).
 /// Returns ("", this) if sep is not found.
-String.prototype.rpartition = function(sep) {
+String.prototype.rpartition = function(sep, part) {
   var sep_pos = this.lastIndexOf(sep);
-  var head = (sep_pos == -1) ? "" : this.slice(0, sep_pos);
-  var tail = this.slice(sep_pos+1);
-  return [head, tail];
+  if (sep_pos < 0) sep_pos = -this.length-sep.length;
+  if (part != undefined)
+    return new String(part == 0 ? this.slice(0, sep_pos) :
+                      this.slice(sep_pos+sep.length));
+  return [new String(this.slice(0, sep_pos)),
+          new String(this.slice(sep_pos+sep.length))];
 };
 
 /// Strips chars (defaults to whitespace) from the start and end of a string.
@@ -130,9 +136,10 @@ jQuery.extend(jQuery.fn, function(p/*rototype*/){ return {
   toggleClass: function(){ return this.each(p.toggleClass, arguments) },
   hasClass:    function(classes){
     for (var i = 0, len = this.length; i < len; i++)
-      if (p.hasClass.call(this[i], classes))
-        return true;
-    return false;
+      if (!this[i].hasClass(classes))
+        return false;
+    return true;
+  },
   }
 }}(Element.prototype));
 
@@ -141,6 +148,7 @@ if (!Object.defineProperty)
   Object.defineProperty = function(o, p, f) {
     f.set && o.__defineSetter__(p, f.set);
     f.get && o.__defineGetter__(p, f.get);
+    return o;
   };
 
 

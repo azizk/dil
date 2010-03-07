@@ -195,7 +195,7 @@ function installTooltipHandlers()
   function showTooltip(e)
   { // Get the content of the tooltip.
     var a_tag = tooltip.target,
-        a_tag_name = a_tag.href.slice(a_tag.href.lastIndexOf("#")+1),
+        a_tag_name = a_tag.href.rpartition('#', 1),
         sym_tag = $(document.getElementsByName(a_tag_name)[0]);
     sym_tag = sym_tag.parent().clone();
     sym_tag.find(".symlink, .srclink").remove();
@@ -301,8 +301,7 @@ function createSplitbar()
 function handleLoadingModule(event)
 {
   event.preventDefault();
-  var modFQN = this.href.slice(this.href.lastIndexOf("/")+1,
-                               this.href.lastIndexOf(".html"));
+  var modFQN = this.href.rpartition('/', 1).partition('.html', 0);
   loadNewModule(modFQN);
 }
 
