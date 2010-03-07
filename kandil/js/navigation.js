@@ -17,7 +17,7 @@ var kandil = {
 <span id='apitab' class='current'>{apitab_label}</span>\
 <span id='modtab'>{modtab_label}</span></p>\
 <div id='panels'><div id='apipanel'/><div id='modpanel'/></div>\
-</div>", /// The navbar HTML code prepended to the body.
+</div>", /// The navbar HTML code prepended to <body>.
     splitbar_html: "<div title='{splitbar_title}' class='splitbar'>\
 <div class='handle'/></div>", /// The splitbar's HTML code.
     navbar_width: 250,    /// Initial navigation bar width.
@@ -39,7 +39,7 @@ var kandil = {
     cookie_life: 30, /// Life-time of cookies in days.
     qs_delay: 500, /// Delay after last key press before quick search starts.
   },
-  saved: {
+  saved: { /// Functions for saving and getting data.
     /// The position of the splitbar.
     splitbar_pos: cookie.func("splitbar_pos", parseInt),
     /// The collapse state.
@@ -91,7 +91,7 @@ $(function main() {
 //   else if (window.opera) // Not needed atm.
 //     document.body.addClass("opera");
 
-  kandil.originalModuleFQN = kandil.moduleFQN = g_moduleFQN;
+  kandil.originalModuleFQN = kandil.moduleFQN = document.body.id;
 
   // Create the navigation bar.
   var navbar = kandil.settings.navbar_html.format(kandil.settings);

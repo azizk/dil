@@ -2,10 +2,9 @@ DDOC = <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-  $(DOC_HEAD)
-  $(DOC_HEAD_EXTRA)
+  $(DOC_HEAD)$(DOC_HEAD_EXTRA)
 </head>
-<body>
+<body id="$(DIL_MODFQN)">
 <div id="kandil-content">
 <div class="module">
   <h1 class="module" id="m-$(DIL_MODFQN)"><a href="$(SRCFILE)" class="symbol">$(TITLE)</a></h1>
@@ -28,9 +27,6 @@ DOC_HEAD = <title>$(TITLE)</title>
   <script type="text/javascript" src="js/modules.js"></script>
   <script type="text/javascript" src="js/quicksearch.js"></script>
   <script type="text/javascript" src="js/navigation.js"></script>
-  <script type="text/javascript">
-    var g_moduleFQN = "$(DIL_MODFQN)";
-  </script>
 DOC_HEAD_EXTRA =
 
 FAVICON = <!-- no favicon -->
