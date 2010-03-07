@@ -101,7 +101,7 @@ $(function main() {
 
   createQuickSearchInputs();
 
-  initSymbolTags();
+  initSymbolTags(kandil);
 
   initTabs();
 });
@@ -305,7 +305,7 @@ function handleLoadingModule(event)
   loadNewModule(modFQN);
 }
 
-function initSymbolTags()
+function initSymbolTags(kandil)
 { // Give the header a '#' source link.
   var h1 = $("h1.module");
   h1.append(" ", h1.find(">a").clone()
@@ -357,6 +357,7 @@ function fadeOutRemove(tag, delay, fade)
 /// Loads a new module and updates the API panel and the content pane.
 function loadNewModule(moduleFQN)
 {
+  var kandil = window.kandil;
   // Load the module's file.
   var doc_url = moduleFQN + ".html";
 
@@ -369,32 +370,32 @@ function loadNewModule(moduleFQN)
     fadeOutRemove(msg, 5000, 500);
   }
 
-  function extractContent(text)
-  {
-    var start = text.indexOf('<div class="module">'),
-        end = text.lastIndexOf('</div>\n</body>');
-    return text.slice(start, end);
-  }
-
-  function extractTitle(text)
-  {
+  function extractParts(text)
+  { // NB: Profiled code.
+    var parts = {};
     var start = text.indexOf('<title>'), end = text.indexOf('</title>');
-    return text.slice(start+7, end); // '<title>'.length = 7
+    parts.title = text.slice(start+7, end) // '<title>'.length = 7
+    start = text.indexOf('<div class="module">');
+    end = text.lastIndexOf('</div>\n</body>');
+    parts.content = text.slice(start, end);
+    return parts;
   }
 
   showLoadingGif(kandil.msg.loading_module);
   try {
     $.ajax({url: doc_url, dataType: "text", error: errorHandler,
-      success: function(data) {
-        if (data == "")
+      success: function(text) {
+        if (text == "")
           return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
+        text = new String(text);
+        var parts = extractParts(text);
         // Reset some global variables.
         kandil.moduleFQN = moduleFQN;
         kandil.sourceCode = [];
-        document.title = extractTitle(data);
+        document.title = parts.title;
         $("html")[0].scrollTop = 0; // Scroll the document to the top.
-        kandil.$.content[0].innerHTML = extractContent(data);
-        initSymbolTags();
+        kandil.$.content[0].innerHTML = parts.content;
+        initSymbolTags(kandil);
         // Update the API panel.
         kandil.$.apipanel.find("> ul").remove(); // Delete old API list.
         kandil.$.apitab.click(kandil.$.apitab.lazyLoad);
@@ -606,10 +607,11 @@ function loadHTMLCode(finished_func)
   showLoadingGif(kandil.msg.loading_code);
   try {
     $.ajax({url: doc_url, dataType: "text", error: errorHandler,
-      success: function(data) {
-        if (data == "")
+      success: function(text) {
+        if (text == "")
           return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
-        setSourceCode(data);
+        text = new String(text);
+        setSourceCode(text);
         finished_func();
         hideLoadingGif();
       }
