@@ -42,7 +42,7 @@ String.prototype.strip = function(chars) {
   if (arguments.length == 1)
     (chars = RegExp.escape(chars)),
     (rx = RegExp("^["+chars+"]+"));
-  var str = this.replace(rx, ""), i = str.length;
+  var str = new String(this.replace(rx, "")), i = str.length;
   if (i) while(rx.test(str[--i])){}
   return str.substring(0, i+1);*/
 };
@@ -53,8 +53,10 @@ String.prototype.format = function format(args) {
     args = format.toArray.call(arguments); // Convert to proper array.
   var implicit_idx = 0;
   return this.replace(format.rx, function(m) {
-    if (m[1] == '{') return '{'; // Escape '{{'.
-    if (m[1] == '}') return args[implicit_idx++]; // '{}'.
+    if (m[1] == '{') return '{'; // Replace '{{' with '{'.
+    if (m[1] == '}')
+      return (implicit_idx in args) ? args[implicit_idx++] : // Replace '{}'.
+        format.error.format("no args["+implicit_idx+"]"); // Else: error.
     // Split e.g.: "0.member1.m2"
     var indices = m.slice(1, -1).split('.'), obj = args;
     for (var i=0, len=indices.length; i < len; i++)
@@ -126,22 +128,38 @@ jQuery.extend(Element.prototype, {
     else // Turn classes on or off according to provided state parameter.
       state ? this.addClass(classes) : this.removeClass(classes);
     return this;
-  }
+  },
+  /// Returns the computed value of a CSS property. If property is undefined,
+  /// the ComputedCSSStyleDeclaration object is returned instead.
+  cCSS: function(property) {
+    var cs = window.getComputedStyle(this, null);
+    return (property === undefined) ? cs : cs.getPropertyValue(property);
+  },
+  xpath: function(path, opt) {
+    opt = opt || {};
+    opt.type = window.XPathResult[opt.type];
+    return document.evaluate(path, this, opt.ns, opt.type, opt.res);
+  },
 });
 
 // Replace the methods in jQuery.
-jQuery.extend(jQuery.fn, function(p/*rototype*/){ return {
-  removeClass: function(){ return this.each(p.removeClass, arguments) },
-  addClass:    function(){ return this.each(p.addClass, arguments) },
-  toggleClass: function(){ return this.each(p.toggleClass, arguments) },
-  hasClass:    function(classes){
+jQuery.extend(jQuery.fn, {
+  removeClass: function(){ return this.each(Element.prototype.removeClass, arguments) },
+  addClass:    function(){ return this.each(Element.prototype.addClass, arguments) },
+  toggleClass: function(){ return this.each(Element.prototype.toggleClass, arguments) },
+  hasClass:    function(classes) {
     for (var i = 0, len = this.length; i < len; i++)
       if (!this[i].hasClass(classes))
         return false;
     return true;
   },
-  }
-}}(Element.prototype));
+  cCSS: function(property) {
+    return this.map(function(){return this.cCSS(property)});
+  },
+  xpath: function(path, options) {
+    return this.map(function(){return this.xpath(path, options)});
+  },
+});
 
 // Use standardized function.
 if (!Object.defineProperty)
@@ -198,7 +216,7 @@ if (window.opera)
 else if (!window.console)
   console = {log: emptyFunc, profile:emptyFunc, profileEnd: emptyFunc};
 
-profile = function profile(msg, func) {
+function profile(msg, func) {
   console.profile(msg);
   func();
   console.profileEnd(msg);
