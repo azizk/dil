@@ -12,7 +12,7 @@ for the D programming languages, version 1.0 and 2.0.
 How To Compile Dil
 ==================
 In order to compile dil you must have:
- *) DMD 1.056 (http://www.digitalmars.com/d/1.0/changelog.html)
+ *) DMD 1.057 (http://www.digitalmars.com/d/1.0/changelog.html)
  *) Tango 0.99.9 (http://dsource.org/projects/tango/)
  *) MPFR 2.4.1 (http://mpfr.org)
  *) Python 2.6.4 (2.5 might work too)
@@ -32,7 +32,7 @@ the MPFR library for their system. Precompiled libraries are available here:
 I have not tested compiling a Windows binary yet. Dil should compile
 if you put one of the debug or release mpfr.lib files into a path
 where the linker can find them. E.g.: pass the following to build.py:
-  > python scripts\build.py -- -L+C:\downloads\mpfr\Win32\Release\
+  > python scripts\build.py -- -L+mpfr.lib -L+C:\downloads\mpfr\Win32\Release\
 
 
 ==Compile dil with Python==
