@@ -108,10 +108,11 @@ def generate_pdf(module_files, dest, tmp, params):
   # Define some regular expressions.
   # --------------------------------
   # Matches the name and href attributes of a symbol link.
-  symbol_rx = re.compile(r'(<a class="symbol[^"]+" name=)"([^"]+)"'
-                         r' href="([^"]+)"')
+  symbol_rx = re.compile(
+    r'(<a class="symbol[^"]+" name=)"([^"]+)" href="htmlsrc/([^#]+)([^"]+)"')
   # Matches the href attribute of "h1.module > a".
-  h1_href_rx = re.compile(r'(<h1 class="module"[^>]+><a href=)"([^"]+)"')
+  h1_href_rx = re.compile(
+    r'(<h1 class="module"[^>]*><a href=)"htmlsrc/([^"]+)"')
 
   package_tree = PackageTree() # For Table of Contents.
 
@@ -129,6 +130,7 @@ def generate_pdf(module_files, dest, tmp, params):
 
   # Prepare the HTML fragments.
   # ---------------------------
+  print "Preparing HTML fragments."
   html_fragments = []
   sym_dict_all = {} # Group symbols by their kind, e.g. class, struct etc.
   for html_file in module_files:
@@ -138,8 +140,10 @@ def generate_pdf(module_files, dest, tmp, params):
     # Extract symbols list, before symbol_rx.
     sym_dict, cat_dict = get_symbols(html_str, module_fqn)
     # Add symlink as a prefix to "a.symbol" tags.
-    html_str = symbol_rx.sub(r'\1"m-%s:\2" href="%s/\3"' %
-                             (module_fqn, symlink), html_str)
+    # The name attribute must be prefixed with "m-%MODULE_FQN%",
+    # in order to make the anchor unique in the entire document.
+    html_str = symbol_rx.sub(
+      r'\1"m-%s:\2" href="%s/\3#\2"' % (module_fqn, symlink), html_str)
     # Add symlink as a prefix to the "h1>a.symbol" tag.
     html_str = h1_href_rx.sub(r'\1"%s/\2"' % symlink, html_str)
     # Extract "#content>.module".
@@ -169,7 +173,7 @@ def generate_pdf(module_files, dest, tmp, params):
 
   # Join the HTML fragments.
   # ------------------------
-  print "Joining HTML fragments."
+  print "Joining HTML fragments into a single file."
   html_src = tmp/("html2pdf.%s" % x_html.lower())
   html_doc = open(html_src, "w")
 
@@ -178,9 +182,9 @@ def generate_pdf(module_files, dest, tmp, params):
   if x_html == "XHTML":
     params = dict(params, doctype=
       '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"'
-      ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">',
+      ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n',
       xmlns=' xmlns="http://www.w3.org/1999/xhtml"')
-  head = u"""%(doctype)s\n<html%(xmlns)s>
+  head = u"""%(doctype)s<html%(xmlns)s>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
   <meta name="author" content="%(author)s"/>
@@ -246,14 +250,16 @@ def generate_pdf(module_files, dest, tmp, params):
       html_doc.write('<h1 id="p-%s" class="package">%s</h1>\n' % ((p.fqn,)*2))
       html_doc.write('<div>')
       if len(p.packages):
-        html_doc.write("<p><b>Packages:</b> ")
-        html_doc.write(", ".join(["<a href='#p-%s'>%s</a>" % (p_.fqn, p_.name)
-                                   for p_ in p.packages]))
-        html_doc.write("</p>\n")
-      html_doc.write("<p><b>Modules:</b> ")
-      html_doc.write(", ".join(["<a href='#m-%s'>%s</a>" % (m.fqn, m.name)
-                                 for m in p.modules]))
-      html_doc.write("</p>\n</div>")
+        html_doc.write("<p><b>Packages:</b> " +
+          ", ".join(["<a href='#p-%s'>%s</a>" % (p_.fqn, p_.name)
+                      for p_ in p.packages]) +
+          "</p>\n")
+      if len(p.modules):
+        html_doc.write("<p><b>Modules:</b> " +
+          ", ".join(["<a href='#m-%s'>%s</a>" % (m.fqn, m.name)
+                      for m in p.modules]) +
+          "</p>\n")
+      html_doc.write("</div>")
       write_nested_fragments(p)
     for m in pckg.modules:
       html_doc.write(m.html_str.encode("utf-8"))
