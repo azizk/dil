@@ -49,8 +49,8 @@ SUB = $1<sub>$2</sub>
 POW = $1<sup>$2</sup>
 _PI = $(PI $0)
 D = <span class="inlcode">$0</span>
-LE = <=
-GT = <
+LE = &lt;
+GT = &gt;
 %(favicon)s
 """ % locals()
   )
@@ -71,7 +71,8 @@ def write_PDF(DIL, SRC, VERSION, TMP):
     logo_file.copy(TMP)
     logo = "<br/><br/><img src='%s'/>" % logo_file.name
   # Go to this URL when a D symbol is clicked.
-  symlink = "http://dil.googlecode.com/svn/doc/Tango_%s" % VERSION
+  #symlink = "http://dil.googlecode.com/svn/doc/Tango_%s" % VERSION
+  symlink = "http://www.dsource.org/projects/tango/docs/" + VERSION
   params = {
     "pdf_title": "Tango %s API" % VERSION,
     "cover_title": "Tango %s<br/><b>API</b>%s" % (VERSION, logo),
@@ -221,7 +222,7 @@ def main():
     os.system(cmd)
 
   if dil_retcode == 0:
-    print "Finished. Exiting normally."
+    print "Python script finished. Exiting normally."
 
 if __name__ == "__main__":
   main()

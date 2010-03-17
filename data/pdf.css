@@ -147,7 +147,7 @@ a {
 
 #indices { page: indices; }
 #indices a { color: black; }
-#indices a::after {
+#indices a::after { /* Page number of the targetted element. */
   content: ", " target-counter(attr(href), page);
 }
 #indices dl { column-count: 2; }
