@@ -195,7 +195,10 @@ def main():
     # 4. Post processing.
     processed_files = read_modules_list(MODLIST)
     if TANGO.is_svn:
-      insert_svn_info(processed_files, TANGO.SRC.ROOT, DEST)
+      author_link = 'https://www.ohloh.net/p/dtango/contributors?query={0}'
+      rev_link = 'http://www.dsource.org/projects/tango/browser/trunk/{0}?rev={1}'
+      insert_svn_info(processed_files, TANGO.SRC.ROOT, DEST,
+        rev_link, author_link)
 
     # Use Python code to do some stuff for 'kandil'.
     if options.pykandil:

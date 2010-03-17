@@ -2,12 +2,22 @@
 # Author: Aziz Köksal
 import re
 
-def insert_svn_info(FILES, SRC_ROOT, DEST):
+def insert_svn_info(FILES, SRC_ROOT, DEST, rev_link, author_link, template=""):
   """ Fetches information about Tango source files using 'svn info'
     and inserts that into the generated HTML files. """
   from subprocess import Popen, PIPE
 
   rx = re.compile(u"Last Changed (?:Author|Rev|Date): (.+)")
+
+  if template == "": # Use default:
+    # {0}=Author; {1}=Revision; {2}=Date
+    template = """<div class="svn_nfo"><h3 class="svnheader">SVN info:</h3>
+<span class="svnlabel">Last Author:</span> <a class="svnauthor"
+  href="{author_link}">{0}</a><br/>
+<span class="svnlabel">Last Revision:</span> <a class="svnrevision"
+  href="{rev_link}">{1}</a><br/>
+<span class="svnlabel">Last Changed Date:</span>
+  <span class="svndate">{2}</span></div>\n"""
 
   print "Querying SVN..."
 
@@ -29,7 +39,7 @@ def insert_svn_info(FILES, SRC_ROOT, DEST):
     #          /dest/tangodoc/tango.core.BitManip.html
     path = DEST/(source['fqn']+".html")
     if not path.exists:
-      print "Warning: not adding SVN info to '%s'" % path
+      print "Warning: file inexistent: '%s'. Not adding SVN info to it." % path
       continue
     # 3. Open the file in update mode.
     f = open(path, "r+")
@@ -40,15 +50,10 @@ def insert_svn_info(FILES, SRC_ROOT, DEST):
     text = text[insert_pos:] # Store the rest of the file.
     # 5. Insert the new content.
     f.seek(insert_pos, 0)
-    fmt_args = file_infos[i] + [src_file]
-    f.write("""<div class="svn_nfo"><b class="svnheader">SVN info:</b><br/>
-<span class="svnlabel">Last Author:</span> <a class="svnauthor"
-  href="https://www.ohloh.net/p/dtango/contributors?query={0}">{0}</a><br/>
-<span class="svnlabel">Last Revision:</span> <a class="svnrevision"
-  href="http://www.dsource.org/projects/tango/browser/trunk/{3}?rev={1}">
-  {1}</a><br/>
-<span class="svnlabel">Last Changed Date:</span>
-  <span class="svndate">{2}</span></div>\n""".format(*fmt_args))
+    fmt_args = file_infos[i]
+    f.write(template.format(*fmt_args,
+      author_link=author_link.format(fmt_args[0]),
+      rev_link=rev_link.format(src_file, fmt_args[1])))
     # 6. Write the rest back and close.
     f.write(text)
     f.close()
