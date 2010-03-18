@@ -161,6 +161,36 @@ jQuery.extend(jQuery.fn, {
   },
 });
 
+
+/// Used by curry() and curry2().
+function curry_(f, arguments, slice_n) {
+  function g() {
+    return !arguments.length ? g.f.apply(g.this_||this, g.args) :
+      g.f.apply(g.this_||this,
+        g.args.concat(Array.prototype.slice.call(arguments)));
+  }
+  if (arguments.length == 1) return f;
+  g.args = Array.prototype.slice.call(arguments, slice_n);
+  g.f = f;
+  return g;
+}
+
+/// Returns a curried version of f().
+/// Calling the returned function g() is like calling f()
+/// with the provided arguments.
+/// Uses f.this_ as the 'this' object if defined.
+function curry(f/*, arg1, arg2...*/) {
+  return curry_(f, arguments, 1);
+}
+
+/// Returns a curried version of f(). Takes a 'this' object.
+function curry2(this_, f/*, arg1, arg2...*/) {
+  var g = curry_(f, arguments, 2);
+  if (f !== g)
+    g.this_ = this_;
+  return g;
+}
+
 // Use standardized function.
 if (!Object.defineProperty)
   Object.defineProperty = function(o, p, f) {
@@ -168,6 +198,20 @@ if (!Object.defineProperty)
     f.get && o.__defineGetter__(p, f.get);
     return o;
   };
+
+// Use an alias for the localStorage object.
+var storage = window.localStorage;
+
+if (storage) {
+  /// Reads or writes a value, depending on whether val is defined or not.
+  Storage.prototype.readwrite = function(key, val) {
+    return val === undefined ? this[key] : this[key] = val;
+  };
+}
+else
+  storage = {"readwrite":function(){}};
+
+storage.readwrite.this_ = storage; // Make this a delegate for curry().
 
 
 /// Gets a cookie or sets it to a value.

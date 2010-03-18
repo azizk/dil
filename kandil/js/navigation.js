@@ -54,6 +54,10 @@ var kandil = {
     splitbar_collapsed: cookie.func("splitbar_collapsed",
                                     function(v){return v == "true"}),
     active_tab: cookie.func("active_tab"), /// Last active tab.
+    modules_ul: curry(storage.readwrite, "ModulesUL"),
+    symbols_ul: function(val) {
+      return storage.readwrite(kandil.moduleFQN + ".SymbolsUL", val);
+    },
   },
   save: null, /// An alias for "saved".
   $: { /// Cache of jQuery objects. E.g.: kandil.$.navbar = $("#navbar")
@@ -161,9 +165,7 @@ function initTabs()
     var ul = createModulesUL(this.panel.find(">div.scroll"));
     var tv = new Treeview(ul);
     tv.loadState("module_tree");
-    tv.bind("save_state", function() {
-      tv.saveState("module_tree");
-    });
+    tv.bind("save_state", curry2(tv, tv.saveState, "module_tree"));
     if (kandil.settings.dynamic_mod_loading)
       this.panel.find(".tview a").click(handleLoadingModule);
     kandil.packageTree.initList(); // Init the list property.
@@ -499,12 +501,15 @@ function getPNGIcon(kind)
 function createSymbolsUL(panel)
 { // TODO: put loading.gif in the center of ul and animate showing/hiding?
   var root = kandil.symbolTree.root;
-  var ul = $("<ul class='tview'><li class='root'><i/>"+getPNGIcon("module")+
+  var ul = $("<ul class='tview'><li class='root'><i></i>"+getPNGIcon("module")+
     "<label><a href='#m-"+root.fqn+"'>"+root.fqn+"</a></label></li>"+
     "<li><img src='img/loading.gif'/></li></ul>");
   panel.append(ul);
-  if (root.sub.length)
-    $(ul[0].firstChild).append(createSymbolsUL_(root.sub));
+  if (root.sub.length) {
+    if (!(content = kandil.saved.symbols_ul()))
+      kandil.save.symbols_ul(content = createSymbolsUL_(root.sub));
+    ul[0].firstChild.innerHTML += content;
+  }
   $(ul[0].lastChild).remove();
   return ul;
 }
@@ -512,11 +517,14 @@ function createSymbolsUL(panel)
 function createModulesUL(panel)
 {
   var root = kandil.packageTree.root;
-  var ul = $("<ul class='tview'><li class='root'><i/>"+getPNGIcon("package")+
+  var ul = $("<ul class='tview'><li class='root'><i></i>"+getPNGIcon("package")+
     "<label>/</label></li><li><img src='img/loading.gif'/></li></ul>");
   panel.append(ul);
-  if (root.sub.length)
-    $(ul[0].firstChild).append(createModulesUL_(root.sub));
+  if (root.sub.length) {
+    if (!(content = kandil.saved.modules_ul()))
+      kandil.save.modules_ul(content = createModulesUL_(root.sub));
+    ul[0].firstChild.innerHTML += content;
+  }
   $(ul[0].lastChild).remove();
   return ul;
 }
@@ -533,7 +541,7 @@ function createSymbolsUL_(symbols)
     var parts = sym.name.partition(':');
     var label = parts[0], number = parts[1];
     label = number ? label+"<sub>"+number+"</sub>" : label; // An index.
-    list += "<li"+leafClass+"><i/>"+getPNGIcon(sym.kind)+
+    list += "<li"+leafClass+"><i></i>"+getPNGIcon(sym.kind)+
             "<label><a href='#"+sym.fqn+"'>"+label+"</a></label>";
     if (hasSubSymbols)
       list += createSymbolsUL_(sym.sub);
@@ -552,7 +560,7 @@ function createModulesUL_(symbols)
     var hasSubSymbols = sym.sub && sym.sub.length;
     var leafClass = hasSubSymbols ? '' : ' class="leaf"';
     list += "<li"+leafClass+">"+ //  kind='"+sym.kind+"'
-            "<i/>"+getPNGIcon(sym.kind)+"<label>";
+            "<i></i>"+getPNGIcon(sym.kind)+"<label>";
     if (hasSubSymbols)
       list += sym.name + "</label>" + createModulesUL_(sym.sub);
     else
@@ -611,8 +619,8 @@ function showCode(symbol)
     for (var num = line_beg; num <= line_end; num++)
       lines += '<a href="' + srcURL + '#L' + num + '">' + num + '</a>\n';
     var table = $('<table class="d_code"/>');
-    table.append('<tr><td class="d_codelines"><pre>'+lines+'</pre></td>'+
-                 '<td class="d_codetext"><pre>'+code+'</pre></td></tr>');
+    table[0].innerHTML = '<tr><td class="d_codelines"><pre>'+lines+
+      '</pre></td><td class="d_codetext"><pre>'+code+'</pre></td></tr>';
     // Create a container div.
     var div = $('<div class="loaded_code"/>');
     div.append(table);
