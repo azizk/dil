@@ -13,13 +13,21 @@ var kandil = {
   packageTree: g_packageTree,
   /// Application settings.
   settings: {
-    navbar_html: "<div id='navbar'><p id='navtabs'>\
-<span id='apitab' class='current'>{apitab_label}</span>\
-<span id='modtab'>{modtab_label}</span></p>\
-<div id='panels'><div id='apipanel'/><div id='modpanel'/></div>\
-</div>", /// The navbar HTML code prepended to <body>.
+    navbar_html: '<div id="navbar">\
+  <div id="navtabs">\
+    <span id="apitab">{apitab_label}</span>\
+    <span id="modtab">{modtab_label}</span>\
+  </div>\
+  <div id="panels">\
+    <div id="apipanel"><div class="scroll"><div class="offsetTop"/></div></div>\
+    <div id="modpanel"><div class="scroll"><div class="offsetTop"/></div></div>\
+  </div>\
+</div>', /// The navbar HTML code prepended to <body>.
     splitbar_html: "<div title='{splitbar_title}' class='splitbar'>\
 <div class='handle'/></div>", /// The splitbar's HTML code.
+    filter_html : '<div class="filter_elem"><table><tr><td width="1">\
+<img src="img/icon_magnifier.png">\
+</td><td></td></tr></table></div>',
     navbar_width: 250,    /// Initial navigation bar width.
     navbar_minwidth: 180, /// Minimum resizable width.
     navbar_collapsewidth : 50, /// Hide the navbar at this width.
@@ -80,6 +88,15 @@ var kandil = {
     no_match: "No match...",
     symboltitle: "Show source code", /// The title attribute of symbols.
   },
+  resize_func: function f() {
+    // Unfortunately the layout must be scripted. Couldn't find a way
+    // to make it work with pure CSS in all targeted browsers.
+    // The height is set so that the panel is scrollable.
+    // h = viewport_height - y_offset_from_viewport - 2px_margin.
+    // offsetTop comes from a dummy div, which has 'position:relative'.
+    var new_height = f.html.clientHeight - this.firstChild.offsetTop - 2;
+    this.style.height = (new_height < 0 ? 0 : new_height)+"px";
+  },
 };
 kandil.save = kandil.saved;
 kandil.$.initialize();
@@ -105,6 +122,13 @@ $(function main() {
   initSymbolTags(kandil);
 
   initTabs();
+  // Scripted layout. :´(
+  kandil.resize_func.panels = document.getElementById("panels");
+  kandil.resize_func.html = document.documentElement;
+  var divs = $(">div>div.scroll", kandil.resize_func.panels);
+  divs.resize(kandil.resize_func);
+  $(window).resize(function(){ divs.resize() });
+  divs.resize();
 });
 
 function initTabs()
@@ -112,11 +136,13 @@ function initTabs()
   // Assign click event handlers for the tabs.
   function makeCurrentTab() {
     var tab = this;
+    if (tab.hasClass("current")) return;
     $(".current", tab.parentNode).removeClass('current');
     tab.addClass('current');
     $("#panels > *").hide(); // Hide all panels.
     tab.panel.show(); // Show the panel under this tab.
     kandil.save.active_tab("#"+tab.id); // Save name of the active tab.
+    $(window).resize();
   }
 
   var apitab = kandil.$.apitab, modtab = kandil.$.modtab;
@@ -132,7 +158,7 @@ function initTabs()
   modtab.lazyLoad = function _() {
     modtab.unbind("click", _); // Remove the lazyLoad handler.
     // Create the list.
-    var ul = createModulesUL(this.panel);
+    var ul = createModulesUL(this.panel.find(">div.scroll"));
     var tv = new Treeview(ul);
     tv.loadState("module_tree");
     tv.bind("save_state", function() {
@@ -155,12 +181,21 @@ function createQuickSearchInputs()
   var qs = [
     new QuickSearch("apiqs", options), new QuickSearch("modqs", options)
   ];
-  kandil.$.apipanel.prepend(qs[0].input);
-  kandil.$.modpanel.prepend(qs[1].input);
+
+  // Insert the input tags.
+  var table = $(kandil.settings.filter_html);
+
+  var table2 = table.clone();
+
+  table.find("td").slice(1).append(qs[0].input);
+  kandil.$.apipanel.prepend(table);
+  table2.find("td").slice(1).append(qs[1].input);
+  kandil.$.modpanel.prepend(table2);
+
   $.extend(qs[0].input,
-    {tag_selector: "#apipanel>ul", symbols: kandil.symbolTree});
+    {tag_selector: "#apipanel .tview", symbols: kandil.symbolTree});
   $.extend(qs[1].input,
-    {tag_selector: "#modpanel>ul", symbols: kandil.packageTree});
+    {tag_selector: "#modpanel .tview", symbols: kandil.packageTree});
   function handleFirstFocus(e, qs) {
     extendSymbols($(this.tag_selector)[0], this.symbols);
   }
@@ -186,7 +221,7 @@ function createQuickSearchInputs()
 /// Installs event handlers to show tooltips for symbols.
 function installTooltipHandlers()
 {
-  var ul = kandil.$.apipanel.find("> ul.tview");
+  var ul = kandil.$.apipanel.find(".tview");
   var tooltip = $.extend({
     current: null, // Current tooltip.
     target: null, // The target to show a tooltip for.
@@ -237,12 +272,12 @@ function createSplitbar()
 {
   var settings = kandil.settings, saved = kandil.saved;
   var splitbar = $(settings.splitbar_html.format(kandil.msg))[0];
-  var navbar = kandil.$.navbar, content = kandil.$.content;
+  var navbar = kandil.$.navbar[0], content = kandil.$.content[0];
   var minwidth = settings.navbar_minwidth,
       collapsewidth = settings.navbar_collapsewidth;
 
-  var body = document.body;
-  body.appendChild(splitbar); // Insert the splitbar into the document.
+  var body = document.body, html_tag = document.documentElement;
+  body.appendChild(splitbar), // Insert the splitbar into the document.
 
   // Event handlers and other functions:
   splitbar.isMoving = false; // Moving status of the splitbar.
@@ -253,12 +288,12 @@ function createSplitbar()
       x = 0;
     else if (x < minwidth)
       x = minwidth;
-    if (x+50 > window.innerWidth)
-      x = window.innerWidth - 50;
+    if (x+50 > html_tag.clientWidth)
+      x = html_tag.clientWidth - 50;
     if (x)
       this.openPos = x;
-    navbar.css("width", x);
-    content.css("margin-left", x);
+    navbar.style.width =
+    content.style.marginLeft =
     splitbar.style.left = x+"px";
   };
   splitbar.save = function() {
@@ -291,7 +326,7 @@ function createSplitbar()
   // Set initial position.
   var pos = saved.splitbar_pos() || settings.navbar_width;
   splitbar.openPos = pos;
-  splitbar.collapsed = !!saved.splitbar_collapsed();
+  splitbar.collapsed = saved.splitbar_collapsed();
   if (splitbar.collapsed)
     pos = 0;
   splitbar.setPos(pos);
@@ -337,7 +372,7 @@ function initAPIList()
   initializeSymbolTree();
 
   // Create the HTML text and append it to the api panel.
-  var ul = createSymbolsUL(kandil.$.apipanel);
+  var ul = createSymbolsUL(kandil.$.apipanel.find(">div.scroll"));
   var tv = new Treeview(ul);
   tv.loadState(kandil.moduleFQN);
   tv.bind("save_state", function() {
@@ -398,7 +433,7 @@ function loadNewModule(moduleFQN)
         kandil.$.content[0].innerHTML = parts.content;
         initSymbolTags(kandil);
         // Update the API panel.
-        kandil.$.apipanel.find("> ul").remove(); // Delete old API list.
+        kandil.$.apipanel.find(".tview").remove(); // Delete old API list.
         kandil.$.apitab.click(kandil.$.apitab.lazyLoad);
         if (kandil.$.apitab.hasClass("current")) // Is the API tab selected?
           kandil.$.apitab.lazyLoad(); // Load the contents then.

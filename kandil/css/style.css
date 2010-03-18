@@ -3,6 +3,16 @@
 * { color: black; }
 body { margin: 0; }
 
+#navbar {
+  position:fixed;
+  top:0;
+  left:0;
+  height:100%;
+  overflow: hidden;
+  background-color:#CCDDCC;
+  box-shadow: 7px 0px 10px #BBB;
+}
+
 #kandil-content {
   padding: 0em 1.2em;
 }
@@ -17,7 +27,6 @@ body { margin: 0; }
   height: 100%;
   position: fixed;
   top: 0;
-  left: 250px;
   background-color: #308430;
 }
 
@@ -39,24 +48,27 @@ body { margin: 0; }
   background-color: #60A460;
 }
 
-#navbar {
-  width: 250px;
-  height: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  background-color: #CDC;
-  overflow: hidden;
+#panels {
+  font-size: 0.95em;
+  padding: 2px;
 }
 
-#panels {
-  border-top: 2px outset DarkGreen;
-  font-size: 0.95em;
+div.scroll { /* The panel that should display scroll bars. */
+  margin-top: 1px;
+  overflow: auto;
+  border: 1px inset DarkGreen;
+  border-radius: 2px;
+  background-color: white;
+}
+
+div.offsetTop {
+  position: relative;
 }
 
 #navtabs {
-  margin: 0.5em 0em 0em 0em;
+  padding: 0.5em 0em 0em 0em;
   text-align: center;
+  border-bottom: 2px inset DarkGreen;
 }
 
 #navtabs span {
@@ -69,6 +81,8 @@ body { margin: 0; }
   background-color: #EFE;
   white-space: nowrap;
   cursor: pointer;
+  border-radius: 4px 4px 0 0;
+  box-shadow: 1px 0px 2px #999;
 }
 #navtabs span > img {
   vertical-align: top;
@@ -80,21 +94,37 @@ body { margin: 0; }
   background-color: #474;
 }
 
-/* Use absolute positioning so that > ul can show scrollbars on overflow. */
-#apipanel, #modpanel { position: absolute; height: 100%; width: 100%; }
+/* The filter box. */
+.filter_elem {
+  border: 1px inset DarkGreen;
+  border-radius: 6px 2px 2px 6px;
+  background-color:white;
+}
+
+.filter_elem > table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.filter_elem img {
+  vertical-align: middle;
+}
+
+.filter_elem img:hover {
+  background-image: url("../img/icon_magnifier.png");
+}
+
+.filter_elem input.filterbox {
+  margin: 0;
+  padding: 0;
+  border: none;
+  width: 100%;
+  color: black;
+}
 
 /* Treeview */
-#panels .tview {
-  position: absolute;
-  top: 23px;
-  bottom: 26px;
-  left: 0; right: 0;
-
-  overflow: auto;
+ul.tview {
   margin: 1px;
-  padding: 0.1em;
-  border: 1px inset DarkGreen;
-  background-color: white;
 }
 
 .tview li sub {
@@ -178,22 +208,6 @@ body { margin: 0; }
 }
 .filtered li.show_hidden > ul > li {
   display: block;
-}
-
-input.filterbox {
-  margin: 1px;
-  padding-left: 17px;
-  border: 1px inset DarkGreen;
-  width: 91.2%;
-  color: black;
-  background: white url("../img/icon_magnifier.png") no-repeat;
-}
-
-.konqueror input.filterbox {
-  /* Konqueror doesn't support background images for inputs properly. */
-  padding-left: 0;
-  width: 98.2%;
-  background: white;
 }
 
 .tooltip {
