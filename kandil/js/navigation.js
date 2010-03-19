@@ -48,15 +48,16 @@ var kandil = {
     qs_delay: 500, /// Delay after last key press before quick search starts.
   },
   saved: { /// Functions for saving and getting data.
-    /// The position of the splitbar.
-    splitbar_pos: cookie.func("splitbar_pos", parseInt),
-    /// The collapse state.
-    splitbar_collapsed: cookie.func("splitbar_collapsed",
-                                    function(v){return v == "true"}),
-    active_tab: cookie.func("active_tab"), /// Last active tab.
-    modules_ul: curry(storage.readwrite, "ModulesUL"),
-    symbols_ul: function(val) {
-      return storage.readwrite(kandil.moduleFQN + ".SymbolsUL", val);
+    splitbar_pos: function(val) { /// The position of the splitbar.
+      return parseInt(storage.readwrite("splitbar_pos", val));
+    },
+    splitbar_collapsed: function(val) { /// The collapse state.
+      return storage.readwrite("splitbar_collapsed", val) == "true";
+    },
+    active_tab: curry(storage.readwrite, "active_tab"), /// Last active tab.
+    modules_ul: curry(storage.readwrite, "modules_ul"), /// The module list.
+    symbols_ul: function(val) { /// The symbol list as HTML.
+      return storage.readwrite("symbols_ul:"+kandil.moduleFQN, val);
     },
   },
   save: null, /// An alias for "saved".
