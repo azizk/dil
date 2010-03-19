@@ -66,7 +66,7 @@ def get_symbols(html_str, module_fqn, categorize=True):
   """ Extracts the symbols from an HTML document. """
   rx = re.compile(r'<a class="symbol [^"]+" name="(?P<fqn>[^"]+)"'
                   r' href="(?P<srclnk>[^"]+)" kind="(?P<kind>[^"]+)"'
-                  r' beg="(?P<beg>\d+)" end="(?P<end>\d+)">'
+                  r' coords="(?P<beg>\d+),(?P<end>\d+)">'
                   r'(?P<name>[^<]+)</a>')
   root = dict(fqn=module_fqn, src="", kind="module", beg="", end="")
   symbol_dict = {"" : Symbol(root)}

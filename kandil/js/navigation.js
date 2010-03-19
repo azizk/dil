@@ -593,8 +593,9 @@ function getSourceCodeURL()
 function showCode(symbol)
 {
   var dt_tag = symbol.parent()[0];
-  var line_beg = parseInt(symbol.attr("beg"));
-  var line_end = parseInt(symbol.attr("end"));
+  var lines_tuple = symbol.attr("coords").split(",");
+  var line_beg = parseInt(lines_tuple[0]);
+  var line_end = parseInt(lines_tuple[1]);
 
   if (dt_tag.code_div)
   { // Remove the displayed code div.
