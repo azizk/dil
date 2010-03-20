@@ -59,6 +59,10 @@ var kandil = {
     symbols_ul: function(val) { /// The symbol list as HTML.
       return storage.readwrite("symbols_ul:"+kandil.moduleFQN, val);
     },
+    modules_tv_state: curry(storage.readwrite, "modules_tv_state"),
+    symbols_tv_state: function(val) {
+      return storage.readwrite("symbols_tv_state:"+kandil.moduleFQN, val);
+    },
   },
   save: null, /// An alias for "saved".
   $: { /// Cache of jQuery objects. E.g.: kandil.$.navbar = $("#navbar")
@@ -165,8 +169,8 @@ function initTabs()
     // Create the list.
     var ul = createModulesUL(this.panel.find(">div.scroll"));
     var tv = new Treeview(ul);
-    tv.loadState("module_tree");
-    tv.bind("save_state", curry2(tv, tv.saveState, "module_tree"));
+    tv.loadState(kandil.saved.modules_tv_state);
+    tv.bind("save_state", curry2(tv, tv.saveState, kandil.saved.modules_tv_state));
     if (kandil.settings.dynamic_mod_loading)
       this.panel.find(".tview a").click(handleLoadingModule);
     kandil.packageTree.initList(); // Init the list property.
@@ -377,10 +381,8 @@ function initAPIList()
   // Create the HTML text and append it to the api panel.
   var ul = createSymbolsUL(kandil.$.apipanel.find(">div.scroll"));
   var tv = new Treeview(ul);
-  tv.loadState(kandil.moduleFQN);
-  tv.bind("save_state", function() {
-    tv.saveState(kandil.moduleFQN);
-  });
+  tv.loadState(kandil.saved.symbols_tv_state);
+  tv.bind("save_state", curry2(tv, tv.saveState, kandil.saved.symbols_tv_state));
   installTooltipHandlers();
 }
 
@@ -887,22 +889,19 @@ Treeview.prototype.eventHandlerTable = (function() {
 })();
 
 /// Saves the state of a treeview in a cookie.
-Treeview.prototype.saveState = function(cookie_name) {
+Treeview.prototype.saveState = function(save_fn) {
   if (this.savedState)
     return;
   var ul_tags = this.ul.getElementsByTagName("ul"), list = "";
   for (var i = 0, len = ul_tags.length; i < len; i++)
     if (ul_tags[i].parentNode.hasClass("closed"))
       list += i + ",";
-  if (list)
-    cookie(cookie_name, list.slice(0, -1), 30);
-  else
-    cookie.del(cookie_name);
+  save_fn(list.slice(0, -1)); // Strip last comma.
   this.savedState = true;
 };
 /// Loads the state of a treeview from a cookie.
-Treeview.prototype.loadState = function(cookie_name) {
-  var list = cookie(cookie_name);
+Treeview.prototype.loadState = function(load_fn) {
+  var list = load_fn();
   if (!list)
     return;
   var ul_tags = this.ul.getElementsByTagName("ul");

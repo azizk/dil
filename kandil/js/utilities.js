@@ -167,7 +167,7 @@ jQuery.extend(jQuery.fn, {
 /// with the provided arguments.
 /// Uses f.this_ as the 'this' object if defined.
 function curry(f/*, arg1, arg2...*/) {
-  if (arguments.length == 1) return f;
+  // if (arguments.length <= 1) return f;
   var g = curry.new_g();
   g.args = Array.prototype.slice.call(arguments, 1);
   g.f = f;
@@ -181,7 +181,7 @@ curry.new_g = function() { return function g() {
 
 /// Returns a curried version of f(). Takes a 'this' object.
 function curry2(this_, f/*, arg1, arg2...*/) {
-  if (arguments.length == 1) return f;
+  // if (arguments.length <= 2) return f;
   var g = curry.new_g();
   g.args = Array.prototype.slice.call(arguments, 2);
   g.f = f;
