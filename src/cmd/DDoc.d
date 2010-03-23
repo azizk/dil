@@ -65,6 +65,9 @@ struct DDocCommand
     auto destDirPath = new FilePath(destDirPath);
     destDirPath.exists || destDirPath.createFolder();
 
+    auto dir = new FilePath(this.destDirPath);
+    dir.append("symbols").exists || dir.createFolder();
+
     if (useKandil && writeXML)
       return Stdout("Error: kandil uses only HTML at the moment.").newline;
 
@@ -191,9 +194,21 @@ struct DDocCommand
     auto dg = verbose ? this.diag : null;
     auto fileText = rawOutput ? ddocText :
       MacroExpander.expand(mtable, "$(DDOC)", mod.filePath, dg);
-    // Finally write the file out to the harddisk.
+
+    // Finally write the XML/XHTML file out to the harddisk.
     scope file = new File(destPath.toString(), File.WriteCreate);
     file.write(fileText);
+    file.close();
+
+    if (!ddocEmitter.symbolTree.length)
+      return; // Has no symbol tree.
+
+    // Write the documented symbols in this module to a json file.
+    auto filePath = new FilePath(destDirPath);
+    filePath.append("symbols").append(modFQN~".json");
+    file = new File(filePath.toString(), File.WriteCreate);
+    char[] text;
+    file.write(symbolsToJSON(ddocEmitter.symbolTree[""], text));
   }
 
   /// Writes the list of processed modules to the disk.
@@ -277,6 +292,47 @@ struct DDocCommand
     foreach (m; pckg.modules)
       f.write(Format("{}M('{}'),\n", indent, m.getFQN()));
   }
+
+  /// Converts the symbol tree into JSON.
+  static char[] symbolsToJSON(DocSymbol symbol, ref char[] text/+,
+    string indent = "\t"+/)
+  {
+    auto locbeg = symbol.begin.lineNum, locend = symbol.end.lineNum;
+    text ~= Format(`["{}",{},[{},{}],[`,
+      symbol.name, symbol.getID(), locbeg, locend);
+    foreach (s; symbol.members)
+    {
+      text ~= \n/+~indent+/;
+      symbolsToJSON(s, text/+, indent~"\t"+/);
+      text ~= ",";
+    }
+    if (text[$-1] == ',')
+      text = text[0..$-1]; // Remove last comma.
+    text ~= "]]";
+    return text;
+  }
+
+version(unused)
+{
+  /// Converts the symbol tree into JSON.
+  static char[] symbolsToJSON(DocSymbol symbol, string indent = "\t")
+  {
+    char[] text;
+    auto locbeg = symbol.begin.lineNum, locend = symbol.end.lineNum;
+    text ~= Format("{{\n"`{}"name":"{}","fqn":"{}","kind":"{}","loc":[{},{}],`\n,
+      indent, symbol.name, symbol.fqn, symbol.kind, locbeg, locend);
+    text ~= indent~`"sub":[`;
+    foreach (s; symbol.members)
+    {
+      text ~= symbolsToJSON(s, indent~"\t");
+      text ~= ",";
+    }
+    if (text[$-1] == ',')
+      text = text[0..$-1]; // Remove last comma.
+    text ~= "]\n"~indent[0..$-1]~"}";
+    return text;
+  }
+}
 
   /// Loads a macro file. Converts any Unicode encoding to UTF-8.
   /// Params:

@@ -74,6 +74,15 @@ String.prototype.format = function format(args) {
   format_func.error = "{{FormatIndexError:{0}}";
 })(String.prototype.format);
 
+
+if (!window.JSON)
+  JSON = {
+    parse: function(text) { // Warning: Don't use untrusted data.
+      return eval('(' + text + ')');
+    },
+    stringify: function(obj){ return "N/A";}
+  };
+
 /// Prepends and appends chars to each element and returns a joined string.
 // Array.prototype.surround = function(chars) {
 //   return chars+this.join(chars+chars)+chars;

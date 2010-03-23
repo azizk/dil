@@ -58,7 +58,6 @@ abstract class DDocEmitter : DefaultVisitor
     { // The module is actually a DDoc text file.
       auto c = DDocUtils.getDDocComment(getDDocText(modul));
       foreach (s; c.sections)
-      {
         if (s.Is("macros"))
         { // Declare the macros in this section.
           auto ms = new MacrosSection(s.name, s.text);
@@ -66,19 +65,26 @@ abstract class DDocEmitter : DefaultVisitor
         }
         else
           write(s.wholeText);
-      }
       return text;
     }
-    // Handle as a normal D module with declarations.
+
+    // Handle as a normal D module with declarations:
+
+    // Initialize the root symbol in the symbol tree.
+    auto lexer = modul.parser.lexer;
+    symbolTree[""] = new DocSymbol(modul.moduleName, modul.getFQN(), "module",
+      lexer.firstToken().getRealLocation(),
+      lexer.tail.getRealLocation()
+    ); // Root symbol.
+
     if (auto d = modul.moduleDecl)
-    {
       if (ddoc(d))
       {
         if (auto copyright = cmnt.takeCopyright())
           mtable.insert("COPYRIGHT", copyright.text);
         writeComment();
       }
-    }
+    // Start traversing the tree and emitting macro text.
     MEMBERS("MODULE", "", modul.root);
     return text;
   }
@@ -729,7 +735,7 @@ abstract class DDocEmitter : DefaultVisitor
     write(")");
   }
 
-  /// Saves the current symbol parameters.
+  /// Saves the attributes of the current symbol.
   string currentSymbolParams;
 
   /// Writes a symbol to the text buffer.
@@ -739,10 +745,23 @@ abstract class DDocEmitter : DefaultVisitor
     auto fqn = getSymbolFQN(name);
     auto loc = d.begin.getRealLocation();
     auto loc_end = d.end.getRealLocation();
+    addSymbol(name, fqn.dup, kind, loc, loc_end);
     currentSymbolParams = Format("{}, {}, {}, {}, {}",
       name, fqn, kind, loc.lineNum, loc_end.lineNum);
     write("$(DIL_SYMBOL ", currentSymbolParams, ")");
     // write("$(DDOC_PSYMBOL ", name, ")"); // DMD's macro with no info.
+  }
+
+  /// The symbols that will appear in the result document.
+  DocSymbol[string] symbolTree;
+
+  /// Adds a symbol to the symbol tree.
+  void addSymbol(string name, string fqn, string kind,
+    Location begin, Location end)
+  {
+    auto symbol = new DocSymbol(name, fqn, kind, begin, end);
+    symbolTree[fqn] = symbol; // Add the symbol itself.
+    symbolTree[parentFQN].members ~= symbol; // Append as a child to parent.
   }
 
   /// Wraps the DDOC_kind_MEMBERS macro around the text
@@ -1036,5 +1055,41 @@ override:
   {
     d.ifDecls && visitD(d.ifDecls);
     return d;
+  }
+}
+
+/// A class that holds some info about a symbol.
+class DocSymbol
+{
+  string name, fqn, kind;
+  Location begin, end;
+  DocSymbol[] members;
+  /// Constructs a DocSymbol object.
+  this(string name, string fqn, string kind,
+    Location begin, Location end)
+  {
+    this.name = name;
+    this.fqn = fqn;
+    this.kind = kind;
+    this.begin = begin;
+    this.end = end;
+  }
+  /// Maps the kind of a symbol to its ID.
+  /// Must match the list in "kandil/js/symbols.js".
+  static int[string] kindToID;
+  static this()
+  {
+    DocSymbol.kindToID = [
+      "package"[]:0, "module":1, "template":2, "class":3, "interface":4,
+      "struct":5, "union":6, "alias":7, "typedef":8, "enum":9,
+      "enummem":10, "variable":11, "function":12, "invariant":13,
+      "new":14, "delete":15, "unittest":16, "ctor":17, "dtor":18,
+      "sctor":19, "sdtor":20
+    ];
+  }
+  /// Returns the ID of the symbol's kind.
+  int getID()
+  {
+    return kindToID[kind];
   }
 }
