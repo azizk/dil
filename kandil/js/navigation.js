@@ -96,6 +96,7 @@ var kandil = {
     splitbar_title: "Drag to resize. Double-click to close or open.",
     no_match: "No match...",
     symboltitle: "Show source code", /// The title attribute of symbols.
+    permalink: "Permalink to this symbol",
   },
   resize_func: function f() {
     // Unfortunately the layout must be scripted. Couldn't find a way
@@ -138,6 +139,9 @@ $(function main() {
   divs.resize(kandil.resize_func);
   $(window).resize(function(){ divs.resize() });
   divs.resize();
+
+  // Set the title of the permalinks.
+  $('.symlink').attr("title", kandil.msg.permalink);
 });
 
 function initTabs()
@@ -472,25 +476,16 @@ function initializeSymbolTree()
   var sym_tags = kandil.$.symbols;
   if (!sym_tags.length)
     return;
-  // Prepare the symbol list.
-  var header = sym_tags[0]; // Header of the page.
+  //var header = sym_tags[0]; // Header of the page.
   sym_tags = sym_tags.slice(1); // Every other symbol.
 
-  var symDict = {};
-  var root = new M(kandil.moduleFQN);
-  var list = [root];
-  symDict[''] = root; // The empty string has to point to the root.
-  for (var i = 0, len = sym_tags.length; i < len; i++)
-  {
-    var sym_tag = sym_tags[i];
-    var sym = new Symbol(sym_tag.name, sym_tag.getAttribute("kind"));
-    list.push(sym); // Append to flat list.
-    symDict[sym.parent_fqn].sub.push(sym); // Append to parent.
-    symDict[sym.fqn] = sym; // Insert the symbol itself.
-  }
-  kandil.symbolTree.root = root;
-  kandil.symbolTree.list = list;
-  kandil.symbolTree.symbol_tags = sym_tags;
+  $.ajax({url: "symbols/"+kandil.moduleFQN+".json", dataType: "text",
+    error: undefined, async: false,
+    success: function(text) {
+      $.extend(kandil.symbolTree, Symbol.getTree(text, kandil.moduleFQN));
+      kandil.symbolTree.symbol_tags = sym_tags;
+    }
+  });
 }
 
 /// Returns an image tag for the provided kind of symbol.
@@ -596,9 +591,6 @@ function getSourceCodeURL()
 function showCode(symbol)
 {
   var dt_tag = symbol.parent()[0];
-  var lines_tuple = symbol.attr("coords").split(",");
-  var line_beg = parseInt(lines_tuple[0]);
-  var line_end = parseInt(lines_tuple[1]);
 
   if (dt_tag.code_div)
   { // Remove the displayed code div.
@@ -611,10 +603,9 @@ function showCode(symbol)
 
   function show()
   { // The function that actually displays the code.
-    if ($(dt_tag).is("h1")) { // Special case.
-      line_beg = 1;
-      line_end = kandil.sourceCode.length -2;
-    }
+    var loc_tuple = kandil.symbolTree[symbol[0].name].loc;
+    var line_beg = loc_tuple[0];
+    var line_end = loc_tuple[1];
     // Get the code lines.
     var code = kandil.sourceCode.slice(line_beg, line_end+1);
     code = code.join("\n");
