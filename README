@@ -1,24 +1,21 @@
-dil
-===
+=DIL=
 Copyright (c) 2007-2010 by Aziz Köksal <aziz.koeksal@gmail.com>
 This program is free software, licensed under the GPL3.
 Please, read the license file "COPYING" for further information.
 
-Description
-===========
+==Description==
 This software is a command line utility, a compiler written in D 1.0
 for the D programming languages, version 1.0 and 2.0.
 
-How To Compile Dil
-==================
-In order to compile dil you must have:
+==How To Compile DIL==
+In order to compile DIL you must have:
  *) DMD 1.057 (http://www.digitalmars.com/d/1.0/changelog.html)
  *) Tango 0.99.9 (http://dsource.org/projects/tango/)
  *) MPFR 2.4.1 (http://mpfr.org)
  *) Python 2.6.4 (2.5 might work too)
-    (DSSS ist unmaintained and can't compile dil anymore.)
+    (DSSS ist unmaintained and can't compile DIL anymore.)
 
-If you can't compile dil because you have newer versions of these programs
+If you can't compile DIL because you have newer versions of these programs
 then report the problem to me, please (see Bugs section.)
 I hope you won't find it frustrating to successfully compile this software,
 and apologize if you do.
@@ -29,16 +26,16 @@ the MPFR library for their system. Precompiled libraries are available here:
 
   http://holoborodko.com/pavel/downloads/win32_gmp_mpfr.zip
 
-I have not tested compiling a Windows binary yet. Dil should compile
+I have not tested compiling a Windows binary yet. DIL should compile
 if you put one of the debug or release mpfr.lib files into a path
 where the linker can find them. E.g.: pass the following to build.py:
   > python scripts\build.py -- -L+mpfr.lib -L+C:\downloads\mpfr\Win32\Release\
 
 
-==Compile dil with Python==
+==Compile DIL with Python==
 # Note: The binary is placed in the bin/ folder.
 
-# Change to the root directory of dil. E.g.:
+# Change to the root directory of DIL. E.g.:
   $ cd git/dil/
 # Print help.
   $ scripts/build.py -h
@@ -58,13 +55,12 @@ where the linker can find them. E.g.: pass the following to build.py:
 # On Windows:
   > bin\dil.exe
 
-Executing dil without parameters will print the main help message.
+Executing DIL without parameters will print the main help message.
 
 The language of the compiler messages can be set in the configuration file.
 Many messages are still untranslated. This task has low priority at the moment.
 
-Bugs And Patches
-================
+==Bugs And Patches==
 "errare humanum est, ignoscere divinum" - to err is human, to forgive divine.
  - Cicero
 
