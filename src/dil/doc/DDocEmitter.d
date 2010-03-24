@@ -854,11 +854,11 @@ abstract class DDocEmitter : DefaultVisitor
   void determineAttributes(Declaration d)
   {
     alias currentAttributes attrs;
-    attrs.prot = d.prot == Protection.None ? null : .toString(d.prot);
+    attrs.prot = d.prot == Protection.None ? null : EnumString(d.prot);
 
     auto stc = d.stc;
     stc &= ~StorageClass.Auto; // Ignore "auto".
-    attrs.stcs = .toStrings(stc);
+    attrs.stcs = EnumString.all(stc);
 
     LinkageType ltype;
     if (auto vd = d.Is!(VariablesDeclaration))
@@ -866,7 +866,7 @@ abstract class DDocEmitter : DefaultVisitor
     else if (auto fd = d.Is!(FunctionDeclaration))
       ltype = fd.linkageType;
 
-    attrs.link = ltype == LinkageType.None ? null : .toString(ltype);
+    attrs.link = ltype == LinkageType.None ? null : EnumString(ltype);
   }
 
   /// Writes the attributes of a declaration in brackets.
@@ -1114,10 +1114,10 @@ class DocSymbol
   }
   /// Maps the kind of a symbol to its ID.
   /// Must match the list in "kandil/js/symbols.js".
-  static int[string] kindToID;
+  static uint[string] kindToID;
   /// Maps the attribute of a symbol to its ID.
   /// Must match the list in "kandil/js/symbols.js".
-  static int[string] attrToID;
+  static uint[string] attrToID;
   /// Initialize the associative arrays.
   static this()
   {
@@ -1149,7 +1149,7 @@ class DocSymbol
       return "[]";
     char[] result = "[";
     foreach (attr; attrs)
-      result ~= Format("{},", attrToID[attr]);
+      result ~= DDocEmitter.toString(attrToID[attr]) ~ ",";
     result[$-1] = ']';
     return result;
   }
