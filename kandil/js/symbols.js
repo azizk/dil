@@ -8,8 +8,8 @@ function makeEnum(elems, sep)
     elems = elems.split(sep);
   var dict = {'toStr': elems};
   for (var i = 0, l = elems.length; i < l; i++)
-    (dict[elems[i]] = i), // E.g.: dict["package"] = 0;
-    (dict[i] = elems[i]); // E.g.: dict[0] = "package";
+    (dict[elems[i]] = i)/*, // E.g.: dict["package"] = 0;
+    (dict[i] = elems[i])*/; // E.g.: dict[0] = "package"; (use toStr instead)
   return dict;
 }
 
@@ -26,11 +26,13 @@ SymbolKind.isFunction = function(key) {
   return 12 <= key && key <= 20; // ID range: 12-20.
 };
 
+/// An enumeration of symbol attributes.
 var SymbolAttr = makeEnum(
   "private protected package public export abstract auto const \
 deprecated extern final invariant override scope static synchronized \
 in out ref lazy variadic manifest C C++ D Windows Pascal", " ");
 
+/// Returns true for protection attributes.
 SymbolAttr.isProtection = function(key) {
   if (typeof key == typeof "")
     key = this[key]; // Get the ID if the key is a string.
@@ -55,14 +57,14 @@ Symbol.getTree = function(json/*=JSON text*/, moduleFQN) {
   var list = []; // A flat list of all symbols.
   function visit(s/*=symbol*/, fqn/*=fully qualified name*/)
   { // Assign the elements of this tuple to variables.
-    var name = s[0], kindID = s[1], attrs = s[2], loc = s[3], members = s[4];
+    var name = s[0], kind = s[1], attrs = s[2], loc = s[3], members = s[4];
     // E.g.: 'tango.core' + '.' + 'Thread'
     fqn += (fqn ? "." : "") + name;
     // E.g.: 'Thread.this', 'Thread.this:2' etc.
     if (sibling = dict[fqn]) // Add ":\d+" suffix if not unique.
       fqn += ":" + ((sibling.count += 1) || (sibling.count = 2));
     // Create a new symbol.
-    var symbol = new visit.Symbol(fqn, SymbolKind[kindID], members);
+    var symbol = new visit.Symbol(fqn, visit.SymbolKind.toStr[kind], members);
     symbol.loc = loc;
     symbol.attrs = attrs;
     // Replace attribute IDs with their string values.
@@ -79,9 +81,12 @@ Symbol.getTree = function(json/*=JSON text*/, moduleFQN) {
     return symbol;
   }
   visit.SymbolAttr = SymbolAttr; // Make finding global variables fast.
+  visit.SymbolKind = SymbolKind;
   visit.Symbol = Symbol;
+
   var root_name = arrayTree[0];
-  // Avoid including the roots name in the FQNs of the symbols.
+  // Avoid including the root's name in the FQNs of the symbols.
+  // E.g.: "Culture.this", not "tango.text.locale.Core.Culture.this"
   arrayTree[0] = "";
   dict.root = visit(arrayTree, "");
   dict.root.name = root_name;

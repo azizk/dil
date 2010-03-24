@@ -92,38 +92,36 @@ function QuickSearch(id, options)
 function extendSymbols(ul, symbols)
 {
   var symlist = symbols.list;
-  var li_s = ul.getElementsByTagName("li");
-  if (li_s.length != symlist.length)
+  var li_tags = ul.getElementsByTagName("li");
+  if (li_tags.length != symlist.length)
     throw new Error("The number of symbols ({0}) doesn't match the number of \
-list items ({1})!".format(li_s.length, symlist.length));
-  // Add the property 'li', so we can modify its CSS classes.
-  for (var i = 0, len = symlist.length; i < len; i++)
-    symlist[i].li = li_s[i];
+list items ({1})!".format(li_tags.length, symlist.length));
 
-  // Add the property 'attributes' to all symbol objects.
+  // Add the property 'qs_attrs' to all symbol objects.
+  // Also add the property 'li', so we can modify the tag's CSS classes.
   if (symbols.symbol_tags)
-  { // D symbols.
-    symlist[0].attributes = "module";
-    var sym_tags = symbols.symbol_tags;
-    for (var i = 0, len = sym_tags.length; i < len; i++)
-    {
-      var attrs = $("> .attrs", sym_tags[i].parentNode)[0],
-          symbol = symlist[i+1];
-      // E.g. "[protected, override]" -> ["protected", "override"]
-      attrs = attrs ? attrs.textContent.slice(1, -1).split(", ") : [];
-      if (SymbolKind.isFunction(symbol.kind) && symbol.kind != "function")
-         attrs.push("function");
-      attrs.push(symbol.kind);
-      attrs = attrs.join("\n"); // Make searchable for RegExps like /^func/m.
-      if (!/p(?:rivate|rotect|ackage)|export/.test(attrs) &&
-          attrs.indexOf("public") == -1)
-        attrs += "\npublic";
-      symbol.attributes = attrs;
+    for (var i = 0, len = symlist.length; i < len; i++)
+    { // Symbols in a module.
+      var s = symlist[i];
+      // Put each attribute on a new line.
+      // Makes it searchable with multiline RegExps.
+      var attrs = s.attrs.join("\n");
+      if (SymbolKind.isFunction(s.kind) && s.kind != "function")
+         attrs += "\nfunction";
+      attrs += "\n"+s.kind;
+      // If there's no protection attribute: (assume it's in attrs[0])
+      if (!SymbolAttr.isProtection(s.attrs[0]))
+        attrs += "\npublic"; // Default to public.
+      if (attrs[0] == "\n")
+        attrs = attrs.slice(1); // Remove leading newline.
+      s.qs_attrs = attrs; // Result, e.g.: "function\npublic\nstatic"
+      s.li = li_tags[i];
     }
-  }
   else // Packages and modules.
     for (var i = 0, len = symlist.length; i < len; i++)
-      symlist[i].attributes = symlist[i].kind;
+      (s = symlist[i]),
+      (s.qs_attrs = s.kind),
+      (s.li = li_tags[i]);
 }
 
 /// Recursively progresses down the "ul" tree.
@@ -140,7 +138,7 @@ function quick_search(qs, symbols)
     var li = symbol.li; // The associated list item.
     // Reset classes.
     li.removeClass("match|parent_of_match|has_hidden|show_hidden");
-    var texts = [symbol.name, symbol.fqn, symbol.attributes];
+    var texts = [symbol.name, symbol.fqn, symbol.qs_attrs];
     var tlist = [qs.query.regexps, qs.query.fqn_regexps, qs.query.attributes];
   SearchLoop:
     for (var j = 0; j < 3; j++)
