@@ -73,6 +73,7 @@ abstract class DDocEmitter : DefaultVisitor
     // Initialize the root symbol in the symbol tree.
     auto lexer = modul.parser.lexer;
     symbolTree[""] = new DocSymbol(modul.moduleName, modul.getFQN(), "module",
+      null,
       lexer.firstToken().getRealLocation(),
       lexer.tail.getRealLocation()
     ); // Root symbol.
@@ -745,6 +746,7 @@ abstract class DDocEmitter : DefaultVisitor
     auto fqn = getSymbolFQN(name);
     auto loc = d.begin.getRealLocation();
     auto loc_end = d.end.getRealLocation();
+    determineAttributes(d);
     addSymbol(name, fqn.dup, kind, loc, loc_end);
     currentSymbolParams = Format("{}, {}, {}, {}, {}",
       name, fqn, kind, loc.lineNum, loc_end.lineNum);
@@ -759,7 +761,8 @@ abstract class DDocEmitter : DefaultVisitor
   void addSymbol(string name, string fqn, string kind,
     Location begin, Location end)
   {
-    auto symbol = new DocSymbol(name, fqn, kind, begin, end);
+    auto attrs = currentAttributes.asArray();
+    auto symbol = new DocSymbol(name, fqn, kind, attrs, begin, end);
     symbolTree[fqn] = symbol; // Add the symbol itself.
     symbolTree[parentFQN].members ~= symbol; // Append as a child to parent.
   }
@@ -825,18 +828,37 @@ abstract class DDocEmitter : DefaultVisitor
     DESC();
   }
 
-  /// Writes the attributes of a declaration in brackets.
-  void writeAttributes(Declaration d)
+  /// All attributes a symbol can have.
+  struct SymbolAttributes
   {
-    char[][] attributes;
+    string prot;   /// Protection attribute.
+    string[] stcs; /// Storage classes.
+    string link;   /// Linkage type.
+    /// Returns all attributes in an array.
+    string[] asArray()
+    {
+      string[] attrs;
+      if (prot.length)
+        attrs = [prot];
+      attrs ~= stcs;
+      if (link.length)
+        attrs ~= link;
+      return attrs;
+    }
+  }
 
-    if (d.prot != Protection.None)
-      attributes ~= "$(DIL_PROT " ~ .toString(d.prot) ~ ")";
+  /// The attributes of the current symbol.
+  SymbolAttributes currentAttributes;
+
+  /// Determine the attributes of the current symbol.
+  void determineAttributes(Declaration d)
+  {
+    alias currentAttributes attrs;
+    attrs.prot = d.prot == Protection.None ? null : .toString(d.prot);
 
     auto stc = d.stc;
-    stc &= ~StorageClass.Auto; // Ignore auto.
-    foreach (stcStr; .toStrings(stc))
-      attributes ~= "$(DIL_STC " ~ stcStr ~ ")";
+    stc &= ~StorageClass.Auto; // Ignore "auto".
+    attrs.stcs = .toStrings(stc);
 
     LinkageType ltype;
     if (auto vd = d.Is!(VariablesDeclaration))
@@ -844,8 +866,22 @@ abstract class DDocEmitter : DefaultVisitor
     else if (auto fd = d.Is!(FunctionDeclaration))
       ltype = fd.linkageType;
 
-    if (ltype != LinkageType.None)
-      attributes ~= "$(DIL_LINKAGE extern(" ~ .toString(ltype) ~ "))";
+    attrs.link = ltype == LinkageType.None ? null : .toString(ltype);
+  }
+
+  /// Writes the attributes of a declaration in brackets.
+  void writeAttributes(Declaration d)
+  {
+    string[] attributes;
+
+    if (currentAttributes.prot.length)
+      attributes ~= "$(DIL_PROT " ~ currentAttributes.prot ~ ")";
+
+    foreach (stcString; currentAttributes.stcs)
+      attributes ~= "$(DIL_STC " ~ stcString ~ ")";
+
+    if (currentAttributes.link.length)
+      attributes ~= "$(DIL_LINKAGE extern(" ~ currentAttributes.link ~ "))";
 
     if (!attributes.length)
       return;
@@ -1064,19 +1100,25 @@ class DocSymbol
   string name, fqn, kind;
   Location begin, end;
   DocSymbol[] members;
+  string[] attrs;
   /// Constructs a DocSymbol object.
-  this(string name, string fqn, string kind,
+  this(string name, string fqn, string kind, string[] attrs,
     Location begin, Location end)
   {
     this.name = name;
     this.fqn = fqn;
     this.kind = kind;
+    this.attrs = attrs;
     this.begin = begin;
     this.end = end;
   }
   /// Maps the kind of a symbol to its ID.
   /// Must match the list in "kandil/js/symbols.js".
   static int[string] kindToID;
+  /// Maps the attribute of a symbol to its ID.
+  /// Must match the list in "kandil/js/symbols.js".
+  static int[string] attrToID;
+  /// Initialize the associative arrays.
   static this()
   {
     DocSymbol.kindToID = [
@@ -1086,10 +1128,29 @@ class DocSymbol
       "new":14, "delete":15, "unittest":16, "ctor":17, "dtor":18,
       "sctor":19, "sdtor":20
     ];
+    DocSymbol.attrToID = [
+      "private"[]:0, "protected":1, "package":2, "public":3, "export":4,
+      "abstract":5, "auto":6, "const":7, "deprecated":8, "extern":9,
+      "final":10, "invariant":11, "override":12, "scope":13,
+      "static":14, "synchronized":15, "in":16, "out":17, "ref":18,
+      "lazy":19, "variadic":20, "manifest":21, "C":22, "C++":23,
+      "D":24, "Windows":25, "Pascal":26
+    ];
   }
   /// Returns the ID of the symbol's kind.
-  int getID()
+  int kindAsID()
   {
     return kindToID[kind];
+  }
+  /// Return the attributes as IDs. E.g.: "[1,9,22]"
+  string formatAttrsAsIDs()
+  {
+    if (!attrs.length)
+      return "[]";
+    char[] result = "[";
+    foreach (attr; attrs)
+      result ~= Format("{},", attrToID[attr]);
+    result[$-1] = ']';
+    return result;
   }
 }

@@ -1,22 +1,40 @@
 /// Author: Aziz Köksal
 /// License: zlib/libpng
 
-/// An enumeration of symbol kinds. Maps strings to IDs and IDs to strings.
-var SymbolKind = (function(){
-  var kinds = "package module template class interface struct union alias \
-typedef enum enummem variable function invariant new delete unittest ctor \
-dtor sctor sdtor".split(" ");
-  var dict = {str: kinds};
-  for (var i = 0, len = kinds.length; i < len; i++)
-    (dict[kinds[i]] = i), // E.g.: dict["package"] = 0;
-    (dict[i] = kinds[i]); // E.g.: dict[0] = "package";
+/// Builds an enum. Maps strings to IDs and IDs to strings.
+function makeEnum(elems, sep)
+{
+  if (sep !== undefined)
+    elems = elems.split(sep);
+  var dict = {'toStr': elems};
+  for (var i = 0, l = elems.length; i < l; i++)
+    (dict[elems[i]] = i), // E.g.: dict["package"] = 0;
+    (dict[i] = elems[i]); // E.g.: dict[0] = "package";
   return dict;
-})();
+}
+
+/// An enumeration of symbol kinds.
+var SymbolKind = makeEnum(
+  "package module template class interface struct union alias \
+typedef enum enummem variable function invariant new delete unittest ctor \
+dtor sctor sdtor", " ");
+
 /// Returns true if this symbol is a function.
 SymbolKind.isFunction = function(key) {
   if (typeof key == typeof "")
     key = this[key]; // Get the ID if the key is a string.
   return 12 <= key && key <= 20; // ID range: 12-20.
+};
+
+var SymbolAttr = makeEnum(
+  "private protected package public export abstract auto const \
+deprecated extern final invariant override scope static synchronized \
+in out ref lazy variadic manifest C C++ D Windows Pascal", " ");
+
+SymbolAttr.isProtection = function(key) {
+  if (typeof key == typeof "")
+    key = this[key]; // Get the ID if the key is a string.
+  return 0 <= key && key <= 4; // ID range: 0-4.
 };
 
 /// Constructs a symbol. Represents a package, a module or a D symbol.
@@ -37,23 +55,31 @@ Symbol.getTree = function(json/*=JSON text*/, moduleFQN) {
   var list = []; // A flat list of all symbols.
   function visit(s/*=symbol*/, fqn/*=fully qualified name*/)
   { // Assign the elements of this tuple to variables.
-    var name = s[0], kindID = s[1], loc = s[2], members = s[3];
-    // E.g.: 'tango.core' + 'Thread'
+    var name = s[0], kindID = s[1], attrs = s[2], loc = s[3], members = s[4];
+    // E.g.: 'tango.core' + '.' + 'Thread'
     fqn += (fqn ? "." : "") + name;
     // E.g.: 'Thread.this', 'Thread.this:2' etc.
     if (sibling = dict[fqn]) // Add ":\d+" suffix if not unique.
       fqn += ":" + ((sibling.count += 1) || (sibling.count = 2));
     // Create a new symbol.
-    var symbol = new Symbol(fqn, SymbolKind[kindID], members);
-    symbol.loc = s[2];
+    var symbol = new visit.Symbol(fqn, SymbolKind[kindID], members);
+    symbol.loc = loc;
+    symbol.attrs = attrs;
+    // Replace attribute IDs with their string values.
+    for (var i = 0, len = attrs.length; i < len; i++)
+      attrs[i] = visit.SymbolAttr.toStr[attrs[i]];
+
     dict[fqn] = symbol; // Add to the dictionary.
     list.push(symbol); // Add to the list.
+
     // Visit the members of this symbol.
     for (var i = 0, len = members.length; i < len; i++)
       (members[i] = visit(members[i], fqn)),
       (members[i].parent = symbol);
     return symbol;
   }
+  visit.SymbolAttr = SymbolAttr; // Make finding global variables fast.
+  visit.Symbol = Symbol;
   var root_name = arrayTree[0];
   // Avoid including the roots name in the FQNs of the symbols.
   arrayTree[0] = "";

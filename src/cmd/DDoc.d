@@ -294,16 +294,16 @@ struct DDocCommand
   }
 
   /// Converts the symbol tree into JSON.
-  static char[] symbolsToJSON(DocSymbol symbol, ref char[] text/+,
-    string indent = "\t"+/)
+  static char[] symbolsToJSON(DocSymbol symbol, ref char[] text)
   {
     auto locbeg = symbol.begin.lineNum, locend = symbol.end.lineNum;
-    text ~= Format(`["{}",{},[{},{}],[`,
-      symbol.name, symbol.getID(), locbeg, locend);
+    text ~= Format(`["{}",{},{},[{},{}],[`,
+      symbol.name, symbol.kindAsID(),
+      symbol.formatAttrsAsIDs(), locbeg, locend);
     foreach (s; symbol.members)
     {
-      text ~= \n/+~indent+/;
-      symbolsToJSON(s, text/+, indent~"\t"+/);
+      text ~= \n;
+      symbolsToJSON(s, text);
       text ~= ",";
     }
     if (text[$-1] == ',')
