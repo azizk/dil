@@ -2,6 +2,8 @@
 /* Author: Aziz Köksal */
 * { color: black; }
 body { margin: 0; }
+body.progress { cursor: progress; }
+
 
 #navbar {
   position:fixed;
@@ -10,7 +12,7 @@ body { margin: 0; }
   height:100%;
   overflow: hidden;
   background-color:#CCDDCC;
-  box-shadow: 7px 0px 10px #BBB;
+  box-shadow: 7px 0px 10px rgba(0,0,0,0.4);
 }
 
 #kandil-content {
@@ -75,14 +77,15 @@ div.offsetTop {
   margin: 0.1em;
   padding: 0.2em;
   padding-bottom: 0;
-  border: 1px outset Green;
+  border: 1px outset #586;
   border-bottom: none;
-  color: Gray;
-  background-color: #EFE;
+  color: #586;
+  background-color: #C0D9AF;
   white-space: nowrap;
   cursor: pointer;
   border-radius: 4px 4px 0 0;
-  box-shadow: 1px 0px 2px #999;
+  text-shadow: 0 -1px 2px rgba(0,0,0,0.1);
+  box-shadow: 1px 0px 2px rgba(0,0,0,0.4);
 }
 #navtabs span > img {
   vertical-align: top;
@@ -90,8 +93,9 @@ div.offsetTop {
 
 #navtabs span.current, #navtabs span:hover {
   padding-bottom: 2px;
-  color: GhostWhite;
-  background-color: #474;
+  color: White;
+  background-color: #526F35;
+  text-shadow: 0 -1px 2px rgba(0,0,0,0.8);
 }
 
 /* The filter box. */
@@ -214,6 +218,7 @@ ul.tview {
   padding: 0.3em;
   background-color: LightGoldenRodYellow;
   border: 1px solid PaleGoldenRod;
+  box-shadow: 3px 3px 5px rgba(0,0,0,0.4);
 }
 
 /* Content */
