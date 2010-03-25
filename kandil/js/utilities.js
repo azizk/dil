@@ -206,6 +206,14 @@ if (!Object.defineProperty)
     return o;
   };
 
+Object.getter = function(o, p, f) {
+  return this.defineProperty(o, p, {'get':f})
+};
+Object.setter = function(o, p, f) {
+  return this.defineProperty(o, p, {'set':f})
+};
+
+
 // Use an alias for the localStorage object.
 var storage = window.localStorage;
 

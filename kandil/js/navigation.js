@@ -6,9 +6,9 @@ var kandil = {
   /// The original module loaded normally by the browser (not JavaScript.)
   originalModuleFQN: "",
   /// An object that represents the symbol tree.
-  symbolTree: {},
+  symbolTree: null,
   /// An array of all the lines of this module's source code.
-  sourceCode: [],
+  sourceCode: null,
   /// Represents the package tree (located in generated modules.js).
   packageTree: g_packageTree,
   /// Application settings.
@@ -82,7 +82,7 @@ var kandil = {
         };
         getter.varname = varname;
         getter.selector = S.selectors[varname];
-        Object.defineProperty(S, varname, {'get':getter});
+        Object.getter(S, varname, getter);
       }
     }
   },
@@ -107,10 +107,24 @@ var kandil = {
     var new_height = f.html.clientHeight - this.firstChild.offsetTop - 2;
     this.style.height = (new_height < 0 ? 0 : new_height)+"px";
   },
+  symbolTree_getter: function f() {
+    if (f.fqn != kandil.moduleFQN)
+    { // Load the JSON file. Cache in an attribute of this function.
+      f.fqn = kandil.moduleFQN;
+      var xhr = $.ajax({
+        url: "symbols/"+f.fqn+".json", dataType: "text", async: false
+      });
+      f.symbolTree = Symbol.getTree(xhr.responseText, f.fqn);
+      f.symbolTree.symbol_tags = kandil.$.symbols;
+    }
+    return f.symbolTree;
+  },
 };
 kandil.save = kandil.saved;
 kandil.$.initialize();
 cookie.life = kandil.settings.cookie_life;
+
+Object.getter(kandil, "symbolTree", kandil.symbolTree_getter);
 
 /// Execute when document is ready.
 $(function main() {
@@ -203,10 +217,11 @@ function createQuickSearchInputs()
   table2.find("td").slice(1).append(qs[1].input);
   kandil.$.modpanel.prepend(table2);
 
-  $.extend(qs[0].input,
-    {tag_selector: "#apipanel .tview", symbols: kandil.symbolTree});
+  qs[0].input.tag_selector = "#apipanel .tview";
+  Object.getter(qs[0].input, "symbols", function(){return kandil.symbolTree});
   $.extend(qs[1].input,
     {tag_selector: "#modpanel .tview", symbols: kandil.packageTree});
+
   function handleFirstFocus(e, qs) {
     extendSymbols($(this.tag_selector)[0], this.symbols);
   }
@@ -380,8 +395,6 @@ function initSymbolTags(kandil)
 /// Adds click handlers to symbols and inits the symbol list.
 function initAPIList()
 {
-  initializeSymbolTree();
-
   // Create the HTML text and append it to the api panel.
   var ul = createSymbolsUL(kandil.$.apipanel.find(">div.scroll"));
   var tv = new Treeview(ul);
@@ -399,7 +412,7 @@ function fadeOutRemove(tag, delay, fade)
   }, delay);
 }
 
-/// Loads a new module and updates the API panel and the content pane.
+/// Loads a new module and updates the content pane.
 function loadNewModule(moduleFQN)
 {
   var kandil = window.kandil;
@@ -429,6 +442,7 @@ function loadNewModule(moduleFQN)
   showLoadingGif(kandil.msg.loading_module);
   try {
     $.ajax({url: doc_url, dataType: "text", error: errorHandler,
+      async: false,
       success: function(text) {
         if (text == "")
           return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
@@ -436,14 +450,15 @@ function loadNewModule(moduleFQN)
         var parts = extractParts(text);
         // Reset some global variables.
         kandil.moduleFQN = moduleFQN;
-        kandil.sourceCode = [];
+        kandil.sourceCode = null;
         document.title = parts.title;
         $("html")[0].scrollTop = 0; // Scroll the document to the top.
         kandil.$.content[0].innerHTML = parts.content;
         initSymbolTags(kandil);
         // Update the API panel.
         kandil.$.apipanel.find(".tview").remove(); // Delete old API list.
-        kandil.$.apitab.click(kandil.$.apitab.lazyLoad);
+        kandil.$.apitab.unbind("click", kandil.$.apitab.lazyLoad)
+          .click(kandil.$.apitab.lazyLoad);
         if (kandil.$.apitab.hasClass("current")) // Is the API tab selected?
           kandil.$.apitab.lazyLoad(); // Load the contents then.
         $("#apiqs")[0].qs.resetFirstFocusHandler();
@@ -468,24 +483,6 @@ function showLoadingGif(msg)
 function hideLoadingGif()
 {
   fadeOutRemove($("#kandil-loading"), 1, 500);
-}
-
-/// Initializes the symbol list under the API tab.
-function initializeSymbolTree()
-{
-  var sym_tags = kandil.$.symbols;
-  if (!sym_tags.length)
-    return;
-  //var header = sym_tags[0]; // Header of the page.
-  sym_tags = sym_tags.slice(1); // Every other symbol.
-
-  $.ajax({url: "symbols/"+kandil.moduleFQN+".json", dataType: "text",
-    error: undefined, async: false,
-    success: function(text) {
-      $.extend(kandil.symbolTree, Symbol.getTree(text, kandil.moduleFQN));
-      kandil.symbolTree.symbol_tags = sym_tags;
-    }
-  });
 }
 
 /// Returns an image tag for the provided kind of symbol.
@@ -601,37 +598,40 @@ function showCode(symbol)
   // Assign a dummy tag to block quick, multiple clicks while loading.
   dt_tag.code_div = $("<div/>");
 
-  function show()
-  { // The function that actually displays the code.
-    var loc_tuple = kandil.symbolTree[symbol[0].name].loc;
-    var line_beg = loc_tuple[0];
-    var line_end = loc_tuple[1];
-    // Get the code lines.
-    var code = kandil.sourceCode.slice(line_beg, line_end+1);
-    code = code.join("\n");
-    // Create the lines column.
-    var lines = "", srcURL = getSourceCodeURL();
-    for (var num = line_beg; num <= line_end; num++)
-      lines += '<a href="' + srcURL + '#L' + num + '">' + num + '</a>\n';
-    var table = $('<table class="d_code"/>');
-    table[0].innerHTML = '<tr><td class="d_codelines"><pre>'+lines+
-      '</pre></td><td class="d_codetext"><pre>'+code+'</pre></td></tr>';
-    // Create a container div.
-    var div = $('<div class="loaded_code"/>');
-    div.append(table);
-    $(dt_tag).after(div);
-    // Store the created div.
-    dt_tag.code_div = div;
-  }
+  if (kandil.sourceCode == null)
+    loadHTMLCode();
 
-  if (kandil.sourceCode.length == 0)
-    loadHTMLCode(show);
-  else // Already loaded. Show the code.
-    show();
+  // The function that actually displays the code.
+  var loc_tuple = kandil.symbolTree[symbol[0].name].loc;
+  var line_beg = loc_tuple[0];
+  var line_end = loc_tuple[1];
+  // Get the code lines.
+  var code = kandil.sourceCode.slice(line_beg, line_end+1);
+  code = code.join("\n");
+  // Create the lines column.
+  var lines = "", srcURL = getSourceCodeURL();
+  // TODO: cache lines?
+  for (var num = line_beg; num <= line_end; num++)
+    lines += '<a href="' + srcURL + '#L' + num + '">' + num + '</a>\n';
+  var table = $('<table class="d_code"/>');
+  table[0].innerHTML = '<tr><td class="d_codelines"><pre>'+lines+
+    '</pre></td><td class="d_codetext"><pre>'+code+'</pre></td></tr>';
+  // Create a container div.
+  var div = $('<div class="loaded_code" title="Double click to expand"/>');
+  div.append(table);
+  $(dt_tag).after(div);
+  // Store the created div.
+  dt_tag.code_div = div;
+  div.dblclick(function(e) {
+    $(this).css("max-height", "none").attr("title","");
+    e.preventDefault();
+    // show/hide line numbers | expand/minimize
+    // resize bar at the bottom that adjusts max-height
+  });
 }
 
 /// Loads the HTML source code file and keeps it cached.
-function loadHTMLCode(finished_func)
+function loadHTMLCode()
 {
   var doc_url = getSourceCodeURL();
 
@@ -646,16 +646,14 @@ function loadHTMLCode(finished_func)
 
   showLoadingGif(kandil.msg.loading_code);
   try {
-    $.ajax({url: doc_url, dataType: "text", error: errorHandler,
-      success: function(text) {
-        if (text == "")
-          return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
-        text = new String(text);
-        setSourceCode(text);
-        finished_func();
-        hideLoadingGif();
-      }
-    });
+    var xhr = $.ajax({url: doc_url, dataType: "text",
+      error: errorHandler, async: false});
+    var text = xhr.responseText;
+    if (text == "")
+      return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
+    text = new String(text);
+    setSourceCode(text);
+    hideLoadingGif();
   }
   catch(e){ errorHandler(0, 0, e); }
 }
