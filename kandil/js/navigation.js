@@ -59,6 +59,10 @@ var kandil = {
     symbols_ul: function(val) { /// The symbol list as HTML.
       return storage.readwrite("symbols_ul:"+kandil.moduleFQN, val);
     },
+    modules_sb: curry(storage.readwrite, "modules_sb"), /// Scrollbar position.
+    symbols_sb: function(val) { /// Scrollbar position of the symbol list.
+      return storage.readwrite("symbols_sb:"+kandil.moduleFQN, val);
+    },
     modules_tv_state: curry(storage.readwrite, "modules_tv_state"),
     symbols_tv_state: function(val) {
       return storage.readwrite("symbols_tv_state:"+kandil.moduleFQN, val);
@@ -189,6 +193,13 @@ function initTabs()
     var tv = new Treeview(ul);
     tv.loadState(kandil.saved.modules_tv_state);
     tv.bind("save_state", curry2(tv, tv.saveState, kandil.saved.modules_tv_state));
+    ul.parent().scroll(function() {
+      kandil.save.modules_sb(this.scrollTop);
+    });
+    setTimeout(function() {
+      ul.parent()[0].scrollTop = kandil.save.modules_sb();
+    });
+
     if (kandil.settings.dynamic_mod_loading)
       this.panel.find(".tview a").click(handleLoadingModule);
     kandil.packageTree.initList(); // Init the list property.
@@ -196,7 +207,7 @@ function initTabs()
   modtab.click(makeCurrentTab).click(modtab.lazyLoad);
   // Activate the tab that has been saved or activate the default tab.
   var tab = kandil.saved.active_tab() || kandil.settings.default_tab;
-  $(tab).trigger("click");
+  $(tab).click();
 }
 
 /// Creates the quick search text inputs.
@@ -400,6 +411,12 @@ function initAPIList()
   var tv = new Treeview(ul);
   tv.loadState(kandil.saved.symbols_tv_state);
   tv.bind("save_state", curry2(tv, tv.saveState, kandil.saved.symbols_tv_state));
+  ul.parent().scroll(function() {
+    kandil.save.symbols_sb(this.scrollTop);
+  });
+  setTimeout(function() {
+    ul.parent()[0].scrollTop = kandil.save.symbols_sb();
+  });
   installTooltipHandlers();
 }
 
