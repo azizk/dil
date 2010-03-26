@@ -166,8 +166,8 @@ function initTabs()
     if (tab.hasClass("current")) return;
     $(".current", tab.parentNode).removeClass('current');
     tab.addClass('current');
-    $("#panels > *").hide(); // Hide all panels.
-    tab.panel.show(); // Show the panel under this tab.
+    $("#panels > *").css("height", "0px"); // Hide all panels.
+    tab.panel.css("height", "auto"); // Show the panel under this tab.
     kandil.save.active_tab("#"+tab.id); // Save name of the active tab.
     $(window).resize();
   }

@@ -55,6 +55,10 @@ body.progress { cursor: progress; }
   padding: 2px;
 }
 
+#panels > div {
+  overflow: hidden;
+}
+
 div.scroll { /* The panel that should display scroll bars. */
   margin-top: 1px;
   overflow: auto;
