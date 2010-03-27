@@ -8,7 +8,7 @@ class Module:
     self.fqn = fqn
     self.sym_dict = {}
   def __cmp__(self, other):
-    return cmp(self.name, other.name)
+    return cmp(self.name.lower(), other.name.lower())
   @property
   def symbolTree(self):
     return self.sym_dict['']
@@ -64,7 +64,7 @@ class Symbol:
     return self.loc[1]
 
   def __cmp__(self, other):
-    return cmp(self.name, other.name)
+    return cmp(self.name.lower(), other.name.lower())
 
   def __repr__(self):
     return self.fqn
