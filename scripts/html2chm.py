@@ -18,7 +18,7 @@ def win_paths(ps):
   return map(win_path, ps)
 
 # Binary format documentation: http://www.russotto.net/chm/chmformat.html
-def generate_chm(module_files, dest, tmp, params):
+def generate_chm(module_files, dest, tmp, params, jsons):
   # On Linux the paths in the project file (hhp) must be in Windows style.
   dest = win_path(dest.abspath)
   hhp, hhc, hhk = tmp//("chm.hhp", "chm.hhc", "chm.hhk")
@@ -71,7 +71,7 @@ Title=%(title)s
     # Extract module FQN.
     module_fqn = Path(html_file).namebase
     # Extract symbols list.
-    sym_dict, cat_dict = get_symbols(html_str, module_fqn)
+    sym_dict, cat_dict = get_symbols(jsons, module_fqn)
     # Add a new module to the tree.
     module = Module(module_fqn)
     module.sym_dict = sym_dict
@@ -186,4 +186,6 @@ class CHMGenerator:
       (SRC/folder).copytree(TMP/folder)
 
   def run(self, *args):
+    html_files = args[0]
+    args += (html_files[0].folder/"symbols",)
     generate_chm(*args)

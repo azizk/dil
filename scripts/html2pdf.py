@@ -73,7 +73,7 @@ def write_bookmarks(html_doc, package_tree, sym_dict_all,
       html_doc.write("</li>\n")
   html_doc.write("</ul>\n")
 
-def generate_pdf(module_files, dest, tmp, params):
+def generate_pdf(module_files, dest, tmp, params, jsons):
   params_default = {
     "pdf_title": "",
     "cover_title": "Cover Title",
@@ -109,7 +109,7 @@ def generate_pdf(module_files, dest, tmp, params):
   # --------------------------------
   # Matches the name and href attributes of a symbol link.
   symbol_rx = re.compile(
-    r'(<a class="symbol[^"]+" name=)"([^"]+)" href="htmlsrc/([^#]+)([^"]+)"')
+    r'(<a class="symbol[^"]*" name=)"([^"]+)" href="htmlsrc/([^#]+)([^"]+)"')
   # Matches the href attribute of "h1.module > a".
   h1_href_rx = re.compile(
     r'(<h1 class="module"[^>]*><a href=)"htmlsrc/([^"]+)"')
@@ -138,7 +138,7 @@ def generate_pdf(module_files, dest, tmp, params):
     # Extract module FQN.
     module_fqn = Path(html_file).namebase
     # Extract symbols list, before symbol_rx.
-    sym_dict, cat_dict = get_symbols(html_str, module_fqn)
+    sym_dict, cat_dict = get_symbols(jsons, module_fqn)
     # Add symlink as a prefix to "a.symbol" tags.
     # The name attribute must be prefixed with "m-%MODULE_FQN%",
     # in order to make the anchor unique in the entire document.
@@ -336,4 +336,6 @@ class PDFGenerator:
       (SRC.KANDIL.IMG/img).copy(TMP/"img")
 
   def run(self, *args):
+    html_files = args[0]
+    args += (html_files[0].folder/"symbols",)
     generate_pdf(*args)

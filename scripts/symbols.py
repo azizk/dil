@@ -56,28 +56,72 @@ class Symbol:
   def link(self):
     return "#m-%s:%s" % (self.modfqn, self.fqn)
 
+  @property
+  def beg(self):
+    return self.loc[0]
+  @property
+  def end(self):
+    return self.loc[1]
+
   def __cmp__(self, other):
     return cmp(self.name, other.name)
 
   def __repr__(self):
     return self.fqn
 
-def get_symbols(html_str, module_fqn, categorize=True):
+def get_symbols(jsons, module_fqn, categorize=True):
   """ Extracts the symbols from an HTML document. """
-  rx = re.compile(r'<a class="symbol [^"]+" name="(?P<fqn>[^"]+)"'
-                  r' href="(?P<srclnk>[^"]+)" kind="(?P<kind>[^"]+)"'
-                  r' coords="(?P<beg>\d+),(?P<end>\d+)">'
-                  r'(?P<name>[^<]+)</a>')
-  root = dict(fqn=module_fqn, src="", kind="module", beg="", end="")
-  symbol_dict = {"" : Symbol(root)}
+
+  SymKind = ("package module template class interface struct union alias "
+    "typedef enum enummem variable function invariant new delete unittest "
+    "ctor dtor sctor sdtor").split(" ")
+
+  SymAttr = ("private protected package public export abstract auto const "
+    "deprecated extern final invariant override scope static synchronized "
+    "in out ref lazy variadic manifest C C++ D Windows Pascal").split(" ")
+
+  import json
+  json_path = jsons/(module_fqn+".json")
+  json_text = open(json_path).read()
+  arrayTree = json.loads(json_text)
+
+  symbol_dict = {}
   cat_dict = {}
-  for m in rx.finditer(html_str):
-    symbol = Symbol(dict(m.groupdict(), modfqn=module_fqn))
-    symbol_dict[symbol.parent_fqn].sub += [symbol]
-    symbol_dict[symbol.fqn] = symbol
-    if categorize:
+
+  def visit(s, fqn):
+    name = s[0]
+    d = {'name': name, 'kind': SymKind[s[1]],
+      'attrs': [SymAttr[x] for x in s[2]], 'loc': s[3], 'modfqn': module_fqn}
+
+    # E.g.: 'tango.core' + '.' + 'Thread'
+    fqn += ("." if fqn != "" else "") + name
+    # Add ":\d+" suffix if not unique.
+    sibling = symbol_dict.get(fqn)
+    if sibling:
+      if not hasattr(sibling, 'count'):
+        sibling.count = 1
+      sibling.count += 1
+      fqn += ":" + str(sibling.count)
+    d['fqn'] = fqn
+
+    symbol = Symbol(d) # Create the symbol.
+    symbol_dict[fqn] = symbol # Add it to the dictionary.
+
+    symbol.sub = members = s[4] # Visit the members of this symbol.
+    for i, m in enumerate(members):
+      members[i] = visit(m, fqn)
+
+    if categorize: # cat_dict[kind] += [symbol]
       kinds = cat_dict.setdefault(symbol.kind, [])
-      kinds += [symbol]
+      kinds.append(symbol)
+
+    return symbol
+
+  root_name = arrayTree[0]
+  arrayTree[0] = ""
+  root = visit(arrayTree, "") # Start traversing the tree.
+  root.name = root_name
+  root.fqn = module_fqn
   return symbol_dict, cat_dict
 
 def get_index(symbols):
