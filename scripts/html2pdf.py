@@ -7,7 +7,7 @@ from common import *
 from symbols import *
 from time import gmtime, strftime
 
-def write_bookmarks(html_doc, package_tree, sym_dict_all,
+def write_bookmarks(write, package_tree, sym_dict_all,
                     kind_title_list, kind_list, indices):
   # Notice how the li-tag has only the link and label attribute
   # with no content between the tag itself.
@@ -17,61 +17,61 @@ def write_bookmarks(html_doc, package_tree, sym_dict_all,
   # Using this technique it is possible to work around this shortcoming.
   def write_symbol_list(kind, symlist, index):
     letter_dict, letter_list = index
-    html_doc.write("<ul>\n")
+    write("<ul>\n")
     # A list of all symbols under the item 'All'.
-    html_doc.write("<li link='#index-%s' label='All'>\n" % kind)
-    html_doc.write("<ul>\n")
+    write("<li link='#index-%s' label='All'>\n" % kind)
+    write("<ul>\n")
     for s in symlist:
-      html_doc.write("<li link='%s' label='%s'></li>\n" %
+      write("<li link='%s' label='%s'></li>\n" %
                      (s.link, s.name))
-    html_doc.write("</ul>\n</li>\n")
+    write("</ul>\n</li>\n")
     # A list of all symbols categorized by their initial letter.
     for letter in letter_list:
-      html_doc.write("<li link='#index-%s-%s' label='%s'>" %
+      write("<li link='#index-%s-%s' label='%s'>" %
                      (kind, letter, letter))
-      html_doc.write("<ul>\n")
+      write("<ul>\n")
       for s in letter_dict[letter]:
-        html_doc.write("<li link='%s' label='%s'></li>" %
+        write("<li link='%s' label='%s'></li>" %
                        (s.link, s.name))
-      html_doc.write("</ul>\n</li>\n")
-    html_doc.write("</ul>\n")
+      write("</ul>\n</li>\n")
+    write("</ul>\n")
 
   def write_symbol_tree(symbol):
-    html_doc.write("<ul>\n")
+    write("<ul>\n")
     for s in symbol.sub:
-      html_doc.write("<li link='%s' label='%s'>" %
+      write("<li link='%s' label='%s'>" %
                      (s.link, s.name))
       if len(s.sub): write_symbol_tree(s)
-      html_doc.write("</li>\n")
-    html_doc.write("</ul>\n")
+      write("</li>\n")
+    write("</ul>\n")
 
   def write_module_tree(pckg):
-    html_doc.write("<ul>\n")
+    write("<ul>\n")
     for p in pckg.packages:
-      html_doc.write("<li link='#p-%s' label='%s'>" %
+      write("<li link='#p-%s' label='%s'>" %
                      (p.fqn, p.name))
       if len(p.packages) or len(p.modules):
         write_module_tree(p)
-      html_doc.write("</li>\n")
+      write("</li>\n")
     for m in pckg.modules:
-      html_doc.write("<li link='#m-%s' label='%s'>" %
+      write("<li link='#m-%s' label='%s'>" %
                      (m.fqn, m.name))
       write_symbol_tree(m.symbolTree)
-      html_doc.write("</li>\n")
-    html_doc.write("</ul>\n")
+      write("</li>\n")
+    write("</ul>\n")
 
-  html_doc.write("<ul id='bookmarks'>\n")
+  write("<ul id='bookmarks'>\n")
   # Modules.
-  html_doc.write("<li link='#module-pages' label='Modules'>")
+  write("<li link='#module-pages' label='Modules'>")
   write_module_tree(package_tree.root)
-  html_doc.write("</li>\n")
+  write("</li>\n")
   # Indices.
   for label, kind in zip(kind_title_list, kind_list):
     if kind in sym_dict_all:
-      html_doc.write("<li link='#index-%s' label='%s'>" % (kind, label))
+      write("<li link='#index-%s' label='%s'>" % (kind, label))
       write_symbol_list(kind, sym_dict_all[kind], indices[kind])
-      html_doc.write("</li>\n")
-  html_doc.write("</ul>\n")
+      write("</li>\n")
+  write("</ul>\n")
 
 def generate_pdf(module_files, dest, tmp, params, jsons):
   params_default = {
@@ -177,6 +177,10 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   html_src = tmp/("html2pdf.%s" % x_html.lower())
   html_doc = open(html_src, "w")
 
+  def write(text):
+    write.out(text.encode("utf-8"))
+  write.out = html_doc.write
+
   # Write the head of the document.
   params = dict(params, doctype="", xmlns="")
   if x_html == "XHTML":
@@ -201,88 +205,91 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
 <div id="toc">
   <p class="toc_header">Table of Contents</p>
 """
-  html_doc.write((head % params).encode("utf-8"))
+  write(head % params)
+
   # Write the Table of Contents.
   # ----------------------------
   def write_module_tree(pckg):
-    html_doc.write("\n<ul>")
+    write("\n<ul>")
     for p in pckg.packages:
-      html_doc.write("<li kind='p'><a href='#p-%s'>%s</a>" % (p.fqn, p.name))
+      write(("<li kind='p'>"
+        "<img src='img/icon_package.svg' class='icon' width='16' height='16'/>"
+        "&nbsp;<a href='#p-%s'>%s</a>") % (p.fqn, p.name))
       if len(p.packages) or len(p.modules):
         write_module_tree(p)
-      html_doc.write("</li>\n")
+      write("</li>\n")
     for m in pckg.modules:
-      html_doc.write("<li kind='m'><a href='#m-%s'>%s</a></li>" %
-                     (m.fqn, m.name))
-    html_doc.write("</ul>\n")
+      write(("<li kind='m'>"
+        "<img src='img/icon_module.svg' class='icon' width='14' height='14'/>"
+        "&nbsp;<a href='#m-%s'>%s</a></li>") % (m.fqn, m.name))
+    write("</ul>\n")
 
   if first_toc:
-    html_doc.write(first_toc)
+    write(first_toc)
 
-  html_doc.write("<p>Module list:</p>\n")
+  write("<h1>Modules</h1>\n")
   if nested_TOC: # Write a nested list of modules.
-    html_doc.write("<div class='modlist nested'>")
+    write("<div class='modlist nested'>")
     write_module_tree(package_tree.root)
-    html_doc.write("</div>")
+    write("</div>")
   else: # Write a flat list of modules.
-    html_doc.write("<div class='modlist flat'><ul>")
+    write("<div class='modlist flat'><ul>")
     for html_fragment, mod_fqn, sym_dict in html_fragments:
-      html_doc.write("<li><a href='#m-%s'>%s</a></li>" % ((mod_fqn,)*2))
-    html_doc.write("</ul></div>")
+      write("<li><a href='#m-%s'>%s</a></li>" % ((mod_fqn,)*2))
+    write("</ul></div>")
 
   if last_toc:
-    html_doc.write(last_toc)
+    write(last_toc)
 
-  html_doc.write("<p>Indices:</p>\n")
-  html_doc.write("<ul>\n")
+  write("<h1>Indices</h1>\n<ul>\n")
   for label, kind in zip(kind_title_list, kind_list):
     if kind in sym_dict_all:
-      html_doc.write("<li><a href='#index-%s'>%s</a></li>\n" % (kind, label))
-  html_doc.write("</ul>\n")
+      write("<li><a href='#index-%s'>%s</a></li>\n" % (kind, label))
+  write("</ul>\n")
 
   # Close <div id="toc">
-  html_doc.write("</div>\n")
+  write("</div>\n")
 
   # Write the HTML fragments.
   # -------------------------
   def write_nested_fragments(pckg):
     for p in pckg.packages:
-      html_doc.write('<h1 id="p-%s" class="package">%s</h1>\n' % ((p.fqn,)*2))
-      html_doc.write('<div>')
+      write('<h1 id="p-%s" class="package">%s</h1>\n' % ((p.fqn,)*2))
+      write('<div>')
       if len(p.packages):
-        html_doc.write("<p><b>Packages:</b> " +
+        write("<p><b>Packages:</b> " +
           ", ".join(["<a href='#p-%s'>%s</a>" % (p_.fqn, p_.name)
                       for p_ in p.packages]) +
           "</p>\n")
       if len(p.modules):
-        html_doc.write("<p><b>Modules:</b> " +
+        write("<p><b>Modules:</b> " +
           ", ".join(["<a href='#m-%s'>%s</a>" % (m.fqn, m.name)
                       for m in p.modules]) +
           "</p>\n")
-      html_doc.write("</div>")
+      write("</div>")
       write_nested_fragments(p)
     for m in pckg.modules:
-      html_doc.write(m.html_str.encode("utf-8"))
+      write(m.html_str)
 
   if before_files:
-    html_doc.write("<div class='before_pages'>")
+    write("<div class='before_pages'>")
     for f in before_files:
-      html_doc.write(open(f).read())
-    html_doc.write("</div>")
+      write(open(f).read())
+    write("</div>")
 
-  html_doc.write("<div id='module-pages'>\n")
+  write("<div id='module-pages'>\n")
   if nested_TOC:
     write_nested_fragments(package_tree.root)
   else:
     for html_fragment, mod_fqn, sym_dict in html_fragments:
-      html_doc.write(html_fragment.encode("utf-8"))
-  html_doc.write("</div>\n")
+      write(html_fragment)
+  write("</div>\n")
 
   if after_files:
-    html_doc.write("<div class='after_pages'>")
+    write("<div class='after_pages'>")
     for f in after_files:
-      html_doc.write(open(f).read())
-    html_doc.write("</div>")
+      write(open(f).read())
+    write("</div>")
 
   # Prepare indices:
   # ----------------
@@ -293,31 +300,28 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
 
   # Write the bookmarks tree.
   # -------------------------
-  write_bookmarks(html_doc, package_tree, sym_dict_all,
-                  kind_title_list, kind_list, indices)
+  write_bookmarks(write, package_tree, sym_dict_all,
+    kind_title_list, kind_list, indices)
 
   # Write the indices.
   # ------------------
-  html_doc.write("<div id='indices'>\n")
+  write("<div id='indices'>\n")
   index_titles= ("Class index,Interface index,"
                  "Struct index,Union index").split(",")
   for title, kind, label in zip(index_titles, kind_list, kind_title_list):
     if kind in sym_dict_all:
       letter_dict, letter_list = indices[kind]
-      html_doc.write("<h1 id='index-%s' label='%s'>%s</h1>\n" %
-                     (kind, label, title))
-      html_doc.write("<dl>\n")
+      write("<h1 id='index-%s' label='%s'>%s</h1>\n" % (kind, label, title))
+      write("<dl>\n")
       for letter in letter_list:
-        html_doc.write("<dt id='index-%s-%s'>%s</dt>\n" %
-                       (kind, letter, letter))
+        write("<dt id='index-%s-%s'>%s</dt>\n" % (kind, letter, letter))
         for sym in letter_dict[letter]:
-          html_doc.write("<dd><a href='%s'>%s</a></dd>\n" %
-                         (sym.link, sym.name))
-      html_doc.write("</dl>\n")
-  html_doc.write("</div>\n")
+          write("<dd><a href='%s'>%s</a></dd>\n" % (sym.link, sym.name))
+      write("</dl>\n")
+  write("</div>\n")
 
   # Close the document.
-  html_doc.write("</body></html>")
+  write("</body></html>")
   html_doc.flush()
   html_doc.close()
 
@@ -332,7 +336,7 @@ class PDFGenerator:
   def fetch_files(self, SRC, TMP):
     (SRC.DATA/"pdf.css").copy(TMP)
     (TMP/"img").mkdir()
-    for img in ("icon_module.png", "icon_package.png"):
+    for img in ("icon_module.svg", "icon_package.svg"):
       (SRC.KANDIL.IMG/img).copy(TMP/"img")
 
   def run(self, *args):
