@@ -15,10 +15,12 @@ import common;
 class DDocXMLEmitter : DDocEmitter
 {
   /// Constructs a DDocXMLEmitter object.
-  this(Module modul, MacroTable mtable, bool includeUndocumented,
+  this(Module modul, MacroTable mtable,
+       bool includeUndocumented, bool includePrivate,
        Diagnostics reportDiag, Highlighter tokenHL)
   {
-    super(modul, mtable, includeUndocumented, reportDiag, tokenHL);
+    super(modul, mtable, includeUndocumented, includePrivate,
+      reportDiag, tokenHL);
   }
 
   alias Declaration D;

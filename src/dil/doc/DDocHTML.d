@@ -14,9 +14,11 @@ import common;
 class DDocHTMLEmitter : DDocEmitter
 {
   /// Constructs a DDocHTMLEmitter object.
-  this(Module modul, MacroTable mtable, bool includeUndocumented,
+  this(Module modul, MacroTable mtable,
+       bool includeUndocumented, bool includePrivate,
        Diagnostics reportDiag, Highlighter tokenHL)
   {
-    super(modul, mtable, includeUndocumented, reportDiag, tokenHL);
+    super(modul, mtable, includeUndocumented, includePrivate,
+      reportDiag, tokenHL);
   }
 }

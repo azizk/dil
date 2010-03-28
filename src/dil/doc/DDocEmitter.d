@@ -30,6 +30,7 @@ abstract class DDocEmitter : DefaultVisitor
 {
   char[] text; /// The buffer that is written to.
   bool includeUndocumented;
+  bool includePrivate;
   MacroTable mtable;
   Module modul;
   Highlighter tokenHL;
@@ -40,12 +41,15 @@ abstract class DDocEmitter : DefaultVisitor
   ///   modul = the module to generate text for.
   ///   mtable = the macro table.
   ///   includeUndocumented = whether to include undocumented symbols.
+  ///   includePrivate = whether to include private symbols.
   ///   tokenHL = used to highlight code sections.
-  this(Module modul, MacroTable mtable, bool includeUndocumented,
+  this(Module modul, MacroTable mtable,
+       bool includeUndocumented, bool includePrivate,
        Diagnostics reportDiag, Highlighter tokenHL)
   {
     this.mtable = mtable;
     this.includeUndocumented = includeUndocumented;
+    this.includePrivate = includePrivate;
     this.modul = modul;
     this.tokenHL = tokenHL;
     this.reportDiag = reportDiag;
@@ -302,8 +306,10 @@ abstract class DDocEmitter : DefaultVisitor
   bool cmntIsDitto; /// True if current comment is "ditto".
 
   /// Sets some members and returns true if a comment was found.
-  bool ddoc(Node node)
+  bool ddoc(Declaration node)
   {
+    if (!includePrivate && node.prot == Protection.Private)
+      return false;
     this.currentDecl = node;
     this.cmnt = DDocUtils.getDDocComment(node);
     if (this.cmnt)
@@ -746,7 +752,7 @@ abstract class DDocEmitter : DefaultVisitor
     auto fqn = getSymbolFQN(name);
     auto loc = d.begin.getRealLocation();
     auto loc_end = d.end.getRealLocation();
-    determineAttributes(d);
+    storeAttributes(d);
     addSymbol(name, fqn.dup, kind, loc, loc_end);
     currentSymbolParams = Format("{}, {}, {}, {}, {}",
       name, fqn, kind, loc.lineNum, loc_end.lineNum);
@@ -850,8 +856,8 @@ abstract class DDocEmitter : DefaultVisitor
   /// The attributes of the current symbol.
   SymbolAttributes currentAttributes;
 
-  /// Determine the attributes of the current symbol.
-  void determineAttributes(Declaration d)
+  /// Stores the attributes of the current symbol.
+  void storeAttributes(Declaration d)
   {
     alias currentAttributes attrs;
     attrs.prot = d.prot == Protection.None ? null : EnumString(d.prot);

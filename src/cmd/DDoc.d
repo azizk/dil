@@ -43,6 +43,7 @@ struct DDocCommand
   string outFileExtension;  /// The extension of the output files.
   Regex[] regexps; /// Regular expressions.
   bool includeUndocumented; /// Whether to include undocumented symbols.
+  bool includePrivate; /// Whether to include private symbols.
   bool writeReport;  /// Whether to write a problem report.
   bool useKandil;    /// Whether to use kandil.
   bool writeXML;     /// Whether to write XML instead of HTML docs.
@@ -182,10 +183,10 @@ struct DDocCommand
     DDocEmitter ddocEmitter;
     if (writeXML)
       ddocEmitter = new DDocXMLEmitter(mod, mtable, includeUndocumented,
-        getReportDiag(modFQN), hl);
+        includePrivate, getReportDiag(modFQN), hl);
     else
       ddocEmitter = new DDocHTMLEmitter(mod, mtable, includeUndocumented,
-        getReportDiag(modFQN), hl);
+        includePrivate, getReportDiag(modFQN), hl);
     // Start the emitter.
     auto ddocText = ddocEmitter.emit();
     // Set the BODY macro to the text produced by the emitter.
@@ -265,12 +266,14 @@ struct DDocCommand
     auto kandil = new FilePath("kandil");
     destDir.dup.append("css").append("style.css")
            .copy(kandil.dup.append("css").append("style.css"));
-    foreach (file; ["navigation.js", "jquery.js", "quicksearch.js"])
+    foreach (file; ["navigation.js", "jquery.js", "quicksearch.js",
+                    "symbols.js", "utilities.js"])
       destDir.dup.append("js").append(file)
              .copy(kandil.dup.append("js").append(file));
     foreach (file; ["alias", "class", "enummem", "enum", "function",
                     "interface", "module", "package", "struct", "template",
-                    "typedef", "union", "variable"])
+                    "typedef", "union", "variable",
+                    "tv_dot", "tv_minus", "tv_plus", "magnifier"])
     {
       file = "icon_" ~ file ~ ".png";
       destDir.dup.append("img").append(file)

@@ -159,6 +159,8 @@ void main(char[][] args)
         cmd.writeHLFiles = true;
       else if (arg == "-i")
         cmd.includeUndocumented = true;
+      else if (arg == "--inc-private")
+        cmd.includePrivate = true;
       else if (arg == "-v")
         cmd.verbose = true;
       else if (arg == "--kandil")
@@ -563,6 +565,7 @@ Options:
   --raw            : don't expand macros in the output (useful for debugging)
   -hl              : write syntax highlighted files to Destination/htmlsrc
   -i               : include undocumented symbols
+  --inc-private    : include private symbols
   -v               : verbose output
   -m=PATH          : write list of processed modules to PATH
   -version=ident   : see "dil help compile" for more details
