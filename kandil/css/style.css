@@ -222,6 +222,7 @@ ul.tview {
   padding: 0.3em;
   background-color: LightGoldenRodYellow;
   border: 1px solid PaleGoldenRod;
+  border-radius: 2px;
   box-shadow: 3px 3px 5px rgba(0,0,0,0.4);
 }
 
@@ -254,23 +255,23 @@ ul.tview {
   border-top: 1px dashed Gray;
 }
 
-.symlink, .srclink{
+.plink, .srclink{
   padding: 0em 0.2em;
   text-decoration: none;
   color: DarkRed;
 }
 
-/*.decl */.symlink, /*.decl */.srclink {
+.plink, .srclink {
   display: none;
 }
 
-.decl:hover .symlink, .symlink:focus,
+.decl:hover .plink, .plink:focus,
 .decl:hover .srclink, .srclink:focus,
 h1.module:hover .srclink {
   display: inline;
 }
 
-.symlink:hover, .srclink:hover {
+.plink:hover, .srclink:hover {
   border: 1px outset #300;
   color: white;
   background-color: DarkRed;

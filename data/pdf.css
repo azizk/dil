@@ -227,7 +227,7 @@ dd.ddef { /* Definition, Explanation */
   margin-right: 0;
 }
 
-.symlink, .srclink { /* Paragraph and Hash char */
+.plink, .srclink { /* Paragraph and Hash char */
   display: none;
 }
 

@@ -159,7 +159,7 @@ $(function main() {
   divs.resize();
 
   // Set the title of the permalinks.
-  $('.symlink').attr("title", kandil.msg.permalink);
+  $('.plink').attr("title", kandil.msg.permalink);
 });
 
 function initTabs()
@@ -271,7 +271,7 @@ function installTooltipHandlers()
         a_tag_name = a_tag.href.rpartition('#', 1),
         sym_tag = $(document.getElementsByName(a_tag_name)[0]);
     sym_tag = sym_tag.parent().clone();
-    sym_tag.find(".symlink, .srclink").remove();
+    sym_tag.find(".plink, .srclink").remove();
     // Create the tooltip.
     var tt = tooltip.current = $("<div class='tooltip'/>");
     tt.append(sym_tag[0].childNodes); // Contents of the tooltip.
@@ -393,7 +393,7 @@ function initSymbolTags(kandil)
   // Prevent permalinks from loading a new page,
   // in case a different module is loaded.
   if (kandil.originalModuleFQN != kandil.moduleFQN)
-    $(".symlink").click(function(event) {
+    $(".plink").click(function(event) {
       event.preventDefault();
       this.scrollIntoView();
     });
