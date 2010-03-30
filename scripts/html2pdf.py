@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
+from __future__ import unicode_literals
 import os, re
 from path import Path
 from subprocess import call
@@ -7,71 +8,68 @@ from common import *
 from symbols import *
 from time import gmtime, strftime
 
-def write_bookmarks(write, package_tree, sym_dict_all,
-                    kind_title_list, kind_list, indices):
-  # Notice how the li-tag has only the link and label attribute
-  # with no content between the tag itself.
-  # The purpose of this is to avoid inflating the size of the PDF, because
-  # PrinceXML cannot generate bookmarks from elements which have the style
-  # "display:none;".
-  # Using this technique it is possible to work around this shortcoming.
-  def write_symbol_list(kind, symlist, index):
-    letter_dict, letter_list = index
-    write("<ul>\n")
-    # A list of all symbols under the item 'All'.
-    write("<li link='#index-%s' label='All'>\n" % kind)
-    write("<ul>\n")
-    for s in symlist:
-      write("<li link='%s' label='%s'></li>\n" %
-                     (s.link, s.name))
-    write("</ul>\n</li>\n")
-    # A list of all symbols categorized by their initial letter.
-    for letter in letter_list:
-      write("<li link='#index-%s-%s' label='%s'>" %
-                     (kind, letter, letter))
-      write("<ul>\n")
-      for s in letter_dict[letter]:
-        write("<li link='%s' label='%s'></li>" %
-                       (s.link, s.name))
-      write("</ul>\n</li>\n")
-    write("</ul>\n")
+
+def write_bookmarks(write, package_tree, all_symbols, index):
+  """ Notice how the li-tag has only the link and label attribute
+  with no content between the tag itself.
+  The purpose of this is to avoid inflating the size of the PDF, because
+  PrinceXML cannot generate bookmarks from elements which have the style
+  "display:none;".
+  Using this technique it is possible to work around this shortcoming. """
 
   def write_symbol_tree(symbol):
-    write("<ul>\n")
+    write('<ul>\n')
     for s in symbol.sub:
-      write("<li link='%s' label='%s'>" %
-                     (s.link, s.name))
+      write('<li link="%s" label="%s">' % (s.link, s.name))
       if len(s.sub): write_symbol_tree(s)
-      write("</li>\n")
-    write("</ul>\n")
+      write('</li>\n')
+    write('</ul>\n')
 
   def write_module_tree(pckg):
-    write("<ul>\n")
+    write('<ul>\n')
     for p in pckg.packages:
-      write("<li link='#p-%s' label='%s'>" %
-                     (p.fqn, p.name))
+      write('<li link="#p-%s" label="%s">' % (p.fqn, p.name))
       if len(p.packages) or len(p.modules):
         write_module_tree(p)
-      write("</li>\n")
+      write('</li>\n')
     for m in pckg.modules:
-      write("<li link='#m-%s' label='%s'>" %
-                     (m.fqn, m.name))
+      write('<li link="#m-%s" label="%s">' % (m.fqn, m.name))
       write_symbol_tree(m.symbolTree)
-      write("</li>\n")
-    write("</ul>\n")
+      write('</li>\n')
+    write('</ul>\n')
 
-  write("<ul id='bookmarks'>\n")
-  # Modules.
-  write("<li link='#module-pages' label='Modules'>")
+  # Begin writing the main ul tag.
+  write('<ul id="bookmarks">\n')
+  # Write the module tree.
+  write('<li link="#module-pages" label="Module Tree">')
   write_module_tree(package_tree.root)
-  write("</li>\n")
-  # Indices.
-  for label, kind in zip(kind_title_list, kind_list):
-    if kind in sym_dict_all:
-      write("<li link='#index-%s' label='%s'>" % (kind, label))
-      write_symbol_list(kind, sym_dict_all[kind], indices[kind])
-      write("</li>\n")
-  write("</ul>\n")
+  write('</li>\n') # Close Module Tree.
+  write('<li link="#module-pages" label="Module List"><ul>')
+  for m in package_tree.modules:
+    write('<li link="#m-%s" label="%s">' % (m.fqn, m.name))
+    write_symbol_tree(m.symbolTree)
+    write('</li>\n')
+  write('</ul></li>') # Close Module List.
+
+  # Write the symbol bookmarks.
+  write('<li link="#allsyms" label="Symbols">')
+  # TODO: also write a subsection "Categorized"?
+  # Write a flat list of all symbols.
+  write('<ul>')
+  current_letter = ''
+  for s in all_symbols:
+    symbol_letter = s.name[0].upper()
+    if symbol_letter != current_letter:
+      current_letter = symbol_letter
+      write('<li link="#index-syms-%s" label="%s:"></li>' %
+            ((current_letter,)*2))
+    write('<li link="%s" label="%s">' % (s.link, s.name))
+    write_symbol_tree(s)
+    write('</li>')
+  write('</ul>')
+  write('</li>') # Close Symbols li.
+
+  write('</ul>\n') # Close main ul.
 
 def generate_pdf(module_files, dest, tmp, params, jsons):
   params_default = {
@@ -92,6 +90,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
     "after_files": [],  # Files to put after module pages.
     "newpage_modules": [] # Which modules should force a page break.
   }
+  # Override defaults with the provided parameters.
   params = dict(params_default, **params)
   if params["creation_date"] == "":
     params["creation_date"] = strftime("%Y-%m-%dT%H:%M:%S+00:00", gmtime())
@@ -114,7 +113,8 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   h1_href_rx = re.compile(
     r'(<h1 class="module"[^>]*><a href=)"htmlsrc/([^"]+)"')
 
-  package_tree = PackageTree() # For Table of Contents.
+  # For Table of Contents, bookmarks and indices.
+  package_tree = PackageTree()
 
   # Add module page-break rules to pdf.css.
   # ---------------------------------------
@@ -131,10 +131,12 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   # Prepare the HTML fragments.
   # ---------------------------
   print "Preparing HTML fragments."
-  html_fragments = []
-  sym_dict_all = {} # Group symbols by their kind, e.g. class, struct etc.
+  cat_dict_all = {} # Group symbols by their kind, e.g. class, struct etc.
   for html_file in module_files:
     html_str = open(html_file).read().decode("utf-8")
+    # TODO: adjust links that link to other symbols.
+    # e.g. href="#Culture.this" -> href="#m-tango.text.locale.core:Culture.this"
+
     # Extract module FQN.
     module_fqn = Path(html_file).namebase
     # Extract symbols list, before symbol_rx.
@@ -150,26 +152,22 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
     start = html_str.find('<div class="module">')
     end = html_str.rfind('<div id="kandil-footer">')
     content = html_str[start:end]
-    # Push a tuple.
-    html_fragments += [(content, module_fqn, sym_dict)]
+
     # Add a new module to the tree.
     module = Module(module_fqn)
     module.sym_dict = sym_dict
-    module.cat_dict = cat_dict
+    module.cat_dict = cat_dict # Symbols categorized by kind.
     module.html_str = content
     package_tree.addModule(module)
+
     # Group the symbols in this module.
-    for kind, sym_list in cat_dict.iteritems():
-      items = sym_dict_all.setdefault(kind, [])
-      items += sym_list
+    for kind, symbol_list in cat_dict.iteritems():
+      cat_dict_all.setdefault(kind, []).extend(symbol_list)
+
   # Sort the list of packages and modules.
   package_tree.sortTree()
   # Sort the list of symbols.
-  map(list.sort, sym_dict_all.itervalues())
-
-  # Used for indices and ToC.
-  kind_title_list = "Classes Interfaces Structs Unions".split(" ")
-  kind_list = "class interface struct union".split(" ")
+  map(list.sort, cat_dict_all.itervalues())
 
   # Join the HTML fragments.
   # ------------------------
@@ -178,7 +176,10 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   html_doc = open(html_src, "w")
 
   def write(text):
-    write.out(text.encode("utf-8"))
+    """ Passes text encoded as UTF-8 to a writer function. """
+    if type(text) == unicode: # 'str' objects are assumed to be in UTF-8.
+      text = text.encode("utf-8")
+    write.out(text)
   write.out = html_doc.write
 
   # Write the head of the document.
@@ -210,45 +211,43 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   # Write the Table of Contents.
   # ----------------------------
   def write_module_tree(pckg):
-    write("\n<ul>")
+    write('\n<ul>')
     for p in pckg.packages:
-      write(("<li kind='p'>"
-        "<img src='img/icon_package.svg' class='icon' width='16' height='16'/>"
-        "&nbsp;<a href='#p-%s'>%s</a>") % (p.fqn, p.name))
+      write(('<li kind="p">'
+        '<img src="img/icon_package.svg" class="icon" width="16" height="16"/>'
+        ' <a href="#p-%s">%s</a>') % (p.fqn, p.name))
       if len(p.packages) or len(p.modules):
         write_module_tree(p)
-      write("</li>\n")
+      write('</li>\n')
     for m in pckg.modules:
-      write(("<li kind='m'>"
-        "<img src='img/icon_module.svg' class='icon' width='14' height='14'/>"
-        "&nbsp;<a href='#m-%s'>%s</a></li>") % (m.fqn, m.name))
-    write("</ul>\n")
+      write(('<li kind="m">'
+        '<img src="img/icon_module.svg" class="icon" width="14" height="14"/>'
+        ' <a href="#m-%s">%s</a></li>') % (m.fqn, m.name))
+    write('</ul>\n')
 
   if first_toc:
     write(first_toc)
 
-  write("<h1>Modules</h1>\n")
+  write('<h1>Modules</h1>\n')
   if nested_TOC: # Write a nested list of modules.
-    write("<div class='modlist nested'>")
+    write('<div class="modlist nested">')
     write_module_tree(package_tree.root)
-    write("</div>")
+    write('</div>')
   else: # Write a flat list of modules.
-    write("<div class='modlist flat'><ul>")
-    for html_fragment, mod_fqn, sym_dict in html_fragments:
-      write("<li><a href='#m-%s'>%s</a></li>" % ((mod_fqn,)*2))
-    write("</ul></div>")
+    write('<div class="modlist flat"><ul>')
+    for m in package_tree.modules:
+      write('<li><a href="#m-%s">%s</a></li>' % ((mod_fqn,)*2))
+    write('</ul></div>')
 
   if last_toc:
     write(last_toc)
 
-  write("<h1>Indices</h1>\n<ul>\n")
-  for label, kind in zip(kind_title_list, kind_list):
-    if kind in sym_dict_all:
-      write("<li><a href='#index-%s'>%s</a></li>\n" % (kind, label))
-  write("</ul>\n")
+  write('<h1>Indices</h1>\n<ul>\n'
+    '<li><a href="#allsyms">Index of classes, interfaces, structs, unions</a></li>'
+    '</ul>\n')
 
   # Close <div id="toc">
-  write("</div>\n")
+  write('</div>\n')
 
   # Write the HTML fragments.
   # -------------------------
@@ -257,71 +256,69 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
       write('<h1 id="p-%s" class="package">%s</h1>\n' % ((p.fqn,)*2))
       write('<div>')
       if len(p.packages):
-        write("<p><b>Packages:</b> " +
-          ", ".join(["<a href='#p-%s'>%s</a>" % (p_.fqn, p_.name)
+        write('<p><b>Packages:</b> ' +
+          ', '.join(['<a href="#p-%s">%s</a>' % (p_.fqn, p_.name)
                       for p_ in p.packages]) +
-          "</p>\n")
+          '</p>\n')
       if len(p.modules):
-        write("<p><b>Modules:</b> " +
-          ", ".join(["<a href='#m-%s'>%s</a>" % (m.fqn, m.name)
+        write('<p><b>Modules:</b> ' +
+          ', '.join(['<a href="#m-%s">%s</a>' % (m.fqn, m.name)
                       for m in p.modules]) +
-          "</p>\n")
-      write("</div>")
+          '</p>\n')
+      write('</div>')
       write_nested_fragments(p)
     for m in pckg.modules:
       write(m.html_str)
 
   if before_files:
-    write("<div class='before_pages'>")
+    write('<div class="before_pages">')
     for f in before_files:
       write(open(f).read())
-    write("</div>")
+    write('</div>')
 
-  write("<div id='module-pages'>\n")
+  write('<div id="module-pages">\n')
   if nested_TOC:
     write_nested_fragments(package_tree.root)
   else:
-    for html_fragment, mod_fqn, sym_dict in html_fragments:
-      write(html_fragment)
-  write("</div>\n")
+    for m in package_tree.modules:
+      write(m.html_fragment)
+  write('</div>\n')
 
   if after_files:
-    write("<div class='after_pages'>")
+    write('<div class="after_pages">')
     for f in after_files:
       write(open(f).read())
-    write("</div>")
+    write('</div>')
 
   # Prepare indices:
   # ----------------
-  # Get {"class": index, "interface": index, ...}.
-  indices = dict([(kind, get_index(sym_dict_all[kind]))
-                   for kind in kind_list
-                     if kind in sym_dict_all])
+  all_symbols = [] # List of all aggregate types.
+  for x in ('class', 'interface', 'struct', 'union'):
+    if x in cat_dict_all:
+      all_symbols.extend(cat_dict_all[x])
+  all_symbols.sort()
+
+  index_by_letter = get_index(all_symbols)
 
   # Write the bookmarks tree.
   # -------------------------
-  write_bookmarks(write, package_tree, sym_dict_all,
-    kind_title_list, kind_list, indices)
+  write_bookmarks(write, package_tree, all_symbols, index_by_letter)
 
   # Write the indices.
   # ------------------
-  write("<div id='indices'>\n")
-  index_titles= ("Class index,Interface index,"
-                 "Struct index,Union index").split(",")
-  for title, kind, label in zip(index_titles, kind_list, kind_title_list):
-    if kind in sym_dict_all:
-      letter_dict, letter_list = indices[kind]
-      write("<h1 id='index-%s' label='%s'>%s</h1>\n" % (kind, label, title))
-      write("<dl>\n")
-      for letter in letter_list:
-        write("<dt id='index-%s-%s'>%s</dt>\n" % (kind, letter, letter))
-        for sym in letter_dict[letter]:
-          write("<dd><a href='%s'>%s</a></dd>\n" % (sym.link, sym.name))
-      write("</dl>\n")
-  write("</div>\n")
+  write('<div id="indices">\n'
+        '<h1 id="allsyms" label="Index of Symbols">Index of Symbols</h1>\n'
+        '<dl>\n')
+  letter_dict, letter_list = index_by_letter
+  for letter in letter_list:
+    write('<dt id="index-syms-%s">%s</dt>\n' % (letter, letter))
+    for sym in letter_dict[letter]:
+      write('<dd><a href="%s">%s</a></dd>\n' % (sym.link, sym.name))
+  write('</dl>\n'
+        '</div>\n')
 
   # Close the document.
-  write("</body></html>")
+  write('</body></html>')
   html_doc.flush()
   html_doc.close()
 

@@ -8,7 +8,10 @@ class Module:
     self.fqn = fqn
     self.sym_dict = {}
   def __cmp__(self, other):
-    return cmp(self.name.lower(), other.name.lower())
+    result = cmp(self.name.lower(), other.name.lower())
+    if result == 0: # Compare fqn if the names are equal.
+      result = cmp(self.fqn.lower(), other.fqn.lower())
+    return result
   @property
   def symbolTree(self):
     return self.sym_dict['']
@@ -19,12 +22,16 @@ class Package(Module): # Inherit for convenience.
     self.packages, self.modules = ([], [])
 
 class PackageTree:
+  from bisect import bisect_left
   def __init__(self):
     self.root = Package('')
     self.packages = {'': self.root}
+    self.modules = [] # Sorted list of all modules.
 
   def addModule(self, module):
-    self.getPackage(module.pckg_fqn).modules += [module]
+    self.getPackage(module.pckg_fqn).modules.append(module)
+    insert_pos = self.bisect_left(self.modules, module)
+    self.modules.insert(insert_pos, module)
 
   def getPackage(self, fqn):
     """ Returns the package object for the fqn string. """
@@ -125,10 +132,11 @@ def get_symbols(jsons, module_fqn, categorize=True):
   return symbol_dict, cat_dict
 
 def get_index(symbols):
+  """ Groups the symbols by the initial letter of their names. """
   letter_dict = {} # Sort index by the symbol's initial letter.
   for sym in symbols:
-    items = letter_dict.setdefault(unicode(sym.name)[0].upper(), [])
-    items += [sym]
+    initial_letter = sym.name[0].upper()
+    letter_dict.setdefault(initial_letter, []).append(sym) # Add to the group.
   letter_list = letter_dict.keys()
   letter_list.sort()
   return letter_dict, letter_list
