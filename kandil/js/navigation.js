@@ -101,6 +101,8 @@ var kandil = {
     no_match: "No match...",
     symboltitle: "Show source code", /// The title attribute of symbols.
     permalink: "Permalink to this symbol",
+    code_expand: "Double-click to expand.",
+    code_shrink: "Double-click to shrink.",
   },
   resize_func: function f() {
     // Unfortunately the layout must be scripted. Couldn't find a way
@@ -122,6 +124,14 @@ var kandil = {
       f.symbolTree.symbol_tags = kandil.$.symbols;
     }
     return f.symbolTree;
+  },
+  /// Returns true if vertical scrollbars are present.
+  hasVScrollbar: function(tag) {
+    return tag.scrollHeight > tag.clientHeight;
+  },
+  /// Returns true if horizontal scrollbars are present.
+  hasHScrollbar: function(tag) {
+    return tag.scrollWidth > tag.clientWidth;
   },
 };
 kandil.save = kandil.saved;
@@ -634,17 +644,23 @@ function showCode(symbol)
   table[0].innerHTML = '<tr><td class="d_codelines"><pre>'+lines+
     '</pre></td><td class="d_codetext"><pre>'+code+'</pre></td></tr>';
   // Create a container div.
-  var div = $('<div class="loaded_code" title="Double click to expand"/>');
+  var div = $('<div class="loaded_code"/>');
   div.append(table);
   $(dt_tag).after(div);
   // Store the created div.
   dt_tag.code_div = div;
-  div.dblclick(function(e) {
-    $(this).css("max-height", "none").attr("title","");
-    e.preventDefault();
-    // show/hide line numbers | expand/minimize
-    // resize bar at the bottom that adjusts max-height
-  });
+  if (kandil.hasVScrollbar(div[0]) && (msg = kandil.msg))
+    div.attr("title", msg.code_expand)
+       .dblclick(function(e) {
+      var val = this.expandedState ?
+        ["", msg.code_expand] : ["none", msg.code_shrink];
+      this.expandedState = !this.expandedState;
+      $(this).css("max-height", val[0]).attr("title", val[1]);
+      // e.preventDefault();
+      // TODO:
+      // show/hide line numbers | expand/minimize
+      // A resize bar at the bottom that adjusts max-height when dragged?
+    });
 }
 
 /// Loads the HTML source code file and keeps it cached.
