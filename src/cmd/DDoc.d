@@ -301,7 +301,7 @@ struct DDocCommand
   {
     auto locbeg = symbol.begin.lineNum, locend = symbol.end.lineNum;
     text ~= Format(`["{}",{},{},[{},{}],[`,
-      symbol.name, symbol.kindAsID(),
+      symbol.name, symbol.kind,
       symbol.formatAttrsAsIDs(), locbeg, locend);
     foreach (s; symbol.members)
     {

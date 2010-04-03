@@ -29,11 +29,11 @@ import tango.text.Ascii : toUpper, icompare;
 abstract class DDocEmitter : DefaultVisitor
 {
   char[] text; /// The buffer that is written to.
-  bool includeUndocumented;
-  bool includePrivate;
-  MacroTable mtable;
-  Module modul;
-  Highlighter tokenHL;
+  bool includeUndocumented; /// Include undocumented symbols?
+  bool includePrivate; /// Include symbols with private protection?
+  MacroTable mtable; /// The macro table.
+  Module modul; /// The module.
+  Highlighter tokenHL; /// The token highlighter.
   Diagnostics reportDiag; /// Collects problem messages.
 
   /// Constructs a DDocEmitter object.
@@ -76,7 +76,7 @@ abstract class DDocEmitter : DefaultVisitor
 
     // Initialize the root symbol in the symbol tree.
     auto lexer = modul.parser.lexer;
-    symbolTree[""] = new DocSymbol(modul.moduleName, modul.getFQN(), "module",
+    symbolTree[""] = new DocSymbol(modul.moduleName, modul.getFQN(), K.Module,
       null,
       lexer.firstToken().getRealLocation(),
       lexer.tail.getRealLocation()
@@ -747,15 +747,16 @@ abstract class DDocEmitter : DefaultVisitor
 
   /// Writes a symbol to the text buffer.
   /// E.g: &#36;(DIL_SYMBOL scan, Lexer.scan, func, 229, 646);
-  void SYMBOL(string name, string kind, Declaration d)
+  void SYMBOL(string name, K kind, Declaration d)
   {
+    auto kindStr = DocSymbol.kindIDToStr[kind];
     auto fqn = getSymbolFQN(name);
     auto loc = d.begin.getRealLocation();
     auto loc_end = d.end.getRealLocation();
     storeAttributes(d);
     addSymbol(name, fqn.dup, kind, loc, loc_end);
     currentSymbolParams = Format("{}, {}, {}, {}, {}",
-      name, fqn, kind, loc.lineNum, loc_end.lineNum);
+      name, fqn, kindStr, loc.lineNum, loc_end.lineNum);
     write("$(DIL_SYMBOL ", currentSymbolParams, ")");
     // write("$(DDOC_PSYMBOL ", name, ")"); // DMD's macro with no info.
   }
@@ -764,7 +765,7 @@ abstract class DDocEmitter : DefaultVisitor
   DocSymbol[string] symbolTree;
 
   /// Adds a symbol to the symbol tree.
-  void addSymbol(string name, string fqn, string kind,
+  void addSymbol(string name, string fqn, K kind,
     Location begin, Location end)
   {
     auto attrs = currentAttributes.asArray();
@@ -790,10 +791,11 @@ abstract class DDocEmitter : DefaultVisitor
     if (!ddoc(d))
       return;
     const kind = is(T == ClassDeclaration) ? "class" : "interface";
+    const kindID = is(T == ClassDeclaration) ? K.Class : K.Interface;
     const KIND = is(T == ClassDeclaration) ? "CLASS" : "INTERFACE";
     DECL({
       write(kind, " ");
-      SYMBOL(d.name.str, kind, d);
+      SYMBOL(d.name.str, kindID, d);
       writeTemplateParams();
       writeInheritanceList(d.bases);
     }, d);
@@ -806,11 +808,12 @@ abstract class DDocEmitter : DefaultVisitor
     if (!ddoc(d))
       return;
     const kind = is(T == StructDeclaration) ? "struct" : "union";
+    const kindID = is(T == StructDeclaration) ? K.Struct : K.Union;
     const KIND = is(T == StructDeclaration) ? "STRUCT" : "UNION";
     string name = d.name ? d.name.str : kind;
     DECL({
       d.name && write(kind, " ");
-      SYMBOL(name, kind, d);
+      SYMBOL(name, kindID, d);
       writeTemplateParams();
     }, d);
     DESC({ MEMBERS(KIND, name, d.decls); });
@@ -820,12 +823,13 @@ abstract class DDocEmitter : DefaultVisitor
   void writeAliasOrTypedef(T)(T d)
   {
     const kind = is(T == AliasDeclaration) ? "alias" : "typedef";
+    const kindID = is(T == AliasDeclaration) ? K.Alias : K.Typedef;
     if (auto vd = d.decl.Is!(VariablesDeclaration))
     {
       auto type = escape(vd.typeNode.baseType.begin, vd.typeNode.end);
       foreach (name; vd.names)
         DECL({ write(kind, " "); write(type, " ");
-          SYMBOL(name.str, kind, d);
+          SYMBOL(name.str, kindID, d);
         }, d);
     }
     else if (auto fd = d.decl.Is!(FunctionDeclaration))
@@ -899,6 +903,7 @@ abstract class DDocEmitter : DefaultVisitor
   }
 
   alias Declaration D;
+  alias DocSymbol.Kind K;
 
 override:
   D visit(AliasDeclaration d)
@@ -922,7 +927,7 @@ override:
     string name = d.name ? d.name.str : "enum";
     DECL({
       d.name && write("enum ");
-      SYMBOL(name, "enum", d);
+      SYMBOL(name, K.Enum, d);
     }, d);
     DESC({ MEMBERS("ENUM", name, d); });
     return d;
@@ -932,7 +937,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL(d.name.str, "enummem", d); }, d, false);
+    DECL({ SYMBOL(d.name.str, K.Enummem, d); }, d, false);
     DESC();
     return d;
   }
@@ -950,7 +955,7 @@ override:
       return d;
     DECL({
       write("template ");
-      SYMBOL(d.name.str, "template", d);
+      SYMBOL(d.name.str, K.Template, d);
       writeTemplateParams();
     }, d);
     DESC({ MEMBERS("TEMPLATE", d.name.str, d.decls); });
@@ -985,7 +990,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("this", "ctor", d); writeParams(d.params); }, d);
+    DECL({ SYMBOL("this", K.Ctor, d); writeParams(d.params); }, d);
     DESC();
     return d;
   }
@@ -994,7 +999,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("static "); SYMBOL("this", "sctor", d); write("()"); }, d);
+    DECL({ write("static "); SYMBOL("this", K.Sctor, d); write("()"); }, d);
     DESC();
     return d;
   }
@@ -1003,7 +1008,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("~this", "dtor", d); write("()"); }, d);
+    DECL({ SYMBOL("~this", K.Dtor, d); write("()"); }, d);
     DESC();
     return d;
   }
@@ -1012,7 +1017,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("static "); SYMBOL("~this", "sdtor", d); write("()"); }, d);
+    DECL({ write("static "); SYMBOL("~this", K.Sdtor, d); write("()"); }, d);
     DESC();
     return d;
   }
@@ -1024,7 +1029,7 @@ override:
     auto type = escape(d.returnType.baseType.begin, d.returnType.end);
     DECL({
       write("$(DIL_RETTYPE ", type, ") ");
-      SYMBOL(d.name.str, "function", d);
+      SYMBOL(d.name.str, K.Function, d);
       writeTemplateParams();
       writeParams(d.params);
     }, d);
@@ -1036,7 +1041,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("new", "new", d); writeParams(d.params); }, d);
+    DECL({ SYMBOL("new", K.New, d); writeParams(d.params); }, d);
     DESC();
     return d;
   }
@@ -1045,7 +1050,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("delete", "delete", d); writeParams(d.params); }, d);
+    DECL({ SYMBOL("delete", K.Delete, d); writeParams(d.params); }, d);
     DESC();
     return d;
   }
@@ -1058,7 +1063,7 @@ override:
     if (d.typeNode)
       type = escape(d.typeNode.baseType.begin, d.typeNode.end);
     foreach (name; d.names)
-      DECL({ write(type, " "); SYMBOL(name.str, "variable", d); }, d);
+      DECL({ write(type, " "); SYMBOL(name.str, K.Variable, d); }, d);
     DESC();
     return d;
   }
@@ -1067,7 +1072,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("invariant", "invariant", d); }, d);
+    DECL({ SYMBOL("invariant", K.Invariant, d); }, d);
     DESC();
     return d;
   }
@@ -1076,7 +1081,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("unittest", "unittest", d); }, d);
+    DECL({ SYMBOL("unittest", K.Unittest, d); }, d);
     DESC();
     return d;
   }
@@ -1103,12 +1108,22 @@ override:
 /// A class that holds some info about a symbol.
 class DocSymbol
 {
-  string name, fqn, kind;
-  Location begin, end;
-  DocSymbol[] members;
-  string[] attrs;
+  /// Enum of symbol kinds.
+  static enum Kind
+  {
+    Package, Module, Template, Class, Interface, Struct,
+    Union, Alias, Typedef, Enum, Enummem, Variable, Function,
+    Invariant, New, Delete, Unittest, Ctor, Dtor, Sctor, Sdtor
+  }
+
+  string name, fqn; /// Name and fully qualified name.
+  Kind kind; /// The kind of this symbol.
+  Location begin, end; /// Beginning and end locations.
+  DocSymbol[] members; /// All symbol members.
+  string[] attrs; /// All attributes of this symbol.
+
   /// Constructs a DocSymbol object.
-  this(string name, string fqn, string kind, string[] attrs,
+  this(string name, string fqn, Kind kind, string[] attrs,
     Location begin, Location end)
   {
     this.name = name;
@@ -1118,23 +1133,26 @@ class DocSymbol
     this.begin = begin;
     this.end = end;
   }
+
+  /// Symbol kinds as strings.
+  static string[] kindIDToStr = ["package", "module", "template",
+    "class", "interface", "struct", "union", "alias", "typedef",
+    "enum", "enummem", "variable", "function", "invariant", "new",
+    "delete", "unittest", "ctor", "dtor", "sctor", "sdtor"];
+
   /// Maps the kind of a symbol to its ID.
   /// Must match the list in "kandil/js/symbols.js".
-  static uint[string] kindToID;
+  static uint[string] kindStrToID;
   /// Maps the attribute of a symbol to its ID.
   /// Must match the list in "kandil/js/symbols.js".
   static uint[string] attrToID;
   /// Initialize the associative arrays.
   static this()
   {
-    DocSymbol.kindToID = [
-      "package"[]:0, "module":1, "template":2, "class":3, "interface":4,
-      "struct":5, "union":6, "alias":7, "typedef":8, "enum":9,
-      "enummem":10, "variable":11, "function":12, "invariant":13,
-      "new":14, "delete":15, "unittest":16, "ctor":17, "dtor":18,
-      "sctor":19, "sdtor":20
-    ];
-    DocSymbol.attrToID = [
+    for (int i; i < Kind.max+1; i++)
+      kindStrToID[kindIDToStr[i]] = i;
+
+    attrToID = [
       "private"[]:0, "protected":1, "package":2, "public":3, "export":4,
       "abstract":5, "auto":6, "const":7, "deprecated":8, "extern":9,
       "final":10, "invariant":11, "override":12, "scope":13,
@@ -1143,11 +1161,7 @@ class DocSymbol
       "D":24, "Windows":25, "Pascal":26
     ];
   }
-  /// Returns the ID of the symbol's kind.
-  int kindAsID()
-  {
-    return kindToID[kind];
-  }
+
   /// Return the attributes as IDs. E.g.: "[1,9,22]"
   string formatAttrsAsIDs()
   {
