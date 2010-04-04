@@ -130,6 +130,13 @@ class Parser
     errorCount++;
   }
 
+  /// Backtracks the Parser and the Lexer to the given token(s).
+  void backtrackTo(Token* newtok, Token* newprev = null)
+  {
+    this.lexer.token = this.token = newtok;
+    this.prevToken = newprev ? newprev : newtok.prevNWS();
+  }
+
   /// Sets the begin and end tokens of a syntax tree node.
   Class set(Class)(Class node, Token* begin)
   {
@@ -3823,7 +3830,20 @@ class Parser
     auto type = parseType();
 
     // Don't parse arguments if an array type was parsed previously.
-    if (prevToken.kind != T.RBracket && token.kind == T.LParen) // NewArguments
+    auto arrayType = type.Is!(ArrayType);
+    if (arrayType && arrayType.isStatic())
+    {}
+    else if(arrayType && arrayType.isAssociative())
+    { // Backtrack to parse as a StaticArray.
+      auto lBracket = type.begin;
+      backtrackTo(lBracket);
+
+      skip(T.LBracket); // "["
+      type = set(new ArrayType(type.next, parseExpression()), lBracket);
+      requireClosing(T.RBracket, lBracket); // "]"
+      delete arrayType; // Delete the old type.
+    }
+    else if (token.kind == T.LParen) // NewArguments
       ctorArguments = parseArguments();
 
     return set(new NewExpression(/*e, */newArguments, type, ctorArguments),
