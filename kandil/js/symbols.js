@@ -47,6 +47,7 @@ function Symbol(fqn, kind, sub)
   this.name = parts[1]; /// The text to be displayed.
   this.kind = kind;     /// The kind of this symbol.
   this.fqn = fqn;       /// The fully qualified name.
+  this.parent = null;   /// The parent symbol of this symbol.
   this.sub = sub || []; /// Sub-symbols.
   return this;
 }
@@ -62,7 +63,7 @@ Symbol.getTree = function(json/*=JSON text*/, moduleFQN) {
     fqn += (fqn ? "." : "") + name;
     // E.g.: 'Thread.this', 'Thread.this:2' etc.
     if (sibling = dict[fqn]) // Add ":\d+" suffix if not unique.
-      fqn += ":" + ((sibling.count += 1) || (sibling.count = 2));
+      fqn += ":" + (++sibling.count || (sibling.count = 2));
     // Create a new symbol.
     var symbol = new visit.Symbol(fqn, visit.SymbolKind.toStr[kind], members);
     symbol.loc = loc;
@@ -88,11 +89,13 @@ Symbol.getTree = function(json/*=JSON text*/, moduleFQN) {
   // Avoid including the root's name in the FQNs of the symbols.
   // E.g.: "Culture.this", not "tango.text.locale.Core.Culture.this"
   arrayTree[0] = "";
-  dict.root = visit(arrayTree, "");
-  dict.root.name = root_name;
-  dict.root.fqn = moduleFQN;
-  dict.list = list;
-  return dict;
+  var tree = {};
+  tree.dict = dict;
+  tree.list = list;
+  tree.root = visit(arrayTree, "");
+  tree.root.name = root_name;
+  tree.root.fqn = moduleFQN;
+  return tree;
 };
 
 

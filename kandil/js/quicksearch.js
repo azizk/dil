@@ -89,9 +89,9 @@ function QuickSearch(id, options)
 }
 
 /// Prepares symbols for the search algorithm.
-function extendSymbols(ul, symbols)
+function extendSymbols(ul, symbolTree)
 {
-  var symlist = symbols.list;
+  var symlist = symbolTree.list;
   var li_tags = ul.getElementsByTagName("li");
   if (li_tags.length != symlist.length)
     throw new Error("The number of symbols ({0}) doesn't match the number of \
@@ -99,7 +99,7 @@ list items ({1})!".format(li_tags.length, symlist.length));
 
   // Add the property 'qs_attrs' to all symbol objects.
   // Also add the property 'li', so we can modify the tag's CSS classes.
-  if (symbols.symbol_tags)
+  if (symbolTree.symbol_tags)
     for (var i = 0, len = symlist.length; i < len; i++)
     { // Symbols in a module.
       var s = symlist[i];
