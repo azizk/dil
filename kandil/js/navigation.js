@@ -101,6 +101,8 @@ var kandil = {
     no_match: "No match...",
     symboltitle: "Show source code", /// The title attribute of symbols.
     permalink: "Permalink to this symbol",
+    srclink: '<a href="{}" class="srclink" title="Go to the HTML source file">#</a>',
+    dt_tagtitle: "Click to show the symbol’s source code",
     code_expand: "Double-click to expand.",
     code_shrink: "Double-click to shrink.",
   },
@@ -167,9 +169,6 @@ $(function main() {
   divs.resize(kandil.resize_func);
   $(window).resize(function(){ divs.resize() });
   divs.resize();
-
-  // Set the title of the permalinks.
-  $('.plink').attr("title", kandil.msg.permalink);
 });
 
 function initTabs()
@@ -389,28 +388,49 @@ function handleLoadingModule(event)
 }
 
 function initSymbolTags(kandil)
-{ // Give the header a '#' source link.
-  var h1 = $("h1.module");
-  h1.append(" ", h1.find(">a").clone()
-    .attr({"class":"srclink", "title":"Go to the HTML source file"}).html("#"));
-
+{
   kandil.$.symbols = $(".symbol");
-  // Add code display functionality to symbol links.
-  kandil.$.symbols.click(function(event) {
-    event.preventDefault();
-    showCode($(this));
+
+  function addStuffLazily(decl)
+  {
+    var kandil = window.kandil;
+    var symbol = decl.find(">.symbol");
+    // Append the '#'-link.
+    var src_link = symbol[0].attributes.getNamedItem("href").value;
+    src_link = kandil.msg.srclink.format(src_link);
+    decl.append(src_link);
+
+    // Add code display functionality to symbol links.
+    symbol.click(function(e) {
+      e.preventDefault();
+      showCode($(this));
+    }).attr("title", kandil.msg.symboltitle);
+
+    decl.click(function(e) {
+      if (e.target == this)
+        showCode($(">.symbol", this));
+    }).attr("title", kandil.msg.dt_tagtitle);
+
+    // Prepare permalinks.
+    var plink = decl.find('>.plink');
+    // Set the title of the permalinks.
+    plink.attr("title", kandil.msg.permalink);
+    // Prevent permalinks from loading a new page,
+    // in case a different module is loaded.
+    // TODO: this code will be removed once the History object can be used.
+    if (kandil.originalModuleFQN != kandil.moduleFQN)
+      plink.click(function(event) {
+        event.preventDefault();
+        this.scrollIntoView();
+      });
+  }
+
+  // Prepare 'dt.decl' tags.
+  var decls = $('.decl');
+  decls.add("h1.module").mouseover(function f() {
+    var decl = $(this).unbind("mouseover", f);
+    addStuffLazily(decl);
   });
-  // Prevent permalinks from loading a new page,
-  // in case a different module is loaded.
-  if (kandil.originalModuleFQN != kandil.moduleFQN)
-    $(".plink").click(function(event) {
-      event.preventDefault();
-      this.scrollIntoView();
-    });
-  // Set the title attribute of the symbol tags.
-  setTimeout(function(){ // Can be delayed. Not so important.
-    kandil.$.symbols.attr("title", kandil.msg.symboltitle);
-  }, 1000);
 }
 
 /// Adds click handlers to symbols and inits the symbol list.

@@ -283,6 +283,11 @@ h1.module:hover .srclink {
   font-weight: bold;
 }
 
+.decl:hover > .symbol,
+.symbol:target {
+  border-bottom: 1px solid ForestGreen;
+}
+
 .summary {
   margin: 0.5em 0;
 }
