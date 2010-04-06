@@ -46,7 +46,7 @@ class IdentifierType : TypeNode
   mixin(copyMethod);
 }
 
-/// Type "." Type
+/// $(BNF QualifiedType := Type "." Type)
 class QualifiedType : TypeNode
 {
   alias next lhs; /// Left-hand side type.
@@ -137,16 +137,16 @@ class ArrayType : TypeNode
   TypeNode assocType;
 
   /// DynamicArray.
-  this(TypeNode t)
+  this(TypeNode next)
   {
-    super(t);
+    super(next);
     mixin(set_kind);
   }
 
   /// StaticArray or SliceArray.
-  this(TypeNode t, Expression e1, Expression e2 = null)
+  this(TypeNode next, Expression e1, Expression e2 = null)
   {
-    this(t);
+    this(next);
     addChild(e1);
     addOptChild(e2);
     this.index1 = e1;
@@ -154,9 +154,9 @@ class ArrayType : TypeNode
   }
 
   /// AssociativeArray.
-  this(TypeNode t, TypeNode assocType)
+  this(TypeNode next, TypeNode assocType)
   {
-    this(t);
+    this(next);
     addChild(assocType);
     this.assocType = assocType;
   }
@@ -224,6 +224,22 @@ class CFuncPointerType : TypeNode
     super(type);
     mixin(set_kind);
     addOptChild(params);
+    this.params = params;
+  }
+  mixin(copyMethod);
+}
+
+/// Function parameters in a C-style type.
+/// E.g.: int (*pFunc)(int a, int b);
+class CFuncType : TypeNode
+{
+  Parameters params;
+  this(TypeNode returnType, Parameters params)
+  {
+    super(returnType);
+    mixin(set_kind);
+    addChild(params);
+    this.params = params;
   }
   mixin(copyMethod);
 }

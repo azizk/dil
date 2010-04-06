@@ -125,6 +125,7 @@ static:
   auto InvalidUTF8SequenceInString = "invalid UTF-8 sequence in string literal: '{0}'";
   auto ModuleDeclarationNotFirst = "a module declaration is only allowed as the first declaration in a file";
   auto StringPostfixMismatch = "string literal has mistmatching postfix character";
+  auto UnexpectedIdentInType = "identifier '{}' not allowed in a type";
   auto ExpectedIdAfterTypeDot = "expected identifier after '(Type).', not '{}'";
   auto ExpectedModuleIdentifier = "expected module identifier, not '{}'";
   auto IllegalDeclaration = "illegal declaration found: {}";

@@ -183,6 +183,12 @@ class Parser
     return token.kind == k ? (nT(), true) : false;
   }
 
+  /// Consumes the current token if its kind matches k and returns it.
+  Token* consumedToken()(TOK k) // Templatized, so it's inlined.
+  {
+    return token.kind == k ? (nT(), prevToken) : null;
+  }
+
   /// Asserts that the current token is of kind expectedKind,
   /// and then moves to the next token.
   void skip()(TOK expectedKind)
@@ -512,13 +518,13 @@ class Parser
   {
     auto begin = token;
     Type type;
-    Token* name;
+    Token* name; // Name of the variable or the function.
 
     // Check for AutoDeclaration: StorageClasses Identifier =
     if (testAutoDeclaration && token.kind == T.Identifier)
     {
       auto next_kind = peekNext();
-      if (next_kind == T.Assign)
+      if (next_kind == T.Assign) // "auto" Identifier "="
       { // Auto variable declaration.
         name = token;
         skip(T.Identifier);
@@ -539,31 +545,57 @@ class Parser
       }
     }
 
-    type = parseType(); // VariableType or ReturnType
+    // VariableType or ReturnType
+    type = parseBasicTypes();
+
+    Parameters params; // Function parameters.
 
     if (token.kind == T.LParen)
-    { // C-style function pointers make the grammar ambiguous.
-      // We have to treat them specially at function scope.
-      // Example:
-      //   void foo() {
-      //     // A pointer to a function taking an integer and
-      //     // returning 'some_type'.
-      //     some_type (*p_func)(int);
-      //     // In the following case precedence is given to a CallExpression.
-      //     something(*p); // 'something' may be a function/method or an object
-      //                    // having opCall overloaded.
-      //   }
-      //   // A pointer to a function taking no parameters and
-      //   // returning 'something'.
-      //   something(*p);
-      type = parseCFunctionPointerType(type, name, optionalParameterList);
-      // FIXME: name can be null or Ident.Empty. Is this a problem?
+    {
+      type = parseCStyleType(type, &name);
+      if (name.kind != T.Identifier)
+        error2(MSG.ExpectedVariableName, name);
+    }
+    else if(0/+auto leftParen = consumedToken(T.LParen)+/)
+    { // FIXME: doesn't work in all cases. :(
+      // BasicTypes "(" CStyleType ")" DeclaratorSuffix?
+      auto leftParen = token;
+      auto innerType = parseCStyleType(type, &name);
+      requireClosing(T.RParen, leftParen); // ")"
+
+      bool noInnerType = innerType is type; // type.parent
+      // Parse CFuncType?
+      bool funcSuffix = noInnerType || token.kind != T.LParen;
+
+      // Parse the suffix.
+      auto innerTypeEnd = type.parent; // Save before parsing suffix.
+      type.parent = null;
+      type = parseDeclaratorSuffix(type, funcSuffix);
+      if (innerTypeEnd !is null)
+        innerTypeEnd.setNext(type), // Fix the type chain.
+        type = innerType;
+
+      if (!noInnerType) // Is the inner type a C-like function?
+        if (auto cfunc = innerType.Is!(CFuncType))
+          params = cfunc.params; // Retrieve the parameters.
+
+      bool isFunc = params || !funcSuffix;
+      if (name.kind != T.Identifier)
+        error2(isFunc ? MSG.ExpectedFunctionName :
+                        MSG.ExpectedVariableName, name);
+
+      // Parse as a function instead of a variable?
+      if (params)
+        goto LparseAfterParams;
+      if (!funcSuffix) // "(" ParameterList ")"
+        goto LparseBeforeParams;
     }
     else if (peekNext() == T.LParen)
     { // Type FunctionName ( ParameterList ) FunctionBody
       name = requireIdentifier(MSG.ExpectedFunctionName);
       if (token.kind != T.LParen)
         nT(); // Skip non-identifier token.
+    LparseBeforeParams:
       assert(token.kind == T.LParen);
       // It's a function declaration
       TemplateParameters tparams;
@@ -574,7 +606,8 @@ class Parser
         // ( TemplateParameterList ) ( ParameterList )
         tparams = parseTemplateParameterList();
 
-      auto params = parseParameterList();
+      params = parseParameterList();
+    LparseAfterParams:
     version(D2)
     {
       if (tparams) // If ( ConstraintExpression )
@@ -1138,28 +1171,25 @@ class Parser
 
     if (enumName && consumed(T.Semicolon))
     {}
-    else if (consumed(T.LBrace))
+    else if (auto leftBrace = consumedToken(T.LBrace)) // "{"
     {
-      auto leftBrace = this.prevToken;
       hasBody = true;
       while (token.kind != T.RBrace)
       {
-        auto begin = token;
+        Token* begin = token,
+               name; // Name of the enum member.
 
         Type type;
       version(D2)
       {
         bool success;
-        try_({
-          // Type Identifier = AssignExpression
-          type = parseType(); // Set outer type variable.
-          if (token.kind != T.Identifier)
-            try_fail(), (type = null);
+        try_({ // Type Identifier "=" AssignExpression
+          type = parseDeclarator(name);
           return null;
         }, success);
       }
 
-        auto name = requireIdentifier(MSG.ExpectedEnumMember);
+        name = requireIdentifier(MSG.ExpectedEnumMember);
         Expression value;
 
         if (consumed(T.Assign))
@@ -1171,7 +1201,7 @@ class Parser
         if (!consumed(T.Comma))
           break;
       }
-      requireClosing(T.RBrace, leftBrace);
+      requireClosing(T.RBrace, leftBrace); // "}"
     }
     else
       error2(MSG.ExpectedEnumBody, token);
@@ -3651,7 +3681,7 @@ class Parser
       if (token.kind != T.LBrace)
       {
         if (token.kind != T.LParen) // Optional return type
-          returnType = parseType();
+          returnType = parseBasicTypes();
         parameters = parseParameterList();
       }
       auto funcBody = parseFunctionBody();
@@ -3826,8 +3856,9 @@ class Parser
       return set(new NewAnonClassExpression(/*e, */newArguments, bases,
                                             ctorArguments, decls), begin);
     }
+
     // NewObjectExpression
-    auto type = parseType();
+    auto type = parseBasicTypes();
 
     // Don't parse arguments if an array type was parsed previously.
     auto arrayType = type.Is!(ArrayType);
@@ -3850,12 +3881,116 @@ class Parser
                begin);
   }
 
-  /// Parses a Type.
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                          Type parsing methods                           |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
+
+  /// Parses the basic types.
   ///
   /// $(BNF Type := BasicType BasicType2 )
-  Type parseType()
+  Type parseBasicTypes()
   {
     return parseBasicType2(parseBasicType());
+  }
+
+  /// Parses a full Type.
+  ///
+  /// $(BNF Type := BasicType BasicType2 CStyleType? )
+  Type parseType()
+  {
+    version(D2)
+    {
+    if (peekNext() != T.LParen)
+      if (auto begin = consumedToken(T.Const))
+        return set(new ConstType(parseType()), begin);
+      else if (auto begin = consumedToken(T.Invariant))
+        return set(new InvariantType(parseType()), begin);
+    }
+    auto type = parseBasicTypes();
+    return token.kind == T.LParen ? parseCStyleType(type) : type;
+  }
+
+  /// Parses a Type with D2.0 const qualifiers.
+  ///
+  /// $(BNF TypeWithQualifiers := (const | invariant) Type )
+  Type parseTypeQualifiers()
+  {
+    // TODO: move code from parseType() to this func.
+    return null;
+  }
+
+  /// Parses a C-style type.
+  ///
+  /// $(BNF CStyleType := BasicType? InnerCType DeclaratorSuffix?
+  ////InnerCType := "(" CStyleType ")" | Ident?
+  ////)
+  /// Example:
+  /// $(PRE
+  ////      6~~~~~~~~ 5~  3 1 2~~~~~~~ 4~~~~~
+  ////type( outerType [] (*(*)(double))(char) )
+  ////Resulting type chain:
+  ////* > (double) > * > (char) > [] > outerType
+  ////1   2~~~~~~~   3   4~~~~~   5~   6~~~~~~~~)
+  /// Read as: a pointer to a function that takes a double,
+  /// which returns a pointer to a function that takes a char,
+  /// which returns an array of outerType.
+  /// Parameters:
+  ///   outerType = The bottommost type in the type chain.
+  ///   pIdent    = If null, no identifier is expected.
+  ///     If non-null, pIdent receives the parsed identifier.
+  Type parseCStyleType(Type outerType, Token** pIdent = null)
+  in { assert(outerType !is null); }
+  out(res) { assert(res !is null && res.parent is null); }
+  body
+  {
+    auto currentType = parseBasicType2(outerType);
+
+    scope innerTypeEnd = new IllegalType();
+    Type innerType;
+    if (auto leftParen = consumedToken(T.LParen)) // Recurse.
+      (innerType = parseCStyleType(innerTypeEnd, pIdent)),
+      requireClosing(T.RParen, leftParen);
+    else if (auto ident = consumedToken(T.Identifier))
+      if (pIdent !is null)
+        *pIdent = ident; // Found valid Id.
+      else
+        error2(MSG.UnexpectedIdentInType, ident);
+    else if (pIdent !is null)
+      *pIdent = token; // Useful for error msg, if an Id was expected.
+
+    currentType = parseDeclaratorSuffix(currentType, true);
+
+    bool noInnerType = innerTypeEnd.parent is null;
+    if (noInnerType) // End of recursion.
+      return currentType; // Return the root of the type chain.
+    // Fix the type chain. Let the inner type point to the current type.
+    innerTypeEnd.parent.setNext(currentType);
+    return innerType;
+  }
+
+  /// Parses a Declarator.
+  ///
+  /// $(BNF Declarator := BasicType CStyleType)
+  /// Params:
+  ///   ident = receives the identifier of the declarator.
+  ///   identOptional = whether to report an error for a missing identifier.
+  Type parseDeclarator(ref Token* ident, bool identOptional = false)
+  {
+    auto type = parseCStyleType(parseBasicType(), &ident);
+    assert(ident !is null);
+    if (ident.kind != T.Identifier)
+      (identOptional || error2(MSG.ExpectedDeclaratorIdentifier, ident)),
+      (ident = null);
+    return type;
+  }
+
+  /// Parses the parameters of a function in a C-like type declaration.
+  Type parseCFuncType(Type returnType)
+  {
+    assert(returnType !is null);
+    auto begin = token;
+    auto params = parseParameterList();
+    return set(new CFuncType(returnType, params), begin);
   }
 
   /// $(BNF IdentifierType := Identifier |
@@ -3910,25 +4045,13 @@ class Parser
       return t;
     version(D2)
     {
-    case T.Const:
-      nT();
-      if (consumed(T.LParen)) { // const "(" Type ")"
-        t = parseType();
-        require(T.RParen);
-      }
-      else // In Phobos2 we see e.g.: const Type
-        t = parseType();
-      t = new ConstType(t);
-      break;
-    case T.Invariant:
-      nT();
-      if (consumed(T.LParen)) { // invariant "(" Type ")"
-        t = parseType();
-        require(T.RParen);
-      }
-      else // invariant Type
-        t = parseType();
-      t = new InvariantType(t);
+    case T.Const, // const "(" Type ")"
+         T.Invariant: // invariant "(" Type ")"
+      requireNext(T.LParen); // "("
+      auto lParen = prevToken;
+      t = parseType(); // Type
+      requireClosing(T.RParen, lParen); // ")"
+      t = (begin.kind == T.Const) ? new ConstType(t): new InvariantType(t);
       break;
     } // version(D2)
     default:
@@ -4020,7 +4143,7 @@ class Parser
   }
 
   /// Parse the array types after the declarator (C-style.) E.g.: int a[]
-  Type parseDeclaratorSuffix(Type lhsType)
+  Type parseDeclaratorSuffix(Type lhsType, bool cfunc = false)
   {
     // The Type chain should be as follows:
     // int[3]* Identifier [][32]
@@ -4029,6 +4152,8 @@ class Parser
     // Resulting chain: [][32]*[3]int
     Type parseNext() // Nested function required to accomplish this.
     {
+      if (cfunc && token.kind == T.LParen)
+        return parseCFuncType(lhsType);
       if (token.kind != T.LBracket)
         return lhsType; // Break recursion; return Type on
                         // the left hand side of the Identifier.
@@ -4094,56 +4219,6 @@ class Parser
       }
     }
     set(t, begin);
-    return t;
-  }
-
-  /// $(BNF CFunctionPointerType := "("
-  ////    BasicType2 (CFunctionPointerType | (Identifier DeclaratorSuffix)?)
-  ////  ")" ParameterList?)
-  Type parseCFunctionPointerType(Type type, ref Token* ident,
-                                 bool optionalParamList)
-  {
-    assert(type !is null);
-    auto begin = token;
-    skip(T.LParen);
-
-    type = parseBasicType2(type);
-    if (token.kind == T.LParen)
-      type = parseCFunctionPointerType(type, ident, true); // Can be nested.
-    else if (consumed(T.Identifier))
-      (ident = prevToken),
-      // The identifier of the function pointer and the declaration.
-      (type = parseDeclaratorSuffix(type));
-    requireClosing(T.RParen, begin);
-
-    Parameters params;
-    if (optionalParamList)
-      params = token.kind == T.LParen ? parseParameterList() : null;
-    else
-      params = parseParameterList();
-
-    type = new CFuncPointerType(type, params);
-    return set(type, begin);
-  }
-
-  /// $(BNF Declarator := Type CFunctionPointerType |
-  ////              Type (Identifier DeclaratorSuffix)?)
-  /// Params:
-  ///   ident = receives the identifier of the declarator.
-  ///   identOptional = whether to report an error for a missing identifier.
-  Type parseDeclarator(ref Token* ident, bool identOptional = false)
-  {
-    auto t = parseType();
-
-    if (token.kind == T.LParen)
-      t = parseCFunctionPointerType(t, ident, true);
-    else if (consumed(T.Identifier))
-      (ident = prevToken),
-      (t = parseDeclaratorSuffix(t));
-
-    if (ident is null && !identOptional)
-      error2(MSG.ExpectedDeclaratorIdentifier, token);
-
     return t;
   }
 

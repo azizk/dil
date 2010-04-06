@@ -11,6 +11,7 @@ import dil.semantic.Types,
 abstract class TypeNode : Node
 {
   TypeNode next; /// The next type in the type chain.
+  TypeNode parent; /// The parent TypeNode of this symbol.
   Type type; /// The semantic type of this type node.
   Symbol symbol;
 
@@ -23,10 +24,24 @@ abstract class TypeNode : Node
   {
     super(NodeCategory.Type);
     addOptChild(next);
+    if (next !is null)
+      next.parent = this;
     this.next = next;
   }
 
-  /// Returns the root type of the type chain.
+  /// Sets the member 'next'. This node becomes the parent of 'n'.
+  void setNext(TypeNode n)
+  {
+    assert(n !is null);
+    next = n;
+    n.parent = this;
+    if (children.length)
+      children[0] = next;
+    else
+      children ~= next;
+  }
+
+  /// Returns the end type of the type chain.
   TypeNode baseType()
   {
     auto type = this;

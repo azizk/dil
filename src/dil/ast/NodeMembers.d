@@ -131,8 +131,8 @@ else
   t[N.TypeofType] = ["expr"];
   t[N.TemplateInstanceType] = ["targs?"];
   t[N.ArrayType] = ["next", "assocType?", "index1?", "index2?"];
-  t[N.FunctionType] = t[N.DelegateType] = ["returnType", "params"];
-  t[N.CFuncPointerType] = ["next", "params?"];
+  t[N.FunctionType] = t[N.DelegateType] = t[N.CFuncType] = ["next", "params"];
+  t[N.CFuncPointerType] = ["next", "params?"]; // TODO: delete
   t[N.PointerType] = t[N.BaseClassType] =
   t[N.ConstType] = t[N.InvariantType] = ["next"];
   // Parameters:
