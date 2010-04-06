@@ -13,7 +13,7 @@ import dil.ast.Visitor,
        dil.ast.Parameters;
 import common;
 
-/// Generates the actual code for visiting the provided members.
+/// Generates the actual code for visiting a node's members.
 private string createCode(NodeKind nodeKind)
 {
   string[] members; // Array of member names to be visited.

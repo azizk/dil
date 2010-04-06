@@ -129,7 +129,7 @@ version(D2)
   t[N.TypeofType] = ["expr?"];
 else
   t[N.TypeofType] = ["expr"];
-  t[N.TemplateInstanceType] = ["targs?"];
+  t[N.TemplateInstanceType] = ["targs"];
   t[N.ArrayType] = ["next", "assocType?", "index1?", "index2?"];
   t[N.FunctionType] = t[N.DelegateType] = t[N.CFuncType] = ["next", "params"];
   t[N.PointerType] = t[N.BaseClassType] =

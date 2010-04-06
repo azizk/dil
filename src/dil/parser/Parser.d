@@ -2099,15 +2099,13 @@ class Parser
       set(variable, begin);
     }
     else
-    { // Declarator = Expression
-      Type parseDeclaratorAssign()
-      {
+    { // Declarator "=" Expression
+      bool success;
+      auto type = try_({
         auto type = parseDeclarator(ident);
         require(T.Assign);
         return type;
-      }
-      bool success;
-      auto type = try_(&parseDeclaratorAssign, success);
+      }, success);
       if (success)
       {
         auto init = parseExpression();
@@ -2116,7 +2114,7 @@ class Parser
         variable = new DeclarationStatement(v);
         set(variable, begin);
       }
-      else
+      else // Normal expression.
         condition = parseExpression();
     }
     requireClosing(T.RParen, leftParen);
@@ -3500,7 +3498,7 @@ class Parser
         nT();
         set(type, begin2);
         break;
-      }
+      } // version(D2)
       default:
        type = parseType();
       }
@@ -3508,24 +3506,22 @@ class Parser
       e = new CastExpression(parseUnaryExpression(), type);
       break;
     case T.LParen:
-      // ( Type ) . Identifier
-      Type parseType_()
-      {
-        skip(T.LParen);
-        auto type = parseType();
-        require(T.RParen);
-        require(T.Dot);
-        return type;
-      }
+      if (!tokenAfterParenIs(T.Dot))
+        goto default;
+      // "(" Type ")" "." Identifier
       bool success;
-      auto type = try_(&parseType_, success);
-      if (success)
-      {
-        auto ident = requireIdentifier2(MSG.ExpectedIdAfterTypeDot);
-        e = new TypeDotIdExpression(type, ident);
-        break;
-      }
-      goto default;
+      auto type = try_({
+        skip(T.LParen); // "("
+        auto type = parseType(); // Type
+        require(T.RParen); // ")"
+        require(T.Dot); // "."
+        return type;
+      }, success);
+      if (!success)
+        goto default;
+      auto ident = requireIdentifier2(MSG.ExpectedIdAfterTypeDot);
+      e = new TypeDotIdExpression(type, ident);
+      break;
     default:
       e = parsePrimaryExpression();
       return e;
@@ -3573,38 +3569,34 @@ class Parser
       e = set(new ModuleScopeExpression(), begin, begin);
       return e;
     case T.This:
-      nT();
       e = new ThisExpression();
-      break;
+      goto LnT_and_return;
     case T.Super:
-      nT();
       e = new SuperExpression();
-      break;
+      goto LnT_and_return;
     case T.Null:
-      nT();
       e = new NullExpression();
-      break;
+      goto LnT_and_return;
     case T.True, T.False:
-      nT();
       e = new BoolExpression(token.kind == T.True);
-      break;
+      goto LnT_and_return;
     case T.Dollar:
-      nT();
       e = new DollarExpression();
-      break;
+      goto LnT_and_return;
     case T.Int32, T.Int64, T.Uint32, T.Uint64:
       e = new IntExpression(token);
-      nT();
-      break;
+      goto LnT_and_return;
     case T.Float32, T.Float64, T.Float80,
          T.Imaginary32, T.Imaginary64, T.Imaginary80:
       e = new RealExpression(token);
-      nT();
-      break;
+      goto LnT_and_return;
     case T.CharLiteral:
       e = new CharExpression(token.dchar_);
+      goto LnT_and_return;
+    LnT_and_return:
       nT();
-      break;
+      set(e, begin);
+      return e;
     case T.String:
       char[] str = token.str;
       char postfix = token.pf;
@@ -3688,31 +3680,26 @@ class Parser
       e = new FunctionLiteralExpression(returnType, parameters, funcBody);
       break;
     case T.Assert:
-      Expression msg;
       requireNext(T.LParen);
       e = parseAssignExpression();
-      if (consumed(T.Comma))
-        msg = parseAssignExpression();
+      auto msg = consumed(T.Comma) ? parseAssignExpression() : null;
       require(T.RParen);
       e = new AssertExpression(e, msg);
       break;
     case T.Mixin:
       requireNext(T.LParen);
-      e = parseAssignExpression();
+      e = new MixinExpression(parseAssignExpression());
       require(T.RParen);
-      e = new MixinExpression(e);
       break;
     case T.Import:
       requireNext(T.LParen);
-      e = parseAssignExpression();
+      e = new ImportExpression(parseAssignExpression());
       require(T.RParen);
-      e = new ImportExpression(e);
       break;
     case T.Typeid:
       requireNext(T.LParen);
-      auto type = parseType();
+      e = new TypeidExpression(parseType());
       require(T.RParen);
-      e = new TypeidExpression(type);
       break;
     case T.Is:
       nT();
@@ -3786,13 +3773,12 @@ class Parser
     version(D2)
     {
     case T.Traits:
-      requireNext(T.LParen);
+      nT();
+      auto leftParen = token;
+      require(T.LParen); // "("
       auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
-      TemplateArguments args;
-      if (token.kind == T.Comma)
-        args = parseTemplateArguments2();
-      else
-        require(T.RParen);
+      auto args = consumed(T.Comma) ? parseTemplateArguments2() : null;
+      requireClosing(T.RParen, leftParen); // ")"
       e = new TraitsExpression(ident, args);
       break;
     }
@@ -4180,7 +4166,7 @@ class Parser
           if (consumed(T.Slice))
             e2 = parseExpression();
           requireClosing(T.RBracket, begin);
-          t = new ArrayType(parseNext(), e, e2); // [ Expression .. Expression ]
+          t = new ArrayType(parseNext(), e, e2); // [ Expr .. Expr ]
         }
       }
       set(t, begin);
@@ -4359,35 +4345,35 @@ class Parser
     return set(params, begin);
   }
 
-  /// $(BNF TemplateArguments := "(" TemplateArguments? ")")
+  /// $(BNF TemplateArguments1 := "(" TemplateArguments? ")")
   TemplateArguments parseTemplateArguments()
   {
     TemplateArguments targs;
     auto leftParen = token;
     require(T.LParen);
-    if (token.kind != T.RParen)
-      targs = parseTemplateArguments_();
+    targs = (token.kind != T.RParen) ?
+      parseTemplateArguments_() : new TemplateArguments;
     requireClosing(T.RParen, leftParen);
-    return targs;
+    return set(targs, leftParen);
   }
 
-  /// $(BNF TemplateArguments2 := "," TemplateArguments "$(RP)")
+  /// $(BNF TemplateArguments2 := TemplateArguments (?="$(RP)"))
   TemplateArguments parseTemplateArguments2()
   {
-  version(D2)
-  {
-    skip(T.Comma);
+    version(D2)
+    {
     TemplateArguments targs;
     if (token.kind != T.RParen)
       targs = parseTemplateArguments_();
     else
       error(token, MSG.ExpectedTypeOrExpression);
-    require(T.RParen);
     return targs;
-  } // version(D2)
-  else return null;
+    } // version(D2)
+    else
+    assert(0);
   }
 
+  /// Used with method try_().
   /// $(BNF TypeArgument := Type (?= "," | "$(RP)"))
   Type parseTypeArgument()
   {
@@ -4422,9 +4408,10 @@ class Parser
   {
     if (!consumed(T.If))
       return null;
+    auto leftParen = token;
     require(T.LParen);
     auto e = parseExpression();
-    require(T.RParen);
+    requireClosing(T.RParen, leftParen);
     return e;
   }
 
