@@ -4129,50 +4129,38 @@ class Parser
   }
 
   /// Parse the array types after the declarator (C-style.) E.g.: int a[]
+  /// Returns: lhsType or a suffix type.
+  /// Params:
+  ///   lhsType = the type on the left-hand side.
+  ///   cfunc   = parse a function parameter list, too?
   Type parseDeclaratorSuffix(Type lhsType, bool cfunc = false)
-  {
-    // The Type chain should be as follows:
-    // int[3]* Identifier [][32]
-    //   <- <-             ->  -.
-    //       ^-----------------´
-    // Resulting chain: [][32]*[3]int
-    Type parseNext() // Nested function required to accomplish this.
+  { // The Type chain should be as follows:
+    // int[3]* Identifier [][1][2]
+    //   <– <–.      ·start·–> -.
+    //         `---------------´
+    // Resulting chain: [][1][2]*[3]int
+    auto result = lhsType; // Return lhsType if nothing else is parsed.
+    Type prevType; // The previously parsed type.
+    if (token.kind == T.LBracket) // "["
     {
-      if (cfunc && token.kind == T.LParen)
-        return parseCFuncType(lhsType);
-      if (token.kind != T.LBracket)
-        return lhsType; // Break recursion; return Type on
-                        // the left hand side of the Identifier.
-      auto begin = token;
-      Type t;
-      skip(T.LBracket);
-      if (consumed(T.RBracket))
-        t = new ArrayType(parseNext()); // [ ]
-      else
+      result = prevType = parseArrayType(lhsType);
+      // Continue parsing ArrayTypes.
+      while (token.kind == T.LBracket) // "["
       {
-        bool success;
-        Type parseAAType()
-        {
-          auto type = parseType();
-          require(T.RBracket);
-          return type;
-        }
-        auto assocType = try_(&parseAAType, success);
-        if (success)
-          t = new ArrayType(parseNext(), assocType); // [ Type ]
-        else
-        {
-          Expression e = parseExpression(), e2;
-          if (consumed(T.Slice))
-            e2 = parseExpression();
-          requireClosing(T.RBracket, begin);
-          t = new ArrayType(parseNext(), e, e2); // [ Expr .. Expr ]
-        }
+        auto arrayType = parseArrayType(lhsType);
+        prevType.setNext(arrayType); // Make prevType point to this type.
+        prevType = arrayType; // Current type becomes previous type.
       }
-      set(t, begin);
-      return t;
     }
-    return parseNext();
+    if (cfunc && token.kind == T.LParen) // "("
+    { // Parse: "(" Parameters? ")"
+      auto cfuncType = parseCFuncType(lhsType);
+      if (prevType) // Have arrays been parsed?
+        prevType.setNext(cfuncType);
+      else
+        result = cfuncType;
+    }
+    return result;
   }
 
   /// $(BNF ArrayType := "[" (Type | Expression | SliceExpression ) "]"
