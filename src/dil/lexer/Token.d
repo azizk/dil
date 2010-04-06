@@ -258,6 +258,12 @@ version(D2)
     return left.start[0 .. right.end - left.start];
   }
 
+  /// ditto
+  char[] textSpan(Token* right)
+  {
+    return textSpan(this, right);
+  }
+
   /// Deletes a linked list beginning from this token.
   void deleteList()
   {
