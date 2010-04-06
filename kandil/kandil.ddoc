@@ -111,5 +111,6 @@ DIL_PARAMS          = $(SPAN params, ($0))
 DDOC_PARAM          = $(EM $0)
 DIL_TEMPLATE_PARAMS = $(SPAN tparams, ($0))
 DIL_TPID            = $(EM $0)
-DIL_BASE_CLASSES    = : $0
+DIL_BASECLASSES     = : $0
+DIL_BASECLASS       = <span class="bclass">$0</span>
 DIL_SC =

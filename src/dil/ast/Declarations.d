@@ -275,6 +275,12 @@ class TemplateDeclaration : Declaration
     return nametok.ident;
   }
 
+  /// Returns true if this is a template that wraps a class, struct etc.
+  bool isWrapper()
+  {
+    return begin.kind != TOK.Template;
+  }
+
   Template symbol; /// The template symbol for this declaration.
 
   mixin(copyMethod);

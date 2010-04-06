@@ -1276,14 +1276,14 @@ class Parser
     BaseClassType[] bases;
     do
     {
-      Protection prot = Protection.Public;
+      Protection prot;
       switch (token.kind)
       {
       case T.Identifier, T.Dot, T.Typeof: goto LparseBasicType;
       case T.Private:   prot = Protection.Private;   break;
       case T.Protected: prot = Protection.Protected; break;
       case T.Package:   prot = Protection.Package;   break;
-      case T.Public:  /*prot = Protection.Public;*/  break;
+      case T.Public:    prot = Protection.Public;    break;
       default:
         error2(MID.ExpectedBaseClasses, token);
         return bases;

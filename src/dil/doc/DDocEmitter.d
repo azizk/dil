@@ -7,6 +7,7 @@ import dil.doc.Parser,
        dil.doc.Macro,
        dil.doc.Doc;
 import dil.ast.DefaultVisitor,
+       dil.ast.TypePrinter,
        dil.ast.Node,
        dil.ast.Declarations,
        dil.ast.Statements,
@@ -35,6 +36,7 @@ abstract class DDocEmitter : DefaultVisitor
   Module modul; /// The module.
   Highlighter tokenHL; /// The token highlighter.
   Diagnostics reportDiag; /// Collects problem messages.
+  TypePrinter typePrinter; /// Used to print type chains.
 
   /// Constructs a DDocEmitter object.
   /// Params:
@@ -53,6 +55,7 @@ abstract class DDocEmitter : DefaultVisitor
     this.modul = modul;
     this.tokenHL = tokenHL;
     this.reportDiag = reportDiag;
+    this.typePrinter = new TypePrinter();
   }
 
   /// Entry method.
@@ -210,7 +213,7 @@ abstract class DDocEmitter : DefaultVisitor
   Node currentDecl;
 
   /// The template parameters of the current declaration.
-  TemplateParameters tparams;
+  TemplateParameters currentTParams;
 
   /// Reflects the fully qualified name of the current symbol's parent.
   string parentFQN;
@@ -594,11 +597,18 @@ abstract class DDocEmitter : DefaultVisitor
       text ~= s;
   }
 
+  /// Writes a type chain to the buffer.
+  void write(TypeNode type)
+  {
+    text ~= escape(typePrinter.print(type));
+  }
+
   /// Writes params to the text buffer.
   void writeParams(Parameters params)
   {
     reportParameters(params);
     write("$(DIL_PARAMS ");
+    size_t item_count = params.items.length;
     foreach (param; params.items)
     {
       if (param.isCVariadic)
@@ -610,7 +620,7 @@ abstract class DDocEmitter : DefaultVisitor
         auto typeBegin = param.type.baseType.begin;
         if (typeBegin !is param.begin) // Write storage classes.
           write(textSpan(param.begin, typeBegin.prevNWS), " ");
-        write(escape(typeBegin, param.type.end)); // Write type.
+        write(param.type); // Write the type.
         if (param.hasName)
           write(" $(DDOC_PARAM ", param.nameStr, ")");
         if (param.isDVariadic)
@@ -619,27 +629,25 @@ abstract class DDocEmitter : DefaultVisitor
           write(" = $(DIL_DEFVAL ",
                 escape(param.defValue.begin, param.defValue.end), ")");
       }
-      write(", ");
+      --item_count && (text ~= ", "); // Skip for last item.
     }
-    if (params.items)
-      text = text[0..$-2]; /// Slice off last ", ".
     write(")");
   }
 
   /// Writes the current template parameters to the text buffer.
   void writeTemplateParams()
   {
-    if (!tparams)
+    if (!currentTParams)
       return;
-    reportParameters(tparams);
+    reportParameters(currentTParams);
     write("$(DIL_TEMPLATE_PARAMS ");
-    foreach (tparam; tparams.items)
+    auto item_count = currentTParams.items.length;
+    foreach (tparam; currentTParams.items)
     {
       void writeSpecDef(TypeNode spec, TypeNode def)
       {
-        if (spec) write(" : ", escape(spec.baseType.begin, spec.end));
-        if (def)  write(" = $(DIL_DEFVAL ",
-                        escape(def.baseType.begin, def.end), ")");
+        if (spec) write(" : "), write(spec);
+        if (def)  write(" = $(DIL_DEFVAL "), write(def), write(")");
       }
       void writeSpecDef2(Expression spec, Expression def)
       {
@@ -658,7 +666,7 @@ abstract class DDocEmitter : DefaultVisitor
         write("$(DIL_TPTUPLE $(DIL_TPID ", p.nameStr, "))");
       else if (auto p = tparam.Is!(TemplateValueParameter))
         write("$(DIL_TPVALUE "),
-        write(escape(p.valueType.baseType.begin, p.valueType.end)),
+        write(p.valueType),
         write(" $(DIL_TPID ", p.nameStr, ")"),
         writeSpecDef2(p.specValue, p.defValue),
         write(")");
@@ -666,24 +674,23 @@ abstract class DDocEmitter : DefaultVisitor
         write("$(DIL_TPTHIS $(DIL_TPID ", p.nameStr, ")"),
         writeSpecDef(p.specType, p.defType),
         write(")");
-      write(", ");
+      --item_count && write(", ");
     }
-    if (tparams.items)
-      text = text[0..$-2]; /// Slice off last ", ".
     write(")");
-    tparams = null;
+    currentTParams = null;
   }
 
   /// Writes bases to the text buffer.
   void writeInheritanceList(BaseClassType[] bases)
   {
-    if (bases.length == 0)
+    auto item_count = bases.length;
+    if (item_count == 0)
       return;
-    auto basesBegin = bases[0].begin.prevNWS;
-    if (basesBegin.kind == TOK.Colon)
-      basesBegin = bases[0].begin;
-    auto text = escape(basesBegin, bases[$-1].end);
-    write(" $(DIL_BASE_CLASSES ", text, ")");
+    write(" $(DIL_BASECLASSES ");
+    foreach (base; bases)
+      write("$(DIL_BASECLASS "), write(base),
+      write(--item_count ? "), " : ")");
+    write(")");
   }
 
   /// Offset at which to insert a declaration with a "ditto" comment.
@@ -825,13 +832,11 @@ abstract class DDocEmitter : DefaultVisitor
     const kind = is(T == AliasDeclaration) ? "alias" : "typedef";
     const kindID = is(T == AliasDeclaration) ? K.Alias : K.Typedef;
     if (auto vd = d.decl.Is!(VariablesDeclaration))
-    {
-      auto type = escape(vd.typeNode.baseType.begin, vd.typeNode.end);
       foreach (name; vd.names)
-        DECL({ write(kind, " "); write(type, " ");
+        DECL({
+          write(kind, " "); write(vd.typeNode); write(" ");
           SYMBOL(name.str, kindID, d);
         }, d);
-    }
     else if (auto fd = d.decl.Is!(FunctionDeclaration))
     {}
     // DECL({ write(textSpan(d.begin, d.end)); }, false);
@@ -944,11 +949,11 @@ override:
 
   D visit(TemplateDeclaration d)
   {
-    this.tparams = d.tparams;
-    if (d.begin.kind != TOK.Template)
+    this.currentTParams = d.tparams;
+    if (d.isWrapper())
     { // This is a templatized class/interface/struct/union/function.
       super.visit(d.decls);
-      this.tparams = null;
+      this.currentTParams = null;
       return d;
     }
     if (!ddoc(d))
@@ -1026,9 +1031,8 @@ override:
   {
     if (!ddoc(d))
       return d;
-    auto type = escape(d.returnType.baseType.begin, d.returnType.end);
     DECL({
-      write("$(DIL_RETTYPE ", type, ") ");
+      write("$(DIL_RETTYPE "); write(d.returnType); write(") ");
       SYMBOL(d.name.str, K.Function, d);
       writeTemplateParams();
       writeParams(d.params);
@@ -1059,11 +1063,13 @@ override:
   {
     if (!ddoc(d))
       return d;
-    char[] type = "auto";
-    if (d.typeNode)
-      type = escape(d.typeNode.baseType.begin, d.typeNode.end);
     foreach (name; d.names)
-      DECL({ write(type, " "); SYMBOL(name.str, K.Variable, d); }, d);
+      DECL({
+        if (d.typeNode) write(d.typeNode);
+        else write("auto");
+        write(" ");
+        SYMBOL(name.str, K.Variable, d);
+      }, d);
     DESC();
     return d;
   }
