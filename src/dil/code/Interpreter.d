@@ -1067,11 +1067,6 @@ override
     return t;
   }
 
-  T visit(CFuncPointerType t)
-  {
-    return t;
-  }
-
   T visit(BaseClassType t)
   {
     return t;

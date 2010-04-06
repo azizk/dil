@@ -1774,12 +1774,12 @@ override
     return t;
   }
 
-  T visit(CFuncPointerType t)
+  T visit(CFuncType t)
   {
     begin(t);
     visitT(t.next);
     write(",");
-    t.params ? visitN(t.params) : write("n");
+    visitN(t.params);
     end(t);
     return t;
   }

@@ -195,7 +195,6 @@ static const char[][] g_classNames = [
   "ArrayType",
   "FunctionType",
   "DelegateType",
-  "CFuncPointerType",
   "CFuncType",
   "BaseClassType",
   "ConstType", // D2.0

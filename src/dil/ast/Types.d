@@ -214,21 +214,6 @@ class DelegateType : TypeNode
   mixin(copyMethod);
 }
 
-/// $(BNF
-///CFuncPointerType := Type "(" BasicType2 Identifier ")" ParameterList?)
-class CFuncPointerType : TypeNode
-{
-  Parameters params;
-  this(TypeNode type, Parameters params)
-  {
-    super(type);
-    mixin(set_kind);
-    addOptChild(params);
-    this.params = params;
-  }
-  mixin(copyMethod);
-}
-
 /// Function parameters in a C-style type.
 /// E.g.: int (*pFunc)(int a, int b);
 class CFuncType : TypeNode
