@@ -132,7 +132,7 @@ class ImportDeclaration : Declaration
     this.bindNames = bindNames;
     this.bindAliases = bindAliases;
     if (isStatic)
-      this.stc |= StorageClass.Static;
+      this.stcs |= StorageClass.Static;
   }
 
   char[][] getModuleFQNs(char separator)

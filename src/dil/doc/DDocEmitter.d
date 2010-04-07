@@ -871,9 +871,9 @@ abstract class DDocEmitter : DefaultVisitor
     alias currentAttributes attrs;
     attrs.prot = d.prot == Protection.None ? null : EnumString(d.prot);
 
-    auto stc = d.stc;
-    stc &= ~StorageClass.Auto; // Ignore "auto".
-    attrs.stcs = EnumString.all(stc);
+    auto stcs = d.stcs;
+    stcs &= ~StorageClass.Auto; // Ignore "auto".
+    attrs.stcs = EnumString.all(stcs);
 
     LinkageType ltype;
     if (auto vd = d.Is!(VariablesDeclaration))

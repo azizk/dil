@@ -150,7 +150,7 @@ class Template : ScopeSymbol
 class Function : ScopeSymbol
 {
   Protection prot; /// The protection.
-  StorageClass stc; /// The storage classes.
+  StorageClass stcs; /// The storage classes.
   LinkageType linkType; /// The linkage type.
 
   Type returnType;
@@ -166,20 +166,20 @@ class Function : ScopeSymbol
 class Variable : Symbol
 {
   Protection prot; /// The protection.
-  StorageClass stc; /// The storage classes.
+  StorageClass stcs; /// The storage classes.
   LinkageType linkType; /// The linkage type.
 
   Type type; /// The type of this variable.
   Expression value; /// The value of this variable.
 
   this(Identifier* name,
-       Protection prot, StorageClass stc, LinkageType linkType,
+       Protection prot, StorageClass stcs, LinkageType linkType,
        Node variableNode)
   {
     super(SYM.Variable, name, variableNode);
 
     this.prot = prot;
-    this.stc = stc;
+    this.stcs = stcs;
     this.linkType = linkType;
   }
 }
@@ -188,10 +188,10 @@ class Variable : Symbol
 class EnumMember : Variable
 {
   this(Identifier* name,
-       Protection prot, StorageClass stc, LinkageType linkType,
+       Protection prot, StorageClass stcs, LinkageType linkType,
        Node enumMemberNode)
   {
-    super(name, prot, stc, linkType, enumMemberNode);
+    super(name, prot, stcs, linkType, enumMemberNode);
     this.sid = SYM.EnumMember;
   }
 }

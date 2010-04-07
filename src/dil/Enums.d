@@ -98,12 +98,12 @@ static:
     }
   }
 
-  /// Returns the strings for stc. Any number of bits may be set.
-  string[] all(StorageClass stc)
+  /// Returns the strings for stcs. Any number of bits may be set.
+  string[] all(StorageClass stcs)
   {
     string[] result;
     for (auto i = StorageClass.max; i; i >>= 1)
-      if (stc & i)
+      if (stcs & i)
         result ~= EnumString(i);
     return result;
   }

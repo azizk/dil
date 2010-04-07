@@ -13,12 +13,12 @@ import dil.Enums;
 /// A function or foreach parameter.
 class Parameter : Node
 {
-  StorageClass stc; /// The storage classes of the parameter.
+  StorageClass stcs; /// The storage classes of the parameter.
   TypeNode type; /// The parameter's type.
   Token* name; /// The name of the parameter.
   Expression defValue; /// The default initialization value.
 
-  this(StorageClass stc, TypeNode type, Token* name, Expression defValue)
+  this(StorageClass stcs, TypeNode type, Token* name, Expression defValue)
   {
     super(NodeCategory.Other);
     mixin(set_kind);
@@ -26,7 +26,7 @@ class Parameter : Node
     addOptChild(type);
     addOptChild(defValue);
 
-    this.stc = stc;
+    this.stcs = stcs;
     this.type = type;
     this.name = name;
     this.defValue = defValue;
@@ -56,20 +56,20 @@ class Parameter : Node
   /// E.g.: func(...)
   bool isCVariadic()
   {
-    return stc == StorageClass.Variadic &&
+    return stcs == StorageClass.Variadic &&
            type is null && name is null;
   }
 
   /// Returns true if this is a D- or C-style variadic parameter.
   bool isVariadic()
   {
-    return !!(stc & StorageClass.Variadic);
+    return !!(stcs & StorageClass.Variadic);
   }
 
   /// Returns true if this parameter is lazy.
   bool isLazy()
   {
-    return !!(stc & StorageClass.Lazy);
+    return !!(stcs & StorageClass.Lazy);
   }
 
   mixin(copyMethod);

@@ -16,17 +16,17 @@ abstract class Declaration : Node
   }
 
   // Members relevant to semantic phase.
-  StorageClass stc; /// The storage classes of this declaration.
+  StorageClass stcs; /// The storage classes of this declaration.
   Protection prot;  /// The protection attribute of this declaration.
 
   final bool isStatic()
   {
-    return !!(stc & StorageClass.Static);
+    return !!(stcs & StorageClass.Static);
   }
 
   final bool isConst()
   {
-    return !!(stc & StorageClass.Const);
+    return !!(stcs & StorageClass.Const);
   }
 
   final bool isPublic()
@@ -34,9 +34,9 @@ abstract class Declaration : Node
     return !!(prot & Protection.Public);
   }
 
-  final void setStorageClass(StorageClass stc)
+  final void setStorageClass(StorageClass stcs)
   {
-    this.stc = stc;
+    this.stcs = stcs;
   }
 
   final void setProtection(Protection prot)

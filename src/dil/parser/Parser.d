@@ -502,13 +502,13 @@ class Parser
   ////Name := Identifier
   ////)
   /// Params:
-  ///   stc = previously parsed storage classes
+  ///   stcs = previously parsed storage classes
   ///   protection = previously parsed protection attribute
   ///   linkType = previously parsed linkage type
   ///   testAutoDeclaration = whether to check for an AutoDeclaration
   ///   optionalParameterList = a hint for how to parse C-style
   ///                           function pointers
-  Declaration parseVariableOrFunction(StorageClass stc = StorageClass.None,
+  Declaration parseVariableOrFunction(StorageClass stcs = StorageClass.None,
                                       Protection protection = Protection.None,
                                       LinkageType linkType = LinkageType.None,
                                       bool testAutoDeclaration = false,
@@ -613,11 +613,11 @@ class Parser
       switch (token.kind)
       {
       case T.Const:
-        stc |= StorageClass.Const;
+        stcs |= StorageClass.Const;
         nT();
         break;
       case T.Invariant:
-        stc |= StorageClass.Invariant;
+        stcs |= StorageClass.Invariant;
         nT();
         break;
       default:
@@ -626,14 +626,14 @@ class Parser
       // ReturnType FunctionName ( ParameterList )
       auto funcBody = parseFunctionBody();
       auto fd = new FunctionDeclaration(type, name, params, funcBody);
-      fd.setStorageClass(stc);
+      fd.setStorageClass(stcs);
       fd.setLinkageType(linkType);
       fd.setProtection(protection);
       if (tparams)
       {
         auto d = putInsideTemplateDeclaration(begin, name, fd, tparams,
                                               constraint);
-        d.setStorageClass(stc);
+        d.setStorageClass(stcs);
         d.setProtection(protection);
         return set(d, begin);
       }
@@ -661,7 +661,7 @@ class Parser
     }
     require(T.Semicolon);
     auto d = new VariablesDeclaration(type, names, values);
-    d.setStorageClass(stc);
+    d.setStorageClass(stcs);
     d.setLinkageType(linkType);
     d.setProtection(protection);
     return set(d, begin);
@@ -864,7 +864,7 @@ class Parser
   ////)
   Declaration parseStorageAttribute()
   {
-    StorageClass stc, stc_tmp;
+    StorageClass stcs, stc_tmp;
     LinkageType prev_linkageType;
 
     auto saved_storageClass = this.storageClass; // Save.
@@ -929,7 +929,7 @@ class Parser
           // NB: this must be similar to the code at the end of
           //     parseDeclarationDefinition().
           decl.setProtection(this.protection);
-          decl.setStorageClass(stc);
+          decl.setStorageClass(stcs);
           set(decl, begin);
           break;
         }
@@ -943,7 +943,7 @@ class Parser
           // NB: this must be similar to the code at the end of
           //     parseDeclarationDefinition().
           decl.setProtection(this.protection);
-          decl.setStorageClass(stc);
+          decl.setStorageClass(stcs);
           set(decl, begin);
           break;
         }
@@ -959,10 +959,10 @@ class Parser
         goto Lcommon;
       Lcommon:
         // Issue error if redundant.
-        if (stc & stc_tmp)
+        if (stcs & stc_tmp)
           error2(MID.RedundantStorageClass, token);
         else
-          stc |= stc_tmp;
+          stcs |= stc_tmp;
 
         nT();
         decl = new StorageClassDeclaration(stc_tmp, parse());
@@ -971,11 +971,11 @@ class Parser
       case T.Identifier:
       case_Declaration:
         // This could be a normal Declaration or an AutoDeclaration
-        decl = parseVariableOrFunction(stc, this.protection, prev_linkageType,
+        decl = parseVariableOrFunction(stcs, this.protection, prev_linkageType,
                                        true);
         break;
       default:
-        this.storageClass = stc; // Set.
+        this.storageClass = stcs; // Set.
         decl = parseDeclarationsBlock();
         this.storageClass = saved_storageClass; // Reset.
       }
@@ -4245,19 +4245,19 @@ class Parser
     do
     {
       auto paramBegin = token;
-      StorageClass stc, stc_;
+      StorageClass stcs, stc;
       Type type;
       Token* ident;
       Expression defValue;
 
       void pushParameter()
       {
-        params ~= set(new Parameter(stc, type, ident, defValue), paramBegin);
+        params ~= set(new Parameter(stcs, type, ident, defValue), paramBegin);
       }
 
       if (consumed(T.Ellipses))
       {
-        stc = StorageClass.Variadic;
+        stcs = StorageClass.Variadic;
         pushParameter(); // type, ident and defValue will be null.
         break;
       }
@@ -4271,41 +4271,41 @@ class Parser
         case T.Invariant: // D2.0
           if (peekNext() == T.LParen)
             break;
-          stc_ = StorageClass.Invariant;
+          stc = StorageClass.Invariant;
           goto Lcommon;
         case T.Const: // D2.0
           if (peekNext() == T.LParen)
             break;
-          stc_ = StorageClass.Const;
+          stc = StorageClass.Const;
           goto Lcommon;
         case T.Final: // D2.0
-          stc_ = StorageClass.Final;
+          stc = StorageClass.Final;
           goto Lcommon;
         case T.Scope: // D2.0
-          stc_ = StorageClass.Scope;
+          stc = StorageClass.Scope;
           goto Lcommon;
         case T.Static: // D2.0
-          stc_ = StorageClass.Static;
+          stc = StorageClass.Static;
           goto Lcommon;
-      }
+      } // end of version(D2)
         case T.In:
-          stc_ = StorageClass.In;
+          stc = StorageClass.In;
           goto Lcommon;
         case T.Out:
-          stc_ = StorageClass.Out;
+          stc = StorageClass.Out;
           goto Lcommon;
         case T.Inout, T.Ref:
-          stc_ = StorageClass.Ref;
+          stc = StorageClass.Ref;
           goto Lcommon;
         case T.Lazy:
-          stc_ = StorageClass.Lazy;
+          stc = StorageClass.Lazy;
           goto Lcommon;
         Lcommon:
           // Check for redundancy.
-          if (stc & stc_)
+          if (stcs & stc)
             error2(MID.RedundantStorageClass, token);
           else
-            stc |= stc_;
+            stcs |= stc;
           nT();
         version(D2)
           continue;
@@ -4322,7 +4322,7 @@ class Parser
 
       if (consumed(T.Ellipses))
       {
-        stc |= StorageClass.Variadic;
+        stcs |= StorageClass.Variadic;
         pushParameter();
         break;
       }
