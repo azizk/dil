@@ -495,9 +495,7 @@ class Parser
   ////AutoVariable := Name "=" Initializer MoreVariables? ";"
   ////VariableDeclaration := Type Name TypeSuffix? ("=" Initializer)?
   ////                       MoreVariables? ";"
-  ////CFunctionDeclaration := Type CFunctionPointer ("=" Initializer)?
-  ////                        MoreVariables? ";"
-  ////MoreVariables := ("," Name ("=" Initializer)?)*
+  ////MoreVariables := ("," Name ("=" Initializer)?)+
   ////FunctionDeclaration := Type Name TemplateParameterList?
   ////                       ParameterList FunctionBody
   ////AutoTemplate := Name TemplateParameterList ParameterList FunctionBody
@@ -3532,17 +3530,20 @@ class Parser
   }
 
   /// $(BNF IdentifierExpression := Identifier | TemplateInstance
-  ////TemplateInstance :=  Identifier "!" "(" TemplateArguments ")")
+  ////TemplateInstance := Identifier "!" TemplateArgumentsOneOrMore)
   Expression parseIdentifierExpression()
   {
     auto begin = token;
     auto ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
     Expression e;
-    // Peek for '(' to avoid matching: id !is id
-    if (token.kind == T.Not && peekNext() == T.LParen)
-    { // Identifier !( TemplateArguments )
+    // Peek to avoid parsing: "id !is Exp" or "id !in Exp"
+    auto nextTok = peekNext();
+    if (token.kind == T.Not && nextTok != T.Is && nextTok != T.In)
+    {
       skip(T.Not);
-      auto tparams = parseTemplateArguments();
+      // Identifier "!" "(" TemplateArguments? ")"
+      // Identifier "!" TemplateArgumentSingle
+      auto tparams = parseOneOrMoreTemplateArguments();
       e = new TemplateInstanceExpression(ident, tparams);
     }
     else // Identifier
@@ -3979,15 +3980,14 @@ class Parser
     return set(new CFuncType(returnType, params), begin);
   }
 
-  /// $(BNF IdentifierType := Identifier |
-  ////                  Identifier "!" "(" TemplateArguments ")" )
+  /// $(BNF IdentifierType := Identifier | TemplateInstance)
   Type parseIdentifierType()
   {
     auto begin = token;
     auto ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
     Type t;
-    if (consumed(T.Not)) // Identifier !( TemplateArguments )
-      t = new TemplateInstanceType(ident, parseTemplateArguments());
+    if (consumed(T.Not)) // TemplateInstance
+      t = new TemplateInstanceType(ident, parseOneOrMoreTemplateArguments());
     else // Identifier
       t = new IdentifierType(ident);
     return set(t, begin);
@@ -4333,7 +4333,28 @@ class Parser
     return set(params, begin);
   }
 
-  /// $(BNF TemplateArguments1 := "(" TemplateArguments? ")")
+  /// $(BNF TemplateArgumentsOneOrMore :=
+  ////  TemplateArgumentList | TemplateArgumentSingle)
+  TemplateArguments parseOneOrMoreTemplateArguments()
+  {
+    version(D2)
+    if (token.kind != T.LParen)
+    { // Parse one TArg, but still put it in TemplateArguments.
+      auto targs = new TemplateArguments;
+      auto begin = token;
+      bool success;
+      auto typeArg = try_({
+        // Don't parse a full Type. TODO: restrict further?
+        return parseBasicType();
+      }, success);
+      // Don't parse a full Expression. TODO: restrict further?
+      targs ~= success ? typeArg : parsePrimaryExpression();
+      return set(targs, begin);
+    }
+    return parseTemplateArguments();
+  }
+
+  /// $(BNF TemplateArgumentList := "(" TemplateArguments? ")")
   TemplateArguments parseTemplateArguments()
   {
     TemplateArguments targs;
@@ -4345,7 +4366,7 @@ class Parser
     return set(targs, leftParen);
   }
 
-  /// $(BNF TemplateArguments2 := TemplateArguments (?="$(RP)"))
+  /// $(BNF TemplateArgumentList2 := TemplateArguments (?="$(RP)"))
   TemplateArguments parseTemplateArguments2()
   {
     version(D2)
