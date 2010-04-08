@@ -512,13 +512,10 @@ class Parser
   ///   protection = previously parsed protection attribute
   ///   linkType = previously parsed linkage type
   ///   testAutoDeclaration = whether to check for an AutoDeclaration
-  ///   optionalParameterList = a hint for how to parse C-style
-  ///                           function pointers
   Declaration parseVariableOrFunction(StorageClass stcs = StorageClass.None,
                                       Protection protection = Protection.None,
                                       LinkageType linkType = LinkageType.None,
-                                      bool testAutoDeclaration = false,
-                                      bool optionalParameterList = true)
+                                      bool testAutoDeclaration = false)
   {
     auto begin = token;
     Type type;
@@ -1190,9 +1187,8 @@ class Parser
       version(D2)
       {
         bool success;
-        try_({ // Type Identifier "=" AssignExpression
-          type = parseDeclarator(name);
-          return null;
+        type = try_({ // Type Identifier "=" AssignExpression
+          return parseDeclarator(name);
         }, success);
       }
 
@@ -1761,12 +1757,10 @@ class Parser
       goto case T.Dot;
     case T.Dot, T.Typeof:
       bool success;
-      d = try_(delegate {
-          return parseVariableOrFunction(StorageClass.None,
-                                         Protection.None,
-                                         LinkageType.None, false, false);
-        }, success
-      );
+      d = try_({
+        return parseVariableOrFunction(StorageClass.None,
+          Protection.None, LinkageType.None, false);
+      }, success);
       if (success)
         goto LreturnDeclarationStatement; // Declaration
       else
@@ -3943,10 +3937,9 @@ class Parser
   {
     auto currentType = parseBasicType2(outerType);
 
-    scope innerTypeEnd = new IllegalType();
     Type innerType;
     if (auto leftParen = consumedToken(T.LParen)) // Recurse.
-      (innerType = parseCStyleType(innerTypeEnd, pIdent)),
+      (innerType = parseCStyleType(currentType, pIdent)),
       requireClosing(T.RParen, leftParen);
     else if (auto ident = consumedToken(T.Identifier))
       if (pIdent !is null)
@@ -3956,13 +3949,14 @@ class Parser
     else if (pIdent !is null)
       *pIdent = token; // Useful for error msg, if an Id was expected.
 
+    auto innerTypeEnd = currentType.parent; // Save before parsing the suffix.
+
     currentType = parseDeclaratorSuffix(currentType, true);
 
-    bool noInnerType = innerTypeEnd.parent is null;
-    if (noInnerType) // End of recursion.
+    if (innerTypeEnd is null) // No inner Type. End of recursion.
       return currentType; // Return the root of the type chain.
     // Fix the type chain. Let the inner type point to the current type.
-    innerTypeEnd.parent.setNext(currentType);
+    innerTypeEnd.setNext(currentType);
     return innerType;
   }
 
@@ -4203,8 +4197,7 @@ class Parser
         t = new ArrayType(t, e, e2);
       }
     }
-    set(t, begin);
-    return t;
+    return set(t, begin);
   }
 
   /// Parses a list of AssignExpressions.
