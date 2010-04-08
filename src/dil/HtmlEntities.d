@@ -3,6 +3,7 @@
 /// $(Maturity very high)
 module dil.HtmlEntities;
 
+import dil.lexer.Funcs : toString;
 import common;
 
 /// A named HTML entity.
@@ -271,20 +272,9 @@ static const Entity[] namedEntities = [
 uint stringToHash(char[] str)
 {
   uint hash;
-  foreach(c; str) {
-    hash *= 11;
-    hash += c;
-  }
+  foreach(c; str)
+    hash = hash * 11 + c;
   return hash;
-}
-
-char[] toString(uint x)
-{
-  char[] str;
-  do
-    str = cast(char)('0' + (x % 10)) ~ str;
-  while (x /= 10)
-  return str;
 }
 
 char[] generateHashAndValueArrays()

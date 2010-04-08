@@ -3,18 +3,11 @@
 /// $(Maturity high)
 module dil.Version;
 
-private char[] toString(uint x)
-{
-  char[] str;
-  do
-    str = cast(char)('0' + (x % 10)) ~ str;
-  while (x /= 10)
-  return str;
-}
+import dil.lexer.Funcs : toString;
 
 private char[] toString(uint x, uint pad)
 {
-  char[] str = toString(x);
+  char[] str = .toString(x);
   if (pad > str.length)
     for (uint i = pad-str.length; i; i--)
       str = "0" ~ str;

@@ -221,15 +221,6 @@ abstract class DDocEmitter : DefaultVisitor
   /// This is useful for anchor names that require unique strings.
   uint[string] fqnCount;
 
-  static char[] toString(uint x)
-  {
-    char[] str;
-    do
-      str = cast(char)('0' + (x % 10)) ~ str;
-    while (x /= 10)
-    return str;
-  }
-
   /// Appends to parentFQN.
   void pushFQN(string name)
   {
@@ -240,7 +231,7 @@ abstract class DDocEmitter : DefaultVisitor
     auto pfqn = parentFQN in fqnCount;
     uint count = pfqn ? *pfqn : 0;
     if (count > 1) // Start adding suffixes with 2.
-      parentFQN ~= ":" ~ toString(count);
+      parentFQN ~= ":" ~ .toString(count);
   }
 
   /// Returns a unique, identifying string for the current symbol.
@@ -259,7 +250,7 @@ abstract class DDocEmitter : DefaultVisitor
       fqnCount[fqn] = 1; // Start counting with 1.
 
     if (count > 1) // Start adding suffixes with 2.
-      fqn ~= ":" ~ toString(count);
+      fqn ~= ":" ~ .toString(count);
     return fqn;
   }
 
@@ -1175,7 +1166,7 @@ class DocSymbol
       return "[]";
     char[] result = "[";
     foreach (attr; attrs)
-      result ~= DDocEmitter.toString(attrToID[attr]) ~ ",";
+      result ~= .toString(attrToID[attr]) ~ ",";
     result[$-1] = ']';
     return result;
   }

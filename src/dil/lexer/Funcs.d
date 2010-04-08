@@ -5,6 +5,16 @@ module dil.lexer.Funcs;
 
 import dil.Unicode : isUnicodeAlpha;
 
+/// Converts an unsigned integer to a string.
+char[] toString(uint x)
+{
+  char[] str;
+  do
+    str = cast(char)('0' + (x % 10)) ~ str;
+  while (x /= 10)
+  return str;
+}
+
 const char[3] LS = \u2028; /// Unicode line separator.
 const dchar LSd = 0x2028;  /// ditto
 const char[3] PS = \u2029; /// Unicode paragraph separator.
@@ -175,12 +185,12 @@ static const int ptable[256] = [
 /// Enumeration of character property flags.
 enum CProperty
 {
-       Octal = 1,    /// 0-7
-       Digit = 1<<1, /// 0-9
-         Hex = 1<<2, /// 0-9a-fA-F
-       Alpha = 1<<3, /// a-zA-Z
-  Underscore = 1<<4, /// _
-  Whitespace = 1<<5  /// ' ' \t \v \f
+       Octal = 1,    /// [0-7]
+       Digit = 1<<1, /// [0-9]
+         Hex = 1<<2, /// [0-9a-fA-F]
+       Alpha = 1<<3, /// [a-zA-Z]
+  Underscore = 1<<4, /// [_]
+  Whitespace = 1<<5  /// [ \t\v\f]
 }
 
 const uint EVMask = 0xFF00; // Bit mask for escape value.

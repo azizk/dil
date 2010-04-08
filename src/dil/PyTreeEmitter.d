@@ -25,15 +25,6 @@ char[] escape_quotes(char[] text)
   return result;
 }
 
-char[] toString(uint x)
-{
-  char[] str;
-  do
-    str = cast(char)('0' + (x % 10)) ~ str;
-  while (x /= 10)
-  return str;
-}
-
 char[] countWhitespace(char[] ws)
 {
   foreach (c; ws)
