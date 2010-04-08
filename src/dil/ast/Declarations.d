@@ -696,6 +696,15 @@ abstract class AttributeDeclaration : Declaration
     addChild(decls);
     this.decls = decls;
   }
+
+  void setDecls(Declaration decls)
+  {
+    this.decls = decls;
+    if (children.length)
+      children[0] = decls;
+    else
+      addChild(decls);
+  }
 }
 
 class ProtectionDeclaration : AttributeDeclaration
@@ -712,13 +721,13 @@ class ProtectionDeclaration : AttributeDeclaration
 
 class StorageClassDeclaration : AttributeDeclaration
 {
-  StorageClass storageClass;
-  this(StorageClass storageClass, Declaration decl)
+  StorageClass stcs;
+  this(StorageClass stcs, Declaration decls)
   {
-    super(decl);
+    super(decls);
     mixin(set_kind);
 
-    this.storageClass = storageClass;
+    this.stcs = stcs;
   }
   mixin(copyMethod);
 }
