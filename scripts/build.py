@@ -10,7 +10,7 @@ class Command:
   def args(self):
     return []
   def call(self):
-    """ Executes the dmd executable. """
+    """ Executes the compiler executable. """
     args = self.args()
     exe = self.exe
     if self.use_wine:
@@ -37,8 +37,9 @@ class DMDCommand(Command):
     od = "-od%s", # Object directory.
     inline = "-inline", # Inline code.
     release = "-release", # Compile release code.
+    debug = "-debug", # Compile in debug statements.
     O = "-O", # Optimize code.
-    g = "-g", # Debug symbols.
+    g = "-g", # Include debug symbols.
     w = "-w", # Enable warnings.
     op = "-op", # Don't strip paths from source files.
     o_ = "-o-" # Don't output object file.
@@ -88,7 +89,7 @@ class LDCCommand(DMDCommand):
     DMDCommand.__init__(self, files, out_exe, exe=exe, **kwargs)
 
 def build_dil(cmd_kwargs):
-  """ Collects D source files and calls dmd. """
+  """ Collects D source files and calls the compiler. """
   from common import find_dil_source_files
   from path import Path
   BIN = Path("bin")
@@ -100,9 +101,15 @@ def build_dil(cmd_kwargs):
   FILES = find_dil_source_files(Path("src"))
   # Pick a compiler class.
   Command = cmd_kwargs.get("CMDCLASS", DMDCommand)
+  use_wine = cmd_kwargs.get("wine", False)
   del cmd_kwargs["CMDCLASS"]
+  del cmd_kwargs["wine"]
   # Run the compiler.
-  cmd = Command(FILES, BIN/"dil", **cmd_kwargs)
+  exe_dest = BIN/"dil"
+  if use_wine:
+    exe_dest = (exe_dest+".exe").replace("/", "\\")
+  cmd = Command(FILES, exe_dest, **cmd_kwargs)
+  cmd.use_wine = use_wine
   print cmd
   try:
     cmd.call()
@@ -117,6 +124,7 @@ def build_dil_release(**kwargs):
 
 def build_dil_debug(**kwargs):
   options = {'debug_info':1}
+  kwargs.setdefault('other', []).append('-debug')
   build_dil(dict(kwargs, **options))
 
 def main():
@@ -136,6 +144,8 @@ def main():
     help="build with -version=D2")
   parser.add_option("--ldc", dest="ldc", action="store_true", default=False,
     help="use ldc instead of dmd")
+  parser.add_option("--wine", dest="wine", action="store_true", default=False,
+    help="use wine to build a Windows binary on Linux")
 
   args, other_args = sys.argv[1:], []
   try:
@@ -147,14 +157,17 @@ def main():
 
   change_cwd(__file__)
 
-  is_win32 = (sys.platform == "win32")
+  is_win32 = (sys.platform == "win32" or options.wine)
 
   command = (DMDCommand, LDCCommand)[options.ldc]
   versions = ([], ["D2"])[options.d2]
-  lnk_args = (["-lmpfr"], ["+mpfr"])[is_win32]
+  lnk_args = (["-lmpfr", "-ldl"], ["+mpfr"])[is_win32]
+  # Remove -ldl if release build.
+  lnk_args = (lnk_args[:1], lnk_args)[options.debug]
+
   build_func = (build_dil_release, build_dil_debug)[options.debug]
   # Call the compiler with the provided options.
-  build_func(CMDCLASS=command, versions=versions,
+  build_func(CMDCLASS=command, wine=options.wine, versions=versions,
     lnk_args=lnk_args, other=other_args)
 
 if __name__ == '__main__':

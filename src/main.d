@@ -42,6 +42,9 @@ import tango.text.Regex : Regex;
 import tango.time.StopWatch;
 import tango.text.Ascii : icompare, toUpper;
 
+debug
+import tango.core.tools.TraceExceptions;
+
 /// Entry function of dil.
 void main(char[][] args)
 {
