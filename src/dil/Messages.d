@@ -134,6 +134,7 @@ static:
   auto ExpectedVariableName = "expected variable name, not '{}'";
   auto ExpectedFunctionBody = "expected function body, not '{}'";
   auto RedundantLinkageType = "redundant linkage type: {}";
+  auto RedundantProtection = "redundant protection attribute: {}";
   auto ExpectedPragmaIdentifier = "expected pragma identifier, not '{}'";
   auto ExpectedAliasModuleName = "expected alias module name, not '{}'";
   auto ExpectedAliasImportName = "expected alias name, not '{}'";

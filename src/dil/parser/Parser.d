@@ -284,11 +284,9 @@ class Parser
          T.Private,
          T.Package,
          T.Protected,
-         T.Public:
-      decl = parseAttributeSpecifier();
-      break;
-    // Storage classes
-    case T.Extern,
+         T.Public,
+         // Storage classes
+         T.Extern,
          T.Deprecated,
          T.Override,
          T.Abstract,
@@ -303,7 +301,7 @@ class Parser
     case_StaticAttribute:
     case_InvariantAttribute: // D 2.0
     case_EnumAttribute: // D 2.0
-      return parseStorageAttribute();
+      return parseAttributes();
     case T.Alias:
       nT();
       version (D2)
@@ -357,11 +355,9 @@ class Parser
       importDecl.setProtection(this.protection);
       return set(importDecl, begin);
     case T.Enum:
-    version(D2)
-    {
+      version(D2)
       if (isEnumManifest())
         goto case_EnumAttribute;
-    }
       decl = parseEnumDeclaration();
       break;
     case T.Class:
@@ -902,18 +898,23 @@ class Parser
   }
 
   /// $(BNF
-  ////StorageAttribute := Attributes+ (DeclarationsBlock | Declaration)
-  ////Attributes := extern | ExternLinkageType | override | abstract | auto |
-  ////  synchronized | static | final | const | invariant | enum | scope
-  ////)
-  Declaration parseStorageAttribute()
+  ////Attributes := (StorageAttribute | OtherAttributes)+
+  ////  (DeclarationsBlock | Declaration)
+  ////StorageAttribute := extern | ExternLinkageType | override | abstract |
+  ////  auto | synchronized | static | final | const | invariant | enum | scope
+  ////
+  ////OtherAttributes := AlignAttribute | PragmaAttribute | ProtectionAttribute
+  ////AlignAttribute := align ("(" Integer ")")?
+  ////PragmaAttribute := pragma "(" Identifier ("," ExpressionList)? ")"
+  ////ProtectionAttribute := private | public | package | protected | export)
+  Declaration parseAttributes()
   {
     StorageClass stcs, // Set to StorageClasses parsed in the loop.
       stc; // Current StorageClass in the loop.
     LinkageType linkageType; // Currently parsed LinkageType.
-
-    auto outer_storageClass = this.storageClass; // Save.
-    auto outer_linkageType = this.linkageType; // Save.
+    Protection protection, // Set to the Protection parsed in the loop.
+      prot; // Current Protection in the loop.
+    uint alignSize; // Set to the AlignSize parsed in the loop.
 
     // Allocate dummy declarations.
     scope emptyDecl = new EmptyDeclaration();
@@ -972,7 +973,7 @@ class Parser
         stc = StorageClass.Invariant;
         goto Lcommon;
       case T.Enum: // D 2.0
-        if (isEnumManifest())
+        if (!isEnumManifest())
           break Loop;
         // enum as StorageClass.
         stc = StorageClass.Manifest;
@@ -991,6 +992,51 @@ class Parser
 
         nT();
         currentAttr = new StorageClassDeclaration(stc, emptyDecl);
+        break;
+
+      // Non-StorageClass attributes:
+      // Protection attributes:
+      case T.Private:
+        prot = Protection.Private;
+        goto Lprot;
+      case T.Package:
+        prot = Protection.Package;
+        goto Lprot;
+      case T.Protected:
+        prot = Protection.Protected;
+        goto Lprot;
+      case T.Public:
+        prot = Protection.Public;
+        goto Lprot;
+      case T.Export:
+        prot = Protection.Export;
+        goto Lprot;
+      Lprot:
+        if (protection != Protection.None)
+          error2(MSG.RedundantProtection, token);
+        protection = prot;
+        nT();
+        currentAttr = new ProtectionDeclaration(prot, emptyDecl);
+        break;
+      case T.Align:
+        // align ("(" Integer ")")?
+        Token* sizetok;
+        alignSize = parseAlignAttribute(sizetok);
+        // TODO: error msg for redundant align attributes.
+        currentAttr = new AlignDeclaration(sizetok, emptyDecl);
+        break;
+      case T.Pragma:
+        // Pragma := pragma "(" Identifier ("," ExpressionList)? ")"
+        nT();
+        Token* ident;
+
+        auto leftParen = token;
+        require(T.LParen);
+        ident = requireIdentifier(MSG.ExpectedPragmaIdentifier);
+        auto args = consumed(T.Comma) ? parseExpressionList() : null;
+        requireClosing(T.RParen, leftParen);
+
+        currentAttr = new PragmaDeclaration(ident, args, emptyDecl);
         break;
       default:
         break Loop;
@@ -1015,15 +1061,24 @@ class Parser
         parseVariableOrFunction(stcs, this.protection, linkageType, true);
       break;
     default:
+      // Save attributes.
+      auto outer_storageClass = this.storageClass;
+      auto outer_linkageType = this.linkageType;
+      auto outer_protection = this.protection;
+      auto outer_alignSize = this.alignSize;
       // Set parsed values.
       this.storageClass = outer_storageClass | stcs; // Combine stcs.
       if (!linkageType) linkageType = outer_linkageType;
       this.linkageType = linkageType;
+      this.protection = protection;
+      this.alignSize = alignSize;
       // Parse a block.
       decl = parseDeclarationsBlock();
       // Restore outer values.
       this.storageClass = outer_storageClass;
       this.linkageType = outer_linkageType;
+      this.protection = outer_protection;
+      this.alignSize = outer_alignSize;
     }
     assert(decl !is null && isNodeSet(decl));
     // Attach the declaration to the previously parsed attribute.
@@ -1046,68 +1101,6 @@ class Parser
       require(T.RParen);
     }
     return size;
-  }
-
-  /// $(BNF
-  ////AttributeSpecifier := Attributes DeclarationsBlock
-  ////Attributes := AlignAttribute | PragmaAttribute | ProtectionAttribute
-  ////AlignAttribute := align ("(" Integer ")")?
-  ////PragmaAttribute := pragma "(" Identifier ("," ExpressionList)? ")"
-  ////ProtectionAttribute := private | public | package | protected | export)
-  Declaration parseAttributeSpecifier()
-  {
-    Declaration decl;
-
-    switch (token.kind)
-    {
-    case T.Align:
-      Token* sizetok;
-      uint alignSize = parseAlignAttribute(sizetok);
-      auto saved = this.alignSize; // Save.
-      this.alignSize = alignSize; // Set.
-      decl = new AlignDeclaration(sizetok, parseDeclarationsBlock());
-      this.alignSize = saved; // Restore.
-      break;
-    case T.Pragma:
-      // Pragma := pragma "(" Identifier ("," ExpressionList)? ")"
-      nT();
-      Token* ident;
-      Expression[] args;
-
-      require(T.LParen);
-      ident = requireIdentifier(MSG.ExpectedPragmaIdentifier);
-
-      if (consumed(T.Comma))
-        args = parseExpressionList();
-      require(T.RParen);
-
-      decl = new PragmaDeclaration(ident, args, parseDeclarationsBlock());
-      break;
-    default:
-      // Protection attributes
-      Protection prot;
-      switch (token.kind)
-      {
-      case T.Private:
-        prot = Protection.Private; break;
-      case T.Package:
-        prot = Protection.Package; break;
-      case T.Protected:
-        prot = Protection.Protected; break;
-      case T.Public:
-        prot = Protection.Public; break;
-      case T.Export:
-        prot = Protection.Export; break;
-      default:
-        assert(0);
-      }
-      nT();
-      auto saved = this.protection; // Save.
-      this.protection = prot; // Set.
-      decl = new ProtectionDeclaration(prot, parseDeclarationsBlock());
-      this.protection = saved; // Restore.
-    }
-    return decl;
   }
 
   /// $(BNF ImportDeclaration := static? import
@@ -1898,11 +1891,9 @@ class Parser
       d = parseDeclarationDefinition();
       goto LreturnDeclarationStatement;
     case T.Enum:
-    version(D2)
-    {
+      version(D2)
       if (isEnumManifest())
         goto case_parseAttribute;
-    }
       d = parseEnumDeclaration();
       goto LreturnDeclarationStatement;
     case T.Class:
