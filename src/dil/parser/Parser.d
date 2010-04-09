@@ -351,11 +351,11 @@ class Parser
       break;
     case T.Import:
     case_Import:
-      decl = parseImportDeclaration();
-      imports ~= decl.to!(ImportDeclaration);
+      auto importDecl = parseImportDeclaration();
+      imports ~= importDecl;
       // Handle specially. StorageClass mustn't be set.
-      decl.setProtection(this.protection);
-      return set(decl, begin);
+      importDecl.setProtection(this.protection);
+      return set(importDecl, begin);
     case T.Enum:
     version(D2)
     {
@@ -1099,7 +1099,7 @@ class Parser
   ////ModuleName := Identifier ("." Identifier)*
   ////AliasName := Identifier
   ////BindName := Identifier)
-  Declaration parseImportDeclaration()
+  ImportDeclaration parseImportDeclaration()
   {
     bool isStatic = consumed(T.Static);
     skip(T.Import);
