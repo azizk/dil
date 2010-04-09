@@ -840,6 +840,11 @@ class Parser
       linkageType = LinkageType.Pascal;
       break;
     case IDK.System:
+      // Do this in the semantic analysis phase:
+      // version(Windows)
+      //   linkageType = LinkageType.Windows;
+      // else
+      //   linkageType = LinkageType.C;
       linkageType = LinkageType.System;
       break;
     case IDK.Empty: break; // Avoid reporting another error below.

@@ -85,7 +85,8 @@ def get_symbols(jsons, module_fqn, categorize=True):
 
   SymAttr = ("private protected package public export abstract auto const "
     "deprecated extern final invariant override scope static synchronized "
-    "in out ref lazy variadic manifest C C++ D Windows Pascal").split(" ")
+    "in out ref lazy variadic manifest "
+    "C C++ D Windows Pascal System").split(" ")
 
   import json
   json_path = jsons/(module_fqn+".json")

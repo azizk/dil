@@ -1155,7 +1155,7 @@ class DocSymbol
       "final":10, "invariant":11, "override":12, "scope":13,
       "static":14, "synchronized":15, "in":16, "out":17, "ref":18,
       "lazy":19, "variadic":20, "manifest":21, "C":22, "C++":23,
-      "D":24, "Windows":25, "Pascal":26
+      "D":24, "Windows":25, "Pascal":26, "System":27
     ];
   }
 
