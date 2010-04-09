@@ -765,6 +765,16 @@ class Parser
     auto begin = token;
     Statement funcBody, inBody, outBody;
     Token* outIdent;
+
+    // Save the attributes.
+    auto saved_stcs = this.storageClass;
+    auto saved_prot = this.protection;
+    auto saved_link = this.linkageType;
+    // Clear attributes.
+    this.storageClass = StorageClass.None;
+    this.protection   = Protection.None;
+    this.linkageType  = LinkageType.None;
+
   Loop:
     while (1)
       switch (token.kind)
@@ -799,6 +809,12 @@ class Parser
         error2(MSG.ExpectedFunctionBody, token);
         break Loop;
       }
+
+    // Restore the original attributes.
+    this.storageClass = saved_stcs;
+    this.protection = saved_prot;
+    this.linkageType = saved_link;
+
     auto func = new FuncBodyStatement(funcBody, inBody, outBody, outIdent);
     return set(func, begin);
   }
@@ -1989,92 +2005,107 @@ class Parser
   ////              final | const | invariant | enum | scope)
   Statement parseAttributeStatement()
   {
-    StorageClass stc, stc_tmp;
-    LinkageType prev_linkageType;
+    StorageClass stcs, stc;
+    LinkageType linkageType;
 
-    Declaration parse() // Nested function.
+    // Allocate dummy declarations.
+    scope emptyDecl = new EmptyDeclaration();
+    // Function as the head of the attribute chain.
+    scope AttributeDeclaration headAttr =
+      new StorageClassDeclaration(StorageClass.None, emptyDecl);
+
+    AttributeDeclaration currentAttr, prevAttr = headAttr;
+
+    // Parse the attributes.
+  Loop:
+    while (1)
     {
       auto begin = token;
-      Declaration decl;
       switch (token.kind)
       {
       case T.Extern:
         if (peekNext() != T.LParen)
         {
-          stc_tmp = StorageClass.Extern;
+          stc = StorageClass.Extern;
           goto Lcommon;
         }
-
-        auto linkageType = parseExternLinkageType();
-        checkLinkageType(prev_linkageType, linkageType, begin);
-
-        decl = new LinkageDeclaration(linkageType, parse());
+        checkLinkageType(linkageType, parseExternLinkageType(), begin);
+        currentAttr = new LinkageDeclaration(linkageType, emptyDecl);
         break;
       case T.Static:
-        stc_tmp = StorageClass.Static;
+        stc = StorageClass.Static;
         goto Lcommon;
       case T.Final:
-        stc_tmp = StorageClass.Final;
+        stc = StorageClass.Final;
         goto Lcommon;
       case T.Const:
-      version(D2)
-      {
+        version(D2)
         if (peekNext() == T.LParen)
-          goto case_Declaration;
-      }
-        stc_tmp = StorageClass.Const;
+          break Loop;
+        stc = StorageClass.Const;
         goto Lcommon;
       version(D2)
       {
       case T.Invariant: // D 2.0
         if (peekNext() == T.LParen)
-          goto case_Declaration;
-        stc_tmp = StorageClass.Invariant;
+          break Loop;
+        stc = StorageClass.Invariant;
         goto Lcommon;
       case T.Enum: // D 2.0
         if (!isEnumManifest())
-        { // A normal enum declaration.
-          decl = parseEnumDeclaration();
-          // NB: this must be similar to the code at the end of
-          //     parseDeclarationDefinition().
-          decl.setProtection(this.protection);
-          decl.setStorageClass(stc);
-          set(decl, begin);
-          return decl;
-        }
+          break Loop;
         // enum as StorageClass.
-        stc_tmp = StorageClass.Manifest;
+        stc = StorageClass.Manifest;
         goto Lcommon;
-      }
+      } // version(D2)
       case T.Auto:
-        stc_tmp = StorageClass.Auto;
+        stc = StorageClass.Auto;
         goto Lcommon;
       case T.Scope:
-        stc_tmp = StorageClass.Scope;
+        stc = StorageClass.Scope;
         goto Lcommon;
       Lcommon:
-        // Issue error if redundant.
-        if (stc & stc_tmp)
+        if (stcs & stc) // Issue error if redundant.
           error2(MID.RedundantStorageClass, token);
-        else
-          stc |= stc_tmp;
+        stcs |= stc;
 
         nT();
-        decl = new StorageClassDeclaration(stc_tmp, parse());
+        currentAttr = new StorageClassDeclaration(stc, emptyDecl);
         break;
-      case T.Class, T.Interface, T.Struct, T.Union, T.Alias, T.Typedef:
-        decl = parseDeclarationDefinition();
-        decl.setProtection(Protection.None);
-        decl.setStorageClass(StorageClass.None);
-        return decl;
       default:
-      case_Declaration:
-        return parseVariableOrFunction(stc, Protection.None, prev_linkageType,
-                                       true);
+        break Loop;
       }
-      return set(decl, begin);
+      set(currentAttr, begin);
+      // Correct the child node and continue parsing attributes.
+      prevAttr.setDecls(currentAttr);
+      prevAttr = currentAttr; // Current becomes previous.
     }
-    return new DeclarationStatement(parse());
+
+    // Parse the declaration.
+    Declaration decl;
+    switch (token.kind)
+    {
+    case T.Class, T.Interface, T.Struct, T.Union,
+         T.Alias, T.Typedef, T.Enum:
+      auto saved_stcs = this.storageClass; // Save value.
+      this.storageClass = stcs; // Set current value.
+      assert(this.protection == Protection.None);
+      // Parse a declaration.
+      decl = parseDeclarationDefinition();
+      this.storageClass = saved_stcs; // Restore old value.
+      break;
+    case T.Template: // TODO:
+      // error2("templates are not allowed in functions", token);
+      //break;
+    default:
+      decl =
+        parseVariableOrFunction(stcs, Protection.None, linkageType, true);
+    }
+    assert(decl !is null && isNodeSet(decl));
+    // Attach the declaration to the previously parsed attribute.
+    prevAttr.setDecls(decl);
+    // Return the first attribute declaration. Wrap it in a Statement.
+    return new DeclarationStatement(headAttr.decls);
   }
 
   /// $(BNF IfStatement := if "(" Condition ")" ScopeStatement
