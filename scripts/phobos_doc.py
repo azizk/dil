@@ -74,6 +74,7 @@ def write_missing_macros(path):
   """ These macros are missing in std.ddoc. """
   open(path, "w").write("""WIKI =
 COMMENT = <!-- -->
+D = $0
 DOLLAR = $
 _PI = &pi;
 POW = $1<sup>$2</sup>
@@ -105,18 +106,23 @@ def write_PDF(DIL, SRC, VERSION, TMP):
 
   for gif in SRC//("erf.gif", "erfc.gif"): gif.copy(TMP)
   html_files = SRC.glob("*.html")
-  ignore_list = ("phobos.html", "std.c.windows.windows.html")
-  html_files = [f for f in html_files
-                    if not any(map(f.endswith, iter(ignore_list)))]
+  ignore_list = ("phobos.html", "std.c.windows.windows.html", "index.html")
+  html_files = filter(lambda f: f.name not in ignore_list, html_files)
   symbol_link = "http://dil.googlecode.com/svn/doc/Phobos_%s" % VERSION
-  params = {"pdf_title": "Phobos %s API" % VERSION,
+  params = {
+    "pdf_title": "Phobos %s API" % VERSION,
     "cover_title": "Phobos %s<br/><b>API</b>" % VERSION,
     "author": "Walter Bright",
     "subject": "Programming API",
     "keywords": "Phobos D Standard Library",
     "nested_toc": True,
-    "symlink": symbol_link}
-  pdf_gen.run(html_files, SRC/("Phobos.%s.API.pdf"%VERSION), TMP, params)
+    "symlink": symbol_link
+    # TODO:
+    #"first_toc": "",
+    #"before_files": []
+  }
+  dest = SRC/("Phobos.%s.API.pdf"%VERSION)
+  pdf_gen.run(html_files, dest, TMP, params)
 
 def main():
   from optparse import OptionParser
@@ -149,21 +155,21 @@ def main():
   V_MINOR = matched[2]
   D_VERSION  = V_MAJOR + ".0" # E.g.: 1.0 or 2.0
 
+  # Initialize some path variables.
   # Path to dil's root folder.
-  DIL       = dil_path()
+  DIL         = dil_path()
   # The source code folder of Phobos.
-  PHOBOS_SRC = Path(args[1])
+  PHOBOS_SRC  = Path(args[1])
   # Path to the html folder of Phobos.
   PHOBOS_SRC.HTML = PHOBOS_SRC/".."/".."/"html"/"d"/"phobos"
   # Destination of doc files.
-  DEST       = doc_path(firstof(str, getitem(args, 2), 'phobosdoc'))
+  DEST        = doc_path(firstof(str, getitem(args, 2), 'phobosdoc'))
   # Temporary directory, deleted in the end.
-  TMP        = DEST/"tmp"
+  TMP         = DEST/"tmp"
   # The list of module files (with info) that have been processed.
-  MODLIST    = TMP/"modules.txt"
+  MODLIST     = TMP/"modules.txt"
   # List of files to ignore.
-  IGNORE_LIST = ("phobos.d", "cast.d", "invariant.d", "switch.d", "unittest.d")
-  IGNORE_LIST = [Path.sep+i for i in IGNORE_LIST] # Prepend with path separator.
+  IGNORE_LIST = ("phobos.d", "unittest.d")
   # The files to generate documentation for.
   FILES       = []
 
@@ -182,8 +188,10 @@ def main():
   # Begin processing.
 
   # Filter out files in the internal/ folder and in the ignore list.
-  filter_func = lambda f: any(f.endswith(i) for i in IGNORE_LIST) or \
-                          f.startswith(PHOBOS_SRC/"internal")
+  # Ignore the internal/ dir because it has files with keywords in their names.
+  # E.g.: "cast.d", "invariant.d", "switch.d", "unittest.d"
+  def filter_func(f):
+    return f.name in IGNORE_LIST or f.folder.name == "internal"
   FILES = find_source_files(PHOBOS_SRC, filter_func)
   FILES.sort() # Sort for index.
 
@@ -194,7 +202,7 @@ def main():
     DOC_FILES = [TMP/"phobos.ddoc", DIL.KANDIL.ddoc] + \
                  TMP//("missing.ddoc", "overrides.ddoc") + \
                 [PHOBOS_SRC/"phobos.d"] + FILES
-    versions = ["DDoc"]
+    versions = ["Windows", "DDoc"]
     generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
                   versions, options='-v -i -hl --kandil'.split(' '))
     modify_phobos_html(DEST/"phobos.html", D_VERSION)
@@ -206,7 +214,7 @@ def main():
     create_index_file(TMP/"index.d", PHOBOS_SRC, FILES)
     DOC_FILES = FILES + [PHOBOS_SRC/"phobos.d"] + \
       TMP//("index.d", "phobos.ddoc", "missing.ddoc", "overrides.ddoc")
-    versions = ["DDoc"]
+    versions = ["Windows", "DDoc"]
     generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
                   versions, options=['-v', '-i', '-hl'])
     modify_phobos_html(DEST/"phobos.html", D_VERSION)
