@@ -317,7 +317,7 @@ class Parser
         decl = new AliasThisDeclaration(ident);
         break;
       }
-      }
+      } // version(D2)
       auto d = new AliasDeclaration(parseVariableOrFunction());
       if (auto var = d.decl.Is!(VariablesDeclaration))
         if (auto init = var.firstInit())
@@ -608,39 +608,34 @@ class Parser
         tparams = parseTemplateParameterList();
 
       params = parseParameterList();
+
     LparseAfterParams:
-    version(D2)
-    {
-      if (tparams) // If ( ConstraintExpression )
-        constraint = parseOptionalConstraint();
-      switch (token.kind)
+      version(D2)
       {
-      case T.Const:
-        stcs |= StorageClass.Const;
-        nT();
-        break;
-      case T.Invariant:
-        stcs |= StorageClass.Invariant;
-        nT();
-        break;
-      default:
-      }
-    }
+      auto postfix_stcs = parseFunctionPostfix();
+      if (tparams) // if "(" ConstraintExpression ")"
+        constraint = parseOptionalConstraint();
+      } // version(D2)
+
       // ReturnType FunctionName ( ParameterList )
       auto funcBody = parseFunctionBody();
       auto fd = new FunctionDeclaration(type, name, params, funcBody);
-      fd.setStorageClass(stcs);
       fd.setLinkageType(linkType);
-      fd.setProtection(protection);
+      Declaration decl = fd;
       if (tparams)
-      {
-        auto d = putInsideTemplateDeclaration(begin, name, fd, tparams,
-                                              constraint);
-        d.setStorageClass(stcs);
-        d.setProtection(protection);
-        return set(d, begin);
+      { // putInside...() uses these members to set the attributes.
+        auto saved_stcs = this.storageClass;
+        auto saved_prot = this.protection;
+        this.storageClass = stcs;
+        this.protection = protection;
+        decl =
+          putInsideTemplateDeclaration(begin, name, fd, tparams, constraint);
+        this.storageClass = saved_stcs;
+        this.protection = saved_prot;
       }
-      return set(fd, begin);
+      decl.setStorageClass(stcs);
+      decl.setProtection(protection);
+      return set(decl, begin);
     }
     else
     { // Type VariableName DeclaratorSuffix
@@ -817,6 +812,31 @@ class Parser
 
     auto func = new FuncBodyStatement(funcBody, inBody, outBody, outIdent);
     return set(func, begin);
+  }
+
+  /// $(BNF FunctionPostfix := (const | invariant)*)
+  StorageClass parseFunctionPostfix()
+  { // Only D2.
+    StorageClass stcs, stc;
+    while (1)
+    {
+      switch (token.kind)
+      {
+      case T.Const:
+        stc = StorageClass.Const;
+        break;
+      case T.Invariant:
+        stc = StorageClass.Invariant;
+        break;
+      default:
+        return stcs;
+      }
+      if (stcs & stc)
+        error2(MID.RedundantStorageClass, token);
+      stcs |= stc;
+      nT();
+    }
+    return stcs;
   }
 
   /// $(BNF ExternLinkageType :=
@@ -1155,8 +1175,8 @@ class Parser
   /// false if it's a normal enum declaration.
   bool isEnumManifest()
   {
-  version(D2)
-  {
+    version(D2)
+    {
     assert(token.kind == T.Enum);
     auto next = token;
     auto kind = peekAfter(next);
@@ -1169,8 +1189,8 @@ class Parser
         return false; // Named enum.
     }
     return true; // Manifest enum.
-  }
-  else return false;
+    }
+    assert(0);
   }
 
   /// $(BNF
