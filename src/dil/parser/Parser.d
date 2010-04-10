@@ -316,15 +316,22 @@ class Parser
         break;
       }
       } // version(D2)
-      auto d = new AliasDeclaration(parseVariableOrFunction());
-      if (auto var = d.decl.Is!(VariablesDeclaration))
+      auto d = new AliasDeclaration(parseAttributes(&decl));
+      if (auto var = decl.Is!(VariablesDeclaration))
+      {
         if (auto init = var.firstInit())
           error(init.begin.prevNWS(), MSG.AliasHasInitializer);
+      }
+      else
+        error2(MSG.AliasExpectsVariable, decl.begin);
       decl = d;
       break;
     case T.Typedef:
       nT();
-      decl = new TypedefDeclaration(parseVariableOrFunction());
+      auto td = new TypedefDeclaration(parseAttributes(&decl));
+      if (!decl.Is!(VariablesDeclaration) && !decl.Is!(FunctionDeclaration))
+        error2(MSG.TypedefExpectsVariable, decl.begin);
+      decl = td;
       break;
     case T.Static:
       switch (peekNext())
@@ -897,8 +904,10 @@ class Parser
       error(begin, MSG.RedundantLinkageType, Token.textSpan(begin, prevToken));
   }
 
+  /// Parses one or more attributes and a Declaration at the end.
+  ///
   /// $(BNF
-  ////Attributes := (StorageAttribute | OtherAttributes)+
+  ////Attributes := (StorageAttribute | OtherAttributes)*
   ////  (DeclarationsBlock | Declaration)
   ////StorageAttribute := extern | ExternLinkageType | override | abstract |
   ////  auto | synchronized | static | final | const | invariant | enum | scope
@@ -907,7 +916,9 @@ class Parser
   ////AlignAttribute := align ("(" Integer ")")?
   ////PragmaAttribute := pragma "(" Identifier ("," ExpressionList)? ")"
   ////ProtectionAttribute := private | public | package | protected | export)
-  Declaration parseAttributes()
+  /// Params:
+  ///   pDecl = set to the non-attribute Declaration if non-null.
+  Declaration parseAttributes(Declaration* pDecl = null)
   {
     StorageClass stcs, // Set to StorageClasses parsed in the loop.
       stc; // Current StorageClass in the loop.
@@ -923,7 +934,7 @@ class Parser
     scope AttributeDeclaration headAttr =
       new StorageClassDeclaration(StorageClass.None, emptyDecl);
 
-    AttributeDeclaration currentAttr, prevAttr = headAttr;
+    AttributeDeclaration currentAttr = headAttr, prevAttr = headAttr;
 
     // Parse the attributes.
   Loop:
@@ -1089,6 +1100,8 @@ class Parser
     this.linkageType = outer_linkageType;
     this.protection = outer_protection;
     this.alignSize = outer_alignSize;
+    if (pDecl)
+      *pDecl = decl;
 
     assert(decl !is null && isNodeSet(decl));
     // Attach the declaration to the previously parsed attribute.
@@ -1801,10 +1814,7 @@ class Parser
       goto case T.Dot;
     case T.Dot, T.Typeof:
       bool success;
-      d = try_({
-        return parseVariableOrFunction(StorageClass.None,
-          Protection.None, LinkageType.None, false);
-      }, success);
+      d = try_({ return parseVariableOrFunction(); }, success);
       if (success)
         goto LreturnDeclarationStatement; // Declaration
       else

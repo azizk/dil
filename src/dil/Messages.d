@@ -165,6 +165,8 @@ static:
   auto MissingCatchOrFinally = "try statement is missing a catch or finally body.";
   auto ExpectedClosing = "expected closing '{}' {}, not '{}'";
   auto AliasHasInitializer = "initializers are not allowed for alias types";
+  auto AliasExpectsVariable = "expected a variable declaration in alias, not ‘{}’";
+  auto TypedefExpectsVariable = "expected a variable declaration in typedef, not ‘{}’";
   // Semantic analysis:
   auto CouldntLoadModule = "couldn't import module '{}'";
   auto ConflictingModuleFiles = "module is in conflict with module '{}'";
