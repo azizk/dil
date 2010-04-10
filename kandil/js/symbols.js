@@ -53,6 +53,7 @@ function Symbol(fqn, kind, sub)
 }
 
 Symbol.getTree = function(json/*=JSON text*/, moduleFQN) {
+  json = json || "['',1,[],[1,1],[]]";
   var arrayTree = JSON.parse(json);
   var dict = {}; // A map of fully qualified names to symbols.
   var list = []; // A flat list of all symbols.
@@ -85,7 +86,6 @@ Symbol.getTree = function(json/*=JSON text*/, moduleFQN) {
   visit.SymbolKind = SymbolKind;
   visit.Symbol = Symbol;
 
-  var root_name = arrayTree[0];
   // Avoid including the root's name in the FQNs of the symbols.
   // E.g.: "Culture.this", not "tango.text.locale.Core.Culture.this"
   arrayTree[0] = "";
@@ -93,7 +93,7 @@ Symbol.getTree = function(json/*=JSON text*/, moduleFQN) {
   tree.dict = dict;
   tree.list = list;
   tree.root = visit(arrayTree, "");
-  tree.root.name = root_name;
+  tree.root.name = moduleFQN.rpartition(".", 1);
   tree.root.fqn = moduleFQN;
   return tree;
 };
