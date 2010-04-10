@@ -915,6 +915,7 @@ class Parser
     Protection protection, // Set to the Protection parsed in the loop.
       prot; // Current Protection in the loop.
     uint alignSize; // Set to the AlignSize parsed in the loop.
+    bool testAutoDecl; // Test for: auto Identifier "=" Expression
 
     // Allocate dummy declarations.
     scope emptyDecl = new EmptyDeclaration();
@@ -939,6 +940,7 @@ class Parser
         }
         checkLinkageType(linkageType, parseExternLinkageType(), begin);
         currentAttr = new LinkageDeclaration(linkageType, emptyDecl);
+        testAutoDecl = false;
         break;
       case T.Override:
         stc = StorageClass.Override;
@@ -992,6 +994,7 @@ class Parser
 
         nT();
         currentAttr = new StorageClassDeclaration(stc, emptyDecl);
+        testAutoDecl = true;
         break;
 
       // Non-StorageClass attributes:
@@ -1017,6 +1020,7 @@ class Parser
         protection = prot;
         nT();
         currentAttr = new ProtectionDeclaration(prot, emptyDecl);
+        testAutoDecl = false;
         break;
       case T.Align:
         // align ("(" Integer ")")?
@@ -1024,6 +1028,7 @@ class Parser
         alignSize = parseAlignAttribute(sizetok);
         // TODO: error msg for redundant align attributes.
         currentAttr = new AlignDeclaration(sizetok, emptyDecl);
+        testAutoDecl = false;
         break;
       case T.Pragma:
         // Pragma := pragma "(" Identifier ("," ExpressionList)? ")"
@@ -1037,6 +1042,7 @@ class Parser
         requireClosing(T.RParen, leftParen);
 
         currentAttr = new PragmaDeclaration(ident, args, emptyDecl);
+        testAutoDecl = false;
         break;
       default:
         break Loop;
@@ -1053,33 +1059,31 @@ class Parser
 
     // Parse the declaration.
     Declaration decl;
-    switch (token.kind)
-    {
-    case T.Identifier: // "auto" Identifier "="
-      // This could be a normal Declaration or an AutoDeclaration
-      decl =
-        parseVariableOrFunction(stcs, this.protection, linkageType, true);
-      break;
-    default:
-      // Save attributes.
-      auto outer_storageClass = this.storageClass;
-      auto outer_linkageType = this.linkageType;
-      auto outer_protection = this.protection;
-      auto outer_alignSize = this.alignSize;
-      // Set parsed values.
-      this.storageClass = outer_storageClass | stcs; // Combine stcs.
-      if (!linkageType) linkageType = outer_linkageType;
-      this.linkageType = linkageType;
-      this.protection = protection;
-      this.alignSize = alignSize;
+    if (!linkageType)
+      linkageType = this.linkageType;
+    // Save attributes.
+    auto outer_storageClass = this.storageClass;
+    auto outer_linkageType = this.linkageType;
+    auto outer_protection = this.protection;
+    auto outer_alignSize = this.alignSize;
+    // Set parsed values.
+    stcs |= outer_storageClass; // Combine with outer stcs.
+    this.storageClass = stcs;
+    this.linkageType = linkageType;
+    this.protection = protection;
+    this.alignSize = alignSize;
+    if (testAutoDecl && token.kind == T.Identifier) // "auto" Identifier "="
+      decl = // This could be a normal Declaration or an AutoDeclaration
+        parseVariableOrFunction(stcs, protection, linkageType, true);
+    else
       // Parse a block.
       decl = parseDeclarationsBlock();
-      // Restore outer values.
-      this.storageClass = outer_storageClass;
-      this.linkageType = outer_linkageType;
-      this.protection = outer_protection;
-      this.alignSize = outer_alignSize;
-    }
+    // Restore outer values.
+    this.storageClass = outer_storageClass;
+    this.linkageType = outer_linkageType;
+    this.protection = outer_protection;
+    this.alignSize = outer_alignSize;
+
     assert(decl !is null && isNodeSet(decl));
     // Attach the declaration to the previously parsed attribute.
     prevAttr.setDecls(decl);
@@ -2018,6 +2022,7 @@ class Parser
   {
     StorageClass stcs, stc;
     LinkageType linkageType;
+    bool testAutoDecl;
 
     // Allocate dummy declarations.
     scope emptyDecl = new EmptyDeclaration();
@@ -2042,6 +2047,7 @@ class Parser
         }
         checkLinkageType(linkageType, parseExternLinkageType(), begin);
         currentAttr = new LinkageDeclaration(linkageType, emptyDecl);
+        testAutoDecl = false;
         break;
       case T.Static:
         stc = StorageClass.Static;
@@ -2082,6 +2088,7 @@ class Parser
 
         nT();
         currentAttr = new StorageClassDeclaration(stc, emptyDecl);
+        testAutoDecl = true;
         break;
       default:
         break Loop;
@@ -2094,23 +2101,28 @@ class Parser
 
     // Parse the declaration.
     Declaration decl;
+    assert(this.storageClass == StorageClass.None);
+    assert(this.protection == Protection.None);
+    assert(this.linkageType == LinkageType.None);
     switch (token.kind)
     {
     case T.Class, T.Interface, T.Struct, T.Union,
          T.Alias, T.Typedef, T.Enum:
-      auto saved_stcs = this.storageClass; // Save value.
-      this.storageClass = stcs; // Set current value.
-      assert(this.protection == Protection.None);
+      // Set current values.
+      this.storageClass = stcs;
+      this.linkageType = linkageType;
       // Parse a declaration.
       decl = parseDeclarationDefinition();
-      this.storageClass = saved_stcs; // Restore old value.
+      // Clear values.
+      this.storageClass = StorageClass.None;
+      this.linkageType = LinkageType.None;
       break;
     case T.Template: // TODO:
       // error2("templates are not allowed in functions", token);
       //break;
     default:
       decl =
-        parseVariableOrFunction(stcs, Protection.None, linkageType, true);
+        parseVariableOrFunction(stcs, protection, linkageType, testAutoDecl);
     }
     assert(decl !is null && isNodeSet(decl));
     // Attach the declaration to the previously parsed attribute.
