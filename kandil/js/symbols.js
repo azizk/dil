@@ -53,7 +53,7 @@ function Symbol(fqn, kind, sub)
 }
 
 Symbol.getTree = function(json/*=JSON text*/, moduleFQN) {
-  json = json || "['',1,[],[1,1],[]]";
+  json = json || '["",1,[],[1,1],[]]';
   var arrayTree = JSON.parse(json);
   var dict = {}; // A map of fully qualified names to symbols.
   var list = []; // A flat list of all symbols.
