@@ -826,7 +826,12 @@ abstract class DDocEmitter : DefaultVisitor
       foreach (name; vd.names)
         DECL({
           write(kind, " "); write(vd.typeNode); write(" ");
-          SYMBOL(name.str, kindID, d);
+          auto saved_begin = vd.begin;
+          // 'vd' instead of 'd' is passed to SYMBOL, because it
+          // has a linkageType member, which has to appear in the docs.
+          vd.begin = d.begin; // Use the begin token of the outer declaration.
+          SYMBOL(name.str, kindID, vd);
+          vd.begin = saved_begin; // Restore to the old value.
         }, d);
     else if (auto fd = d.decl.Is!(FunctionDeclaration))
     {}

@@ -91,7 +91,7 @@ DDOC_STANDARDS   = $(SECH Standards:)$0
 DDOC_THROWS      = $(SECH Throws:)$0
 DDOC_VERSION     = $(SECH Version:)$0
 
-DDOC_PARAMS     = $(SECH Params:)
+DDOC_PARAMS     = $(SECH Parameters:)
 <table class="params">$0</table>
 DDOC_PARAM_ROW  = $(TR $0)
 DDOC_PARAM_ID   = $(TD $0)
