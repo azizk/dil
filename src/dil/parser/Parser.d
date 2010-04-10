@@ -955,6 +955,12 @@ class Parser
         stc = StorageClass.Synchronized;
         goto Lcommon;
       case T.Static:
+        switch (peekNext())
+        { // Avoid parsing static import, static this etc.
+        case T.Import, T.This, T.Tilde, T.If, T.Assert:
+          break Loop;
+        default:
+        }
         stc = StorageClass.Static;
         goto Lcommon;
       case T.Final:
@@ -2050,6 +2056,14 @@ class Parser
         testAutoDecl = false;
         break;
       case T.Static:
+        // Commented out: These stmnts with attributes before them
+        // would be illegal anyway.
+        // switch (peekNext())
+        // { // Avoid parsing static if and static assert.
+        // case T.If, T.Assert:
+        //   break Loop;
+        // default:
+        // }
         stc = StorageClass.Static;
         goto Lcommon;
       case T.Final:
@@ -2079,6 +2093,9 @@ class Parser
         stc = StorageClass.Auto;
         goto Lcommon;
       case T.Scope:
+        // ScopeGuardStatement with attributes isn't allowed anyway.
+        // if (peekNext() == T.LParen)
+        //   break Loop;
         stc = StorageClass.Scope;
         goto Lcommon;
       Lcommon:
