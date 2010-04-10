@@ -207,10 +207,10 @@ if (!Object.defineProperty)
   };
 
 Object.getter = function(o, p, f) {
-  return this.defineProperty(o, p, {'get':f})
+  return this.defineProperty(o, p, {'get':f, 'configurable':true})
 };
 Object.setter = function(o, p, f) {
-  return this.defineProperty(o, p, {'set':f})
+  return this.defineProperty(o, p, {'set':f, 'configurable':true})
 };
 
 
