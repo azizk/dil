@@ -166,6 +166,13 @@ class ConfigLoader : SettingsLoader
     GlobalSettings.dataDir = this.dataDir;
     Environment.set("DATADIR", this.dataDir);
 
+    if (auto val = getValue!(StringExpression)("KANDILDIR"))
+    {
+      auto kandilDir = normalize(expandVariables(val.getString()));
+      GlobalSettings.kandilDir = kandilDir;
+      Environment.set("KANDILDIR", kandilDir);
+    }
+
     if (auto array = getValue!(ArrayInitExpression)("VERSION_IDS"))
       foreach (value; array.values)
         if (auto val = castTo!(StringExpression)(value))

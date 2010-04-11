@@ -21,7 +21,7 @@
 module dilconf;
 
 /// Files needed by dil are located in this directory.
-var DATADIR = "${BINDIR}/../data/";
+var DATADIR = "${BINDIR}/../data";
 
 /// Predefined version identifiers.
 var VERSION_IDS = ["X86", "linux", "LittleEndian"];
@@ -41,6 +41,9 @@ var LANG_FILE = "${DATADIR}/lang_en.d";
 var XML_MAP = "${DATADIR}/xml_map.d";
 /// Path to the html map.
 var HTML_MAP = "${DATADIR}/html_map.d";
+
+/// Path to the files of kandil.
+var KANDILDIR = "${DATADIR}/../kandil";
 
 /// Customizable formats for error messages.
 ///

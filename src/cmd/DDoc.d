@@ -53,7 +53,7 @@ struct DDocCommand
 
   CompilationContext context; /// Environment variables of the compilation.
   Diagnostics diag;           /// Collects error messages.
-  Diagnostics reportDiag;     /// Collectr problem messages.
+  Diagnostics reportDiag;     /// Collects problem messages.
   Highlighter hl; /// For highlighting source files or DDoc code sections.
   /// For managing loaded modules and getting a sorted list of them.
   ModuleManager mm;
@@ -66,8 +66,13 @@ struct DDocCommand
     auto destDirPath = new FilePath(destDirPath);
     destDirPath.exists || destDirPath.createFolder();
 
-    auto dir = new FilePath(this.destDirPath);
-    dir.append("symbols").exists || dir.createFolder();
+    if (useKandil)
+      if (auto symDir = destDirPath.dup.append("symbols"))
+        symDir.exists || symDir.createFolder();
+
+    if (writeHLFiles)
+      if (auto srcDir = destDirPath.dup.append("htmlsrc"))
+        srcDir.exists || srcDir.createFolder();
 
     if (useKandil && writeXML)
       return Stdout("Error: kandil uses only HTML at the moment.").newline;
@@ -108,6 +113,10 @@ struct DDocCommand
       {
         if (mm.moduleByPath(mod.filePath()))
           continue; // The same file path was already loaded. TODO: warning?
+
+        if (verbose)
+          Stdout.formatln("Parsing: {}", mod.filePath());
+
         mod.parse();
         if (mm.moduleByFQN(mod.getFQNPath()))
           continue; // Same FQN, but different file path. TODO: error?
@@ -135,14 +144,15 @@ struct DDocCommand
       writeModuleLists();
     if (writeReport)
       writeDDocReport();
+    if (verbose && diag.info.length)
+      Stdout("\nDiagnostic messages:").newline;
   }
 
   /// Writes a syntax highlighted file for mod.
   void writeSyntaxHighlightedFile(Module mod)
   {
     auto filePath = new FilePath(destDirPath);
-    filePath.append("htmlsrc");
-    filePath.append(mod.getFQN());
+    filePath.append("htmlsrc").append(mod.getFQN());
     filePath.cat(outFileExtension);
     if (verbose)
       Stdout.formatln("hl {} > {}", mod.filePath(), filePath.toString());
@@ -263,9 +273,12 @@ struct DDocCommand
     foreach (path; ["css", "js", "img"])
       dir.set(destDir.dup.append(path)).exists() || dir.createFolder();
     // Copy kandil files.
-    auto kandil = new FilePath("kandil");
+    auto kandil = new FilePath(GlobalSettings.kandilDir);
+    auto data = new FilePath(GlobalSettings.dataDir);
     destDir.dup.append("css").append("style.css")
            .copy(kandil.dup.append("css").append("style.css"));
+    destDir.dup.append("htmlsrc").append("html.css")
+           .copy(data.dup.append("html.css"));
     foreach (file; ["navigation.js", "jquery.js", "quicksearch.js",
                     "symbols.js", "utilities.js"])
       destDir.dup.append("js").append(file)

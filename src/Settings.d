@@ -11,6 +11,8 @@ struct GlobalSettings
 static:
   /// Path to the data directory.
   string dataDir = "data/";
+  /// Path to the directory of kandil.
+  string kandilDir = "kandil/";
   /// Predefined version identifiers.
   string[] versionIds;
   /// Path to the language file.
