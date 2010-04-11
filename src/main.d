@@ -364,7 +364,9 @@ void main(char[][] args)
       importPaths ~= item ~ ";";
     foreach (item; GS.ddocFilePaths)
       ddocPaths ~= item ~ ";";
-    string[string] settings = ["DATADIR"[]:GS.dataDir, "VERSION_IDS":versionIds,
+    string[string] settings = [
+      "DATADIR"[]:GS.dataDir, "VERSION_IDS":versionIds,
+      "KANDILDIR":GS.kandilDir,
       "IMPORT_PATHS":importPaths, "DDOC_FILES":ddocPaths,
       "LANG_FILE":GS.langFile, "XML_MAP":GS.xmlMapFile,
       "HTML_MAP":GS.htmlMapFile, "LEXER_ERROR":GS.lexerErrorFormat,
@@ -383,6 +385,7 @@ void main(char[][] args)
       }
     else // Print all settings.
       foreach (name; ["DATADIR", "VERSION_IDS", "IMPORT_PATHS", "DDOC_FILES",
+          "KANDILDIR",
           "LANG_FILE", "XML_MAP", "HTML_MAP", "LEXER_ERROR",
           "PARSER_ERROR", "SEMANTIC_ERROR", "TAB_WIDTH"])
         Stdout.formatln("{}={}", name, settings[name]);
