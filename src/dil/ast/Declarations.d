@@ -189,7 +189,7 @@ class TypedefDeclaration : Declaration
 
 class EnumDeclaration : Declaration
 {
-  Token* nametok;
+  Token* name;
   TypeNode baseType;
   EnumMemberDeclaration[] members;
   this(Token* name, TypeNode baseType, EnumMemberDeclaration[] members, bool hasBody)
@@ -199,15 +199,15 @@ class EnumDeclaration : Declaration
     addOptChild(baseType);
     addOptChildren(members);
 
-    this.nametok = name;
+    this.name = name;
     this.baseType = baseType;
     this.members = members;
   }
 
-  /// TODO: remove this and rename 'nametok' to 'name'.
-  Identifier* name()
+  /// Returns the Identifier object of a variable.
+  Identifier* nameId()
   {
-    return nametok ? nametok.ident : null;
+    return name ? name.ident : null;
   }
 
   Enum symbol;
@@ -218,14 +218,14 @@ class EnumDeclaration : Declaration
 class EnumMemberDeclaration : Declaration
 {
   TypeNode type; // D 2.0
-  Token* nametok;
+  Token* name;
   Expression value;
   this(Token* name, Expression value)
   {
     mixin(set_kind);
     addOptChild(value);
 
-    this.nametok = name;
+    this.name = name;
     this.value = value;
   }
 
@@ -237,10 +237,10 @@ class EnumMemberDeclaration : Declaration
     this(name, value);
   }
 
-  /// TODO: remove this and rename 'nametok' to 'name'.
-  Identifier* name()
+  /// Returns the Identifier object of a variable.
+  Identifier* nameId()
   {
-    return nametok.ident;
+    return name ? name.ident : null;
   }
 
   EnumMember symbol;
@@ -250,7 +250,7 @@ class EnumMemberDeclaration : Declaration
 
 class TemplateDeclaration : Declaration
 {
-  Token* nametok;
+  Token* name;
   TemplateParameters tparams;
   Expression constraint; // D 2.0
   CompoundDeclaration decls;
@@ -263,16 +263,17 @@ class TemplateDeclaration : Declaration
     addOptChild(constraint);
     addChild(decls);
 
-    this.nametok = name;
+    this.name = name;
     this.tparams = tparams;
     this.constraint = constraint;
     this.decls = decls;
   }
 
-  /// TODO: remove this and rename 'nametok' to 'name'.
-  Identifier* name()
+  /// Returns the Identifier object of this declaration. May be null.
+  Identifier* nameId()
   {
-    return nametok.ident;
+    assert(name !is null);
+    return name.ident;
   }
 
   /// Returns true if this is a template that wraps a class, struct etc.
@@ -291,21 +292,21 @@ class TemplateDeclaration : Declaration
 
 abstract class AggregateDeclaration : Declaration
 {
-  Token* nametok;
+  Token* name;
 //   TemplateParameters tparams;
   CompoundDeclaration decls;
   this(Token* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
   {
     super.hasBody = decls !is null;
-    this.nametok = name;
+    this.name = name;
 //     this.tparams = tparams;
     this.decls = decls;
   }
 
-  /// TODO: remove this and rename 'nametok' to 'name'.
-  Identifier* name()
+  /// Returns the Identifier object of this declaration. May be null.
+  Identifier* nameId()
   {
-    return nametok ? nametok.ident : null;
+    return name ? name.ident : null;
   }
 }
 
@@ -447,7 +448,7 @@ class StaticDestructorDeclaration : Declaration
 class FunctionDeclaration : Declaration
 {
   TypeNode returnType;
-  Token* nametok;
+  Token* name;
 //   TemplateParameters tparams;
   Parameters params;
   FuncBodyStatement funcBody;
@@ -464,18 +465,19 @@ class FunctionDeclaration : Declaration
     addChild(funcBody);
 
     this.returnType = returnType;
-    this.nametok = name;
+    this.name = name;
 //     this.tparams = tparams;
     this.params = params;
     this.funcBody = funcBody;
   }
 
-  /// TODO: remove this and rename 'nametok' to 'name'.
-  Identifier* name()
+  /// Returns the Identifier object of this declaration. May be null.
+  Identifier* nameId()
   {
-    return nametok.ident;
+    return name ? name.ident : null;
   }
 
+  // Sets the LinkageType of this function.
   void setLinkageType(LinkageType linkageType)
   {
     this.linkageType = linkageType;
@@ -495,13 +497,12 @@ class FunctionDeclaration : Declaration
 class VariablesDeclaration : Declaration
 {
   TypeNode typeNode;
-  Token*[] nametoks;
-  Identifier*[] names; // TODO: will be removed.
+  Token*[] names;
   Expression[] inits;
-  this(TypeNode typeNode, Token*[] nametoks, Expression[] inits)
+  this(TypeNode typeNode, Token*[] names, Expression[] inits)
   {
     // No empty arrays allowed. Both arrays must be of same size.
-    assert(nametoks.length != 0 && nametoks.length == inits.length);
+    assert(names.length != 0 && names.length == inits.length);
     // If no type (in case of AutoDeclaration), first value mustn't be null.
     assert(typeNode ? 1 : inits[0] !is null);
     mixin(set_kind);
@@ -509,12 +510,17 @@ class VariablesDeclaration : Declaration
     foreach (init; inits)
       addOptChild(init);
 
-    foreach (nametok; nametoks)
-      names ~= nametok ? nametok.ident : null;
-
     this.typeNode = typeNode;
-    this.nametoks = nametoks;
+    this.names = names;
     this.inits = inits;
+  }
+
+  /// Returns the Identifier object of this declaration. May be null.
+  /// Params:
+  ///   i = the index to the 'names' array member.
+  Identifier* nameId(uint i)
+  {
+    return names[i] ? names[i].ident : null;
   }
 
   LinkageType linkageType;

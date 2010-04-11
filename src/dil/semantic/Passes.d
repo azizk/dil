@@ -163,6 +163,9 @@ abstract class SemanticPass : DefaultVisitor
   /// ---
   ScopeSymbol idScope;
 
+  /// The root of the Identifier tree.
+  Node rootIdNode;
+
   /// This object is assigned to idScope when a symbol lookup
   /// returned no valid symbol.
   static const ScopeSymbol emptyIdScope;
@@ -296,7 +299,7 @@ override
       return d;
 
     // Create the symbol.
-    d.symbol = new Enum(d.name, d);
+    d.symbol = new Enum(d.nameId, d);
 
     bool isAnonymous = d.symbol.isAnonymous;
     if (isAnonymous)
@@ -323,7 +326,7 @@ override
 
   D visit(EnumMemberDeclaration d)
   {
-    d.symbol = new EnumMember(d.name, protection, storageClass, linkageType, d);
+    d.symbol = new EnumMember(d.nameId, protection, storageClass, linkageType, d);
     insert(d.symbol);
     return d;
   }
@@ -333,7 +336,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new Class(d.name, d);
+    d.symbol = new Class(d.nameId, d);
     // Insert into current scope.
     insert(d.symbol);
     enterScope(d.symbol);
@@ -348,7 +351,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new dil.semantic.Symbols.Interface(d.name, d);
+    d.symbol = new dil.semantic.Symbols.Interface(d.nameId, d);
     // Insert into current scope.
     insert(d.symbol);
     enterScope(d.symbol);
@@ -363,7 +366,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new Struct(d.name, d);
+    d.symbol = new Struct(d.nameId, d);
 
     if (d.symbol.isAnonymous)
       d.symbol.name = IdTable.genAnonStructID();
@@ -387,7 +390,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new Union(d.name, d);
+    d.symbol = new Union(d.nameId, d);
 
     if (d.symbol.isAnonymous)
       d.symbol.name = IdTable.genAnonUnionID();
@@ -437,7 +440,7 @@ override
 
   D visit(FunctionDeclaration d)
   {
-    auto func = new Function(d.name, d);
+    auto func = new Function(d.nameId, d);
     insertOverload(func);
     return d;
   }
@@ -445,15 +448,18 @@ override
   D visit(VariablesDeclaration vd)
   {
     // Error if we are in an interface.
-    if (scop.symbol.isInterface && !vd.isStatic)
+    if (scop.symbol.isInterface && !(vd.isStatic || vd.isConst))
       return error(vd.begin, MSG.InterfaceCantHaveVariables), vd;
 
     // Insert variable symbols in this declaration into the symbol table.
+    vd.variables = new Variable[vd.names.length];
     foreach (i, name; vd.names)
     {
-      auto variable = new Variable(name, protection, storageClass, linkageType, vd);
+      auto nameId = vd.nameId(i);
+      auto variable = new Variable(nameId, protection, storageClass,
+        linkageType, vd);
       variable.value = vd.inits[i];
-      vd.variables ~= variable;
+      vd.variables[i] = variable;
       insert(variable);
     }
     return vd;
@@ -522,7 +528,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new Template(d.name, d);
+    d.symbol = new Template(d.nameId, d);
     // Insert into current scope.
     insertOverload(d.symbol);
     return d;

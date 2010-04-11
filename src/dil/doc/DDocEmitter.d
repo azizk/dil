@@ -793,11 +793,11 @@ abstract class DDocEmitter : DefaultVisitor
     const KIND = is(T == ClassDeclaration) ? "CLASS" : "INTERFACE";
     DECL({
       write(kind, " ");
-      SYMBOL(d.name.str, kindID, d);
+      SYMBOL(d.name.text, kindID, d);
       writeTemplateParams();
       writeInheritanceList(d.bases);
     }, d);
-    DESC({ MEMBERS(KIND, d.name.str, d.decls); });
+    DESC({ MEMBERS(KIND, d.name.text, d.decls); });
   }
 
   /// Writes a struct or union declaration.
@@ -808,7 +808,7 @@ abstract class DDocEmitter : DefaultVisitor
     const kind = is(T == StructDeclaration) ? "struct" : "union";
     const kindID = is(T == StructDeclaration) ? K.Struct : K.Union;
     const KIND = is(T == StructDeclaration) ? "STRUCT" : "UNION";
-    string name = d.name ? d.name.str : kind;
+    string name = d.name ? d.name.text : kind;
     DECL({
       d.name && write(kind, " ");
       SYMBOL(name, kindID, d);
@@ -830,7 +830,7 @@ abstract class DDocEmitter : DefaultVisitor
           // 'vd' instead of 'd' is passed to SYMBOL, because it
           // has a linkageType member, which has to appear in the docs.
           vd.begin = d.begin; // Use the begin token of the outer declaration.
-          SYMBOL(name.str, kindID, vd);
+          SYMBOL(name.text, kindID, vd);
           vd.begin = saved_begin; // Restore to the old value.
         }, d);
     else if (auto fd = d.decl.Is!(FunctionDeclaration))
@@ -925,7 +925,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    string name = d.name ? d.name.str : "enum";
+    string name = d.name ? d.name.text : "enum";
     DECL({
       d.name && write("enum ");
       SYMBOL(name, K.Enum, d);
@@ -938,7 +938,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL(d.name.str, K.Enummem, d); }, d, false);
+    DECL({ SYMBOL(d.name.text, K.Enummem, d); }, d, false);
     DESC();
     return d;
   }
@@ -956,10 +956,10 @@ override:
       return d;
     DECL({
       write("template ");
-      SYMBOL(d.name.str, K.Template, d);
+      SYMBOL(d.name.text, K.Template, d);
       writeTemplateParams();
     }, d);
-    DESC({ MEMBERS("TEMPLATE", d.name.str, d.decls); });
+    DESC({ MEMBERS("TEMPLATE", d.name.text, d.decls); });
     return d;
   }
 
@@ -1029,7 +1029,7 @@ override:
       return d;
     DECL({
       write("$(DIL_RETTYPE "); write(d.returnType); write(") ");
-      SYMBOL(d.name.str, K.Function, d);
+      SYMBOL(d.name.text, K.Function, d);
       writeTemplateParams();
       writeParams(d.params);
     }, d);
@@ -1064,7 +1064,7 @@ override:
         if (d.typeNode) write(d.typeNode);
         else write("auto");
         write(" ");
-        SYMBOL(name.str, K.Variable, d);
+        SYMBOL(name.text, K.Variable, d);
       }, d);
     DESC();
     return d;

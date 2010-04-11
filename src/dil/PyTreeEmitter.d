@@ -368,7 +368,7 @@ override
   D visit(EnumDeclaration d)
   {
     begin(d);
-    write(indexOf(d.nametok));
+    write(indexOf(d.name));
     write(",");
     d.baseType ? visitT(d.baseType) : write("n");
     write(",");
@@ -382,7 +382,7 @@ override
     begin(d);
     d.type ? visitT(d.type) : write("n");
     write(",");
-    write(indexOf(d.nametok));
+    write(indexOf(d.name));
     write(",");
     d.value ? visitE(d.value) : write("n");
     end(d);
@@ -392,7 +392,7 @@ override
   D visit(ClassDeclaration d)
   {
     begin(d);
-    write(indexOf(d.nametok));
+    write(indexOf(d.name));
     write(",");
     write(d.bases);
     write(",");
@@ -404,7 +404,7 @@ override
   D visit(InterfaceDeclaration d)
   {
     begin(d);
-    write(indexOf(d.nametok));
+    write(indexOf(d.name));
     write(",");
     write(d.bases);
     write(",");
@@ -416,7 +416,7 @@ override
   D visit(StructDeclaration d)
   {
     begin(d);
-    write(indexOf(d.nametok));
+    write(indexOf(d.name));
     write(",");
     d.decls ? visitD(d.decls) : write("n");
     end(d);
@@ -426,7 +426,7 @@ override
   D visit(UnionDeclaration d)
   {
     begin(d);
-    write(indexOf(d.nametok));
+    write(indexOf(d.name));
     write(",");
     d.decls ? visitD(d.decls) : write("n");
     end(d);
@@ -472,7 +472,7 @@ override
     begin(d);
     d.returnType ? visitT(d.returnType) : write("n");
     write(",");
-    write(indexOf(d.nametok));
+    write(indexOf(d.name));
     write(",");
     visitN(d.params);
     write(",");
@@ -491,7 +491,7 @@ override
       write("-1");
     // Variable names.
     write(",(");
-    foreach (name; d.nametoks)
+    foreach (name; d.names)
       write(indexOf(name) ~ ",");
     write("),(");
     foreach (init; d.inits) {
@@ -551,7 +551,7 @@ override
   D visit(TemplateDeclaration d)
   {
     begin(d);
-    write(indexOf(d.nametok));
+    write(indexOf(d.name));
     write(",");
     visitN(d.tparams);
     write(",");
