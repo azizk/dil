@@ -73,14 +73,15 @@ enum TOK : ushort
   MulAssign, Mul,
   ModAssign, Mod,
   XorAssign, Xor,
-  CatAssign,
-  Tilde,
+  PowAssign, Power,
+  CatAssign, Tilde,
 
   Colon,
   Semicolon,
   Question,
   Comma,
   Dollar,
+  At,
 
   /* Keywords:
      NB.: Token.isKeyword() depends on this list being contiguous.
@@ -181,14 +182,15 @@ const string[TOK.MAX] tokToString = [
   "*=", "*",
   "%=", "%",
   "^=", "^",
-  "~=",
-  "~",
+  "^^=", "^^",
+  "~=", "~",
 
   ":",
   ";",
   "?",
   ",",
   "$",
+  "@",
 
   "abstract","alias","align","asm","assert","auto","body",
   "break","case","cast","catch",

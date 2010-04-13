@@ -344,8 +344,12 @@ class Lexer
         return scanRawStringLiteral(t);
       case '"':
         return scanNormalStringLiteral(t);
+      version(D2)
+      {}
+      else { // Only in D1.
       case '\\':
         return scanEscapeStringLiteral(t);
+      }
       case '>': /* >  >=  >>  >>=  >>>  >>>= */
         c = *++p;
         switch (c)
@@ -503,40 +507,63 @@ class Lexer
           t.kind = TOK.Assign;
         goto Lcommon;
       case '~': /* ~  ~= */
-         if (p[1] == '=')
-           ++p,
-           t.kind = TOK.CatAssign;
-         else
-           t.kind = TOK.Tilde;
-         goto Lcommon;
+        if (p[1] == '=')
+          ++p,
+          t.kind = TOK.CatAssign;
+        else
+          t.kind = TOK.Tilde;
+        goto Lcommon;
       case '*': /* *  *= */
-         if (p[1] == '=')
-           ++p,
-           t.kind = TOK.MulAssign;
-         else
-           t.kind = TOK.Mul;
-         goto Lcommon;
+        if (p[1] == '=')
+          ++p,
+          t.kind = TOK.MulAssign;
+        else
+          t.kind = TOK.Mul;
+        goto Lcommon;
+      version(D2)
+      {
+      case '^': /* ^  ^=  ^^  ^^= */
+        if (p[1] == '=')
+          ++p,
+          t.kind = TOK.XorAssign;
+        else if (p[1] == '^')
+        {
+          ++p;
+          if (p[1] == '=')
+            ++p,
+            t.kind = TOK.PowAssign;
+          else
+            t.kind = TOK.Power;
+        }
+        else
+          t.kind = TOK.Xor;
+        goto Lcommon;
+      }
+      else
+      {
       case '^': /* ^  ^= */
-         if (p[1] == '=')
-           ++p,
-           t.kind = TOK.XorAssign;
-         else
-           t.kind = TOK.Xor;
-         goto Lcommon;
+        if (p[1] == '=')
+          ++p,
+          t.kind = TOK.XorAssign;
+        else
+          t.kind = TOK.Xor;
+        goto Lcommon;
+      }
       case '%': /* %  %= */
-         if (p[1] == '=')
-           ++p,
-           t.kind = TOK.ModAssign;
-         else
-           t.kind = TOK.Mod;
-         goto Lcommon;
+        if (p[1] == '=')
+          ++p,
+          t.kind = TOK.ModAssign;
+        else
+          t.kind = TOK.Mod;
+        goto Lcommon;
       // Single character tokens:
       mixin(cases(
         "(", "LParen",   ")", "RParen",
         "[", "LBracket", "]", "RBracket",
         "{", "LBrace",   "}", "RBrace",
         ":", "Colon",    ";", "Semicolon",
-        "?", "Question", ",", "Comma", "$", "Dollar"
+        "?", "Question", ",", "Comma",
+        "$", "Dollar",   "@", "At"
       ));
       Lcommon:
         ++p;
@@ -713,7 +740,8 @@ class Lexer
       "<<=", "LShiftAssign", ">>=", "RShiftAssign",
       ">>>", "URShift", "...", "Ellipses",
       "!<=", "UorG", "!>=", "UorL",
-      "!<>", "UorE", "<>=", "LorEorG"
+      "!<>", "UorE", "<>=", "LorEorG",
+      "^^=", "PowAssign"
     ));
     Lcommon3:
       p += 3;
@@ -755,7 +783,7 @@ class Lexer
       "--", "MinusMinus", "-=", "MinusAssign",
       "*=", "MulAssign",  "/=", "DivAssign",
       "%=", "ModAssign",  "^=", "XorAssign",
-      "~=", "CatAssign"
+      "~=", "CatAssign",  "^^", "Power"
     ));
     Lcommon2:
       p += 2;
@@ -770,7 +798,8 @@ class Lexer
       '=':TOK.Assign, '~':TOK.Tilde, '*':TOK.Mul, '/':TOK.Div,
       '%':TOK.Mod, '(':TOK.LParen, ')':TOK.RParen, '[':TOK.LBracket,
       ']':TOK.RBracket, '{':TOK.LBrace, '}':TOK.RBrace, ':':TOK.Colon,
-      ';':TOK.Semicolon, '?':TOK.Question, ',':TOK.Comma, '$':TOK.Dollar
+      ';':TOK.Semicolon, '?':TOK.Question, ',':TOK.Comma, '$':TOK.Dollar,
+      '@':TOK.At
     ];
 
     c >>>= 8;
@@ -794,8 +823,12 @@ class Lexer
       return scanRawStringLiteral(t);
     case '"':
       return scanNormalStringLiteral(t);
+    version(D2)
+    {}
+    else { // Only in D1.
     case '\\':
       return scanEscapeStringLiteral(t);
+    }
     case '.':
       if (isdigit(p[1]))
         return scanReal(t);
@@ -2626,6 +2659,16 @@ unittest
     {"\r",      TOK.Newline},       {"\r\n",    TOK.Newline},
     {"\u2028",  TOK.Newline},       {"\u2029",  TOK.Newline}
   ];
+
+  version(D2)
+  {
+  static Pair[] pairs2 = [
+    {"@",       TOK.At},
+    {"^^",      TOK.Power},
+    {"^^=",     TOK.PowAssign}
+  ];
+  pairs ~= pairs2;
+  }
 
   char[] src;
 
