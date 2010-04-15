@@ -1310,7 +1310,7 @@ override
     return e;
   }
 
-  E visit(NewAnonClassExpression e)
+  E visit(NewClassExpression e)
   {
     begin(e);
     write(e.newArgs);

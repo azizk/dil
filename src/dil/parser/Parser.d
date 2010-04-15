@@ -3451,16 +3451,15 @@ class Parser
     auto e = parseUnaryExpression();
     while (1)
     {
-      while (consumed(T.Dot))
-      {
-        e = new DotExpression(e, token.kind == T.New ?
-                                 parseNewExpression() :
-                                 parseIdentifierExpression());
-        set(e, begin);
-      }
-
       switch (token.kind)
       {
+      case T.Dot:
+        nT();
+        e = new DotExpression(e, parseIdentifierExpression());
+        goto Lset;
+      case T.New:
+        e = parseNewExpression(e);
+        continue;
       case T.PlusPlus:
         e = new PostIncrExpression(e);
         break;
@@ -3911,7 +3910,9 @@ class Parser
   ////NewObjectExpression := new NewArguments? Type (NewArguments | NewArray)?
   ////NewArguments := "(" ArgumentList ")"
   ////NewArray     := "[" AssignExpression "]")
-  Expression parseNewExpression(/*Expression e*/)
+  /// Params:
+  ///   frame = The frame or 'this' pointer expression.
+  Expression parseNewExpression(Expression frame = null)
   {
     auto begin = token;
     skip(T.New);
@@ -3922,7 +3923,7 @@ class Parser
       newArguments = parseArguments();
 
     if (consumed(T.Class))
-    { // NewAnonClassExpression
+    { // NewAnonymousClassExpression
       if (token.kind == T.LParen)
         ctorArguments = parseArguments();
 
@@ -3931,8 +3932,8 @@ class Parser
         bases = parseBaseClasses();
 
       auto decls = parseDeclarationDefinitionsBody();
-      return set(new NewAnonClassExpression(/*e, */newArguments, bases,
-                                            ctorArguments, decls), begin);
+      return set(new NewClassExpression(frame, newArguments, bases,
+        ctorArguments, decls), begin);
     }
 
     // NewObjectExpression
@@ -3955,8 +3956,8 @@ class Parser
     else if (token.kind == T.LParen) // NewArguments
       ctorArguments = parseArguments();
 
-    return set(new NewExpression(/*e, */newArguments, type, ctorArguments),
-               begin);
+    return set(new NewExpression(frame, newArguments, type, ctorArguments),
+      begin);
   }
 
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -797,7 +797,7 @@ override
     return e;
   }
 
-  E visit(NewAnonClassExpression e)
+  E visit(NewClassExpression e)
   {
     return e;
   }

@@ -71,8 +71,9 @@ char[] genMembersTable()
   t[N.IndexExpression] = ["una", "args[]"];
   t[N.SliceExpression] = ["una", "left?", "right?"];
   t[N.AsmPostBracketExpression] = ["una", "index"];
-  t[N.NewExpression] = ["newArgs[]", "type", "ctorArgs[]"];
-  t[N.NewAnonClassExpression] = ["newArgs[]", "bases[]", "ctorArgs[]", "decls"];
+  t[N.NewExpression] = ["frame?", "newArgs[]", "type", "ctorArgs[]"];
+  t[N.NewClassExpression] = ["frame?", "newArgs[]", "bases[]",
+    "ctorArgs[]", "decls"];
   t[N.AsmBracketExpression] = ["expr"];
   t[N.TemplateInstanceExpression] = ["targs?"];
   t[N.ArrayLiteralExpression] = ["values[]"];

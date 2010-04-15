@@ -140,7 +140,7 @@ static const char[][] g_classNames = [
   "CompExpression",
   "CallExpression",
   "NewExpression",
-  "NewAnonClassExpression",
+  "NewClassExpression",
   "DeleteExpression",
   "CastExpression",
   "IndexExpression",

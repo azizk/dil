@@ -477,15 +477,17 @@ class CallExpression : UnaryExpression
   }
 }
 
-class NewExpression : /*Unary*/Expression
+class NewExpression : Expression
 {
+  Expression frame; /// The frame or 'this' pointer.
   Expression[] newArgs;
   TypeNode type;
   Expression[] ctorArgs;
-  this(/*Expression e, */Expression[] newArgs, TypeNode type, Expression[] ctorArgs)
+  this(Expression frame, Expression[] newArgs, TypeNode type,
+    Expression[] ctorArgs)
   {
-    /*super(e);*/
     mixin(set_kind);
+    addOptChild(frame);
     addOptChildren(newArgs);
     addChild(type);
     addOptChildren(ctorArgs);
@@ -496,16 +498,18 @@ class NewExpression : /*Unary*/Expression
   mixin(copyMethod);
 }
 
-class NewAnonClassExpression : /*Unary*/Expression
+class NewClassExpression : Expression
 {
+  Expression frame; /// The frame or 'this' pointer.
   Expression[] newArgs;
   BaseClassType[] bases;
   Expression[] ctorArgs;
   CompoundDeclaration decls;
-  this(/*Expression e, */Expression[] newArgs, BaseClassType[] bases, Expression[] ctorArgs, CompoundDeclaration decls)
+  this(Expression frame, Expression[] newArgs, BaseClassType[] bases,
+    Expression[] ctorArgs, CompoundDeclaration decls)
   {
-    /*super(e);*/
     mixin(set_kind);
+    addOptChild(frame);
     addOptChildren(newArgs);
     addOptChildren(bases);
     addOptChildren(ctorArgs);
