@@ -419,7 +419,7 @@ const char[] COMMANDS =
   "  ddoc (d)\n"
   "  highlight (hl)\n"
   "  importgraph (igraph)\n"
-  "  python (py)\n"
+  "  pytree (py)\n"
   "  settings (set)\n"
   "  statistics (stats)\n"
   "  tokenize (tok)\n"
@@ -537,10 +537,10 @@ Options:
 Example:
   dil c src/main.d -Isrc/`;
     break;
-  case "py", "python":
-    msg = `Write a D parse tree to a Python source file.
+  case "py", "pytree":
+    msg = `Exports a D parse tree to a Python source file.
 Usage:
-  dil python Destination file.d [file2.d, ...] [Options]
+  dil pytree Destination file.d [file2.d, ...] [Options]
 
 Options:
   --tokens         : only emit a list of the tokens (N/A yet)
@@ -657,8 +657,8 @@ Usage:
   dil stats file.d [file2.d, ...] [Options]
 
 Options:
-  --toktable      : print the count of all kinds of tokens in a table.
-  --asttable      : print the count of all kinds of nodes in a table.
+  --toktable      : print the count of all token kinds in a table.
+  --asttable      : print the count of all node kinds in a table.
 
 Example:
   dil stats src/main.d src/dil/Unicode.d";
