@@ -1525,11 +1525,9 @@ class Parser
   /// $(BNF VersionCondition := unittest #*D2.0*# | IdentOrInt)
   Token* parseVersionCondition()
   {
-  version(D2)
-  {
-    if (consumed(T.Unittest))
-      return this.prevToken;
-  }
+    version(D2)
+    if (auto t = consumedToken(T.Unittest))
+      return t;
     return parseIdentOrInt();
   }
 
@@ -2024,8 +2022,8 @@ class Parser
   /// $(BNF NoScopeOrEmptyStatement := ";" | NoScopeStatement )
   Statement parseNoScopeOrEmptyStatement()
   {
-    if (consumed(T.Semicolon))
-      return set(new EmptyStatement(), this.prevToken);
+    if (auto semicolon = consumedToken(T.Semicolon))
+      return set(new EmptyStatement(), semicolon);
     else
       return parseNoScopeStatement();
   }
@@ -2451,9 +2449,8 @@ class Parser
   {
     skip(T.Synchronized);
     Expression expr;
-    if (consumed(T.LParen))
+    if (auto leftParen = consumedToken(T.LParen))
     {
-      auto leftParen = this.prevToken;
       expr = parseExpression();
       requireClosing(T.RParen, leftParen);
     }
@@ -2478,28 +2475,28 @@ class Parser
 
     while (consumed(T.Catch))
     {
+      auto catchBegin = prevToken;
       Parameter param;
-      if (consumed(T.LParen))
+      if (auto leftParen = consumedToken(T.LParen))
       {
-        auto begin2 = token;
-        Token* ident;
-        auto type = parseDeclarator(ident, true);
-        param = new Parameter(StorageClass.None, type, ident, null);
-        set(param, begin2);
-        require(T.RParen);
+        auto paramBegin = token;
+        Token* name;
+        auto type = parseDeclarator(name, true);
+        param = new Parameter(StorageClass.None, type, name, null);
+        set(param, paramBegin);
+        requireClosing(T.RParen, leftParen);
       }
       catchBodies ~= set(new CatchStatement(param, parseNoScopeStatement()),
-                         begin);
+                         catchBegin);
       if (param is null)
         break; // This is a LastCatch
-      begin = token;
     }
 
-    if (consumed(T.Finally))
-      finBody = set(new FinallyStatement(parseNoScopeStatement()), prevToken);
+    if (auto t = consumedToken(T.Finally))
+      finBody = set(new FinallyStatement(parseNoScopeStatement()), t);
 
-    if (catchBodies.length == 0 && finBody is null)
-      assert(begin.kind == T.Try), error(begin, MSG.MissingCatchOrFinally);
+    if (catchBodies is null && finBody is null)
+      error(begin, MSG.MissingCatchOrFinally);
 
     return new TryStatement(tryBody, catchBodies, finBody);
   }
@@ -2768,14 +2765,13 @@ class Parser
   {
     auto begin = token;
     auto e = parseAsmOrOrExpression();
-    if (consumed(T.Question))
+    if (auto qtok = consumedToken(T.Question)) // "?"
     {
-      auto tok = this.prevToken; // "?"
       auto iftrue = parseAsmExpression();
       auto ctok = token; // ":"
       require(T.Colon);
       auto iffalse = parseAsmExpression();
-      e = new CondExpression(e, iftrue, iffalse, tok, ctok);
+      e = new CondExpression(e, iftrue, iffalse, qtok, ctok);
       set(e, begin);
     }
     // TODO: create AsmExpression that contains e?
@@ -2969,11 +2965,10 @@ class Parser
   /// $(BNF AsmPostExpression := AsmUnaryExpression ("[" AsmExpression "]")* )
   Expression parseAsmPostExpression()
   {
-    auto begin = token;
+    Token* begin = token, leftBracket = void;
     auto e = parseAsmUnaryExpression();
-    while (consumed(T.LBracket))
+    while ((leftBracket = consumedToken(T.LBracket)) !is null)
     {
-      auto leftBracket = this.prevToken;
       e = new AsmPostBracketExpression(e, parseAsmExpression());
       requireClosing(T.RBracket, leftBracket);
       set(e, begin);
@@ -3226,14 +3221,13 @@ class Parser
   {
     auto begin = token;
     auto e = parseOrOrExpression();
-    if (consumed(T.Question))
+    if (auto qtok = consumedToken(T.Question)) // "?"
     {
-      auto tok = this.prevToken; // "?"
       auto iftrue = parseExpression();
       auto ctok = token; // ":"
       require(T.Colon);
       auto iffalse = parseCondExpression();
-      e = new CondExpression(e, iftrue, iffalse, tok, ctok);
+      e = new CondExpression(e, iftrue, iffalse, qtok, ctok);
       set(e, begin);
     }
     return e;
@@ -3243,15 +3237,10 @@ class Parser
   Expression parseOrOrExpression()
   {
     alias parseAndAndExpression parseNext;
-    auto begin = token;
+    Token* begin = token, operator = void;
     auto e = parseNext();
-    while (token.kind == T.OrLogical)
-    {
-      auto tok = token;
-      nT();
-      e = new OrOrExpression(e, parseNext(), tok);
-      set(e, begin);
-    }
+    while ((operator = consumedToken(T.OrLogical)) !is null)
+      e = set(new OrOrExpression(e, parseNext(), operator), begin);
     return e;
   }
 
@@ -3259,15 +3248,10 @@ class Parser
   Expression parseAndAndExpression()
   {
     alias parseOrExpression parseNext;
-    auto begin = token;
+    Token* begin = token, operator = void;
     auto e = parseNext();
-    while (token.kind == T.AndLogical)
-    {
-      auto tok = token;
-      nT();
-      e = new AndAndExpression(e, parseNext(), tok);
-      set(e, begin);
-    }
+    while ((operator = consumedToken(T.AndLogical)) !is null)
+      e = set(new AndAndExpression(e, parseNext(), operator), begin);
     return e;
   }
 
@@ -3275,15 +3259,10 @@ class Parser
   Expression parseOrExpression()
   {
     alias parseXorExpression parseNext;
-    auto begin = token;
+    Token* begin = token, operator = void;
     auto e = parseNext();
-    while (token.kind == T.OrBinary)
-    {
-      auto tok = token;
-      nT();
-      e = new OrExpression(e, parseNext(), tok);
-      set(e, begin);
-    }
+    while ((operator = consumedToken(T.OrBinary)) !is null)
+      e = set(new OrExpression(e, parseNext(), operator), begin);
     return e;
   }
 
@@ -3291,15 +3270,10 @@ class Parser
   Expression parseXorExpression()
   {
     alias parseAndExpression parseNext;
-    auto begin = token;
+    Token* begin = token, operator = void;
     auto e = parseNext();
-    while (token.kind == T.Xor)
-    {
-      auto tok = token;
-      nT();
-      e = new XorExpression(e, parseNext(), tok);
-      set(e, begin);
-    }
+    while ((operator = consumedToken(T.Xor)) !is null)
+      e = set(new XorExpression(e, parseNext(), operator), begin);
     return e;
   }
 
@@ -3307,15 +3281,10 @@ class Parser
   Expression parseAndExpression()
   {
     alias parseCmpExpression parseNext;
-    auto begin = token;
+    Token* begin = token, operator = void;
     auto e = parseNext();
-    while (token.kind == T.AndBinary)
-    {
-      auto tok = token;
-      nT();
-      e = new AndExpression(e, parseNext(), tok);
-      set(e, begin);
-    }
+    while ((operator = consumedToken(T.AndBinary)) !is null)
+      e = set(new AndExpression(e, parseNext(), operator), begin);
     return e;
   }
 
