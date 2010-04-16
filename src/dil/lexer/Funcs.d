@@ -15,9 +15,9 @@ char[] toString(uint x)
   return str;
 }
 
-const char[3] LS = \u2028; /// Unicode line separator.
+const char[3] LS = "\u2028"; /// Unicode line separator.
 const dchar LSd = 0x2028;  /// ditto
-const char[3] PS = \u2029; /// Unicode paragraph separator.
+const char[3] PS = "\u2029"; /// Unicode paragraph separator.
 const dchar PSd = 0x2029;  /// ditto
 static assert(LS[0] == PS[0] && LS[1] == PS[1]);
 

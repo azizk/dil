@@ -232,7 +232,7 @@ struct DDocCommand
     {
       scope file = new File(modsTxtPath, File.WriteCreate);
       foreach (modul; mm.loadedModules)
-        file.write(modul.filePath() ~ ", " ~ modul.getFQN() ~ \n);
+        file.write(modul.filePath() ~ ", " ~ modul.getFQN() ~ "\n");
     }
 
     if (!useKandil)
@@ -318,7 +318,7 @@ struct DDocCommand
       symbol.formatAttrsAsIDs(), locbeg, locend);
     foreach (s; symbol.members)
     {
-      text ~= \n;
+      text ~= "\n";
       symbolsToJSON(s, text);
       text ~= ",";
     }
@@ -335,7 +335,7 @@ version(unused)
   {
     char[] text;
     auto locbeg = symbol.begin.lineNum, locend = symbol.end.lineNum;
-    text ~= Format("{{\n"`{}"name":"{}","fqn":"{}","kind":"{}","loc":[{},{}],`\n,
+    text ~= Format("{{\n"`{}"name":"{}","fqn":"{}","kind":"{}","loc":[{},{}],`"\n",
       indent, symbol.name, symbol.fqn, symbol.kind, locbeg, locend);
     text ~= indent~`"sub":[`;
     foreach (s; symbol.members)
@@ -458,13 +458,13 @@ version(unused)
     auto ruler = new char[maxNameLength+2+4*7];
     foreach (ref c; ruler)
       c = '-';
-    file.write(ruler~\n);
+    file.write(ruler~"\n");
     // Write the table rows.
     foreach (mod; ModuleData.sortedList)
       file.write(Format(rowFormat, mod.name,
         mod.kind1.length, mod.kind2.length, mod.kind3.length, mod.kind4.length
       ));
-    file.write(ruler~\n);
+    file.write(ruler~"\n");
     // Write the totals.
     file.write(Format(rowFormat, "Totals",
       kind1Total, kind2Total, kind3Total, kind4Total
@@ -487,10 +487,10 @@ version(unused)
         { // (x,y) (x,y) etc.
           line ~= p.location.str("({},{}) ");
           if (line.length > 80)
-            file.write("  "~line[0..$-1]~\n), (line = "");
+            file.write("  "~line[0..$-1]~"\n"), (line = "");
         }
         if (line.length)
-          file.write("  "~line[0..$-1]~\n);
+          file.write("  "~line[0..$-1]~"\n");
       }
     }
   }

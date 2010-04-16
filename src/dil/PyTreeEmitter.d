@@ -221,7 +221,7 @@ class PyTreeEmitter : Visitor
             /+"def N(id, *args):\n"+/
             /+"  return NodeTable[id](*args)\n\n"+/;
     text ~= `module = Module(tokens=tokens, fqn="` ~ modul.getFQN() ~
-            `",ext="` ~ modul.fileExtension() ~ `",root=`\n;
+            `",ext="` ~ modul.fileExtension() ~ `",root=`"\n";
 
     visitD(modul.root);
     if (line.length)

@@ -365,7 +365,7 @@ void printDotDocument(Graph graph, string siStyle, string piStyle,
       verticesByPckgName[vertex.modul.packageName] ~= vertex;
     foreach (packageFQN, vertices; verticesByPckgName)
     { // Output nodes in a cluster.
-      Stdout.format(`  subgraph "cluster_{0}" {{`\n
+      Stdout.format(`  subgraph "cluster_{0}" {{`"\n"
                     `    label="{0}";color=blue;`"\n    ",
                     packageFQN);
       foreach (vertex; vertices)
@@ -383,8 +383,8 @@ void printDotDocument(Graph graph, string siStyle, string piStyle,
     { // Output nodes in a cluster.
       foreach (p; pckg.packages)
       {
-        Stdout.format(`{0}subgraph "cluster_{1}" {{`\n
-                      `{0}  label="{2}";color=blue;`\n
+        Stdout.format(`{0}subgraph "cluster_{1}" {{`"\n"
+                      `{0}  label="{2}";color=blue;`"\n"
                       "{0}  ",
                       indent, p.getFQN(), p.pckgName);
         foreach (modul; p.modules)

@@ -32,22 +32,22 @@ private string createCode(NodeKind nodeKind)
     switch (type)
     {
     case "": // Visit node.
-      code ~= "visitN(n."~name~");"\n; // visitN(n.member);
+      code ~= "visitN(n."~name~");\n"; // visitN(n.member);
       break;
     case "?": // Visit node, may be null.
       // n.member && visitN(n.member);
-      code ~= "n."~name~" && visitN(n."~name~");"\n;
+      code ~= "n."~name~" && visitN(n."~name~");\n";
       break;
     case "[]": // Visit nodes in the array.
-      code ~= "foreach (x; n."~name~")"\n // foreach (x; n.member)
+      code ~= "foreach (x; n."~name~")\n" // foreach (x; n.member)
               "  visitN(x);\n";           //   visitN(x);
       break;
     case "[?]": // Visit nodes in the array, items may be null.
-      code ~= "foreach (x; n."~name~")"\n // foreach (x; n.member)
+      code ~= "foreach (x; n."~name~")\n" // foreach (x; n.member)
               "  x && visitN(x);\n";      //   x && visitN(x);
       break;
     case "%": // Copy code verbatim.
-      code ~= name ~ \n;
+      code ~= name ~ "\n";
       break;
     default:
       assert(0, "unknown member type.");

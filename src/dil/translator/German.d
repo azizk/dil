@@ -261,9 +261,9 @@ override:
 
   Node visit(Parameter n)
   {
-    put.format("'{}' des Typs \"", n.name ? n.name.str : "unbenannt");
+    put.format(`'{}' des Typs "`, n.name ? n.name.str : "unbenannt");
     n.type && visitN(n.type);
-    put(\");
+    put(`"`);
     return n;
   }
 

@@ -1,15 +1,15 @@
 /// A map of document elements and D tokens to format strings.
 string[string] map = [
-  "DocHead" : `<?xml version="1.0"?>`\n
-              `<?xml-stylesheet href="xml.css" type="text/css"?>`\n
+  "DocHead" : `<?xml version="1.0"?>`"\n"
+              `<?xml-stylesheet href="xml.css" type="text/css"?>`"\n"
               "<root>\n",
   "DocEnd"  : "\n</root>",
   "SourceBegin" : "<sourcecode>",
   "SourceEnd"   : "\n</sourcecode>",
   "CompBegin"   : "<compiler>\n",
   "CompEnd"     : "</compiler>\n",
-  "LexerError"  : `<error t="L">{0}({1},{2})L: {3}</error>`\n,
-  "ParserError" : `<error t="P">{0}({1},{2})P: {3}</error>`\n,
+  "LexerError"  : `<error t="L">{0}({1},{2})L: {3}</error>`"\n",
+  "ParserError" : `<error t="P">{0}({1},{2})P: {3}</error>`"\n",
   "LineNumberBegin" : `<linescolumn>`,
   "LineNumberEnd"   : `</linescolumn>`,
   "LineNumber"      : `<a xml:id="L{0}">{0}</a>`,
