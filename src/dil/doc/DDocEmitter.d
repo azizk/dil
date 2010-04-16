@@ -1028,7 +1028,9 @@ override:
     if (!ddoc(d))
       return d;
     DECL({
-      write("$(DIL_RETTYPE "); write(d.returnType); write(") ");
+      if (d.returnType)
+        write("$(DIL_RETTYPE "), write(d.returnType), write(") ");
+      else write("auto");
       SYMBOL(d.name.text, K.Function, d);
       writeTemplateParams();
       writeParams(d.params);

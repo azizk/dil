@@ -529,8 +529,12 @@ class Parser
                                       bool testAutoDeclaration = false)
   {
     auto begin = token;
-    Type type;
+    Type type; // Variable or function type.
     Token* name; // Name of the variable or the function.
+
+    Parameters params; // Function parameters.
+    TemplateParameters tparams; // Function template parameters.
+    Expression constraint; // Function template constraint.
 
     // Check for AutoDeclaration: StorageClasses Identifier =
     if (testAutoDeclaration && token.kind == T.Identifier)
@@ -543,24 +547,31 @@ class Parser
         goto LparseVariables;
       }
       else version(D2) if (next_kind == T.LParen)
-      { // Check for auto return type template function.
-        // StorageClasses Name ( TemplateParameterList ) ( ParameterList )
+      { // Check for auto return type (template) function.
+        // StorageClasses Name
+        //  ("(" TemplateParameterList ")")? "(" ParameterList ")"
         auto peek_token = token;
         peekAfter(peek_token); // Move to the next token, after the Identifier.
-        if (tokenAfterParenIs(T.LParen, peek_token))
+        next_kind = skipParens(peek_token, T.RParen);
+        if (next_kind == T.LParen)
         {
           name = token;
           skip(T.Identifier);
           assert(token.kind == T.LParen);
           goto LparseTPList; // Continue with parsing a template function.
         }
+        else if (next_kind == T.LBrace)
+        {
+          name = token;
+          skip(T.Identifier);
+          assert(token.kind == T.LParen);
+          goto LparseBeforeParams;
+        }
       }
     }
 
     // VariableType or ReturnType
     type = parseBasicTypes();
-
-    Parameters params; // Function parameters.
 
     if (token.kind == T.LParen)
     {
@@ -600,24 +611,21 @@ class Parser
       if (params)
         goto LparseAfterParams;
       if (!funcSuffix) // "(" ParameterList ")"
-        goto LparseBeforeParams;
+        goto LparseBeforeTParams;
     }
     else if (peekNext() == T.LParen)
-    { // Type FunctionName ( ParameterList ) FunctionBody
+    { // Type FunctionName "(" ParameterList ")" FunctionBody
       name = requireIdentifier(MSG.ExpectedFunctionName);
       if (token.kind != T.LParen)
         nT(); // Skip non-identifier token.
-    LparseBeforeParams:
-      assert(token.kind == T.LParen);
-      // It's a function declaration
-      TemplateParameters tparams;
-      Expression constraint;
 
+    LparseBeforeTParams:
+      assert(token.kind == T.LParen);
       if (tokenAfterParenIs(T.LParen))
       LparseTPList:
-        // ( TemplateParameterList ) ( ParameterList )
+        // "(" TemplateParameterList ")" "(" ParameterList ")"
         tparams = parseTemplateParameterList();
-
+    LparseBeforeParams:
       params = parseParameterList();
 
     LparseAfterParams:
@@ -628,7 +636,7 @@ class Parser
         constraint = parseOptionalConstraint();
       } // version(D2)
 
-      // ReturnType FunctionName ( ParameterList )
+      // ReturnType FunctionName "(" ParameterList ")"
       auto funcBody = parseFunctionBody();
       auto fd = new FunctionDeclaration(type, name, params, funcBody);
       fd.setLinkageType(linkType);
