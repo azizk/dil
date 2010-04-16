@@ -29,8 +29,10 @@ SymbolKind.isFunction = function(key) {
 /// An enumeration of symbol attributes.
 var SymbolAttr = makeEnum(
   "private protected package public export abstract auto const \
-deprecated extern final invariant override scope static synchronized \
-in out ref lazy variadic manifest C C++ D Windows Pascal System", " ");
+deprecated extern final override scope static synchronized \
+in out ref lazy variadic immutable manifest nothrow pure \
+shared gshared thread disable property safe system trusted \
+C C++ D Windows Pascal System", " ");
 
 /// Returns true for protection attributes.
 SymbolAttr.isProtection = function(key) {

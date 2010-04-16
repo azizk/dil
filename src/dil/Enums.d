@@ -9,23 +9,35 @@ import common;
 enum StorageClass
 {
   None         = 0,
-  Abstract     = 1,
-  Auto         = 1<<2,
-  Const        = 1<<3,
-  Deprecated   = 1<<4,
-  Extern       = 1<<5,
-  Final        = 1<<6,
-  Invariant    = 1<<7,
-  Override     = 1<<8,
-  Scope        = 1<<9,
-  Static       = 1<<10,
-  Synchronized = 1<<11,
-  In           = 1<<12,
-  Out          = 1<<13,
-  Ref          = 1<<14,
-  Lazy         = 1<<15,
-  Variadic     = 1<<16,
-  Manifest     = 1<<17, // D 2.0 manifest using enum.
+  Abstract     = 1<<0,
+  Auto         = 1<<1,
+  Const        = 1<<2,
+  Deprecated   = 1<<3,
+  Extern       = 1<<4,
+  Final        = 1<<5,
+  Override     = 1<<6,
+  Scope        = 1<<7,
+  Static       = 1<<8,
+  Synchronized = 1<<9,
+  In           = 1<<10,
+  Out          = 1<<11,
+  Ref          = 1<<12,
+  Lazy         = 1<<13,
+  Variadic     = 1<<14,
+  // D2:
+  Immutable    = 1<<15,
+  Manifest     = 1<<16,
+  Nothrow      = 1<<17,
+  Pure         = 1<<18,
+  Shared       = 1<<19,
+  Gshared      = 1<<20,
+  Thread       = 1<<21,
+  // Attributes:
+  Disable      = 1<<22,
+  Property     = 1<<23,
+  Safe         = 1<<24,
+  System       = 1<<25,
+  Trusted      = 1<<26,
 }
 
 /// Enumeration of protection attributes.
@@ -55,47 +67,57 @@ enum LinkageType
 struct EnumString
 {
 static:
+
+  /// List of Protection strings.
+  string[] prots =
+    ["","private","protected","package","public","export"];
+
   /// Returns the string for prot.
   string opCall(Protection prot)
   {
-    switch (prot)
-    { alias Protection P;
-    case P.None:      return "";
-    case P.Private:   return "private";
-    case P.Protected: return "protected";
-    case P.Package:   return "package";
-    case P.Public:    return "public";
-    case P.Export:    return "export";
-    default:
-      assert(0);
-    }
+    return prots[prot];
   }
+
+  /// List of StorageClass strings.
+  string[] stcs = [
+    "",
+    "abstract",
+    "auto",
+    "const",
+    "deprecated",
+    "extern",
+    "final",
+    "override",
+    "scope",
+    "static",
+    "synchronized",
+    "in",
+    "out",
+    "ref",
+    "lazy",
+    "variadic",
+    "immutable",
+    "manifest",
+    "nothrow",
+    "pure",
+    "shared",
+    "gshared",
+    "thread",
+    "disable",
+    "property",
+    "safe",
+    "system",
+    "trusted",
+  ];
+
+  import tango.core.BitManip : bsf;
 
   /// Returns the string of a storage class. Only one bit may be set.
   string opCall(StorageClass stc)
   {
-    switch (stc)
-    { alias StorageClass SC;
-    case SC.Abstract:     return "abstract";
-    case SC.Auto:         return "auto";
-    case SC.Const:        return "const";
-    case SC.Deprecated:   return "deprecated";
-    case SC.Extern:       return "extern";
-    case SC.Final:        return "final";
-    case SC.Invariant:    return "invariant";
-    case SC.Override:     return "override";
-    case SC.Scope:        return "scope";
-    case SC.Static:       return "static";
-    case SC.Synchronized: return "synchronized";
-    case SC.In:           return "in";
-    case SC.Out:          return "out";
-    case SC.Ref:          return "ref";
-    case SC.Lazy:         return "lazy";
-    case SC.Variadic:     return "variadic";
-    case SC.Manifest:     return "manifest";
-    default:
-      assert(0);
-    }
+    int index = stc ? bsf(stc)+1 : 0;
+    assert(index < stcs.length);
+    return stcs[index];
   }
 
   /// Returns the strings for stcs. Any number of bits may be set.
@@ -108,20 +130,12 @@ static:
     return result;
   }
 
+  /// List of LinkageType strings.
+  string[] ltypes = ["","C","C++","D","Windows","Pascal","System"];
+
   /// Returns the string for ltype.
   string opCall(LinkageType ltype)
   {
-    switch (ltype)
-    { alias LinkageType LT;
-    case LT.None:    return "";
-    case LT.C:       return "C";
-    case LT.Cpp:     return "C++";
-    case LT.D:       return "D";
-    case LT.Windows: return "Windows";
-    case LT.Pascal:  return "Pascal";
-    case LT.System:  return "System";
-    default:
-      assert(0);
-    }
+    return ltypes[ltype];
   }
 }

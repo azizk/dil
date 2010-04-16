@@ -154,6 +154,8 @@ static:
   auto ExpectedScopeIdentifier = "expected 'exit', 'success' or 'failure', not '{}'";
   auto InvalidScopeIdentifier = "'exit', 'success', 'failure' are valid scope identifiers, but not '{}'";
   auto ExpectedLinkageIdentifier = "expected 'C', 'D', 'Windows', 'Pascal' or 'System', but not '{}'";
+  auto ExpectedAttributeId = "expected an identifier after ‘@’";
+  auto UnrecognizedAttribute = "unrecognized attribute: ‘@{}’";
   auto ExpectedIntegerAfterAlign = "expected an integer after align, not '{}'";
   auto IllegalAsmStatement = "illegal asm statement found: {}";
   auto ExpectedDeclaratorIdentifier = "expected declarator identifier, not '{}'";

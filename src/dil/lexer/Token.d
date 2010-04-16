@@ -370,7 +370,7 @@ bool isDeclDefStartToken(TOK tok)
     return true;
   version(D2)
   {
-  case T.Invariant:
+  case T.At, T.Invariant, T.Immutable:
     return true;
   }
   default:
@@ -401,7 +401,7 @@ bool isStatementStartToken(TOK tok)
     return true;
   version(D2)
   {
-  case T.Traits, T.Invariant:
+  case T.At, T.Traits, T.Invariant, T.Immutable:
     return true;
   }
   default:

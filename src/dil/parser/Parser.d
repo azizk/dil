@@ -294,7 +294,15 @@ class Parser
          //T.Static,
          T.Final,
          //T.Const,
-         //T.Invariant, // D 2.0
+         //T.Invariant, // D2
+         T.Immutable, // D2
+         T.Shared, // D2
+         T.Gshared, // D2
+         T.Ref, // D2
+         T.Pure, // D2
+         T.Nothrow, // D2
+         T.Thread, // D2
+         T.At, // D2
          T.Auto,
          T.Scope:
     case_ConstAttribute:
@@ -817,9 +825,12 @@ class Parser
     return set(func, begin);
   }
 
-  /// $(BNF FunctionPostfix := (const | invariant)*)
+  /// $(BNF FunctionPostfix := (const | immutable | nothrow | shared |
+  ////  pure | "@" Identifier)*)
   StorageClass parseFunctionPostfix()
-  { // Only D2.
+  {
+    version(D2)
+    {
     StorageClass stcs, stc;
     while (1)
     {
@@ -828,8 +839,20 @@ class Parser
       case T.Const:
         stc = StorageClass.Const;
         break;
-      case T.Invariant:
-        stc = StorageClass.Invariant;
+      case T.Immutable, T.Invariant:
+        stc = StorageClass.Immutable;
+        break;
+      case T.Nothrow:
+        stc = StorageClass.Nothrow;
+        break;
+      case T.Shared:
+        stc = StorageClass.Shared;
+        break;
+      case T.Pure:
+        stc = StorageClass.Pure;
+        break;
+      case T.At:
+        stc = parseAtAttribute();
         break;
       default:
         return stcs;
@@ -840,6 +863,8 @@ class Parser
       nT();
     }
     return stcs;
+    }
+    assert(0);
   }
 
   /// $(BNF ExternLinkageType :=
@@ -857,7 +882,7 @@ class Parser
     }
 
     auto idtok = requireIdentifier(MSG.ExpectedLinkageIdentifier);
-    IDK idKind = idtok ? idtok.ident.idKind : IDK.Null;
+    IDK idKind = idtok ? idtok.ident.idKind : IDK.Empty;
 
     switch (idKind)
     {
@@ -888,8 +913,8 @@ class Parser
       break;
     case IDK.Empty: break; // Avoid reporting another error below.
     default:
-      error2(MID.UnrecognizedLinkageType, token);
-      nT();
+      assert(idtok);
+      error2(MID.UnrecognizedLinkageType, idtok);
     }
     require(T.RParen);
     return linkageType;
@@ -977,27 +1002,48 @@ class Parser
       case T.Final:
         stc = StorageClass.Final;
         goto Lcommon;
-      case T.Const:
-        version(D2)
-        if (peekNext() == T.LParen)
-          break Loop;
-        stc = StorageClass.Const;
-        goto Lcommon;
       version(D2)
       {
-      case T.Invariant: // D 2.0
+      case T.Invariant, T.Const, T.Immutable, T.Shared:
         if (peekNext() == T.LParen)
           break Loop;
-        // invariant as StorageClass.
-        stc = StorageClass.Invariant;
+        switch (token.kind)
+        {
+        case T.Const:     stc = StorageClass.Const; break;
+        case T.Immutable: stc = StorageClass.Immutable; break;
+        default:          stc = StorageClass.Shared; break;
+        }
         goto Lcommon;
-      case T.Enum: // D 2.0
+      case T.Enum:
         if (!isEnumManifest())
           break Loop;
-        // enum as StorageClass.
-        stc = StorageClass.Manifest;
+        stc = StorageClass.Manifest; // enum as StorageClass.
+        goto Lcommon;
+      case T.Ref:
+        stc = StorageClass.Ref;
+        goto Lcommon;
+      case T.Pure:
+        stc = StorageClass.Pure;
+        goto Lcommon;
+      case T.Nothrow:
+        stc = StorageClass.Nothrow;
+        goto Lcommon;
+      case T.Gshared:
+        stc = StorageClass.Gshared;
+        goto Lcommon;
+      case T.Thread:
+        stc = StorageClass.Thread;
+        goto Lcommon;
+      case T.At:
+        stc = parseAtAttribute();
         goto Lcommon;
       } // version(D2)
+      else
+      { // D1
+      case T.Const:
+        stc = StorageClass.Const;
+        goto Lcommon;
+      }
       case T.Auto:
         stc = StorageClass.Auto;
         goto Lcommon;
@@ -1124,6 +1170,32 @@ class Parser
       require(T.RParen);
     }
     return size;
+  }
+
+  /// $(BNF AtAttribute := "@" Identifier)
+  StorageClass parseAtAttribute()
+  {
+    skip(T.At); // "@"
+    Token* idtok = token;
+    if (token.kind != T.Identifier)
+      idtok = requireIdentifier(MSG.ExpectedAttributeId);
+    assert(idtok.kind == T.Identifier);
+    IDK idKind = idtok ? idtok.ident.idKind : IDK.Empty;
+    StorageClass stc;
+    switch (idKind)
+    {
+    case IDK.disable:  stc = StorageClass.Disable;  break;
+    case IDK.property: stc = StorageClass.Property; break;
+    case IDK.safe:     stc = StorageClass.Safe;     break;
+    case IDK.system:   stc = StorageClass.System;   break;
+    case IDK.trusted:  stc = StorageClass.Trusted;  break;
+    case IDK.Empty: break;
+    default:
+      assert(idtok);
+      error2(MSG.UnrecognizedAttribute, idtok);
+    }
+    // Return without skipping the identifier.
+    return stc;
   }
 
   /// $(BNF ImportDeclaration := static? import
@@ -1795,7 +1867,14 @@ class Parser
     case T.Extern,
          T.Final,
          T.Const,
-         T.Invariant, // D2.0
+         T.Invariant, T.Immutable, // D2
+         T.Pure,  // D2
+         T.Shared, // D2
+         T.Gshared, // D2
+         T.Ref, // D2
+         T.Nothrow, // D2
+         T.Thread, // D2
+         T.At, // D2
          T.Auto:
          //T.Scope
          //T.Static
@@ -2077,26 +2156,48 @@ class Parser
       case T.Final:
         stc = StorageClass.Final;
         goto Lcommon;
-      case T.Const:
-        version(D2)
-        if (peekNext() == T.LParen)
-          break Loop;
-        stc = StorageClass.Const;
-        goto Lcommon;
       version(D2)
       {
-      case T.Invariant: // D 2.0
+      case T.Invariant, T.Const, T.Immutable, T.Shared:
         if (peekNext() == T.LParen)
           break Loop;
-        stc = StorageClass.Invariant;
+        switch (token.kind)
+        {
+        case T.Const:     stc = StorageClass.Const; break;
+        case T.Immutable: stc = StorageClass.Immutable; break;
+        default:          stc = StorageClass.Shared; break;
+        }
         goto Lcommon;
-      case T.Enum: // D 2.0
+      case T.Enum:
         if (!isEnumManifest())
           break Loop;
-        // enum as StorageClass.
-        stc = StorageClass.Manifest;
+        stc = StorageClass.Manifest; // enum as StorageClass.
         goto Lcommon;
+      case T.Ref:
+        stc = StorageClass.Ref;
+        goto Lcommon;
+      case T.Pure:
+        stc = StorageClass.Pure;
+        goto Lcommon;
+      case T.Nothrow:
+        stc = StorageClass.Nothrow;
+        goto Lcommon;
+      case T.Gshared:
+        stc = StorageClass.Gshared;
+        goto Lcommon;
+      case T.Thread:
+        stc = StorageClass.Thread;
+        goto Lcommon;
+      case T.At:
+        stc = parseAtAttribute();
+        break;
       } // version(D2)
+      else
+      { // D1
+      case T.Const:
+        stc = StorageClass.Const;
+        goto Lcommon;
+      }
       case T.Auto:
         stc = StorageClass.Auto;
         goto Lcommon;
@@ -2288,7 +2389,7 @@ class Parser
 
       switch (token.kind)
       {
-      case T.Ref, T.Inout:
+      case T.Ref, T.Inout: // T.Inout is deprecated in D2.
         stc = StorageClass.Ref;
         nT();
         // fall through
@@ -4349,35 +4450,35 @@ class Parser
       { // Parse storage classes.
         switch (token.kind)
         {
-      version(D2)
-      {
-        case T.Invariant: // D2.0
+        version(D2)
+        {
+        case T.Invariant, T.Const, T.Immutable, T.Shared:
           if (peekNext() == T.LParen)
             break;
-          stc = StorageClass.Invariant;
+          switch (token.kind)
+          {
+          case T.Const:     stc = StorageClass.Const; break;
+          case T.Immutable: stc = StorageClass.Immutable; break;
+          default:          stc = StorageClass.Shared; break;
+          }
           goto Lcommon;
-        case T.Const: // D2.0
-          if (peekNext() == T.LParen)
-            break;
-          stc = StorageClass.Const;
-          goto Lcommon;
-        case T.Final: // D2.0
+        case T.Final:
           stc = StorageClass.Final;
           goto Lcommon;
-        case T.Scope: // D2.0
+        case T.Scope:
           stc = StorageClass.Scope;
           goto Lcommon;
-        case T.Static: // D2.0
+        case T.Static:
           stc = StorageClass.Static;
           goto Lcommon;
-      } // end of version(D2)
+        } // end of version(D2)
         case T.In:
           stc = StorageClass.In;
           goto Lcommon;
         case T.Out:
           stc = StorageClass.Out;
           goto Lcommon;
-        case T.Inout, T.Ref:
+        case T.Inout, T.Ref: // T.Inout is deprecated in D2.
           stc = StorageClass.Ref;
           goto Lcommon;
         case T.Lazy:

@@ -1154,14 +1154,11 @@ class DocSymbol
     for (int i; i < Kind.max+1; i++)
       kindStrToID[kindIDToStr[i]] = i;
 
-    attrToID = [
-      "private"[]:0, "protected":1, "package":2, "public":3, "export":4,
-      "abstract":5, "auto":6, "const":7, "deprecated":8, "extern":9,
-      "final":10, "invariant":11, "override":12, "scope":13,
-      "static":14, "synchronized":15, "in":16, "out":17, "ref":18,
-      "lazy":19, "variadic":20, "manifest":21, "C":22, "C++":23,
-      "D":24, "Windows":25, "Pascal":26, "System":27
-    ];
+    // Combine attributes and add them to attrToID.
+    auto attrs = EnumString.prots[1..$] ~
+      EnumString.stcs[1..$] ~ EnumString.ltypes[1..$];
+    for (int i; i < attrs.length; i++)
+      attrToID[attrs[i]] = i;
   }
 
   /// Return the attributes as IDs. E.g.: "[1,9,22]"

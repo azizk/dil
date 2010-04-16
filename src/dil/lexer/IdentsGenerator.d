@@ -37,6 +37,8 @@ private static const char[][] predefIdents = [
   "New:__new", "Delete:__delete",
   // Unittest and invariant.
   "Unittest:__unittest", "Invariant:__invariant",
+  // Attributes (D2):
+  "disable", "property", /+"safe", "system",+/ "trusted",
   // Operator overload names:
   "opNeg",    "opPos",    "opCom",
   "opEquals", "opCmp",    "opAssign",
