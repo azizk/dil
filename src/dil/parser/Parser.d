@@ -322,7 +322,7 @@ class Parser
         if (auto init = var.firstInit())
           error(init.begin.prevNWS(), MSG.AliasHasInitializer);
       }
-      else
+      else if (!decl.Is!(FunctionDeclaration))
         error2(MSG.AliasExpectsVariable, decl.begin);
       decl = d;
       break;
