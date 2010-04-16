@@ -3953,15 +3953,18 @@ class Parser
              T.Delegate,
              T.Super,
              T.Return:
-        case_Const_Invariant:
+        case_Const_Immutable_Shared: // D2
           specTok = token;
           nT();
           break;
-        case T.Const, T.Invariant:
+        version(D2)
+        {
+        case T.Const, T.Invariant, T.Immutable, T.Shared:
           auto next = peekNext();
           if (next == T.RParen || next == T.Comma)
-            goto case_Const_Invariant;
+            goto case_Const_Immutable_Shared;
           // Fall through. It's a type.
+        }
         default:
           specType = parseType();
         }
