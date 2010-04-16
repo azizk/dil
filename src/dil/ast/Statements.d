@@ -293,6 +293,26 @@ class CaseStatement : Statement
   mixin(copyMethod);
 }
 
+// D2
+class CaseRangeStatement : Statement
+{
+  Expression left, right;
+  Statement caseBody;
+
+  this(Expression left, Expression right, Statement caseBody)
+  {
+    mixin(set_kind);
+    addChild(left);
+    addChild(right);
+    addChild(caseBody);
+
+    this.left = left;
+    this.right = right;
+    this.caseBody = caseBody;
+  }
+  mixin(copyMethod);
+}
+
 class DefaultStatement : Statement
 {
   Statement defaultBody;

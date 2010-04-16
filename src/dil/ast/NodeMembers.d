@@ -107,6 +107,7 @@ char[] genMembersTable()
   t[N.ForeachRangeStatement] = ["params", "lower", "upper", "forBody"];
   t[N.SwitchStatement] = ["condition", "switchBody"];
   t[N.CaseStatement] = ["values[]", "caseBody"];
+  t[N.CaseRangeStatement] = ["left", "right", "caseBody"];
   t[N.DefaultStatement] = ["defaultBody"];
   t[N.ReturnStatement] = t[N.GotoStatement] = ["expr?"];
   t[N.WithStatement] = ["expr", "withBody"];

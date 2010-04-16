@@ -70,6 +70,7 @@ static const char[][] g_classNames = [
   "ForeachRangeStatement", // D2.0
   "SwitchStatement",
   "CaseStatement",
+  "CaseRangeStatement",
   "DefaultStatement",
   "ContinueStatement",
   "BreakStatement",

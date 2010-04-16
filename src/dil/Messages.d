@@ -169,6 +169,7 @@ static:
   auto AliasHasInitializer = "initializers are not allowed for alias types";
   auto AliasExpectsVariable = "expected a variable declaration in alias, not ‘{}’";
   auto TypedefExpectsVariable = "expected a variable declaration in typedef, not ‘{}’";
+  auto CaseRangeStartExpression = "only one expression is allowed for the start of a case range";
   // Semantic analysis:
   auto CouldntLoadModule = "couldn’t import module ‘{}’";
   auto ConflictingModuleFiles = "module is in conflict with module ‘{}’";

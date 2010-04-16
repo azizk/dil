@@ -2495,6 +2495,17 @@ class Parser
     skip(T.Case);
     auto values = parseExpressionList();
     require(T.Colon);
+    version(D2)
+    if (consumed(T.Slice)) // ".."
+    {
+      if (values.length > 1)
+        error(values[1].begin, MSG.CaseRangeStartExpression);
+      require(T.Case);
+      Expression left = values[0], right = parseAssignExpression();
+      require(T.Colon);
+      auto caseBody = parseCaseOrDefaultBody();
+      return new CaseRangeStatement(left, right, caseBody);
+    }
     auto caseBody = parseCaseOrDefaultBody();
     return new CaseStatement(values, caseBody);
   }
