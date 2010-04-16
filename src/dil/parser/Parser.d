@@ -3445,11 +3445,13 @@ class Parser
       {
       case T.Dot:
         nT();
+        if (token.kind == T.New)
+        {
+          e = parseNewExpression(e);
+          continue;
+        }
         e = new DotExpression(e, parseIdentifierExpression());
         goto Lset;
-      case T.New:
-        e = parseNewExpression(e);
-        continue;
       case T.PlusPlus:
         e = new PostIncrExpression(e);
         break;
