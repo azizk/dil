@@ -14,7 +14,7 @@ string[] messages = [
   "unterminated character literal.",
   "empty character literal.",
   // #line
-  "expected 'line' after '#'.",
+  "expected ‘line’ after ‘#’.",
   "integer expected after #line",
 //   `expected filespec string (e.g. "path\to\file".)`,
   "unterminated filespec string.",
@@ -54,14 +54,14 @@ string[] messages = [
   "exponents must start with a digit.",
 
   // Parser messages
-  "expected '{0}', but found '{1}'.",
-  "'{0}' is redundant.",
+  "expected ‘{0}’, but found ‘{1}’.",
+  "‘{0}’ is redundant.",
   "template tuple parameters can only be last.",
-  "the functions 'in' contract was already parsed.",
-  "the functions 'out' contract was already parsed.",
+  "the functions ‘in’ contract was already parsed.",
+  "the functions ‘out’ contract was already parsed.",
   "no linkage type was specified.",
-  "unrecognized linkage type '{0}'; valid types are C, C++, D, Windows, Pascal und System.",
-  "expected one or more base classes, not '{0}'.",
+  "unrecognized linkage type ‘{0}’; valid types are C, C++, D, Windows, Pascal und System.",
+  "expected one or more base classes, not ‘{0}’.",
   "base classes are not allowed in forward declarations.",
 
   // Help messages:

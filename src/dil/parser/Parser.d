@@ -4838,9 +4838,9 @@ class Parser
     if (!consumed(closing))
     {
       auto loc = opening.getRealLocation();
-      auto openingLoc = Format("(opening @{},{})", loc.lineNum, loc.colNum);
       error(token, MSG.ExpectedClosing,
-            Token.toString(closing), openingLoc, getPrintable(token));
+        Token.toString(closing), opening.text, loc.lineNum, loc.colNum,
+        getPrintable(token));
     }
   }
 
