@@ -155,4 +155,28 @@ override:
     visitT(t.next);
     return t;
   }
+
+  T visit(ConstType t)
+  {
+    text ~= "const";
+    if (t.next !is null)
+    {
+      text ~= "(";
+      visitT(t.next);
+      text ~= ")";
+    }
+    return t;
+  }
+
+  T visit(InvariantType t)
+  {
+    text ~= "invariant";
+    if (t.next !is null)
+    {
+      text ~= "(";
+      visitT(t.next);
+      text ~= ")";
+    }
+    return t;
+  }
 }
