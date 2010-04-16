@@ -991,7 +991,11 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("this", K.Ctor, d); writeParams(d.params); }, d);
+    DECL({ SYMBOL("this", K.Ctor, d);
+      version(D2)
+      writeTemplateParams();
+      writeParams(d.params);
+    }, d);
     DESC();
     return d;
   }

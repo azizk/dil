@@ -1532,10 +1532,31 @@ class Parser
   /// $(BNF ConstructorDeclaration := this ParameterList FunctionBody)
   Declaration parseConstructorDeclaration()
   {
+    version(D2)
+    {
+    auto begin = token;
+    TemplateParameters tparams;
+    Expression constraint;
+    skip(T.This);
+    if (token.kind == T.LParen && tokenAfterParenIs(T.LParen))
+      tparams = parseTemplateParameterList(); // "(" TemplateParameterList ")"
+    auto parameters = parseParameterList(); // "(" ParameterList ")"
+    this.storageClass |= parseFunctionPostfix(); // Combine with current stcs.
+    if (tparams) // if "(" ConstraintExpression ")"
+      constraint = parseOptionalConstraint();
+    auto funcBody = parseFunctionBody();
+    Declaration d = new ConstructorDeclaration(parameters, funcBody);
+    if (tparams)
+      d = putInsideTemplateDeclaration(begin, begin, d, tparams, constraint);
+    return d;
+    }
+    else
+    { // D1
     skip(T.This);
     auto parameters = parseParameterList();
     auto funcBody = parseFunctionBody();
     return new ConstructorDeclaration(parameters, funcBody);
+    }
   }
 
   /// $(BNF DestructorDeclaration := "~" this "(" ")" FunctionBody)
