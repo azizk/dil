@@ -242,6 +242,16 @@ class ModExpression : BinaryExpression
   }
 }
 
+// D2
+class PowExpression : BinaryExpression
+{
+  this(Expression left, Expression right, Token* tok)
+  {
+    super(left, right, tok);
+    mixin(set_kind);
+  }
+}
+
 class AssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
@@ -339,6 +349,15 @@ class XorAssignExpression : BinaryExpression
   }
 }
 class CatAssignExpression : BinaryExpression
+{
+  this(Expression left, Expression right)
+  {
+    super(left, right);
+    mixin(set_kind);
+  }
+}
+// D2
+class PowAssignExpression : BinaryExpression
 {
   this(Expression left, Expression right)
   {

@@ -3173,7 +3173,7 @@ class Parser
 
   /// $(BNF AssignExpression := CondExpression (Op AssignExpression)*
   ////Op := "=" | "<<=" | ">>=" | ">>>=" | "|=" |
-  ////      "&=" | "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~="
+  ////      "&=" | "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~=" | "^^="
   ////)
   Expression parseAssignExpression()
   {
@@ -3208,6 +3208,11 @@ class Parser
       nT(); e = new XorAssignExpression(e, parseNext()); break;
     case T.CatAssign:
       nT(); e = new CatAssignExpression(e, parseNext()); break;
+    version(D2)
+    {
+    case T.PowAssign:
+      nT(); e = new PowAssignExpression(e, parseNext()); break;
+    }
     default:
       return e;
     }
@@ -3385,8 +3390,13 @@ class Parser
 
   /// $(BNF MulExpression := PostExpression (Op PostExpression)*
   ////Op := "*" | "/" | "%")
+  ///D2:
+  /// $(BNF MulExpression := PowExpression (Op PowExpression)*)
   Expression parseMulExpression()
   {
+    version(D2)
+    alias parsePowExpression parseNext;
+    else
     alias parsePostExpression parseNext;
     auto begin = token;
     auto e = parseNext();
@@ -3404,6 +3414,17 @@ class Parser
       set(e, begin);
     }
     assert(0);
+  }
+
+  /// $(BNF PowExpression := PostExpression ("^^" PostExpression)*)
+  Expression parsePowExpression()
+  {
+    alias parsePostExpression parseNext;
+    Token* begin = token, operator = void;
+    auto e = parseNext();
+    while ((operator = consumedToken(T.Pow)) !is null)
+      e = set(new PowExpression(e, parseNext(), operator), begin);
+    return e;
   }
 
   /// $(BNF PostExpression := UnaryExpression

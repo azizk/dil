@@ -116,6 +116,7 @@ static const char[][] g_classNames = [
   "MulExpression",
   "DivExpression",
   "ModExpression",
+  "PowExpression", // D2
   "AssignExpression",
   "LShiftAssignExpression",
   "RShiftAssignExpression",
@@ -129,6 +130,7 @@ static const char[][] g_classNames = [
   "ModAssignExpression",
   "XorAssignExpression",
   "CatAssignExpression",
+  "PowAssignExpression", // D2
   "AddressExpression",
   "PreIncrExpression",
   "PreDecrExpression",

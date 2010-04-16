@@ -533,7 +533,7 @@ class Lexer
             ++p,
             t.kind = TOK.PowAssign;
           else
-            t.kind = TOK.Power;
+            t.kind = TOK.Pow;
         }
         else
           t.kind = TOK.Xor;
@@ -783,7 +783,7 @@ class Lexer
       "--", "MinusMinus", "-=", "MinusAssign",
       "*=", "MulAssign",  "/=", "DivAssign",
       "%=", "ModAssign",  "^=", "XorAssign",
-      "~=", "CatAssign",  "^^", "Power"
+      "~=", "CatAssign",  "^^", "Pow"
     ));
     Lcommon2:
       p += 2;
@@ -2664,7 +2664,7 @@ unittest
   {
   static Pair[] pairs2 = [
     {"@",       TOK.At},
-    {"^^",      TOK.Power},
+    {"^^",      TOK.Pow},
     {"^^=",     TOK.PowAssign}
   ];
   pairs ~= pairs2;

@@ -53,12 +53,14 @@ char[] genMembersTable()
   t[N.InExpression] = t[N.LShiftExpression] = t[N.RShiftExpression] =
   t[N.URShiftExpression] = t[N.PlusExpression] = t[N.MinusExpression] =
   t[N.CatExpression] = t[N.MulExpression] = t[N.DivExpression] =
+  t[N.PowExpression] = // D2
   t[N.ModExpression] = t[N.AssignExpression] = t[N.LShiftAssignExpression] =
   t[N.RShiftAssignExpression] = t[N.URShiftAssignExpression] =
   t[N.OrAssignExpression] = t[N.AndAssignExpression] =
   t[N.PlusAssignExpression] = t[N.MinusAssignExpression] =
   t[N.DivAssignExpression] = t[N.MulAssignExpression] =
   t[N.ModAssignExpression] = t[N.XorAssignExpression] =
+  t[N.PowAssignExpression] = // D2
   t[N.CatAssignExpression] = t[N.DotExpression] = ["lhs", "rhs"];
   // UnaryExpressions:
   t[N.AddressExpression] = t[N.PreIncrExpression] = t[N.PreDecrExpression] =

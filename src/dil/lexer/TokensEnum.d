@@ -73,7 +73,7 @@ enum TOK : ushort
   MulAssign, Mul,
   ModAssign, Mod,
   XorAssign, Xor,
-  PowAssign, Power,
+  PowAssign, Pow,
   CatAssign, Tilde,
 
   Colon,
