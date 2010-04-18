@@ -263,8 +263,9 @@ class SwitchStatement : Statement
 {
   Expression condition;
   Statement switchBody;
+  bool isFinal;
 
-  this(Expression condition, Statement switchBody)
+  this(Expression condition, Statement switchBody, bool isFinal = false)
   {
     mixin(set_kind);
     addChild(condition);
@@ -272,6 +273,7 @@ class SwitchStatement : Statement
 
     this.condition = condition;
     this.switchBody = switchBody;
+    this.isFinal = isFinal;
   }
   mixin(copyMethod);
 }

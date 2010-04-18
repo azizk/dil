@@ -1898,7 +1898,7 @@ class Parser
          T.Private, T.Package, T.Protected, T.Public, T.Export,
          T.Deprecated, T.Override, T.Abstract,+/
     case T.Extern,
-         T.Final,
+         //T.Final,
          T.Const,
          T.Invariant, T.Immutable, // D2
          T.Pure,  // D2
@@ -1945,6 +1945,15 @@ class Parser
     case T.Foreach, T.ForeachReverse:
       s = parseForeachStatement();
       break;
+    case T.Final:
+      version(D2)
+      {
+      if (peekNext() != T.Switch)
+        goto case_parseAttribute;
+      // Fall through to SwitchStatement.
+      }
+      else
+      goto case_parseAttribute;
     case T.Switch:
       s = parseSwitchStatement();
       break;
@@ -2466,13 +2475,14 @@ class Parser
   /// $(BNF SwitchStatement := switch "(" Expression ")" ScopeStatement)
   Statement parseSwitchStatement()
   {
+    bool isFinal = consumed(T.Final);
     skip(T.Switch);
     auto leftParen = token;
     require(T.LParen);
     auto condition = parseExpression();
     requireClosing(T.RParen, leftParen);
     auto switchBody = parseScopeStatement();
-    return new SwitchStatement(condition, switchBody);
+    return new SwitchStatement(condition, switchBody, isFinal);
   }
 
   /// Helper function for parsing the body of a default or case statement.
