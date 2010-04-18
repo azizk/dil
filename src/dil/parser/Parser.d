@@ -4110,28 +4110,28 @@ class Parser
 
   /// Parses a full Type.
   ///
-  /// $(BNF Type := BasicType BasicType2 CStyleType? )
-  Type parseType()
+  /// $(BNF Type := Modifier BasicType BasicType2 CStyleType?
+  //// Modifier := const | immutable | shared)
+  Type parseType(Token** pIdent = null)
   {
     version(D2)
     {
+    auto begin= token;
     if (peekNext() != T.LParen)
-      if (auto begin = consumedToken(T.Const))
-        return set(new ConstType(parseType()), begin);
-      else if (auto begin = consumedToken(T.Invariant))
-        return set(new InvariantType(parseType()), begin);
+    {
+      TypeNode t = consumed(T.Const) ?
+          new ConstType(parseType(pIdent)) :
+        (consumed(T.Immutable) || consumed(T.Invariant)) ?
+          new InvariantType(parseType(pIdent)) :
+        (consumed(T.Shared)) ?
+          new /*Shared*/ConstType(parseType(pIdent)) :
+          null;
+      if (t) return set(t, begin);
+    }
     }
     auto type = parseBasicTypes();
-    return token.kind == T.LParen ? parseCStyleType(type) : type;
-  }
-
-  /// Parses a Type with D2.0 const qualifiers.
-  ///
-  /// $(BNF TypeWithQualifiers := (const | invariant) Type )
-  Type parseTypeQualifiers()
-  {
-    // TODO: move code from parseType() to this func.
-    return null;
+    return (token.kind == T.LParen || pIdent) ?
+      parseCStyleType(type, pIdent) : type;
   }
 
   /// Parses a C-style type.
@@ -4149,7 +4149,7 @@ class Parser
   /// Read as: a pointer to a function that takes a double,
   /// which returns a pointer to a function that takes a char,
   /// which returns an array of outerType.
-  /// Parameters:
+  /// Params:
   ///   outerType = The bottommost type in the type chain.
   ///   pIdent    = If null, no identifier is expected.
   ///     If non-null, pIdent receives the parsed identifier.
@@ -4191,7 +4191,7 @@ class Parser
   ///   identOptional = whether to report an error for a missing identifier.
   Type parseDeclarator(ref Token* ident, bool identOptional = false)
   {
-    auto type = parseCStyleType(parseBasicType(), &ident);
+    auto type = parseType(&ident);
     assert(ident !is null);
     if (ident.kind != T.Identifier)
       (identOptional || error2(MSG.ExpectedDeclaratorIdentifier, ident)),
