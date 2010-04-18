@@ -3706,16 +3706,15 @@ class Parser
       {
       version(D2)
       {
-      case T.Const:
+      case T.RParen: // cast "(" ")"
+        break;
+      case T.Shared, T.Const, T.Invariant:
         if (peekNext() != T.RParen)
-          goto default; // const ( Type )
-        type = new ConstType(null); // cast ( const )
-        goto Lcommon;
-      case T.Invariant:
-        if (peekNext() != T.RParen)
-          goto default; // invariant ( Type )
-        type = new InvariantType(null); // cast ( invariant )
-      Lcommon:
+          goto default; // (const|immutable|shared) "(" Type ")"
+        auto kind = token.kind;
+        type = (kind == T.Const) ? new ConstType(type) :
+          (kind == T.Invariant) ? new InvariantType(type) :
+          new SharedType(type);
         nT();
         set(type, begin2);
         break;
@@ -4124,7 +4123,7 @@ class Parser
         (consumed(T.Immutable) || consumed(T.Invariant)) ?
           new InvariantType(parseType(pIdent)) :
         (consumed(T.Shared)) ?
-          new /*Shared*/ConstType(parseType(pIdent)) :
+          new SharedType(parseType(pIdent)) :
           null;
       if (t) return set(t, begin);
     }
@@ -4240,7 +4239,7 @@ class Parser
   }
 
   /// $(BNF BasicType := IntegralType | QualifiedType |
-  ////             ConstType | InvariantType # D2.0 )
+  ////             ConstType | InvariantType | SharedType # D2.0 )
   Type parseBasicType()
   {
     auto begin = token;
@@ -4258,14 +4257,16 @@ class Parser
       t = parseQualifiedType();
       return t;
     version(D2)
-    {
-    case T.Const, // const "(" Type ")"
-         T.Invariant: // invariant "(" Type ")"
+    { // (const|immutable|shared) "(" Type ")"
+    case T.Const, T.Invariant, T.Immutable, T.Shared:
+      auto kind = token.kind;
       requireNext(T.LParen); // "("
       auto lParen = prevToken;
       t = parseType(); // Type
       requireClosing(T.RParen, lParen); // ")"
-      t = (begin.kind == T.Const) ? new ConstType(t): new InvariantType(t);
+      t = (kind == T.Const) ? new ConstType(t) :
+        (kind == T.Invariant) ? new InvariantType(t) :
+        new SharedType(t);
       break;
     } // version(D2)
     default:

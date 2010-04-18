@@ -248,8 +248,7 @@ class BaseClassType : TypeNode
 class ConstType : TypeNode
 {
   this(TypeNode next)
-  {
-    // If t is null: cast(const)
+  { // If t is null: cast(const)
     super(next);
     mixin(set_kind);
   }
@@ -260,8 +259,18 @@ class ConstType : TypeNode
 class InvariantType : TypeNode
 {
   this(TypeNode next)
-  {
-    // If t is null: cast(invariant)
+  { // If t is null: cast(invariant)
+    super(next);
+    mixin(set_kind);
+  }
+  mixin(copyMethod);
+}
+
+/// $(BNF SharedType := shared "(" Type ")")
+class SharedType : TypeNode
+{
+  this(TypeNode next)
+  { // If t is null: cast(shared)
     super(next);
     mixin(set_kind);
   }

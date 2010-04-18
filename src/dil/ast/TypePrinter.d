@@ -179,4 +179,16 @@ override:
     }
     return t;
   }
+
+  T visit(SharedType t)
+  {
+    text ~= "shared";
+    if (t.next !is null)
+    {
+      text ~= "(";
+      visitT(t.next);
+      text ~= ")";
+    }
+    return t;
+  }
 }
