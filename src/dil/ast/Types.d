@@ -255,11 +255,11 @@ class ConstType : TypeNode
   mixin(copyMethod);
 }
 
-/// $(BNF InvariantType := invariant "(" Type ")")
-class InvariantType : TypeNode
+/// $(BNF ImmutableType := immutable "(" Type ")")
+class ImmutableType : TypeNode
 {
   this(TypeNode next)
-  { // If t is null: cast(invariant)
+  { // If t is null: cast(immutable)
     super(next);
     mixin(set_kind);
   }

@@ -168,7 +168,7 @@ override:
     return t;
   }
 
-  T visit(InvariantType t)
+  T visit(ImmutableType t)
   {
     text ~= "invariant";
     if (t.next !is null)

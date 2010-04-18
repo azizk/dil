@@ -295,7 +295,7 @@ class Parser
          T.Final,
          //T.Const,
          //T.Invariant, // D2
-         T.Immutable, // D2
+         //T.Immutable, // D2
          T.Shared, // D2
          T.Gshared, // D2
          T.Ref, // D2
@@ -305,10 +305,7 @@ class Parser
          T.At, // D2
          T.Auto,
          T.Scope:
-    case_ConstAttribute:
-    case_StaticAttribute:
-    case_InvariantAttribute: // D 2.0
-    case_EnumAttribute: // D 2.0
+    case_parseAttributes:
       return parseAttributes();
     case T.Alias:
       nT();
@@ -359,7 +356,7 @@ class Parser
         decl = parseStaticAssertDeclaration();
         break;
       default:
-        goto case_StaticAttribute;
+        goto case_parseAttributes;
       }
       break;
     case T.Import:
@@ -372,7 +369,7 @@ class Parser
     case T.Enum:
       version(D2)
       if (isEnumManifest())
-        goto case_EnumAttribute;
+        goto case_parseAttributes;
       decl = parseEnumDeclaration();
       break;
     case T.Class:
@@ -394,7 +391,7 @@ class Parser
       version(D2)
       if (peekNext() == T.LParen)
         goto case_Declaration;
-      goto case_ConstAttribute;
+      goto case_parseAttributes;
     case T.Invariant:
     version(D2)
     {
@@ -405,10 +402,17 @@ class Parser
           goto case_Declaration;  // invariant ( Type )
       }
       else
-        goto case_InvariantAttribute; // invariant as StorageClass.
+        goto case_parseAttributes; // invariant as StorageClass.
     }
       decl = parseInvariantDeclaration(); // invariant ( )
       break;
+    version(D2)
+    {
+    case T.Immutable:
+      if (peekNext() == T.LParen)
+        goto case_Declaration;
+      goto case_parseAttributes;
+    }
     case T.Unittest:
       decl = parseUnittestDeclaration();
       break;
@@ -943,7 +947,7 @@ class Parser
   ////Attributes := (StorageAttribute | OtherAttributes)*
   ////  (DeclarationsBlock | Declaration)
   ////StorageAttribute := extern | ExternLinkageType | override | abstract |
-  ////  auto | synchronized | static | final | const | invariant | enum | scope
+  ////  auto | synchronized | static | final | const | immutable | enum | scope
   ////
   ////OtherAttributes := AlignAttribute | PragmaAttribute | ProtectionAttribute
   ////AlignAttribute := align ("(" Integer ")")?
@@ -2139,7 +2143,7 @@ class Parser
   /// $(BNF AttributeStatement := Attributes+
   ////  (VariableOrFunctionDeclaration | DeclarationDefinition)
   ////Attributes := extern | ExternLinkageType | auto | static |
-  ////              final | const | invariant | enum | scope)
+  ////              final | const | immutable | enum | scope)
   Statement parseAttributeStatement()
   {
     StorageClass stcs, stc;
@@ -3708,12 +3712,12 @@ class Parser
       {
       case T.RParen: // cast "(" ")"
         break;
-      case T.Shared, T.Const, T.Invariant:
+      case T.Shared, T.Const, T.Invariant, T.Immutable:
         if (peekNext() != T.RParen)
           goto default; // (const|immutable|shared) "(" Type ")"
         auto kind = token.kind;
         type = (kind == T.Const) ? new ConstType(type) :
-          (kind == T.Invariant) ? new InvariantType(type) :
+          (kind == T.Invariant || kind == T.Immutable) ? new ImmutableType(type) :
           new SharedType(type);
         nT();
         set(type, begin2);
@@ -4121,7 +4125,7 @@ class Parser
       TypeNode t = consumed(T.Const) ?
           new ConstType(parseType(pIdent)) :
         (consumed(T.Immutable) || consumed(T.Invariant)) ?
-          new InvariantType(parseType(pIdent)) :
+          new ImmutableType(parseType(pIdent)) :
         (consumed(T.Shared)) ?
           new SharedType(parseType(pIdent)) :
           null;
@@ -4239,7 +4243,7 @@ class Parser
   }
 
   /// $(BNF BasicType := IntegralType | QualifiedType |
-  ////             ConstType | InvariantType | SharedType # D2.0 )
+  ////             ConstType | ImmutableType | SharedType # D2.0 )
   Type parseBasicType()
   {
     auto begin = token;
@@ -4265,7 +4269,7 @@ class Parser
       t = parseType(); // Type
       requireClosing(T.RParen, lParen); // ")"
       t = (kind == T.Const) ? new ConstType(t) :
-        (kind == T.Invariant) ? new InvariantType(t) :
+        (kind == T.Invariant || kind == T.Immutable) ? new ImmutableType(t) :
         new SharedType(t);
       break;
     } // version(D2)

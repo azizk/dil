@@ -1752,7 +1752,7 @@ override
     return t;
   }
 
-  T visit(InvariantType t) // D2.0
+  T visit(ImmutableType t) // D2.0
   {
     return t;
   }

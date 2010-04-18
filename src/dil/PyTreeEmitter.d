@@ -1787,15 +1787,15 @@ override
   T visit(ConstType t) // D2.0
   {
     begin(t);
-    visitT(t.next);
+    t.next && visitT(t.next);
     end(t);
     return t;
   }
 
-  T visit(InvariantType t) // D2.0
+  T visit(ImmutableType t) // D2.0
   {
     begin(t);
-    visitT(t.next);
+    t.next && visitT(t.next);
     end(t);
     return t;
   }

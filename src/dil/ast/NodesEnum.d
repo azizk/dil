@@ -201,7 +201,7 @@ static const char[][] g_classNames = [
   "CFuncType",
   "BaseClassType",
   "ConstType", // D2.0
-  "InvariantType", // D2.0
+  "ImmutableType", // D2.0
   "SharedType", // D2.0
 
   // Parameters:

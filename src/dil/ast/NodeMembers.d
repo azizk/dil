@@ -136,8 +136,8 @@ else
   t[N.TemplateInstanceType] = ["targs"];
   t[N.ArrayType] = ["next", "assocType?", "index1?", "index2?"];
   t[N.FunctionType] = t[N.DelegateType] = t[N.CFuncType] = ["next", "params"];
-  t[N.PointerType] = t[N.BaseClassType] =
-  t[N.ConstType] = t[N.InvariantType] = t[N.SharedType] = ["next"];
+  t[N.PointerType] = t[N.BaseClassType] = ["next"];
+  t[N.ConstType] = t[N.ImmutableType] = t[N.SharedType] = ["next?"];
   // Parameters:
   t[N.Parameter] = ["type?", "defValue?"];
   t[N.Parameters] = t[N.TemplateParameters] =
