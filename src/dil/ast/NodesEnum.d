@@ -189,7 +189,6 @@ static const char[][] g_classNames = [
   // Types:
   "IllegalType",
   "IntegralType",
-  "QualifiedType",
   "ModuleScopeType",
   "IdentifierType",
   "TypeofType",

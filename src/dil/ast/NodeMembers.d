@@ -127,13 +127,13 @@ char[] genMembersTable()
   t[N.DebugStatement] = t[N.VersionStatement] = ["mainBody", "elseBody?"];
   // TypeNodes:
   t[N.IllegalType] = t[N.IntegralType] =
-  t[N.ModuleScopeType] = t[N.IdentifierType] = [];
-  t[N.QualifiedType] = ["lhs", "rhs"];
+  t[N.ModuleScopeType] = [];
+  t[N.IdentifierType] = ["next?"];
 version(D2)
   t[N.TypeofType] = ["expr?"];
 else
   t[N.TypeofType] = ["expr"];
-  t[N.TemplateInstanceType] = ["targs"];
+  t[N.TemplateInstanceType] = ["next?", "targs"];
   t[N.ArrayType] = ["next", "assocType?", "index1?", "index2?"];
   t[N.FunctionType] = t[N.DelegateType] = t[N.CFuncType] = ["next", "params"];
   t[N.PointerType] = t[N.BaseClassType] = ["next"];

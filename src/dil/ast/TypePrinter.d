@@ -68,12 +68,14 @@ override:
 
   T visit(IdentifierType t)
   {
+    t.next && visitT(t.next) && (text ~= ".");
     text ~= t.ident.str;
     return t;
   }
 
   T visit(TemplateInstanceType t)
   {
+    t.next && visitT(t.next) && (text ~= ".");
     text ~= t.ident.str ~ "!";
     auto a = t.targs;
     text ~= a.begin.textSpan(a.end);
@@ -83,15 +85,6 @@ override:
   T visit(TypeofType t)
   {
     text ~= t.begin.textSpan(t.end);
-    return t;
-  }
-
-  T visit(QualifiedType t)
-  {
-    if (t.lhs.kind != NodeKind.ModuleScopeType)
-      visitT(t.lhs);
-    text ~= ".";
-    visitT(t.rhs);
     return t;
   }
 

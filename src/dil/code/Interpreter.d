@@ -1022,11 +1022,6 @@ override
     return t;
   }
 
-  T visit(QualifiedType t)
-  {
-    return t;
-  }
-
   T visit(ModuleScopeType t)
   {
     return t;

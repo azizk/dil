@@ -4212,15 +4212,16 @@ class Parser
   }
 
   /// $(BNF IdentifierType := Identifier | TemplateInstance)
-  Type parseIdentifierType()
+  Type parseIdentifierType(Type next = null)
   {
     auto begin = token;
     auto ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
     Type t;
     if (consumed(T.Not)) // TemplateInstance
-      t = new TemplateInstanceType(ident, parseOneOrMoreTemplateArguments());
+      t = new TemplateInstanceType(next, ident,
+        parseOneOrMoreTemplateArguments());
     else // Identifier
-      t = new IdentifierType(ident);
+      t = new IdentifierType(next, ident);
     return set(t, begin);
   }
 
@@ -4238,7 +4239,7 @@ class Parser
       type = parseIdentifierType();
 
     while (consumed(T.Dot))
-      type = set(new QualifiedType(type, parseIdentifierType()), begin);
+      type = parseIdentifierType(type);
     return type;
   }
 

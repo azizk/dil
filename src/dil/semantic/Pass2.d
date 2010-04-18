@@ -224,16 +224,6 @@ override
     return t;
   }
 
-  T visit(QualifiedType t)
-  {
-    if (t.lhs.Is!(QualifiedType) is null)
-      idScope = null; // Reset at left-most type.
-    visitT(t.lhs);
-    visitT(t.rhs);
-    t.type = t.rhs.type;
-    return t;
-  }
-
   T visit(IdentifierType t)
   {
     auto idToken = t.begin;

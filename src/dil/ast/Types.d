@@ -38,25 +38,11 @@ class IntegralType : TypeNode
 class IdentifierType : TypeNode
 {
   Identifier* ident;
-  this(Identifier* ident)
+  this(TypeNode next, Identifier* ident)
   {
+    super(next);
     mixin(set_kind);
     this.ident = ident;
-  }
-  mixin(copyMethod);
-}
-
-/// $(BNF QualifiedType := Type "." Type)
-class QualifiedType : TypeNode
-{
-  alias next lhs; /// Left-hand side type.
-  TypeNode rhs; /// Right-hand side type.
-  this(TypeNode lhs, TypeNode rhs)
-  {
-    super(lhs);
-    mixin(set_kind);
-    addChild(rhs);
-    this.rhs = rhs;
   }
   mixin(copyMethod);
 }
@@ -103,8 +89,9 @@ class TemplateInstanceType : TypeNode
 {
   Identifier* ident;
   TemplateArguments targs;
-  this(Identifier* ident, TemplateArguments targs)
+  this(TypeNode next, Identifier* ident, TemplateArguments targs)
   {
+    super(next);
     mixin(set_kind);
     addOptChild(targs);
     this.ident = ident;

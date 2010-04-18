@@ -1664,25 +1664,6 @@ override
     return t;
   }
 
-  T visit(QualifiedType t)
-  {
-    // Reset idScope at the end if this the root QualifiedType.
-    bool resetIdScope = idScope is null;
-//     if (t.lhs.Is!(QualifiedType) is null)
-//       idScope = null; // Reset at left-most type.
-    visitT(t.lhs);
-    // Assign the symbol of the left-hand side to idScope.
-    setIdScope(t.lhs.symbol);
-    visitT(t.rhs);
-//     setIdScope(t.rhs.symbol);
-    // Assign members of the right-hand side to this type.
-    t.type = t.rhs.type;
-    t.symbol = t.rhs.symbol;
-    // Reset idScope.
-    resetIdScope && (idScope = null);
-    return t;
-  }
-
   T visit(ModuleScopeType t)
   {
     idScope = modul;

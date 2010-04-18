@@ -312,14 +312,6 @@ override:
     return n;
   }
 
-  TypeNode visit(QualifiedType n)
-  {
-    visitT(n.lhs);
-    put(".");
-    visitT(n.rhs);
-    return n;
-  }
-
   TypeNode visit(IdentifierType n)
   {
     put(n.ident.str);

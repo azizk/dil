@@ -1680,16 +1680,6 @@ override
     return t;
   }
 
-  T visit(QualifiedType t)
-  {
-    begin(t);
-    visitT(t.lhs);
-    write(",");
-    visitT(t.rhs);
-    end(t);
-    return t;
-  }
-
   T visit(ModuleScopeType t)
   {
     begin(t);
@@ -1700,6 +1690,8 @@ override
   T visit(IdentifierType t)
   {
     begin(t);
+    t.next ? visitT(t.next) : write("n");
+    write(",");
     write(indexOf(t.begin));
     end(t);
     return t;
@@ -1716,6 +1708,8 @@ override
   T visit(TemplateInstanceType t)
   {
     begin(t);
+    t.next ? visitT(t.next) : write("n");
+    write(",");
     write(indexOf(t.begin));
     write(",");
     t.targs ? visitN(t.targs) : write("n");
