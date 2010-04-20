@@ -155,7 +155,7 @@ struct DDocCommand
     filePath.append("htmlsrc").append(mod.getFQN());
     filePath.cat(outFileExtension);
     if (verbose)
-      Stdout.formatln("hl {} > {}", mod.filePath(), filePath.toString());
+      Stdout.formatln("hl > {}", filePath.toString());
     auto file = new File(filePath.toString(), File.WriteCreate);
     auto print = hl.print; // Save.
     hl.print = new FormatOut(Format, file); // New print object.
@@ -175,7 +175,7 @@ struct DDocCommand
     destPath.append(mod.getFQN() ~ outFileExtension);
     // Verbose output of activity.
     if (verbose) // TODO: create a setting for this format string in dilconf.d?
-      Stdout.formatln("ddoc {} > {}", mod.filePath(), destPath);
+      Stdout.formatln("ddoc > {}", destPath);
 
     // Create an own macro environment for this module.
     mtable = new MacroTable(mtable);
