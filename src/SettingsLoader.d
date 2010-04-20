@@ -10,6 +10,7 @@ import dil.semantic.Module,
        dil.semantic.Pass1,
        dil.semantic.Symbol,
        dil.semantic.Symbols;
+import dil.lexer.Funcs;
 import dil.Messages;
 import dil.Diagnostics;
 import dil.Compilation;
@@ -105,12 +106,6 @@ class ConfigLoader : SettingsLoader
   /// Expands environment variables such as ${HOME} in a string.
   static string expandVariables(string val)
   {
-    char[] makeString(char* begin, char* end)
-    {
-      assert(begin && end && begin <= end);
-      return begin[0 .. end - begin];
-    }
-
     char[] result;
     char* p = val.ptr, end = p + val.length;
     char* pieceBegin = p; // Points to the piece of the string after a variable.
@@ -124,16 +119,16 @@ class ConfigLoader : SettingsLoader
           p++;
         if (p == end)
           break; // Don't expand unterminated variables.
-        result ~= makeString(pieceBegin, variableBegin);
+        result ~= String(pieceBegin, variableBegin);
         variableBegin += 2; // Skip ${
         // Get the environment variable and append it to the result.
-        result ~= Environment.get(makeString(variableBegin, p));
+        result ~= Environment.get(String(variableBegin, p));
         pieceBegin = p + 1; // Point to character after '}'.
       }
       p++;
     }
     if (pieceBegin < end)
-      result ~= makeString(pieceBegin, end);
+      result ~= String(pieceBegin, end);
     return result;
   }
 

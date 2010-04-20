@@ -15,7 +15,7 @@ char[] toString(uint x)
   return str;
 }
 
-/// Constructs a string from the begin and end pointers.
+/// Returns a string slice ranging from begin to end.
 char[] String(char* begin, char* end)
 {
   assert(begin && end && begin <= end);

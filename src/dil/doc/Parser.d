@@ -75,7 +75,7 @@ struct IdentValueParser
     while (isspace(*--end) || *end == '\n')
     {}
     end++;
-    return makeString(begin, end);
+    return String(begin, end);
   }
 
   /// Finds the next "Identifier =".
@@ -118,13 +118,6 @@ struct IdentValueParser
     while (p < textEnd && *p == '\n')
       p++;
   }
-}
-
-/// Returns a string slice ranging from begin to end.
-char[] makeString(char* begin, char* end)
-{
-  assert(begin && end && begin <= end);
-  return begin[0 .. end - begin];
 }
 
 unittest

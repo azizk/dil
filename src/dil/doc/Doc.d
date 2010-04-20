@@ -446,7 +446,7 @@ class Section
   {
     if (name.length == 0)
       return text;
-    return makeString(name.ptr, text.ptr+text.length);
+    return String(name.ptr, text.ptr+text.length);
   }
 }
 
