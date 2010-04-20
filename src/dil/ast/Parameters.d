@@ -135,15 +135,18 @@ abstract class TemplateParameter : Node
 /// $(BNF TemplateAliasParameter := "alias" Identifier SpecOrDefaultType)
 class TemplateAliasParameter : TemplateParameter
 {
-  TypeNode specType, defType;
-  this(Token* name, TypeNode specType, TypeNode defType)
+  Node spec; /// Specialization. Can be a Type or an Expression (in D2).
+  Node def; /// Default. Can be a Type or an Expression (in D2).
+  this(Token* name, Node spec, Node def)
   {
+    assert(!spec || spec.isType() || spec.isExpression());
+    assert(!def || def.isType() || def.isExpression());
     super(name);
     mixin(set_kind);
-    addOptChild(specType);
-    addOptChild(defType);
-    this.specType = specType;
-    this.defType = defType;
+    addOptChild(spec);
+    addOptChild(def);
+    this.spec = spec;
+    this.def = def;
   }
   mixin(copyMethod);
 }

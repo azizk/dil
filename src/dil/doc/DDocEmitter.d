@@ -571,6 +571,12 @@ abstract class DDocEmitter : DefaultVisitor
     text ~= escape(typePrinter.print(type));
   }
 
+  /// Writes an expression to the buffer.
+  void writeE(Expression e)
+  { // Just copy the text of the expression.
+    text ~= escape(e.begin, e.end);
+  }
+
   /// Writes params to the text buffer.
   void writeParams(Parameters params)
   {
@@ -594,8 +600,7 @@ abstract class DDocEmitter : DefaultVisitor
         if (param.isDVariadic)
           write("...");
         if (param.defValue)
-          write(" = \1DIL_DEFVAL ",
-                escape(param.defValue.begin, param.defValue.end), "\2");
+          write(" = \1DIL_DEFVAL "), writeE(param.defValue), write("\2");
       }
       --item_count && (text ~= ", "); // Skip for last item.
     }
@@ -607,24 +612,25 @@ abstract class DDocEmitter : DefaultVisitor
   {
     if (!currentTParams)
       return;
+
+    void writeTorE(Node n)
+    {
+      n.isType() ? write(n.to!(TypeNode)) : writeE(n.to!(Expression));
+    }
+    void writeSpecDef(Node spec, Node def)
+    {
+      if (spec) write(" : "), writeTorE(spec);
+      if (def)  write(" = \1DIL_DEFVAL "), writeTorE(def), write("\2");
+    }
+
     reportParameters(currentTParams);
     write("\1DIL_TEMPLATE_PARAMS ");
     auto item_count = currentTParams.items.length;
     foreach (tparam; currentTParams.items)
     {
-      void writeSpecDef(TypeNode spec, TypeNode def)
-      {
-        if (spec) write(" : "), write(spec);
-        if (def)  write(" = \1DIL_DEFVAL "), write(def), write("\2");
-      }
-      void writeSpecDef2(Expression spec, Expression def)
-      {
-        if (spec) write(" : ", escape(spec.begin, spec.end));
-        if (def)  write(" = \1DIL_DEFVAL ", escape(def.begin, def.end), "\2");
-      }
       if (auto p = tparam.Is!(TemplateAliasParameter))
         write("\1DIL_TPALIAS \1DIL_TPID ", p.nameStr, "\2"),
-        writeSpecDef(p.specType, p.defType),
+        writeSpecDef(p.spec, p.def),
         write("\2");
       else if (auto p = tparam.Is!(TemplateTypeParameter))
         write("\1DIL_TPTYPE \1DIL_TPID ", p.nameStr, "\2"),
@@ -636,7 +642,7 @@ abstract class DDocEmitter : DefaultVisitor
         write("\1DIL_TPVALUE "),
         write(p.valueType),
         write(" \1DIL_TPID ", p.nameStr, "\2"),
-        writeSpecDef2(p.specValue, p.defValue),
+        writeSpecDef(p.specValue, p.defValue),
         write("\2");
       else if (auto p = tparam.Is!(TemplateThisParameter))
         write("\1DIL_TPTHIS \1DIL_TPID ", p.nameStr, "\2"),

@@ -1822,9 +1822,9 @@ override
   N visit(TemplateAliasParameter p)
   {
     begin(p);
-    p.specType ? visitT(p.specType) : write("n");
+    p.spec ? visitN(p.spec) : write("n");
     write(",");
-    p.defType ? visitT(p.defType) : write("n");
+    p.def ? visitN(p.def) : write("n");
     end(p);
     return p;
   }

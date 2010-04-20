@@ -142,7 +142,8 @@ else
   t[N.Parameter] = ["type?", "defValue?"];
   t[N.Parameters] = t[N.TemplateParameters] =
   t[N.TemplateArguments] = ["children[]"];
-  t[N.TemplateAliasParameter] = t[N.TemplateTypeParameter] =
+  t[N.TemplateAliasParameter] = ["spec?", "def?"];
+  t[N.TemplateTypeParameter] =
   t[N.TemplateThisParameter] = ["specType?", "defType?"];
   t[N.TemplateValueParameter] = ["valueType", "specValue?", "defValue?"];
   t[N.TemplateTupleParameter] = [];
