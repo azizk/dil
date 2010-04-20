@@ -125,6 +125,7 @@ class ModuleManager
     moduleFQNPathTable[moduleFQNPath] = newModule;
     absFilePathTable[absFilePath] = newModule;
     loadedModules ~= newModule;
+    newModule.ID = loadedModules.length;
     insertOrdered(newModule);
 
     // Add the module to its package.

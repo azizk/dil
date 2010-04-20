@@ -28,6 +28,7 @@ class Module : ScopeSymbol
   string moduleFQN; /// Fully qualified name of the module. E.g.: dil.ast.Node
   string packageName; /// E.g.: dil.ast
   string moduleName; /// E.g.: Node
+  uint ID; /// A unique 1-based ID. Useful for graph traversing.
 
   CompoundDeclaration root; /// The root of the parse tree.
   ImportDeclaration[] imports; /// ImportDeclarations found in this file.
