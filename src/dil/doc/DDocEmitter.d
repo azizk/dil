@@ -619,7 +619,7 @@ abstract class DDocEmitter : DefaultVisitor
     }
     void writeSpecDef(Node spec, Node def)
     {
-      if (spec) write(" : "), writeTorE(spec);
+      if (spec) write(" : \1DIL_SPEC "), writeTorE(spec), write("\2");
       if (def)  write(" = \1DIL_DEFVAL "), writeTorE(def), write("\2");
     }
 
