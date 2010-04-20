@@ -203,8 +203,11 @@ struct DDocCommand
     mtable.insert("BODY", ddocText);
     // Do the macro expansion pass.
     auto dg = verbose ? this.diag : null;
+    string DDOC = "$(DDOC)";
+    if (auto ddocMacro = mtable.search("DDOC"))
+      DDOC = ddocMacro.text;
     auto fileText = rawOutput ? ddocText :
-      MacroExpander.expand(mtable, "$(DDOC)", mod.filePath, dg);
+      MacroExpander.expand(mtable, DDOC, mod.filePath, dg);
 
     // Finally write the XML/XHTML file out to the harddisk.
     scope file = new File(destPath.toString(), File.WriteCreate);

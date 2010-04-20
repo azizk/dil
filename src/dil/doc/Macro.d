@@ -13,14 +13,66 @@ import common;
 /// The DDoc macro class.
 class Macro
 {
+  /// Enum of special marker characters.
+  enum Marker
+  {
+    Opening  = '\1', /// Opening macro character.
+    Closing  = '\2', /// Closing macro character.
+    Unclosed = '\3', /// Unclosed macro character.
+  }
+
   string name; /// The name of the macro.
   string text; /// The substitution text.
-  uint callLevel;  /// Recursive call level.
+  uint callLevel; /// The recursive call level.
+
   /// Constructs a Macro object.
   this (string name, string text)
   {
     this.name = name;
     this.text = text;
+  }
+
+  /// Converts a macro text to the internal format.
+  static string convert(string text)
+  {
+    char[] result;
+    char* p = text.ptr;
+    char* end = p + text.length;
+    char* prev = p;
+    char[] parens; // Stack of parentheses and markers.
+    for (; p < end; p++)
+      switch (*p)
+      {
+      case '$':
+        auto p2 = p+2;
+        if (p+2 < end && p[1] == '(' &&
+            (isidbeg(p[2]) || isUnicodeAlpha(p2, end))) // IdStart
+        { // Scanned: "$(IdStart"
+          prev != p && (result ~= String(prev, p)); // Copy previous text.
+          parens ~= Macro.Marker.Closing;
+          result ~= Macro.Marker.Opening; // Relace "$(".
+          p++; // Move to '('.
+          prev = p+1;
+        }
+        break;
+      case '(': // Only push on the stack, when inside a macro.
+        if (parens.length) parens ~= ')'; break;
+      case ')':
+        if (!parens.length) break;
+        if (parens[$-1] == Macro.Marker.Closing)
+          (prev != p && (result ~= String(prev, p)), prev = p+1),
+          (result ~= Macro.Marker.Closing); // Replace ')'.
+        parens = parens[0..$-1];
+      default:
+      }
+    if (prev == text.ptr)
+      return text; // No macros found. Return original text.
+    if (prev < end)
+      result ~= String(prev, end);
+    foreach_reverse (c; parens)
+      if (c == Macro.Marker.Opening) // Unclosed macros?
+        result ~= Macro.Marker.Unclosed; // Add marker for errors.
+    return result;
   }
 }
 
@@ -42,8 +94,13 @@ class MacroTable
 
   /// Inserts the macro m into the table.
   /// Overwrites the current macro if one exists.
-  void insert(Macro m)
+  /// Params:
+  ///   m = The macro.
+  ///   convertText = Convert the macro text to the internal format.
+  void insert(Macro m, bool convertText = true)
   {
+    if (convertText)
+      m.text = Macro.convert(m.text);
     table[m.name] = m;
   }
 
@@ -108,15 +165,12 @@ struct MacroParser
   {
     assert(*p == '$');
     if (p+2 < textEnd && p[1] == '(')
-    {
-      p += 2;
-      if (scanIdentifier(p, textEnd))
+      if ((p += 2), scanIdentifier(p, textEnd))
       {
         MacroExpander.scanArguments(p, textEnd);
         p != textEnd && p++; // Skip ')'.
         return p;
       }
-    }
     return null;
   }
 }
@@ -152,100 +206,102 @@ struct MacroExpander
     // if (depth == 0)
     //   return  text;
     // depth--;
+
     char[] result;
     char* p = text.ptr;
     char* textEnd = p + text.length;
     char* macroEnd = p;
-    while (p+3 < textEnd) // minimum 4 chars: $(x)
-    {
-      if (*p == '$' && p[1] == '(')
+
+    // Scan for: "\1MacroName ...\2"
+    for (; p+2 < textEnd; p++) // 2 chars look-ahead.
+      if (*p == Macro.Marker.Opening)
       {
         // Copy string between macros.
         if (macroEnd != p)
-          result ~= makeString(macroEnd, p);
-        p += 2;
+          result ~= String(macroEnd, p);
+        p++;
         if (auto macroName = scanIdentifier(p, textEnd))
-        {
+        { // Scanned "\1MacroName" so far.
           // Get arguments.
           auto macroArgs = scanArguments(p, textEnd);
-          if (p == textEnd)
-          {
-            warning(MSG.UnterminatedDDocMacro, macroName);
-            result ~= "$(" ~ macroName ~ " ";
-          }
-          else
-            p++;
-          macroEnd = p; // Point past ')'.
+          macroEnd = p;
+          // Closing parenthesis not found?
+          if (p == textEnd || *p == Macro.Marker.Unclosed)
+            warning(MSG.UnterminatedDDocMacro, macroName),
+            (result ~= "$(" ~ macroName ~ " ");
+          else // p points to the closing marker.
+            macroEnd = p+1; // Point past the closing marker.
 
           auto macro_ = mtable.search(macroName);
-          if (macro_)
-          { // Ignore recursive macro if:
-            auto macroArg0 = macroArgs.length ? macroArgs[0] : null;
-            if (macro_.callLevel != 0 &&
-                (macroArgs.length == 0/+ || // Macro has no arguments.
-                 prevArg0 == macroArg0+/)) // macroArg0 equals previous arg0.
-            { continue; }
-            macro_.callLevel++;
-            // Expand the arguments in the macro text.
-            auto expandedText = expandArguments(macro_.text, macroArgs);
-            result ~= expandMacros(expandedText/+, macroArg0, depth+/);
-            macro_.callLevel--;
-          }
-          else
-          {
-            warning(MSG.UndefinedDDocMacro, macroName);
-            //result ~= makeString(macroName.ptr-2, macroEnd);
-          }
-          continue;
+          if (!macro_)
+            warning(MSG.UndefinedDDocMacro, macroName),
+            // Insert into the table to avoid more warnings.
+            mtable.insert(macro_ = new Macro(macroName, "$0"));
+          // Ignore recursive macro if:
+          auto macroArg0 = macroArgs.length ? macroArgs[0] : null;
+          if (macro_.callLevel != 0 &&
+              (macroArgs.length == 0/+ || // Macro has no arguments.
+                prevArg0 == macroArg0+/)) // macroArg0 equals previous arg0.
+            continue;
+          macro_.callLevel++;
+          // Expand the arguments in the macro text.
+          auto expandedText = expandArguments(macro_.text, macroArgs);
+          result ~= expandMacros(expandedText/+, macroArg0, depth+/);
+          macro_.callLevel--;
         }
       }
-      p++;
-    }
     if (macroEnd == text.ptr)
       return text; // No macros found. Return original text.
     if (macroEnd < textEnd)
-      result ~= makeString(macroEnd, textEnd);
+      result ~= String(macroEnd, textEnd);
     return result;
   }
 
   /// Scans until the closing parenthesis is found. Sets p to one char past it.
   /// Returns: [arg0, arg1, arg2 ...].
-  static char[][] scanArguments(ref char* p, char* textEnd)
+  /// Params:
+  ///   ref_p = Will point to Macro.Marker.Closing or Marker.Unclosed,
+  ///           or to textEnd if it wasn't found.
+  static char[][] scanArguments(ref char* ref_p, char* textEnd)
   out(args) { assert(args.length != 1); }
   body
   {
     // D specs: "The argument text can contain nested parentheses,
     //           "" or '' strings, comments, or tags."
-    uint level = 1; // Nesting level of the parentheses.
+    uint mlevel = 1; // Nesting level of macros.
+    uint plevel = 0; // Nesting level of parentheses.
     char[][] args;
+    auto p = ref_p; // Use a non-ref variable to scan the text.
 
     // Skip leading spaces.
     while (p < textEnd && isspace(*p))
       p++;
 
-    char* arg0Begin = p; // Whole argument list.
+    char* arg0Begin = p; // Begin of all arguments.
     char* argBegin = p;
   MainLoop:
     while (p < textEnd)
     {
       switch (*p)
       {
+      case Macro.Marker.Opening:
+        mlevel++;
+        break;
+      case Macro.Marker.Closing, Macro.Marker.Unclosed:
+        if (--mlevel == 0) // Final closing macro character?
+          break MainLoop;
+        break;
+      case '(': plevel++; break;
+      case ')': if (plevel) plevel--; break;
       case ',':
-        if (level != 1) // Ignore comma if inside ().
+        if ((plevel+mlevel) != 1) // Ignore comma if inside ( ).
           break;
         // Add a new argument.
-        args ~= makeString(argBegin, p);
+        args ~= String(argBegin, p);
         while (++p < textEnd && isspace(*p)) // Skip spaces.
         {}
         argBegin = p;
         continue;
-      case '(':
-        level++;
-        break;
-      case ')':
-        if (--level == 0)
-          break MainLoop;
-        break;
       // Commented out: causes too many problems in the expansion pass.
       // case '"', '\'':
       //   auto c = *p;
@@ -281,13 +337,16 @@ struct MacroExpander
       }
       p++;
     }
-    assert(*p == ')' && level == 0 || p == textEnd);
+    assert(mlevel == 0 &&
+    (*p == Macro.Marker.Closing || *p == Macro.Marker.Unclosed) ||
+      p == textEnd);
+    ref_p = p;
     if (arg0Begin == p)
-      return null;
+      return null; // No arguments.
     // arg0 spans the whole argument list.
-    auto arg0 = makeString(arg0Begin, p);
+    auto arg0 = String(arg0Begin, p);
     // Add last argument.
-    args ~= makeString(argBegin, p);
+    args ~= String(argBegin, p);
     return arg0 ~ args;
   }
 
@@ -312,7 +371,7 @@ struct MacroExpander
       {
         // Copy string between argument placeholders.
         if (placeholderEnd != p-1)
-          result ~= makeString(placeholderEnd, p-1);
+          result ~= String(placeholderEnd, p-1);
         placeholderEnd = p+1; // Set new placeholder end.
 
         if (args.length == 0)
@@ -321,7 +380,7 @@ struct MacroExpander
         if (*p == '+')
         { // $+ = $2 to $n
           if (args.length > 2)
-            result ~= makeString(args[2].ptr, args[0].ptr + args[0].length);
+            result ~= String(args[2].ptr, args[0].ptr + args[0].length);
         }
         else
         { // 0 - 9
@@ -335,7 +394,7 @@ struct MacroExpander
     if (placeholderEnd == text.ptr)
       return text; // No placeholders found. Return original text.
     if (placeholderEnd < textEnd)
-      result ~= makeString(placeholderEnd, textEnd);
+      result ~= String(placeholderEnd, textEnd);
     return result;
   }
 }

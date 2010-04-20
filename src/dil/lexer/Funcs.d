@@ -15,6 +15,13 @@ char[] toString(uint x)
   return str;
 }
 
+/// Constructs a string from the begin and end pointers.
+char[] String(char* begin, char* end)
+{
+  assert(begin && end && begin <= end);
+  return begin[0..end-begin];
+}
+
 const char[3] LS = "\u2028"; /// Unicode line separator.
 const dchar LSd = 0x2028;  /// ditto
 const char[3] PS = "\u2029"; /// Unicode paragraph separator.

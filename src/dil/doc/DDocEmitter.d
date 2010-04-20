@@ -341,27 +341,27 @@ abstract class DDocEmitter : DefaultVisitor
   {
     auto c = this.cmnt;
     assert(c !is null);
-    write("$(DDOC_SECTIONS ");
+    write("\1DDOC_SECTIONS ");
       foreach (s; c.sections)
       {
         if (s is c.summary)
-          write("\n$(DDOC_SUMMARY ");
+          write("\n\1DDOC_SUMMARY ");
         else if (s is c.description)
-          write("\n$(DDOC_DESCRIPTION ");
+          write("\n\1DDOC_DESCRIPTION ");
         else if (auto name = toUpper(s.name.dup) in specialSections)
-          write("\n$(DDOC_", *name, " ");
+          write("\n\1DDOC_", *name, " ");
         else if (s.Is("params"))
         { // Process parameters section.
           auto ps = new ParamsSection(s.name, s.text);
-          write("\n$(DDOC_PARAMS ");
+          write("\n\1DDOC_PARAMS ");
           foreach (i, paramName; ps.paramNames)
-            write("\n$(DDOC_PARAM_ROW ",
-                    "$(DDOC_PARAM_ID $(DDOC_PARAM ", paramName, "))",
-                    "$(DDOC_PARAM_DESC ",
+            write("\n\1DDOC_PARAM_ROW "
+                    "\1DDOC_PARAM_ID \1DDOC_PARAM ", paramName, "\2\2",
+                    "\1DDOC_PARAM_DESC ",
                       scanCommentText(ps.paramDescs[i]),
-                    ")",
-                  ")");
-          write(")");
+                    "\2"
+                  "\2");
+          write("\2");
           continue;
         }
         else if (s.Is("macros"))
@@ -371,16 +371,17 @@ abstract class DDocEmitter : DefaultVisitor
           continue;
         }
         else
-          write("\n$(DDOC_SECTION $(DDOC_SECTION_H ", replace_(s.name), ":)");
-        write(scanCommentText(s.text), ")");
+          write("\n\1DDOC_SECTION \1DDOC_SECTION_H ", replace_(s.name), ":\2");
+        write(scanCommentText(s.text), "\2");
       }
-    write(")");
+    write("\2");
   }
 
-  /// Replaces occurrences of '_' with ' ' in str.
+  /// Replaces occurrences of '_' with ' ' in a copy of str.
   char[] replace_(char[] str)
   {
-    foreach (ref c; str.dup)
+    str = str.dup;
+    foreach (ref c; str)
       if (c == '_') c = ' ';
     return str;
   }
@@ -389,7 +390,6 @@ abstract class DDocEmitter : DefaultVisitor
   /// $(UL
   /// $(LI skips HTML tags)
   /// $(LI escapes '&lt;', '&gt;' and '&amp;' with named HTML entities)
-  /// $(LI inserts $&#40;LP&#41;/$&#40;RP&#41; in place of '('/')')
   /// $(LI inserts $&#40;DDOC_BLANKLINE&#41; in place of '\n\n')
   /// $(LI highlights the tokens in code sections)
   /// )
@@ -401,21 +401,29 @@ abstract class DDocEmitter : DefaultVisitor
     result.length = 0;
     uint level = 0; // Nesting level of macro invocations and
                     // the parentheses inside of them.
+    char[] parens; // Stack of parentheses and markers.
     while (p < end)
     {
       switch (*p)
       {
       case '$':
-        auto macroBegin = p;
-        if (p+2 < end && p[1] == '(')
-          if ((p += 2), scanIdentifier(p, end))
-          {
-            level++;
-            result ~= makeString(macroBegin, p); // Copy "$(MacroName".
-            continue;
-          }
-        p = macroBegin;
+        auto p2 = p+2;
+        if (p+2 < end && p[1] == '(' &&
+            (isidbeg(p[2]) || isUnicodeAlpha(p2, end))) // IdStart
+        {
+          parens ~= Macro.Marker.Closing;
+          result ~= Macro.Marker.Opening; // Relace "$(".
+          p += 2; // Skip "$(".
+        }
         goto default;
+      case '(':
+        if (parens.length) parens ~= ')'; goto default;
+      case ')':
+        if (!parens.length) goto default;
+        auto closing_char = parens[$-1];
+        result ~= closing_char; // Replace ')'.
+        parens = parens[0..$-1]; // Pop one char.
+        break;
       case '<':
         auto begin = p;
         p++;
@@ -429,7 +437,7 @@ abstract class DDocEmitter : DefaultVisitor
               p += 3; // Point one past '>'.
               break;
             }
-          result ~= makeString(begin, p);
+          result ~= String(begin, p);
         } // <tag ...> or </tag>
         else if (p < end && (isalpha(*p) || *p == '/'))
         {
@@ -442,23 +450,11 @@ abstract class DDocEmitter : DefaultVisitor
             continue;
           }
           p++; // Skip '>'.
-          result ~= makeString(begin, p);
+          result ~= String(begin, p);
         }
         else
           result ~= "&lt;";
         continue;
-      case '(':
-        if (level)
-          ++level, result ~= "(";
-        else
-          result ~= "$(LP)";
-        break;
-      case ')':
-        if (level)
-          --level, result ~= ")";
-        else
-          result ~= "$(RP)";
-        break;
       // case '\'': result ~= "&apos;"; break; // &#39;
       // case '"': result ~= "&quot;"; break;
       case '>': result ~= "&gt;"; break;
@@ -471,7 +467,7 @@ abstract class DDocEmitter : DefaultVisitor
           else
             while (++p < end && isalpha(*p)){} // Named entity.
           if (p < end && *p == ';') {
-            result ~= makeString(entityBegin, ++p); // Copy valid entity.
+            result ~= String(entityBegin, ++p); // Copy valid entity.
             continue;
           }
           p = entityBegin + 1; // Reset. It's not a valid entity.
@@ -482,7 +478,7 @@ abstract class DDocEmitter : DefaultVisitor
         if (!(p+1 < end && p[1] == '\n'))
           goto default;
         ++p;
-        result ~= "\n$(DDOC_BLANKLINE)\n";
+        result ~= "\n\1DDOC_BLANKLINE\2\n";
         break;
       case '-':
         if (p+2 < end && p[1] == '-' && p[2] == '-')
@@ -506,18 +502,18 @@ abstract class DDocEmitter : DefaultVisitor
             codeEnd++; // Include the non-newline character.
           if (codeBegin < codeEnd)
           { // Highlight the extracted source code.
-            auto codeText = makeString(codeBegin, codeEnd);
+            auto codeText = String(codeBegin, codeEnd);
             uint lines; // Number of lines in the code text.
 
             codeText = DDocUtils.unindentText(codeText);
             codeText = tokenHL.highlightTokens(codeText, modul.getFQN(),
                                                lines);
-            result ~= "$(D_CODE\n";
-              result ~= "$(DIL_CODELINES ";
-              for (auto line = 1; line <= lines; line++)
-                result ~= Format("{}\n", line);
-              result ~= "),$(DIL_CODETEXT " ~ escapeLPRP(codeText) ~ ")";
-            result ~= "\n)";
+            result ~= "\1D_CODE\n"
+              "\1DIL_CODELINES ";
+              for (uint num = 1; num <= lines; num++)
+                (result ~= .toString(num)), (result ~= '\n');
+              result ~= "\2,\1DIL_CODETEXT " ~ codeText ~ "\2"
+            "\n\2";
           }
           while (p < end && *p == '-') // Skip remaining dashes.
             p++;
@@ -530,11 +526,13 @@ abstract class DDocEmitter : DefaultVisitor
       p++;
     }
     assert(p is end);
+    foreach (c; parens)
+      if (c == Macro.Marker.Closing) // Unclosed macros?
+        result ~= Macro.Marker.Unclosed; // Add marker for errors.
     return result;
   }
 
   /// Escapes '<', '>' and '&' with named HTML entities.
-  /// Also escapes '(' and ')' with $&#40;LP&#41; and $&#40;RP&#41;.
   char[] escape(char[] text)
   {
     char[] result = new char[text.length]; // Reserve space.
@@ -545,29 +543,8 @@ abstract class DDocEmitter : DefaultVisitor
         case '<': result ~= "&lt;";  break;
         case '>': result ~= "&gt;";  break;
         case '&': result ~= "&amp;"; break;
-        case '(': result ~= "$(LP)"; break;
-        case ')': result ~= "$(RP)"; break;
         default:  result ~= c;
       }
-    if (result.length != text.length)
-      return result;
-    // Nothing escaped. Return original text.
-    delete result;
-    return text;
-  }
-
-  /// Escapes '(' and ')' with $&#40;LP&#41; and $&#40;RP&#41;.
-  char[] escapeLPRP(char[] text)
-  {
-    char[] result = new char[text.length]; // Reserve space.
-    result.length = 0;
-    foreach(c; text)
-      if (c == '(')
-        result ~= "$(LP)";
-      else if (c == ')')
-        result ~= "$(RP)";
-      else
-        result ~= c;
     if (result.length != text.length)
       return result;
     // Nothing escaped. Return original text.
@@ -598,7 +575,7 @@ abstract class DDocEmitter : DefaultVisitor
   void writeParams(Parameters params)
   {
     reportParameters(params);
-    write("$(DIL_PARAMS ");
+    write("\1DIL_PARAMS ");
     size_t item_count = params.items.length;
     foreach (param; params.items)
     {
@@ -613,16 +590,16 @@ abstract class DDocEmitter : DefaultVisitor
           write(textSpan(param.begin, typeBegin.prevNWS), " ");
         write(param.type); // Write the type.
         if (param.hasName)
-          write(" $(DDOC_PARAM ", param.nameStr, ")");
+          write(" \1DDOC_PARAM ", param.nameStr, "\2");
         if (param.isDVariadic)
           write("...");
         if (param.defValue)
-          write(" = $(DIL_DEFVAL ",
-                escape(param.defValue.begin, param.defValue.end), ")");
+          write(" = \1DIL_DEFVAL ",
+                escape(param.defValue.begin, param.defValue.end), "\2");
       }
       --item_count && (text ~= ", "); // Skip for last item.
     }
-    write(")");
+    write("\2");
   }
 
   /// Writes the current template parameters to the text buffer.
@@ -631,43 +608,43 @@ abstract class DDocEmitter : DefaultVisitor
     if (!currentTParams)
       return;
     reportParameters(currentTParams);
-    write("$(DIL_TEMPLATE_PARAMS ");
+    write("\1DIL_TEMPLATE_PARAMS ");
     auto item_count = currentTParams.items.length;
     foreach (tparam; currentTParams.items)
     {
       void writeSpecDef(TypeNode spec, TypeNode def)
       {
         if (spec) write(" : "), write(spec);
-        if (def)  write(" = $(DIL_DEFVAL "), write(def), write(")");
+        if (def)  write(" = \1DIL_DEFVAL "), write(def), write("\2");
       }
       void writeSpecDef2(Expression spec, Expression def)
       {
         if (spec) write(" : ", escape(spec.begin, spec.end));
-        if (def)  write(" = $(DIL_DEFVAL ", escape(def.begin, def.end), ")");
+        if (def)  write(" = \1DIL_DEFVAL ", escape(def.begin, def.end), "\2");
       }
       if (auto p = tparam.Is!(TemplateAliasParameter))
-        write("$(DIL_TPALIAS $(DIL_TPID ", p.nameStr, ")"),
+        write("\1DIL_TPALIAS \1DIL_TPID ", p.nameStr, "\2"),
         writeSpecDef(p.specType, p.defType),
-        write(")");
+        write("\2");
       else if (auto p = tparam.Is!(TemplateTypeParameter))
-        write("$(DIL_TPTYPE $(DIL_TPID ", p.nameStr, ")"),
+        write("\1DIL_TPTYPE \1DIL_TPID ", p.nameStr, "\2"),
         writeSpecDef(p.specType, p.defType),
-        write(")");
+        write("\2");
       else if (auto p = tparam.Is!(TemplateTupleParameter))
-        write("$(DIL_TPTUPLE $(DIL_TPID ", p.nameStr, "))");
+        write("\1DIL_TPTUPLE \1DIL_TPID ", p.nameStr, "\2\2");
       else if (auto p = tparam.Is!(TemplateValueParameter))
-        write("$(DIL_TPVALUE "),
+        write("\1DIL_TPVALUE "),
         write(p.valueType),
-        write(" $(DIL_TPID ", p.nameStr, ")"),
+        write(" \1DIL_TPID ", p.nameStr, "\2"),
         writeSpecDef2(p.specValue, p.defValue),
-        write(")");
+        write("\2");
       else if (auto p = tparam.Is!(TemplateThisParameter))
-        write("$(DIL_TPTHIS $(DIL_TPID ", p.nameStr, ")"),
+        write("\1DIL_TPTHIS \1DIL_TPID ", p.nameStr, "\2"),
         writeSpecDef(p.specType, p.defType),
-        write(")");
+        write("\2");
       --item_count && write(", ");
     }
-    write(")");
+    write("\2");
     currentTParams = null;
   }
 
@@ -677,11 +654,11 @@ abstract class DDocEmitter : DefaultVisitor
     auto item_count = bases.length;
     if (item_count == 0)
       return;
-    write(" $(DIL_BASECLASSES ");
+    write(" \1DIL_BASECLASSES ");
     foreach (base; bases)
-      write("$(DIL_BASECLASS "), write(base),
-      write(--item_count ? "), " : ")");
-    write(")");
+      write("\1DIL_BASECLASS "), write(base),
+      write(--item_count ? "\2, " : "\2");
+    write("\2");
   }
 
   /// Offset at which to insert a declaration with a "ditto" comment.
@@ -692,11 +669,11 @@ abstract class DDocEmitter : DefaultVisitor
   {
     void writeDECL()
     {
-      write("\n$(DDOC_DECL ");
+      write("\n\1DDOC_DECL ");
       dg();
-      writeSemicolon && write("$(DIL_SC)");
+      writeSemicolon && write("\1DIL_SC\2");
       writeAttributes(d);
-      write(" $(DIL_SYMEND ", currentSymbolParams, "))");
+      write(" \1DIL_SYMEND ", currentSymbolParams, "\2\2");
     }
 
     if (/+includeUndocumented &&+/ this.cmnt is this.emptyCmnt)
@@ -731,13 +708,13 @@ abstract class DDocEmitter : DefaultVisitor
     auto isEmpty = this.cmnt is this.emptyCmnt;
     if (cmntIsDitto && !isEmpty)
       return; // Don't write a description when we have a ditto-comment.
-    write("\n$(DDOC_DECL_DD ");
+    write("\n\1DDOC_DECL_DD ");
     if (isEmpty)
-      write("\n$(DIL_NOCMNT)");
+      write("\1DIL_NOCMNT\2");
     else
       writeComment();
     dg && dg();
-    write(")");
+    write("\2");
   }
 
   /// Saves the attributes of the current symbol.
@@ -755,8 +732,8 @@ abstract class DDocEmitter : DefaultVisitor
     addSymbol(name, fqn.dup, kind, loc, loc_end);
     currentSymbolParams = Format("{}, {}, {}, {}, {}",
       name, fqn, kindStr, loc.lineNum, loc_end.lineNum);
-    write("$(DIL_SYMBOL ", currentSymbolParams, ")");
-    // write("$(DDOC_PSYMBOL ", name, ")"); // DMD's macro with no info.
+    write("\1DIL_SYMBOL ", currentSymbolParams, "\2");
+    // write("\1DDOC_PSYMBOL ", name, "\2"); // DMD's macro with no info.
   }
 
   /// The symbols that will appear in the result document.
@@ -777,10 +754,10 @@ abstract class DDocEmitter : DefaultVisitor
   void MEMBERS(D)(string kind, string name, D members)
   {
     scope s = new DDocScope(name);
-    write("\n$(DDOC_"~kind~"_MEMBERS ");
+    write("\n\1DDOC_"~kind~"_MEMBERS ");
     if (members !is null)
       super.visit(members);
-    write(")");
+    write("\2");
   }
 
   /// Writes a class or interface declaration.
@@ -886,21 +863,21 @@ abstract class DDocEmitter : DefaultVisitor
     string[] attributes;
 
     if (currentAttributes.prot.length)
-      attributes ~= "$(DIL_PROT " ~ currentAttributes.prot ~ ")";
+      attributes ~= "\1DIL_PROT " ~ currentAttributes.prot ~ "\2";
 
     foreach (stcString; currentAttributes.stcs)
-      attributes ~= "$(DIL_STC " ~ stcString ~ ")";
+      attributes ~= "\1DIL_STC " ~ stcString ~ "\2";
 
     if (currentAttributes.link.length)
-      attributes ~= "$(DIL_LINKAGE extern(" ~ currentAttributes.link ~ "))";
+      attributes ~= "\1DIL_LINKAGE extern(" ~ currentAttributes.link ~ ")\2";
 
     if (!attributes.length)
       return;
 
-    write(" $(DIL_ATTRIBUTES ", attributes[0]);
+    write(" \1DIL_ATTRIBUTES ", attributes[0]);
     foreach (attribute; attributes[1..$])
       write(", ", attribute);
-    write(")");
+    write("\2");
   }
 
   alias Declaration D;
@@ -1033,7 +1010,7 @@ override:
       return d;
     DECL({
       if (d.returnType)
-        write("$(DIL_RETTYPE "), write(d.returnType), write(") ");
+        write("\1DIL_RETTYPE "), write(d.returnType), write("\2 ");
       else write("auto");
       SYMBOL(d.name.text, K.Function, d);
       writeTemplateParams();
