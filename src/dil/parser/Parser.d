@@ -291,20 +291,23 @@ class Parser
          T.Override,
          T.Abstract,
          T.Synchronized,
-         //T.Static,
-         T.Final,
-         //T.Const,
-         //T.Invariant, // D2
-         //T.Immutable, // D2
-         T.Shared, // D2
-         T.Gshared, // D2
-         T.Ref, // D2
-         T.Pure, // D2
-         T.Nothrow, // D2
-         T.Thread, // D2
-         T.At, // D2
          T.Auto,
-         T.Scope:
+         T.Scope,
+         //T.Static,
+         //T.Const,
+         T.Final:
+    version(D2)
+    {
+    case T.Shared,
+         T.Gshared,
+         //T.Invariant,
+         //T.Immutable,
+         T.Ref,
+         T.Pure,
+         T.Nothrow,
+         T.Thread,
+         T.At:
+    }
     case_parseAttributes:
       return parseAttributes();
     case T.Alias:
@@ -1897,20 +1900,14 @@ class Parser
       /+ Not applicable for statements.
          T.Private, T.Package, T.Protected, T.Public, T.Export,
          T.Deprecated, T.Override, T.Abstract,+/
-    case T.Extern,
-         //T.Final,
-         T.Const,
-         T.Invariant, T.Immutable, // D2
-         T.Pure,  // D2
-         T.Shared, // D2
-         T.Gshared, // D2
-         T.Ref, // D2
-         T.Nothrow, // D2
-         T.Thread, // D2
-         T.At, // D2
-         T.Auto:
-         //T.Scope
-         //T.Static
+    case //T.Final, T.Scope, T.Static,
+         T.Extern, T.Const, T.Auto:
+    version(D2)
+    {
+    case T.Invariant, T.Immutable,
+         T.Pure, T.Shared, T.Gshared,
+         T.Ref, T.Nothrow, T.Thread, T.At:
+    }
     case_parseAttribute:
       s = parseAttributeStatement();
       break;
@@ -2077,7 +2074,10 @@ class Parser
     case T.Typeid:
     case T.Is:
     case T.LParen:
-    case T.Traits: // D2.0
+    version(D2)
+    {
+    case T.Traits:
+    }
     // Tokens that can start a UnaryExpression:
     case T.AndBinary, T.PlusPlus, T.MinusMinus, T.Mul, T.Minus,
          T.Plus, T.Not, T.Tilde, T.New, T.Delete, T.Cast:
