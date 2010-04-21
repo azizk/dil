@@ -287,8 +287,7 @@ class Lexer
       Lidentifier:
         do
         { c = *++p; }
-        while (isident(c) ||
-          !isascii(c) && ((this.p = p), isUnicodeAlpha(), (p = this.p)))
+        while (isident(c) || !isascii(c) && isUnicodeAlpha(p))
         t.end = this.p = p;
 
         auto id = IdTable.lookup(t.text);
@@ -831,8 +830,7 @@ class Lexer
     Lidentifier:
       do
       { c = *++p; }
-      while (isident(c) ||
-        !isascii(c) && ((this.p = p), isUnicodeAlpha(), (p = this.p)))
+      while (isident(c) || !isascii(c) && isUnicodeAlpha(p))
       t.end = this.p = p;
 
       auto id = IdTable.lookup(t.text);
@@ -1366,7 +1364,7 @@ class Lexer
       // Parse Identifier + EndOfLine
       do
       { c = *++p; }
-      while (isident(c) || !isascii(c) && isUnicodeAlpha())
+      while (isident(c) || !isascii(c) && isUnicodeAlpha(p))
       // Store identifier
       str_delim = begin[0..p-begin];
       // Scan newline
@@ -2384,13 +2382,13 @@ class Lexer
 
   /// Returns true if the current character to be decoded is
   /// a Unicode alpha character.
-  ///
-  /// The current pointer 'p' is set to the last trailbyte if true is returned.
-  bool isUnicodeAlpha()
+  /// Params:
+  ///   ref_p = Is set to the last trailbyte if true is returned.
+  static bool isUnicodeAlpha(ref char* ref_p)
   {
+    char* p = ref_p;
     assert(!isascii(*p),
       "check for ASCII char before calling isUnicodeAlpha().");
-    char* p = this.p;
     dchar d = *p;
     ++p; // Move to second byte.
     // Error if second byte is not a trail byte.
@@ -2435,7 +2433,7 @@ class Lexer
     if (!isValidChar(d) || !isUniAlpha(d))
       return false;
     // Only advance pointer if this is a Unicode alpha character.
-    this.p = p;
+    ref_p = p;
     return true;
   }
 
