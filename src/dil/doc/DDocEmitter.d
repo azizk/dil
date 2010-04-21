@@ -506,8 +506,8 @@ abstract class DDocEmitter : DefaultVisitor
             uint lines; // Number of lines in the code text.
 
             codeText = DDocUtils.unindentText(codeText);
-            codeText = tokenHL.highlightTokens(codeText, modul.getFQN(),
-                                               lines);
+            codeText = tokenHL.highlightTokens(
+              codeText, modul.getFQN(), lines);
             result ~= "\1D_CODE\n"
               "\1DIL_CODELINES ";
               for (uint num = 1; num <= lines; num++)
@@ -573,8 +573,8 @@ abstract class DDocEmitter : DefaultVisitor
 
   /// Writes an expression to the buffer.
   void writeE(Expression e)
-  { // Just copy the text of the expression.
-    text ~= escape(e.begin, e.end);
+  {
+    text ~= tokenHL.highlightTokens(e.begin, e.end, true);
   }
 
   /// Writes params to the text buffer.
@@ -593,7 +593,9 @@ abstract class DDocEmitter : DefaultVisitor
         // Write storage classes.
         auto typeBegin = param.type.baseType.begin;
         if (typeBegin !is param.begin) // Write storage classes.
-          write(textSpan(param.begin, typeBegin.prevNWS), " ");
+          write(
+            tokenHL.highlightTokens(param.begin, typeBegin.prevNWS, true),
+            " ");
         write(param.type); // Write the type.
         if (param.hasName)
           write(" \1DDOC_PARAM ", param.nameStr, "\2");

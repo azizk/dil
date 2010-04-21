@@ -36,25 +36,38 @@ class Highlighter
   }
 
   /// Highlights tokens in a text buffer.
-  /// Returns: a string with the highlighted tokens.
+  /// Returns: A string with the highlighted tokens.
   string highlightTokens(string text, string filePath, ref uint lines)
   {
-    auto buffer = new Array(text.length, 1024);
-    auto print_saved = print; // Save;
-    print = new FormatOut(Format, buffer);
-
     auto lx = new Lexer(new SourceText(filePath, text), diag);
     lx.scanAll();
     lines = lx.lineNum;
+    return highlightTokens(lx.firstToken(), lx.tail);
+  }
+
+  /// Highlights the tokens from begin to end (both included).
+  /// Returns: A string with the highlighted tokens.
+  /// Params:
+  ///   skipWS = Skips whitespace tokens (e.g. comments) if true.
+  string highlightTokens(Token* begin, Token* end, bool skipWS = false)
+  {
+    scope buffer = new Array(512, 512); // Allocate 512B, grow by 512B.
+    auto print_saved = this.print; // Save;
+    auto print = this.print = new FormatOut(Format, buffer);
 
     // Traverse linked list and print tokens.
-    for (auto token = lx.firstToken(); token; token = token.next) {
+    for (auto token = begin; token; token = token.next)
+    {
+      if (skipWS && token.isWhitespace())
+        continue;
       token.ws && print(token.wsChars); // Print preceding whitespace.
       printToken(token);
+      if (token is end)
+        break;
     }
 
-    print = print_saved; // Restore.
-    return cast(char[])buffer.slice();
+    this.print = print_saved; // Restore.
+    return cast(char[])buffer.slice().dup; // Return a copy.
   }
 
   /// Highlights all tokens of a source file.
