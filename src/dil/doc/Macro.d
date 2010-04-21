@@ -70,10 +70,21 @@ class Macro
     if (prev < end)
       result ~= String(prev, end);
     foreach_reverse (c; parens)
-      if (c == Macro.Marker.Opening) // Unclosed macros?
+      if (c == Macro.Marker.Closing) // Unclosed macros?
         result ~= Macro.Marker.Unclosed; // Add marker for errors.
     return result;
   }
+}
+
+unittest
+{
+  alias Macro.convert fn;
+  auto r = fn("$(bla())");
+  assert(r == "\1bla()\2");
+  r = fn("($(ÖÜTER ( $(NestedMacro ?,ds()))))");
+  assert(r == "(\1ÖÜTER ( \1NestedMacro ?,ds()\2)\2)");
+  r = fn("$(Unclosed macro ");
+  assert(r == "\1Unclosed macro \3");
 }
 
 /// Maps macro names to Macro objects.
