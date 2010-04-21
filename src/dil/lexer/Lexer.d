@@ -583,6 +583,7 @@ class Lexer
 
       error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
+      p = this.p;
       ++p;
       kind = TOK.Illegal;
       t.setWhitespaceFlag();
@@ -594,8 +595,7 @@ class Lexer
     ++p;
   Lreturn:
     t.kind = kind;
-    t.end = p;
-    this.p = p;
+    t.end = this.p = p;
     return;
   }
 
@@ -872,6 +872,7 @@ class Lexer
 
     error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
+    p = this.p;
     ++p;
     kind = TOK.Illegal;
     t.setWhitespaceFlag();
