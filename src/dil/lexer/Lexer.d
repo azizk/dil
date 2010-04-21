@@ -225,9 +225,12 @@ class Lexer
   {
     assert(text.ptr <= t.start && t.start < end, Token.toString(t.kind));
     assert(text.ptr <= t.end && t.end <= end, Token.toString(t.kind));
+    assert(t.kind != TOK.Invalid);
   }
   body
   {
+    TOK kind; // The token kind that will be assigned to t.kind.
+    char* p = this.p; // Incrementing a stack variable is faster.
     // Scan whitespace.
     if (isspace(*p))
     {
@@ -239,7 +242,7 @@ class Lexer
     // Scan a token.
     uint c = *p;
     {
-      t.start = p;
+      t.start = this.p = p;
       // Newline.
       switch (*p)
       {
@@ -251,13 +254,13 @@ class Lexer
         ++p;
         ++lineNum;
         setLineBegin(p);
-        t.kind = TOK.Newline;
+        kind = TOK.Newline;
         t.setWhitespaceFlag();
-        t.newline.filePaths = this.filePaths;
-        t.newline.oriLineNum = lineNum;
-        t.newline.setLineNum = lineNum_hline;
-        t.end = p;
-        return;
+        auto nl = &t.newline;
+        nl.filePaths = this.filePaths;
+        nl.oriLineNum = lineNum;
+        nl.setLineNum = lineNum_hline;
+        goto Lreturn;
       default:
         if (isUnicodeNewline(p))
         {
@@ -265,77 +268,74 @@ class Lexer
           goto case '\n';
         }
       }
+      assert(this.p == p);
       // Identifier or string literal.
       if (isidbeg(c))
       {
         if (c == 'r' && p[1] == '"')
-          return ++p, scanRawStringLiteral(t);
+          return ++this.p, scanRawStringLiteral(t);
         if (c == 'x' && p[1] == '"')
           return scanHexStringLiteral(t);
-      version(D2)
-      {
+        version(D2)
+        {
         if (c == 'q' && p[1] == '"')
           return scanDelimitedStringLiteral(t);
         if (c == 'q' && p[1] == '{')
           return scanTokenStringLiteral(t);
-      }
+        }
         // Scan identifier.
       Lidentifier:
         do
         { c = *++p; }
-        while (isident(c) || !isascii(c) && isUnicodeAlpha())
-
-        t.end = p;
+        while (isident(c) ||
+          !isascii(c) && ((this.p = p), isUnicodeAlpha(), (p = this.p)))
+        t.end = this.p = p;
 
         auto id = IdTable.lookup(t.text);
-        t.kind = id.kind;
+        t.kind = kind = id.kind;
         t.ident = id;
 
-        if (t.kind == TOK.Identifier || t.isKeyword)
+        if (kind == TOK.Identifier || t.isKeyword)
           return;
         else if (t.isSpecialToken)
           finalizeSpecialToken(t);
-        else if (t.kind == TOK.EOF)
+        else if (kind == TOK.EOF)
         {
           tail = &t;
           assert(t.text == "__EOF__");
         }
         else
-          assert(0, "unexpected token type: " ~ Token.toString(t.kind));
+          assert(0, "unexpected token type: " ~ Token.toString(kind));
         return;
       }
 
+      assert(this.p == p);
       if (isdigit(c))
         return scanNumber(t);
 
       if (c == '/')
-      {
-        c = *++p;
-        switch(c)
+        switch(c = *++p)
         {
         case '=':
           ++p;
-          t.kind = TOK.DivAssign;
-          t.end = p;
-          return;
+          kind = TOK.DivAssign;
+          goto Lreturn;
         case '+':
-          return scanNestedComment(t);
+          return (this.p = p), scanNestedComment(t);
         case '*':
-          return scanBlockComment(t);
+          return (this.p = p), scanBlockComment(t);
         case '/': // LineComment.
           while (!isEndOfLine(++p))
-            isascii(*p) || decodeUTF8();
-          t.kind = TOK.Comment;
+            isascii(*p) || ((this.p = p), decodeUTF8(), (p = this.p));
+          kind = TOK.Comment;
           t.setWhitespaceFlag();
-          t.end = p;
-          return;
+          goto Lreturn;
         default:
-          t.kind = TOK.Div;
-          t.end = p;
-          return;
+          kind = TOK.Div;
+          goto Lreturn;
         }
-      }
 
+      assert(this.p == p);
       switch (c)
       {
       case '\'':
@@ -355,7 +355,7 @@ class Lexer
         switch (c)
         {
         case '=':
-          t.kind = TOK.GreaterEqual;
+          kind = TOK.GreaterEqual;
           goto Lcommon;
         case '>':
           if (p[1] == '>')
@@ -363,19 +363,19 @@ class Lexer
             ++p;
             if (p[1] == '=')
               ++p,
-              t.kind = TOK.URShiftAssign;
+              kind = TOK.URShiftAssign;
             else
-              t.kind = TOK.URShift;
+              kind = TOK.URShift;
           }
           else if (p[1] == '=')
             ++p,
-            t.kind = TOK.RShiftAssign;
+            kind = TOK.RShiftAssign;
           else
-            t.kind = TOK.RShift;
+            kind = TOK.RShift;
           goto Lcommon;
         default:
-          t.kind = TOK.Greater;
-          goto Lcommon2;
+          kind = TOK.Greater;
+          goto Lreturn;
         }
         assert(0);
       case '<': /* <  <=  <>  <>=  <<  <<= */
@@ -383,25 +383,25 @@ class Lexer
         switch (c)
         {
         case '=':
-          t.kind = TOK.LessEqual;
+          kind = TOK.LessEqual;
           goto Lcommon;
         case '<':
           if (p[1] == '=')
             ++p,
-            t.kind = TOK.LShiftAssign;
+            kind = TOK.LShiftAssign;
           else
-            t.kind = TOK.LShift;
+            kind = TOK.LShift;
           goto Lcommon;
         case '>':
           if (p[1] == '=')
             ++p,
-            t.kind = TOK.LorEorG;
+            kind = TOK.LorEorG;
           else
-            t.kind = TOK.LorG;
+            kind = TOK.LorG;
           goto Lcommon;
         default:
-          t.kind = TOK.Less;
-          goto Lcommon2;
+          kind = TOK.Less;
+          goto Lreturn;
         }
         assert(0);
       case '!': /* !  !<  !>  !<=  !>=  !<>  !<>= */
@@ -411,150 +411,145 @@ class Lexer
         case '<':
           c = *++p;
           if (c == '>')
-          {
             if (p[1] == '=')
               ++p,
-              t.kind = TOK.Unordered;
+              kind = TOK.Unordered;
             else
-              t.kind = TOK.UorE;
-          }
+              kind = TOK.UorE;
           else if (c == '=')
-            t.kind = TOK.UorG;
+            kind = TOK.UorG;
           else {
-            t.kind = TOK.UorGorE;
-            goto Lcommon2;
+            kind = TOK.UorGorE;
+            goto Lreturn;
           }
           goto Lcommon;
         case '>':
           if (p[1] == '=')
             ++p,
-            t.kind = TOK.UorL;
+            kind = TOK.UorL;
           else
-            t.kind = TOK.UorLorE;
+            kind = TOK.UorLorE;
           goto Lcommon;
         case '=':
-          t.kind = TOK.NotEqual;
+          kind = TOK.NotEqual;
           goto Lcommon;
         default:
-          t.kind = TOK.Not;
-          goto Lcommon2;
+          kind = TOK.Not;
+          goto Lreturn;
         }
         assert(0);
       case '.': /* .  .[0-9]  ..  ... */
         if (p[1] == '.')
-        {
-          ++p;
-          if (p[1] == '.')
+          if ((++p)[1] == '.')
             ++p,
-            t.kind = TOK.Ellipses;
+            kind = TOK.Ellipses;
           else
-            t.kind = TOK.Slice;
-        }
+            kind = TOK.Slice;
         else if (isdigit(p[1]))
-          return scanReal(t);
+          return (this.p = p), scanReal(t);
         else
-          t.kind = TOK.Dot;
+          kind = TOK.Dot;
         goto Lcommon;
       case '|': /* |  ||  |= */
         c = *++p;
         if (c == '=')
-          t.kind = TOK.OrAssign;
+          kind = TOK.OrAssign;
         else if (c == '|')
-          t.kind = TOK.OrLogical;
+          kind = TOK.OrLogical;
         else {
-          t.kind = TOK.OrBinary;
-          goto Lcommon2;
+          kind = TOK.OrBinary;
+          goto Lreturn;
         }
         goto Lcommon;
       case '&': /* &  &&  &= */
         c = *++p;
         if (c == '=')
-          t.kind = TOK.AndAssign;
+          kind = TOK.AndAssign;
         else if (c == '&')
-          t.kind = TOK.AndLogical;
+          kind = TOK.AndLogical;
         else {
-          t.kind = TOK.AndBinary;
-          goto Lcommon2;
+          kind = TOK.AndBinary;
+          goto Lreturn;
         }
         goto Lcommon;
       case '+': /* +  ++  += */
         c = *++p;
         if (c == '=')
-          t.kind = TOK.PlusAssign;
+          kind = TOK.PlusAssign;
         else if (c == '+')
-          t.kind = TOK.PlusPlus;
+          kind = TOK.PlusPlus;
         else {
-          t.kind = TOK.Plus;
-          goto Lcommon2;
+          kind = TOK.Plus;
+          goto Lreturn;
         }
         goto Lcommon;
       case '-': /* -  --  -= */
         c = *++p;
         if (c == '=')
-          t.kind = TOK.MinusAssign;
+          kind = TOK.MinusAssign;
         else if (c == '-')
-          t.kind = TOK.MinusMinus;
+          kind = TOK.MinusMinus;
         else {
-          t.kind = TOK.Minus;
-          goto Lcommon2;
+          kind = TOK.Minus;
+          goto Lreturn;
         }
         goto Lcommon;
       case '=': /* =  == */
         if (p[1] == '=')
           ++p,
-          t.kind = TOK.Equal;
+          kind = TOK.Equal;
         else
-          t.kind = TOK.Assign;
+          kind = TOK.Assign;
         goto Lcommon;
       case '~': /* ~  ~= */
         if (p[1] == '=')
           ++p,
-          t.kind = TOK.CatAssign;
+          kind = TOK.CatAssign;
         else
-          t.kind = TOK.Tilde;
+          kind = TOK.Tilde;
         goto Lcommon;
       case '*': /* *  *= */
         if (p[1] == '=')
           ++p,
-          t.kind = TOK.MulAssign;
+          kind = TOK.MulAssign;
         else
-          t.kind = TOK.Mul;
+          kind = TOK.Mul;
         goto Lcommon;
       version(D2)
       {
       case '^': /* ^  ^=  ^^  ^^= */
         if (p[1] == '=')
           ++p,
-          t.kind = TOK.XorAssign;
+          kind = TOK.XorAssign;
         else if (p[1] == '^')
         {
           ++p;
           if (p[1] == '=')
             ++p,
-            t.kind = TOK.PowAssign;
+            kind = TOK.PowAssign;
           else
-            t.kind = TOK.Pow;
+            kind = TOK.Pow;
         }
         else
-          t.kind = TOK.Xor;
+          kind = TOK.Xor;
         goto Lcommon;
-      }
+      } // end of version(D2)
       else
       {
       case '^': /* ^  ^= */
         if (p[1] == '=')
           ++p,
-          t.kind = TOK.XorAssign;
+          kind = TOK.XorAssign;
         else
-          t.kind = TOK.Xor;
+          kind = TOK.Xor;
         goto Lcommon;
       }
       case '%': /* %  %= */
         if (p[1] == '=')
           ++p,
-          t.kind = TOK.ModAssign;
+          kind = TOK.ModAssign;
         else
-          t.kind = TOK.Mod;
+          kind = TOK.Mod;
         goto Lcommon;
       // Single character tokens:
       mixin(cases(
@@ -565,12 +560,8 @@ class Lexer
         "?", "Question", ",", "Comma",
         "$", "Dollar",   "@", "At"
       ));
-      Lcommon:
-        ++p;
-      Lcommon2:
-        t.end = p;
-        return;
       case '#':
+        assert(this.p == p);
         return scanSpecialTokenSequence(t);
       default:
       }
@@ -579,25 +570,34 @@ class Lexer
       if (isEOF(c))
       {
         assert(isEOF(*p), ""~*p);
-        t.kind = TOK.EOF;
-        t.end = p;
+        kind = TOK.EOF;
         tail = &t;
-        assert(t.start == t.end);
-        return;
+        assert(t.start == p);
+        goto Lreturn;
       }
 
-      if (!isascii(c) && isUniAlpha(c = decodeUTF8()))
+      assert(this.p == p);
+      if (!isascii(c) && isUniAlpha(c = decodeUTF8())) {
+        p = this.p;
         goto Lidentifier;
+      }
 
       error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
       ++p;
-      t.kind = TOK.Illegal;
+      kind = TOK.Illegal;
       t.setWhitespaceFlag();
       t.dchar_ = c;
-      t.end = p;
-      return;
+      goto Lreturn;
     }
+
+  Lcommon:
+    ++p;
+  Lreturn:
+    t.kind = kind;
+    t.end = p;
+    this.p = p;
+    return;
   }
 
   /// CTF: Casts a string literal to an integer.
@@ -615,7 +615,7 @@ class Lexer
   /// ---
   //// // case_("<", "Less") ->
   /// case 60u:
-  ///   t.kind = TOK.Less;
+  ///   kind = TOK.Less;
   ///   goto Lcommon;
   /// ---
   static char[] case_(char[] str, char[] kind)
@@ -623,7 +623,7 @@ class Lexer
     char[] label_str = "Lcommon";
     if (str.length != 1) // Append length as a suffix.
       label_str ~= '0' + str.length;
-    return "case toUint(\""~str~"\"): t.kind = TOK."~kind~";"
+    return "case toUint(\""~str~"\"): kind = TOK."~kind~";"
              "goto "~label_str~";\n";
   }
   // pragma(msg, case_("<", "Less"));
@@ -650,9 +650,12 @@ class Lexer
   {
     assert(text.ptr <= t.start && t.start < end, Token.toString(t.kind));
     assert(text.ptr <= t.end && t.end <= end, Token.toString(t.kind));
+    assert(t.kind != TOK.Invalid, String(t.start, t.end));
   }
   body
   {
+    TOK kind; // The token kind that will be assigned to t.kind.
+    char* p = this.p; // Incrementing a stack variable is faster.
     // Scan whitespace.
     if (isspace(*p))
     {
@@ -662,32 +665,7 @@ class Lexer
     }
 
     // Scan a token.
-    t.start = p;
-    // Newline.
-    switch (*p)
-    {
-    case '\r':
-      if (p[1] == '\n')
-        ++p;
-    case '\n':
-      assert(isNewlineEnd(p));
-      ++p;
-      ++lineNum;
-      setLineBegin(p);
-      t.kind = TOK.Newline;
-      t.setWhitespaceFlag();
-      t.newline.filePaths = this.filePaths;
-      t.newline.oriLineNum = lineNum;
-      t.newline.setLineNum = lineNum_hline;
-      t.end = p;
-      return;
-    default:
-      if (isUnicodeNewline(p))
-      {
-        ++p; ++p;
-        goto case '\n';
-      }
-    }
+    t.start = this.p = p;
 
     uint c = *p;
     assert(end - p != 0);
@@ -723,10 +701,6 @@ class Lexer
     switch (c)
     {
     mixin(cases(">>>=", "RShiftAssign", "!<>=", "Unordered"));
-    Lcommon4:
-      p += 4;
-      t.end = p;
-      return;
     default:
     }
 
@@ -738,15 +712,14 @@ class Lexer
     {
     mixin(cases(
       "<<=", "LShiftAssign", ">>=", "RShiftAssign",
-      ">>>", "URShift", "...", "Ellipses",
-      "!<=", "UorG", "!>=", "UorL",
-      "!<>", "UorE", "<>=", "LorEorG",
+      ">>>", "URShift",      "...", "Ellipses",
+      "!<=", "UorG",         "!>=", "UorL",
+      "!<>", "UorE",         "<>=", "LorEorG",
       "^^=", "PowAssign"
     ));
-    Lcommon3:
-      p += 3;
-      t.end = p;
-      return;
+    case toUint(LS), toUint(PS):
+      p += 2;
+      goto Lnewline;
     default:
     }
 
@@ -757,20 +730,19 @@ class Lexer
     switch (c)
     {
     case toUint("/+"):
-      ++p; // Skip /
+      this.p = ++p; // Skip /
       return scanNestedComment(t);
     case toUint("/*"):
-      ++p; // Skip /
+      this.p = ++p; // Skip /
       return scanBlockComment(t);
     case toUint("//"): // LineComment.
       ++p; // Skip /
       assert(*p == '/');
       while (!isEndOfLine(++p))
-        isascii(*p) || decodeUTF8();
-      t.kind = TOK.Comment;
+        isascii(*p) || ((this.p = p), decodeUTF8(), (p = this.p));
+      kind = TOK.Comment;
       t.setWhitespaceFlag();
-      t.end = p;
-      return;
+      goto Lreturn;
     mixin(cases(
       "<=", "LessEqual",  ">=", "GreaterEqual",
       "<<", "LShift",     ">>", "RShift",
@@ -785,20 +757,30 @@ class Lexer
       "%=", "ModAssign",  "^=", "XorAssign",
       "~=", "CatAssign",  "^^", "Pow"
     ));
-    Lcommon2:
-      p += 2;
-      t.end = p;
-      return;
+    case toUint("\r\n"):
+      ++p;
+      goto Lnewline;
+    case toUint(`r"`):
+      return (this.p = ++p), scanRawStringLiteral(t);
+    case toUint(`x"`):
+      return scanHexStringLiteral(t);
+    version(D2)
+    {
+    case toUint(`q"`):
+      return scanDelimitedStringLiteral(t);
+    case toUint(`q{`):
+      return scanTokenStringLiteral(t);
+    }
     default:
     }
 
     static TOK[127] char2tok = [
-      '<':TOK.Greater, '>':TOK.Less, '^':TOK.Xor, '!':TOK.Not,
-      '&':TOK.AndBinary, '|':TOK.OrBinary, '+':TOK.Plus, '-':TOK.Minus,
-      '=':TOK.Assign, '~':TOK.Tilde, '*':TOK.Mul, '/':TOK.Div,
-      '%':TOK.Mod, '(':TOK.LParen, ')':TOK.RParen, '[':TOK.LBracket,
-      ']':TOK.RBracket, '{':TOK.LBrace, '}':TOK.RBrace, ':':TOK.Colon,
-      ';':TOK.Semicolon, '?':TOK.Question, ',':TOK.Comma, '$':TOK.Dollar,
+      '<':TOK.Greater,   '>':TOK.Less,     '^':TOK.Xor,    '!':TOK.Not,
+      '&':TOK.AndBinary, '|':TOK.OrBinary, '+':TOK.Plus,   '-':TOK.Minus,
+      '=':TOK.Assign,    '~':TOK.Tilde,    '*':TOK.Mul,    '/':TOK.Div,
+      '%':TOK.Mod,       '(':TOK.LParen,   ')':TOK.RParen, '[':TOK.LBracket,
+      ']':TOK.RBracket,  '{':TOK.LBrace,   '}':TOK.RBrace, ':':TOK.Colon,
+      ';':TOK.Semicolon, '?':TOK.Question, ',':TOK.Comma,  '$':TOK.Dollar,
       '@':TOK.At
     ];
 
@@ -808,15 +790,14 @@ class Lexer
     assert(*p == c, Format("p={0},c={1}", *p, cast(dchar)c));
     // 1 character tokens.
     // TODO: consider storing the token type in ptable.
-    if (c < 127)
-      if (auto kind = char2tok[c])
-      {
-        t.kind = kind;
-        t.end = ++p;
-        return;
-      }
+    if (c < 127 && (kind = char2tok[c]) != 0)
+      goto Lcommon;
+
+    assert(this.p == p);
     switch (c)
     {
+    case '\r', '\n':
+      goto Lnewline;
     case '\'':
       return scanCharacterLiteral(t);
     case '`':
@@ -831,12 +812,12 @@ class Lexer
     }
     case '.':
       if (isdigit(p[1]))
-        return scanReal(t);
-      t.kind = TOK.Dot;
+        return (this.p = p), scanReal(t);
+      kind = TOK.Dot;
       ++p;
-      t.end = p;
-      return;
+      goto Lreturn;
     case '#':
+      assert(this.p == p);
       return scanSpecialTokenSequence(t);
     default:
     }
@@ -846,44 +827,33 @@ class Lexer
 
     // TODO: consider moving isidbeg() and isdigit() up.
     if (isidbeg(c))
-    {
-      if (c == 'r' && p[1] == '"')
-        return ++p, scanRawStringLiteral(t);
-      if (c == 'x' && p[1] == '"')
-        return scanHexStringLiteral(t);
-    version(D2)
-    {
-      if (c == 'q' && p[1] == '"')
-        return scanDelimitedStringLiteral(t);
-      if (c == 'q' && p[1] == '{')
-        return scanTokenStringLiteral(t);
-    }
-      // Scan identifier.
+    { // Scan an identifier.
     Lidentifier:
       do
       { c = *++p; }
-      while (isident(c) || !isascii(c) && isUnicodeAlpha())
-
-      t.end = p;
+      while (isident(c) ||
+        !isascii(c) && ((this.p = p), isUnicodeAlpha(), (p = this.p)))
+      t.end = this.p = p;
 
       auto id = IdTable.lookup(t.text);
-      t.kind = id.kind;
+      t.kind = kind = id.kind;
       t.ident = id;
 
-      if (t.kind == TOK.Identifier || t.isKeyword)
+      if (kind == TOK.Identifier || t.isKeyword)
         return;
       else if (t.isSpecialToken)
         finalizeSpecialToken(t);
-      else if (t.kind == TOK.EOF)
+      else if (kind == TOK.EOF)
       {
         tail = &t;
         assert(t.text == "__EOF__");
       }
       else
-        assert(0, "unexpected token type: " ~ Token.toString(t.kind));
+        assert(0, "unexpected token type: " ~ Token.toString(kind));
       return;
     }
 
+    assert(this.p == p);
     if (isdigit(c))
       return scanNumber(t);
 
@@ -891,23 +861,51 @@ class Lexer
     if (isEOF(c))
     {
       assert(isEOF(*p), *p~"");
-      t.kind = TOK.EOF;
-      t.end = p;
+      kind = TOK.EOF;
       tail = &t;
-      assert(t.start == t.end);
-      return;
+      assert(t.start == p);
+      goto Lreturn;
     }
 
-    if (!isascii(c) && isUniAlpha(c = decodeUTF8()))
+    if (!isascii(c) && isUniAlpha(c = decodeUTF8())) {
+      p = this.p;
       goto Lidentifier;
+    }
 
     error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
     ++p;
-    t.kind = TOK.Illegal;
+    kind = TOK.Illegal;
     t.setWhitespaceFlag();
     t.dchar_ = c;
-    t.end = p;
+    goto Lreturn;
+
+  Lcommon4:
+    ++p;
+  Lcommon3:
+    ++p;
+  Lcommon2:
+    ++p;
+  Lcommon:
+    ++p;
+  Lreturn:
+    t.kind = kind;
+    t.end = this.p = p;
+    return;
+
+  Lnewline:
+    assert(isNewlineEnd(p));
+    ++p;
+    ++lineNum;
+    setLineBegin(p);
+    kind = TOK.Newline;
+    t.setWhitespaceFlag();
+    auto nl = &t.newline;
+    nl.filePaths = this.filePaths;
+    nl.oriLineNum = lineNum;
+    nl.setLineNum = lineNum_hline;
+    t.kind = kind;
+    t.end = this.p = p;
     return;
   }
 
