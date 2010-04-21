@@ -1,14 +1,27 @@
 =Purpose=
-dil is a hand-crafted compiler implementation for the D programming language written in D 1.0 using the [http://dsource.org/projects/tango Tango] standard library. The lexer and the parser are fully implemented. Semantic analysis is being worked on. The backend will most probably be [http://llvm.org LLVM].
+Dil is a hand-crafted compiler implementation for the D programming language written in D 1.0 using the [http://dsource.org/projects/tango Tango] standard library. The lexer and the parser are fully implemented. Semantic analysis is being worked on. The backend will most probably be [http://llvm.org LLVM] ('cause it's sexy).
 
-What dil can do at the present:
-  * dil is fully internationalized and can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in the [http://dil.googlecode.com/svn/doc/dil/dilconf.html#LANG_FILE configuration file].
-  * Generate documentation from Ddoc comments. In comparison to dmd, dil has fewer bugs and also offers a few treats. To see examples browse the documentations of [http://dil.googlecode.com/svn/doc/dil/dilconf.html dil v1.000-a] ([http://dil.googlecode.com/files/dil.1.000-a_doc.7z 7zip]), [http://dil.googlecode.com/svn/doc/Tango_0.99.7_kandil/tango.core.Array.html Tango v0.99.7] ([http://dil.googlecode.com/files/Tango.0.99.7_doc.7z 7zip]), [http://dil.googlecode.com/svn/doc/Phobos_1.037/std.format.html Phobos v1.037] ([http://dil.googlecode.com/files/Phobos.1.037_doc.7z 7zip]) and [http://dil.googlecode.com/svn/doc/MiniD_2.0/minid.api.html MiniD v2.0] ([http://dil.googlecode.com/files/MiniD.2.0_doc.7z 7zip]). See [http://code.google.com/p/dil/wiki/Kandil kandil] for more information.
-  * Generate XML or HTML documents. You can choose to generate tags for tokens only or you can also have the whole parse tree unparsed. The whitespace of the original source file is preserved. You can view the HTML documents in any browser you like. The XML documents can only be viewed in W3C-standards compatible browsers(`*`) in combination with an XML formatting CSS document. dil provides two ordinary CSS documents (for XML/HTML) which can be customized to one's heart's content. Example: dil's source code in [http://dil.googlecode.com/files/xml_rev709.zip XML] or [http://dil.googlecode.com/files/html_rev709.zip HTML]. (`*`Note: Internet Explorer is the only browser that spectacularly fails at this job.)
-  * Produce module dependency graphs using the graphviz dot format. For example, see the [http://dil.googlecode.com/files/main.2.dot dot file] of dil: rendered in [http://dil.googlecode.com/files/main.2.svg SVG], [http://dil.googlecode.com/files/main.2.png PNG] (2.7MB) or [http://dil.googlecode.com/files/main.2.gif GIF]. Cyclic edges (import statements) and nodes (modules) are highlighted in red. The edges of public imports are bold.
-  * Output code statistics (lines of code, count syntax tree nodes and tokens, number of whitespace characters etc.) When dil has advanced enough [http://www.aivosto.com/project/help/pm-oo-ck.html OO-metrics] will be supported. Example: [http://dil.googlecode.com/files/stats_dstress_r1835_2.txt dstress] (1.5MB text; totals are at the bottom)
+<wiki:gadget url="http://www.ohloh.net/p/8880/widgets/project_partner_badge.xml" height="53" border="0"/>
 
-  * dil can parse D 2.0 additions:
+=Status=
+  * Semantic analysis is very difficult. Only a little bit of it exists in Dil.
+  * Therefore binaries cannot be generated yet.
+
+
+What Dil can do at the present:
+  * Dil is fully internationalized and can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in the [http://dil.googlecode.com/svn/doc/dil/dilconf.html#LANG_FILE configuration file].
+  * Generate documentation from Ddoc comments. In comparison to DMD, Dil has fewer bugs and also offers a few treats. It is possible to generate PDF documents from the HTML files using [http://princexml.com PrinceXML]. See [http://code.google.com/p/dil/wiki/Kandil kandil] for more information. Example documentation of some projects (outdated; will be updated soon):
+    * [http://dil.googlecode.com/svn/doc/dil/dilconf.html dil 1.000-a] ([http://dil.googlecode.com/files/dil.1.000-a_doc.7z 7zip], [http://dil.googlecode.com/files/dil.1.000-b.API.pdf PDF])
+    * [http://dil.googlecode.com/files/Tango.0.99.9.API-v3.7z Tango 0.99.9 API as a PDF]
+    * [http://dil.googlecode.com/svn/doc/Tango_0.99.7/tango.core.Array.html Tango 0.99.7] ([http://dil.googlecode.com/files/Tango.0.99.7_doc.7z 7zip], [http://dil.googlecode.com/files/Tango.0.99.7.API.2.pdf PDF], [http://dil.googlecode.com/files/Tango.0.99.7.report-2.txt report])
+    * [http://dil.googlecode.com/svn/doc/Phobos_1.037/std.format.html Phobos 1.037] ([http://dil.googlecode.com/files/Phobos.1.037_doc.7z 7zip], [http://dil.googlecode.com/files/Phobos.1.037.API.2.pdf PDF])
+    * [http://dil.googlecode.com/svn/doc/Phobos_2.021/std.format.html Phobos 2.021] ([http://dil.googlecode.com/files/Phobos.2.021_doc.7z 7zip])
+    * [http://dil.googlecode.com/svn/doc/MiniD_2.0/minid.api.html MiniD 2.0] ([http://dil.googlecode.com/files/MiniD.2.0_doc.7z 7zip]).
+  * Generate XML or HTML documents. You can choose to generate tags for tokens only or you can also have the whole parse tree unparsed. The whitespace of the original source file is preserved. You can view the HTML documents in any browser you like. The XML documents can only be viewed in W3C-standards compatible browsers(`*`) in combination with an XML formatting CSS document. Dil provides two ordinary CSS documents (for XML/HTML) which can be customized to one's heart's content. Example: Dil's source code in [http://dil.googlecode.com/files/xml_rev709.zip XML] or [http://dil.googlecode.com/files/html_rev709.zip HTML]. (`*`Note: Internet Explorer is the only browser that spectacularly fails at this job.)
+  * Produce module dependency graphs using the graphviz dot format. For example, see the [http://dil.googlecode.com/files/main.2.dot dot file] of Dil: rendered in [http://dil.googlecode.com/files/main.2.svg SVG], [http://dil.googlecode.com/files/main.2.png PNG] (2.7MB) or [http://dil.googlecode.com/files/main.2.gif GIF]. Cyclic edges (import statements) and nodes (modules) are highlighted in red. The edges of public imports are bold.
+  * Output code statistics (lines of code, count syntax tree nodes and tokens, number of whitespace characters etc.) When Dil has advanced enough [http://www.aivosto.com/project/help/pm-oo-ck.html OO-metrics] will be supported. Example: [http://dil.googlecode.com/files/stats_dstress_r1835_2.txt dstress] (1.5MB text; totals are at the bottom)
+
+  * Dil can parse D 2.0 additions:
     * Delimited and token [http://www.digitalmars.com/d/2.0/lex.html#StringLiteral string literals].
     * [http://www.digitalmars.com/d/2.0/statement.html#ForeachRangeStatement ForeachRangeStatement].
     * Optional [http://www.digitalmars.com/d/2.0/expression.html#IsExpression TemplateParameterList in IsExpression].
@@ -16,6 +29,7 @@ What dil can do at the present:
     * [http://www.digitalmars.com/d/2.0/template.html#TemplateThisParameter TemplateThisParameter].
     * Cast expressions: `cast(const)` and `cast(invariant)`.
     * Type constructors: `const(Type)` and `invariant(Type)`.
+    * Const qualifiers: `const int*` is the same as `const(int*)`.
     * const and invariant attributes after the parameter list of a function (C++ style.)
     * `typeof(return)`.
     * Traits expressions: `__traits(Identifier)` and `__traits(Identifier, TemplateArguments)`.
@@ -25,13 +39,14 @@ What dil can do at the present:
     * [http://www.digitalmars.com/d/2.0/template.html#Constraint Template Constraints].
     * `auto` return type for [http://www.digitalmars.com/d/2.0/template.html#function-templates Function Templates].
     * Modified syntax for [http://www.digitalmars.com/d/2.0/enum.html Enums] (manifest constants.)
+    * Single template argument syntax: `something!int` is the same as `something!(int)`.
 
 == Help ==
-Writing a fully functional compiler is a huge undertaking and can therefore take months and years for a single person. Perhaps you would like to give a hand and speed up the development of this project. Here are some of the things you could do for dil and the D community:
+Writing a fully functional compiler is a huge undertaking and can therefore take months and years for a single person. Perhaps you would like to give a hand and speed up the development of this project. Here are some of the things you could do for Dil and the D community:
 
-  * Document the inner workings of DMD's front-end, specifically semantic analysis (SA.) This would help me immensely to implement SA for dil and be as close to the official D compiler as possible. Or you could:
+  * Document the inner workings of DMD's front-end, specifically semantic analysis (SA.) This would help me immensely to implement SA for Dil and be as close to the official D compiler as possible. Or you could:
   * Lobby for better and clearer D language specifications.
-  * Learn git and start writing code for dil. The code you write will be credited to you, even if I commit the patches (as git distinguishes between author and submitter of revisions.)
+  * Learn git and start writing code for Dil. The code you write will be credited to you, even if I commit the patches (as git distinguishes between author and submitter of revisions.)
   * Any kind of interesting feedback is always welcome.
 
 == Planned Features ==
@@ -45,22 +60,26 @@ Writing a fully functional compiler is a huge undertaking and can therefore take
 
 *Meaning:*
 
-The word dil comes from the Turkish language and means among other things a) tongue or b) language.
-It is a very fitting name for this project because of its meaning and because it starts with the letter d and for the reason that the project owner has Turkish origins.
+The word 'dil' comes from the Turkish language and means among other things a) tongue or b) language.
+It is a very fitting name for this project because of its meaning and because it starts with the letter D and for the reason that the project owner has Turkish origins.
 
 ===Contact===
-Feel free to join my channel, #dil, which I've set up on freenode.net.
+Feel free to join my IRC channel, #dil, which I've set up on freenode.net.
 You can also send me a plain e-Mail if you have questions regarding my project.
 
 ===License===
-Some people might not like the license under which dil is currently being developed.
+Some people might not like the license under which Dil is currently being developed.
 In fact, it could be off-putting for some programmers who would like to contribute to it or make use of it as a client.
 However, please keep in mind that a lot of hours were spent in order to come up with a compiler that is well documented and has a solid design.
 It is not unlikely that the author will put the project under a less restrictive license one time or another.
 It could be LGPL3 or even BSD.
-It very much depends on how many cookies and apple pies somebody might be willing to stuff the author with.
+It very much depends on how many cookies and apple pies somebody is willing to stuff the author with.
 
 ==Download==
 There are no downloadable binaries yet.
+Go to the [http://code.google.com/p/dil/wiki/Git?tm=4 Source] page to find out how to get the code using Git.
 If you have [http://dsource.org/projects/dsss DSSS] you can use the fetch command, "`dsss net fetch dil.zip`", to get the latest revision of the source code.
-Click the "Source"-tab to find out how to get the sources using Git.
+
+==Statistics==
+<wiki:gadget url="http://www.ohloh.net/p/8880/widgets/project_languages.xml" height="200" width="370" border="1"/>
+<wiki:gadget url="http://www.ohloh.net/p/8880/widgets/project_basic_stats.xml" height="260" border="1"/>
