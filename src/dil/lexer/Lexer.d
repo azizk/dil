@@ -2390,7 +2390,8 @@ class Lexer
   /// The current pointer 'p' is set to the last trailbyte if true is returned.
   bool isUnicodeAlpha()
   {
-    assert(!isascii(*p), "check for ASCII char before calling decodeUTF8().");
+    assert(!isascii(*p),
+      "check for ASCII char before calling isUnicodeAlpha().");
     char* p = this.p;
     dchar d = *p;
     ++p; // Move to second byte.
@@ -2581,12 +2582,14 @@ class Lexer
   /// Returns: e.g.: "abc" -> "\x61\x62\x63"
   static char[] formatBytes(char* start, char* end)
   {
+    const formatLen = 4; // `\xXX`.length
+    const H = "0123456789ABCDEF"; // Hex numerals.
     auto strLen = end-start;
-    const formatLen = `\xXX`.length;
-    char[] result = new char[strLen*formatLen]; // Reserve space.
-    result.length = 0;
-    foreach (c; cast(ubyte[])start[0..strLen])
-      result ~= Format("\\x{:X}", c);
+    char[] result = new char[strLen*formatLen]; // Allocate space.
+    char* p = result.ptr;
+    foreach (c; start[0..strLen])
+      (*p++ = '\\'), (*p++ = 'x'), (*p++ = H[c>>4]), (*p++ = H[c&0x0F]);
+    assert(p is result.ptr+result.length);
     return result;
   }
 
