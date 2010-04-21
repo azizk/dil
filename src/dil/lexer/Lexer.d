@@ -2660,7 +2660,10 @@ unittest
     {"çay",     TOK.Identifier},    {".0",      TOK.Float64},
     {"0",       TOK.Int32},         {"\n",      TOK.Newline},
     {"\r",      TOK.Newline},       {"\r\n",    TOK.Newline},
-    {"\u2028",  TOK.Newline},       {"\u2029",  TOK.Newline}
+    {"\u2028",  TOK.Newline},       {"\u2029",  TOK.Newline},
+    {"'c'",     TOK.Char},          {`'\''`,    TOK.Char},
+    {`"dblq"`,  TOK.String},        {"`raw`",   TOK.String},
+    {`r"aw"`,   TOK.String},        {`x"0123456789abcdef"`, TOK.String},
   ];
 
   version(D2)
@@ -2668,7 +2671,18 @@ unittest
   static Pair[] pairs2 = [
     {"@",       TOK.At},
     {"^^",      TOK.Pow},
-    {"^^=",     TOK.PowAssign}
+    {"^^=",     TOK.PowAssign},
+    {"q\"d\n\nd\"", TOK.String},    {"q\"(())\"", TOK.String},
+    {"q\"{{}}\"",   TOK.String},    {"q\"[[]]\"", TOK.String},
+    {"q\"<<>>\"",   TOK.String},    {"q\"/__/\"", TOK.String},
+    {"q{toks...}",  TOK.String},    {"q{({#line 0\n})}", TOK.String},
+  ];
+  pairs ~= pairs2;
+  }
+  else // D1
+  {
+  static Pair[] pairs2 = [
+    {"\\n",  TOK.String},           {"\\u2028", TOK.String}
   ];
   pairs ~= pairs2;
   }
@@ -2687,8 +2701,11 @@ unittest
       src ~= pair.tokenText ~ " ";
 
   // Lex the constructed source text.
-  auto lx = new Lexer(new SourceText("", src));
+  auto lx = new Lexer(new SourceText("lexer_unittest", src));
   lx.scanAll();
+
+  foreach (e; lx.errors)
+    Stdout.formatln("{}({},{})L: {}", e.filePath, e.loc, e.col, e.getMsg);
 
   auto token = lx.firstToken();
 
