@@ -777,7 +777,7 @@ abstract class DDocEmitter : DefaultVisitor
     const kindID = is(T == ClassDeclaration) ? K.Class : K.Interface;
     const KIND = is(T == ClassDeclaration) ? "CLASS" : "INTERFACE";
     DECL({
-      write(kind, " ");
+      write("\1DIL_KW ", kind, "\2 ");
       SYMBOL(d.name.text, kindID, d);
       writeTemplateParams();
       writeInheritanceList(d.bases);
@@ -795,7 +795,7 @@ abstract class DDocEmitter : DefaultVisitor
     const KIND = is(T == StructDeclaration) ? "STRUCT" : "UNION";
     string name = d.name ? d.name.text : kind;
     DECL({
-      d.name && write(kind, " ");
+      d.name && write("\1DIL_KW ", kind, "\2 ");
       SYMBOL(name, kindID, d);
       writeTemplateParams();
     }, d);
@@ -810,7 +810,7 @@ abstract class DDocEmitter : DefaultVisitor
     if (auto vd = d.decl.Is!(VariablesDeclaration))
       foreach (name; vd.names)
         DECL({
-          write(kind, " "); write(vd.typeNode); write(" ");
+          write("\1DIL_KW ", kind, "\2 "); write(vd.typeNode); write(" ");
           auto saved_begin = vd.begin;
           // 'vd' instead of 'd' is passed to SYMBOL, because it
           // has a linkageType member, which has to appear in the docs.
@@ -912,7 +912,7 @@ override:
       return d;
     string name = d.name ? d.name.text : "enum";
     DECL({
-      d.name && write("enum ");
+      d.name && write("\1DIL_KW enum\2 ");
       SYMBOL(name, K.Enum, d);
     }, d);
     DESC({ MEMBERS("ENUM", name, d); });
@@ -923,6 +923,7 @@ override:
   {
     if (!ddoc(d))
       return d;
+    // TODO: emit d.type (D2).
     DECL({ SYMBOL(d.name.text, K.Enummem, d); }, d, false);
     DESC();
     return d;
@@ -940,7 +941,7 @@ override:
     if (!ddoc(d))
       return d;
     DECL({
-      write("template ");
+      write("\1DIL_KW template\2 ");
       SYMBOL(d.name.text, K.Template, d);
       writeTemplateParams();
     }, d);
@@ -989,7 +990,8 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("static "); SYMBOL("this", K.Sctor, d); write("()"); }, d);
+    DECL({ write("\1DIL_KW static\2 ");
+      SYMBOL("this", K.Sctor, d); write("()"); }, d);
     DESC();
     return d;
   }
@@ -1007,7 +1009,8 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ write("static "); SYMBOL("~this", K.Sdtor, d); write("()"); }, d);
+    DECL({ write("\1DIL_KW static\2 ");
+      SYMBOL("~this", K.Sdtor, d); write("()"); }, d);
     DESC();
     return d;
   }
@@ -1019,7 +1022,7 @@ override:
     DECL({
       if (d.returnType)
         write("\1DIL_RETTYPE "), write(d.returnType), write("\2 ");
-      else write("auto");
+      else write("\1DIL_KW auto\2");
       SYMBOL(d.name.text, K.Function, d);
       writeTemplateParams();
       writeParams(d.params);
@@ -1032,7 +1035,7 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("new", K.New, d); writeParams(d.params); }, d);
+    DECL({ SYMBOL("\1DIL_KW new\2", K.New, d); writeParams(d.params); }, d);
     DESC();
     return d;
   }
@@ -1041,7 +1044,8 @@ override:
   {
     if (!ddoc(d))
       return d;
-    DECL({ SYMBOL("delete", K.Delete, d); writeParams(d.params); }, d);
+    DECL({ SYMBOL("\1DIL_KW delete\2", K.Delete, d);
+      writeParams(d.params); }, d);
     DESC();
     return d;
   }
@@ -1053,7 +1057,7 @@ override:
     foreach (name; d.names)
       DECL({
         if (d.typeNode) write(d.typeNode);
-        else write("auto");
+        else write("\1DIL_KW auto\2");
         write(" ");
         SYMBOL(name.text, K.Variable, d);
       }, d);

@@ -101,6 +101,7 @@ DDOC_KEYWORD    = $(SPAN kw, $0)
 DDOC_BLANKLINE = <p class="bl"></p>
 
 DIL_NOCMNT          = <div class="nocmnt"></div>
+DIL_KW              = $(SPAN kw, $0)
 DIL_ATTRIBUTES      = $(SPAN attrs, [$0])
 DIL_PROT            = $(SPAN prot, $0)
 DIL_STC             = $(SPAN stc, $0)
@@ -112,6 +113,8 @@ DIL_PARAMS          = $(SPAN params, ($0))
 DDOC_PARAM          = $(EM $0)
 DIL_TEMPLATE_PARAMS = $(SPAN tparams, ($0))
 DIL_TPID            = $(EM $0)
+DIL_TPALIAS         = $(DIL_KW alias) $0
+DIL_TPTHIS          = $(DIL_KW this) $0
 DIL_BASECLASSES     = : $0
 DIL_BASECLASS       = <span class="bclass">$0</span>
 DIL_SC =
