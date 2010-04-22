@@ -30,15 +30,15 @@ override:
   {
     if (!ddoc(d))
       return d;
-    auto type = textSpan(d.returnType.baseType.begin, d.returnType.end);
     DECL({
-      write("function, ");
-      write("$(TYPE ");
-      write("$(RETURNS ", escape(type), ")");
+      write("function, ", "\1TYPE \1RETURNS");
+      if (d.returnType) write(d.returnType);
+      else write("auto");
+      write("\2");
       writeTemplateParams();
       writeParams(d.params);
-      write(")");
-      SYMBOL(d.name.str, K.Function, d);
+      write("\2");
+      SYMBOL(d.name.text, K.Function, d);
     }, d);
     DESC();
     return d;
@@ -48,12 +48,13 @@ override:
   {
     if (!ddoc(d))
       return d;
-    char[] type = "auto";
-    if (d.typeNode)
-      type = textSpan(d.typeNode.baseType.begin, d.typeNode.end);
     foreach (name; d.names)
-      DECL({ write("variable, "); write("$(TYPE ", escape(type), ")");
-        SYMBOL(name.str, K.Variable, d);
+      DECL({
+        write("variable, ", "\1TYPE ");
+        if (d.typeNode) write(d.typeNode);
+        else write("auto");
+        write("\2 ");
+        SYMBOL(name.text, K.Variable, d);
       }, d);
     DESC();
     return d;
