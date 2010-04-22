@@ -375,7 +375,7 @@ abstract class DDocEmitter : DefaultVisitor
         }
         else
           write("\n\1DDOC_SECTION \1DDOC_SECTION_H ", replace_(s.name), ":\2");
-        write(scanCommentText(s.text), "\2");
+        write("\1DIL_CMT ", scanCommentText(s.text), "\2\2");
       }
     write("\2");
   }
@@ -486,10 +486,10 @@ abstract class DDocEmitter : DefaultVisitor
       case '-':
         if (p+2 < end && p[1] == '-' && p[2] == '-')
         { // Found "---".
-          while (p < end && *p == '-') // Skip leading dashes.
+          while (p < end && *p == '-') // Skip trailing dashes.
             p++;
           auto codeBegin = p;
-          while (p < end && isspace(*p))
+          while (p < end && isspace(*p)) // Skip whitespace.
             p++;
           if (p < end && *p == '\n') // Skip first newline.
             codeBegin = ++p;
