@@ -1047,7 +1047,7 @@ class Lexer
         ++p;
         t.pf = scanPostfix();
       Lreturn:
-        t.str = buffer ~ '\0';
+        t.str = (buffer ~= '\0');
         t.end = p;
         return;
       case '\\':
@@ -1176,14 +1176,15 @@ class Lexer
           ++p;
           t.pf = scanPostfix();
         Lreturn:
-          t.str = buffer ~ '\0';
+          t.str = (buffer ~= '\0');
           t.end = p;
           return;
         }
         break;
       case 0, _Z_:
         error(tokenLineNum, tokenLineBegin, t.start,
-          delim == 'r' ? MID.UnterminatedRawString : MID.UnterminatedBackQuoteString);
+          delim == 'r' ?
+            MID.UnterminatedRawString : MID.UnterminatedBackQuoteString);
         goto Lreturn;
       default:
         if (!isascii(c))
@@ -1442,7 +1443,7 @@ class Lexer
         (str_delim.length || encodeUTF8(str_delim, closing_delim), str_delim));
 
   Lerr:
-    t.str = buffer ~ '\0';
+    t.str = (buffer ~= '\0');
     t.end = p;
   } // version(D2)
   }
@@ -1556,9 +1557,10 @@ class Lexer
   /// Scans an escape sequence.
   ///
   /// $(BNF
-  ////EscapeSequence := "\\" (BinaryEsc | UnicodeEsc | CEsc)
+  ////EscapeSequence := "\\" (BinaryEsc | UnicodeEsc | CEsc | HTMLEsc)
   ////BinaryEsc := Octal{1,3} | "x" Hex{2}
   ////UnicodeEsc := "u" Hex{4} | "U" Hex{8}
+  ////HTMLEsc := "&" AlphaNumerical+ ";"
   ////CEsc := "'" | '"' | "?" | "\\" | "a" | "b" | "f" | "n" | "r" | "t" | "v"
   ////)
   /// Params:
