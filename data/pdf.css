@@ -278,6 +278,11 @@ table.params td:first-child {
   text-align: right;
   color: Gray;
 }
+
+.d_codelines a {
+  color: Gray;
+}
+
 /* Number */
 /*.d_code*/ .n { color: teal; }
 /* Keyword */

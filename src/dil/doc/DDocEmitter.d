@@ -37,6 +37,9 @@ abstract class DDocEmitter : DefaultVisitor
   Highlighter tokenHL; /// The token highlighter.
   Diagnostics reportDiag; /// Collects problem messages.
   TypePrinter typePrinter; /// Used to print type chains.
+  /// Counts code examples in comments.
+  /// This is used to make the code lines targetable in HTML.
+  uint codeExamplesCounter;
 
   /// Constructs a DDocEmitter object.
   /// Params:
@@ -505,13 +508,21 @@ abstract class DDocEmitter : DefaultVisitor
             auto codeText = String(codeBegin, codeEnd);
             uint lines; // Number of lines in the code text.
 
+            codeExamplesCounter++; // Found a code section. Increment counter.
+
             codeText = DDocUtils.unindentText(codeText);
             codeText = tokenHL.highlightTokens(
               codeText, modul.getFQN(), lines);
             result ~= "\1D_CODE\n"
               "\1DIL_CODELINES ";
               for (uint num = 1; num <= lines; num++)
-                (result ~= .toString(num)), (result ~= '\n');
+              {
+                auto numtxt = .toString(num);
+                auto id = "L"~numtxt~"_ex"~.toString(codeExamplesCounter);
+                result ~= `<a href="#`~id~`" name="`~id~`">`;
+                result ~= numtxt;
+                result ~= `</a>`"\n";
+              }
               result ~= "\2,\1DIL_CODETEXT " ~ codeText ~ "\2"
             "\n\2";
           }

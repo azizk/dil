@@ -360,13 +360,19 @@ table.params td:first-child {
   overflow: auto;
 }
 
-.loaded_code .d_codelines a {
+.d_codelines a {
   color: DimGray;
   text-decoration: none;
+  display: inline-block;
+  width: 100%;
 }
 
-.loaded_code .d_codelines a:hover {
+.d_codelines a:hover {
   text-decoration: underline;
+}
+
+.d_codelines a:target {
+  background-color: yellow;
 }
 
 /* Number */
