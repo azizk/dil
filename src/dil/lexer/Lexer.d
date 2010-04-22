@@ -1302,7 +1302,7 @@ class Lexer
     auto tokenLineBegin = lineBegin;
 
     char[] buffer;
-    dchar opening_delim = 0, // 0 if no nested delimiter or '[', '(', '<', '{'
+    dchar nesting_delim, // '[', '(', '<', '{', or 0 if no nesting delimiter.
           closing_delim; // Will be ']', ')', '>', '},
                          // the first character of an identifier or
                          // any other Unicode/ASCII character.
@@ -1314,42 +1314,21 @@ class Lexer
     switch (c)
     {
     case '(':
-      opening_delim = c;
+      nesting_delim = c;
       closing_delim = ')'; // c + 1
       break;
     case '[', '<', '{':
-      opening_delim = c;
+      nesting_delim = c;
       closing_delim = c + 2; // Get to closing counterpart. Feature of ASCII table.
       break;
     default:
-      dchar scanNewline()
-      {
-        switch (*p)
-        {
-        case '\r':
-          if (p[1] == '\n')
-            ++p;
-        case '\n':
-          assert(isNewlineEnd(p));
-          ++p;
-          ++lineNum;
-          setLineBegin(p);
-          break;
-        default:
-          if (isUnicodeNewline(p)) {
-            p += 2;
-            goto case '\n';
-          }
-          return false;
-        }
-        return true;
-      }
-      // Skip leading newlines:
-      while (scanNewline())
-      {}
-      assert(!isNewline(p));
+      // Skip leading newlines? DMD seems to do it. Bug?
+      /+while (scanNewline(p))
+        ++lineNum,
+        setLineBegin(p);
+      assert(!isNewline(p));+/
 
-      char* begin = p;
+      char* idbegin = p;
       c = *p;
       closing_delim = c;
       // TODO: Check for non-printable characters?
@@ -1362,29 +1341,32 @@ class Lexer
       else if (!isidbeg(c))
         break; // Not an identifier.
 
-      // Parse Identifier + EndOfLine
+      // Scan: Identifier + EndOfLine
       do
       { c = *++p; }
       while (isident(c) || !isascii(c) && isUnicodeAlpha(p))
-      // Store identifier
-      str_delim = begin[0..p-begin];
-      // Scan newline
-      if (scanNewline())
+      // Store the identifier.
+      str_delim = idbegin[0..p-idbegin];
+      // Scan a newline.
+      if (scanNewline(p))
+        ++lineNum,
+        setLineBegin(p),
         --p; // Go back one because of "c = *++p;" in main loop.
       else
-      {
-        // TODO: error(p, MID.ExpectedNewlineAfterIdentDelim);
-      }
+        error(p, MSG.NoNewlineAfterIdDelimiter, str_delim);
     }
+    assert(closing_delim);
+
+    if (isspace(closing_delim))
+      error(p, MSG.DelimiterIsWhitespace);
 
     bool checkStringDelim(char* p)
-    {
-      assert(str_delim.length != 0);
-      if (buffer[$-1] == '\n' && // Last character copied to buffer must be '\n'.
-          end-p >= str_delim.length && // Check remaining length.
-          p[0..str_delim.length] == str_delim) // Compare.
-        return true;
-      return false;
+    { // Returns true if p points to the closing string delimiter.
+      assert(str_delim.length != 0, ""~*p);
+      return buffer.length &&
+        buffer[$-1] == '\n' && // Last copied character must be '\n'.
+        end-p >= str_delim.length && // Check remaining length.
+        p[0..str_delim.length] == str_delim; // Compare.
     }
 
     while (1)
@@ -1402,8 +1384,9 @@ class Lexer
         setLineBegin(p+1);
         break;
       case 0, _Z_:
-        // TODO: error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedDelimitedString);
-        goto Lreturn3;
+        error(tokenLineNum, tokenLineBegin, t.start,
+          MSG.UnterminatedDelimitedString);
+        goto Lerr;
       default:
         if (!isascii(c))
         {
@@ -1412,9 +1395,8 @@ class Lexer
           if (isUnicodeNewlineChar(c))
             goto case '\n';
           if (c == closing_delim)
-          {
             if (str_delim.length)
-            {
+            { // Matched first character of the string delimiter.
               if (checkStringDelim(begin))
               {
                 p = begin + str_delim.length;
@@ -1427,18 +1409,15 @@ class Lexer
               --level;
               goto Lreturn;
             }
-          }
           encodeUTF8(buffer, c);
           continue;
         }
         else
-        {
-          if (c == opening_delim)
+          if (c == nesting_delim)
             ++level;
           else if (c == closing_delim)
-          {
             if (str_delim.length)
-            {
+            { // Matched first character of the string delimiter.
               if (checkStringDelim(p))
               {
                 p += str_delim.length;
@@ -1447,8 +1426,6 @@ class Lexer
             }
             else if (--level == 0)
               goto Lreturn;
-          }
-        }
       }
       assert(isascii(c));
       buffer ~= c;
@@ -1459,14 +1436,12 @@ class Lexer
     ++p; // Skip closing delimiter.
   Lreturn2: // String delimiter.
     if (*p == '"')
-      ++p;
+      ++p, t.pf = scanPostfix();
     else
-    {
-      // TODO: error(p, MID.ExpectedDblQuoteAfterDelim, str_delim.length ? str_delim : closing_delim~"");
-    }
+      error(p, MSG.ExpectedDblQuoteAfterDelim,
+        (str_delim.length || encodeUTF8(str_delim, closing_delim), str_delim));
 
-    t.pf = scanPostfix();
-  Lreturn3: // Error.
+  Lerr:
     t.str = buffer ~ '\0';
     t.end = p;
   } // version(D2)
@@ -2312,6 +2287,12 @@ class Lexer
   void error(uint lineNum, char* lineBegin, char* columnPos, MID mid, ...)
   {
     error_(lineNum, lineBegin, columnPos, GetMsg(mid), _arguments, _argptr);
+  }
+
+  /// ditto
+  void error(uint lineNum, char* lineBegin, char* columnPos, char[] msg, ...)
+  {
+    error_(lineNum, lineBegin, columnPos, msg, _arguments, _argptr);
   }
 
   /// Creates an error report and appends it to a list.
