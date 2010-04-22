@@ -532,32 +532,6 @@ abstract class DDocEmitter : DefaultVisitor
     return result;
   }
 
-  /// Escapes '<', '>' and '&' with named HTML entities.
-  char[] escape(char[] text)
-  {
-    char[] result = new char[text.length]; // Reserve space.
-    result.length = 0;
-    foreach(c; text)
-      switch(c)
-      {
-        case '<': result ~= "&lt;";  break;
-        case '>': result ~= "&gt;";  break;
-        case '&': result ~= "&amp;"; break;
-        default:  result ~= c;
-      }
-    if (result.length != text.length)
-      return result;
-    // Nothing escaped. Return original text.
-    delete result;
-    return text;
-  }
-
-  /// Returns the escaped text between begin and end.
-  string escape(Token* begin, Token* end)
-  {
-    return this.escape(textSpan(begin, end));
-  }
-
   /// Writes an array of strings to the text buffer.
   void write(char[][] strings...)
   {
@@ -568,7 +542,7 @@ abstract class DDocEmitter : DefaultVisitor
   /// Writes a type chain to the buffer.
   void write(TypeNode type)
   {
-    text ~= escape(typePrinter.print(type));
+    text ~= xml_escape(typePrinter.print(type));
   }
 
   /// Writes an expression to the buffer.

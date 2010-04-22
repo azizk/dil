@@ -266,23 +266,34 @@ class Highlighter
   }
 }
 
-/// Escapes the characters '<', '>' and '&' with named character entities.
+/// Escapes '<', '>' and '&' with named HTML entities.
+/// Returns: The escaped text, or the original if no entities were found.
 char[] xml_escape(char[] text)
 {
+  char* p = text.ptr, end = p + text.length;
+  char* prev = p; // Points to the end of the previous escape char.
+  char[] entity; // Current entity to be appended.
   char[] result;
-  foreach(c; text)
-    switch(c)
+  while (p < end)
+    switch(*p)
     {
-      case '<': result ~= "&lt;";  break;
-      case '>': result ~= "&gt;";  break;
-      case '&': result ~= "&amp;"; break;
-      default:  result ~= c;
+    case '<': entity = "&lt;";  goto Lcommon;
+    case '>': entity = "&gt;";  goto Lcommon;
+    case '&': entity = "&amp;"; goto Lcommon;
+    Lcommon:
+      prev != p && (result ~= String(prev, p)); // Append previous string.
+      result ~= entity; // Append entity.
+      p++; // Skip '<', '>' or '&'.
+      prev = p;
+      break;
+    default:
+      p++;
     }
-  if (result.length != text.length)
-    return result;
-  // Nothing escaped. Return original text.
-  delete result;
-  return text;
+  if (prev is text.ptr)
+    return text; // Nothing escaped. Return original, unchanged text.
+  if (prev < end)
+    result ~= String(prev, end);
+  return result;
 }
 
 /// Maps tokens to (format) strings.
