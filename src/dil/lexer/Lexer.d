@@ -105,7 +105,7 @@ class Lexer
       t.start = p;
       ++p;
       while (!isEndOfLine(++p))
-        isascii(*p) || decodeUTF8();
+        isascii(*p) || decodeUTF8(p);
       t.end = p;
       this.token.next = t;
       t.prev = this.token;
@@ -325,7 +325,7 @@ class Lexer
           return (this.p = p), scanBlockComment(t);
         case '/': // LineComment.
           while (!isEndOfLine(++p))
-            isascii(*p) || ((this.p = p), decodeUTF8(), (p = this.p));
+            isascii(*p) || decodeUTF8(p);
           kind = TOK.Comment;
           t.setWhitespaceFlag();
           goto Lreturn;
@@ -576,10 +576,8 @@ class Lexer
       }
 
       assert(this.p == p);
-      if (!isascii(c) && isUniAlpha(c = decodeUTF8())) {
-        p = this.p;
+      if (!isascii(c) && isUniAlpha(c = decodeUTF8(p)))
         goto Lidentifier;
-      }
 
       error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
@@ -738,7 +736,7 @@ class Lexer
       ++p; // Skip /
       assert(*p == '/');
       while (!isEndOfLine(++p))
-        isascii(*p) || ((this.p = p), decodeUTF8(), (p = this.p));
+        isascii(*p) || decodeUTF8(p);
       kind = TOK.Comment;
       t.setWhitespaceFlag();
       goto Lreturn;
@@ -865,10 +863,8 @@ class Lexer
       goto Lreturn;
     }
 
-    if (!isascii(c) && isUniAlpha(c = decodeUTF8())) {
-      p = this.p;
+    if (!isascii(c) && isUniAlpha(c = decodeUTF8(p)))
       goto Lidentifier;
-    }
 
     error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
@@ -937,7 +933,7 @@ class Lexer
       default:
         if (!isascii(*p))
         {
-          if (isUnicodeNewlineChar(decodeUTF8()))
+          if (isUnicodeNewlineChar(decodeUTF8(p)))
             goto case '\n';
         }
         else if (isEOF(*p))
@@ -986,11 +982,11 @@ class Lexer
         assert(isNewlineEnd(p));
         ++lineNum;
         setLineBegin(p+1);
-        continue;
+        break;
       default:
         if (!isascii(*p))
         {
-          if (isUnicodeNewlineChar(decodeUTF8()))
+          if (isUnicodeNewlineChar(decodeUTF8(p)))
             goto case '\n';
         }
         else if (isEOF(*p))
@@ -1074,7 +1070,7 @@ class Lexer
       default:
         if (!isascii(c))
         {
-          c = decodeUTF8();
+          c = decodeUTF8(p);
           if (isUnicodeNewlineChar(c))
             goto case '\n';
           encodeUTF8(buffer, c);
@@ -1131,7 +1127,7 @@ class Lexer
         break;
       uint c = *p;
       if (!isascii(c))
-        c = decodeUTF8();
+        c = decodeUTF8(p);
       t.dchar_ = c;
       ++p;
     }
@@ -1189,7 +1185,7 @@ class Lexer
       default:
         if (!isascii(c))
         {
-          c = decodeUTF8();
+          c = decodeUTF8(p);
           if (isUnicodeNewlineChar(c))
             goto case '\n';
           encodeUTF8(buffer, c);
@@ -1274,7 +1270,7 @@ class Lexer
           auto errorAt = p;
           if (!isascii(c))
           {
-            c = decodeUTF8();
+            c = decodeUTF8(p);
             if (isUnicodeNewlineChar(c))
               goto case '\n';
           }
@@ -1338,7 +1334,7 @@ class Lexer
       // TODO: Check for non-printable characters?
       if (!isascii(c))
       {
-        closing_delim = decodeUTF8();
+        closing_delim = decodeUTF8(p);
         if (!isUniAlpha(closing_delim))
           break; // Not an identifier.
       }
@@ -1395,7 +1391,7 @@ class Lexer
         if (!isascii(c))
         {
           auto begin = p;
-          c = decodeUTF8();
+          c = decodeUTF8(p);
           if (isUnicodeNewlineChar(c))
             goto case '\n';
           if (c == closing_delim)
@@ -1695,7 +1691,7 @@ class Lexer
         if (isascii(c))
           str ~= *p;
         else
-          encodeUTF8(str, decodeUTF8());
+          encodeUTF8(str, decodeUTF8(p));
         ++p;
         // TODO: check for unprintable character?
         error(sequenceStart, MID.UndefinedEscapeSequence, str);
@@ -2218,7 +2214,7 @@ class Lexer
             tokenEnd = p;
             goto Lerr;
           }
-          isascii(*p) || decodeUTF8();
+          isascii(*p) || decodeUTF8(p);
         }
         auto start = t.tokLineFilespec.start +1; // +1 skips '"'
         t.tokLineFilespec.str = start[0 .. p - start];
@@ -2380,7 +2376,7 @@ class Lexer
   /// Returns true if the current character to be decoded is
   /// a Unicode alpha character.
   /// Params:
-  ///   ref_p = Is set to the last trailbyte if true is returned.
+  ///   ref_p = Is set to the last trail byte if true is returned.
   static bool isUnicodeAlpha(ref char* ref_p)
   {
     char* p = ref_p;
@@ -2435,10 +2431,13 @@ class Lexer
   }
 
   /// Decodes the next UTF-8 sequence.
-  dchar decodeUTF8()
+  ///
+  /// Params:
+  ///   ref_p = Set to the last trail byte.
+  dchar decodeUTF8(ref char* ref_p)
   {
+    char* p = ref_p;
     assert(!isascii(*p), "check for ASCII char before calling decodeUTF8().");
-    char* p = this.p;
     dchar d = *p;
 
     ++p; // Move to second byte.
@@ -2511,10 +2510,10 @@ class Lexer
       assert(!isTrailByte(p[1]));
     Lerr2:
       d = REPLACEMENT_CHAR;
-      error(this.p, MID.InvalidUTF8Sequence, formatBytes(this.p, p));
+      error(ref_p, MID.InvalidUTF8Sequence, formatBytes(ref_p, p));
     }
-
-    this.p = p;
+    // Advance the pointer and return.
+    ref_p = p;
     return d;
   }
 
