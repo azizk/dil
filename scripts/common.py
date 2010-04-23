@@ -132,6 +132,10 @@ def generate_modules_js(modlist, dest_path, max_line_len=80):
   writePackage(package_tree.root)
   f.write('])\n);\n')
 
+  from time import time
+  timestamp = "\nvar g_creationTime = %d;\n" % int(time())
+  f.write(timestamp)
+
   f.close()
 
 def generate_docs(dil_exe, dest, modlist, files,

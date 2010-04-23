@@ -101,7 +101,7 @@ var kandil = {
     no_match: "No match...",
     symboltitle: "Show source code", /// The title attribute of symbols.
     permalink: "Permalink to this symbol",
-    srclink: '<a href="{}" class="srclink" title="Go to the HTML source file">#</a>',
+    srclink: ' <a href="{}" class="srclink" title="Go to the HTML source file">#</a>',
     dt_tagtitle: "Click to show the symbol’s source code",
     code_expand: "Double-click to expand.",
     code_shrink: "Double-click to shrink.",
@@ -135,12 +135,25 @@ var kandil = {
   hasHScrollbar: function(tag) {
     return tag.scrollWidth > tag.clientWidth;
   },
+  setCreationTime: function(time) {
+    var stored_time = storage.creationTime;
+    if (!stored_time)
+      storage.creationTime = time;
+    else if (stored_time != time)
+      storage.clear(); // Need to clear storage, if docs are new.
+  },
 };
-kandil.save = kandil.saved;
-kandil.$.initialize();
-cookie.life = kandil.settings.cookie_life;
 
-Object.getter(kandil, "symbolTree", kandil.symbolTree_getter);
+(function init_kandil() {
+  // Some things that can be done while the document is loading:
+  kandil.save = kandil.saved;
+  kandil.setCreationTime(g_creationTime);
+  kandil.$.initialize();
+  cookie.life = kandil.settings.cookie_life;
+
+  Object.getter(kandil, "symbolTree", kandil.symbolTree_getter);
+
+})();
 
 /// Execute when document is ready.
 $(function main() {

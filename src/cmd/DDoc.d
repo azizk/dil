@@ -30,6 +30,7 @@ import common;
 
 import tango.text.Ascii : toUpper;
 import tango.text.Regex : Regex;
+import tango.time.Clock : Clock;
 import tango.io.FilePath,
        tango.io.device.File;
 
@@ -266,6 +267,10 @@ struct DDocCommand
     file.write("var g_packageTree = new PackageTree(P('', [\n");
     writePackage(file, mm.rootPackage);
     file.write("])\n);\n");
+
+    // Write a timestamp. Checked by kandil to clear old storage.
+    auto stamp = Clock().now().unix().seconds();
+    file.write(Format("\nvar g_creationTime = {};\n", stamp));
   }
 
   /// Creates sub-folders and copies kandil's files into them.
