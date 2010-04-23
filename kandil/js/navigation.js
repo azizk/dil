@@ -649,7 +649,7 @@ function showCode(symbol)
     loadHTMLCode();
 
   // The function that actually displays the code.
-  var loc_tuple = kandil.symbolTree.dict[symbol[0].name].loc;
+  var loc_tuple = kandil.symbolTree.dict.get(symbol[0].name).loc;
   var line_beg = loc_tuple[0];
   var line_end = loc_tuple[1];
   // Get the code lines.

@@ -54,10 +54,19 @@ function Symbol(fqn, kind, sub)
   return this;
 }
 
+Symbol.dict = function dict() {
+  // Prefix with "." to avoid property collisions.
+  return {
+    get: function(key) {return this["."+key]},
+    set: function(key, val) {return this["."+key] = val},
+    del: function(key) {delete this["."+key]},
+  }
+};
+
 Symbol.getTree = function(json/*=JSON text*/, moduleFQN) {
   json = json || '["",1,[],[1,1],[]]';
   var arrayTree = JSON.parse(json);
-  var dict = {}; // A map of fully qualified names to symbols.
+  var dict = new Symbol.dict(); // A map of fully qualified names to symbols.
   var list = []; // A flat list of all symbols.
   function visit(s/*=symbol*/, fqn/*=fully qualified name*/)
   { // Assign the elements of this tuple to variables.
@@ -65,7 +74,7 @@ Symbol.getTree = function(json/*=JSON text*/, moduleFQN) {
     // E.g.: 'tango.core' + '.' + 'Thread'
     fqn += (fqn ? "." : "") + name;
     // E.g.: 'Thread.this', 'Thread.this:2' etc.
-    if (sibling = dict[fqn]) // Add ":\d+" suffix if not unique.
+    if (sibling = dict.get(fqn)) // Add ":\d+" suffix if not unique.
       fqn += ":" + (++sibling.count || (sibling.count = 2));
     // Create a new symbol.
     var symbol = new visit.Symbol(fqn, visit.SymbolKind.toStr[kind], members);
@@ -75,7 +84,7 @@ Symbol.getTree = function(json/*=JSON text*/, moduleFQN) {
     for (var i = 0, len = attrs.length; i < len; i++)
       attrs[i] = visit.SymbolAttr.toStr[attrs[i]];
 
-    dict[fqn] = symbol; // Add to the dictionary.
+    dict.set(fqn, symbol); // Add to the dictionary.
     list.push(symbol); // Add to the list.
 
     // Visit the members of this symbol.
