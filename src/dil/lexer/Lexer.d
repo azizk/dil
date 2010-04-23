@@ -1323,13 +1323,16 @@ class Lexer
       closing_delim = c + 2; // Get to closing counterpart. Feature of ASCII table.
       break;
     default:
-      // Skip leading newlines? DMD seems to do it. Bug?
-      /+while (scanNewline(p))
-        ++lineNum,
-        setLineBegin(p);
-      assert(!isNewline(p));+/
-
       char* idbegin = p;
+      if (scanNewline(p))
+      {
+        error(idbegin, MSG.DelimiterIsMissing);
+        ++lineNum;
+        setLineBegin(p);
+        // closing_delim = '\n';
+        goto Lerr;
+      }
+
       c = *p;
       closing_delim = c;
       // TODO: Check for non-printable characters?
@@ -1437,7 +1440,7 @@ class Lexer
     ++p; // Skip closing delimiter.
   Lreturn2: // String delimiter.
     if (*p == '"')
-      ++p, t.pf = scanPostfix();
+      ++p, (t.pf = scanPostfix());
     else
       error(p, MSG.ExpectedDblQuoteAfterDelim,
         (str_delim.length || encodeUTF8(str_delim, closing_delim), str_delim));

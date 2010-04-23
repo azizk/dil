@@ -122,6 +122,7 @@ static:
   auto InvalidOctalEscapeSequence = "value of octal escape sequence is greater than 0xFF: ‘{}’";
   auto InvalidModuleName = "the file name ‘{}’ can't be used as a module name; it’s an invalid or reserved D identifier.";
   auto DelimiterIsWhitespace = "the delimiter character cannot be whitespace";
+  auto DelimiterIsMissing = "expected delimiter character or identifier after ‘q\"’";
   auto NoNewlineAfterIdDelimiter = "expected a newline after identifier delimiter ‘{}’";
   auto UnterminatedDelimitedString = "unterminated delimited string literal";
   auto ExpectedDblQuoteAfterDelim = "expected ‘\"’ after delimiter ‘{}’";
