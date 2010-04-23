@@ -126,6 +126,7 @@ static:
   auto NoNewlineAfterIdDelimiter = "expected a newline after identifier delimiter ‘{}’";
   auto UnterminatedDelimitedString = "unterminated delimited string literal";
   auto ExpectedDblQuoteAfterDelim = "expected ‘\"’ after delimiter ‘{}’";
+  auto UnterminatedTokenString = "unterminated token string literal";
   // Parser messages:
   auto InvalidUTF8SequenceInString = "invalid UTF-8 sequence in string literal: ‘{}’";
   auto ModuleDeclarationNotFirst = "a module declaration is only allowed as the first declaration in a file";

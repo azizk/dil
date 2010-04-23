@@ -1473,9 +1473,12 @@ class Lexer
 
     ++p; ++p; // Skip q{
     char* str_begin = p, str_end = void;
+    // Set to true, if '\r', LS, PS, or multiline tokens are encountered.
+    bool convertNewlines;
 
     auto prev_t = &t;
     Token* token;
+  Loop:
     while (1)
     {
       token = new Token;
@@ -1489,24 +1492,31 @@ class Lexer
       {
       case TOK.LBrace:
         ++level;
-        continue;
+        break;
       case TOK.RBrace:
         if (--level == 0)
         {
           t.tok_str = t.next;
           t.next = null;
-          break;
+          break Loop;
         }
-        continue;
+        break;
+      case TOK.String, TOK.Comment:
+        if (token.isMultiline())
+          convertNewlines = true;
+        break;
+      case TOK.Newline:
+        if (*token.start != '\n')
+          convertNewlines = true;
+        break;
       case TOK.EOF:
-        // TODO: error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedTokenString);
+        error(tokenLineNum, tokenLineBegin, t.start,
+          MSG.UnterminatedTokenString);
         t.tok_str = t.next;
         t.next = token;
-        break;
+        break Loop;
       default:
-        continue;
       }
-      break; // Exit loop.
     }
 
     assert(token.kind == TOK.RBrace || token.kind == TOK.EOF);
@@ -1524,7 +1534,7 @@ class Lexer
     }
     auto buffer = str_begin[0..str_end-str_begin+1]; // +1 for '\0'.
     // Convert newlines to '\n'.
-    if (lineNum != this.lineNum)
+    if (convertNewlines)
     { // Copy the string to the buffer and convert the newlines.
       buffer = new char[buffer.length];
       auto q = str_begin, s = buffer.ptr;
@@ -1544,9 +1554,9 @@ class Lexer
             ++q; ++q;
             goto case '\n';
           }
-          *s++ = *q; // Copy.
+          *s++ = *q; // Copy current character.
         }
-      buffer.length = s - buffer.ptr +1;
+      buffer.length = s - buffer.ptr +1; // +1 for '\0'.
     }
     else // Just duplicate the string, no conversion needed.
       buffer = buffer.dup;
