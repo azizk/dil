@@ -312,6 +312,19 @@ class Lexer
       if (isdigit(c))
         return scanNumber(t);
 
+      // Check these characters early. They are very common.
+      switch (c)
+      {
+      mixin(cases(
+        ",", "Comma",
+        ":", "Colon",    ";", "Semicolon",
+        "(", "LParen",   ")", "RParen",
+        "{", "LBrace",   "}", "RBrace",
+        "[", "LBracket", "]", "RBracket"
+      ));
+      default:
+      }
+
       if (c == '/')
         switch(c = *++p)
         {
@@ -337,6 +350,13 @@ class Lexer
       assert(this.p == p);
       switch (c)
       {
+      case '=': /* =  == */
+        if (p[1] == '=')
+          ++p,
+          kind = TOK.Equal;
+        else
+          kind = TOK.Assign;
+        goto Lcommon;
       case '\'':
         return scanCharacterLiteral(t);
       case '`':
@@ -493,13 +513,6 @@ class Lexer
           goto Lreturn;
         }
         goto Lcommon;
-      case '=': /* =  == */
-        if (p[1] == '=')
-          ++p,
-          kind = TOK.Equal;
-        else
-          kind = TOK.Assign;
-        goto Lcommon;
       case '~': /* ~  ~= */
         if (p[1] == '=')
           ++p,
@@ -552,12 +565,9 @@ class Lexer
         goto Lcommon;
       // Single character tokens:
       mixin(cases(
-        "(", "LParen",   ")", "RParen",
-        "[", "LBracket", "]", "RBracket",
-        "{", "LBrace",   "}", "RBrace",
-        ":", "Colon",    ";", "Semicolon",
-        "?", "Question", ",", "Comma",
-        "$", "Dollar",   "@", "At"
+        "@", "At",
+        "$", "Dollar",
+        "?", "Question"
       ));
       case '#':
         assert(this.p == p);
