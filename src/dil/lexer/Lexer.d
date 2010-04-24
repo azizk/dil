@@ -680,7 +680,8 @@ class Lexer
       version(BigEndian)
         c = *cast(uint*)p;
       else
-      {
+      { // TODO: change toUint() for LittleEndian compilations
+        // to make byte swapping unnecessary?
         c <<= 8; c |= p[1]; c <<= 8; c |= p[2]; c <<= 8; c |= p[3];
         /+
         c = *cast(uint*)p;
@@ -1473,18 +1474,18 @@ class Lexer
     bool convertNewlines;
 
     auto prev_t = &t;
-    Token* token;
+    Token* new_t;
   Loop:
     while (1)
     {
-      token = new Token;
-      scan(*token);
+      new_t = new Token;
+      scan(*new_t);
       // Save the tokens in a doubly linked list.
       // Could be useful for various tools.
-      token.prev = prev_t;
-      prev_t.next = token;
-      prev_t = token;
-      switch (token.kind)
+      new_t.prev = prev_t;
+      prev_t.next = new_t;
+      prev_t = new_t;
+      switch (new_t.kind)
       {
       case TOK.LBrace:
         ++level;
@@ -1498,30 +1499,30 @@ class Lexer
         }
         break;
       case TOK.String, TOK.Comment:
-        if (token.isMultiline())
+        if (new_t.isMultiline())
           convertNewlines = true;
         break;
       case TOK.Newline:
-        if (*token.start != '\n')
+        if (*new_t.start != '\n')
           convertNewlines = true;
         break;
       case TOK.EOF:
         error(tokenLineNum, tokenLineBegin, t.start,
           MSG.UnterminatedTokenString);
         t.tok_str = t.next;
-        t.next = token;
+        t.next = new_t;
         break Loop;
       default:
       }
     }
 
-    assert(token.kind == TOK.RBrace || token.kind == TOK.EOF);
-    assert(token.kind == TOK.RBrace && t.next is null ||
-           token.kind == TOK.EOF && t.next !is null);
+    assert(new_t.kind == TOK.RBrace || new_t.kind == TOK.EOF);
+    assert(new_t.kind == TOK.RBrace && t.next is null ||
+           new_t.kind == TOK.EOF && t.next !is null);
 
-    // token is "}" or EOF.
-    if (token.kind == TOK.EOF)
-      str_end = t.end = token.start;
+    // new_t is "}" or EOF.
+    if (new_t.kind == TOK.EOF)
+      str_end = t.end = new_t.start;
     else
     {
       str_end = p-1;

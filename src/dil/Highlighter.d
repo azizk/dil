@@ -208,10 +208,30 @@ class Highlighter
     case TOK.String:
       auto text = token.text;
       assert(text.length);
-      text = (text[0] == '"') ?
-        scanEscapeSequences(text, tags.table["Escape"]) :
-        xml_escape(text);
-      Lprint:
+      if (text.length > 1 && text[1] == '{')
+      {
+      version(D2)
+      {
+        scope buffer = new Array(128, 128);
+        auto print_saved = this.print; // Save;
+        auto print = this.print = new FormatOut(Format, buffer);
+        print("q{");
+        // Traverse linked list and print tokens.
+        for (auto t = token.tok_str; t; t = t.next)
+        {
+          t.ws && print(t.wsChars); // Print preceding whitespace.
+          printToken(t);
+        }
+        if (token.pf != 0)
+          print(token.pf); // Postfix character.
+        this.print = print_saved; // Restore.
+        text = cast(char[])buffer.slice().dup; // Take a copy.
+      }
+      }
+      else
+        text = (text[0] == '"') ?
+          scanEscapeSequences(text, tags.table["Escape"]) :
+          xml_escape(text);
       print.format(tags.String, text);
       break;
     case TOK.CharLiteral:
