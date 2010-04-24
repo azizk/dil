@@ -32,59 +32,70 @@ class TypePrinter : Visitor
   void writeParams(Parameters params)
   {
     assert(params !is null);
-    text ~= "(";
+    write("(");
     size_t item_count = params.items.length;
     foreach (param; params.items)
     {
       if (param.isCVariadic)
-        text ~= "...";
+        write("...");
       else
       {
-        auto typeBegin = param.type.baseType.begin;
-        // StorageClasses Type ParamName ("=" DefValue)?
-        if (typeBegin !is param.begin)
-          text ~= param.begin.textSpan(typeBegin.prevNWS) ~ " ";
+        // Write storage class(es).
+        auto lastSTC = param.tokenOfLastSTC();
+        if (lastSTC) // Write storage classes.
+          write(param.begin, lastSTC),
+          write(" ");
 
-        visitT(param.type);
+        param.type && visitT(param.type);
 
         if (param.hasName)
-          text ~= " " ~ param.nameStr;
+          write(" "), write(param.nameStr);
         if (param.isDVariadic)
-          text ~= "...";
+          write("...");
         if (auto v = param.defValue)
-          text ~= " = " ~ v.begin.textSpan(v.end);
+          write(" = "), write(v.begin, v.end);
       }
-      --item_count && (text ~= ", "); // Skip for last item.
+      --item_count && write(", "); // Skip for last item.
     }
-    text ~= ")";
+    write(")");
+  }
+
+  void write(string text)
+  {
+    this.text ~= text;
+  }
+
+  void write(Token* begin, Token* end)
+  {
+    this.text ~= begin.textSpan(end);
   }
 
 override:
   T visit(IntegralType t)
   {
-    text ~= t.begin.text;
+    write(t.begin.text);
     return t;
   }
 
   T visit(IdentifierType t)
   {
-    t.next && visitT(t.next) && (text ~= ".");
-    text ~= t.ident.str;
+    t.next && visitT(t.next) && write(".");
+    write(t.ident.str);
     return t;
   }
 
   T visit(TemplateInstanceType t)
   {
-    t.next && visitT(t.next) && (text ~= ".");
-    text ~= t.ident.str ~ "!";
+    t.next && visitT(t.next) && write(".");
+    write(t.ident.str), write("!");
     auto a = t.targs;
-    text ~= a.begin.textSpan(a.end);
+    write(a.begin, a.end);
     return t;
   }
 
   T visit(TypeofType t)
   {
-    text ~= t.begin.textSpan(t.end);
+    write(t.begin, t.end);
     return t;
   }
 
@@ -93,36 +104,37 @@ override:
     if (auto cfunc = t.next.Is!(CFuncType))
     { // Skip the CFuncType. Write a D-style function pointer.
       visitT(t.next.next);
-      text ~= " function";
+      write(" function");
       writeParams(cfunc.params);
     }
     else
       visitT(t.next),
-      text ~= "*";
+      write("*");
     return t;
   }
 
   T visit(ArrayType t)
   {
     visitT(t.next);
-    text ~= "[";
+    write("[");
     if (t.isAssociative())
       visitT(t.assocType);
     /+else if (t.isDynamic())
     {}+/
     else if (t.isStatic())
-      text ~= t.index1.begin.textSpan(t.index1.end);
+      write(t.index1.begin, t.index1.end);
     else if (t.isSlice())
-      text ~= t.index1.begin.textSpan(t.index1.end) ~
-        ".." ~ t.index2.begin.textSpan(t.index2.end);
-    text ~= "]";
+      write(t.index1.begin, t.index1.end),
+      write(".."),
+      write(t.index2.begin, t.index2.end);
+    write("]");
     return t;
   }
 
   T visit(FunctionType t)
   {
     visitT(t.next);
-    text ~= " function";
+    write(" function");
     writeParams(t.params);
     return t;
   }
@@ -130,7 +142,7 @@ override:
   T visit(DelegateType t)
   {
     visitT(t.next);
-    text ~= " delegate";
+    write(" delegate");
     writeParams(t.params);
     return t;
   }
@@ -144,43 +156,43 @@ override:
 
   T visit(BaseClassType t)
   {
-    text ~= EnumString(t.prot) ~ " ";
+    write(EnumString(t.prot) ~ " ");
     visitT(t.next);
     return t;
   }
 
   T visit(ConstType t)
   {
-    text ~= "const";
+    write("const");
     if (t.next !is null)
     {
-      text ~= "(";
+      write("(");
       visitT(t.next);
-      text ~= ")";
+      write(")");
     }
     return t;
   }
 
   T visit(ImmutableType t)
   {
-    text ~= "immutable";
+    write("immutable");
     if (t.next !is null)
     {
-      text ~= "(";
+      write("(");
       visitT(t.next);
-      text ~= ")";
+      write(")");
     }
     return t;
   }
 
   T visit(SharedType t)
   {
-    text ~= "shared";
+    write("shared");
     if (t.next !is null)
     {
-      text ~= "(";
+      write("(");
       visitT(t.next);
-      text ~= ")";
+      write(")");
     }
     return t;
   }
