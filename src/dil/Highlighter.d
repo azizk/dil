@@ -186,7 +186,7 @@ class Highlighter
       print.format(lineNumberFormat, lineNum);
   }
 
-  /// Prints a token to the stream print.
+  /// Prints a token to the stream 'print'.
   void printToken(Token* token)
   {
     switch(token.kind)
@@ -206,10 +206,20 @@ class Highlighter
       print.format(formatStr, xml_escape(token.text));
       break;
     case TOK.String:
-      print.format(tags.String, xml_escape(token.text));
+      auto text = token.text;
+      assert(text.length);
+      text = (text[0] == '"') ?
+        scanEscapeSequences(text, tags.table["Escape"]) :
+        xml_escape(text);
+      Lprint:
+      print.format(tags.String, text);
       break;
     case TOK.CharLiteral:
-      print.format(tags.Char, xml_escape(token.text));
+      auto text = token.text;
+      text = (text.length > 1 && text[1] == '\\') ?
+        scanEscapeSequences(text, tags.Escape) :
+        xml_escape(text);
+      print.format(tags.Char, text);
       break;
     case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
         TOK.Float32, TOK.Float64, TOK.Float80,
@@ -264,6 +274,95 @@ class Highlighter
         print(tags[token.kind]);
     }
   }
+
+  /// Highlights escape sequences inside a text. Also escapes XML characters.
+  /// Params:
+  ///   text = The text to search in.
+  ///   fmt  = The format string passed to the function Format().
+  static char[] scanEscapeSequences(char[] text, char[] fmt)
+  {
+    char* p = text.ptr, end = p + text.length;
+    char* prev = p;
+    char[] result, escape_str;
+
+    for (; p < end; p++)
+    {
+      char[] xml_entity = void;
+      switch(*p)
+      {
+      case '\\': break; // Found beginning of an escape sequence.
+      // Code to escape XML chars:
+      case '<': xml_entity = "&lt;";  goto Lxml;
+      case '>': xml_entity = "&gt;";  goto Lxml;
+      case '&': xml_entity = "&amp;"; goto Lxml;
+      Lxml:
+        if (p != prev) result ~= String(prev, p); // Append previous string.
+        result ~= xml_entity; // Append entity.
+        p++; // Skip '<', '>' or '&'.
+        prev = p;
+        continue; // End of "XML" code.
+      default:
+        continue;
+      }
+      auto escape_str_begin = p;
+      assert(*p == '\\');
+      p++;
+      assert(p < end);
+      if (p >= end)
+        break;
+
+      uint digits = void;
+      switch (*p)
+      {
+      case 'x':
+        digits = 2;
+      case_Unicode:
+        assert(digits == 2 || digits == 4 || digits == 8);
+        if (p+digits >= end)
+          continue;
+        p += digits+1;
+        break;
+      case 'u': digits = 4; goto case_Unicode;
+      case 'U': digits = 8; goto case_Unicode;
+      default:
+        if (char2ev(*p)) // Table lookup.
+          p++;
+        else if (isoctal(*p))
+        {
+          if (++p < end && isoctal(*p))
+            if (++p < end && isoctal(*p))
+              p++;
+        }
+        else if(*p == '&')
+        { // Skip to ";". Assume valid sequence.
+          auto entity_name_begin = p+1;
+          while (++p < end && isalnum(*p))
+          {}
+          if (p == end || *p != ';')
+            continue; // '&' ends up unescaped.
+          p++; // Skip ';'.
+          escape_str = "\\&amp;" ~ String(entity_name_begin, p);
+          goto LformatString2;
+        }
+        else
+          continue; // Nothing to format.
+      }
+    LformatString:
+      escape_str = String(escape_str_begin, p);
+    LformatString2:
+      if (p != prev) // Append previous string.
+        result ~= String(prev, escape_str_begin);
+      prev = p;
+      result ~= Format(fmt, escape_str);
+      p--;
+    }
+
+    if (prev is text.ptr)
+      return text; // Nothing escaped. Return original, unchanged text.
+    if (prev < end)
+      result ~= String(prev, end);
+    return result;
+  }
 }
 
 /// Escapes '<', '>' and '&' with named HTML entities.
@@ -313,6 +412,7 @@ class TagMap
     LineC        = this["LineC", "{0}"];
     BlockC       = this["BlockC", "{0}"];
     NestedC      = this["NestedC", "{0}"];
+    Escape       = this["Escape", "{0}"];
     Shebang      = this["Shebang", "{0}"];
     HLine        = this["HLine", "{0}"];
     Filespec     = this["Filespec", "{0}"];
@@ -353,7 +453,7 @@ class TagMap
   }
 
   /// Shortcuts for quick access.
-  string Identifier, String, Char, Number, Keyword, LineC, BlockC,
+  string Identifier, String, Char, Number, Keyword, LineC, BlockC, Escape,
          NestedC, Shebang, HLine, Filespec, Illegal, Newline, SpecialToken,
          Declaration, Statement, Expression, Type, Other, EOF;
 

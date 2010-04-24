@@ -44,6 +44,8 @@
 .hl { color: green; }
 /* filespec (e.g. #line number [filespec]) */
 .fs { color: purple;}
+/* Escape sequences. */
+.es { color: teal; }
 /* When the first line starts with #! it's a "shebang" */
 .shebang { color: gray; }
 /* Operator */

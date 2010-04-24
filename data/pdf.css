@@ -303,6 +303,8 @@ table.params td:first-child {
 .d_code .fs { color: purple;}
 /* The first line that starts with "#!" is called a "shebang" */
 .d_code .shebang { color: gray; }
+/* Escape sequences. */
+.d_code .es { color: teal; }
 
 .d_code .d.Module .i, .d_code .d.Import .i { color: blue; }
 .d_code .t.Identifier .i, .d_code .TemplateTypeParameter .i { color: DarkRed; }

@@ -45,6 +45,8 @@ string[string] map = [
 
   "SpecialToken" : "<st>{0}</st>", // __FILE__, __LINE__ etc.
 
+  "Escape" : `<es>{0}</es>`, // \" \&xxx; \uxxxx \xXX
+
   "("    : "<br>(</br>",
   ")"    : "<br>)</br>",
   "["    : "<br>[</br>",

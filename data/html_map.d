@@ -56,6 +56,8 @@ string[string] map = [
 
   "SpecialToken" : `<span class="st">{0}</span>`, // __FILE__, __LINE__ etc.
 
+  "Escape" : `<span class="es">{0}</span>`, // \" \&xxx; \uxxxx \xXX
+
   "("    : "(",
   ")"    : ")",
   "["    : "[",
