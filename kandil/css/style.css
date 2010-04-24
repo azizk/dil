@@ -281,6 +281,7 @@ h1.module:hover .srclink {
   color: ForestGreen;
   text-decoration: none;
   font-weight: bold;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1);
 }
 
 .decl:hover > .symbol,
