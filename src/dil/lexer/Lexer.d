@@ -665,6 +665,49 @@ class Lexer
     t.start = this.p = p;
 
     uint c = *p;
+
+    assert(p == t.start);
+    // Check for ids first, as they occur the most often in source codes.
+    if (isidbeg(c))
+    { // Scan an identifier.
+      if (c == 'r' && p[1] == '"')
+        return (this.p = ++p), scanRawStringLiteral(t);
+      if (c == 'x' && p[1] == '"')
+        return scanHexStringLiteral(t);
+      version(D2)
+      {
+      if (c == 'q' && p[1] == '"')
+        return scanDelimitedStringLiteral(t);
+      if (c == 'q' && p[1] == '{')
+        return scanTokenStringLiteral(t);
+      }
+    Lidentifier:
+      do
+      { c = *++p; }
+      while (isident(c) || !isascii(c) && isUnicodeAlpha(p))
+      t.end = this.p = p;
+
+      auto id = IdTable.lookup(t.text);
+      t.kind = kind = id.kind;
+      t.ident = id;
+
+      if (kind == TOK.Identifier || t.isKeyword)
+        return;
+      else if (t.isSpecialToken)
+        finalizeSpecialToken(t);
+      else if (kind == TOK.EOF)
+      {
+        tail = &t;
+        assert(t.text == "__EOF__");
+      }
+      else
+        assert(0, "unexpected token type: " ~ Token.toString(kind));
+      return;
+    }
+
+    if (isdigit(c))
+      return scanNumber(t);
+
     assert(end - p != 0);
     switch (end - p)
     {
@@ -758,17 +801,6 @@ class Lexer
     case toUint("\r\n"):
       ++p;
       goto Lnewline;
-    case toUint(`r"`):
-      return (this.p = ++p), scanRawStringLiteral(t);
-    case toUint(`x"`):
-      return scanHexStringLiteral(t);
-    version(D2)
-    {
-    case toUint(`q"`):
-      return scanDelimitedStringLiteral(t);
-    case toUint(`q{`):
-      return scanTokenStringLiteral(t);
-    }
     default:
     }
 
@@ -822,37 +854,6 @@ class Lexer
 
     assert(p == t.start);
     assert(*p == c);
-
-    // TODO: consider moving isidbeg() and isdigit() up.
-    if (isidbeg(c))
-    { // Scan an identifier.
-    Lidentifier:
-      do
-      { c = *++p; }
-      while (isident(c) || !isascii(c) && isUnicodeAlpha(p))
-      t.end = this.p = p;
-
-      auto id = IdTable.lookup(t.text);
-      t.kind = kind = id.kind;
-      t.ident = id;
-
-      if (kind == TOK.Identifier || t.isKeyword)
-        return;
-      else if (t.isSpecialToken)
-        finalizeSpecialToken(t);
-      else if (kind == TOK.EOF)
-      {
-        tail = &t;
-        assert(t.text == "__EOF__");
-      }
-      else
-        assert(0, "unexpected token type: " ~ Token.toString(kind));
-      return;
-    }
-
-    assert(this.p == p);
-    if (isdigit(c))
-      return scanNumber(t);
 
     // Check for EOF
     if (isEOF(c))
