@@ -2427,27 +2427,28 @@ class Parser
       auto paramBegin = token;
       StorageClass stc;
       Type type;
-      Token* ident;
+      Token* name, stctok;
 
       switch (token.kind)
       {
       case T.Ref, T.Inout: // T.Inout is deprecated in D2.
         stc = StorageClass.Ref;
+        stctok = token;
         nT();
         // fall through
       case T.Identifier:
         auto next = peekNext();
         if (next == T.Comma || next == T.Semicolon || next == T.RParen)
         { // (ref|inout)? Identifier
-          ident = requireIdentifier(MSG.ExpectedVariableName);
+          name = requireIdentifier(MSG.ExpectedVariableName);
           break;
         }
         // fall through
       default: // (ref|inout)? Declarator
-        type = parseDeclarator(ident);
+        type = parseDeclarator(name);
       }
 
-      params ~= set(new Parameter(stc, type, ident, null), paramBegin);
+      params ~= set(new Parameter(stc, stctok, type, name, null), paramBegin);
     } while (consumed(T.Comma))
     set(params, paramsBegin);
 
@@ -2637,7 +2638,7 @@ class Parser
         auto paramBegin = token;
         Token* name;
         auto type = parseDeclarator(name, true);
-        param = new Parameter(StorageClass.None, type, name, null);
+        param = new Parameter(StorageClass.None, null, type, name, null);
         set(param, paramBegin);
         requireClosing(T.RParen, leftParen);
       }
@@ -4489,19 +4490,21 @@ class Parser
     {
       auto paramBegin = token;
       StorageClass stcs, stc;
+      Token* stctok; // Token of the last storage class.
       Type type;
-      Token* ident;
+      Token* name;
       Expression defValue;
 
       void pushParameter()
       {
-        params ~= set(new Parameter(stcs, type, ident, defValue), paramBegin);
+        auto param = new Parameter(stcs, stctok, type, name, defValue);
+        params ~= set(param, paramBegin);
       }
 
       if (consumed(T.Ellipses))
       {
         stcs = StorageClass.Variadic;
-        pushParameter(); // type, ident and defValue will be null.
+        pushParameter(); // type, name and defValue will be null.
         break;
       }
 
@@ -4549,6 +4552,7 @@ class Parser
             error2(MID.RedundantStorageClass, token);
           else
             stcs |= stc;
+          stctok = token;
           nT();
         version(D2)
           continue;
@@ -4558,7 +4562,7 @@ class Parser
         }
         break; // Break out of inner loop.
       }
-      type = parseDeclarator(ident, true);
+      type = parseDeclarator(name, true);
 
       if (consumed(T.Assign))
         defValue = parseAssignExpression();

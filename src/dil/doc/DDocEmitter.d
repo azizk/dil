@@ -575,12 +575,10 @@ abstract class DDocEmitter : DefaultVisitor
       else
       {
         assert(param.type);
-        // Write storage classes.
-        auto typeBegin = param.type.baseType.begin;
-        if (typeBegin !is param.begin) // Write storage classes.
-          write(
-            tokenHL.highlightTokens(param.begin, typeBegin.prevNWS, true),
-            " ");
+        // Write storage class(es).
+        auto lastSTC = param.tokenOfLastSTC();
+        if (lastSTC) // Write storage classes.
+          write(tokenHL.highlightTokens(param.begin, lastSTC, true), " ");
         write(param.type); // Write the type.
         if (param.hasName)
           write(" \1DDOC_PARAM ", param.nameStr, "\2");

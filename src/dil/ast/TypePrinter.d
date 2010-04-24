@@ -163,7 +163,7 @@ override:
 
   T visit(ImmutableType t)
   {
-    text ~= "invariant";
+    text ~= "immutable";
     if (t.next !is null)
     {
       text ~= "(";

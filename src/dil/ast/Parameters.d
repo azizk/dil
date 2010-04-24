@@ -14,11 +14,13 @@ import dil.Enums;
 class Parameter : Node
 {
   StorageClass stcs; /// The storage classes of the parameter.
+  Token* stok; /// Token of the last storage class.
   TypeNode type; /// The parameter's type.
   Token* name; /// The name of the parameter.
   Expression defValue; /// The default initialization value.
 
-  this(StorageClass stcs, TypeNode type, Token* name, Expression defValue)
+  this(StorageClass stcs, Token* stok, TypeNode type,
+    Token* name, Expression defValue)
   {
     super(NodeCategory.Other);
     mixin(set_kind);
@@ -27,6 +29,7 @@ class Parameter : Node
     addOptChild(defValue);
 
     this.stcs = stcs;
+    this.stok = stok;
     this.type = type;
     this.name = name;
     this.defValue = defValue;
@@ -70,6 +73,12 @@ class Parameter : Node
   bool isLazy()
   {
     return !!(stcs & StorageClass.Lazy);
+  }
+
+  /// Returns the token of the storage class that comes before the type.
+  Token* tokenOfLastSTC()
+  {
+    return stok;
   }
 
   mixin(copyMethod);
