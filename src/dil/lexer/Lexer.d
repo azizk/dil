@@ -1017,7 +1017,7 @@ class Lexer
   /// Scans the postfix character of a string literal.
   ///
   /// $(BNF PostfixChar := "c" | "w" | "d")
-  char scanPostfix()
+  static char scanPostfix(ref char* p)
   {
     assert(p[-1] == '"' || p[-1] == '`' ||
       { version(D2) return p[-1] == '}';
@@ -1030,9 +1030,8 @@ class Lexer
     case 'd':
       return *p++;
     default:
-      return 0;
     }
-    assert(0);
+    return 0;
   }
 
   /// Scans a normal string literal.
@@ -1053,7 +1052,7 @@ class Lexer
       {
       case '"':
         ++p;
-        t.pf = scanPostfix();
+        t.pf = scanPostfix(p);
       Lreturn:
         t.str = (buffer ~= '\0');
         t.end = p;
@@ -1182,7 +1181,7 @@ class Lexer
         if (c == delim)
         {
           ++p;
-          t.pf = scanPostfix();
+          t.pf = scanPostfix(p);
         Lreturn:
           t.str = (buffer ~= '\0');
           t.end = p;
@@ -1237,7 +1236,7 @@ class Lexer
         if (n & 1)
           error(tokenLineNum, tokenLineBegin, t.start, MID.OddNumberOfDigitsInHexString);
         ++p;
-        t.pf = scanPostfix();
+        t.pf = scanPostfix(p);
       Lreturn:
         t.str = cast(string) (buffer ~= 0);
         t.end = p;
@@ -1448,7 +1447,7 @@ class Lexer
     ++p; // Skip closing delimiter.
   Lreturn2: // String delimiter.
     if (*p == '"')
-      ++p, (t.pf = scanPostfix());
+      t.pf = scanPostfix((++p, p));
     else
       error(p, MSG.ExpectedDblQuoteAfterDelim,
         (str_delim.length || encodeUTF8(str_delim, closing_delim), str_delim));
@@ -1537,7 +1536,7 @@ class Lexer
     else
     {
       str_end = p-1;
-      t.pf = scanPostfix();
+      t.pf = scanPostfix(p);
       t.end = p;
     }
     auto buffer = str_begin[0..str_end-str_begin+1]; // +1 for '\0'.
