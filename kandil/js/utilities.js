@@ -74,6 +74,56 @@ String.prototype.format = function format(args) {
   format_func.error = "{{FormatIndexError:{0}}";
 })(String.prototype.format);
 
+/// Calculates the Levenshtein distance between str1 and str2.
+function levenshtein_distance(str1, str2)
+{
+  var a0, a1;
+  var i = 0, j = 0, cost = 0;
+  var len1 = str1.length, len2 = str2.length;
+  var tmp;
+  if (len1 < len2) { // Swap shorter with longer string.
+    tmp = str1; str1 = str2; str2 = tmp;
+    tmp = len1; len1 = len2; len2 = tmp;
+  }
+
+  if (len2 < 64)
+  {
+    a0 = levenshtein_distance.a0_static.slice(); // Copy pre-initialized.
+    a1 = a0.slice();
+  }
+  else
+  { // String is longer.
+    a0 = []; a1 = [];
+    var len = len1 < len2 ? len1 : len2;
+    for (; i <= len; i++)
+      a0[i] = a1[i] = i;
+  }
+
+  for (i = 0; i < len1; i++)
+  {
+    var char1 = str1[i];
+    a1[0] = i+1;
+    for (j = 0; j < len2; j++)
+    {
+      cost = (char1 != str2[j]); // char2 = str2[j]
+      // a1[j+1] = min(x1,x2,x2)
+      var x1 = a0[j+1] + 1,  // Deletion.
+          x2 = a1[j] + 1,    // Insertion.
+          x3 = a0[j] + cost; // Substitution.
+      x1 = x1 < x2 ? x1 : x2;
+      a1[j+1] = x1 < x3 ? x1 : x3;
+    }
+    tmp = a0; a0 = a1; a1 = tmp; // Swap arrays.
+  }
+  return a0[j];
+}
+
+levenshtein_distance.a0_static = (function() {
+  var a = []; // Initialize an array of 64+1 elements.
+  for (var i = 0; i < 65; i++)
+    a[i] = i;
+  return a;
+})();
 
 if (!window.JSON)
   JSON = {
