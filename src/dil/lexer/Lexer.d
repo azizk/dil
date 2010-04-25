@@ -1708,7 +1708,6 @@ class Lexer
     }
 
   Lreturn:
-    assert(c);
     this.p = p;
     return c;
   Lerr:
