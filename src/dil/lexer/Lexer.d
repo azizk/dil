@@ -1592,24 +1592,27 @@ class Lexer
   { assert(isValidChar(result)); }
   body
   {
+    auto p = this.p;
     assert(*p == '\\');
+    // Used for error reporting.
+    MID mid;
+    char[] err_msg, err_arg;
 
-    auto sequenceStart = p; // Used for error reporting.
-
-    ++p;
-    uint c = char2ev(*p);
+    ++p; // Skip '\\'.
+    uint c = char2ev(*p); // Table lookup.
     if (c)
     {
       ++p;
-      return c;
+      goto Lreturn;
     }
 
-    uint digits = 2;
+    uint digits = void;
 
     switch (*p)
     {
     case 'x':
       isBinary = true;
+      digits = 2;
     case_Unicode:
       assert(c == 0);
       assert(digits == 2 || digits == 4 || digits == 8);
@@ -1628,18 +1631,16 @@ class Lexer
           {
             ++p;
             if (isValidChar(c))
-              return c; // Return valid escape value.
+              goto Lreturn; // Return valid escape value.
 
-            error(sequenceStart, MID.InvalidUnicodeEscapeSequence,
-                  sequenceStart[0..p-sequenceStart]);
-            break;
+            mid = MID.InvalidUnicodeEscapeSequence;
+            goto Lerr;
           }
           continue;
         }
 
-        error(sequenceStart, MID.InsufficientHexDigits,
-              sequenceStart[0..p-sequenceStart]);
-        break;
+        mid = MID.InsufficientHexDigits;
+        goto Lerr;
       }
       break;
     case 'u':
@@ -1653,22 +1654,18 @@ class Lexer
       {
         isBinary = true;
         assert(c == 0);
-        c += *p - '0';
-        ++p;
+        c += *p++ - '0';
         if (!isoctal(*p))
-          return c;
-        c *= 8;
-        c += *p - '0';
-        ++p;
+          goto Lreturn;
+        c = c * 8 + *p++ - '0';
         if (!isoctal(*p))
-          return c;
-        c *= 8;
-        c += *p - '0';
-        ++p;
-        if (c > 0xFF)
-          error(sequenceStart, MSG.InvalidOctalEscapeSequence,
-                sequenceStart[0..p-sequenceStart]);
-        return c; // Return valid escape value.
+          goto Lreturn;
+        c = c * 8 + *p++ - '0';
+        if (c <= 0xFF)
+          goto Lreturn;
+
+        err_msg = MSG.InvalidOctalEscapeSequence;
+        goto Lerr2;
       }
       else if(*p == '&')
       {
@@ -1684,31 +1681,44 @@ class Lexer
             c = entity2Unicode(begin[0..p - begin]);
             ++p; // Skip ;
             if (c != 0xFFFF)
-              return c; // Return valid escape value.
+              goto Lreturn; // Return valid escape value.
             else
-              error(sequenceStart, MID.UndefinedHTMLEntity, sequenceStart[0 .. p - sequenceStart]);
+              mid = MID.UndefinedHTMLEntity;
           }
           else
-            error(sequenceStart, MID.UnterminatedHTMLEntity, sequenceStart[0 .. p - sequenceStart]);
+            mid = MID.UnterminatedHTMLEntity;
         }
         else
-          error(sequenceStart, MID.InvalidBeginHTMLEntity);
+          mid = MID.InvalidBeginHTMLEntity;
       }
       else if (isEndOfLine(p))
-        error(sequenceStart, MID.UndefinedEscapeSequence,
-          isEOF(*p) ? `\EOF` : `\NewLine`);
+        (mid = MID.UndefinedEscapeSequence),
+        (err_arg = isEOF(*p) ? `\EOF` : `\NewLine`);
       else
       {
-        char[] str = `\`;
-        if (isascii(c))
-          str ~= *p;
-        else
-          encodeUTF8(str, decodeUTF8(p));
-        ++p;
+        err_arg = `\`;
         // TODO: check for unprintable character?
-        error(sequenceStart, MID.UndefinedEscapeSequence, str);
+        if (isascii(*p))
+          err_arg ~= *p;
+        else
+          encodeUTF8(err_arg, decodeUTF8(p));
+        ++p;
+        mid = MID.UndefinedEscapeSequence;
       }
+      goto Lerr;
     }
+
+  Lreturn:
+    assert(c);
+    this.p = p;
+    return c;
+  Lerr:
+    err_msg = GetMsg(mid);
+  Lerr2:
+    if (!err_arg.length)
+      err_arg = this.p[0 .. p - this.p];
+    error(this.p, err_msg, err_arg);
+    this.p = p; // Is at the beginning of the sequence. Update now.
     return REPLACEMENT_CHAR; // Error: return replacement character.
   }
 
