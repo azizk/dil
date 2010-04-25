@@ -338,9 +338,9 @@ dchar entity2Unicode(char[] entity)
 {
   auto hash = stringToHash(entity);
   // Binary search:
-  size_t lower = void, index = void, upper = void;
-  lower = 0;
-  upper = hashes.length -1;
+  int index = void,
+      lower = 0,
+      upper = hashes.length -1;
   while (lower <= upper)
   {
     index = (lower + upper) / 2;
@@ -358,6 +358,14 @@ unittest
 {
   Stdout("Testing entity2Unicode().").newline;
   alias entity2Unicode f;
+
+  // Test extreme values.
+  assert(stringToHash("") < hashes[0]);
+  assert(f("") == 0xFFFF);
+  assert(stringToHash("xxxxxxxx") > hashes[$-1]);
+  assert(f("xxxxxxxx") == 0xFFFF);
+
+  // Test all entities in the Entity array.
   foreach (entity; namedEntities)
     assert(f(entity.name) == entity.value,
       Format("'&{};' == \\u{:X4}, not \\u{:X4}",
