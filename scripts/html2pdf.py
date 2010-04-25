@@ -96,7 +96,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
     params["creation_date"] = strftime("%Y-%m-%dT%H:%M:%S+00:00", gmtime())
 
   x_html = params["x_html"]
-  symlink = params["symlink"]
+  rootURL = params["symlink"]
   nested_TOC = params["nested_toc"]
   newpage_modules = params["newpage_modules"]
   before_files = params["before_files"]
@@ -106,15 +106,57 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
 
   # Define some regular expressions.
   # --------------------------------
-  # Matches the name and href attributes of a symbol link.
-  symbol_rx = re.compile(
-    r'(<a class="symbol[^"]*" name=)"([^"]+)" href="htmlsrc/([^#]+)([^"]+)"')
-  # Matches the href attribute of "h1.module > a".
-  h1_href_rx = re.compile(
-    r'(<h1 class="module"[^>]*><a href=)"htmlsrc/([^"]+)"')
 
-  # For Table of Contents, bookmarks and indices.
-  package_tree = PackageTree()
+  anchor_tag_rx = re.compile(r'<a\s+([^>]+)>')
+  attrs_rx = re.compile(r'''(\w+)=("[^"]+"|'[^']+')''')
+  symclass_rx = re.compile(r'\bsymbol\b')
+  symhref_rx = re.compile(r'(?:(.+?).html)?(?:#(.+))?')
+
+  # The callback function for anchor_tag_rx.
+  # ----------------------------------------
+  module_fqn = ''
+  def fix_link(m):
+    """ Get's a match object. Fixes the attributes and returns the a-tag. """
+    attrs = m.group(1)
+    # [1:-1] strips the quotes.
+    attrs = dict([(a[0], a[1][1:-1] if a[1] else None)
+                   for a in attrs_rx.findall(attrs)])
+    href = attrs.get('href')
+    name = attrs.get('name')
+    clas = attrs.get('class')
+    if clas == 'plink':
+      pass
+    elif href != None and len(href):
+      if href[:2] == "#L" and href[2:3].isdigit():
+        # If line number of a code example.
+        attrs = {} # Delete all attributes. No use in the PDF.
+      elif href.find("://") == -1: # If relative link:
+        if href[:8] == "htmlsrc/":
+          if symclass_rx.search(clas): # Is this a symbol?
+            href = rootURL + '/' + module_fqn + '.html'
+            if name != None: # h1>a tags don't have this attr.
+              href += '#' + name
+              attrs['name'] = 'm-%s:'%module_fqn + name
+          else: # Just a normal link to a source file.
+            href = rootURL + '/' + href
+          attrs['href'] = href
+        else: # Links to symbols, or user links.
+          m = symhref_rx.match(href)
+          if m:
+            link_fqn, symname = m.groups()
+            if link_fqn or symname:
+              link_fqn = link_fqn or module_fqn
+              symname = ':'+symname if symname else ''
+              href = '#m-'+link_fqn + symname
+            else:
+              href = rootURL + '/' + href # Prefix user URLs with rootURL.
+          attrs['href'] = href
+    elif name != None: # Prefix with module_fqn to make it unique.
+      attrs['name'] = 'm-%s:'%module_fqn + name
+    # Finally join the attributes together and return the tag.
+    attrs = ['%s="%s"' % (name.replace('"', '&quot;'), val)
+              for name, val in attrs.items()]
+    return '<a ' + " ".join(attrs) + '>'
 
   # Add module page-break rules to pdf.css.
   # ---------------------------------------
@@ -131,23 +173,22 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   # Prepare the HTML fragments.
   # ---------------------------
   print "Preparing HTML fragments."
-  cat_dict_all = {} # Group symbols by their kind, e.g. class, struct etc.
+  # Group symbols by their kind, e.g. class, struct etc.
+  cat_dict_all = {}
+  # For Table of Contents, bookmarks and indices.
+  package_tree = PackageTree()
+
   for html_file in module_files:
     html_str = open(html_file).read().decode("utf-8")
-    # TODO: adjust links that link to other symbols.
-    # e.g. href="#Culture.this" -> href="#m-tango.text.locale.core:Culture.this"
-
     # Extract module FQN.
     module_fqn = Path(html_file).namebase
-    # Extract symbols list, before symbol_rx.
+
+    # Fix the links.
+    html_str = anchor_tag_rx.sub(fix_link, html_str)
+
+    # Get symbols list.
     sym_dict, cat_dict = get_symbols(jsons, module_fqn)
-    # Add symlink as a prefix to "a.symbol" tags.
-    # The name attribute must be prefixed with "m-%MODULE_FQN%",
-    # in order to make the anchor unique in the entire document.
-    html_str = symbol_rx.sub(
-      r'\1"m-%s:\2" href="%s/\3#\2"' % (module_fqn, symlink), html_str)
-    # Add symlink as a prefix to the "h1>a.symbol" tag.
-    html_str = h1_href_rx.sub(r'\1"%s/\2"' % symlink, html_str)
+
     # Extract "#content>.module".
     start = html_str.find('<div class="module">')
     end = html_str.rfind('<div id="kandil-footer">')
