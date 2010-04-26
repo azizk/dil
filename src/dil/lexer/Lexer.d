@@ -97,6 +97,7 @@ class Lexer
   /// $(BNF Shebang := "#!" AnyChar* EndOfLine)
   void scanShebang()
   {
+    auto p = this.p;
     if (*p == '#' && p[1] == '!')
     {
       auto t = new Token;
@@ -106,7 +107,7 @@ class Lexer
       ++p;
       while (!isEndOfLine(++p))
         isascii(*p) || decodeUTF8(p);
-      t.end = p;
+      t.end = this.p = p;
       this.token.next = t;
       t.prev = this.token;
     }
@@ -921,6 +922,7 @@ class Lexer
   /// $(BNF BlockComment := "/*" AnyChar* "*/")
   void scanBlockComment(ref Token t)
   {
+    auto p = this.p;
     assert(p[-1] == '/' && *p == '*');
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
@@ -957,7 +959,7 @@ class Lexer
     }
     t.kind = TOK.Comment;
     t.setWhitespaceFlag();
-    t.end = p;
+    t.end = this.p = p;
     return;
   }
 
@@ -966,6 +968,7 @@ class Lexer
   /// $(BNF NestedComment := "/+" (AnyChar* | NestedComment) "+/")
   void scanNestedComment(ref Token t)
   {
+    auto p = this.p;
     assert(p[-1] == '/' && *p == '+');
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
@@ -1010,7 +1013,7 @@ class Lexer
     }
     t.kind = TOK.Comment;
     t.setWhitespaceFlag();
-    t.end = p;
+    t.end = this.p = p;
     return;
   }
 
@@ -1039,59 +1042,68 @@ class Lexer
   /// $(BNF NormalStringLiteral := '"' AnyChar* '"')
   void scanNormalStringLiteral(ref Token t)
   {
+    auto p = this.p;
     assert(*p == '"');
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
     t.kind = TOK.String;
     char[] buffer;
+    char* prev = ++p; // Skip '"'. prev is used to copy chunks to buffer.
     uint c;
+  Loop:
     while (1)
-    {
-      c = *++p;
-      switch (c)
+      switch (c = *p)
       {
       case '"':
-        ++p;
-        t.pf = scanPostfix(p);
-      Lreturn:
-        t.str = (buffer ~= '\0');
-        t.end = p;
-        return;
+        break Loop;
       case '\\':
+        if (prev != p) buffer ~= String(prev, p);
         bool isBinary;
-        c = scanEscapeSequence(isBinary);
-        --p;
+        c = scanEscapeSequence(p, isBinary);
+        prev = p;
         if (isascii(c) || isBinary)
           buffer ~= c;
         else
           encodeUTF8(buffer, c);
-        continue;
+        break;
       case '\r':
+        c = 0;
         if (p[1] == '\n')
-          ++p;
+          ++p, ++c;
       case '\n':
         assert(isNewlineEnd(p));
-        c = '\n'; // Convert Newline to \n.
+        c = (c == '\n') ? 0 : c;
+        // Need to substract c to get to the start of the newline.
+        if (p-c != prev) buffer ~= String(prev, p-c);
+        buffer ~= '\n'; // Convert Newline to \n.
         ++lineNum;
-        setLineBegin(p+1);
+        setLineBegin(++p);
+        prev = p;
         break;
       case 0, _Z_:
         error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedString);
-        goto Lreturn;
+        buffer ~= '\0';
+        goto Lerr;
       default:
-        if (!isascii(c))
+        if (!isascii(c) && isUnicodeNewlineChar(c = decodeUTF8(p)))
         {
-          c = decodeUTF8(p);
-          if (isUnicodeNewlineChar(c))
-            goto case '\n';
-          encodeUTF8(buffer, c);
-          continue;
+          c = 2;
+          goto case '\n';
         }
+        ++p;
       }
-      assert(isascii(c));
-      buffer ~= c;
-    }
-    assert(0);
+    assert(*p == '"');
+    ++p; // Skip here to make room for '\0'.
+    if (this.p+1 == prev) // Is .dup the same as ~= here?
+      buffer = String(prev, p).dup;
+    else
+      buffer ~= String(prev, p); // Copy previous string.
+    buffer[$-1] = 0;
+    t.pf = scanPostfix(p);
+  Lerr:
+    t.str = buffer;
+    t.end = this.p = p;
+    return;
   }
 
   /// Scans an escape string literal.
@@ -1104,7 +1116,7 @@ class Lexer
     do
     {
       bool isBinary;
-      auto c = scanEscapeSequence(isBinary);
+      auto c = scanEscapeSequence(p, isBinary);
       if (isascii(c) || isBinary)
         buffer ~= c;
       else
@@ -1128,7 +1140,7 @@ class Lexer
     {
     case '\\':
       bool notused;
-      t.dchar_ = scanEscapeSequence(notused);
+      t.dchar_ = scanEscapeSequence(p, notused);
       break;
     case '\'':
       error(t.start, MID.EmptyCharacterLiteral);
@@ -1155,6 +1167,7 @@ class Lexer
   /// $(BNF RawStringLiteral := 'r"' AnyChar* '"' | "`" AnyChar* "`")
   void scanRawStringLiteral(ref Token t)
   {
+    auto p = this.p;
     assert(*p == '`' || *p == '"' && p[-1] == 'r');
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
@@ -1162,6 +1175,7 @@ class Lexer
     uint delim = *p;
     char[] buffer;
     uint c;
+  Loop:
     while (1)
     {
       c = *++p;
@@ -1179,20 +1193,13 @@ class Lexer
       case '`':
       case '"':
         if (c == delim)
-        {
-          ++p;
-          t.pf = scanPostfix(p);
-        Lreturn:
-          t.str = (buffer ~= '\0');
-          t.end = p;
-          return;
-        }
+          break Loop;
         break;
       case 0, _Z_:
         error(tokenLineNum, tokenLineBegin, t.start,
-          delim == 'r' ?
+          delim == '"' ?
             MID.UnterminatedRawString : MID.UnterminatedBackQuoteString);
-        goto Lreturn;
+        goto Lerr;
       default:
         if (!isascii(c))
         {
@@ -1206,7 +1213,12 @@ class Lexer
       assert(isascii(c));
       buffer ~= c;
     }
-    assert(0);
+    ++p;
+    t.pf = scanPostfix(p);
+  Lerr:
+    t.str = (buffer ~= '\0');
+    t.end = this.p = p;
+    return;
   }
 
   /// Scans a hexadecimal string literal.
@@ -1214,6 +1226,7 @@ class Lexer
   /// $(BNF HexStringLiteral := 'x"' (HexChar HexChar)* '"')
   void scanHexStringLiteral(ref Token t)
   {
+    auto p = this.p;
     assert(p[0] == 'x' && p[1] == '"');
     t.kind = TOK.String;
 
@@ -1227,20 +1240,14 @@ class Lexer
 
     ++p;
     assert(*p == '"');
+  Loop:
     while (1)
     {
       c = *++p;
       switch (c)
       {
       case '"':
-        if (n & 1)
-          error(tokenLineNum, tokenLineBegin, t.start, MID.OddNumberOfDigitsInHexString);
-        ++p;
-        t.pf = scanPostfix(p);
-      Lreturn:
-        t.str = cast(string) (buffer ~= 0);
-        t.end = p;
-        return;
+        break Loop;
       case '\r':
         if (p[1] == '\n')
           ++p;
@@ -1274,7 +1281,7 @@ class Lexer
         {
           error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedHexString);
           t.pf = 0;
-          goto Lreturn;
+          goto Lerr;
         }
         else
         {
@@ -1289,7 +1296,15 @@ class Lexer
         }
       }
     }
-    assert(0);
+    if (n & 1)
+      error(tokenLineNum, tokenLineBegin, t.start,
+        MID.OddNumberOfDigitsInHexString);
+    ++p;
+    t.pf = scanPostfix(p);
+  Lerr:
+    t.str = cast(string) (buffer ~= 0);
+    t.end = this.p = p;
+    return;
   }
 
   /// Scans a delimited string literal.
@@ -1303,6 +1318,7 @@ class Lexer
   {
   version(D2)
   {
+    auto p = this.p;
     assert(p[0] == 'q' && p[1] == '"');
     t.kind = TOK.String;
 
@@ -1454,7 +1470,7 @@ class Lexer
 
   Lerr:
     t.str = (buffer ~= '\0');
-    t.end = p;
+    t.end = this.p = p;
   } // version(D2)
   }
 
@@ -1525,7 +1541,6 @@ class Lexer
       default:
       }
     }
-
     assert(new_t.kind == TOK.RBrace || new_t.kind == TOK.EOF);
     assert(new_t.kind == TOK.RBrace && t.next is null ||
            new_t.kind == TOK.EOF && t.next !is null);
@@ -1584,14 +1599,15 @@ class Lexer
   ////CEsc := "'" | '"' | "?" | "\\" | "a" | "b" | "f" | "n" | "r" | "t" | "v"
   ////)
   /// Params:
-  ///   isBinary = set to true for octal and hexadecimal escapes.
+  ///   ref_p = Used to scan the sequence.
+  ///   isBinary = Set to true for octal and hexadecimal escapes.
   /// Returns: the escape value.
-  dchar scanEscapeSequence(ref bool isBinary)
+  dchar scanEscapeSequence(ref char* ref_p, ref bool isBinary)
   out(result)
   { assert(isValidChar(result)); }
   body
   {
-    auto p = this.p;
+    auto p = ref_p;
     assert(*p == '\\');
     // Used for error reporting.
     MID mid;
@@ -1696,7 +1712,7 @@ class Lexer
       else
       {
         err_arg = `\`;
-        // TODO: check for unprintable character?
+        // TODO: check for non-printable character?
         if (isascii(*p))
           err_arg ~= *p;
         else
@@ -1708,15 +1724,16 @@ class Lexer
     }
 
   Lreturn:
-    this.p = p;
+    ref_p = p;
     return c;
+
   Lerr:
     err_msg = GetMsg(mid);
   Lerr2:
     if (!err_arg.length)
-      err_arg = this.p[0 .. p - this.p];
-    error(this.p, err_msg, err_arg);
-    this.p = p; // Is at the beginning of the sequence. Update now.
+      err_arg = ref_p[0 .. p - ref_p];
+    error(ref_p, err_msg, err_arg);
+    ref_p = p; // Is at the beginning of the sequence. Update now.
     return REPLACEMENT_CHAR; // Error: return replacement character.
   }
 
@@ -1733,6 +1750,7 @@ class Lexer
   /// Invalid: "0b_", "0x_", "._" etc.
   void scanNumber(ref Token t)
   {
+    auto p = this.p;
     ulong ulong_;
     bool overflow;
     bool isDecimal;
@@ -1848,6 +1866,7 @@ class Lexer
       if (p[1] == '.')
         break;
     case 'p', 'P':
+      this.p = p;
       return scanHexReal(t);
     default:
     }
@@ -2007,9 +2026,10 @@ class Lexer
       assert(0);
     }
     t.ulong_ = ulong_;
-    t.end = p;
+    t.end = this.p = p;
     return;
   LscanReal:
+    this.p = p;
     scanReal(t);
     return;
   }
@@ -2041,6 +2061,7 @@ class Lexer
   ////)
   void scanReal(ref Token t)
   {
+    auto p = this.p;
     if (*p == '.')
     {
       assert(p[1] != '.');
@@ -2074,6 +2095,7 @@ class Lexer
         error(p, MID.FloatExpMustStartWithDigit);
     }
 
+    this.p = p;
     finalizeFloat(t, copySansUnderscores(t.start, p));
   }
 
@@ -2086,6 +2108,7 @@ class Lexer
   ////)
   void scanHexReal(ref Token t)
   {
+    auto p = this.p;
     assert(*p == '.' || *p == 'p' || *p == 'P');
     MID mid = MID.HexFloatExponentRequired;
     if (*p == '.')
@@ -2106,11 +2129,12 @@ class Lexer
     while (isdigit(*++p) || *p == '_')
     {}
 
+    this.p = p;
     finalizeFloat(t, copySansUnderscores(t.start, p));
     return;
   Lerr:
     t.kind = TOK.Float32;
-    t.end = p;
+    t.end = this.p = p;
     error(p, mid);
   }
 
@@ -2120,6 +2144,7 @@ class Lexer
   ///   buffer = the well-formed float string.
   void finalizeFloat(ref Token t, string buffer)
   {
+    auto p = this.p;
     assert(buffer.length && buffer[$-1] == 0);
     // Finally check suffixes.
     TOK kind = void;
@@ -2156,7 +2181,7 @@ class Lexer
       // error(t.start, MSG.NaNFloat);
     t.mpfloat = f;
     t.kind = kind;
-    t.end = p;
+    t.end = this.p = p;
     return;
   }
 
@@ -2165,6 +2190,7 @@ class Lexer
   /// $(BNF SpecialTokenSequence := "#line" Integer Filespec? EndOfLine)
   void scanSpecialTokenSequence(ref Token t)
   {
+    auto p = this.p;
     assert(*p == '#');
     t.kind = TOK.HashLine;
     t.setWhitespaceFlag();
@@ -2200,12 +2226,14 @@ class Lexer
           mid = MID.ExpectedIntegerAfterSTLine;
           goto Lerr;
         }
-        t.tokLineNum = new Token;
-        scan(*t.tokLineNum);
-        tokenEnd = p;
-        if (t.tokLineNum.kind != TOK.Int32 && t.tokLineNum.kind != TOK.Uint32)
+        auto newtok = new Token;
+        t.tokLineNum = newtok;
+        this.p = p;
+        scan(*newtok);
+        tokenEnd = p = this.p;
+        if (newtok.kind != TOK.Int32 && newtok.kind != TOK.Uint32)
         {
-          errorAtColumn = t.tokLineNum.start;
+          errorAtColumn = newtok.start;
           mid = MID.ExpectedIntegerAfterSTLine;
           goto Lerr;
         }
@@ -2244,6 +2272,7 @@ class Lexer
       }
       else/+ if (state == State.End)+/
       {
+        errorAtColumn = tokenEnd;
         mid = MID.UnterminatedSpecialToken;
         goto Lerr;
       }
@@ -2264,13 +2293,11 @@ class Lexer
       if (t.tokLineFilespec)
         newFilePath(t.tokLineFilespec.str);
     }
-    p = tokenEnd;
-    t.end = tokenEnd;
 
+    t.end = this.p = tokenEnd;
     return;
   Lerr:
-    p = tokenEnd;
-    t.end = tokenEnd;
+    t.end = this.p = tokenEnd;
     error(errorAtColumn, mid);
   }
 
