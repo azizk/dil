@@ -435,7 +435,7 @@ class Parser
       decl = parseDeleteDeclaration();
       break;
     case T.Mixin:
-      decl = parseMixin!(MixinDeclaration)();
+      decl = parseMixin!(MixinDeclaration, Declaration)();
       break;
     case T.Semicolon:
       nT();
@@ -1753,7 +1753,7 @@ class Parser
   /// $(BNF TemplateDeclaration :=
   ////  template Name TemplateParameterList Constraint?
   ////  DeclarationDefinitionsBody)
-  Declaration parseTemplateDeclaration()
+  TemplateDeclaration parseTemplateDeclaration()
   {
     skip(T.Template);
     auto name = requireIdentifier(MSG.ExpectedTemplateName);
@@ -1809,17 +1809,19 @@ class Parser
 
   /// Parses a MixinDeclaration or MixinStatement.
   /// $(BNF
-  ////MixinDecl := (MixinExpression | MixinTemplate) ";"
+  ////MixinDecl := (MixinExpression | MixinTemplateId | MixinTemplate) ";"
   ////MixinExpression := mixin "(" AssignExpression ")"
-  ////MixinTemplate := mixin TemplateIdentifier
-  ////                 ("!" "(" TemplateArguments ")")? MixinIdentifier?)
-  Class parseMixin(Class)()
+  ////MixinTemplateId := mixin TemplateIdentifier
+  ////                   ("!" "(" TemplateArguments ")")? MixinIdentifier?)
+  ////MixinTemplate := mixin TemplateDeclaration
+  RetT parseMixin(Class, RetT = Class)()
   {
-  static assert(is(Class == MixinDeclaration) || is(Class == MixinStatement));
+    static assert(is(Class == MixinDeclaration) ||
+      is(Class == MixinStatement));
     skip(T.Mixin);
 
-  static if (is(Class == MixinDeclaration))
-  {
+    static if (is(Class == MixinDeclaration))
+    {
     if (consumed(T.LParen))
     {
       auto leftParen = token;
@@ -1828,7 +1830,13 @@ class Parser
       require(T.Semicolon);
       return new MixinDeclaration(e);
     }
-  }
+    else version(D2) if (consumed(T.Template))
+    {
+      auto d = parseTemplateDeclaration();
+      d.isMixin = true;
+      return d;
+    }
+    }
 
     auto begin = token;
     Expression e;

@@ -924,6 +924,8 @@ override:
     if (!ddoc(d))
       return d;
     DECL({
+      version(D2)
+      if (d.isMixin) write("\1DIL_KW mixin\2 ");
       write("\1DIL_KW template\2 ");
       SYMBOL(d.name.text, K.Template, d);
       writeTemplateParams();

@@ -254,6 +254,8 @@ class TemplateDeclaration : Declaration
   TemplateParameters tparams;
   Expression constraint; // D 2.0
   CompoundDeclaration decls;
+  bool isMixin; /// Is this a mixin template? (D2 feature.)
+
   this(Token* name, TemplateParameters tparams, Expression constraint,
        CompoundDeclaration decls)
   {
@@ -278,8 +280,8 @@ class TemplateDeclaration : Declaration
 
   /// Returns true if this is a template that wraps a class, struct etc.
   bool isWrapper()
-  {
-    return begin.kind != TOK.Template;
+  { // "mixin template" is D2.
+    return begin.kind != TOK.Template && begin.kind != TOK.Mixin;
   }
 
   Template symbol; /// The template symbol for this declaration.
