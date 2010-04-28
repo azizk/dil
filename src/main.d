@@ -145,7 +145,6 @@ void main(char[][] args)
 
     DDocCommand cmd;
     cmd.destDirPath = args[2];
-    cmd.macroPaths = GlobalSettings.ddocFilePaths;
     cmd.context = newCompilationContext();
     cmd.diag = diag;
 
@@ -578,8 +577,8 @@ Options:
 
 Example:
   dil d doc/ src/main.d data/macros_dil.ddoc -i -m=doc/modules.txt
-  dil d tangodoc/ -v -version=Windows -version=Tango -version=DDoc \
-        --kandil kandil/kandil.ddoc tangosrc/file_1.d tangosrc/file_n.d`;
+  dil d tangodoc/ -v -version=Windows -version=Tango \
+        --kandil tangosrc/file_1.d tangosrc/file_n.d`;
     break;
   case "hl", "highlight":
 //     msg = GetMsg(MID.HelpGenerate);

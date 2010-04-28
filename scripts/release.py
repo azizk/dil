@@ -1,6 +1,9 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
+#
+# This is the script that creates release packages for dil.
+#
 import os, re
 from path import Path
 from common import *
@@ -42,10 +45,6 @@ def update_version(path, major, minor, suffix):
   open(path, "w").write(code)
 
 def write_PDF(DIL, SRC, VERSION, TMP):
-  # TODO: some links should be rewritten:
-  # E.g.: .) "dil.lexer.Funcs.html#CProperty.Whitespace" ->
-  #          "m-dil.lexer.Funcs:CProperty.Whitespace"
-  #       .) "dil.lexer.Identifier" -> "m-dil.lexer.Identifier"
   pdf_gen = PDFGenerator()
   pdf_gen.fetch_files(DIL, TMP)
   html_files = SRC.glob("*.html")
@@ -179,8 +178,7 @@ def main():
   if options.docs:
     build_dil_if_inexistant(DIL.EXE)
 
-    DOC_FILES = [DEST.KANDIL.ddoc] + \
-                 DEST.DATA//("macros_dil.ddoc", "dilconf.d") + FILES
+    DOC_FILES = DEST.DATA//("macros_dil.ddoc", "dilconf.d") + FILES
     print "***** Generating documentation *****"
     versions = ["DDoc"]
     generate_docs(DIL.EXE, DEST.DOC, MODLIST, DOC_FILES,

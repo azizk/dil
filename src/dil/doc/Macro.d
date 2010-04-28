@@ -159,6 +159,7 @@ class MacroTable
 /// Parses a text with macro definitions.
 struct MacroParser
 {
+static:
   Macro[] parse(string text)
   {
     IdentValueParser parser;
@@ -172,7 +173,7 @@ struct MacroParser
   /// Scans for a macro invocation. E.g.: &#36;(DDOC)
   /// Returns: a pointer set to one char past the closing parenthesis,
   /// or null if this isn't a macro invocation.
-  static char* scanMacro(char* p, char* textEnd)
+  char* scanMacro(char* p, char* textEnd)
   {
     assert(*p == '$');
     if (p+2 < textEnd && p[1] == '(')

@@ -51,6 +51,7 @@ _PI = $(PI $0)
 D = <span class="inlcode">$0</span>
 LE = &lt;
 GT = &gt;
+CLN = :
 %(favicon)s
 """ % locals()
   )
@@ -178,12 +179,14 @@ def main():
     # 2. Prepare files and options to call generate_docs().
     create_index(TMP/"index.d", TANGO.SRC.ROOT, FILES)
     write_tango_ddoc(TANGO_DDOC, TANGO.favicon, options.revision)
-    DOC_FILES = [DIL.KANDIL.ddoc, TANGO_DDOC, TMP/"index.d"] + FILES
+    DOC_FILES = [TANGO_DDOC, TMP/"index.d"] + FILES
 
     versions = ["Tango", "TangoDoc"] + \
                [["Windows", "Win32"], ["Posix"]][options.posix]
     dil_options = ['-v', '-hl', '--kandil']
-    options.pykandil and dil_options.pop() # Removes '--kandil'.
+    if options.pykandil:
+      dil_options.pop() # Removes '--kandil'.
+      DOC_FILES.insert(0, DIL.KANDIL.ddoc)
 
     # 3. Generate the documentation.
     dil_retcode = generate_docs(DIL.EXE, DEST.abspath, MODLIST,

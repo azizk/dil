@@ -78,12 +78,20 @@ struct DDocCommand
     if (useKandil && writeXML)
       return Stdout("Error: kandil uses only HTML at the moment.").newline;
 
+    // Prepare macro files:
+    // Get file paths from the config file.
+    string[] macroPaths = GlobalSettings.ddocFilePaths.dup;
+
+    if (useKandil)
+      macroPaths ~=
+        (Path(GlobalSettings.kandilDir) /= "kandil.ddoc").toString();
+    macroPaths ~= this.macroPaths; // Add files from the cmd line arguments.
+
     // Parse macro files and build macro table hierarchy.
     MacroTable mtable;
-    MacroParser mparser;
     foreach (macroPath; macroPaths)
     {
-      auto macros = mparser.parse(loadMacroFile(macroPath, diag));
+      auto macros = MacroParser.parse(loadMacroFile(macroPath, diag));
       mtable = new MacroTable(mtable);
       mtable.insert(macros);
     }
