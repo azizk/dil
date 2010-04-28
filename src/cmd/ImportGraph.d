@@ -12,13 +12,13 @@ import dil.parser.ImportParser,
        dil.Compilation,
        dil.ModuleManager,
        dil.Diagnostics;
+import util.Path;
 import Settings;
 import common;
 
 import tango.text.Regex : RegExp = Regex;
 import tango.text.Util;
-import tango.io.FilePath,
-       tango.io.model.IFile;
+import tango.io.model.IFile;
 
 alias FileConst.PathSeparatorChar dirSep;
 
@@ -65,7 +65,7 @@ struct IGraphCommand
       regexps ~= new RegExp(strRegexp);
 
     // Add the directory of the file to the import paths.
-    auto filePath = new FilePath(this.filePath);
+    auto filePath = Path(this.filePath);
     context.importPaths ~= filePath.folder();
 
     auto gbuilder = new GraphBuilder;

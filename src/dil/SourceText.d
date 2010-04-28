@@ -6,10 +6,10 @@ module dil.SourceText;
 import dil.Converter;
 import dil.Diagnostics;
 import dil.Messages;
+import util.Path;
 import common;
 
-import tango.io.device.File,
-       tango.io.FilePath;
+import tango.io.device.File;
 
 /// Represents D source code.
 ///
@@ -51,10 +51,10 @@ final class SourceText
 
     scope(failure)
     {
-      if (!(new FilePath(this.filePath)).exists())
-        diag ~= new LexerError(new Location(filePath, 0), MSG.InexistantFile);
-      else
-        diag ~= new LexerError(new Location(filePath, 0), MSG.CantReadFile);
+      auto loc = new Location(filePath, 0);
+      auto msg = Path(this.filePath).exists() ?
+        MSG.CantReadFile : MSG.InexistantFile;
+      diag ~= new LexerError(loc, msg);
       data = "\0";
       return false;
     }

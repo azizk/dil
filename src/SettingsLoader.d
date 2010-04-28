@@ -15,10 +15,10 @@ import dil.Messages;
 import dil.Diagnostics;
 import dil.Compilation;
 import dil.Unicode;
+import util.Path;
 import Settings;
 import common;
 
-import tango.io.FilePath;
 import tango.sys.Environment;
 import tango.io.Path : normalize;
 import tango.stdc.stringz : fromStringz;
@@ -94,7 +94,7 @@ class ConfigLoader : SettingsLoader
     super(diag);
     this.homePath = Environment.get("HOME");
     this.executablePath = GetExecutableFilePath(arg0);
-    this.executableDir = (new FilePath(this.executablePath)).path();
+    this.executableDir = Path(this.executablePath).path();
     Environment.set("BINDIR", this.executableDir);
   }
 
@@ -235,7 +235,7 @@ class ConfigLoader : SettingsLoader
   string findConfigurationFilePath()
   {
     // 1. Look in environment variable DILCONF.
-    auto filePath = new FilePath(Environment.get("DILCONF"));
+    auto filePath = Path(Environment.get("DILCONF"));
     if (filePath.exists())
       return filePath.toString();
     // 2. Look in the current working directory.
@@ -301,7 +301,7 @@ class TagMapLoader : SettingsLoader
 /// Returns: filePath if it is absolute or execPath + filePath.
 string resolvePath(string execPath, string filePath)
 {
-  scope path = new FilePath(filePath);
+  scope path = Path(filePath);
   if (path.isAbsolute())
     return filePath;
   path.set(execPath).append(filePath);

@@ -20,6 +20,11 @@ class Path : FilePath
   {
     super(s.toString());
   }
+  /// Constructs an empty Path.
+  this()
+  {
+    super();
+  }
 
   /// Returns a new Path object.
   static Path opCall(string s)
@@ -30,6 +35,11 @@ class Path : FilePath
   static Path opCall(FilePath p)
   {
     return new Path(p);
+  }
+  /// ditto
+  static Path opCall()
+  {
+    return new Path("");
   }
 
   Path append(string s)

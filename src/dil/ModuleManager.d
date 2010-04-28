@@ -8,10 +8,10 @@ import dil.semantic.Module,
        dil.semantic.Symbol;
 import dil.Diagnostics;
 import dil.Messages;
+import util.Path;
 import common;
 
-import tango.io.FilePath,
-       tango.io.model.IFile;
+import tango.io.model.IFile;
 import tango.io.Path : pathNormalize = normalize;
 import tango.core.Array : lbound, sort;
 import tango.text.Ascii : icompare;
@@ -218,11 +218,11 @@ class ModuleManager
   /// Returns: the file path to the module, or null if it wasn't found.
   static string findModuleFilePath(string moduleFQNPath, string[] importPaths)
   {
-    auto filePath = new FilePath();
+    auto filePath = Path();
     foreach (importPath; importPaths)
     {
       filePath.set(importPath); // E.g.: src/
-      filePath.append(moduleFQNPath); // E.g.: dil/ast/Node
+      filePath /= moduleFQNPath; // E.g.: dil/ast/Node
       filePath.suffix(".d"); // E.g.: src/dil/ast/Node.d
       if (!filePath.exists())
       {

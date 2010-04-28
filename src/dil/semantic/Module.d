@@ -14,9 +14,9 @@ import dil.Location;
 import dil.Messages;
 import dil.Diagnostics;
 import dil.SourceText;
+import util.Path;
 import common;
 
-import tango.io.FilePath;
 import tango.io.model.IFile;
 
 alias FileConst.PathSeparatorChar dirSep;
@@ -103,7 +103,7 @@ class Module : ScopeSymbol
 
     if (!this.moduleFQN.length)
     { // Take the base name of the file as the module name.
-      auto str = (new FilePath(filePath)).name(); // E.g.: Node
+      auto str = Path(filePath).name(); // E.g.: Node
       if (!Lexer.isValidUnreservedIdentifier(str))
       {
         auto location = this.firstToken().getErrorLocation();

@@ -24,6 +24,7 @@ import dil.ModuleManager,
        dil.SourceText,
        dil.Enums,
        dil.Time;
+import util.Path;
 import SettingsLoader;
 import Settings;
 import common;
@@ -31,8 +32,7 @@ import common;
 import tango.text.Ascii : toUpper;
 import tango.text.Regex : Regex;
 import tango.time.Clock : Clock;
-import tango.io.FilePath,
-       tango.io.device.File;
+import tango.io.device.File;
 
 /// The ddoc command.
 struct DDocCommand
@@ -64,15 +64,15 @@ struct DDocCommand
   {
     context.addVersionId("D_Ddoc"); // Define D_Ddoc version identifier.
 
-    auto destDirPath = new FilePath(destDirPath);
+    auto destDirPath = Path(destDirPath);
     destDirPath.exists || destDirPath.createFolder();
 
     if (useKandil)
-      if (auto symDir = destDirPath.dup.append("symbols"))
+      if (auto symDir = destDirPath/"symbols")
         symDir.exists || symDir.createFolder();
 
     if (writeHLFiles)
-      if (auto srcDir = destDirPath.dup.append("htmlsrc"))
+      if (auto srcDir = destDirPath/"htmlsrc")
         srcDir.exists || srcDir.createFolder();
 
     if (useKandil && writeXML)
@@ -133,7 +133,7 @@ struct DDocCommand
         pass1.run();
       }
       else // Normally done in mod.parse().
-        mod.setFQN((new FilePath(filePath)).name());
+        mod.setFQN(Path(filePath).name());
 
       // Write the documentation file.
       writeDocumentationFile(mod, mtable);
@@ -152,8 +152,8 @@ struct DDocCommand
   /// Writes a syntax highlighted file for mod.
   void writeSyntaxHighlightedFile(Module mod)
   {
-    auto filePath = new FilePath(destDirPath);
-    filePath.append("htmlsrc").append(mod.getFQN());
+    auto filePath = Path(destDirPath);
+    (filePath /= "htmlsrc") /= mod.getFQN();
     filePath.cat(outFileExtension);
     if (verbose)
       Stdout.formatln("hl > {}", filePath.toString());
@@ -172,8 +172,8 @@ struct DDocCommand
   void writeDocumentationFile(Module mod, MacroTable mtable)
   {
     // Build destination file path.
-    auto destPath = new FilePath(destDirPath);
-    destPath.append(mod.getFQN() ~ outFileExtension);
+    auto destPath = Path(destDirPath);
+    (destPath /= mod.getFQN()) ~= outFileExtension;
     // Verbose output of activity.
     if (verbose) // TODO: create a setting for this format string in dilconf.d?
       Stdout.formatln("ddoc > {}", destPath);
@@ -219,8 +219,8 @@ struct DDocCommand
       return; // Has no symbol tree.
 
     // Write the documented symbols in this module to a json file.
-    auto filePath = new FilePath(destDirPath);
-    filePath.append("symbols").append(modFQN~".json");
+    auto filePath = Path(destDirPath);
+    ((filePath /= "symbols") /= modFQN) ~= ".json";
     file = new File(filePath.toString(), File.WriteCreate);
     char[] text;
     file.write(symbolsToJSON(ddocEmitter.symbolTree[""], text));
@@ -244,8 +244,8 @@ struct DDocCommand
 
     copyKandilFiles();
 
-    auto filePath = new FilePath(destDirPath);
-    filePath.append("js").append("modules.js");
+    auto filePath = Path(destDirPath);
+    (filePath /= "js") /= "modules.js";
     scope file = new File(filePath.toString(), File.WriteCreate);
 
     file.write("var g_moduleList = [\n "); // Write a flat list of FQNs.
@@ -276,32 +276,27 @@ struct DDocCommand
   /// Creates sub-folders and copies kandil's files into them.
   void copyKandilFiles()
   { // Create folders if they do not exist yet.
-    FilePath destDir = new FilePath(destDirPath);
+    auto destDir = Path(destDirPath);
     auto dir = destDir.dup;
     foreach (path; ["css", "js", "img"])
       dir.set(destDir.dup.append(path)).exists() || dir.createFolder();
     // Copy kandil files.
-    auto kandil = new FilePath(GlobalSettings.kandilDir);
-    auto data = new FilePath(GlobalSettings.dataDir);
-    destDir.dup.append("css").append("style.css")
-           .copy(kandil.dup.append("css").append("style.css"));
-    destDir.dup.append("htmlsrc").append("html.css")
-           .copy(data.dup.append("html.css"));
-    foreach (file; ["navigation.js", "jquery.js", "quicksearch.js",
+    auto kandil = Path(GlobalSettings.kandilDir);
+    auto data = Path(GlobalSettings.dataDir);
+    (destDir / "css" /= "style.css").copy(kandil / "css" /= "style.css");
+    (destDir / "htmlsrc" /= "html.css") .copy(data / "html.css");
+    foreach (js_file; ["navigation.js", "jquery.js", "quicksearch.js",
                     "symbols.js", "utilities.js"])
-      destDir.dup.append("js").append(file)
-             .copy(kandil.dup.append("js").append(file));
+      (destDir / "js" /= js_file).copy(kandil / "js" /= js_file);
     foreach (file; ["alias", "class", "enummem", "enum", "function",
                     "interface", "module", "package", "struct", "template",
                     "typedef", "union", "variable",
                     "tv_dot", "tv_minus", "tv_plus", "magnifier"])
     {
       file = "icon_" ~ file ~ ".png";
-      destDir.dup.append("img").append(file)
-             .copy(kandil.dup.append("img").append(file));
+      (destDir / "img" /= file).copy(kandil / "img" /= file);
     }
-    destDir.dup.append("img").append("loading.gif")
-           .copy(kandil.dup.append("img").append("loading.gif"));
+    (destDir / "img" /= "loading.gif").copy(kandil / "img" /= "loading.gif");
   }
 
   /// Writes the sub-packages and sub-modules of a package to the disk.
@@ -417,8 +412,8 @@ version(unused)
   void writeDDocReport()
   {
     assert(writeReport);
-    auto filePath = new FilePath(destDirPath);
-    filePath.append("report.txt");
+    auto filePath = Path(destDirPath);
+    filePath /= "report.txt";
     scope file = new File(filePath.toString(), File.WriteCreate);
     file.write("");
 

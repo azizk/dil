@@ -14,10 +14,10 @@ import dil.parser.Parser;
 import dil.semantic.Module;
 import dil.SourceText;
 import dil.Diagnostics;
+import util.Path;
 import common;
 
 import tango.io.device.Array;
-import tango.io.FilePath;
 
 /// A token and syntax highlighter.
 class Highlighter
@@ -76,7 +76,7 @@ class Highlighter
     auto lx = new Lexer(new SourceText(filePath, true), diag);
     lx.scanAll();
 
-    print.format(tags["DocHead"], (new FilePath(filePath)).name());
+    print.format(tags["DocHead"], Path(filePath).name());
     if (lx.errors.length)
     {
       print(tags["CompBegin"]);
