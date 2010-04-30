@@ -4491,10 +4491,7 @@ class Parser
 
     auto params = new Parameters();
 
-    if (consumed(T.RParen))
-      return set(params, begin);
-
-    do
+    while (token.kind != T.RParen)
     {
       auto paramBegin = token;
       StorageClass stcs, stc;
@@ -4583,7 +4580,9 @@ class Parser
       }
       pushParameter();
 
-    } while (consumed(T.Comma))
+      if (!consumed(T.Comma))
+        break;
+    }
     requireClosing(T.RParen, begin);
     return set(params, begin);
   }
@@ -4754,9 +4753,9 @@ class Parser
           auto typeArgument = try_(&parseTypeArgument, success);
           return success ? typeArgument : parseCondExpression();
         }
-        if (consumed(T.Colon))  // ":" SpecializationType
+        if (consumed(T.Colon))  // ":" Specialization
           spec = parseExpOrType();
-        if (consumed(T.Assign)) // "=" DefaultType
+        if (consumed(T.Assign)) // "=" Default
           def = parseExpOrType();
       }
       else
