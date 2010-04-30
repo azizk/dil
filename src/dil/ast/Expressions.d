@@ -849,6 +849,14 @@ class StringExpression : Expression
     this.type = new TypeSArray(charType, str.length);
   }
 
+  this(ubyte[] str, char kind)
+  {
+    Type t = Types.Char;
+    if (kind == 'w') t = Types.Wchar;
+    else if (kind == 'd') t = Types.Dchar;
+    this(str, t);
+  }
+
   this(char[] str)
   {
     this(cast(ubyte[])str, Types.Char);

@@ -110,7 +110,7 @@ override:
   D visit(ModuleDeclaration n)
   {
     printLoc(n);
-    put.format("Dies ist das Modul '{}'", n.moduleName.str);
+    put.format("Dies ist das Modul '{}'", n.moduleName.text);
     if (n.packages.length)
       put.format(" im Paket '{}'", n.getPackageName('.'));
     put(".").newline;
@@ -128,7 +128,7 @@ override:
   {
     printLoc(n);
     scope E = new EnteredClass(n);
-    put(indent).formatln("'{}' is eine Klasse mit den Eigenschaften:", n.name.str);
+    put(indent).formatln("'{}' is eine Klasse mit den Eigenschaften:", n.name.text);
     scope I = new Indent();
     n.decls && visitD(n.decls);
     return n;
@@ -138,7 +138,7 @@ override:
   {
     printLoc(n);
     scope E = new EnteredInterface(n);
-    put(indent).formatln("'{}' is ein Interface mit den Eigenschaften:", n.name.str);
+    put(indent).formatln("'{}' is ein Interface mit den Eigenschaften:", n.name.text);
     scope I = new Indent();
     n.decls && visitD(n.decls);
     return n;
@@ -148,7 +148,7 @@ override:
   {
     printLoc(n);
     scope E = new EnteredStruct(n);
-    put(indent).formatln("'{}' is eine Datenstruktur mit den Eigenschaften:", n.name.str);
+    put(indent).formatln("'{}' is eine Datenstruktur mit den Eigenschaften:", n.name.text);
     scope I = new Indent();
     n.decls && visitD(n.decls);
     return n;
@@ -158,7 +158,7 @@ override:
   {
     printLoc(n);
     scope E = new EnteredUnion(n);
-    put(indent).formatln("'{}' is eine Datenunion mit den Eigenschaften:", n.name.str);
+    put(indent).formatln("'{}' is eine Datenunion mit den Eigenschaften:", n.name.text);
     scope I = new Indent();
     n.decls && visitD(n.decls);
     return n;
@@ -176,7 +176,7 @@ override:
       was = "globale Variable";
     foreach (name; n.names)
     {
-      put(indent).format("'{}' ist eine {} des Typs: ", name.str, was);
+      put(indent).format("'{}' ist eine {} des Typs: ", name.text, was);
       if (n.typeNode)
         visitT(n.typeNode);
       else
@@ -197,7 +197,7 @@ override:
     else
       was = "Funktion";
     scope E = new EnteredFunction(n);
-    put(indent).format("'{}' ist eine {} ", n.name.str, was);
+    put(indent).format("'{}' ist eine {} ", n.name.text, was);
     if (n.params.length == 1)
       put("mit dem Argument "), visitN(n.params);
     else if (n.params.length > 1)
@@ -261,7 +261,7 @@ override:
 
   Node visit(Parameter n)
   {
-    put.format(`'{}' des Typs "`, n.name ? n.name.str : "unbenannt");
+    put.format(`'{}' des Typs "`, n.name ? n.name.text : "unbenannt");
     n.type && visitN(n.type);
     put(`"`);
     return n;

@@ -3844,35 +3844,43 @@ class Parser
       set(e, begin);
       return e;
     case T.String:
-      char[] str = token.str;
-      char postfix = token.pf;
+      char[] str = token.strval.str;
+      char postfix = token.strval.pf;
       nT();
+      if (token.kind == T.String)
+        str = str.dup; // Only copy when strings have to be appended.
+      // Concatenate adjacent string literals.
       while (token.kind == T.String)
       {
+        auto pf = token.strval.pf;
         /+if (postfix == 0)
-            postfix = token.pf;
+            postfix = pf;
         else+/
-        if (token.pf && token.pf != postfix)
+        if (pf && pf != postfix)
           error(token, MSG.StringPostfixMismatch);
         str.length = str.length - 1; // Exclude '\0'.
-        str ~= token.str;
+        str ~= token.strval.str;
         nT();
       }
-      switch (postfix)
+      assert(str[$-1] == 0);
+
+      ubyte[] bin_str = cast(ubyte[])str;
+      if (postfix == 'w')
       {
-      case 'w':
-        if (hasInvalidUTF8(str, begin))
-          goto default;
-        e = new StringExpression(dil.Unicode.toUTF16(str)); break;
-      case 'd':
-        if (hasInvalidUTF8(str, begin))
-          goto default;
-        e = new StringExpression(dil.Unicode.toUTF32(str)); break;
-      case 'c':
-      default:
-        // No checking done to allow for binary data.
-        e = new StringExpression(str); break;
+        if(!hasInvalidUTF8(str, begin))
+          bin_str = cast(ubyte[])dil.Unicode.toUTF16(str);
       }
+      else if (postfix == 'd')
+      {
+        if (!hasInvalidUTF8(str, begin))
+          bin_str = cast(ubyte[])dil.Unicode.toUTF32(str);
+      }
+      else
+      {
+        if (begin !is prevToken)
+          bin_str = cast(ubyte[])lexer.lookupString(str[0..$-1]).str;
+      }
+      e = new StringExpression(bin_str, postfix);
       break;
     case T.LBracket:
       Expression[] values;

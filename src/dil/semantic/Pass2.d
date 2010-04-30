@@ -302,7 +302,7 @@ override
       e.value = new IntExpression(e.specialToken.uint_, Types.Uint);
       break;
     case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
-      e.value = new StringExpression(e.specialToken.str);
+      e.value = new StringExpression(e.specialToken.strval.str);
       break;
     default:
       assert(0);

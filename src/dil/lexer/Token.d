@@ -34,6 +34,17 @@ struct Token
   char* start; /// Points to the first character of the token.
   char* end;   /// Points one character past the end of the token.
 
+  /// Represents the string value of a string literal.
+  struct StringValue
+  {
+    string str; /// Zero-terminated string. The length includes '\0'.
+    char pf;    /// Postfix: 'c', 'w', 'd'. '\0' for none.
+    version(D2)
+    Token* tok_str; /// Points to the contents of a token string stored as a
+                    /// doubly linked list. The last token is always '}' or
+                    /// EOF in case the string is not closed properly.
+  }
+
   /// Data associated with this token.
   /// TODO: move data structures out;
   /// use only pointers here to keep Token.sizeof small.
@@ -47,16 +58,7 @@ struct Token
       Token* tokLineNum; /// #line number
       Token* tokLineFilespec; /// #line number filespec
     }
-    /// The value of a string token.
-    struct
-    {
-      string str; /// Zero-terminated string. The length includes '\0'.
-      char pf;    /// Postfix: 'c', 'w', 'd'. '\0' for none.
-    version(D2)
-      Token* tok_str; /// Points to the contents of a token string stored as a
-                      /// doubly linked list. The last token is always '}' or
-                      /// EOF in case the string is not closed properly.
-    }
+    StringValue* strval; /// The value of a string token.
     Identifier* ident; /// For keywords and identifiers.
     dchar  dchar_;   /// A character value.
     long   long_;    /// A long integer value.
@@ -164,8 +166,8 @@ version(D2)
 {
   /// Returns true if this is a token string literal.
   bool isTokenStringLiteral()
-  {
-    return kind == TOK.String && tok_str !is null;
+  { // strval.tok_str !is null
+    return kind == TOK.String && *start == 'q' && start[1] == '{';
   }
 }
 

@@ -217,13 +217,14 @@ class Highlighter
         auto print = this.print = new FormatOut(Format, buffer);
         print("q{");
         // Traverse linked list and print tokens.
-        for (auto t = token.tok_str; t; t = t.next)
+        for (auto t = token.strval.tok_str; t; t = t.next)
         {
           t.ws && print(t.wsChars); // Print preceding whitespace.
           printToken(t);
         }
-        if (token.pf != 0)
-          print(token.pf); // Postfix character.
+        auto postfix = token.strval.pf;
+        if (postfix != 0)
+          print(postfix); // Postfix character.
         this.print = print_saved; // Restore.
         text = cast(char[])buffer.slice().dup; // Take a copy.
       }

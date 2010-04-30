@@ -117,33 +117,30 @@ class Lexer
   void finalizeSpecialToken(ref Token t)
   {
     assert(t.text[0..2] == "__");
+    char[] str;
     switch (t.kind)
     {
     case TOK.FILE:
-      t.str = this.filePaths.setPath;
+      str = this.filePaths.setPath.dup;
       break;
     case TOK.LINE:
       t.uint_ = this.errorLineNumber(this.lineNum);
       break;
-    case TOK.DATE,
-         TOK.TIME,
-         TOK.TIMESTAMP:
-      auto time_str = Time.toString();
+    case TOK.DATE, TOK.TIME, TOK.TIMESTAMP:
+      str = Time.toString();
       switch (t.kind)
       {
       case TOK.DATE:
-        time_str = Time.month_day(time_str) ~ ' ' ~ Time.year(time_str); break;
+        str = Time.month_day(str) ~ ' ' ~ Time.year(str); break;
       case TOK.TIME:
-        time_str = Time.time(time_str); break;
+        str = Time.time(str); break;
       case TOK.TIMESTAMP:
-        break; // time_str is the timestamp.
+        break; // str is the timestamp.
       default: assert(0);
       }
-      time_str ~= '\0'; // Terminate with a zero.
-      t.str = time_str;
       break;
     case TOK.VENDOR:
-      t.str = VENDOR;
+      str = VENDOR.dup;
       break;
     case TOK.VERSION:
       t.uint_ = VERSION_MAJOR*1000 + VERSION_MINOR;
@@ -151,6 +148,8 @@ class Lexer
     default:
       assert(0);
     }
+    if (str.length)
+      t.strval = lookupString(str);
   }
 
   /// Sets a new file path.
@@ -213,6 +212,41 @@ class Lexer
           return true;
     return false;
   }
+
+  // TODO: these tables must be moved into CompilationContext.
+  /// A collection of tables for various token values.
+  struct ValueTables
+  {
+    string[string] strings;
+    // TODO:
+    // Float[string] floats;
+    // ulong[ulong] ulongs;
+    // NewlineValue[] newlines;
+  }
+
+  static ValueTables tables;
+  alias Token.StringValue StringValue;
+
+  /// Looks a string up in the table.
+  /// Params:
+  ///   str = The string to be looked up, which is not zero-terminated.
+  StringValue* lookupString(char[] str)
+  {
+    auto pstr = str in tables.strings;
+    if (!pstr)
+    { // Insert a new string into the table.
+      auto new_str = str;
+      if (text.ptr <= str.ptr && str.ptr < end) // Inside the text?
+        new_str = new_str.dup; // A copy is needed.
+      new_str ~= '\0'; // Terminate with a zero.
+      pstr = &new_str;
+      tables.strings[str] = new_str;
+    }
+    auto sv = new StringValue;
+    sv.str = *pstr;
+    return sv;
+  }
+
 
   /// The main method which recognizes the characters that make up a token.
   ///
@@ -1069,10 +1103,12 @@ class Lexer
       case '\r':
         c = 0;
         if (p[1] == '\n')
-          ++p, ++c;
+          ++p, c = 1;
+        goto Lnewline;
       case '\n':
+        c = 0;
+      Lnewline:
         assert(isNewlineEnd(p));
-        c = (c == '\n') ? 0 : c;
         // Need to substract c to get to the start of the newline.
         if (p-c != prev) buffer ~= String(prev, p-c);
         buffer ~= '\n'; // Convert Newline to \n.
@@ -1082,26 +1118,26 @@ class Lexer
         break;
       case 0, _Z_:
         error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedString);
-        buffer ~= '\0';
         goto Lerr;
       default:
         if (!isascii(c) && isUnicodeNewlineChar(c = decodeUTF8(p)))
         {
           c = 2;
-          goto case '\n';
+          goto Lnewline;
         }
         ++p;
       }
     assert(*p == '"');
-    ++p; // Skip here to make room for '\0'.
-    if (this.p+1 == prev) // Is .dup the same as ~= here?
-      buffer = String(prev, p).dup;
+    auto str = String(prev, p);
+    if (buffer.length)
+      buffer ~= str; // Append previous string.
     else
-      buffer ~= String(prev, p); // Copy previous string.
-    buffer[$-1] = 0;
-    t.pf = scanPostfix(p);
+      buffer = str; // A slice from the text.
+    ++p; // Skip '"'.
+    auto strval = lookupString(buffer);
+    strval.pf = scanPostfix(p);
+    t.strval = strval;
   Lerr:
-    t.str = buffer;
     t.end = this.p = p;
     return;
   }
@@ -1122,9 +1158,8 @@ class Lexer
       else
         encodeUTF8(buffer, c);
     } while (*p == '\\')
-    buffer ~= 0;
+    t.strval = lookupString(buffer);
     t.kind = TOK.String;
-    t.str = buffer;
     t.end = p;
   }
 
@@ -1203,8 +1238,7 @@ class Lexer
       default:
         if (!isascii(c))
         {
-          c = decodeUTF8(p);
-          if (isUnicodeNewlineChar(c))
+          if (isUnicodeNewlineChar(c = decodeUTF8(p)))
             goto case '\n';
           encodeUTF8(buffer, c);
           continue;
@@ -1213,10 +1247,12 @@ class Lexer
       assert(isascii(c));
       buffer ~= c;
     }
+    assert(*p == '"' || *p == '`');
     ++p;
-    t.pf = scanPostfix(p);
+    auto strval = lookupString(buffer);
+    strval.pf = scanPostfix(p);
+    t.strval = strval;
   Lerr:
-    t.str = (buffer ~= '\0');
     t.end = this.p = p;
     return;
   }
@@ -1280,7 +1316,6 @@ class Lexer
         else if (isEOF(c))
         {
           error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedHexString);
-          t.pf = 0;
           goto Lerr;
         }
         else
@@ -1300,9 +1335,10 @@ class Lexer
       error(tokenLineNum, tokenLineBegin, t.start,
         MID.OddNumberOfDigitsInHexString);
     ++p;
-    t.pf = scanPostfix(p);
+    auto strval = lookupString(cast(string)buffer);
+    strval.pf = scanPostfix(p);
+    t.strval = strval;
   Lerr:
-    t.str = cast(string) (buffer ~= 0);
     t.end = this.p = p;
     return;
   }
@@ -1373,7 +1409,7 @@ class Lexer
       { c = *++p; }
       while (isident(c) || !isascii(c) && isUnicodeAlpha(p))
       // Store the identifier.
-      str_delim = idbegin[0..p-idbegin];
+      str_delim = String(idbegin, p);
       // Scan a newline.
       if (scanNewline(p))
         ++lineNum,
@@ -1462,14 +1498,15 @@ class Lexer
     assert(level == 0);
     ++p; // Skip closing delimiter.
   Lreturn2: // String delimiter.
+    auto strval = lookupString(buffer);
     if (*p == '"')
-      t.pf = scanPostfix((++p, p));
+      strval.pf = scanPostfix((++p, p));
     else
       error(p, MSG.ExpectedDblQuoteAfterDelim,
         (str_delim.length || encodeUTF8(str_delim, closing_delim), str_delim));
 
+    t.strval = strval;
   Lerr:
-    t.str = (buffer ~= '\0');
     t.end = this.p = p;
   } // version(D2)
   }
@@ -1496,6 +1533,7 @@ class Lexer
 
     ++p; ++p; // Skip q{
     char* str_begin = p, str_end = void;
+    Token* inner_tokens; // The tokens inside this string.
     // Set to true, if '\r', LS, PS, or multiline tokens are encountered.
     bool convertNewlines;
 
@@ -1519,7 +1557,7 @@ class Lexer
       case TOK.RBrace:
         if (--level == 0)
         {
-          t.tok_str = t.next;
+          inner_tokens = t.next;
           t.next = null;
           break Loop;
         }
@@ -1535,7 +1573,7 @@ class Lexer
       case TOK.EOF:
         error(tokenLineNum, tokenLineBegin, t.start,
           MSG.UnterminatedTokenString);
-        t.tok_str = t.next;
+        inner_tokens = t.next;
         t.next = new_t;
         break Loop;
       default:
@@ -1545,16 +1583,18 @@ class Lexer
     assert(new_t.kind == TOK.RBrace && t.next is null ||
            new_t.kind == TOK.EOF && t.next !is null);
 
+    char postfix;
     // new_t is "}" or EOF.
     if (new_t.kind == TOK.EOF)
       str_end = t.end = new_t.start;
     else
     {
       str_end = p-1;
-      t.pf = scanPostfix(p);
+      postfix = scanPostfix(p);
       t.end = p;
     }
-    auto buffer = str_begin[0..str_end-str_begin+1]; // +1 for '\0'.
+
+    auto buffer = String(str_begin, str_end);
     // Convert newlines to '\n'.
     if (convertNewlines)
     { // Copy the string to the buffer and convert the newlines.
@@ -1578,12 +1618,12 @@ class Lexer
           }
           *s++ = *q; // Copy current character.
         }
-      buffer.length = s - buffer.ptr +1; // +1 for '\0'.
+      buffer.length = s - buffer.ptr;
     }
-    else // Just duplicate the string, no conversion needed.
-      buffer = buffer.dup;
-    buffer[$-1] = 0;
-    t.str = buffer;
+    auto strval = lookupString(buffer);
+    strval.pf = postfix;
+    strval.tok_str = inner_tokens;
+    t.strval = strval;
 
     --inTokenString;
   } // version(D2)
@@ -1693,7 +1733,7 @@ class Lexer
           if (*p == ';')
           {
             // Pass entity excluding '&' and ';'.
-            c = entity2Unicode(begin[0..p - begin]);
+            c = entity2Unicode(String(begin, p));
             ++p; // Skip ;
             if (c != 0xFFFF)
               goto Lreturn; // Return valid escape value.
@@ -1731,7 +1771,7 @@ class Lexer
     err_msg = GetMsg(mid);
   Lerr2:
     if (!err_arg.length)
-      err_arg = ref_p[0 .. p - ref_p];
+      err_arg = String(ref_p, p);
     error(ref_p, err_msg, err_arg);
     ref_p = p; // Is at the beginning of the sequence. Update now.
     return REPLACEMENT_CHAR; // Error: return replacement character.
@@ -2265,7 +2305,7 @@ class Lexer
           isascii(*p) || decodeUTF8(p);
         }
         auto start = t.tokLineFilespec.start +1; // +1 skips '"'
-        t.tokLineFilespec.str = start[0 .. p - start];
+        t.tokLineFilespec.strval = lookupString(String(start, p));
         t.tokLineFilespec.end = p + 1;
         tokenEnd = p + 1;
         state = State.End;
@@ -2291,7 +2331,7 @@ class Lexer
     {
       this.lineNum_hline = this.lineNum - t.tokLineNum.uint_ + 1;
       if (t.tokLineFilespec)
-        newFilePath(t.tokLineFilespec.str);
+        newFilePath(t.tokLineFilespec.strval.str);
     }
 
     t.end = this.p = tokenEnd;
