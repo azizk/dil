@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
+# License: zlib/libpng
 
 def append2PATH(PATH, tmp_path):
   """ Appends the given argument to the PATH in the registry. """

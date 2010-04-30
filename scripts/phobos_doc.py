@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
+# License: zlib/libpng
 import os, re
 from path import Path
 from common import *

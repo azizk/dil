@@ -1,6 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
+# License: zlib/libpng
 #
 # This is the script that creates release packages for dil.
 #

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
+# License: zlib/libpng
 import os, shutil
 
 class Path(unicode):

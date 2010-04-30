@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
+# License: zlib/libpng
 import re
 
 def insert_svn_info(FILES, SRC_ROOT, DEST, rev_link, author_link, template=""):
