@@ -3475,12 +3475,14 @@ class Parser
       e = new EqualExpression(e, parseNext(), operator);
       break;
     case T.Not:
-      if (peekNext() != T.Is)
-        break;
-      nT();
-      // fall through
+      auto next = peekNext();
+      if (next == T.Is)
+      { nT(); goto case T.Is; }
+      else version(D2) if (next == T.In)
+      { nT(); goto case T.In; }
+      break;
     case T.Is:
-      nT();
+      skip(T.Is);
       e = new IdentityExpression(e, parseNext(), operator);
       break;
     case T.LessEqual, T.Less, T.GreaterEqual, T.Greater,
@@ -3490,7 +3492,7 @@ class Parser
       e = new RelExpression(e, parseNext(), operator);
       break;
     case T.In:
-      nT();
+      skip(T.In);
       e = new InExpression(e, parseNext(), operator);
       break;
     default:
