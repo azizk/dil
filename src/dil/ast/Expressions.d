@@ -741,6 +741,7 @@ class IntExpression : Expression
   {
     // Some semantic computation here.
     auto type = Types.Int; // Should be most common case.
+    ulong number = token.uint_;
     switch (token.kind)
     {
     // case TOK.Int32:
@@ -748,13 +749,13 @@ class IntExpression : Expression
     case TOK.Uint32:
       type = Types.Uint; break;
     case TOK.Int64:
-      type = Types.Long; break;
+      type = Types.Long; number = token.intval.ulong_; break;
     case TOK.Uint64:
-      type = Types.Ulong; break;
+      type = Types.Ulong; number = token.intval.ulong_; break;
     default:
       assert(token.kind == TOK.Int32);
     }
-    this(token.ulong_, type);
+    this(number, type);
   }
 
   mixin(copyMethod);

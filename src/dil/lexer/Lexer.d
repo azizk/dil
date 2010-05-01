@@ -219,13 +219,14 @@ class Lexer
   {
     string[string] strings; /// Maps strings to zero-terminated string values.
     Float[string] floats; /// Maps float strings to Float values.
+    IntegerValue*[ulong] ulongs; /// Maps a ulong to an IntegerValue.
     // TODO:
-    // ulong[ulong] ulongs;
     // NewlineValue[] newlines;
   }
 
   static ValueTables tables;
   alias Token.StringValue StringValue;
+  alias Token.IntegerValue IntegerValue;
 
   /// Looks a string up in the table.
   /// Params:
@@ -245,6 +246,22 @@ class Lexer
     auto sv = new StringValue;
     sv.str = *pstr;
     return sv;
+  }
+
+  /// Looks up a ulong in the table.
+  /// Params:
+  ///   num = The number value.
+  IntegerValue* lookupUlong(ulong num)
+  {
+    auto pintval = num in tables.ulongs;
+    if (!pintval)
+    { // Insert a new IntegerValue into the table.
+      auto iv = new IntegerValue;
+      iv.ulong_ = num;
+      pintval = &iv;
+      tables.ulongs[num] = iv;
+    }
+    return *pintval;
   }
 
   /// Looks up a Float in the table.
@@ -1816,7 +1833,7 @@ class Lexer
   void scanNumber(ref Token t)
   {
     auto p = this.p;
-    ulong ulong_;
+    ulong ulong_; // The integer value.
     bool overflow;
     bool isDecimal;
     size_t digits;
@@ -2052,6 +2069,7 @@ class Lexer
       }
 
     // Determine type of Integer.
+    TOK kind;
     switch (suffix)
     {
     case Suffix.None:
@@ -2059,38 +2077,47 @@ class Lexer
       {
         if (isDecimal)
           error(t.start, MID.OverflowDecimalSign);
-        t.kind = TOK.Uint64;
+        kind = TOK.Uint64;
       }
       else if (ulong_ & 0xFFFF_FFFF_0000_0000)
-        t.kind = TOK.Int64;
+        kind = TOK.Int64;
       else if (ulong_ & 0x8000_0000)
-        t.kind = isDecimal ? TOK.Int64 : TOK.Uint32;
+        kind = isDecimal ? TOK.Int64 : TOK.Uint32;
       else
-        t.kind = TOK.Int32;
+        kind = TOK.Int32;
       break;
     case Suffix.Unsigned:
       if (ulong_ & 0xFFFF_FFFF_0000_0000)
-        t.kind = TOK.Uint64;
+        kind = TOK.Uint64;
       else
-        t.kind = TOK.Uint32;
+        kind = TOK.Uint32;
       break;
     case Suffix.Long:
       if (ulong_ & 0x8000_0000_0000_0000)
       {
         if (isDecimal)
           error(t.start, MID.OverflowDecimalSign);
-        t.kind = TOK.Uint64;
+        kind = TOK.Uint64;
       }
       else
-        t.kind = TOK.Int64;
+        kind = TOK.Int64;
       break;
     case Suffix.Unsigned | Suffix.Long:
-      t.kind = TOK.Uint64;
+      kind = TOK.Uint64;
       break;
     default:
       assert(0);
     }
-    t.ulong_ = ulong_;
+    t.kind = kind;
+    if (kind == TOK.Int64 || kind == TOK.Uint64)
+    {
+      version(X86_64)
+      t.intval.ulong_ = ulong_;
+      else
+      t.intval = lookupUlong(ulong_);
+    }
+    else
+      t.uint_ = cast(uint)ulong_;
     t.end = this.p = p;
     return;
   LscanReal:

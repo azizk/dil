@@ -45,6 +45,13 @@ struct Token
                     /// EOF in case the string is not closed properly.
   }
 
+  /// Represents the long/ulong value of a number literal.
+  union IntegerValue
+  {
+    long  long_;    /// A long integer value.
+    ulong ulong_;   /// An unsigned long integer value.
+  }
+
   /// Data associated with this token.
   /// TODO: move data structures out;
   /// use only pointers here to keep Token.sizeof small.
@@ -60,11 +67,13 @@ struct Token
     }
     StringValue* strval; /// The value of a string token.
     Identifier* ident; /// For keywords and identifiers.
-    dchar  dchar_;   /// A character value.
-    long   long_;    /// A long integer value.
-    ulong  ulong_;   /// An unsigned long integer value.
+    dchar  dchar_;   /// Value of a character literal.
     int    int_;     /// An integer value.
     uint   uint_;    /// An unsigned integer value.
+    version(X86_64)
+    IntegerValue intval; /// Value of a number literal.
+    else
+    IntegerValue* intval; /// Value of a number literal.
     Float mpfloat;   /// A multiple precision float value.
   }
 
