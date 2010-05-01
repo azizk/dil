@@ -151,13 +151,13 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
       void printWS(char* start, char* end) {
         line ~= '"' ~ start[0 .. end - start] ~ `",`;
       }
-      auto num = token.tokLineNum;
+      auto num = token.hlval.lineNum;
       line ~= `"#line"`;
       if (num)
       { // Print whitespace between #line and number.
         printWS(token.start, num.start); // Prints "#line" as well.
         line ~= '"' ~ num.text ~ '"'; // Print the number.
-        if (auto filespec = token.tokLineFilespec)
+        if (auto filespec = token.hlval.lineFilespec)
         { // Print whitespace between number and filespec.
           printWS(num.end, filespec.start);
           line ~= '"' ~ escape_quotes(filespec.text) ~ '"';

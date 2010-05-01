@@ -52,30 +52,32 @@ struct Token
     ulong ulong_;   /// An unsigned long integer value.
   }
 
+  /// Represents the value of a "#line" token.
+  struct HashLineValue
+  {
+    Token* lineNum; /// #line number
+    Token* lineFilespec; /// #line number filespec
+  }
+
   /// Data associated with this token.
   /// TODO: move data structures out;
   /// use only pointers here to keep Token.sizeof small.
-  union
+  union /+TokenValue+/
   {
-    /// For newline tokens.
-    NewlineData newline;
-    /// For #line tokens.
-    struct
-    {
-      Token* tokLineNum; /// #line number
-      Token* tokLineFilespec; /// #line number filespec
-    }
+    NewlineData* newline; /// For newline tokens.
+    HashLineValue* hlval; /// Value of a #line token.
     StringValue* strval; /// The value of a string token.
     Identifier* ident; /// For keywords and identifiers.
-    dchar  dchar_;   /// Value of a character literal.
-    int    int_;     /// An integer value.
-    uint   uint_;    /// An unsigned integer value.
+    dchar  dchar_; /// Value of a character literal.
+    int    int_; /// An integer value.
+    uint   uint_; /// An unsigned integer value.
     version(X86_64)
     IntegerValue intval; /// Value of a number literal.
     else
     IntegerValue* intval; /// Value of a number literal.
-    Float mpfloat;   /// A multiple precision float value.
+    Float mpfloat; /// A multiple precision float value.
   }
+//   static assert(TokenValue.sizeof == (void*).sizeof);
 
   /// Returns the text of the token.
   string text()

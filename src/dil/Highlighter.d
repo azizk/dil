@@ -259,7 +259,7 @@ class Highlighter
         if (start != end) lineText ~= start[0 .. end - start];
       }
 
-      auto num = token.tokLineNum;
+      auto num = token.hlval.lineNum;
       if (num is null) // Malformed #line
         lineText = token.text;
       else
@@ -268,7 +268,7 @@ class Highlighter
         printWS(token.start, num.start); // Prints "#line" as well.
         lineText ~= Format(tags.Number, num.text); // Print the number.
 
-        if (auto filespec = token.tokLineFilespec)
+        if (auto filespec = token.hlval.lineFilespec)
         { // Print whitespace between number and filespec.
           printWS(num.end, filespec.start);
           lineText ~= Format(tags.Filespec, xml_escape(filespec.text));

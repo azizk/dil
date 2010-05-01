@@ -67,17 +67,19 @@ class Lexer
     // Initialize this.filePaths.
     newFilePath(this.srcText.filePath);
     // Add a newline as the first token after the head.
-    auto newline = new Token;
-    newline.kind = TOK.Newline;
-    newline.setWhitespaceFlag();
-    newline.start = newline.end = this.p;
-    newline.newline.filePaths = this.filePaths;
-    newline.newline.oriLineNum = 1;
-    newline.newline.setLineNum = 0;
+    auto nl_tok = new Token;
+    nl_tok.kind = TOK.Newline;
+    nl_tok.setWhitespaceFlag();
+    nl_tok.start = nl_tok.end = this.p;
+    auto nd = new NewlineData;
+    nl_tok.newline = nd;
+    nd.filePaths = this.filePaths;
+    nd.oriLineNum = 1;
+    nd.setLineNum = 0;
     // Link in.
-    this.token.next = newline;
-    newline.prev = this.token;
-    this.token = newline;
+    this.token.next = nl_tok;
+    nl_tok.prev = this.token;
+    this.token = nl_tok;
     scanShebang();
   }
 
@@ -333,7 +335,7 @@ class Lexer
         setLineBegin(p);
         kind = TOK.Newline;
         t.setWhitespaceFlag();
-        auto nl = &t.newline;
+        auto nl = t.newline = new NewlineData;
         nl.filePaths = this.filePaths;
         nl.oriLineNum = lineNum;
         nl.setLineNum = lineNum_hline;
@@ -984,7 +986,7 @@ class Lexer
     setLineBegin(p);
     kind = TOK.Newline;
     t.setWhitespaceFlag();
-    auto nl = &t.newline;
+    auto nl = t.newline = new NewlineData;
     nl.filePaths = this.filePaths;
     nl.oriLineNum = lineNum;
     nl.setLineNum = lineNum_hline;
@@ -2277,6 +2279,7 @@ class Lexer
     assert(*p == '#');
     t.kind = TOK.HashLine;
     t.setWhitespaceFlag();
+    auto hlval = t.hlval = new Token.HashLineValue;
 
     MID mid;
     char* errorAtColumn = p;
@@ -2310,7 +2313,7 @@ class Lexer
           goto Lerr;
         }
         auto newtok = new Token;
-        t.tokLineNum = newtok;
+        hlval.lineNum = newtok;
         this.p = p;
         scan(*newtok);
         tokenEnd = p = this.p;
@@ -2331,25 +2334,26 @@ class Lexer
         //   mid = MID.ExpectedFilespec;
         //   goto Lerr;
         // }
-        t.tokLineFilespec = new Token;
-        t.tokLineFilespec.start = p;
-        t.tokLineFilespec.kind = TOK.Filespec;
-        t.tokLineFilespec.setWhitespaceFlag();
+        auto fs = hlval.lineFilespec = new Token;
+        fs = new Token;
+        fs.start = p;
+        fs.kind = TOK.Filespec;
+        fs.setWhitespaceFlag();
         while (*++p != '"')
         {
           if (isEndOfLine(p))
           {
-            errorAtColumn = t.tokLineFilespec.start;
+            errorAtColumn = fs.start;
             mid = MID.UnterminatedFilespec;
-            t.tokLineFilespec.end = p;
+            fs.end = p;
             tokenEnd = p;
             goto Lerr;
           }
           isascii(*p) || decodeUTF8(p);
         }
-        auto start = t.tokLineFilespec.start +1; // +1 skips '"'
-        t.tokLineFilespec.strval = lookupString(String(start, p));
-        t.tokLineFilespec.end = p + 1;
+        auto start = fs.start +1; // +1 skips '"'
+        fs.strval = lookupString(String(start, p));
+        fs.end = p + 1;
         tokenEnd = p + 1;
         state = State.End;
       }
@@ -2370,11 +2374,11 @@ class Lexer
     }
 
     // Evaluate #line only when not in token string.
-    if (!inTokenString && t.tokLineNum)
+    if (!inTokenString && hlval.lineNum)
     {
-      this.lineNum_hline = this.lineNum - t.tokLineNum.uint_ + 1;
-      if (t.tokLineFilespec)
-        newFilePath(t.tokLineFilespec.strval.str);
+      this.lineNum_hline = this.lineNum - hlval.lineNum.uint_ + 1;
+      if (hlval.lineFilespec)
+        newFilePath(hlval.lineFilespec.strval.str);
     }
 
     t.end = this.p = tokenEnd;
