@@ -217,9 +217,9 @@ class Lexer
   /// A collection of tables for various token values.
   struct ValueTables
   {
-    string[string] strings;
+    string[string] strings; /// Maps strings to zero-terminated string values.
+    Float[string] floats; /// Maps float strings to Float values.
     // TODO:
-    // Float[string] floats;
     // ulong[ulong] ulongs;
     // NewlineValue[] newlines;
   }
@@ -245,6 +245,31 @@ class Lexer
     auto sv = new StringValue;
     sv.str = *pstr;
     return sv;
+  }
+
+  /// Looks up a Float in the table.
+  /// Params:
+  ///   str = The zero-terminated string of the float number.
+  Float lookupFloat(string str)
+  {
+    assert(str.length && str[$-1] == 0);
+    auto pFloat = str in tables.floats;
+    if (!pFloat)
+    { // Insert a new Float into the table.
+      mpfr_t mpfloat;
+      mpfr_init(&mpfloat);
+      // Convert to multiprecision float.
+      int res = mpfr_strtofr(&mpfloat, str.ptr, null, 0, Float.RND);
+      // if (res == 0) // Exact precision.
+      // else if (res < 0) // Lower precision.
+      // {}
+      // else /*if (res > 0)*/ // Higher precision.
+      // {}
+      auto f = new Float(&mpfloat);
+      pFloat = &f;
+      tables.floats[str] = f;
+    }
+    return *pFloat;
   }
 
 
@@ -2194,15 +2219,7 @@ class Lexer
       ++p, kind = TOK.Float80;
     else
       kind = TOK.Float64;
-    // Convert to multiprecision float.
-    mpfr_t mpfloat;
-    mpfr_init(&mpfloat);
-    int res = mpfr_strtofr(&mpfloat, buffer.ptr, null, 0, Float.RND);
-    // if (res == 0) // Exact precision.
-    // else if (res < 0) // Lower precision.
-    // {}
-    // else /*if (res > 0)*/ // Higher precision.
-    // {}
+
     if (*p == 'i')
     {
       ++p;
@@ -2212,7 +2229,7 @@ class Lexer
     }
     // TODO: test for overflow/underflow according to target platform.
     //       CompilationContext must be passed to Lexer for this.
-    auto f = new Float(&mpfloat);
+    auto f = lookupFloat(buffer);
     if (f.isPInf())
       error(t.start, MID.OverflowFloatNumber);
     // else if (f.isNInf())
