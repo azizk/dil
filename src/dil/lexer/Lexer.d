@@ -1123,8 +1123,8 @@ class Lexer
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
     t.kind = TOK.String;
-    char[] buffer;
-    char* prev = ++p; // Skip '"'. prev is used to copy chunks to buffer.
+    char[] value;
+    char* prev = ++p; // Skip '"'. prev is used to copy chunks to value.
     uint c;
   Loop:
     while (1)
@@ -1133,14 +1133,14 @@ class Lexer
       case '"':
         break Loop;
       case '\\':
-        if (prev != p) buffer ~= String(prev, p);
+        if (prev != p) value ~= String(prev, p);
         bool isBinary;
         c = scanEscapeSequence(p, isBinary);
         prev = p;
         if (isascii(c) || isBinary)
-          buffer ~= c;
+          value ~= c;
         else
-          encodeUTF8(buffer, c);
+          encodeUTF8(value, c);
         break;
       case '\r':
         c = 0;
@@ -1149,8 +1149,8 @@ class Lexer
         // goto LconvertNewline;
       LconvertNewline:
         // Need to substract c to get to the start of the newline.
-        buffer ~= String(prev, p-c + 1); // +1 is for '\n'.
-        buffer[$-1] = '\n'; // Convert Newline to '\n'.
+        value ~= String(prev, p-c + 1); // +1 is for '\n'.
+        value[$-1] = '\n'; // Convert Newline to '\n'.
         prev = p+1;
       case '\n':
         assert(isNewlineEnd(p));
@@ -1170,12 +1170,12 @@ class Lexer
       }
     assert(*p == '"');
     auto str = String(prev, p);
-    if (buffer.length)
-      buffer ~= str; // Append previous string.
+    if (value.length)
+      value ~= str; // Append previous string.
     else
-      buffer = str; // A slice from the text.
+      value = str; // A slice from the text.
     ++p; // Skip '"'.
-    auto strval = lookupString(buffer);
+    auto strval = lookupString(value);
     strval.pf = scanPostfix(p);
     t.strval = strval;
   Lerr:
@@ -1189,17 +1189,17 @@ class Lexer
   void scanEscapeStringLiteral(ref Token t)
   {
     assert(*p == '\\');
-    char[] buffer;
+    char[] value;
     do
     {
       bool isBinary;
       auto c = scanEscapeSequence(p, isBinary);
       if (isascii(c) || isBinary)
-        buffer ~= c;
+        value ~= c;
       else
-        encodeUTF8(buffer, c);
+        encodeUTF8(value, c);
     } while (*p == '\\')
-    t.strval = lookupString(buffer);
+    t.strval = lookupString(value);
     t.kind = TOK.String;
     t.end = p;
   }
@@ -1249,7 +1249,7 @@ class Lexer
     auto tokenLineBegin = lineBegin;
     t.kind = TOK.String;
     uint delim = *p;
-    char[] buffer;
+    char[] value;
     uint c;
   Loop:
     while (1)
@@ -1281,16 +1281,16 @@ class Lexer
         {
           if (isUnicodeNewlineChar(c = decodeUTF8(p)))
             goto case '\n';
-          encodeUTF8(buffer, c);
+          encodeUTF8(value, c);
           continue;
         }
       }
       assert(isascii(c));
-      buffer ~= c;
+      value ~= c;
     }
     assert(*p == '"' || *p == '`');
     ++p;
-    auto strval = lookupString(buffer);
+    auto strval = lookupString(value);
     strval.pf = scanPostfix(p);
     t.strval = strval;
   Lerr:
@@ -1311,7 +1311,7 @@ class Lexer
     auto tokenLineBegin = lineBegin;
 
     uint c;
-    ubyte[] buffer;
+    ubyte[] value;
     ubyte h; // hex number
     uint n; // number of hex digits
 
@@ -1345,7 +1345,7 @@ class Lexer
           {
             h <<= 4;
             h |= c;
-            buffer ~= h;
+            value ~= h;
           }
           else
             h = cast(ubyte)c;
@@ -1376,7 +1376,7 @@ class Lexer
       error(tokenLineNum, tokenLineBegin, t.start,
         MID.OddNumberOfDigitsInHexString);
     ++p;
-    auto strval = lookupString(cast(string)buffer);
+    auto strval = lookupString(cast(string)value);
     strval.pf = scanPostfix(p);
     t.strval = strval;
   Lerr:
@@ -1402,7 +1402,7 @@ class Lexer
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
 
-    char[] buffer;
+    char[] value;
     dchar nesting_delim, // '[', '(', '<', '{', or 0 if no nesting delimiter.
           closing_delim; // Will be ']', ')', '>', '},
                          // the first character of an identifier or
@@ -1467,8 +1467,8 @@ class Lexer
     bool checkStringDelim(char* p)
     { // Returns true if p points to the closing string delimiter.
       assert(str_delim.length != 0, ""~*p);
-      return buffer.length &&
-        buffer[$-1] == '\n' && // Last copied character must be '\n'.
+      return value.length &&
+        value[$-1] == '\n' && // Last copied character must be '\n'.
         end-p >= str_delim.length && // Check remaining length.
         p[0..str_delim.length] == str_delim; // Compare.
     }
@@ -1513,7 +1513,7 @@ class Lexer
               --level;
               goto Lreturn;
             }
-          encodeUTF8(buffer, c);
+          encodeUTF8(value, c);
           continue;
         }
         else
@@ -1532,14 +1532,14 @@ class Lexer
               goto Lreturn;
       }
       assert(isascii(c));
-      buffer ~= c;
+      value ~= c;
     }
   Lreturn: // Character delimiter.
     assert(c == closing_delim);
     assert(level == 0);
     ++p; // Skip closing delimiter.
   Lreturn2: // String delimiter.
-    auto strval = lookupString(buffer);
+    auto strval = lookupString(value);
     if (*p == '"')
       strval.pf = scanPostfix((++p, p));
     else
@@ -1635,12 +1635,12 @@ class Lexer
       t.end = p;
     }
 
-    auto buffer = String(str_begin, str_end);
+    auto value = String(str_begin, str_end);
     // Convert newlines to '\n'.
     if (convertNewlines)
-    { // Copy the string to the buffer and convert the newlines.
-      buffer = new char[buffer.length];
-      auto q = str_begin, s = buffer.ptr;
+    { // Copy the value and convert the newlines.
+      value = new char[value.length];
+      auto q = str_begin, s = value.ptr;
       for (; q < str_end; ++q)
         switch (*q)
         {
@@ -1659,9 +1659,9 @@ class Lexer
           }
           *s++ = *q; // Copy current character.
         }
-      buffer.length = s - buffer.ptr;
+      value.length = s - value.ptr;
     }
-    auto strval = lookupString(buffer);
+    auto strval = lookupString(value);
     strval.pf = postfix;
     strval.tok_str = inner_tokens;
     t.strval = strval;
@@ -2232,11 +2232,11 @@ class Lexer
   /// Sets the value of the token.
   /// Params:
   ///   t = receives the value.
-  ///   buffer = the well-formed float string.
-  void finalizeFloat(ref Token t, string buffer)
+  ///   float_string = the well-formed float string.
+  void finalizeFloat(ref Token t, string float_string)
   {
     auto p = this.p;
-    assert(buffer.length && buffer[$-1] == 0);
+    assert(float_string.length && float_string[$-1] == 0);
     // Finally check suffixes.
     TOK kind = void;
     if (*p == 'f' || *p == 'F')
@@ -2255,7 +2255,7 @@ class Lexer
     }
     // TODO: test for overflow/underflow according to target platform.
     //       CompilationContext must be passed to Lexer for this.
-    auto f = lookupFloat(buffer);
+    auto f = lookupFloat(float_string);
     if (f.isPInf())
       error(t.start, MID.OverflowFloatNumber);
     // else if (f.isNInf())
