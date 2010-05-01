@@ -1146,17 +1146,16 @@ class Lexer
         c = 0;
         if (p[1] == '\n')
           ++p, c = 1;
-        goto Lnewline;
-      case '\n':
-        c = 0;
-      Lnewline:
-        assert(isNewlineEnd(p));
+        // goto LconvertNewline;
+      LconvertNewline:
         // Need to substract c to get to the start of the newline.
-        if (p-c != prev) buffer ~= String(prev, p-c);
-        buffer ~= '\n'; // Convert Newline to \n.
+        buffer ~= String(prev, p-c + 1); // +1 is for '\n'.
+        buffer[$-1] = '\n'; // Convert Newline to '\n'.
+        prev = p+1;
+      case '\n':
+        assert(isNewlineEnd(p));
         ++lineNum;
         setLineBegin(++p);
-        prev = p;
         break;
       case 0, _Z_:
         error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedString);
@@ -1165,7 +1164,7 @@ class Lexer
         if (!isascii(c) && isUnicodeNewlineChar(c = decodeUTF8(p)))
         {
           c = 2;
-          goto Lnewline;
+          goto LconvertNewline;
         }
         ++p;
       }
