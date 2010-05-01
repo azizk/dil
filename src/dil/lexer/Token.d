@@ -38,7 +38,7 @@ struct Token
   struct StringValue
   {
     string str; /// Zero-terminated string. The length includes '\0'.
-    char pf;    /// Postfix: 'c', 'w', 'd'. '\0' for none.
+    char pf = 0;    /// Postfix: 'c', 'w', 'd'. '\0' for none.
     version(D2)
     Token* tok_str; /// Points to the contents of a token string stored as a
                     /// doubly linked list. The last token is always '}' or
@@ -76,6 +76,7 @@ struct Token
     else
     IntegerValue* intval; /// Value of a number literal.
     Float mpfloat; /// A multiple precision float value.
+    void* pvoid; /// Associate arbitrary data with this token.
   }
 //   static assert(TokenValue.sizeof == (void*).sizeof);
 
