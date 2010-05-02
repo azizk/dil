@@ -208,7 +208,7 @@ class Highlighter
     case TOK.String:
       auto text = token.text;
       assert(text.length);
-      if (text.length > 1 && text[1] == '{')
+      if (text.length > 1 && text[0] == 'q' && text[1] == '{')
       {
       version(D2)
       {
