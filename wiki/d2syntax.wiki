@@ -1,0 +1,27 @@
+#summary Differences of syntax between D1 and D2.
+
+= Differences =
+This is a list of syntactical changes from D1 to D2:
+  * Delimited and token [http://www.digitalmars.com/d/2.0/lex.html#StringLiteral string literals].
+  * [http://www.digitalmars.com/d/2.0/statement.html#ForeachRangeStatement ForeachRangeStatement].
+  * Optional [http://www.digitalmars.com/d/2.0/expression.html#IsExpression TemplateParameterList in IsExpression].
+  * const and immutable in !IsExpressions.
+  * [http://www.digitalmars.com/d/2.0/template.html#TemplateThisParameter TemplateThisParameter].
+  * Cast expressions: `cast()` (cast to mutable), `cast(const)`, `cast(immutable)` and `cast(shared)`.
+  * Not-in expression: `x !in assocArray`
+  * Type constructors: `const(Type)`, immutable(Type)` and shared(Type)`.
+  * Const qualifiers: `const int*` is the same as `const(int*)`.
+  * `@` attributes: @disable, @property, @safe, @system and @trusted.
+  * const, immutable and other attributes after the parameter list of a function (C++ style.)
+  * `typeof(return)`.
+  * Traits expressions: `__traits(Identifier)` and `__traits(Identifier, TemplateArguments)`.
+  * const/invariant/final/scope/static as storage classes in parameter lists (e.g. `void func(ref const Foo f);`).
+  * invariant as a storage class for declarations (e.g. `invariant Foo f;`).
+  * The identifier `__EOF__` is interpreted as the end of file.
+  * [http://www.digitalmars.com/d/2.0/template.html#Constraint Template Constraints].
+  * `auto` return type for [http://www.digitalmars.com/d/2.0/template.html#function-templates Function Templates].
+  * Modified syntax for [http://www.digitalmars.com/d/2.0/enum.html Enums] (manifest constants.)
+  * !CaseRangeStatement: `case m: .. case n:`
+  * Single template argument syntax: `something!int` is the same as `something!(int)`.
+  * `mixin template` [http://www.digitalmars.com/d/2.0/template-mixin.html declarations].
+  * Expressions in !TemplateAliasParameter: `template cmp(alias Pred : "specialization" = "default value" ) {...}`
