@@ -84,8 +84,8 @@ abstract class DDocEmitter : DefaultVisitor
     auto lexer = modul.parser.lexer;
     symbolTree[""] = new DocSymbol(modul.moduleName, modul.getFQN(), K.Module,
       null,
-      lexer.firstToken().getRealLocation(),
-      lexer.tail.getRealLocation()
+      locationOf(lexer.firstToken()),
+      locationOf(lexer.tail)
     ); // Root symbol.
 
     if (auto d = modul.moduleDecl)
@@ -100,12 +100,18 @@ abstract class DDocEmitter : DefaultVisitor
     return text;
   }
 
+  /// Returns the location of t.
+  Location locationOf(Token* t)
+  {
+    return t.getRealLocation(modul.filePath);
+  }
+
   /// Reports an undocumented symbol.
   void reportUndocumented()
   {
     if (reportDiag is null)
       return;
-    auto loc = currentDecl.begin.getRealLocation();
+    auto loc = locationOf(currentDecl.begin);
     loc.setFilePath(modul.getFQN());
     auto kind = DDocProblem.Kind.UndocumentedSymbol;
     reportDiag ~= new DDocProblem(loc, kind, MSG.UndocumentedSymbol);
@@ -116,7 +122,7 @@ abstract class DDocEmitter : DefaultVisitor
   {
     if (reportDiag is null || !this.cmnt.isEmpty())
       return;
-    auto loc = currentDecl.begin.getRealLocation();
+    auto loc = locationOf(currentDecl.begin);
     loc.setFilePath(modul.getFQN());
     auto kind = DDocProblem.Kind.EmptyComment;
     reportDiag ~= new DDocProblem(loc, kind, MSG.EmptyDDocComment);
@@ -159,7 +165,7 @@ abstract class DDocEmitter : DefaultVisitor
         paramsSection = s;
     if (paramsSection is null)
     {
-      auto loc = paramsBegin.getRealLocation();
+      auto loc = locationOf(paramsBegin);
       loc.setFilePath(modul.getFQN());
       auto kind = DDocProblem.Kind.NoParamsSection;
       reportDiag ~= new DDocProblem(loc, kind, MSG.MissingParamsSection);
@@ -173,7 +179,7 @@ abstract class DDocEmitter : DefaultVisitor
     foreach (param; params) // Find undocumented parameters.
       if (!(param.ident.str in documentedParams))
       {
-        auto loc = param.getRealLocation();
+        auto loc = locationOf(param);
         loc.setFilePath(modul.getFQN());
         auto kind = DDocProblem.Kind.UndocumentedParam;
         auto msg = Format(MSG.MissingParamsSection, param);
@@ -717,8 +723,8 @@ abstract class DDocEmitter : DefaultVisitor
   {
     auto kindStr = DocSymbol.kindIDToStr[kind];
     auto fqn = getSymbolFQN(name);
-    auto loc = d.begin.getRealLocation();
-    auto loc_end = d.end.getRealLocation();
+    auto loc = locationOf(d.begin);
+    auto loc_end = locationOf(d.end);
     storeAttributes(d);
     addSymbol(name, fqn.dup, kind, loc, loc_end);
     currentSymbolParams = Format("{}, {}, {}, {}, {}",

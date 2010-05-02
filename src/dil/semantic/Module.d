@@ -106,7 +106,7 @@ class Module : ScopeSymbol
       auto str = Path(filePath).name(); // E.g.: Node
       if (!Lexer.isValidUnreservedIdentifier(str))
       {
-        auto location = this.firstToken().getErrorLocation();
+        auto location = this.firstToken().getErrorLocation(filePath());
         auto msg = Format(MSG.InvalidModuleName, str);
         diag ~= new LexerError(location, msg);
         str = IdTable.genModuleID().str;

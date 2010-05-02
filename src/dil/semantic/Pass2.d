@@ -72,7 +72,7 @@ class SemanticPass2 : DefaultVisitor
   /// Creates an error report.
   void error(Token* token, char[] formatMsg, ...)
   {
-    auto location = token.getErrorLocation();
+    auto location = token.getErrorLocation(modul.filePath());
     auto msg = Format(_arguments, _argptr, formatMsg);
     modul.diag ~= new SemanticError(location, msg);
   }
@@ -181,7 +181,7 @@ override
       }
       else
       { // Parse the declarations in the string.
-        auto loc = md.begin.getErrorLocation();
+        auto loc = md.begin.getErrorLocation(modul.filePath());
         auto filePath = loc.filePath;
         auto sourceText = new SourceText(filePath, stringExpr.getString());
         auto parser = new Parser(sourceText, modul.diag);
@@ -390,7 +390,7 @@ override
      error(me.begin, MSG.MixinArgumentMustBeString);
     else
     {
-      auto loc = me.begin.getErrorLocation();
+      auto loc = me.begin.getErrorLocation(modul.filePath());
       auto filePath = loc.filePath;
       auto sourceText = new SourceText(filePath, stringExpr.getString());
       auto parser = new Parser(sourceText, modul.diag);

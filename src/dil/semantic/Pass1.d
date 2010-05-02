@@ -136,7 +136,7 @@ class SemanticPass1 : Visitor
   /// Reports an error: new symbol s1 conflicts with existing symbol s2.
   void reportSymbolConflict(Symbol s1, Symbol s2, Identifier* name)
   {
-    auto loc = s2.node.begin.getErrorLocation();
+    auto loc = s2.node.begin.getErrorLocation(modul.filePath());
     auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
     error(s1.node.begin, MSG.DeclConflictsWithDecl, name.str, locString);
   }
@@ -146,7 +146,7 @@ class SemanticPass1 : Visitor
   {
     if (!modul.diag)
       return;
-    auto location = token.getErrorLocation();
+    auto location = token.getErrorLocation(modul.filePath());
     auto msg = Format(_arguments, _argptr, formatMsg);
     modul.diag ~= new SemanticError(location, msg);
   }

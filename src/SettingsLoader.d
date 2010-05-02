@@ -41,7 +41,7 @@ abstract class SettingsLoader
   ///   formatMsg = error message.
   void error(Token* token, char[] formatMsg, ...)
   {
-    auto location = token.getErrorLocation();
+    auto location = token.getErrorLocation(mod.filePath);
     auto msg = Format(_arguments, _argptr, formatMsg);
     diag ~= new SemanticError(location, msg);
   }

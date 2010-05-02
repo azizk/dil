@@ -40,11 +40,10 @@ class Lexer
   LexerError[] errors;
   /// Always points to the first character of the current line.
   char* lineBegin;
-  uint lineNum = 1;   /// Current, actual source text line number.
-  uint lineNum_hline; /// Line number set by #line.
+  uint lineNum; /// Current, actual source text line number.
   uint inTokenString; /// > 0 if inside q{ }
   /// Holds the original file path and the modified one (by #line.)
-  NewlineData.FilePaths* filePaths;
+  Token.HashLineInfo* hlinfo; /// Info set by "#line".
 
   /// Constructs a Lexer object.
   /// Params:
@@ -59,27 +58,24 @@ class Lexer
     this.p = text.ptr;
     this.end = this.p + text.length;
     this.lineBegin = this.p;
+    this.lineNum = 1;
 
     this.head = new Token;
     this.head.kind = TOK.HEAD;
     this.head.start = this.head.end = this.p;
     this.token = this.head;
-    // Initialize this.filePaths.
-    newFilePath(this.srcText.filePath);
+
     // Add a newline as the first token after the head.
     auto nl_tok = new Token;
     nl_tok.kind = TOK.Newline;
     nl_tok.setWhitespaceFlag();
     nl_tok.start = nl_tok.end = this.p;
-    auto nd = new NewlineData;
-    nl_tok.newline = nd;
-    nd.filePaths = this.filePaths;
-    nd.oriLineNum = 1;
-    nd.setLineNum = 0;
+    nl_tok.nlval = lookupNewline();
     // Link in.
     this.token.next = nl_tok;
     nl_tok.prev = this.token;
     this.token = nl_tok;
+
     scanShebang();
   }
 
@@ -123,7 +119,7 @@ class Lexer
     switch (t.kind)
     {
     case TOK.FILE:
-      str = this.filePaths.setPath.dup;
+      str = errorFilePath().dup;
       break;
     case TOK.LINE:
       t.uint_ = this.errorLineNumber(this.lineNum);
@@ -152,15 +148,6 @@ class Lexer
     }
     if (str.length)
       t.strval = lookupString(str);
-  }
-
-  /// Sets a new file path.
-  void newFilePath(char[] newPath)
-  {
-    auto paths = new NewlineData.FilePaths;
-    paths.oriPath = this.srcText.filePath;
-    paths.setPath = newPath;
-    this.filePaths = paths;
   }
 
   private void setLineBegin(char* p)
@@ -222,13 +209,15 @@ class Lexer
     string[string] strings; /// Maps strings to zero-terminated string values.
     Float[string] floats; /// Maps float strings to Float values.
     IntegerValue*[ulong] ulongs; /// Maps a ulong to an IntegerValue.
-    // TODO:
-    // NewlineValue[] newlines;
+    /// A list of newline values.
+    /// Only instances, where 'hlinfo' is null, are kept here.
+    NewlineValue*[] newlines;
   }
 
   static ValueTables tables;
   alias Token.StringValue StringValue;
   alias Token.IntegerValue IntegerValue;
+  alias Token.NewlineValue NewlineValue;
 
   /// Looks a string up in the table.
   /// Params:
@@ -291,6 +280,35 @@ class Lexer
     return *pFloat;
   }
 
+  /// Looks up a newline value.
+  NewlineValue* lookupNewline()
+  {
+    uint linnum = this.lineNum;
+    if (hlinfo)
+    { // Don't insert into the table, when '#line' tokens are in the text.
+      // This could be optimised with another table.
+      auto nl = new NewlineValue;
+      nl.lineNum = linnum;
+      auto hlinfo = nl.hlinfo = new Token.HashLineInfo;
+      *hlinfo = *this.hlinfo;
+      return nl;
+    }
+
+    auto newlines = tables.newlines;
+    assert(linnum != 0);
+    auto i = linnum - 1;
+    if (i >= newlines.length)
+      (tables.newlines.length = linnum),
+      (newlines = tables.newlines);
+    auto nl = newlines[i];
+    if (!nl)
+    { // Insert a new NewlineValue.
+      newlines[i] = nl = new NewlineValue;
+      nl.lineNum = linnum;
+    }
+    return nl;
+  }
+
 
   /// The main method which recognizes the characters that make up a token.
   ///
@@ -335,10 +353,7 @@ class Lexer
         setLineBegin(p);
         kind = TOK.Newline;
         t.setWhitespaceFlag();
-        auto nl = t.newline = new NewlineData;
-        nl.filePaths = this.filePaths;
-        nl.oriLineNum = lineNum;
-        nl.setLineNum = lineNum_hline;
+        t.nlval = lookupNewline();
         goto Lreturn;
       default:
         if (isUnicodeNewline(p))
@@ -986,10 +1001,7 @@ class Lexer
     setLineBegin(p);
     kind = TOK.Newline;
     t.setWhitespaceFlag();
-    auto nl = t.newline = new NewlineData;
-    nl.filePaths = this.filePaths;
-    nl.oriLineNum = lineNum;
-    nl.setLineNum = lineNum_hline;
+    t.nlval = lookupNewline();
     t.kind = kind;
     t.end = this.p = p;
     return;
@@ -1567,8 +1579,7 @@ class Lexer
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
 
-    // A guard against changes to particular members:
-    // this.lineNum_hline and this.errorPath
+    // A guard against changes to 'this.hlinfo'.
     ++inTokenString;
 
     uint lineNum = this.lineNum;
@@ -2334,8 +2345,7 @@ class Lexer
         //   mid = MID.ExpectedFilespec;
         //   goto Lerr;
         // }
-        auto fs = hlval.lineFilespec = new Token;
-        fs = new Token;
+        auto fs = hlval.filespec = new Token;
         fs.start = p;
         fs.kind = TOK.Filespec;
         fs.setWhitespaceFlag();
@@ -2352,9 +2362,10 @@ class Lexer
           isascii(*p) || decodeUTF8(p);
         }
         auto start = fs.start +1; // +1 skips '"'
-        fs.strval = lookupString(String(start, p));
-        fs.end = p + 1;
-        tokenEnd = p + 1;
+        auto strval = new StringValue;
+        strval.str = String(start, p); // No need to zero-terminate.
+        fs.strval = strval;
+        fs.end = tokenEnd = p + 1;
         state = State.End;
       }
       else/+ if (state == State.End)+/
@@ -2376,9 +2387,11 @@ class Lexer
     // Evaluate #line only when not in token string.
     if (!inTokenString && hlval.lineNum)
     {
-      this.lineNum_hline = this.lineNum - hlval.lineNum.uint_ + 1;
-      if (hlval.lineFilespec)
-        newFilePath(hlval.lineFilespec.strval.str);
+      if (!hlinfo)
+        hlinfo = new Token.HashLineInfo;
+      hlinfo.setLineNum(this.lineNum, hlval.lineNum.uint_);
+      if (hlval.filespec)
+        hlinfo.path = hlval.filespec.strval.str;
     }
 
     t.end = this.p = tokenEnd;
@@ -2413,7 +2426,15 @@ class Lexer
   /// Returns the error line number.
   uint errorLineNumber(uint lineNum)
   {
-    return lineNum - this.lineNum_hline;
+    if (hlinfo)
+      lineNum -= hlinfo.lineNum;
+    return lineNum;
+  }
+
+  /// Returns the file path for error messages.
+  string errorFilePath()
+  {
+    return hlinfo ? hlinfo.path : srcText.filePath;
   }
 
   /// Forwards error parameters.
@@ -2450,7 +2471,7 @@ class Lexer
               TypeInfo[] _arguments, va_list _argptr)
   {
     lineNum = this.errorLineNumber(lineNum);
-    auto errorPath = this.filePaths.setPath;
+    auto errorPath = errorFilePath();
     auto location = new Location(errorPath, lineNum, lineBegin, columnPos);
     msg = Format(_arguments, _argptr, msg);
     auto error = new LexerError(location, msg);

@@ -102,7 +102,7 @@ class GermanTranslator : DefaultVisitor
   /// Prints the location of a node: @(lin,col)
   void printLoc(Node node)
   {
-    auto loc = node.begin.getRealLocation();
+    auto loc = node.begin.getRealLocation("no_filepath");
     put(indent).formatln("@({},{})",/+ loc.filePath,+/ loc.lineNum, loc.colNum);
   }
 

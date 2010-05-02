@@ -4909,7 +4909,7 @@ class Parser
     assert(opening !is null);
     if (!consumed(closing))
     {
-      auto loc = opening.getRealLocation();
+      auto loc = opening.getErrorLocation(lexer.srcText.filePath);
       error(token, MSG.ExpectedClosing,
         Token.toString(closing), opening.text, loc.lineNum, loc.colNum,
         getPrintable(token));
@@ -4964,7 +4964,7 @@ class Parser
       errorCount++;
       return;
     }
-    auto location = token.getErrorLocation();
+    auto location = token.getErrorLocation(lexer.srcText.filePath);
     auto msg = Format(_arguments, _argptr, formatMsg);
     auto error = new ParserError(location, msg);
     errors ~= error;

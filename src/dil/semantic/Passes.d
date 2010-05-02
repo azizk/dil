@@ -132,7 +132,7 @@ abstract class SemanticPass : DefaultVisitor
   /// Reports an error: new symbol s1 conflicts with existing symbol s2.
   void reportSymbolConflict(Symbol s1, Symbol s2, Identifier* name)
   {
-    auto loc = s2.node.begin.getErrorLocation();
+    auto loc = s2.node.begin.getErrorLocation(modul.filePath());
     auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
     error(s1.node.begin, MSG.DeclConflictsWithDecl, name.str, locString);
   }
@@ -212,7 +212,7 @@ abstract class SemanticPass : DefaultVisitor
   {
     if (!modul.diag)
       return;
-    auto location = token.getErrorLocation();
+    auto location = token.getErrorLocation(modul.filePath());
     auto msg = Format(_arguments, _argptr, formatMsg);
     modul.diag ~= new SemanticError(location, msg);
   }
@@ -1438,7 +1438,7 @@ override
       e.value = new IntExpression(e.specialToken.uint_, Types.Uint);
       break;
     case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
-      e.value = new StringExpression(e.specialToken.str);
+      e.value = new StringExpression(e.specialToken.strval.str);
       break;
     default:
       assert(0);

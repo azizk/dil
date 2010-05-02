@@ -15,6 +15,13 @@ import tango.core.Exception;
 public import dil.lexer.TokensEnum;
 
 /// A Token is a sequence of characters recognized by the lexical analyzer.
+///
+/// Example:
+/// $(PRE  ‘    StringValue’
+////   ^ws ^start     ^end)
+/// kind = TOK.Identifier$(BR)
+/// flags = Flags.None$(BR)
+/// ident = Identifier("StringValue", kind)
 struct Token
 { /// Flags set by the Lexer.
   enum Flags : ushort
@@ -29,7 +36,6 @@ struct Token
   Token* next, prev;
 
   /// Start of whitespace characters before token. Null if no WS.
-  /// TODO: remove to save space; can be replaced by 'prev.end'.
   char* ws;
   char* start; /// Points to the first character of the token.
   char* end;   /// Points one character past the end of the token.
@@ -48,29 +54,51 @@ struct Token
   /// Represents the long/ulong value of a number literal.
   union IntegerValue
   {
-    long  long_;    /// A long integer value.
-    ulong ulong_;   /// An unsigned long integer value.
+    long  long_;  /// A long integer value.
+    ulong ulong_; /// An unsigned long integer value.
   }
 
-  /// Represents the value of a "#line" token.
+  /// Represents the data of a newline token.
+  struct NewlineValue
+  {
+    uint lineNum; /// The line number in the source text.
+    HashLineInfo* hlinfo; /// Info from a "#line" token.
+  }
+
+  /// Represents the value of a "#line Number Filespec?" token.
   struct HashLineValue
   {
-    Token* lineNum; /// #line number
-    Token* lineFilespec; /// #line number filespec
+    Token* lineNum; /// The Number.
+    Token* filespec; /// The optional Filespec.
+  }
+
+  /// Represents the info of a #line token. Used for error messages.
+  struct HashLineInfo
+  {
+    uint lineNum; /// Delta line number calculated from #line Number.
+    string path;  /// File path set by #line num Filespec.
+    /// Calculates and returns the line number.
+    uint getLineNum(uint realnum)
+    {
+      return realnum - lineNum;
+    }
+    /// Calculates a delta value and sets 'lineNum'.
+    void setLineNum(uint realnum, uint hlnum)
+    {
+      lineNum = realnum - hlnum + 1;
+    }
   }
 
   /// Data associated with this token.
-  /// TODO: move data structures out;
-  /// use only pointers here to keep Token.sizeof small.
   union /+TokenValue+/
   {
-    NewlineData* newline; /// For newline tokens.
+    NewlineValue* nlval; /// Value of a newline token.
     HashLineValue* hlval; /// Value of a #line token.
     StringValue* strval; /// The value of a string token.
     Identifier* ident; /// For keywords and identifiers.
     dchar  dchar_; /// Value of a character literal.
-    int    int_; /// An integer value.
-    uint   uint_; /// An unsigned integer value.
+    int    int_; /// Value of an Int32 token.
+    uint   uint_; /// Value of a Uint32 token.
     version(X86_64)
     IntegerValue intval; /// Value of a number literal.
     else
@@ -83,7 +111,7 @@ struct Token
   /// Returns the text of the token.
   string text()
   {
-    assert(start && end);
+    assert(end && start <= end);
     return start[0 .. end - start];
   }
 
@@ -212,22 +240,22 @@ version(D2)
   }
 
   /// Returns the Location of this token.
-  Location getLocation(bool realLocation)()
+  Location getLocation(bool realLocation)(string filePath)
   {
     auto search_t = this.prev;
     // Find previous newline token.
     while (search_t.kind != TOK.Newline)
       search_t = search_t.prev;
-    auto newline = search_t.newline;
+
+    auto newline = search_t.nlval;
+    auto lineNum = newline.lineNum;
     static if (realLocation)
-    {
-      auto filePath  = newline.filePaths.oriPath;
-      auto lineNum   = newline.oriLineNum;
-    }
+    {}
     else
-    {
-      auto filePath  = newline.filePaths.setPath;
-      auto lineNum   = newline.oriLineNum - newline.setLineNum;
+    if (auto hlinfo = newline.hlinfo)
+    { // Change file path and line number.
+      filePath = hlinfo.path;
+      lineNum  = hlinfo.getLineNum(newline.lineNum);
     }
     auto lineBegin = search_t.end;
     // Determine actual line begin and line number.
@@ -236,10 +264,8 @@ version(D2)
       if (search_t.isMultiline)
         for (auto p = search_t.start, end = search_t.end; p < end;)
           if (scanNewline(p))
-          {
+            ++lineNum,
             lineBegin = p;
-            ++lineNum;
-          }
           else
             ++p;
     return new Location(filePath, lineNum, lineBegin, this.start);
@@ -330,8 +356,8 @@ version(token_malloc)
   void destructHashLineToken()
   {
     assert(kind == TOK.HashLine);
-    delete tokLineNum;
-    delete tokLineFilespec;
+    delete hlval.lineNum;
+    delete hlval.filespec;
   }
 
 version(D2)
@@ -340,9 +366,9 @@ version(D2)
   {
     assert(kind == TOK.String);
     assert(start && *start == 'q' && start[1] == '{');
-    assert(tok_str !is null);
-    auto tok_it = tok_str;
-    auto tok_del = tok_str;
+    assert(strval.tok_str !is null);
+    auto tok_it = strval.tok_str;
+    auto tok_del = tok_it;
     while (tok_it && tok_it.kind != TOK.EOF)
     {
       tok_it = tok_it.next;
@@ -353,19 +379,6 @@ version(D2)
   }
 }
 }
-}
-
-/// Data associated with newline tokens.
-struct NewlineData
-{
-  struct FilePaths
-  {
-    char[] oriPath;   /// Original path to the source text.
-    char[] setPath;   /// Path set by #line.
-  }
-  FilePaths* filePaths;
-  uint oriLineNum;  /// Actual line number in the source text.
-  uint setLineNum;  /// Delta line number set by #line.
 }
 
 /// Returns true if this token starts a DeclarationDefinition.

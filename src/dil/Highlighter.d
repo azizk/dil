@@ -268,7 +268,7 @@ class Highlighter
         printWS(token.start, num.start); // Prints "#line" as well.
         lineText ~= Format(tags.Number, num.text); // Print the number.
 
-        if (auto filespec = token.hlval.lineFilespec)
+        if (auto filespec = token.hlval.filespec)
         { // Print whitespace between number and filespec.
           printWS(num.end, filespec.start);
           lineText ~= Format(tags.Filespec, xml_escape(filespec.text));

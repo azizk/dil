@@ -99,12 +99,19 @@ class ModuleManager
 
     if (getPackageFQN(modul.getFQNPath()) != getPackageFQN(moduleFQNPath))
     { // Error: the requested module is not in the correct package.
-      auto location = modul.getModuleDeclToken().getErrorLocation();
+      auto location = getErrorLocation(modul);
       auto msg = Format(MSG.ModuleNotInPackage, getPackageFQN(moduleFQNPath));
       diag ~= new SemanticError(location, msg);
     }
 
     return modul;
+  }
+
+  /// Returns the error location of the module's module declaration
+  /// or the first token in the source text.
+  Location getErrorLocation(Module m)
+  {
+    return m.getModuleDeclToken().getErrorLocation(m.filePath);
   }
 
   /// Inserts the given module into the tables.
@@ -115,7 +122,7 @@ class ModuleManager
     auto moduleFQNPath = newModule.getFQNPath();
     if (auto existingModule = moduleFQNPath in moduleFQNPathTable)
     { // Error: two module files have the same f.q. module name.
-      auto location = newModule.getModuleDeclToken().getErrorLocation();
+      auto location = getErrorLocation(newModule);
       auto msg = Format(MSG.ConflictingModuleFiles, newModule.filePath());
       diag ~= new SemanticError(location, msg);
       return; // Can't insert new module, so return.
@@ -136,7 +143,7 @@ class ModuleManager
     { // Error: module and package share the same name.
       // Happens when: "src/dil/module.d", "src/dil.d"
       // There's a package dil and a module dil.
-      auto location = newModule.getModuleDeclToken().getErrorLocation();
+      auto location = getErrorLocation(newModule);
       auto msg = Format(MSG.ConflictingModuleAndPackage, newModule.getFQN());
       diag ~= new SemanticError(location, msg);
     }

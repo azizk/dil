@@ -157,7 +157,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
       { // Print whitespace between #line and number.
         printWS(token.start, num.start); // Prints "#line" as well.
         line ~= '"' ~ num.text ~ '"'; // Print the number.
-        if (auto filespec = token.hlval.lineFilespec)
+        if (auto filespec = token.hlval.filespec)
         { // Print whitespace between number and filespec.
           printWS(num.end, filespec.start);
           line ~= '"' ~ escape_quotes(filespec.text) ~ '"';
@@ -278,7 +278,10 @@ class PyTreeEmitter : Visitor
   {
     assert(n !is null && n.begin !is null && n.end !is null);
     auto i1 = index[n.begin], i2 = index[n.end];
-    assert(i1 <= i2, Format("ops, Parser or AST buggy? {}@{},i1={},i2={}", g_classNames[n.kind], n.begin.getRealLocation().str(), i1, i2));
+    assert(i1 <= i2,
+      Format("ops, Parser or AST buggy? {}@{},i1={},i2={}",
+        g_classNames[n.kind],
+        n.begin.getRealLocation(modul.filePath()).str(), i1, i2));
     write((writeComma ? ",":"") ~ "p("~toString(i1)~","~toString(i2-i1)~"))");
   }
 
