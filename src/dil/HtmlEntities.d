@@ -3,7 +3,7 @@
 /// $(Maturity very high)
 module dil.HtmlEntities;
 
-import dil.lexer.Funcs : toString;
+import dil.lexer.Funcs : StringCTF;
 import common;
 
 /// A named HTML entity.
@@ -313,8 +313,8 @@ char[] generateHashAndValueArrays()
          valuesText = "private static const dchar[] values = [";
   foreach (i, hash; hashes)
   {
-    hashesText ~= toString(hash) ~ ",";
-    valuesText ~= toString(values[i]) ~ ",";
+    hashesText ~= StringCTF(hash) ~ ",";
+    valuesText ~= StringCTF(values[i]) ~ ",";
   }
   hashesText ~= "];";
   valuesText ~= "];";

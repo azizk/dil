@@ -29,7 +29,7 @@ char[] countWhitespace(char[] ws)
 {
   foreach (c; ws)
     if (c != ' ') return "'"~ws~"'";
-  return toString(ws.length);
+  return String(ws.length);
 }
 
 enum Flags
@@ -132,7 +132,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   for (auto token = first_token; token; ++index, token = token.next)
   {
     indexMap[token] = index;
-    line ~= '(' ~ toString(token.kind) ~ ',';
+    line ~= '(' ~ String(token.kind) ~ ',';
     line ~= (token.ws) ? countWhitespace(token.wsChars) : `0`;
     line ~= ',';
     switch(token.kind)
@@ -141,7 +141,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
     case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
          TOK.Float32, TOK.Float64, TOK.Float80,
          TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
-      line ~= toString(map[token.text].pos);
+      line ~= String(map[token.text].pos);
       break;
     case TOK.Shebang:
       line ~= '"' ~ escape_quotes(token.text) ~ '"';
@@ -237,13 +237,11 @@ class PyTreeEmitter : Visitor
   private alias TypeNode T; /// ditto
   private alias Parameter P; /// ditto
   private alias Node N; /// ditto
-  /// Alias to the outer toString. Avoids conflicts with Object.toString.
-  private alias .toString toString;
 
   /// Returns the index number of a token as a string.
   char[] indexOf(Token* token)
   {
-    return "t["~toString(index[token])~"]";
+    return "t["~String(index[token])~"]";
   }
 
   void write(char[] str)
@@ -271,7 +269,7 @@ class PyTreeEmitter : Visitor
   void begin(Node n)
   {
 //     write(g_classNames[n.kind]~"(");
-    write("N"~toString(n.kind)~"(");
+    write("N"~String(n.kind)~"(");
   }
 
   void end(Node n, bool writeComma = true)
@@ -282,7 +280,7 @@ class PyTreeEmitter : Visitor
       Format("ops, Parser or AST buggy? {}@{},i1={},i2={}",
         g_classNames[n.kind],
         n.begin.getRealLocation(modul.filePath()).str(), i1, i2));
-    write((writeComma ? ",":"") ~ "p("~toString(i1)~","~toString(i2-i1)~"))");
+    write((writeComma ? ",":"") ~ "p("~String(i1)~","~String(i2-i1)~"))");
   }
 
 override

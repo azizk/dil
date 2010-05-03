@@ -5,7 +5,8 @@ module dil.lexer.IdTable;
 
 import dil.lexer.TokensEnum,
        dil.lexer.IdentsGenerator,
-       dil.lexer.Keywords;
+       dil.lexer.Keywords,
+       dil.lexer.Funcs : String;
 import common;
 
 public import dil.lexer.Identifier,
@@ -138,13 +139,7 @@ static:
   /// The identifier is not inserted into the table.
   Identifier* genAnonymousID(string prefix)
   {
-    ++anonCount;
-    auto x = anonCount;
-    // Convert count to a string and append it to str.
-    char[] num;
-    do
-      num = cast(char)('0' + (x % 10)) ~ num;
-    while (x /= 10)
+    auto num = String(++anonCount);
     return Identifier(prefix ~ num, TOK.Identifier);
   }
 

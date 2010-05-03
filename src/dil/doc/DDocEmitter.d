@@ -240,7 +240,7 @@ abstract class DDocEmitter : DefaultVisitor
     auto pfqn = parentFQN in fqnCount;
     uint count = pfqn ? *pfqn : 0;
     if (count > 1) // Start adding suffixes with 2.
-      parentFQN ~= ":" ~ .toString(count);
+      parentFQN ~= ":" ~ String(count);
   }
 
   /// Returns a unique, identifying string for the current symbol.
@@ -259,7 +259,7 @@ abstract class DDocEmitter : DefaultVisitor
       fqnCount[fqn] = 1; // Start counting with 1.
 
     if (count > 1) // Start adding suffixes with 2.
-      fqn ~= ":" ~ .toString(count);
+      fqn ~= ":" ~ String(count);
     return fqn;
   }
 
@@ -523,8 +523,8 @@ abstract class DDocEmitter : DefaultVisitor
               "\1DIL_CODELINES ";
               for (uint num = 1; num <= lines; num++)
               {
-                auto numtxt = .toString(num);
-                auto id = "L"~numtxt~"_ex"~.toString(codeExamplesCounter);
+                auto numtxt = String(num);
+                auto id = "L"~numtxt~"_ex"~String(codeExamplesCounter);
                 result ~= `<a href="#`~id~`" name="`~id~`">`;
                 result ~= numtxt;
                 result ~= `</a>`"\n";
@@ -1154,7 +1154,7 @@ class DocSymbol
       return "[]";
     char[] result = "[";
     foreach (attr; attrs)
-      result ~= .toString(attrToID[attr]) ~ ",";
+      result ~= String(attrToID[attr]) ~ ",";
     result[$-1] = ']';
     return result;
   }

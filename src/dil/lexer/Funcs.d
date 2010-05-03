@@ -5,14 +5,26 @@ module dil.lexer.Funcs;
 
 import dil.Unicode : isUnicodeAlpha;
 
-/// Converts an unsigned integer to a string.
-char[] toString(uint x)
+/// Converts an unsigned integer to a string (CTF version.)
+char[] StringCTF(uint x)
 {
   char[] str;
   do
     str = cast(char)('0' + (x % 10)) ~ str;
   while (x /= 10)
   return str;
+}
+
+/// Converts an unsigned integer to a string.
+char[] String(uint x)
+{
+  char[10] buffer; // "4294967295".len = 10
+  auto end = buffer.ptr + 10;
+  auto p = end;
+  do
+    *--p = '0' + x % 10;
+  while (x /= 10)
+  return String(p, end).dup;
 }
 
 /// Returns a string slice ranging from begin to end.
