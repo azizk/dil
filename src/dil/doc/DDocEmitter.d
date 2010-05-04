@@ -82,7 +82,7 @@ abstract class DDocEmitter : DefaultVisitor
 
     // Initialize the root symbol in the symbol tree.
     auto lexer = modul.parser.lexer;
-    symbolTree[""] = new DocSymbol(modul.moduleName, modul.getFQN(), K.Module,
+    symbolTree[0] = new DocSymbol(modul.moduleName, modul.getFQN(), K.Module,
       null,
       locationOf(lexer.firstToken()),
       locationOf(lexer.tail)
@@ -172,12 +172,12 @@ abstract class DDocEmitter : DefaultVisitor
       return;
     }
     // Search for undocumented parameters.
-    bool[string] documentedParams;
+    bool[hash_t] documentedParams;
     auto ps = new ParamsSection(paramsSection.name, paramsSection.text);
     foreach (name; ps.paramNames) // Create set of documented parameters.
-      documentedParams[name] = true;
+      documentedParams[hashOf(name)] = true;
     foreach (param; params) // Find undocumented parameters.
-      if (!(param.ident.str in documentedParams))
+      if (!(hashOf(param.ident.str) in documentedParams))
       {
         auto loc = locationOf(param);
         loc.setFilePath(modul.getFQN());
@@ -228,7 +228,7 @@ abstract class DDocEmitter : DefaultVisitor
   string parentFQN;
   /// Counts symbols with the same FQN.
   /// This is useful for anchor names that require unique strings.
-  uint[string] fqnCount;
+  uint[hash_t] fqnCount;
 
   /// Appends to parentFQN.
   void pushFQN(string name)
@@ -237,7 +237,7 @@ abstract class DDocEmitter : DefaultVisitor
       parentFQN ~= ".";
     parentFQN ~= name;
 
-    auto pfqn = parentFQN in fqnCount;
+    auto pfqn = hashOf(parentFQN) in fqnCount;
     uint count = pfqn ? *pfqn : 0;
     if (count > 1) // Start adding suffixes with 2.
       parentFQN ~= ":" ~ String(count);
@@ -252,11 +252,12 @@ abstract class DDocEmitter : DefaultVisitor
     fqn ~= name;
 
     uint count;
-    auto pfqn = fqn in fqnCount;
+    auto hash = hashOf(fqn);
+    auto pfqn = hash in fqnCount;
     if (pfqn)
       count = (*pfqn += 1); // Update counter.
     else
-      fqnCount[fqn] = 1; // Start counting with 1.
+      fqnCount[hash] = 1; // Start counting with 1.
 
     if (count > 1) // Start adding suffixes with 2.
       fqn ~= ":" ~ String(count);
@@ -335,14 +336,14 @@ abstract class DDocEmitter : DefaultVisitor
   }
 
   /// List of predefined, special sections.
-  static char[][char[]] specialSections;
+  static string[hash_t] specialSections;
   static this()
   {
     foreach (name; ["AUTHORS", "BUGS", "COPYRIGHT", "DATE", "DEPRECATED",
                     "EXAMPLES", "HISTORY", "LICENSE", "RETURNS", "SEE_ALSO",
                     "STANDARDS", "THROWS", "VERSION"] ~
                    ["AUTHOR"]) // Addition by dil.
-      specialSections[name] = name;
+      specialSections[hashOf(name)] = name;
   }
 
   /// Writes the DDoc comment to the text buffer.
@@ -357,7 +358,7 @@ abstract class DDocEmitter : DefaultVisitor
           write("\n\1DDOC_SUMMARY ");
         else if (s is c.description)
           write("\n\1DDOC_DESCRIPTION ");
-        else if (auto name = toUpper(s.name.dup) in specialSections)
+        else if (auto name = hashOf(toUpper(s.name.dup)) in specialSections)
           write("\n\1DDOC_", *name, " ");
         else if (s.Is("params"))
         { // Process parameters section.
@@ -734,7 +735,7 @@ abstract class DDocEmitter : DefaultVisitor
   }
 
   /// The symbols that will appear in the result document.
-  DocSymbol[string] symbolTree;
+  DocSymbol[hash_t] symbolTree;
 
   /// Adds a symbol to the symbol tree.
   void addSymbol(string name, string fqn, K kind,
@@ -742,8 +743,8 @@ abstract class DDocEmitter : DefaultVisitor
   {
     auto attrs = currentAttributes.asArray();
     auto symbol = new DocSymbol(name, fqn, kind, attrs, begin, end);
-    symbolTree[fqn] = symbol; // Add the symbol itself.
-    symbolTree[parentFQN].members ~= symbol; // Append as a child to parent.
+    symbolTree[hashOf(fqn)] = symbol; // Add the symbol itself.
+    symbolTree[hashOf(parentFQN)].members ~= symbol; // Append as a child to parent.
   }
 
   /// Wraps the DDOC_kind_MEMBERS macro around the text
@@ -1130,21 +1131,21 @@ class DocSymbol
 
   /// Maps the kind of a symbol to its ID.
   /// Must match the list in "kandil/js/symbols.js".
-  static uint[string] kindStrToID;
+  static uint[hash_t] kindStrToID;
   /// Maps the attribute of a symbol to its ID.
   /// Must match the list in "kandil/js/symbols.js".
-  static uint[string] attrToID;
+  static uint[hash_t] attrToID;
   /// Initialize the associative arrays.
   static this()
   {
     for (int i; i < Kind.max+1; i++)
-      kindStrToID[kindIDToStr[i]] = i;
+      kindStrToID[hashOf(kindIDToStr[i])] = i;
 
     // Combine attributes and add them to attrToID.
     auto attrs = EnumString.prots[1..$] ~
       EnumString.stcs[1..$] ~ EnumString.ltypes[1..$];
     for (int i; i < attrs.length; i++)
-      attrToID[attrs[i]] = i;
+      attrToID[hashOf(attrs[i])] = i;
   }
 
   /// Return the attributes as IDs. E.g.: "[1,9,22]"
@@ -1154,7 +1155,7 @@ class DocSymbol
       return "[]";
     char[] result = "[";
     foreach (attr; attrs)
-      result ~= String(attrToID[attr]) ~ ",";
+      result ~= String(attrToID[hashOf(attr)]) ~ ",";
     result[$-1] = ']';
     return result;
   }

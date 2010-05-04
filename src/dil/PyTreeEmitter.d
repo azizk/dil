@@ -77,7 +77,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
     }
   }
   // Gather all identifiers, comments, strings and numbers in this map.
-  Tuple[char[]] map;
+  Tuple[hash_t] map;
   for (auto token = first_token; token; token = token.next)
     switch(token.kind)
     {
@@ -85,9 +85,10 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
          TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
          TOK.Float32, TOK.Float64, TOK.Float80,
          TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
-      auto p = token.text in map;
+      auto hash = hashOf(token.text);
+      auto p = hash in map;
       if (p) p.count += 1;
-      else map[token.text] =  new Tuple(1, token.text, token.kind);
+      else map[hash] = new Tuple(1, token.text, token.kind);
       break;
     default:
     }
@@ -141,7 +142,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
     case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
          TOK.Float32, TOK.Float64, TOK.Float80,
          TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
-      line ~= String(map[token.text].pos);
+      line ~= String(map[hashOf(token.text)].pos);
       break;
     case TOK.Shebang:
       line ~= '"' ~ escape_quotes(token.text) ~ '"';

@@ -8,7 +8,8 @@ import dil.ast.Node,
 import dil.semantic.Module,
        dil.semantic.Package;
 import dil.parser.ImportParser,
-       dil.SourceText,
+       dil.lexer.Funcs : hashOf;
+import dil.SourceText,
        dil.Compilation,
        dil.ModuleManager,
        dil.Diagnostics;
@@ -197,7 +198,7 @@ class GraphBuilder
   Graph graph;
   IGraphCommand.Options options;
   string[] importPaths; /// Where to look for modules.
-  Vertex[string] loadedModulesTable; /// Maps FQN paths to modules.
+  Vertex[hash_t] loadedModulesTable; /// Maps FQN paths to modules.
   bool delegate(string) filterPredicate;
 
   /// Constructs a GraphBuilder object.
@@ -222,14 +223,15 @@ class GraphBuilder
   Vertex loadModule(string moduleFQNPath)
   {
     // Look up in table if the module is already loaded.
-    auto pVertex = moduleFQNPath in loadedModulesTable;
+    auto hash = hashOf(moduleFQNPath);
+    auto pVertex = hash in loadedModulesTable;
     if (pVertex !is null)
       return *pVertex; // Returns null for filtered or unlocatable modules.
 
     // Filter out modules.
     if (filterPredicate && filterPredicate(moduleFQNPath))
     { // Store null for filtered modules.
-      loadedModulesTable[moduleFQNPath] = null;
+      loadedModulesTable[hash] = null;
       return null;
     }
 
@@ -251,7 +253,7 @@ class GraphBuilder
         graph.addVertex(vertex);
       }
       // Store vertex in the table (vertex may be null.)
-      loadedModulesTable[moduleFQNPath] = vertex;
+      loadedModulesTable[hash] = vertex;
     }
     else
     {
@@ -264,7 +266,7 @@ class GraphBuilder
       vertex.modul = modul;
 
       graph.addVertex(vertex);
-      loadedModulesTable[modul.getFQNPath()] = vertex;
+      loadedModulesTable[hashOf(modul.getFQNPath())] = vertex;
 
       // Load the modules which this module depends on.
       foreach (importDecl; modul.imports)

@@ -95,7 +95,7 @@ class MacroTable
 {
   /// The parent in the hierarchy. Or null if this is the root.
   MacroTable parent;
-  Macro[string] table; /// The associative array that holds the macro definitions.
+  Macro[hash_t] table; /// The associative array that holds the macro definitions.
 
   /// Constructs a MacroTable instance.
   this(MacroTable parent = null)
@@ -112,7 +112,7 @@ class MacroTable
   {
     if (convertText)
       m.text = Macro.convert(m.text);
-    table[m.name] = m;
+    table[hashOf(m.name)] = m;
   }
 
   /// Inserts an array of macros into the table.
@@ -143,8 +143,7 @@ class MacroTable
   /// Returns: the macro if found, or null if not.
   Macro search(string name)
   {
-    auto pmacro = name in table;
-    if (pmacro)
+    if (auto pmacro = hashOf(name) in table)
       return *pmacro;
     if (!isRoot())
       return parent.search(name);

@@ -206,8 +206,8 @@ class Lexer
   /// A collection of tables for various token values.
   struct ValueTables
   {
-    string[string] strings; /// Maps strings to zero-terminated string values.
-    Float[string] floats; /// Maps float strings to Float values.
+    string[hash_t] strings; /// Maps strings to zero-terminated string values.
+    Float[hash_t] floats; /// Maps float strings to Float values.
     IntegerValue*[ulong] ulongs; /// Maps a ulong to an IntegerValue.
     /// A list of newline values.
     /// Only instances, where 'hlinfo' is null, are kept here.
@@ -224,7 +224,8 @@ class Lexer
   ///   str = The string to be looked up, which is not zero-terminated.
   StringValue* lookupString(char[] str)
   {
-    auto pstr = str in tables.strings;
+    auto hash = hashOf(str);
+    auto pstr = hash in tables.strings;
     if (!pstr)
     { // Insert a new string into the table.
       auto new_str = str;
@@ -232,7 +233,7 @@ class Lexer
         new_str = new_str.dup; // A copy is needed.
       new_str ~= '\0'; // Terminate with a zero.
       pstr = &new_str;
-      tables.strings[str] = new_str;
+      tables.strings[hash] = new_str;
     }
     auto sv = new StringValue;
     sv.str = *pstr;
@@ -261,7 +262,8 @@ class Lexer
   Float lookupFloat(string str)
   {
     assert(str.length && str[$-1] == 0);
-    auto pFloat = str in tables.floats;
+    auto hash = hashOf(str);
+    auto pFloat = hash in tables.floats;
     if (!pFloat)
     { // Insert a new Float into the table.
       mpfr_t mpfloat;
@@ -275,7 +277,7 @@ class Lexer
       // {}
       auto f = new Float(&mpfloat);
       pFloat = &f;
-      tables.floats[str] = f;
+      tables.floats[hash] = f;
     }
     return *pFloat;
   }

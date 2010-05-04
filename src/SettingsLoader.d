@@ -270,7 +270,7 @@ class TagMapLoader : SettingsLoader
     return new TagMapLoader(diag);
   }
 
-  string[string] load(string filePath)
+  string[hash_t] load(string filePath)
   {
     mod = new Module(filePath, diag);
     mod.parse();
@@ -281,7 +281,7 @@ class TagMapLoader : SettingsLoader
     auto pass1 = new SemanticPass1(mod, context);
     pass1.run();
 
-    string[string] map;
+    string[hash_t] map;
     if (auto array = getValue!(ArrayInitExpression)("map"))
       foreach (i, value; array.values)
       {
@@ -290,7 +290,7 @@ class TagMapLoader : SettingsLoader
           if (!key)
             error(value.begin, "expected key : value");
           else if (auto keyExp = castTo!(StringExpression)(key))
-            map[keyExp.getString()] = valExp.getString();
+            map[hashOf(keyExp.getString())] = valExp.getString();
       }
     return map;
   }

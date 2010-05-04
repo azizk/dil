@@ -4,6 +4,7 @@
 module dil.Compilation;
 
 import dil.semantic.Types;
+import dil.lexer.Funcs : hashOf;
 import common;
 
 /// A group of settings relevant to the compilation process.
@@ -14,8 +15,8 @@ class CompilationContext
   string[] importPaths;
   uint debugLevel;
   uint versionLevel;
-  bool[string] debugIds;
-  bool[string] versionIds;
+  bool[hash_t] debugIds;
+  bool[hash_t] versionIds;
   bool releaseBuild;
   bool unittestBuild;
   bool acceptDeprecated;
@@ -43,18 +44,17 @@ class CompilationContext
 
   void addDebugId(string id)
   {
-    debugIds[id] = true;
+    debugIds[hashOf(id)] = true;
   }
 
   void addVersionId(string id)
   {
-    versionIds[id] = true;
+    versionIds[hashOf(id)] = true;
   }
 
   bool findDebugId(string id)
   {
-    auto pId = id in debugIds;
-    if (pId)
+    if (auto pId = hashOf(id) in debugIds)
       return true;
     if (!isRoot())
       return parent.findDebugId(id);
@@ -63,8 +63,7 @@ class CompilationContext
 
   bool findVersionId(string id)
   {
-    auto pId = id in versionIds;
-    if (pId)
+    if (auto pId = hashOf(id) in versionIds)
       return true;
     if (!isRoot())
       return parent.findVersionId(id);

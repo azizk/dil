@@ -377,10 +377,10 @@ void main(char[][] args)
     if (args.length > 2)
       retrieve_settings = args[2..$];
     if (retrieve_settings.length) // Print select settings.
-      foreach (name; retrieve_settings) {
-        name = toUpper(name);
-        if (name in settings)
-          Stdout.formatln("{}={}", name, settings[name]);
+      foreach (name; retrieve_settings)
+      {
+        if (auto psetting = (name = toUpper(name)) in settings)
+          Stdout.formatln("{}={}", name, *psetting);
       }
     else // Print all settings.
       foreach (name; ["DATADIR", "VERSION_IDS", "IMPORT_PATHS", "DDOC_FILES",

@@ -5,7 +5,8 @@ module dil.semantic.Types;
 
 import dil.semantic.Symbol,
        dil.semantic.TypesEnum;
-import dil.lexer.Identifier;
+import dil.lexer.Identifier,
+       dil.lexer.Funcs : hashOf;
 import dil.CompilerInfo;
 
 import common;
@@ -525,13 +526,13 @@ class TypeInvariant : Type
 /// Maps mangled type identifiers to Type objects.
 class TypeTable
 {
-  Type[string] table; /// The table data structure.
+  Type[hash_t] table; /// The table data structure.
   /// Looks up ident in the table.
   /// Returns: the symbol if there, otherwise null.
   Type lookup(string mangled)
   {
     assert(mangled.length);
-    auto ptype = mangled in table;
+    auto ptype = hashOf(mangled) in table;
     return ptype ? *ptype : null;
   }
 
@@ -539,7 +540,7 @@ class TypeTable
   void insert(Type type)
   {
     assert(type.mangled.length);
-    table[type.mangled] = type;
+    table[hashOf(type.mangled)] = type;
   }
 }
 

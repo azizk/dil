@@ -231,7 +231,7 @@ struct DDocCommand
     ((filePath /= "symbols") /= modFQN) ~= ".json";
     file = new File(filePath.toString(), File.WriteCreate);
     char[] text;
-    file.write(symbolsToJSON(ddocEmitter.symbolTree[""], text));
+    file.write(symbolsToJSON(ddocEmitter.symbolTree[0], text));
   }
 
   /// Writes the list of processed modules to the disk.
@@ -392,18 +392,19 @@ version(unused)
     DDocProblem[] kind1, kind2, kind3, kind4;
 
   static:
-    ModuleData[string] table;
+    ModuleData[hash_t] table;
     ModuleData[] sortedList;
     /// Returns a ModuleData for name.
     /// Inserts a new instance into the table if not present.
     ModuleData get(string name)
     {
-      auto mod = name in table;
+      auto hash = hashOf(name);
+      auto mod = hash in table;
       if (mod)
         return *mod;
       auto md = new ModuleData();
       md.name = name;
-      table[name] = md;
+      table[hash] = md;
       return md;
     }
     /// Uses mm to set the member sortedList.
@@ -411,7 +412,7 @@ version(unused)
     {
       auto allModules = mm.rootPackage.getModuleList();
       foreach (mod; allModules)
-        if (auto data = mod.getFQN() in table)
+        if (auto data = hashOf(mod.getFQN()) in table)
           sortedList ~= *data;
     }
   }

@@ -231,7 +231,7 @@ class Highlighter
       }
       else
         text = (text[0] == '"') ?
-          scanEscapeSequences(text, tags.table["Escape"]) :
+          scanEscapeSequences(text, tags.Escape) :
           xml_escape(text);
       print.format(tags.String, text);
       break;
@@ -419,10 +419,10 @@ char[] xml_escape(char[] text)
 /// Maps tokens to (format) strings.
 class TagMap
 {
-  string[string] table;
+  string[hash_t] table;
   string[TOK.MAX] tokenTable;
 
-  this(string[string] table)
+  this(string[hash_t] table)
   {
     this.table = table;
     Identifier   = this["Identifier", "{0}"];
@@ -448,15 +448,14 @@ class TagMap
     EOF          = this["EOF", ""];
 
     foreach (i, tokStr; tokToString)
-      if (auto pStr = tokStr in this.table)
+      if (auto pStr = hashOf(tokStr) in this.table)
         tokenTable[i] = *pStr;
   }
 
   /// Returns the value for str, or 'fallback' if str is not in the table.
   string opIndex(string str, string fallback = "")
   {
-    auto p = str in table;
-    if (p)
+    if (auto p = hashOf(str) in table)
       return *p;
     return fallback;
   }

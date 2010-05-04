@@ -6,6 +6,7 @@ module dil.ModuleManager;
 import dil.semantic.Module,
        dil.semantic.Package,
        dil.semantic.Symbol;
+import dil.lexer.Funcs : hashOf;
 import dil.Diagnostics;
 import dil.Messages;
 import util.Path;
@@ -25,11 +26,11 @@ class ModuleManager
   /// The root package. Contains all other modules and packages.
   Package rootPackage;
   /// Maps full package names to packages. E.g.: dil.ast
-  Package[string] packageTable;
+  Package[hash_t] packageTable;
   /// Maps FQN paths to modules. E.g.: dil/ast/Node
-  Module[string] moduleFQNPathTable;
+  Module[hash_t] moduleFQNPathTable;
   /// Maps absolute file paths to modules. E.g.: /home/user/dil/src/main.d
-  Module[string] absFilePathTable;
+  Module[hash_t] absFilePathTable;
   /// Loaded modules in sequential order.
   Module[] loadedModules;
   /// Loaded modules which are ordered according to the number of
@@ -44,7 +45,7 @@ class ModuleManager
   this(string[] importPaths, Diagnostics diag)
   {
     this.rootPackage = new Package(null);
-    packageTable[""] = this.rootPackage;
+    packageTable[0] = this.rootPackage; // hashOf("") = 0
     this.importPaths = importPaths;
     this.diag = diag;
   }
@@ -54,7 +55,7 @@ class ModuleManager
   Module moduleByPath(string moduleFilePath)
   {
     auto absFilePath = absolutePath(moduleFilePath);
-    if (auto existingModule = absFilePath in absFilePathTable)
+    if (auto existingModule = hashOf(absFilePath) in absFilePathTable)
       return *existingModule;
     return null;
   }
@@ -62,7 +63,7 @@ class ModuleManager
   /// Looks up a module by its f.q.n. path. E.g.: "dil/ModuleManager"
   Module moduleByFQN(string moduleFQNPath)
   {
-    if (auto existingModule = moduleFQNPath in moduleFQNPathTable)
+    if (auto existingModule = hashOf(moduleFQNPath) in moduleFQNPathTable)
       return *existingModule;
     return null;
   }
@@ -120,7 +121,8 @@ class ModuleManager
     auto absFilePath = absolutePath(newModule.filePath());
 
     auto moduleFQNPath = newModule.getFQNPath();
-    if (auto existingModule = moduleFQNPath in moduleFQNPathTable)
+    auto hash = hashOf(moduleFQNPath);
+    if (auto existingModule = hash in moduleFQNPathTable)
     { // Error: two module files have the same f.q. module name.
       auto location = getErrorLocation(newModule);
       auto msg = Format(MSG.ConflictingModuleFiles, newModule.filePath());
@@ -129,8 +131,8 @@ class ModuleManager
     }
 
     // Insert into the tables.
-    moduleFQNPathTable[moduleFQNPath] = newModule;
-    absFilePathTable[absFilePath] = newModule;
+    moduleFQNPathTable[hash] = newModule;
+    absFilePathTable[hashOf(absFilePath)] = newModule;
     loadedModules ~= newModule;
     newModule.ID = loadedModules.length;
     insertOrdered(newModule);
@@ -139,7 +141,7 @@ class ModuleManager
     auto pckg = getPackage(newModule.packageName);
     pckg.add(newModule);
 
-    if (auto p = newModule.getFQN() in packageTable)
+    if (auto p = hashOf(newModule.getFQN()) in packageTable)
     { // Error: module and package share the same name.
       // Happens when: "src/dil/module.d", "src/dil.d"
       // There's a package dil and a module dil.
@@ -170,8 +172,8 @@ class ModuleManager
   /// Returns the root package for an empty string.
   Package getPackage(string pckgFQN)
   {
-    auto pPckg = pckgFQN in packageTable;
-    if (pPckg)
+    auto hash = hashOf(pckgFQN);
+    if (auto pPckg = hash in packageTable)
       return *pPckg;
 
     string prevFQN, lastPckgName;
@@ -185,7 +187,7 @@ class ModuleManager
     parentPckg.add(pckg); // 'dil'.add('ast')
 
     // Insert the package into the table.
-    packageTable[pckgFQN] = pckg;
+    packageTable[hash] = pckg;
 
     return pckg;
   }
