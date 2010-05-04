@@ -6,7 +6,7 @@ module dil.lexer.IdTable;
 import dil.lexer.TokensEnum,
        dil.lexer.IdentsGenerator,
        dil.lexer.Keywords,
-       dil.lexer.Funcs : String;
+       dil.lexer.Funcs : String, hashOf;
 import common;
 
 public import dil.lexer.Identifier,
@@ -38,47 +38,55 @@ struct IdTable
 {
 static:
   /// A set of common, predefined identifiers for fast lookups.
-  private Identifier*[string] staticTable;
+  private Identifier*[hash_t] staticTable;
   /// A table that grows with every newly found, unique identifier.
-  private Identifier*[string] growingTable;
+  private Identifier*[hash_t] growingTable;
 
   /// Loads keywords and predefined identifiers into the static table.
   static this()
   {
     foreach (ref k; g_reservedIds)
-      staticTable[k.str] = &k;
+      staticTable[hashOf(k.str)] = &k;
     foreach (id; Ident.allIds())
-      staticTable[id.str] = id;
+      staticTable[hashOf(id.str)] = id;
     staticTable.rehash;
   }
 
   /// Looks up idString in both tables.
   Identifier* lookup(string idString)
   {
-    auto id = inStatic(idString);
+    auto idHash = hashOf(idString);
+    auto id = inStatic(idHash);
+    assert(!id || idString == id.str,
+      Format("bad hash function:\n ‘{}’ != ‘{}’; hash={}",
+        idString, id.str, idHash));
     if (id)
       return id;
-    return inGrowing(idString);
+    return inGrowing(idHash, idString);
+  }
+
+  /// Looks up the hash of an id in the static table.
+  Identifier* inStatic(hash_t idHash)
+  {
+    auto id = idHash in staticTable;
+    return id ? *id : null;
   }
 
   /// Looks up idString in the static table.
   Identifier* inStatic(string idString)
   {
-    auto id = idString in staticTable;
+    auto id = hashOf(idString) in staticTable;
     return id ? *id : null;
   }
 
-  alias Identifier* function(string idString) LookupFunction;
+  alias Identifier* function(hash_t, string) LookupFunction;
   /// Looks up idString in the growing table.
   LookupFunction inGrowing = &_inGrowing_unsafe; // Default to unsafe function.
 
   /// Sets the thread safety mode of the growing table.
-  void setThreadsafe(bool b)
+  void setThreadsafe(bool safe)
   {
-    if (b)
-      inGrowing = &_inGrowing_safe;
-    else
-      inGrowing = &_inGrowing_unsafe;
+    inGrowing = safe ? &_inGrowing_safe : &_inGrowing_unsafe;
   }
 
   /// Returns true if access to the growing table is thread-safe.
@@ -90,16 +98,18 @@ static:
   /// Looks up idString in the table.
   ///
   /// Adds idString to the table if not found.
-  private Identifier* _inGrowing_unsafe(string idString)
+  private Identifier* _inGrowing_unsafe(hash_t idHash, string idString)
   out(id)
   { assert(id !is null); }
   body
   {
-    auto id = idString in growingTable;
+    auto id = idHash in growingTable;
+    assert(!id || idString == (*id).str,
+      Format("bad hash function:\n ‘{}’ != ‘{}’", idString, (*id).str));
     if (id)
       return *id;
     auto newID = Identifier(idString, TOK.Identifier);
-    growingTable[idString] = newID;
+    growingTable[idHash] = newID;
     return newID;
   }
 
@@ -107,10 +117,10 @@ static:
   ///
   /// Adds idString to the table if not found.
   /// Access to the data structure is synchronized.
-  private Identifier* _inGrowing_safe(string idString)
+  private Identifier* _inGrowing_safe(hash_t idHash, string idString)
   {
     synchronized
-      return _inGrowing_unsafe(idString);
+      return _inGrowing_unsafe(idHash, idString);
   }
 
   /+
