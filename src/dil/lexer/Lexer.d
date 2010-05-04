@@ -322,8 +322,8 @@ class Lexer
   }
   out
   {
-    assert(text.ptr <= t.start && t.start < end, Token.toString(t.kind));
-    assert(text.ptr <= t.end && t.end <= end, Token.toString(t.kind));
+    assert(text.ptr <= t.start && t.start < end, t.kindAsString());
+    assert(text.ptr <= t.end && t.end <= end, t.kindAsString());
     assert(t.kind != TOK.Invalid);
   }
   body
@@ -751,8 +751,8 @@ class Lexer
   }
   out
   {
-    assert(text.ptr <= t.start && t.start < end, Token.toString(t.kind));
-    assert(text.ptr <= t.end && t.end <= end, Token.toString(t.kind));
+    assert(text.ptr <= t.start && t.start < end, t.kindAsString());
+    assert(text.ptr <= t.end && t.end <= end, t.kindAsString());
     assert(t.kind != TOK.Invalid, String(t.start, t.end));
   }
   body
