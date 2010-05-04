@@ -4,6 +4,7 @@
 module dil.lexer.Funcs;
 
 import dil.Unicode : isUnicodeAlpha;
+import common;
 
 /// Converts an unsigned integer to a string (CTF version.)
 char[] StringCTF(uint x)
@@ -32,6 +33,37 @@ char[] String(char* begin, char* end)
 {
   assert(begin && end && begin <= end);
   return begin[0..end-begin];
+}
+
+/// Calculates a hash value for str.
+hash_t hashOf(string str)
+{
+  hash_t hash;
+  char* pstr = str.ptr;
+  size_t len = str.length;
+  ubyte rem = len % hash_t.sizeof; // Remainder.
+  if (len == rem)
+    goto Lrem;
+
+  union Chunks { struct { size_t len; void* ptr; } hash_t[] items; }
+  Chunks chunks = void;
+  chunks.ptr = pstr;
+  // Align length to multiples of 4 or 8 (x86 vs. x86_64).
+  chunks.len = len >> (hash_t.sizeof / 2);
+  foreach (c; chunks.items)
+    hash = hash * 11 + c;
+
+  if (rem)
+  { // Calculate the hash of the remaining characters.
+    pstr += len - rem; // Move to the beginning of the remainder.
+  Lrem:
+    size_t chunk;
+    while (rem--)
+      chunk = (chunk << 8) | *pstr++;
+    hash = hash * 11 + chunk;
+  }
+
+  return hash;
 }
 
 const char[3] LS = "\u2028"; /// Unicode line separator.
