@@ -78,7 +78,8 @@ class Lexer
     nl_tok.prev = this.token;
     this.token = nl_tok;
 
-    scanShebang();
+    if (*p == '#' && p[1] == '!')
+      scanShebang();
   }
 
   /// The destructor deletes the doubly-linked token list.
@@ -114,19 +115,17 @@ class Lexer
   void scanShebang()
   {
     auto p = this.p;
-    if (*p == '#' && p[1] == '!')
-    {
-      auto t = new Token;
-      t.kind = TOK.Shebang;
-      t.setWhitespaceFlag();
-      t.start = p;
-      ++p;
-      while (!isEndOfLine(++p))
-        isascii(*p) || decodeUTF8(p);
-      t.end = this.p = p;
-      this.token.next = t;
-      t.prev = this.token;
-    }
+    assert(*p == '#' && p[1] == '!');
+    auto t = new Token;
+    t.kind = TOK.Shebang;
+    t.setWhitespaceFlag();
+    t.start = p++;
+    while (!isEndOfLine(++p))
+      isascii(*p) || decodeUTF8(p);
+    t.end = this.p = p;
+    // Link it in.
+    this.token.next = t;
+    t.prev = this.token;
   }
 
   /// Sets the value of the special token.
