@@ -22,6 +22,13 @@ struct SymbolTable
     return psym ? *psym : null;
   }
 
+  /// Looks up a string hash in the table.
+  Symbol lookup(hash_t hash)
+  {
+    auto psym = hash in table;
+    return psym ? *psym : null;
+  }
+
   /// Inserts a symbol into the table.
   void insert(Symbol symbol, Identifier* ident)
   {

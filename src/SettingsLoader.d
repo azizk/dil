@@ -10,7 +10,8 @@ import dil.semantic.Module,
        dil.semantic.Pass1,
        dil.semantic.Symbol,
        dil.semantic.Symbols;
-import dil.lexer.Funcs;
+import dil.lexer.Funcs,
+       dil.lexer.Identifier;
 import dil.Messages;
 import dil.Diagnostics;
 import dil.Compilation;
@@ -28,10 +29,12 @@ abstract class SettingsLoader
 {
   Diagnostics diag; /// Collects error messages.
   Module mod; /// Current module.
+  CompilationContext cc; /// The context.
 
   /// Constructs a SettingsLoader object.
-  this(Diagnostics diag)
+  this(CompilationContext cc, Diagnostics diag)
   {
+    this.cc = cc;
     this.diag = diag;
   }
 
@@ -39,16 +42,16 @@ abstract class SettingsLoader
   /// Params:
   ///   token = where the error occurred.
   ///   formatMsg = error message.
-  void error(Token* token, char[] formatMsg, ...)
+  void error(Token* token, string formatMsg, ...)
   {
     auto location = token.getErrorLocation(mod.filePath);
     auto msg = Format(_arguments, _argptr, formatMsg);
     diag ~= new SemanticError(location, msg);
   }
 
-  T getValue(T)(char[] name)
+  T getValue(T)(string name)
   {
-    auto var = mod.lookup(name);
+    auto var = mod.lookup(hashOf(name));
     if (!var) // Returning T.init instead of null, because dmd gives an error.
       return error(mod.firstToken, "variable '{}' is not defined", name), T.init;
     auto t = var.node.begin;
@@ -67,7 +70,7 @@ abstract class SettingsLoader
   {
     if (auto result = n.Is!(T))
       return result;
-    char[] type = T.stringof;
+    string type = T.stringof;
     (is(T == StringExpression) && (type = "char[]").ptr) ||
     (is(T == ArrayInitExpression) && (type = "[]").ptr) ||
     (is(T == IntExpression) && (type = "int"));
@@ -89,18 +92,19 @@ class ConfigLoader : SettingsLoader
   string homePath; /// Path to the home directory.
 
   /// Constructs a ConfigLoader object.
-  this(Diagnostics diag, char[] arg0)
+  this(CompilationContext cc, Diagnostics diag, string arg0)
   {
-    super(diag);
+    super(cc, diag);
     this.homePath = Environment.get("HOME");
     this.executablePath = GetExecutableFilePath(arg0);
     this.executableDir = Path(this.executablePath).path();
     Environment.set("BINDIR", this.executableDir);
   }
 
-  static ConfigLoader opCall(Diagnostics diag, char[] arg0)
+  static ConfigLoader opCall(CompilationContext cc, Diagnostics diag,
+    string arg0)
   {
-    return new ConfigLoader(diag, arg0);
+    return new ConfigLoader(cc, diag, arg0);
   }
 
   /// Expands environment variables such as ${HOME} in a string.
@@ -144,7 +148,7 @@ class ConfigLoader : SettingsLoader
       return;
     }
     // Load the file as a D module.
-    mod = new Module(filePath, diag);
+    mod = new Module(filePath, cc, diag);
     mod.parse();
 
     if (mod.hasErrors)
@@ -204,7 +208,7 @@ class ConfigLoader : SettingsLoader
     // Load language file.
     // TODO: create a separate class for this?
     filePath = expandVariables(GlobalSettings.langFile);
-    mod = new Module(filePath, diag);
+    mod = new Module(filePath, cc, diag);
     mod.parse();
 
     if (mod.hasErrors)
@@ -215,7 +219,7 @@ class ConfigLoader : SettingsLoader
 
     if (auto array = getValue!(ArrayInitExpression)("messages"))
     {
-      char[][] messages;
+      string[] messages;
       foreach (value; array.values)
         if (auto val = castTo!(StringExpression)(value))
           messages ~= val.getString();
@@ -260,19 +264,19 @@ class ConfigLoader : SettingsLoader
 class TagMapLoader : SettingsLoader
 {
   /// Constructs a TagMapLoader object.
-  this(Diagnostics diag)
+  this(CompilationContext cc, Diagnostics diag)
   {
-    super(diag);
+    super(cc, diag);
   }
 
-  static TagMapLoader opCall(Diagnostics diag)
+  static TagMapLoader opCall(CompilationContext cc, Diagnostics diag)
   {
-    return new TagMapLoader(diag);
+    return new TagMapLoader(cc, diag);
   }
 
   string[hash_t] load(string filePath)
   {
-    mod = new Module(filePath, diag);
+    mod = new Module(filePath, cc, diag);
     mod.parse();
     if (mod.hasErrors)
       return null;

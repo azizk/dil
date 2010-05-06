@@ -17,9 +17,9 @@ class Package : ScopeSymbol
   Module[] modules;   /// The modules contained in this package.
 
   /// Constructs a Package object.
-  this(string pckgName)
+  this(string pckgName, IdTable idtable)
   {
-    auto ident = IdTable.lookup(pckgName);
+    auto ident = idtable.lookup(pckgName);
     super(SYM.Package, ident, null);
     this.pckgName = pckgName;
   }

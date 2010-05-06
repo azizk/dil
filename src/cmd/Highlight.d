@@ -5,6 +5,7 @@ module cmd.Highlight;
 
 import dil.Highlighter;
 import dil.Diagnostics;
+import dil.Compilation;
 import SettingsLoader;
 import Settings;
 import common;
@@ -30,6 +31,7 @@ struct HighlightCommand
   string filePathSrc; /// File path to the module to be highlighted.
   string filePathDest; /// Where to write the highlighted file.
   Diagnostics diag; /// Collects error messages.
+  CompilationContext cc; /// The context.
 
   /// Adds o to the options.
   void add(Option o)
@@ -46,7 +48,7 @@ struct HighlightCommand
 
     auto mapFilePath = options & Option.HTML ? GlobalSettings.htmlMapFile
                                              : GlobalSettings.xmlMapFile;
-    auto map = TagMapLoader(diag).load(mapFilePath);
+    auto map = TagMapLoader(cc, diag).load(mapFilePath);
     auto tags = new TagMap(map);
 
     if (diag.hasInfo)
@@ -56,7 +58,7 @@ struct HighlightCommand
     if (filePathDest.length)
       print = new FormatOut(Format, new File(filePathDest, File.WriteCreate));
 
-    auto hl = new Highlighter(tags, print, diag);
+    auto hl = new Highlighter(tags, print, cc);
 
     bool printLines = (options & Option.PrintLines) != 0;
     bool printHTML = (options & Option.HTML) != 0;

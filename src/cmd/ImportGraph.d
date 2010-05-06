@@ -69,7 +69,7 @@ struct IGraphCommand
     auto filePath = Path(this.filePath);
     context.importPaths ~= filePath.folder();
 
-    auto gbuilder = new GraphBuilder;
+    auto gbuilder = new GraphBuilder(context);
 
     gbuilder.importPaths = context.importPaths;
     gbuilder.options = options;
@@ -94,7 +94,7 @@ struct IGraphCommand
         printModuleList(graph.vertices, levels+1, "");
     }
     else
-      printDotDocument(graph, siStyle, piStyle, options);
+      printDotDocument(context, graph, siStyle, piStyle, options);
   }
 }
 
@@ -195,16 +195,18 @@ class Vertex
 /// Builds a module dependency graph.
 class GraphBuilder
 {
-  Graph graph;
-  IGraphCommand.Options options;
+  Graph graph; /// The graph object.
+  IGraphCommand.Options options; /// The options.
   string[] importPaths; /// Where to look for modules.
   Vertex[hash_t] loadedModulesTable; /// Maps FQN paths to modules.
   bool delegate(string) filterPredicate;
+  CompilationContext cc; /// The context.
 
   /// Constructs a GraphBuilder object.
-  this()
+  this(CompilationContext cc)
   {
     this.graph = new Graph;
+    this.cc = cc;
   }
 
   /// Start building the graph and return that.
@@ -248,7 +250,7 @@ class GraphBuilder
       if (options & IGraphCommand.Option.IncludeUnlocatableModules)
       { // Include module nevertheless.
         vertex = new Vertex;
-        vertex.modul = new Module("");
+        vertex.modul = new Module("", cc);
         vertex.modul.setFQN(replace(moduleFQNPath, dirSep, '.'));
         graph.addVertex(vertex);
       }
@@ -257,9 +259,9 @@ class GraphBuilder
     }
     else
     {
-      auto modul = new Module(moduleFilePath);
+      auto modul = new Module(moduleFilePath, cc);
       // Use lightweight ImportParser.
-      modul.setParser(new ImportParser(modul.sourceText));
+      modul.setParser(new ImportParser(modul.sourceText, cc.tables));
       modul.parse();
 
       vertex = new Vertex;
@@ -314,16 +316,17 @@ void printModuleList(Vertex[] vertices, uint level, char[] indent)
 }
 
 /// Prints the graph as a graphviz dot document.
-void printDotDocument(Graph graph, string siStyle, string piStyle,
-                      IGraphCommand.Options options)
+void printDotDocument(CompilationContext cc, Graph graph,
+  string siStyle, string piStyle, IGraphCommand.Options options)
 {
   // Needed for grouping by package names.
   ModuleManager mm;
   uint groupModules = options & (IGraphCommand.Option.GroupByFullPackageName |
                                  IGraphCommand.Option.GroupByPackageNames);
+
   if (groupModules)
   {
-    mm = new ModuleManager(null, new Diagnostics());
+    mm = new ModuleManager(cc, cc.diag);
     foreach (vertex; graph.vertices)
       mm.addModule(vertex.modul);
   }
@@ -409,6 +412,7 @@ void printDotDocument(Graph graph, string siStyle, string piStyle,
 /// The new algorithm doesn't work (yet.)
 void analyzeGraph(Vertex[] vertices_init, Edge[] edges)
 {
+  // TODO: use BitArray to see which vertices have been visited already.
   edges = edges.dup;
   void recursive(Vertex[] vertices)
   {

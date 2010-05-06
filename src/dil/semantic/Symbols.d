@@ -30,20 +30,19 @@ class ScopeSymbol : Symbol
     super(SYM.Scope, name, node);
   }
 
-  /// Look up name in the table.
+  /// Looks up name in the table.
   Symbol lookup(Identifier* name)
   {
     return symbolTable.lookup(name);
   }
 
-  /// Look up name in the table.
-  Symbol lookup(string name)
+  /// Looks up a symbol in the table using its string hash.
+  Symbol lookup(hash_t hash)
   {
-    auto id = IdTable.lookup(name);
-    return id ? symbolTable.lookup(id) : null;
+    return symbolTable.lookup(hash);
   }
 
-  /// Insert a symbol into the table.
+  /// Inserts a symbol into the table.
   void insert(Symbol s, Identifier* name)
   {
     symbolTable.insert(s, name);

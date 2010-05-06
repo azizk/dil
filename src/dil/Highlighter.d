@@ -12,8 +12,8 @@ import dil.ast.DefaultVisitor,
 import dil.lexer.Lexer;
 import dil.parser.Parser;
 import dil.semantic.Module;
+import dil.Compilation;
 import dil.SourceText;
-import dil.Diagnostics;
 import util.Path;
 import common;
 
@@ -23,23 +23,24 @@ import tango.io.device.Array;
 class Highlighter
 {
   TagMap tags; /// Which tag map to use.
-  /// Used to print formatted strings. Can be a file, stdout or buffer.
+  /// Used to print formatted strings. Can be a file, stdout or a buffer.
   FormatOut print;
-  Diagnostics diag; /// Collects error messages.
+  CompilationContext cc; /// The compilation context.
 
   /// Constructs a TokenHighlighter object.
-  this(TagMap tags, FormatOut print, Diagnostics diag)
+  this(TagMap tags, FormatOut print, CompilationContext cc)
   {
     this.tags = tags;
     this.print = print;
-    this.diag = diag;
+    this.cc = cc;
   }
 
-  /// Highlights tokens in a text buffer.
+  /// Highlights tokens in a string.
   /// Returns: A string with the highlighted tokens.
   string highlightTokens(string text, string filePath, ref uint lines)
   {
-    auto lx = new Lexer(new SourceText(filePath, text), diag);
+    auto src = new SourceText(filePath, text);
+    auto lx = new Lexer(src, cc.tables, cc.diag);
     lx.scanAll();
     lines = lx.lineNum;
     return highlightTokens(lx.firstToken(), lx.tail);
@@ -73,7 +74,8 @@ class Highlighter
   /// Highlights all tokens of a source file.
   void highlightTokens(string filePath, bool opt_printLines)
   {
-    auto lx = new Lexer(new SourceText(filePath, true), diag);
+    auto src = new SourceText(filePath, true);
+    auto lx = new Lexer(src, cc.tables, cc.diag);
     lx.scanAll();
 
     print.format(tags["DocHead"], Path(filePath).name());
@@ -104,7 +106,7 @@ class Highlighter
   /// Highlights the syntax in a source file.
   void highlightSyntax(string filePath, bool printHTML, bool opt_printLines)
   {
-    auto modul = new Module(filePath, diag);
+    auto modul = new Module(filePath, cc, cc.diag);
     modul.parse();
     highlightSyntax(modul, printHTML, opt_printLines);
   }

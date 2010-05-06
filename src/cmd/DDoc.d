@@ -103,19 +103,19 @@ struct DDocCommand
     string mapFilePath = GlobalSettings.htmlMapFile;
     if (writeXML)
       mapFilePath = GlobalSettings.xmlMapFile;
-    auto map = TagMapLoader(diag).load(mapFilePath);
+    auto map = TagMapLoader(context, diag).load(mapFilePath);
     auto tags = new TagMap(map);
 
-    hl = new Highlighter(tags, null, diag);
+    hl = new Highlighter(tags, null, context);
 
     outFileExtension = writeXML ? ".xml" : ".html";
 
-    mm = new ModuleManager(null, diag);
+    mm = new ModuleManager(context, diag);
 
     // Process D files.
     foreach (filePath; filePaths)
     {
-      auto mod = new Module(filePath, diag);
+      auto mod = new Module(filePath, context, diag);
 
       // Only parse if the file is not a "Ddoc"-file.
       if (!DDocEmitter.isDDocFile(mod))

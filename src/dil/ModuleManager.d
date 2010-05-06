@@ -7,6 +7,7 @@ import dil.semantic.Module,
        dil.semantic.Package,
        dil.semantic.Symbol;
 import dil.lexer.Funcs : hashOf;
+import dil.Compilation;
 import dil.Diagnostics;
 import dil.Messages;
 import util.Path;
@@ -36,17 +37,17 @@ class ModuleManager
   /// Loaded modules which are ordered according to the number of
   /// import statements in each module (ascending order.)
   Module[] orderedModules;
-  /// Where to look for module files.
-  string[] importPaths;
   /// Collects error messages.
   Diagnostics diag;
+  /// Provides tables and compiler variables.
+  CompilationContext cc;
 
   /// Constructs a ModuleManager object.
-  this(string[] importPaths, Diagnostics diag)
+  this(CompilationContext cc, Diagnostics diag)
   {
-    this.rootPackage = new Package(null);
+    this.rootPackage = new Package(null, cc.tables.idents);
     packageTable[0] = this.rootPackage; // hashOf("") = 0
-    this.importPaths = importPaths;
+    this.cc = cc;
     this.diag = diag;
   }
 
@@ -75,7 +76,7 @@ class ModuleManager
       return existingModule;
 
     // Create a new module.
-    auto newModule = new Module(moduleFilePath, diag);
+    auto newModule = new Module(moduleFilePath, cc, diag);
     newModule.parse();
 
     addModule(newModule);
@@ -91,7 +92,7 @@ class ModuleManager
       return existingModule;
 
     // Locate the module in the file system.
-    auto moduleFilePath = findModuleFilePath(moduleFQNPath, importPaths);
+    auto moduleFilePath = findModuleFilePath(moduleFQNPath, cc.importPaths);
     if (!moduleFilePath.length)
       return null; // No module found.
 
@@ -183,7 +184,7 @@ class ModuleManager
     auto parentPckg = getPackage(prevFQN); // E.g.: 'dil'
 
     // Create a new package.
-    auto pckg = new Package(lastPckgName); // E.g.: 'ast'
+    auto pckg = new Package(lastPckgName, cc.tables.idents); // E.g.: 'ast'
     parentPckg.add(pckg); // 'dil'.add('ast')
 
     // Insert the package into the table.

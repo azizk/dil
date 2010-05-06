@@ -8,6 +8,7 @@ import dil.lexer.Lexer,
        dil.lexer.Token;
 import dil.parser.Parser;
 import dil.ast.NodesEnum;
+import dil.Compilation;
 import dil.SourceText;
 import common;
 
@@ -17,13 +18,14 @@ struct StatsCommand
   string[] filePaths; /// Module file paths.
   bool printTokensTable; /// Whether to print the tokens table.
   bool printNodesTable; /// Whether to print the nodes table.
+  CompilationContext cc; /// The context.
 
   /// Execute the command.
   void run()
   {
     Statistics[] stats;
     foreach (filePath; filePaths)
-      stats ~= getStatistics(filePath, printTokensTable, printNodesTable);
+      stats ~= getStatistics(cc, filePath, printTokensTable, printNodesTable);
 
     auto total = Statistics(printTokensTable, printNodesTable);
 
@@ -148,7 +150,8 @@ void execute(string[] filePaths, bool printTokensTable, bool printNodesTable)
 }
 
 /// Returns the statistics for a D source file.
-Statistics getStatistics(string filePath, bool printTokensTable, bool printNodesTable)
+Statistics getStatistics(CompilationContext cc, string filePath,
+  bool printTokensTable, bool printNodesTable)
 {
   // Create a new record.
   auto stats = Statistics(printTokensTable);
@@ -158,7 +161,7 @@ Statistics getStatistics(string filePath, bool printTokensTable, bool printNodes
   Lexer lx;
   if (printNodesTable)
   {
-    parser = new Parser(sourceText);
+    parser = new Parser(sourceText, cc.tables);
     auto rootNode = parser.start();
     // Count nodes.
     stats.nodesTable = (new ASTStats).count(rootNode);
@@ -166,7 +169,7 @@ Statistics getStatistics(string filePath, bool printTokensTable, bool printNodes
   }
   else
   {
-    lx = new Lexer(sourceText);
+    lx = new Lexer(sourceText, cc.tables);
     lx.scanAll();
   }
 

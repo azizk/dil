@@ -303,7 +303,7 @@ override
 
     bool isAnonymous = d.symbol.isAnonymous;
     if (isAnonymous)
-      d.symbol.name = IdTable.genAnonEnumID();
+      d.symbol.name = context.tables.idents.genAnonEnumID();
 
     insert(d.symbol);
 
@@ -369,7 +369,7 @@ override
     d.symbol = new Struct(d.nameId, d);
 
     if (d.symbol.isAnonymous)
-      d.symbol.name = IdTable.genAnonStructID();
+      d.symbol.name = context.tables.idents.genAnonStructID();
     // Insert into current scope.
     insert(d.symbol);
 
@@ -393,7 +393,7 @@ override
     d.symbol = new Union(d.nameId, d);
 
     if (d.symbol.isAnonymous)
-      d.symbol.name = IdTable.genAnonUnionID();
+      d.symbol.name = context.tables.idents.genAnonUnionID();
 
     // Insert into current scope.
     insert(d.symbol);

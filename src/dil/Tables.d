@@ -4,6 +4,7 @@
 module dil.Tables;
 
 import dil.lexer.Token;
+import dil.lexer.IdTable;
 import dil.semantic.Types;
 import common;
 
@@ -13,6 +14,7 @@ class Tables
   /// Contructs a Tables object.
   this()
   {
+    idents = new IdTable();
     types = new TypeTable();
   }
 
@@ -22,10 +24,18 @@ class Tables
 
   TypeTable types; /// A table for D types.
 
+  // A collection of tables for various token values.
+  IdTable idents;
   string[hash_t] strings; /// Maps strings to zero-terminated string values.
   Float[hash_t] floats; /// Maps float strings to Float values.
   IntegerValue*[ulong] ulongs; /// Maps a ulong to an IntegerValue.
   /// A list of newline values.
   /// Only instances, where 'hlinfo' is null, are kept here.
   NewlineValue*[] newlines;
+
+  /// Looks up an identifier.
+  Identifier* lookupIdentifier(string str)
+  {
+    return idents.lookup(str);
+  }
 }

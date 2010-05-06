@@ -5,6 +5,8 @@ module dil.Compilation;
 
 import dil.semantic.Types;
 import dil.lexer.Funcs : hashOf;
+import dil.Tables;
+import dil.Diagnostics;
 import common;
 
 /// A group of settings relevant to the compilation process.
@@ -12,44 +14,52 @@ class CompilationContext
 {
   alias typeof(this) CC;
   CC parent;
-  string[] importPaths;
-  uint debugLevel;
-  uint versionLevel;
-  bool[hash_t] debugIds;
-  bool[hash_t] versionIds;
-  bool releaseBuild;
-  bool unittestBuild;
-  bool acceptDeprecated;
+  string[] importPaths; /// Import paths.
+  uint debugLevel; /// The debug level.
+  uint versionLevel; /// The version level.
+  string[hash_t] debugIds; /// Set of debug identifiers.
+  string[hash_t] versionIds; /// Set of version identifiers.
+  bool releaseBuild; /// Build release version?
+  bool unittestBuild; /// Include unittests?
+  bool acceptDeprecated; /// Allow deprecated symbols/features?
   uint structAlign = 4;
-  TypeTable typeTable;
+
+  Tables tables; /// Tables used by the Lexer and the semantic phase.
+
+  Diagnostics diag; /// Diagnostics object.
 
   this(CC parent = null)
   {
     this.parent = parent;
-    if (parent)
+    if (isRoot())
+      (tables = new Tables()),
+      (diag = new Diagnostics());
+    else
     {
       this.importPaths = parent.importPaths.dup;
       this.debugLevel = parent.debugLevel;
       this.versionLevel = parent.versionLevel;
       this.releaseBuild = parent.releaseBuild;
       this.structAlign = parent.structAlign;
-      this.typeTable = parent.typeTable;
+      this.tables = parent.tables;
+      this.diag = parent.diag;
     }
+  }
 
-    if (isRoot())
-    {
-      typeTable = new TypeTable();
-    }
+  /// Makes accessing the tables thread-safe.
+  void threadsafeTables(bool safe)
+  {
+    tables.idents.setThreadsafe(safe);
   }
 
   void addDebugId(string id)
   {
-    debugIds[hashOf(id)] = true;
+    debugIds[hashOf(id)] = id;
   }
 
   void addVersionId(string id)
   {
-    versionIds[hashOf(id)] = true;
+    versionIds[hashOf(id)] = id;
   }
 
   bool findDebugId(string id)

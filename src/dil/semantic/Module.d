@@ -10,6 +10,7 @@ import dil.lexer.Lexer,
        dil.lexer.IdTable;
 import dil.semantic.Symbol,
        dil.semantic.Symbols;
+import dil.Compilation;
 import dil.Location;
 import dil.Messages;
 import dil.Diagnostics;
@@ -46,6 +47,8 @@ class Module : ScopeSymbol
   Diagnostics diag; /// Collects error messages.
   bool failedLoading; /// True if loading the source file failed.
 
+  CompilationContext cc; /// The compilation context.
+
   this()
   {
     super(SYM.Module, null, null);
@@ -55,11 +58,12 @@ class Module : ScopeSymbol
   /// Params:
   ///   filePath = file path to the source text; loaded in the constructor.
   ///   diag = used for collecting error messages.
-  this(string filePath, Diagnostics diag = null)
+  this(string filePath, CompilationContext cc, Diagnostics diag = null)
   {
     this();
+    this.cc = cc;
     this.sourceText = new SourceText(filePath);
-    this.diag = diag is null ? new Diagnostics() : diag;
+    this.diag = diag is null ? cc.diag : diag;
     this.failedLoading = !this.sourceText.load(diag);
   }
 
@@ -88,7 +92,7 @@ class Module : ScopeSymbol
   void parse()
   {
     if (this.parser is null)
-      this.parser = new Parser(sourceText, diag);
+      this.parser = new Parser(sourceText, cc.tables, diag);
 
     this.root = parser.start();
     this.imports = parser.imports;
@@ -101,22 +105,25 @@ class Module : ScopeSymbol
         this.setFQN(moduleDecl.getFQN()); // E.g.: dil.ast.Node
     }
 
+
+    auto idtable = cc.tables.idents;
+
     if (!this.moduleFQN.length)
     { // Take the base name of the file as the module name.
       auto str = Path(filePath).name(); // E.g.: Node
-      if (!Lexer.isValidUnreservedIdentifier(str))
+      if (!idtable.isValidUnreservedIdentifier(str))
       {
         auto location = this.firstToken().getErrorLocation(filePath());
         auto msg = Format(MSG.InvalidModuleName, str);
         diag ~= new LexerError(location, msg);
-        str = IdTable.genModuleID().str;
+        str = idtable.genModuleID().str;
       }
       this.moduleFQN = this.moduleName = str;
     }
     assert(this.moduleFQN.length);
 
     // Set the symbol name.
-    this.name = IdTable.lookup(this.moduleName);
+    this.name = idtable.lookup(this.moduleName);
   }
 
   /// Returns the first token of the module's source text.

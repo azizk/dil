@@ -10,13 +10,13 @@ import dil.ast.Visitor,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
-import dil.lexer.IdTable;
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
        dil.semantic.Types,
        dil.semantic.Scope,
        dil.semantic.Module,
        dil.semantic.Analysis;
+import dil.lexer.IdTable;
 import dil.Compilation;
 import dil.Diagnostics;
 import dil.Messages;
@@ -237,7 +237,7 @@ override
 
     bool isAnonymous = d.symbol.isAnonymous;
     if (isAnonymous)
-      d.symbol.name = IdTable.genAnonEnumID();
+      d.symbol.name = context.tables.idents.genAnonEnumID();
 
     insert(d.symbol);
 
@@ -303,7 +303,7 @@ override
     d.symbol = new Struct(d.nameId, d);
 
     if (d.symbol.isAnonymous)
-      d.symbol.name = IdTable.genAnonStructID();
+      d.symbol.name = context.tables.idents.genAnonStructID();
     // Insert into current scope.
     insert(d.symbol);
 
@@ -327,7 +327,7 @@ override
     d.symbol = new Union(d.nameId, d);
 
     if (d.symbol.isAnonymous)
-      d.symbol.name = IdTable.genAnonUnionID();
+      d.symbol.name = context.tables.idents.genAnonUnionID();
 
     // Insert into current scope.
     insert(d.symbol);

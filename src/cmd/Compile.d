@@ -31,7 +31,7 @@ struct CompileCommand
   void run()
   {
     // TODO: import object.d
-    moduleMan = new ModuleManager(context.importPaths, diag);
+    moduleMan = new ModuleManager(context, diag);
     foreach (filePath; filePaths)
       moduleMan.loadModuleFile(filePath);
 

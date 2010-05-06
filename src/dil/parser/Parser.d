@@ -11,6 +11,7 @@ import dil.ast.Node,
        dil.ast.Expressions,
        dil.ast.Types,
        dil.ast.Parameters;
+import dil.Tables;
 import dil.Messages;
 import dil.Diagnostics;
 import dil.Enums;
@@ -48,10 +49,10 @@ class Parser
   /// Params:
   ///   srcText = the UTF-8 source code.
   ///   diag = used for collecting error messages.
-  this(SourceText srcText, Diagnostics diag = null)
+  this(SourceText srcText, Tables tables, Diagnostics diag = null)
   {
     this.diag = diag;
-    lexer = new Lexer(srcText, diag);
+    this.lexer = new Lexer(srcText, tables, diag);
   }
 
   /// Moves to the first token.

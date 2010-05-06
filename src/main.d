@@ -48,8 +48,9 @@ import tango.core.tools.TraceExceptions;
 /// Entry function of dil.
 void main(char[][] args)
 {
-  auto diag = new Diagnostics();
-  ConfigLoader(diag, args[0]).load();
+  auto globalCC = newCompilationContext();
+  auto diag = globalCC.diag;
+  ConfigLoader(globalCC, diag, args[0]).load();
   if (diag.hasInfo)
     return printErrors(diag);
 
@@ -64,7 +65,7 @@ void main(char[][] args)
       return printHelp(command);
 
     CompileCommand cmd;
-    cmd.context = newCompilationContext();
+    cmd.context = globalCC;
     cmd.diag = diag;
 
     foreach (arg; args[2..$])
@@ -122,7 +123,7 @@ void main(char[][] args)
     // Execute the command.
     foreach (path; filePaths)
     {
-      auto modul = new Module(path, diag);
+      auto modul = new Module(path, globalCC, diag);
       modul.parse();
       if (!modul.hasErrors)
       {
@@ -145,7 +146,7 @@ void main(char[][] args)
 
     DDocCommand cmd;
     cmd.destDirPath = args[2];
-    cmd.context = newCompilationContext();
+    cmd.context = globalCC;
     cmd.diag = diag;
 
     // Parse arguments.
@@ -186,6 +187,7 @@ void main(char[][] args)
       return printHelp(command);
 
     HighlightCommand cmd;
+    cmd.cc = globalCC;
     cmd.diag = diag;
 
     foreach (arg; args[2..$])
@@ -215,7 +217,7 @@ void main(char[][] args)
       return printHelp(command);
 
     IGraphCommand cmd;
-    cmd.context = newCompilationContext();
+    cmd.context = globalCC;
 
     foreach (arg; args[2..$])
     {
@@ -263,6 +265,7 @@ void main(char[][] args)
       return printHelp(command);
 
     StatsCommand cmd;
+    cmd.cc = globalCC;
     foreach (arg; args[2..$])
       if (arg == "--toktable")
         cmd.printTokensTable = true;
@@ -300,7 +303,7 @@ void main(char[][] args)
       sourceText = new SourceText(filePath, true);
 
     diag = new Diagnostics();
-    auto lx = new Lexer(sourceText, diag);
+    auto lx = new Lexer(sourceText, globalCC.tables, diag);
     lx.scanAll();
     auto token = lx.firstToken();
 
@@ -322,9 +325,8 @@ void main(char[][] args)
     if (args[2] != "German")
       return Stdout.formatln("Error: unrecognized target language \"{}\"", args[2]);
 
-    diag = new Diagnostics();
     auto filePath = args[3];
-    auto mod = new Module(filePath, diag);
+    auto mod = new Module(filePath, globalCC);
     // Parse the file.
     mod.parse();
     if (!mod.hasErrors)
@@ -346,11 +348,13 @@ void main(char[][] args)
     else
       filePaths = args[2..$];
 
+    auto tables = globalCC.tables;
+
     StopWatch swatch;
     swatch.start;
 
     foreach (filePath; filePaths)
-      (new Lexer(new SourceText(filePath, true))).scanAll();
+      (new Lexer(new SourceText(filePath, true), tables)).scanAll();
 
     Stdout.formatln("Scanned in {:f10}s.", swatch.stop);
     break;
@@ -444,7 +448,7 @@ CompilationContext newCompilationContext()
 version(D2)
   cc.addVersionId("D_Version2");
   foreach (versionId; GlobalSettings.versionIds)
-    if (Lexer.isValidUnreservedIdentifier(versionId))
+    if (cc.tables.idents.isValidUnreservedIdentifier(versionId))
       cc.addVersionId(versionId);
   return cc;
 }
@@ -459,7 +463,7 @@ bool parseDebugOrVersion(string arg, CompilationContext context)
       auto val = arg[7..$];
       if (isdigit(val[0]))
         context.debugLevel = Integer.toInt(val);
-      else if (Lexer.isValidUnreservedIdentifier(val))
+      else if (context.tables.idents.isValidUnreservedIdentifier(val))
         context.addDebugId(val);
     }
     else
@@ -470,7 +474,7 @@ bool parseDebugOrVersion(string arg, CompilationContext context)
     auto val = arg[9..$];
     if (isdigit(val[0]))
       context.versionLevel = Integer.toInt(val);
-    else if (Lexer.isValidUnreservedIdentifier(val))
+    else if (context.tables.idents.isValidUnreservedIdentifier(val))
       context.addVersionId(val);
   }
   else

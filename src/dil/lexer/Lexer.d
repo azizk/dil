@@ -5,9 +5,9 @@ module dil.lexer.Lexer;
 
 import dil.lexer.Token,
        dil.lexer.Keywords,
-       dil.lexer.Identifier,
-       dil.lexer.IdTable;
+       dil.lexer.Identifier;
 import dil.Diagnostics;
+import dil.Tables;
 import dil.Messages;
 import dil.HtmlEntities;
 import dil.CompilerInfo;
@@ -34,6 +34,7 @@ class Lexer
   Token* head;  /// The head of the doubly linked token list.
   Token* tail;  /// The tail of the linked list. Set in scan().
   Token* token; /// Points to the current token in the token list.
+  Tables tables; /// Used to look up token values.
 
   // Members used for error messages:
   Diagnostics diag;
@@ -49,9 +50,10 @@ class Lexer
   /// Params:
   ///   srcText = the UTF-8 source code.
   ///   diag = used for collecting error messages.
-  this(SourceText srcText, Diagnostics diag = null)
+  this(SourceText srcText, Tables tables, Diagnostics diag = null)
   {
     this.srcText = srcText;
+    this.tables = tables;
     this.diag = diag;
 
     assert(text.length && text[$-1] == 0, "source text has no sentinel character");
@@ -86,9 +88,25 @@ class Lexer
     head = tail = token = null;
   }
 
-  char[] text()
+  /// Returns the source text string.
+  string text()
   {
     return srcText.data;
+  }
+
+  /// Scans the whole source text until EOF is encountered.
+  void scanAll()
+  {
+    while (nextToken() != TOK.EOF)
+    {}
+  }
+
+  /// Returns the first token of the source text.
+  /// This can be the EOF token.
+  /// Structure: HEAD -> Newline -> First Token
+  Token* firstToken()
+  {
+    return this.head.next.next;
   }
 
   /// The "shebang" may optionally appear once at the beginning of a file.
@@ -202,19 +220,6 @@ class Lexer
     return false;
   }
 
-  // TODO: these tables must be moved into CompilationContext.
-  /// A collection of tables for various token values.
-  struct ValueTables
-  {
-    string[hash_t] strings; /// Maps strings to zero-terminated string values.
-    Float[hash_t] floats; /// Maps float strings to Float values.
-    IntegerValue*[ulong] ulongs; /// Maps a ulong to an IntegerValue.
-    /// A list of newline values.
-    /// Only instances, where 'hlinfo' is null, are kept here.
-    NewlineValue*[] newlines;
-  }
-
-  static ValueTables tables;
   alias Token.StringValue StringValue;
   alias Token.IntegerValue IntegerValue;
   alias Token.NewlineValue NewlineValue;
@@ -386,7 +391,7 @@ class Lexer
         while (isident(c) || !isascii(c) && isUnicodeAlpha(p))
         t.end = this.p = p;
 
-        auto id = IdTable.lookup(t.text);
+        auto id = tables.lookupIdentifier(t.text);
         t.kind = kind = id.kind;
         t.ident = id;
 
@@ -793,7 +798,7 @@ class Lexer
       while (isident(c) || !isascii(c) && isUnicodeAlpha(p))
       t.end = this.p = p;
 
-      auto id = IdTable.lookup(t.text);
+      auto id = tables.lookupIdentifier(t.text);
       t.kind = kind = id.kind;
       t.ident = id;
 
@@ -2482,54 +2487,6 @@ class Lexer
       diag ~= error;
   }
 
-  /// Scans the whole source text until EOF is encountered.
-  void scanAll()
-  {
-    while (nextToken() != TOK.EOF)
-    {}
-  }
-
-  /// Returns the first token of the source text.
-  /// This can be the EOF token.
-  /// Structure: HEAD -> Newline -> First Token
-  Token* firstToken()
-  {
-    return this.head.next.next;
-  }
-
-  /// Returns true if str is a valid D identifier.
-  static bool isIdentifierString(char[] str)
-  {
-    if (str.length == 0 || isdigit(str[0]))
-      return false;
-    size_t idx;
-    do
-    {
-      auto c = dil.Unicode.decode(str, idx);
-      if (c == ERROR_CHAR || !(isident(c) || !isascii(c) && isUniAlpha(c)))
-        return false;
-    } while (idx < str.length)
-    return true;
-  }
-
-  /// Returns true if str is a keyword or
-  /// a special token (__FILE__, __LINE__ etc.)
-  static bool isReservedIdentifier(char[] str)
-  {
-    if (str.length == 0)
-      return false;
-    auto id = IdTable.inStatic(str);
-    if (id is null || id.kind == TOK.Identifier)
-      return false; // str is not in the table or a normal identifier.
-    return true;
-  }
-
-  /// Returns true if this is a valid identifier and if it's not reserved.
-  static bool isValidUnreservedIdentifier(char[] str)
-  {
-    return isIdentifierString(str) && !isReservedIdentifier(str);
-  }
-
   /// Returns true if the current character to be decoded is
   /// a Unicode alpha character.
   /// Params:
@@ -2850,7 +2807,8 @@ unittest
       src ~= pair.tokenText ~ " ";
 
   // Lex the constructed source text.
-  auto lx = new Lexer(new SourceText("lexer_unittest", src));
+  auto tables = new Tables();
+  auto lx = new Lexer(new SourceText("lexer_unittest", src), tables);
   lx.scanAll();
 
   foreach (e; lx.errors)
@@ -2869,8 +2827,9 @@ unittest
 unittest
 {
   Stdout("Testing method Lexer.peek()\n");
+  auto tables = new Tables();
   auto sourceText = new SourceText("", "unittest { }");
-  auto lx = new Lexer(sourceText, null);
+  auto lx = new Lexer(sourceText, tables);
 
   auto next = lx.head;
   lx.peek(next);
@@ -2884,7 +2843,7 @@ unittest
   lx.peek(next);
   assert(next.kind == TOK.EOF);
 
-  lx = new Lexer(new SourceText("", ""));
+  lx = new Lexer(new SourceText("", ""), tables);
   next = lx.head;
   lx.peek(next);
   assert(next.kind == TOK.Newline);

@@ -6,7 +6,8 @@ module dil.lexer.IdTable;
 import dil.lexer.TokensEnum,
        dil.lexer.IdentsGenerator,
        dil.lexer.Keywords,
-       dil.lexer.Funcs : String, hashOf;
+       dil.lexer.Funcs;
+import dil.Unicode;
 import common;
 
 public import dil.lexer.Identifier,
@@ -33,23 +34,62 @@ struct Ident
   }
 }
 
-/// Global table for hoarding and retrieving identifiers.
-struct IdTable
+/// A table for hoarding and retrieving identifiers.
+class IdTable
 {
-static:
   /// A set of common, predefined identifiers for fast lookups.
-  private Identifier*[hash_t] staticTable;
+  Identifier*[hash_t] staticTable;
   /// A table that grows with every newly found, unique identifier.
-  private Identifier*[hash_t] growingTable;
+  Identifier*[hash_t] growingTable;
 
+  alias Identifier* delegate(hash_t, string) LookupMethod;
+  /// Looks up idString in the growing table.
+  LookupMethod inGrowing;
+
+  /// Constructs an IdTable object.
+  ///
   /// Loads keywords and predefined identifiers into the static table.
-  static this()
+  this()
   {
+    inGrowing = &_inGrowing_unsafe; // Default to unsafe function.
+
     foreach (ref k; g_reservedIds)
       staticTable[hashOf(k.str)] = &k;
     foreach (id; Ident.allIds())
       staticTable[hashOf(id.str)] = id;
     staticTable.rehash;
+  }
+
+  /// Returns true if str is a valid D identifier.
+  static bool isIdentifierString(string str)
+  {
+    if (str.length == 0 || isdigit(str[0]))
+      return false;
+    size_t idx;
+    do
+    {
+      auto c = dil.Unicode.decode(str, idx);
+      if (c == ERROR_CHAR || !(isident(c) || !isascii(c) && isUniAlpha(c)))
+        return false;
+    } while (idx < str.length)
+    return true;
+  }
+
+  /// Returns true if str is a keyword or
+  /// a special token (__FILE__, __LINE__ etc.)
+  bool isReservedIdentifier(string str)
+  {
+    if (str.length == 0)
+      return false;
+    auto id = inStatic(str);
+    // True if id is in the table and if it's not a normal identifier.
+    return id && id.kind != TOK.Identifier;
+  }
+
+  /// Returns true if this is a valid identifier and if it's not reserved.
+  bool isValidUnreservedIdentifier(string str)
+  {
+    return isIdentifierString(str) && !isReservedIdentifier(str);
   }
 
   /// Looks up idString in both tables.
@@ -78,10 +118,6 @@ static:
     auto id = hashOf(idString) in staticTable;
     return id ? *id : null;
   }
-
-  alias Identifier* function(hash_t, string) LookupFunction;
-  /// Looks up idString in the growing table.
-  LookupFunction inGrowing = &_inGrowing_unsafe; // Default to unsafe function.
 
   /// Sets the thread safety mode of the growing table.
   void setThreadsafe(bool safe)
@@ -123,25 +159,8 @@ static:
       return _inGrowing_unsafe(idHash, idString);
   }
 
-  /+
-  Identifier* addIdentifiers(char[][] idStrings)
-  {
-    auto ids = new Identifier*[idStrings.length];
-    foreach (i, idString; idStrings)
-    {
-      Identifier** id = idString in tabulatedIds;
-      if (!id)
-      {
-        auto newID = Identifier(TOK.Identifier, idString);
-        tabulatedIds[idString] = newID;
-        id = &newID;
-      }
-      ids[i] = *id;
-    }
-  }
-  +/
-
-  static uint anonCount; /// Counter for anonymous identifiers.
+  /// Counter for anonymous identifiers.
+  static uint anonCount;
 
   /// Generates an anonymous identifier.
   ///

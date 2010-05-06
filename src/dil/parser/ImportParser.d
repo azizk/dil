@@ -8,6 +8,7 @@ import dil.ast.Node,
        dil.ast.Declarations,
        dil.ast.Statements;
 import dil.SourceText;
+import dil.Tables;
 import dil.Enums;
 import common;
 
@@ -17,9 +18,9 @@ private alias TOK T;
 /// in the source text.
 class ImportParser : Parser
 {
-  this(SourceText srcText)
+  this(SourceText srcText, Tables tables)
   {
-    super(srcText);
+    super(srcText, tables);
   }
 
   override CompoundDeclaration start()
