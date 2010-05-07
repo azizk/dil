@@ -1363,16 +1363,6 @@ override
     return e;
   }
 
-  E visit(DotExpression e)
-  {
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    end(e);
-    return e;
-  }
-
   E visit(ModuleScopeExpression e)
   {
     begin(e);

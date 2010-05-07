@@ -1849,7 +1849,7 @@ class Parser
       e = parseIdentifierExpression();
 
     while (consumed(T.Dot))
-      e = set(new DotExpression(e, parseIdentifierExpression()), begin);
+      e = parseIdentifierExpression(e);
 
     mixinIdent = optionalIdentifier();
     require(T.Semicolon);
@@ -3211,16 +3211,16 @@ class Parser
   }
 
   /// $(BNF AsmPrimaryExpression :=
-  ////  IntExpression | RealExpression | DollarExpression | DotExpression |
+  ////  IntExpression | RealExpression | DollarExpression |
   ////  AsmLocalSizeExpression | AsmRegisterExpression | AsmBracketExpression |
-  ////  IdentifierExpression
+  ////  QualifiedExpression
   ////IntExpression := Integer
   ////RealExpression := Float | Imaginary
   ////DollarExpression := "$"
   ////AsmBracketExpression :=  "[" AsmExpression "]"
   ////AsmLocalSizeExpression := "__LOCAL_SIZE"
   ////AsmRegisterExpression := ...
-  ////DotExpression := (ModuleScopeExpression | IdentifierExpression)
+  ////QualifiedExpression := (ModuleScopeExpression | IdentifierExpression)
   ////                 ("." IdentifierExpression)+
   ////ModuleScopeExpression := ".")
   Expression parseAsmPrimaryExpression()
@@ -3294,13 +3294,13 @@ class Parser
       default:
         e = parseIdentifierExpression();
         while (consumed(T.Dot))
-          e = set(new DotExpression(e, parseIdentifierExpression()), begin);
+          e = parseIdentifierExpression(e);
       } // end of switch
       break;
     case T.Dot:
       e = set(new ModuleScopeExpression(), begin, begin);
       while (consumed(T.Dot))
-        e = set(new DotExpression(e, parseIdentifierExpression()), begin);
+        e = parseIdentifierExpression(e);
       break;
     default:
       error2(MID.ExpectedButFound, "Expression", token);
@@ -3595,9 +3595,9 @@ class Parser
   }
 
   /// $(BNF PostExpression := UnaryExpression
-  ////  (DotExpression | IncOrDecExpression | CallExpression |
+  ////  (QualifiedExpression | IncOrDecExpression | CallExpression |
   ////   SliceExpression | IndexExpression)*
-  ////DotExpression := "." (NewExpression | IdentifierExpression)
+  ////QualifiedExpression := "." (NewExpression | IdentifierExpression)
   ////IncOrDecExpression := "++" | "--"
   ////CallExpression := "(" Arguments? ")"
   ////SliceExpression := "[" (AssignExpression ".." AssignExpression )? "]"
@@ -3613,12 +3613,10 @@ class Parser
       case T.Dot:
         nT();
         if (token.kind == T.New)
-        {
           e = parseNewExpression(e);
-          continue;
-        }
-        e = new DotExpression(e, parseIdentifierExpression());
-        goto Lset;
+        else
+          e = parseIdentifierExpression(e);
+        continue;
       case T.PlusPlus:
         e = new PostIncrExpression(e);
         break;
@@ -3779,7 +3777,7 @@ class Parser
 
   /// $(BNF IdentifierExpression := Identifier | TemplateInstance
   ////TemplateInstance := Identifier "!" TemplateArgumentsOneOrMore)
-  Expression parseIdentifierExpression()
+  Expression parseIdentifierExpression(Expression next = null)
   {
     auto begin = token;
     auto ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
@@ -3792,10 +3790,10 @@ class Parser
       // Identifier "!" "(" TemplateArguments? ")"
       // Identifier "!" TemplateArgumentSingle
       auto tparams = parseOneOrMoreTemplateArguments();
-      e = new TemplateInstanceExpression(ident, tparams);
+      e = new TemplateInstanceExpression(ident, tparams, next);
     }
     else // Identifier
-      e = new IdentifierExpression(ident);
+      e = new IdentifierExpression(ident, next);
     return set(e, begin);
   }
 
@@ -3814,8 +3812,9 @@ class Parser
       e = new TypeofExpression(parseTypeofType());
       break;
     case T.Dot:
-      // No nT() because we want a DotExpression to be parsed afterwards.
       e = set(new ModuleScopeExpression(), begin, begin);
+      nT();
+      e = parseIdentifierExpression(e);
       return e;
     case T.This:
       e = new ThisExpression();
@@ -3844,7 +3843,8 @@ class Parser
       goto LnT_and_return;
     LnT_and_return:
       nT();
-      set(e, begin);
+      assert(begin is prevToken);
+      set(e, begin, begin);
       return e;
     case T.String:
       char[] str = token.strval.str;

@@ -822,11 +822,6 @@ override
     return e;
   }
 
-  E visit(DotExpression e)
-  {
-    return e;
-  }
-
   E visit(ModuleScopeExpression e)
   {
     return e;

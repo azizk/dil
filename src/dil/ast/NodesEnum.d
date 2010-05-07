@@ -151,7 +151,6 @@ static const char[][] g_classNames = [
   "ModuleScopeExpression",
   "IdentifierExpression",
   "SpecialTokenExpression",
-  "DotExpression",
   "TemplateInstanceExpression",
   "ThisExpression",
   "SuperExpression",

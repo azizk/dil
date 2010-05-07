@@ -37,7 +37,7 @@ char[] genMembersTable()
   t[N.PragmaDeclaration] = ["args[]", "decls"];
   t[N.MixinDeclaration] = ["templateExpr?", "argument?"];
   // Expressions:
-  t[N.IllegalExpression] = t[N.IdentifierExpression] =
+  t[N.IllegalExpression] =
   t[N.SpecialTokenExpression] = t[N.ThisExpression] =
   t[N.SuperExpression] = t[N.NullExpression] =
   t[N.DollarExpression] = t[N.BoolExpression] =
@@ -45,6 +45,8 @@ char[] genMembersTable()
   t[N.CharExpression] = t[N.StringExpression] = t[N.VoidInitExpression] =
   t[N.ModuleScopeExpression] = t[N.AsmLocalSizeExpression] = [];
   t[N.AsmRegisterExpression] = ["number?"];
+  t[N.IdentifierExpression] = ["next?"];
+  t[N.TemplateInstanceExpression] = ["targs?", "next?"];
   // BinaryExpressions:
   t[N.CondExpression] = ["condition", "lhs", "rhs"];
   t[N.CommaExpression] = t[N.OrOrExpression] = t[N.AndAndExpression] =
@@ -61,7 +63,7 @@ char[] genMembersTable()
   t[N.DivAssignExpression] = t[N.MulAssignExpression] =
   t[N.ModAssignExpression] = t[N.XorAssignExpression] =
   t[N.PowAssignExpression] = // D2
-  t[N.CatAssignExpression] = t[N.DotExpression] = ["lhs", "rhs"];
+  t[N.CatAssignExpression] = ["lhs", "rhs"];
   // UnaryExpressions:
   t[N.AddressExpression] = t[N.PreIncrExpression] = t[N.PreDecrExpression] =
   t[N.PostIncrExpression] = t[N.PostDecrExpression] = t[N.DerefExpression] =
@@ -77,7 +79,6 @@ char[] genMembersTable()
   t[N.NewClassExpression] = ["frame?", "newArgs[]", "bases[]",
     "ctorArgs[]", "decls"];
   t[N.AsmBracketExpression] = ["expr"];
-  t[N.TemplateInstanceExpression] = ["targs?"];
   t[N.ArrayLiteralExpression] = ["values[]"];
   t[N.AArrayLiteralExpression] = ["keys[]", "values[]"];
   t[N.AssertExpression] = ["expr", "msg?"];

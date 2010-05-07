@@ -1391,16 +1391,6 @@ override
     return e;
   }
 
-  E visit(DotExpression e)
-  {
-    if (e.hasType)
-      return e;
-    bool resetIdScope = idScope is null;
-    // TODO:
-    resetIdScope && (idScope = null);
-    return e;
-  }
-
   E visit(ModuleScopeExpression e)
   {
     if (e.hasType)

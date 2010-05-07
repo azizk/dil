@@ -366,16 +366,6 @@ class PowAssignExpression : BinaryExpression
   }
 }
 
-/// $(BNF DotExpression := Expression '.' Expression)
-class DotExpression : BinaryExpression
-{
-  this(Expression left, Expression right)
-  {
-    super(left, right);
-    mixin(set_kind);
-  }
-}
-
 /*++++++++++++++++++++
 + Unary Expressions: +
 ++++++++++++++++++++*/
@@ -600,10 +590,13 @@ class SliceExpression : UnaryExpression
 
 class IdentifierExpression : Expression
 {
+  Expression next;
   Identifier* ident;
-  this(Identifier* ident)
+  this(Identifier* ident, Expression next = null)
   {
     mixin(set_kind);
+    addOptChild(next);
+    this.next = next;
     this.ident = ident;
   }
 
@@ -629,12 +622,15 @@ class ModuleScopeExpression : Expression
 
 class TemplateInstanceExpression : Expression
 {
+  Expression next;
   Identifier* ident;
   TemplateArguments targs;
-  this(Identifier* ident, TemplateArguments targs)
+  this(Identifier* ident, TemplateArguments targs, Expression next = null)
   {
     mixin(set_kind);
     addOptChild(targs);
+    addOptChild(next);
+    this.next = next;
     this.ident = ident;
     this.targs = targs;
   }
