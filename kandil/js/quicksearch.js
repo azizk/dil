@@ -57,21 +57,27 @@ function QuickSearch(id, options)
       term = RegExp.escape(term).replace(/\\\?/g, ".").replace(/\\\*/g, ".*?");
       return RegExp(term, "i");
     }
-    var terms = this.str.split(/\s+/);
-    var query = {regexps: [], attributes: [], fqn_regexps: []};
+    var terms = this.str.split(/\s+/); // Split by whitespace.
+    var query = {terms: [], attr_terms: [], fqn_terms: []};
+    var qterms = query.terms;
     try
     {
       for (var i = 0, len = terms.length; i < len; i++)
-        if (terms[i][0] == ':')
-          query.attributes.push(RegExp("^(?:"+terms[i].slice(1)+")", "mi"));
-        //else if (terms[i][0] == '/')
-        //  query.regexps.push(RegExp(terms[i].slice(1,-1), "i"));
-        else if (terms[i].indexOf(".") != -1)
-          query.fqn_regexps.push(makeRegExp(terms[i]));
-        else if (terms[i].indexOf("*") != -1)
-          query.regexps.push(makeRegExp(terms[i]));
+      {
+        var term = terms[i];
+        if (term[0] == ':')
+          query.attr_terms.push(RegExp("^(?:"+term.slice(1)+")", "mi"));
+        //else if (term[0] == '/')
+        //  qterms.push(RegExp(term.slice(1,-1), "i"));
+        else if (/\.\.$/.test(term))
+          qterms.push(new LevenTerm(term));
+        else if (term.indexOf(".") != -1)
+          query.fqn_terms.push(makeRegExp(term));
+        else if (term.indexOf("*") != -1)
+          qterms.push(makeRegExp(term));
         else
-          query.regexps.push(RegExp(RegExp.escape(terms[i]), "i"));
+          qterms.push(RegExp(RegExp.escape(term), "i"));
+      }
     }
     catch(e) {
       return false;
@@ -85,6 +91,22 @@ function QuickSearch(id, options)
     this.str = this.str.strip();
     return this.str;
   };
+  return this;
+}
+
+/// Add an alias for RegExp terms.
+RegExp.prototype.search = RegExp.prototype.test;
+
+/// Constructs a LevenTerm object.
+function LevenTerm(term)
+{
+  term = term.toLowerCase().match(/(.+?)(\.+)$/);
+  this.term = term[1]; // Actual term, excluding the trailing dots.
+  this.max = term[2].length; // Number of dots equals the distance.
+  this.leven_func = levenshtein_distance;
+  this.search = function(str) {
+    return this.leven_func(this.term, str.toLowerCase()) <= this.max;
+  }
   return this;
 }
 
@@ -129,6 +151,8 @@ function quick_search(qs, symbols)
 {
   var hasMatches = false; // Whether any item in the tree matched.
   var hasUnmatched = false; // Whether any item in the tree didn't match.
+  // List of query terms.
+  var tlist = [qs.query.terms, qs.query.fqn_terms, qs.query.attr_terms];
   for (var i = 0, len = symbols.length; i < len; i++)
   {
     if (qs.cancelSearch) // Did the user cancel?
@@ -138,14 +162,14 @@ function quick_search(qs, symbols)
     var li = symbol.li; // The associated list item.
     // Reset classes.
     li.removeClass("match|parent_of_match|has_hidden|show_hidden");
+    // Do the actual text searching:
     var texts = [symbol.name, symbol.fqn, symbol.qs_attrs];
-    var tlist = [qs.query.regexps, qs.query.fqn_regexps, qs.query.attributes];
   SearchLoop:
     for (var j = 0; j < 3; j++)
     {
       var text = texts[j], terms = tlist[j];
       for (var k = 0, len2 = terms.length; k < len2; k++)
-        if (text.search(terms[k]) != -1) {
+        if (terms[k].search(text)) {
           itemMatched = true;
           break SearchLoop;
         }
