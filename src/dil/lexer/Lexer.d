@@ -46,6 +46,17 @@ class Lexer
   /// Holds the original file path and the modified one (by #line.)
   Token.HashLineInfo* hlinfo; /// Info set by "#line".
 
+
+  static
+  {
+  const ushort chars_r = toUintE(`r"`); /// `r"` as a ushort.
+  const ushort chars_x = toUintE(`x"`); /// `x"` as a ushort.
+  const ushort chars_q = toUintE(`q"`); /// `q"` as a ushort.
+  const ushort chars_q2 = toUintE(`q{`); /// `q{` as a ushort.
+  const ushort chars_shebang = toUintE("#!"); /// `#!` as a ushort.
+  const uint chars_line = toUintE("line"); /// `line` as a uint.
+  }
+
   /// Constructs a Lexer object.
   /// Params:
   ///   srcText = the UTF-8 source code.
@@ -79,7 +90,7 @@ class Lexer
     nl_tok.prev = this.token;
     this.token = nl_tok;
 
-    if (*p == '#' && p[1] == '!')
+    if (*cast(ushort*)p == chars_shebang)
       scanShebang();
   }
 
@@ -373,17 +384,19 @@ class Lexer
       // Identifier or string literal.
       if (isidbeg(c))
       {
-        if (c == 'r' && p[1] == '"')
+        c = *cast(ushort*)p;
+        if (c == chars_r)
           return ++this.p, scanRawStringLiteral(t);
-        if (c == 'x' && p[1] == '"')
+        if (c == chars_x)
           return scanHexStringLiteral(t);
         version(D2)
         {
-        if (c == 'q' && p[1] == '"')
+        if (c == chars_q)
           return scanDelimitedStringLiteral(t);
-        if (c == 'q' && p[1] == '{')
+        if (c == chars_q2)
           return scanTokenStringLiteral(t);
         }
+
         // Scan identifier.
       Lidentifier:
         do
@@ -711,13 +724,35 @@ class Lexer
   /// CTF: Casts a string literal to an integer.
   static uint toUint(char[] s)
   {
-    assert(0 < s.length && s.length <= 4);
-    int x = 0;
-    for (int i = 0; i < s.length; i++)
-      x = x << 8 | s[i];
+    assert(s.length <= 4);
+    uint x, i = s.length;
+    if (i) x |= s[--i];
+    if (i) x |= s[--i] << 8;
+    if (i) x |= s[--i] << 16;
+    if (i) x |= s[--i] << 24;
     return x;
   }
   static assert(toUint("\xAA\xBB\xCC\xDD") == 0xAABBCCDD);
+
+  /// CTF: Like toUint(), but considers the endianness of the CPU.
+  static uint toUintE(char[] s)
+  {
+    version(BigEndian)
+    return toUint(s);
+    else
+    {
+    assert(s.length <= 4);
+    uint x, i = s.length;
+    if (i) x |= s[--i] << 24;
+    if (i) x |= s[--i] << 16;
+    if (i) x |= s[--i] << 8;
+    if (i) x |= s[--i];
+    x >>>= (4 - s.length) * 8;
+    return x;
+    }
+  }
+  version(LittleEndian)
+  static assert(toUintE("\xAA\xBB\xCC\xDD") == 0xDDCCBBAA);
 
   /// CTF: Constructs case statements. E.g.:
   /// ---
@@ -731,7 +766,7 @@ class Lexer
     char[] label_str = "Lcommon";
     if (str.length != 1) // Append length as a suffix.
       label_str ~= '0' + str.length;
-    return "case toUint(\""~str~"\"): kind = TOK."~kind~";"
+    return "case toUintE(\""~str~"\"): kind = TOK."~kind~";"
              "goto "~label_str~";\n";
   }
   // pragma(msg, case_("<", "Less"));
@@ -780,18 +815,21 @@ class Lexer
     assert(p == t.start);
     // Check for ids first, as they occur the most often in source codes.
     if (isidbeg(c))
-    { // Scan an identifier.
-      if (c == 'r' && p[1] == '"')
+    {
+      c = *cast(ushort*)p;
+      if (c == chars_r)
         return (this.p = ++p), scanRawStringLiteral(t);
-      if (c == 'x' && p[1] == '"')
+      if (c == chars_x)
         return scanHexStringLiteral(t);
       version(D2)
       {
-      if (c == 'q' && p[1] == '"')
+      if (c == chars_q)
         return scanDelimitedStringLiteral(t);
-      if (c == 'q' && p[1] == '{')
+      if (c == chars_q2)
         return scanTokenStringLiteral(t);
       }
+
+      // Scan an identifier.
     Lidentifier:
       do
       { c = *++p; }
@@ -819,35 +857,10 @@ class Lexer
     if (isdigit(c))
       return scanNumber(t);
 
-    assert(end - p != 0);
-    switch (end - p)
-    {
-    case 1:
-      goto L1character;
-    case 2:
-      c <<= 8; c |= p[1];
-      goto L2characters;
-    case 3:
-      c <<= 8; c |= p[1]; c <<= 8; c |= p[2];
-      goto L3characters;
-    default:
-      version(BigEndian)
-        c = *cast(uint*)p;
-      else
-      { // TODO: change toUint() for LittleEndian compilations
-        // to make byte swapping unnecessary?
-        c <<= 8; c |= p[1]; c <<= 8; c |= p[2]; c <<= 8; c |= p[3];
-        /+
-        c = *cast(uint*)p;
-        asm
-        {
-          mov EDX, c;
-          bswap EDX;
-          mov c, EDX;
-        }
-        +/
-      }
-    }
+
+    // Thanks to the 4 zeros terminating the text,
+    // it is possible to look ahead 4 characters.
+    c = *cast(uint*)p;
 
     // 4 character tokens.
     switch (c)
@@ -856,8 +869,10 @@ class Lexer
     default:
     }
 
+    version(BigEndian)
     c >>>= 8;
-  L3characters:
+    else
+    c &= 0x00FFFFFF;
     assert(p == t.start);
     // 3 character tokens.
     switch (c)
@@ -869,25 +884,27 @@ class Lexer
       "!<>", "UorE",         "<>=", "LorEorG",
       "^^=", "PowAssign"
     ));
-    case toUint(LS), toUint(PS):
+    case toUintE(LS), toUintE(PS):
       p += 2;
       goto Lnewline;
     default:
     }
 
+    version(BigEndian)
     c >>>= 8;
-  L2characters:
+    else
+    c &= 0x0000FFFF;
     assert(p == t.start);
     // 2 character tokens.
     switch (c)
     {
-    case toUint("/+"):
+    case toUintE("/+"):
       this.p = ++p; // Skip /
       return scanNestedComment(t);
-    case toUint("/*"):
+    case toUintE("/*"):
       this.p = ++p; // Skip /
       return scanBlockComment(t);
-    case toUint("//"): // LineComment.
+    case toUintE("//"): // LineComment.
       ++p; // Skip /
       assert(*p == '/');
       while (!isEndOfLine(++p))
@@ -909,7 +926,7 @@ class Lexer
       "%=", "ModAssign",  "^=", "XorAssign",
       "~=", "CatAssign",  "^^", "Pow"
     ));
-    case toUint("\r\n"):
+    case toUintE("\r\n"):
       ++p;
       goto Lnewline;
     default:
@@ -925,8 +942,10 @@ class Lexer
       '@':TOK.At
     ];
 
+    version(BigEndian)
     c >>>= 8;
-  L1character:
+    else
+    c &= 0x000000FF;
     assert(p == t.start);
     assert(*p == c, Format("p={0},c={1}", *p, cast(dchar)c));
     // 1 character tokens.
@@ -2303,7 +2322,7 @@ class Lexer
     char* errorAtColumn = p;
     char* tokenEnd = ++p;
 
-    if (!(p[0] == 'l' && p[1] == 'i' && p[2] == 'n' && p[3] == 'e'))
+    if (*cast(uint*)p != chars_line)
     {
       mid = MID.ExpectedIdentifierSTLine;
       goto Lerr;
