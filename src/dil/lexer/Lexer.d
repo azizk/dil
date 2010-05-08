@@ -2313,9 +2313,8 @@ class Lexer
   {
     auto p = this.p;
     assert(*p == '#');
-    t.kind = TOK.HashLine;
-    t.setWhitespaceFlag();
-    auto hlval = t.hlval = new Token.HashLineValue;
+
+    auto hlval = new Token.HashLineValue;
 
     MID mid;
     char* errorAtColumn = p;
@@ -2326,21 +2325,22 @@ class Lexer
       mid = MID.ExpectedIdentifierSTLine;
       goto Lerr;
     }
-    p += 3;
-    tokenEnd = p + 1;
+
+    p += 4;
+    tokenEnd = p;
 
     // TODO: #line58"path/file" is legal. Require spaces?
     //       State.Space could be used for that purpose.
     enum State
-    { /+Space,+/ Integer, Filespec, End }
+    { /+Space,+/ Integer, OptionalFilespec, End }
 
     State state = State.Integer;
 
-    while (!isEndOfLine(++p))
+    while (!isEndOfLine(p))
     {
       if (isspace(*p))
-        continue;
-      if (state == State.Integer)
+      {}
+      else if (state == State.Integer)
       {
         if (!isdigit(*p))
         {
@@ -2359,39 +2359,33 @@ class Lexer
           mid = MID.ExpectedIntegerAfterSTLine;
           goto Lerr;
         }
-        --p; // Go one back because scan() advanced p past the integer.
-        state = State.Filespec;
+        state = State.OptionalFilespec;
+        continue;
       }
-      else if (state == State.Filespec && *p == '"')
-      { // MID.ExpectedFilespec is deprecated.
-        // if (*p != '"')
-        // {
-        //   errorAtColumn = p;
-        //   mid = MID.ExpectedFilespec;
-        //   goto Lerr;
-        // }
+      else if (state == State.OptionalFilespec && *p == '"')
+      {
         auto fs = hlval.filespec = new Token;
         fs.start = p;
         fs.kind = TOK.Filespec;
         fs.setWhitespaceFlag();
-        while (*++p != '"')
-        {
-          if (isEndOfLine(p))
-          {
-            errorAtColumn = fs.start;
-            mid = MID.UnterminatedFilespec;
-            fs.end = p;
-            tokenEnd = p;
-            goto Lerr;
-          }
+        // Skip until closing '"'.
+        while (*++p != '"' && !isEndOfLine(p))
           isascii(*p) || decodeUTF8(p);
+        if (*p != '"')
+        { // Error.
+          errorAtColumn = fs.start;
+          mid = MID.UnterminatedFilespec;
+          fs.end = p;
+          tokenEnd = p;
+          goto Lerr;
         }
         auto start = fs.start +1; // +1 skips '"'
         auto strval = new StringValue;
         strval.str = String(start, p); // No need to zero-terminate.
         fs.strval = strval;
-        fs.end = tokenEnd = p + 1;
+        fs.end = tokenEnd = ++p;
         state = State.End;
+        continue;
       }
       else/+ if (state == State.End)+/
       {
@@ -2399,6 +2393,7 @@ class Lexer
         mid = MID.UnterminatedSpecialToken;
         goto Lerr;
       }
+      ++p;
     }
     assert(isEndOfLine(p));
 
@@ -2413,17 +2408,24 @@ class Lexer
     if (!inTokenString && hlval.lineNum)
     {
       if (!hlinfo)
+      {
         hlinfo = new Token.HashLineInfo;
+        hlinfo.path = srcText.filePath;
+      }
       hlinfo.setLineNum(this.lineNum, hlval.lineNum.uint_);
       if (hlval.filespec)
         hlinfo.path = hlval.filespec.strval.str;
     }
 
+    if(0)
+    Lerr:
+      error(errorAtColumn, mid);
+
+    t.kind = TOK.HashLine;
+    t.setWhitespaceFlag();
+    t.hlval = hlval;
     t.end = this.p = tokenEnd;
     return;
-  Lerr:
-    t.end = this.p = tokenEnd;
-    error(errorAtColumn, mid);
   }
 
   /// Inserts an empty dummy token (TOK.Empty) before t.
