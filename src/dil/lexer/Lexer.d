@@ -56,7 +56,8 @@ class Lexer
     this.tables = tables;
     this.diag = diag;
 
-    assert(text.length && text[$-1] == 0, "source text has no sentinel character");
+    assert(text.length >= 4 && text[$-4..$] == SourceText.sentinelString,
+      "source text has no sentinel character");
     this.p = text.ptr;
     this.end = this.p + text.length;
     this.lineBegin = this.p;

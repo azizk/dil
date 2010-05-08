@@ -18,7 +18,10 @@ final class SourceText
 {
   /// The file path to the source text. Mainly used for error messages.
   string filePath;
-  char[] data; /// The UTF-8, zero-terminated source text.
+  string data; /// The UTF-8, zero-terminated source text.
+  /// The data member must be terminated with this string.
+  /// Four zeros are used to make certain optimizations possible in the Lexer.
+  static const string sentinelString = "\0\0\0\0";
 
   /// Constructs a SourceText object.
   /// Params:
@@ -33,12 +36,12 @@ final class SourceText
   /// Constructs a SourceText object.
   /// Params:
   ///   filePath = file path for error messages.
-  ///   data = memory buffer.
+  ///   data = memory buffer (may be terminated with sentinelString.)
   this(string filePath, char[] data)
   {
     this(filePath);
+    addSentinelString(data);
     this.data = data;
-    addSentinelCharacter();
   }
 
   /// Loads the source text from a file.
@@ -55,7 +58,7 @@ final class SourceText
       auto msg = Path(this.filePath).exists() ?
         MSG.CantReadFile : MSG.InexistantFile;
       diag ~= new LexerError(loc, msg);
-      data = "\0";
+      data = sentinelString;
       return false;
     }
 
@@ -63,15 +66,18 @@ final class SourceText
     auto rawdata = cast(ubyte[]) File.get(filePath);
     // Convert the data.
     auto converter = Converter(filePath, diag);
-    data = converter.data2UTF8(rawdata);
-    addSentinelCharacter();
+    auto text = converter.data2UTF8(rawdata);
+    addSentinelString(text);
+    this.data = text;
     return true;
   }
 
-  /// Adds '\0' to the text (if not already there.)
-  private void addSentinelCharacter()
+  /// Appends the sentinel string to the text (if not already there.)
+  static void addSentinelString(ref char[] text)
   {
-    if (data.length == 0 || data[$-1] != 0)
-      data ~= 0;
+    if (text.length < 4 ||
+        // Same as: text[$-4..$] != sentinelString
+        *cast(uint*)(text.ptr+text.length-4) != 0)
+      text ~= sentinelString;
   }
 }
