@@ -365,21 +365,10 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
-        assert(isNewlineEnd(p));
-        ++p;
-        ++lineNum;
-        setLineBegin(p);
-        kind = TOK.Newline;
-        t.setWhitespaceFlag();
-        t.nlval = lookupNewline();
-        goto Lreturn;
+        goto Lnewline;
       default:
-        if (isUnicodeNewline(p))
-        {
-          ++p; ++p;
-          goto case '\n';
-        }
       }
+
       assert(this.p == p);
       // Identifier or string literal.
       if (isidbeg(c))
@@ -703,20 +692,32 @@ class Lexer
       if (!isascii(c) && isUniAlpha(c = decodeUTF8(p)))
         goto Lidentifier;
 
+      if (isUnicodeNewlineChar(c))
+        goto Lnewline;
+
       error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
-      p = this.p;
-      ++p;
       kind = TOK.Illegal;
       t.setWhitespaceFlag();
       t.dchar_ = c;
-      goto Lreturn;
+      goto Lcommon;
     }
 
   Lcommon:
     ++p;
   Lreturn:
     t.kind = kind;
+    t.end = this.p = p;
+    return;
+
+  Lnewline:
+    assert(isNewlineEnd(p));
+    ++p;
+    ++lineNum;
+    setLineBegin(p);
+    t.kind = TOK.Newline;
+    t.setWhitespaceFlag();
+    t.nlval = lookupNewline();
     t.end = this.p = p;
     return;
   }
@@ -1000,12 +1001,10 @@ class Lexer
 
     error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
-    p = this.p;
-    ++p;
     kind = TOK.Illegal;
     t.setWhitespaceFlag();
     t.dchar_ = c;
-    goto Lreturn;
+    goto Lcommon;
 
   Lcommon4:
     ++p;
