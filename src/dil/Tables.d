@@ -26,7 +26,8 @@ class Tables
 
   // A collection of tables for various token values.
   IdTable idents;
-  string[hash_t] strings; /// Maps strings to zero-terminated string values.
+  string[hash_t] strings; /// Maps strings to their zero-terminated equivalent.
+  StringValue*[hash_t] strvals; /// Maps string+postfix to string values.
   Float[hash_t] floats; /// Maps float strings to Float values.
   IntegerValue*[ulong] ulongs; /// Maps a ulong to an IntegerValue.
   /// A list of newline values.

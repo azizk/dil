@@ -176,7 +176,7 @@ class Lexer
       assert(0);
     }
     if (str.length)
-      t.strval = lookupString(str);
+      t.strval = lookupString(str, 0);
   }
 
   private void setLineBegin(char* p)
@@ -235,12 +235,31 @@ class Lexer
   alias Token.IntegerValue IntegerValue;
   alias Token.NewlineValue NewlineValue;
 
-  /// Looks a string up in the table.
+  /// Looks up a string value in the table.
   /// Params:
   ///   str = The string to be looked up, which is not zero-terminated.
-  StringValue* lookupString(char[] str)
+  ///   pf = The postfix character.
+  StringValue* lookupString(char[] str, char postfix)
   {
     auto hash = hashOf(str);
+    auto psv = (hash + postfix) in tables.strvals;
+    if (!psv)
+    { // Insert a new string value into the table.
+      auto sv = new StringValue;
+      sv.str = lookupString(hash, str);
+      sv.pf = postfix;
+      tables.strvals[hash + postfix] = sv;
+      return sv;
+    }
+    return *psv;
+  }
+
+  /// Looks up a string in the table.
+  /// Params:
+  ///   hash = The hash of str.
+  ///   str = The string to be looked up, which is not zero-terminated.
+  string lookupString(hash_t hash, string str)
+  {
     auto pstr = hash in tables.strings;
     if (!pstr)
     { // Insert a new string into the table.
@@ -248,12 +267,16 @@ class Lexer
       if (text.ptr <= str.ptr && str.ptr < end) // Inside the text?
         new_str = new_str.dup; // A copy is needed.
       new_str ~= '\0'; // Terminate with a zero.
-      pstr = &new_str;
       tables.strings[hash] = new_str;
+      return new_str;
     }
-    auto sv = new StringValue;
-    sv.str = *pstr;
-    return sv;
+    return *pstr;
+  }
+
+  /// Calls lookupString(hash_t, string).
+  string lookupString(string str)
+  {
+    return lookupString(hashOf(str), str);
   }
 
   /// Looks up a ulong in the table.
@@ -266,8 +289,8 @@ class Lexer
     { // Insert a new IntegerValue into the table.
       auto iv = new IntegerValue;
       iv.ulong_ = num;
-      pintval = &iv;
       tables.ulongs[num] = iv;
+      return iv;
     }
     return *pintval;
   }
@@ -292,8 +315,8 @@ class Lexer
       // else /*if (res > 0)*/ // Higher precision.
       // {}
       auto f = new Float(&mpfloat);
-      pFloat = &f;
       tables.floats[hash] = f;
+      return f;
     }
     return *pFloat;
   }
@@ -1214,9 +1237,7 @@ class Lexer
     else
       value = str; // A slice from the text.
     ++p; // Skip '"'.
-    auto strval = lookupString(value);
-    strval.pf = scanPostfix(p);
-    t.strval = strval;
+    t.strval = lookupString(value, scanPostfix(p));
   Lerr:
     t.end = this.p = p;
     return;
@@ -1238,7 +1259,7 @@ class Lexer
       else
         encodeUTF8(value, c);
     } while (*p == '\\')
-    t.strval = lookupString(value);
+    t.strval = lookupString(value, 0);
     t.kind = TOK.String;
     t.end = p;
   }
@@ -1329,9 +1350,7 @@ class Lexer
     }
     assert(*p == '"' || *p == '`');
     ++p;
-    auto strval = lookupString(value);
-    strval.pf = scanPostfix(p);
-    t.strval = strval;
+    t.strval = lookupString(value, scanPostfix(p));
   Lerr:
     t.end = this.p = p;
     return;
@@ -1401,12 +1420,8 @@ class Lexer
         else
         {
           auto errorAt = p;
-          if (!isascii(c))
-          {
-            c = decodeUTF8(p);
-            if (isUnicodeNewlineChar(c))
-              goto case '\n';
-          }
+          if (!isascii(c) && isUnicodeNewlineChar(c = decodeUTF8(p)))
+            goto case '\n';
           error(errorAt, MID.NonHexCharInHexString, cast(dchar)c);
         }
       }
@@ -1415,9 +1430,7 @@ class Lexer
       error(tokenLineNum, tokenLineBegin, t.start,
         MID.OddNumberOfDigitsInHexString);
     ++p;
-    auto strval = lookupString(cast(string)value);
-    strval.pf = scanPostfix(p);
-    t.strval = strval;
+    t.strval = lookupString(cast(string)value, scanPostfix(p));
   Lerr:
     t.end = this.p = p;
     return;
@@ -1578,14 +1591,14 @@ class Lexer
     assert(level == 0);
     ++p; // Skip closing delimiter.
   Lreturn2: // String delimiter.
-    auto strval = lookupString(value);
+    char postfix;
     if (*p == '"')
-      strval.pf = scanPostfix((++p, p));
+      postfix = scanPostfix((++p, p));
     else
       error(p, MSG.ExpectedDblQuoteAfterDelim,
         (str_delim.length || encodeUTF8(str_delim, closing_delim), str_delim));
 
-    t.strval = strval;
+    t.strval = lookupString(value, postfix);
   Lerr:
     t.end = this.p = p;
   } // version(D2)
@@ -1699,7 +1712,9 @@ class Lexer
         }
       value.length = s - value.ptr;
     }
-    auto strval = lookupString(value);
+
+    auto strval = new StringValue;
+    strval.str = lookupString(value);
     strval.pf = postfix;
     strval.tok_str = inner_tokens;
     t.strval = strval;

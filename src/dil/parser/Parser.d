@@ -3881,7 +3881,7 @@ class Parser
       else
       {
         if (begin !is prevToken)
-          bin_str = cast(ubyte[])lexer.lookupString(str[0..$-1]).str;
+          bin_str = cast(ubyte[])lexer.lookupString(str[0..$-1]);
       }
       e = new StringExpression(bin_str, postfix);
       break;
