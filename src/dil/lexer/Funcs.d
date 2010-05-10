@@ -36,29 +36,33 @@ char[] String(char* begin, char* end)
 }
 
 /// Calculates a hash value for str.
+/// Note: The value will differ between 32bit and 64bit systems.
+/// It will also differ between little and big endian systems.
 hash_t hashOf(string str)
 {
   hash_t hash;
   char* pstr = str.ptr;
   size_t len = str.length;
-  ubyte rem = len % hash_t.sizeof; // Remainder.
-  if (len == rem)
-    goto Lrem;
 
-  union Chunks { struct { size_t len; void* ptr; } hash_t[] items; }
-  Chunks chunks = void;
-  chunks.ptr = pstr;
+  ubyte rem_len = len % hash_t.sizeof; // Remainder.
+  if (len == rem_len)
+    goto Lonly_remainder;
+
+  auto hptr = cast(hash_t*)pstr;
   // Align length to multiples of 4 or 8 (x86 vs. x86_64).
-  chunks.len = len >> (hash_t.sizeof / 2);
-  foreach (c; chunks.items)
-    hash = hash * 11 + c;
+  auto hlen = len >> (hash_t.sizeof / 2);
 
-  if (rem)
+  while (hlen--)
+    hash = hash * 11 + *hptr++;
+
+  if (rem_len)
   { // Calculate the hash of the remaining characters.
-    pstr += len - rem; // Move to the beginning of the remainder.
-  Lrem:
+    // Move to the beginning of the remainder.
+    // & ~(...) clears the first 3 or 7 bits of len.
+    pstr += len & ~(hash_t.sizeof - 1); // pstr += len - rem;
+  Lonly_remainder:
     size_t chunk;
-    while (rem--)
+    while (rem_len--)
       chunk = (chunk << 8) | *pstr++;
     hash = hash * 11 + chunk;
   }
