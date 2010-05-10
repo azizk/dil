@@ -369,7 +369,7 @@ version(unused)
   {
     auto src = new SourceText(filePath);
     src.load(diag);
-    auto text = src.data[0..$-1]; // Exclude '\0'.
+    auto text = src.text(); // Exclude '\0'.
     return sanitizeText(text);
   }
 

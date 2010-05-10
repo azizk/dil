@@ -44,6 +44,12 @@ final class SourceText
     this.data = data;
   }
 
+  /// Returns a slice to the source text, excluding the sentinel string.
+  string text()
+  {
+    return data[0..$-4];
+  }
+
   /// Loads the source text from a file.
   /// Returns: true for success, false on failure.
   bool load(Diagnostics diag = null)
