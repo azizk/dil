@@ -50,15 +50,19 @@ def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen.fetch_files(DIL, TMP)
   html_files = SRC.glob("*.html")
   symlink = "http://dil.googlecode.com/svn/doc/dil_%s" % VERSION
-  params = {"pdf_title": "dil %s API" % VERSION,
+
+  params = {
+    "pdf_title": "dil %s API" % VERSION,
     "cover_title": "dil %s<br/><b>API</b>" % VERSION,
     "author": u"Aziz Köksal",
     "subject": "Compiler API",
     "keywords": "dil D compiler API documentation",
     "x_html": "XHTML",
     "nested_toc": True,
-    "symlink": symlink}
-  pdf_gen.run(html_files, SRC/("dil.%s.API.pdf"%VERSION), TMP, params)
+    "symlink": symlink
+  }
+  dest = SRC/("dil.%s.API.pdf" % VERSION)
+  pdf_gen.run(html_files, dest, TMP, params)
 
 def main():
   from functools import partial as func_partial
@@ -169,6 +173,9 @@ def main():
   # Rebuild the path object for kandil. (Images are globbed.)
   DEST.KANDIL = kandil_path(DEST/"kandil")
 
+  print "***** Copying files *****"
+  copy_files(DEST)
+
   # Find the source code files.
   FILES = find_dil_source_files(DEST.SRC)
 
@@ -179,13 +186,14 @@ def main():
   if options.docs:
     build_dil_if_inexistant(DIL.EXE)
 
-    DOC_FILES = DEST.DATA//("macros_dil.ddoc", "dilconf.d") + FILES
     print "***** Generating documentation *****"
+    DOC_FILES = DEST.DATA//("macros_dil.ddoc", "dilconf.d") + FILES
     versions = ["DDoc"]
     generate_docs(DIL.EXE, DEST.DOC, MODLIST, DOC_FILES,
                   versions, options=['-v', '-i', '-hl', '--kandil'])
-    if options.pdf:
-      write_PDF(DEST, DEST.DOC, VERSION, TMP)
+
+  if options.pdf:
+    write_PDF(DEST, DEST.DOC, VERSION, TMP)
 
   COMPILER.use_wine = False
   use_wine = False
@@ -209,15 +217,17 @@ def main():
   if options.no_binaries:
     build_linux_binaries = build_windows_binaries = False
 
-  # Create partial functions with common parameters.
+  # Create partial functions with common parameters (aka. currying).
   # Note: the -inline switch makes the binaries significantly larger on Linux.
-  linker_args = ["-lmpfr"]
+  linker_args = [None]
   build_dil_rls = func_partial(build_dil, COMPILER, FILES,
     release=True, optimize=True, inline=True, lnk_args=linker_args)
   build_dil_dbg = func_partial(build_dil, COMPILER, FILES,
     debug_info=options.debug_symbols, lnk_args=linker_args)
+
   if build_linux_binaries:
     print "\n***** Building Linux binaries *****\n"
+    linker_args[0] = "-lmpfr"
     # Linux Debug Binaries
     build_dil_dbg(BIN/"dil_d")
     build_dil_dbg(BIN/"dil2_d", versions=["D2"])
@@ -228,15 +238,13 @@ def main():
   if build_windows_binaries:
     print "\n***** Building Windows binaries *****\n"
     COMPILER.use_wine = use_wine
+    linker_args[0] = "+mpfr.lib"
     # Windows Debug Binaries
     build_dil_dbg(BIN/"dil_d.exe")
     build_dil_dbg(BIN/"dil2_d.exe", versions=["D2"])
     # Windows Release Binaries
     build_dil_rls(BIN/"dil.exe")
     build_dil_rls(BIN/"dil2.exe", versions=["D2"])
-
-  print "***** Copying files *****"
-  copy_files(DEST)
 
   options.docs or DEST.DOC.rmtree()
   TMP.rmtree()
