@@ -84,7 +84,10 @@ struct Converter
 
     char[] result;
     uint lineNum = 1;
-    dchar[] text = cast(dchar[]) data[0 .. $-($%4)]; // Trim to multiple of 4.
+    // Used to clear first 2 bits to make len multiple of 4.
+    const bmask = ~cast(size_t)0b11;
+    dchar[] text = cast(dchar[])data[0 .. $ & bmask];
+
     foreach (dchar c; text)
     {
       static if (isBigEndian)
@@ -124,7 +127,9 @@ struct Converter
     if (data.length == 0)
       return null;
 
-    wchar[] text = cast(wchar[]) data[0 .. $-($%2)]; // Trim to multiple of two.
+    // Used to clear first bit to make len multiple of 2.
+    const bmask = ~cast(size_t)0b1;
+    wchar[] text = cast(wchar[]) data[0 .. $ & bmask];
     wchar* p = text.ptr,
          end = text.ptr + text.length;
     char[] result;
