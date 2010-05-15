@@ -38,7 +38,7 @@ struct Ident
 class IdTable
 {
   /// A set of common, predefined identifiers for fast lookups.
-  Identifier*[hash_t] staticTable;
+  static Identifier*[hash_t] staticTable;
   /// A table that grows with every newly found, unique identifier.
   Identifier*[hash_t] growingTable;
 
@@ -53,11 +53,14 @@ class IdTable
   {
     inGrowing = &_inGrowing_unsafe; // Default to unsafe function.
 
-    foreach (ref k; g_reservedIds)
-      staticTable[hashOf(k.str)] = &k;
+    if (staticTable is null) // Initialize global static table?
+    {
+      foreach (ref k; g_reservedIds)
+        staticTable[hashOf(k.str)] = &k;
+      staticTable.rehash;
+    }
     foreach (id; Ident.allIds())
       staticTable[hashOf(id.str)] = id;
-    staticTable.rehash;
   }
 
   /// Returns true if str is a valid D identifier.
