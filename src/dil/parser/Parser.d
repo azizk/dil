@@ -218,13 +218,13 @@ class Parser
                     typeId.ident !is Ident.system &&
                     typeId.ident !is Ident.Empty)
         error(typeId, MSG.ExpectedModuleType);
-      require(T.RParen);
+      require2(T.RParen);
     }
     }
     do
       moduleFQN ~= requireIdentifier(MSG.ExpectedModuleIdentifier);
     while (consumed(T.Dot))
-    require(T.Semicolon);
+    require2(T.Semicolon);
     return set(new ModuleDeclaration(typeId, moduleFQN), begin);
   }
 
@@ -320,7 +320,7 @@ class Parser
         auto ident = token;
         skip(T.Identifier);
         skip(T.This);
-        require(T.Semicolon);
+        require2(T.Semicolon);
         decl = new AliasThisDeclaration(ident);
         break;
       }
@@ -684,7 +684,7 @@ class Parser
       else
         values ~= null;
     }
-    require(T.Semicolon);
+    require2(T.Semicolon);
     auto d = new VariablesDeclaration(type, names, values);
     d.setStorageClass(stcs);
     d.setLinkageType(linkType);
@@ -819,7 +819,7 @@ class Parser
         nT();
         if (consumed(T.LParen))
           (outIdent = requireIdentifier(MSG.ExpectedAnIdentifier)),
-          require(T.RParen);
+          require2(T.RParen);
         outBody = parseStatements();
         break;
       case T.Body:
@@ -932,7 +932,7 @@ class Parser
       assert(idtok);
       error2(MID.UnrecognizedLinkageType, idtok);
     }
-    require(T.RParen);
+    require2(T.RParen);
     return linkageType;
   }
 
@@ -1115,7 +1115,7 @@ class Parser
         Token* ident;
 
         auto leftParen = token;
-        require(T.LParen);
+        require2(T.LParen);
         ident = requireIdentifier(MSG.ExpectedPragmaIdentifier);
         auto args = consumed(T.Comma) ? parseExpressionList() : null;
         requireClosing(T.RParen, leftParen);
@@ -1183,7 +1183,7 @@ class Parser
         (sizetok = token), (size = token.int_), skip(T.Int32);
       else
         expected(T.Int32);
-      require(T.RParen);
+      require2(T.RParen);
     }
     return size;
   }
@@ -1269,7 +1269,7 @@ class Parser
         bindAliases ~= bindAlias;
       } while (consumed(T.Comma))
     }
-    require(T.Semicolon);
+    require2(T.Semicolon);
 
     return new ImportDeclaration(moduleFQNs, moduleAliases, bindNames,
                                  bindAliases, isStatic);
@@ -1571,9 +1571,9 @@ class Parser
   Declaration parseDestructorDeclaration()
   {
     skip(T.Tilde);
-    require(T.This);
-    require(T.LParen);
-    require(T.RParen);
+    require2(T.This);
+    require2(T.LParen);
+    require2(T.RParen);
     auto funcBody = parseFunctionBody();
     return new DestructorDeclaration(funcBody);
   }
@@ -1583,8 +1583,8 @@ class Parser
   {
     skip(T.Static);
     skip(T.This);
-    require(T.LParen);
-    require(T.RParen);
+    require2(T.LParen);
+    require2(T.RParen);
     auto funcBody = parseFunctionBody();
     return new StaticConstructorDeclaration(funcBody);
   }
@@ -1595,9 +1595,9 @@ class Parser
   {
     skip(T.Static);
     skip(T.Tilde);
-    require(T.This);
-    require(T.LParen);
-    require(T.RParen);
+    require2(T.This);
+    require2(T.LParen);
+    require2(T.RParen);
     auto funcBody = parseFunctionBody();
     return new StaticDestructorDeclaration(funcBody);
   }
@@ -1608,7 +1608,7 @@ class Parser
     skip(T.Invariant);
     // Optional () for getting ready porting to D 2.0
     if (consumed(T.LParen))
-      require(T.RParen);
+      require2(T.RParen);
     auto funcBody = parseFunctionBody();
     return new InvariantDeclaration(funcBody);
   }
@@ -1656,14 +1656,14 @@ class Parser
     { // debug = Integer ;
       // debug = Identifier ;
       spec = parseIdentOrInt();
-      require(T.Semicolon);
+      require2(T.Semicolon);
     }
     else
     { // "(" Condition ")"
       if (consumed(T.LParen))
       {
         cond = parseIdentOrInt();
-        require(T.RParen);
+        require2(T.RParen);
       }
       // debug DeclarationsBlock
       // debug ( Condition ) DeclarationsBlock
@@ -1692,13 +1692,13 @@ class Parser
     { // version = Integer ;
       // version = Identifier ;
       spec = parseIdentOrInt();
-      require(T.Semicolon);
+      require2(T.Semicolon);
     }
     else
     { // ( Condition )
-      require(T.LParen);
+      require2(T.LParen);
       cond = parseVersionCondition();
-      require(T.RParen);
+      require2(T.RParen);
       // version ( Condition ) DeclarationsBlock
       decls = parseDeclarationsBlock();
       // else DeclarationsBlock
@@ -1721,7 +1721,7 @@ class Parser
     Declaration ifDecls, elseDecls;
 
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     condition = parseAssignExpression();
     requireClosing(T.RParen, leftParen);
 
@@ -1742,12 +1742,12 @@ class Parser
     skip(T.Assert);
     Expression condition, message;
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     condition = parseAssignExpression();
     if (consumed(T.Comma))
       message = parseAssignExpression();
     requireClosing(T.RParen, leftParen);
-    require(T.Semicolon);
+    require2(T.Semicolon);
     return new StaticAssertDeclaration(condition, message);
   }
 
@@ -1789,7 +1789,7 @@ class Parser
     auto begin = token;
     skip(T.Typeof);
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     Type type;
     switch (token.kind)
     {
@@ -1828,7 +1828,7 @@ class Parser
       auto leftParen = token;
       auto e = parseAssignExpression();
       requireClosing(T.RParen, leftParen);
-      require(T.Semicolon);
+      require2(T.Semicolon);
       return new MixinDeclaration(e);
     }
     else version(D2) if (consumed(T.Template))
@@ -1852,7 +1852,7 @@ class Parser
       e = parseIdentifierExpression(e);
 
     mixinIdent = optionalIdentifier();
-    require(T.Semicolon);
+    require2(T.Semicolon);
 
     return new Class(e, mixinIdent);
   }
@@ -2092,7 +2092,7 @@ class Parser
          T.Plus, T.Not, T.Tilde, T.New, T.Delete, T.Cast:
     case_parseExpressionStatement:
       s = new ExpressionStatement(parseExpression());
-      require(T.Semicolon);
+      require2(T.Semicolon);
       break;
     default:
       if (token.isSpecialToken)
@@ -2320,7 +2320,7 @@ class Parser
     Statement ifBody, elseBody;
 
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
 
     Token* ident;
     auto begin = token; // For start of AutoDeclaration or normal Declaration.
@@ -2368,7 +2368,7 @@ class Parser
   {
     skip(T.While);
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     auto condition = parseExpression();
     requireClosing(T.RParen, leftParen);
     return new WhileStatement(condition, parseScopeStatement());
@@ -2381,7 +2381,7 @@ class Parser
     auto doBody = parseScopeStatement();
     require(T.While);
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     auto condition = parseExpression();
     requireClosing(T.RParen, leftParen);
     return new DoWhileStatement(condition, doBody);
@@ -2398,12 +2398,12 @@ class Parser
     Expression condition, increment;
 
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     if (!consumed(T.Semicolon))
       init = parseNoScopeStatement();
     if (token.kind != T.Semicolon)
       condition = parseExpression();
-    require(T.Semicolon);
+    require2(T.Semicolon);
     if (token.kind != T.RParen)
       increment = parseExpression();
     requireClosing(T.RParen, leftParen);
@@ -2429,7 +2429,7 @@ class Parser
     Expression e; // Aggregate or LwrExpression
 
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     auto paramsBegin = token;
     do
     {
@@ -2461,7 +2461,7 @@ class Parser
     } while (consumed(T.Comma))
     set(params, paramsBegin);
 
-    require(T.Semicolon);
+    require2(T.Semicolon);
     e = parseExpression();
 
   version(D2)
@@ -2488,7 +2488,7 @@ class Parser
     bool isFinal = consumed(T.Final);
     skip(T.Switch);
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     auto condition = parseExpression();
     requireClosing(T.RParen, leftParen);
     auto switchBody = parseScopeStatement();
@@ -2518,7 +2518,7 @@ class Parser
   {
     skip(T.Case);
     auto values = parseExpressionList();
-    require(T.Colon);
+    require2(T.Colon);
     version(D2)
     if (consumed(T.Slice)) // ".."
     {
@@ -2526,7 +2526,7 @@ class Parser
         error(values[1].begin, MSG.CaseRangeStartExpression);
       require(T.Case);
       Expression left = values[0], right = parseAssignExpression();
-      require(T.Colon);
+      require2(T.Colon);
       auto caseBody = parseCaseOrDefaultBody();
       return new CaseRangeStatement(left, right, caseBody);
     }
@@ -2538,7 +2538,7 @@ class Parser
   Statement parseDefaultStatement()
   {
     skip(T.Default);
-    require(T.Colon);
+    require2(T.Colon);
     auto defaultBody = parseCaseOrDefaultBody();
     return new DefaultStatement(defaultBody);
   }
@@ -2548,7 +2548,7 @@ class Parser
   {
     skip(T.Continue);
     auto ident = optionalIdentifier();
-    require(T.Semicolon);
+    require2(T.Semicolon);
     return new ContinueStatement(ident);
   }
 
@@ -2557,7 +2557,7 @@ class Parser
   {
     skip(T.Break);
     auto ident = optionalIdentifier();
-    require(T.Semicolon);
+    require2(T.Semicolon);
     return new BreakStatement(ident);
   }
 
@@ -2568,7 +2568,7 @@ class Parser
     Expression expr;
     if (token.kind != T.Semicolon)
       expr = parseExpression();
-    require(T.Semicolon);
+    require2(T.Semicolon);
     return new ReturnStatement(expr);
   }
 
@@ -2593,7 +2593,7 @@ class Parser
     default:
       ident = requireIdentifier(MSG.ExpectedAnIdentifier);
     }
-    require(T.Semicolon);
+    require2(T.Semicolon);
     return new GotoStatement(ident, caseExpr);
   }
 
@@ -2602,7 +2602,7 @@ class Parser
   {
     skip(T.With);
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     auto expr = parseExpression();
     requireClosing(T.RParen, leftParen);
     return new WithStatement(expr, parseScopeStatement());
@@ -2671,7 +2671,7 @@ class Parser
   {
     skip(T.Throw);
     auto expr = parseExpression();
-    require(T.Semicolon);
+    require2(T.Semicolon);
     return new ThrowStatement(expr);
   }
 
@@ -2691,7 +2691,7 @@ class Parser
         if (condition.ident != Ident.Empty) // Don't report error twice.
           error2(MSG.InvalidScopeIdentifier, condition);
       }
-    require(T.RParen);
+    require2(T.RParen);
     auto scopeBody = (token.kind == T.LBrace) ?
                       parseScopeStatement() : parseNoScopeStatement();
     return new ScopeGuardStatement(condition, scopeBody);
@@ -2723,7 +2723,7 @@ class Parser
     Statement pragmaBody;
 
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     name = requireIdentifier(MSG.ExpectedPragmaIdentifier);
 
     if (consumed(T.Comma))
@@ -2746,7 +2746,7 @@ class Parser
     Statement ifBody, elseBody;
 
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     condition = parseExpression();
     requireClosing(T.RParen, leftParen);
     ifBody = parseNoScopeStatement();
@@ -2764,12 +2764,12 @@ class Parser
     skip(T.Assert);
     Expression condition, message;
 
-    require(T.LParen);
+    require2(T.LParen);
     condition = parseAssignExpression(); // Condition.
     if (consumed(T.Comma))
       message = parseAssignExpression(); // Error message.
-    require(T.RParen);
-    require(T.Semicolon);
+    require2(T.RParen);
+    require2(T.Semicolon);
     return new StaticAssertStatement(condition, message);
   }
 
@@ -2786,7 +2786,7 @@ class Parser
     if (consumed(T.LParen))
     {
       cond = parseIdentOrInt();
-      require(T.RParen);
+      require2(T.RParen);
     }
     // debug Statement
     // debug ( Condition ) Statement
@@ -2808,9 +2808,9 @@ class Parser
     Statement versionBody, elseBody;
 
     // ( Condition )
-    require(T.LParen);
+    require2(T.LParen);
     cond = parseVersionCondition();
-    require(T.RParen);
+    require2(T.RParen);
     // version ( Condition ) Statement
     versionBody = parseNoScopeStatement();
     // else Statement
@@ -2892,7 +2892,7 @@ class Parser
         do
           es ~= parseAsmExpression();
         while (consumed(T.Comma))
-      require(T.Semicolon);
+      require2(T.Semicolon);
       s = new AsmStatement(ident, es);
       break;
     case T.Align:
@@ -2901,7 +2901,7 @@ class Parser
       auto number = token;
       if (!consumed(T.Int32))
         error2(MSG.ExpectedIntegerAfterAlign, token);
-      require(T.Semicolon);
+      require2(T.Semicolon);
       s = new AsmAlignStatement(number);
       break;
     case T.Semicolon:
@@ -3265,7 +3265,7 @@ class Parser
         Expression number; // (1) - (7)
         if (consumed(T.LParen))
           (number = parseAsmExpression()),
-          require(T.RParen);
+          require2(T.RParen);
         e = new AsmRegisterExpression(register, number);
         break;
       case IDK.ES, IDK.CS, IDK.SS, IDK.DS, IDK.GS, IDK.FS:
@@ -3722,14 +3722,14 @@ class Parser
       e = new DeleteExpression(parseUnaryExpression());
       break;
     case T.Cast:
-      requireNext(T.LParen);
+      nT();
+      require2(T.LParen);
       Type type;
-    version(D2)
-      auto begin2 = token;
       switch (token.kind)
       {
       version(D2)
       {
+      auto begin2 = token;
       case T.RParen: // cast "(" ")"
         break;
       case T.Shared, T.Const, T.Invariant, T.Immutable:
@@ -3746,7 +3746,7 @@ class Parser
       default:
        type = parseType();
       }
-      require(T.RParen);
+      require2(T.RParen);
       e = new CastExpression(parseUnaryExpression(), type);
       break;
     case T.LParen:
@@ -3940,28 +3940,31 @@ class Parser
       requireNext(T.LParen);
       e = parseAssignExpression();
       auto msg = consumed(T.Comma) ? parseAssignExpression() : null;
-      require(T.RParen);
+      require2(T.RParen);
       e = new AssertExpression(e, msg);
       break;
     case T.Mixin:
-      requireNext(T.LParen);
+      nT();
+      require2(T.LParen);
       e = new MixinExpression(parseAssignExpression());
-      require(T.RParen);
+      require2(T.RParen);
       break;
     case T.Import:
-      requireNext(T.LParen);
+      nT();
+      require2(T.LParen);
       e = new ImportExpression(parseAssignExpression());
-      require(T.RParen);
+      require2(T.RParen);
       break;
     case T.Typeid:
-      requireNext(T.LParen);
+      nT();
+      require2(T.LParen);
       e = new TypeidExpression(parseType());
-      require(T.RParen);
+      require2(T.RParen);
       break;
     case T.Is:
       nT();
       auto leftParen = token;
-      require(T.LParen);
+      require2(T.LParen);
 
       Type type, specType;
       Token* ident; // optional Identifier
@@ -4035,7 +4038,7 @@ class Parser
     case T.Traits:
       nT();
       auto leftParen = token;
-      require(T.LParen); // "("
+      require2(T.LParen); // "("
       auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
       auto args = consumed(T.Comma) ? parseTemplateArguments2() : null;
       requireClosing(T.RParen, leftParen); // ")"
@@ -4048,7 +4051,7 @@ class Parser
         auto type = new IntegralType(token.kind);
         nT();
         set(type, begin);
-        require(T.Dot);
+        require2(T.Dot);
         auto ident = requireIdentifier2(MSG.ExpectedIdAfterTypeDot);
         e = new TypeDotIdExpression(type, ident);
       }
@@ -4295,7 +4298,8 @@ class Parser
     { // (const|immutable|shared) "(" Type ")"
     case T.Const, T.Invariant, T.Immutable, T.Shared:
       auto kind = token.kind;
-      requireNext(T.LParen); // "("
+      nT();
+      require2(T.LParen); // "("
       auto lParen = prevToken;
       t = parseType(); // Type
       requireClosing(T.RParen, lParen); // ")"
@@ -4498,7 +4502,7 @@ class Parser
   body
   {
     auto begin = token;
-    require(T.LParen);
+    require2(T.LParen);
 
     auto params = new Parameters();
 
@@ -4624,7 +4628,7 @@ class Parser
   {
     TemplateArguments targs;
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     targs = (token.kind != T.RParen) ?
       parseTemplateArguments_() : new TemplateArguments;
     requireClosing(T.RParen, leftParen);
@@ -4683,7 +4687,7 @@ class Parser
     if (!consumed(T.If))
       return null;
     auto leftParen = token;
-    require(T.LParen);
+    require2(T.LParen);
     auto e = parseExpression();
     requireClosing(T.RParen, leftParen);
     return e;
@@ -4694,7 +4698,7 @@ class Parser
   {
     auto begin = token;
     auto tparams = new TemplateParameters;
-    require(T.LParen);
+    require2(T.LParen);
     if (token.kind != T.RParen)
       parseTemplateParameterList_(tparams);
     requireClosing(T.RParen, begin);
@@ -4847,6 +4851,15 @@ class Parser
       error2(MID.ExpectedButFound, Token.toString(tok), token);
   }
 
+  /// Requires a token of kind tok. Uses the token end as the error location.
+  void require2(TOK tok)
+  {
+    if (token.kind == tok)
+      nT();
+    else
+      error2_eL(MID.ExpectedButFound, Token.toString(tok), token);
+  }
+
   /// Requires the next token to be of kind tok.
   void requireNext(TOK tok)
   {
@@ -4884,7 +4897,7 @@ class Parser
   /// Params:
   ///   errorMsg = the error message to be used.
   /// Returns: the identifier token or null.
-  Token* requireIdentifier(char[] errorMsg)
+  Token* requireIdentifier(string errorMsg)
   {
     Token* idtok;
     if (token.kind == T.Identifier)
@@ -4927,18 +4940,23 @@ class Parser
   }
 
   /// Forwards error parameters.
-  void error(Token* token, char[] formatMsg, ...)
+  void error(Token* token, string formatMsg, ...)
   {
-    error_(token, formatMsg, _arguments, _argptr);
+    error_(token, false, formatMsg, _arguments, _argptr);
   }
   /// ditto
   void error(MID mid, ...)
   {
-    error_(this.token, GetMsg(mid), _arguments, _argptr);
+    error_(this.token, false, GetMsg(mid), _arguments, _argptr);
+  }
+  /// ditto
+  void error_eL(MID mid, ...)
+  {
+    error_(this.prevToken, true, GetMsg(mid), _arguments, _argptr);
   }
 
   /// ditto
-  void error2(char[] formatMsg, Token* token)
+  void error2(string formatMsg, Token* token)
   {
     error(token, formatMsg, getPrintable(token));
   }
@@ -4948,16 +4966,22 @@ class Parser
     error(mid, getPrintable(token));
   }
   /// ditto
-  void error2(MID mid, char[] arg, Token* token)
+  void error2(MID mid, string arg, Token* token)
   {
     error(mid, arg, getPrintable(token));
+  }
+  /// ditto
+  void error2_eL(MID mid, string arg, Token* token)
+  {
+    error_eL(mid, arg, getPrintable(token));
   }
 
   /// Creates an error report and appends it to a list.
   /// Params:
-  ///   token = used to get the location of where the error is.
-  ///   formatMsg = the compiler error message.
-  void error_(Token* token, char[] formatMsg,
+  ///   token = Used to get the location of the error.
+  ///   endLoc = Get the position of the token's end or start character?
+  ///   formatMsg = The parser error message.
+  void error_(Token* token, bool endLoc, string formatMsg,
               TypeInfo[] _arguments, va_list _argptr)
   {
     if (trying)
@@ -4965,7 +4989,10 @@ class Parser
       errorCount++;
       return;
     }
-    auto location = token.getErrorLocation(lexer.srcText.filePath);
+    auto filePath = lexer.srcText.filePath;
+    auto location = endLoc ?
+      token.errorLocationOfEnd(filePath) :
+      token.getErrorLocation(filePath);
     auto msg = Format(_arguments, _argptr, formatMsg);
     auto error = new ParserError(location, msg);
     errors ~= error;

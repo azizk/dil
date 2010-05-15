@@ -17,7 +17,7 @@ public import dil.lexer.TokensEnum;
 /// A Token is a sequence of characters recognized by the lexical analyzer.
 ///
 /// Example:
-/// $(PRE  ‘    StringValue’
+/// $(PRE&#32; ‘    StringValue’
 ////   ^ws ^start     ^end)
 /// kind = TOK.Identifier$(BR)
 /// flags = Flags.None$(BR)
@@ -280,6 +280,20 @@ version(D2)
   alias getLocation!(true) getRealLocation;
   alias getLocation!(false) getErrorLocation;
 
+  /// Returns the location of the character past the end of this token.
+  Location errorLocationOfEnd(string filePath)
+  {
+    auto loc = getErrorLocation(filePath);
+    loc.to = end;
+    if (isMultiline) // Mutliline tokens may have newlines.
+      for (auto p = start, end_ = end; p < end_;)
+        if (scanNewline(p))
+          loc.lineBegin = p;
+        else
+          ++p;
+    return loc;
+  }
+
   uint lineCount()
   {
     uint count = 1;
@@ -287,12 +301,10 @@ version(D2)
     {
       auto p = this.start, end = this.end;
       while (p != end)
-      {
         if (scanNewline(p) == '\n')
           ++count;
         else
           ++p;
-      }
     }
     return count;
   }
