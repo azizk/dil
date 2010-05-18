@@ -10,30 +10,30 @@ import common;
 /// Represents a location in a source text.
 final class Location
 {
-  char[] filePath; /// The file path.
+  string filePath; /// The file path.
   size_t lineNum; /// The line number.
   char* lineBegin, to; /// Used to calculate the column.
 
   static uint TAB_WIDTH = 4; /// The default width of the tabulator character.
 
   /// Forwards the parameters to the second constructor.
-  this(char[] filePath, size_t lineNum)
+  this(string filePath, size_t lineNum)
   {
     set(filePath, lineNum);
   }
 
   /// Constructs a Location object.
-  this(char[] filePath, size_t lineNum, char* lineBegin, char* to)
+  this(string filePath, size_t lineNum, char* lineBegin, char* to)
   {
     set(filePath, lineNum, lineBegin, to);
   }
 
-  void set(char[] filePath, size_t lineNum)
+  void set(string filePath, size_t lineNum)
   {
     set(filePath, lineNum, null, null);
   }
 
-  void set(char[] filePath, size_t lineNum, char* lineBegin, char* to)
+  void set(string filePath, size_t lineNum, char* lineBegin, char* to)
   {
     this.filePath  = filePath;
     set(lineNum, lineBegin, to);
@@ -47,7 +47,7 @@ final class Location
     this.to        = to;
   }
 
-  void setFilePath(char[] filePath)
+  void setFilePath(string filePath)
   {
     this.filePath = filePath;
   }
@@ -92,7 +92,7 @@ final class Location
   }
   alias calculateColumn colNum;
 
-  char[] str(char[] format = "({},{})")
+  string str(string format = "({},{})")
   {
     return Format(format, lineNum, colNum);
   }
