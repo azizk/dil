@@ -1548,7 +1548,11 @@ class Parser
     skip(T.This);
     if (token.kind == T.LParen && tokenAfterParenIs(T.LParen))
       tparams = parseTemplateParameterList(); // "(" TemplateParameterList ")"
-    auto parameters = parseParameterList(); // "(" ParameterList ")"
+    Parameters parameters = new Parameters();
+    if (peekNext() != T.This)
+      parameters = parseParameterList(); // "(" ParameterList ")"
+    else // TODO: Create own class PostBlit?: this "(" this ")"
+      require2(T.LParen), skip(T.This), require2(T.RParen);
     this.storageClass |= parseFunctionPostfix(); // Combine with current stcs.
     if (tparams) // if "(" ConstraintExpression ")"
       constraint = parseOptionalConstraint();
