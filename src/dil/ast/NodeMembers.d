@@ -71,6 +71,9 @@ char[] genMembersTable()
   t[N.CallExpression] = t[N.DeleteExpression] =
   t[N.AsmTypeExpression] = t[N.AsmOffsetExpression] =
   t[N.AsmSegExpression] = ["una"];
+  version(D2)
+  t[N.CastExpression] = ["type?", "una"];
+  else
   t[N.CastExpression] = ["type", "una"];
   t[N.IndexExpression] = ["una", "args[]"];
   t[N.SliceExpression] = ["una", "left?", "right?"];

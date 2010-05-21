@@ -1334,6 +1334,9 @@ override
   E visit(CastExpression e)
   {
     begin(e);
+    version(D2)
+    e.type ? visitT(e.type) : write("n");
+    else
     visitT(e.type);
     write(",");
     visitE(e.una);

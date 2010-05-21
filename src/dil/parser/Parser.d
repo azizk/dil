@@ -3730,7 +3730,7 @@ class Parser
       version(D2)
       {
       auto begin2 = token;
-      case T.RParen: // cast "(" ")"
+      case T.RParen: // Mutable cast: cast "(" ")"
         break;
       case T.Shared, T.Const, T.Invariant, T.Immutable:
         if (peekNext() != T.RParen)

@@ -546,6 +546,9 @@ class CastExpression : UnaryExpression
   TypeNode type;
   this(Expression e, TypeNode type)
   {
+    version(D2)
+    addOptChild(type);
+    else
     addChild(type); // Add type before super().
     super(e);
     mixin(set_kind);
