@@ -6,6 +6,7 @@ module dil.Tables;
 import dil.lexer.Token;
 import dil.lexer.IdTable;
 import dil.semantic.Types;
+import dil.Float;
 import common;
 
 /// A collection of tables used by the Lexer and other classes.

@@ -3,7 +3,7 @@
 /// $(Maturity very high)
 module dil.Unicode;
 
-import util.uni : isUniAlpha;
+public import util.uni : isUniAlpha;
 
 /// U+FFFD = �. Used to replace invalid Unicode characters.
 const dchar REPLACEMENT_CHAR = '\uFFFD';
