@@ -3733,10 +3733,10 @@ class Parser
       {
       version(D2)
       {
-      auto begin2 = token;
       case T.RParen: // Mutable cast: cast "(" ")"
         break;
       case T.Shared, T.Const, T.Invariant, T.Immutable:
+        auto begin2 = token;
         if (peekNext() != T.RParen)
           goto default; // (const|immutable|shared) "(" Type ")"
         auto kind = token.kind;

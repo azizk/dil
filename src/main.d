@@ -298,7 +298,7 @@ void main(char[][] args)
         filePath = arg;
     }
 
-    separator || (separator = "\n");
+    if (!separator) separator = "\n";
     if (!sourceText)
       sourceText = new SourceText(filePath, true);
 
