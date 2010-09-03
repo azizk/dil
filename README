@@ -9,7 +9,7 @@ for the D programming languages, version 1.0 and 2.0.
 
 ==How To Compile DIL==
 In order to compile DIL you must have:
- *) DMD 1.062 (http://www.digitalmars.com/d/1.0/changelog.html)
+ *) DMD 1.063 (http://www.digitalmars.com/d/1.0/changelog.html)
  *) Tango 0.99.9 (http://dsource.org/projects/tango/)
  *) MPFR 2.4.2 (http://mpfr.org)
  *) Python 2.6.5 (2.5 might work too)
