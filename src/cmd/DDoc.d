@@ -223,15 +223,15 @@ struct DDocCommand
     file.write(fileText);
     file.close();
 
-    if (!ddocEmitter.symbolTree.length)
-      return; // Has no symbol tree.
-
     // Write the documented symbols in this module to a json file.
-    auto filePath = Path(destDirPath);
-    ((filePath /= "symbols") /= modFQN) ~= ".json";
-    file = new File(filePath.toString(), File.WriteCreate);
-    char[] text;
-    file.write(symbolsToJSON(ddocEmitter.symbolTree[0], text));
+    if (ddocEmitter.symbolTree.length && useKandil)
+    {
+      auto filePath = Path(destDirPath);
+      ((filePath /= "symbols") /= modFQN) ~= ".json";
+      file = new File(filePath.toString(), File.WriteCreate);
+      char[] text;
+      file.write(symbolsToJSON(ddocEmitter.symbolTree[0], text));
+    }
   }
 
   /// Writes the list of processed modules to the disk.
@@ -287,14 +287,15 @@ struct DDocCommand
     auto destDir = Path(destDirPath);
     auto dir = destDir.dup;
     foreach (path; ["css", "js", "img"])
-      dir.set(destDir.dup.append(path)).exists() || dir.createFolder();
+      dir.set(destDir / path).exists() || dir.createFolder();
     // Copy kandil files.
     auto kandil = Path(GlobalSettings.kandilDir);
     auto data = Path(GlobalSettings.dataDir);
     (destDir / "css" /= "style.css").copy(kandil / "css" /= "style.css");
-    (destDir / "htmlsrc" /= "html.css") .copy(data / "html.css");
+    if (writeHLFiles)
+      (destDir / "htmlsrc" /= "html.css").copy(data / "html.css");
     foreach (js_file; ["navigation.js", "jquery.js", "quicksearch.js",
-                    "symbols.js", "utilities.js"])
+                       "symbols.js", "utilities.js"])
       (destDir / "js" /= js_file).copy(kandil / "js" /= js_file);
     foreach (file; ["alias", "class", "enummem", "enum", "function",
                     "interface", "module", "package", "struct", "template",
