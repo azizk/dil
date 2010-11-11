@@ -2717,7 +2717,7 @@ class Parser
   }
 
   /// $(BNF PragmaStatement :=
-  ////  pragma "(" PragmaName ("," ExpressionList) ")" NoScopeStatement)
+  ////  pragma "(" PragmaName ("," ExpressionList)? ")" NoScopeStatement)
   Statement parsePragmaStatement()
   {
     skip(T.Pragma);
@@ -3653,7 +3653,7 @@ class Parser
 
         // [ ExpressionList ]
         if (consumed(T.Comma))
-           es ~= parseExpressionList();
+           es ~= parseExpressionList2(T.RBracket);
         requireClosing(T.RBracket, leftBracket);
 
         e = new IndexExpression(e, es);
@@ -3899,7 +3899,7 @@ class Parser
         if (consumed(T.Colon))
           goto LparseAssocArray;
         if (consumed(T.Comma))
-          values = [e] ~ parseExpressionList();
+          values = [e] ~ parseExpressionList2(T.RBracket);
         requireClosing(T.RBracket, begin);
       }
 
@@ -3910,13 +3910,15 @@ class Parser
       Expression[] keys = [e];
 
       goto LenterLoop;
-      do
+      while (token.kind != T.RBracket)
       {
         keys ~= parseAssignExpression();
         require(T.Colon);
       LenterLoop:
         values ~= parseAssignExpression();
-      } while (consumed(T.Comma))
+        if (!consumed(T.Comma))
+          break;
+      }
       requireClosing(T.RBracket, begin);
       e = new AArrayLiteralExpression(keys, values);
       break;
@@ -4478,6 +4480,21 @@ class Parser
     return expressions;
   }
 
+  /// Parses a list of AssignExpressions.
+  /// Allows a trailing comma.
+  /// $(BNF ExpressionList2 := AssignExpression ("," AssignExpression)* ","?)
+  Expression[] parseExpressionList2(TOK closing_tok)
+  {
+    Expression[] expressions;
+    while (token.kind != closing_tok)
+    {
+      expressions ~= parseAssignExpression();
+      if(!consumed(T.Comma))
+        break;
+    }
+    return expressions;
+  }
+
   /// Parses a list of Arguments.
   /// $(BNF Arguments := "(" ExpressionList? ")" )
   Expression[] parseArguments()
@@ -4486,7 +4503,7 @@ class Parser
     skip(T.LParen);
     Expression[] args;
     if (token.kind != T.RParen)
-      args = parseExpressionList();
+      args = parseExpressionList2(T.RParen);
     requireClosing(T.RParen, leftParen);
     return args;
   }
@@ -4672,7 +4689,7 @@ class Parser
   {
     auto begin = token;
     auto targs = new TemplateArguments;
-    do
+    while (token.kind != T.RParen)
     {
       bool success;
       auto typeArgument = try_(&parseTypeArgument, success);
@@ -4680,7 +4697,9 @@ class Parser
         targs ~= typeArgument;
       else // TemplateArgument := AssignExpression
         targs ~= parseAssignExpression();
-    } while (consumed(T.Comma))
+      if (!consumed(T.Comma))
+        break;
+    }
     set(targs, begin);
     return targs;
   }
@@ -4742,7 +4761,7 @@ class Parser
   ////)
   void parseTemplateParameterList_(TemplateParameters tparams)
   {
-    do
+    while (token.kind != T.RParen)
     {
       auto paramBegin = token;
       TemplateParameter tp;
@@ -4835,7 +4854,9 @@ class Parser
       // Push template parameter.
       tparams ~= set(tp, paramBegin);
 
-    } while (consumed(T.Comma))
+      if (!consumed(T.Comma))
+        break;
+    }
   }
 
   /// Returns the string of a token printable to the client.
