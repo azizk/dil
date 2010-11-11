@@ -1015,7 +1015,7 @@ override:
     DECL({
       if (d.returnType)
         write("\1DIL_RETTYPE "), write(d.returnType), write("\2 ");
-      else write("\1DIL_KW auto\2");
+      else write("\1DIL_KW auto\2 ");
       SYMBOL(d.name.text, K.Function, d);
       writeTemplateParams();
       writeParams(d.params);
