@@ -689,11 +689,16 @@ Example:
     break;
   case "main":
   default:
-    auto COMPILED_WITH = __VENDOR__;
-    auto COMPILED_VERSION = Format("{}.{,:d3}", __VERSION__/1000, __VERSION__%1000);
-    auto COMPILED_DATE = __TIMESTAMP__;
-    msg = FormatMsg(MID.HelpMain, VERSION, COMMANDS, COMPILED_WITH,
-                    COMPILED_VERSION, COMPILED_DATE);
+    if (command != "" && command != "main")
+      msg = Format("Unknown command: ‘{}’", command);
+    else
+    {
+      auto COMPILED_WITH = __VENDOR__;
+      auto COMPILED_VERSION = Format("{}.{,:d3}", __VERSION__/1000, __VERSION__%1000);
+      auto COMPILED_DATE = __TIMESTAMP__;
+      msg = FormatMsg(MID.HelpMain, VERSION, COMMANDS, COMPILED_WITH,
+                      COMPILED_VERSION, COMPILED_DATE);
+    }
   }
   Stdout(msg).newline;
 }
