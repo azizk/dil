@@ -233,11 +233,8 @@ dchar decode(wchar[] str, ref size_t index)
   assert(str.length && index < str.length);
   dchar c = str[index];
   if (0xD800 > c || c > 0xDFFF)
-  {
-    ++index;
-    return c;
-  }
-  if (c <= 0xDBFF && index+1 != str.length)
+    return ++index, c;
+  if (c <= 0xDBFF && index+1 < str.length)
   {
     wchar c2 = str[index+1];
     if (0xDC00 <= c2 && c2 <= 0xDFFF)
@@ -263,11 +260,8 @@ dchar decode(ref wchar* p, wchar* end)
   assert(p && p < end);
   dchar c = *p;
   if (0xD800 > c || c > 0xDFFF)
-  {
-    ++p;
-    return c;
-  }
-  if (c <= 0xDBFF && p+1 != end)
+    return ++p, c;
+  if (c <= 0xDBFF && p+1 < end)
   {
     wchar c2 = p[1];
     if (0xDC00 <= c2 && c2 <= 0xDFFF)
@@ -290,10 +284,7 @@ dchar decode(ref wchar* p)
   assert(p);
   dchar c = *p;
   if (0xD800 > c || c > 0xDFFF)
-  {
-    ++p;
-    return c;
-  }
+    return ++p, c;
   if (c <= 0xDBFF)
   {
     wchar c2 = p[1];
