@@ -18,10 +18,10 @@ public import dil.lexer.TokensEnum;
 ///
 /// Example:
 /// $(PRE&#32; ‘    StringValue’
-////   ^ws ^start     ^end)
-/// kind = TOK.Identifier$(BR)
-/// flags = Flags.None$(BR)
-/// ident = Identifier("StringValue", kind)
+////   ^$(SYMLINK Token.ws, ws) ^$(SYMLINK Token.start, start)     ^$(SYMLINK Token.end, end))
+/// $(SYMLINK Token.kind, kind) = TOK.Identifier$(BR)
+/// $(SYMLINK Token.flags, flags) = Flags.None$(BR)
+/// $(SYMLINK Token.union.ident, ident) = Identifier("StringValue", kind)
 struct Token
 { /// Flags set by the Lexer.
   enum Flags : ushort
