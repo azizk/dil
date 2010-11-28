@@ -38,7 +38,6 @@ SLICEARGS = $+
 
 MODLINK = <a href="$0.html">$0</a>
 MODLINK2 = <a href="$1.html">$+</a>
-MODLINK3 = <a href="$1.html#$2">$(SLICEARGS $+)</a>
 
 SRCFILE = htmlsrc/$(DIL_MODFQN).html
 PLINK = <a href="$(DIL_MODFQN).html#$0" class="plink">¶</a>
@@ -46,11 +45,8 @@ SRCLINK = <a title="Go to the HTML source file" class="srclink" href="$(SRCFILE)
 DIL_SYMBOL = <a class="symbol _$3" name="$2" href="$(SRCFILE)#L$4">$1</a>
 DIL_SYMEND = $(PLINK $2)
 
-SYMHREF = href="#$1"
-SYMHREF2 = href="$1.html#$2"
-
-SYMLINK = <a $(SYMHREF $1)>$2</a>
-SYMLINK2 = <a $(SYMHREF $1, $2)>$3</a>
+SYMLINK = <a href="#$1">$2</a>
+SYMLINK2 = <a href="$1.html#$2">$(SLICEARGS $+)</a>
 
 DMDBUG = $(LINK2 http://d.puremagic.com/issues/show_bug.cgi?id=$1, $2)
 DDD = ---
