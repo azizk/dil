@@ -15,7 +15,7 @@ const dchar ERROR_CHAR = 0xD800;
 /// code point and not higher than 0x10FFFF.
 bool isValidChar(dchar d)
 {
-  return d < 0xD800 || d > 0xDFFF && d <= 0x10FFFF;
+  return d < 0xD800 || (d > 0xDFFF && d <= 0x10FFFF);
 }
 
 /// There are a total of 66 noncharacters.
@@ -37,6 +37,24 @@ bool isTrailByte(ubyte b)
 bool isLeadByte(ubyte b)
 {
   return (b & 0xC0) == 0xC0; // 11xx_xxxx
+}
+
+/// Returns: true if c is a valid lead character.
+bool isValidLead(char c)
+{ // NB: not all overlong sequences are checked.
+  return (c & 0xC0) == 0xC0 && (c & 0xFE) != 0xC0;
+}
+
+/// ditto
+bool isValidLead(wchar c)
+{
+  return c <= 0xDBFF || c > 0xDFFF;
+}
+
+/// ditto
+bool isValidLead(dchar c)
+{
+  return isValidChar(c);
 }
 
 /// Advances ref_p only if this is a valid Unicode alpha character.
@@ -86,14 +104,10 @@ body
   dchar c = *p;
 
   if (c < 0x80)
-    return ref_p++, c;
+    return ref_p++, c; // ASCII character.
 
-  p++; // Move to second byte.
-  if (!(p < end))
-    return ERROR_CHAR;
-
-  // Error if second byte is not a trail byte.
-  if (!isTrailByte(*p))
+  // Error if: end of string or second byte is not a trail byte.
+  if (++p >= end || !isTrailByte(*p))
     return ERROR_CHAR;
 
   // Check for overlong sequences.
@@ -111,7 +125,7 @@ body
   }
 
   const char[] checkNextByte = "if (!(++p < end && isTrailByte(*p)))"
-                                "  return ERROR_CHAR;";
+                               "  return ERROR_CHAR;";
   const char[] appendSixBits = "c = (c << 6) | *p & 0b0011_1111;";
 
   // Decode
@@ -303,17 +317,17 @@ dchar decode(ref wchar* p)
 B[] convertString(A, B)(A[] str)
 {
   B[] result;
-  size_t idx;
-  while (idx < str.length)
+  size_t idx, len = str.length;
+  while (idx < len)
   {
     auto c = decode(str, idx);
     if (c == ERROR_CHAR)
-    { // Skip trail bytes.
-      while (++idx < str.length && isTrailByte(str[idx]))
+    { // Skip to valid lead char.
+      while (++idx < len && !isValidLead(str[idx]))
       {}
       c = REPLACEMENT_CHAR;
     }
-    static if(is(B == dchar))
+    static if (is(B == dchar))
       result ~= c; // Just append. No need for an encoding function.
     else
       encode(result, c);
