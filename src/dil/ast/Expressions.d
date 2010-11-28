@@ -824,9 +824,9 @@ class CharExpression : Expression
     mixin(set_kind);
 //    this.character = character;
     // Some semantic computation here.
-    if(character <= 0xFF)
+    if (character <= 0xFF)
       this.type = Types.Char;
-    else if(character <= 0xFFFF)
+    else if (character <= 0xFFFF)
       this.type = Types.Wchar;
     else
       this.type = Types.Dchar;

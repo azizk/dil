@@ -76,7 +76,7 @@ class Module : ScopeSymbol
   /// Returns the file extension: "d" or "di".
   string fileExtension()
   {
-    foreach_reverse(i, c; filePath)
+    foreach_reverse (i, c; filePath)
       if (c == '.')
         return filePath[i+1..$];
     return "";

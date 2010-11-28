@@ -82,8 +82,8 @@ void main(char[][] args)
 char[] xml_escape(char[] text)
 {
   char[] result;
-  foreach(c; text)
-    switch(c)
+  foreach (c; text)
+    switch (c)
     {
       case '<': result ~= "&lt;";  break;
       case '>': result ~= "&gt;";  break;
@@ -158,7 +158,7 @@ static const char[][] binaryExpressions = [
 
 template ExpressionType(alias x, alias y, char[] expression)
 {
-  static if(is(typeof(mixin(expression)) ResultType))
+  static if (is(typeof(mixin(expression)) ResultType))
     const char[] result = ResultType.stringof;
   else
     const char[] result = "Error";

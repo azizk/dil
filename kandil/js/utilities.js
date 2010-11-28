@@ -43,7 +43,7 @@ String.prototype.strip = function(chars) {
     (chars = RegExp.escape(chars)),
     (rx = RegExp("^["+chars+"]+"));
   var str = new String(this.replace(rx, "")), i = str.length;
-  if (i) while(rx.test(str[--i])){}
+  if (i) while (rx.test(str[--i])){}
   return str.substring(0, i+1);*/
 };
 
@@ -178,7 +178,7 @@ jQuery.extend(Element.prototype, {
         className = " "+className+" ";
         classes = classes.split("|");
         for (var i = 0, len = classes.length; i < len; i++)
-          if(className.indexOf(" "+classes[i]+" ") != -1) // hasClass
+          if (className.indexOf(" "+classes[i]+" ") != -1) // hasClass
             this.removeClass(classes[i]);
           else
             this.addClass(classes[i]);

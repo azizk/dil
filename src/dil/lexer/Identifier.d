@@ -44,7 +44,7 @@ struct Identifier
   uint toHash()
   {
     uint hash;
-    foreach(c; str) {
+    foreach (c; str) {
       hash *= 11;
       hash += c;
     }

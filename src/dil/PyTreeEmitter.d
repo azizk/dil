@@ -79,7 +79,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   // Gather all identifiers, comments, strings and numbers in this map.
   Tuple[hash_t] map;
   for (auto token = first_token; token; token = token.next)
-    switch(token.kind)
+    switch (token.kind)
     {
     case TOK.Identifier, TOK.Comment, TOK.String, TOK.CharLiteral,
          TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
@@ -136,7 +136,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
     line ~= '(' ~ String(token.kind) ~ ',';
     line ~= (token.ws) ? countWhitespace(token.wsChars) : `0`;
     line ~= ',';
-    switch(token.kind)
+    switch (token.kind)
     {
     case TOK.Identifier, TOK.Comment, TOK.String, TOK.CharLiteral:
     case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
@@ -322,21 +322,21 @@ override
   {
     begin(d);
     write("(");
-    foreach(moduleFQN; d.moduleFQNs)
+    foreach (moduleFQN; d.moduleFQNs)
     {
       write("(");
-      foreach(tok; moduleFQN)
+      foreach (tok; moduleFQN)
         write(indexOf(tok)~",");
       write("),");
     }
     write("),(");
-    foreach(tok; d.moduleAliases)
+    foreach (tok; d.moduleAliases)
       tok ? write(indexOf(tok)~",") : write("n,");
     write("),(");
-    foreach(tok; d.bindNames)
+    foreach (tok; d.bindNames)
       write(indexOf(tok)~",");
     write("),(");
-    foreach(tok; d.bindAliases)
+    foreach (tok; d.bindAliases)
       tok ? write(indexOf(tok)~",") : write("n,");
     write(")");
     end(d);

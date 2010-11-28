@@ -192,7 +192,7 @@ override:
     char[] was;
     if (inAggregate)
       was = "Methode";
-    else if(inFunc)
+    else if (inFunc)
       was = "geschachtelte Funktion";
     else
       was = "Funktion";

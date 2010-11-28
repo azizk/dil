@@ -272,7 +272,7 @@ static const Entity[] namedEntities = [
 uint stringToHash(char[] str)
 {
   uint hash;
-  foreach(c; str)
+  foreach (c; str)
     hash = hash * 11 + c;
   return hash;
 }

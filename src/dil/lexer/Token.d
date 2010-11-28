@@ -359,7 +359,7 @@ version(token_malloc)
     auto token = cast(Token*)p;
     if (token)
     {
-      if(token.kind == TOK.HashLine)
+      if (token.kind == TOK.HashLine)
         token.destructHashLineToken();
       else
       {
@@ -460,7 +460,7 @@ bool isStatementStartToken(TOK tok)
 /// Returns true if this token starts an AsmStatement.
 bool isAsmStatementStartToken(TOK tok)
 {
-  switch(tok)
+  switch (tok)
   {
   alias TOK T;
   // TODO: need to add all opcodes.

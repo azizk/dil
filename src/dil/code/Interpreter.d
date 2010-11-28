@@ -67,13 +67,13 @@ class Interpreter : Visitor
   {
     // We cache this result so that we don't blindly try to reevaluate
     // functions that can't be evaluated at compile time
-    if(fd.cantInterpret)
+    if (fd.cantInterpret)
       return NAR;
 
     // TODO: check for nested/method
 
     // Check for invalid parameter types
-    if(fd.params.hasVariadic() || fd.params.hasLazy())
+    if (fd.params.hasVariadic() || fd.params.hasLazy())
     {
       fd.cantInterpret = true;
       return NAR;
@@ -110,7 +110,7 @@ class Interpreter : Visitor
 
   static bool isBool(Expression e, bool value)
   {
-    switch(e.kind)
+    switch (e.kind)
     {
       alias NodeKind NK;
     case NK.IntExpression:
@@ -522,11 +522,11 @@ override
   {
     auto r = visitE(e.condition);
 
-    if(r !is NAR)
+    if (r !is NAR)
     {
-      if(isBool(r, true))
+      if (isBool(r, true))
         r = visitE(e.lhs);
-      else if(isBool(r, false))
+      else if (isBool(r, false))
         r = visitE(e.rhs);
       else
         r = NAR;
@@ -537,7 +537,7 @@ override
   E visit(CommaExpression e)
   {
     auto r = visitE(e.lhs);
-    if(r !is NAR)
+    if (r !is NAR)
       r = visitE(e.rhs);
     return r;
   }
@@ -546,19 +546,19 @@ override
   {
     auto r = visitE(e.lhs);
 
-    if(r !is NAR)
+    if (r !is NAR)
     {
-      if(isBool(r, true))
+      if (isBool(r, true))
         r = new IntExpression(1, Types.Bool);
-      else if(isBool(r, false))
+      else if (isBool(r, false))
       {
         r = visitE(e.rhs);
 
-        if(r !is NAR)
+        if (r !is NAR)
         {
-          if(isBool(r, true))
+          if (isBool(r, true))
             r = new IntExpression(1, Types.Bool);
-          else if(isBool(r, false))
+          else if (isBool(r, false))
             r = new IntExpression(0, Types.Bool);
           else
             r = NAR;
@@ -574,18 +574,18 @@ override
   {
     auto r = visitE(e.lhs);
 
-    if(r !is NAR)
+    if (r !is NAR)
     {
-      if(isBool(r, false))
+      if (isBool(r, false))
         r = new IntExpression(0, Types.Bool);
-      else if(isBool(r, true))
+      else if (isBool(r, true))
       {
         r = visitE(e.rhs);
-        if(r !is NAR)
+        if (r !is NAR)
         {
-          if(isBool(r, true))
+          if (isBool(r, true))
             r = new IntExpression(1, Types.Bool);
-          else if(isBool(r, false))
+          else if (isBool(r, false))
             r = new IntExpression(0, Types.Bool);
           else
             r = NAR;

@@ -102,8 +102,8 @@ class Parameters : Node
 
   bool hasLazy()
   {
-    foreach(param; items)
-      if(param.isLazy())
+    foreach (param; items)
+      if (param.isLazy())
         return true;
     return false;
   }

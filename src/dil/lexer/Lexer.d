@@ -452,7 +452,7 @@ class Lexer
       }
 
       if (c == '/')
-        switch(c = *++p)
+        switch (c = *++p)
         {
         case '=':
           ++p;
@@ -1816,7 +1816,7 @@ class Lexer
         err_msg = MSG.InvalidOctalEscapeSequence;
         goto Lerr2;
       }
-      else if(*p == '&')
+      else if (*p == '&')
       {
         if (isalpha(*++p))
         {
@@ -2432,7 +2432,7 @@ class Lexer
         hlinfo.path = hlval.filespec.strval.str;
     }
 
-    if(0)
+    if (0) // Only issue an error if jumped here.
     Lerr:
       error(errorAtColumn, mid);
 

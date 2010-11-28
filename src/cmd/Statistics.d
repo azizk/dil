@@ -90,7 +90,7 @@ struct StatsCommand
       Stdout("// End of tokens table.").newline;
     }
 
-    if(printNodesTable)
+    if (printNodesTable)
     {
       Stdout("Table of nodes:").newline;
       Stdout.formatln(" {,10} | {}", "Count", "Node kind");

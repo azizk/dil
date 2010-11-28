@@ -170,7 +170,7 @@ void main(char[][] args)
         cmd.useKandil = true;
       else if (arg == "--report")
         cmd.writeReport = true;
-      else if(strbeg(arg, "-rx="))
+      else if (strbeg(arg, "-rx="))
         cmd.regexps ~= new Regex(arg[4..$]);
       else if (arg.length > 3 && strbeg(arg, "-m="))
         cmd.modsTxtPath = arg[3..$];
@@ -225,13 +225,13 @@ void main(char[][] args)
       {}
       else if (strbeg(arg, "-I"))
         cmd.context.importPaths ~= arg[2..$];
-      else if(strbeg(arg, "-x"))
+      else if (strbeg(arg, "-x"))
         cmd.regexps ~= arg[2..$];
-      else if(strbeg(arg, "-l"))
+      else if (strbeg(arg, "-l"))
         cmd.levels = Integer.toInt(arg[2..$]);
-      else if(strbeg(arg, "-si"))
+      else if (strbeg(arg, "-si"))
         cmd.siStyle = arg[3..$];
-      else if(strbeg(arg, "-pi"))
+      else if (strbeg(arg, "-pi"))
         cmd.piStyle = arg[3..$];
       else
         switch (arg)

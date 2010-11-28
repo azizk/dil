@@ -587,7 +587,7 @@ class Parser
       if (name.kind != T.Identifier)
         error2(MSG.ExpectedVariableName, name);
     }
-    else if(0/+auto leftParen = consumedToken(T.LParen)+/)
+    else if (0/+auto leftParen = consumedToken(T.LParen)+/)
     { // FIXME: doesn't work in all cases. :(
       // BasicTypes "(" CStyleType ")" DeclaratorSuffix?
       auto leftParen = token;
@@ -2143,7 +2143,7 @@ class Parser
     Statement s;
     if (token.kind == T.LBrace)
       s = parseStatements();
-    else if(!consumed(T.Semicolon))
+    else if (!consumed(T.Semicolon))
       s = parseStatement();
     else
     { // ";"
@@ -3874,7 +3874,7 @@ class Parser
       ubyte[] bin_str = cast(ubyte[])str;
       if (postfix == 'w')
       {
-        if(!hasInvalidUTF8(str, begin))
+        if (!hasInvalidUTF8(str, begin))
           bin_str = cast(ubyte[])dil.Unicode.toUTF16(str);
       }
       else if (postfix == 'd')
@@ -4121,7 +4121,7 @@ class Parser
     auto arrayType = type.Is!(ArrayType);
     if (arrayType && arrayType.isStatic())
     {}
-    else if(arrayType && arrayType.isAssociative())
+    else if (arrayType && arrayType.isAssociative())
     { // Backtrack to parse as a StaticArray.
       auto lBracket = type.begin;
       backtrackTo(lBracket);
@@ -4476,7 +4476,7 @@ class Parser
     Expression[] expressions;
     do
       expressions ~= parseAssignExpression();
-    while(consumed(T.Comma))
+    while (consumed(T.Comma))
     return expressions;
   }
 
@@ -4489,7 +4489,7 @@ class Parser
     while (token.kind != closing_tok)
     {
       expressions ~= parseAssignExpression();
-      if(!consumed(T.Comma))
+      if (!consumed(T.Comma))
         break;
     }
     return expressions;

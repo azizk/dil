@@ -191,7 +191,7 @@ class Highlighter
   /// Prints a token to the stream 'print'.
   void printToken(Token* token)
   {
-    switch(token.kind)
+    switch (token.kind)
     {
     case TOK.Identifier:
       print.format(tags.Identifier, token.text);
@@ -311,7 +311,7 @@ class Highlighter
     for (; p < end; p++)
     {
       char[] xml_entity = void;
-      switch(*p)
+      switch (*p)
       {
       case '\\': break; // Found beginning of an escape sequence.
       // Code to escape XML chars:
@@ -356,7 +356,7 @@ class Highlighter
             if (++p < end && isoctal(*p))
               p++;
         }
-        else if(*p == '&')
+        else if (*p == '&')
         { // Skip to ";". Assume valid sequence.
           auto entity_name_begin = p+1;
           while (++p < end && isalnum(*p))
@@ -397,7 +397,7 @@ char[] xml_escape(char[] text)
   char[] entity; // Current entity to be appended.
   char[] result;
   while (p < end)
-    switch(*p)
+    switch (*p)
     {
     case '<': entity = "&lt;";  goto Lcommon;
     case '>': entity = "&gt;";  goto Lcommon;
@@ -500,7 +500,7 @@ class TagMap
 /// Returns: the index if found, or -1 if not.
 int rfind(char[] subject, char object)
 {
-  foreach_reverse(i, c; subject)
+  foreach_reverse (i, c; subject)
     if (c == object)
       return i;
   return -1;
