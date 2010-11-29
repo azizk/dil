@@ -252,57 +252,44 @@ struct Converter
 
 /// Replaces invalid UTF-8 sequences with U+FFFD (if there's enough space,)
 /// and Newlines with '\n'.
+/// Params:
+///   text = the string to be sanitized; no new memory is allocated.
 char[] sanitizeText(char[] text)
 {
   if (!text.length)
     return null;
 
   char* p = text.ptr; // Reader.
-  char* end = p + text.length;
   char* q = p; // Writer.
+  char* end = p + text.length;
 
-  for (; p < end; p++, q++)
+  while (p < end)
   {
     assert(q <= p);
-    if (isascii(*p)) {
-      *q = *p; // Just copy ASCII characters.
-      continue;
-    }
-    switch (*p)
+
+    if (isascii(*p))
     {
-    case '\r':
-      if (p+1 < end && p[1] == '\n')
-        p++;
-    case '\n':
-      *q = '\n'; // Copy newlines as '\n'.
-      continue;
-    default:
-      if (p+2 < end && isUnicodeNewline(p))
-      {
-        p += 2;
-        goto case '\n';
-      }
-
-      auto p2 = p; // Remember beginning of the UTF-8 sequence.
-      dchar c = decode(p, end);
-
-      if (c == ERROR_CHAR)
-      { // Skip to next ASCII character or valid UTF-8 sequence.
-        while (++p < end && isTrailByte(*p))
-        {}
-        alias REPLACEMENT_STR R;
-        if (q+2 < p) // Copy replacement char if there is enough space.
-          (*q = R[0]), (*++q = R[1]), (*++q = R[2]);
-        p--;
-      }
+      if (scanNewline(p, end))
+        *q++ = '\n'; // Copy newlines as '\n'.
       else
-      { // Copy the valid UTF-8 sequence.
-        while (p2 < p) // p points to one past the last trail byte.
-          *q++ = *p2++; // Copy code units.
-        q--;
-        p--;
-      }
+        *q++ = *p++; // Copy the ASCII character and advance pointers.
+      continue;
     }
+
+    auto p2 = p; // Remember beginning of the UTF-8 sequence.
+    dchar c = decode(p, end);
+
+    if (c == ERROR_CHAR)
+    { // Skip to next ASCII character or valid UTF-8 sequence.
+      while (++p < end && !isValidLead(*p))
+      {}
+      alias REPLACEMENT_STR R;
+      if (q+2 < p) // Copy replacement char if there is enough space.
+        (*q++ = R[0]), (*q++ = R[1]), (*q++ = R[2]);
+    }
+    else // Copy the valid UTF-8 sequence.
+      while (p2 < p) // p points to one past the last trail byte.
+        *q++ = *p2++; // Copy code units.
   }
   assert(p == end);
   text.length = q - text.ptr;
