@@ -17,16 +17,20 @@ public import dil.lexer.TokensEnum;
 /// A Token is a sequence of characters recognized by the lexical analyzer.
 ///
 /// Example:
-/// $(PRE&#32; ‘    StringValue’
-////   ^$(SYMLINK Token.ws, ws) ^$(SYMLINK Token.start, start)     ^$(SYMLINK Token.end, end))
-/// $(SYMLINK Token.kind, kind) = TOK.Identifier$(BR)
-/// $(SYMLINK Token.flags, flags) = Flags.None$(BR)
-/// $(SYMLINK Token.union.ident, ident) = Identifier("StringValue", kind)
+/// $(PRE ‘    StringValue’
+//// ^$(Token ws, ws) ^$(Token start, start)     ^$(Token end, end)
+///
+///$(Token kind, kind)  = TOK.Identifier
+///$(Token flags, flags) = Flags.None
+///$(Token union.ident, ident) = $(Identifier)("StringValue", kind))
+/// Macros:
+///   Token = $(SYMLINK Token.$1, $2)
+///   Identifier = $(SYMLINK2 dil.lexer.Identifier, Identifier, Identifier)
 struct Token
 { /// Flags set by the Lexer.
   enum Flags : ushort
   {
-    None,
+    None, /// No flags set.
     Whitespace = 1, /// Tokens with this flag are ignored by the Parser.
   }
 
