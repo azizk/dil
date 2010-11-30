@@ -167,63 +167,52 @@ static:
 
   /// Sanitizes a DDoc comment string.
   ///
-  /// Leading "commentChar"s are removed from the lines.
+  /// Leading padding characters are removed from the lines.
   /// The various newline types are converted to '\n'.
   /// Params:
   ///   comment = the string to be sanitized.
-  ///   commentChar = '/', '+', or '*'
-  string sanitize(string comment, char commentChar)
+  ///   padding = '/', '+' or '*'
+  string sanitize(string comment, char padding)
   {
-    alias comment result;
+    bool isNewline = true; // True when at the beginning of a new line.
+    char* p = comment.ptr; // Reader.
+    char* q = p; // Writer.
+    char* end = p + comment.length;
 
-    bool newline = true; // True when at the beginning of a new line.
-    uint i, j;
-    auto len = result.length;
-    for (; i < len; i++, j++)
+    while (p < end)
     {
-      if (newline)
-      { // Ignore commentChars at the beginning of each new line.
-        newline = false;
-        auto begin = i;
-        while (i < len && isspace(result[i]))
-          i++;
-        if (i < len && result[i] == commentChar)
-          while (++i < len && result[i] == commentChar)
+      if (isNewline)
+      { // Ignore padding at the beginning of each new line.
+        isNewline = false;
+        auto begin = p;
+        while (p < end && isspace(*p)) // Skip spaces.
+          p++;
+        if (p < end && *p == padding)
+          while (++p < end && *p == padding) // Skip padding.
           {}
         else
-          i = begin; // Reset. No commentChar found.
-        if (i >= len)
-          break;
+          p = begin; // Reset. No padding found.
       }
-      // Check for Newline.
-      switch (result[i])
+      else
       {
-      case '\r':
-        if (i+1 < len && result[i+1] == '\n')
-          i++;
-      case '\n':
-        result[j] = '\n'; // Copy Newline as '\n'.
-        newline = true;
-        continue;
-      default:
-        if (!isascii(result[i]) && i+2 < len && isUnicodeNewline(result.ptr + i))
-        {
-          i += 2;
-          goto case '\n';
-        }
+        isNewline = scanNewline(p, end);
+        if (isNewline)
+          *q++ = '\n'; // Copy newlines as '\n'.
+        else
+          *q++ = *p++; // Copy character.
       }
-      // Copy character.
-      result[j] = result[i];
     }
-    result.length = j; // Adjust length.
-    // Lastly, strip trailing commentChars.
-    if (!result.length)
+    comment.length = q - comment.ptr; // Adjust length.
+    if (!comment.length)
       return null;
-    i = result.length;
-    for (; i && result[i-1] == commentChar; i--)
-    {}
-    result.length = i;
-    return result;
+    // Lastly, strip trailing padding.
+    p = q - 1; // q points to the end of the string.
+    q = comment.ptr - 1; // Now let q point to the start.
+    while (p > q && *p == padding)
+      p--; // Go back until no padding characters are left.
+    assert(p == q || p >= comment.ptr);
+    comment.length = p - comment.ptr + 1;
+    return comment;
   }
 
   /// Unindents all lines in text by the maximum amount possible.
