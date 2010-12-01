@@ -182,22 +182,6 @@ def load_pymodules(folder):
   sys.path = sys.path[1:]
   return modules
 
-def generate_shl_files(dil_exe, dest, prefix, files):
-  """ Generates syntax highlighted files. """
-  for filepath in files:
-    htmlfile = get_module_fqn(prefix, filepath) + ".html"
-    yield (filepath, dest/htmlfile)
-    args = (dil_exe, filepath, dest/htmlfile)
-    os.system('%s hl --lines --syntax --html %s > "%s"' % args)
-
-def generate_shl_files2(dil_exe, dest, modlist):
-  """ Generates syntax highlighted files. """
-  for mod in modlist:
-    htmlfile = mod['fqn'] + ".html"
-    yield (mod['path'], dest/htmlfile)
-    args = (dil_exe, mod['path'], dest/htmlfile)
-    os.system('%s hl --lines --syntax --html %s > "%s"' % args)
-
 def locate_command(command):
   """ Locates a command using the PATH environment variable. """
   if 'PATH' in os.environ:
