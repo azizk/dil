@@ -2,6 +2,7 @@
 # Author: Aziz Köksal
 # License: zlib/libpng
 import os, re, sys
+import subprocess
 from path import Path
 
 def find_source_files(src_path, filter_pred=lambda x: False):
@@ -151,6 +152,25 @@ def generate_pymodules(dil_exe, dest, files, options=[], cwd=None):
   """ Generates Python source files. """
   from subprocess import call
   call([dil_exe, "py", dest] + options + files, cwd=cwd)
+
+def create_archives(opts, src, dest, cwd):
+  """ Calls archiving programs to archive the src folder. """
+  cwd = cwd or None # Causes exception in call() if empty string.
+  for which, cmd in zip(
+    ('tar_gz', 'tar_bz2', 'zip', '_7z'),
+    ("tar --owner root --group root -czf %(name)s.tar.gz",
+     "tar --owner root --group root --bzip2 -cf %(name)s.tar.bz2",
+     "zip -q -9 -r %(name)s.zip",
+     "7zr a %(name)s.7z")):
+    if not getattr(opts, which, False): continue
+    cmd = cmd.split(' ') # Split into array as call() requires it.
+    if not locate_command(cmd[0]):
+      print "Error: the utility '%s' is not in your PATH." % cmd[0]
+      continue
+    cmd[-1] = cmd[-1] % {'name':dest} # Format the destination parameter.
+    cmd += [src] # Append the src parameter.
+    print "\n", " ".join(cmd)
+    subprocess.call(cmd, cwd=cwd) # Call the program.
 
 def load_pymodules(folder):
   """ Loads all python modules (names matching 'd_*.py') from a folder. """
