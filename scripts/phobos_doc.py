@@ -132,7 +132,7 @@ def main():
   parser = OptionParser(usage=usage)
   #parser.add_option("--rev", dest="revision", metavar="REVISION", default=None,
     #type="int", help="set the repository REVISION to use in symbol links")
-  parser.add_option("--zip", dest="zip", default=False, action="store_true",
+  parser.add_option("--7z", dest="_7z", default=False, action="store_true",
     help="create a 7z archive")
   parser.add_option("--pdf", dest="pdf", default=False, action="store_true",
     help="create a PDF document")
@@ -225,11 +225,8 @@ def main():
 
   TMP.rmtree()
 
-  if options.zip:
-    name, src = "Phobos.%s_doc" % VERSION, DEST
-    cmd = "7zr a %(name)s.7z %(src)s" % locals()
-    print cmd
-    os.system(cmd)
+  archive = "Phobos.%s_doc" % VERSION
+  create_archives(options, DEST.name, archive, DEST.folder.abspath)
 
 if __name__ == "__main__":
   main()

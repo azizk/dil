@@ -251,19 +251,7 @@ def main():
 
   # Build archives.
   assert DEST[-1] != Path.sep
-  opt = options
-  for exec_cmd, cmd in zip((opt.tar_gz, opt.tar_bz2, opt.zip, opt._7z),
-    ("tar --owner root --group root -czf %(name)s.tar.gz %(src)s",
-     "tar --owner root --group root --bzip2 -cf %(name)s.tar.bz2 %(src)s",
-     "zip -q -9 -r %(name)s.zip %(src)s",
-     "7zr a %(name)s.7z %(src)s")):
-    if not exec_cmd: continue
-    if locate_command(cmd):
-      print "Error: the utility '%s' is not in your PATH." % cmd
-      continue
-    cmd = cmd % dict(locals(), name=DEST, src=DEST)
-    print cmd
-    os.system(cmd)
+  create_archives(options, DEST.name, DEST.name, DEST.folder)
 
 if __name__ == '__main__':
   main()

@@ -120,10 +120,10 @@ def main():
     type="int", help="set the repository REVISION to use in symbol links"
                      " (unused atm)")
   parser.add_option("--docs", dest="docs", default=False, action="store_true",
-    help="also generate docs if --zip/--pdf specified")
+    help="also generate docs if --7z/--pdf specified")
   parser.add_option("--posix", dest="posix", default=False, action="store_true",
     help="define version Posix instead of Win32 and Windows")
-  parser.add_option("--zip", dest="zip", default=False, action="store_true",
+  parser.add_option("--7z", dest="_7z", default=False, action="store_true",
     help="create a 7z archive")
   parser.add_option("--pdf", dest="pdf", default=False, action="store_true",
     help="create a PDF document")
@@ -139,8 +139,8 @@ def main():
     print "The path '%s' doesn't exist." % args[0]
     return
 
-  # True if --docs is given, or neither of --pdf and --zip is true.
-  options.docs = options.docs or not (options.pdf or options.zip)
+  # True if --docs is given, or neither of --pdf and --7z is true.
+  options.docs = options.docs or not (options.pdf or options._7z)
 
   # 1. Initialize some path variables.
   # Path to dil's root folder.
@@ -218,12 +218,8 @@ def main():
 
   TMP.rmtree()
 
-  # Optionally create an archive.
-  if options.zip:
-    name, src = "Tango.%s_doc" % VERSION, DEST
-    cmd = "7zr a %(name)s.7z %(src)s" % locals()
-    print cmd
-    os.system(cmd)
+  archive = "Tango.%s_doc" % VERSION
+  create_archives(options, DEST.name, archive, DEST.folder.abspath)
 
   if dil_retcode == 0:
     print "Python script finished. Exiting normally."
