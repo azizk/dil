@@ -156,8 +156,11 @@ def main():
     src.copytree(DEST)
   elif locate_command('git'):
     # Use git to checkout a clean copy.
-    os.system("git clone ./ '%s'" % DEST)
-    (DEST/".git").rmtree() # Remove the .git folder.
+    DEST.mkdir()
+    TARFILE = DEST/"dil.tar"
+    subprocess.call(["git", "archive", "-o", TARFILE, "HEAD"])
+    subprocess.call(["tar", "-xf", TARFILE.name], cwd=DEST)
+    TARFILE.rm()
     if options.copy_modified:
       modified_files = os.popen("git ls-files -m").read()[:-1]
       if modified_files != "":
