@@ -2653,7 +2653,7 @@ class Lexer
       //    p points to second byte in the sequence.
       assert(isTrailByte(*p));
       // Move to next ASCII character or lead byte of a UTF-8 sequence.
-      while (p < (end-1) && isTrailByte(*p))
+      while (*p && !isValidLead(*p))
         ++p;
       --p;
       assert(!isTrailByte(p[1]));
@@ -2740,18 +2740,16 @@ class Lexer
   {
     char* p = str.ptr, end = p + str.length;
     while (p < end)
-    {
       if (decode(p, end) == ERROR_CHAR)
       {
         auto begin = p;
         // Skip trail-bytes.
-        while (++p < end && isTrailByte(*p))
+        while (++p < end && !isValidLead(*p))
         {}
         return Lexer.formatBytes(begin, p);
       }
-    }
     assert(p == end);
-    return "";
+    return null;
   }
 }
 
