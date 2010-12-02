@@ -70,7 +70,7 @@ class Lexer
     assert(text.length >= 4 && text[$-4..$] == SourceText.sentinelString,
       "source text has no sentinel character");
     this.p = text.ptr;
-    this.end = this.p + text.length;
+    this.end = this.p + text.length; // Point past the sentinel string.
     this.lineBegin = this.p;
     this.lineNum = 1;
 
@@ -105,6 +105,12 @@ class Lexer
   string text()
   {
     return srcText.data;
+  }
+
+  /// Returns the end pointer excluding the sentinel string.
+  char* endX()
+  {
+    return this.end - SourceText.sentinelString.length;
   }
 
   /// Scans the whole source text until EOF is encountered.
@@ -264,7 +270,7 @@ class Lexer
     if (!pstr)
     { // Insert a new string into the table.
       auto new_str = str;
-      if (text.ptr <= str.ptr && str.ptr < end) // Inside the text?
+      if (text.ptr <= str.ptr && str.ptr < this.endX()) // Inside the text?
         new_str = new_str.dup; // A copy is needed.
       new_str ~= '\0'; // Terminate with a zero.
       tables.strings[hash] = new_str;
@@ -1521,7 +1527,7 @@ class Lexer
       assert(str_delim.length != 0, ""~*p);
       return value.length &&
         value[$-1] == '\n' && // Last copied character must be '\n'.
-        end-p >= str_delim.length && // Check remaining length.
+        this.endX()-p >= str_delim.length && // Check remaining length.
         p[0..str_delim.length] == str_delim; // Compare.
     }
 
@@ -2656,7 +2662,7 @@ class Lexer
       while (*p && !isValidLead(*p))
         ++p;
       --p;
-      assert(!isTrailByte(p[1]));
+      assert(!isTrailByte(p[1]) && p < this.endX());
     Lerr2:
       d = REPLACEMENT_CHAR;
       error(ref_p, MID.InvalidUTF8Sequence, formatBytes(ref_p, p));
