@@ -15,7 +15,7 @@ import common;
 struct TokenSerializer
 {
 static:
-  const string HEADER = "DIL1.0TOKS\x1A\n";
+  const string HEADER = "DIL1.0TOKS\x1A\x04\n";
 
   ubyte[] serialize(Token* first_token)
   {
@@ -128,7 +128,9 @@ static:
       uint id_begin = void, id_len = void;
       if (!read4B(id_begin) || !read2B(id_len) ||
           id_begin+id_len > srcText.length) return null;
-      return idtable.lookup(srcText[id_begin .. id_begin + id_len]);
+      auto id_str = srcText[id_begin .. id_begin + id_len];
+      if (!IdTable.isIdentifierString(id_str)) return null;
+      return idtable.lookup(id_str);
     }
 
     Token[] tokens;
@@ -151,13 +153,13 @@ static:
 
     uint token_count = void;
     if (!read4B(token_count)) goto Lerr;
-    // We can allocate the exact amount of tokens we need.
-    tokens = new Token[token_count];
 
     uint body_length = void;
     if (!read4B(body_length)) goto Lerr;
     if (p + body_length != end) goto Lerr;
 
+    // We can allocate the exact amount of tokens we need.
+    tokens = new Token[token_count];
     Token* token = &tokens[0];
     char* prev_end = srcText.ptr;
     char* src_end = srcText.ptr+srcText.length;
@@ -188,7 +190,7 @@ static:
         if (!read2B(token_len)) goto Lerr;
       }
       // Set token.end.
-      token.end += token_len;
+      token.end = token.start + token_len;
       if (token.end > src_end) goto Lerr;
       prev_end = token.end;
       // Pass the token back to the client.
