@@ -11,7 +11,7 @@ import dil.ast.DefaultVisitor,
        dil.ast.Types;
 
 /// Counts the nodes in a syntax tree.
-class ASTStats : DefaultVisitor
+class ASTStats : DefaultVisitor2
 {
   uint[] table; /// Table for counting nodes.
 
@@ -24,9 +24,9 @@ class ASTStats : DefaultVisitor
   }
 
   // Override dispatch function.
-  override Node dispatch(Node n)
+  override void dispatch(Node n)
   {
     table[n.kind]++;
-    return super.dispatch(n);
+    super.dispatch(n);
   }
 }
