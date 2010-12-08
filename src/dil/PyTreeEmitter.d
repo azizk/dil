@@ -269,7 +269,6 @@ class PyTreeEmitter : Visitor
 
   void begin(Node n)
   {
-//     write(g_classNames[n.kind]~"(");
     write("N"~String(n.kind)~"(");
   }
 
@@ -279,7 +278,7 @@ class PyTreeEmitter : Visitor
     auto i1 = index[n.begin], i2 = index[n.end];
     assert(i1 <= i2,
       Format("ops, Parser or AST buggy? {}@{},i1={},i2={}",
-        g_classNames[n.kind],
+        NodeClassNames[n.kind],
         n.begin.getRealLocation(modul.filePath()).str(), i1, i2));
     write((writeComma ? ",":"") ~ "p("~String(i1)~","~String(i2-i1)~"))");
   }

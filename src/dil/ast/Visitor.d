@@ -21,7 +21,7 @@ import common;
 char[] generateVisitMethods()
 {
   char[] text = "void _beforeFirstVisitMethod(){}";
-  foreach (className; g_classNames)
+  foreach (className; NodeClassNames)
     text ~= "returnType!(\""~className~"\") visit("~
       className~" node){return node;}\n";
   return text;
@@ -31,7 +31,7 @@ char[] generateVisitMethods()
 char[] generateVisitMethods2()
 {
   char[] text = "void _beforeFirstVisitMethod(){}";
-  foreach (className; g_classNames)
+  foreach (className; NodeClassNames)
     text ~= "void visit("~className~" node){}\n";
   return text;
 }

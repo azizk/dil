@@ -96,7 +96,7 @@ struct StatsCommand
       Stdout.formatln(" {,10} | {}", "Count", "Node kind");
       Stdout("-----------------------------").newline;
       foreach (i, count; total.nodesTable)
-        Stdout.formatln(" {,10} | {}", count, g_classNames[i]);
+        Stdout.formatln(" {,10} | {}", count, NodeClassNames[i]);
       Stdout("// End of nodes table.").newline;
     }
   }
@@ -122,7 +122,7 @@ struct Statistics
     if (allocateTokensTable)
       s.tokensTable = new uint[TOK.MAX];
     if (allocateNodesTable)
-      s.nodesTable = new uint[g_classNames.length];
+      s.nodesTable = new uint[NodeClassNames.length];
     return s;
   }
 

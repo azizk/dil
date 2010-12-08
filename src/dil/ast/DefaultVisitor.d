@@ -66,7 +66,7 @@ private string createCode(NodeKind nodeKind)
 string generateDefaultVisitMethods()
 {
   string code;
-  foreach (i, className; g_classNames)
+  foreach (i, className; NodeClassNames)
     code ~= "override returnType!(`"~className~"`) visit("~className~" n)"
             "{"
             "  "~createCode(cast(NodeKind)i)~
@@ -80,7 +80,7 @@ string generateDefaultVisitMethods()
 string generateDefaultVisitMethods2()
 {
   string code;
-  foreach (i, className; g_classNames)
+  foreach (i, className; NodeClassNames)
     code ~= "override void visit("~className~" n)"
             "{"
             "  "~createCode(cast(NodeKind)i)~

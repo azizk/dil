@@ -10,7 +10,7 @@ private alias NodeKind N;
 /// CTF: Returns a table of Node class members as a string.
 char[] genMembersTable()
 {
-  char[][][g_classNames.length] t;
+  char[][][NodeClassNames.length] t;
 
   t[N.CompoundDeclaration] = ["decls[]"];
   t[N.EmptyDeclaration] = t[N.IllegalDeclaration] =
