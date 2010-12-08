@@ -117,7 +117,7 @@ static:
     }
     bool read2B(ref uint x)
     {
-      return p+1 < end && ((x = *cast(uint*)p), (p += 2), 1);
+      return p+1 < end && ((x = *cast(ushort*)p), (p += 2), 1);
     }
     bool read4B(ref uint x)
     {
@@ -133,6 +133,8 @@ static:
       return idtable.lookup(id_str);
     }
 
+    if (srcText.length == 0) goto Lerr;
+
     Token[] tokens;
     Identifier*[] idents;
 
@@ -142,10 +144,11 @@ static:
 
     uint id_count = void;
     if (!read2B(id_count)) goto Lerr;
+    idents = new Identifier*[id_count];
 
-    for (; id_count; id_count--)
+    for (uint i; i < id_count; i++)
       if (auto id = readID())
-        idents ~= id;
+        idents[i] = id;
       else
         goto Lerr;
 
@@ -190,9 +193,8 @@ static:
         if (!read2B(token_len)) goto Lerr;
       }
       // Set token.end.
-      token.end = token.start + token_len;
-      if (token.end > src_end) goto Lerr;
-      prev_end = token.end;
+      token.end = prev_end = token.start + token_len;
+      if (prev_end > src_end) goto Lerr;
       // Pass the token back to the client.
       callback(token);
       // Advance the pointer to the next token in the array.
