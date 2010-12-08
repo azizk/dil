@@ -122,6 +122,7 @@ abstract class Visitor2
 
 final:
   alias dispatch visit;
+  alias dispatch visitN;
 }
 
 /// Index into the vtable of the Visitor classes.
