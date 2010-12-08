@@ -76,10 +76,31 @@ string generateDefaultVisitMethods()
 }
 // pragma(msg, generateDefaultVisitMethods());
 
+/// Same as above but returns void.
+string generateDefaultVisitMethods2()
+{
+  string code;
+  foreach (i, className; g_classNames)
+    code ~= "override void visit("~className~" n)"
+            "{"
+            "  "~createCode(cast(NodeKind)i)~
+            "}\n";
+  return code;
+}
+
+
 /// This class provides default methods for
 /// traversing nodes and their subnodes.
 class DefaultVisitor : Visitor
 {
   // Comment out if too many errors are shown.
   mixin(generateDefaultVisitMethods());
+}
+
+/// This class provides default methods for
+/// traversing nodes and their subnodes.
+class DefaultVisitor2 : Visitor2
+{
+  // Comment out if too many errors are shown.
+  mixin(generateDefaultVisitMethods2());
 }
