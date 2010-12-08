@@ -9,25 +9,35 @@ import dil.ast.Node,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
+import common;
 
-/// Generate visit methods.
+/// Generates visit methods for all classes.
 ///
 /// E.g.:
 /// ---
-/// Declaration visit(ClassDeclaration){return null;};
-/// Expression visit(CommaExpression){return null;};
+/// Declaration visit(ClassDeclaration node){return node;}
+/// Expression visit(CommaExpression node){return node;}
 /// ---
 char[] generateVisitMethods()
 {
-  char[] text;
+  char[] text = "void _beforeFirstVisitMethod(){}";
   foreach (className; g_classNames)
-    text ~= "returnType!(\""~className~"\") visit("~className~" node){return node;}\n";
+    text ~= "returnType!(\""~className~"\") visit("~
+      className~" node){return node;}\n";
   return text;
 }
-// pragma(msg, generateAbstractVisitMethods());
+
+/// Same as generateVisitMethods, but return void instead.
+char[] generateVisitMethods2()
+{
+  char[] text = "void _beforeFirstVisitMethod(){}";
+  foreach (className; g_classNames)
+    text ~= "void visit("~className~" node){}\n";
+  return text;
+}
 
 /// Gets the appropriate return type for the provided class.
-template returnType(char[] className)
+template returnType(string className)
 {
   static if (is(typeof(mixin(className)) : Declaration))
     alias Declaration returnType;
@@ -44,49 +54,17 @@ template returnType(char[] className)
     alias Node returnType;
 }
 
-/// Generate functions which do the second dispatch.
-///
-/// E.g.:
-/// ---
-/// Expression visitCommaExpression(Visitor visitor, CommaExpression c)
-/// { visitor.visit(c); /* Second dispatch. */ }
-/// ---
-/// The equivalent in the traditional visitor pattern would be:
-/// ---
-/// class CommaExpression : Expression
-/// {
-///   void accept(Visitor visitor)
-///   { visitor.visit(this); }
-/// }
-/// ---
-char[] generateDispatchFunctions()
-{
-  char[] text;
-  foreach (className; g_classNames)
-    text ~= "returnType!(\""~className~"\") visit"~className~"(Visitor visitor, "~className~" c)\n"
-            "{ return visitor.visit(c); }\n";
-  return text;
+/// Returns a delegate to the method that can visit the node n.
+Ret delegate(Node) getVisitMethod(Ret)(Object o, Node n)
+{ // Get the method's address from the vtable.
+  assert(indexOfFirstVisitMethod+n.kind < o.classinfo.vtbl.length);
+  auto funcptr = o.classinfo.vtbl[indexOfFirstVisitMethod+n.kind];
+  // Make a delegate and return it.
+  Ret delegate(Node) visitMethod = void;
+  visitMethod.ptr = cast(void*)o; // Frame pointer.
+  visitMethod.funcptr = cast(Ret function(Node))funcptr;
+  return visitMethod;
 }
-// pragma(msg, generateDispatchFunctions());
-
-/++
- Generates an array of function pointers.
-
- ---
- [
-   cast(void*)&visitCommaExpression,
-   // etc.
- ]
- ---
-+/
-char[] generateVTable()
-{
-  char[] text = "[";
-  foreach (className; g_classNames)
-    text ~= "cast(void*)&visit"~className~",\n";
-  return text[0..$-2]~"]"; // slice away last ",\n"
-}
-// pragma(msg, generateVTable());
 
 /// Implements a variation of the visitor pattern.
 ///
@@ -96,63 +74,73 @@ abstract class Visitor
 {
   mixin(generateVisitMethods());
 
-  static
-    mixin(generateDispatchFunctions());
-
-  // This is necessary so that the compiler puts
-  // the array into the static data segment.
-  mixin("private const _dispatch_vtable = " ~ generateVTable() ~ ";");
-  /// The table holding function pointers to the second dispatch functions.
-  static const dispatch_vtable = _dispatch_vtable;
-  static assert(dispatch_vtable.length == g_classNames.length,
-                "vtable length doesn't match number of classes");
-
-  /// Looks up the second dispatch function for n and returns that.
-  Node function(Visitor, Node) getDispatchFunction()(Node n)
-  {
-    return cast(Node function(Visitor, Node))dispatch_vtable[n.kind];
-  }
-
-  /// The main and first dispatch function.
+  /// Calls the appropriate visit() method for a node.
   Node dispatch(Node n)
-  { // Second dispatch is done in the called function.
-    return getDispatchFunction(n)(this, n);
+  {
+    return getVisitMethod!(Node)(this, n)(n);
   }
 
 final:
-  Declaration visit(Declaration n)
-  { return visitD(n); }
-  Statement visit(Statement n)
-  { return visitS(n); }
-  Expression visit(Expression n)
-  { return visitE(n); }
-  TypeNode visit(TypeNode n)
-  { return visitT(n); }
-  Node visit(Node n)
-  { return visitN(n); }
-
+  // Visits a Declaration and returns a Declaration.
   Declaration visitD(Declaration n)
   {
-    return cast(Declaration)cast(void*)dispatch(n);
+    return dispatch(n).to!(Declaration);
   }
-
+  // Visits a Statement and returns a Statement.
   Statement visitS(Statement n)
   {
-    return cast(Statement)cast(void*)dispatch(n);
+    return dispatch(n).to!(Statement);
   }
-
+  // Visits a Expression and returns an Expression.
   Expression visitE(Expression n)
   {
-    return cast(Expression)cast(void*)dispatch(n);
+    return dispatch(n).to!(Expression);
   }
-
+  // Visits a TypeNode and returns a TypeNode.
   TypeNode visitT(TypeNode n)
   {
-    return cast(TypeNode)cast(void*)dispatch(n);
+    return dispatch(n).to!(TypeNode);
   }
-
+  // Visits a Node and returns a Node.
   Node visitN(Node n)
   {
     return dispatch(n);
   }
+}
+
+/// The same as class Visitor, but the methods return void.
+/// This class is suitable when you don't want to transform the AST.
+abstract class Visitor2
+{
+  mixin(generateVisitMethods2());
+
+  /// Calls the appropriate visit() method for a node.
+  void dispatch(Node n)
+  {
+    getVisitMethod!(void)(this, n)(n);
+  }
+
+final:
+  alias dispatch visit;
+}
+
+/// Index into the vtable of the Visitor classes.
+private static const uint indexOfFirstVisitMethod;
+
+/// Initializes visitMethods in both Visitor classes.
+static this()
+{
+  auto vtbl = Visitor.classinfo.vtbl;
+  auto vtbl2 = Visitor2.classinfo.vtbl;
+  uint i;
+  foreach (j, func; vtbl)
+    if (func is &Visitor._beforeFirstVisitMethod &&
+        vtbl2[j] is &Visitor2._beforeFirstVisitMethod)
+    {
+      i = j + 1;
+      assert(vtbl.length > i);
+      break;
+    }
+  assert(i, "couldn't find first visit method in the vtable");
+  indexOfFirstVisitMethod = i;
 }
