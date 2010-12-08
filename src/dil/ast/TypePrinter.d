@@ -11,7 +11,7 @@ import dil.Enums;
 import common;
 
 /// Writes the type chain to a text buffer.
-class TypePrinter : Visitor
+class TypePrinter : Visitor2
 {
   char[] text; /// The buffer that gets written to.
 
@@ -71,35 +71,31 @@ class TypePrinter : Visitor
   }
 
 override:
-  T visit(IntegralType t)
+  void visit(IntegralType t)
   {
     write(t.begin.text);
-    return t;
   }
 
-  T visit(IdentifierType t)
+  void visit(IdentifierType t)
   {
-    t.next && visitT(t.next) && write(".");
+    t.next && (visitT(t.next), write("."));
     write(t.ident.str);
-    return t;
   }
 
-  T visit(TemplateInstanceType t)
+  void visit(TemplateInstanceType t)
   {
-    t.next && visitT(t.next) && write(".");
+    t.next && (visitT(t.next), write("."));
     write(t.ident.str), write("!");
     auto a = t.targs;
     write(a.begin, a.end);
-    return t;
   }
 
-  T visit(TypeofType t)
+  void visit(TypeofType t)
   {
     write(t.begin, t.end);
-    return t;
   }
 
-  T visit(PointerType t)
+  void visit(PointerType t)
   {
     if (auto cfunc = t.next.Is!(CFuncType))
     { // Skip the CFuncType. Write a D-style function pointer.
@@ -110,10 +106,9 @@ override:
     else
       visitT(t.next),
       write("*");
-    return t;
   }
 
-  T visit(ArrayType t)
+  void visit(ArrayType t)
   {
     visitT(t.next);
     write("[");
@@ -128,40 +123,35 @@ override:
       write(".."),
       write(t.index2.begin, t.index2.end);
     write("]");
-    return t;
   }
 
-  T visit(FunctionType t)
+  void visit(FunctionType t)
   {
     visitT(t.next);
     write(" function");
     writeParams(t.params);
-    return t;
   }
 
-  T visit(DelegateType t)
+  void visit(DelegateType t)
   {
     visitT(t.next);
     write(" delegate");
     writeParams(t.params);
-    return t;
   }
 
-  T visit(CFuncType t)
+  void visit(CFuncType t)
   {
     visitT(t.next);
     writeParams(t.params);
-    return t;
   }
 
-  T visit(BaseClassType t)
+  void visit(BaseClassType t)
   {
     write(EnumString(t.prot) ~ " ");
     visitT(t.next);
-    return t;
   }
 
-  T visit(ConstType t)
+  void visit(ConstType t)
   {
     write("const");
     if (t.next !is null)
@@ -170,10 +160,9 @@ override:
       visitT(t.next);
       write(")");
     }
-    return t;
   }
 
-  T visit(ImmutableType t)
+  void visit(ImmutableType t)
   {
     write("immutable");
     if (t.next !is null)
@@ -182,10 +171,9 @@ override:
       visitT(t.next);
       write(")");
     }
-    return t;
   }
 
-  T visit(SharedType t)
+  void visit(SharedType t)
   {
     write("shared");
     if (t.next !is null)
@@ -194,6 +182,5 @@ override:
       visitT(t.next);
       write(")");
     }
-    return t;
   }
 }
