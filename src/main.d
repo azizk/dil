@@ -5,7 +5,8 @@ module main;
 
 import dil.parser.Parser;
 import dil.lexer.Lexer,
-       dil.lexer.Token;
+       dil.lexer.Token,
+       dil.lexer.TokenSerializer;
 import dil.ast.Declarations,
        dil.ast.Expressions,
        dil.ast.Node,
@@ -321,6 +322,46 @@ void main(char[][] args)
 
     diag.hasInfo && printErrors(diag);
     break;
+  case "dlexed", "dlx":
+    if (args.length < 3)
+      return printHelp(command);
+    SourceText sourceText;
+    char[] filePath, outFilePath;
+    bool set_outFilePath;
+
+    foreach (arg; args[2..$])
+      if (arg == "-")
+        sourceText = new SourceText("stdin", readStdin());
+      else if (arg == "-o")
+        set_outFilePath = true;
+      else if (set_outFilePath)
+        (outFilePath = arg), (set_outFilePath = false);
+      else
+        filePath = arg;
+
+    if (!sourceText)
+      sourceText = new SourceText(filePath, true);
+
+    diag = new Diagnostics();
+    auto lx = new Lexer(sourceText, globalCC.tables, diag);
+    lx.scanAll();
+
+    if (lx.errors.length || diag.hasInfo)
+      printErrors(diag);
+    else
+    {
+      auto data = TokenSerializer.serialize(lx.firstToken());
+      if (outFilePath.length)
+      {
+        scope file = new File(outFilePath, File.WriteCreate);
+        file.write(data);
+        file.close();
+      }
+      else
+        Stdout(cast(string)data);
+    }
+
+    break;
   case "trans", "translate":
     if (args.length < 3)
       return printHelp(command);
@@ -423,6 +464,7 @@ const char[] COMMANDS =
   "  help (?)\n"
   "  compile (c)\n"
   "  ddoc (d)\n"
+  "  dlexed (dlx)\n"
   "  highlight (hl)\n"
   "  importgraph (igraph)\n"
   "  pytree (py)\n"
@@ -648,7 +690,7 @@ Usage:
   dil tok file.d [Options]
 
 Options:
-  -               : reads text from the standard input.
+  -               : read text from STDIN.
   -sSEPARATOR     : print SEPARATOR instead of newline between tokens.
   -i              : ignore whitespace tokens (e.g. comments, shebang etc.)
   -ws             : print a token's preceding whitespace characters.
@@ -656,6 +698,19 @@ Options:
 Example:
   echo "module foo; void func(){}" | dil tok -
   dil tok src/main.d | grep ^[0-9]`;
+    break;
+  case "dlexed", "dlx":
+    msg = `Write the begin/end indices of all tokens in a binary format.
+Usage:
+  dil dlx file.d [Options]
+
+Options:
+  -               : read text from STDIN.
+  -o FILE         : output to FILE instead of STDOUT.
+
+Example:
+  echo 'module foo; void func(){}' | dil dlx - > test.dlx
+  dil dlx src/main.d -o dlx/main.dlx`;
     break;
   case "stats", "statistics":
     msg = "Gather statistics about D source files.
