@@ -23,13 +23,11 @@ class DDocXMLEmitter : DDocEmitter
       reportDiag, tokenHL);
   }
 
-  alias Declaration D;
-
 override:
-  D visit(FunctionDeclaration d)
+  void visit(FunctionDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     DECL({
       write("function, ", "\1TYPE \1RETURNS");
       if (d.returnType) write(d.returnType);
@@ -41,13 +39,12 @@ override:
       SYMBOL(d.name.text, K.Function, d);
     }, d);
     DESC();
-    return d;
   }
 
-  D visit(VariablesDeclaration d)
+  void visit(VariablesDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     foreach (name; d.names)
       DECL({
         write("variable, ", "\1TYPE ");
@@ -57,6 +54,5 @@ override:
         SYMBOL(name.text, K.Variable, d);
       }, d);
     DESC();
-    return d;
   }
 }

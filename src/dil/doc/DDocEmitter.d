@@ -28,7 +28,7 @@ import common;
 import tango.text.Ascii : toUpper, icompare;
 
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
-abstract class DDocEmitter : DefaultVisitor
+abstract class DDocEmitter : DefaultVisitor2
 {
   char[] text; /// The buffer that is written to.
   bool includeUndocumented; /// Include undocumented symbols?
@@ -879,58 +879,53 @@ abstract class DDocEmitter : DefaultVisitor
     write("\2");
   }
 
-  alias Declaration D;
   alias DocSymbol.Kind K;
 
 override:
-  D visit(AliasDeclaration d)
+  void visit(AliasDeclaration d)
   {
     if (ddoc(d))
       writeAliasOrTypedef(d);
-    return d;
   }
 
-  D visit(TypedefDeclaration d)
+  void visit(TypedefDeclaration d)
   {
     if (ddoc(d))
       writeAliasOrTypedef(d);
-    return d;
   }
 
-  D visit(EnumDeclaration d)
+  void visit(EnumDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     string name = d.name ? d.name.text : "enum";
     DECL({
       d.name && write("\1DIL_KW enum\2 ");
       SYMBOL(name, K.Enum, d);
     }, d);
     DESC({ MEMBERS("ENUM", name, d); });
-    return d;
   }
 
-  D visit(EnumMemberDeclaration d)
+  void visit(EnumMemberDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     // TODO: emit d.type (D2).
     DECL({ SYMBOL(d.name.text, K.Enummem, d); }, d, false);
     DESC();
-    return d;
   }
 
-  D visit(TemplateDeclaration d)
+  void visit(TemplateDeclaration d)
   {
     this.currentTParams = d.tparams;
     if (d.isWrapper())
     { // This is a templatized class/interface/struct/union/function.
       super.visit(d.decls);
       this.currentTParams = null;
-      return d;
+      return;
     }
     if (!ddoc(d))
-      return d;
+      return;
     DECL({
       version(D2)
       if (d.isMixin) write("\1DIL_KW mixin\2 ");
@@ -939,79 +934,70 @@ override:
       writeTemplateParams();
     }, d);
     DESC({ MEMBERS("TEMPLATE", d.name.text, d.decls); });
-    return d;
   }
 
-  D visit(ClassDeclaration d)
+  void visit(ClassDeclaration d)
   {
     writeClassOrInterface(d);
-    return d;
   }
 
-  D visit(InterfaceDeclaration d)
+  void visit(InterfaceDeclaration d)
   {
     writeClassOrInterface(d);
-    return d;
   }
 
-  D visit(StructDeclaration d)
+  void visit(StructDeclaration d)
   {
     writeStructOrUnion(d);
-    return d;
   }
 
-  D visit(UnionDeclaration d)
+  void visit(UnionDeclaration d)
   {
     writeStructOrUnion(d);
-    return d;
   }
 
-  D visit(ConstructorDeclaration d)
+  void visit(ConstructorDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     DECL({ SYMBOL("this", K.Ctor, d);
       version(D2)
       writeTemplateParams();
       writeParams(d.params);
     }, d);
     DESC();
-    return d;
   }
 
-  D visit(StaticConstructorDeclaration d)
+  void visit(StaticConstructorDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     DECL({ write("\1DIL_KW static\2 ");
       SYMBOL("this", K.Sctor, d); write("()"); }, d);
     DESC();
-    return d;
   }
 
-  D visit(DestructorDeclaration d)
+  void visit(DestructorDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     DECL({ SYMBOL("~this", K.Dtor, d); write("()"); }, d);
     DESC();
-    return d;
   }
 
-  D visit(StaticDestructorDeclaration d)
+  void visit(StaticDestructorDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     DECL({ write("\1DIL_KW static\2 ");
       SYMBOL("~this", K.Sdtor, d); write("()"); }, d);
     DESC();
-    return d;
   }
 
-  D visit(FunctionDeclaration d)
+  void visit(FunctionDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     DECL({
       if (d.returnType)
         write("\1DIL_RETTYPE "), write(d.returnType), write("\2 ");
@@ -1021,32 +1007,29 @@ override:
       writeParams(d.params);
     }, d);
     DESC();
-    return d;
   }
 
-  D visit(NewDeclaration d)
+  void visit(NewDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     DECL({ SYMBOL("\1DIL_KW new\2", K.New, d); writeParams(d.params); }, d);
     DESC();
-    return d;
   }
 
-  D visit(DeleteDeclaration d)
+  void visit(DeleteDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     DECL({ SYMBOL("\1DIL_KW delete\2", K.Delete, d);
       writeParams(d.params); }, d);
     DESC();
-    return d;
   }
 
-  D visit(VariablesDeclaration d)
+  void visit(VariablesDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     foreach (name; d.names)
       DECL({
         if (d.typeNode) write(d.typeNode);
@@ -1055,43 +1038,37 @@ override:
         SYMBOL(name.text, K.Variable, d);
       }, d);
     DESC();
-    return d;
   }
 
-  D visit(InvariantDeclaration d)
+  void visit(InvariantDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     DECL({ SYMBOL("invariant", K.Invariant, d); }, d);
     DESC();
-    return d;
   }
 
-  D visit(UnittestDeclaration d)
+  void visit(UnittestDeclaration d)
   {
     if (!ddoc(d))
-      return d;
+      return;
     DECL({ SYMBOL("unittest", K.Unittest, d); }, d);
     DESC();
-    return d;
   }
 
-  D visit(DebugDeclaration d)
+  void visit(DebugDeclaration d)
   {
     d.compiledDecls && visitD(d.compiledDecls);
-    return d;
   }
 
-  D visit(VersionDeclaration d)
+  void visit(VersionDeclaration d)
   {
     d.compiledDecls && visitD(d.compiledDecls);
-    return d;
   }
 
-  D visit(StaticIfDeclaration d)
+  void visit(StaticIfDeclaration d)
   {
     d.ifDecls && visitD(d.ifDecls);
-    return d;
   }
 }
 
