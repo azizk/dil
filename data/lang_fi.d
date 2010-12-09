@@ -66,7 +66,7 @@ string[] messages = [
 
   // Help messages:
   `dil v{0}
-Copyright (c) 2007-2010, Aziz Köksal. GPL3-lisensöity.
+Copyright (c) 2007-2011, Aziz Köksal. GPL3-lisensöity.
 
 Alikomennot:
 {1}
