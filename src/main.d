@@ -24,6 +24,8 @@ import dil.SourceText;
 import dil.Compilation;
 import dil.PyTreeEmitter;
 
+import util.Path;
+
 import cmd.Compile;
 import cmd.Highlight;
 import cmd.Statistics;
@@ -97,7 +99,7 @@ void main(char[][] args)
   case "pytree", "py":
     if (args.length < 4)
       return printHelp(command);
-    auto dest = args[2];
+    auto dest = Path(args[2]);
     string[] filePaths;
     string format = "d_{0}.py";
     bool verbose;
@@ -132,9 +134,10 @@ void main(char[][] args)
         auto pckgName = replace(modul.packageName.dup, '.', '_');
         auto modName = modul.moduleName;
         auto fileName = Format(format, modFQN, pckgName, modName);
+        auto destPath = (dest/fileName).toString;
         if (verbose)
-          Stdout(path~" > "~dest~"/"~fileName).newline;
-        auto f = new File(dest~"/"~fileName, File.WriteCreate);
+          Stdout(path~" > "~destPath).newline;
+        auto f = new File(destPath, File.WriteCreate);
         f.write(py.emit());
       }
     }
@@ -550,8 +553,8 @@ Options:
   --fmt            : the format string for the destination file names
                      Default: d_{0}.py
                      {0} = fully qualified module name (e.g. dil_PyTreeEmitter)
-                     {1} package name (e.g. dil, dil_ast, dil_lexer etc.)
-                     {2} module name (e.g. PyTreeEmitter)
+                     {1} = package name (e.g. dil, dil_ast, dil_lexer etc.)
+                     {2} = module name (e.g. PyTreeEmitter)
   -v               : verbose output
 
 Example:
