@@ -1,14 +1,18 @@
 /// A map of document elements and D tokens to format strings.
 string[string] map = [
-  "DocHead" : `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">`"\n"
-              `<html>`"\n"
-              `<head>`"\n"
-              `  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">`"\n"
-              `  <title>{0}</title>`"\n"
-              `  <link href="html.css" rel="stylesheet" type="text/css">`"\n"
-              `</head>`"\n"
-              `<body>`"\n"
-              `<table><tr>`"\n",
+  "DocHead" : `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>{0}</title>
+  <style type="text/css">
+  .linescolumn > a {{ display: block; }
+  td {{ vertical-align: top; }
+  </style>
+  <link href="html.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<table><tr>`,
   "CompBegin"   : `<td><div class="compilerinfo">`"\n",
   "CompEnd"     : "</div>\n</td></tr><tr>",
   "LexerError"  : `<p class="error L">{0}({1},{2})L: {3}</p>`"\n",
