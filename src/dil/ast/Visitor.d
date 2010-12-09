@@ -122,13 +122,13 @@ abstract class Visitor2
 
 final:
   alias dispatch visit;
-  alias dispatch visitN;
+  alias dispatch visitN, visitD, visitS, visitE, visitT;
 }
 
 /// Index into the vtable of the Visitor classes.
 private static const uint indexOfFirstVisitMethod;
 
-/// Initializes visitMethods in both Visitor classes.
+/// Initializes indexOfFirstVisitMethod for both Visitor classes.
 static this()
 {
   auto vtbl = Visitor.classinfo.vtbl;
