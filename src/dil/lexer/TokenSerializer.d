@@ -96,6 +96,7 @@ static:
     write4B(token_count);
     write4B(data_body.length);
     data ~= data_body;
+    writeS("\n");
     return data;
   }
 
@@ -159,7 +160,8 @@ static:
 
     uint body_length = void;
     if (!read4B(body_length)) goto Lerr;
-    if (p + body_length != end) goto Lerr;
+    if (p + body_length + 1 != end) goto Lerr;
+    if (*(p + body_length) != '\n') goto Lerr; // Terminated with '\n'.
 
     // We can allocate the exact amount of tokens we need.
     tokens = new Token[token_count];
