@@ -33,7 +33,9 @@ var IMPORT_PATHS = []; /// E.g.: ["src/", "import/"]
 /// DDoc macro file paths.
 ///
 /// Macro definitions in ddoc_files[n] override the ones in ddoc_files[n-1].$(BR)
-var DDOC_FILES = ["${DATADIR}/predefined.ddoc"]; /// E.g.: ["src/mymacros.ddoc", "othermacros.ddoc"]
+///
+/// E.g.: ["src/mymacros.ddoc", "othermacros.ddoc"]
+var DDOC_FILES = ["${DATADIR}/predefined.ddoc"];
 
 /// Path to the language file.
 var LANG_FILE = "${DATADIR}/lang_en.d";
