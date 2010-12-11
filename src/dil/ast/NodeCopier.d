@@ -56,8 +56,8 @@ private string createCode(string[] members)
       code ~= "n."~name~" = n."~name~".copy();\n";
       break;
     case "?": // Copy a member, may be null.
-      // n.member && (n.member = n.member.copy());
-      code ~= "n."~name~" && (n."~name~" = n."~name~".copy());\n";
+      // if(n.member) n.member = n.member.copy();
+      code ~= "if(n."~name~") n."~name~" = n."~name~".copy();\n";
       break;
     case "[]": // Copy an array of nodes.
       code ~= "n."~name~" = n."~name~".dup;\n" // n.member = n.member.dup;
@@ -67,7 +67,7 @@ private string createCode(string[] members)
     case "[?]": // Copy an array of nodes, items may be null.
       code ~= "n."~name~" = n."~name~".dup;\n" // n.member = n.member.dup;
               "foreach (ref x; n."~name~")\n"  // foreach (ref x; n.member)
-              "  x && (x = x.copy());\n";      //   x && (x = x.copy());
+              "  if(x) x = x.copy();\n";       //   if(x) x = x.copy();
       break;
     case "%": // Copy code verbatim.
       code ~= name ~ "\n";
