@@ -10,32 +10,36 @@ import common;
 
 /// Mixed into the body of a class that inherits from Node.
 const string copyMethod =
-  "override typeof(this) copy()"
-  "{"
-  "  alias typeof(this) this_t;"
-  "  mixin(genCopyCode(mixin(`NodeKind.`~this_t.stringof)));"
-  "  return n;"
-  "}";
+  `override typeof(this) copy()
+  {
+    alias typeof(this) this_t;
+    mixin(genCopyCode(mixin("NodeKind."~this_t.stringof)));
+    return n;
+  }`;
 
 /// Mixed into the body of abstract class BinaryExpression.
 const string copyMethodBinaryExpression =
-  "override typeof(this) copy()"
-  "{"
-  "  alias typeof(this) this_t;"
-  "  assert(is(CommaExpression : BinaryExpression), `CommaExpression doesn't inherit from BinaryExpression`);"
-  "  mixin(genCopyCode(NodeKind.CommaExpression));"
-  "  return n;"
-  "}";
+  `override typeof(this) copy()
+  {
+    alias typeof(this) this_t;
+    // BinaryExpression is an abstract class and not a member of NodeKind.
+    // Just take CommaExpression instead.
+    static assert(is(CommaExpression : BinaryExpression),
+      "CommaExpression doesn't inherit from BinaryExpression");
+    mixin(genCopyCode(NodeKind.CommaExpression));
+    return n;
+  }`;
 
 /// Mixed into the body of abstract class UnaryExpression.
 const string copyMethodUnaryExpression =
-  "override typeof(this) copy()"
-  "{"
-  "  alias typeof(this) this_t;"
-  "  assert(is(AddressExpression : UnaryExpression), `AddressExpression doesn't inherit from UnaryExpression`);"
-  "  mixin(genCopyCode(NodeKind.AddressExpression));"
-  "  return n;"
-  "}";
+  `override typeof(this) copy()
+  {
+    alias typeof(this) this_t;
+    static assert(is(AddressExpression : UnaryExpression),
+      "AddressExpression doesn't inherit from UnaryExpression");
+    mixin(genCopyCode(NodeKind.AddressExpression));
+    return n;
+  }`;
 
 /// Generates the actual code for copying the provided members.
 private string createCode(string[] members)
