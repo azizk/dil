@@ -410,75 +410,63 @@ void printDotDocument(CompilationContext cc, Graph graph,
 /// This is the old algorithm that is used
 /// to detect cycles in a directed graph.
 /// The new algorithm doesn't work (yet.)
-void analyzeGraph(Vertex[] vertices_init, Edge[] edges)
+void analyzeGraph(Vertex[] vertices, Edge[] edges)
 {
-  // TODO: use BitArray to see which vertices have been visited already.
+  // TODO: use a BitArray for this algorithm?
   edges = edges.dup;
-  void recursive(Vertex[] vertices)
-  {
-    foreach (idx, vertex; vertices)
-    {
-      uint outgoing, incoming;
-      foreach (j, edge; edges)
-      {
-        if (edge.from is vertex)
-          outgoing++;
-        if (edge.to is vertex)
-          incoming++;
-      }
+  vertices = vertices.dup;
 
-      if (outgoing == 0)
-      {
-        if (incoming != 0)
-        {
-          // Vertex is a sink.
-          alias outgoing i; // Reuse
-          alias incoming j; // Reuse
-          // Remove edges.
-          for (i=j=0; i < edges.length; i++)
-            if (edges[i].to !is vertex)
-              edges[j++] = edges[i];
-          edges.length = j;
-          vertices = vertices[0..idx] ~ vertices[idx+1..$];
-          recursive(vertices);
-          return;
-        }
-        else
-        {
-          // Edges to this vertex were removed previously.
-          // Only remove vertex now.
-          vertices = vertices[0..idx] ~ vertices[idx+1..$];
-          recursive(vertices);
-          return;
-        }
-      }
-      else if (incoming == 0)
-      {
-        // Vertex is a source
-        alias outgoing i; // Reuse
-        alias incoming j; // Reuse
-        // Remove edges.
+RestartLoop:
+  foreach (idx, vertex; vertices)
+  { // 1. Count the outgoing and incoming edges from/to the current vertex.
+    uint outgoing, incoming;
+    alias outgoing i; // Reuse below.
+    alias incoming j;
+    foreach (edge; edges)
+    {
+      if (edge.from is vertex)
+        outgoing = true;
+      if (edge.to is vertex)
+        incoming = true;
+    }
+    // 2. See if the vertex is a "sink" or a "source".
+    if (outgoing == 0)
+    {
+      if (incoming != 0)
+      { // Vertex is a sink.
+        // Remove edges leading to this vertex.
         for (i=j=0; i < edges.length; i++)
-          if (edges[i].from !is vertex)
+          if (edges[i].to !is vertex)
             edges[j++] = edges[i];
         edges.length = j;
-        vertices = vertices[0..idx] ~ vertices[idx+1..$];
-        recursive(vertices);
-        return;
       }
-//       else
-//       {
-//         // source && sink
-//         // continue loop.
-//       }
+      // else
+        // Edges to this vertex were removed previously.
+        // Only remove vertex now.
     }
+    else if (incoming == 0)
+    { // Vertex is a source.
+      // Remove edges coming from this vertex.
+      for (i=j=0; i < edges.length; i++)
+        if (edges[i].from !is vertex)
+          edges[j++] = edges[i];
+      edges.length = j;
+    }
+    else // Vertex is source and sink. Continue loop.
+      continue;
 
-    // When reaching this point it means only cylic edges and vertices are left.
-    foreach (vertex; vertices)
-      vertex.isCyclic = true;
-    foreach (edge; edges)
-      if (edge)
-        edge.isCyclic = true;
+    // 3. Remove the vertex from the list.
+    auto p = vertices.ptr + idx,
+         end = vertices.ptr + vertices.length -1;
+    for (; p < end; p++)
+      *p = p[1]; // Move all elements one position to the left.
+    vertices.length = vertices.length -1;
+    goto RestartLoop; // Start over.
   }
-  recursive(vertices_init);
+
+  // When reaching this point it means only cyclic edges and vertices are left.
+  foreach (vertex; vertices)
+    vertex.isCyclic = true;
+  foreach (edge; edges)
+    edge.isCyclic = true;
 }
