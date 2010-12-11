@@ -167,9 +167,9 @@ else
 }
 
 /// A table listing the subnodes of all classes inheriting from Node.
-static const char[][][/+NodeKind.max+1+/] g_membersTable = mixin(genMembersTable());
+static const char[][][/+NodeKind.max+1+/] NodeMembersTable = mixin(genMembersTable());
 
-/// A helper function that parses the special strings in g_membersTable.
+/// A helper function that parses the special strings in NodeMembersTable.
 ///
 /// Basic syntax:
 /// $(BNF

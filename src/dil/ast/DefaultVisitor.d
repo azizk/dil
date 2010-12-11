@@ -19,7 +19,7 @@ private string createCode(NodeKind nodeKind)
   string[] members; // Array of member names to be visited.
 
   // Look up members for this kind of node in the table.
-  members = g_membersTable[nodeKind];
+  members = NodeMembersTable[nodeKind];
 
   if (!members.length)
     return "";

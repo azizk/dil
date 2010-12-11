@@ -91,7 +91,7 @@ string genCopyCode(NodeKind nodeKind)
     m = ["%n.str = n.str.dup;"];
   else
     // Look up members for this kind of node in the table.
-    m = g_membersTable[nodeKind];
+    m = NodeMembersTable[nodeKind];
 
   char[] code =
   // First do a shallow copy.
