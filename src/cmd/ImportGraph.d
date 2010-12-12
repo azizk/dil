@@ -123,40 +123,9 @@ class Graph
 
   /// Walks the graph and marks cyclic vertices and edges.
   void detectCycles()
-  { // Cycles could also be detected in the GraphBuilder,
-    // but having the code here makes things much clearer.
-
-    // Commented out because this algorithm doesn't work.
-    // Returns true if the vertex is in status Visiting.
-    /+bool visit(Vertex vertex)
-    {
-      switch (vertex.status)
-      {
-      case Vertex.Status.Visiting:
-        vertex.isCyclic = true;
-        return true;
-      case Vertex.Status.None:
-        vertex.status = Vertex.Status.Visiting; // Flag as visiting.
-        foreach (outVertex; vertex.outgoing)    // Visit successors.
-          vertex.isCyclic |= visit(outVertex);
-        vertex.status = Vertex.Status.Visited;  // Flag as visited.
-        break;
-      case Vertex.Status.Visited:
-        break;
-      default:
-        assert(0, "unknown vertex status");
-      }
-      return false; // return (vertex.status == Vertex.Status.Visiting);
-    }
-    // Start visiting vertices.
-    visit(vertices[0]);+/
-
-    //foreach (edge; edges)
-    //  if (edge.from.isCyclic && edge.to.isCyclic)
-    //    edge.isCyclic = true;
-
+  {
     // Use functioning algorithm.
-    analyzeGraph(vertices, edges);
+    findCyclesInGraph(this);
   }
 }
 
@@ -186,10 +155,6 @@ class Vertex
   Vertex[] outgoing; /// Also called successors.
   bool isCyclic;     /// Whether this vertex is in a cyclic relationship
                      /// with other vertices.
-
-  enum Status : ubyte
-  { None, Visiting, Visited }
-  Status status; /// Used by the cycle detection algorithm.
 }
 
 /// Builds a module dependency graph.
@@ -407,18 +372,16 @@ void printDotDocument(CompilationContext cc, Graph graph,
   Stdout("}\n");
 }
 
-/// This is the old algorithm that is used
-/// to detect cycles in a directed graph.
-/// The new algorithm doesn't work (yet.)
-void analyzeGraph(Vertex[] vertices, Edge[] edges)
+/// Marks cyclic edges and vertices.
+void findCyclesInGraph(Graph g)
 {
   // TODO: use a BitArray for this algorithm?
-  edges = edges.dup;
-  vertices = vertices.dup;
+  auto edges = g.edges.dup;
+  auto vertices = g.vertices.dup;
 
 RestartLoop:
   foreach (idx, vertex; vertices)
-  { // 1. Count the outgoing and incoming edges from/to the current vertex.
+  { // 1. See if this vertex has outgoing and/or incoming edges.
     uint outgoing, incoming;
     alias outgoing i; // Reuse below.
     alias incoming j;
