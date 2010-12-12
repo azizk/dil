@@ -129,6 +129,35 @@ class Graph
   }
 }
 
+unittest
+{
+  Stdout("Testing class Graph.").newline;
+  auto g = new Graph();
+
+  auto V = [new Vertex(), new Vertex(), new Vertex(),
+    new Vertex(), new Vertex(), new Vertex(), new Vertex()];
+
+  foreach (v; V)
+    g.addVertex(v);
+
+  g.addEdge(V[0], V[1]); // 0 -> 1
+  g.addEdge(V[1], V[3]); // 1 -> 3
+  g.addEdge(V[3], V[2]); // 3 -> 2
+  g.addEdge(V[2], V[0]); // 2 -> 0
+
+  g.addEdge(V[6], V[5]); // 6 -> 5
+  g.addEdge(V[5], V[3]); // 5 -> 3
+  g.addEdge(V[3], V[4]); // 3 -> 4
+  g.addEdge(V[4], V[6]); // 4 -> 6
+
+  g.detectCycles();
+
+  foreach (v; V)
+    assert(v.isCyclic);
+  foreach (e; g.edges)
+    assert(e.isCyclic);
+}
+
 /// Represents a directed connection between two vertices.
 class Edge
 {
