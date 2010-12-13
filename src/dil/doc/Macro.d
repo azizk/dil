@@ -16,9 +16,10 @@ class Macro
   /// Enum of special marker characters.
   enum Marker
   {
-    Opening  = '\1', /// Opening macro character.
-    Closing  = '\2', /// Closing macro character.
-    Unclosed = '\3', /// Unclosed macro character.
+    Opening   = '\1', /// Opening macro character.
+    Closing   = '\2', /// Closing macro character.
+    Unclosed  = '\3', /// Unclosed macro character.
+    ArgsStart = '\4', /// Marks the start of a macro's arguments.
   }
 
   string name; /// The name of the macro.
@@ -286,6 +287,11 @@ struct MacroExpander
 
     // Skip leading spaces.
     while (p < textEnd && isspace(*p))
+      p++;
+
+    // Skip special arguments marker. (Dil extension!)
+    // This is needed to preserve the whitespace that comes after the marker.
+    if (p < textEnd && *p == Macro.Marker.ArgsStart)
       p++;
 
     char* arg0Begin = p; // Begin of all arguments.

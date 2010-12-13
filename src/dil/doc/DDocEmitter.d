@@ -531,7 +531,7 @@ abstract class DDocEmitter : DefaultVisitor2
                 result ~= numtxt;
                 result ~= `</a>`"\n";
               }
-              result ~= "\2,\1DIL_CODETEXT " ~ codeText ~ "\2"
+              result ~= "\2,\1DIL_CODETEXT \4" ~ codeText ~ "\2"
             "\n\2";
           }
           while (p < end && *p == '-') // Skip remaining dashes.
