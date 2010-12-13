@@ -294,6 +294,7 @@ h1.module:hover .srclink {
 }
 
 .params em, .tparams em {
+  font-family: monospace;
   font-weight: normal;
   color: OliveDrab;
 }

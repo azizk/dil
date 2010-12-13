@@ -37,6 +37,7 @@ def write_tango_ddoc(path, favicon, revision):
   open(path, "w").write("""
 LICENSE = see $(LINK2 http://www.dsource.org/projects/tango/wiki/LibraryLicense, license.txt)
 REPOFILE = http://www.dsource.org/projects/tango/browser/trunk/$(DIL_MODPATH)%(revision)s
+EMAIL = &lt;<a href="mailto:$0">$0</a>&gt;
 CODEURL =
 MEMBERTABLE = <table>$0</table>
 ANCHOR = <a name="$0"></a>
