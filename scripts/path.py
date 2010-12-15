@@ -128,6 +128,7 @@ class Path(unicode):
     """ Like mkdir(), but also creates parent directories. """
     if not self.exists:
       os.makedirs(self, mode)
+  mkdirs = makedirs
 
   def remove(self):
     """ Removes a file. """

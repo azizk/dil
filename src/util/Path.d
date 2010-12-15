@@ -39,7 +39,7 @@ class Path : FilePath
   /// ditto
   static Path opCall()
   {
-    return new Path("");
+    return new Path();
   }
 
   Path append(string s)
@@ -57,6 +57,13 @@ class Path : FilePath
   Path dup()
   {
     return Path(toString());
+  }
+
+  /// The path without its extension. Returns a copy.
+  Path noext()
+  {
+    auto ext_len = this.suffix().length;
+    return Path(toString()[0..$-ext_len]);
   }
 
 
