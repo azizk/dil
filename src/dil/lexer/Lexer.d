@@ -5,7 +5,8 @@ module dil.lexer.Lexer;
 
 import dil.lexer.Token,
        dil.lexer.Keywords,
-       dil.lexer.Identifier;
+       dil.lexer.Identifier,
+       dil.lexer.TokenSerializer;
 import dil.Diagnostics;
 import dil.Tables;
 import dil.Messages;
@@ -37,14 +38,17 @@ class Lexer
   Tables tables; /// Used to look up token values.
 
   // Members used for error messages:
-  Diagnostics diag;
-  LexerError[] errors;
+  Diagnostics diag; /// For diagnostics.
+  LexerError[] errors; /// List of errors.
   /// Always points to the first character of the current line.
   char* lineBegin;
   uint lineNum; /// Current, actual source text line number.
   uint inTokenString; /// > 0 if inside q{ }
   /// Holds the original file path and the modified one (by #line.)
   Token.HashLineInfo* hlinfo; /// Info set by "#line".
+
+  /// Tokens from a *.dlx file.
+  Token[] dlxTokens;
 
 
   static
@@ -99,6 +103,111 @@ class Lexer
   {
     head.deleteList();
     head = tail = token = null;
+  }
+
+  /// Callback function to TokenSerializer.deserialize().
+  void dlxCallback(Token* t)
+  {
+    switch (t.kind)
+    { // Some tokens need special handling:
+    case TOK.Newline:
+      assert(isNewlineEnd(t.end-1));
+      ++lineNum;
+      setLineBegin(t.end);
+      t.setWhitespaceFlag();
+      t.nlval = lookupNewline();
+      break;
+    case TOK.CharLiteral: // May have escape sequences.
+      this.p = t.start;
+      scanCharacterLiteral(*t);
+      break;
+    case TOK.String: // Escape sequences; token strings; etc.
+      this.p = t.start;
+      dchar c = *cast(ushort*)p;
+      switch (c)
+      {
+      case chars_r:
+        ++this.p, scanRawStringLiteral(*t); break;
+      case chars_x:
+        scanHexStringLiteral(*t); break;
+      version(D2)
+      {
+      case chars_q:
+        scanDelimitedStringLiteral(*t); break;
+      case chars_q2:
+        scanTokenStringLiteral(*t); break;
+      }
+      default:
+      }
+      switch (*p)
+      {
+      case '`':
+        scanRawStringLiteral(*t); break;
+      case '"':
+        scanNormalStringLiteral(*t); break;
+      version(D2)
+      {}
+      else { // Only in D1.
+      case '\\':
+        scanEscapeStringLiteral(*t); break;
+      }
+      default:
+      }
+      break;
+    case TOK.Comment: // Just rescan for newlines.
+      t.setWhitespaceFlag();
+      if (t.isMultiline) // Mutliline tokens may have newlines.
+        for (auto p = t.start, end = t.end; p < end;)
+          if (scanNewline(p))
+            lineNum++,
+            setLineBegin(p);
+          else
+            ++p;
+      break;
+    case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64:
+      this.p = t.start;
+      scanNumber(*t); // Complicated. Let the method handle this.
+      break;
+    case TOK.Float32, TOK.Float64, TOK.Float80,
+         TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
+      // The token is complete. What remains is to get its value.
+      t.mpfloat = lookupFloat(copySansUnderscores(t.start, t.end));
+      break;
+    case TOK.HashLine:
+      this.p = t.start;
+      scanSpecialTokenSequence(*t); // Complicated. Let the method handle this.
+      break;
+    case TOK.Shebang, TOK.Empty: // Whitespace tokens.
+      t.setWhitespaceFlag();
+      break;
+    default:
+    }
+    // Link the token into the list.
+    this.token.next = t;
+    t.prev = this.token;
+    this.token = t;
+  }
+
+  /// Loads the tokens from a dlx file.
+  bool fromDLXFile(ubyte[] data)
+  {
+    this.dlxTokens = TokenSerializer.deserialize(
+      data, this.text(), tables.idents, &dlxCallback);
+    if (dlxTokens.length)
+    {
+      this.p = this.token.end;
+      this.tail = this.token; // Set tail.
+    }
+    else
+    { /// Function failed. Reset...
+      this.p = this.text.ptr;
+      this.lineBegin = this.p;
+      this.lineNum = 1;
+      if (*cast(ushort*)p == chars_shebang)
+        scanShebang();
+    }
+    this.token = this.head.next; // Go to first newline token.
+    return !!dlxTokens.length;
   }
 
   /// Returns the source text string.
@@ -200,13 +309,13 @@ class Lexer
   private void scanNext(ref Token* t)
   {
     assert(t !is null);
-    if (t.next)
+    if (t.next) // Simply go to the next token if there is one.
       t = t.next;
     else if (t !is this.tail)
-    {
+    { // Create a new token and pass it to the main scan() method.
       Token* new_t = new Token;
       scan(*new_t);
-      new_t.prev = t;
+      new_t.prev = t; // Link the token in.
       t.next = new_t;
       t = new_t;
     }
