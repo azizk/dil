@@ -10,15 +10,17 @@ import dil.lexer.Lexer,
        dil.lexer.IdTable;
 import dil.semantic.Symbol,
        dil.semantic.Symbols;
-import dil.Compilation;
-import dil.Location;
-import dil.Messages;
-import dil.Diagnostics;
-import dil.SourceText;
+import dil.Compilation,
+       dil.Location,
+       dil.Messages,
+       dil.Diagnostics,
+       dil.SourceText;
 import util.Path;
 import common;
 
-import tango.io.model.IFile;
+import tango.io.model.IFile,
+       tango.io.device.File;
+import tango.text.Util;
 
 alias FileConst.PathSeparatorChar dirSep;
 
@@ -49,6 +51,9 @@ class Module : ScopeSymbol
 
   CompilationContext cc; /// The compilation context.
 
+  /// Set when the Lexer should load the tokens from a file.
+  string dlxFilePath;
+
   this()
   {
     super(SYM.Module, null, null);
@@ -73,6 +78,12 @@ class Module : ScopeSymbol
     return sourceText.filePath;
   }
 
+  /// Returns filePath and escapes '/' or '\' with '_'.
+  string filePathEsc()
+  {
+    return replace(filePath().dup, dirSep, '_');
+  }
+
   /// Returns the file extension: "d" or "di".
   string fileExtension()
   {
@@ -93,6 +104,9 @@ class Module : ScopeSymbol
   {
     if (this.parser is null)
       this.parser = new Parser(sourceText, cc.tables, diag);
+
+    if (this.dlxFilePath.length)
+      this.parser.lexer.fromDLXFile(cast(ubyte[])File.get(dlxFilePath));
 
     this.root = parser.start();
     this.imports = parser.imports;
