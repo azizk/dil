@@ -100,7 +100,7 @@ static:
     return data;
   }
 
-  bool deserialize(ubyte[] data, string srcText, IdTable idtable,
+  Token[] deserialize(ubyte[] data, string srcText, IdTable idtable,
     void delegate(Token* next_token) callback)
   {
     ubyte* p = data.ptr;
@@ -203,12 +203,18 @@ static:
       token++;
       token_count--;
     }
+    assert(token == tokens.ptr + tokens.length, "token pointer not at end");
+    token--; // Go back to the last token.
 
-    return true;
+    if (token.kind != TOK.EOF) // Last token must be EOF.
+      goto Lerr;
+
+    return tokens;
   Lerr:
     delete tokens;
     delete idents;
-    delete data;
-    return false;
+    // delete data; // Not owned by this function.
+    return null;
+  }
   }
 }
