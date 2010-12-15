@@ -298,18 +298,16 @@ version(D2)
     return loc;
   }
 
+  /// Counts the newlines in this token.
   uint lineCount()
   {
-    uint count = 1;
+    uint count;
     if (this.isMultiline)
-    {
-      auto p = this.start, end = this.end;
-      while (p != end)
-        if (scanNewline(p) == '\n')
-          ++count;
+      for (auto p = start, end_ = end; p < end_;)
+        if (scanNewline(p, end_))
+          count++;
         else
-          ++p;
-    }
+          p++;
     return count;
   }
 
