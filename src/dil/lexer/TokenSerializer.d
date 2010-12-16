@@ -216,5 +216,4 @@ static:
     // delete data; // Not owned by this function.
     return null;
   }
-  }
 }
