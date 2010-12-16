@@ -49,8 +49,8 @@ hash_t hashOf(string str)
     goto Lonly_remainder;
 
   auto hptr = cast(hash_t*)pstr;
-  // Align length to multiples of 4 or 8 (x86 vs. x86_64).
-  auto hlen = len >> (hash_t.sizeof / 2);
+  // Divide the length by 4 or 8 (x86 vs. x86_64).
+  auto hlen = len / hash_t.sizeof;
 
   while (hlen--)
     hash = hash * 11 + *hptr++;
