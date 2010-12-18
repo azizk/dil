@@ -4,29 +4,16 @@
 module dil.Float;
 
 import util.mpfr;
-import tango.stdc.stdio;
 import common;
-
-alias util.mpfr.mp_rnd_t mp_rnd_t;
-
-alias util.mpfr.mp_size_t mp_size_t;
-alias util.mpfr.mp_exp_t mp_exp_t;
-alias util.mpfr.mp_limb_t mp_limb_t;
-alias util.mpfr.mpfr_prec_t mpfr_prec_t;
-alias util.mpfr.mpfr_sign_t mpfr_sign_t;
-alias util.mpfr.mpfr_t mpfr_t;
-alias util.mpfr.mpfr_ptr mpfr_ptr, mpfr_srcptr;
-
-alias util.mpfr.MPFR_EXP_ZERO MPFR_EXP_ZERO;
-alias util.mpfr.MPFR_EXP_NAN MPFR_EXP_NAN;
-alias util.mpfr.MPFR_EXP_INF MPFR_EXP_INF;
 
 /// A wrapper class for the MPFR library functions.
 /// See: $(LINK http://www.mpfr.org/)
 class Float
 {
-  static const mp_rnd_t RND = mp_rnd_t.GMP_RNDZ; /// The default rounding method.
-  mpfr_t f = void; /// The multiprecission float variable.
+  /// The default rounding method.
+  static const mpfr_rnd_t RND = mpfr_rnd_t.RNDZ;
+  /// The multiprecission float variable.
+  mpfr_t f = void;
 
   /// Constructs a Float initialized to 0.
   this()
@@ -173,7 +160,7 @@ class Float
   /// Calculates f += x.
   Float opAddAssign(Float x)
   {
-    mpfr_add(&f, &f, &x.f);
+    mpfr_add(&f, &f, &x.f, RND);
     return this;
   }
 
@@ -347,14 +334,14 @@ class Float
   }
 
   /// Sets the exponent. Returns itself.
-  Float exponent(mp_exp_t x)
+  Float exponent(mpfr_exp_t x)
   {
     f.exp = x;
     return this;
   }
 
   /// Returns the exponent.
-  mp_exp_t exponent()
+  mpfr_exp_t exponent()
   {
     return f.exp;
   }
@@ -363,6 +350,7 @@ class Float
   Float mantissa(long x)
   {
     // TODO:
+    assert(0);
     return this;
   }
 
@@ -370,6 +358,7 @@ class Float
   Float mantissa(/+mpz_t+/int x)
   {
     // TODO:
+    assert(0);
     return this;
   }
 
@@ -377,18 +366,19 @@ class Float
   /+mpz_t+/ int mant()
   {
     // TODO:
+    assert(0);
     return 0;
   }
 
   /// Sets the precision. Returns itself.
-  Float prec(int prec)
+  Float prec(mpfr_prec_t prec)
   {
-    f.prec = prec;
+    mpfr_prec_round(&f, prec, RND);
     return this;
   }
 
   /// Returns the precision.
-  int prec()
+  mpfr_prec_t prec()
   {
     return f.prec;
   }
@@ -422,32 +412,10 @@ class Float
     return this;
   }
 
-  /// Takes the square root of this number. Returns itself.
-  Float sqrt()
-  {
-    mpfr_sqrt(&f, &f, RND);
-    return this;
-  }
-
-  /// Takes the square root of x and returns a Float.
-  static Float sqrt(uint x)
-  {
-    auto result = new Float();
-    mpfr_sqrt_ui(&result.f, x, RND);
-    return result;
-  }
-
-  /// Raises the number to the power x.
-  Float pow(uint x)
-  {
-    mpfr_pow_ui(&f, &f, x, RND);
-    return this;
-  }
-
   /// Returns the limbs of the float data structure.
-  mp_limb_t[] limbs()
+  mpfr_limb_t[] limbs()
   {
-    return f.limbs[0..f.size & 0x7FFF_FFFF]; // Clear sign bit.
+    return f.limbs_array();
   }
 
   /// Returns this float as a string.
@@ -480,6 +448,28 @@ class Float
   }
 
   // Exponentiation and logarithmic functions.
+
+  /// Calculates √f. Returns itself.
+  Float sqrt()
+  {
+    mpfr_sqrt(&f, &f, RND);
+    return this;
+  }
+
+  /// Calculates √x. Returns a new Float.
+  static Float sqrt(uint x)
+  {
+    auto result = new Float();
+    mpfr_sqrt_ui(&result.f, x, RND);
+    return result;
+  }
+
+  /// Calculates f^x. Returns itself.
+  Float pow(uint x)
+  {
+    mpfr_pow_ui(&f, &f, x, RND);
+    return this;
+  }
 
   /// Calculates ln(x). Returns itself.
   Float ln()
@@ -582,22 +572,22 @@ class Float
   }
 }
 
-/// Calculates ln(x). Returns itself.
+/// Returns ln(x).
 Float ln(Float x)
 {
   return x.dup().ln();
 }
-/// Calculates log2(x). Returns itself.
+/// Returns log2(x).
 Float log2(Float x)
 {
   return x.dup().log2();
 }
-/// Calculates log2(x). Returns itself.
+/// Returns log2(x).
 Float log10(Float x)
 {
   return x.dup().log10();
 }
-/// Calculates e^x. Returns itself.
+/// Returns e^x.
 Float exp(Float x)
 {
   return x.dup().exp();

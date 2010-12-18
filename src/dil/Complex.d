@@ -4,9 +4,8 @@
 module dil.Complex;
 
 import dil.Float;
+import util.mpfr : mpfr_t;
 import common;
-
-import tango.stdc.stdio;
 
 alias dil.Float.Float Float;
 
@@ -41,7 +40,7 @@ class Complex
     im = i ? i : new Float();
   }
 
-  /// Constructs from two mpfr_t.
+  /// Constructs from two mpfr_t instances.
   this(mpfr_t* r, mpfr_t* i=null)
   {
     re = new Float(r);
@@ -94,16 +93,13 @@ class Complex
   /// Constructs a Complex from a zero-terminated string.
   this(char* x)
   {
-    if (!x || !*x)
-      (re = new Float()),
-      im = new Float();
-    else
-      set(x);
+    set(x);
   }
 
+  /// Parses the string and sets the real and imaginary parts. Returns itself.
   Complex set(char* x)
   {
-    x = x || *x ? x : "0";
+    x = x && *x ? x : "0";
 
     char[] r_str, i_str;
     bool i_neg;
@@ -161,7 +157,7 @@ class Complex
     return new Complex(this);
   }
 
-  /// Calculates z += x.
+  /// Calculates z += x. Returns itself.
   Complex opAddAssign(Complex x)
   {
     re += x.re;
@@ -169,13 +165,13 @@ class Complex
     return this;
   }
 
-  /// Calculates z+x.
+  /// Calculates z+x. Returns a new number.
   Complex opAdd(Complex x)
   {
     return new Complex() += x;
   }
 
-  /// Calculates z+x.
+  /// ditto
   Complex opAdd(uint x)
   {
     auto z = new Complex();
@@ -183,7 +179,7 @@ class Complex
     return z;
   }
 
-  /// Calculates x-z.
+//   /// Calculates x-z.
 //   Complex opAdd_r(T)(T x)
 //   {
 //     static if (is(T == Complex))
@@ -192,7 +188,7 @@ class Complex
 //       return new Complex(x) + this;
 //   }
 
-  /// Calculates z -= x.
+  /// Calculates z -= x. Returns itself.
   Complex opSubAssign(Complex x)
   {
     re -= x.re;
@@ -200,14 +196,14 @@ class Complex
     return this;
   }
 
-  /// Calculates z -= x.
+  /// ditto
   Complex opSubAssign(uint x)
   {
     re -= x;
     return this;
   }
 
-  /// Calculates z-x.
+  /// Calculates z-x. Returns a new number.
   Complex opSub(T)(T x)
   {
     static if (is(T == Complex) || is(T == uint))
@@ -216,7 +212,7 @@ class Complex
       return dup() -= new Complex(x);
   }
 
-  /// Calculates x-z.
+//   /// Calculates x-z.
 //   Complex opSub_r(T)(T x)
 //   {
 //     static if (is(T == Complex))
@@ -225,9 +221,9 @@ class Complex
 //       return new Complex(x) - this;
 //   }
 
-  /// Calculates z /= x.
+  /// Calculates z /= x. Returns itself.
   Complex opDivAssign(T:Complex)(T x)
-  {
+  { // Special handling.
     if (x.im == 0)
       (re /= x.re),
       (im /= x.re);
@@ -238,15 +234,18 @@ class Complex
       // auto r_ = re.dup();
       // re *= n; re += im; re /= d;
       // im *= n; im -= r_; im /= d;
-      auto d = x.re*x.re + x.im*x.im;
+
+      auto rx = x.re, ix = x.im;
+      // d = x.re² + x.im²
+      auto d = rx.dup().pow(2) += ix.dup().pow(2);
       auto r_ = re.dup();
-      re *= x.re; re += im*x.im; re /= d;
-      im *= x.re; im -= r_*x.im; im /= d;
+      re *= rx; re += im * ix; re /= d;
+      im *= rx; im -= r_ * ix; im /= d;
     }
     return this;
   }
 
-  /// Calculates z /= x.
+  /// ditto
   Complex opDivAssign(T)(T x)
   {
     static if (is(T == Float) || is(T == uint))
@@ -258,7 +257,7 @@ class Complex
     return this;
   }
 
-  /// Calculates z/x.
+  /// Calculates z/x.  Returns a new number.
   Complex opDiv(T)(T x)
   {
     static if (is(T == Complex) || is(T == uint))
@@ -272,7 +271,7 @@ class Complex
   // Complex opDiv_r(T)(T x)
   // { return new Complex(x) /= this; }
 
-  /// Calculates x/z.
+  /// Calculates x/z. Returns a new number.
   Complex opDiv_r(uint x)
   {
     return new Complex(cast(ulong)x) /= this;
@@ -296,9 +295,9 @@ class Complex
     return new Complex(x) /= this;
   }
 
-  /// Calculates z *= x.
+  /// Calculates z *= x. Returns itself.
   Complex opMulAssign(T:Complex)(T x)
-  {
+  { // Special handling.
     if (x.im == 0)
       (re *= x.re),
       (im *= x.re);
@@ -311,7 +310,7 @@ class Complex
     return this;
   }
 
-  /// Calculates z *= x.
+  /// ditto
   Complex opMulAssign(T)(T x)
   {
     static if (is(T == Float) || is(T == uint))
@@ -323,7 +322,7 @@ class Complex
     return this;
   }
 
-  /// Calculates z*x.
+  /// Calculates z*x. Returns a new number.
   Complex opMul(T)(T x)
   {
     static if (is(T == Complex) || is(T == uint))
@@ -333,7 +332,7 @@ class Complex
     return dup() *= z;
   }
 
-  /// Calculates x*z.
+//   /// Calculates x*z.
 //   Complex opMul_r(T)(T x)
 //   {
 //     static if (is(T == Complex))
@@ -358,13 +357,13 @@ class Complex
     return this;
   }
 
-  /// Compares this to x.
+  /// Compares z with x.
   int opEquals(T)(T x)
   {
-    static if (!is(T == Complex))
-      auto z = new Complex(x);
-    else
+    static if (is(T == Complex))
       alias x z;
+    else
+      auto z = new Complex(x);
     return re == z.re && im == z.im;
   }
 
@@ -377,7 +376,7 @@ class Complex
     return n;
   }
 
-  /// Negates this number.
+  /// Negates this number. Returns itself.
   Complex neg()
   {
     re.neg();
@@ -385,7 +384,7 @@ class Complex
     return this;
   }
 
-  /// Converts this number to polar representation.
+  /// Converts this number to polar representation. Returns itself.
   Complex polar()
   {
     auto phi_ = im.dup.atan2(re);
@@ -394,7 +393,7 @@ class Complex
     return this;
   }
 
-  /// Converts this number to cartesian representation.
+  /// Converts this number to cartesian representation. Returns itself.
   Complex cart()
   { // Looks weird but saves temporary variables.
     auto mag_ = mag.dup();
@@ -403,7 +402,7 @@ class Complex
     return this;
   }
 
-  /// Calculates the square root of this number. Returns itself.
+  /// Calculates √z. Returns itself.
   Complex sqrt()
   { // √z = √(r.e^iφ) = √(r).e^(iφ/2)
     polar();
@@ -412,20 +411,20 @@ class Complex
     return cart();
   }
 
-  /// Calculates z^x. Returns itself.
-  Complex pow(T)(T x)
-  { // z^2 = (r.e^iφ)^2 = r^2.e^2φi
-    polar();
-    mag.pow(x);
-    phi *= x;
-    return cart();
-  }
-
   /// Calculates z^w. Returns itself.
   Complex pow(T:Complex)(T w)
   { // z^w = e^(w*ln(z))
     ln() *= w; // z = ln(z); z *= w
     return exp(); // e^z
+  }
+
+  /// Calculates z^x. Returns itself.
+  Complex pow(T)(T x)
+  { // z² = (r.e^iφ)² = r².e^(2φi)
+    polar();
+    mag.pow(x);
+    phi *= x;
+    return cart();
   }
 
   /// Calculates e^z. Returns itself.
@@ -443,13 +442,13 @@ class Complex
     return this;
   }
 
-  /// Calculates log_a+bi(z) = ln(z)/ln(a+bi). Returns a new number.
-  Complex logz(Complex z)
+  /// Calculates log$(SUB a+bi)(w) = ln(w)/ln(a+bi). Returns a new number.
+  Complex logz(Complex w)
   {
-    return z.dup().ln() /= dup().ln();
+    return w.dup().ln() /= dup().ln();
   }
 
-  /// Conjugates this number, conj(z) = Re(z) - Im(z). Returns itself.
+  /// Conjugates this number: conj(z) = Re(z) - Im(z). Returns itself.
   Complex conjugate()
   {
     im = -im;
@@ -462,31 +461,31 @@ class Complex
     return dup().conjugate();
   }
 
-  /// Inverses this number. z = z^-1
+  /// Inverses this number: z = z^-1. Returns itself.
   Complex inverse()
-  { // re/(a*a+b*b) - im/(a*a+b*b)
-    auto d = (re*re) += im*im;
+  { // re/(a²+b²) - im/(a²+b²)
+    auto d = re.dup().pow(2) += im.dup().pow(2);
     re /= d;
     im /= d.neg();
     return this;
   }
 
-  /// Returns an inversed copy of this number. z^-1
+  /// Returns an inversed copy of this number.
   Complex inversed()
   {
     return dup().inverse();
   }
 
-  /// Returns the polar angle. φ = arctan(b/a)
+  /// Returns the polar angle: φ = arctan(b/a).
   Float arg()
   {
     return im.dup().atan2(re);
   }
 
-  /// Returns the absolute value. |z| = √(re^2 + im^2)
+  /// Returns the absolute value: |z| = √(re² + im²).
   Float abs()
   {
-    return re.dup().hypot(im);
+    return hypot(re, im);
   }
 
   /// Returns this float as a string.
@@ -516,7 +515,7 @@ unittest
   assert(C(3L, 2L) / C(4L,-6L) == C(0., 0.5));
   assert(C(3L, 4L).abs() == F(5));
   assert(C(3L, 4L).conjugate() == C(3L, -4L));
-//   assert(C(3L, 4L).pow(2) == C(-7, 24));
+//   assert(C(3L, 4L).pow(2) == C(-7L, 24L));
 //   assert(C(3L, 4L).sqrt() == C(2L, 1L));
   assert(C("3+4j") == C(3L, 4L));
   assert(C("-4e+2j") == C(0L, -400L));

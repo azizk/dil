@@ -52,6 +52,7 @@ DMDBUG = $(LINK2 http://d.puremagic.com/issues/show_bug.cgi?id=$1, $2)
 DDD = ---
 
 SUP = <sup>$0</sup>
+SUB = <sub>$0</sub>
 EM  = <em>$0</em>
 BR  = <br/>
 PRE = <pre>$0</pre>
