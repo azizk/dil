@@ -51,18 +51,17 @@ hash_t hashOf(string str)
   auto hptr = cast(hash_t*)pstr;
   // Divide the length by 4 or 8 (x86 vs. x86_64).
   auto hlen = len / hash_t.sizeof;
+  assert(hlen, "can't be zero");
 
-  while (hlen--)
+  while (hlen--) // Main loop.
     hash = hash * 11 + *hptr++;
 
   if (rem_len)
   { // Calculate the hash of the remaining characters.
-    // Move to the beginning of the remainder.
-    // & ~(...) clears the first 3 or 7 bits of len.
-    pstr += len & ~(hash_t.sizeof - 1); // pstr += len - rem;
+    pstr = cast(char*)hptr; // hptr points exactly to the remainder.
   Lonly_remainder:
     size_t chunk;
-    while (rem_len--)
+    while (rem_len--) // Remainder loop.
       chunk = (chunk << 8) | *pstr++;
     hash = hash * 11 + chunk;
   }
