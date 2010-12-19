@@ -137,14 +137,19 @@ def main():
 
     Options after the string '--' are forwarded to the compiler."""
   parser = OptionParser(usage=usage)
-  parser.add_option("--release", dest="release", action="store_true", default=False,
+  parser.add_option(
+    "--release", dest="release", action="store_true", default=False,
     help="build a release version (default)")
-  parser.add_option("--debug", dest="debug", action="store_true", default=False,
+  parser.add_option(
+    "--debug", dest="debug", action="store_true", default=False,
     help="build a debug version")
   parser.add_option("-2", dest="d2", action="store_true", default=False,
     help="build with -version=D2")
   parser.add_option("--ldc", dest="ldc", action="store_true", default=False,
     help="use ldc instead of dmd")
+  parser.add_option(
+    "--unittest", dest="unittest", action="store_true", default=False,
+    help="build unit tests (recommended for first run)")
   parser.add_option("--wine", dest="wine", action="store_true", default=False,
     help="use wine to build a Windows binary on Linux")
 
@@ -165,6 +170,8 @@ def main():
   lnk_args = (["-lmpfr", "-ldl"], ["+mpfr"])[is_win32]
   # Remove -ldl if release build.
   lnk_args = (lnk_args[:1], lnk_args)[options.debug]
+
+  if options.unittest: other_args += ["-unittest"]
 
   build_func = (build_dil_release, build_dil_debug)[options.debug]
   # Call the compiler with the provided options.
