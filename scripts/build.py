@@ -52,7 +52,7 @@ class DMDCommand(Command):
     Command.__init__(self, exe)
     P = self.P
     self.files = files
-    self.out_exe = P.of%out_exe
+    self.out_exe = P.of%out_exe if out_exe else None
     options = ((release, P.release), (optimize, P.O), (inline, P.inline),
               (objdir, P.od%objdir), (warnings, P.w), (debug_info, P.g),
               (not strip_paths, P.op), (no_obj, P.o_))
@@ -65,7 +65,8 @@ class DMDCommand(Command):
   def args(self):
     """ Returns all command arguments as a list of strings. """
     return self.options + self.lnk_args + self.includes + \
-           self.versions + self.files + [self.out_exe] + self.other_args
+           self.versions + self.files + self.other_args + \
+           ([self.out_exe] if self.out_exe else [])
 
   def __str__(self):
     """ Returns the cmd as a string, but doesn't include the file paths. """
@@ -109,6 +110,8 @@ def build_dil(cmd_kwargs):
   exe_dest = BIN/"dil"
   if use_wine:
     exe_dest = (exe_dest+".exe").replace("/", "\\")
+  if "-c" in cmd_kwargs["other"]: # Only compile objects?
+    exe_dest = None
   cmd = Command(FILES, exe_dest, **cmd_kwargs)
   cmd.use_wine = use_wine
   print cmd
