@@ -8,6 +8,8 @@ import common;
 
 /// A wrapper class for the MPFR library functions.
 /// See: $(LINK http://www.mpfr.org/)
+/// Macros:
+/// f = <a href="#Float.f" style="text-decoration:none">f</a>
 class Float
 {
   /// The default rounding method.
@@ -157,21 +159,21 @@ class Float
 
   // TODO: add set() methods.
 
-  /// Calculates f += x.
+  /// Calculates $(f) += x.
   Float opAddAssign(Float x)
   {
     mpfr_add(&f, &f, &x.f, RND);
     return this;
   }
 
-  /// Calculates f += x.
+  /// Calculates $(f) += x.
   Float opAddAssign(uint x)
   {
     mpfr_add_ui(&f, &f, x, RND);
     return this;
   }
 
-  /// Calculates f+x.
+  /// Calculates $(f) + x.
   Float opAdd(T)(T x)
   {
     static if (is(T == Float) || is(T == uint))
@@ -180,21 +182,21 @@ class Float
       return dup() += new Float(x);
   }
 
-  /// Calculates f -= x.
+  /// Calculates $(f) -= x.
   Float opSubAssign(Float x)
   {
     mpfr_sub(&f, &f, &x.f, RND);
     return this;
   }
 
-  /// Calculates f -= x.
+  /// Calculates $(f) -= x.
   Float opSubAssign(uint x)
   {
     mpfr_sub_ui(&f, &f, x, RND);
     return this;
   }
 
-  /// Calculates f-x.
+  /// Calculates $(f) - x.
   Float opSub(T)(T x)
   {
     static if (is(T == Float) || is(T == uint))
@@ -203,7 +205,7 @@ class Float
       return dup() -= new Float(x);
   }
 
-  /// Calculates x-f.
+  /// Calculates x - $(f).
   Float opSub_r(uint x)
   {
     auto result = new Float();
@@ -211,21 +213,21 @@ class Float
     return result;
   }
 
-  /// Calculates f /= x.
+  /// Calculates $(f) /= x.
   Float opDivAssign(Float x)
   {
     mpfr_div(&f, &f, &x.f, RND);
     return this;
   }
 
-  /// Calculates f /= x.
+  /// Calculates $(f) /= x.
   Float opDivAssign(uint x)
   {
     mpfr_div_ui(&f, &f, x, RND);
     return this;
   }
 
-  /// Calculates f/x.
+  /// Calculates $(f) / x.
   Float opDiv(T)(T x)
   {
     static if (is(T == Float) || is(T == uint))
@@ -234,7 +236,7 @@ class Float
       return dup() /= new Float(x);
   }
 
-  /// Calculates x/f.
+  /// Calculates x / $(f).
   Float opDiv_r(uint x)
   {
     auto result = new Float();
@@ -242,21 +244,21 @@ class Float
     return result;
   }
 
-  /// Calculates f *= x.
+  /// Calculates $(f) *= x.
   Float opMulAssign(Float x)
   {
     mpfr_mul(&f, &f, &x.f, RND);
     return this;
   }
 
-  /// Calculates f *= x.
+  /// Calculates $(f) *= x.
   Float opMulAssign(uint x)
   {
     mpfr_mul_ui(&f, &f, x, RND);
     return this;
   }
 
-  /// Calculates f*x.
+  /// Calculates $(f) * x.
   Float opMul(T)(T x)
   {
     static if (is(T == Float) || is(T == uint))
@@ -265,14 +267,14 @@ class Float
       return dup() *= new Float(x);
   }
 
-  /// Calculates f*2^x. Returns itself.
+  /// Calculates $(f) * 2$(SUP x). Returns itself.
   Float mul_2exp(uint x)
   {
     mpfr_mul_2ui(&f, &f, x, RND);
     return this;
   }
 
-  /// Calculates f/2^x. Returns itself.
+  /// Calculates $(f) / 2$(SUP x). Returns itself.
   Float div_2exp(uint x)
   {
     mpfr_div_2ui(&f, &f, x, RND);
@@ -327,7 +329,7 @@ class Float
     return mpfr_cmp_ui(&f, x);
   }
 
-  /// Returns true if the first bits of f and x are equal.
+  /// Returns true if the first bits of $(f) and x are equal.
   bool equals(Float x, uint bits)
   {
     return mpfr_eq(&f, &x.f, bits) != 0;
@@ -449,7 +451,7 @@ class Float
 
   // Exponentiation and logarithmic functions.
 
-  /// Calculates √f. Returns itself.
+  /// Calculates √$(f). Returns itself.
   Float sqrt()
   {
     mpfr_sqrt(&f, &f, RND);
@@ -464,14 +466,14 @@ class Float
     return result;
   }
 
-  /// Calculates f^x. Returns itself.
+  /// Calculates $(f)$(SUP x). Returns itself.
   Float pow(uint x)
   {
     mpfr_pow_ui(&f, &f, x, RND);
     return this;
   }
 
-  /// Calculates f². Returns itself.
+  /// Calculates $(f)². Returns itself.
   Float square()
   {
     mpfr_sqr(&f, &f, RND);
@@ -484,19 +486,19 @@ class Float
     mpfr_log(&f, &f, RND);
     return this;
   }
-  /// Calculates log2(x). Returns itself.
+  /// Calculates log$(SUB 2)(x). Returns itself.
   Float log2()
   {
     mpfr_log2(&f, &f, RND);
     return this;
   }
-  /// Calculates log10(x). Returns itself.
+  /// Calculates log$(SUB 10)(x). Returns itself.
   Float log10()
   {
     mpfr_log10(&f, &f, RND);
     return this;
   }
-  /// Calculates e^x. Returns itself.
+  /// Calculates e$(SUP x). Returns itself.
   Float exp()
   {
     mpfr_exp(&f, &f, RND);
@@ -545,7 +547,6 @@ class Float
     return this;
   }
 
-  // mpfr_sin_cos(&f, &f2, &f, RND);
   /// Calculates cos(x). Returns itself.
   Float cos()
   {
@@ -571,7 +572,7 @@ class Float
   // mpfr_csc(&f, &f, RND);
   // mpfr_cot(&f, &f, RND);
 
-  /// Calculates hypot(x, y) = √(x^2 + y^2). Returns itself.
+  /// Calculates hypot(x, y) = √(x² + y²). Returns itself.
   Float hypot(Float y)
   {
     mpfr_hypot(&f, &f, &y.f, RND);
@@ -584,17 +585,17 @@ Float ln(Float x)
 {
   return x.dup().ln();
 }
-/// Returns log2(x).
+/// Returns log$(SUB 2)(x).
 Float log2(Float x)
 {
   return x.dup().log2();
 }
-/// Returns log2(x).
+/// Returns log$(SUB 10)(x).
 Float log10(Float x)
 {
   return x.dup().log10();
 }
-/// Returns e^x.
+/// Returns e$(SUP x).
 Float exp(Float x)
 {
   return x.dup().exp();
@@ -605,7 +606,7 @@ Float acos(Float x)
 {
   return x.dup().acos();
 }
-/// Returns (x).
+/// Returns asin(x).
 Float asin(Float x)
 {
   return x.dup().asin();
@@ -625,17 +626,17 @@ Float cos(Float x)
 {
   return x.dup().cos();
 }
-/// Returns (x).
+/// Returns tan(x).
 Float tan(Float x)
 {
   return x.dup().tan();
 }
-/// Returns atan2(y/x).
+/// Returns atan2(x,y) = atan(y/x).
 Float atan2(Float y, Float x)
 {
   return y.dup().atan2(x);
 }
-/// Returns hypot(x) = √(x^2 + y^2).
+/// Returns hypot(x) = √(x² + y²).
 Float hypot(Float x, Float y)
 {
   return x.dup().hypot(y);
