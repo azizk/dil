@@ -471,6 +471,13 @@ class Float
     return this;
   }
 
+  /// Calculates f². Returns itself.
+  Float square()
+  {
+    mpfr_sqr(&f, &f, RND);
+    return this;
+  }
+
   /// Calculates ln(x). Returns itself.
   Float ln()
   {
@@ -670,5 +677,6 @@ unittest
   assert(F(16).neg() == F(-16));
   assert(F(16).neg().abs() == F(-16).abs());
   assert(F(1).exp().ln() <= F(1));
+  assert(F(32).square() == F(1024));
 }
 

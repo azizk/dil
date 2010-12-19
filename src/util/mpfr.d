@@ -94,6 +94,7 @@ void mpfr_sqrt(mpfr_ptr, mpfr_srcptr, mpfr_rnd_t);
 void mpfr_sqrt_ui(mpfr_ptr, uint, mpfr_rnd_t);
 void mpfr_pow(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_rnd_t);
 void mpfr_pow_ui(mpfr_ptr, mpfr_srcptr, uint, mpfr_rnd_t);
+int  mpfr_sqr(mpfr_ptr, mpfr_srcptr, mpfr_rnd_t);
 
 int  mpfr_cmp(mpfr_srcptr, mpfr_srcptr);
 int  mpfr_cmp_d(mpfr_srcptr, double);

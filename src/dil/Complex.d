@@ -237,7 +237,7 @@ class Complex
 
       auto rx = x.re, ix = x.im;
       // d = x.re² + x.im²
-      auto d = rx.dup().pow(2) += ix.dup().pow(2);
+      auto d = rx.dup().square() += ix.dup().square();
       auto r_ = re.dup();
       re *= rx; re += im * ix; re /= d;
       im *= rx; im -= r_ * ix; im /= d;
@@ -388,7 +388,7 @@ class Complex
   Complex polar()
   {
     auto phi_ = im.dup.atan2(re);
-    re.hypot(im); // r = √(re^2 + im^2)
+    re.hypot(im); // r = √(re² + im²)
     phi = phi_;   // φ = arctan(im/re)
     return this;
   }
@@ -420,7 +420,7 @@ class Complex
 
   /// Calculates z^x. Returns itself.
   Complex pow(T)(T x)
-  { // z² = (r.e^iφ)² = r².e^(2φi)
+  { // z^x = (r.e^iφ)^x = r^x.e^(xφi)
     polar();
     mag.pow(x);
     phi *= x;
@@ -464,7 +464,7 @@ class Complex
   /// Inverses this number: z = z^-1. Returns itself.
   Complex inverse()
   { // re/(a²+b²) - im/(a²+b²)
-    auto d = re.dup().pow(2) += im.dup().pow(2);
+    auto d = re.dup().square() += im.dup().square();
     re /= d;
     im /= d.neg();
     return this;
