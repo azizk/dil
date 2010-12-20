@@ -5,6 +5,9 @@ import os, re, sys
 import subprocess
 from path import Path
 
+# Are we on a Windows system?
+is_win32 = sys.platform == "win32"
+
 def find_source_files(src_path, filter_pred=lambda x: False):
   """ Searches for source files (*.d and *.di) and returns a list of them.
     Passes dir and file names to filter_pred() to be filtered.
@@ -58,8 +61,7 @@ def dil_path(where="", dilconf=True):
       P.BIN = exe_path.folder # Update binary folder.
       P.EXE = exe_path # Update exe path.
       # Get the settings from dil.
-      from subprocess import Popen, PIPE
-      sttngs = Popen([exe_path, "set"], stdout=PIPE).communicate()[0]
+      sttngs = call_read([exe_path, "set"])
       sttngs = dict(re.findall("^(\w+)=(.+)", sttngs[:-1], re.MULTILINE))
       # Set the actual paths.
       P.DATA = Path(sttngs['DATADIR']).normpath
@@ -143,10 +145,9 @@ def generate_modules_js(modlist, dest_path, max_line_len=80):
 def generate_docs(dil_exe, dest, modlist, files,
                   versions=[], options=[], cwd=None):
   """ Generates documenation files. """
-  from subprocess import call
   versions = ["-version="+v for v in versions]
   args = ["ddoc", dest, "-m="+modlist] + options + versions + files
-  return call([dil_exe] + args, cwd=cwd)
+  return subprocess.call([dil_exe] + args, cwd=cwd)
 
 def generate_pymodules(dil_exe, dest, files, options=[], cwd=None):
   """ Generates Python source files. """
@@ -185,8 +186,7 @@ def load_pymodules(folder):
 def locate_command(command):
   """ Locates a command using the PATH environment variable. """
   if 'PATH' in os.environ:
-    from sys import platform
-    if platform is 'win32' and Path(command).ext.lower() != ".exe":
+    if is_win32 and Path(command).ext.lower() != ".exe":
       command += ".exe" # Append extension if we're on Windows.
     PATH = os.environ['PATH'].split(Path.pathsep)
     for path in reversed(PATH): # Search in reverse order.
@@ -196,8 +196,7 @@ def locate_command(command):
   return None
 
 def build_dil_if_inexistant(dil_exe):
-  from sys import platform
-  if platform == 'win32': dil_exe += ".exe"
+  if is_win32: dil_exe += ".exe"
   if not dil_exe.exists and not locate_command('dil'):
     inp = raw_input("Executable %s doesn't exist. Build it? (Y/n) " % dil_exe)
     if inp.lower() in ("", "y", "yes"):
@@ -206,6 +205,11 @@ def build_dil_if_inexistant(dil_exe):
       build_dil_release()
     else:
       raise Exception("can't proceed without dil executable")
+
+def call_read(args, **kwargs):
+  """ Calls a process and returns the contents of stdout. """
+  kwargs = dict({'stdout':subprocess.PIPE}, **kwargs)
+  return subprocess.Popen(args, **kwargs).communicate()[0]
 
 # Not in use atm.
 def download_jquery(dest_path, force=False,
