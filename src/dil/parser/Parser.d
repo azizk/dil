@@ -141,6 +141,7 @@ class Parser
   /// Sets the begin and end tokens of a syntax tree node.
   Class set(Class)(Class node, Token* begin)
   {
+    assert(node !is null);
     node.setTokens(begin, this.prevToken);
     return node;
   }
@@ -148,6 +149,7 @@ class Parser
   /// Sets the begin and end tokens of a syntax tree node.
   Class set(Class)(Class node, Token* begin, Token* end)
   {
+    assert(node !is null);
     node.setTokens(begin, end);
     return node;
   }
@@ -155,6 +157,7 @@ class Parser
   /// Returns true if set() has been called on a node.
   static bool isNodeSet(Node node)
   {
+    assert(node !is null);
     return node.begin !is null && node.end !is null;
   }
 
@@ -220,7 +223,7 @@ class Parser
         error(typeId, MSG.ExpectedModuleType);
       require2(T.RParen);
     }
-    }
+    } // version(D2)
     do
       moduleFQN ~= requireIdentifier(MSG.ExpectedModuleIdentifier);
     while (consumed(T.Dot))
@@ -299,16 +302,15 @@ class Parser
          T.Final:
     version(D2)
     {
-    case T.Shared,
+    case //T.Shared,
          T.Gshared,
-         //T.Invariant,
          //T.Immutable,
          T.Ref,
          T.Pure,
          T.Nothrow,
          T.Thread,
          T.At:
-    }
+    } // version(D2)
     case_parseAttributes:
       return parseAttributes();
     case T.Alias:
@@ -325,6 +327,7 @@ class Parser
         break;
       }
       } // version(D2)
+
       auto d = new AliasDeclaration(parseAttributes(&decl));
       if (auto var = decl.Is!(VariablesDeclaration))
       {
@@ -391,32 +394,21 @@ class Parser
     case T.Tilde:
       decl = parseDestructorDeclaration();
       break;
+    version(D2)
+    {
+    case T.Const, T.Immutable, T.Shared:
+      if (peekNext() == T.LParen)
+        goto case_Declaration;
+      goto case_parseAttributes;
+    } // version(D2)
+    else
+    { // D1
     case T.Const:
-      version(D2)
-      if (peekNext() == T.LParen)
-        goto case_Declaration;
       goto case_parseAttributes;
+    }
     case T.Invariant:
-    version(D2)
-    {
-      auto next = token;
-      if (peekAfter(next) == T.LParen)
-      {
-        if (peekAfter(next) != T.RParen)
-          goto case_Declaration;  // invariant ( Type )
-      }
-      else
-        goto case_parseAttributes; // invariant as StorageClass.
-    }
-      decl = parseInvariantDeclaration(); // invariant ( )
+      decl = parseInvariantDeclaration(); // invariant "(" ")"
       break;
-    version(D2)
-    {
-    case T.Immutable:
-      if (peekNext() == T.LParen)
-        goto case_Declaration;
-      goto case_parseAttributes;
-    }
     case T.Unittest:
       decl = parseUnittestDeclaration();
       break;
@@ -575,7 +567,7 @@ class Parser
           assert(token.kind == T.LParen);
           goto LparseBeforeParams;
         }
-      }
+      } // version(D2)
     }
 
     // VariableType or ReturnType
@@ -855,7 +847,7 @@ class Parser
       case T.Const:
         stc = StorageClass.Const;
         break;
-      case T.Immutable, T.Invariant:
+      case T.Immutable:
         stc = StorageClass.Immutable;
         break;
       case T.Nothrow:
@@ -879,7 +871,7 @@ class Parser
       nT();
     }
     return stcs;
-    }
+    } // version(D2)
     assert(0);
   }
 
@@ -898,9 +890,8 @@ class Parser
     }
 
     auto idtok = requireIdentifier(MSG.ExpectedLinkageIdentifier);
-    IDK idKind = idtok ? idtok.ident.idKind : IDK.Empty;
 
-    switch (idKind)
+    switch (idtok.ident.idKind)
     {
     case IDK.C:
       if (consumed(T.PlusPlus))
@@ -1020,15 +1011,12 @@ class Parser
         goto Lcommon;
       version(D2)
       {
-      case T.Invariant, T.Const, T.Immutable, T.Shared:
+      case T.Const, T.Immutable, T.Shared:
         if (peekNext() == T.LParen)
           break Loop;
-        switch (token.kind)
-        {
-        case T.Const:     stc = StorageClass.Const; break;
-        case T.Immutable: stc = StorageClass.Immutable; break;
-        default:          stc = StorageClass.Shared; break;
-        }
+        stc = (token.kind == T.Const) ? StorageClass.Const :
+          (token.kind == T.Immutable) ? StorageClass.Immutable :
+                                        StorageClass.Shared;
         goto Lcommon;
       case T.Enum:
         if (!isEnumManifest())
@@ -1192,20 +1180,17 @@ class Parser
   StorageClass parseAtAttribute()
   {
     skip(T.At); // "@"
-    Token* idtok = token;
-    if (token.kind != T.Identifier)
-      idtok = requireIdentifier(MSG.ExpectedAttributeId);
-    assert(idtok.kind == T.Identifier);
-    IDK idKind = idtok ? idtok.ident.idKind : IDK.Empty;
+    auto idtok = token.kind == T.Identifier ?
+      token : requireIdentifier(MSG.ExpectedAttributeId);
     StorageClass stc;
-    switch (idKind)
+    switch (idtok.ident.idKind)
     {
     case IDK.disable:  stc = StorageClass.Disable;  break;
     case IDK.property: stc = StorageClass.Property; break;
     case IDK.safe:     stc = StorageClass.Safe;     break;
     case IDK.system:   stc = StorageClass.System;   break;
     case IDK.trusted:  stc = StorageClass.Trusted;  break;
-    case IDK.Empty: break;
+    case IDK.Empty: break; // No Id. Avoid another error below.
     default:
       assert(idtok);
       error2(MSG.UnrecognizedAttribute, idtok);
@@ -1329,13 +1314,13 @@ class Parser
                name; // Name of the enum member.
 
         Type type;
-      version(D2)
-      {
+        version(D2)
+        {
         bool success;
         type = try_({ // Type Identifier "=" AssignExpression
           return parseDeclarator(name);
         }, success);
-      }
+        } // version(D2)
 
         name = requireIdentifier(MSG.ExpectedEnumMember);
         Expression value;
@@ -1561,7 +1546,7 @@ class Parser
     if (tparams)
       d = putInsideTemplateDeclaration(begin, begin, d, tparams, constraint);
     return d;
-    }
+    } // version(D2)
     else
     { // D1
     skip(T.This);
@@ -1818,7 +1803,7 @@ class Parser
   ////MixinExpression := mixin "(" AssignExpression ")"
   ////MixinTemplateId := mixin TemplateIdentifier
   ////                   ("!" "(" TemplateArguments ")")? MixinIdentifier?)
-  ////MixinTemplate := mixin TemplateDeclaration
+  ////MixinTemplate := mixin TemplateDeclaration # D2
   RetT parseMixin(Class, RetT = Class)()
   {
     static assert(is(Class == MixinDeclaration) ||
@@ -1835,12 +1820,12 @@ class Parser
       require2(T.Semicolon);
       return new MixinDeclaration(e);
     }
-    else version(D2) if (consumed(T.Template))
+    else version(D2) if (token.kind == T.Template)
     {
       auto d = parseTemplateDeclaration();
       d.isMixin = true;
       return d;
-    }
+    } // version(D2)
     }
 
     auto begin = token;
@@ -1913,12 +1898,11 @@ class Parser
       /+ Not applicable for statements.
          T.Private, T.Package, T.Protected, T.Public, T.Export,
          T.Deprecated, T.Override, T.Abstract,+/
-    case //T.Final, T.Scope, T.Static,
-         T.Extern, T.Const, T.Auto:
+    case T.Extern, T.Const, T.Auto:
+         //T.Final, T.Scope, T.Static:
     version(D2)
     {
-    case T.Invariant, T.Immutable,
-         T.Pure, T.Shared, T.Gshared,
+    case T.Immutable, T.Pure, T.Shared, T.Gshared,
          T.Ref, T.Nothrow, T.Thread, T.At:
     }
     case_parseAttribute:
@@ -2213,15 +2197,12 @@ class Parser
         goto Lcommon;
       version(D2)
       {
-      case T.Invariant, T.Const, T.Immutable, T.Shared:
+      case T.Const, T.Immutable, T.Shared:
         if (peekNext() == T.LParen)
           break Loop;
-        switch (token.kind)
-        {
-        case T.Const:     stc = StorageClass.Const; break;
-        case T.Immutable: stc = StorageClass.Immutable; break;
-        default:          stc = StorageClass.Shared; break;
-        }
+        stc = (token.kind == T.Const) ? StorageClass.Const :
+          (token.kind == T.Immutable) ? StorageClass.Immutable :
+                                        StorageClass.Shared;
         goto Lcommon;
       case T.Enum:
         if (!isEnumManifest())
@@ -2245,7 +2226,7 @@ class Parser
         goto Lcommon;
       case T.At:
         stc = parseAtAttribute();
-        break;
+        goto Lcommon;
       } // version(D2)
       else
       { // D1
@@ -2468,8 +2449,8 @@ class Parser
     require2(T.Semicolon);
     e = parseExpression();
 
-  version(D2)
-  { //Foreach (ForeachType; LwrExpression .. UprExpression ) ScopeStatement
+    version(D2)
+    { //Foreach (ForeachType; LwrExpression .. UprExpression ) ScopeStatement
     if (consumed(T.Slice))
     {
       // if (params.length != 1)
@@ -2479,7 +2460,7 @@ class Parser
       auto forBody = parseScopeStatement();
       return new ForeachRangeStatement(tok, params, e, upper, forBody);
     }
-  }
+    } // version(D2)
     // Foreach (ForeachTypeList; Aggregate) ScopeStatement
     requireClosing(T.RParen, leftParen);
     auto forBody = parseScopeStatement();
@@ -2533,7 +2514,7 @@ class Parser
       require2(T.Colon);
       auto caseBody = parseCaseOrDefaultBody();
       return new CaseRangeStatement(left, right, caseBody);
-    }
+    } // version(D2)
     auto caseBody = parseCaseOrDefaultBody();
     return new CaseStatement(values, caseBody);
   }
@@ -3735,14 +3716,14 @@ class Parser
       {
       case T.RParen: // Mutable cast: cast "(" ")"
         break;
-      case T.Shared, T.Const, T.Invariant, T.Immutable:
+      case T.Const, T.Immutable, T.Shared:
         auto begin2 = token;
         if (peekNext() != T.RParen)
           goto default; // (const|immutable|shared) "(" Type ")"
         auto kind = token.kind;
         type = (kind == T.Const) ? new ConstType(type) :
-          (kind == T.Invariant || kind == T.Immutable) ? new ImmutableType(type) :
-          new SharedType(type);
+           (kind == T.Immutable) ? new ImmutableType(type) :
+                                   new SharedType(type);
         nT();
         set(type, begin2);
         break;
@@ -3929,17 +3910,21 @@ class Parser
       break;
     case T.Function, T.Delegate:
       // FunctionLiteral := ("function" | "delegate")
-      //                    Type? "(" ArgumentList ")" FunctionBody
+      //   ReturnType? "(" ArgumentList ")" FunctionPostfix? FunctionBody
       nT(); // Skip function or delegate keyword.
       Type returnType;
       Parameters parameters;
+      StorageClass stcs;
       if (token.kind != T.LBrace)
       {
         if (token.kind != T.LParen) // Optional return type
           returnType = parseBasicTypes();
         parameters = parseParameterList();
+        version(D2)
+        stcs = parseFunctionPostfix();
       }
       auto funcBody = parseFunctionBody();
+      // TODO: set/pass stcs.
       e = new FunctionLiteralExpression(returnType, parameters, funcBody);
       break;
     case T.Assert:
@@ -4001,12 +3986,12 @@ class Parser
           break;
         version(D2)
         {
-        case T.Const, T.Invariant, T.Immutable, T.Shared:
+        case T.Const, T.Immutable, T.Shared:
           auto next = peekNext();
           if (next == T.RParen || next == T.Comma)
             goto case_Const_Immutable_Shared;
           // Fall through. It's a type.
-        }
+        } // version(D2)
         default:
           specType = parseType();
         }
@@ -4014,12 +3999,12 @@ class Parser
       }
 
       TemplateParameters tparams;
-    version(D2)
-    { // "is" "(" Type Identifier (":" | "==") TypeSpecialization ","
+      version(D2)
+      { // "is" "(" Type Identifier (":" | "==") TypeSpecialization ","
       //          TemplateParameterList ")"
       if (ident && specType && token.kind == T.Comma)
         tparams = parseTemplateParameterList2();
-    }
+      } // version(D2)
       requireClosing(T.RParen, leftParen);
       e = new IsExpression(type, ident, opTok, specTok, specType, tparams);
       break;
@@ -4050,7 +4035,7 @@ class Parser
       requireClosing(T.RParen, leftParen); // ")"
       e = new TraitsExpression(ident, args);
       break;
-    }
+    } // version(D2)
     default:
       if (token.isIntegralType)
       { // IntegralType . Identifier
@@ -4161,16 +4146,18 @@ class Parser
     auto begin= token;
     if (peekNext() != T.LParen)
     {
-      TypeNode t = consumed(T.Const) ?
-          new ConstType(parseType(pIdent)) :
-        (consumed(T.Immutable) || consumed(T.Invariant)) ?
-          new ImmutableType(parseType(pIdent)) :
-        (consumed(T.Shared)) ?
-          new SharedType(parseType(pIdent)) :
-          null;
-      if (t) return set(t, begin);
+      auto kind = token.kind;
+      if (kind == T.Const || kind == T.Immutable || kind == T.Shared)
+      {
+        nT();
+        auto t = parseType(pIdent);
+        t = (kind == T.Const) ?   new ConstType(t) :
+          (kind == T.Immutable) ? new ImmutableType(t) :
+                                  new SharedType(t);
+        return set(t, begin);
+      }
     }
-    }
+    } // version(D2)
     auto type = parseBasicTypes();
     return (token.kind == T.LParen || pIdent) ?
       parseCStyleType(type, pIdent) : type;
@@ -4302,16 +4289,16 @@ class Parser
       return t;
     version(D2)
     { // (const|immutable|shared) "(" Type ")"
-    case T.Const, T.Invariant, T.Immutable, T.Shared:
+    case T.Const, T.Immutable, T.Shared:
       auto kind = token.kind;
       nT();
       require2(T.LParen); // "("
       auto lParen = prevToken;
       t = parseType(); // Type
       requireClosing(T.RParen, lParen); // ")"
-      t = (kind == T.Const) ? new ConstType(t) :
-        (kind == T.Invariant || kind == T.Immutable) ? new ImmutableType(t) :
-        new SharedType(t);
+      t = (kind == T.Const) ?   new ConstType(t) :
+        (kind == T.Immutable) ? new ImmutableType(t) :
+                                new SharedType(t);
       break;
     } // version(D2)
     default:
@@ -4345,6 +4332,9 @@ class Parser
         TOK tok = token.kind;
         nT();
         auto parameters = parseParameterList();
+        version(D2)
+        auto stcs = parseFunctionPostfix();
+        // TODO: add stcs to t.
         if (tok == T.Function)
           t = new FunctionType(t, parameters);
         else
@@ -4555,15 +4545,12 @@ class Parser
         {
         version(D2)
         {
-        case T.Invariant, T.Const, T.Immutable, T.Shared:
+        case T.Const, T.Immutable, T.Shared:
           if (peekNext() == T.LParen)
             break;
-          switch (token.kind)
-          {
-          case T.Const:     stc = StorageClass.Const; break;
-          case T.Immutable: stc = StorageClass.Immutable; break;
-          default:          stc = StorageClass.Shared; break;
-          }
+          stc = (token.kind == T.Const) ? StorageClass.Const :
+            (token.kind == T.Immutable) ? StorageClass.Immutable :
+                                          StorageClass.Shared;
           goto Lcommon;
         case T.Final:
           stc = StorageClass.Final;
@@ -4574,7 +4561,10 @@ class Parser
         case T.Static:
           stc = StorageClass.Static;
           goto Lcommon;
-        } // end of version(D2)
+        case T.Auto:
+          stc = StorageClass.Auto;
+          goto Lcommon;
+        } // version(D2)
         case T.In:
           stc = StorageClass.In;
           goto Lcommon;
@@ -4640,7 +4630,7 @@ class Parser
       // Don't parse a full Expression. TODO: restrict further?
       targs ~= success ? typeArg : parsePrimaryExpression();
       return set(targs, begin);
-    }
+    } // version(D2)
     return parseTemplateArguments();
   }
 
@@ -4783,8 +4773,8 @@ class Parser
         skip(T.Alias);
         ident = requireIdentifier(MSG.ExpectedAliasTemplateParam);
         Node spec, def;
-      version(D2)
-      {
+        version(D2)
+        {
         Node parseExpOrType()
         {
           bool success;
@@ -4795,13 +4785,13 @@ class Parser
           spec = parseExpOrType();
         if (consumed(T.Assign)) // "=" Default
           def = parseExpOrType();
-      }
-      else
-      { // D1
+        } // version(D2)
+        else
+        { // D1
         parseSpecAndOrDefaultType();
         spec = specType;
         def = defType;
-      }
+        }
         tp = new TemplateAliasParameter(ident, spec, def);
         break;
       case T.Identifier:
@@ -4836,7 +4826,7 @@ class Parser
         parseSpecAndOrDefaultType();
         tp = new TemplateThisParameter(ident, specType, defType);
         break;
-      }
+      } // version(D2)
       default:
       LTemplateValueParameter:
         // TemplateValueParameter := Declarator
