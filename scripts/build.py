@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
-import subprocess
+from common import *
 
 class Command:
   def __init__(self, exe):
@@ -92,8 +92,6 @@ class LDCCommand(DMDCommand):
 
 def build_dil(cmd_kwargs):
   """ Collects D source files and calls the compiler. """
-  from common import find_dil_source_files
-  from path import Path
   BIN = Path("bin")
   DATA = Path("data")
   BIN.mkdir()
@@ -133,7 +131,6 @@ def build_dil_debug(**kwargs):
 
 def main():
   from optparse import OptionParser
-  from common import change_cwd
   import sys
 
   usage = """Usage: scripts/build.py [Options]
@@ -166,11 +163,11 @@ def main():
 
   change_cwd(__file__)
 
-  is_win32 = (sys.platform == "win32" or options.wine)
+  for_win = is_win32 or options.wine
 
   command = (DMDCommand, LDCCommand)[options.ldc]
-  versions = ([], ["D2"])[options.d2]
-  lnk_args = (["-lmpfr", "-ldl"], ["+mpfr"])[is_win32]
+  versions = (["D1"], ["D2"])[options.d2]
+  lnk_args = (["-lmpfr", "-ldl"], ["+mpfr"])[for_win]
   # Remove -ldl if release build.
   lnk_args = (lnk_args[:1], lnk_args)[options.debug]
 
