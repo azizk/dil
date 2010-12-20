@@ -308,7 +308,7 @@ class Highlighter
     char* prev = p;
     char[] result, escape_str;
 
-    for (; p < end; p++)
+    while (p < end)
     {
       char[] xml_entity = void;
       switch (*p)
@@ -319,18 +319,18 @@ class Highlighter
       case '>': xml_entity = "&gt;";  goto Lxml;
       case '&': xml_entity = "&amp;"; goto Lxml;
       Lxml:
-        if (p != prev) result ~= String(prev, p); // Append previous string.
+        if (prev < p) result ~= String(prev, p); // Append previous string.
         result ~= xml_entity; // Append entity.
-        p++; // Skip '<', '>' or '&'.
-        prev = p;
+        prev = ++p;
         continue; // End of "XML" code.
       default:
-        continue;
+        p++;
+        continue; // Nothing to escape. Continue.
       }
+
       auto escape_str_begin = p;
       assert(*p == '\\');
       p++;
-      assert(p < end);
       if (p >= end)
         break;
 
@@ -338,15 +338,16 @@ class Highlighter
       switch (*p)
       {
       case 'x':
-        digits = 2;
+        digits = 2+1;
       case_Unicode:
-        assert(digits == 2 || digits == 4 || digits == 8);
+        assert(digits == 2+1 || digits == 4+1 || digits == 8+1);
         if (p+digits >= end)
-          continue;
-        p += digits+1;
+          p++; // Broken sequence. Only skip the letter.
+        else // +1 was added everywhere else, so that the digits are skipped.
+          p += digits;
         break;
-      case 'u': digits = 4; goto case_Unicode;
-      case 'U': digits = 8; goto case_Unicode;
+      case 'u': digits = 4+1; goto case_Unicode;
+      case 'U': digits = 8+1; goto case_Unicode;
       default:
         if (char2ev(*p)) // Table lookup.
           p++;
@@ -361,24 +362,23 @@ class Highlighter
           auto entity_name_begin = p+1;
           while (++p < end && isalnum(*p))
           {}
-          if (p == end || *p != ';')
-            continue; // '&' ends up unescaped.
-          p++; // Skip ';'.
+          if (p < end && *p == ';')
+            p++; // Skip ';'.
           escape_str = "\\&amp;" ~ String(entity_name_begin, p);
-          goto LformatString2;
+          goto Lescape_str_assigned;
         }
-        else
-          continue; // Nothing to format.
+        // else
+          // continue; // Broken escape sequence.
       }
-    LformatString:
+
       escape_str = String(escape_str_begin, p);
-    LformatString2:
-      if (p != prev) // Append previous string.
+    Lescape_str_assigned:
+      if (prev < p) // Append previous string.
         result ~= String(prev, escape_str_begin);
-      prev = p;
-      result ~= Format(fmt, escape_str);
-      p--;
+      result ~= Format(fmt, escape_str); // Finally format the escape sequence.
+      prev = p; // Update prev pointer.
     }
+    assert(p <= end && prev <= end);
 
     if (prev is text.ptr)
       return text; // Nothing escaped. Return original, unchanged text.
