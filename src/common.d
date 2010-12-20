@@ -19,3 +19,14 @@ static this()
 {
   Format = new typeof(Format);
 }
+
+// Check version IDs.
+version(D1) {
+  version(D2)
+    static assert(0, "Can't have both D1 and D2 defined.");
+}
+else
+version(D2)
+{}
+else
+  static assert(0, "Either -version=D1 or D2 must be defined.");
