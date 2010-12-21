@@ -12,6 +12,27 @@ import dil.Float : Float;
 import common;
 
 /// Serializes a linked list of tokens to a buffer.
+/// $(BNF
+//// FileFormat := Header IdArray Tokens
+////     Header := "DIL1.0TOKS\x1A\x04\n"
+////    IdArray := "Ids:" IdCount IdElement* "\n"
+////  IdElement := AbsOffset IdLength
+////     Tokens := "Toks:" TokenCount BodyLength (IdTok | OtherTok)+ "\n"
+////      IdTok := TOK RelOffset IdIndex
+////   OtherTok := TOK RelOffset TokenLength
+////    IdCount := 2B # Number of elements in IdArray (=Identifier*[].)
+////  AbsOffset := 4B # Absolute offset from the beginning of the source text.
+////   IdLength := 2B # The length of the identifier.
+//// TokenCount := 4B # Number of tokens (including EOF.)
+//// BodyLength := 4B # Total length of the token data.
+////        TOK := 1B # The token kind.
+////  RelOffset := 2B # Relative offset to previous token (=whitespace.)
+////    IdIndex := 2B # Index into IdArray.
+////TokenLength := 2B # Length of the token's text.
+////         1B := 1Byte
+////         2B := 2Bytes
+////         4B := 4Bytes
+////)
 struct TokenSerializer
 {
 static:
