@@ -239,14 +239,17 @@ version(D2)
     return isAsmStatementStartToken(kind);
   }
 
+  /// Compares a token's kind to kind2.
   int opEquals(TOK kind2)
   {
     return kind == kind2;
   }
 
+  /// Compares the position of two tokens.
+  /// Assumes they are from the same source text.
   int opCmp(Token* rhs)
-  {
-    return start < rhs.start;
+  { // Returns: (lower, equal, greater) = (-1, 0, 1)
+    return start < rhs.start ? -1 : start !is rhs.start;
   }
 
   /// Returns the Location of this token.
