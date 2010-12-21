@@ -101,7 +101,7 @@ static:
   }
 
   Token[] deserialize(ubyte[] data, string srcText, IdTable idtable,
-    void delegate(Token* next_token) callback)
+    bool delegate(Token* next_token) callback)
   {
     ubyte* p = data.ptr;
     ubyte* end = data.ptr + data.length;
@@ -198,7 +198,8 @@ static:
       token.end = prev_end = token.start + token_len;
       if (prev_end > src_end) goto Lerr;
       // Pass the token back to the client.
-      callback(token);
+      if (!callback(token))
+        goto Lerr;
       // Advance the pointer to the next token in the array.
       token++;
       token_count--;

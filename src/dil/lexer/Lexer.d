@@ -106,7 +106,7 @@ class Lexer
   }
 
   /// Callback function to TokenSerializer.deserialize().
-  void dlxCallback(Token* t)
+  bool dlxCallback(Token* t)
   {
     switch (t.kind)
     { // Some tokens need special handling:
@@ -186,6 +186,7 @@ class Lexer
     this.token.next = t;
     t.prev = this.token;
     this.token = t;
+    return true;
   }
 
   /// Loads the tokens from a dlx file.
