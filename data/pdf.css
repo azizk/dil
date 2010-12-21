@@ -241,8 +241,8 @@ dd.ddef { /* Definition, Explanation */
 }
 
 .params em, .tparams em { /* Function or template parameter name */
+  font-family: monospace;
   font-weight: normal;
-  font-style: italic;
   color: OliveDrab;
 }
 
