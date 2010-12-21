@@ -93,14 +93,14 @@ class Parser
     return parseExpression();
   }
 
-  // Members related to the method try_().
-  uint trying; /// Greater than 0 if Parser is in try_().
-  uint errorCount; /// Used to track nr. of errors while being in try_().
+  // Members related to the method tryToParse().
+  uint trying; /// Greater than 0 if Parser is in tryToParse().
+  uint errorCount; /// Used to track nr. of errors while being in tryToParse().
 
-  /// This method executes the delegate parseMethod and when an error occurred
+  /// This method executes the delegate parseMethod and when an error occurs
   /// the state of the lexer and parser is restored.
   /// Returns: the return value of parseMethod().
-  RetType try_(RetType)(RetType delegate() parseMethod, out bool success)
+  RetType tryToParse(RetType)(RetType delegate() parseMethod, out bool success)
   {
     // Save members.
     auto oldToken     = this.token;
@@ -124,8 +124,8 @@ class Parser
     return result;
   }
 
-  /// Causes the current call to try_() to fail.
-  void try_fail()
+  /// Causes the current call to tryToParse() to fail.
+  void fail_tryToParse()
   {
     assert(trying);
     errorCount++;
@@ -1317,7 +1317,7 @@ class Parser
         version(D2)
         {
         bool success;
-        type = try_({ // Type Identifier "=" AssignExpression
+        type = tryToParse({ // Type Identifier "=" AssignExpression
           return parseDeclarator(name);
         }, success);
         } // version(D2)
@@ -1918,7 +1918,7 @@ class Parser
       goto case T.Dot;
     case T.Dot, T.Typeof:
       bool success;
-      d = try_({ return parseVariableOrFunction(); }, success);
+      d = tryToParse({ return parseVariableOrFunction(); }, success);
       if (success)
         goto LreturnDeclarationStatement; // Declaration
       else
@@ -2090,7 +2090,7 @@ class Parser
         // Assert that this isn't a valid expression.
         assert(delegate bool(){
             bool success;
-            auto expression = try_(&parseExpression, success);
+            auto expression = tryToParse(&parseExpression, success);
             return success;
           }() == false, "Didn't expect valid expression."
         );
@@ -2325,7 +2325,7 @@ class Parser
     else
     { // Declarator "=" Expression
       bool success;
-      auto type = try_({
+      auto type = tryToParse({
         auto type = parseDeclarator(ident);
         require(T.Assign);
         return type;
@@ -3739,7 +3739,7 @@ class Parser
         goto default;
       // "(" Type ")" "." Identifier
       bool success;
-      auto type = try_({
+      auto type = tryToParse({
         skip(T.LParen); // "("
         auto type = parseType(); // Type
         require(T.RParen); // ")"
@@ -4444,7 +4444,7 @@ class Parser
         require(T.RBracket);
         return type;
       }
-      auto assocType = try_(&parseAAType, success);
+      auto assocType = tryToParse(&parseAAType, success);
       if (success)
         t = new ArrayType(t, assocType);
       else
@@ -4623,7 +4623,7 @@ class Parser
       auto targs = new TemplateArguments;
       auto begin = token;
       bool success;
-      auto typeArg = try_({
+      auto typeArg = tryToParse({
         // Don't parse a full Type. TODO: restrict further?
         return parseBasicType();
       }, success);
@@ -4662,14 +4662,14 @@ class Parser
     assert(0);
   }
 
-  /// Used with method try_().
+  /// Used with method tryToParse().
   /// $(BNF TypeArgument := Type (?= "," | "$(RP)"))
   Type parseTypeArgument()
   {
     auto type = parseType();
     if (token.kind == T.Comma || token.kind == T.RParen)
       return type;
-    try_fail();
+    fail_tryToParse();
     return null;
   }
 
@@ -4682,7 +4682,7 @@ class Parser
     while (token.kind != T.RParen)
     {
       bool success;
-      auto typeArgument = try_(&parseTypeArgument, success);
+      auto typeArgument = tryToParse(&parseTypeArgument, success);
       if (success) // TemplateArgument := Type | Symbol
         targs ~= typeArgument;
       else // TemplateArgument := AssignExpression
@@ -4778,7 +4778,7 @@ class Parser
         Node parseExpOrType()
         {
           bool success;
-          auto typeArgument = try_(&parseTypeArgument, success);
+          auto typeArgument = tryToParse(&parseTypeArgument, success);
           return success ? typeArgument : parseCondExpression();
         }
         if (consumed(T.Colon))  // ":" Specialization
