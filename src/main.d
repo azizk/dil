@@ -440,6 +440,9 @@ void main(char[][] args)
   case "?", "help":
     printHelp(args.length >= 3 ? args[2] : "");
     break;
+  case "-v", "v", "--version", "version":
+    Stdout(VERSION).newline;
+    break;
   default:
     printHelp("main");
   }
@@ -752,7 +755,8 @@ Example:
     else
     {
       auto COMPILED_WITH = __VENDOR__;
-      auto COMPILED_VERSION = Format("{}.{,:d3}", __VERSION__/1000, __VERSION__%1000);
+      auto COMPILED_VERSION = Format("{}.{,:d3}",
+        __VERSION__/1000, __VERSION__%1000);
       auto COMPILED_DATE = __TIMESTAMP__;
       msg = FormatMsg(MID.HelpMain, VERSION, COMMANDS, COMPILED_WITH,
                       COMPILED_VERSION, COMPILED_DATE);
