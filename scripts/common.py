@@ -189,7 +189,7 @@ def locate_command(command):
     if is_win32 and Path(command).ext.lower() != ".exe":
       command += ".exe" # Append extension if we're on Windows.
     PATH = os.environ['PATH'].split(Path.pathsep)
-    for path in reversed(PATH): # Search in reverse order.
+    for path in PATH:
       path = Path(path, command)
       if path.exists:
         return path
