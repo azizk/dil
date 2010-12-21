@@ -257,7 +257,7 @@ ul.tview {
   border-top: 1px dashed Gray;
 }
 
-.plink, .srclink{
+.plink, .plink:visited, .srclink, .srclink:visited {
   padding: 0em 0.2em;
   text-decoration: none;
   color: DarkRed;
@@ -279,7 +279,7 @@ h1.module:hover .srclink {
   background-color: DarkRed;
 }
 
-.symbol {
+.symbol, .symbol:visited {
   color: ForestGreen;
   text-decoration: none;
   font-weight: bold;
