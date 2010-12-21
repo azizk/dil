@@ -8,7 +8,6 @@
 import os, re
 from path import Path
 from common import *
-from sys import platform
 from build import DMDCommand, LDCCommand
 from html2pdf import PDFGenerator
 
@@ -162,7 +161,7 @@ def main():
     subprocess.call(["tar", "-xf", TARFILE.name], cwd=DEST)
     TARFILE.rm()
     if options.copy_modified:
-      modified_files = os.popen("git ls-files -m").read()[:-1]
+      modified_files = call_read(["git", "ls-files", "-m"])[:-1]
       if modified_files != "":
         for f in modified_files.split("\n"):
           Path(f).copy(DEST/f)
@@ -200,7 +199,7 @@ def main():
 
   COMPILER.use_wine = False
   use_wine = False
-  if platform is 'win32':
+  if is_win32:
     build_linux_binaries = False
     build_windows_binaries = True
   else:

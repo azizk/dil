@@ -6,17 +6,17 @@ from path import Path
 from subprocess import call
 from common import *
 from symbols import *
-from sys import platform
-
-is_win32 = (platform == "win32")
 
 def win_path(p):
-  """ Converts paths to Windows paths on non-Windows platforms. """
-  if is_win32: return p
-  return os.popen("winepath -w '"+p+"'").read()[:-1]
+  """ Converts a Unix path to a Windows path. """
+  return call_read("winepath", "-w", p)[:-1]
 
 def win_paths(ps):
   return map(win_path, ps)
+
+if is_win32: # No conversion needed if on Windows.
+  def win_path(p): return p
+  def win_paths(ps): return ps
 
 # Binary format documentation: http://www.russotto.net/chm/chmformat.html
 def generate_chm(module_files, dest, tmp, params, jsons):
@@ -169,15 +169,16 @@ def call_hhc(project_hhp):
   hhc_exe = "hhc.exe" # Assume the exe is in PATH.
 
   # Get the %ProgramFiles% environment variable.
-  call_echo = ("wine ", "")[is_win32] + "cmd.exe /c echo %ProgramFiles%"
-  program_files = os.popen(call_echo).read()[:-1] # Remove \n.
+  # "[is_win32:]" slices off "wine" if on Windows.
+  echo_cmd = ["wine", "cmd.exe", "/c", "echo", "%ProgramFiles%"][is_win32:]
+  program_files = call_read(echo_cmd)[:-1] # Remove \n.
   # See if "C:\Program Files\HTML Help Workshop\hhc.exe" exists.
   exe = program_files + "\\HTML Help Workshop\\" + hhc_exe
   # Convert back to Unix path if not on Windows.
-  if not is_win32: exe = os.popen("winepath -u '"+exe+"'").read()[:-1]
+  if not is_win32: exe = call_read("winepath", "-u", exe)[:-1]
   if Path(exe).exists: hhc_exe = exe
 
-  hhc_exe = ["wine", hhc_exe][is_win32:] # Slice off "wine" if on Windows.
+  hhc_exe = ["wine", hhc_exe][is_win32:]
 
   call(hhc_exe + [project_hhp])
 
