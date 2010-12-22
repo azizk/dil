@@ -224,6 +224,14 @@ class VersionInfo:
   def __ge__(self, other): return self.f >= other
 PyVersion = VersionInfo()
 
+def tounicode(*strings):
+  result = [].append
+  for s in strings:
+    if not isinstance(s, unicode):
+      s = str(s).decode('utf-8')
+    result(s)
+  return result.__self__
+
 def chunks(seq, n):
   """ Returns chunks of a sequence of size n. """
   return [seq[i:i+n] for i in xrange(0, len(seq), n)]
