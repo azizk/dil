@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
+from __future__ import unicode_literals
 import os, re
 from path import Path
 from common import *
@@ -132,6 +133,8 @@ def main():
     help="use Python code to handle kandil, don't pass --kandil to dil")
 
   (options, args) = parser.parse_args()
+  if type(getitem(args, 0)) == str: # Convert args to unicode.
+    args = map(lambda a: a.decode('utf-8'), args)
 
   if len(args) < 1:
     return parser.print_help()
@@ -152,7 +155,7 @@ def main():
   # Root of the Tango source code (either svn or zip.)
   TANGO     = get_tango_path(Path(args[0]).abspath)
   # Destination of doc files.
-  DEST      = doc_path(firstof(str, getitem(args, 1), 'tangodoc'))
+  DEST      = doc_path(getitem(args, 1) or 'tangodoc')
   # Temporary directory, deleted in the end.
   TMP       = (DEST/"tmp").abspath
   # Some DDoc macros for Tango.
