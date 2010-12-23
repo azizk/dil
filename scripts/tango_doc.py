@@ -35,7 +35,7 @@ def write_tango_ddoc(path, favicon, revision):
   revision = "?rev=" + revision if revision != None else ''
   favicon = "" if not favicon.exists else \
     'FAVICON = <link href="img/favicon.png" rel="icon" type="image/png"/>'
-  open(path, "w").write("""
+  open(path, "w").write(("""
 LICENSE = see $(LINK2 http://www.dsource.org/projects/tango/wiki/LibraryLicense, license.txt)
 REPOFILE = http://www.dsource.org/projects/tango/browser/trunk/$(DIL_MODPATH)%(revision)s
 EMAIL = &lt;<a href="mailto:$0">$0</a>&gt;
@@ -56,7 +56,7 @@ LE = &lt;
 GT = &gt;
 CLN = :
 %(favicon)s
-""" % locals()
+""" % locals()).encode("utf-8")
   )
 
 def write_PDF(DIL, SRC, VERSION, TMP):
@@ -99,7 +99,7 @@ def create_index(dest, prefix_path, files):
   style = "list-style-image: url(img/icon_module.png)"
   text = ("Ddoc\n<ul style='%s'>\n%s\n</ul>"
           "\nMacros:\nTITLE = Index") % (style, text)
-  open(dest, 'w').write(text)
+  open(dest, 'w').write(text.encode("utf-8"))
 
 def get_tango_path(path):
   path = firstof(Path, path, Path(path))
