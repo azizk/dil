@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
-import os, re
 
 class Module:
   def __init__(self, fqn):
@@ -141,5 +140,5 @@ def get_index(symbols):
     initial_letter = sym.name[0].upper()
     letter_dict.setdefault(initial_letter, []).append(sym) # Add to the group.
   letter_list = letter_dict.keys()
-  letter_list.sort()
+  letter_list.sort(key=unicode.lower)
   return letter_dict, letter_list
