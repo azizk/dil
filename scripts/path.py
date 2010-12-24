@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
+from __future__ import unicode_literals
 import os, shutil
 
 class Path(unicode):

@@ -38,11 +38,11 @@ def build_dil(COMPILER, *args, **kwargs):
 def update_version(path, major, minor, suffix):
   """ Updates the version info in the compiler's source code. """
   major, minor = int(major), int(minor)
-  code = open(path).read().decode("u8")
+  code = path.open().read()
   code = re.sub(r"(VERSION_MAJOR\s*=\s*)[\w\d]+;", r"\g<1>%s;" % major, code)
   code = re.sub(r"(VERSION_MINOR\s*=\s*)\d+;", r"\g<1>%s;" % minor, code)
   code = re.sub(r'(VERSION_SUFFIX\s*=\s*)"";', r'\g<1>"%s";' % suffix, code)
-  open(path, "w").write(code.encode("u8"))
+  path.open("w").write(code)
 
 def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen = PDFGenerator()
@@ -127,7 +127,9 @@ def main():
   m = re.match(r"((\d)\.(\d\d\d)(-\w+)?)", args[0])
   if not m:
     parser.error("invalid VERSION; format: /\d.\d\d\d(-\w+)?/ E.g.: 1.123")
-  matched = m.groups()
+  # The version of dil to be built.
+  VERSION, V_MAJOR, V_MINOR, V_SUFFIX = m.groups()
+  V_SUFFIX = V_SUFFIX or ''
 
   # Pick a compiler for compiling dil.
   CmdClass = (DMDCommand, LDCCommand)[options.ldc]
@@ -139,12 +141,9 @@ def main():
 
   # Path to dil's root folder.
   DIL       = dil_path()
-  # The version of dil to be built.
-  VERSION, V_MAJOR = matched[:2]
-  V_MINOR, V_SUFFIX = (matched[2], firstof(str, matched[3], ''))
 
   # Build folder.
-  BUILD_DIR = Path(firstof(str, options.builddir, "build"))
+  BUILD_DIR = Path(options.builddir or "build")
   # Destination of distributable files.
   DEST      = dil_path(BUILD_DIR/("dil."+VERSION), dilconf=False)
   BIN       = DEST.BIN # Shortcut to the bin/ folder.

@@ -37,11 +37,11 @@ def append2PATH(paths, tmp_path):
     #var_type = 'str(2)'
   # Write to "tmp_path/newpath.reg".
   tmp_reg = Path(tmp_path)/"newpath.reg"
-  open(tmp_reg, "w").write(("""Windows Registry Editor Version 5.00\r
+  tmp_reg.open("w", "utf-16").write("""Windows Registry Editor Version 5.00\r
 \r
 [HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\
 Control\\Session Manager\\Environment]\r
-"Path"=%s:%s\r\n""" % (var_type, NEW_PATH)).encode('utf-16'))
+"Path"=%s:%s\r\n""" % (var_type, NEW_PATH))
 
   # 4. Apply the reg file to the registry. "/s" means run silently.
   regedit = ["wine", "regedit.exe", "/s", tmp_reg][is_win32:]

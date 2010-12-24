@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
-#from __future__ import unicode_literals
-from __future__ import print_function
+from __future__ import unicode_literals, print_function
 import os, re, sys
 import subprocess
 from path import Path
@@ -209,9 +208,9 @@ def build_dil_if_inexistant(dil_exe):
       raise Exception("can't proceed without dil executable")
 
 def call_read(args, **kwargs):
-  """ Calls a process and returns the contents of stdout. """
+  """ Calls a process and returns the contents of stdout in Unicode. """
   kwargs = dict({'stdout':subprocess.PIPE}, **kwargs)
-  return subprocess.Popen(args, **kwargs).communicate()[0]
+  return subprocess.Popen(args, **kwargs).communicate()[0].decode('u8')
 
 class VersionInfo:
   from sys import version_info as vi

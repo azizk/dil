@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
-from __future__ import print_function
+from __future__ import unicode_literals, print_function
 from common import *
 from html2pdf import PDFGenerator
 
 def modify_std_ddoc(std_ddoc, phobos_ddoc, version):
   """ Modify std.ddoc and write it out to phobos.ddoc. """
-  ddoc = open(std_ddoc).read() # Read the whole file.
+  ddoc = std_ddoc.open().read() # Read the whole file.
   # Add a website icon.
   ddoc = re.sub(r"</head>", '<link rel="icon" type="image/gif" href="./holy.gif">\r\n</head>', ddoc)
   # Make "../" to "./".
@@ -26,7 +26,7 @@ def modify_std_ddoc(std_ddoc, phobos_ddoc, version):
   # Add a link to the index in the navigation sidebar.
   ddoc = re.sub('(NAVIGATION_PHOBOS=\r\n<div class="navblock">)', '\\1\r\n$(UL\r\n$(LI<a href="index.html" title="Index of all HTML files">Index</a>)\r\n)', ddoc)
   # Write new ddoc file.
-  open(phobos_ddoc, "w").write(ddoc)
+  phobos_ddoc.open("w").write(ddoc)
 
 # Create an index file.
 def create_index_file(index_d, prefix_path, FILES):
@@ -35,7 +35,7 @@ def create_index_file(index_d, prefix_path, FILES):
     fqn = get_module_fqn(prefix_path, filepath)
     text += '  <li><a href="{0}.html">{0}.html</a></li>\n'.format(fqn)
   text = "Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % text
-  open(index_d, 'w').write(text)
+  index_d.open("w").write(text)
 
 def copy_files(DIL, PHOBOS, DEST, use_kandil):
   """ Copies required files to the destination folder. """
@@ -61,19 +61,20 @@ def copy_files_kandil(DIL, PHOBOS, DEST):
 
 def modify_phobos_html(phobos_html, version):
   """ Modifys DEST/phobos.html. """
-  ddoc = open(phobos_html).read() # Read the whole file.
+  ddoc = phobos_html.open().read() # Read the whole file.
   # Make relative links to absolute links.
   ddoc = ddoc.replace("../", "http://www.digitalmars.com/d/%s/" % version)
   # Make e.g. "std_string.html" to "std.string.html".
-  ddoc = re.sub("href=\"std_[^\"]+\"", lambda m: m.group(0).replace("_", "."), ddoc)
+  ddoc = re.sub("href=\"std_[^\"]+\"",
+    lambda m: m.group(0).replace("_", "."), ddoc)
   # De-linkify the title.
   ddoc = re.sub("<h1><a[^>]+>(.+?)</a></h1>", "<h1>\\1</h1>", ddoc)
   # Write the contents back to the file.
-  open(phobos_html, "w").write(ddoc)
+  phobos_html.open("w").write(ddoc)
 
 def write_missing_macros(path):
   """ These macros are missing in std.ddoc. """
-  open(path, "w").write("""WIKI =
+  path.open("w").write("""WIKI =
 COMMENT = <!-- -->
 D = $0
 DOLLAR = $
@@ -104,7 +105,7 @@ DIL_SYMBOL = <a href="$(SRCFILE)#L$4" class="sym$3" name="$2" title="At line $4.
     macros = """
 COPYRIGHT = Copyright © 1999-2009 by Digital Mars ®, All Rights Reserved.
 """
-  open(path, "w").write(macros)
+  path.open("w").write(macros)
 
 def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen = PDFGenerator()
@@ -144,7 +145,7 @@ def main():
   parser.add_option("--kandil", dest="use_kandil", action="store_true",
     default=False, help="use kandil as the documentation front-end")
 
-  (options, args) = parser.parse_args()
+  (options, args) = parser.parse_args(sys.uargv[1:])
 
   if len(args) < 2:
     return parser.print_help()
@@ -155,10 +156,8 @@ def main():
   m = re.match(r"((\d)\.(\d\d\d))", args[0])
   if not m:
     parser.error("invalid VERSION; format: /\d.\d\d\d/ E.g.: 1.123")
-  matched = m.groups()
   # Extract the version strings.
-  VERSION, V_MAJOR = matched[:2]
-  V_MINOR = matched[2]
+  VERSION, V_MAJOR, V_MINOR = m.groups()
   D_VERSION  = V_MAJOR + ".0" # E.g.: 1.0 or 2.0
 
   # Initialize some path variables.
@@ -169,7 +168,7 @@ def main():
   # Path to the html folder of Phobos.
   PHOBOS_SRC.HTML = PHOBOS_SRC/".."/".."/"html"/"d"/"phobos"
   # Destination of doc files.
-  DEST        = doc_path(firstof(str, getitem(args, 2), 'phobosdoc'))
+  DEST        = doc_path(getitem(args, 2) or 'phobosdoc')
   # Temporary directory, deleted in the end.
   TMP         = DEST/"tmp"
   # The list of module files (with info) that have been processed.

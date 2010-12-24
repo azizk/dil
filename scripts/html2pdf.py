@@ -158,7 +158,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   # Add module page-break rules to pdf.css.
   # ---------------------------------------
   if newpage_modules:
-    f = open(tmp/params["css_file"], "r+")
+    f = (tmp/params["css_file"]).open("r+")
     module_page_breaks = "\n".join([
       "h1.module[id=m-%s] { page-break-before: always; }" % fqn
         for fqn in newpage_modules])
@@ -176,7 +176,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   package_tree = PackageTree()
 
   for html_file in module_files:
-    html_str = open(html_file).read().decode("utf-8")
+    html_str = html_file.open().read()
     # Extract module FQN.
     module_fqn = Path(html_file).namebase
 
@@ -211,14 +211,8 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   # ------------------------
   print("Joining HTML fragments into a single file.")
   html_src = tmp/("html2pdf.%s" % x_html.lower())
-  html_doc = open(html_src, "w")
-
-  def write(text):
-    """ Passes text encoded as UTF-8 to a writer function. """
-    if type(text) == unicode: # 'str' objects are assumed to be in UTF-8.
-      text = text.encode("utf-8")
-    write.out(text)
-  write.out = html_doc.write
+  html_doc = html_src.open("w")
+  write = html_doc.write
 
   # Write the head of the document.
   params = dict(params, doctype="", xmlns="")
@@ -248,19 +242,19 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
 
   # Write the Table of Contents.
   # ----------------------------
-  def write_module_tree(pckg):
+  def write_module_tree(pckg): # \xA0 = &nbsp;
     write('\n<ul>')
     for p in pckg.packages:
       write(('<li kind="p">'
         '<img src="img/icon_package.svg" class="icon" width="16" height="16"/>'
-        ' <a href="#p-%s">%s</a>') % (p.fqn, p.name))
+        '\xA0<a href="#p-%s">%s</a>') % (p.fqn, p.name))
       if len(p.packages) or len(p.modules):
         write_module_tree(p)
       write('</li>\n')
     for m in pckg.modules:
       write(('<li kind="m">'
         '<img src="img/icon_module.svg" class="icon" width="14" height="14"/>'
-        ' <a href="#m-%s">%s</a></li>') % (m.fqn, m.name))
+        '\xA0<a href="#m-%s">%s</a></li>') % (m.fqn, m.name))
     write('</ul>\n')
 
   if first_toc:
@@ -311,7 +305,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   if before_files:
     write('<div class="before_pages">')
     for f in before_files:
-      write(open(f).read())
+      write(Path(f).open().read())
     write('</div>')
 
   write('<div id="module-pages">\n')
@@ -325,7 +319,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   if after_files:
     write('<div class="after_pages">')
     for f in after_files:
-      write(open(f).read())
+      write(Path(f).open().read())
     write('</div>')
 
   # Prepare indices:
@@ -365,7 +359,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   call_prince(html_src, dest)
 
 def call_prince(src, dest):
-  call(["prince", src, "-o", dest, "-v"])
+  subprocess.call(["prince", src, "-o", dest, "-v"])
 
 class PDFGenerator:
   def fetch_files(self, SRC, TMP):

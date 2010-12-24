@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
-from __future__ import print_function
+from __future__ import unicode_literals, print_function
 from common import *
 
 class Command:

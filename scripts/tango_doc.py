@@ -22,18 +22,16 @@ def copy_files(DIL, TANGO, DEST):
     img.copy(DEST.IMG)
 
 def get_tango_version(path):
-  for line in open(path):
-    m = re.search("Major\s*=\s*(\d+)", line)
-    if m: major = int(m.group(1))
-    m = re.search("Minor\s*=\s*(\d+)", line)
-    if m: minor = int(m.group(1))
+  txt = path.open().read()
+  numbers = re.findall("(?:Major|Minor)\s*=\s*(\d+)", txt)
+  major, minor = map(int, numbers) # Convert the two strings to integers.
   return "%s.%s.%s" % (major, minor/10, minor%10)
 
 def write_tango_ddoc(path, favicon, revision):
   revision = "?rev=" + revision if revision != None else ''
   favicon = "" if not favicon.exists else \
     'FAVICON = <link href="img/favicon.png" rel="icon" type="image/png"/>'
-  open(path, "w").write(("""
+  path.open("w").write("""
 LICENSE = see $(LINK2 http://www.dsource.org/projects/tango/wiki/LibraryLicense, license.txt)
 REPOFILE = http://www.dsource.org/projects/tango/browser/trunk/$(DIL_MODPATH)%(revision)s
 EMAIL = &lt;<a href="mailto:$0">$0</a>&gt;
@@ -54,7 +52,7 @@ LE = &lt;
 GT = &gt;
 CLN = :
 %(favicon)s
-""" % locals()).encode("utf-8")
+""" % locals()
   )
 
 def write_PDF(DIL, SRC, VERSION, TMP):
@@ -97,7 +95,7 @@ def create_index(dest, prefix_path, files):
   style = "list-style-image: url(img/icon_module.png)"
   text = ("Ddoc\n<ul style='%s'>\n%s\n</ul>"
           "\nMacros:\nTITLE = Index") % (style, text)
-  open(dest, 'w').write(text.encode("utf-8"))
+  dest.open('w').write(text)
 
 def get_tango_path(path):
   path = firstof(Path, path, Path(path))
@@ -130,9 +128,7 @@ def main():
   parser.add_option("--pykandil", dest="pykandil", default=False, action="store_true",
     help="use Python code to handle kandil, don't pass --kandil to dil")
 
-  (options, args) = parser.parse_args()
-  if type(getitem(args, 0)) == str: # Convert args to unicode.
-    args = map(lambda a: a.decode('utf-8'), args)
+  (options, args) = parser.parse_args(sys.uargv[1:])
 
   if len(args) < 1:
     return parser.print_help()

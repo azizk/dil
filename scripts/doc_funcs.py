@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
-from __future__ import print_function
+from __future__ import unicode_literals, print_function
 import re
 
 def insert_svn_info(FILES, SRC_ROOT, DEST,
@@ -45,10 +45,11 @@ def insert_svn_info(FILES, SRC_ROOT, DEST,
       print("Warning: file inexistent: '%s'. Not adding SVN info to it." % path)
       continue
     # 3. Open the file in update mode.
-    f = open(path, "r+")
+    # No encoding is used to make seeking and inserting uncomplicated.
+    f = path.open("r+", encoding=None)
     text = f.read()
     # 4. Find the insertion position.
-    div = '<div id="kandil-footer">'
+    div = '<div id="kandil-footer">'.encode("u8")
     insert_pos = text.rfind(div) + len(div) + 1
     text = text[insert_pos:] # Store the rest of the file.
     # 5. Insert the new content.
@@ -56,7 +57,7 @@ def insert_svn_info(FILES, SRC_ROOT, DEST,
     fmt_args = file_infos[i]
     f.write(template.format(*fmt_args,
       author_link=author_link.format(fmt_args[0]),
-      rev_link=rev_link.format(src_file, fmt_args[1])))
+      rev_link=rev_link.format(src_file, fmt_args[1])).encode("u8"))
     # 6. Write the rest back and close.
     f.write(text)
     f.close()

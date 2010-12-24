@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
+from __future__ import unicode_literals
 
 class Module:
   def __init__(self, fqn):
@@ -91,7 +92,7 @@ def get_symbols(jsons, module_fqn, categorize=True):
 
   import json
   json_path = jsons/(module_fqn+".json")
-  json_text = open(json_path).read()
+  json_text = json_path.open().read()
   arrayTree = json.loads(json_text)
 
   symbol_dict = {}
@@ -99,8 +100,11 @@ def get_symbols(jsons, module_fqn, categorize=True):
 
   def visit(s, fqn):
     name = s[0]
-    d = {'name': name, 'kind': SymKind[s[1]],
-      'attrs': [SymAttr[x] for x in s[2]], 'loc': s[3], 'modfqn': module_fqn}
+    d = {
+      'name': name, 'kind': SymKind[s[1]],
+      'attrs': [SymAttr[x] for x in s[2]],
+      'loc': s[3], 'modfqn': module_fqn
+    }
 
     # E.g.: 'tango.core' + '.' + 'Thread'
     fqn += ("." if fqn != "" else "") + name

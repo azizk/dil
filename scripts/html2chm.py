@@ -178,7 +178,7 @@ def call_hhc(project_hhp):
 
   hhc_exe = ["wine", hhc_exe][is_win32:]
 
-  call(hhc_exe + [project_hhp])
+  subprocess.call(hhc_exe + [project_hhp])
 
 class CHMGenerator:
   def fetch_files(self, SRC, TMP):
