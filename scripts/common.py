@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
+#from __future__ import unicode_literals
+from __future__ import print_function
 import os, re, sys
 import subprocess
 from path import Path
@@ -166,11 +168,11 @@ def create_archives(opts, src, dest, cwd):
     if not getattr(opts, which, False): continue
     cmd = cmd.split(' ') # Split into array as call() requires it.
     if not locate_command(cmd[0]):
-      print "Error: the utility '%s' is not in your PATH." % cmd[0]
+      print("Error: the utility '%s' is not in your PATH." % cmd[0])
       continue
     cmd[-1] = cmd[-1] % {'name':dest} # Format the destination parameter.
     cmd += [src] # Append the src parameter.
-    print "\n", " ".join(cmd)
+    print("\n", " ".join(cmd))
     subprocess.call(cmd, cwd=cwd) # Call the program.
 
 def load_pymodules(folder):

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
+from __future__ import print_function
 from common import *
 
 class Command:
@@ -112,12 +113,12 @@ def build_dil(cmd_kwargs):
     exe_dest = None
   cmd = Command(FILES, exe_dest, **cmd_kwargs)
   cmd.use_wine = use_wine
-  print cmd
+  print(cmd)
   try:
     cmd.call()
   except OSError as e:
     if e.errno == 2:
-      print "Error: command not found: '%s'" % e.exe
+      print("Error: command not found: '%s'" % e.exe)
 
 
 def build_dil_release(**kwargs):

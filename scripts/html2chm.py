@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
-import os, re
-from path import Path
-from subprocess import call
+from __future__ import print_function
 from common import *
 from symbols import *
 
@@ -160,7 +158,7 @@ Title=%(title)s
   f.close()
 
   # Finally write the CHM file.
-  print "Writing CHM file to '%s'." % dest
+  print("Writing CHM file to '%s'." % dest)
   call_hhc(win_path(hhp))
 
 # A script to install HHW on Linux is located here:

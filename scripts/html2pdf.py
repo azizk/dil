@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
-from __future__ import unicode_literals
-import os, re
-from path import Path
-from subprocess import call
+from __future__ import unicode_literals, print_function
 from common import *
 from symbols import *
 from time import gmtime, strftime
-
 
 def write_bookmarks(write, package_tree, all_symbols, index):
   """ Notice how the li-tag has only the link and label attribute
@@ -173,7 +169,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
 
   # Prepare the HTML fragments.
   # ---------------------------
-  print "Preparing HTML fragments."
+  print("Preparing HTML fragments.")
   # Group symbols by their kind, e.g. class, struct etc.
   cat_dict_all = {}
   # For Table of Contents, bookmarks and indices.
@@ -213,7 +209,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
 
   # Join the HTML fragments.
   # ------------------------
-  print "Joining HTML fragments into a single file."
+  print("Joining HTML fragments into a single file.")
   html_src = tmp/("html2pdf.%s" % x_html.lower())
   html_doc = open(html_src, "w")
 
@@ -365,7 +361,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   html_doc.close()
 
   # Finally write the PDF document.
-  print "Writing PDF document to '%s'." % dest
+  print("Writing PDF document to '%s'." % dest)
   call_prince(html_src, dest)
 
 def call_prince(src, dest):

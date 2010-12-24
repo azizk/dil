@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
-from __future__ import unicode_literals
-import os, re
-from path import Path
+from __future__ import unicode_literals, print_function
 from common import *
 from html2pdf import PDFGenerator
 from doc_funcs import *
@@ -140,8 +138,7 @@ def main():
     return parser.print_help()
 
   if not Path(args[0]).exists:
-    print "The path '%s' doesn't exist." % args[0]
-    return
+    return print("The path '%s' doesn't exist." % args[0])
 
   # True if --docs is given, or neither of --pdf and --7z is true.
   options.docs = options.docs or not (options.pdf or options._7z)
@@ -198,8 +195,7 @@ def main():
       DOC_FILES, versions, dil_options, cwd=DIL)
 
     if dil_retcode != 0:
-      print "Error: dil return code: %d" % dil_retcode
-      return
+      return print("Error: dil return code: %d" % dil_retcode)
 
     # 4. Post processing.
     processed_files = read_modules_list(MODLIST)
@@ -226,7 +222,7 @@ def main():
   create_archives(options, DEST.name, archive, DEST.folder.abspath)
 
   if dil_retcode == 0:
-    print "Python script finished. Exiting normally."
+    print("Python script finished. Exiting normally.")
 
 if __name__ == "__main__":
   main()

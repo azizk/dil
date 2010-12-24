@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
+from __future__ import print_function
 import re
 
 def insert_svn_info(FILES, SRC_ROOT, DEST,
@@ -21,7 +22,7 @@ def insert_svn_info(FILES, SRC_ROOT, DEST,
 <span class="svnlabel">Last Changed Date:</span>
   <span class="svndate">{2}</span></div>\n"""
 
-  print "Querying SVN..."
+  print("Querying SVN...")
 
   file_paths = [f['path'] for f in FILES]
   p = Popen(["svn", "info"] + file_paths, stdout=PIPE)
@@ -32,7 +33,7 @@ def insert_svn_info(FILES, SRC_ROOT, DEST,
   assert(len(file_infos) == len(FILES))
   SRC_ROOT = SRC_ROOT / "" # Ensure trailing '/'.
 
-  print "Inserting SVN information into the HTML files."
+  print("Inserting SVN information into the HTML files.")
 
   for i, source in enumerate(FILES):
     # 1. E.g.: /svn/tango/tango/core/BitManip.d -> tango/core/BitManip.d
@@ -41,7 +42,7 @@ def insert_svn_info(FILES, SRC_ROOT, DEST,
     #          /dest/tangodoc/tango.core.BitManip.html
     path = DEST/(source['fqn']+".html")
     if not path.exists:
-      print "Warning: file inexistent: '%s'. Not adding SVN info to it." % path
+      print("Warning: file inexistent: '%s'. Not adding SVN info to it." % path)
       continue
     # 3. Open the file in update mode.
     f = open(path, "r+")

@@ -5,7 +5,7 @@
 #
 # This is the script that creates release packages for dil.
 #
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 from common import *
 from build import DMDCommand, LDCCommand
 from html2pdf import PDFGenerator
@@ -32,7 +32,7 @@ def build_dil(COMPILER, *args, **kwargs):
   kwargs.update(exe=COMPILER)
   cmd = COMPILER.cmd(*args, **kwargs)
   cmd.use_wine = COMPILER.use_wine
-  print cmd
+  print(cmd)
   cmd.call()
 
 def update_version(path, major, minor, suffix):
@@ -119,7 +119,7 @@ def main():
   if len(args) < 1:
     return parser.print_help()
   if len(args) > 1:
-    print "Warning! Arguments ignored: " + " ".join(args[1:])
+    print("Warning! Arguments ignored: " + " ".join(args[1:]))
 
   change_cwd(__file__)
 
@@ -191,7 +191,7 @@ def main():
   # Rebuild the path object for kandil. (Images are globbed.)
   DEST.KANDIL = kandil_path(DEST/"kandil")
 
-  print "***** Copying files *****"
+  print("***** Copying files *****")
   copy_files(DEST)
 
   # Find the source code files.
@@ -204,7 +204,7 @@ def main():
   if options.docs:
     build_dil_if_inexistant(DIL.EXE)
 
-    print "***** Generating documentation *****"
+    print("***** Generating documentation *****")
     DOC_FILES = DEST.DATA//("macros_dil.ddoc", "dilconf.d") + FILES
     versions = ["DDoc"]
     generate_docs(DIL.EXE, DEST.DOC, MODLIST, DOC_FILES,
@@ -231,8 +231,8 @@ def main():
     BIN = BINPath(BIN)
     use_wine = True # Use wine on Linux to build Windows binaries.
     if not build_windows_binaries:
-      print "Error: can't build windows binaries: "\
-            "wine is not installed or not in PATH."
+      print("Error: can't build windows binaries: "
+            "wine is not installed or not in PATH.")
 
   if options.no_binaries:
     build_linux_binaries = build_windows_binaries = False
@@ -246,7 +246,7 @@ def main():
     debug_info=options.debug_symbols, lnk_args=linker_args)
 
   if build_linux_binaries:
-    print "\n***** Building Linux binaries *****\n"
+    print("\n***** Building Linux binaries *****\n")
     linker_args[0] = "-lmpfr"
     # Linux Debug Binaries
     build_dil_dbg(BIN/"dil_d")
@@ -256,7 +256,7 @@ def main():
     build_dil_rls(BIN/"dil2", versions=["D2"])
 
   if build_windows_binaries:
-    print "\n***** Building Windows binaries *****\n"
+    print("\n***** Building Windows binaries *****\n")
     COMPILER.use_wine = use_wine
     linker_args[0] = "+mpfr.lib"
     # Windows Debug Binaries

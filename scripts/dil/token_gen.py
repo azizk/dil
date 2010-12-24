@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
+from __future__ import print_function
 from sys import stdout
 
 toks = (
@@ -58,19 +59,19 @@ def main():
     else:
       line[0] += text
 
-  print "class TOK:"
+  print("class TOK:")
   stdout.write("  ")
   for tok, tokstr in tokens[:-1]:
     write('%s,' % tok, 76, "\\\n  ")
   write(tokens[-1][0]+" = range(0,%s)" % len(tokens))
   write("", flush=True)
-  print "  MAX = %s" % len(tokens)
+  print("  MAX = %s" % len(tokens))
 
   stdout.write("  str = (\n    ")
   for tok, tokstr in tokens:
     write("'%s'," % tokstr.replace("\n", "\\n"), 76, "\n    ")
   write("", flush=True)
-  print "  )"
+  print("  )")
 
 if __name__ == '__main__':
   main()

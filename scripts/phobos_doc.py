@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
-import os, re
-from path import Path
+from __future__ import print_function
 from common import *
 from html2pdf import PDFGenerator
 
@@ -181,8 +180,7 @@ def main():
   FILES       = []
 
   if not PHOBOS_SRC.exists:
-    print "The path '%s' doesn't exist." % PHOBOS_SRC
-    return
+    return print("The path '%s' doesn't exist." % PHOBOS_SRC)
 
   build_dil_if_inexistant(DIL.EXE)
 
@@ -229,7 +227,7 @@ def main():
   if options.pdf:
     if use_kandil: write_PDF(DIL, DEST, VERSION, TMP)
     else:
-      print "Warning: can only create a PDF document from kandil HTML files."
+      print("Warning: can only create a PDF document from kandil HTML files.")
 
   TMP.rmtree()
 
@@ -237,7 +235,7 @@ def main():
   create_archives(options, DEST.name, archive, DEST.folder.abspath)
 
   if dil_retcode == 0:
-    print "Python script finished. Exiting normally."
+    print("Python script finished. Exiting normally.")
 
 if __name__ == "__main__":
   main()
