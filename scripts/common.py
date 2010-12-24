@@ -224,12 +224,14 @@ class VersionInfo:
   def __ge__(self, other): return self.f >= other
 PyVersion = VersionInfo()
 
-def tounicode(*strings):
+def tounicode(*objects, **kwargs):
+  """ Converts the elements of an array to Unicode strings
+      using the optional 'encoding' kwarg as the encoding (default=UTF-8.) """
   result = [].append
-  for s in strings:
-    if not isinstance(s, unicode):
-      s = str(s).decode('utf-8')
-    result(s)
+  encoding = kwargs.get('encoding', 'u8')
+  for o in objects:
+    result(o if isinstance(o, unicode) else
+      str(o).decode(encoding))
   return result.__self__
 
 def chunks(seq, n):
