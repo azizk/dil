@@ -3,14 +3,15 @@
 # License: zlib/libpng
 import re
 
-def insert_svn_info(FILES, SRC_ROOT, DEST, rev_link, author_link, template=""):
+def insert_svn_info(FILES, SRC_ROOT, DEST,
+  rev_link, author_link, template=None):
   """ Fetches information about Tango source files using 'svn info'
     and inserts that into the generated HTML files. """
   from subprocess import Popen, PIPE
 
   rx = re.compile(u"Last Changed (?:Author|Rev|Date): (.+)")
 
-  if template == "": # Use default:
+  if template == None: # Use default:
     # {0}=Author; {1}=Revision; {2}=Date
     template = """<div class="svn_nfo"><h3 class="svnheader">SVN info:</h3>
 <span class="svnlabel">Last Author:</span> <a class="svnauthor"
