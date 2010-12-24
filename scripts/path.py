@@ -164,3 +164,8 @@ class Path(unicode):
   def glob(self, pattern):
     from glob import glob
     return map(Path, glob(unicode(self/pattern)))
+
+  def open(self, mode='rb', encoding='utf-8'):
+    """ Opens a file with an encoding (default=UTF-8.) """
+    from codecs import open
+    return open(self, mode=mode, encoding=encoding)
