@@ -10,6 +10,7 @@ from path import Path
 from common import *
 from build import DMDCommand, LDCCommand
 from html2pdf import PDFGenerator
+from html2chm import CHMGenerator
 
 def copy_files(DIL):
   """ Copies required files to the destination folder. """
@@ -63,6 +64,21 @@ def write_PDF(DIL, SRC, VERSION, TMP):
   dest = SRC/("dil.%s.API.pdf" % VERSION)
   pdf_gen.run(html_files, dest, TMP, params)
 
+def write_CHM(DIL, SRC, VERSION, TMP):
+  TMP = TMP/"chm"
+  TMP.exists or TMP.mkdir()
+
+  chm_gen = CHMGenerator()
+  chm_gen.fetch_files(DIL.DOC, TMP)
+  html_files = SRC.glob("*.html")
+  params = {
+    "title": "dil %s API" % VERSION,
+    "default_window": "main",
+    "default_topic": "dilconf.html",
+  }
+  dest = SRC/("dil.%s.API.chm" % VERSION)
+  chm_gen.run(html_files, dest, TMP, params)
+
 def main():
   from functools import partial as func_partial
   from optparse import OptionParser
@@ -80,6 +96,7 @@ def main():
   add_option("--bz2", dest="tar_bz2", help="create a tar.bz2 archive")
   add_option("--zip", dest="zip", help="create a zip archive")
   add_option("--pdf", dest="pdf", help="create a PDF document")
+  #add_option("--chm", dest="chm", help="create a CHM file")
   add_option("-m", dest="copy_modified",
     help="copy modified files from the (git) working directory")
   parser.add_option("--src", dest="src", metavar="SRC", default=None,
@@ -196,6 +213,8 @@ def main():
 
   if options.pdf:
     write_PDF(DEST, DEST.DOC, VERSION, TMP)
+  #if options.chm:
+    #write_CHM(DEST, DEST.DOC, VERSION, TMP)
 
   COMPILER.use_wine = False
   use_wine = False
