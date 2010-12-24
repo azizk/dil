@@ -234,6 +234,9 @@ def tounicode(*objects, **kwargs):
       str(o).decode(encoding))
   return result.__self__
 
+# Add a copy of args in Unicode to sys.
+sys.uargv = tounicode(*sys.argv)
+
 def chunks(seq, n):
   """ Returns chunks of a sequence of size n. """
   return [seq[i:i+n] for i in xrange(0, len(seq), n)]

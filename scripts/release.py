@@ -5,8 +5,7 @@
 #
 # This is the script that creates release packages for dil.
 #
-import os, re
-from path import Path
+from __future__ import unicode_literals
 from common import *
 from build import DMDCommand, LDCCommand
 from html2pdf import PDFGenerator
@@ -39,11 +38,11 @@ def build_dil(COMPILER, *args, **kwargs):
 def update_version(path, major, minor, suffix):
   """ Updates the version info in the compiler's source code. """
   major, minor = int(major), int(minor)
-  code = open(path).read()
+  code = open(path).read().decode("u8")
   code = re.sub(r"(VERSION_MAJOR\s*=\s*)[\w\d]+;", r"\g<1>%s;" % major, code)
   code = re.sub(r"(VERSION_MINOR\s*=\s*)\d+;", r"\g<1>%s;" % minor, code)
   code = re.sub(r'(VERSION_SUFFIX\s*=\s*)"";', r'\g<1>"%s";' % suffix, code)
-  open(path, "w").write(code)
+  open(path, "w").write(code.encode("u8"))
 
 def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen = PDFGenerator()
@@ -110,7 +109,7 @@ def main():
     help="permanently append P to PATH in the Windows (or wine's) registry. "
          "Exits the script.")
 
-  (options, args) = parser.parse_args()
+  (options, args) = parser.parse_args(sys.uargv[1:])
 
   if options.winpath != None:
     from env_path import append2PATH
