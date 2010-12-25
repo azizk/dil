@@ -48,7 +48,7 @@ def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen = PDFGenerator()
   pdf_gen.fetch_files(DIL, TMP)
   html_files = SRC.glob("*.html")
-  symlink = "http://dil.googlecode.com/svn/doc/dil_%s" % VERSION
+  sym_url = "http://dl.dropbox.com/u/17101773/doc/dil/{0}" # % VERSION
 
   params = {
     "pdf_title": "dil %s API" % VERSION,
@@ -58,7 +58,7 @@ def write_PDF(DIL, SRC, VERSION, TMP):
     "keywords": "dil D compiler API documentation",
     "x_html": "XHTML",
     "nested_toc": True,
-    "symlink": symlink
+    "sym_url": sym_url
   }
   dest = SRC/("dil.%s.API.pdf" % VERSION)
   pdf_gen.run(html_files, dest, TMP, params)

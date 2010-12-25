@@ -115,7 +115,7 @@ def write_PDF(DIL, SRC, VERSION, TMP):
   html_files = SRC.glob("*.html")
   ignore_list = ("phobos.html", "std.c.windows.windows.html", "index.html")
   html_files = filter(lambda f: f.name not in ignore_list, html_files)
-  symbol_link = "http://dil.googlecode.com/svn/doc/Phobos_%s" % VERSION
+  sym_url = "http://dl.dropbox.com/u/17101773/doc/phobos.%s/{0}" % VERSION
   params = {
     "pdf_title": "Phobos %s API" % VERSION,
     "cover_title": "Phobos %s<br/><b>API</b>" % VERSION,
@@ -123,7 +123,7 @@ def write_PDF(DIL, SRC, VERSION, TMP):
     "subject": "Programming API",
     "keywords": "Phobos D Standard Library",
     "nested_toc": True,
-    "symlink": symbol_link
+    "sym_url": sym_url
     # TODO:
     #"first_toc": "",
     #"before_files": []

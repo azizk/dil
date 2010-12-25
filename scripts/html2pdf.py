@@ -80,7 +80,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
     "keywords": "D programming language",
     "x_html": "HTML", # HTML or XHTML.
     "css_file": "pdf.css",
-    "symlink": "", # Prefix for symbol links.
+    "sym_url": "{0}", # URL for symbol links.
     "nested_toc": False, # Use nested or flat ToC.
     "first_toc": "", # (X)HTML code to put first in the ToC.
     "last_toc": "",  # (X)HTML code to put last in the ToC.
@@ -94,7 +94,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
     params["creation_date"] = strftime("%Y-%m-%dT%H:%M:%S+00:00", gmtime())
 
   x_html = params["x_html"]
-  rootURL = params["symlink"]
+  sym_url = params["sym_url"]
   nested_TOC = params["nested_toc"]
   newpage_modules = params["newpage_modules"]
   before_files = params["before_files"]
@@ -113,7 +113,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   # The callback function for anchor_tag_rx.
   # ----------------------------------------
   module_fqn = ''
-  def fix_link(m):
+  def rewrite_link_tag(m):
     """ Get's a match object. Fixes the attributes and returns the a-tag. """
     attrs = m.group(1)
     # [1:-1] strips the quotes.
@@ -128,16 +128,15 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
       if href[:2] == "#L" and href[2:3].isdigit():
         # If line number of a code example.
         attrs = {} # Delete all attributes. No use in the PDF.
-      elif href.find("://") == -1: # If relative link:
+      elif href.find("://") == -1 or href[:2] == '//': # If relative link:
         if href[:8] == "htmlsrc/":
-          if symclass_rx.search(clas): # Is this a symbol?
-            href = rootURL + '/' + module_fqn + '.html'
+          if symclass_rx.search(clas): # Is this class="symbol"?
+            href = module_fqn + '.html'
             if name != None: # h1>a tags don't have this attr.
               href += '#' + name
               attrs['name'] = 'm-%s:'%module_fqn + name
           else: # Just a normal link to a source file.
-            href = rootURL + '/' + href
-          attrs['href'] = href
+            pass #href = sym_url.format(href)
         else: # Links to symbols, or user links.
           m = symhref_rx.match(href)
           if m:
@@ -146,9 +145,10 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
               link_fqn = link_fqn or module_fqn
               symname = ':'+symname if symname else ''
               href = '#m-'+link_fqn + symname
-            else:
-              href = rootURL + '/' + href # Prefix user URLs with rootURL.
-          attrs['href'] = href
+            else: # Other URLs.
+              pass #href = sym_url.format(href)
+        # Finally format the URL.
+        attrs['href'] = sym_url.format(href)
     elif name != None: # Prefix with module_fqn to make it unique.
       attrs['name'] = 'm-%s:'%module_fqn + name
     # Finally join the attributes together and return the tag.
@@ -182,7 +182,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
     module_fqn = Path(html_file).namebase
 
     # Fix the links.
-    html_str = anchor_tag_rx.sub(fix_link, html_str)
+    html_str = anchor_tag_rx.sub(rewrite_link_tag, html_str)
 
     # Get symbols list.
     sym_dict, cat_dict = get_symbols(jsons, module_fqn)

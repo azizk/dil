@@ -71,8 +71,8 @@ def write_PDF(DIL, SRC, VERSION, TMP):
     logo_file.copy(TMP)
     logo = "<br/><br/><img src='%s'/>" % logo_file.name
   # Go to this URL when a D symbol is clicked.
-  #symlink = "http://dil.googlecode.com/svn/doc/Tango_%s" % VERSION
-  symlink = "http://www.dsource.org/projects/tango/docs/" + VERSION
+  #sym_url = "http://dl.dropbox.com/u/17101773/doc/tango.%s/{0}" % VERSION
+  sym_url = "http://www.dsource.org/projects/tango/docs/%s/{0}" % VERSION
   params = {
     "pdf_title": "Tango %s API" % VERSION,
     "cover_title": "Tango %s<br/><b>API</b>%s" % (VERSION, logo),
@@ -81,7 +81,7 @@ def write_PDF(DIL, SRC, VERSION, TMP):
     "keywords": "Tango standard library API documentation",
     "x_html": "HTML",
     "nested_toc": True,
-    "symlink": symlink
+    "sym_url": sym_url
   }
   pdf_file = SRC/("Tango.%s.API.pdf" % VERSION)
   pdf_gen.run(html_files, pdf_file, TMP, params)
