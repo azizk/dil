@@ -1,3 +1,4 @@
+#! /usr/bin/python
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
 # License: zlib/libpng
@@ -372,3 +373,43 @@ class PDFGenerator:
     html_files = args[0]
     args += (html_files[0].folder/"symbols",)
     generate_pdf(*args)
+
+def main():
+  from optparse import OptionParser
+  import json
+
+  usage = "Usage: %s SOURCE_DIR PDF_FILE" % tounicode(__file__)
+  parser = OptionParser(usage=usage)
+  parser.add_option("--params", dest="params", metavar="JSON", default=None,
+    help="pass parameters to the generator as a JSON string")
+
+  (opts, args) = parser.parse_args(sys.uargv[1:])
+
+  if not opts.params:
+    parser.error("missing argument --params")
+  if len(args) < 1:
+    parser.error("missing argument SOURCE_DIR")
+  if len(args) < 2:
+    parser.error("missing argument PDF_FILE")
+
+  try:
+    params = json.loads(opts.params)
+  except ValueError as e:
+    parser.error("--params=JSON: %s" % e)
+
+  SRC = Path(args[0])
+  DIL = dil_path()
+  DEST_PDF = doc_path(args[1])
+  TMP = DEST_PDF.folder/"pdf_tmp"
+  TMP.mkdirs()
+
+  pdf_gen = PDFGenerator()
+  pdf_gen.fetch_files(DIL, TMP)
+  html_files = SRC.glob("*.html")
+  pdf_gen.run(html_files, DEST_PDF, TMP, params)
+
+  TMP.rmtree()
+
+if __name__ == "__main__":
+  main()
+
