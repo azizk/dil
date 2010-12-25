@@ -42,7 +42,7 @@ class Path(unicode):
     return Path(path + unicode(self))
 
   def __repr__(self):
-    return u"Path(%s)" % unicode.__repr__(self)
+    return "Path(%s)" % unicode.__repr__(self)
 
   @property
   def name(self):

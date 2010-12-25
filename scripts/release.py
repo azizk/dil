@@ -53,7 +53,7 @@ def write_PDF(DIL, SRC, VERSION, TMP):
   params = {
     "pdf_title": "dil %s API" % VERSION,
     "cover_title": "dil %s<br/><b>API</b>" % VERSION,
-    "author": u"Aziz Köksal",
+    "author": "Aziz Köksal",
     "subject": "Compiler API",
     "keywords": "dil D compiler API documentation",
     "x_html": "XHTML",
