@@ -137,8 +137,8 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
             if name != None: # h1>a tags don't have this attr.
               href += '#' + name
               attrs['name'] = 'm-%s:'%module_fqn + name
-          else: # Just a normal link to a source file.
-            pass #href = sym_url.format(href)
+          #else: pass # Just a normal link to a source file.
+          href = sym_url.format(href) # Format for both cases.
         else: # Links to symbols, or user links.
           m = symhref_rx.match(href)
           if m:
@@ -148,9 +148,9 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
               symname = ':'+symname if symname else ''
               href = '#m-'+link_fqn + symname
             else: # Other URLs.
-              pass #href = sym_url.format(href)
-        # Finally format the URL.
-        attrs['href'] = sym_url.format(href)
+              href = sym_url.format(href)
+        # Finally assign the URL to its attribute.
+        attrs['href'] = href
     elif name != None: # Prefix with module_fqn to make it unique.
       attrs['name'] = 'm-%s:'%module_fqn + name
     # Finally join the attributes together and return the tag.
