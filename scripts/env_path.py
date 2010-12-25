@@ -6,19 +6,20 @@ from __future__ import unicode_literals
 def append2PATH(paths, tmp_path):
   """ Appends the given argument to the PATH in the registry.
       The paths argument can contain multiple paths separated by ';'. """
-  from common import is_win32, Path, call_read, subprocess, chunks, tounicode
-  paths, tmp_path = tounicode(paths, tmp_path)
+  from common import is_win32, Path, call_read, subprocess, \
+    chunks, tounicode, tounicodes
+  paths, tmp_path = tounicodes((paths, tmp_path))
   sep = ";"
   path_list = paths.split(sep)
 
   # 1. Get the current PATH value.
   echo_cmd = ["wine", "cmd.exe", "/c", "echo", "%PATH%"][is_win32:]
   CUR_PATH = call_read(echo_cmd).rstrip('\r\n') # Remove trailing \r\n.
-  CUR_PATH = tounicode(CUR_PATH)[0]
+  CUR_PATH = tounicode(CUR_PATH)
   if not is_win32 and '/' in paths: # Convert the Unix paths to Windows paths.
     winepath = lambda p: call_read(["winepath", "-w", p])[:-1]
     path_list = map(winepath, path_list)
-    path_list = tounicode(*path_list)
+    path_list = tounicodes(path_list)
 
   # 2. Avoid appending the same path(s) again. Strip '\' before comparing.
   op_list = [p.rstrip('\\') for p in CUR_PATH.split(sep)]

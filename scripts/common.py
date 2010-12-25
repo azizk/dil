@@ -225,18 +225,21 @@ class VersionInfo:
   def __ge__(self, other): return self.f >= other
 PyVersion = VersionInfo()
 
-def tounicode(*objects, **kwargs):
+def tounicode(o, encoding='u8'):
+  return (o if isinstance(o, unicode)
+          else str(o).decode(encoding))
+
+def tounicodes(objects, encoding='u8'):
   """ Converts the elements of an array to Unicode strings
       using the optional 'encoding' kwarg as the encoding (default=UTF-8.) """
   result = [].append
-  encoding = kwargs.get('encoding', 'u8')
   for o in objects:
-    result(o if isinstance(o, unicode) else
-      str(o).decode(encoding))
+    result(o if isinstance(o, unicode)
+           else str(o).decode(encoding))
   return result.__self__
 
 # Add a copy of args in Unicode to sys.
-sys.uargv = tounicode(*sys.argv)
+sys.uargv = tounicodes(sys.argv)
 
 def chunks(seq, n):
   """ Returns chunks of a sequence of size n. """
