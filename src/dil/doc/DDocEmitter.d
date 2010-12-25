@@ -1013,7 +1013,7 @@ override:
   {
     if (!ddoc(d))
       return;
-    DECL({ SYMBOL("\1DIL_KW new\2", K.New, d); writeParams(d.params); }, d);
+    DECL({ SYMBOL("new", K.New, d); writeParams(d.params); }, d);
     DESC();
   }
 
@@ -1021,8 +1021,7 @@ override:
   {
     if (!ddoc(d))
       return;
-    DECL({ SYMBOL("\1DIL_KW delete\2", K.Delete, d);
-      writeParams(d.params); }, d);
+    DECL({ SYMBOL("delete", K.Delete, d); writeParams(d.params); }, d);
     DESC();
   }
 
