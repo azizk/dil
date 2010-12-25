@@ -8,19 +8,29 @@ class Module:
     self.pckg_fqn, sep, self.name = fqn.rpartition('.')
     self.fqn = fqn
     self.sym_dict = {}
+
   def __cmp__(self, other):
     result = cmp(self.name.lower(), other.name.lower())
     if result == 0: # Compare fqn if the names are equal.
       result = cmp(self.fqn.lower(), other.fqn.lower())
     return result
+
   @property
   def symbolTree(self):
     return self.sym_dict['']
+
+  @property
+  def link(self):
+    return "#m-" + self.fqn
 
 class Package(Module): # Inherit for convenience.
   def __init__(self, fqn):
     Module.__init__(self, fqn)
     self.packages, self.modules = ([], [])
+
+  @property
+  def link(self):
+    return "#p-" + self.fqn
 
 class PackageTree:
   from bisect import bisect_left
@@ -67,6 +77,7 @@ class Symbol:
   @property
   def beg(self):
     return self.loc[0]
+
   @property
   def end(self):
     return self.loc[1]
