@@ -15,10 +15,12 @@ def write_bookmarks(write, package_tree, all_symbols, index):
   "display:none;".
   Using this technique it is possible to work around this shortcoming. """
 
+  def li(link, label): return '<li link="%s" label="%s">' % (link, label)
+
   def write_symbol_tree(symbol):
     write('<ul>\n')
     for s in symbol.sub:
-      write('<li link="%s" label="%s">' % (s.link, s.name))
+      write(li(s.link, s.name))
       if len(s.sub): write_symbol_tree(s)
       write('</li>\n')
     write('</ul>\n')
@@ -26,12 +28,12 @@ def write_bookmarks(write, package_tree, all_symbols, index):
   def write_module_tree(pckg):
     write('<ul>\n')
     for p in pckg.packages:
-      write('<li link="%s" label="%s">' % (p.link, p.name))
+      write(li(p.link, p.name))
       if len(p.packages) or len(p.modules):
         write_module_tree(p)
       write('</li>\n')
     for m in pckg.modules:
-      write('<li link="%s" label="%s">' % (m.link, m.name))
+      write(li(m.link, m.name))
       write_symbol_tree(m.symbolTree)
       write('</li>\n')
     write('</ul>\n')
@@ -44,7 +46,7 @@ def write_bookmarks(write, package_tree, all_symbols, index):
   write('</li>\n') # Close Module Tree.
   write('<li link="#module-pages" label="Module List"><ul>')
   for m in package_tree.modules:
-    write('<li link="%s" label="%s">' % (m.link, m.name))
+    write(li(m.link, m.name))
     write_symbol_tree(m.symbolTree)
     write('</li>\n')
   write('</ul></li>') # Close Module List.
@@ -59,9 +61,9 @@ def write_bookmarks(write, package_tree, all_symbols, index):
     symbol_letter = s.name[0].upper()
     if symbol_letter != current_letter:
       current_letter = symbol_letter
-      write('<li link="#index-syms-%s" label="%s:"></li>' %
+      write('<li link="#index-syms-%s" label="(%s)"></li>' %
             ((current_letter,)*2))
-    write('<li link="%s" label="%s">' % (s.link, s.name))
+    write(li(s.link, s.name))
     write_symbol_tree(s)
     write('</li>')
   write('</ul>')
