@@ -82,7 +82,7 @@ def main():
   from functools import partial as func_partial
   from optparse import OptionParser
 
-  usage = "Usage: scripts/release.py VERSION [Options]"
+  usage = "Usage: %s VERSION [Options]" % tounicode(__file__)
   parser = OptionParser(usage=usage)
   add_option = func_partial(parser.add_option, action="store_true",
                             default=False)

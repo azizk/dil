@@ -134,9 +134,10 @@ def main():
   from optparse import OptionParser
   import sys
 
-  usage = """Usage: scripts/build.py [Options]
+  usage = """Usage: %s [Options]
 
-    Options after the string '--' are forwarded to the compiler."""
+    Options after the string '--' are forwarded to the compiler.""" \
+    % tounicode(__file__)
   parser = OptionParser(usage=usage)
   parser.add_option(
     "--release", dest="release", action="store_true", default=False,
@@ -154,7 +155,7 @@ def main():
   parser.add_option("--wine", dest="wine", action="store_true", default=False,
     help="use wine to build a Windows binary on Linux")
 
-  args, other_args = sys.argv[1:], []
+  args, other_args = sys.uargv[1:], []
   try:
     i = args.index("--")
     args, other_args = args[:i], args[i+1:]

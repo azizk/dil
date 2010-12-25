@@ -112,7 +112,7 @@ def get_tango_path(path):
 def main():
   from optparse import OptionParser
 
-  usage = "Usage: scripts/tango_doc.py TANGO_DIR [DESTINATION_DIR]"
+  usage = "Usage: %s TANGO_DIR [DESTINATION_DIR]" % tounicode(__file__)
   parser = OptionParser(usage=usage)
   parser.add_option("--rev", dest="revision", metavar="REVISION", default=None,
     type="int", help="set the repository REVISION to use in symbol links"
