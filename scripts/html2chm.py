@@ -114,47 +114,49 @@ Title=%(title)s
   # Write the content references.
   # -----------------------------
   f = open(hhc, "w")
-  f.write(doc_head)
+  write = f.write
+  write(doc_head)
 
   def write_symbol_tree(symbol):
-    f.write("<ul>\n")
+    write("<ul>\n")
     for s in symbol.sub:
       symbo_link = "%s.html#%s" % (s.modfqn, s.fqn)
-      f.write("<li>" + objtag(name=s.name, link=symbo_link))
+      write("<li>" + objtag(name=s.name, link=symbo_link))
       if len(s.sub): write_symbol_tree(s)
-      f.write("</li>\n")
-    f.write("</ul>\n")
+      write("</li>\n")
+    write("</ul>\n")
 
   def write_module_tree(pckg):
-    f.write("<ul>\n")
+    write("<ul>\n")
     for p in pckg.packages:
-      f.write("<li>" + objtag(name=p.name+"/"))
+      write("<li>" + objtag(name=p.name+"/"))
       if len(p.packages) or len(p.modules): write_module_tree(p)
-      f.write("</li>\n")
+      write("</li>\n")
     for m in pckg.modules:
-      f.write("<li>" + objtag(name=m.name, link=m.fqn+".html"))
+      write("<li>" + objtag(name=m.name, link=m.fqn+".html"))
       write_symbol_tree(m.symbolTree)
-      f.write("</li>\n")
-    f.write("</ul>\n")
+      write("</li>\n")
+    write("</ul>\n")
 
-  f.write("<ul>\n")
-  f.write('<li>' + objtag(name="Modules"))
+  write("<ul>\n")
+  write('<li>' + objtag(name="Modules"))
   write_module_tree(package_tree.root)
-  f.write('</li>')
+  write('</li>')
   # TODO: write references
-  f.write("</ul>\n")
+  write("</ul>\n")
 
-  f.write(doc_end)
+  write(doc_end)
   f.close()
 
   # Write the index.
   # ----------------
   f = open(hhk, "w")
-  f.write(doc_head)
+  write = f.write
+  write(doc_head)
 
   # TODO:
 
-  f.write(doc_end)
+  write(doc_end)
   f.close()
 
   # Finally write the CHM file.
