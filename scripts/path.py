@@ -3,6 +3,9 @@
 # License: zlib/libpng
 from __future__ import unicode_literals
 import os, shutil
+__all__ = ["Path"]
+
+op = os.path
 
 class Path(unicode):
   """ Models a path in an object oriented way. """
@@ -10,7 +13,7 @@ class Path(unicode):
   pathsep = os.pathsep # Separator in the PATH environment variable.
 
   def __new__(cls, *paths):
-    return unicode.__new__(cls, os.path.join(*paths) if len(paths) else '')
+    return unicode.__new__(cls, op.join(*paths) if len(paths) else '')
 
   def __div__(self, path):
     """ Joins this path with another path. """
@@ -47,7 +50,7 @@ class Path(unicode):
   @property
   def name(self):
     """ '/home/a/bc.d' -> 'bc.d' """
-    return os.path.basename(self)
+    return op.basename(self)
 
   @property
   def namebase(self):
@@ -57,27 +60,27 @@ class Path(unicode):
   @property
   def noext(self):
     """ '/home/a/bc.d' -> '/home/a/bc' """
-    return Path(os.path.splitext(self)[0])
+    return Path(op.splitext(self)[0])
 
   @property
   def ext(self):
     """ '/home/a/bc.d' -> '.d' """
-    return Path(os.path.splitext(self)[1])
+    return Path(op.splitext(self)[1])
 
   @property
   def abspath(self):
     """ './a/bc.d' -> '/home/a/bc.d'  """
-    return Path(os.path.abspath(self))
+    return Path(op.abspath(self))
 
   @property
   def realpath(self):
     """ Resolves symbolic links. """
-    return Path(os.path.realpath(self))
+    return Path(op.realpath(self))
 
   @property
   def normpath(self):
     """ '/home/x/.././a//bc.d' -> '/home/a/bc.d' """
-    return Path(os.path.normpath(self))
+    return Path(op.normpath(self))
 
   @property
   def folder(self):
@@ -85,32 +88,32 @@ class Path(unicode):
     """ '/home/a/bc.d' -> '/home/a' """
     """ '/home/a/' -> '/home/a' """
     """ '/home/a' -> '/home' """
-    return Path(os.path.dirname(self))
+    return Path(op.dirname(self))
 
   @property
   def exists(self):
     """ Returns True if the path exists. """
-    return os.path.exists(self)
+    return op.exists(self)
 
   @property
   def atime(self):
     """ Returns last accessed time. """
-    return os.path.getatime(self)
+    return op.getatime(self)
 
   @property
   def mtime(self):
     """ Returns last modified time. """
-    return os.path.getmtime(self)
+    return op.getmtime(self)
 
   @property
   def ctime(self):
     """ Returns last changed time. """
-    return os.path.getctime(self)
+    return op.getctime(self)
 
   @classmethod
   def supports_unicode(cls):
     """ Returns True if the system can handle Unicode file names. """
-    return os.path.supports_unicode_filenames()
+    return op.supports_unicode_filenames()
 
   @classmethod
   def cwd(cls):
