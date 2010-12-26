@@ -33,7 +33,7 @@ def script_parent_folder(script_path):
 
 def change_cwd(script_path):
   """ Changes the current working directory to "script_dir/.." """
-  os.chdir(script_parent_folder(script_path))
+  script_parent_folder(script_path).chdir()
 
 def kandil_path(where="kandil"):
   P = firstof(Path, where, Path(where))
@@ -75,6 +75,7 @@ def dil_path(where="", dilconf=True):
 def doc_path(where):
   P = firstof(Path, where, Path(where))
   P.HTMLSRC = P/"htmlsrc" # Destination of syntax highlighted source files.
+  P.SYMBOLS = P/"symbols" # JSON files.
   P.JS, P.CSS, P.IMG = P//("js", "css", "img")
   return P
 
