@@ -84,12 +84,12 @@ def get_module_fqn(prefix_path, filepath):
           in the source file. """
   # Remove prefix and strip off path separator.
   # E.g.: prefix_path/std/format.d -> std/format.d
-  filepath = filepath[len(prefix_path):].lstrip(os.path.sep)
+  filepath = filepath[len(prefix_path):].lstrip(Path.sep)
   # Remove the extension.
   # E.g.: std/format.d - > std/format
-  filepath = os.path.splitext(filepath)[0]
+  filepath = Path(filepath).noext
   # Finally replace the path separators.
-  return filepath.replace(os.path.sep, '.') # E.g.: std/format -> std.format
+  return filepath.replace(Path.sep, '.') # E.g.: std/format -> std.format
 
 def read_modules_list(path):
   rx = re.compile(r"^(?P<path>[^,]+), (?P<fqn>\w+(?:\.\w+)*)$")
