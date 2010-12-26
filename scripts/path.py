@@ -108,9 +108,17 @@ class Path(unicode):
     return os.path.getctime(self)
 
   @classmethod
-  def supports_unicode(self):
+  def supports_unicode(cls):
     """ Returns True if the system can handle Unicode file names. """
     return os.path.supports_unicode_filenames()
+
+  @classmethod
+  def cwd(cls):
+    return Path(os.getcwd())
+
+  def chdir(self):
+    os.chdir(self)
+    return self
 
   def walk(self, **kwargs):
     """ Returns a generator that walks through a directory tree. """
@@ -124,16 +132,19 @@ class Path(unicode):
     """ Creates a directory, if it doesn't exist already. """
     if not self.exists:
       os.mkdir(self, mode)
+    return self
 
   def makedirs(self, mode=0777):
     """ Like mkdir(), but also creates parent directories. """
     if not self.exists:
       os.makedirs(self, mode)
+    return self
   mkdirs = makedirs
 
   def remove(self):
     """ Removes a file. """
     os.remove(self)
+    return self
   rm = remove # Alias.
 
   def rmdir(self):
@@ -146,21 +157,26 @@ class Path(unicode):
 
   def copy(self, to):
     shutil.copy(self, to)
+    return self
 
   def copytree(self, to):
     """ Copies a directory tree to another path. """
     shutil.copytree(self, to)
+    return self
 
   def move(self, to):
     """ Moves a file or directory to another path. """
     shutil.move(self, to)
+    return self
 
   def rename(self, to):
     """ Renames a file or directory. May throw an OSError. """
     os.rename(self, to)
+    return self
 
   def renames(self, to):
     os.renames(self, to)
+    return self
 
   def glob(self, pattern):
     from glob import glob
