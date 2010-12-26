@@ -92,8 +92,7 @@ def get_module_fqn(prefix_path, filepath):
   return filepath.replace(os.path.sep, '.') # E.g.: std/format -> std.format
 
 def read_modules_list(path):
-  from re import compile
-  rx = compile(r"^(?P<path>[^,]+), (?P<fqn>\w+(?:\.\w+)*)$")
+  rx = re.compile(r"^(?P<path>[^,]+), (?P<fqn>\w+(?:\.\w+)*)$")
   return [match.groupdict() for match in map(rx.match, open(path)) if match]
 
 def generate_modules_js(modlist, dest_path, max_line_len=80):
@@ -152,8 +151,7 @@ def generate_docs(dil_exe, dest, modlist, files,
 
 def generate_pymodules(dil_exe, dest, files, options=[], cwd=None):
   """ Generates Python source files. """
-  from subprocess import call
-  call([dil_exe, "py", dest] + options + files, cwd=cwd)
+  subprocess.call([dil_exe, "py", dest] + options + files, cwd=cwd)
 
 def create_archives(opts, src, dest, cwd):
   """ Calls archiving programs to archive the src folder. """
@@ -213,8 +211,7 @@ def call_read(args, **kwargs):
   return subprocess.Popen(args, **kwargs).communicate()[0].decode('u8')
 
 class VersionInfo:
-  from sys import version_info as vi
-  vi = vi
+  vi = sys.version_info
   f = float("%d.%d%d" % vi[:3])
   i = int(f*100)
   def __lt__(self, other): return self.f < other
