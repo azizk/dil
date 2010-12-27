@@ -50,12 +50,12 @@ class Path(unicode):
   @property
   def name(self):
     """ '/home/a/bc.d' -> 'bc.d' """
-    return op.basename(self)
+    return Path(op.basename(self))
 
   @property
   def namebase(self):
     """ '/home/a/bc.d' -> 'bc' """
-    return self.noext.name
+    return self.name.noext
 
   @property
   def noext(self):
