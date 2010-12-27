@@ -64,39 +64,39 @@ Title=%(title)s
 
   # Extract symbols and build the package tree.
   package_tree = PackageTree()
-  sym_dict_all = {} # Group symbols by their kind, e.g. class, struct etc.
+  cat_dict_all = {} # Group symbols by their kind, e.g. class, struct etc.
   for html_file in module_files:
-    html_str = open(html_file).read()
-    # Extract module FQN.
+    # Get module FQN.
     module_fqn = Path(html_file).namebase
     # Extract symbols list.
     sym_dict, cat_dict = get_symbols(jsons, module_fqn)
     # Add a new module to the tree.
     module = Module(module_fqn)
     module.sym_dict = sym_dict
+    module.cat_dict = cat_dict
     package_tree.addModule(module)
     # Group the symbols in this module.
-    for kind, sym_list in cat_dict.iteritems():
-      items = sym_dict_all.setdefault(kind, [])
-      items += sym_list
+    for kind, symbol_list in cat_dict.iteritems():
+      cat_dict_all.setdefault(kind, []).extend(symbol_list)
 
   # Sort the list of packages and modules.
   package_tree.sortTree()
+  # Sort the list of symbols.
+  map(list.sort, cat_dict_all.itervalues())
 
   # CHM files don't support UTF-8. Therefore Unicode characters
   # are encoded with numerical HTML entities.
-  # This step must come after extracting symbols, since
-  # symbol links/names may contain Unicode characters.
   def to_num_entity(m):
     return "&#%d;" % ord(m.group(0))
   # Matches any non-ASCII character.
   non_ascii_rx = re.compile("[^\x00-\x7F]") #\u0080-\U0010FFFF
 
-  for f in module_files:
-    text = f.open().read()
+  # Open the files, modify and write them to the tmp dir.
+  for html_file in module_files:
+    text = html_file.open().read()
     text = non_ascii_rx.sub(to_num_entity, text)
     # TODO: deactivate navigation bar somehow.
-    (tmp/f.name).open("w", encoding=None).write(text)
+    (tmp/html_file.name).open("w", encoding=None).write(text)
 
   doc_head = """<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>\n<head><meta name="generator" content="dil"></head>
