@@ -7,7 +7,7 @@ from symbols import *
 
 def win_path(p):
   """ Converts a Unix path to a Windows path. """
-  return call_read("winepath", "-w", p)[:-1]
+  return call_read(["winepath", "-w", p])[:-1]
 
 def win_paths(ps):
   return map(win_path, ps)
@@ -165,21 +165,20 @@ Title=%(title)s
 # A script to install HHW on Linux is located here:
 # http://code.google.com/p/dil/source/browse/misc/install_hhw.sh
 def call_hhc(project_hhp):
-  hhc_exe = "hhc.exe" # Assume the exe is in PATH.
-
   # Get the %ProgramFiles% environment variable.
   # "[is_win32:]" slices off "wine" if on Windows.
-  echo_cmd = ["wine", "cmd.exe", "/c", "echo", "%ProgramFiles%"][is_win32:]
-  program_files = call_read(echo_cmd)[:-1] # Remove \n.
+  echo_cmd = ["wine", "cmd", "/c", "echo", "%ProgramFiles%"][is_win32:]
+  ProgramFiles = call_read(echo_cmd).rstrip("\r\n")
   # See if "C:\Program Files\HTML Help Workshop\hhc.exe" exists.
-  exe = program_files + "\\HTML Help Workshop\\" + hhc_exe
+  hhc_exe = ProgramFiles + "\\HTML Help Workshop\\hhc.exe"
   # Convert back to Unix path if not on Windows.
-  if not is_win32: exe = call_read("winepath", "-u", exe)[:-1]
-  if Path(exe).exists: hhc_exe = exe
+  if not is_win32:
+    hhc_exe = call_read(["winepath", "-u", hhc_exe])[:-1]
+  if not Path(hhc_exe).exists:
+    hhc_exe = "hhc.exe" # Assume the exe is in PATH.
 
-  hhc_exe = ["wine", hhc_exe][is_win32:]
-
-  subprocess.call(hhc_exe + [project_hhp])
+  hhc_cmd = ["wine", hhc_exe, project_hhp][is_win32:]
+  subprocess.call(hhc_cmd)
 
 class CHMGenerator:
   def fetch_files(self, SRC, TMP):
