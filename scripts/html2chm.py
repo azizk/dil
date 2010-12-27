@@ -103,13 +103,12 @@ Title=%(title)s
 <body>\n"""
   doc_end = "</body>\n</html>"
 
-  def objtag(**kwargs):
-    """ Returns an object tag with param tags (can be ommitted.) """
-    tags = (("name", '<param name="Name" value="%(name)s">'),
-            ("link", '<param name="Local" value="%(link)s">'),
-            ("img",  '<param name="ImageNumber" value="%(img)s">'))
-    tags = [tag for key, tag in tags if key in kwargs]
-    return ('<object type="text/sitemap">'+"".join(tags)+'</object>') % kwargs
+  def objtag(*args):
+    """ Returns an object tag with any number of param tags. """
+    ptag = '<param name="%s" value="%s">'
+    m = {"name":"Name", "link":"Local", "img":"ImageNumber"}
+    tags = "\n".join([ptag % (m[a[0]], a[1]) for a in args])
+    return '<object type="text/sitemap">\n'+tags+'\n</object>'
 
   # Write the content references.
   # -----------------------------
@@ -121,7 +120,7 @@ Title=%(title)s
     write("<ul>\n")
     for s in symbol.sub:
       symbo_link = "%s.html#%s" % (s.modfqn, s.fqn)
-      write("<li>" + objtag(name=s.name, link=symbo_link))
+      write("<li>" + objtag(('name',s.name), ('link',symbo_link)))
       if len(s.sub): write_symbol_tree(s)
       write("</li>\n")
     write("</ul>\n")
@@ -129,17 +128,17 @@ Title=%(title)s
   def write_module_tree(pckg):
     write("<ul>\n")
     for p in pckg.packages:
-      write("<li>" + objtag(name=p.name+"/"))
+      write("<li>" + objtag(('name',p.name+"/")))
       if len(p.packages) or len(p.modules): write_module_tree(p)
       write("</li>\n")
     for m in pckg.modules:
-      write("<li>" + objtag(name=m.name, link=m.fqn+".html"))
+      write("<li>" + objtag(('name',m.name), ('link',m.fqn+".html")))
       write_symbol_tree(m.symbolTree)
       write("</li>\n")
     write("</ul>\n")
 
   write("<ul>\n")
-  write('<li>' + objtag(name="Modules"))
+  write('<li>' + objtag(('name',"Modules")))
   write_module_tree(package_tree.root)
   write('</li>')
   # TODO: write references
