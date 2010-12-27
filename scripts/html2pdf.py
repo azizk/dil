@@ -179,28 +179,24 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   package_tree = PackageTree()
 
   for html_file in module_files:
-    html_str = html_file.open().read()
+    html_txt = html_file.open().read()
     # Extract module FQN.
     module_fqn = Path(html_file).namebase
-
     # Fix the links.
-    html_str = anchor_tag_rx.sub(rewrite_link_tag, html_str)
+    html_txt = anchor_tag_rx.sub(rewrite_link_tag, html_txt)
+    # Extract "#content>.module".
+    start = html_txt.find('<div class="module">')
+    end = html_txt.rfind('<div id="kandil-footer">')
+    content = html_txt[start:end]
 
     # Get symbols list.
     sym_dict, cat_dict = get_symbols(jsons, module_fqn)
-
-    # Extract "#content>.module".
-    start = html_str.find('<div class="module">')
-    end = html_str.rfind('<div id="kandil-footer">')
-    content = html_str[start:end]
-
     # Add a new module to the tree.
     module = Module(module_fqn)
     module.sym_dict = sym_dict
     module.cat_dict = cat_dict # Symbols categorized by kind.
-    module.html_str = content
+    module.html_txt = content
     package_tree.addModule(module)
-
     # Group the symbols in this module.
     for kind, symbol_list in cat_dict.iteritems():
       cat_dict_all.setdefault(kind, []).extend(symbol_list)
@@ -304,7 +300,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
       write('</div>')
       write_nested_fragments(p)
     for m in pckg.modules:
-      write(m.html_str)
+      write(m.html_txt)
 
   if before_files:
     write('<div class="before_pages">')
