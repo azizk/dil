@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 class Module:
   def __init__(self, fqn):
     self.pckg_fqn, sep, self.name = fqn.rpartition('.')
+    self.pckg = None
     self.fqn = fqn
     self.sym_dict = {}
 
@@ -28,11 +29,20 @@ class Package(Module): # Inherit for convenience.
     Module.__init__(self, fqn)
     self.packages, self.modules = ([], [])
 
+  def addModule(self, module):
+    self.modules.append(module)
+    module.pckg = self
+
+  def addPackage(self, package):
+    self.packages.append(package)
+    package.pckg = self
+
   @property
   def link(self):
     return "#p-" + self.fqn
 
 class PackageTree:
+  """ Represents a tree of all packages and modules in a project. """
   from bisect import bisect_left
   def __init__(self):
     self.root = Package('')
@@ -40,7 +50,7 @@ class PackageTree:
     self.modules = [] # Sorted list of all modules.
 
   def addModule(self, module):
-    self.getPackage(module.pckg_fqn).modules.append(module)
+    self.getPackage(module.pckg_fqn).addModule(module)
     insert_pos = self.bisect_left(self.modules, module)
     self.modules.insert(insert_pos, module)
 
@@ -51,7 +61,7 @@ class PackageTree:
       parent_fqn, sep, name = fqn.rpartition('.')
       parentPackage = self.getPackage(parent_fqn) # Get the parent recursively.
       package = Package(fqn) # Create a new package.
-      parentPackage.packages += [package] # Add the new package to its parent.
+      parentPackage.addPackage(package) # Add the new package to its parent.
       self.packages[fqn] = package # Add the new package to the list.
     return package;
 
@@ -86,7 +96,7 @@ class Symbol:
     return cmp(self.name.lower(), other.name.lower())
 
   def __repr__(self):
-    return self.fqn
+    return "Symbol(%s)" % self.fqn
 
 class ModuleJSON(Module):
   """ Class for loading a module's symbols from a *.json file. """
