@@ -48,6 +48,11 @@ class Path(unicode):
     return "Path(%s)" % unicode.__repr__(self)
 
   @property
+  def uni(self):
+    """ Returns itself as a Unicode string. """
+    return unicode(self)
+
+  @property
   def name(self):
     """ '/home/a/bc.d' -> 'bc.d' """
     return Path(op.basename(self))
