@@ -67,7 +67,7 @@ Title=%(title)s
   cat_dict_all = {} # Group symbols by their kind, e.g. class, struct etc.
   for html_file in module_files:
     # Get module FQN.
-    module_fqn = Path(html_file).namebase
+    module_fqn = Path(html_file).namebase.uni
     # Load the module from a JSON file.
     m = ModuleJSON(jsons, module_fqn)
     package_tree.addModule(m)
@@ -82,15 +82,15 @@ Title=%(title)s
 
   # CHM files don't support UTF-8. Therefore Unicode characters
   # are encoded with numerical HTML entities.
-  def to_num_entity(m):
-    return "&#%d;" % ord(m.group(0))
-  # Matches any non-ASCII character.
+  # The regexp matches any non-ASCII character.
   non_ascii_rx = re.compile("[^\x00-\x7F]") #\u0080-\U0010FFFF
+  def escape_uni(text):
+    return non_ascii_rx.sub(lambda m: "&#%d;" % ord(m.group(0)), text)
 
   # Open the files, modify and write them to the tmp dir.
   for html_file in module_files:
     text = html_file.open().read()
-    text = non_ascii_rx.sub(to_num_entity, text)
+    text = escape_uni(text)
     # TODO: deactivate navigation bar somehow.
     (tmp/html_file.name).open("w", encoding=None).write(text)
 
@@ -104,7 +104,7 @@ Title=%(title)s
     ptag = '<param name="%s" value="%s">'
     m = {"name":"Name", "link":"Local", "img":"ImageNumber"}
     tags = "\n".join([ptag % (m[a[0]], a[1]) for a in args])
-    return '<object type="text/sitemap">\n'+tags+'\n</object>'
+    return escape_uni('<object type="text/sitemap">\n'+tags+'\n</object>')
 
   # Write the content references.
   # -----------------------------
