@@ -182,7 +182,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   for html_file in module_files:
     html_txt = html_file.open().read()
     # Extract module FQN.
-    module_fqn = Path(html_file).namebase
+    module_fqn = Path(html_file).namebase.uni
     # Fix the links.
     html_txt = anchor_tag_rx.sub(rewrite_link_tag, html_txt)
     # Extract "#content>.module".
@@ -327,7 +327,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
       all_symbols.extend(cat_dict_all[x])
   all_symbols.sort()
 
-  index_by_letter = get_index(all_symbols)
+  index_by_letter = make_index(all_symbols)
 
   # Write the bookmarks tree.
   # -------------------------

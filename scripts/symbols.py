@@ -157,7 +157,7 @@ class ModuleJSON(Module):
 
     return symbol
 
-def get_index(symbols):
+def make_index(symbols):
   """ Groups the symbols by the initial letter of their names. """
   letter_dict = {} # Sort index by the symbol's initial letter.
   for sym in symbols:
