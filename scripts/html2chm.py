@@ -68,15 +68,11 @@ Title=%(title)s
   for html_file in module_files:
     # Get module FQN.
     module_fqn = Path(html_file).namebase
-    # Extract symbols list.
-    sym_dict, cat_dict = get_symbols(jsons, module_fqn)
-    # Add a new module to the tree.
-    module = Module(module_fqn)
-    module.sym_dict = sym_dict
-    module.cat_dict = cat_dict
-    package_tree.addModule(module)
+    # Load the module from a JSON file.
+    m = ModuleJSON(jsons, module_fqn)
+    package_tree.addModule(m)
     # Group the symbols in this module.
-    for kind, symbol_list in cat_dict.iteritems():
+    for kind, symbol_list in m.cat_dict.iteritems():
       cat_dict_all.setdefault(kind, []).extend(symbol_list)
 
   # Sort the list of packages and modules.

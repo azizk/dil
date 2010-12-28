@@ -190,16 +190,12 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
     end = html_txt.rfind('<div id="kandil-footer">')
     content = html_txt[start:end]
 
-    # Get symbols list.
-    sym_dict, cat_dict = get_symbols(jsons, module_fqn)
-    # Add a new module to the tree.
-    module = Module(module_fqn)
-    module.sym_dict = sym_dict
-    module.cat_dict = cat_dict # Symbols categorized by kind.
-    module.html_txt = content
-    package_tree.addModule(module)
+    # Load the module from a JSON file.
+    m = ModuleJSON(jsons, module_fqn)
+    m.html_txt = content # Define an extra property.
+    package_tree.addModule(m) # Add the new module to the tree.
     # Group the symbols in this module.
-    for kind, symbol_list in cat_dict.iteritems():
+    for kind, symbol_list in m.cat_dict.iteritems():
       cat_dict_all.setdefault(kind, []).extend(symbol_list)
 
   # Sort the list of packages and modules.

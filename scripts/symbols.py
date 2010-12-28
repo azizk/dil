@@ -88,39 +88,56 @@ class Symbol:
   def __repr__(self):
     return self.fqn
 
-def get_symbols(jsons, module_fqn, categorize=True):
-  """ Extracts the symbols from an HTML document. """
+class ModuleJSON(Module):
+  """ Class for loading a module's symbols from a *.json file. """
+  import json
 
   SymKind = ("package module template class interface struct union alias "
     "typedef enum enummem variable function invariant new delete unittest "
     "ctor dtor sctor sdtor").split(" ")
+  SymKind = tuple(SymKind).__getitem__
 
   SymAttr = ("private protected package public export abstract auto const "
     "deprecated extern final override scope static synchronized "
     "in out ref lazy variadic immutable manifest nothrow pure "
     "shared gshared thread disable property safe system trusted "
     "C C++ D Windows Pascal System").split(" ")
+  SymAttr = tuple(SymAttr).__getitem__
 
-  import json
-  json_path = jsons/(module_fqn+".json")
-  json_text = json_path.open().read()
-  arrayTree = json.loads(json_text)
+  def __init__(self, path, fqn, categorize=True):
+    """ Loads the file and constructs the object. """
+    Module.__init__(self, fqn)
+    json_path = path/(fqn+".json")
+    json_text = json_path.open().read()
+    arrayTree = self.json.loads(json_text)
 
-  symbol_dict = {}
-  cat_dict = {}
+    self.module_fqn = fqn
+    self.categorize = categorize
+    self.sym_dict = {} # Maps FQNs to symbols.
+    self.cat_dict = {} # Categorized by symbol kind.
 
-  def visit(s, fqn):
+    # The root's name must be empty,
+    # so that it doesn't become a part of the symbols' FQN.
+    root_name = arrayTree[0]
+    arrayTree[0] = ""
+    root = self._visit(arrayTree, "") # Start traversing the tree.
+    root.name = root_name
+    root.fqn = fqn
+
+    self.root = root
+
+  def _visit(self, s, fqn):
     name = s[0]
     d = {
-      'name': name, 'kind': SymKind[s[1]],
-      'attrs': [SymAttr[x] for x in s[2]],
-      'loc': s[3], 'modfqn': module_fqn
+      'name': name, 'kind': self.SymKind(s[1]),
+      'attrs': map(self.SymAttr, s[2]),
+      'loc': s[3], 'modfqn': self.module_fqn
     }
 
     # E.g.: 'tango.core' + '.' + 'Thread'
     fqn += ("." if fqn != "" else "") + name
     # Add ":\d+" suffix if not unique.
-    sibling = symbol_dict.get(fqn)
+    sibling = self.sym_dict.get(fqn)
     if sibling:
       if not hasattr(sibling, 'count'):
         sibling.count = 1
@@ -129,24 +146,16 @@ def get_symbols(jsons, module_fqn, categorize=True):
     d['fqn'] = fqn
 
     symbol = Symbol(d) # Create the symbol.
-    symbol_dict[fqn] = symbol # Add it to the dictionary.
+    self.sym_dict[fqn] = symbol # Add it to the dictionary.
 
     symbol.sub = members = s[4] # Visit the members of this symbol.
     for i, m in enumerate(members):
-      members[i] = visit(m, fqn)
+      members[i] = self._visit(m, fqn)
 
-    if categorize: # cat_dict[kind] += [symbol]
-      kinds = cat_dict.setdefault(symbol.kind, [])
-      kinds.append(symbol)
+    if self.categorize: # cat_dict[kind] += [symbol]
+      self.cat_dict.setdefault(symbol.kind, []).append(symbol)
 
     return symbol
-
-  root_name = arrayTree[0]
-  arrayTree[0] = ""
-  root = visit(arrayTree, "") # Start traversing the tree.
-  root.name = root_name
-  root.fqn = module_fqn
-  return symbol_dict, cat_dict
 
 def get_index(symbols):
   """ Groups the symbols by the initial letter of their names. """
