@@ -10,6 +10,7 @@ from common import *
 from build import DMDCommand, LDCCommand
 from html2pdf import PDFGenerator
 from html2chm import CHMGenerator
+__file__ = tounicode(__file__)
 
 def copy_files(DIL):
   """ Copies required files to the destination folder. """
@@ -82,7 +83,7 @@ def main():
   from functools import partial as func_partial
   from optparse import OptionParser
 
-  usage = "Usage: %s VERSION [Options]" % tounicode(__file__)
+  usage = "Usage: %s VERSION [Options]" % __file__
   parser = OptionParser(usage=usage)
   add_option = func_partial(parser.add_option, action="store_true",
                             default=False)

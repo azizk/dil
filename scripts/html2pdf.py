@@ -6,6 +6,7 @@ from __future__ import unicode_literals, print_function
 from common import *
 from symbols import *
 from time import gmtime, strftime
+__file__ = tounicode(__file__)
 
 def write_bookmarks(write, package_tree, all_symbols, index):
   """ Notice how the li-tag has only the link and label attribute
@@ -377,7 +378,7 @@ def main():
   from optparse import OptionParser
   import json
 
-  usage = "Usage: %s SOURCE_DIR PDF_FILE" % tounicode(__file__)
+  usage = "Usage: %s SOURCE_DIR PDF_FILE" % __file__
   parser = OptionParser(usage=usage)
   parser.add_option("--params", dest="params", metavar="JSON", default=None,
     help="pass parameters to the generator as a JSON string")

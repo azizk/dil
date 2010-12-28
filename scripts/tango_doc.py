@@ -6,6 +6,7 @@ from __future__ import unicode_literals, print_function
 from common import *
 from html2pdf import PDFGenerator
 from doc_funcs import *
+__file__ = tounicode(__file__)
 
 def copy_files(DIL, TANGO, DEST):
   """ Copies required files to the destination folder. """
@@ -112,7 +113,7 @@ def get_tango_path(path):
 def main():
   from optparse import OptionParser
 
-  usage = "Usage: %s TANGO_DIR [DESTINATION_DIR]" % tounicode(__file__)
+  usage = "Usage: %s TANGO_DIR [DESTINATION_DIR]" % __file__
   parser = OptionParser(usage=usage)
   parser.add_option("--rev", dest="revision", metavar="REVISION", default=None,
     type="int", help="set the repository REVISION to use in symbol links"

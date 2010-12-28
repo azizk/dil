@@ -5,6 +5,7 @@
 from __future__ import unicode_literals, print_function
 from common import *
 from html2pdf import PDFGenerator
+__file__ = tounicode(__file__)
 
 def modify_std_ddoc(std_ddoc, phobos_ddoc, version):
   """ Modify std.ddoc and write it out to phobos.ddoc. """
@@ -134,7 +135,7 @@ def write_PDF(DIL, SRC, VERSION, TMP):
 def main():
   from optparse import OptionParser
 
-  usage = "Usage: %s VERSION PHOBOS_DIR [DESTINATION_DIR]" % tounicode(__file__)
+  usage = "Usage: %s VERSION PHOBOS_DIR [DESTINATION_DIR]" % __file__
   parser = OptionParser(usage=usage)
   #parser.add_option("--rev", dest="revision", metavar="REVISION", default=None,
     #type="int", help="set the repository REVISION to use in symbol links")

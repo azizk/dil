@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author: Aziz Köksal
-from os import path
+from future import unicode_literals, print_function
+from common import *
+__file__ = tounicode(__file__)
 
 nodes_info = (
   # Declarations:
@@ -201,8 +203,8 @@ nodes_info = (
 )
 
 def main():
-  this_dir = path.dirname(__file__)
-  f = open(path.join(this_dir, "nodes.py"), "w")
+  this_dir = Path(__file__).folder
+  f = (this_dir/"nodes.py").open("w")
 
   f.write("""# -*- coding: utf-8 -*-
 # Author: Aziz Köksal

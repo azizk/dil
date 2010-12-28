@@ -4,6 +4,7 @@
 # License: zlib/libpng
 from __future__ import unicode_literals, print_function
 from common import *
+__file__ = tounicode(__file__)
 
 class Command:
   def __init__(self, exe):
@@ -136,8 +137,7 @@ def main():
 
   usage = """Usage: %s [Options]
 
-    Options after the string '--' are forwarded to the compiler.""" \
-    % tounicode(__file__)
+    Options after the string '--' are forwarded to the compiler.""" % __file__
   parser = OptionParser(usage=usage)
   parser.add_option(
     "--release", dest="release", action="store_true", default=False,
