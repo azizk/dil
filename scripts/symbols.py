@@ -56,22 +56,22 @@ class PackageTree:
 
   def getPackage(self, fqn):
     """ Returns the package object for the fqn string. """
-    package = self.packages.get(fqn);
+    package = self.packages.get(fqn)
     if not package:
       parent_fqn, sep, name = fqn.rpartition('.')
       parentPackage = self.getPackage(parent_fqn) # Get the parent recursively.
       package = Package(fqn) # Create a new package.
       parentPackage.addPackage(package) # Add the new package to its parent.
       self.packages[fqn] = package # Add the new package to the list.
-    return package;
+    return package
 
   def sortTree(self): self.sort(self.root)
 
   def sort(self, pckg):
-    pckg.packages.sort();
-    pckg.modules.sort();
+    pckg.packages.sort()
+    pckg.modules.sort()
     for subpckg in pckg.packages:
-      self.sort(subpckg);
+      self.sort(subpckg)
 
 class Symbol:
   def __init__(self, symdict):
