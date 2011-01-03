@@ -109,55 +109,68 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   # --------------------------------
 
   anchor_tag_rx = re.compile(r'<a\s+([^>]+)>')
-  attrs_rx = re.compile(r'''(\w+)=("[^"]+"|'[^']+')''')
-  symclass_rx = re.compile(r'\bsymbol\b')
-  symhref_rx = re.compile(r'(?:(.+?).html)?(?:#(.+))?')
+  attrs_rx = re.compile(r'''(\w+)=("[^"]*"|'[^']*')''')
+  symhref_rx = re.compile(r'(?:([\w.]+).html)?(?:#(.+))?', re.U)
+  splitclass_rx = re.compile(r'\s+') # For getting a list of class names.
 
   # The callback function for anchor_tag_rx.
   # ----------------------------------------
-  module_fqn = ''
+  module_fqn = '' # Current module FQN in the for loop below.
+
   def rewrite_link_tag(m):
-    """ Get's a match object. Fixes the attributes and returns the a-tag. """
+    """ Gets a match object. Rewrites the attributes and returns the a-tag. """
     attrs = m.group(1)
-    # [1:-1] strips the quotes.
-    attrs = dict([(a[0], a[1][1:-1] if a[1] else None)
-                   for a in attrs_rx.findall(attrs)])
+    # Get a dict of all attributes. [1:-1] strips the quotes.
+    attrs = dict([(a[0], a[1][1:-1]) for a in attrs_rx.findall(attrs)])
+    id   = attrs.get('id')
     href = attrs.get('href')
     name = attrs.get('name')
     clas = attrs.get('class')
-    if clas == 'plink':
+    classes = splitclass_rx.split(clas.strip(' ')) if clas else []
+    # Returns a name/id prefixed with the module's FQN.
+    make_unique = lambda ID: 'm-%s:%s' % (module_fqn, ID)
+
+    if id:   attrs['id']   = make_unique(id)
+    if name: attrs['name'] = make_unique(name)
+    if ('plink' in classes or  # Ignore "¶" links.
+        'srclink' in classes): # Ignore "#" links.
       pass
-    elif href != None and len(href):
-      if href[:2] == "#L" and href[2:3].isdigit():
+    elif href:
+      if href[:2] == '#L' and href[2:3].isdigit(): # E.g.: #L1_ex1
         # If line number of a code example.
         attrs = {} # Delete all attributes. No use in the PDF.
-      elif href.find("://") == -1 or href[:2] == '//': # If relative link:
-        if href[:8] == "htmlsrc/":
-          if symclass_rx.search(clas): # Is this class="symbol"?
-            href = module_fqn + '.html'
-            if name != None: # h1>a tags don't have this attr.
-              href += '#' + name
-              attrs['name'] = 'm-%s:'%module_fqn + name
+      elif '://' not in href: # If relative link:
+        if href[:8] == 'htmlsrc/':
+          if 'symbol' in classes: # Is this class="symbol"?
+            href = module_fqn + '.html' # E.g.: "dil.ast.Node.html"
+            if name: # h1>a tags don't have this attr.
+              href += '#' + name # E.g.: "dil.ast.Node.html#Node"
           #else: pass # Just a normal link to a source file.
           href = sym_url.format(href) # Format for both cases.
         else: # Links to symbols, or user links.
           m = symhref_rx.match(href)
           if m:
-            link_fqn, symname = m.groups()
-            if link_fqn or symname:
+            # 1) "dil.ast.Node.html", 2) "#Node", 3) "dil.ast.Node.html#Node"
+            link_fqn, sym_name = m.groups()
+            m = link_fqn or sym_name
+            if m:
               link_fqn = link_fqn or module_fqn
-              symname = ':'+symname if symname else ''
-              href = '#m-'+link_fqn + symname
-            else: # Other URLs.
-              href = sym_url.format(href)
+              # Check if the module exists.
+              m = module = package_tree.mod_dict.get(link_fqn)
+              if module:
+                href = module.link
+                if sym_name:
+                  symbol = module.sym_dict.get(sym_name)
+                  if symbol: href = symbol.link
+                  else: href += sym_name # Link to anchor in another module.
+          if not m: # Other URLs.
+            href = sym_url.format(href)
         # Finally assign the URL to its attribute.
         attrs['href'] = href
-    elif name != None: # Prefix with module_fqn to make it unique.
-      attrs['name'] = 'm-%s:'%module_fqn + name
     # Finally join the attributes together and return the tag.
-    attrs = ['%s="%s"' % (name.replace('"', '&quot;'), val)
+    attrs = ['%s="%s"' % (name, val.replace('"', '&quot;'))
               for name, val in attrs.items()]
-    return '<a ' + " ".join(attrs) + '>'
+    return '<a ' + ' '.join(attrs) + '>'
 
   # Add module page-break rules to pdf.css.
   # ---------------------------------------
@@ -174,14 +187,19 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   # Prepare the HTML fragments.
   # ---------------------------
   print("Preparing HTML fragments.")
-  # Group symbols by their kind, e.g. class, struct etc.
-  cat_dict_all = {}
   # For Table of Contents, bookmarks and indices.
   package_tree = PackageTree()
+  # First load all modules and symbols.
+  for html_file in module_files:
+    # Get module FQN from the file name.
+    module_fqn = Path(html_file).namebase.uni
+    # Load the module from a JSON file.
+    m = ModuleJSON(jsons, module_fqn)
+    package_tree.addModule(m) # Add the new module to the tree.
 
+  # Then patch the HTML files.
   for html_file in module_files:
     html_txt = html_file.open().read()
-    # Extract module FQN.
     module_fqn = Path(html_file).namebase.uni
     # Fix the links.
     html_txt = anchor_tag_rx.sub(rewrite_link_tag, html_txt)
@@ -190,18 +208,12 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
     end = html_txt.rfind('<div id="kandil-footer">')
     content = html_txt[start:end]
 
-    # Load the module from a JSON file.
-    m = ModuleJSON(jsons, module_fqn)
+    m = package_tree.mod_dict[module_fqn]
     m.html_txt = content # Define an extra property.
-    package_tree.addModule(m) # Add the new module to the tree.
-    # Group the symbols in this module.
-    for kind, symbol_list in m.cat_dict.iteritems():
-      cat_dict_all.setdefault(kind, []).extend(symbol_list)
 
   # Sort the list of packages and modules.
   package_tree.sortTree()
-  # Sort the list of symbols.
-  map(list.sort, cat_dict_all.itervalues())
+  package_tree.sortCatDict()
 
   # Join the HTML fragments.
   # ------------------------
@@ -321,13 +333,9 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
 
   # Prepare indices:
   # ----------------
-  all_symbols = [] # List of all aggregate types.
-  for x in ('class', 'interface', 'struct', 'union'):
-    if x in cat_dict_all:
-      all_symbols.extend(cat_dict_all[x])
-  all_symbols.sort()
-
-  index_by_letter = make_index(all_symbols)
+  all_symbols = package_tree.listSymbols(
+    ('class', 'interface', 'struct', 'union'))
+  index_by_letter = package_tree.symbolsByLetter(all_symbols)
 
   # Write the bookmarks tree.
   # -------------------------

@@ -48,11 +48,16 @@ class PackageTree:
     self.root = Package('')
     self.packages = {'': self.root}
     self.modules = [] # Sorted list of all modules.
+    self.mod_dict = {} # All modules by FQN.
+    self.cat_dict = {} # All symbols by category.
 
   def addModule(self, module):
     self.getPackage(module.pckg_fqn).addModule(module)
     insert_pos = self.bisect_left(self.modules, module)
     self.modules.insert(insert_pos, module)
+    self.mod_dict[module.fqn] = module
+    if hasattr(module, 'cat_dict'):
+      self.addCatDict(module.cat_dict)
 
   def getPackage(self, fqn):
     """ Returns the package object for the fqn string. """
@@ -73,7 +78,36 @@ class PackageTree:
     for subpckg in pckg.packages:
       self.sort(subpckg)
 
+  def addCatDict(self, cat_dict):
+    for kind, symbol_list in cat_dict.iteritems():
+      self.cat_dict.setdefault(kind, []).extend(symbol_list)
+
+  def sortCatDict(self):
+    map(list.sort, self.cat_dict.itervalues())
+
+  def listSymbols(self, kinds):
+    """ Returns a list of all symbols of certain kinds in this tree. """
+    syms = []
+    for kind in kinds:
+      if kind in self.cat_dict:
+        syms.extend(self.cat_dict[kind])
+    syms.sort()
+    return syms
+
+  @classmethod
+  def symbolsByLetter(cls, symbols):
+    """ Groups the symbols by the initial letter of their names. """
+    letter_dict = {} # Sort index by the symbol's initial letter.
+    for sym in symbols:
+      initial_letter = sym.name[0].upper()
+      # Add to the group.
+      letter_dict.setdefault(initial_letter, []).append(sym)
+    letter_list = letter_dict.keys()
+    letter_list.sort(key=unicode.lower)
+    return letter_dict, letter_list
+
 class Symbol:
+  """ Represents a D symbol. E.g. a class, a function etc. """
   def __init__(self, symdict):
     for attr, val in symdict.items():
       setattr(self, attr, val)
@@ -127,11 +161,11 @@ class ModuleJSON(Module):
     self.cat_dict = {} # Categorized by symbol kind.
 
     # The root's name must be empty,
-    # so that it doesn't become a part of the symbols' FQN.
+    # so that it doesn't become part of the symbols' FQN.
     root_name = arrayTree[0]
     arrayTree[0] = ""
     root = self._visit(arrayTree, "") # Start traversing the tree.
-    root.name = root_name
+    root.name = root_name # Now we can restore the name.
     root.fqn = fqn
 
     self.root = root
@@ -166,13 +200,3 @@ class ModuleJSON(Module):
       self.cat_dict.setdefault(symbol.kind, []).append(symbol)
 
     return symbol
-
-def make_index(symbols):
-  """ Groups the symbols by the initial letter of their names. """
-  letter_dict = {} # Sort index by the symbol's initial letter.
-  for sym in symbols:
-    initial_letter = sym.name[0].upper()
-    letter_dict.setdefault(initial_letter, []).append(sym) # Add to the group.
-  letter_list = letter_dict.keys()
-  letter_list.sort(key=unicode.lower)
-  return letter_dict, letter_list
