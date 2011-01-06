@@ -273,13 +273,12 @@ void main(char[][] args)
 
     StatsCommand cmd;
     cmd.cc = globalCC;
-    foreach (arg; args[2..$])
-      if (arg == "--toktable")
-        cmd.printTokensTable = true;
-      else if (arg == "--asttable")
-        cmd.printNodesTable = true;
-      else
-        cmd.filePaths ~= arg;
+
+    while (op.hasArgs())
+      if (op.parse("--toktable", cmd.printTokensTable)) {}
+      else if (op.parse("--asttable", cmd.printNodesTable)) {}
+      else cmd.filePaths ~= op.getArg();
+
     cmd.run();
     break;
   case "tok", "tokenize":
