@@ -286,28 +286,21 @@ void main(char[][] args)
     if (args.length < 3)
       return printHelp(command);
     SourceText sourceText;
-    char[] filePath;
-    char[] separator;
-    bool ignoreWSToks;
-    bool printWS;
+    string srcFilePath;
+    string separator = "\n";
+    bool ignoreWSToks, printWS, fromStdin;
 
-    foreach (arg; args[2..$])
-    {
-      if (strbeg(arg, "-s"))
-        separator = arg[2..$];
-      else if (arg == "-")
-        sourceText = new SourceText("stdin", readStdin());
-      else if (arg == "-i")
-        ignoreWSToks = true;
-      else if (arg == "-ws")
-        printWS = true;
-      else
-        filePath = arg;
-    }
+    while (op.hasArgs())
+      if (op.parse("-s", separator)) {}
+      else if (op.parse("-", fromStdin)) {}
+      else if (op.parse("-i", ignoreWSToks)) {}
+      else if (op.parse("-ws", printWS)) {}
+      else srcFilePath = op.getArg();
 
-    if (!separator) separator = "\n";
-    if (!sourceText)
-      sourceText = new SourceText(filePath, true);
+    sourceText = fromStdin ?
+      new SourceText("stdin", readStdin()) :
+      new SourceText(srcFilePath, true);
+
 
     diag = new Diagnostics();
     auto lx = new Lexer(sourceText, globalCC.tables, diag);
@@ -754,12 +747,12 @@ Usage:
 
 Options:
   -               : read text from STDIN.
-  -sSEPARATOR     : print SEPARATOR instead of newline between tokens.
+  -sSEPARATOR     : print SEPARATOR instead of '\n' between tokens.
   -i              : ignore whitespace tokens (e.g. comments, shebang etc.)
   -ws             : print a token's preceding whitespace characters.
 
 Example:
-  echo "module foo; void func(){}" | dil tok -
+  echo 'module foo; void func(){}' | dil tok -
   dil tok src/main.d | grep ^[0-9]`;
     break;
   case "dlexed", "dlx":
