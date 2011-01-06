@@ -448,6 +448,70 @@ void main(char[][] args)
   }
 }
 
+/// A command line option parser.
+struct OptParser
+{
+  string[] argv; /// The argument vector.
+
+  /// Parses a parameter.
+  bool parse(string param, ref string out_arg)
+  {
+    if (!hasArgs()) return false;
+    auto arg0 = argv[0];
+    auto n = param.length;
+    if (strbeg(arg0, param))
+    {
+      if (arg0.length == n) // arg0 == param
+      { // Eg: -I /include/path
+        if (argv.length <= 1)
+          goto Lerr;
+        out_arg = argv[1];
+        n = 2;
+      }
+      else
+      { // Eg: -I/include/path
+        auto skipEqualSign = arg0[n] == '=';
+        out_arg = arg0[n + skipEqualSign .. $];
+        n = 1;
+      }
+      consume(n); // Consume n arguments.
+      return true;
+    }
+    return false;
+  Lerr:
+    return false;
+  }
+
+  /// Parses a flag.
+  bool parse(string flag, ref bool out_arg)
+  {
+    if (hasArgs() && argv[0] == flag) {
+      out_arg = true;
+      consume(1);
+      return true;
+    }
+    return false;
+  }
+
+  /// Slices off n elements from argv.
+  void consume(size_t n)
+  {
+    argv = argv[n..$];
+  }
+
+  bool hasArgs()
+  {
+    return argv.length != 0;
+  }
+
+  string getArg()
+  {
+    auto arg = argv[0];
+    consume(1);
+    return arg;
+  }
+}
+
 /// Reads the standard input and returns its contents.
 char[] readStdin()
 {
@@ -476,14 +540,11 @@ const char[] COMMANDS =
   "  tokenize (tok)\n"
   "  translate (trans)\n";
 
-bool strbeg(char[] str, char[] begin)
+/// Returns true if str starts with s.
+bool strbeg(string str, string s)
 {
-  if (str.length >= begin.length)
-  {
-    if (str[0 .. begin.length] == begin)
-      return true;
-  }
-  return false;
+  return str.length >= s.length &&
+         str[0 .. s.length] == s;
 }
 
 /// Creates the global compilation context.
