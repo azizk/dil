@@ -73,58 +73,37 @@ void main(char[][] args)
     CompileCommand cmd;
     cmd.context = globalCC;
     cmd.diag = diag;
+    string value;
 
-    foreach (arg; args[2..$])
-    {
-      if (parseDebugOrVersion(arg, cmd.context))
-      {}
-      else if (strbeg(arg, "-I"))
-        cmd.context.importPaths ~= arg[2..$];
-      else if (arg == "-release")
-        cmd.context.releaseBuild = true;
-      else if (arg == "-unittest")
-      {
+    while (op.hasArgs())
+      if (parseDebugOrVersion(op, cmd.context)) {}
+      else if (op.parse("-I", value))
+        cmd.context.importPaths ~= value;
+      else if (op.parse("-release", cmd.context.releaseBuild)) {}
+      else if (op.parse("-unittest", cmd.context.unittestBuild)) {
       version(D2)
         cmd.context.addVersionId("unittest");
-        cmd.context.unittestBuild = true;
       }
-      else if (arg == "-d")
-        cmd.context.acceptDeprecated = true;
-      else if (arg == "-ps")
-        cmd.printSymbolTree = true;
-      else if (arg == "-pm")
-        cmd.printModuleTree = true;
-      else
-        cmd.filePaths ~= arg;
-    }
+      else if (op.parse("-d", cmd.context.acceptDeprecated)) {}
+      else if (op.parse("-ps", cmd.printSymbolTree)) {}
+      else if (op.parse("-pm", cmd.printModuleTree)) {}
+      else cmd.filePaths ~= op.getArg();
+
     cmd.run();
     diag.hasInfo && printErrors(diag);
     break;
   case "pytree", "py":
     if (args.length < 4)
       return printHelp(command);
-    auto dest = Path(args[2]);
+    auto dest = Path(op.getArg());
     string[] filePaths;
     string format = "d_{0}.py";
     bool verbose;
-    // Parse arguments.
-    bool skip;
-    args = args[3..$];
-    foreach (i, arg; args)
-    {
-      if (skip)
-        skip = false;
-      else if (strbeg(arg, "--fmt="))
-        format = arg[6..$];
-      else if (arg == "--fmt" && i+1 != args.length) {
-        format = args[i+1];
-        skip = true; // Skip next argument.
-      }
-      else if (arg == "-v")
-        verbose = true;
-      else
-        filePaths ~= arg;
-    }
+
+    while (op.hasArgs())
+      if (op.parse("--fmt", format)) {}
+      else if (op.parse("-v", verbose)) {}
+      else filePaths ~= op.getArg();
 
     // Execute the command.
     foreach (path; filePaths)
@@ -155,37 +134,34 @@ void main(char[][] args)
     cmd.destDirPath = args[2];
     cmd.context = globalCC;
     cmd.diag = diag;
+    string value;
 
     // Parse arguments.
-    foreach (arg; args[3..$])
+    while (op.hasArgs())
     {
-      if (parseDebugOrVersion(arg, cmd.context))
-      {}
-      else if (arg == "--xml")
-        cmd.writeXML = true;
-      else if (arg == "--raw")
-        cmd.rawOutput = true;
-      else if (arg == "-hl")
-        cmd.writeHLFiles = true;
-      else if (arg == "-i")
-        cmd.includeUndocumented = true;
-      else if (arg == "--inc-private")
-        cmd.includePrivate = true;
-      else if (arg == "-v")
-        cmd.verbose = true;
-      else if (arg == "--kandil")
-        cmd.useKandil = true;
-      else if (arg == "--report")
-        cmd.writeReport = true;
-      else if (strbeg(arg, "-rx="))
-        cmd.regexps ~= new Regex(arg[4..$]);
-      else if (arg.length > 3 && strbeg(arg, "-m="))
-        cmd.modsTxtPath = arg[3..$];
-      else if (arg.length > 6 && icompare(arg[$-5..$], ".ddoc") == 0)
-        cmd.macroPaths ~= arg;
+      if (parseDebugOrVersion(op, cmd.context)) {}
+      else if (op.parse("--xml", cmd.writeXML)) {}
+      else if (op.parse("--raw", cmd.rawOutput)) {}
+      else if (op.parse("-hl", cmd.writeHLFiles)) {}
+      else if (op.parse("-i", cmd.includeUndocumented)) {}
+      else if (op.parse("--inc-private", cmd.includePrivate)) {}
+      else if (op.parse("-v", cmd.verbose)) {}
+      else if (op.parse("--kandil", cmd.useKandil)) {}
+      else if (op.parse("--report", cmd.writeReport)) {}
+      else if (op.parse("-rx", value))
+        cmd.regexps ~= new Regex(value);
+      else if (op.parse("-m", value))
+        cmd.modsTxtPath = value;
       else
-        cmd.filePaths ~= arg;
+      {
+        auto arg = op.getArg();
+        if (arg.length > 6 && icompare(arg[$-5..$], ".ddoc") == 0)
+          cmd.macroPaths ~= arg;
+        else
+          cmd.filePaths ~= arg;
+      }
     }
+
     cmd.run();
     diag.hasInfo && printErrors(diag);
     break;
@@ -197,8 +173,9 @@ void main(char[][] args)
     cmd.cc = globalCC;
     cmd.diag = diag;
 
-    foreach (arg; args[2..$])
+    while (op.hasArgs())
     {
+      auto arg = op.getArg();
       switch (arg)
       {
       case "--syntax":
@@ -216,6 +193,7 @@ void main(char[][] args)
           cmd.filePathDest = arg;
       }
     }
+
     cmd.run();
     diag.hasInfo && printErrors(diag);
     break;
@@ -225,23 +203,23 @@ void main(char[][] args)
 
     IGraphCommand cmd;
     cmd.context = globalCC;
+    string value;
 
-    foreach (arg; args[2..$])
+    while (op.hasArgs())
     {
-      if (parseDebugOrVersion(arg, cmd.context))
-      {}
-      else if (strbeg(arg, "-I"))
-        cmd.context.importPaths ~= arg[2..$];
-      else if (strbeg(arg, "-x"))
-        cmd.regexps ~= arg[2..$];
-      else if (strbeg(arg, "-l"))
-        cmd.levels = Integer.toInt(arg[2..$]);
-      else if (strbeg(arg, "-si"))
-        cmd.siStyle = arg[3..$];
-      else if (strbeg(arg, "-pi"))
-        cmd.piStyle = arg[3..$];
+      if (parseDebugOrVersion(op, cmd.context)) {}
+      else if (op.parse("-I", value))
+        cmd.context.importPaths ~= value;
+      else if (op.parse("-x", value))
+        cmd.regexps ~= value;
+      else if (op.parse("-l", value))
+        cmd.levels = Integer.toInt(value);
+      else if (op.parse("-si", value))
+        cmd.siStyle = value;
+      else if (op.parse("-pi", value))
+        cmd.piStyle = value;
       else
-        switch (arg)
+        switch (value = op.getArg())
         {
         case "--dot":
           cmd.add(IGraphCommand.Option.PrintDot); break;
@@ -262,9 +240,10 @@ void main(char[][] args)
         case "-m":
           cmd.add(IGraphCommand.Option.MarkCyclicModules); break;
         default:
-          cmd.filePath = arg;
+          cmd.filePath = value;
         }
     }
+
     cmd.run();
     break;
   case "stats", "statistics":
@@ -554,25 +533,21 @@ version(D2)
 }
 
 /// Parses a debug or version command line option.
-bool parseDebugOrVersion(string arg, CompilationContext context)
+bool parseDebugOrVersion(ref OptParser op, CompilationContext context)
 {
-  if (strbeg(arg, "-debug"))
+  string val;
+  if (op.argv[0] == "-debug")
+    context.debugLevel = 1;
+  else if (op.parse("-debug", val))
   {
-    if (arg.length > 7)
-    {
-      auto val = arg[7..$];
-      if (isdigit(val[0]))
-        context.debugLevel = Integer.toInt(val);
-      else if (context.tables.idents.isValidUnreservedIdentifier(val))
-        context.addDebugId(val);
-    }
-    else
-      context.debugLevel = 1;
+    if (val.length && isdigit(val[0]))
+      context.debugLevel = Integer.toInt(val);
+    else if (context.tables.idents.isValidUnreservedIdentifier(val))
+      context.addDebugId(val);
   }
-  else if (arg.length > 9 && strbeg(arg, "-version="))
+  else if (op.parse("-version", val))
   {
-    auto val = arg[9..$];
-    if (isdigit(val[0]))
+    if (val.length && isdigit(val[0]))
       context.versionLevel = Integer.toInt(val);
     else if (context.tables.idents.isValidUnreservedIdentifier(val))
       context.addVersionId(val);
