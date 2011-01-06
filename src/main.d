@@ -60,7 +60,10 @@ void main(char[][] args)
   if (args.length <= 1)
     return printHelp("main");
 
+  OptParser op;
+  op.argv = args[2..$];
   string command = args[1];
+
   switch (command)
   {
   case "c", "compile":
@@ -326,21 +329,17 @@ void main(char[][] args)
     if (args.length < 3)
       return printHelp(command);
     SourceText sourceText;
-    char[] filePath, outFilePath;
-    bool set_outFilePath;
+    string srcFilePath, outFilePath;
+    bool fromStdin;
 
-    foreach (arg; args[2..$])
-      if (arg == "-")
-        sourceText = new SourceText("stdin", readStdin());
-      else if (arg == "-o")
-        set_outFilePath = true;
-      else if (set_outFilePath)
-        (outFilePath = arg), (set_outFilePath = false);
-      else
-        filePath = arg;
+    while (op.hasArgs())
+      if (op.parse("-", fromStdin)) {}
+      else if (op.parse("-o", outFilePath)) {}
+      else srcFilePath = op.getArg();
 
-    if (!sourceText)
-      sourceText = new SourceText(filePath, true);
+    sourceText = fromStdin ?
+      new SourceText("stdin", readStdin()) :
+      new SourceText(srcFilePath, true);
 
     diag = new Diagnostics();
     auto lx = new Lexer(sourceText, globalCC.tables, diag);
