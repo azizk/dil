@@ -49,7 +49,7 @@ debug
 import tango.core.tools.TraceExceptions;
 
 /// Entry function of dil.
-void main(char[][] args)
+void main(string[] args)
 {
   auto globalCC = newCompilationContext();
   auto diag = globalCC.diag;
@@ -353,10 +353,10 @@ void main(char[][] args)
   case "profile":
     if (args.length < 3)
       break;
-    char[][] filePaths;
+    string[] filePaths;
     if (args[2] == "dstress")
     {
-      auto text = cast(char[]) File.get("dstress_files");
+      auto text = cast(string) File.get("dstress_files");
       filePaths = split(text, "\0");
     }
     else
@@ -374,7 +374,7 @@ void main(char[][] args)
     break;
   case "settings", "set":
     alias GlobalSettings GS;
-    char[] versionIds, importPaths, ddocPaths;
+    string versionIds, importPaths, ddocPaths;
     foreach (item; GS.versionIds)
       versionIds ~= item ~ ";";
     foreach (item; GS.importPaths)
@@ -483,7 +483,7 @@ struct OptParser
 }
 
 /// Reads the standard input and returns its contents.
-char[] readStdin()
+string readStdin()
 {
   char[] text;
   while (1)
@@ -497,7 +497,7 @@ char[] readStdin()
 }
 
 /// Available commands.
-const char[] COMMANDS =
+const string COMMANDS =
   "  help (?)\n"
   "  compile (c)\n"
   "  ddoc (d)\n"
@@ -562,7 +562,7 @@ void printErrors(Diagnostics diag)
 {
   foreach (info; diag.info)
   {
-    char[] errorFormat;
+    string errorFormat;
     if (info.classinfo is LexerError.classinfo)
       errorFormat = GlobalSettings.lexerErrorFormat;
     else if (info.classinfo is ParserError.classinfo)
@@ -582,9 +582,9 @@ void printErrors(Diagnostics diag)
 
 /// Prints the help message of a command.
 /// If the command wasn't found, the main help message is printed.
-void printHelp(char[] command)
+void printHelp(string command)
 {
-  char[] msg;
+  string msg;
   switch (command)
   {
   case "c", "compile":
