@@ -3,6 +3,10 @@
 # License: zlib/libpng
 from __future__ import unicode_literals
 import os, shutil
+from re import compile as re_compile
+from sys import version_info as vi
+from glob import glob
+from codecs import open
 __all__ = ["Path"]
 
 op = os.path
@@ -131,7 +135,6 @@ class Path(unicode):
   def walk(self, **kwargs):
     """ Returns a generator that walks through a directory tree. """
     if "followlinks" in kwargs:
-      from sys import version_info as vi
       if vi[0]*10+vi[1] < 26: # Only Python 2.6 or newer supports followlinks.
         del kwargs["followlinks"]
     return os.walk(self, **kwargs)
@@ -182,15 +185,30 @@ class Path(unicode):
     os.rename(self, to)
     return self
 
-  def renames(self, to):
-    os.renames(self, to)
+  def renames(self, other):
+    """ Renames another file or directory. """
+    os.renames(self, other)
     return self
 
   def glob(self, pattern):
-    from glob import glob
+    """ Returns a list of paths matching the glob pattern. """
     return map(Path, glob(unicode(self/pattern)))
+
+  def rxglob(self, byname=None, bypath=None, prunedir=None):
+    """ Walks through a dir tree using regular expressions.
+        Also accepts callback functions. """
+    byname, bypath, prunedir = [(rx if callable(rx) else
+      re_compile(rx).search if rx else lambda x: False)
+      for rx in (byname, bypath, prunedir)]
+    found = []
+    for root, dirs, files in self.walk(followlinks=True):
+      dirs[:] = [dir for dir in dirs if not prunedir(Path(root, dir))]
+      for filename in files:
+        fullpath = Path(root, filename)
+        if byname(filename) or bypath(fullpath):
+          found.append(fullpath)
+    return found
 
   def open(self, mode='rb', encoding='utf-8'):
     """ Opens a file with an encoding (default=UTF-8.) """
-    from codecs import open
     return open(self, mode=mode, encoding=encoding)
