@@ -798,7 +798,7 @@ abstract class DDocEmitter : DefaultVisitor2
   {
     const kind = is(T == AliasDeclaration) ? "alias" : "typedef";
     const kindID = is(T == AliasDeclaration) ? K.Alias : K.Typedef;
-    if (auto vd = d.decl.Is!(VariablesDeclaration))
+    if (auto vd = d.vardecl.Is!(VariablesDeclaration))
       foreach (name; vd.names)
         DECL({
           write("\1DIL_KW ", kind, "\2 "); write(vd.typeNode); write(" ");
@@ -809,9 +809,8 @@ abstract class DDocEmitter : DefaultVisitor2
           SYMBOL(name.text, kindID, vd);
           vd.begin = saved_begin; // Restore to the old value.
         }, d);
-    else if (auto fd = d.decl.Is!(FunctionDeclaration))
-    {}
-    // DECL({ write(textSpan(d.begin, d.end)); }, false);
+    else
+      assert(0, "unhandled case");
     DESC();
   }
 

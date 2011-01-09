@@ -328,20 +328,22 @@ class Parser
       }
       } // version(D2)
 
-      auto d = new AliasDeclaration(parseAttributes(&decl));
+      auto ad = new AliasDeclaration(parseAttributes(&decl));
+      ad.vardecl = decl;
       if (auto var = decl.Is!(VariablesDeclaration))
       {
         if (auto init = var.firstInit())
           error(init.begin.prevNWS(), MSG.AliasHasInitializer);
       }
-      else if (!decl.Is!(FunctionDeclaration))
+      else
         error2(MSG.AliasExpectsVariable, decl.begin);
-      decl = d;
+      decl = ad;
       break;
     case T.Typedef:
       nT();
       auto td = new TypedefDeclaration(parseAttributes(&decl));
-      if (!decl.Is!(VariablesDeclaration) && !decl.Is!(FunctionDeclaration))
+      td.vardecl = decl;
+      if (!decl.Is!(VariablesDeclaration))
         error2(MSG.TypedefExpectsVariable, decl.begin);
       decl = td;
       break;

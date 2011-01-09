@@ -155,6 +155,10 @@ class ImportDeclaration : Declaration
 class AliasDeclaration : Declaration
 {
   Declaration decl;
+  /// Shortcut that skips any attributes inbetween.
+  /// Eg.: alias extern(C) void function() C_funcptr;
+  ///        decl^  vardecl^
+  Declaration vardecl;
   this(Declaration decl)
   {
     mixin(set_kind);
@@ -178,6 +182,7 @@ class AliasThisDeclaration : Declaration
 class TypedefDeclaration : Declaration
 {
   Declaration decl;
+  Declaration vardecl;
   this(Declaration decl)
   {
     mixin(set_kind);
