@@ -299,7 +299,7 @@ override
       return d;
 
     // Create the symbol.
-    d.symbol = new Enum(d.nameId, d);
+    d.symbol = new EnumSymbol(d.nameId, d);
 
     bool isAnonymous = d.symbol.isAnonymous;
     if (isAnonymous)
@@ -336,7 +336,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new Class(d.nameId, d);
+    d.symbol = new ClassSymbol(d.nameId, d);
     // Insert into current scope.
     insert(d.symbol);
     enterScope(d.symbol);
@@ -351,7 +351,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new dil.semantic.Symbols.Interface(d.nameId, d);
+    d.symbol = new InterfaceSymbol(d.nameId, d);
     // Insert into current scope.
     insert(d.symbol);
     enterScope(d.symbol);
@@ -366,7 +366,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new Struct(d.nameId, d);
+    d.symbol = new StructSymbol(d.nameId, d);
 
     if (d.symbol.isAnonymous)
       d.symbol.name = context.tables.idents.genAnonStructID();
@@ -390,7 +390,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new Union(d.nameId, d);
+    d.symbol = new UnionSymbol(d.nameId, d);
 
     if (d.symbol.isAnonymous)
       d.symbol.name = context.tables.idents.genAnonUnionID();
@@ -412,35 +412,35 @@ override
 
   D visit(ConstructorDeclaration d)
   {
-    auto func = new Function(Ident.Ctor, d);
+    auto func = new FunctionSymbol(Ident.Ctor, d);
     insertOverload(func);
     return d;
   }
 
   D visit(StaticConstructorDeclaration d)
   {
-    auto func = new Function(Ident.Ctor, d);
+    auto func = new FunctionSymbol(Ident.Ctor, d);
     insertOverload(func);
     return d;
   }
 
   D visit(DestructorDeclaration d)
   {
-    auto func = new Function(Ident.Dtor, d);
+    auto func = new FunctionSymbol(Ident.Dtor, d);
     insertOverload(func);
     return d;
   }
 
   D visit(StaticDestructorDeclaration d)
   {
-    auto func = new Function(Ident.Dtor, d);
+    auto func = new FunctionSymbol(Ident.Dtor, d);
     insertOverload(func);
     return d;
   }
 
   D visit(FunctionDeclaration d)
   {
-    auto func = new Function(d.nameId, d);
+    auto func = new FunctionSymbol(d.nameId, d);
     insertOverload(func);
     return d;
   }
@@ -452,11 +452,11 @@ override
       return error(vd.begin, MSG.InterfaceCantHaveVariables), vd;
 
     // Insert variable symbols in this declaration into the symbol table.
-    vd.variables = new Variable[vd.names.length];
+    vd.variables = new VariableSymbol[vd.names.length];
     foreach (i, name; vd.names)
     {
       auto nameId = vd.nameId(i);
-      auto variable = new Variable(nameId, protection, storageClass,
+      auto variable = new VariableSymbol(nameId, protection, storageClass,
         linkageType, vd);
       variable.value = vd.inits[i];
       vd.variables[i] = variable;
@@ -467,14 +467,14 @@ override
 
   D visit(InvariantDeclaration d)
   {
-    auto func = new Function(Ident.Invariant, d);
+    auto func = new FunctionSymbol(Ident.Invariant, d);
     insert(func);
     return d;
   }
 
   D visit(UnittestDeclaration d)
   {
-    auto func = new Function(Ident.Unittest, d);
+    auto func = new FunctionSymbol(Ident.Unittest, d);
     insertOverload(func);
     return d;
   }
@@ -528,7 +528,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new Template(d.nameId, d);
+    d.symbol = new TemplateSymbol(d.nameId, d);
     // Insert into current scope.
     insertOverload(d.symbol);
     return d;
@@ -536,14 +536,14 @@ override
 
   D visit(NewDeclaration d)
   {
-    auto func = new Function(Ident.New, d);
+    auto func = new FunctionSymbol(Ident.New, d);
     insert(func);
     return d;
   }
 
   D visit(DeleteDeclaration d)
   {
-    auto func = new Function(Ident.Delete, d);
+    auto func = new FunctionSymbol(Ident.Delete, d);
     insert(func);
     return d;
   }

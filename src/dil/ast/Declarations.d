@@ -215,7 +215,7 @@ class EnumDeclaration : Declaration
     return name ? name.ident : null;
   }
 
-  Enum symbol;
+  EnumSymbol symbol;
 
   mixin(copyMethod);
 }
@@ -289,7 +289,7 @@ class TemplateDeclaration : Declaration
     return begin.kind != TOK.Template && begin.kind != TOK.Mixin;
   }
 
-  Template symbol; /// The template symbol for this declaration.
+  TemplateSymbol symbol; /// The template symbol for this declaration.
 
   mixin(copyMethod);
 }
@@ -331,7 +331,7 @@ class ClassDeclaration : AggregateDeclaration
     this.bases = bases;
   }
 
-  Class symbol; /// The class symbol for this declaration.
+  ClassSymbol symbol; /// The class symbol for this declaration.
 
   mixin(copyMethod);
 }
@@ -352,7 +352,7 @@ class InterfaceDeclaration : AggregateDeclaration
 
   alias dil.semantic.Symbols.Interface Interface;
 
-  Interface symbol; /// The interface symbol for this declaration.
+  InterfaceSymbol symbol; /// The interface symbol for this declaration.
 
   mixin(copyMethod);
 }
@@ -373,7 +373,7 @@ class StructDeclaration : AggregateDeclaration
     this.alignSize = alignSize;
   }
 
-  Struct symbol; /// The struct symbol for this declaration.
+  StructSymbol symbol; /// The struct symbol for this declaration.
 
   mixin(copyMethod);
 }
@@ -388,7 +388,7 @@ class UnionDeclaration : AggregateDeclaration
     addOptChild(decls);
   }
 
-  Union symbol; /// The union symbol for this declaration.
+  UnionSymbol symbol; /// The union symbol for this declaration.
 
   mixin(copyMethod);
 }
@@ -546,7 +546,7 @@ class VariablesDeclaration : Declaration
     return null;
   }
 
-  Variable[] variables;
+  VariableSymbol[] variables;
 
   mixin(copyMethod);
 }

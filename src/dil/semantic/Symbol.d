@@ -98,7 +98,9 @@ class Symbol
   /// Casts the symbol to Class.
   Class to(Class)()
   {
-    assert(mixin(`this.sid == mixin("SYM." ~ Class.stringof)`));
+    assert(mixin(`this.sid == mixin("SYM." ~
+      { const N = Class.stringof; // Slice off "Symbol" from the name.
+        return N[$-6..$] == "Symbol" ? N[0..$-6] : N; }())`));
     return cast(Class)cast(void*)this;
   }
 

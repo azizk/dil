@@ -57,7 +57,7 @@ abstract class SettingsLoader
     auto t = var.node.begin;
     if (!var.isVariable)
       return error(t, "'{}' is not a variable declaration", name), T.init;
-    auto value = var.to!(Variable).value;
+    auto value = var.to!(VariableSymbol).value;
     if (!value)
       return error(t, "'{}' variable has no value set", name), T.init;
     T val = value.Is!(T); // Try casting to T.

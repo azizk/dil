@@ -54,8 +54,8 @@ class ScopeSymbol : Symbol
 abstract class Aggregate : ScopeSymbol
 {
   Type type;
-  Function[] funcs;
-  Variable[] fields;
+  FunctionSymbol[] funcs;
+  VariableSymbol[] fields;
 
   this(SYM sid, Identifier* name, Node node)
   {
@@ -66,16 +66,16 @@ abstract class Aggregate : ScopeSymbol
   {
     if (s.isVariable)
       // Append variable to fields.
-      fields ~= cast(Variable)cast(void*)s;
+      fields ~= cast(VariableSymbol)cast(void*)s;
     else if (s.isFunction)
       // Append function to funcs.
-      funcs ~= cast(Function)cast(void*)s;
+      funcs ~= cast(FunctionSymbol)cast(void*)s;
     super.insert(s, ident);
   }
 }
 
 /// A class symbol.
-class Class : Aggregate
+class ClassSymbol : Aggregate
 {
   this(Identifier* name, Node classNode)
   {
@@ -85,7 +85,7 @@ class Class : Aggregate
 }
 
 /// An interface symbol.
-class Interface : Aggregate
+class InterfaceSymbol : Aggregate
 {
   this(Identifier* name, Node interfaceNode)
   {
@@ -95,7 +95,7 @@ class Interface : Aggregate
 }
 
 /// A struct symbol.
-class Struct : Aggregate
+class StructSymbol : Aggregate
 {
   bool isAnonymous;
   this(Identifier* name, Node structNode)
@@ -107,7 +107,7 @@ class Struct : Aggregate
 }
 
 /// A union symbol.
-class Union : Aggregate
+class UnionSymbol : Aggregate
 {
   bool isAnonymous;
   this(Identifier* name, Node unionNode)
@@ -119,7 +119,7 @@ class Union : Aggregate
 }
 
 /// An enum symbol.
-class Enum : ScopeSymbol
+class EnumSymbol : ScopeSymbol
 {
   TypeEnum type;
   bool isAnonymous;
@@ -137,7 +137,7 @@ class Enum : ScopeSymbol
 }
 
 /// A template symbol.
-class Template : ScopeSymbol
+class TemplateSymbol : ScopeSymbol
 {
   this(Identifier* name, Node templateNode)
   {
@@ -146,14 +146,14 @@ class Template : ScopeSymbol
 }
 
 /// A function symbol.
-class Function : ScopeSymbol
+class FunctionSymbol : ScopeSymbol
 {
   Protection prot; /// The protection.
   StorageClass stcs; /// The storage classes.
   LinkageType linkType; /// The linkage type.
 
   Type returnType;
-  Variable[] params;
+  VariableSymbol[] params;
 
   this(Identifier* name, Node functionNode)
   {
@@ -162,7 +162,7 @@ class Function : ScopeSymbol
 }
 
 /// A variable symbol.
-class Variable : Symbol
+class VariableSymbol : Symbol
 {
   Protection prot; /// The protection.
   StorageClass stcs; /// The storage classes.
@@ -184,7 +184,7 @@ class Variable : Symbol
 }
 
 /// An enum member symbol.
-class EnumMember : Variable
+class EnumMember : VariableSymbol
 {
   this(Identifier* name,
        Protection prot, StorageClass stcs, LinkageType linkType,
@@ -196,7 +196,7 @@ class EnumMember : Variable
 }
 
 /// An alias symbol.
-class Alias : Symbol
+class AliasSymbol : Symbol
 {
   this(Identifier* name, Node aliasNode)
   {
