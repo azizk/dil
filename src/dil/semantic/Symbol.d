@@ -74,26 +74,27 @@ class Symbol
   bool isComplete()
   { return status == Status.Complete; }
 
-  /// A template macro for building isXYZ() methods.
-  private template isX(char[] kind)
+  /// A template for building isXYZ() methods.
+  private static string is_()(string kind)
   {
-    const char[] isX = `bool is`~kind~`(){ return sid == SYM.`~kind~`; }`;
+    return `bool is`~kind~`(){ return sid == SYM.`~kind~`; }`;
   }
-  mixin(isX!("Module"));
-  mixin(isX!("Package"));
-  mixin(isX!("Class"));
-  mixin(isX!("Interface"));
-  mixin(isX!("Struct"));
-  mixin(isX!("Union"));
-  mixin(isX!("Enum"));
-  mixin(isX!("EnumMember"));
-  mixin(isX!("Template"));
-  mixin(isX!("Variable"));
-  mixin(isX!("Function"));
-  mixin(isX!("Alias"));
-  mixin(isX!("OverloadSet"));
-  mixin(isX!("Scope"));
-//   mixin(isX!("Type"));
+
+  mixin(is_("Module"));
+  mixin(is_("Package"));
+  mixin(is_("Class"));
+  mixin(is_("Interface"));
+  mixin(is_("Struct"));
+  mixin(is_("Union"));
+  mixin(is_("Enum"));
+  mixin(is_("EnumMember"));
+  mixin(is_("Template"));
+  mixin(is_("Variable"));
+  mixin(is_("Function"));
+  mixin(is_("Alias"));
+  mixin(is_("OverloadSet"));
+  mixin(is_("Scope"));
+//   mixin(is_("Type"));
 
   /// Casts the symbol to Class.
   Class to(Class)()
