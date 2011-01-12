@@ -12,6 +12,8 @@ import dil.ast.Node,
        dil.ast.NodeCopier;
 import dil.lexer.Identifier;
 import dil.semantic.Types;
+import dil.Float,
+       dil.Complex;
 import common;
 
 class IllegalExpression : Expression
@@ -762,10 +764,9 @@ class IntExpression : Expression
 
 class RealExpression : Expression
 {
-  // TODO: switch to 'dil.Float'.
-  real number;
+  Float number;
 
-  this(real number, Type type)
+  this(Float number, Type type)
   {
     mixin(set_kind);
     this.number = number;
@@ -793,7 +794,7 @@ class RealExpression : Expression
     default:
       assert(token.kind == TOK.Float64);
     }
-    this(0.0, type);
+    this(token.mpfloat, type);
   }
 
   mixin(copyMethod);
@@ -804,14 +805,24 @@ class RealExpression : Expression
 /// It is only created in the semantic phase.
 class ComplexExpression : Expression
 {
-  // Complex number; // TODO: switch to this class.
-  creal number;
-  this(creal number, Type type)
+  Complex number;
+
+  this(Complex number, Type type)
   {
     mixin(set_kind);
     this.number = number;
     this.type = type;
   }
+
+  Float re()
+  {
+    return number.re;
+  }
+  Float im()
+  {
+    return number.im;
+  }
+
   mixin(copyMethod);
 }
 
