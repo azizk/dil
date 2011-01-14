@@ -17,10 +17,10 @@ char[] StringCTF(uint x)
 }
 
 /// Converts an unsigned integer to a string.
-char[] String(uint x)
+char[] String(ulong x)
 {
-  char[10] buffer; // "4294967295".len = 10
-  auto end = buffer.ptr + 10;
+  char[20] buffer; // ulong.max -> "18446744073709551616".len = 20
+  auto end = buffer.ptr + buffer.length;
   auto p = end;
   do
     *--p = '0' + x % 10;
@@ -33,6 +33,17 @@ char[] String(char* begin, char* end)
 {
   assert(begin && end && begin <= end);
   return begin[0..end-begin];
+}
+
+/// Encodes a string's characters with hexadecimal digits.
+char[] StringHex(char[] str)
+{
+  const hexdigits = "0123456789abcdef";
+  char[] inhex = new char[str.length*2]; // Reserve space.
+  char* p = inhex.ptr;
+  foreach (ubyte c; str)
+    (*p = hexdigits[c >> 4]), (*++p = hexdigits[c & 0xF]);
+  return inhex;
 }
 
 /// Calculates a hash value for str.
