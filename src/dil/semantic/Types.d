@@ -36,7 +36,7 @@ abstract class Type/* : Symbol*/
   /// Casts the type to Class.
   Class to(Class)()
   { // [4..$] is there for slicing off "Type" from the class name.
-    assert(this.tid == mixin(`mixin("TYP." ~ Class.stringof[4..$])`) ||
+    assert(this.tid == mixin("TYP." ~ Class.stringof[4..$]) ||
            Class.stringof == "TypeBasic" && this.isBasic());
     return cast(Class)cast(void*)this;
   }
@@ -527,12 +527,19 @@ class TypeInvariant : Type
 class TypeTable
 {
   Type[hash_t] table; /// The table data structure.
-  /// Looks up ident in the table.
+
+  /// Looks up a type by its mangled id.
   /// Returns: the symbol if there, otherwise null.
   Type lookup(string mangled)
   {
     assert(mangled.length);
-    auto ptype = hashOf(mangled) in table;
+    return lookup(hashOf(mangled));
+  }
+
+  /// Looks up a type by the hash of its mangled id.
+  Type lookup(hash_t hash)
+  {
+    auto ptype = hash in table;
     return ptype ? *ptype : null;
   }
 
@@ -679,6 +686,8 @@ static:
       "Short", "Ushort", "Int", "Uint", "Long", "Ulong", "Cent", "Ucent",
       "Float", "Double", "Real", "Ifloat", "Idouble", "Ireal", "Cfloat",
       "Cdouble", "Creal", "Void"]));
+    // FIXME: Size_t and Ptrdiff_t should depend on the platform
+    // the code is generated for.
     version(X86_64)
     {
       Size_t = Ulong;
