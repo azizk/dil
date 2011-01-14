@@ -857,7 +857,7 @@ class StringExpression : Expression
     mixin(set_kind);
     this.str = str;
     this.charType = charType;
-    this.type = new TypeSArray(charType, str.length);
+    this.type = charType.arrayOf(str.length/charType.sizeOf());
   }
 
   this(ubyte[] str, char kind)
