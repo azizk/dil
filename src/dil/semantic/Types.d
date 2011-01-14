@@ -95,6 +95,14 @@ abstract class Type/* : Symbol*/
     return new TypeAArray(this, key);
   }
 
+  /// Returns a static array type using this type as its base.
+  /// Params:
+  ///   size = the number of elements in the array.
+  TypeSArray arrayOf(size_t size)
+  {
+    return new TypeSArray(this, size);
+  }
+
   /// Returns the byte size of this type.
   final size_t sizeOf()
   {
