@@ -15,15 +15,15 @@ import common;
 ///
 /// E.g.:
 /// ---
-/// Declaration visit(ClassDeclaration node){return node;}
-/// Expression visit(CommaExpression node){return node;}
+/// Declaration visit(ClassDeclaration node){return unhandled(node);}
+/// Expression visit(CommaExpression node){return unhandled(node);}
 /// ---
 char[] generateVisitMethods()
 {
   char[] text = "void _beforeFirstVisitMethod(){}";
   foreach (className; NodeClassNames)
     text ~= "returnType!("~className~") visit("~
-      className~" node){return node;}\n";
+      className~" node){return unhandled(node).to!("~className~");}\n";
   return text;
 }
 
@@ -32,7 +32,7 @@ char[] generateVisitMethods2()
 {
   char[] text = "void _beforeFirstVisitMethod(){}";
   foreach (className; NodeClassNames)
-    text ~= "void visit("~className~" node){}\n";
+    text ~= "void visit("~className~" node){unhandled(node);}\n";
   return text;
 }
 
@@ -80,6 +80,10 @@ abstract class Visitor
     return getVisitMethod!(Node)(this, n)(n);
   }
 
+  /// Called by visit() methods that were not overridden.
+  Node unhandled(Node n)
+  { return n; }
+
 final:
   // Visits a Declaration and returns a Declaration.
   Declaration visitD(Declaration n)
@@ -119,6 +123,10 @@ abstract class Visitor2
   {
     getVisitMethod!(void)(this, n)(n);
   }
+
+  /// Called by visit() methods that were not overridden.
+  void unhandled(Node n)
+  {}
 
 final:
   alias dispatch visit;
