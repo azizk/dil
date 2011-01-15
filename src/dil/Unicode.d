@@ -57,6 +57,9 @@ bool isValidLead(dchar c)
   return isValidChar(c);
 }
 
+// NB: All functions below advance the pointer/index only
+//     when the decoded Unicode sequence was valid.
+
 /// Advances ref_p only if this is a valid Unicode alpha character.
 /// Params:
 ///   ref_p = set to the last trail byte of the valid UTF-8 sequence.
@@ -243,8 +246,10 @@ body
 ///   index = where to start from.
 /// Returns: ERROR_CHAR in case of an error in the sequence.
 dchar decode(wchar[] str, ref size_t index)
+in { assert(str.length && index < str.length, "empty string or reached end"); }
+out(c) { assert(index <= str.length && (isValidChar(c) || c == ERROR_CHAR)); }
+body
 {
-  assert(str.length && index < str.length);
   dchar c = str[index];
   if (0xD800 > c || c > 0xDFFF)
     return ++index, c;
@@ -257,8 +262,8 @@ dchar decode(wchar[] str, ref size_t index)
       // (c - 0xD800 + 0x40) << 10 ->
       c = (c - 0xD7C0) << 10;
       c |= (c2 & 0x3FF);
-      index += 2;
-      return c;
+      if (isValidChar(c))
+        return (index += 2), c;
     }
   }
   return ERROR_CHAR;
@@ -270,8 +275,10 @@ dchar decode(wchar[] str, ref size_t index)
 ///   end = one past the end of the sequence.
 /// Returns: ERROR_CHAR in case of an error in the sequence.
 dchar decode(ref wchar* p, wchar* end)
+in { assert(p && p < end, "p is null or at the end of the string"); }
+out(c) { assert(p <= end && (isValidChar(c) || c == ERROR_CHAR)); }
+body
 {
-  assert(p && p < end);
   dchar c = *p;
   if (0xD800 > c || c > 0xDFFF)
     return ++p, c;
@@ -282,8 +289,8 @@ dchar decode(ref wchar* p, wchar* end)
     {
       c = (c - 0xD7C0) << 10;
       c |= (c2 & 0x3FF);
-      p += 2;
-      return c;
+      if (isValidChar(c))
+        return (p += 2), c;
     }
   }
   return ERROR_CHAR;
@@ -294,6 +301,9 @@ dchar decode(ref wchar* p, wchar* end)
 ///   p = start of the UTF-16 sequence.
 /// Returns: ERROR_CHAR in case of an error in the sequence.
 dchar decode(ref wchar* p)
+in { assert(p && *p, "p is null or at the end of the string"); }
+out(c) { assert(isValidChar(c) || c == ERROR_CHAR); }
+body
 {
   assert(p);
   dchar c = *p;
@@ -306,8 +316,8 @@ dchar decode(ref wchar* p)
     {
       c = (c - 0xD7C0) << 10;
       c |= (c2 & 0x3FF);
-      p += 2;
-      return c;
+      if (isValidChar(c))
+        return (p += 2), c;
     }
   }
   return ERROR_CHAR;
