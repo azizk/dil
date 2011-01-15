@@ -60,14 +60,14 @@ private string createCode(NodeKind nodeKind)
 ///
 /// E.g.:
 /// ---
-/// override returnType!("ClassDeclaration") visit(ClassDeclaration n)
+/// override returnType!(ClassDeclaration) visit(ClassDeclaration n)
 /// { /* Code that visits the subnodes... */ return n; }
 /// ---
 string generateDefaultVisitMethods()
 {
   string code;
   foreach (i, className; NodeClassNames)
-    code ~= "override returnType!(`"~className~"`) visit("~className~" n)"
+    code ~= "override returnType!("~className~") visit("~className~" n)"
             "{"
             "  "~createCode(cast(NodeKind)i)~
             "  return n;"

@@ -22,7 +22,7 @@ char[] generateVisitMethods()
 {
   char[] text = "void _beforeFirstVisitMethod(){}";
   foreach (className; NodeClassNames)
-    text ~= "returnType!(\""~className~"\") visit("~
+    text ~= "returnType!("~className~") visit("~
       className~" node){return node;}\n";
   return text;
 }
@@ -37,18 +37,18 @@ char[] generateVisitMethods2()
 }
 
 /// Gets the appropriate return type for the provided class.
-template returnType(string className)
+template returnType(Class)
 {
-  static if (is(typeof(mixin(className)) : Declaration))
+  static if (is(Class : Declaration))
     alias Declaration returnType;
   else
-  static if (is(typeof(mixin(className)) : Statement))
+  static if (is(Class : Statement))
     alias Statement returnType;
   else
-  static if (is(typeof(mixin(className)) : Expression))
+  static if (is(Class : Expression))
     alias Expression returnType;
   else
-  static if (is(typeof(mixin(className)) : TypeNode))
+  static if (is(Class : TypeNode))
     alias TypeNode returnType;
   else
     alias Node returnType;
