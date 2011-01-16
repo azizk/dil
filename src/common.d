@@ -15,9 +15,13 @@ alias dchar[] dstring; /// ditto
 alias FormatOutput!(char) FormatOut;
 /// Global formatter instance.
 static Layout!(char) Format;
+static typeof(&Stdout.format) Printf;
+static typeof(&Stdout.formatln) Printfln;
 static this()
 {
   Format = new typeof(Format);
+  Printf = &Stdout.format;
+  Printfln = &Stdout.formatln;
 }
 
 // Check version IDs.
