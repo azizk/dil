@@ -123,6 +123,13 @@ class Symbol
     return name.str;
   }
 
+  /// Returns the type of this symbol or null if inexistent.
+  /// The return type is Object to avoid circular imports.
+  Object getType()
+  {
+    return null;
+  }
+
   /// Returns the mangled name of this symbol.
   char[] toMangle()
   {

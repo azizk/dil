@@ -72,6 +72,11 @@ abstract class Aggregate : ScopeSymbol
       funcs ~= cast(FunctionSymbol)cast(void*)s;
     super.insert(s, ident);
   }
+
+  override Type getType()
+  {
+    return type;
+  }
 }
 
 /// A class symbol.
@@ -133,6 +138,11 @@ class EnumSymbol : ScopeSymbol
   void setType(TypeEnum type)
   {
     this.type = type;
+  }
+
+  override Type getType()
+  {
+    return type;
   }
 }
 
