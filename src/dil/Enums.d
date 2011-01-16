@@ -63,6 +63,14 @@ enum LinkageType
   System
 }
 
+/// Enumeration of variadic argument styles.
+enum VariadicStyle
+{
+  None, /// Not variadic.
+  C,    /// E.g.: void func(int x, ...)
+  D,    /// E.g.: void func(int[] xs...)
+}
+
 /// Namespace for functions that return the string of an enum.
 struct EnumString
 {
