@@ -6,8 +6,9 @@ module dil.semantic.Types;
 import dil.semantic.Symbol,
        dil.semantic.TypesEnum;
 import dil.lexer.Identifier,
-       dil.lexer.Funcs : hashOf;
-import dil.CompilerInfo;
+       dil.lexer.Funcs : hashOf, String;
+import dil.CompilerInfo,
+       dil.Enums;
 
 import common;
 
@@ -267,6 +268,22 @@ abstract class Type/* : Symbol*/
       return next.isScalar(); // Check base type.
     return isScalar();
   }
+
+  /// Returns the mangle character for this type.
+  final char mangleChar()
+  {
+    return MITable.mangleChar(this);
+  }
+
+  /// Returns the mangled name of this type.
+  char[] toMangle()
+  {
+    char[] m;
+    m ~= mangleChar();
+    if (next)
+      m ~= next.toMangle();
+    return m;
+  }
 }
 
 /// All basic types. E.g.: int, char, real etc.
@@ -320,6 +337,11 @@ class TypeAArray : Type
   {
     return next.toString() ~ "[" ~ keyType.toString() ~ "]";
   }
+
+  char[] toMangle()
+  {
+    return mangleChar() ~ keyType.toMangle() ~ next.toMangle();
+  }
 }
 
 /// Static array type.
@@ -334,7 +356,12 @@ class TypeSArray : Type
 
   char[] toString()
   {
-    return Format("%s[%d]", next.toString(), dimension);
+    return next.toString() ~ "[" ~ String(dimension) ~ "]";
+  }
+
+  char[] toMangle()
+  {
+    return mangleChar() ~ String(dimension) ~ next.toMangle();
   }
 }
 
@@ -386,6 +413,11 @@ class TypeEnum : Type
   {
     return symbol.name.str;
   }
+
+  char[] toMangle()
+  {
+    return mangleChar() ~ symbol.toMangle();
+  }
 }
 
 /// Struct type.
@@ -400,6 +432,11 @@ class TypeStruct : Type
   char[] toString()
   {
     return symbol.name.str;
+  }
+
+  char[] toMangle()
+  {
+    return mangleChar() ~ symbol.toMangle();
   }
 }
 
@@ -416,6 +453,11 @@ class TypeClass : Type
   {
     return symbol.name.str;
   }
+
+  char[] toMangle()
+  {
+    return mangleChar() ~ symbol.toMangle();
+  }
 }
 
 /// Typedef type.
@@ -430,6 +472,11 @@ class TypeTypedef : Type
   { // TODO:
     return "typedef";
   }
+
+  char[] toMangle()
+  {
+    return mangleChar() ~ symbol.toMangle();
+  }
 }
 
 
@@ -439,31 +486,82 @@ interface IParameters
   VariadicStyle getVariadic();
 }
 
-/// Function type.
-class TypeFunction : Type
+/// Abstract base class for TypeFunction and TypeDelegate.
+abstract class TypeFuncBase : Type
 {
-  this(Type next)
+  alias symbol params; /// The parameter list.
+  LinkageType linkage; /// The linkage type.
+  VariadicStyle variadic; /// Variadic style.
+
+  this(Type retType, Symbol params, LinkageType linkage, TYP tid)
   {
-    super(next, TYP.Function);
+    assert(params.isParameters());
+    super(retType, tid);
+    this.params = params;
+    this.linkage = linkage;
+    this.variadic = iparams().getVariadic();
+  }
+
+  final IParameters iparams()
+  {
+    return cast(IParameters)cast(void*)params;
+  }
+
+  final char[] toString(string keyword)
+  { // := ReturnType " " DelegateOrFunction ParameterList
+    return next.toString() ~ " " ~ keyword ~ params.toString();
+  }
+
+  char[] toMangle()
+  { // := MangleChar LinkageChar ParamsMangle ReturnChar ReturnTypeMangle
+    char[] m;
+    char mc = void;
+    // 'P' for functions and 'D' for delegates.
+    m ~= (tid == TYP.Function) ? 'P' : 'D';
+    switch (linkage)
+    {
+    case LinkageType.C:       mc = 'U'; break;
+    case LinkageType.D:       mc = 'F'; break;
+    case LinkageType.Cpp:     mc = 'R'; break;
+    case LinkageType.Windows: mc = 'W'; break;
+    case LinkageType.Pascal:  mc = 'V'; break;
+    default: assert(0);
+    }
+    m ~= mc;
+    m ~= params.toMangle();
+    mc = 'Z' - variadic;
+    assert(mc == 'X' || mc == 'Y' || mc == 'Z');
+    m ~= mc; // Marks end of parameter list.
+    m ~= next.toMangle();
+    return m;
+  }
+}
+
+/// Function type.
+class TypeFunction : TypeFuncBase
+{
+  this(Type retType, Symbol params, LinkageType linkage)
+  {
+    super(retType, params, linkage, TYP.Function);
   }
 
   char[] toString()
-  { // TODO:
-    return "function";
+  {
+    return super.toString("function");
   }
 }
 
 /// Delegate type.
-class TypeDelegate : Type
+class TypeDelegate : TypeFuncBase
 {
-  this(Type next)
+  this(Type retType, Symbol params, LinkageType linkage)
   {
-    super(next, TYP.Delegate);
+    super(retType, params, linkage, TYP.Delegate);
   }
 
   char[] toString()
-  { // TODO:
-    return "delegate";
+  {
+    return super.toString("delegate");
   }
 }
 
@@ -479,6 +577,12 @@ class TypeIdentifier : Type
   char[] toString()
   {
     return ident.str;
+  }
+
+  char[] toMangle()
+  { // := MangleChar IDLength ID
+    auto id = ident.str;
+    return mangleChar() ~ String(id.length) ~ id;
   }
 }
 
@@ -499,14 +603,24 @@ class TypeTemplInstance : Type
 /// Template tuple type.
 class TypeTuple : Type
 {
-  this(Type next)
+  alias symbol params;
+
+  this(Symbol params)
   {
-    super(next, TYP.Tuple);
+    assert(params.isParameters());
+    super(null, TYP.Tuple);
+    this.params = params;
   }
 
   char[] toString()
-  { // TODO:
-    return "tuple";
+  {
+    return params.toString();
+  }
+
+  char[] toMangle()
+  { // := MangleChar ParamsMangleLength ParamsMangle
+    char[] params = params.toMangle();
+    return mangleChar() ~ String(params.length) ~ params;
   }
 }
 
@@ -662,6 +776,12 @@ static:
     if (size == SIZE_NOT_AVAILABLE)
       return type.sizeOf_();
     return size;
+  }
+
+  /// Returns the mangle character of a type.
+  char mangleChar(Type type)
+  {
+    return metaInfoTable[type.tid].mangle;
   }
 }
 
