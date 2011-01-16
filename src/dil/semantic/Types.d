@@ -432,6 +432,13 @@ class TypeTypedef : Type
   }
 }
 
+
+/// Using this interface avoids circular imports.
+interface IParameters
+{
+  VariadicStyle getVariadic();
+}
+
 /// Function type.
 class TypeFunction : Type
 {

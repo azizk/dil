@@ -25,6 +25,8 @@ enum SYM
   Alias,
   OverloadSet,
   Scope,
+  Parameter,
+  Parameters,
 //   Type,
 }
 
@@ -94,6 +96,8 @@ class Symbol
   mixin(is_("Alias"));
   mixin(is_("OverloadSet"));
   mixin(is_("Scope"));
+  mixin(is_("Parameter"));
+  mixin(is_("Parameters"));
 //   mixin(is_("Type"));
 
   /// Casts the symbol to Class.
@@ -117,5 +121,18 @@ class Symbol
     if (parent !is null && parent.name !is Ident.Empty)
       return parent.getFQN() ~ '.' ~ name.str;
     return name.str;
+  }
+
+  /// Returns the mangled name of this symbol.
+  char[] toMangle()
+  {
+    // TODO:
+    return name.str.dup;
+  }
+
+  /// Returns the string representation of this symbol.
+  char[] toString()
+  {
+    return name.str.dup;
   }
 }

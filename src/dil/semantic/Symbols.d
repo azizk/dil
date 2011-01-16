@@ -161,6 +161,94 @@ class FunctionSymbol : ScopeSymbol
   }
 }
 
+/// The parameter symbol.
+class ParameterSymbol : Symbol
+{
+  StorageClass stcs; /// Storage classes.
+  VariadicStyle variadic; /// Variadic style.
+  Type type; /// The parameter's type.
+  Expression defValue; /// The default initialization value.
+
+  this(Identifier* name, StorageClass stcs, Node node)
+  {
+    name = name ? name : Ident.Empty; // Move to  base class Symbol?
+    super(SYM.Parameter, name, node);
+  }
+
+  char[] toString()
+  { // := StorageClasses? ParamType? ParamName? (" = " DefaultValue)? "..."?
+    char[] s;
+    foreach (stc; EnumString.all(stcs))
+      s ~= stc ~ " ";
+    if (type)
+      s ~= type.toString();
+    if (name !is Ident.Empty)
+      s ~= name.str;
+    if (defValue) // TODO: should be defValue.toString()
+      s ~= " = " ~ Token.textSpan(defValue.begin, defValue.end);
+    else if (variadic)
+      s ~= "...";
+    assert(s.length, "empty parameter?");
+    return s;
+  }
+
+  char[] toMangle()
+  { // 1. Mangle storage class.
+    char[] m;
+    char mc = 0;
+    if (stcs & StorageClass.Out)
+      mc = 'J';
+    else if (stcs & StorageClass.Ref)
+      mc = 'K';
+    else if (stcs & StorageClass.Lazy)
+      mc = 'L';
+    if (mc)
+      m ~= mc;
+    // 2. Mangle parameter type.
+    if (type)
+      m ~= type.toMangle();
+    return m;
+  }
+}
+
+/// A list of ParameterSymbol objects.
+class ParametersSymbol : Symbol, IParameters
+{
+  ParameterSymbol[] params; /// The parameters.
+
+  this(ParameterSymbol[] params, Node node=null)
+  {
+    super(SYM.Parameters, Ident.Empty, node);
+    this.params = params;
+  }
+
+  /// Returns the variadic style of the last parameter.
+  VariadicStyle getVariadic()
+  {
+    return params.length ? params[$-1].variadic : VariadicStyle.None;
+  }
+
+  char[] toString()
+  { // := "(" ParameterList ")"
+    char[] s;
+    s ~= "(";
+    foreach (i, p; params) {
+      if (i) s ~= ", "; // Append comma if more than one param.
+      s ~= p.toString();
+    }
+    s ~= ")";
+    return s;
+  }
+
+  char[] toMangle()
+  {
+    char[] m;
+    foreach (p; params)
+      m ~= p.toMangle();
+    return m;
+  }
+}
+
 /// A variable symbol.
 class VariableSymbol : Symbol
 {
