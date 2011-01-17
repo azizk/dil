@@ -3332,38 +3332,39 @@ class Parser
     alias parseAssignExpression parseNext;
     auto begin = token;
     auto e = parseCondExpression();
-    switch (token.kind)
+    auto optok = token;
+    switch (optok.kind)
     {
     case T.Assign:
-      nT(); e = new AssignExpression(e, parseNext()); break;
+      nT(); e = new AssignExpression(e, parseNext(), optok); break;
     case T.LShiftAssign:
-      nT(); e = new LShiftAssignExpression(e, parseNext()); break;
+      nT(); e = new LShiftAssignExpression(e, parseNext(), optok); break;
     case T.RShiftAssign:
-      nT(); e = new RShiftAssignExpression(e, parseNext()); break;
+      nT(); e = new RShiftAssignExpression(e, parseNext(), optok); break;
     case T.URShiftAssign:
-      nT(); e = new URShiftAssignExpression(e, parseNext()); break;
+      nT(); e = new URShiftAssignExpression(e, parseNext(), optok); break;
     case T.OrAssign:
-      nT(); e = new OrAssignExpression(e, parseNext()); break;
+      nT(); e = new OrAssignExpression(e, parseNext(), optok); break;
     case T.AndAssign:
-      nT(); e = new AndAssignExpression(e, parseNext()); break;
+      nT(); e = new AndAssignExpression(e, parseNext(), optok); break;
     case T.PlusAssign:
-      nT(); e = new PlusAssignExpression(e, parseNext()); break;
+      nT(); e = new PlusAssignExpression(e, parseNext(), optok); break;
     case T.MinusAssign:
-      nT(); e = new MinusAssignExpression(e, parseNext()); break;
+      nT(); e = new MinusAssignExpression(e, parseNext(), optok); break;
     case T.DivAssign:
-      nT(); e = new DivAssignExpression(e, parseNext()); break;
+      nT(); e = new DivAssignExpression(e, parseNext(), optok); break;
     case T.MulAssign:
-      nT(); e = new MulAssignExpression(e, parseNext()); break;
+      nT(); e = new MulAssignExpression(e, parseNext(), optok); break;
     case T.ModAssign:
-      nT(); e = new ModAssignExpression(e, parseNext()); break;
+      nT(); e = new ModAssignExpression(e, parseNext(), optok); break;
     case T.XorAssign:
-      nT(); e = new XorAssignExpression(e, parseNext()); break;
+      nT(); e = new XorAssignExpression(e, parseNext(), optok); break;
     case T.CatAssign:
-      nT(); e = new CatAssignExpression(e, parseNext()); break;
+      nT(); e = new CatAssignExpression(e, parseNext(), optok); break;
     version(D2)
     {
     case T.PowAssign:
-      nT(); e = new PowAssignExpression(e, parseNext()); break;
+      nT(); e = new PowAssignExpression(e, parseNext(), optok); break;
     }
     default:
       return e;

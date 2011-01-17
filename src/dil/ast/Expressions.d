@@ -35,14 +35,14 @@ abstract class BinaryExpression : Expression
   Expression lhs; /// Left-hand side expression.
   Expression rhs; /// Right-hand side expression.
   Token* optok;   /// The operator token.
+
   /// Constructs a BinaryExpression object.
-  this(Expression lhs, Expression rhs, Token* optok=null)
+  this(Expression lhs, Expression rhs, Token* optok)
   {
     addChildren([lhs, rhs]);
     this.lhs = lhs;
     this.rhs = rhs;
-    assert(lhs.end !is null);
-    this.optok = optok ? optok : lhs.end.nextNWS;
+    this.optok = optok;
   }
   mixin(copyMethodBinaryExpression);
 }
@@ -65,54 +65,54 @@ class CondExpression : BinaryExpression
 
 class CommaExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class OrOrExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class AndAndExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class OrExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class XorExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class AndExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
@@ -120,17 +120,17 @@ class AndExpression : BinaryExpression
 /// This class isn't strictly needed, just here for clarity.
 abstract class CmpExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
   }
 }
 
 class EqualExpression : CmpExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
@@ -138,108 +138,108 @@ class EqualExpression : CmpExpression
 /// Expression "!"? "is" Expression
 class IdentityExpression : CmpExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class RelExpression : CmpExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class InExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class LShiftExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class RShiftExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class URShiftExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class PlusExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class MinusExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class CatExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class MulExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class DivExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class ModExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
@@ -247,123 +247,123 @@ class ModExpression : BinaryExpression
 // D2
 class PowExpression : BinaryExpression
 {
-  this(Expression left, Expression right, Token* tok)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right, tok);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 
 class AssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 class LShiftAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 class RShiftAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 class URShiftAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 class OrAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 class AndAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 class PlusAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 class MinusAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 class DivAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 class MulAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 class ModAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 class XorAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 class CatAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
 // D2
 class PowAssignExpression : BinaryExpression
 {
-  this(Expression left, Expression right)
+  this(Expression left, Expression right, Token* optok)
   {
-    super(left, right);
+    super(left, right, optok);
     mixin(set_kind);
   }
 }
