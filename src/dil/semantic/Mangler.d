@@ -10,7 +10,8 @@ import dil.lexer.Funcs : String, StringHex;
 import dil.semantic.TypesEnum;
 import dil.Float,
        dil.Unicode,
-       dil.Diagnostics;
+       dil.Diagnostics,
+       dil.Messages;
 import common;
 
 /// Mangles expressions used as template arguments.
@@ -45,10 +46,26 @@ class TArgMangler : Visitor2
       diag ~= error;
   }
 
+  void utf16Error(Token* tok, wchar[] s, size_t i)
+  {
+    auto e = dil.Unicode.utf16Error(s, i);
+    ushort arg1 = s[i-1], arg2 = arg1;
+    string msg;
+    if (e == UTF16Error.Invalid) { // TODO: add msgs to struct MSG.
+      msg = "invalid UTF-16 sequence \\u{:X4}\\u{:X4}";
+      arg1 = s[i-2];
+    }
+    else if (e == UTF16Error.LoSurrogate)
+      msg = "missing low surrogate in UTF-16 sequence \\u{:X4}\\uXXXX";
+    else if (e == UTF16Error.HiSurrogate)
+      msg = "missing high surrogate in UTF-16 sequence \\uXXXX\\u{:X4}";
+    error(tok, msg, arg1, arg2);
+  }
+
 override:
   void unhandled(Node n)
-  {
-    // error(); // TODO:
+  { // TODO: add to struct MSG.
+    error(n.begin, "invalid template argument ‘{}’", n.toText());
   }
 
   void visit(IntExpression e)
@@ -95,9 +112,7 @@ override:
       {
         auto c = decode(tmp, i);
         if (c == ERROR_CHAR) {
-          // TODO: use getError() from Unicode module.
-          //error(e.begin, "invalid UTF16 sequence \\u{:X4}\\u{:X4}",
-          //  tmp[i]+0, tmp[i+1]+0);
+          utf16Error(e.begin, tmp, i);
           break;
         }
         else
@@ -108,8 +123,10 @@ override:
       mc = 'd';
       dchar[] tmp = (cast(dchar[])e.str)[0..$-1];
       foreach (dchar c; tmp)
-        if (!isValidChar(c))
-          error(e.begin, "invalid UTF32 char \\U{:X8}", c);
+        if (!isValidChar(c)) {
+          error(e.begin, MSG.InvalidUTF32Character, c+0);
+          break;
+        }
         else
           encode(utf8str, c);
       break;
