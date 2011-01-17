@@ -11,9 +11,9 @@ import common;
 ///
 /// $(BNF
 ////Identifier := IdStart IdChar*
-////IdStart    := "_" | Letter
-////IdChar     := IdStart | "0"-"9"
-////Letter     := UniAlpha
+////   IdStart := "_" | Letter
+////    IdChar := IdStart | "0"-"9"
+////    Letter := UniAlpha
 ////)
 /// See_Also:
 ///  Unicode alphas are defined in Unicode 5.0.0.
