@@ -1033,7 +1033,7 @@ override
     {
       auto whichOp = e.lhs.type.isBaseComplex() ? e.lhs.begin : e.rhs.begin;
       error(whichOp, "the operator '{}' is undefined for complex numbers",
-            e.tok.text());
+            e.optok.text());
     }
     e.type = Types.Bool;
     return e;
@@ -1107,7 +1107,7 @@ override
     }
     else
     {
-      error(e.tok, "concatenation operator '~' is undefined for: {} ~ {}",
+      error(e.optok, "concatenation operator '~' is undefined for: {} ~ {}",
             e.lhs, e.rhs);
       e.type = e.lhs.type; // Use Types.Error if e.lhs.type is not a good idea.
     }

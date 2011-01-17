@@ -988,7 +988,7 @@ override
     write(",");
     visitE(e.rhs);
     write(",");
-    write(indexOf(e.tok));
+    write(indexOf(e.optok));
     write(",");
     write(indexOf(e.ctok));
     end(e);
@@ -1000,7 +1000,7 @@ override
     write(",");
     visitE(e.rhs);
     write(",");
-    write(indexOf(e.tok));
+    write(indexOf(e.optok));
     end(e);`;
 
   const unaryExpr = `

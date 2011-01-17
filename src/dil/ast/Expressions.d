@@ -34,15 +34,15 @@ abstract class BinaryExpression : Expression
 {
   Expression lhs; /// Left-hand side expression.
   Expression rhs; /// Right-hand side expression.
-  Token* tok;     /// The operator token.
+  Token* optok;   /// The operator token.
   /// Constructs a BinaryExpression object.
-  this(Expression lhs, Expression rhs, Token* tok=null)
+  this(Expression lhs, Expression rhs, Token* optok=null)
   {
     addChildren([lhs, rhs]);
     this.lhs = lhs;
     this.rhs = rhs;
     assert(lhs.end !is null);
-    this.tok = tok ? tok : lhs.end.nextNWS;
+    this.optok = optok ? optok : lhs.end.nextNWS;
   }
   mixin(copyMethodBinaryExpression);
 }
