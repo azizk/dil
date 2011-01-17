@@ -2728,30 +2728,37 @@ class Lexer
                                  "  goto Lerr2;";
     const char[] appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
 
-    // Decode
+    // See how many bytes need to be decoded.
     if ((d & 0b1110_0000) == 0b1100_0000)
     { // 110xxxxx 10xxxxxx
       d &= 0b0001_1111;
-      mixin(appendSixBits);
+      goto L2Bytes;
     }
     else if ((d & 0b1111_0000) == 0b1110_0000)
     { // 1110xxxx 10xxxxxx 10xxxxxx
       d &= 0b0000_1111;
-      mixin(appendSixBits ~
-            checkNextByte ~ appendSixBits);
+      goto L3Bytes;
     }
     else if ((d & 0b1111_1000) == 0b1111_0000)
     { // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
       d &= 0b0000_0111;
-      mixin(appendSixBits ~
-            checkNextByte ~ appendSixBits ~
-            checkNextByte ~ appendSixBits);
+      goto L4Bytes;
     }
     else
       // 5 and 6 byte UTF-8 sequences are not allowed yet.
       // 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
       // 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
       goto Lerr;
+
+    // Decode the bytes now.
+  L4Bytes:
+    mixin(appendSixBits);
+    mixin(checkNextByte);
+  L3Bytes:
+    mixin(appendSixBits);
+    mixin(checkNextByte);
+  L2Bytes:
+    mixin(appendSixBits);
 
     assert(isTrailByte(*p));
 
