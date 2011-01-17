@@ -131,7 +131,7 @@ void main(string[] args)
       return printHelp(command);
 
     DDocCommand cmd;
-    cmd.destDirPath = args[2];
+    cmd.destDirPath = op.getArg();
     cmd.context = globalCC;
     cmd.diag = diag;
     string value;
