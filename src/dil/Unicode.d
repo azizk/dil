@@ -39,6 +39,7 @@ bool isLeadByte(ubyte b)
   return (b & 0xC0) == 0xC0; // 11xx_xxxx
 }
 
+// FIXME: isValidLead() should return true for ASCII as well.
 /// Returns: true if c is a valid lead character.
 bool isValidLead(char c)
 { // NB: not all overlong sequences are checked.
@@ -133,8 +134,9 @@ body
   UTF16Error error = UTF16Error.LoSurrogate;
   if (c > 0xDBFF)
     error = UTF16Error.HiSurrogate;
-  else if (p+1 < end && 0xDC00 <= (c = *++p) && c <= 0xDFFF)
-    error = UTF16Error.Invalid;
+  else if (p+1 < end && 0xDC00 <= (c = p[1]) && c <= 0xDFFF)
+    (error = UTF16Error.Invalid), p++;
+  p++;
   return error;
 }
 
