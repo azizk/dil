@@ -105,66 +105,79 @@ body
 {
   char* p = ref_p;
   dchar c = *p;
+  char c2 = void;
 
   if (c < 0x80)
-    return ref_p++, c; // ASCII character.
+    goto Lreturn; // ASCII character.
 
   // Error if: end of string or second byte is not a trail byte.
-  if (++p >= end || !isTrailByte(*p))
-    return ERROR_CHAR;
+  if (!(++p < end && isTrailByte(c2 = *p)))
+    goto Lerr;
 
   // Check for overlong sequences.
   switch (c)
   {
-  case 0xE0, // 11100000 100xxxxx
-       0xF0, // 11110000 1000xxxx
-       0xF8, // 11111000 10000xxx
-       0xFC: // 11111100 100000xx
-    if ((*p & c) == 0x80)
-      return ERROR_CHAR;
+  case 0xE0, // c=11100000 c2=100xxxxx
+       0xF0, // c=11110000 c2=1000xxxx
+       0xF8, // c=11111000 c2=10000xxx
+       0xFC: // c=11111100 c2=100000xx
+    if ((c & c2) == 0x80)
+      goto Lerr;
   default:
-    if ((c & 0xFE) == 0xC0) // 1100000x
-      return ERROR_CHAR;
+    if ((c & 0xFE) == 0xC0) // c=1100000x
+      goto Lerr;
   }
 
-  const char[] checkNextByte = "if (!(++p < end && isTrailByte(*p)))"
-                               "  return ERROR_CHAR;";
-  const char[] appendSixBits = "c = (c << 6) | *p & 0b0011_1111;";
+  const char[] checkNextByte = "if (!isTrailByte(c2 = *++p))"
+                               "  goto Lerr;";
+  const char[] appendSixBits = "c = (c << 6) | c2 & 0b0011_1111;";
 
-  // Decode
+  // See how many bytes need to be decoded.
+  assert(p == ref_p+1, "p doesn't point to the second byte");
   if ((c & 0b1110_0000) == 0b1100_0000)
-  {
-    // 110xxxxx 10xxxxxx
+  { // 110xxxxx 10xxxxxx
     c &= 0b0001_1111;
-    mixin(appendSixBits);
+    goto L2Bytes;
   }
   else if ((c & 0b1111_0000) == 0b1110_0000)
-  {
-    // 1110xxxx 10xxxxxx 10xxxxxx
+  { // 1110xxxx 10xxxxxx 10xxxxxx
     c &= 0b0000_1111;
-    mixin(appendSixBits ~
-          checkNextByte ~ appendSixBits);
+    if (p + 1 < end)
+      goto L3Bytes;
   }
   else if ((c & 0b1111_1000) == 0b1111_0000)
-  {
-    // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+  { // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
     c &= 0b0000_0111;
-    mixin(appendSixBits ~
-          checkNextByte ~ appendSixBits ~
-          checkNextByte ~ appendSixBits);
+    if (p + 2 < end)
+      goto L4Bytes;
   }
   else
-    // 5 and 6 byte UTF-8 sequences are not allowed yet.
+  { // 5 and 6 byte UTF-8 sequences are not allowed yet.
     // 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
     // 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
-    return ERROR_CHAR;
+  }
+  goto Lerr;
 
-  assert(isTrailByte(*p));
+  // Decode the bytes now.
+L4Bytes:
+  mixin(appendSixBits);
+  mixin(checkNextByte);
+L3Bytes:
+  mixin(appendSixBits);
+  mixin(checkNextByte);
+L2Bytes:
+  mixin(appendSixBits);
 
-  if (!isValidChar(c))
-    return ERROR_CHAR;
-  ref_p = p+1;
+  assert(isTrailByte(c2));
+  if (!isValidChar(c)) // Final check for validity.
+    goto Lerr;
+Lreturn:
+  ref_p = p+1; // Character is valid. Advance the pointer.
+LreturnError:
   return c;
+Lerr:
+  c = ERROR_CHAR;
+  goto LreturnError;
 }
 
 /// Encodes c and appends it to str.
