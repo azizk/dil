@@ -57,6 +57,87 @@ bool isValidLead(dchar c)
   return isValidChar(c);
 }
 
+/// Enumeration of errors related to decoding UTF-8 sequences.
+enum UTF8Error
+{
+  Invalid,    /// The correctly decoded character is invalid.
+  Overlong,   /// Overlong sequence (must be encoded with fewer bytes.)
+  TrailByte,  /// Missing trail byte.
+  Over4Bytes, /// The sequence is longer than 4 bytes.
+}
+/// Enumeration of errors related to decoding UTF-16 sequences.
+enum UTF16Error
+{
+  Invalid,     /// The correctly decoded character is invalid.
+  LoSurrogate, /// Missing low surrogate wchar.
+  HiSurrogate, /// Missing high surrogate wchar.
+}
+
+/// Returns the precise error in a UTF-8 sequence.
+UTF8Error utf8Error(char[] s, ref size_t i)
+{
+  char* p = s.ptr + i;
+  auto e = utf8Error(p, s.ptr + s.length);
+  i = p - s.ptr;
+  return e;
+}
+/// ditto
+UTF8Error utf8Error(ref char* p, char* end)
+in { auto p_ = p; assert(decode(p_, end) == ERROR_CHAR); }
+body
+{
+  UTF8Error error = UTF8Error.Invalid;
+  dchar c = *p;
+  assert(c >= 0x80);
+  if (!(++p < end && isTrailByte(*p)))
+    return UTF8Error.TrailByte;
+  switch (c)
+  {
+  case 0xE0, 0xF0, 0xF8, 0xFC:
+    if ((c & *p) == 0x80)
+      return UTF8Error.Overlong;
+  default:
+    if ((c & 0xFE) == 0xC0)
+      return UTF8Error.Overlong;
+  }
+  if ((c & 0b1110_0000) == 0b1100_0000)
+  {}
+  else if ((c & 0b1111_0000) == 0b1110_0000)
+  {
+    if (!(p + 1 < end && isTrailByte(*++p)))
+      error = UTF8Error.TrailByte;
+  }
+  else if ((c & 0b1111_1000) == 0b1111_0000)
+  {
+    if (!(p + 2 < end && isTrailByte(*++p) && isTrailByte(*++p)))
+      error = UTF8Error.TrailByte;
+  }
+  else
+    error = UTF8Error.Over4Bytes;
+  return error;
+}
+/// Returns the precise error in a UTF-16 sequence.
+UTF16Error utf16Error(wchar[] s, ref size_t i)
+{
+  wchar* p = s.ptr + i;
+  auto e = utf16Error(p, s.ptr + s.length);
+  i = p - s.ptr;
+  return e;
+}
+/// ditto
+UTF16Error utf16Error(ref wchar* p, wchar* end)
+in { auto p_ = p; assert(decode(p_, end) == ERROR_CHAR); }
+body
+{
+  dchar c = *p;
+  UTF16Error error = UTF16Error.LoSurrogate;
+  if (c > 0xDBFF)
+    error = UTF16Error.HiSurrogate;
+  else if (p+1 < end && 0xDC00 <= (c = *++p) && c <= 0xDFFF)
+    error = UTF16Error.Invalid;
+  return error;
+}
+
 // NB: All functions below advance the pointer/index only
 //     when the decoded Unicode sequence was valid.
 
