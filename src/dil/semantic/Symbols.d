@@ -194,8 +194,8 @@ class ParameterSymbol : Symbol
       s ~= type.toString();
     if (name !is Ident.Empty)
       s ~= name.str;
-    if (defValue) // TODO: should be defValue.toString()
-      s ~= " = " ~ Token.textSpan(defValue.begin, defValue.end);
+    if (defValue)
+      s ~= " = " ~ defValue.toText();
     else if (variadic)
       s ~= "...";
     assert(s.length, "empty parameter?");

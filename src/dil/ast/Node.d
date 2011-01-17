@@ -63,6 +63,13 @@ abstract class Node
     children is null || addChildren(children);
   }
 
+  /// Returns the text spanned by the begin and end tokens.
+  string toText()
+  {
+    assert(begin && end);
+    return begin.textSpan(end);
+  }
+
   /// Returns a reference to Class if this node can be cast to it.
   Class Is(Class)()
   {
