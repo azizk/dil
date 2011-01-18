@@ -6,6 +6,8 @@ module dil.semantic.Types;
 import dil.semantic.Symbol,
        dil.semantic.TypesEnum;
 import dil.lexer.Identifier,
+       dil.lexer.Keywords,
+       dil.lexer.IdTable,
        dil.lexer.Funcs : hashOf, String;
 import dil.CompilerInfo,
        dil.Enums;
@@ -308,23 +310,17 @@ class TypeError : Type
 /// All basic types. E.g.: int, char, real etc.
 class TypeBasic : Type
 {
-  this(TYP typ)
+  Identifier* ident; /// Keyword identifier.
+
+  this(Identifier* ident, TYP typ)
   {
     super(null, typ);
+    this.ident = ident;
   }
 
   char[] toString()
   {
-    return [
-      TYP.Char : "char"[], TYP.Wchar : "wchar", TYP.Dchar : "dchar",
-      TYP.Bool : "bool", TYP.Byte : "byte", TYP.Ubyte : "ubyte",
-      TYP.Short : "short", TYP.Ushort : "ushort", TYP.Int : "int",
-      TYP.Uint : "uint", TYP.Long : "long", TYP.Ulong : "ulong",
-      TYP.Cent : "cent", TYP.Ucent : "ucent", TYP.Float : "float",
-      TYP.Double : "double", TYP.Real : "real", TYP.Ifloat : "ifloat",
-      TYP.Idouble : "idouble", TYP.Ireal : "ireal", TYP.Cfloat : "cfloat",
-      TYP.Cdouble : "cdouble", TYP.Creal : "creal"
-    ][this.tid];
+    return ident.str.dup;
   }
 }
 
@@ -825,11 +821,11 @@ static:
   TypeError DontKnowYet; /// The symbol is undefined but might be resolved.
 
   /// Creates a list of statements for creating and initializing types.
-  char[] createTypes(char[][] typeNames)
+  char[] createTypes(string[] typeNames)
   {
     char[] result;
-    foreach (typeName; typeNames)
-      result ~= typeName~" = new TypeBasic(TYP."~typeName~");";
+    foreach (n; typeNames)
+      result ~= n~" = new TypeBasic(Keyword."~n~", TYP."~n~");";
     return result;
   }
 
