@@ -4,7 +4,8 @@
 module dil.lexer.Identifier;
 
 import dil.lexer.TokensEnum,
-       dil.lexer.IdentsEnum;
+       dil.lexer.IdentsEnum,
+       dil.lexer.Funcs : hashOf;
 import common;
 
 /// Represents an identifier as defined in the D specs.
@@ -24,6 +25,7 @@ struct Identifier
   TOK kind;   /// The token kind.
   IDK idKind; /// Only for predefined identifiers.
 
+  /// Constructs an Identifier.
   static Identifier* opCall(string str, TOK kind)
   {
     auto id = new Identifier;
@@ -31,7 +33,7 @@ struct Identifier
     id.kind = kind;
     return id;
   }
-
+  /// ditto
   static Identifier* opCall(string str, TOK kind, IDK idKind)
   {
     auto id = new Identifier;
@@ -41,14 +43,17 @@ struct Identifier
     return id;
   }
 
-  uint toHash()
+  /// Calculates a hash for this id.
+  hash_t toHash()
   {
-    uint hash;
-    foreach (c; str) {
-      hash *= 11;
-      hash += c;
-    }
-    return hash;
+    return hashOf(str);
+  }
+
+  /// Returns true if this id starts with prefix.
+  bool startsWith(string prefix)
+  {
+    auto plen = prefix.length;
+    return str.length > plen && str[0..plen] == prefix;
   }
 }
 // pragma(msg, Identifier.sizeof.stringof);
