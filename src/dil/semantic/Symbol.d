@@ -44,7 +44,9 @@ class Symbol
   SYM sid; /// The ID of this symbol.
   Status status; /// The semantic status of this symbol.
   Symbol parent; /// The parent this symbol belongs to.
-  Identifier* name; /// The name of this symbol.
+  /// The name of this symbol.
+  /// If the symbol is nameless Ident.Empty is assigned to it.
+  Identifier* name;
   /// The syntax tree node that produced this symbol.
   /// Useful for source code location info and retrieval of doc comments.
   Node node;
@@ -57,7 +59,7 @@ class Symbol
   this(SYM sid, Identifier* name, Node node)
   {
     this.sid = sid;
-    this.name = name;
+    this.name = name ? name : Ident.Empty;
     this.node = node;
   }
 

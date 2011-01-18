@@ -181,7 +181,6 @@ class ParameterSymbol : Symbol
 
   this(Identifier* name, StorageClass stcs, Node node)
   {
-    name = name ? name : Ident.Empty; // Move to  base class Symbol?
     super(SYM.Parameter, name, node);
   }
 
