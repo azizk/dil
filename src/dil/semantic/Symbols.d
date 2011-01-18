@@ -302,6 +302,15 @@ class AliasSymbol : Symbol
   }
 }
 
+/// A typedef symbol.
+class TypedefSymbol : Symbol
+{
+  this(Identifier* name, Node aliasNode)
+  {
+    super(SYM.Typedef, name, aliasNode);
+  }
+}
+
 /// A list of symbols that share the same identifier.
 ///
 /// These can be functions, templates and aggregates with template parameter lists.

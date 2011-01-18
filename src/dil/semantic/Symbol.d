@@ -23,6 +23,7 @@ enum SYM
   Variable,
   Function,
   Alias,
+  Typedef,
   OverloadSet,
   Scope,
   Parameter,
@@ -94,6 +95,7 @@ class Symbol
   mixin(is_("Variable"));
   mixin(is_("Function"));
   mixin(is_("Alias"));
+  mixin(is_("Typedef"));
   mixin(is_("OverloadSet"));
   mixin(is_("Scope"));
   mixin(is_("Parameter"));
