@@ -55,7 +55,7 @@ class IdTable
 
     if (staticTable is null) // Initialize global static table?
     {
-      foreach (ref k; g_reservedIds)
+      foreach (ref k; Keyword.list)
         staticTable[hashOf(k.str)] = &k;
       staticTable.rehash;
     }

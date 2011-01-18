@@ -65,11 +65,13 @@ private static const char[][] predefIdents = [
   // foreach and foreach_reverse:
   "opApply", "opApplyReverse",
   // Entry function:
-  "main",
+  "main", "WinMain", "DllMain",
   // D2 module (system|safe)
   "system", "safe",
   // From object.d
   "object", "Object", "ClassInfo", "TypeInfo",
+  "TypeInfo_Class", "TypeInfo_Struct",
+  "TypeInfo_Typedef", "TypeInfo_Tuple",
   "Exception", "Error", "Interface",
   "ptrdiff_t", "size_t", "hash_t",
   // ASM identifiers:
