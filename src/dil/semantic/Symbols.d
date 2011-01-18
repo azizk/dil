@@ -90,11 +90,12 @@ class ClassSymbol : Aggregate
 }
 
 /// An interface symbol.
-class InterfaceSymbol : Aggregate
+class InterfaceSymbol : ClassSymbol
 {
   this(Identifier* name, Node interfaceNode)
   {
-    super(SYM.Interface, name, interfaceNode);
+    super(name, interfaceNode);
+    this.sid = SYM.Interface;
     this.type = new TypeClass(this);
   }
 }
@@ -112,12 +113,13 @@ class StructSymbol : Aggregate
 }
 
 /// A union symbol.
-class UnionSymbol : Aggregate
+class UnionSymbol : StructSymbol
 {
   bool isAnonymous;
   this(Identifier* name, Node unionNode)
   {
-    super(SYM.Union, name, unionNode);
+    super(name, unionNode);
+    this.sid = SYM.Union;
     this.type = new TypeStruct(this);
     this.isAnonymous = name is null;
   }
