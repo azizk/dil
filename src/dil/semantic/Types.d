@@ -286,6 +286,25 @@ abstract class Type/* : Symbol*/
   }
 }
 
+/// The error type.
+class TypeError : Type
+{
+  this()
+  {
+    super(null, TYP.Error);
+  }
+
+  char[] toString()
+  {
+    return "{error}";
+  }
+
+  char[] toMangle()
+  {
+    return "{error}";
+  }
+}
+
 /// All basic types. E.g.: int, char, real etc.
 class TypeBasic : Type
 {
@@ -801,9 +820,9 @@ static:
   TypeBasic Size_t; /// The size type.
   TypeBasic Ptrdiff_t; /// The pointer difference type.
   TypePointer Void_ptr; /// The void pointer type.
-  TypeBasic Error; /// The error type.
-  TypeBasic Undefined; /// The undefined type.
-  TypeBasic DontKnowYet; /// The symbol is undefined but might be resolved.
+  TypeError Error; /// The error type.
+  TypeError Undefined; /// The undefined type.
+  TypeError DontKnowYet; /// The symbol is undefined but might be resolved.
 
   /// Creates a list of statements for creating and initializing types.
   char[] createTypes(char[][] typeNames)
@@ -834,8 +853,8 @@ static:
       Ptrdiff_t = Int;
     }
     Void_ptr = Void.ptrTo;
-    Error = new TypeBasic(TYP.Error);
-    Undefined = new TypeBasic(TYP.Error);
-    DontKnowYet = new TypeBasic(TYP.Error);
+    Error = new TypeError();
+    Undefined = new TypeError();
+    DontKnowYet = new TypeError();
   }
 }
