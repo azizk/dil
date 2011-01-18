@@ -64,12 +64,12 @@ abstract class Aggregate : ScopeSymbol
 
   override void insert(Symbol s, Identifier* ident)
   {
-    if (s.isVariable)
+    if (s.isVariable())
       // Append variable to fields.
-      fields ~= cast(VariableSymbol)cast(void*)s;
-    else if (s.isFunction)
+      fields ~= s.to!(VariableSymbol);
+    else if (s.isFunction())
       // Append function to funcs.
-      funcs ~= cast(FunctionSymbol)cast(void*)s;
+      funcs ~= s.to!(FunctionSymbol);
     super.insert(s, ident);
   }
 
