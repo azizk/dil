@@ -278,7 +278,7 @@ abstract class Type/* : Symbol*/
   }
 
   /// Returns the mangled name of this type.
-  char[] toMangle()
+  string toMangle()
   {
     char[] m;
     m ~= mangleChar();
@@ -353,7 +353,7 @@ class TypeAArray : Type
     return next.toString() ~ "[" ~ keyType.toString() ~ "]";
   }
 
-  char[] toMangle()
+  string toMangle()
   {
     return mangleChar() ~ keyType.toMangle() ~ next.toMangle();
   }
@@ -374,7 +374,7 @@ class TypeSArray : Type
     return next.toString() ~ "[" ~ String(dimension) ~ "]";
   }
 
-  char[] toMangle()
+  string toMangle()
   {
     return mangleChar() ~ String(dimension) ~ next.toMangle();
   }
@@ -429,7 +429,7 @@ class TypeEnum : Type
     return symbol.name.str;
   }
 
-  char[] toMangle()
+  string toMangle()
   {
     return mangleChar() ~ symbol.toMangle();
   }
@@ -449,7 +449,7 @@ class TypeStruct : Type
     return symbol.name.str;
   }
 
-  char[] toMangle()
+  string toMangle()
   {
     return mangleChar() ~ symbol.toMangle();
   }
@@ -469,7 +469,7 @@ class TypeClass : Type
     return symbol.name.str;
   }
 
-  char[] toMangle()
+  string toMangle()
   {
     return mangleChar() ~ symbol.toMangle();
   }
@@ -488,7 +488,7 @@ class TypeTypedef : Type
     return "typedef";
   }
 
-  char[] toMangle()
+  string toMangle()
   {
     return mangleChar() ~ symbol.toMangle();
   }
@@ -527,7 +527,7 @@ abstract class TypeFuncBase : Type
     return next.toString() ~ " " ~ keyword ~ params.toString();
   }
 
-  char[] toMangle()
+  string toMangle()
   { // := MangleChar LinkageChar ParamsMangle ReturnChar ReturnTypeMangle
     char[] m;
     char mc = void;
@@ -594,7 +594,7 @@ class TypeIdentifier : Type
     return ident.str;
   }
 
-  char[] toMangle()
+  string toMangle()
   { // := MangleChar IDLength ID
     auto id = ident.str;
     return mangleChar() ~ String(id.length) ~ id;
@@ -632,7 +632,7 @@ class TypeTuple : Type
     return params.toString();
   }
 
-  char[] toMangle()
+  string toMangle()
   { // := MangleChar ParamsMangleLength ParamsMangle
     char[] params = params.toMangle();
     return mangleChar() ~ String(params.length) ~ params;
