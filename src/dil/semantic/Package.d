@@ -10,7 +10,7 @@ import dil.lexer.IdTable;
 import common;
 
 /// A package groups modules and other packages.
-class Package : ScopeSymbol
+class Package : PackageSymbol
 {
   string pckgName;    /// The name of the package. E.g.: 'dil'.
   Package[] packages; /// The sub-packages contained in this package.
@@ -19,8 +19,8 @@ class Package : ScopeSymbol
   /// Constructs a Package object.
   this(string pckgName, IdTable idtable)
   {
-    auto ident = idtable.lookup(pckgName);
-    super(SYM.Package, ident, null);
+    auto name = idtable.lookup(pckgName);
+    super(name);
     this.pckgName = pckgName;
   }
 

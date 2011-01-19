@@ -25,7 +25,7 @@ import tango.text.Util;
 alias FileConst.PathSeparatorChar dirSep;
 
 /// Represents a semantic D module and a source file.
-class Module : ScopeSymbol
+class Module : ModuleSymbol
 {
   SourceText sourceText; /// The source file of this module.
   string moduleFQN; /// Fully qualified name of the module. E.g.: dil.ast.Node
@@ -56,7 +56,7 @@ class Module : ScopeSymbol
 
   this()
   {
-    super(SYM.Module, null, null);
+    super();
   }
 
   /// Constructs a Module object.
@@ -138,6 +138,8 @@ class Module : ScopeSymbol
 
     // Set the symbol name.
     this.name = idtable.lookup(this.moduleName);
+    // Set the symbol node.
+    this.node = this.root;
   }
 
   /// Returns the first token of the module's source text.
