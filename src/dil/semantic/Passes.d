@@ -249,57 +249,59 @@ class FirstSemanticPass : SemanticPass
   }
 
   /// Looks for special classes and stores them in a table.
-  void lookForSpecialClasses(ClassSymbol s)
+  /// May modify d.symbol and assign a SpecialClassSymbol to it.
+  void lookForSpecialClasses(ClassDeclaration d)
   {
-    if (!s.parent.isModule())
+    if (!isModuleScope())
       return; // Only consider top-level classes.
 
+    ClassSymbol s = d.symbol;
+    ClassSymbol* ps; /// Assigned to, if special class.
     auto name = s.name;
+    auto table = cc.tables.classes;
 
     if (name is Ident.Sizeof  ||
         name is Ident.Alignof ||
         name is Ident.Mangleof)
-      error(s.node.begin, "illegal class name ‘{}’", s.name.str);
-    // TODO: find a place to store these symbols
-    // (avoid circular imports.)
-    if (name.startsWith("TypeInfo"))
+      error(d.name, "illegal class name ‘{}’", s.name);
+    else if (name.startsWith("TypeInfo"))
     {
       switch (name.idKind)
       {
       case IDK.TypeInfo:
-        //cc.tables.tinfo = this; break;
+        ps = &table.tinfo; break;
       case IDK.TypeInfo_Array:
-        //cc.tables.tinfoArray = this; break;
+        ps = &table.tinfoArray; break;
       case IDK.TypeInfo_AssociativeArray:
-        //cc.tables.tinfoAArray = this; break;
+        ps = &table.tinfoAArray; break;
       case IDK.TypeInfo_Class:
-        //cc.tables.tinfoClass = this; break;
+        ps = &table.tinfoClass; break;
       case IDK.TypeInfo_Delegate:
-        //cc.tables.tinfoDelegate = this; break;
+        ps = &table.tinfoDelegate; break;
       case IDK.TypeInfo_Enum:
-        //cc.tables.tinfoEnum = this; break;
+        ps = &table.tinfoEnum; break;
       case IDK.TypeInfo_Function:
-        //cc.tables.tinfoFunction = this; break;
+        ps = &table.tinfoFunction; break;
       case IDK.TypeInfo_Interface:
-        //cc.tables.tinfoInterface = this; break;
+        ps = &table.tinfoInterface; break;
       case IDK.TypeInfo_Pointer:
-        //cc.tables.tinfoPointer = this; break;
+        ps = &table.tinfoPointer; break;
       case IDK.TypeInfo_StaticArray:
-        //cc.tables.tinfoSArray = this; break;
+        ps = &table.tinfoSArray; break;
       case IDK.TypeInfo_Struct:
-        //cc.tables.tinfoStruct = this; break;
+        ps = &table.tinfoStruct; break;
       case IDK.TypeInfo_Tuple:
-        //cc.tables.tinfoTypelist = this; break;
+        ps = &table.tinfoTuple; break;
       case IDK.TypeInfo_Typedef:
-        //cc.tables.tinfoTypedef = this; break;
+        ps = &table.tinfoTypedef; break;
       version(D2)
       {
       case IDK.TypeInfo_Const:
-        //cc.tables.tinfoConst = this; break;
+        ps = &table.tinfoConst; break;
       case IDK.TypeInfo_Invariant:
-        //cc.tables.tinfoInvariant = this; break;
+        ps = &table.tinfoInvariant; break;
       case IDK.TypeInfo_Shared:
-        //cc.tables.tinfoShared = this; break;
+        ps = &table.tinfoShared; break;
       } //version(D2)
       default:
       }
@@ -308,11 +310,23 @@ class FirstSemanticPass : SemanticPass
       modul.parent.parent is null) // root package = modul.parent
     {
       if (name is Ident.Object)
-      {} //cc.tables.object = this;
+        ps = &table.object;
       else if (name is Ident.ClassInfo)
-      {} //cc.tables.classInfo = this;
+        ps = &table.classInfo;
       else if (name is Ident.ModuleInfo)
-      {} //cc.tables.moduleInfo = this;
+        ps = &table.moduleInfo;
+      else if (name is Ident.Exception)
+        ps = &table.exeption;
+    }
+
+    if (ps)
+    { // Convert to subclass. (Handles mangling differently.)
+      if (*ps !is null)
+        error(d.name,
+          "special class ‘{}’ already defined at ‘{}’",
+          name, *ps.getFQN());
+      else
+        d.symbol = *ps = new SpecialClassSymbol(s.name, s.node);
     }
   }
 
@@ -406,7 +420,7 @@ override
       return d;
     // Create the symbol.
     d.symbol = new ClassSymbol(d.nameId, d);
-    lookForSpecialClasses(d.symbol);
+    lookForSpecialClasses(d);
     // Insert into current scope.
     insert(d.symbol);
     enterScope(d.symbol);
