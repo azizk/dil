@@ -45,6 +45,7 @@ abstract class SemanticPass : DefaultVisitor
   Module modul; /// The module to be semantically checked.
   CompilationContext context; /// The compilation context.
   Interpreter interp; /// Used to interpret ASTs.
+  alias context cc;
 
   /// Constructs a SemanticPass object.
   /// Params:
@@ -247,6 +248,74 @@ class FirstSemanticPass : SemanticPass
     visitN(modul.root);
   }
 
+  /// Looks for special classes and stores them in a table.
+  void lookForSpecialClasses(ClassSymbol s)
+  {
+    if (!s.parent.isModule())
+      return; // Only consider top-level classes.
+
+    auto name = s.name;
+
+    if (name is Ident.Sizeof  ||
+        name is Ident.Alignof ||
+        name is Ident.Mangleof)
+      error(s.node.begin, "illegal class name ‘{}’", s.name.str);
+    // TODO: find a place to store these symbols
+    // (avoid circular imports.)
+    if (name.startsWith("TypeInfo"))
+    {
+      switch (name.idKind)
+      {
+      case IDK.TypeInfo:
+        //cc.tables.tinfo = this; break;
+      case IDK.TypeInfo_Array:
+        //cc.tables.tinfoArray = this; break;
+      case IDK.TypeInfo_AssociativeArray:
+        //cc.tables.tinfoAArray = this; break;
+      case IDK.TypeInfo_Class:
+        //cc.tables.tinfoClass = this; break;
+      case IDK.TypeInfo_Delegate:
+        //cc.tables.tinfoDelegate = this; break;
+      case IDK.TypeInfo_Enum:
+        //cc.tables.tinfoEnum = this; break;
+      case IDK.TypeInfo_Function:
+        //cc.tables.tinfoFunction = this; break;
+      case IDK.TypeInfo_Interface:
+        //cc.tables.tinfoInterface = this; break;
+      case IDK.TypeInfo_Pointer:
+        //cc.tables.tinfoPointer = this; break;
+      case IDK.TypeInfo_StaticArray:
+        //cc.tables.tinfoSArray = this; break;
+      case IDK.TypeInfo_Struct:
+        //cc.tables.tinfoStruct = this; break;
+      case IDK.TypeInfo_Tuple:
+        //cc.tables.tinfoTypelist = this; break;
+      case IDK.TypeInfo_Typedef:
+        //cc.tables.tinfoTypedef = this; break;
+      version(D2)
+      {
+      case IDK.TypeInfo_Const:
+        //cc.tables.tinfoConst = this; break;
+      case IDK.TypeInfo_Invariant:
+        //cc.tables.tinfoInvariant = this; break;
+      case IDK.TypeInfo_Shared:
+        //cc.tables.tinfoShared = this; break;
+      } //version(D2)
+      default:
+      }
+    } // If object.d module and if in root package.
+    else if (modul.name is Ident.object &&
+      modul.parent.parent is null) // root package = modul.parent
+    {
+      if (name is Ident.Object)
+      {} //cc.tables.object = this;
+      else if (name is Ident.ClassInfo)
+      {} //cc.tables.classInfo = this;
+      else if (name is Ident.ModuleInfo)
+      {} //cc.tables.moduleInfo = this;
+    }
+  }
+
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   |                                Declarations                               |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
@@ -337,6 +406,7 @@ override
       return d;
     // Create the symbol.
     d.symbol = new ClassSymbol(d.nameId, d);
+    lookForSpecialClasses(d.symbol);
     // Insert into current scope.
     insert(d.symbol);
     enterScope(d.symbol);
