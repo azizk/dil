@@ -50,6 +50,24 @@ class ScopeSymbol : Symbol
   }
 }
 
+/// A module symbol.
+class ModuleSymbol : ScopeSymbol
+{
+  this(Identifier* name=null, Node node=null)
+  {
+    super(SYM.Module, name, node);
+  }
+}
+
+/// A package symbol.
+class PackageSymbol : ScopeSymbol
+{
+  this(Identifier* name=null, Node node=null)
+  {
+    super(SYM.Package, name, node);
+  }
+}
+
 /// Aggregates have function and field members.
 abstract class Aggregate : ScopeSymbol
 {
