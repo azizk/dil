@@ -64,16 +64,34 @@ private static const char[][] predefIdents = [
   "opStar", // D2
   // foreach and foreach_reverse:
   "opApply", "opApplyReverse",
-  // Entry function:
+  // Entry functions:
   "main", "WinMain", "DllMain",
   // D2 module (system|safe)
   "system", "safe",
   // From object.d
-  "object", "Object", "ClassInfo", "TypeInfo",
-  "TypeInfo_Class", "TypeInfo_Struct",
-  "TypeInfo_Typedef", "TypeInfo_Tuple",
-  "Exception", "Error", "Interface",
-  "ptrdiff_t", "size_t", "hash_t",
+  "object", "Object", "Interface",
+  "Exception", "Error",
+  "ClassInfo", "TypeInfo", "OffsetTypeInfo",
+  "ModuleInfo", "FrameInfo", "TraceInfo",
+  "ptrdiff_t", "size_t", "hash_t", "equals_t",
+  // TypeInfo classes
+  "TypeInfo_Array",
+  "TypeInfo_AssociativeArray",
+  "TypeInfo_Class",
+  "TypeInfo_Const", // D2
+  "TypeInfo_Delegate",
+  "TypeInfo_Enum",
+  "TypeInfo_Function",
+  "TypeInfo_Interface",
+  "TypeInfo_Invariant", // D2
+  "TypeInfo_Pointer",
+  "TypeInfo_Shared", // D2
+  "TypeInfo_StaticArray",
+  "TypeInfo_Struct",
+  "TypeInfo_Tuple",
+  "TypeInfo_Typedef",
+  // Special properties
+  "Sizeof:sizeof", "Alignof:alignof", "Mangleof:mangleof",
   // ASM identifiers:
   "near", "far", "word", "dword", "qword",
   "ptr", "offsetof", "seg", "__LOCAL_SIZE",
