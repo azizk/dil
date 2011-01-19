@@ -160,6 +160,12 @@ struct Token
     return token;
   }
 
+  /// Returns the text of this token.
+  string toString()
+  {
+    return text();
+  }
+
   /// Returns the string for a token kind.
   static string toString(TOK kind)
   {

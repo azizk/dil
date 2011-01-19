@@ -49,6 +49,12 @@ struct Identifier
     return hashOf(str);
   }
 
+  /// Returns the string of this id.
+  string toString()
+  {
+    return str;
+  }
+
   /// Returns true if this id starts with prefix.
   bool startsWith(string prefix)
   {
