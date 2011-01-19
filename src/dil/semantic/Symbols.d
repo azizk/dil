@@ -107,6 +107,24 @@ class ClassSymbol : Aggregate
   }
 }
 
+/// Special classes, e.g.: Object, ClassInfo, ModuleInfo etc.
+class SpecialClassSymbol : ClassSymbol
+{
+  this(Identifier* name, Node classNode)
+  {
+    super(name, classNode);
+  }
+
+  string toMangle()
+  {
+    auto parent_save = parent;
+    parent = null;
+    auto m = super.toMangle();
+    parent = parent_save;
+    return m;
+  }
+}
+
 /// An interface symbol.
 class InterfaceSymbol : ClassSymbol
 {
