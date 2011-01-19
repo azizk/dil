@@ -115,16 +115,13 @@ class Symbol
 
   /// Returns: the fully qualified name of this symbol.
   /// E.g.: dil.semantic.Symbol.Symbol.getFQN
-  char[] getFQN()
+  string getFQN()
   {
-    auto name = this.name;
-    if (name is null)
-      name = Ident.Empty; // Equals "".
-    // Check if the parent is the "root package", which has
-    // Ident.Empty as its name.
-    if (parent !is null && parent.name !is Ident.Empty)
-      return parent.getFQN() ~ '.' ~ name.str;
-    return name.str;
+    char[] fqn = name.str.dup;
+    if (parent) // Iter upwards until the root package is reached.
+      for (auto s = parent; s.parent; s = s.parent)
+        fqn = s.name.str ~ '.' ~ fqn;
+    return fqn;
   }
 
   /// Returns the type of this symbol or null if inexistent.
