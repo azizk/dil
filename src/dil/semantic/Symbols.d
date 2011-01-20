@@ -347,6 +347,87 @@ class ThisSymbol : VariableSymbol
   }
 }
 
+/// A ClassInfo variable symbol.
+class ClassInfoSymbol : VariableSymbol
+{
+  ClassSymbol clas; /// The class to provide info for.
+  /// Constructs a ClassInfoSymbol object.
+  ///
+  /// Params:
+  ///   clas = ClassInfo for this class.
+  ///   classClassInfo = The global ClassInfo class from object.d.
+  this(ClassSymbol clas, ClassSymbol classClassInfo)
+  {
+    super(clas.name, clas.node);
+    this.type = classClassInfo.type;
+    this.clas = clas;
+    this.stcs = StorageClass.Static;
+  }
+
+//   Something toSomething() // TODO:
+//   { return null; }
+}
+
+/// A ModuleInfo variable symbol.
+class ModuleInfoSymbol : VariableSymbol
+{
+  ModuleSymbol modul; /// The module to provide info for.
+  /// Constructs a ModuleInfoSymbol object.
+  ///
+  /// Params:
+  ///   modul = ModuleInfo for this module.
+  ///   classModuleInfo = The global ModuleInfo class from object.d.
+  this(ModuleSymbol modul, ClassSymbol classModuleInfo)
+  {
+    super(modul.name, modul.node);
+    this.type = classModuleInfo.type;
+    this.modul = modul;
+    this.stcs = StorageClass.Static;
+  }
+
+//   Something toSomething() // TODO:
+//   { return null; }
+}
+
+/// A TypeInfo variable symbol.
+class TypeInfoSymbol : VariableSymbol
+{
+  Type titype; /// The type to provide info for.
+  /// Constructs a TypeInfo object.
+  ///
+  /// The variable is of type TypeInfo and its name is mangled.
+  /// E.g.:
+  /// ---
+  /// TypeInfo _D10TypeInfo_a6__initZ; // For type "char".
+  /// ---
+  /// Params:
+  ///   titype = TypeInfo for this type.
+  ///   name  = The mangled name of this variable.
+  ///   classTypeInfo = The global TypeInfo class from object.d.
+  this(Type titype, Identifier* name, ClassSymbol classTypeInfo)
+  { // FIXME: provide the node of TypeInfo for now.
+    // titype has no node; should every Type get one?
+    super(name, classTypeInfo.node);
+    this.type = classTypeInfo.type;
+    this.titype = titype;
+    this.stcs = StorageClass.Static;
+    this.prot = Protection.Public;
+    this.linkage = LinkageType.C;
+  }
+
+//   Something toSomething() // TODO:
+//   {
+//     switch (titype.tid)
+//     {
+//     case TYP.Char: break;
+//     case TYP.Function: break;
+//     // etc.
+//     default:
+//     }
+//     return null;
+//   }
+}
+
 /// An alias symbol.
 class AliasSymbol : Symbol
 {
