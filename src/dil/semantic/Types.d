@@ -522,9 +522,10 @@ abstract class TypeFuncBase : Type
     return cast(IParameters)cast(void*)params;
   }
 
-  final char[] toString(string keyword)
+  char[] toString()
   { // := ReturnType " " DelegateOrFunction ParameterList
-    return next.toString() ~ " " ~ keyword ~ params.toString();
+    auto ident = (tid == TYP.Function) ? Keyword.Function : Keyword.Delegate;
+    return next.toString() ~ " " ~ ident.str ~ params.toString();
   }
 
   string toMangle()
@@ -559,11 +560,6 @@ class TypeFunction : TypeFuncBase
   {
     super(retType, params, linkage, TYP.Function);
   }
-
-  char[] toString()
-  {
-    return super.toString("function");
-  }
 }
 
 /// Delegate type.
@@ -572,11 +568,6 @@ class TypeDelegate : TypeFuncBase
   this(Type retType, Symbol params, LinkageType linkage)
   {
     super(retType, params, linkage, TYP.Delegate);
-  }
-
-  char[] toString()
-  {
-    return super.toString("delegate");
   }
 }
 
