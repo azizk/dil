@@ -241,7 +241,7 @@ class ParameterSymbol : Symbol
     return s;
   }
 
-  char[] toMangle()
+  string toMangle()
   { // 1. Mangle storage class.
     char[] m;
     char mc = 0;
@@ -289,7 +289,7 @@ class ParametersSymbol : Symbol, IParameters
     return s;
   }
 
-  char[] toMangle()
+  string toMangle()
   {
     char[] m;
     foreach (p; params)

@@ -132,7 +132,7 @@ class Symbol
   }
 
   /// Returns the mangled name of this symbol.
-  char[] toMangle()
+  string toMangle()
   {
     // TODO:
     return name.str.dup;
