@@ -219,9 +219,13 @@ class ParameterSymbol : Symbol
   Type type; /// The parameter's type.
   Expression defValue; /// The default initialization value.
 
-  this(Identifier* name, StorageClass stcs, Node node)
+  this(Type type, Identifier* name,
+    StorageClass stcs, VariadicStyle variadic, Node node)
   {
     super(SYM.Parameter, name, node);
+    this.stcs = stcs;
+    this.variadic = variadic;
+    this.type = type;
   }
 
   char[] toString()
