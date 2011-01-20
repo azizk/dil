@@ -176,6 +176,9 @@ static:
   auto AliasExpectsVariable = "expected a variable declaration in alias, not ‘{}’";
   auto TypedefExpectsVariable = "expected a variable declaration in typedef, not ‘{}’";
   auto CaseRangeStartExpression = "only one expression is allowed for the start of a case range";
+  auto ExpectedParamDefValue = "expected default value for parameter ‘{}’";
+  auto IllegalVariadicParam = "variadic parameter cannot be ‘ref’ or ‘out’";
+  auto ParamsAfterVariadic = "cannot have parameters after a variadic parameter";
   // Semantic analysis:
   auto CouldntLoadModule = "couldn’t import module ‘{}’";
   auto ConflictingModuleFiles = "module is in conflict with module ‘{}’";

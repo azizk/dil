@@ -4503,43 +4503,33 @@ class Parser
 
   /// Parses a ParameterList.
   Parameters parseParameterList()
-  out(params)
-  {
-    if (params.length > 1)
-      foreach (param; params.items[0..$-1])
-      {
-        if (param.isVariadic())
-          assert(0, "variadic arguments can only appear "
-                    "at the end of the parameter list.");
-      }
-  }
-  body
   {
     auto begin = token;
     require2(T.LParen);
 
     auto params = new Parameters();
 
+    Expression defValue; // Default value.
+
     while (token.kind != T.RParen)
     {
       auto paramBegin = token;
-      StorageClass stcs, stc;
+      StorageClass stcs, stc; // Storage classes.
       Token* stctok; // Token of the last storage class.
-      Type type;
-      Token* name;
-      Expression defValue;
+      Type type; // Type of the parameter.
+      Token* name; // Name of the parameter.
 
       void pushParameter()
-      {
+      { // Appends a new Parameter to the list.
         auto param = new Parameter(stcs, stctok, type, name, defValue);
         params ~= set(param, paramBegin);
       }
 
       if (consumed(T.Ellipses))
-      {
+      { // "..."
         stcs = StorageClass.Variadic;
         pushParameter(); // type, name and defValue will be null.
-        break;
+        goto LvariadicParam; // Go to common code and leave the loop.
       }
 
       while (1)
@@ -4600,13 +4590,24 @@ class Parser
 
       if (consumed(T.Assign))
         defValue = parseAssignExpression();
+      else if (defValue !is null) // Parsed a defValue previously?
+        error(name ? name : type.begin, // Position.
+          MSG.ExpectedParamDefValue,
+          name ? name.text() : ""); // Name.
 
       if (consumed(T.Ellipses))
       {
         stcs |= StorageClass.Variadic;
+        if (stcs & (StorageClass.Ref | StorageClass.Out))
+          error(paramBegin, MSG.IllegalVariadicParam);
+      LvariadicParam:
         pushParameter();
+        // TODO: allow trailing comma here? DMD doesn't...
+        if (token.kind != T.RParen)
+          error(token, MSG.ParamsAfterVariadic);
         break;
       }
+      // Add a non-variadic parameter to the list.
       pushParameter();
 
       if (!consumed(T.Comma))
