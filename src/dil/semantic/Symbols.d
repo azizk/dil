@@ -8,7 +8,9 @@ import dil.ast.Node,
 import dil.semantic.Symbol,
        dil.semantic.SymbolTable,
        dil.semantic.Types;
-import dil.lexer.IdTable;
+import dil.lexer.IdTable,
+       dil.lexer.Keywords,
+       dil.lexer.Funcs : String;
 import dil.Enums;
 import common;
 
@@ -316,6 +318,11 @@ class VariableSymbol : Symbol
     this.stcs = stcs;
     this.linkage = linkage;
   }
+
+  this(Identifier* name, Node variableNode)
+  {
+    this(name, Protection.None, StorageClass.None, LinkageType.None, node);
+  }
 }
 
 /// An enum member symbol.
@@ -327,6 +334,16 @@ class EnumMember : VariableSymbol
   {
     super(name, prot, stcs, linkage, enumMemberNode);
     this.sid = SYM.EnumMember;
+  }
+}
+
+/// A this-pointer symbol for member functions (or frame pointers.)
+class ThisSymbol : VariableSymbol
+{
+  this(Type type, Node node)
+  {
+    super(Keyword.This, node);
+    this.type = type;
   }
 }
 
