@@ -4,8 +4,9 @@
 module dil.semantic.Symbol;
 
 import dil.ast.Node;
-import dil.lexer.Identifier;
-import dil.lexer.IdTable;
+import dil.lexer.Identifier,
+       dil.lexer.IdTable,
+       dil.lexer.Funcs : String;
 import common;
 
 /// Enumeration of Symbol IDs.
@@ -146,9 +147,23 @@ class Symbol
 
   /// Returns the mangled name of this symbol.
   string toMangle()
+  { // := ParentMangle? NameMangleLength NameMangle
+    if (name is Ident.Empty)
+    {} // TODO: ?
+    string pm; // Parent mangle.
+    if (parent)
+    {
+      pm = parent.toMangle();
+      if (pm.length >= 2 && pm[0..2] == "_D")
+        pm = pm[2..$]; // Skip the prefix.
+    }
+    string id = name.str;
+    return pm ~ String(id.length) ~ id;
+  }
+
+  static string toMangle(Symbol s)
   {
-    // TODO:
-    return name.str.dup;
+    return s.toMangle();
   }
 
   /// Returns the string representation of this symbol.

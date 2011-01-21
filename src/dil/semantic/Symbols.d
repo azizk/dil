@@ -14,6 +14,84 @@ import dil.lexer.IdTable,
 import dil.Enums;
 import common;
 
+/// Declaration symbol.
+abstract class DeclarationSymbol : Symbol
+{
+  Protection prot; /// The protection.
+  StorageClass stcs; /// The storage classes.
+  LinkageType linkage; /// The linkage type.
+
+  this(SYM sid, Identifier* name, Node node)
+  {
+    super(sid, name, node);
+  }
+
+  string toMangle()
+  {
+    return toMangle(this, linkage);
+  }
+
+  static string toMangle(Symbol s, LinkageType linkage)
+  {
+    string toCppMangle(Symbol s){ /+TODO+/ return ""; }
+
+    char[] m;
+    if (!s.parent || s.parent.isModule())
+      switch (linkage)
+      {
+      case LinkageType.D:
+        break;
+      case LinkageType.C:
+      case LinkageType.Windows:
+      case LinkageType.Pascal:
+        m = s.name.str.dup;
+        break;
+      case LinkageType.Cpp:
+        version(D2)version(Windows)
+        goto case LinkageType.C; // D2 on Windows
+
+        m = toCppMangle(s);
+        break;
+      case LinkageType.None:
+        // TODO: issue forward declaration error?
+        goto case LinkageType.C;
+      default: assert(0);
+      }
+    if (!m)
+      m = "_D" ~ toMangle2(s);
+    return m;
+  }
+
+  static string toMangle2(Symbol s)
+  { // Recursive function.
+    string m;
+    Symbol s2 = s;
+    for (; s2; s2 = s2.parent)
+      if (s2.name is Ident.Empty)
+        m = "0" ~ m;
+      else if (s2 !is s && s2.isFunction())
+      {
+        m = toMangle2(s2) ~ m; // Recursive call.
+        break;
+      }
+      else
+      {
+        auto id = s2.name.str;
+        m = String(id.length) ~ id ~ m;
+      }
+
+    auto fs = s.isFunction() ? s.to!(FunctionSymbol) : null;
+
+    if (fs /+&& (fs.needThis() || fs.isNested())+/) // FIXME:
+      m ~= 'M'; // Mangle char for member/nested functions.
+    if (auto t = cast(Type)s.getType())
+      if (t.mangled)
+        m ~= t.mangled;
+
+    return m;
+  }
+}
+
 /// A symbol that has its own scope with a symbol table.
 class ScopeSymbol : Symbol
 {
@@ -97,6 +175,11 @@ abstract class Aggregate : ScopeSymbol
   {
     return type;
   }
+
+  string toMangle()
+  {
+    return Symbol.toMangle(this);
+  }
 }
 
 /// A class symbol.
@@ -117,6 +200,7 @@ class SpecialClassSymbol : ClassSymbol
     super(name, classNode);
   }
 
+  /// Handle mangling differently for special classes.
   string toMangle()
   {
     auto parent_save = parent;
@@ -199,6 +283,35 @@ class FunctionSymbol : ScopeSymbol
   this(Identifier* name, Node functionNode)
   {
     super(SYM.Function, name, functionNode);
+  }
+
+  string toMangle()
+  {
+    if (isDMain())
+      return "_Dmain";
+    if (isWinMain() || isDllMain())
+      return name.str;
+    return DeclarationSymbol.toMangle(this, linkage);
+  }
+
+  bool isDMain()
+  {
+    return name is Ident.main && linkage != LinkageType.C && !isMember();
+  }
+
+  bool isWinMain()
+  {
+    return name is Ident.WinMain && linkage != LinkageType.C && !isMember();
+  }
+
+  bool isDllMain()
+  {
+    return name is Ident.DllMain && linkage != LinkageType.C && !isMember();
+  }
+
+  bool isMember()
+  { // TODO
+    return false;
   }
 }
 
@@ -439,6 +552,11 @@ class TypedefSymbol : Symbol
   {
     super(SYM.Typedef, name, aliasNode);
   }
+
+  string toMangle()
+  {
+    return Symbol.toMangle(this);
+  }
 }
 
 /// A template symbol.
@@ -459,6 +577,23 @@ class TemplInstanceSymbol : ScopeSymbol
   {
     super(SYM.TemplateInstance, name, node);
   }
+
+  string toMangle()
+  { // := ParentMangle? NameMangleLength NameMangle
+    if (name is Ident.Empty)
+    {} // TODO: ?
+    string pm; // Parent mangle.
+    if (!tplSymbol)
+    {} // Error: undefined
+    else if (tplSymbol.parent)
+    {
+      pm = tplSymbol.parent.toMangle();
+      if (pm.length >= 2 && pm[0..2] == "_D")
+        pm = pm[2..$]; // Skip the prefix.
+    }
+    string id = name.str;
+    return pm ~ String(id.length) ~ id;
+  }
 }
 
 /// A template mixin symbol.
@@ -468,6 +603,11 @@ class TemplMixinSymbol : TemplInstanceSymbol
   {
     super(name, node);
     this.sid = SYM.TemplateMixin;
+  }
+
+  string toMangle()
+  {
+    return Symbol.toMangle(this);
   }
 }
 
