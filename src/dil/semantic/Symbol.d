@@ -124,6 +124,15 @@ class Symbol
     return fqn;
   }
 
+  /// Returns the module this symbol belongs to or null if orphaned.
+  Symbol getModule()
+  {
+    auto s = this;
+    for (; s && !s.isModule(); s = s.parent)
+    {}
+    return s;
+  }
+
   /// Returns the type of this symbol or null if inexistent.
   /// The return type is Object to avoid circular imports.
   Object getType()
