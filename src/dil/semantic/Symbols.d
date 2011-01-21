@@ -333,19 +333,22 @@ class ParameterSymbol : Symbol
 {
   StorageClass stcs; /// Storage classes.
   VariadicStyle variadic; /// Variadic style.
-  Type type; /// The parameter's type.
+  Type ptype; /// The parameter's type.
   Expression defValue; /// The default initialization value.
 
-  this(Type type, Identifier* name,
+  TypeParameter type; /// Type of this symbol.
+
+  this(Type ptype, Identifier* name,
     StorageClass stcs, VariadicStyle variadic, Node node)
   {
     super(SYM.Parameter, name, node);
     this.stcs = stcs;
     this.variadic = variadic;
-    this.type = type;
+    this.ptype = ptype;
+    this.type = new TypeParameter(ptype, stcs, variadic);
   }
 
-  char[] toString()
+  string toString()
   { // := StorageClasses? ParamType? ParamName? (" = " DefaultValue)? "..."?
     char[] s;
     foreach (stc; EnumString.all(stcs))
@@ -363,42 +366,34 @@ class ParameterSymbol : Symbol
   }
 
   string toMangle()
-  { // 1. Mangle storage class.
-    char[] m;
-    char mc = 0;
-    if (stcs & StorageClass.Out)
-      mc = 'J';
-    else if (stcs & StorageClass.Ref)
-      mc = 'K';
-    else if (stcs & StorageClass.Lazy)
-      mc = 'L';
-    if (mc)
-      m ~= mc;
-    // 2. Mangle parameter type.
-    if (type)
-      m ~= type.toMangle();
-    return m;
+  {
+    return type.toMangle();
   }
 }
 
 /// A list of ParameterSymbol objects.
-class ParametersSymbol : Symbol, IParameters
+class ParametersSymbol : Symbol
 {
   ParameterSymbol[] params; /// The parameters.
+  TypeParameters type; /// Type of this symbol.
 
   this(ParameterSymbol[] params, Node node=null)
   {
     super(SYM.Parameters, Ident.Empty, node);
     this.params = params;
+    auto ptypes = new TypeParameter[params.length];
+    foreach (i, p; params)
+      ptypes[i] = p.type;
+    this.type = new TypeParameters(ptypes);
   }
 
   /// Returns the variadic style of the last parameter.
   VariadicStyle getVariadic()
   {
-    return params.length ? params[$-1].variadic : VariadicStyle.None;
+    return type.getVariadic();
   }
 
-  char[] toString()
+  string toString()
   { // := "(" ParameterList ")"
     char[] s;
     s ~= "(";
@@ -412,10 +407,7 @@ class ParametersSymbol : Symbol, IParameters
 
   string toMangle()
   {
-    char[] m;
-    foreach (p; params)
-      m ~= p.toMangle();
-    return m;
+    return type.toMangle();
   }
 }
 

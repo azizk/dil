@@ -494,38 +494,124 @@ class TypeTypedef : Type
   }
 }
 
-
-/// Using this interface avoids circular imports.
-interface IParameters
+/// Parameter type.
+class TypeParameter : Type
 {
-  VariadicStyle getVariadic();
+  alias next type; /// Parameter's type.
+  StorageClass stcs; /// Storage classes.
+  VariadicStyle variadic; /// Variadic style.
+  // TODO: add these?
+  // They have no relevance for mangling,
+  // because they don't affect the function signature,
+  // and they will be null after a Type.merge().
+  // Identifier* name;
+  // Node defValue;
+
+  this(Type type, StorageClass stcs, VariadicStyle variadic=VariadicStyle.None)
+  {
+    super(type, TYP.Parameter);
+    this.stcs = stcs;
+    this.variadic = variadic;
+  }
+
+  /// NB: the parameter's name and the optional default value are not printed.
+  string toString()
+  { // := StorageClasses? ParamType? "..."?
+    char[] s;
+    // TODO: exclude STC.In?
+    foreach (stc; EnumString.all(stcs/+ & ~StorageClass.In+/))
+      s ~= stc ~ " ";
+    if (type)
+      s ~= type.toString();
+    else if (variadic)
+      s ~= "...";
+    assert(s.length, "empty parameter?");
+    return s;
+  }
+
+  string toMangle()
+  { // := StorageClassMangleChar TypeMangle
+    // 1. Mangle storage class.
+    char[] m;
+    char mc = 0;
+    // TODO: D2 can have more than one stc. What to do?
+    if (stcs & StorageClass.Out)
+      mc = 'J';
+    //else if (stcs & StorageClass.In)
+      //mc = 0;
+    else if (stcs & StorageClass.Ref)
+      mc = 'K';
+    else if (stcs & StorageClass.Lazy)
+      mc = 'L';
+    if (mc)
+      m ~= mc;
+    // 2. Mangle parameter type.
+    if (type)
+      m ~= type.toMangle();
+    else
+      assert(variadic == VariadicStyle.C);
+    return m;
+  }
+}
+
+/// A list of TypeParameter objects.
+class TypeParameters : Type
+{
+  TypeParameter[] params; /// The parameters.
+
+  this(TypeParameter[] params)
+  {
+    super(null, TYP.Parameters);
+    this.params = params;
+  }
+
+  /// Returns the variadic style of the last parameter.
+  VariadicStyle getVariadic()
+  {
+    return params.length ? params[$-1].variadic : VariadicStyle.None;
+  }
+
+  string toString()
+  { // := "(" ParameterList ")"
+    char[] s;
+    s ~= "(";
+    foreach (i, p; params) {
+      if (i) s ~= ", "; // Append comma if more than one param.
+      s ~= p.toString();
+    }
+    s ~= ")";
+    return s;
+  }
+
+  string toMangle()
+  {
+    char[] m;
+    foreach (p; params)
+      m ~= p.toMangle();
+    return m;
+  }
 }
 
 /// Abstract base class for TypeFunction and TypeDelegate.
 abstract class TypeFuncBase : Type
 {
-  alias symbol params; /// The parameter list.
+  alias next retType;
+  TypeParameters params; /// The parameter list.
   LinkageType linkage; /// The linkage type.
   VariadicStyle variadic; /// Variadic style.
 
-  this(Type retType, Symbol params, LinkageType linkage, TYP tid)
+  this(Type retType, TypeParameters params, LinkageType linkage, TYP tid)
   {
-    assert(params.isParameters());
     super(retType, tid);
     this.params = params;
     this.linkage = linkage;
-    this.variadic = iparams().getVariadic();
-  }
-
-  final IParameters iparams()
-  {
-    return cast(IParameters)cast(void*)params;
+    this.variadic = params.getVariadic();
   }
 
   char[] toString()
   { // := ReturnType " " DelegateOrFunction ParameterList
     auto ident = (tid == TYP.Function) ? Keyword.Function : Keyword.Delegate;
-    return next.toString() ~ " " ~ ident.str ~ params.toString();
+    return retType.toString() ~ " " ~ ident.str ~ params.toString();
   }
 
   string toMangle()
@@ -548,7 +634,7 @@ abstract class TypeFuncBase : Type
     mc = 'Z' - variadic;
     assert(mc == 'X' || mc == 'Y' || mc == 'Z');
     m ~= mc; // Marks end of parameter list.
-    m ~= next.toMangle();
+    m ~= retType.toMangle();
     return m;
   }
 }
@@ -556,7 +642,7 @@ abstract class TypeFuncBase : Type
 /// Function type.
 class TypeFunction : TypeFuncBase
 {
-  this(Type retType, Symbol params, LinkageType linkage)
+  this(Type retType, TypeParameters params, LinkageType linkage)
   {
     super(retType, params, linkage, TYP.Function);
   }
@@ -565,7 +651,7 @@ class TypeFunction : TypeFuncBase
 /// Delegate type.
 class TypeDelegate : TypeFuncBase
 {
-  this(Type retType, Symbol params, LinkageType linkage)
+  this(Type retType, TypeParameters params, LinkageType linkage)
   {
     super(retType, params, linkage, TYP.Delegate);
   }
@@ -754,6 +840,8 @@ static:
     {'v', 1},   // void
 
     {'n', SNA},  // None
+    {'?', SNA},  // Parameter
+    {'?', SNA},  // Parameters
 
     {'A', PS*2, &VNULL}, // Dynamic array
     {'G', PS*2, &VNULL}, // Static array

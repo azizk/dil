@@ -35,6 +35,9 @@ enum TYP
 
   None,   /// TypeNone in the specs. Why?
 
+  Parameter, /// Function parameter.
+  Parameters, /// List of function parameters.
+
   DArray, /// Dynamic array.
   SArray, /// Static array.
   AArray, /// Associative array.
