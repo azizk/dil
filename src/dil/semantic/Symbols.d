@@ -186,15 +186,6 @@ class EnumSymbol : ScopeSymbol
   }
 }
 
-/// A template symbol.
-class TemplateSymbol : ScopeSymbol
-{
-  this(Identifier* name, Node templateNode)
-  {
-    super(SYM.Template, name, templateNode);
-  }
-}
-
 /// A function symbol.
 class FunctionSymbol : ScopeSymbol
 {
@@ -447,6 +438,36 @@ class TypedefSymbol : Symbol
   this(Identifier* name, Node aliasNode)
   {
     super(SYM.Typedef, name, aliasNode);
+  }
+}
+
+/// A template symbol.
+class TemplateSymbol : ScopeSymbol
+{
+  this(Identifier* name, Node node)
+  {
+    super(SYM.Template, name, node);
+  }
+}
+
+/// A template instance symbol.
+class TemplInstanceSymbol : ScopeSymbol
+{
+  // TemplArgSymbol[] tiArgs;
+  TemplateSymbol tplSymbol;
+  this(Identifier* name, Node node)
+  {
+    super(SYM.TemplateInstance, name, node);
+  }
+}
+
+/// A template mixin symbol.
+class TemplMixinSymbol : TemplInstanceSymbol
+{
+  this(Identifier* name, Node node)
+  {
+    super(name, node);
+    this.sid = SYM.TemplateMixin;
   }
 }
 

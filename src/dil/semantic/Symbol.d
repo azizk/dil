@@ -20,6 +20,8 @@ enum SYM
   Enum,
   EnumMember,
   Template,
+  TemplateInstance,
+  TemplateMixin,
   Variable,
   Function,
   Alias,
@@ -94,6 +96,8 @@ class Symbol
   mixin(is_("Enum"));
   mixin(is_("EnumMember"));
   mixin(is_("Template"));
+  mixin(is_("TemplateInstance"));
+  mixin(is_("TemplateMixin"));
   mixin(is_("Variable"));
   mixin(is_("Function"));
   mixin(is_("Alias"));
