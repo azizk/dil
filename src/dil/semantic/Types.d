@@ -695,24 +695,32 @@ class TypeTemplInstance : Type
 /// Template tuple type.
 class TypeTuple : Type
 {
-  alias symbol params;
+  Type[] types; /// The types inside this tuple.
 
-  this(Symbol params)
+  this(Type[] types)
   {
-    assert(params.isParameters());
     super(null, TYP.Tuple);
-    this.params = params;
+    this.types = types;
   }
 
-  char[] toString()
-  {
-    return params.toString();
+  string toString()
+  { // := "(" TypeList ")"
+    char[] s;
+    s ~= "(";
+    foreach (i, t; types) {
+      if (i) s ~= ", "; // Append comma if more than one type.
+      s ~= t.toString();
+    }
+    s ~= ")";
+    return s;
   }
 
   string toMangle()
-  { // := MangleChar ParamsMangleLength ParamsMangle
-    char[] params = params.toMangle();
-    return mangleChar() ~ String(params.length) ~ params;
+  { // := MangleChar TypesMangleLength TypesMangle
+    char[] tm;
+    foreach (t; types)
+      tm ~= t.toMangle();
+    return mangleChar() ~ String(tm.length) ~ tm;
   }
 }
 
