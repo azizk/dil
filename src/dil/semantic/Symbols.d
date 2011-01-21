@@ -133,6 +133,8 @@ class ScopeSymbol : Symbol
 /// A module symbol.
 class ModuleSymbol : ScopeSymbol
 {
+  ModuleInfoSymbol varminfo; /// The ModuleInfo for this module.
+
   this(Identifier* name=null, Node node=null)
   {
     super(SYM.Module, name, node);
@@ -185,6 +187,11 @@ abstract class Aggregate : ScopeSymbol
 /// A class symbol.
 class ClassSymbol : Aggregate
 {
+  ClassSymbol base; /// The inherited base class.
+  InterfaceSymbol[] ifaces; /// The inherited interfaces.
+
+  TypeInfoSymbol vartinfo; /// The TypeInfo of this class.
+
   this(Identifier* name, Node classNode)
   {
     super(SYM.Class, name, classNode);
@@ -276,6 +283,7 @@ class FunctionSymbol : ScopeSymbol
   Protection prot; /// The protection.
   StorageClass stcs; /// The storage classes.
   LinkageType linkage; /// The linkage type.
+  Type type; /// The type of this function.
 
   Type returnType;
   VariableSymbol[] params;
@@ -283,6 +291,11 @@ class FunctionSymbol : ScopeSymbol
   this(Identifier* name, Node functionNode)
   {
     super(SYM.Function, name, functionNode);
+  }
+
+  Type getType()
+  {
+    return type;
   }
 
   string toMangle()
@@ -539,6 +552,9 @@ class TypeInfoSymbol : VariableSymbol
 /// An alias symbol.
 class AliasSymbol : Symbol
 {
+  Type aliasType;
+  Symbol aliasSym;
+
   this(Identifier* name, Node aliasNode)
   {
     super(SYM.Alias, name, aliasNode);
