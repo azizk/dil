@@ -54,6 +54,16 @@ abstract class Type/* : Symbol*/
     return this;
   }
 
+  /// Returns the mangled TypeInfo identifier for this type.
+  /// Params:
+  ///   idtable = Inserts the returned id into this table.
+  final Identifier* mangledTypeInfoIdent(IdTable idtable)
+  {
+    auto m = toMangle();
+    m = "_D" ~ String(m.length+9) ~ "TypeInfo_" ~ m ~ "6__initZ";
+    return idtable.lookup(m);
+  }
+
   /// Returns the base type if this is an enum or typedef, or itself otherwise.
   Type baseType()
   {
