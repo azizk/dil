@@ -44,16 +44,6 @@ abstract class Type/* : Symbol*/
     return cast(Class)cast(void*)this;
   }
 
-  /// Returns the unique version of this type from the type table.
-  /// Inserts this type into the table if not yet existant.
-  Type unique(TypeTable tt)
-  {
-    // TODO:
-    if (!mangled.length)
-    {}
-    return this;
-  }
-
   /// Returns the mangled TypeInfo identifier for this type.
   /// Params:
   ///   idtable = Inserts the returned id into this table.
@@ -870,7 +860,38 @@ class TypeTable
   void insert(Type type)
   {
     assert(type.mangled.length);
-    table[hashOf(type.mangled)] = type;
+    insert(type, hashOf(type.mangled));
+  }
+
+  /// Inserts a type into the table by its hash.
+  void insert(Type type, hash_t hash)
+  {
+    assert(type.mangled.length && hash == hashOf(type.mangled));
+    table[hash] = type;
+  }
+
+  /// Returns the unique version of a type
+  /// by looking up its mangled name.
+  /// Inserts the type into the table if not present.
+  Type unique(Type t)
+  {
+    if (t.mangled.length) // Already unique?
+      assert(t is lookup(t.mangled),
+        "the type in the table and the given type are not the same object");
+    else
+    {
+      if (t.next) // Follow the type chain.
+        t.next = unique(t.next);
+      // Get the mangled string and look it up.
+      auto m = t.toMangle();
+      auto m_hash = hashOf(m); // Only calculate once.
+      if (auto t_intable = lookup(m_hash))
+        t = t_intable; // Found.
+      else // Insert if not found.
+        (t.mangled = m),
+        insert(t, m_hash);
+    }
+    return t;
   }
 }
 
