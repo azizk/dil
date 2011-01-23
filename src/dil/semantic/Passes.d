@@ -135,7 +135,7 @@ abstract class SemanticPass : DefaultVisitor
   {
     auto loc = s2.node.begin.getErrorLocation(modul.filePath());
     auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
-    error(s1.node.begin, MSG.DeclConflictsWithDecl, name.str, locString);
+    error(s1.node, MSG.DeclConflictsWithDecl, name.str, locString);
   }
 
   /// Error messages are reported for undefined identifiers if true.
@@ -213,6 +213,17 @@ abstract class SemanticPass : DefaultVisitor
   {
     if (!modul.diag)
       return;
+    auto location = token.getErrorLocation(modul.filePath());
+    auto msg = Format(_arguments, _argptr, formatMsg);
+    modul.diag ~= new SemanticError(location, msg);
+  }
+
+  /// ditto
+  void error(Node n, char[] formatMsg, ...)
+  {
+    if (!modul.diag)
+      return;
+    auto token = n.begin; // Use the begin token of this node.
     auto location = token.getErrorLocation(modul.filePath());
     auto msg = Format(_arguments, _argptr, formatMsg);
     modul.diag ~= new SemanticError(location, msg);
@@ -360,7 +371,7 @@ override
     {
       auto importedModule = importModule(moduleFQNPath);
       if (importedModule is null)
-        error(d.begin, MSG.CouldntLoadModule, moduleFQNPath ~ ".d");
+        error(d, MSG.CouldntLoadModule, moduleFQNPath ~ ".d");
       modul.modules ~= importedModule;
     }
     return d;
@@ -533,7 +544,7 @@ override
   {
     // Error if we are in an interface.
     if (scop.symbol.isInterface && !(vd.isStatic || vd.isConst))
-      return error(vd.begin, MSG.InterfaceCantHaveVariables), vd;
+      return error(vd, MSG.InterfaceCantHaveVariables), vd;
 
     // Insert variable symbols in this declaration into the symbol table.
     vd.variables = new VariableSymbol[vd.names.length];
@@ -568,7 +579,7 @@ override
     if (d.isSpecification)
     { // debug = Id | Int
       if (!isModuleScope())
-        error(d.begin, MSG.DebugSpecModuleLevel, d.spec.text);
+        error(d, MSG.DebugSpecModuleLevel, d.spec.text);
       else if (d.spec.kind == TOK.Identifier)
         context.addDebugId(d.spec.ident.str);
       else
@@ -590,7 +601,7 @@ override
     if (d.isSpecification)
     { // version = Id | Int
       if (!isModuleScope())
-        error(d.begin, MSG.VersionSpecModuleLevel, d.spec.text);
+        error(d, MSG.VersionSpecModuleLevel, d.spec.text);
       else if (d.spec.kind == TOK.Identifier)
         context.addVersionId(d.spec.ident.str);
       else
@@ -959,7 +970,7 @@ override
   {
     assert(e.type !is null);
     if (e.type.isBaseBool())
-      error(e.begin, "the operation is undefined for type bool");
+      error(e, "the operation is undefined for type bool");
   }
 
   /// Reports an error if e has no boolean result.
@@ -969,10 +980,10 @@ override
     switch (e.kind)
     {
     case NodeKind.DeleteExpression:
-      error(e.begin, "the delete operator has no boolean result");
+      error(e, "the delete operator has no boolean result");
       break;
     case NodeKind.AssignExpression:
-      error(e.begin, "the assignment operator '=' has no boolean result");
+      error(e, "the assignment operator '=' has no boolean result");
       break;
     case NodeKind.CondExpression:
       auto cond = e.to!(CondExpression);
@@ -981,7 +992,7 @@ override
       break;
     default:
       if (!e.type.isBaseScalar()) // Only scalar types can be bool.
-        error(e.begin, "expression has no boolean result");
+        error(e, "expression has no boolean result");
     }
   }
 
@@ -1130,7 +1141,7 @@ override
       return o;
     if (!e.rhs.type.baseType().isAArray())
     {
-      error(e.rhs.begin, "right operand of 'in' operator must be an associative array");
+      error(e.rhs, "right operand of 'in' operator must be an associative array");
       e.type = e.rhs.type; // Don't use Types.Error. Cascading error msgs are irritating.
     }
     else
@@ -1382,7 +1393,7 @@ override
     e.type = e.una.type.next;
     if (!e.una.type.isPointer)
     {
-      error(e.una.begin,
+      error(e.una,
         "dereference operator '*x' not defined for expression of type '{}'",
         e.una.type.toString());
       e.type = Types.Error;
@@ -1425,7 +1436,7 @@ override
     e.type = e.una.type;
     if (e.type.isBaseFloating() || e.type.isBaseBool())
     {
-      error(e.begin, "the operator '~x' is undefined for the type '{}'",
+      error(e, "the operator '~x' is undefined for the type '{}'",
             e.type.toString());
       e.type = Types.Error;
     }
