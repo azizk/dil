@@ -23,29 +23,34 @@ abstract class Node
     this.category = category;
   }
 
+  /// Sets the begin and end tokens.
   void setTokens(Token* begin, Token* end)
   {
     this.begin = begin;
     this.end = end;
   }
 
-  Class setToks(Class)(Class node)
+  /// Sets the location tokens (begin and end) using another node.
+  void setLoc(Node other)
   {
-    node.setTokens(this.begin, this.end);
-    return node;
+    this.begin = other.begin;
+    this.end = other.end;
   }
 
+  /// Adds a child node.
   void addChild(Node child)
   {
     assert(child !is null, "failed in " ~ this.classinfo.name);
     this.children ~= child;
   }
 
+  /// Adss a child node if not null.
   void addOptChild(Node child)
   {
     child is null || addChild(child);
   }
 
+  /// Adds a list of child nodes.
   void addChildren(Node[] children)
   {
     assert(children !is null && delegate{
@@ -58,6 +63,7 @@ abstract class Node
     this.children ~= children;
   }
 
+  /// Adds a list of child nodes if not null.
   void addOptChildren(Node[] children)
   {
     children is null || addChildren(children);
@@ -102,28 +108,35 @@ abstract class Node
   /// from Node. It sets the member kind.
   const string set_kind = `this.kind = mixin("NodeKind." ~ typeof(this).stringof);`;
 
+  /// Returns true if Declaration.
   final bool isDeclaration()
   {
     return category == NodeCategory.Declaration;
   }
 
+  /// Returns true if Statement.
   final bool isStatement()
   {
     return category == NodeCategory.Statement;
   }
 
+  /// Returns true if Expression.
   final bool isExpression()
   {
     return category == NodeCategory.Expression;
   }
 
+  /// Returns true if Type.
   final bool isType()
   {
     return category == NodeCategory.Type;
   }
 
-  final bool isParameter()
-  { // The only nodes in this category are parameter classes.
+  /// Returns true if Other.
+  final bool isOther()
+  {
     return category == NodeCategory.Other;
   }
+  /// The only nodes in this category are Parameter classes.
+  alias isOther isParameter;
 }
