@@ -134,40 +134,124 @@ abstract class Type/* : Symbol*/
     return symbol !is null;
   }
 
-  /// Returns the type as a string.
+  /// Returns the type as a human-readable string.
   abstract char[] toString();
 
-  /// Returns true if this type is a pointer type.
-  final bool isPointer()
-  {
-    return tid == TYP.Pointer;
-  }
-
-  // Returns true if this is a dynamic array type.
+  /// Returns true if dynamic array type.
   final bool isDArray()
   {
     return tid == TYP.DArray;
   }
 
-  // Returns true if this is a static array type.
+  /// Returns true if static array type.
   final bool isSArray()
   {
     return tid == TYP.SArray;
   }
 
-  // Returns true if this is a associative array type.
+  /// Returns true if associative array type.
   final bool isAArray()
   {
     return tid == TYP.AArray;
   }
 
-  // Returns true if this is a dynamic or static array type.
+  /// Returns true if parameter type.
+  final bool isParameter()
+  {
+    return tid == TYP.Parameter;
+  }
+
+  /// Returns true if parameters type.
+  final bool isParameters()
+  {
+    return tid == TYP.Parameters;
+  }
+
+  /// Returns true if enum type.
+  final bool isEnum()
+  {
+    return tid == TYP.Enum;
+  }
+
+  /// Returns true if struct type.
+  final bool isStruct()
+  {
+    return tid == TYP.Struct;
+  }
+
+  /// Returns true if class type.
+  final bool isClass()
+  {
+    return tid == TYP.Struct;
+  }
+
+  /// Returns true if typedef type.
+  final bool isTypedef()
+  {
+    return tid == TYP.Typedef;
+  }
+
+  /// Returns true if function type.
+  final bool isFunction()
+  {
+    return tid == TYP.Function;
+  }
+
+  /// Returns true if Delegate type.
+  final bool isDelegate()
+  {
+    return tid == TYP.Delegate;
+  }
+
+  /// Returns true if pointer type.
+  final bool isPointer()
+  {
+    return tid == TYP.Pointer;
+  }
+
+  /// Returns true if reference type.
+  final bool isReference()
+  {
+    return tid == TYP.Reference;
+  }
+
+  /// Returns true if identifier type.
+  final bool isIdentifier()
+  {
+    return tid == TYP.Identifier;
+  }
+
+  /// Returns true if template instance type.
+  final bool isTInstance()
+  {
+    return tid == TYP.TInstance;
+  }
+
+  /// Returns true if tuple type.
+  final bool isTuple()
+  {
+    return tid == TYP.Tuple;
+  }
+
+  /// Returns true if const type.
+  final bool isConst()
+  {
+    return tid == TYP.Const;
+  }
+
+  /// Returns true if invariant type.
+  final bool isInvariant()
+  {
+    return tid == TYP.Invariant;
+  }
+
+  /// Returns true if dynamic or static array type.
   final bool isDorSArray()
   {
     return tid == TYP.DArray || tid == TYP.SArray;
   }
 
-  /// Returns true if this type is a bool type.
+  /// Returns true if bool type.
   final bool isBool()
   {
     return tid == TYP.Bool;
