@@ -436,6 +436,11 @@ class VariableSymbol : Symbol
   {
     this(name, Protection.None, StorageClass.None, LinkageType.None, node);
   }
+
+  string toMangle()
+  {
+    return DeclarationSymbol.toMangle(this, linkage);
+  }
 }
 
 /// An enum member symbol.
@@ -595,7 +600,7 @@ class TupleSymbol : Symbol
 
   string toMangle()
   {
-    return DeclarationSymbol.toMangle(this, LinkageType.D/+FIXME+/);
+    return DeclarationSymbol.toMangle(this, LinkageType.D /+FIXME+/);
   }
 }
 
@@ -613,6 +618,11 @@ class AliasSymbol : Symbol
   this(Identifier* name, Node aliasNode)
   {
     super(SYM.Alias, name, aliasNode);
+  }
+
+  string toMangle()
+  {
+    return DeclarationSymbol.toMangle(this, LinkageType.D /+FIXME+/);
   }
 }
 
