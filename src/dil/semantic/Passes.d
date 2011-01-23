@@ -259,6 +259,48 @@ class FirstSemanticPass : SemanticPass
     visitN(modul.root);
   }
 
+  /// Returns the lvalue of e.
+  Expression toLValue(Expression e)
+  {
+    switch (e.kind)
+    {
+    alias NodeKind NK;
+    case NK.IdentifierExpression,
+         NK.ThisExpression,
+         NK.IndexExpression,
+         NK.StructInitExpression,
+         NK.VariablesDeclaration,
+         NK.DerefExpression,
+         NK.SliceExpression:
+      // Nothing to do.
+      break;
+    case NK.ArrayLiteralExpression:
+      // if (e.type && e.type.baseType().tid == TYP.Void)
+      //   error();
+      break;
+    case NK.CommaExpression:
+      e = toLValue(e.to!(CommaExpression).rhs); // (lhs, rhs)
+    case NK.CondExpression:
+      break;
+    case NK.CallExpression:
+      if (e.type.baseType().isStruct())
+        break;
+      goto default;
+    default:
+      error(e, "‘{}’ is not an lvalue", e.toText());
+    }
+    return e;
+  }
+
+  /// Returns the expression &e.
+  Expression addressOf(Expression e)
+  {
+    auto e2 = new AddressExpression(toLValue(e));
+    e2.setLoc(e);
+    e2.type = e.type.ptrTo();
+    return e2;
+  }
+
   /// Looks for special classes and stores them in a table.
   /// May modify d.symbol and assign a SpecialClassSymbol to it.
   void lookForSpecialClasses(ClassDeclaration d)
