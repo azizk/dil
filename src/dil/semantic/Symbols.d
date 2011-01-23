@@ -541,6 +541,69 @@ class TypeInfoSymbol : VariableSymbol
 //   }
 }
 
+// TODO: let dil.semantic.Types.Type inherit from Symbol?
+/// A type symbol.
+class TypeSymbol : Symbol
+{
+  Type type; /// Wrapper around this type.
+
+  this(Type type)
+  {
+    super(SYM.Type, null, null);
+    this.type = type;
+  }
+}
+
+/// A tuple symbol.
+class TupleSymbol : Symbol
+{
+  TypeTuple type; /// The type of this tuple.
+  Symbol[] items; /// The items in this tuple.
+
+  this(Symbol[] items, Identifier* name, Node node)
+  {
+    super(SYM.Tuple, name, node);
+  }
+
+  /// Returns the type only when all elements are types, otherwise null.
+  Type getType()
+  {
+    if (!type && hasOnlyTypes())
+      type = makeTypeTuple();
+    return type;
+  }
+
+  /// Returns true if all elements are types (also if the tuple is empty.)
+  bool hasOnlyTypes()
+  {
+    foreach (item; items)
+      if (!item.isType())
+        return false;
+    return true;
+  }
+
+  /// Creates a TypeTuple instance from the items of this tuple.
+  TypeTuple makeTypeTuple()
+  in { assert(hasOnlyTypes()); }
+  body
+  {
+    auto types = new Type[items.length]; // Allocate exact amount of types.
+    foreach (i, item; items)
+      types[i] = item.to!(TypeSymbol).type;
+    return new TypeTuple(types);
+  }
+
+  string toMangle()
+  {
+    return DeclarationSymbol.toMangle(this, LinkageType.D/+FIXME+/);
+  }
+}
+
+// class ExprTupleSymbol : TupleSymbol
+// {
+//   // TODO:
+// }
+
 /// An alias symbol.
 class AliasSymbol : Symbol
 {

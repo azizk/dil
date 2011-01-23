@@ -31,7 +31,8 @@ enum SYM
   Scope,
   Parameter,
   Parameters,
-//   Type,
+  Tuple,
+  Type,
 }
 
 /// A symbol represents an object with semantic code information.
@@ -107,7 +108,8 @@ class Symbol
   mixin(is_("Scope"));
   mixin(is_("Parameter"));
   mixin(is_("Parameters"));
-//   mixin(is_("Type"));
+  mixin(is_("Tuple"));
+  mixin(is_("Type"));
 
   /// Casts the symbol to Class.
   Class to(Class)()
