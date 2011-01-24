@@ -315,7 +315,7 @@ override
   {
     if (e.type)
       return e;
-    e.type = Types.Size_t;
+    e.type = modul.cc.tables.types.Size_t;
     // if (!inArraySubscript)
     //   error("$ can only be in an array subscript.");
     return e;

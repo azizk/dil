@@ -1595,7 +1595,7 @@ override
   {
     if (e.hasType)
       return e;
-    e.type = Types.Size_t;
+    e.type = cc.tables.types.Size_t;
     // if (!inArraySubscript)
     //   error("$ can only be in an array subscript.");
     return e;

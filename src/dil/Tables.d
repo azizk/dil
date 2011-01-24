@@ -14,10 +14,11 @@ import common;
 class Tables
 {
   /// Contructs a Tables object.
-  this()
+  this(bool[string] options = null)
   {
     idents = new IdTable();
     types = new TypeTable();
+    types.init(options);
     classes = new ClassTable();
   }
 

@@ -917,6 +917,28 @@ class TypeTable
       insert(t, m_hash);
     return t;
   }
+
+  // TODO: change bool[string] to a different structure if necessary.
+  /// Initializes the table and
+  /// takes the target machine's properties into account.
+  void init(bool[string] args)
+  {
+    synchronized Types.init();
+
+    if("is64" in args) // Generate code for 64bit?
+    {
+      Size_t = Types.Ulong;
+      Ptrdiff_t = Types.Long;
+    }
+    else
+    {
+      Size_t = Types.Uint;
+      Ptrdiff_t = Types.Int;
+    }
+  }
+
+  TypeBasic Size_t; /// The size type.
+  TypeBasic Ptrdiff_t; /// The pointer difference type.
 }
 
 /// Represents a value related to a Type.
@@ -1039,12 +1061,12 @@ static:
             Ifloat, Idouble, Ireal,
             Cfloat, Cdouble, Creal, Void;
 
-  TypeBasic Size_t; /// The size type.
-  TypeBasic Ptrdiff_t; /// The pointer difference type.
   TypePointer Void_ptr; /// The void pointer type.
   TypeError Error; /// The error type.
   TypeError Undefined; /// The undefined type.
   TypeError DontKnowYet; /// The symbol is undefined but might be resolved.
+
+  TypeFunction Void_0Args_DFunc; /// Type: extern(D) void function()
 
   /// Creates a list of statements for creating and initializing types.
   char[] createTypes(string[] typeNames)
@@ -1056,27 +1078,25 @@ static:
   }
 
   /// Initializes predefined types.
-  static this()
+  /// NB: Not thread-safe.
+  void init()
   {
+    static bool initialized;
+    if (initialized)
+      return;
+
     mixin(createTypes(["Char", "Wchar", "Dchar", "Bool", "Byte", "Ubyte",
       "Short", "Ushort", "Int", "Uint", "Long", "Ulong", "Cent", "Ucent",
       "Float", "Double", "Real", "Ifloat", "Idouble", "Ireal", "Cfloat",
       "Cdouble", "Creal", "Void"]));
-    // FIXME: Size_t and Ptrdiff_t should depend on the platform
-    // the code is generated for.
-    version(X86_64)
-    {
-      Size_t = Ulong;
-      Ptrdiff_t = Long;
-    }
-    else
-    {
-      Size_t = Uint;
-      Ptrdiff_t = Int;
-    }
-    Void_ptr = Void.ptrTo;
+
+    Void_ptr = Void.ptrTo();
     Error = new TypeError();
     Undefined = new TypeError();
     DontKnowYet = new TypeError();
+
+    // A function type that's frequently used.
+    auto params = new TypeParameters(null);
+    Void_0Args_DFunc = new TypeFunction(Types.Void, params, LinkageType.D);
   }
 }
