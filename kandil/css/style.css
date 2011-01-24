@@ -301,8 +301,9 @@ h1.module:hover .srclink {
   color: OliveDrab;
 }
 
-.attrs {
+.attrs, .attrs .stc {
   font-size: 0.8em;
+  color: Gray;
 }
 
 table.params td {
@@ -315,7 +316,7 @@ table.params td:first-child {
 }
 
 #kandil-loading, .ajaxerror {
-  background-color: white;
+  background-color: White;
   position: fixed;
   margin: 0.5em;
   padding: 0.2em;
