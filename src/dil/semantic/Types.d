@@ -125,7 +125,7 @@ abstract class Type/* : Symbol*/
   }
 
   /// Returns the type as a human-readable string.
-  abstract char[] toString();
+  abstract string toString();
 
   /// Returns true if dynamic array type.
   final bool isDArray()
@@ -364,6 +364,8 @@ abstract class Type/* : Symbol*/
   /// Returns the mangled name of this type.
   string toMangle()
   {
+    if (mangled.length)
+      return mangled;
     char[] m;
     m ~= mangleChar();
     if (next)
@@ -380,14 +382,14 @@ class TypeError : Type
     super(null, TYP.Error);
   }
 
-  char[] toString()
+  string toString()
   {
-    return "{error}";
+    return "{TypeError}";
   }
 
-  char[] toMangle()
+  string toMangle()
   {
-    return "{error}";
+    return "{TypeError}";
   }
 }
 
@@ -402,7 +404,7 @@ class TypeBasic : Type
     this.ident = ident;
   }
 
-  char[] toString()
+  string toString()
   {
     return ident.str.dup;
   }
@@ -416,7 +418,7 @@ class TypeDArray : Type
     super(next, TYP.DArray);
   }
 
-  char[] toString()
+  string toString()
   {
     return next.toString() ~ "[]";
   }
@@ -432,13 +434,15 @@ class TypeAArray : Type
     this.keyType = keyType;
   }
 
-  char[] toString()
+  string toString()
   {
     return next.toString() ~ "[" ~ keyType.toString() ~ "]";
   }
 
   string toMangle()
   {
+    if (mangled.length)
+      return mangled;
     return mangleChar() ~ keyType.toMangle() ~ next.toMangle();
   }
 }
@@ -453,13 +457,15 @@ class TypeSArray : Type
     this.dimension = dimension;
   }
 
-  char[] toString()
+  string toString()
   {
     return next.toString() ~ "[" ~ String(dimension) ~ "]";
   }
 
   string toMangle()
   {
+    if (mangled.length)
+      return mangled;
     return mangleChar() ~ String(dimension) ~ next.toMangle();
   }
 }
@@ -472,7 +478,7 @@ class TypePointer : Type
     super(next, TYP.Pointer);
   }
 
-  char[] toString()
+  string toString()
   {
     return next.toString() ~ "*";
   }
@@ -486,7 +492,7 @@ class TypeReference : Type
     super(next, TYP.Reference);
   }
 
-  char[] toString()
+  string toString()
   { // FIXME: this is probably wrong.
     return next.toString() ~ "&";
   }
@@ -508,13 +514,15 @@ class TypeEnum : Type
     next = type;
   }
 
-  char[] toString()
+  string toString()
   {
     return symbol.name.str;
   }
 
   string toMangle()
   {
+    if (mangled.length)
+      return mangled;
     return mangleChar() ~ symbol.toMangle();
   }
 }
@@ -528,13 +536,15 @@ class TypeStruct : Type
     this.symbol = symbol;
   }
 
-  char[] toString()
+  string toString()
   {
     return symbol.name.str;
   }
 
   string toMangle()
   {
+    if (mangled.length)
+      return mangled;
     return mangleChar() ~ symbol.toMangle();
   }
 }
@@ -548,13 +558,15 @@ class TypeClass : Type
     this.symbol = symbol;
   }
 
-  char[] toString()
+  string toString()
   {
     return symbol.name.str;
   }
 
   string toMangle()
   {
+    if (mangled.length)
+      return mangled;
     return mangleChar() ~ symbol.toMangle();
   }
 }
@@ -567,13 +579,15 @@ class TypeTypedef : Type
     super(next, TYP.Typedef);
   }
 
-  char[] toString()
+  string toString()
   { // TODO:
     return "typedef";
   }
 
   string toMangle()
   {
+    if (mangled.length)
+      return mangled;
     return mangleChar() ~ symbol.toMangle();
   }
 }
@@ -615,6 +629,8 @@ class TypeParameter : Type
 
   string toMangle()
   { // := StorageClassMangleChar TypeMangle
+    if (mangled.length)
+      return mangled;
     // 1. Mangle storage class.
     char[] m;
     char mc = 0;
@@ -669,6 +685,8 @@ class TypeParameters : Type
 
   string toMangle()
   {
+    if (mangled.length)
+      return mangled;
     char[] m;
     foreach (p; params)
       m ~= p.toMangle();
@@ -692,7 +710,7 @@ abstract class TypeFuncBase : Type
     this.variadic = params.getVariadic();
   }
 
-  char[] toString()
+  string toString()
   { // := ReturnType " " DelegateOrFunction ParameterList
     auto ident = (tid == TYP.Function) ? Keyword.Function : Keyword.Delegate;
     return retType.toString() ~ " " ~ ident.str ~ params.toString();
@@ -700,6 +718,8 @@ abstract class TypeFuncBase : Type
 
   string toMangle()
   { // := MangleChar LinkageChar ParamsMangle ReturnChar ReturnTypeMangle
+    if (mangled.length)
+      return mangled;
     char[] m;
     char mc = void;
     // 'P' for functions and 'D' for delegates.
@@ -750,13 +770,15 @@ class TypeIdentifier : Type
     super(null, TYP.Identifier);
   }
 
-  char[] toString()
+  string toString()
   {
     return ident.str;
   }
 
   string toMangle()
   { // := MangleChar IDLength ID
+    if (mangled.length)
+      return mangled;
     auto id = ident.str;
     return mangleChar() ~ String(id.length) ~ id;
   }
@@ -770,7 +792,7 @@ class TypeTemplInstance : Type
     super(null, TYP.TInstance);
   }
 
-  char[] toString()
+  string toString()
   { // TODO:
     return "tpl!()";
   }
@@ -801,6 +823,8 @@ class TypeTuple : Type
 
   string toMangle()
   { // := MangleChar TypesMangleLength TypesMangle
+    if (mangled.length)
+      return mangled;
     char[] tm;
     foreach (t; types)
       tm ~= t.toMangle();
@@ -816,7 +840,7 @@ class TypeConst : Type
     super(next, TYP.Const);
   }
 
-  char[] toString()
+  string toString()
   {
     return "const(" ~ next.toString() ~ ")";
   }
@@ -830,7 +854,7 @@ class TypeInvariant : Type
     super(next, TYP.Const);
   }
 
-  char[] toString()
+  string toString()
   {
     return "invariant(" ~ next.toString() ~ ")";
   }
