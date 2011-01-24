@@ -896,25 +896,25 @@ class TypeTable
 
   /// Returns the unique version of a type
   /// by looking up its mangled name.
-  /// Inserts the type into the table if not present.
+  /// The subtypes in the type chain are visited as well.
+  /// The type is inserted into the table if not present.
   Type unique(Type t)
   {
-    if (t.mangled.length) // Already unique?
-      assert(t is lookup(t.mangled),
-        "the type in the table and the given type are not the same object");
-    else
-    {
-      if (t.next) // Follow the type chain.
-        t.next = unique(t.next);
-      // Get the mangled string and look it up.
-      auto m = t.toMangle();
-      auto m_hash = hashOf(m); // Only calculate once.
-      if (auto t_intable = lookup(m_hash))
-        t = t_intable; // Found.
-      else // Insert if not found.
-        (t.mangled = m),
-        insert(t, m_hash);
-    }
+    if (t.next) // Follow the type chain.
+      t.next = unique(t.next);
+    return unique2(t);
+  }
+
+  /// Same as unique(Type) but doesn't follow the type chain.
+  Type unique2(Type t)
+  { // Get the mangled string and look it up.
+    if (!t.mangled.length)
+      t.mangled = t.toMangle();
+    auto m_hash = hashOf(t.mangled); // Only calculate once.
+    if (auto t_intable = lookup(m_hash))
+      t = t_intable; // Found.
+    else // Insert new type.
+      insert(t, m_hash);
     return t;
   }
 }
