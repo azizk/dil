@@ -47,6 +47,7 @@ enum TYP
   Class,      /// A class.
   Typedef,    /// A typedef.
   Function,   /// A function.
+  FuncPtr,    /// A function pointer.
   Delegate,   /// A delegate.
   Pointer,    /// A pointer.
   Reference,  /// A reference.

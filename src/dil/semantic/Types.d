@@ -694,26 +694,25 @@ class TypeParameters : Type
   }
 }
 
-/// Abstract base class for TypeFunction and TypeDelegate.
-abstract class TypeFuncBase : Type
+/// A function type.
+class TypeFunction : Type
 {
   alias next retType;
   TypeParameters params; /// The parameter list.
   LinkageType linkage; /// The linkage type.
   VariadicStyle variadic; /// Variadic style.
 
-  this(Type retType, TypeParameters params, LinkageType linkage, TYP tid)
+  this(Type retType, TypeParameters params, LinkageType linkage)
   {
-    super(retType, tid);
+    super(retType, TYP.Function);
     this.params = params;
     this.linkage = linkage;
     this.variadic = params.getVariadic();
   }
 
   string toString()
-  { // := ReturnType " " DelegateOrFunction ParameterList
-    auto ident = (tid == TYP.Function) ? Keyword.Function : Keyword.Delegate;
-    return retType.toString() ~ " " ~ ident.str ~ params.toString();
+  { // := ReturnType ParameterList
+    return retType.toString() ~ params.toString();
   }
 
   string toMangle()
@@ -722,8 +721,6 @@ abstract class TypeFuncBase : Type
       return mangled;
     char[] m;
     char mc = void;
-    // 'P' for functions and 'D' for delegates.
-    m ~= (tid == TYP.Function) ? 'P' : 'D';
     switch (linkage)
     {
     case LinkageType.C:       mc = 'U'; break;
@@ -743,21 +740,53 @@ abstract class TypeFuncBase : Type
   }
 }
 
-/// Function type.
-class TypeFunction : TypeFuncBase
+/// Pointer to function type.
+class TypeFuncPtr : Type
 {
-  this(Type retType, TypeParameters params, LinkageType linkage)
+  this(TypeFunction func)
   {
-    super(retType, params, linkage, TYP.Function);
+    super(func, TYP.FuncPtr);
+  }
+
+  TypeFunction funcType()
+  {
+    return next.to!(TypeFunction);
+  }
+
+  string toString()
+  {
+    auto f = funcType();
+    return f.retType.toString() ~ " function" ~ f.params.toString();
+  }
+
+  string toMangle()
+  {
+    return mangleChar() ~ next.toMangle();
   }
 }
 
 /// Delegate type.
-class TypeDelegate : TypeFuncBase
+class TypeDelegate : Type
 {
-  this(Type retType, TypeParameters params, LinkageType linkage)
+  this(TypeFunction func)
   {
-    super(retType, params, linkage, TYP.Delegate);
+    super(func, TYP.Delegate);
+  }
+
+  TypeFunction funcType()
+  {
+    return next.to!(TypeFunction);
+  }
+
+  string toString()
+  {
+    auto f = funcType();
+    return f.retType.toString() ~ " delegate" ~ f.params.toString();
+  }
+
+  string toMangle()
+  {
+    return mangleChar() ~ next.toMangle();
   }
 }
 
@@ -1009,6 +1038,7 @@ static:
     {'v', 1},   // void
 
     {'n', SNA},  // None
+
     {'?', SNA},  // Parameter
     {'?', SNA},  // Parameters
 
@@ -1021,6 +1051,7 @@ static:
     {'C', PS, &VNULL},  // Class
     {'T', SNA}, // Typedef
     {'F', PS},  // Function
+    {'P', PS, &VNULL}, // FuncPtr
     {'D', PS*2, &VNULL}, // Delegate
     {'P', PS, &VNULL},  // Pointer
     {'R', PS, &VNULL},  // Reference
@@ -1066,7 +1097,7 @@ static:
   TypeError Undefined; /// The undefined type.
   TypeError DontKnowYet; /// The symbol is undefined but might be resolved.
 
-  TypeFunction Void_0Args_DFunc; /// Type: extern(D) void function()
+  TypeFunction Void_0Args_DFunc; /// Type: extern(D) void X()
 
   /// Creates a list of statements for creating and initializing types.
   char[] createTypes(string[] typeNames)
