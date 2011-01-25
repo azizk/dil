@@ -33,7 +33,7 @@ enum TYP
   Creal,   /// complex float80
   Void,    /// void
 
-  None,   /// TypeNone in the specs. Why?
+  None,   /// TypeNone in the specs. Purpose?
 
   Parameter, /// Function parameter.
   Parameters, /// List of function parameters.
@@ -51,8 +51,8 @@ enum TYP
   Pointer,    /// A pointer.
   Reference,  /// A reference.
   Identifier, /// An identifier.
-  TInstance,  /// Template instance.
+  TInstance,  /// A template instance.
   Tuple,      /// A template tuple.
   Const,      /// A constant type. D2.0
-  Invariant,  /// An invariant type. D2.0
+  Immutable,  /// An immutable type. D2.0
 }

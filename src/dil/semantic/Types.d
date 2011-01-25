@@ -223,16 +223,16 @@ abstract class Type/* : Symbol*/
     return tid == TYP.Tuple;
   }
 
-  /// Returns true if const type.
+  /// Returns true if const type. D2.
   final bool isConst()
   {
     return tid == TYP.Const;
   }
 
-  /// Returns true if invariant type.
-  final bool isInvariant()
+  /// Returns true if immutable type. D2.
+  final bool isImmutable()
   {
-    return tid == TYP.Invariant;
+    return tid == TYP.Immutable;
   }
 
   /// Returns true if dynamic or static array type.
@@ -846,17 +846,17 @@ class TypeConst : Type
   }
 }
 
-/// Invariant type. D2.0
-class TypeInvariant : Type
+/// Immutable type. D2.0
+class TypeImmutable : Type
 {
   this(Type next)
   {
-    super(next, TYP.Const);
+    super(next, TYP.Immutable);
   }
 
   string toString()
   {
-    return "invariant(" ~ next.toString() ~ ")";
+    return "immutable(" ~ next.toString() ~ ")";
   }
 }
 
@@ -1028,7 +1028,7 @@ static:
     {'?', SNA}, // Template instance
     {'B', SNA}, // Tuple
     {'x', SNA}, // Const, D2
-    {'y', SNA}, // Invariant, D2
+    {'y', SNA}, // Immutable, D2
   ];
   static assert(metaInfoTable.length == TYP.max+1);
 
