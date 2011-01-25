@@ -283,10 +283,8 @@ class FunctionSymbol : ScopeSymbol
   Protection prot; /// The protection.
   StorageClass stcs; /// The storage classes.
   LinkageType linkage; /// The linkage type.
-  Type type; /// The type of this function.
-
-  Type returnType;
-  VariableSymbol[] params;
+  TypeFunction type; /// The type of this function.
+  ParametersSymbol params; /// The parameters of this function.
 
   this(Identifier* name, Node functionNode)
   {
@@ -296,6 +294,11 @@ class FunctionSymbol : ScopeSymbol
   Type getType()
   {
     return type;
+  }
+
+  string toString()
+  { // := ReturnType Name ParameterList
+    return type.retType.toString() ~ name.str ~ params.toString();
   }
 
   string toMangle()
