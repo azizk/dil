@@ -253,9 +253,10 @@ static const:
 /// static const Identifier[] list = [
 ///   {"__gshared", TOK.Gshared}, ...
 /// ];
-/// // Error: non-constant expression &(Identifier("__gshared",cast(TOK)cast(ushort)121u))
+/++ // Error: non-constant expression &(Identifier("__gshared",cast(TOK)cast(ushort)121u)) ++/
 /// static const Identifier* Gshared = &list[0];
 /// ---
+/// See: $(DMDBUG 5479, DMD bug report)
 static this()
 {
   auto pIdent = Keyword.list.ptr; // Init with first element.

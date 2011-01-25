@@ -46,7 +46,8 @@ class ModuleManager
   this(CompilationContext cc, Diagnostics diag)
   {
     this.rootPackage = new Package(null, cc.tables.idents);
-    packageTable[0] = this.rootPackage; // hashOf("") = 0
+    packageTable[0] = this.rootPackage;
+    assert(hashOf("") == 0);
     this.cc = cc;
     this.diag = diag;
   }
