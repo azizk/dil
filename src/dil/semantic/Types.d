@@ -699,13 +699,15 @@ class TypeFunction : Type
 {
   alias next retType;
   TypeParameters params; /// The parameter list.
+  StorageClass stcs; /// The storage classes.
   LinkageType linkage; /// The linkage type.
   VariadicStyle variadic; /// Variadic style.
 
-  this(Type retType, TypeParameters params, LinkageType linkage)
+  this(Type retType, TypeParameters params, StorageClass stcs, LinkageType linkage)
   {
     super(retType, TYP.Function);
     this.params = params;
+    this.stcs = stcs;
     this.linkage = linkage;
     this.variadic = params.getVariadic();
   }
@@ -721,6 +723,8 @@ class TypeFunction : Type
       return mangled;
     char[] m;
     char mc = void;
+    version(D2)
+    m ~= modsToMangle();
     switch (linkage)
     {
     case LinkageType.C:       mc = 'U'; break;
@@ -731,6 +735,8 @@ class TypeFunction : Type
     default: assert(0);
     }
     m ~= mc;
+    version(D2)
+    m ~= attrsToMangle();
     m ~= params.toMangle();
     mc = 'Z' - variadic;
     assert(mc == 'X' || mc == 'Y' || mc == 'Z');
@@ -738,6 +744,45 @@ class TypeFunction : Type
     m ~= retType.toMangle();
     return m;
   }
+
+  version(D2)
+  {
+  /// Mangles the modifiers of this function.
+  string modsToMangle()
+  out(m) { assert(m in ["O"[]:1, "Ox":1, "ONg":1, "x":1, "y":1, "Ng":1]); }
+  body
+  {
+    char[] m;
+    if (stcs & StorageClass.Shared)
+      m ~= "O";
+    if (stcs & StorageClass.Const)
+      m ~= "x";
+    if (stcs & StorageClass.Immutable)
+      m ~= "y";
+    if (stcs & StorageClass.Wild)
+      m ~= "Ng";
+    return m;
+  }
+
+  /// Mangles the attributes of this function.
+  string attrsToMangle()
+  {
+    char[] m;
+    if (stcs & StorageClass.Pure)
+      m ~= "Na";
+    if (stcs & StorageClass.Nothrow)
+      m ~= "Nb";
+    if (stcs & StorageClass.Ref)
+      m ~= "Nc";
+    if (stcs & StorageClass.Property)
+      m ~= "Nd";
+    if (stcs & StorageClass.Trusted)
+      m ~= "Ne";
+    if (stcs & StorageClass.Safe)
+      m ~= "Nf";
+    return m;
+  }
+  } // version(D2)
 }
 
 /// Pointer to function type.
@@ -1128,6 +1173,7 @@ static:
 
     // A function type that's frequently used.
     auto params = new TypeParameters(null);
-    Void_0Args_DFunc = new TypeFunction(Types.Void, params, LinkageType.D);
+    Void_0Args_DFunc = new TypeFunction(Types.Void, params,
+      StorageClass.None, LinkageType.D);
   }
 }
