@@ -115,6 +115,7 @@ static const:
     {"volatile", TOK.Volatile},
     {"wchar", TOK.Wchar},
     {"while", TOK.While},
+    {"wild", TOK.Wild}, // D2.0
     {"with", TOK.With},
     // Special tokens:
     {"__FILE__", TOK.FILE},
@@ -233,6 +234,7 @@ static const:
   Identifier* Volatile;
   Identifier* Wchar;
   Identifier* While;
+  Identifier* Wild; // D2.0
   Identifier* With;
   Identifier* FILE;
   Identifier* LINE;

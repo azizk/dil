@@ -32,12 +32,13 @@ enum StorageClass
   Shared       = 1<<19,
   Gshared      = 1<<20,
   Thread       = 1<<21,
+  Wild         = 1<<22,
   // Attributes:
-  Disable      = 1<<22,
-  Property     = 1<<23,
-  Safe         = 1<<24,
-  System       = 1<<25,
-  Trusted      = 1<<26,
+  Disable      = 1<<23,
+  Property     = 1<<24,
+  Safe         = 1<<25,
+  System       = 1<<26,
+  Trusted      = 1<<27,
 }
 
 /// Enumeration of protection attributes.
@@ -111,11 +112,12 @@ static:
     "shared",
     "gshared",
     "thread",
-    "disable",
-    "property",
-    "safe",
-    "system",
-    "trusted",
+    "wild",
+    "@disable",
+    "@property",
+    "@safe",
+    "@system",
+    "@trusted",
   ];
 
   import tango.core.BitManip : bsf;
