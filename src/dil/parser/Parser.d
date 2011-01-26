@@ -47,8 +47,8 @@ class Parser
 
   /// Constructs a Parser object.
   /// Params:
-  ///   srcText = the UTF-8 source code.
-  ///   diag = used for collecting error messages.
+  ///   srcText = The UTF-8 source code.
+  ///   diag = Used for collecting error messages.
   this(SourceText srcText, Tables tables, Diagnostics diag = null)
   {
     this.diag = diag;
@@ -99,7 +99,7 @@ class Parser
 
   /// This method executes the delegate parseMethod and when an error occurs
   /// the state of the lexer and parser is restored.
-  /// Returns: the return value of parseMethod().
+  /// Returns: The return value of parseMethod().
   RetType tryToParse(RetType)(RetType delegate() parseMethod, out bool success)
   {
     // Save members.
@@ -521,14 +521,15 @@ class Parser
   ////Name := Identifier
   ////)
   /// Params:
-  ///   stcs = previously parsed storage classes
-  ///   protection = previously parsed protection attribute
-  ///   linkType = previously parsed linkage type
-  ///   testAutoDeclaration = whether to check for an AutoDeclaration
-  Declaration parseVariableOrFunction(StorageClass stcs = StorageClass.None,
-                                      Protection protection = Protection.None,
-                                      LinkageType linkType = LinkageType.None,
-                                      bool testAutoDeclaration = false)
+  ///   stcs = Previously parsed storage classes.
+  ///   protection = Previously parsed protection attribute.
+  ///   linkType = Previously parsed linkage type.
+  ///   testAutoDeclaration = Whether to check for an AutoDeclaration.
+  Declaration parseVariableOrFunction(
+    StorageClass stcs = StorageClass.None,
+    Protection protection = Protection.None,
+    LinkageType linkType = LinkageType.None,
+    bool testAutoDeclaration = false)
   {
     auto begin = token;
     Type type; // Variable or function type.
@@ -616,7 +617,7 @@ class Parser
         goto LparseBeforeTParams;
     }
     else if (peekNext() == T.LParen)
-    { // Type FunctionName "(" ParameterList ")" FunctionBody
+    { // ReturnType FunctionName "(" ParameterList ")" FunctionBody
       name = requireIdentifier(MSG.ExpectedFunctionName);
       if (token.kind != T.LParen)
         nT(); // Skip non-identifier token.
@@ -624,10 +625,9 @@ class Parser
     LparseBeforeTParams:
       assert(token.kind == T.LParen);
       if (tokenAfterParenIs(T.LParen))
-      LparseTPList:
-        // "(" TemplateParameterList ")" "(" ParameterList ")"
+      LparseTPList: // "(" TemplateParameterList ")"
         tparams = parseTemplateParameterList();
-    LparseBeforeParams:
+    LparseBeforeParams: // "(" ParameterList ")"
       params = parseParameterList();
 
     LparseAfterParams:
@@ -639,7 +639,7 @@ class Parser
         constraint = parseOptionalConstraint();
       } // version(D2)
 
-      // ReturnType FunctionName "(" ParameterList ")"
+      // FunctionBody
       auto funcBody = parseFunctionBody();
       auto fd = new FunctionDeclaration(type, name, params, funcBody);
       Declaration decl = fd;
@@ -948,7 +948,7 @@ class Parser
   ////PragmaAttribute := pragma "(" Identifier ("," ExpressionList)? ")"
   ////ProtectionAttribute := private | public | package | protected | export)
   /// Params:
-  ///   pDecl = set to the non-attribute Declaration if non-null.
+  ///   pDecl = Set to the non-attribute Declaration if non-null.
   Declaration parseAttributes(Declaration* pDecl = null)
   {
     StorageClass stcs, // Set to StorageClasses parsed in the loop.
@@ -1343,16 +1343,17 @@ class Parser
 
   /// Wraps a declaration inside a template declaration.
   /// Params:
-  ///   begin = begin token of decl.
-  ///   name = name of decl.
-  ///   decl = the declaration to be wrapped.
-  ///   tparams = the template parameters.
-  ///   constraint = the constraint expression.
-  TemplateDeclaration putInsideTemplateDeclaration(Token* begin,
-                                                   Token* name,
-                                                   Declaration decl,
-                                                   TemplateParameters tparams,
-                                                   Expression constraint)
+  ///   begin = Begin token of decl.
+  ///   name = Name of decl.
+  ///   decl = The declaration to be wrapped.
+  ///   tparams = The template parameters.
+  ///   constraint = The constraint expression.
+  TemplateDeclaration putInsideTemplateDeclaration(
+    Token* begin,
+    Token* name,
+    Declaration decl,
+    TemplateParameters tparams,
+    Expression constraint)
   {
     set(decl, begin);
     auto cd = new CompoundDeclaration;
@@ -1537,6 +1538,7 @@ class Parser
       parameters = parseParameterList(); // "(" ParameterList ")"
     else // TODO: Create own class PostBlit?: this "(" this ")"
       require2(T.LParen), skip(T.This), require2(T.RParen);
+    // FIXME: |= to storageClass?? Won't this affect other decls?
     this.storageClass |= parseFunctionPostfix(); // Combine with current stcs.
     if (tparams) // if "(" ConstraintExpression ")"
       constraint = parseOptionalConstraint();
@@ -4216,8 +4218,8 @@ class Parser
   ///
   /// $(BNF Declarator := BasicType CStyleType)
   /// Params:
-  ///   ident = receives the identifier of the declarator.
-  ///   identOptional = whether to report an error for a missing identifier.
+  ///   ident = Receives the identifier of the declarator.
+  ///   identOptional = Whether to report an error for a missing identifier.
   Type parseDeclarator(ref Token* ident, bool identOptional = false)
   {
     auto type = parseType(&ident);
@@ -4351,7 +4353,7 @@ class Parser
   /// Returns true if the token after the closing parenthesis
   /// matches the searched kind.
   /// Params:
-  ///   kind = the kind of token to test for.
+  ///   kind = The kind of token to test for.
   bool tokenAfterParenIs(TOK kind)
   {
     auto peek_token = token;
@@ -4376,9 +4378,9 @@ class Parser
   /// Skips to the token behind the 'closing' token.
   /// Takes nesting into account.
   /// Params:
-  ///   peek_token = opening token to start from; used to peek further.
-  ///   closing = kind of the closing token.
-  /// Returns: the kind of the searched token or TOK.EOF.
+  ///   peek_token = Opening token to start from; used to peek further.
+  ///   closing = Kind of the closing token.
+  /// Returns: The kind of the searched token or TOK.EOF.
   TOK skipParens(ref Token* peek_token, TOK closing)
   {
     assert(peek_token !is null);
@@ -4395,8 +4397,8 @@ class Parser
   /// Parse the array types after the declarator (C-style.) E.g.: int a[]
   /// Returns: lhsType or a suffix type.
   /// Params:
-  ///   lhsType = the type on the left-hand side.
-  ///   cfunc   = parse a function parameter list, too?
+  ///   lhsType = The type on the left-hand side.
+  ///   cfunc   = Parse a function parameter list, too?
   Type parseDeclaratorSuffix(Type lhsType, bool cfunc = false)
   { // The Type chain should be as follows:
     // int[3]* Identifier [][1][2]
@@ -4898,8 +4900,8 @@ class Parser
 
   /// Reports an error if the current token is not an identifier.
   /// Params:
-  ///   mid = the error message ID to be used.
-  /// Returns: the identifier token or null.
+  ///   mid = The error message ID to be used.
+  /// Returns: The identifier token or null.
   Token* requireIdentifier(MID mid)
   {
     return requireIdentifier(GetMsg(mid));
@@ -4907,8 +4909,8 @@ class Parser
 
   /// Reports an error if the current token is not an identifier.
   /// Params:
-  ///   errorMsg = the error message to be used.
-  /// Returns: the identifier token or null.
+  ///   errorMsg = The error message to be used.
+  /// Returns: The identifier token or null.
   Token* requireIdentifier(string errorMsg)
   {
     Token* idtok;
