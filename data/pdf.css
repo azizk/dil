@@ -248,6 +248,7 @@ dd.ddef { /* Definition, Explanation */
 
 .attrs { /* E.g.: [private, extern(C)] */
   font-size: 0.9em;
+  color: #555;
 }
 
 table.params td {
