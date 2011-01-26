@@ -4525,12 +4525,8 @@ class Parser
         params ~= set(param, paramBegin);
       }
 
-      if (consumed(T.Ellipses))
-      { // "..."
-        stcs = StorageClass.Variadic;
-        pushParameter(); // type, name and defValue will be null.
+      if (consumed(T.Ellipses)) // "..."
         goto LvariadicParam; // Go to common code and leave the loop.
-      }
 
       while (1)
       { // Parse storage classes.
@@ -4597,10 +4593,10 @@ class Parser
 
       if (consumed(T.Ellipses))
       {
-        stcs |= StorageClass.Variadic;
         if (stcs & (StorageClass.Ref | StorageClass.Out))
           error(paramBegin, MSG.IllegalVariadicParam);
       LvariadicParam:
+        stcs |= StorageClass.Variadic;
         pushParameter();
         // TODO: allow trailing comma here? DMD doesn't...
         if (token.kind != T.RParen)
