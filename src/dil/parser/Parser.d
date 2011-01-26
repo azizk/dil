@@ -631,9 +631,10 @@ class Parser
       params = parseParameterList();
 
     LparseAfterParams:
+      StorageClass postfix_stcs; // const | immutable | @property | ...
       version(D2)
       {
-      auto postfix_stcs = parseFunctionPostfix();
+      postfix_stcs = parseFunctionPostfix();
       if (tparams) // if "(" ConstraintExpression ")"
         constraint = parseOptionalConstraint();
       } // version(D2)
@@ -641,21 +642,17 @@ class Parser
       // ReturnType FunctionName "(" ParameterList ")"
       auto funcBody = parseFunctionBody();
       auto fd = new FunctionDeclaration(type, name, params, funcBody);
-      fd.setLinkageType(linkType);
       Declaration decl = fd;
       if (tparams)
-      { // putInside...() uses these members to set the attributes.
-        auto saved_stcs = this.storageClass;
-        auto saved_prot = this.protection;
-        this.storageClass = stcs;
-        this.protection = protection;
+      {
         decl =
           putInsideTemplateDeclaration(begin, name, fd, tparams, constraint);
-        this.storageClass = saved_stcs;
-        this.protection = saved_prot;
+        decl.setStorageClass(stcs);
+        decl.setProtection(protection);
       }
-      decl.setStorageClass(stcs);
-      decl.setProtection(protection);
+      fd.setLinkageType(linkType);
+      fd.setStorageClass(stcs | postfix_stcs); // Combine prefix/postfix stcs.
+      fd.setProtection(protection);
       return set(decl, begin);
     }
     else
