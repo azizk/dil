@@ -80,6 +80,26 @@ hash_t hashOf(string str)
   return hash;
 }
 
+/// ditto
+hash_t hashOfCTF(string str)
+{
+  hash_t hash;
+  ubyte rem_len = str.length % hash_t.sizeof; // Remainder.
+  if (str.length == rem_len)
+    goto Lonly_remainder;
+  foreach (hc; cast(hash_t[])str[0 .. $-rem_len]) // Main loop.
+    hash = hash * 11 + hc;
+  if (rem_len)
+  { // Calculate the hash of the remaining characters.
+  Lonly_remainder:
+    hash_t hc;
+    foreach (c; str[$-rem_len .. $]) // Remainder loop.
+      hc = (hc << 8) | c;
+    hash = hash * 11 + hc;
+  }
+  return hash;
+}
+
 const char[3] LS = "\u2028"; /// Unicode line separator.
 const dchar LSd = 0x2028;  /// ditto
 const char[3] PS = "\u2029"; /// Unicode paragraph separator.
