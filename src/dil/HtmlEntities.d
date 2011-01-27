@@ -3,14 +3,14 @@
 /// $(Maturity very high)
 module dil.HtmlEntities;
 
-import dil.lexer.Funcs : StringCTF;
+import dil.lexer.Funcs : StringCTF, hashOfCTF, hashOf;
 import common;
 
 /// A named HTML entity.
 struct Entity
 {
-  char[] name;
-  dchar value;
+  string name; /// The name, e.g. "quot".
+  dchar value; /// The Unicode code point, e.g. '\u0022'.
 }
 
 /// The table of named HTML entities.
@@ -269,47 +269,53 @@ static const Entity[] namedEntities = [
   {"zwnj", '\u200C'}
 ];
 
-uint stringToHash(char[] str)
-{
-  uint hash;
-  foreach (c; str)
-    hash = hash * 11 + c;
-  return hash;
-}
-
+/// Generates the hashes and values array.
+/// ---
+/// private static const hash_t[] hashes = [
+///   19829,20085,20585, // ...
+/// ];
+/// private static const dchar[] values = [
+///   924,925,928, // ...
+/// ];
+/// ---
 char[] generateHashAndValueArrays()
 {
-  uint[] hashes; // String hashes.
+  hash_t[] hashes; // HTML entity name hashes.
   dchar[] values; // Unicode codepoints.
   // Build arrays:
   foreach (entity; namedEntities)
-  {
-    auto hash = stringToHash(entity.name);
+  { // 1. Get the hash and value of the entity.
+    auto hash = hashOfCTF(entity.name);
     auto value = entity.value;
     assert(hash != 0);
-    // Find insertion place.
-    uint i;
-    for (; i < hashes.length; ++i)
+    // 2. Binary search to find insertion place.
+    size_t i = void, lower = 0, upper = hashes.length;
+    while (lower < upper)
     {
+      i = lower/2 + upper/2;
       assert(hash != hashes[i], "bad hash function: conflicting hashes");
-      if (hash < hashes[i])
-        break;
+      if (hash > hashes[i])
+        lower = i + 1;
+      else
+        upper = i;
     }
-    // Insert hash and value into tables.
+    i = lower;
+    // 3. Insert hash and value into tables.
     if (i == hashes.length)
     {
       hashes ~= hash;
       values ~= value;
     }
     else
-    {
-      hashes = hashes[0..i] ~ hash ~ hashes[i..$]; // Insert before index.
-      values = values[0..i] ~ value ~ values[i..$]; // Insert before index.
+    { // Insert before index.
+      hashes = hashes[0..i] ~ hash ~ hashes[i..$];
+      values = values[0..i] ~ value ~ values[i..$];
     }
     assert(hashes[i] == hash && values[i] == value);
   }
+
   // Build source text:
-  char[] hashesText = "private static const uint[] hashes = [",
+  char[] hashesText = "private static const hash_t[] hashes = [",
          valuesText = "private static const dchar[] values = [";
   foreach (i, hash; hashes)
   {
@@ -324,7 +330,7 @@ char[] generateHashAndValueArrays()
 version(DDoc)
 {
   /// Table of hash values of the entities' names.
-  private static const uint[] hashes;
+  private static const hash_t[] hashes;
   /// Table of Unicode codepoints.
   private static const dchar[] values;
 }
@@ -334,20 +340,20 @@ else
 
 /// Converts a named HTML entity into its equivalent Unicode codepoint.
 /// Returns: the entity's value or 0xFFFF if it doesn't exist.
-dchar entity2Unicode(char[] entity)
+dchar entity2Unicode(string entity)
 {
-  auto hash = stringToHash(entity);
+  auto hash = hashOf(entity);
   // Binary search:
-  int index = void,
-      lower = 0,
-      upper = hashes.length -1;
-  while (lower <= upper)
-  {
-    index = (lower + upper) / 2;
-    if (hash < hashes[index])
-      upper = index - 1;
-    else if (hash > hashes[index])
+  size_t index = void,
+         lower = 0,
+         upper = hashes.length;
+  while (lower < upper)
+  { // Don't do (lower+upper)/2. Might overflow.
+    index = lower/2 + upper/2;
+    if (hash > hashes[index])
       lower = index + 1;
+    else if (hash < hashes[index])
+      upper = index;
     else
       return values[index]; // Return the Unicode codepoint.
   }
@@ -360,15 +366,17 @@ unittest
   alias entity2Unicode f;
 
   // Test extreme values.
-  assert(stringToHash("") < hashes[0]);
+  assert(hashOf("") < hashes[0]);
   assert(f("") == 0xFFFF);
-  assert(stringToHash("xxxxxxxx") > hashes[$-1]);
-  assert(f("xxxxxxxx") == 0xFFFF);
+  assert(hashOf("\xFF\xFF\xFF\xFF") > hashes[$-1]);
+  assert(f("\xFF\xFF\xFF\xFF") == 0xFFFF);
 
   // Test all entities in the Entity array.
   foreach (entity; namedEntities)
-    assert(f(entity.name) == entity.value,
-      Format("'&{};' == \\u{:X4}, not \\u{:X4}",
-             entity.name, entity.value, cast(uint)f(entity.name))
+    assert(f(entity.name) == entity.value &&
+           hashOfCTF(entity.name) == hashOf(entity.name),
+      Format("'&{};' == \\u{:X4}, not \\u{:X4}; hashes: {} <-> {}",
+             entity.name, entity.value+0, f(entity.name)+0,
+             hashOfCTF(entity.name), hashOf(entity.name))
     );
 }
