@@ -82,23 +82,45 @@ hash_t hashOf(string str)
 
 /// ditto
 hash_t hashOfCTF(string str)
-{
+{ /// Nested func because DMD can't do: cast(hash_t[])str
+  hash_t[] toHashArray(string s)
+  { // See: $(DMDBUG 5497, reinterpret cast inside CTFs)
+    hash_t swapBytesOnLE(hash_t c)
+    { // Reverse bytes on little-endian machines.
+      version(BigEndian)
+      return c; // Return as is on big-endian machines.
+      hash_t c_;
+      for (size_t i; i < hash_t.sizeof; i++, c >>= 8)
+        c_ = c_ << 8 | (c & 0xFF); // Pick 1byte from c and append to c_.
+      return c_;
+    }
+    auto ha_len = s.length / hash_t.sizeof;
+    hash_t[] ha;
+    for (size_t i, j; i < ha_len; i++)
+    {
+      hash_t hc; // A hash char.
+      for (size_t k = j + hash_t.sizeof; j < k; j++)
+        hc = hc << 8 | s[j]; // Append as many bytes as possible.
+      ha ~= swapBytesOnLE(hc); // Append to hash array.
+    }
+    return ha;
+  }
+
   hash_t hash;
   ubyte rem_len = str.length % hash_t.sizeof; // Remainder.
-  if (str.length == rem_len)
-    goto Lonly_remainder;
-  foreach (hc; cast(hash_t[])str[0 .. $-rem_len]) // Main loop.
-    hash = hash * 11 + hc;
+  hash_t[] ha = toHashArray(str);
   if (rem_len)
-  { // Calculate the hash of the remaining characters.
-  Lonly_remainder:
+  { // Append remainder hash character.
     hash_t hc;
     foreach (c; str[$-rem_len .. $]) // Remainder loop.
       hc = (hc << 8) | c;
-    hash = hash * 11 + hc;
+    ha ~= hc;
   }
+  foreach (hc; ha) // Main loop.
+    hash = hash * 11 + hc;
   return hash;
 }
+
 
 const char[3] LS = "\u2028"; /// Unicode line separator.
 const dchar LSd = 0x2028;  /// ditto
