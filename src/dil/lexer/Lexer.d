@@ -1941,11 +1941,10 @@ class Lexer
           {}
 
           if (*p == ';')
-          {
-            // Pass entity excluding '&' and ';'.
+          { // Pass entity excluding '&' and ';'.
             c = entity2Unicode(String(begin, p));
             ++p; // Skip ;
-            if (c != 0xFFFF)
+            if (c)
               goto Lreturn; // Return valid escape value.
             else
               mid = MID.UndefinedHTMLEntity;

@@ -338,8 +338,8 @@ else
   mixin(generateHashAndValueArrays);
 // pragma(msg, generateHashAndValueArrays());
 
-/// Converts a named HTML entity into its equivalent Unicode codepoint.
-/// Returns: the entity's value or 0xFFFF if it doesn't exist.
+/// Converts a named HTML entity to its equivalent Unicode codepoint.
+/// Returns: The entity's value or 0 if it does not exist.
 dchar entity2Unicode(string entity)
 {
   auto hash = hashOf(entity);
@@ -357,7 +357,7 @@ dchar entity2Unicode(string entity)
     else
       return values[index]; // Return the Unicode codepoint.
   }
-  return 0xFFFF; // Return error value.
+  return 0; // Return error value.
 }
 
 unittest
@@ -367,9 +367,9 @@ unittest
 
   // Test extreme values.
   assert(hashOf("") < hashes[0]);
-  assert(f("") == 0xFFFF);
+  assert(f("") == 0);
   assert(hashOf("\xFF\xFF\xFF\xFF") > hashes[$-1]);
-  assert(f("\xFF\xFF\xFF\xFF") == 0xFFFF);
+  assert(f("\xFF\xFF\xFF\xFF") == 0);
 
   // Test all entities in the Entity array.
   foreach (entity; namedEntities)
