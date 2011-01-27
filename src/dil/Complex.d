@@ -295,6 +295,33 @@ class Complex
     return new Complex(x) /= this;
   }
 
+  /// Calculates z %= w. Returns itself.
+  Complex opModAssign(Complex w)
+  { // modulo(z, w) = frac(z/w) * w
+    // TODO: optimize for certain cases.
+    (this /= w).fraction() *= w;
+    return this;
+  }
+
+  /// Calculates z %= f. Returns itself.
+  Complex opModAssign(Float f)
+  {
+    this %= new Complex(f);
+    return this;
+  }
+
+  /// Calculates z % w. Returns a new number.
+  Complex opMod(Complex w)
+  {
+    return dup() %= w;
+  }
+
+  /// Calculates z % f. Returns a new number.
+  Complex opMod(Float f)
+  {
+    return dup() %= f;
+  }
+
   /// Calculates z *= x. Returns itself.
   Complex opMulAssign(T:Complex)(T x)
   { // Special handling.
@@ -399,6 +426,14 @@ class Complex
     auto mag_ = mag.dup();
     mag *= phi.dup().cos(); // re = r*cos(φ)
     phi.sin() *= mag_;      // im = r*sin(φ)
+    return this;
+  }
+
+  /// Calculates frac(z). Returns itself.
+  Complex fraction()
+  {
+    re.fraction();
+    im.fraction();
     return this;
   }
 

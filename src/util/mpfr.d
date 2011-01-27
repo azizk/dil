@@ -96,6 +96,13 @@ void mpfr_pow(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_rnd_t);
 void mpfr_pow_ui(mpfr_ptr, mpfr_srcptr, uint, mpfr_rnd_t);
 int  mpfr_sqr(mpfr_ptr, mpfr_srcptr, mpfr_rnd_t);
 
+int  mpfr_trunc(mpfr_ptr, mpfr_srcptr);
+int  mpfr_frac(mpfr_ptr, mpfr_srcptr, mpfr_rnd_t);
+
+int  mpfr_fmod(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_rnd_t);
+int  mpfr_remainder(mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_rnd_t);
+int  mpfr_remquo(mpfr_ptr, int*, mpfr_srcptr, mpfr_srcptr, mpfr_rnd_t);
+
 int  mpfr_cmp(mpfr_srcptr, mpfr_srcptr);
 int  mpfr_cmp_d(mpfr_srcptr, double);
 int  mpfr_cmp_si(mpfr_srcptr, int);

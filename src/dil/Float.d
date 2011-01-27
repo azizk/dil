@@ -244,6 +244,19 @@ class Float
     return result;
   }
 
+  /// Calculates $(f) %= x.
+  Float opModAssign(Float x)
+  {
+    mpfr_fmod(&f, &f, &x.f, RND);
+    return this;
+  }
+
+  /// Calculates $(f) % x.
+  Float opMod(Float x)
+  {
+    return dup() %= x;
+  }
+
   /// Calculates $(f) *= x.
   Float opMulAssign(Float x)
   {
@@ -333,6 +346,13 @@ class Float
   bool equals(Float x, uint bits)
   {
     return mpfr_eq(&f, &x.f, bits) != 0;
+  }
+
+  /// Sets $(f) to frac($(f)). Returns itself.
+  Float fraction()
+  {
+    mpfr_frac(&f, &f, RND);
+    return this;
   }
 
   /// Sets the exponent. Returns itself.
