@@ -1160,6 +1160,7 @@ static:
     static bool initialized;
     if (initialized)
       return;
+    initialized = true;
 
     mixin(createTypes(["Char", "Wchar", "Dchar", "Bool", "Byte", "Ubyte",
       "Short", "Ushort", "Int", "Uint", "Long", "Ulong", "Cent", "Ucent",
