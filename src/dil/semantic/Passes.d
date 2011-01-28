@@ -1562,7 +1562,7 @@ override
     switch (e.specialToken.kind)
     {
     case TOK.LINE, TOK.VERSION:
-      e.value = new IntExpression(e.specialToken.uint_, Types.Uint);
+      e.value = new IntExpression(e.specialToken.uint_, Types.UInt32);
       break;
     case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
       e.value = new StringExpression(e.specialToken.strval.str);
@@ -1613,27 +1613,27 @@ override
       return e;
 
     if (e.number & 0x8000_0000_0000_0000)
-      e.type = Types.Ulong; // 0xFFFF_FFFF_FFFF_FFFF
+      e.type = Types.UInt64; // 0xFFFF_FFFF_FFFF_FFFF
     else if (e.number & 0xFFFF_FFFF_0000_0000)
-      e.type = Types.Long; // 0x7FFF_FFFF_FFFF_FFFF
+      e.type = Types.Int64; // 0x7FFF_FFFF_FFFF_FFFF
     else if (e.number & 0x8000_0000)
-      e.type = Types.Uint; // 0xFFFF_FFFF
+      e.type = Types.UInt32; // 0xFFFF_FFFF
     else
-      e.type = Types.Int; // 0x7FFF_FFFF
+      e.type = Types.Int32; // 0x7FFF_FFFF
     return e;
   }
 
   E visit(RealExpression e)
   {
     if (!e.hasType)
-      e.type = Types.Double;
+      e.type = Types.Float64;
     return e;
   }
 
   E visit(ComplexExpression e)
   {
     if (!e.hasType)
-      e.type = Types.Cdouble;
+      e.type = Types.CFloat64;
     return e;
   }
 
@@ -1776,18 +1776,7 @@ override
 
   T visit(IntegralType t)
   {
-    // A table mapping the kind of a token to its corresponding semantic Type.
-    TypeBasic[TOK] tok2Type = [
-      TOK.Char : Types.Char,   TOK.Wchar : Types.Wchar,   TOK.Dchar : Types.Dchar, TOK.Bool : Types.Bool,
-      TOK.Byte : Types.Byte,   TOK.Ubyte : Types.Ubyte,   TOK.Short : Types.Short, TOK.Ushort : Types.Ushort,
-      TOK.Int : Types.Int,    TOK.Uint : Types.Uint,    TOK.Long : Types.Long,  TOK.Ulong : Types.Ulong,
-      TOK.Cent : Types.Cent,   TOK.Ucent : Types.Ucent,
-      TOK.Float : Types.Float,  TOK.Double : Types.Double,  TOK.Real : Types.Real,
-      TOK.Ifloat : Types.Ifloat, TOK.Idouble : Types.Idouble, TOK.Ireal : Types.Ireal,
-      TOK.Cfloat : Types.Cfloat, TOK.Cdouble : Types.Cdouble, TOK.Creal : Types.Creal, TOK.Void : Types.Void
-    ];
-    assert(t.tok in tok2Type);
-    t.type = tok2Type[t.tok];
+    t.type = Types.fromTOK(t.tok);
     return t;
   }
 

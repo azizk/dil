@@ -8,30 +8,30 @@ enum TYP
 {
   Error,
   // Basic types.
-  Char,    /// char
-  Wchar,   /// wchar
-  Dchar,   /// dchar
-  Bool,    /// bool
-  Byte,    /// int8
-  Ubyte,   /// uint8
-  Short,   /// int16
-  Ushort,  /// uint16
-  Int,     /// int32
-  Uint,    /// uint32
-  Long,    /// int64
-  Ulong,   /// uint64
-  Cent,    /// int128
-  Ucent,   /// uint128
-  Float,   /// float32
-  Double,  /// float64
-  Real,    /// float80
-  Ifloat,  /// imaginary float32
-  Idouble, /// imaginary float64
-  Ireal,   /// imaginary float80
-  Cfloat,  /// complex float32
-  Cdouble, /// complex float64
-  Creal,   /// complex float80
-  Void,    /// void
+  Char,     /// char
+  WChar,    /// wchar
+  DChar,    /// dchar
+  Bool,     /// bool
+  Int8,     /// byte
+  UInt8,    /// ubyte
+  Int16,    /// short
+  UInt16,   /// ushort
+  Int32,    /// int
+  UInt32,   /// uint
+  Int64,    /// long
+  UInt64,   /// ulong
+  Int128,   /// cent
+  UInt128,  /// ucent
+  Float32,  /// float
+  Float64,  /// double
+  Float80,  /// real
+  IFloat32, /// ifloat
+  IFloat64, /// idouble
+  IFloat80, /// ireal
+  CFloat32, /// cfloat
+  CFloat64, /// cdouble
+  CFloat80, /// creal
+  Void,     /// void
 
   None,   /// TypeNone in the specs. Purpose?
 

@@ -741,18 +741,18 @@ class IntExpression : Expression
   this(Token* token)
   {
     // Some semantic computation here.
-    auto type = Types.Int; // Should be most common case.
+    auto type = Types.Int32; // Should be most common case.
     ulong number = token.uint_;
     switch (token.kind)
     {
     // case TOK.Int32:
-    //   type = Types.Int; break;
+    //   type = Types.Int32; break;
     case TOK.Uint32:
-      type = Types.Uint; break;
+      type = Types.UInt32; break;
     case TOK.Int64:
-      type = Types.Long; number = token.intval.ulong_; break;
+      type = Types.Int64;  number = token.intval.ulong_; break;
     case TOK.Uint64:
-      type = Types.Ulong; number = token.intval.ulong_; break;
+      type = Types.UInt64; number = token.intval.ulong_; break;
     default:
       assert(token.kind == TOK.Int32);
     }
@@ -776,24 +776,7 @@ class RealExpression : Expression
   this(Token* token)
   {
     // Some semantic computation here.
-    auto type = Types.Double; // Most common case?
-    switch (token.kind)
-    {
-    case TOK.Float32:
-      type = Types.Float; break;
-    // case TOK.Float64:
-    //   type = Types.Double; break;
-    case TOK.Float80:
-      type = Types.Real; break;
-    case TOK.Imaginary32:
-      type = Types.Ifloat; break;
-    case TOK.Imaginary64:
-      type = Types.Idouble; break;
-    case TOK.Imaginary80:
-      type = Types.Ireal; break;
-    default:
-      assert(token.kind == TOK.Float64);
-    }
+    auto type = Types.fromTOK(token.kind);
     this(token.mpfloat, type);
   }
 
@@ -838,9 +821,9 @@ class CharExpression : Expression
     if (character <= 0xFF)
       this.type = Types.Char;
     else if (character <= 0xFFFF)
-      this.type = Types.Wchar;
+      this.type = Types.WChar;
     else
-      this.type = Types.Dchar;
+      this.type = Types.DChar;
 
     this.value = new IntExpression(character, this.type);
   }
@@ -863,8 +846,8 @@ class StringExpression : Expression
   this(ubyte[] str, char kind)
   {
     Type t = Types.Char;
-    if (kind == 'w') t = Types.Wchar;
-    else if (kind == 'd') t = Types.Dchar;
+    if (kind == 'w') t = Types.WChar;
+    else if (kind == 'd') t = Types.DChar;
     this(str, t);
   }
 
@@ -875,12 +858,12 @@ class StringExpression : Expression
 
   this(wchar[] str)
   {
-    this(cast(ubyte[])str, Types.Wchar);
+    this(cast(ubyte[])str, Types.WChar);
   }
 
   this(dchar[] str)
   {
-    this(cast(ubyte[])str, Types.Dchar);
+    this(cast(ubyte[])str, Types.DChar);
   }
 
   /// Returns the string excluding the terminating 0.

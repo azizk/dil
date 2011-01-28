@@ -105,7 +105,7 @@ override:
       mc = 'a';
       utf8str = cast(char[])e.str;
       break;
-    case TYP.Wchar:
+    case TYP.WChar:
       mc = 'w';
       wchar[] tmp = (cast(wchar[])e.str)[0..$-1];
       for (size_t i; i < tmp.length;)
@@ -119,7 +119,7 @@ override:
           encode(utf8str, c);
       }
       break;
-    case TYP.Dchar:
+    case TYP.DChar:
       mc = 'd';
       dchar[] tmp = (cast(dchar[])e.str)[0..$-1];
       foreach (dchar c; tmp)

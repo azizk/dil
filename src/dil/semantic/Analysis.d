@@ -112,12 +112,12 @@ void integerPromotion(Expression e)
   assert(e.type !is null);
   switch (e.type.baseType().tid)
   {
-  case TYP.Bool, TYP.Byte, TYP.Ubyte, TYP.Short,
-       TYP.Ushort, TYP.Char, TYP.Wchar:
-    e.type = Types.Int;
+  case TYP.Bool, TYP.Int8, TYP.UInt8, TYP.Int16,
+       TYP.UInt16, TYP.Char, TYP.WChar:
+    e.type = Types.Int32;
     break;
-  case TYP.Dchar:
-    e.type = Types.Uint;
+  case TYP.DChar:
+    e.type = Types.UInt32;
     break;
   default:
   }

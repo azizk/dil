@@ -8,6 +8,7 @@ import dil.semantic.Symbol,
 import dil.lexer.Identifier,
        dil.lexer.Keywords,
        dil.lexer.IdTable,
+       dil.lexer.TokensEnum,
        dil.lexer.Funcs : hashOf, String;
 import dil.CompilerInfo,
        dil.Enums;
@@ -266,9 +267,9 @@ abstract class Type/* : Symbol*/
   {
     switch (tid)
     {
-    case TYP.Char, TYP.Wchar, TYP.Dchar, TYP.Bool, TYP.Byte, TYP.Ubyte,
-         TYP.Short, TYP.Ushort, TYP.Int, TYP.Uint, TYP.Long, TYP.Ulong,
-         TYP.Cent, TYP.Ucent:
+    case TYP.Char, TYP.WChar, TYP.DChar, TYP.Bool, TYP.Int8, TYP.UInt8,
+         TYP.Int16, TYP.UInt16, TYP.Int32, TYP.UInt32, TYP.Int64, TYP.UInt64,
+         TYP.Int128, TYP.UInt128:
       return true;
     default:
       return false;
@@ -294,7 +295,7 @@ abstract class Type/* : Symbol*/
   /// Returns true if this type is a real number type.
   final bool isReal()
   {
-    return tid == TYP.Float || tid == TYP.Double || tid == TYP.Real;
+    return tid == TYP.Float32 || tid == TYP.Float64 || tid == TYP.Float80;
   }
 
   /// Like isReal(). Also checks base types of typedef/enum.
@@ -310,7 +311,7 @@ abstract class Type/* : Symbol*/
   /// Returns true if this type is an imaginary number type.
   final bool isImaginary()
   {
-    return tid == TYP.Ifloat || tid == TYP.Idouble || tid == TYP.Ireal;
+    return tid == TYP.IFloat32 || tid == TYP.IFloat64 || tid == TYP.IFloat80;
   }
 
   /// Like isImaginary(). Also checks base types of typedef/enum.
@@ -326,7 +327,7 @@ abstract class Type/* : Symbol*/
   /// Returns true if this type is a complex number type.
   final bool isComplex()
   {
-    return tid == TYP.Cfloat || tid == TYP.Cdouble || tid == TYP.Creal;
+    return tid == TYP.CFloat32 || tid == TYP.CFloat64 || tid == TYP.CFloat80;
   }
 
   /// Like isComplex(). Also checks base types of typedef/enum.
@@ -504,7 +505,8 @@ class TypeEnum : Type
   this(Symbol symbol)
   {
     // FIXME: pass int as the base type for the time being.
-    super(Types.Int, TYP.Enum);
+    // Use Types.DontKnowYet instead?
+    super(Types.Int32, TYP.Enum);
     this.symbol = symbol;
   }
 
@@ -1001,13 +1003,13 @@ class TypeTable
 
     if("is64" in args) // Generate code for 64bit?
     {
-      Size_t = Types.Ulong;
-      Ptrdiff_t = Types.Long;
+      Size_t = Types.UInt64;
+      Ptrdiff_t = Types.Int64;
     }
     else
     {
-      Size_t = Types.Uint;
-      Ptrdiff_t = Types.Int;
+      Size_t = Types.UInt32;
+      Ptrdiff_t = Types.Int32;
     }
   }
 
@@ -1129,13 +1131,13 @@ struct Types
 {
 static:
   /// Predefined basic types.
-  TypeBasic Char,   Wchar,   Dchar, Bool,
-            Byte,   Ubyte,   Short, Ushort,
-            Int,    Uint,    Long,  Ulong,
-            Cent,   Ucent,
-            Float,  Double,  Real,
-            Ifloat, Idouble, Ireal,
-            Cfloat, Cdouble, Creal, Void;
+  TypeBasic Char,     WChar,    DChar, Bool,
+            Int8,     UInt8,    Int16, UInt16,
+            Int32,    UInt32,   Int64, UInt64,
+            Int128,   UInt128,
+            Float32,  Float64,  Float80,
+            IFloat32, IFloat64, IFloat80,
+            CFloat32, CFloat64, CFloat80, Void;
 
   TypePointer Void_ptr; /// The void pointer type.
   TypeError Error; /// The error type.
@@ -1144,12 +1146,26 @@ static:
 
   TypeFunction Void_0Args_DFunc; /// Type: extern(D) void X()
 
+  // A table mapping the kind of a token to its corresponding semantic Type.
+  TypeBasic[TOK] TOK2Type;
+
+  /// Returns the corresponding Type instance for tok,
+  /// or null if it does not apply.
+  Type fromTOK(TOK tok)
+  {
+    auto ptype = tok in TOK2Type;
+    return ptype ? *ptype : null;
+  }
+
   /// Creates a list of statements for creating and initializing types.
-  char[] createTypes(string[] typeNames)
+  /// ---
+  /// Int8 = new TypeBasic(Keyword.Byte, TYP.Int8);
+  /// ---
+  char[] createTypes(string[2][] typeNames)
   {
     char[] result;
     foreach (n; typeNames)
-      result ~= n~" = new TypeBasic(Keyword."~n~", TYP."~n~");";
+      result ~= n[0]~" = new TypeBasic(Keyword."~n[1]~", TYP."~n[0]~");";
     return result;
   }
 
@@ -1162,10 +1178,42 @@ static:
       return;
     initialized = true;
 
-    mixin(createTypes(["Char", "Wchar", "Dchar", "Bool", "Byte", "Ubyte",
-      "Short", "Ushort", "Int", "Uint", "Long", "Ulong", "Cent", "Ucent",
-      "Float", "Double", "Real", "Ifloat", "Idouble", "Ireal", "Cfloat",
-      "Cdouble", "Creal", "Void"]));
+    mixin(createTypes([ // Pass tuples: (TypeName, KeywordName)
+      ["Char", "Char"], ["WChar", "Wchar"], ["DChar", "Dchar"],
+      ["Bool", "Bool"],
+      ["Int8", "Byte"], ["UInt8", "Ubyte"],
+      ["Int16", "Short"], ["UInt16", "Ushort"],
+      ["Int32", "Int"], ["UInt32", "Uint"],
+      ["Int64", "Long"], ["UInt64", "Ulong"],
+      ["Int128", "Cent"], ["UInt128", "Ucent"],
+      ["Float32", "Float"], ["Float64", "Double"], ["Float80", "Real"],
+      ["IFloat32", "Ifloat"], ["IFloat64", "Idouble"], ["IFloat80", "Ireal"],
+      ["CFloat32", "Cfloat"], ["CFloat64", "Cdouble"],
+      ["CFloat80", "Creal"], ["Void", "Void"]
+    ]));
+
+    TOK2Type = [
+      // Number literal TOKs:
+      TOK.Int32 : Types.Int32, TOK.Uint32 : Types.UInt32,
+      TOK.Int64 : Types.Int64, TOK.Uint64 : Types.UInt64,
+      TOK.Float32 : Types.Float32, TOK.Float64 : Types.Float64,
+      TOK.Float80 : Types.Float80, TOK.Imaginary32 : Types.IFloat32,
+      TOK.Imaginary64 : Types.IFloat64, TOK.Imaginary80 : Types.IFloat80,
+      // Keyword TOKs:
+      TOK.Char : Types.Char, TOK.Wchar : Types.WChar, TOK.Dchar : Types.DChar,
+      TOK.Bool : Types.Bool,
+      TOK.Byte : Types.Int8, TOK.Ubyte : Types.UInt8,
+      TOK.Short : Types.Int16, TOK.Ushort : Types.UInt16,
+      TOK.Int : Types.Int32, TOK.Uint : Types.UInt32,
+      TOK.Long : Types.Int64, TOK.Ulong : Types.UInt64,
+      TOK.Cent : Types.Int128, TOK.Ucent : Types.UInt128,
+      TOK.Float : Types.Float32, TOK.Double : Types.Float64,
+      TOK.Real : Types.Float80,
+      TOK.Ifloat : Types.IFloat32, TOK.Idouble : Types.IFloat64,
+      TOK.Ireal : Types.IFloat80,
+      TOK.Cfloat : Types.CFloat32, TOK.Cdouble : Types.CFloat64,
+      TOK.Creal : Types.CFloat80, TOK.Void : Types.Void
+    ];
 
     Void_ptr = Void.ptrTo();
     Error = new TypeError();
