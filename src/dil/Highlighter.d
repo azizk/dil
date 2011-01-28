@@ -244,9 +244,9 @@ class Highlighter
         xml_escape(text);
       print.format(tags.Char, text);
       break;
-    case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
-        TOK.Float32, TOK.Float64, TOK.Float80,
-        TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
+    case TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64,
+         TOK.Float32, TOK.Float64, TOK.Float80,
+         TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
       print.format(tags.Number, token.text);
       break;
     case TOK.Shebang:

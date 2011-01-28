@@ -2058,9 +2058,9 @@ class Parser
     case T.Null:
     case T.True, T.False:
     // case T.Dollar:
-    case T.Int32, T.Int64, T.Uint32, T.Uint64:
+    case T.Int32, T.Int64, T.UInt32, T.UInt64:
     case T.Float32, T.Float64, T.Float80,
-         T.Imaginary32, T.Imaginary64, T.Imaginary80:
+         T.IFloat32, T.IFloat64, T.IFloat80:
     case T.CharLiteral:
     case T.String:
     case T.LBracket:
@@ -3215,12 +3215,12 @@ class Parser
     Expression e;
     switch (token.kind)
     {
-    case T.Int32, T.Int64, T.Uint32, T.Uint64:
+    case T.Int32, T.Int64, T.UInt32, T.UInt64:
       e = new IntExpression(token);
       nT();
       break;
     case T.Float32, T.Float64, T.Float80,
-         T.Imaginary32, T.Imaginary64, T.Imaginary80:
+         T.IFloat32, T.IFloat64, T.IFloat80:
       e = new RealExpression(token);
       nT();
       break;
@@ -3818,11 +3818,11 @@ class Parser
     case T.Dollar:
       e = new DollarExpression();
       goto LnT_and_return;
-    case T.Int32, T.Int64, T.Uint32, T.Uint64:
+    case T.Int32, T.Int64, T.UInt32, T.UInt64:
       e = new IntExpression(token);
       goto LnT_and_return;
     case T.Float32, T.Float64, T.Float80,
-         T.Imaginary32, T.Imaginary64, T.Imaginary80:
+         T.IFloat32, T.IFloat64, T.IFloat80:
       e = new RealExpression(token);
       goto LnT_and_return;
     case T.CharLiteral:

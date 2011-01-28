@@ -206,9 +206,9 @@ Statistics getStatistics(CompilationContext cc, string filePath,
     case TOK.Comment:
       stats.commentCount++;
       break;
-    case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
+    case TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64,
          TOK.Float32, TOK.Float64, TOK.Float80,
-         TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
+         TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
       stats.numberCount++;
       break;
     case TOK.Newline:

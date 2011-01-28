@@ -32,10 +32,11 @@ enum TOK : ushort
   VERSION,
 
   // Number literals
-  Int32, Int64, Uint32, Uint64,
-  // Floating point number scanner relies on this order. (FloatXY + 3 == ImaginaryXY)
+  Int32, Int64, UInt32, UInt64,
+  // Floating point number scanner relies on this order.
+  // FloatXY + 3 == IFloatXY
   Float32, Float64, Float80,
-  Imaginary32, Imaginary64, Imaginary80,
+  IFloat32, IFloat64, IFloat80,
 
 
   // Brackets
@@ -146,9 +147,9 @@ const string[TOK.MAX] tokToString = [
   "__VENDOR__",
   "__VERSION__",
 
-  "Int32", "Int64", "Uint32", "Uint64",
+  "Int32", "Int64", "UInt32", "UInt64",
   "Float32", "Float64", "Float80",
-  "Imaginary32", "Imaginary64", "Imaginary80",
+  "IFloat32", "IFloat64", "IFloat80",
 
   "(",
   ")",

@@ -164,12 +164,12 @@ class Lexer
           else
             ++p;
       break;
-    case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64:
+    case TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64:
       this.p = t.start;
       scanNumber(*t); // Complicated. Let the method handle this.
       break;
     case TOK.Float32, TOK.Float64, TOK.Float80,
-         TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
+         TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
       // The token is complete. What remains is to get its value.
       t.mpfloat = lookupFloat(copySansUnderscores(t.start, t.end));
       break;
@@ -2244,39 +2244,39 @@ class Lexer
       {
         if (isDecimal)
           error(t.start, MID.OverflowDecimalSign);
-        kind = TOK.Uint64;
+        kind = TOK.UInt64;
       }
       else if (ulong_ & 0xFFFF_FFFF_0000_0000)
         kind = TOK.Int64;
       else if (ulong_ & 0x8000_0000)
-        kind = isDecimal ? TOK.Int64 : TOK.Uint32;
+        kind = isDecimal ? TOK.Int64 : TOK.UInt32;
       else
         kind = TOK.Int32;
       break;
     case Suffix.Unsigned:
       if (ulong_ & 0xFFFF_FFFF_0000_0000)
-        kind = TOK.Uint64;
+        kind = TOK.UInt64;
       else
-        kind = TOK.Uint32;
+        kind = TOK.UInt32;
       break;
     case Suffix.Long:
       if (ulong_ & 0x8000_0000_0000_0000)
       {
         if (isDecimal)
           error(t.start, MID.OverflowDecimalSign);
-        kind = TOK.Uint64;
+        kind = TOK.UInt64;
       }
       else
         kind = TOK.Int64;
       break;
     case Suffix.Unsigned | Suffix.Long:
-      kind = TOK.Uint64;
+      kind = TOK.UInt64;
       break;
     default:
       assert(0);
     }
     t.kind = kind;
-    if (kind == TOK.Int64 || kind == TOK.Uint64)
+    if (kind == TOK.Int64 || kind == TOK.UInt64)
     {
       version(X86_64)
       t.intval.ulong_ = ulong_;
@@ -2418,8 +2418,8 @@ class Lexer
     {
       ++p;
       kind += 3; // Switch to imaginary counterpart.
-      assert(kind == TOK.Imaginary32 || kind == TOK.Imaginary64 ||
-             kind == TOK.Imaginary80);
+      assert(kind == TOK.IFloat32 || kind == TOK.IFloat64 ||
+             kind == TOK.IFloat80);
     }
     // TODO: test for overflow/underflow according to target platform.
     //       CompilationContext must be passed to Lexer for this.
@@ -2483,7 +2483,7 @@ class Lexer
         this.p = p;
         scan(*newtok);
         tokenEnd = p = this.p;
-        if (newtok.kind != TOK.Int32 && newtok.kind != TOK.Uint32)
+        if (newtok.kind != TOK.Int32 && newtok.kind != TOK.UInt32)
         {
           errorAtColumn = newtok.start;
           mid = MID.ExpectedIntegerAfterSTLine;

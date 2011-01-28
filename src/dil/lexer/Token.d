@@ -102,7 +102,7 @@ struct Token
     Identifier* ident; /// For keywords and identifiers.
     dchar  dchar_; /// Value of a character literal.
     int    int_; /// Value of an Int32 token.
-    uint   uint_; /// Value of a Uint32 token.
+    uint   uint_; /// Value of a UInt32 token.
     version(X86_64)
     IntegerValue intval; /// Value of a number literal.
     else
@@ -449,9 +449,9 @@ bool isStatementStartToken(TOK tok)
         T.With, T.Synchronized, T.Try, T.Throw, T.Scope, T.Volatile, T.Asm,
         T.Pragma, T.Mixin, T.Static, T.Debug, T.Version, T.Alias, T.Semicolon,
         T.Enum, T.Class, T.Interface, T.Struct, T.Union, T.LBrace, T.Typedef,
-        T.This, T.Super, T.Null, T.True, T.False, T.Int32, T.Int64, T.Uint32,
-        T.Uint64, T.Float32, T.Float64, T.Float80, T.Imaginary32,
-        T.Imaginary64, T.Imaginary80, T.CharLiteral, T.String, T.LBracket,
+        T.This, T.Super, T.Null, T.True, T.False, T.Int32, T.Int64, T.UInt32,
+        T.UInt64, T.Float32, T.Float64, T.Float80, T.IFloat32,
+        T.IFloat64, T.IFloat80, T.CharLiteral, T.String, T.LBracket,
         T.Function, T.Delegate, T.Assert, T.Import, T.Typeid, T.Is, T.LParen,
         T.AndBinary, T.PlusPlus, T.MinusMinus, T.Mul,
         T.Minus, T.Plus, T.Not, T.Tilde, T.New, T.Delete, T.Cast:

@@ -747,11 +747,11 @@ class IntExpression : Expression
     {
     // case TOK.Int32:
     //   type = Types.Int32; break;
-    case TOK.Uint32:
+    case TOK.UInt32:
       type = Types.UInt32; break;
     case TOK.Int64:
       type = Types.Int64;  number = token.intval.ulong_; break;
-    case TOK.Uint64:
+    case TOK.UInt64:
       type = Types.UInt64; number = token.intval.ulong_; break;
     default:
       assert(token.kind == TOK.Int32);

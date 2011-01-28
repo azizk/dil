@@ -82,9 +82,9 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
     switch (token.kind)
     {
     case TOK.Identifier, TOK.Comment, TOK.String, TOK.CharLiteral,
-         TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
+         TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64,
          TOK.Float32, TOK.Float64, TOK.Float80,
-         TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
+         TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
       auto hash = hashOf(token.text);
       auto p = hash in map;
       if (p) p.count += 1;
@@ -139,9 +139,9 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
     switch (token.kind)
     {
     case TOK.Identifier, TOK.Comment, TOK.String, TOK.CharLiteral:
-    case TOK.Int32, TOK.Int64, TOK.Uint32, TOK.Uint64,
+    case TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64,
          TOK.Float32, TOK.Float64, TOK.Float80,
-         TOK.Imaginary32, TOK.Imaginary64, TOK.Imaginary80:
+         TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
       line ~= String(map[hashOf(token.text)].pos);
       break;
     case TOK.Shebang:

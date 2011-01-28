@@ -1194,11 +1194,11 @@ static:
 
     TOK2Type = [
       // Number literal TOKs:
-      TOK.Int32 : Types.Int32, TOK.Uint32 : Types.UInt32,
-      TOK.Int64 : Types.Int64, TOK.Uint64 : Types.UInt64,
+      TOK.Int32 : Types.Int32, TOK.UInt32 : Types.UInt32,
+      TOK.Int64 : Types.Int64, TOK.UInt64 : Types.UInt64,
       TOK.Float32 : Types.Float32, TOK.Float64 : Types.Float64,
-      TOK.Float80 : Types.Float80, TOK.Imaginary32 : Types.IFloat32,
-      TOK.Imaginary64 : Types.IFloat64, TOK.Imaginary80 : Types.IFloat80,
+      TOK.Float80 : Types.Float80, TOK.IFloat32 : Types.IFloat32,
+      TOK.IFloat64 : Types.IFloat64, TOK.IFloat80 : Types.IFloat80,
       // Keyword TOKs:
       TOK.Char : Types.Char, TOK.Wchar : Types.WChar, TOK.Dchar : Types.DChar,
       TOK.Bool : Types.Bool,
