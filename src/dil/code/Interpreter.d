@@ -16,6 +16,7 @@ import dil.semantic.Symbol,
        dil.semantic.Symbols,
        dil.semantic.Types;
 import dil.Diagnostics;
+import common;
 
 /// Used for compile-time evaluation of D code.
 class Interpreter : Visitor
@@ -74,6 +75,15 @@ class Interpreter : Visitor
     // remove me plx
     assert(false);
     return NAR;
+  }
+
+  void error(Node n, string msg, ...)
+  {
+    auto location = n.begin.getErrorLocation(/+filePath+/""); // FIXME
+    msg = Format(_arguments, _argptr, msg);
+    auto error = new SemanticError(location, msg);
+    if (diag !is null)
+      diag ~= error;
   }
 
   /// Some handy aliases.
