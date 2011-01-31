@@ -810,7 +810,32 @@ override
 
   E visit(ArrayLiteralExpression e)
   {
-    return e;
+    if (!e.values)
+      goto Lerr;
+    Expression[] elems_dup; // Duplicate if the elements changed.
+    foreach (i, elem; e.values)
+    {
+      auto newelem = visitE(elem);
+      if (newelem is NAR)
+        goto Lerr;
+      if (newelem !is elem)
+      {
+        if (!elems_dup)
+          elems_dup = e.values.dup;
+        elems_dup[i] = newelem; // Overwrite if the element changed.
+      }
+    }
+    Expression r = e;
+    if (elems_dup)
+    { // Make a new array literal.
+      r = new ArrayLiteralExpression(elems_dup);
+      r.setLoc(e);
+      r.type = e.type;
+    }
+    return r;
+  Lerr:
+    error(e, "cannot interpret array literal");
+    return NAR;
   }
 
   E visit(AArrayLiteralExpression e)
