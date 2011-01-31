@@ -4,6 +4,7 @@
 module dil.code.Interpreter;
 
 import dil.code.NotAResult;
+import dil.code.Methods;
 import dil.ast.Visitor,
        dil.ast.Node,
        dil.ast.Declarations,
@@ -20,6 +21,7 @@ import dil.Diagnostics;
 class Interpreter : Visitor
 {
   Diagnostics diag;
+  EMethods EM;
 
   alias dil.code.NotAResult.NAR NAR;
 
@@ -42,6 +44,7 @@ class Interpreter : Visitor
   this(Diagnostics diag)
   {
     this.diag = diag;
+    this.EM = new EMethods(diag);
   }
 
   /// Start evaluation.
@@ -80,51 +83,7 @@ class Interpreter : Visitor
   private alias TypeNode T; /// ditto
   private alias Parameter P; /// ditto
   private alias Node N; /// ditto
-
-  /// Returns true if e is immutable.
-  static bool isImmutable(Expression e)
-  {
-    switch (e.kind)
-    {
-    alias NodeKind NK;
-    case NK.IntExpression, NK.RealExpression,
-         NK.ComplexExpression, NK.CharExpression,
-         NK.BoolExpression, NK.StringExpression,
-         NK.NullExpression:
-      return true;
-    default:
-    }
-    return false;
-  }
-
-  static bool isBool(Expression e, bool value)
-  {
-    switch (e.kind)
-    {
-      alias NodeKind NK;
-    case NK.IntExpression:
-      auto num = e.to!(IntExpression).number;
-      return num ? value == true : value == false;
-    case NK.RealExpression:
-      auto num = e.to!(RealExpression).number;
-      return num ? value == true : value == false;
-    case NK.ComplexExpression:
-      auto num = e.to!(ComplexExpression).number;
-      return num ? value == true : value == false;
-    case NK.CharExpression:
-      auto num = e.to!(CharExpression).value.number;
-      return num ? value == true : value == false;
-    case NK.BoolExpression:
-      auto num = e.to!(BoolExpression).value.number;
-      return num ? value == true : value == false;
-    case NK.StringExpression:
-      return value == true;
-    case NK.NullExpression:
-      return value == false;
-    default:
-    }
-    return false;
-  }
+  private alias NodeKind NK; /// ditto
 
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   |                                Declarations                               |
@@ -510,79 +469,34 @@ override
   E visit(CondExpression e)
   {
     auto r = visitE(e.condition);
-
     if (r !is NAR)
     {
-      if (isBool(r, true))
-        r = visitE(e.lhs);
-      else if (isBool(r, false))
-        r = visitE(e.rhs);
-      else
-        r = NAR;
+      auto bval = EM.isBool(r);
+      if (bval == 1)      r = visitE(e.lhs);
+      else if (bval == 0) r = visitE(e.rhs);
+      else                r = NAR;
     }
     return r;
   }
 
   E visit(CommaExpression e)
   {
-    auto r = visitE(e.lhs);
-    if (r !is NAR)
-      r = visitE(e.rhs);
-    return r;
+    return visitE(e.lhs) is NAR ? NAR : visitE(e.rhs);
   }
 
   E visit(OrOrExpression e)
   {
-    auto r = visitE(e.lhs);
-
-    if (r !is NAR)
-    {
-      if (isBool(r, true))
-        r = new IntExpression(1, Types.Bool);
-      else if (isBool(r, false))
-      {
-        r = visitE(e.rhs);
-
-        if (r !is NAR)
-        {
-          if (isBool(r, true))
-            r = new IntExpression(1, Types.Bool);
-          else if (isBool(r, false))
-            r = new IntExpression(0, Types.Bool);
-          else
-            r = NAR;
-        }
-      }
-      else
-        r = NAR;
-    }
+    auto r = EM.toBool(visitE(e.lhs));
+    if (r !is NAR && r.to!(IntExpression).number == 0)
+      r = EM.toBool(visitE(e.rhs));
     return r;
   }
 
   E visit(AndAndExpression e)
   {
-    auto r = visitE(e.lhs);
-
-    if (r !is NAR)
-    {
-      if (isBool(r, false))
-        r = new IntExpression(0, Types.Bool);
-      else if (isBool(r, true))
-      {
-        r = visitE(e.rhs);
-        if (r !is NAR)
-        {
-          if (isBool(r, true))
-            r = new IntExpression(1, Types.Bool);
-          else if (isBool(r, false))
-            r = new IntExpression(0, Types.Bool);
-          else
-            r = NAR;
-        }
-      }
-      else
-        r = NAR;
-    }
+    auto r = EM.toBool(visitE(e.lhs));
+    if (r !is NAR && r.to!(IntExpression).number == 1)
+      r = EM.toBool(visitE(e.rhs));
     return r;
   }
 
