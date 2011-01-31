@@ -420,16 +420,19 @@ override
 
   S visit(AsmBlockStatement s)
   {
+    error(s, "cannot interpret assembler statements at compile time");
     return s;
   }
 
   S visit(AsmStatement s)
   {
+    assert(0);
     return s;
   }
 
   S visit(AsmAlignStatement s)
   {
+    assert(0);
     return s;
   }
 
@@ -766,7 +769,7 @@ override
   }
 
   E visit(NullExpression e)
-  {
+  { // Just return e.
     return e;
   }
 
@@ -776,32 +779,32 @@ override
   }
 
   E visit(BoolExpression e)
-  {
+  { // Just return the value of e.
     return e.value;
   }
 
   E visit(IntExpression e)
-  {
+  { // Just return e.
     return e;
   }
 
   E visit(RealExpression e)
-  {
+  { // Just return e.
     return e;
   }
 
   E visit(ComplexExpression e)
-  {
+  { // Just return e.
     return e;
   }
 
   E visit(CharExpression e)
-  {
+  { // Just return e.
     return e;
   }
 
   E visit(StringExpression e)
-  {
+  { // Just return e.
     return e;
   }
 
@@ -882,36 +885,43 @@ override
 
   E visit(AsmTypeExpression e)
   {
+    assert(0);
     return e;
   }
 
   E visit(AsmOffsetExpression e)
   {
+    assert(0);
     return e;
   }
 
   E visit(AsmSegExpression e)
   {
+    assert(0);
     return e;
   }
 
   E visit(AsmPostBracketExpression e)
   {
+    assert(0);
     return e;
   }
 
   E visit(AsmBracketExpression e)
   {
+    assert(0);
     return e;
   }
 
   E visit(AsmLocalSizeExpression e)
   {
+    assert(0);
     return e;
   }
 
   E visit(AsmRegisterExpression e)
   {
+    assert(0);
     return e;
   }
 } // override
