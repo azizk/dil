@@ -3,6 +3,7 @@
 /// $(Maturity very low)
 module dil.code.Interpreter;
 
+import dil.code.NotAResult;
 import dil.ast.Visitor,
        dil.ast.Node,
        dil.ast.Declarations,
@@ -20,19 +21,7 @@ class Interpreter : Visitor
 {
   Diagnostics diag;
 
-  static class Result : Expression
-  {
-    override Result copy(){return null;}
-  }
-
-  /// Not a Result. Similar to NAN in floating point arithmetics.
-  static const Result NAR;
-
-  static this()
-  {
-    NAR = new Result;
-    NAR.type = Types.Error;
-  }
+  alias dil.code.NotAResult.NAR NAR;
 
   /// Evaluates the expression e.
   /// Returns: NAR or a value.
