@@ -788,7 +788,7 @@ override
     return e;
   }
 
-  E visit(RealExpression e)
+  E visit(FloatExpression e)
   { // Just return e.
     return e;
   }

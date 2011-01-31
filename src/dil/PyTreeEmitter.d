@@ -1344,7 +1344,7 @@ override
     end(e, false);
   }
 
-  void visit(RealExpression e)
+  void visit(FloatExpression e)
   {
     begin(e);
     end(e, false);

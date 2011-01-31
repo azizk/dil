@@ -294,7 +294,7 @@ class Float
     return this;
   }
 
-  /// Compares this to x.
+  /// Compares $(f) to x.
   int opEquals(Float x)
   {
     return mpfr_equal_p(&f, &x.f);
@@ -318,7 +318,7 @@ class Float
     return mpfr_cmp_ui(&f, x) == 0;
   }
 
-  /// Compares this to x.
+  /// Compares $(f) to x.
   int opCmp(Float x)
   {
     return mpfr_cmp(&f, &x.f);

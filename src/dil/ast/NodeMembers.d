@@ -41,7 +41,7 @@ char[] genMembersTable()
   t[N.SpecialTokenExpression] = t[N.ThisExpression] =
   t[N.SuperExpression] = t[N.NullExpression] =
   t[N.DollarExpression] = t[N.BoolExpression] =
-  t[N.IntExpression] = t[N.RealExpression] = t[N.ComplexExpression] =
+  t[N.IntExpression] = t[N.FloatExpression] = t[N.ComplexExpression] =
   t[N.CharExpression] = t[N.StringExpression] = t[N.VoidInitExpression] =
   t[N.ModuleScopeExpression] = t[N.AsmLocalSizeExpression] = [];
   t[N.AsmRegisterExpression] = ["number?"];

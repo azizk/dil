@@ -158,7 +158,7 @@ static const char[][] NodeClassNames = [
   "DollarExpression",
   "BoolExpression",
   "IntExpression",
-  "RealExpression",
+  "FloatExpression",
   "ComplexExpression",
   "CharExpression",
   "StringExpression",

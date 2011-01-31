@@ -76,7 +76,7 @@ override:
       text ~= 'i' ~ String(e.number);
   }
 
-  void visit(RealExpression e)
+  void visit(FloatExpression e)
   {
     text ~= 'e';
     mangleFloat(e.number);

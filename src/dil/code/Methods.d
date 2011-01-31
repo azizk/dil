@@ -67,8 +67,8 @@ class EMethods
     case NK.IntExpression:
       auto num = e.to!(IntExpression).number;
       r = num != 0; break;
-    case NK.RealExpression:
-      auto num = e.to!(RealExpression).number;
+    case NK.FloatExpression:
+      auto num = e.to!(FloatExpression).number;
       r = num != 0; break;
     case NK.ComplexExpression:
       auto num = e.to!(ComplexExpression).number;

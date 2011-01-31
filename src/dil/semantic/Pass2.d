@@ -342,7 +342,7 @@ override
     return e;
   }
 
-  E visit(RealExpression e)
+  E visit(FloatExpression e)
   {
     if (!e.type)
       e.type = Types.Float64;

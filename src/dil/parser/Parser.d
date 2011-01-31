@@ -3197,11 +3197,11 @@ class Parser
   }
 
   /// $(BNF AsmPrimaryExpression :=
-  ////  IntExpression | RealExpression | DollarExpression |
+  ////  IntExpression | FloatExpression | DollarExpression |
   ////  AsmLocalSizeExpression | AsmRegisterExpression | AsmBracketExpression |
   ////  QualifiedExpression
   ////IntExpression := Integer
-  ////RealExpression := Float | Imaginary
+  ////FloatExpression := FloatLiteral | IFloatLiteral
   ////DollarExpression := "$"
   ////AsmBracketExpression :=  "[" AsmExpression "]"
   ////AsmLocalSizeExpression := "__LOCAL_SIZE"
@@ -3221,7 +3221,7 @@ class Parser
       break;
     case T.Float32, T.Float64, T.Float80,
          T.IFloat32, T.IFloat64, T.IFloat80:
-      e = new RealExpression(token);
+      e = new FloatExpression(token);
       nT();
       break;
     case T.Dollar:
@@ -3823,7 +3823,7 @@ class Parser
       goto LnT_and_return;
     case T.Float32, T.Float64, T.Float80,
          T.IFloat32, T.IFloat64, T.IFloat80:
-      e = new RealExpression(token);
+      e = new FloatExpression(token);
       goto LnT_and_return;
     case T.CharLiteral:
       e = new CharExpression(token.dchar_);

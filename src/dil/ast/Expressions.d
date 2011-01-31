@@ -762,7 +762,8 @@ class IntExpression : Expression
   mixin(copyMethod);
 }
 
-class RealExpression : Expression
+/// Holds a Float number and may be a real or imaginary number.
+class FloatExpression : Expression
 {
   Float number;
 
