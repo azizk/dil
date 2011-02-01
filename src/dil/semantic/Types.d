@@ -256,6 +256,22 @@ abstract class Type/* : Symbol*/
     return isBool();
   }
 
+  /// Returns true if the type is unsigned.
+  final bool isUnsigned()
+  {
+    return tid == TYP.Char   || tid == TYP.WChar  ||
+           tid == TYP.DChar  || tid == TYP.Bool   ||
+           tid == TYP.UInt8  || tid == TYP.UInt16 ||
+           tid == TYP.UInt32 || tid == TYP.UInt64 || tid == TYP.UInt128;
+  }
+
+  /// Returns true if the type is signed.
+  final bool isSigned()
+  {
+    return tid == TYP.Int8  || tid == TYP.Int16 ||
+           tid == TYP.Int32 || tid == TYP.Int64 || tid == TYP.Int128;
+  }
+
   /// Returns true if this is a basic type.
   final bool isBasic()
   {
