@@ -108,15 +108,12 @@ abstract class Type/* : Symbol*/
   }
 
   /// Returns the byte size of this type.
-  final size_t sizeOf()
+  /// Returns 0 if the size could not be determined.
+  /// Params:
+  ///  tt = The type table has target-dependent info.
+  size_t sizeOf(TypeTable tt = null)
   {
     return MITable.getSize(this);
-  }
-
-  /// Size is not in MITable. Find out via virtual method.
-  size_t sizeOf_()
-  {
-    return sizeOf();
   }
 
   /// Returns true if this type has a symbol.
@@ -435,6 +432,11 @@ class TypeDArray : Type
     super(next, TYP.DArray);
   }
 
+  size_t sizeOf(TypeTable tt)
+  {
+    return tt.PtrSize * 2;
+  }
+
   string toString()
   {
     return next.toString() ~ "[]";
@@ -449,6 +451,11 @@ class TypeAArray : Type
   {
     super(next, TYP.AArray);
     this.keyType = keyType;
+  }
+
+  size_t sizeOf(TypeTable tt)
+  {
+    return tt.PtrSize * 2;
   }
 
   string toString()
@@ -474,6 +481,11 @@ class TypeSArray : Type
     this.dimension = dimension;
   }
 
+  size_t sizeOf(TypeTable tt)
+  {
+    return tt.PtrSize * 2;
+  }
+
   string toString()
   {
     return next.toString() ~ "[" ~ String(dimension) ~ "]";
@@ -495,6 +507,11 @@ class TypePointer : Type
     super(next, TYP.Pointer);
   }
 
+  size_t sizeOf(TypeTable tt)
+  {
+    return tt.PtrSize;
+  }
+
   string toString()
   {
     return next.toString() ~ "*";
@@ -507,6 +524,11 @@ class TypeReference : Type
   this(Type next)
   {
     super(next, TYP.Reference);
+  }
+
+  size_t sizeOf(TypeTable tt)
+  {
+    return tt.PtrSize;
   }
 
   string toString()
@@ -532,6 +554,11 @@ class TypeEnum : Type
     next = type;
   }
 
+  size_t sizeOf(TypeTable tt)
+  { // TODO:
+    return 0;
+  }
+
   string toString()
   {
     return symbol.name.str;
@@ -552,6 +579,11 @@ class TypeStruct : Type
   {
     super(null, TYP.Struct);
     this.symbol = symbol;
+  }
+
+  size_t sizeOf(TypeTable tt)
+  { // TODO:
+    return 0;
   }
 
   string toString()
@@ -576,6 +608,11 @@ class TypeClass : Type
     this.symbol = symbol;
   }
 
+  size_t sizeOf(TypeTable tt)
+  {
+    return tt.PtrSize;
+  }
+
   string toString()
   {
     return symbol.name.str;
@@ -595,6 +632,11 @@ class TypeTypedef : Type
   this(Type next)
   {
     super(next, TYP.Typedef);
+  }
+
+  size_t sizeOf(TypeTable tt)
+  { // TODO:
+    return 0;
   }
 
   string toString()
@@ -816,6 +858,11 @@ class TypeFuncPtr : Type
     return next.to!(TypeFunction);
   }
 
+  size_t sizeOf(TypeTable tt)
+  {
+    return tt.PtrSize;
+  }
+
   string toString()
   {
     auto f = funcType();
@@ -841,6 +888,11 @@ class TypeDelegate : Type
     return next.to!(TypeFunction);
   }
 
+  size_t sizeOf(TypeTable tt)
+  {
+    return tt.PtrSize * 2;
+  }
+
   string toString()
   {
     auto f = funcType();
@@ -860,6 +912,11 @@ class TypeIdentifier : Type
   this(Identifier* ident)
   {
     super(null, TYP.Identifier);
+  }
+
+  size_t sizeOf(TypeTable tt)
+  { // TODO:
+    return 0;
   }
 
   string toString()
@@ -884,6 +941,11 @@ class TypeTemplInstance : Type
     super(null, TYP.TInstance);
   }
 
+  size_t sizeOf(TypeTable tt)
+  { // TODO:
+    return 0;
+  }
+
   string toString()
   { // TODO:
     return "tpl!()";
@@ -899,6 +961,11 @@ class TypeTuple : Type
   {
     super(null, TYP.Tuple);
     this.types = types;
+  }
+
+  size_t sizeOf(TypeTable tt)
+  { // TODO:
+    return 0;
   }
 
   string toString()
@@ -932,6 +999,11 @@ class TypeConst : Type
     super(next, TYP.Const);
   }
 
+  size_t sizeOf(TypeTable tt)
+  {
+    return next.sizeOf(tt);
+  }
+
   string toString()
   {
     return "const(" ~ next.toString() ~ ")";
@@ -944,6 +1016,11 @@ class TypeImmutable : Type
   this(Type next)
   {
     super(next, TYP.Immutable);
+  }
+
+  size_t sizeOf(TypeTable tt)
+  {
+    return next.sizeOf(tt);
   }
 
   string toString()
@@ -1027,10 +1104,19 @@ class TypeTable
       Size_t = Types.UInt32;
       Ptrdiff_t = Types.Int32;
     }
+    PtrSize = Ptrdiff_t.sizeOf();
   }
 
   TypeBasic Size_t; /// The size type.
   TypeBasic Ptrdiff_t; /// The pointer difference type.
+
+  size_t PtrSize; /// The size of a pointer (dependent on the architecture.)
+
+  /// Returns the byte size of t.
+  size_t sizeOf(Type t)
+  {
+    return t.sizeOf(this);
+  }
 }
 
 /// Represents a value related to a Type.
@@ -1070,7 +1156,7 @@ static:
   const Value VNAN = {float_:float.nan}; /// Value NAN.
   const Value VCNAN = {creal_:creal.nan}; /// Value complex NAN.
   private alias SIZE_NOT_AVAILABLE SNA;
-  private alias PTR_SIZE PS;
+  private const ushort PS = 0; // Used for documentation purposes below.
   /// The meta info table.
   private const TypeMetaInfo metaInfoTable[] = [
     {'?', SNA}, // Error
@@ -1091,13 +1177,13 @@ static:
     {'?', 16, &VZERO},  // Ucent
     {'f', 4, &VNAN},   // Float
     {'d', 8, &VNAN},   // Double
-    {'e', 12, &VNAN},  // Real
+    {'e', 10, &VNAN},  // Real
     {'o', 4, &VNAN},   // Ifloat
     {'p', 8, &VNAN},   // Idouble
-    {'j', 12, &VNAN},  // Ireal
+    {'j', 10, &VNAN},  // Ireal
     {'q', 8, &VCNAN},   // Cfloat
     {'r', 16, &VCNAN},  // Cdouble
-    {'c', 24, &VCNAN},  // Creal
+    {'c', 20, &VCNAN},  // Creal
     {'v', 1},   // void
 
     {'n', SNA},  // None
@@ -1113,7 +1199,7 @@ static:
     {'S', SNA}, // Struct
     {'C', PS, &VNULL},  // Class
     {'T', SNA}, // Typedef
-    {'F', PS},  // Function
+    {'F', SNA}, // Function
     {'P', PS, &VNULL}, // FuncPtr
     {'D', PS*2, &VNULL}, // Delegate
     {'P', PS, &VNULL},  // Pointer
@@ -1126,13 +1212,10 @@ static:
   ];
   static assert(metaInfoTable.length == TYP.max+1);
 
-  /// Returns the size of a type.
+  /// Returns the byte size of a type.
   size_t getSize(Type type)
   {
-    auto size = metaInfoTable[type.tid].size;
-    if (size == SIZE_NOT_AVAILABLE)
-      return type.sizeOf_();
-    return size;
+    return metaInfoTable[type.tid].size;
   }
 
   /// Returns the mangle character of a type.
