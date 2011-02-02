@@ -1148,13 +1148,13 @@ struct MITable
 {
 static:
   const ushort SIZE_NOT_AVAILABLE = 0; /// Size not available.
-  const Value VZERO = {int_:0}; /// Value 0.
-  const Value VNULL = {pvoid:null}; /// Value null.
-  const Value V0xFF = {dchar_:0xFF}; /// Value 0xFF.
+  const Value VZERO   = {int_:0}; /// Value 0.
+  const Value VNULL   = {pvoid:null}; /// Value null.
+  const Value V0xFF   = {dchar_:0xFF}; /// Value 0xFF.
   const Value V0xFFFF = {dchar_:0xFFFF}; /// Value 0xFFFF.
-  const Value VFALSE = {bool_:false}; /// Value false.
-  const Value VNAN = {float_:float.nan}; /// Value NAN.
-  const Value VCNAN = {creal_:creal.nan}; /// Value complex NAN.
+  const Value VFALSE  = {bool_:false}; /// Value false.
+  const Value VNAN    = {float_:float.nan}; /// Value NAN.
+  const Value VCNAN   = {creal_:creal.nan}; /// Value complex NAN.
   private alias SIZE_NOT_AVAILABLE SNA;
   private const ushort PS = 0; // Used for documentation purposes below.
   /// The meta info table.
@@ -1162,34 +1162,34 @@ static:
     {'?', SNA}, // Error
 
     {'a', 1, &V0xFF},   // Char
-    {'u', 2, &V0xFFFF},   // Wchar
-    {'w', 4, &V0xFFFF},   // Dchar
-    {'b', 1, &VFALSE},   // Bool
-    {'g', 1, &VZERO},   // Byte
-    {'h', 1, &VZERO},   // Ubyte
-    {'s', 2, &VZERO},   // Short
-    {'t', 2, &VZERO},   // Ushort
-    {'i', 4, &VZERO},   // Int
-    {'k', 4, &VZERO},   // Uint
-    {'l', 8, &VZERO},   // Long
-    {'m', 8, &VZERO},   // Ulong
-    {'?', 16, &VZERO},  // Cent
-    {'?', 16, &VZERO},  // Ucent
-    {'f', 4, &VNAN},   // Float
-    {'d', 8, &VNAN},   // Double
-    {'e', 10, &VNAN},  // Real
-    {'o', 4, &VNAN},   // Ifloat
-    {'p', 8, &VNAN},   // Idouble
-    {'j', 10, &VNAN},  // Ireal
-    {'q', 8, &VCNAN},   // Cfloat
-    {'r', 16, &VCNAN},  // Cdouble
-    {'c', 20, &VCNAN},  // Creal
-    {'v', 1},   // void
+    {'u', 2, &V0xFFFF}, // WChar
+    {'w', 4, &V0xFFFF}, // DChar
+    {'b', 1, &VFALSE},  // Bool
+    {'g', 1, &VZERO},   // Int8
+    {'h', 1, &VZERO},   // UInt8
+    {'s', 2, &VZERO},   // Int16
+    {'t', 2, &VZERO},   // UInt16
+    {'i', 4, &VZERO},   // Int32
+    {'k', 4, &VZERO},   // UInt32
+    {'l', 8, &VZERO},   // Int64
+    {'m', 8, &VZERO},   // UInt64
+    {'?', 16, &VZERO},  // Int128
+    {'?', 16, &VZERO},  // UInt128
+    {'f', 4, &VNAN},    // Float32
+    {'d', 8, &VNAN},    // Float64
+    {'e', 10, &VNAN},   // Float80
+    {'o', 4, &VNAN},    // IFloat32
+    {'p', 8, &VNAN},    // IFloat64
+    {'j', 10, &VNAN},   // IFloat80
+    {'q', 8, &VCNAN},   // CFloat32
+    {'r', 16, &VCNAN},  // CFloat64
+    {'c', 20, &VCNAN},  // CFloat80
+    {'v', 1},           // Void
 
-    {'n', SNA},  // None
+    {'n', SNA}, // None
 
-    {'?', SNA},  // Parameter
-    {'?', SNA},  // Parameters
+    {'?', SNA}, // Parameter
+    {'?', SNA}, // Parameters
 
     {'A', PS*2, &VNULL}, // Dynamic array
     {'G', PS*2, &VNULL}, // Static array
@@ -1197,13 +1197,13 @@ static:
 
     {'E', SNA}, // Enum
     {'S', SNA}, // Struct
-    {'C', PS, &VNULL},  // Class
+    {'C', PS, &VNULL}, // Class
     {'T', SNA}, // Typedef
     {'F', SNA}, // Function
     {'P', PS, &VNULL}, // FuncPtr
     {'D', PS*2, &VNULL}, // Delegate
-    {'P', PS, &VNULL},  // Pointer
-    {'R', PS, &VNULL},  // Reference
+    {'P', PS, &VNULL}, // Pointer
+    {'R', PS, &VNULL}, // Reference
     {'I', SNA}, // Identifier
     {'?', SNA}, // Template instance
     {'B', SNA}, // Tuple
