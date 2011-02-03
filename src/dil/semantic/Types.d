@@ -108,12 +108,21 @@ abstract class Type/* : Symbol*/
   }
 
   /// Returns the byte size of this type.
-  /// Returns 0 if the size could not be determined.
+  /// Returns 0 if it could not be determined.
   /// Params:
-  ///  tt = The type table has target-dependent info.
-  size_t sizeOf(TypeTable tt = null)
+  ///   tti = Contains target-dependent info.
+  size_t sizeOf(TargetTInfo tti = null)
   {
     return MITable.getSize(this);
+  }
+
+  /// Returns the align size of this type.
+  /// Returns 0 if it could not be determined.
+  /// Params:
+  ///   tti = Contains target-dependent info.
+  size_t alignSizeOf(TargetTInfo tti = null)
+  {
+    return MITable.getAlignSize(this);
   }
 
   /// Returns true if this type has a symbol.
@@ -418,6 +427,11 @@ class TypeBasic : Type
     this.ident = ident;
   }
 
+  size_t alignSizeOf(TargetTInfo tti)
+  { // TODO:
+    return 0;
+  }
+
   string toString()
   {
     return ident.str.dup;
@@ -432,9 +446,14 @@ class TypeDArray : Type
     super(next, TYP.DArray);
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   {
-    return tt.PtrSize * 2;
+    return tti.ptrSize * 2;
+  }
+
+  size_t alignSizeOf(TargetTInfo tti)
+  {
+    return tti.ptrSize;
   }
 
   string toString()
@@ -453,9 +472,9 @@ class TypeAArray : Type
     this.keyType = keyType;
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   {
-    return tt.PtrSize * 2;
+    return tti.ptrSize * 2;
   }
 
   string toString()
@@ -481,9 +500,14 @@ class TypeSArray : Type
     this.dimension = dimension;
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   {
-    return tt.PtrSize * 2;
+    return tti.ptrSize * 2;
+  }
+
+  size_t alignSizeOf(TargetTInfo tti)
+  {
+    return next.alignSizeOf(tti);
   }
 
   string toString()
@@ -507,9 +531,9 @@ class TypePointer : Type
     super(next, TYP.Pointer);
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   {
-    return tt.PtrSize;
+    return tti.ptrSize;
   }
 
   string toString()
@@ -526,9 +550,9 @@ class TypeReference : Type
     super(next, TYP.Reference);
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   {
-    return tt.PtrSize;
+    return tti.ptrSize;
   }
 
   string toString()
@@ -554,9 +578,14 @@ class TypeEnum : Type
     next = type;
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   { // TODO:
     return 0;
+  }
+
+  size_t alignSizeOf(TargetTInfo tti)
+  {
+    return next.sizeOf(tti);
   }
 
   string toString()
@@ -581,7 +610,12 @@ class TypeStruct : Type
     this.symbol = symbol;
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
+  { // TODO:
+    return 0;
+  }
+
+  size_t alignSizeOf(TargetTInfo tti)
   { // TODO:
     return 0;
   }
@@ -608,9 +642,9 @@ class TypeClass : Type
     this.symbol = symbol;
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   {
-    return tt.PtrSize;
+    return tti.ptrSize;
   }
 
   string toString()
@@ -634,14 +668,19 @@ class TypeTypedef : Type
     super(next, TYP.Typedef);
   }
 
-  size_t sizeOf(TypeTable tt)
-  { // TODO:
-    return 0;
+  size_t sizeOf(TargetTInfo tti)
+  {
+    return next.sizeOf(tti);
+  }
+
+  size_t alignSizeOf(TargetTInfo tti)
+  {
+    return next.alignSizeOf(tti);
   }
 
   string toString()
-  { // TODO:
-    return "typedef";
+  {
+    return next.toString();
   }
 
   string toMangle()
@@ -858,9 +897,9 @@ class TypeFuncPtr : Type
     return next.to!(TypeFunction);
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   {
-    return tt.PtrSize;
+    return tti.ptrSize;
   }
 
   string toString()
@@ -888,9 +927,14 @@ class TypeDelegate : Type
     return next.to!(TypeFunction);
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   {
-    return tt.PtrSize * 2;
+    return tti.ptrSize * 2;
+  }
+
+  size_t alignSizeOf(TargetTInfo tti)
+  {
+    return tti.ptrSize;
   }
 
   string toString()
@@ -914,7 +958,7 @@ class TypeIdentifier : Type
     super(null, TYP.Identifier);
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   { // TODO:
     return 0;
   }
@@ -941,7 +985,7 @@ class TypeTemplInstance : Type
     super(null, TYP.TInstance);
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   { // TODO:
     return 0;
   }
@@ -963,7 +1007,7 @@ class TypeTuple : Type
     this.types = types;
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   { // TODO:
     return 0;
   }
@@ -999,9 +1043,9 @@ class TypeConst : Type
     super(next, TYP.Const);
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   {
-    return next.sizeOf(tt);
+    return next.sizeOf(tti);
   }
 
   string toString()
@@ -1018,9 +1062,9 @@ class TypeImmutable : Type
     super(next, TYP.Immutable);
   }
 
-  size_t sizeOf(TypeTable tt)
+  size_t sizeOf(TargetTInfo tti)
   {
-    return next.sizeOf(tt);
+    return next.sizeOf(tti);
   }
 
   string toString()
@@ -1105,7 +1149,13 @@ class TypeTable
       Ptrdiff_t = Types.Int32;
     }
     PtrSize = Ptrdiff_t.sizeOf();
+
+    tti = new TargetTInfo;
+    tti.ptrSize = PtrSize;
+    tti.is64 = !!("is64" in args);
   }
+
+  TargetTInfo tti; /// An instance used to calculate type sizes.
 
   TypeBasic Size_t; /// The size type.
   TypeBasic Ptrdiff_t; /// The pointer difference type.
@@ -1115,7 +1165,13 @@ class TypeTable
   /// Returns the byte size of t.
   size_t sizeOf(Type t)
   {
-    return t.sizeOf(this);
+    return t.sizeOf(tti);
+  }
+
+  /// Returns the align size of t.
+  size_t alignOf(Type t)
+  {
+    return t.alignSizeOf(tti);
   }
 }
 
@@ -1135,11 +1191,20 @@ union Value
   creal  creal_;
 }
 
+/// Target information for types.
+class TargetTInfo
+{
+  size_t ptrSize; /// The size of a pointer.
+  bool is64; /// Is it a 64bit CPU?
+  bool isLE; /// Is it little-endian or big-endian?
+}
+
 /// Information related to a Type.
 struct TypeMetaInfo
 {
   char mangle; /// Mangle character of the type.
   ushort size; /// Byte size of the type.
+  ushort alignsize; /// Align size of the type.
   Value* defaultInit; /// Default initialization value.
 }
 
@@ -1148,6 +1213,7 @@ struct MITable
 {
 static:
   const ushort SIZE_NOT_AVAILABLE = 0; /// Size not available.
+  const ushort ALIGN_NOT_AVAILABLE = 0; /// Align not available.
   const Value VZERO   = {int_:0}; /// Value 0.
   const Value VNULL   = {pvoid:null}; /// Value null.
   const Value V0xFF   = {dchar_:0xFF}; /// Value 0xFF.
@@ -1156,64 +1222,71 @@ static:
   const Value VNAN    = {float_:float.nan}; /// Value NAN.
   const Value VCNAN   = {creal_:creal.nan}; /// Value complex NAN.
   private alias SIZE_NOT_AVAILABLE SNA;
+  private alias ALIGN_NOT_AVAILABLE ANA;
   private const ushort PS = 0; // Used for documentation purposes below.
   /// The meta info table.
   private const TypeMetaInfo metaInfoTable[] = [
-    {'?', SNA}, // Error
+    {'?', SNA, ANA}, // Error
 
-    {'a', 1, &V0xFF},   // Char
-    {'u', 2, &V0xFFFF}, // WChar
-    {'w', 4, &V0xFFFF}, // DChar
-    {'b', 1, &VFALSE},  // Bool
-    {'g', 1, &VZERO},   // Int8
-    {'h', 1, &VZERO},   // UInt8
-    {'s', 2, &VZERO},   // Int16
-    {'t', 2, &VZERO},   // UInt16
-    {'i', 4, &VZERO},   // Int32
-    {'k', 4, &VZERO},   // UInt32
-    {'l', 8, &VZERO},   // Int64
-    {'m', 8, &VZERO},   // UInt64
-    {'?', 16, &VZERO},  // Int128
-    {'?', 16, &VZERO},  // UInt128
-    {'f', 4, &VNAN},    // Float32
-    {'d', 8, &VNAN},    // Float64
-    {'e', 10, &VNAN},   // Float80
-    {'o', 4, &VNAN},    // IFloat32
-    {'p', 8, &VNAN},    // IFloat64
-    {'j', 10, &VNAN},   // IFloat80
-    {'q', 8, &VCNAN},   // CFloat32
-    {'r', 16, &VCNAN},  // CFloat64
-    {'c', 20, &VCNAN},  // CFloat80
-    {'v', 1},           // Void
+    {'a', 1, ANA, &V0xFF},   // Char
+    {'u', 2, ANA, &V0xFFFF}, // WChar
+    {'w', 4, ANA, &V0xFFFF}, // DChar
+    {'b', 1, ANA, &VFALSE},  // Bool
+    {'g', 1, ANA, &VZERO},   // Int8
+    {'h', 1, ANA, &VZERO},   // UInt8
+    {'s', 2, ANA, &VZERO},   // Int16
+    {'t', 2, ANA, &VZERO},   // UInt16
+    {'i', 4, ANA, &VZERO},   // Int32
+    {'k', 4, ANA, &VZERO},   // UInt32
+    {'l', 8, ANA, &VZERO},   // Int64
+    {'m', 8, ANA, &VZERO},   // UInt64
+    {'?', 16, ANA, &VZERO},  // Int128
+    {'?', 16, ANA, &VZERO},  // UInt128
+    {'f', 4, ANA, &VNAN},    // Float32
+    {'d', 8, ANA, &VNAN},    // Float64
+    {'e', 10, ANA, &VNAN},   // Float80
+    {'o', 4, ANA, &VNAN},    // IFloat32
+    {'p', 8, ANA, &VNAN},    // IFloat64
+    {'j', 10, ANA, &VNAN},   // IFloat80
+    {'q', 8, ANA, &VCNAN},   // CFloat32
+    {'r', 16, ANA, &VCNAN},  // CFloat64
+    {'c', 20, ANA, &VCNAN},  // CFloat80
+    {'v', 1, 1},             // Void
 
-    {'n', SNA}, // None
+    {'n', SNA, ANA}, // None
 
-    {'?', SNA}, // Parameter
-    {'?', SNA}, // Parameters
+    {'?', SNA, ANA}, // Parameter
+    {'?', SNA, ANA}, // Parameters
 
-    {'A', PS*2, &VNULL}, // Dynamic array
-    {'G', PS*2, &VNULL}, // Static array
-    {'H', PS*2, &VNULL}, // Associative array
+    {'A', PS*2, ANA, &VNULL}, // Dynamic array
+    {'G', PS*2, ANA, &VNULL}, // Static array
+    {'H', PS*2, ANA, &VNULL}, // Associative array
 
-    {'E', SNA}, // Enum
-    {'S', SNA}, // Struct
-    {'C', PS, &VNULL}, // Class
-    {'T', SNA}, // Typedef
-    {'F', SNA}, // Function
-    {'P', PS, &VNULL}, // FuncPtr
-    {'D', PS*2, &VNULL}, // Delegate
-    {'P', PS, &VNULL}, // Pointer
-    {'R', PS, &VNULL}, // Reference
-    {'I', SNA}, // Identifier
-    {'?', SNA}, // Template instance
-    {'B', SNA}, // Tuple
-    {'x', SNA}, // Const, D2
-    {'y', SNA}, // Immutable, D2
+    {'E', SNA, ANA}, // Enum
+    {'S', SNA, ANA}, // Struct
+    {'C', PS, ANA, &VNULL}, // Class
+    {'T', SNA, ANA}, // Typedef
+    {'F', SNA, ANA}, // Function
+    {'P', PS, ANA, &VNULL}, // FuncPtr
+    {'D', PS*2, ANA, &VNULL}, // Delegate
+    {'P', PS, ANA, &VNULL}, // Pointer
+    {'R', PS, ANA, &VNULL}, // Reference
+    {'I', SNA, ANA}, // Identifier
+    {'?', SNA, ANA}, // Template instance
+    {'B', SNA, ANA}, // Tuple
+    {'x', SNA, ANA}, // Const, D2
+    {'y', SNA, ANA}, // Immutable, D2
   ];
   static assert(metaInfoTable.length == TYP.max+1);
 
   /// Returns the byte size of a type.
   size_t getSize(Type type)
+  {
+    return metaInfoTable[type.tid].size;
+  }
+
+  /// Returns the align size of a type.
+  size_t getAlignSize(Type type)
   {
     return metaInfoTable[type.tid].size;
   }
