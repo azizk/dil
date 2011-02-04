@@ -1310,7 +1310,7 @@ static:
   alias TF.BoolVal BV;   /// ditto
   }
   /// The meta info table.
-  private const TypeMetaInfo metaInfoTable[] = [
+  private const TypeMetaInfo table[] = [
     {'?', SNA, ANA}, // Error
 
     {'a', 1, ANA, &V0xFF, I|U},    // Char
@@ -1362,24 +1362,24 @@ static:
     {'x', SNA, ANA}, // Const, D2
     {'y', SNA, ANA}, // Immutable, D2
   ];
-  static assert(metaInfoTable.length == TYP.max+1);
+  static assert(table.length == TYP.max+1);
 
   /// Returns the byte size of a type.
   size_t getSize(Type type)
   {
-    return metaInfoTable[type.tid].size;
+    return table[type.tid].size;
   }
 
   /// Returns the align size of a type.
   size_t getAlignSize(Type type)
   {
-    return metaInfoTable[type.tid].size;
+    return table[type.tid].size;
   }
 
   /// Returns the mangle character of a type.
   char mangleChar(Type type)
   {
-    return metaInfoTable[type.tid].mangle;
+    return table[type.tid].mangle;
   }
 }
 
