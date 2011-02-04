@@ -1191,6 +1191,76 @@ union Value
   creal  creal_;
 }
 
+/// A list of flags for types.
+struct TypeFlags
+{
+  /// The actual flags.
+  enum
+  {
+    None      = 0,      /// No flags are set.
+    ZeroInit  = 1 << 0, /// All bytes of the type can be initialized to 0.
+    Signed    = 1 << 1, /// Signed type.
+    Unsigned  = 1 << 2, /// Unsigned type.
+    Integral  = 1 << 3, /// Integral type.
+    Floating  = 1 << 4, /// Floating point type.
+    Real      = 1 << 5, /// Real part of a complex number.
+    Imaginary = 1 << 6, /// Imaginary part of a complex number.
+    Complex   = 1 << 7, /// Complex number type.
+    Pointer   = 1 << 8, /// Pointer or function pointer type.
+    BoolVal   = 1 << 9, /// Non-scalar type can be in a boolean expression.
+    Basic     = Integral | Floating, /// Basic type.
+    Scalar    = Basic | Pointer, /// Scalar type.
+  }
+  alias typeof(None) Flags; /// Alias to enum member.
+
+  Flags flags; /// Holds a set of flags.
+
+  /// Returns true if any bit from fs is set in flags.
+  bool has(Flags fs){ return (flags & fs) != 0; }
+  /// Returns true if all bits from fs are set in flags.
+  bool hasAll(Flags fs){ return (flags & fs) == fs; }
+  /// Returns true if zero init.
+  bool isZeroInit() { return has(ZeroInit); }
+  /// Returns true if signed.
+  bool isSigned() { return has(Signed); }
+  /// Returns true if unsigned.
+  bool isUnsigned() { return has(Unsigned); }
+  /// Returns true if integral.
+  bool isIntegral() { return has(Integral); }
+  /// Returns true if floating.
+  bool isFloating() { return has(Floating); }
+  /// Returns true if real.
+  bool isReal() { return has(Real); }
+  /// Returns true if imaginary.
+  bool isComplex() { return has(Complex); }
+  /// Returns true if boolean value.
+  bool isBoolVal() { return has(BoolVal | Scalar); }
+  /// Returns true if basic.
+  bool isBasic() { return has(Basic); }
+
+  TypeFlags opOrAssign(TypeFlags tf)
+  {
+    flags |= tf.flags;
+    return *this;
+  }
+
+  TypeFlags opOr(TypeFlags tf)
+  {
+    return *this |= tf;
+  }
+
+  TypeFlags opAndAssign(TypeFlags tf)
+  {
+    flags &= tf.flags;
+    return *this;
+  }
+
+  TypeFlags opAnd(TypeFlags tf)
+  {
+    return *this &= tf;
+  }
+}
+
 /// Target information for types.
 class TargetTInfo
 {
@@ -1206,6 +1276,7 @@ struct TypeMetaInfo
   ushort size; /// Byte size of the type.
   ushort alignsize; /// Align size of the type.
   Value* defaultInit; /// Default initialization value.
+  TypeFlags.Flags flags; /// The flags of the type.
 }
 
 /// Namespace for the meta info table.
@@ -1221,56 +1292,70 @@ static:
   const Value VFALSE  = {bool_:false}; /// Value false.
   const Value VNAN    = {float_:float.nan}; /// Value NAN.
   const Value VCNAN   = {creal_:creal.nan}; /// Value complex NAN.
-  private alias SIZE_NOT_AVAILABLE SNA;
-  private alias ALIGN_NOT_AVAILABLE ANA;
-  private const ushort PS = 0; // Used for documentation purposes below.
+  private
+  {
+  alias SIZE_NOT_AVAILABLE SNA;
+  alias ALIGN_NOT_AVAILABLE ANA;
+  const ushort PS = 0; // Used for documentation purposes below.
+  alias TypeFlags TF;    /// Shortcuts.
+  alias TF.ZeroInit Z;   /// ditto
+  alias TF.Unsigned U;   /// ditto
+  alias TF.Signed S;     /// ditto
+  alias TF.Integral I;   /// ditto
+  alias TF.Floating F;   /// ditto
+  alias TF.Real Re;      /// ditto
+  alias TF.Imaginary Im; /// ditto
+  alias TF.Complex Cx;   /// ditto
+  alias TF.Pointer P;    /// ditto
+  alias TF.BoolVal BV;   /// ditto
+  }
   /// The meta info table.
   private const TypeMetaInfo metaInfoTable[] = [
     {'?', SNA, ANA}, // Error
 
-    {'a', 1, ANA, &V0xFF},   // Char
-    {'u', 2, ANA, &V0xFFFF}, // WChar
-    {'w', 4, ANA, &V0xFFFF}, // DChar
-    {'b', 1, ANA, &VFALSE},  // Bool
-    {'g', 1, ANA, &VZERO},   // Int8
-    {'h', 1, ANA, &VZERO},   // UInt8
-    {'s', 2, ANA, &VZERO},   // Int16
-    {'t', 2, ANA, &VZERO},   // UInt16
-    {'i', 4, ANA, &VZERO},   // Int32
-    {'k', 4, ANA, &VZERO},   // UInt32
-    {'l', 8, ANA, &VZERO},   // Int64
-    {'m', 8, ANA, &VZERO},   // UInt64
-    {'?', 16, ANA, &VZERO},  // Int128
-    {'?', 16, ANA, &VZERO},  // UInt128
-    {'f', 4, ANA, &VNAN},    // Float32
-    {'d', 8, ANA, &VNAN},    // Float64
-    {'e', 10, ANA, &VNAN},   // Float80
-    {'o', 4, ANA, &VNAN},    // IFloat32
-    {'p', 8, ANA, &VNAN},    // IFloat64
-    {'j', 10, ANA, &VNAN},   // IFloat80
-    {'q', 8, ANA, &VCNAN},   // CFloat32
-    {'r', 16, ANA, &VCNAN},  // CFloat64
-    {'c', 20, ANA, &VCNAN},  // CFloat80
-    {'v', 1, 1},             // Void
+    {'a', 1, ANA, &V0xFF, I|U},    // Char
+    {'u', 2, ANA, &V0xFFFF, I|U},  // WChar
+    {'w', 4, ANA, &V0xFFFF, I|U},  // DChar
+    {'b', 1, ANA, &VFALSE, I|U|Z}, // Bool
+    {'g', 1, ANA, &VZERO, I|S|Z},  // Int8
+    {'h', 1, ANA, &VZERO, I|U|Z},  // UInt8
+    {'s', 2, ANA, &VZERO, I|S|Z},  // Int16
+    {'t', 2, ANA, &VZERO, I|U|Z},  // UInt16
+    {'i', 4, ANA, &VZERO, I|S|Z},  // Int32
+    {'k', 4, ANA, &VZERO, I|U|Z},  // UInt32
+    {'l', 8, ANA, &VZERO, I|S|Z},  // Int64
+    {'m', 8, ANA, &VZERO, I|U|Z},  // UInt64
+    {'?', 16, ANA, &VZERO, I|S|Z}, // Int128
+    {'?', 16, ANA, &VZERO, I|U|Z}, // UInt128
+    {'f', 4, ANA, &VNAN, F|Re},    // Float32
+    {'d', 8, ANA, &VNAN, F|Re},    // Float64
+    {'e', 10, ANA, &VNAN, F|Re},   // Float80
+    {'o', 4, ANA, &VNAN, F|Im},    // IFloat32
+    {'p', 8, ANA, &VNAN, F|Im},    // IFloat64
+    {'j', 10, ANA, &VNAN, F|Im},   // IFloat80
+    {'q', 8, ANA, &VCNAN, F|Cx},   // CFloat32
+    {'r', 16, ANA, &VCNAN, F|Cx},  // CFloat64
+    {'c', 20, ANA, &VCNAN, F|Cx},  // CFloat80
+    {'v', 1, 1},                   // Void
 
     {'n', SNA, ANA}, // None
 
     {'?', SNA, ANA}, // Parameter
     {'?', SNA, ANA}, // Parameters
 
-    {'A', PS*2, ANA, &VNULL}, // Dynamic array
-    {'G', PS*2, ANA, &VNULL}, // Static array
-    {'H', PS*2, ANA, &VNULL}, // Associative array
+    {'A', PS*2, ANA, &VNULL, Z|BV}, // Dynamic array
+    {'G', PS*2, ANA}, // Static array
+    {'H', PS*2, ANA, &VNULL, Z|BV}, // Associative array
 
     {'E', SNA, ANA}, // Enum
     {'S', SNA, ANA}, // Struct
-    {'C', PS, ANA, &VNULL}, // Class
+    {'C', PS, ANA, &VNULL, Z|BV}, // Class
     {'T', SNA, ANA}, // Typedef
     {'F', SNA, ANA}, // Function
-    {'P', PS, ANA, &VNULL}, // FuncPtr
-    {'D', PS*2, ANA, &VNULL}, // Delegate
-    {'P', PS, ANA, &VNULL}, // Pointer
-    {'R', PS, ANA, &VNULL}, // Reference
+    {'P', PS, ANA, &VNULL, Z|BV|P}, // FuncPtr
+    {'D', PS*2, ANA, &VNULL, Z|BV}, // Delegate
+    {'P', PS, ANA, &VNULL, Z|BV|P}, // Pointer
+    {'R', PS, ANA, &VNULL, Z}, // Reference
     {'I', SNA, ANA}, // Identifier
     {'?', SNA, ANA}, // Template instance
     {'B', SNA, ANA}, // Tuple
