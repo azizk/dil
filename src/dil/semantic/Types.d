@@ -268,46 +268,34 @@ abstract class Type/* : Symbol*/
     return isBool();
   }
 
-  /// Returns true if the type is unsigned.
-  final bool isUnsigned()
-  {
-    return tid == TYP.Char   || tid == TYP.WChar  ||
-           tid == TYP.DChar  || tid == TYP.Bool   ||
-           tid == TYP.UInt8  || tid == TYP.UInt16 ||
-           tid == TYP.UInt32 || tid == TYP.UInt64 || tid == TYP.UInt128;
-  }
-
   /// Returns true if the type is signed.
   final bool isSigned()
   {
-    return tid == TYP.Int8  || tid == TYP.Int16 ||
-           tid == TYP.Int32 || tid == TYP.Int64 || tid == TYP.Int128;
+    return MITable.getFlags(this).isSigned();
+  }
+
+  /// Returns true if the type is unsigned.
+  final bool isUnsigned()
+  {
+    return MITable.getFlags(this).isUnsigned();
   }
 
   /// Returns true if this is a basic type.
   final bool isBasic()
   {
-    return isIntegral() || isFloating();
+    return MITable.getFlags(this).isBasic();
   }
 
   /// Returns true if this type is an integral number type.
   final bool isIntegral()
   {
-    switch (tid)
-    {
-    case TYP.Char, TYP.WChar, TYP.DChar, TYP.Bool, TYP.Int8, TYP.UInt8,
-         TYP.Int16, TYP.UInt16, TYP.Int32, TYP.UInt32, TYP.Int64, TYP.UInt64,
-         TYP.Int128, TYP.UInt128:
-      return true;
-    default:
-      return false;
-    }
+    return MITable.getFlags(this).isIntegral();
   }
 
   /// Returns true if this type is a floating point number type.
   final bool isFloating()
   {
-    return isReal() || isImaginary() || isComplex();
+    return MITable.getFlags(this).isFloating();
   }
 
   /// Like isFloating(). Also checks base types of typedef/enum.
@@ -317,13 +305,13 @@ abstract class Type/* : Symbol*/
       return false; // Base type of enum can't be floating.
     if (tid == TYP.Typedef)
       return next.isBaseFloating();
-    return isReal() || isImaginary() || isComplex();
+    return isFloating();
   }
 
   /// Returns true if this type is a real number type.
   final bool isReal()
   {
-    return tid == TYP.Float32 || tid == TYP.Float64 || tid == TYP.Float80;
+    return MITable.getFlags(this).isReal();
   }
 
   /// Like isReal(). Also checks base types of typedef/enum.
@@ -339,7 +327,7 @@ abstract class Type/* : Symbol*/
   /// Returns true if this type is an imaginary number type.
   final bool isImaginary()
   {
-    return tid == TYP.IFloat32 || tid == TYP.IFloat64 || tid == TYP.IFloat80;
+    return MITable.getFlags(this).isImaginary();
   }
 
   /// Like isImaginary(). Also checks base types of typedef/enum.
@@ -355,7 +343,7 @@ abstract class Type/* : Symbol*/
   /// Returns true if this type is a complex number type.
   final bool isComplex()
   {
-    return tid == TYP.CFloat32 || tid == TYP.CFloat64 || tid == TYP.CFloat80;
+    return MITable.getFlags(this).isComplex();
   }
 
   /// Like isComplex(). Also checks base types of typedef/enum.
@@ -371,7 +359,7 @@ abstract class Type/* : Symbol*/
   /// Returns true for scalar types.
   final bool isScalar()
   {
-    return isPointer() || isBasic();
+    return MITable.getFlags(this).isScalar();
   }
 
   /// Like isScalar(). Also checks base types of typedef/enum.
