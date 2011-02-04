@@ -19,7 +19,7 @@ import dil.semantic.Module,
 import dil.code.Interpreter;
 import dil.translator.German;
 import dil.Messages;
-import dil.CompilerInfo;
+import dil.Version;
 import dil.Diagnostics;
 import dil.SourceText;
 import dil.Compilation;

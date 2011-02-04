@@ -21,7 +21,6 @@ import dil.Compilation;
 import dil.Diagnostics;
 import dil.Messages;
 import dil.Enums;
-import dil.CompilerInfo;
 import common;
 
 import tango.io.model.IFile;

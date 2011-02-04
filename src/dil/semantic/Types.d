@@ -10,8 +10,7 @@ import dil.lexer.Identifier,
        dil.lexer.IdTable,
        dil.lexer.TokensEnum,
        dil.lexer.Funcs : hashOf, String;
-import dil.CompilerInfo,
-       dil.Enums;
+import dil.Enums;
 
 import common;
 

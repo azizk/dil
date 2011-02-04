@@ -11,7 +11,7 @@ import dil.Diagnostics;
 import dil.Tables;
 import dil.Messages;
 import dil.HtmlEntities;
-import dil.CompilerInfo;
+import dil.Version;
 import dil.Unicode;
 import dil.SourceText;
 import dil.Time;

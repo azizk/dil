@@ -27,7 +27,6 @@ import dil.SourceText;
 import dil.Diagnostics;
 import dil.Messages;
 import dil.Enums;
-import dil.CompilerInfo;
 import common;
 
 /// Some handy aliases.

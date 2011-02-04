@@ -23,7 +23,6 @@ import dil.SourceText;
 import dil.Diagnostics;
 import dil.Messages;
 import dil.Enums;
-import dil.CompilerInfo;
 import common;
 
 /// The second pass determines the types of symbols and the types

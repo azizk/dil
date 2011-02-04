@@ -15,7 +15,6 @@ import dil.Tables;
 import dil.Messages;
 import dil.Diagnostics;
 import dil.Enums;
-import dil.CompilerInfo;
 import dil.SourceText;
 import dil.Unicode;
 import common;
@@ -40,7 +39,8 @@ class Parser
   LinkageType linkageType;
   Protection protection; /// ditto
   StorageClass storageClass; /// ditto
-  uint alignSize = DEFAULT_ALIGN_SIZE; /// ditto
+  uint alignSize; /// ditto
+
 
   private alias TOK T; /// Used often in this class.
   private alias TypeNode Type;
@@ -1163,7 +1163,7 @@ class Parser
   uint parseAlignAttribute(ref Token* sizetok)
   {
     skip(T.Align);
-    uint size = DEFAULT_ALIGN_SIZE; // Global default.
+    uint size;
     if (consumed(T.LParen))
     {
       if (token.kind == T.Int32)
