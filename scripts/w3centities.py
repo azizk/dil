@@ -20,14 +20,13 @@ def formatEntities(ents):
   for name, value, longname in ents:
     cmnt = "" # Comment out?
     if (value.count("&#") > 1 or # The entity has more than one character.
-        " " in value or # E.g.: DotDot " &#x020DC;"
         "." in name): # E.g.: "b.Delta"
       cmnt, value = ("// ", '"%s"' % value)
     elif "&#38;" in value: # E.g.: "&#38;#60;" = &LT;
       value = value.replace("&#38;#", "").rstrip(";") # -> "60;" -> "60"
       value = "0x%05X" % int(value) # -> "0x00060"
     else:
-      value = "0" + value.strip("&#;")
+      value = "0" + value.strip(" &#;")
     s += '  %s{"%s", %s},\n' % (cmnt, name, value)
   return s + "];\n"
 
