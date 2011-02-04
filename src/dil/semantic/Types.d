@@ -125,6 +125,12 @@ abstract class Type/* : Symbol*/
     return MITable.getAlignSize(this);
   }
 
+  /// Returns the flags of this type.
+  TypeFlags flagsOf()
+  {
+    return MITable.getFlags(this);
+  }
+
   /// Returns true if this type has a symbol.
   final bool hasSymbol()
   {
@@ -510,6 +516,14 @@ class TypeSArray : Type
     return next.alignSizeOf(tti);
   }
 
+  TypeFlags flagsOf()
+  { // TODO:
+    auto tf = next.flagsOf();
+    //if (symbol.isZeroInit())
+      //tf |= TypeFlags.ZeroInit;
+    return tf;
+  }
+
   string toString()
   {
     return next.toString() ~ "[" ~ String(dimension) ~ "]";
@@ -586,6 +600,14 @@ class TypeEnum : Type
   size_t alignSizeOf(TargetTInfo tti)
   {
     return next.sizeOf(tti);
+  }
+
+  TypeFlags flagsOf()
+  { // TODO:
+    auto tf = next.flagsOf();
+    //if (symbol.isZeroInit())
+      //tf |= TypeFlags.ZeroInit;
+    return tf;
   }
 
   string toString()
@@ -676,6 +698,14 @@ class TypeTypedef : Type
   size_t alignSizeOf(TargetTInfo tti)
   {
     return next.alignSizeOf(tti);
+  }
+
+  TypeFlags flagsOf()
+  { // TODO:
+    auto tf = next.flagsOf();
+    //if (symbol.isZeroInit())
+      //tf |= TypeFlags.ZeroInit;
+    return tf;
   }
 
   string toString()
@@ -1374,6 +1404,13 @@ static:
   size_t getAlignSize(Type type)
   {
     return table[type.tid].size;
+  }
+
+  /// Returns the flags of a type.
+  TypeFlags getFlags(Type type)
+  {
+    TypeFlags tf = {MITable.table[type.tid].flags};
+    return tf;
   }
 
   /// Returns the mangle character of a type.
