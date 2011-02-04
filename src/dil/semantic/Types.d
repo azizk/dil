@@ -1262,11 +1262,17 @@ struct TypeFlags
   /// Returns true if real.
   bool isReal() { return has(Real); }
   /// Returns true if imaginary.
+  bool isImaginary() { return has(Imaginary); }
+  /// Returns true if complex.
   bool isComplex() { return has(Complex); }
+  /// Returns true if pointer.
+  bool isPointer() { return has(Pointer); }
   /// Returns true if boolean value.
   bool isBoolVal() { return has(BoolVal | Scalar); }
   /// Returns true if basic.
   bool isBasic() { return has(Basic); }
+  /// Returns true if scalar.
+  bool isScalar() { return has(Scalar); }
 
   TypeFlags opOrAssign(TypeFlags tf)
   {
