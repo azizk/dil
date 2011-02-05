@@ -867,6 +867,12 @@ class StringExpression : Expression
     this(cast(ubyte[])str, Types.DChar);
   }
 
+  /// Returns the number of chars/wchar/dchars in this string.
+  size_t length()
+  {
+    return type.to!(TypeSArray).dimension;
+  }
+
   /// Returns the string excluding the terminating 0.
   char[] getString()
   {
