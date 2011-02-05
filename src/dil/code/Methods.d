@@ -119,4 +119,21 @@ class EMethods
     }
     return r;
   }
+
+  /// Returns the length of a string/array/assocarray.
+  static Expression arrayLength(Expression e)
+  {
+    size_t len;
+    if (auto se = e.Is!(StringExpression))
+      len = se.length();
+    else if (auto ae = e.Is!(ArrayLiteralExpression))
+      len = ae.values.length;
+    else if (auto aae = e.Is!(AArrayLiteralExpression))
+      len = aae.keys.length;
+    else
+      return NAR;
+    auto r = new IntExpression(len, e.type);
+    r.setLoc(e);
+    return r;
+  }
 }
