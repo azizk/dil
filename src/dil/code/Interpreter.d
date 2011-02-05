@@ -14,7 +14,8 @@ import dil.ast.Visitor,
        dil.ast.Parameters;
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
-       dil.semantic.Types;
+       dil.semantic.Types,
+       dil.semantic.TypesEnum;
 import dil.Diagnostics;
 import common;
 
@@ -515,17 +516,23 @@ override
 
   E visit(OrExpression e)
   {
-    return e;
+    auto r = new IntExpression(EM.toInt(e.lhs) | EM.toInt(e.rhs), e.type);
+    r.setLoc(e);
+    return r;
   }
 
   E visit(XorExpression e)
   {
-    return e;
+    auto r = new IntExpression(EM.toInt(e.lhs) ^ EM.toInt(e.rhs), e.type);
+    r.setLoc(e);
+    return r;
   }
 
   E visit(AndExpression e)
   {
-    return e;
+    auto r = new IntExpression(EM.toInt(e.lhs) & EM.toInt(e.rhs), e.type);
+    r.setLoc(e);
+    return r;
   }
 
   E visit(EqualExpression e)
@@ -550,17 +557,52 @@ override
 
   E visit(LShiftExpression e)
   {
-    return e;
+    auto r = new IntExpression(EM.toInt(e.lhs) << EM.toInt(e.rhs), e.type);
+    r.setLoc(e);
+    return r;
   }
 
   E visit(RShiftExpression e)
   {
-    return e;
+    Expression r;
+    ulong val = EM.toInt(e.lhs), bits = EM.toInt(e.rhs);
+    switch (e.lhs.type.baseType().tid)
+    {
+    case TYP.Int8:    val =   cast(byte)val >> bits; break;
+    case TYP.UInt8:   val =  cast(ubyte)val >> bits; break;
+    case TYP.Int16:   val =  cast(short)val >> bits; break;
+    case TYP.UInt16:  val = cast(ushort)val >> bits; break;
+    case TYP.Int32:   val =    cast(int)val >> bits; break;
+    case TYP.UInt32:  val =   cast(uint)val >> bits; break;
+    case TYP.Int64:   val =   cast(long)val >> bits; break;
+    case TYP.UInt64:  val =  cast(ulong)val >> bits; break;
+    //case TYP.Int128:  val =   cast(cent)val >> bits; break;
+    //case TYP.UInt128: val =  cast(ucent)val >> bits; break;
+    case TYP.Error:  r = e; return r;
+    default: assert(0);
+    }
+    r = new IntExpression(val, e.type);
+    r.setLoc(e);
+    return r;
   }
 
   E visit(URShiftExpression e)
   {
-    return e;
+    Expression r;
+    ulong val = EM.toInt(e.lhs), bits = EM.toInt(e.rhs);
+    switch (e.lhs.type.baseType().tid)
+    {
+    case TYP.Int8, TYP.UInt8:     val =  cast(ubyte)val; break;
+    case TYP.Int16, TYP.UInt16:   val = cast(ushort)val; break;
+    case TYP.Int32, TYP.UInt32:   val =   cast(uint)val; break;
+    case TYP.Int64, TYP.UInt64:   val =  cast(ulong)val; break;
+    //case TYP.Int128, TYP.UInt128: val =  cast(ucent)val; break;
+    case TYP.Error:  r = e; return r;
+    default: assert(0);
+    }
+    r = new IntExpression(val >> bits, e.type);
+    r.setLoc(e);
+    return r;
   }
 
   E visit(PlusExpression e)
@@ -695,12 +737,16 @@ override
 
   E visit(NotExpression e)
   {
-    return e;
+    auto r = new IntExpression(EM.isBool(e) == 0, e.type);
+    r.setLoc(e);
+    return r;
   }
 
   E visit(CompExpression e)
   {
-    return e;
+    auto r = new IntExpression(~EM.toInt(e), e.type);
+    r.setLoc(e);
+    return r;
   }
 
   E visit(CallExpression e)
