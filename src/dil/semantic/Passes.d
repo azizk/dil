@@ -549,6 +549,7 @@ override
   D visit(ConstructorDeclaration d)
   {
     auto func = new FunctionSymbol(Ident.Ctor, d);
+    //func.type = null;
     insertOverload(func);
     return d;
   }
@@ -556,6 +557,7 @@ override
   D visit(StaticConstructorDeclaration d)
   {
     auto func = new FunctionSymbol(Ident.Ctor, d);
+    //func.type = cc.tables.types.Void_0Args_DFunc;
     insertOverload(func);
     return d;
   }
@@ -563,6 +565,7 @@ override
   D visit(DestructorDeclaration d)
   {
     auto func = new FunctionSymbol(Ident.Dtor, d);
+    //func.type = cc.tables.types.Void_0Args_DFunc;
     insertOverload(func);
     return d;
   }
@@ -570,6 +573,7 @@ override
   D visit(StaticDestructorDeclaration d)
   {
     auto func = new FunctionSymbol(Ident.Dtor, d);
+    //func.type = cc.tables.types.Void_0Args_DFunc;
     insertOverload(func);
     return d;
   }
@@ -1098,7 +1102,7 @@ override
       e.lhs = visitE(e.lhs);
       errorIfNonBool(e.lhs); // Left operand must be bool.
       e.rhs = visitE(e.rhs);
-      if (e.rhs.type == Types.Void)
+      if (e.rhs.type is Types.Void)
         e.type = Types.Void; // According to spec.
       else
         (e.type = Types.Bool), // Otherwise type is bool and
@@ -1114,7 +1118,7 @@ override
       e.lhs = visitE(e.lhs);
       errorIfNonBool(e.lhs); // Left operand must be bool.
       e.rhs = visitE(e.rhs);
-      if (e.rhs.type == Types.Void)
+      if (e.rhs.type is Types.Void)
         e.type = Types.Void; // According to spec.
       else
         (e.type = Types.Bool), // Otherwise type is bool and
