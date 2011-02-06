@@ -31,5 +31,12 @@ abstract class Expression : Node
     return symbol !is null;
   }
 
+  /// Returns true if the expression's type is semantically resolved.
+  /// That is, if the type isn't null and it isn't Types.DontKnowYet.
+  bool isChecked()
+  {
+    return hasType() && type !is Types.DontKnowYet;
+  }
+
   override abstract Expression copy();
 }

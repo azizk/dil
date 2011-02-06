@@ -1082,7 +1082,7 @@ override
 
   E visit(CommaExpression e)
   {
-    if (!e.hasType)
+    if (!e.isChecked)
     {
       e.lhs = visitE(e.lhs);
       e.rhs = visitE(e.rhs);
@@ -1093,7 +1093,7 @@ override
 
   E visit(OrOrExpression e)
   {
-    if (!e.hasType)
+    if (!e.isChecked)
     {
       e.lhs = visitE(e.lhs);
       errorIfNonBool(e.lhs); // Left operand must be bool.
@@ -1109,7 +1109,7 @@ override
 
   E visit(AndAndExpression e)
   {
-    if (!e.hasType)
+    if (!e.isChecked)
     {
       e.lhs = visitE(e.lhs);
       errorIfNonBool(e.lhs); // Left operand must be bool.
@@ -1370,7 +1370,7 @@ override
 
   E visit(AddressExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
     e.una = visitE(e.una);
     e.type = e.una.type.ptrTo();
@@ -1379,7 +1379,7 @@ override
 
   E visit(PreIncrExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
     // TODO: rewrite to e+=1
     e.una = visitE(e.una);
@@ -1390,7 +1390,7 @@ override
 
   E visit(PreDecrExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
     // TODO: rewrite to e-=1
     e.una = visitE(e.una);
@@ -1401,7 +1401,7 @@ override
 
   E visit(PostIncrExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
     if (auto o = findOverload(e, Ident.opPostInc))
       return o;
@@ -1413,7 +1413,7 @@ override
 
   E visit(PostDecrExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
     if (auto o = findOverload(e, Ident.opPostDec))
       return o;
@@ -1425,7 +1425,7 @@ override
 
   E visit(DerefExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
   version(D2)
     if (auto o = findOverload(e, Ident.opStar))
@@ -1447,7 +1447,7 @@ override
 
   E visit(SignExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
     if (auto o = findOverload(e, e.isNeg ? Ident.opNeg : Ident.opPos))
       return o;
@@ -1459,7 +1459,7 @@ override
 
   E visit(NotExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
     e.una = visitE(e.una);
     e.type = Types.Bool;
@@ -1469,7 +1469,7 @@ override
 
   E visit(CompExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
     if (auto o = findOverload(e, Ident.opCom))
       return o;
@@ -1529,14 +1529,12 @@ override
 
   E visit(ModuleScopeExpression e)
   {
-    if (e.hasType)
-      return e;
     return e;
   }
 
   E visit(IdentifierExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
     debug(sema) Stdout.formatln("", e);
     auto idToken = e.idToken();
@@ -1546,7 +1544,7 @@ override
 
   E visit(TemplateInstanceExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
     debug(sema) Stdout.formatln("", e);
     auto idToken = e.idToken();
@@ -1556,7 +1554,7 @@ override
 
   E visit(SpecialTokenExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e.value;
     switch (e.specialToken.kind)
     {
@@ -1585,14 +1583,14 @@ override
 
   E visit(NullExpression e)
   {
-    if (!e.hasType)
+    if (!e.isChecked)
       e.type = Types.Void_ptr;
     return e;
   }
 
   E visit(DollarExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
     e.type = cc.tables.types.Size_t;
     // if (!inArraySubscript)
@@ -1602,13 +1600,13 @@ override
 
   E visit(BoolExpression e)
   {
-    assert(e.hasType);
+    assert(e.isChecked);
     return e.value;
   }
 
   E visit(IntExpression e)
   {
-    if (e.hasType)
+    if (e.isChecked)
       return e;
 
     if (e.number & 0x8000_0000_0000_0000)
@@ -1624,27 +1622,27 @@ override
 
   E visit(FloatExpression e)
   {
-    if (!e.hasType)
+    if (!e.isChecked)
       e.type = Types.Float64;
     return e;
   }
 
   E visit(ComplexExpression e)
   {
-    if (!e.hasType)
+    if (!e.isChecked)
       e.type = Types.CFloat64;
     return e;
   }
 
   E visit(CharExpression e)
   {
-    assert(e.hasType);
+    assert(e.isChecked);
     return e.value;
   }
 
   E visit(StringExpression e)
   {
-    assert(e.hasType);
+    assert(e.isChecked);
     return e;
   }
 
@@ -1695,7 +1693,7 @@ override
 
   E visit(ParenExpression e)
   {
-    if (!e.hasType)
+    if (!e.isChecked)
     {
       e.next = visitE(e.next);
       e.type = e.next.type;
