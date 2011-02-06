@@ -130,6 +130,18 @@ abstract class Type/* : Symbol*/
     return MITable.getFlags(this);
   }
 
+  /// Returns true if this type has a boolean value.
+  final bool hasBoolVal()
+  {
+    return flagsOf().isBoolVal();
+  }
+
+  /// Returns true if this type is initialized with zero(s).
+  final bool isZeroInit()
+  {
+    return flagsOf().isZeroInit();
+  }
+
   /// Returns true if this type has a symbol.
   final bool hasSymbol()
   {
@@ -138,6 +150,12 @@ abstract class Type/* : Symbol*/
 
   /// Returns the type as a human-readable string.
   abstract string toString();
+
+  /// Returns true if error type.
+  final bool isError()
+  {
+    return tid == TYP.Error;
+  }
 
   /// Returns true if dynamic array type.
   final bool isDArray()
