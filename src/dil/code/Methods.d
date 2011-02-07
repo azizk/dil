@@ -8,6 +8,7 @@ import dil.ast.Node,
 import dil.semantic.Types;
 import dil.code.NotAResult;
 import dil.Float,
+       dil.Complex,
        dil.Diagnostics,
        dil.Messages;
 import common;
@@ -54,6 +55,89 @@ class EMethods
   ulong toUInt(Expression e)
   {
     return cast(ulong)toInt(e);
+  }
+
+  /// Reports an error.
+  void errorExpectedIntOrFloat(Expression e)
+  {
+    error(e, "expected integer or float constant, not ‘{}’", e.toText());
+  }
+
+  /// Returns Im(e).
+  Float toImag(Expression e)
+  {
+    Float r;
+    switch (e.kind)
+    {
+    case NK.ComplexExpression:
+      r = e.to!(ComplexExpression).number.im; break;
+    case NK.FloatExpression:
+      auto fe = e.to!(FloatExpression);
+      if (fe.type.flagsOf().isImaginary())
+        r = fe.number;
+      else
+        r = Float();
+      break;
+    case NK.IntExpression:
+      r = Float();
+      break;
+    default:
+      errorExpectedIntOrFloat(e);
+    }
+    return r;
+  }
+
+  /// Returns Re(e).
+  Float toReal(Expression e)
+  {
+    Float r;
+    switch (e.kind)
+    {
+    case NK.ComplexExpression:
+      r = e.to!(ComplexExpression).number.re; break;
+    case NK.FloatExpression:
+      auto fe = e.to!(FloatExpression);
+      if (fe.type.flagsOf().isReal())
+        r = fe.number;
+      else
+        r = Float();
+      break;
+    case NK.IntExpression:
+      auto ie = e.to!(IntExpression);
+      if (ie.type.flagsOf().isSigned())
+        r = Float(cast(long)ie.number);
+      else
+        r = Float(ie.number);
+      break;
+    default:
+      errorExpectedIntOrFloat(e);
+    }
+    return r;
+  }
+
+  /// Returns Re(e) + Im(e).
+  Complex toComplex(Expression e)
+  {
+    Complex z;
+    switch (e.kind)
+    {
+    case NK.ComplexExpression:
+      z = e.to!(ComplexExpression).number; break;
+    case NK.FloatExpression:
+      auto fe = e.to!(FloatExpression);
+      Float re, im;
+      if (fe.type.flagsOf().isReal())
+        re = fe.number;
+      else
+        im = fe.number;
+      z = Complex(re, im);
+      break;
+    case NK.IntExpression:
+      z = Complex(toReal(e)); break;
+    default:
+      errorExpectedIntOrFloat(e);
+    }
+    return z;
   }
 
   /// Checks if e has a boolean value.
@@ -118,6 +202,12 @@ class EMethods
       r.setLoc(e);
     }
     return r;
+  }
+
+  /// Returns the Float value of e.
+  Float toRealOrImag(Expression e)
+  {
+    return e.type.flagsOf().isReal() ? toReal(e) : toImag(e);
   }
 
   /// Returns the length of a string/array/assocarray.
