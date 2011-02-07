@@ -16,7 +16,9 @@ import dil.semantic.Symbol,
        dil.semantic.Symbols,
        dil.semantic.Types,
        dil.semantic.TypesEnum;
-import dil.Diagnostics;
+import dil.Float,
+       dil.Complex,
+       dil.Diagnostics;
 import common;
 
 /// Used for compile-time evaluation of D code.
@@ -475,6 +477,52 @@ override
   |                                Expressions                                |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
+  /// Calculates z1 + z2 or z1 - z2.
+  /// Returns a new ComplexExpression.
+  ComplexExpression complexPlusOrMinus(BinaryExpression e, bool minusOp)
+  {
+    int comb = void; // Indicates which case needs to be calculated.
+    Complex z = void; // Temp variable.
+    Float re, im, r2, i2;
+    Expression lhs = e.lhs, rhs = e.rhs; // Left and right operand.
+    auto lt = lhs.type.flagsOf(), rt = rhs.type.flagsOf(); // Type flags.
+    // Initialize left-hand side.
+    if (lt.isReal())
+      (re = EM.toReal(lhs)), (comb = 0);
+    else if (lt.isImaginary())
+      (im = EM.toImag(lhs)), (comb = 3);
+    else if (lt.isComplex())
+      (z = EM.toComplex(lhs)), (re = z.re), (im = z.im), (comb = 6);
+    // Initialize right-hand side.
+    if (rt.isReal())
+      (r2 = EM.toReal(rhs)), (comb += 0);
+    else if (rt.isImaginary())
+      (i2 = EM.toImag(rhs)), (comb += 1);
+    else if (rt.isComplex())
+      (z = EM.toComplex(rhs)), (r2 = z.re), (i2 = z.im), (comb += 2);
+    assert(comb != 0 && comb != 4, "must be handled elsewhere");
+    if (minusOp)
+    { // Negate the second operand if we have a minus operation.
+      if (r2) r2.neg();
+      if (i2) i2.neg();
+    }
+    // Do the calculation.
+    switch (comb)
+    {
+    //case 0: re = re + r2; break;             // re + r2
+    case 1: im = i2; break;                    // re + i2
+    case 2: im = i2; goto case 6;              // re + (r2+i2)
+    case 3: re = r2; break;                    // im + r2
+    //case 4: im = im + i2; break;             // im + i2
+    case 5: re = r2; goto case 7;              // im + (r2+i2)
+    case 6: re = re + r2; break;               // (re+im) + r2
+    case 7: im = im + i2; break;               // (re+im) + i2
+    case 8: re = re + r2; im = im + i2; break; // (re+im) + (r2+i2)
+    default: assert(0);
+    }
+    return new ComplexExpression(Complex(re, im), e.type);
+  }
+
 override
 {
   E visit(IllegalExpression)
@@ -607,12 +655,32 @@ override
 
   E visit(PlusExpression e)
   {
-    return e;
+    Expression r, lhs = e.lhs, rhs = e.rhs;
+    auto et = e.type.flagsOf();
+    if (et.isReal() || et.isImaginary()) // Boths operands are real or imag.
+      r = new FloatExpression(
+        EM.toRealOrImag(lhs) + EM.toRealOrImag(rhs), e.type);
+    else if (et.isComplex())
+      r = complexPlusOrMinus(e, false);
+    else
+      r = new IntExpression(EM.toInt(e.lhs) + EM.toInt(e.rhs), e.type);
+    r.setLoc(e);
+    return r;
   }
 
   E visit(MinusExpression e)
   {
-    return e;
+    Expression r;
+    auto et = e.type.flagsOf();
+    if (et.isReal() || et.isImaginary()) // Boths operands are real or imag.
+      r = new FloatExpression(
+        EM.toRealOrImag(e.lhs) - EM.toRealOrImag(e.rhs), e.type);
+    else if (et.isComplex())
+      r = complexPlusOrMinus(e, true);
+    else
+      r = new IntExpression(EM.toInt(e.lhs) - EM.toInt(e.rhs), e.type);
+    r.setLoc(e);
+    return r;
   }
 
   E visit(CatExpression e)
