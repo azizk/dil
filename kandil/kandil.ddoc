@@ -46,7 +46,8 @@ DIL_SYMBOL = <a class="symbol _$3" name="$2" href="$(SRCFILE)#L$4">$1</a>
 DIL_SYMEND = $(PLINK $2)
 
 SYMLINK = <a href="#$1">$2</a>
-SYMLINK2 = <a href="$1.html#$2">$(SLICEARGS $+)</a>
+SYMLINK2 = <a href="$1.html#$2">$2</a>
+SYMLINK3 = <a href="$1.html#$2">$(SLICEARGS $+)</a>
 
 DMDBUG = $(LINK2 http://d.puremagic.com/issues/show_bug.cgi?id=$1, $2)
 DDD = ---

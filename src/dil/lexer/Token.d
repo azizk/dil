@@ -25,7 +25,7 @@ public import dil.lexer.TokensEnum;
 ///$(Token union.ident, ident) = $(Identifier)("StringValue", kind))
 /// Macros:
 ///   Token = $(SYMLINK Token.$1, $2)
-///   Identifier = $(SYMLINK2 dil.lexer.Identifier, Identifier, Identifier)
+///   Identifier = $(SYMLINK2 dil.lexer.Identifier, Identifier)
 struct Token
 { /// Flags set by the Lexer.
   enum Flags : ushort

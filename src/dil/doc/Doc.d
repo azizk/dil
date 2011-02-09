@@ -395,7 +395,7 @@ struct DDocParser
     return false;
   }
 
-  /// Skips $(SYMLINK2 dil.lexer.Funcs, CProperty.Whitespace, whitespace).
+  /// Skips $(SYMLINK3 dil.lexer.Funcs, CProperty.Whitespace, whitespace).
   void skipWhitespace()
   {
     while (p < textEnd && isspace(*p))
