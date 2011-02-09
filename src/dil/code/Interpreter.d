@@ -663,22 +663,22 @@ override
     else if (et.isComplex())
       r = complexPlusOrMinus(e, false);
     else
-      r = new IntExpression(EM.toInt(e.lhs) + EM.toInt(e.rhs), e.type);
+      r = new IntExpression(EM.toInt(lhs) + EM.toInt(rhs), e.type);
     r.setLoc(e);
     return r;
   }
 
   E visit(MinusExpression e)
   {
-    Expression r;
+    Expression r, lhs = e.lhs, rhs = e.rhs;
     auto et = e.type.flagsOf();
     if (et.isReal() || et.isImaginary()) // Boths operands are real or imag.
       r = new FloatExpression(
-        EM.toRealOrImag(e.lhs) - EM.toRealOrImag(e.rhs), e.type);
+        EM.toRealOrImag(lhs) - EM.toRealOrImag(rhs), e.type);
     else if (et.isComplex())
       r = complexPlusOrMinus(e, true);
     else
-      r = new IntExpression(EM.toInt(e.lhs) - EM.toInt(e.rhs), e.type);
+      r = new IntExpression(EM.toInt(lhs) - EM.toInt(rhs), e.type);
     r.setLoc(e);
     return r;
   }
