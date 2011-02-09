@@ -901,6 +901,7 @@ override:
     DECL({
       d.name && write("\1DIL_KW enum\2 ");
       SYMBOL(name, K.Enum, d);
+      d.baseType && (write(" : "), write(d.baseType));
     }, d);
     DESC({ MEMBERS("ENUM", name, d); });
   }
