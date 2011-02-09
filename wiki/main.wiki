@@ -4,42 +4,37 @@ Dil is a hand-crafted compiler implementation for the D programming language wri
 <wiki:gadget url="http://www.ohloh.net/p/8880/widgets/project_partner_badge.xml" height="53" border="0"/>
 
 =Status=
+  * Dil shines at generating documentation from source files.
   * Semantic analysis is very difficult. Only a little bit of it exists in Dil.
-  * Therefore binaries cannot be generated yet.
+  * Binaries cannot be generated yet.
 
+=News=
+  * 2010/12/25: Uploaded docs for Derelict2, DMDScript2, !LanguageMachine, VisualD and Yage. PDFs and archives included.
+  * 2010/12/22: Generated docs for Tango 1.0.0, Phobos 1.066/2.051, !MiniD2.0 and Dil.<br>Uploaded all files to a folder on [http://dl.dropbox.com/u/17101773/doc/index.html Dropbox]. More projects and PDF files to follow.
 
-What Dil can do at the present:
-  * Dil is fully internationalized and can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in the [http://dil.googlecode.com/svn/doc/dil/dilconf.html#LANG_FILE configuration file].
-  * Generate documentation from Ddoc comments. In comparison to DMD, Dil has fewer bugs and also offers a few treats. It is possible to generate PDF documents from the HTML files using [http://princexml.com PrinceXML]. See [http://code.google.com/p/dil/wiki/Kandil kandil] for more information. Example documentation of some projects (outdated; will be updated soon):
-    * [http://dil.googlecode.com/svn/doc/dil/dilconf.html dil 1.000-a] ([http://dil.googlecode.com/files/dil.1.000-a_doc.7z 7zip], [http://dil.googlecode.com/files/dil.1.000-b.API.pdf PDF])
-    * [http://dil.googlecode.com/files/Tango.0.99.9.API-v3.7z Tango 0.99.9 API as a PDF]
-    * [http://dil.googlecode.com/svn/doc/Tango_0.99.7/tango.core.Array.html Tango 0.99.7] ([http://dil.googlecode.com/files/Tango.0.99.7_doc.7z 7zip], [http://dil.googlecode.com/files/Tango.0.99.7.API.2.pdf PDF], [http://dil.googlecode.com/files/Tango.0.99.7.report-2.txt report])
-    * [http://dil.googlecode.com/svn/doc/Phobos_1.037/std.format.html Phobos 1.037] ([http://dil.googlecode.com/files/Phobos.1.037_doc.7z 7zip], [http://dil.googlecode.com/files/Phobos.1.037.API.2.pdf PDF])
-    * [http://dil.googlecode.com/svn/doc/Phobos_2.021/std.format.html Phobos 2.021] ([http://dil.googlecode.com/files/Phobos.2.021_doc.7z 7zip])
-    * [http://dil.googlecode.com/svn/doc/MiniD_2.0/minid.api.html MiniD 2.0] ([http://dil.googlecode.com/files/MiniD.2.0_doc.7z 7zip]).
-  * Generate XML or HTML documents. You can choose to generate tags for tokens only or you can also have the whole parse tree unparsed. The whitespace of the original source file is preserved. You can view the HTML documents in any browser you like. The XML documents can only be viewed in W3C-standards compatible browsers(`*`) in combination with an XML formatting CSS document. Dil provides two ordinary CSS documents (for XML/HTML) which can be customized to one's heart's content. Example: Dil's source code in [http://dil.googlecode.com/files/xml_rev709.zip XML] or [http://dil.googlecode.com/files/html_rev709.zip HTML]. (`*`Note: Internet Explorer is the only browser that spectacularly fails at this job.)
-  * Produce module dependency graphs using the graphviz dot format. For example, see the [http://dil.googlecode.com/files/main.2.dot dot file] of Dil: rendered in [http://dil.googlecode.com/files/main.2.svg SVG], [http://dil.googlecode.com/files/main.2.png PNG] (2.7MB) or [http://dil.googlecode.com/files/main.2.gif GIF]. Cyclic edges (import statements) and nodes (modules) are highlighted in red. The edges of public imports are bold.
+=What Dil Can Do=
+
+  * Generate documentation from Ddoc comments.<br>In comparison to DMD, Dil has fewer bugs and also offers a few treats. It is possible to generate PDF documents from the HTML files using [http://princexml.com PrinceXML]. See [http://code.google.com/p/dil/wiki/Kandil Kandil] for more information. Example documentation of some projects ([http://dl.dropbox.com/u/17101773/doc/index.html in one folder]):
+    * [http://dl.dropbox.com/u/17101773/doc/dil/index.html Dil] ([http://dl.dropbox.com/u/17101773/doc/dil.7z 7z])
+    * [http://dl.dropbox.com/u/17101773/doc/tango.1.0.0/index.html Tango 1.0.0] ([http://dl.dropbox.com/u/17101773/doc/tango.1.0.0.7z 7z], [http://dl.dropbox.com/u/17101773/doc/tango.1.0.0/Tango.1.0.0.API.pdf PDF], [http://docs.google.com/viewer?url=http%3A%2F%2Fdl.dropbox.com%2Fu%2F17101773%2Fdoc%2Ftango.1.0.0%2FTango.1.0.0.API.pdf Google PDF Viewer])
+    * [http://dl.dropbox.com/u/17101773/doc/phobos.1.066/index.html Phobos 1.066] ([http://dl.dropbox.com/u/17101773/doc/phobos.1.066.7z 7z], [http://dl.dropbox.com/u/17101773/doc/phobos.1.066/Phobos.1.066.pdf PDF])
+    * [http://dl.dropbox.com/u/17101773/doc/phobos.2.051/index.html Phobos 2.051] ([http://dl.dropbox.com/u/17101773/doc/phobos.2.051.7z 7z])
+    * [http://dl.dropbox.com/u/17101773/doc/minid2/index.html MiniD 2.0] ([http://dl.dropbox.com/u/17101773/doc/minid2.7z 7z], [http://dl.dropbox.com/u/17101773/doc/minid2/MiniD.2_API.pdf PDF])
+    * [http://dl.dropbox.com/u/17101773/doc/yage/index.html Yage] ([http://dl.dropbox.com/u/17101773/doc/yage.7z 7z], [http://dl.dropbox.com/u/17101773/doc/yage/Yage.x.x_API.pdf PDF])
+    * [http://dl.dropbox.com/u/17101773/doc/visuald/index.html VisualD] ([http://dl.dropbox.com/u/17101773/doc/visuald.7z 7z], [http://dl.dropbox.com/u/17101773/doc/visuald/VisualD.0.3.19_API.pdf PDF])
+    * [http://dl.dropbox.com/u/17101773/doc/derelict2/index.html Derelict2] ([http://dl.dropbox.com/u/17101773/doc/derelict2.7z 7z], [http://dl.dropbox.com/u/17101773/doc/derelict2/Derelict.2_API.pdf PDF])
+    * [http://dl.dropbox.com/u/17101773/doc/dmdscript2/index.html DMDScript2] ([http://dl.dropbox.com/u/17101773/doc/dmdscript2.7z 7z], [http://dl.dropbox.com/u/17101773/doc/dmdscript2/DMDScript.2_API.pdf PDF])
+    * [http://dl.dropbox.com/u/17101773/doc/lmn/index.html LanguageMachine] ([http://dl.dropbox.com/u/17101773/doc/lmn.7z 7z], [http://dl.dropbox.com/u/17101773/doc/lmn/LMN.x.x_API.pdf PDF])
+
+  * Generate highlighted source files in HTML or XML.<br>Tokens only are highlighted by default, but the whole parse tree can be unparsed as well. The whitespace of the original source file is preserved. Any browser can display the HTML documents, but the XML documents can only be viewed in W3C-standards compatible browsers in combination with an XML formatting CSS document. Dil provides two ordinary CSS documents (for XML/HTML) which can be easily customized. Example: Dil's source code in [http://dil.googlecode.com/files/xml_rev709.zip XML] or [http://dil.googlecode.com/files/html_rev709.zip HTML] (files are outdated).
+
+  * Produce module dependency graphs using the graphviz dot format.<br>For example, see the [http://dil.googlecode.com/files/main.2.dot dot file] of Dil: rendered in [http://dil.googlecode.com/files/main.2.svg SVG], [http://dil.googlecode.com/files/main.2.png PNG] (2.7MB) or [http://dil.googlecode.com/files/main.2.gif GIF]. Cyclic edges (import statements) and nodes (modules) are highlighted in red. The edges of public imports are bold.
+
   * Output code statistics (lines of code, count syntax tree nodes and tokens, number of whitespace characters etc.) When Dil has advanced enough [http://www.aivosto.com/project/help/pm-oo-ck.html OO-metrics] will be supported. Example: [http://dil.googlecode.com/files/stats_dstress_r1835_2.txt dstress] (1.5MB text; totals are at the bottom)
 
-  * Dil can parse D 2.0 additions:
-    * Delimited and token [http://www.digitalmars.com/d/2.0/lex.html#StringLiteral string literals].
-    * [http://www.digitalmars.com/d/2.0/statement.html#ForeachRangeStatement ForeachRangeStatement].
-    * Optional [http://www.digitalmars.com/d/2.0/expression.html#IsExpression TemplateParameterList in IsExpression].
-    * const and invariant in !IsExpressions.
-    * [http://www.digitalmars.com/d/2.0/template.html#TemplateThisParameter TemplateThisParameter].
-    * Cast expressions: `cast(const)` and `cast(invariant)`.
-    * Type constructors: `const(Type)` and `invariant(Type)`.
-    * Const qualifiers: `const int*` is the same as `const(int*)`.
-    * const and invariant attributes after the parameter list of a function (C++ style.)
-    * `typeof(return)`.
-    * Traits expressions: `__traits(Identifier)` and `__traits(Identifier, TemplateArguments)`.
-    * const/invariant/final/scope/static as storage classes in parameter lists (e.g. `void func(ref const Foo f);`).
-    * invariant as a storage class for declarations (e.g. `invariant Foo f;`).
-    * The identifier `__EOF__` is interpreted as the end of file.
-    * [http://www.digitalmars.com/d/2.0/template.html#Constraint Template Constraints].
-    * `auto` return type for [http://www.digitalmars.com/d/2.0/template.html#function-templates Function Templates].
-    * Modified syntax for [http://www.digitalmars.com/d/2.0/enum.html Enums] (manifest constants.)
-    * Single template argument syntax: `something!int` is the same as `something!(int)`.
+  * Dil is fully internationalized.<br>It can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in the [http://dil.googlecode.com/svn/doc/dil/dilconf.html#LANG_FILE configuration file].
+
+  * Dil can parse [http://code.google.com/p/dil/wiki/D2Syntax the syntax changes in D2].
 
 == Help ==
 Writing a fully functional compiler is a huge undertaking and can therefore take months and years for a single person. Perhaps you would like to give a hand and speed up the development of this project. Here are some of the things you could do for Dil and the D community:
@@ -73,7 +68,7 @@ In fact, it could be off-putting for some programmers who would like to contribu
 However, please keep in mind that a lot of hours were spent in order to come up with a compiler that is well documented and has a solid design.
 It is not unlikely that the author will put the project under a less restrictive license one time or another.
 It could be LGPL3 or even BSD.
-It very much depends on how many cookies and apple pies somebody is willing to stuff the author with.
+It very much depends on how many cookies and apple pies somebody is willing to stuff the author with. :P
 
 ==Download==
 There are no downloadable binaries yet.
