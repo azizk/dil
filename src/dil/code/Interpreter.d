@@ -690,17 +690,71 @@ override
 
   E visit(MulExpression e)
   {
-    return e;
+    Expression r, lhs = e.lhs, rhs = e.rhs;
+    auto et = e.type.flagsOf();
+    if (et.isFloating())
+    {
+      Complex z = EM.toComplex(lhs) * EM.toComplex(rhs);
+      if (et.isReal() || et.isImaginary())
+        r = new FloatExpression(et.isReal() ? z.re : z.im, e.type);
+      else
+        assert(et.isComplex()), r = new ComplexExpression(z, e.type);
+    }
+    else
+      r = new IntExpression(EM.toInt(lhs) * EM.toInt(rhs), e.type);
+    return r;
   }
 
   E visit(DivExpression e)
   {
-    return e;
+    Expression r, lhs = e.lhs, rhs = e.rhs;
+    auto et = e.type.flagsOf();
+    if (et.isFloating())
+    {
+      Complex z = EM.toComplex(lhs) / EM.toComplex(rhs);
+      if (et.isReal() || et.isImaginary())
+        r = new FloatExpression(et.isReal() ? z.re : z.im, e.type);
+      else
+        assert(et.isComplex()), r = new ComplexExpression(z, e.type);
+    }
+    else
+    {
+      ulong x, x1 = EM.toInt(lhs), x2 = EM.toInt(rhs);
+      if (x2 == 0)
+        error(rhs, "division by 0");
+      else if (lhs.type.isSigned() && rhs.type.isSigned())
+        x = cast(long)x1 / cast(long)x2;
+      else
+        x = x1 / x2;
+      r = new IntExpression(x, e.type);
+    }
+    return r;
   }
 
   E visit(ModExpression e)
   {
-    return e;
+    Expression r, lhs = e.lhs, rhs = e.rhs;
+    auto et = e.type.flagsOf();
+    if (et.isFloating())
+    {
+      Complex z = EM.toComplex(lhs) % EM.toComplex(rhs);
+      if (et.isReal() || et.isImaginary())
+        r = new FloatExpression(et.isReal() ? z.re : z.im, e.type);
+      else
+        assert(et.isComplex()), r = new ComplexExpression(z, e.type);
+    }
+    else
+    {
+      ulong x, x1 = EM.toInt(lhs), x2 = EM.toInt(rhs);
+      if (x2 == 0)
+        error(rhs, "modulo by 0");
+      else if (lhs.type.isSigned() && rhs.type.isSigned())
+        x = cast(long)x1 % cast(long)x2;
+      else
+        x = x1 % x2;
+      r = new IntExpression(x, e.type);
+    }
+    return r;
   }
 
   E visit(AssignExpression e)
