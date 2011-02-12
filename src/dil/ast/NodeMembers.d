@@ -12,30 +12,30 @@ char[] genMembersTable()
 {
   char[][][NodeClassNames.length] t;
 
-  t[N.CompoundDeclaration] = ["decls[]"];
-  t[N.EmptyDeclaration] = t[N.IllegalDeclaration] =
-  t[N.ModuleDeclaration] = t[N.ImportDeclaration] =
-  t[N.AliasThisDeclaration] = [];
-  t[N.AliasDeclaration] = t[N.TypedefDeclaration] = ["decl"];
-  t[N.EnumDeclaration] = ["baseType?", "members[]"];
-  t[N.EnumMemberDeclaration] = ["type?", "value?"];
-  t[N.ClassDeclaration] = t[N.InterfaceDeclaration] = ["bases[]", "decls?"];
-  t[N.StructDeclaration] = t[N.UnionDeclaration] = ["decls?"];
-  t[N.ConstructorDeclaration] = ["params", "funcBody"];
-  t[N.StaticConstructorDeclaration] = t[N.DestructorDeclaration] =
-  t[N.StaticDestructorDeclaration] = t[N.InvariantDeclaration] =
-  t[N.UnittestDeclaration] = ["funcBody"];
-  t[N.FunctionDeclaration] = ["returnType?", "params", "funcBody"];
-  t[N.VariablesDeclaration] = ["typeNode?", "inits[?]"];
-  t[N.DebugDeclaration] = t[N.VersionDeclaration] = ["decls?", "elseDecls?"];
-  t[N.StaticIfDeclaration] = ["condition", "ifDecls", "elseDecls?"];
-  t[N.StaticAssertDeclaration] = ["condition", "message?"];
-  t[N.TemplateDeclaration] = ["tparams", "constraint?", "decls"];
-  t[N.NewDeclaration] = t[N.DeleteDeclaration] = ["params", "funcBody"];
-  t[N.ProtectionDeclaration] = t[N.StorageClassDeclaration] =
-  t[N.LinkageDeclaration] = t[N.AlignDeclaration] = ["decls"];
-  t[N.PragmaDeclaration] = ["args[]", "decls"];
-  t[N.MixinDeclaration] = ["templateExpr?", "argument?"];
+  t[N.CompoundDecl] = ["decls[]"];
+  t[N.EmptyDecl] = t[N.IllegalDecl] =
+  t[N.ModuleDecl] = t[N.ImportDecl] =
+  t[N.AliasThisDecl] = [];
+  t[N.AliasDecl] = t[N.TypedefDecl] = ["decl"];
+  t[N.EnumDecl] = ["baseType?", "members[]"];
+  t[N.EnumMemberDecl] = ["type?", "value?"];
+  t[N.ClassDecl] = t[N.InterfaceDecl] = ["bases[]", "decls?"];
+  t[N.StructDecl] = t[N.UnionDecl] = ["decls?"];
+  t[N.ConstructorDecl] = ["params", "funcBody"];
+  t[N.StaticCtorDecl] = t[N.DestructorDecl] =
+  t[N.StaticDtorDecl] = t[N.InvariantDecl] =
+  t[N.UnittestDecl] = ["funcBody"];
+  t[N.FunctionDecl] = ["returnType?", "params", "funcBody"];
+  t[N.VariablesDecl] = ["typeNode?", "inits[?]"];
+  t[N.DebugDecl] = t[N.VersionDecl] = ["decls?", "elseDecls?"];
+  t[N.StaticIfDecl] = ["condition", "ifDecls", "elseDecls?"];
+  t[N.StaticAssertDecl] = ["condition", "message?"];
+  t[N.TemplateDecl] = ["tparams", "constraint?", "decls"];
+  t[N.NewDecl] = t[N.DeleteDecl] = ["params", "funcBody"];
+  t[N.ProtectionDecl] = t[N.StorageClassDecl] =
+  t[N.LinkageDecl] = t[N.AlignDecl] = ["decls"];
+  t[N.PragmaDecl] = ["args[]", "decls"];
+  t[N.MixinDecl] = ["templateExpr?", "argument?"];
   // Expressions:
   t[N.IllegalExpression] =
   t[N.SpecialTokenExpression] = t[N.ThisExpression] =

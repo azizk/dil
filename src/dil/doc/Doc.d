@@ -99,7 +99,7 @@ static:
   Token*[] getDocTokens(Node node, bool function(Token*) isDocComment = &isDDocComment)
   {
     Token*[] comments;
-    auto isEnumMember = node.kind == NodeKind.EnumMemberDeclaration;
+    auto isEnumMember = node.kind == NodeKind.EnumMemberDecl;
     // Get preceding comments.
     auto token = node.begin;
     // Scan backwards until we hit another declaration.

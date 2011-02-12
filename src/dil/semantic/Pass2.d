@@ -121,12 +121,12 @@ class SemanticPass2 : DefaultVisitor
 
 override
 {
-  D visit(CompoundDeclaration d)
+  D visit(CompoundDecl d)
   {
     return super.visit(d);
   }
 
-  D visit(EnumDeclaration d)
+  D visit(EnumDecl d)
   {
     d.symbol.setCompleting();
 
@@ -162,7 +162,7 @@ override
     return d;
   }
 
-  D visit(MixinDeclaration md)
+  D visit(MixinDecl md)
   {
     if (md.decls)
       return md.decls;

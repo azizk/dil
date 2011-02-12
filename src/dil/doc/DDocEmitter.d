@@ -764,9 +764,9 @@ abstract class DDocEmitter : DefaultVisitor2
   {
     if (!ddoc(d))
       return;
-    const kind = is(T == ClassDeclaration) ? "class" : "interface";
-    const kindID = is(T == ClassDeclaration) ? K.Class : K.Interface;
-    const KIND = is(T == ClassDeclaration) ? "CLASS" : "INTERFACE";
+    const kind = is(T == ClassDecl) ? "class" : "interface";
+    const kindID = is(T == ClassDecl) ? K.Class : K.Interface;
+    const KIND = is(T == ClassDecl) ? "CLASS" : "INTERFACE";
     DECL({
       write("\1DIL_KW ", kind, "\2 ");
       SYMBOL(d.name.text, kindID, d);
@@ -781,9 +781,9 @@ abstract class DDocEmitter : DefaultVisitor2
   {
     if (!ddoc(d))
       return;
-    const kind = is(T == StructDeclaration) ? "struct" : "union";
-    const kindID = is(T == StructDeclaration) ? K.Struct : K.Union;
-    const KIND = is(T == StructDeclaration) ? "STRUCT" : "UNION";
+    const kind = is(T == StructDecl) ? "struct" : "union";
+    const kindID = is(T == StructDecl) ? K.Struct : K.Union;
+    const KIND = is(T == StructDecl) ? "STRUCT" : "UNION";
     string name = d.name ? d.name.text : kind;
     DECL({
       d.name && write("\1DIL_KW ", kind, "\2 ");
@@ -796,9 +796,9 @@ abstract class DDocEmitter : DefaultVisitor2
   /// Writes an alias or typedef declaration.
   void writeAliasOrTypedef(T)(T d)
   {
-    const kind = is(T == AliasDeclaration) ? "alias" : "typedef";
-    const kindID = is(T == AliasDeclaration) ? K.Alias : K.Typedef;
-    if (auto vd = d.vardecl.Is!(VariablesDeclaration))
+    const kind = is(T == AliasDecl) ? "alias" : "typedef";
+    const kindID = is(T == AliasDecl) ? K.Alias : K.Typedef;
+    if (auto vd = d.vardecl.Is!(VariablesDecl))
       foreach (name; vd.names)
         DECL({
           write("\1DIL_KW ", kind, "\2 "); write(vd.typeNode); write(" ");
@@ -847,9 +847,9 @@ abstract class DDocEmitter : DefaultVisitor2
     attrs.stcs = EnumString.all(stcs);
 
     LinkageType ltype;
-    if (auto vd = d.Is!(VariablesDeclaration))
+    if (auto vd = d.Is!(VariablesDecl))
       ltype = vd.linkageType;
-    else if (auto fd = d.Is!(FunctionDeclaration))
+    else if (auto fd = d.Is!(FunctionDecl))
       ltype = fd.linkageType;
 
     attrs.link = ltype == LinkageType.None ? null : EnumString(ltype);
@@ -881,19 +881,19 @@ abstract class DDocEmitter : DefaultVisitor2
   alias DocSymbol.Kind K;
 
 override:
-  void visit(AliasDeclaration d)
+  void visit(AliasDecl d)
   {
     if (ddoc(d))
       writeAliasOrTypedef(d);
   }
 
-  void visit(TypedefDeclaration d)
+  void visit(TypedefDecl d)
   {
     if (ddoc(d))
       writeAliasOrTypedef(d);
   }
 
-  void visit(EnumDeclaration d)
+  void visit(EnumDecl d)
   {
     if (!ddoc(d))
       return;
@@ -906,7 +906,7 @@ override:
     DESC({ MEMBERS("ENUM", name, d); });
   }
 
-  void visit(EnumMemberDeclaration d)
+  void visit(EnumMemberDecl d)
   {
     if (!ddoc(d))
       return;
@@ -915,7 +915,7 @@ override:
     DESC();
   }
 
-  void visit(TemplateDeclaration d)
+  void visit(TemplateDecl d)
   {
     this.currentTParams = d.tparams;
     if (d.isWrapper())
@@ -936,27 +936,27 @@ override:
     DESC({ MEMBERS("TEMPLATE", d.name.text, d.decls); });
   }
 
-  void visit(ClassDeclaration d)
+  void visit(ClassDecl d)
   {
     writeClassOrInterface(d);
   }
 
-  void visit(InterfaceDeclaration d)
+  void visit(InterfaceDecl d)
   {
     writeClassOrInterface(d);
   }
 
-  void visit(StructDeclaration d)
+  void visit(StructDecl d)
   {
     writeStructOrUnion(d);
   }
 
-  void visit(UnionDeclaration d)
+  void visit(UnionDecl d)
   {
     writeStructOrUnion(d);
   }
 
-  void visit(ConstructorDeclaration d)
+  void visit(ConstructorDecl d)
   {
     if (!ddoc(d))
       return;
@@ -968,7 +968,7 @@ override:
     DESC();
   }
 
-  void visit(StaticConstructorDeclaration d)
+  void visit(StaticCtorDecl d)
   {
     if (!ddoc(d))
       return;
@@ -977,7 +977,7 @@ override:
     DESC();
   }
 
-  void visit(DestructorDeclaration d)
+  void visit(DestructorDecl d)
   {
     if (!ddoc(d))
       return;
@@ -985,7 +985,7 @@ override:
     DESC();
   }
 
-  void visit(StaticDestructorDeclaration d)
+  void visit(StaticDtorDecl d)
   {
     if (!ddoc(d))
       return;
@@ -994,7 +994,7 @@ override:
     DESC();
   }
 
-  void visit(FunctionDeclaration d)
+  void visit(FunctionDecl d)
   {
     if (!ddoc(d))
       return;
@@ -1009,7 +1009,7 @@ override:
     DESC();
   }
 
-  void visit(NewDeclaration d)
+  void visit(NewDecl d)
   {
     if (!ddoc(d))
       return;
@@ -1017,7 +1017,7 @@ override:
     DESC();
   }
 
-  void visit(DeleteDeclaration d)
+  void visit(DeleteDecl d)
   {
     if (!ddoc(d))
       return;
@@ -1025,7 +1025,7 @@ override:
     DESC();
   }
 
-  void visit(VariablesDeclaration d)
+  void visit(VariablesDecl d)
   {
     if (!ddoc(d))
       return;
@@ -1039,7 +1039,7 @@ override:
     DESC();
   }
 
-  void visit(InvariantDeclaration d)
+  void visit(InvariantDecl d)
   {
     if (!ddoc(d))
       return;
@@ -1047,7 +1047,7 @@ override:
     DESC();
   }
 
-  void visit(UnittestDeclaration d)
+  void visit(UnittestDecl d)
   {
     if (!ddoc(d))
       return;
@@ -1055,17 +1055,17 @@ override:
     DESC();
   }
 
-  void visit(DebugDeclaration d)
+  void visit(DebugDecl d)
   {
     d.compiledDecls && visitD(d.compiledDecls);
   }
 
-  void visit(VersionDeclaration d)
+  void visit(VersionDecl d)
   {
     d.compiledDecls && visitD(d.compiledDecls);
   }
 
-  void visit(StaticIfDeclaration d)
+  void visit(StaticIfDecl d)
   {
     d.ifDecls && visitD(d.ifDecls);
   }

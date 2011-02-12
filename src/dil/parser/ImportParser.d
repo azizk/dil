@@ -23,12 +23,12 @@ class ImportParser : Parser
     super(srcText, tables);
   }
 
-  override CompoundDeclaration start()
+  override CompoundDecl start()
   {
-    auto decls = new CompoundDeclaration;
+    auto decls = new CompoundDecl;
     super.init();
     if (token.kind == T.Module)
-      decls ~= parseModuleDeclaration();
+      decls ~= parseModuleDecl();
     while (token.kind != T.EOF)
       parseDeclarationDefinition(Protection.None);
     return decls;
@@ -198,9 +198,9 @@ class ImportParser : Parser
       break;
     case T.Import:
     case_Import:
-      auto decl = parseImportDeclaration();
+      auto decl = parseImportDecl();
       decl.setProtection(prot); // Set the protection attribute.
-      imports ~= decl.to!(ImportDeclaration);
+      imports ~= decl.to!(ImportDecl);
       break;
     case T.Enum:
       nT();

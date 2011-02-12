@@ -15,7 +15,7 @@ import dil.semantic.Symbols;
 import dil.Enums;
 import common;
 
-class CompoundDeclaration : Declaration
+class CompoundDecl : Declaration
 {
   this()
   {
@@ -28,7 +28,7 @@ class CompoundDeclaration : Declaration
     addChild(d);
   }
 
-  void opCatAssign(CompoundDeclaration ds)
+  void opCatAssign(CompoundDecl ds)
   {
     addChildren(ds.children);
   }
@@ -47,7 +47,7 @@ class CompoundDeclaration : Declaration
 }
 
 /// Single semicolon.
-class EmptyDeclaration : Declaration
+class EmptyDecl : Declaration
 {
   this()
   {
@@ -59,7 +59,7 @@ class EmptyDeclaration : Declaration
 /// Illegal declarations encompass all tokens that don't
 /// start a DeclarationDefinition.
 /// See_Also: dil.lexer.Token.isDeclDefStartToken()
-class IllegalDeclaration : Declaration
+class IllegalDecl : Declaration
 {
   this()
   {
@@ -71,7 +71,7 @@ class IllegalDeclaration : Declaration
 /// FQN = fully qualified name
 alias Token*[] ModuleFQN; // Identifier ("." Identifier)*
 
-class ModuleDeclaration : Declaration
+class ModuleDecl : Declaration
 {
   Token* typeIdent;
   Token* moduleName;
@@ -115,7 +115,7 @@ class ModuleDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class ImportDeclaration : Declaration
+class ImportDecl : Declaration
 {
   private alias Token*[] Ids;
   ModuleFQN[] moduleFQNs;
@@ -152,7 +152,7 @@ class ImportDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class AliasDeclaration : Declaration
+class AliasDecl : Declaration
 {
   Declaration decl;
   /// Shortcut that skips any attributes inbetween.
@@ -168,7 +168,7 @@ class AliasDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class AliasThisDeclaration : Declaration
+class AliasThisDecl : Declaration
 {
   Token* ident;
   this(Token* ident)
@@ -179,7 +179,7 @@ class AliasThisDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class TypedefDeclaration : Declaration
+class TypedefDecl : Declaration
 {
   Declaration decl;
   Declaration vardecl;
@@ -192,12 +192,12 @@ class TypedefDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class EnumDeclaration : Declaration
+class EnumDecl : Declaration
 {
   Token* name;
   TypeNode baseType;
-  EnumMemberDeclaration[] members;
-  this(Token* name, TypeNode baseType, EnumMemberDeclaration[] members, bool hasBody)
+  EnumMemberDecl[] members;
+  this(Token* name, TypeNode baseType, EnumMemberDecl[] members, bool hasBody)
   {
     super.hasBody = hasBody;
     mixin(set_kind);
@@ -220,7 +220,7 @@ class EnumDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class EnumMemberDeclaration : Declaration
+class EnumMemberDecl : Declaration
 {
   TypeNode type; // D 2.0
   Token* name;
@@ -253,16 +253,16 @@ class EnumMemberDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class TemplateDeclaration : Declaration
+class TemplateDecl : Declaration
 {
   Token* name;
   TemplateParameters tparams;
   Expression constraint; // D 2.0
-  CompoundDeclaration decls;
+  CompoundDecl decls;
   bool isMixin; /// Is this a mixin template? (D2 feature.)
 
   this(Token* name, TemplateParameters tparams, Expression constraint,
-       CompoundDeclaration decls)
+       CompoundDecl decls)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -295,14 +295,14 @@ class TemplateDeclaration : Declaration
 }
 
 // Note: tparams is commented out because the Parser wraps declarations
-//       with template parameters inside a TemplateDeclaration.
+//       with template parameters inside a TemplateDecl.
 
-abstract class AggregateDeclaration : Declaration
+abstract class AggregateDecl : Declaration
 {
   Token* name;
 //   TemplateParameters tparams;
-  CompoundDeclaration decls;
-  this(Token* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
+  CompoundDecl decls;
+  this(Token* name, /+TemplateParameters tparams, +/CompoundDecl decls)
   {
     super.hasBody = decls !is null;
     this.name = name;
@@ -317,10 +317,10 @@ abstract class AggregateDeclaration : Declaration
   }
 }
 
-class ClassDeclaration : AggregateDeclaration
+class ClassDecl : AggregateDecl
 {
   BaseClassType[] bases;
-  this(Token* name, /+TemplateParameters tparams, +/BaseClassType[] bases, CompoundDeclaration decls)
+  this(Token* name, /+TemplateParameters tparams, +/BaseClassType[] bases, CompoundDecl decls)
   {
     super(name, /+tparams, +/decls);
     mixin(set_kind);
@@ -336,10 +336,10 @@ class ClassDeclaration : AggregateDeclaration
   mixin(copyMethod);
 }
 
-class InterfaceDeclaration : AggregateDeclaration
+class InterfaceDecl : AggregateDecl
 {
   BaseClassType[] bases;
-  this(Token* name, /+TemplateParameters tparams, +/BaseClassType[] bases, CompoundDeclaration decls)
+  this(Token* name, /+TemplateParameters tparams, +/BaseClassType[] bases, CompoundDecl decls)
   {
     super(name, /+tparams, +/decls);
     mixin(set_kind);
@@ -357,10 +357,10 @@ class InterfaceDeclaration : AggregateDeclaration
   mixin(copyMethod);
 }
 
-class StructDeclaration : AggregateDeclaration
+class StructDecl : AggregateDecl
 {
   uint alignSize;
-  this(Token* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
+  this(Token* name, /+TemplateParameters tparams, +/CompoundDecl decls)
   {
     super(name, /+tparams, +/decls);
     mixin(set_kind);
@@ -378,9 +378,9 @@ class StructDeclaration : AggregateDeclaration
   mixin(copyMethod);
 }
 
-class UnionDeclaration : AggregateDeclaration
+class UnionDecl : AggregateDecl
 {
-  this(Token* name, /+TemplateParameters tparams, +/CompoundDeclaration decls)
+  this(Token* name, /+TemplateParameters tparams, +/CompoundDecl decls)
   {
     super(name, /+tparams, +/decls);
     mixin(set_kind);
@@ -393,7 +393,7 @@ class UnionDeclaration : AggregateDeclaration
   mixin(copyMethod);
 }
 
-class ConstructorDeclaration : Declaration
+class ConstructorDecl : Declaration
 {
   Parameters params;
   FuncBodyStatement funcBody;
@@ -410,7 +410,7 @@ class ConstructorDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class StaticConstructorDeclaration : Declaration
+class StaticCtorDecl : Declaration
 {
   FuncBodyStatement funcBody;
   this(FuncBodyStatement funcBody)
@@ -424,7 +424,7 @@ class StaticConstructorDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class DestructorDeclaration : Declaration
+class DestructorDecl : Declaration
 {
   FuncBodyStatement funcBody;
   this(FuncBodyStatement funcBody)
@@ -438,7 +438,7 @@ class DestructorDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class StaticDestructorDeclaration : Declaration
+class StaticDtorDecl : Declaration
 {
   FuncBodyStatement funcBody;
   this(FuncBodyStatement funcBody)
@@ -452,7 +452,7 @@ class StaticDestructorDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class FunctionDeclaration : Declaration
+class FunctionDecl : Declaration
 {
   TypeNode returnType;
   Token* name;
@@ -499,9 +499,9 @@ class FunctionDeclaration : Declaration
   mixin(copyMethod);
 }
 
-/// $(BNF VariablesDeclaration :=
+/// $(BNF VariablesDecl :=
 ///  Type? Identifier ("=" Init)? ("," Identifier ("=" Init)?)* ";")
-class VariablesDeclaration : Declaration
+class VariablesDecl : Declaration
 {
   TypeNode typeNode;
   Token*[] names;
@@ -510,7 +510,7 @@ class VariablesDeclaration : Declaration
   {
     // No empty arrays allowed. Both arrays must be of same size.
     assert(names.length != 0 && names.length == inits.length);
-    // If no type (in case of AutoDeclaration), first value mustn't be null.
+    // If no type (in case of AutoDecl), first value mustn't be null.
     assert(typeNode ? 1 : inits[0] !is null);
     mixin(set_kind);
     addOptChild(typeNode);
@@ -551,7 +551,7 @@ class VariablesDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class InvariantDeclaration : Declaration
+class InvariantDecl : Declaration
 {
   FuncBodyStatement funcBody;
   this(FuncBodyStatement funcBody)
@@ -565,7 +565,7 @@ class InvariantDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class UnittestDeclaration : Declaration
+class UnittestDecl : Declaration
 {
   FuncBodyStatement funcBody;
   this(FuncBodyStatement funcBody)
@@ -579,7 +579,7 @@ class UnittestDeclaration : Declaration
   mixin(copyMethod);
 }
 
-abstract class ConditionalCompilationDeclaration : Declaration
+abstract class ConditionalCompilationDecl : Declaration
 {
   Token* spec;
   Token* cond;
@@ -611,7 +611,7 @@ abstract class ConditionalCompilationDeclaration : Declaration
   Declaration compiledDecls;
 }
 
-class DebugDeclaration : ConditionalCompilationDeclaration
+class DebugDecl : ConditionalCompilationDecl
 {
   this(Token* spec, Token* cond, Declaration decls, Declaration elseDecls)
   {
@@ -621,7 +621,7 @@ class DebugDeclaration : ConditionalCompilationDeclaration
   mixin(copyMethod);
 }
 
-class VersionDeclaration : ConditionalCompilationDeclaration
+class VersionDecl : ConditionalCompilationDecl
 {
   this(Token* spec, Token* cond, Declaration decls, Declaration elseDecls)
   {
@@ -631,7 +631,7 @@ class VersionDeclaration : ConditionalCompilationDeclaration
   mixin(copyMethod);
 }
 
-class StaticIfDeclaration : Declaration
+class StaticIfDecl : Declaration
 {
   Expression condition;
   Declaration ifDecls, elseDecls;
@@ -650,7 +650,7 @@ class StaticIfDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class StaticAssertDeclaration : Declaration
+class StaticAssertDecl : Declaration
 {
   Expression condition, message;
   this(Expression condition, Expression message)
@@ -666,7 +666,7 @@ class StaticAssertDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class NewDeclaration : Declaration
+class NewDecl : Declaration
 {
   Parameters params;
   FuncBodyStatement funcBody;
@@ -683,7 +683,7 @@ class NewDeclaration : Declaration
   mixin(copyMethod);
 }
 
-class DeleteDeclaration : Declaration
+class DeleteDecl : Declaration
 {
   Parameters params;
   FuncBodyStatement funcBody;
@@ -700,7 +700,7 @@ class DeleteDeclaration : Declaration
   mixin(copyMethod);
 }
 
-abstract class AttributeDeclaration : Declaration
+abstract class AttributeDecl : Declaration
 {
   Declaration decls;
   this(Declaration decls)
@@ -720,7 +720,7 @@ abstract class AttributeDeclaration : Declaration
   }
 }
 
-class ProtectionDeclaration : AttributeDeclaration
+class ProtectionDecl : AttributeDecl
 {
   Protection prot;
   this(Protection prot, Declaration decls)
@@ -732,7 +732,7 @@ class ProtectionDeclaration : AttributeDeclaration
   mixin(copyMethod);
 }
 
-class StorageClassDeclaration : AttributeDeclaration
+class StorageClassDecl : AttributeDecl
 {
   StorageClass stcs;
   this(StorageClass stcs, Declaration decls)
@@ -745,7 +745,7 @@ class StorageClassDeclaration : AttributeDeclaration
   mixin(copyMethod);
 }
 
-class LinkageDeclaration : AttributeDeclaration
+class LinkageDecl : AttributeDecl
 {
   LinkageType linkageType;
   this(LinkageType linkageType, Declaration decls)
@@ -758,7 +758,7 @@ class LinkageDeclaration : AttributeDeclaration
   mixin(copyMethod);
 }
 
-class AlignDeclaration : AttributeDeclaration
+class AlignDecl : AttributeDecl
 {
   int size;
   Token* sizetok;
@@ -772,7 +772,7 @@ class AlignDeclaration : AttributeDeclaration
   mixin(copyMethod);
 }
 
-class PragmaDeclaration : AttributeDeclaration
+class PragmaDecl : AttributeDecl
 {
   Token* idtok;
   Expression[] args;
@@ -795,7 +795,7 @@ class PragmaDeclaration : AttributeDeclaration
   mixin(copyMethod);
 }
 
-class MixinDeclaration : Declaration
+class MixinDecl : Declaration
 {
   /// IdExpression := IdentifierExpression | TemplateInstanceExpression
   /// MixinTemplate := IdExpression ("." IdExpression)*

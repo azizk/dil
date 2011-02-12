@@ -507,7 +507,7 @@ int rfind(char[] subject, char object)
 }
 
 /// Returns the short class name of a class descending from Node.$(BR)
-/// E.g.: dil.ast.Declarations.ClassDeclaration -> Class
+/// E.g.: dil.ast.Declarations.ClassDecl -> Class
 char[] getShortClassName(Node node)
 {
   static char[][] name_table;
@@ -526,7 +526,7 @@ char[] getShortClassName(Node node)
   {
   alias NodeCategory NC;
   case NC.Declaration:
-    suffixLength = "Declaration".length;
+    suffixLength = "Decl".length;
     break;
   case NC.Statement:
     suffixLength = "Statement".length;

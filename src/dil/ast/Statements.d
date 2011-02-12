@@ -132,7 +132,7 @@ class DeclarationStatement : Statement
 
 class IfStatement : Statement
 {
-  Statement variable; // AutoDeclaration or VariableDeclaration
+  Statement variable; // AutoDecl or VariableDecl
   Expression condition;
   Statement ifBody;
   Statement elseBody;

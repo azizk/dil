@@ -60,7 +60,7 @@ private string createCode(NodeKind nodeKind)
 ///
 /// E.g.:
 /// ---
-/// override returnType!(ClassDeclaration) visit(ClassDeclaration n)
+/// override returnType!(ClassDecl) visit(ClassDecl n)
 /// { /* Code that visits the subnodes... */ return n; }
 /// ---
 string generateDefaultVisitMethods()

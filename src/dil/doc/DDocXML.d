@@ -24,7 +24,7 @@ class DDocXMLEmitter : DDocEmitter
   }
 
 override:
-  void visit(FunctionDeclaration d)
+  void visit(FunctionDecl d)
   {
     if (!ddoc(d))
       return;
@@ -41,7 +41,7 @@ override:
     DESC();
   }
 
-  void visit(VariablesDeclaration d)
+  void visit(VariablesDecl d)
   {
     if (!ddoc(d))
       return;

@@ -32,7 +32,7 @@ class Parser
   Diagnostics diag;     /// Collects error messages.
   ParserError[] errors; /// Array of parser error messages.
 
-  ImportDeclaration[] imports; /// ImportDeclarations in the source text.
+  ImportDecl[] imports; /// ImportDeclarations in the source text.
 
   /// Attributes are evaluated in the parsing phase.
   /// TODO: will be removed. SemanticPass1 takes care of attributes.
@@ -74,13 +74,13 @@ class Parser
   }
 
   /// Start the parser and return the parsed Declarations.
-  CompoundDeclaration start()
+  CompoundDecl start()
   {
     init();
     auto begin = token;
-    auto decls = new CompoundDeclaration;
+    auto decls = new CompoundDecl;
     if (token.kind == T.Module)
-      decls ~= parseModuleDeclaration();
+      decls ~= parseModuleDecl();
     decls.addOptChildren(parseDeclarationDefinitions());
     set(decls, begin);
     return decls;
@@ -206,7 +206,7 @@ class Parser
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   /// $(BNF ModuleDeclaration := module Identifier ("." Identifier)* ";")
-  Declaration parseModuleDeclaration()
+  Declaration parseModuleDecl()
   {
     auto begin = token;
     skip(T.Module);
@@ -228,7 +228,7 @@ class Parser
       moduleFQN ~= requireIdentifier(MSG.ExpectedModuleIdentifier);
     while (consumed(T.Dot))
     require2(T.Semicolon);
-    return set(new ModuleDeclaration(typeId, moduleFQN), begin);
+    return set(new ModuleDecl(typeId, moduleFQN), begin);
   }
 
   /// Parses DeclarationDefinitions until the end of file is hit.
@@ -243,7 +243,7 @@ class Parser
 
   /// Parse the body of a template, class, interface, struct or union.
   /// $(BNF DeclDefsBlock := "{" DeclDefs? "}" )
-  CompoundDeclaration parseDeclarationDefinitionsBody()
+  CompoundDecl parseDeclarationDefinitionsBody()
   {
     // Save attributes.
     auto linkageType  = this.linkageType;
@@ -256,7 +256,7 @@ class Parser
 
     // Parse body.
     auto begin = token;
-    auto decls = new CompoundDeclaration;
+    auto decls = new CompoundDecl;
     require(T.LBrace);
     while (token.kind != T.RBrace && token.kind != T.EOF)
       decls ~= parseDeclarationDefinition();
@@ -323,14 +323,14 @@ class Parser
         skip(T.Identifier);
         skip(T.This);
         require2(T.Semicolon);
-        decl = new AliasThisDeclaration(ident);
+        decl = new AliasThisDecl(ident);
         break;
       }
       } // version(D2)
 
-      auto ad = new AliasDeclaration(parseAttributes(&decl));
+      auto ad = new AliasDecl(parseAttributes(&decl));
       ad.vardecl = decl;
-      if (auto var = decl.Is!(VariablesDeclaration))
+      if (auto var = decl.Is!(VariablesDecl))
       {
         if (auto init = var.firstInit())
           error(init.begin.prevNWS(), MSG.AliasHasInitializer);
@@ -341,9 +341,9 @@ class Parser
       break;
     case T.Typedef:
       nT();
-      auto td = new TypedefDeclaration(parseAttributes(&decl));
+      auto td = new TypedefDecl(parseAttributes(&decl));
       td.vardecl = decl;
-      if (!decl.Is!(VariablesDeclaration))
+      if (!decl.Is!(VariablesDecl))
         error2(MSG.TypedefExpectsVariable, decl.begin);
       decl = td;
       break;
@@ -353,16 +353,16 @@ class Parser
       case T.Import:
         goto case_Import;
       case T.This:
-        decl = parseStaticConstructorDeclaration();
+        decl = parseStaticCtorDecl();
         break;
       case T.Tilde:
-        decl = parseStaticDestructorDeclaration();
+        decl = parseStaticDtorDecl();
         break;
       case T.If:
-        decl = parseStaticIfDeclaration();
+        decl = parseStaticIfDecl();
         break;
       case T.Assert:
-        decl = parseStaticAssertDeclaration();
+        decl = parseStaticAssertDecl();
         break;
       default:
         goto case_parseAttributes;
@@ -370,7 +370,7 @@ class Parser
       break;
     case T.Import:
     case_Import:
-      auto importDecl = parseImportDeclaration();
+      auto importDecl = parseImportDecl();
       imports ~= importDecl;
       // Handle specially. StorageClass mustn't be set.
       importDecl.setProtection(this.protection);
@@ -379,22 +379,22 @@ class Parser
       version(D2)
       if (isEnumManifest())
         goto case_parseAttributes;
-      decl = parseEnumDeclaration();
+      decl = parseEnumDecl();
       break;
     case T.Class:
-      decl = parseClassDeclaration();
+      decl = parseClassDecl();
       break;
     case T.Interface:
-      decl = parseInterfaceDeclaration();
+      decl = parseInterfaceDecl();
       break;
     case T.Struct, T.Union:
-      decl = parseStructOrUnionDeclaration();
+      decl = parseStructOrUnionDecl();
       break;
     case T.This:
-      decl = parseConstructorDeclaration();
+      decl = parseConstructorDecl();
       break;
     case T.Tilde:
-      decl = parseDestructorDeclaration();
+      decl = parseDestructorDecl();
       break;
     version(D2)
     {
@@ -409,32 +409,32 @@ class Parser
       goto case_parseAttributes;
     }
     case T.Invariant:
-      decl = parseInvariantDeclaration(); // invariant "(" ")"
+      decl = parseInvariantDecl(); // invariant "(" ")"
       break;
     case T.Unittest:
-      decl = parseUnittestDeclaration();
+      decl = parseUnittestDecl();
       break;
     case T.Debug:
-      decl = parseDebugDeclaration();
+      decl = parseDebugDecl();
       break;
     case T.Version:
-      decl = parseVersionDeclaration();
+      decl = parseVersionDecl();
       break;
     case T.Template:
-      decl = parseTemplateDeclaration();
+      decl = parseTemplateDecl();
       break;
     case T.New:
-      decl = parseNewDeclaration();
+      decl = parseNewDecl();
       break;
     case T.Delete:
-      decl = parseDeleteDeclaration();
+      decl = parseDeleteDecl();
       break;
     case T.Mixin:
-      decl = parseMixin!(MixinDeclaration, Declaration)();
+      decl = parseMixin!(MixinDecl, Declaration)();
       break;
     case T.Semicolon:
       nT();
-      decl = new EmptyDeclaration();
+      decl = new EmptyDecl();
       break;
     // Declaration
     case T.Identifier, T.Dot, T.Typeof:
@@ -446,12 +446,12 @@ class Parser
         goto case_Declaration;
       else if (token.kind == T.Module)
       {
-        decl = parseModuleDeclaration();
+        decl = parseModuleDecl();
         error(begin, MSG.ModuleDeclarationNotFirst);
         return decl;
       }
 
-      decl = new IllegalDeclaration();
+      decl = new IllegalDecl();
       // Skip to next valid token.
       do
         nT();
@@ -478,7 +478,7 @@ class Parser
     case T.LBrace:
       auto begin = token;
       nT();
-      auto decls = new CompoundDeclaration;
+      auto decls = new CompoundDecl;
       while (token.kind != T.RBrace && token.kind != T.EOF)
         decls ~= parseDeclarationDefinition();
       requireClosing(T.RBrace, begin);
@@ -489,7 +489,7 @@ class Parser
       //   goto default;
       nT();
       auto begin = token;
-      auto decls = new CompoundDeclaration;
+      auto decls = new CompoundDecl;
       while (token.kind != T.RBrace && token.kind != T.EOF)
         decls ~= parseDeclarationDefinition();
       d = set(decls, begin);
@@ -641,7 +641,7 @@ class Parser
 
       // FunctionBody
       auto funcBody = parseFunctionBody();
-      auto fd = new FunctionDeclaration(type, name, params, funcBody);
+      auto fd = new FunctionDecl(type, name, params, funcBody);
       Declaration decl = fd;
       if (tparams)
       {
@@ -676,7 +676,7 @@ class Parser
         values ~= null;
     }
     require2(T.Semicolon);
-    auto d = new VariablesDeclaration(type, names, values);
+    auto d = new VariablesDecl(type, names, values);
     d.setStorageClass(stcs);
     d.setLinkageType(linkType);
     d.setProtection(protection);
@@ -960,12 +960,12 @@ class Parser
     bool testAutoDecl; // Test for: auto Identifier "=" Expression
 
     // Allocate dummy declarations.
-    scope emptyDecl = new EmptyDeclaration();
+    scope emptyDecl = new EmptyDecl();
     // Function as the head of the attribute chain.
-    scope AttributeDeclaration headAttr =
-      new StorageClassDeclaration(StorageClass.None, emptyDecl);
+    scope AttributeDecl headAttr =
+      new StorageClassDecl(StorageClass.None, emptyDecl);
 
-    AttributeDeclaration currentAttr = headAttr, prevAttr = headAttr;
+    AttributeDecl currentAttr = headAttr, prevAttr = headAttr;
 
     // Parse the attributes.
   Loop:
@@ -981,7 +981,7 @@ class Parser
           goto Lcommon;
         }
         checkLinkageType(linkageType, parseExternLinkageType(), begin);
-        currentAttr = new LinkageDeclaration(linkageType, emptyDecl);
+        currentAttr = new LinkageDecl(linkageType, emptyDecl);
         testAutoDecl = false;
         break;
       case T.Override:
@@ -1059,7 +1059,7 @@ class Parser
         stcs |= stc;
 
         nT();
-        currentAttr = new StorageClassDeclaration(stc, emptyDecl);
+        currentAttr = new StorageClassDecl(stc, emptyDecl);
         testAutoDecl = true;
         break;
 
@@ -1085,7 +1085,7 @@ class Parser
           error2(MSG.RedundantProtection, token);
         protection = prot;
         nT();
-        currentAttr = new ProtectionDeclaration(prot, emptyDecl);
+        currentAttr = new ProtectionDecl(prot, emptyDecl);
         testAutoDecl = false;
         break;
       case T.Align:
@@ -1093,7 +1093,7 @@ class Parser
         Token* sizetok;
         alignSize = parseAlignAttribute(sizetok);
         // TODO: error msg for redundant align attributes.
-        currentAttr = new AlignDeclaration(sizetok, emptyDecl);
+        currentAttr = new AlignDecl(sizetok, emptyDecl);
         testAutoDecl = false;
         break;
       case T.Pragma:
@@ -1107,7 +1107,7 @@ class Parser
         auto args = consumed(T.Comma) ? parseExpressionList() : null;
         requireClosing(T.RParen, leftParen);
 
-        currentAttr = new PragmaDeclaration(ident, args, emptyDecl);
+        currentAttr = new PragmaDecl(ident, args, emptyDecl);
         testAutoDecl = false;
         break;
       default:
@@ -1207,7 +1207,7 @@ class Parser
   ////ModuleName := Identifier ("." Identifier)*
   ////AliasName := Identifier
   ////BindName := Identifier)
-  ImportDeclaration parseImportDeclaration()
+  ImportDecl parseImportDecl()
   {
     bool isStatic = consumed(T.Static);
     skip(T.Import);
@@ -1255,7 +1255,7 @@ class Parser
     }
     require2(T.Semicolon);
 
-    return new ImportDeclaration(moduleFQNs, moduleAliases, bindNames,
+    return new ImportDecl(moduleFQNs, moduleAliases, bindNames,
                                  bindAliases, isStatic);
   }
 
@@ -1288,13 +1288,13 @@ class Parser
   ////EnumMembers := EnumMember ("," EnumMember)* ","?
   ////EnumMembers2 := Type? EnumMember ("," Type? EnumMember)* ","? # D2.0
   ////EnumMember := Name ("=" AssignExpression)?)
-  Declaration parseEnumDeclaration()
+  Declaration parseEnumDecl()
   {
     skip(T.Enum);
 
     Token* enumName;
     Type baseType;
-    EnumMemberDeclaration[] members;
+    EnumMemberDecl[] members;
     bool hasBody;
 
     enumName = optionalIdentifier();
@@ -1327,7 +1327,7 @@ class Parser
         if (consumed(T.Assign))
           value = parseAssignExpression();
 
-        auto member = new EnumMemberDeclaration(type, name, value);
+        auto member = new EnumMemberDecl(type, name, value);
         members ~= set(member, begin);
 
         if (!consumed(T.Comma))
@@ -1338,7 +1338,7 @@ class Parser
     else
       error2(MSG.ExpectedEnumBody, token);
 
-    return new EnumDeclaration(enumName, baseType, members, hasBody);
+    return new EnumDecl(enumName, baseType, members, hasBody);
   }
 
   /// Wraps a declaration inside a template declaration.
@@ -1348,7 +1348,7 @@ class Parser
   ///   decl = The declaration to be wrapped.
   ///   tparams = The template parameters.
   ///   constraint = The constraint expression.
-  TemplateDeclaration putInsideTemplateDeclaration(
+  TemplateDecl putInsideTemplateDeclaration(
     Token* begin,
     Token* name,
     Declaration decl,
@@ -1356,19 +1356,19 @@ class Parser
     Expression constraint)
   {
     set(decl, begin);
-    auto cd = new CompoundDeclaration;
+    auto cd = new CompoundDecl;
     cd ~= decl;
     set(cd, begin);
     decl.setStorageClass(this.storageClass);
     decl.setProtection(this.protection);
-    return new TemplateDeclaration(name, tparams, constraint, cd);
+    return new TemplateDecl(name, tparams, constraint, cd);
   }
 
   /// $(BNF ClassDeclaration :=
   ////  class Name TemplateParameterList? (":" BaseClasses) ClassBody |
   ////  class Name ";"
   ////ClassBody := DeclarationDefinitionsBody)
-  Declaration parseClassDeclaration()
+  Declaration parseClassDecl()
   {
     auto begin = token;
     skip(T.Class);
@@ -1377,7 +1377,7 @@ class Parser
     TemplateParameters tparams;
     Expression constraint;
     BaseClassType[] bases;
-    CompoundDeclaration decls;
+    CompoundDecl decls;
 
     name = requireIdentifier(MSG.ExpectedClassName);
 
@@ -1397,7 +1397,7 @@ class Parser
     else
       error2(MSG.ExpectedClassBody, token);
 
-    Declaration d = new ClassDeclaration(name, /+tparams, +/bases, decls);
+    Declaration d = new ClassDecl(name, /+tparams, +/bases, decls);
     if (tparams)
       d = putInsideTemplateDeclaration(begin, name, d, tparams, constraint);
     return d;
@@ -1436,7 +1436,7 @@ class Parser
   ////  interface Name TemplateParameterList? (":" BaseClasses) InterfaceBody |
   ////  interface Name ";"
   ////InterfaceBody := DeclarationDefinitionsBody)
-  Declaration parseInterfaceDeclaration()
+  Declaration parseInterfaceDecl()
   {
     auto begin = token;
     skip(T.Interface);
@@ -1445,7 +1445,7 @@ class Parser
     TemplateParameters tparams;
     Expression constraint;
     BaseClassType[] bases;
-    CompoundDeclaration decls;
+    CompoundDecl decls;
 
     name = requireIdentifier(MSG.ExpectedInterfaceName);
 
@@ -1465,7 +1465,7 @@ class Parser
     else
       error2(MSG.ExpectedInterfaceBody, token);
 
-    Declaration d = new InterfaceDeclaration(name, bases, decls);
+    Declaration d = new InterfaceDecl(name, bases, decls);
     if (tparams)
       d = putInsideTemplateDeclaration(begin, name, d, tparams, constraint);
     return d;
@@ -1479,7 +1479,7 @@ class Parser
   ////  union Name? TemplateParameterList? UnionBody |
   ////  union Name ";"
   ////UnionBody := DeclarationDefinitionsBody)
-  Declaration parseStructOrUnionDeclaration()
+  Declaration parseStructOrUnionDecl()
   {
     assert(token.kind == T.Struct || token.kind == T.Union);
     auto begin = token;
@@ -1488,7 +1488,7 @@ class Parser
     Token* name;
     TemplateParameters tparams;
     Expression constraint;
-    CompoundDeclaration decls;
+    CompoundDecl decls;
 
     name = optionalIdentifier();
 
@@ -1510,12 +1510,12 @@ class Parser
     Declaration d;
     if (begin.kind == T.Struct)
     {
-      auto sd = new StructDeclaration(name, /+tparams, +/decls);
+      auto sd = new StructDecl(name, /+tparams, +/decls);
       sd.setAlignSize(this.alignSize);
       d = sd;
     }
     else
-      d = new UnionDeclaration(name, /+tparams, +/decls);
+      d = new UnionDecl(name, /+tparams, +/decls);
 
     if (tparams)
       d = putInsideTemplateDeclaration(begin, name, d, tparams, constraint);
@@ -1523,7 +1523,7 @@ class Parser
   }
 
   /// $(BNF ConstructorDeclaration := this ParameterList FunctionBody)
-  Declaration parseConstructorDeclaration()
+  Declaration parseConstructorDecl()
   {
     version(D2)
     {
@@ -1543,7 +1543,7 @@ class Parser
     if (tparams) // if "(" ConstraintExpression ")"
       constraint = parseOptionalConstraint();
     auto funcBody = parseFunctionBody();
-    Declaration d = new ConstructorDeclaration(parameters, funcBody);
+    Declaration d = new ConstructorDecl(parameters, funcBody);
     if (tparams)
       d = putInsideTemplateDeclaration(begin, begin, d, tparams, constraint);
     return d;
@@ -1553,35 +1553,35 @@ class Parser
     skip(T.This);
     auto parameters = parseParameterList();
     auto funcBody = parseFunctionBody();
-    return new ConstructorDeclaration(parameters, funcBody);
+    return new ConstructorDecl(parameters, funcBody);
     }
   }
 
-  /// $(BNF DestructorDeclaration := "~" this "(" ")" FunctionBody)
-  Declaration parseDestructorDeclaration()
+  /// $(BNF DestructorDecl := "~" this "(" ")" FunctionBody)
+  Declaration parseDestructorDecl()
   {
     skip(T.Tilde);
     require2(T.This);
     require2(T.LParen);
     require2(T.RParen);
     auto funcBody = parseFunctionBody();
-    return new DestructorDeclaration(funcBody);
+    return new DestructorDecl(funcBody);
   }
 
-  /// $(BNF StaticConstructorDeclaration := static this "(" ")" FunctionBody)
-  Declaration parseStaticConstructorDeclaration()
+  /// $(BNF StaticCtorDecl := static this "(" ")" FunctionBody)
+  Declaration parseStaticCtorDecl()
   {
     skip(T.Static);
     skip(T.This);
     require2(T.LParen);
     require2(T.RParen);
     auto funcBody = parseFunctionBody();
-    return new StaticConstructorDeclaration(funcBody);
+    return new StaticCtorDecl(funcBody);
   }
 
   /// $(BNF
-  ////StaticDestructorDeclaration := static "~" this "(" ")" FunctionBody)
-  Declaration parseStaticDestructorDeclaration()
+  ////StaticDtorDecl := static "~" this "(" ")" FunctionBody)
+  Declaration parseStaticDtorDecl()
   {
     skip(T.Static);
     skip(T.Tilde);
@@ -1589,26 +1589,26 @@ class Parser
     require2(T.LParen);
     require2(T.RParen);
     auto funcBody = parseFunctionBody();
-    return new StaticDestructorDeclaration(funcBody);
+    return new StaticDtorDecl(funcBody);
   }
 
   /// $(BNF InvariantDeclaration := invariant ("(" ")")? FunctionBody)
-  Declaration parseInvariantDeclaration()
+  Declaration parseInvariantDecl()
   {
     skip(T.Invariant);
     // Optional () for getting ready porting to D 2.0
     if (consumed(T.LParen))
       require2(T.RParen);
     auto funcBody = parseFunctionBody();
-    return new InvariantDeclaration(funcBody);
+    return new InvariantDecl(funcBody);
   }
 
   /// $(BNF UnittestDeclaration := unittest FunctionBody)
-  Declaration parseUnittestDeclaration()
+  Declaration parseUnittestDecl()
   {
     skip(T.Unittest);
     auto funcBody = parseFunctionBody();
-    return new UnittestDeclaration(funcBody);
+    return new UnittestDecl(funcBody);
   }
 
   /// Parses an identifier or an integer. Reports an error otherwise.
@@ -1634,7 +1634,7 @@ class Parser
   ////                    debug Condition? DeclarationsBlock
   ////                    (else DeclarationsBlock)?
   ////Condition := "(" IdentOrInt ")")
-  Declaration parseDebugDeclaration()
+  Declaration parseDebugDecl()
   {
     skip(T.Debug);
 
@@ -1663,14 +1663,14 @@ class Parser
         elseDecls = parseDeclarationsBlock();
     }
 
-    return new DebugDeclaration(spec, cond, decls, elseDecls);
+    return new DebugDecl(spec, cond, decls, elseDecls);
   }
 
   /// $(BNF VersionDeclaration := version "=" IdentOrInt ";" |
   ////                      version Condition DeclarationsBlock
   ////                      (else DeclarationsBlock)?
   ////Condition := "(" IdentOrInt ")")
-  Declaration parseVersionDeclaration()
+  Declaration parseVersionDecl()
   {
     skip(T.Version);
 
@@ -1696,13 +1696,13 @@ class Parser
         elseDecls = parseDeclarationsBlock();
     }
 
-    return new VersionDeclaration(spec, cond, decls, elseDecls);
+    return new VersionDecl(spec, cond, decls, elseDecls);
   }
 
   /// $(BNF StaticIfDeclaration :=
   ////  static if "(" AssignExpression ")" DeclarationsBlock
   ////  (else DeclarationsBlock)?)
-  Declaration parseStaticIfDeclaration()
+  Declaration parseStaticIfDecl()
   {
     skip(T.Static);
     skip(T.If);
@@ -1720,13 +1720,13 @@ class Parser
     if (consumed(T.Else))
       elseDecls = parseDeclarationsBlock();
 
-    return new StaticIfDeclaration(condition, ifDecls, elseDecls);
+    return new StaticIfDecl(condition, ifDecls, elseDecls);
   }
 
   /// $(BNF StaticAsserDeclaration :=
   ////  static assert "(" AssignExpression ("," Message)? ")" ";"
   ////Message := AssignExpression)
-  Declaration parseStaticAssertDeclaration()
+  Declaration parseStaticAssertDecl()
   {
     skip(T.Static);
     skip(T.Assert);
@@ -1738,38 +1738,38 @@ class Parser
       message = parseAssignExpression();
     requireClosing(T.RParen, leftParen);
     require2(T.Semicolon);
-    return new StaticAssertDeclaration(condition, message);
+    return new StaticAssertDecl(condition, message);
   }
 
   /// $(BNF TemplateDeclaration :=
   ////  template Name TemplateParameterList Constraint?
   ////  DeclarationDefinitionsBody)
-  TemplateDeclaration parseTemplateDeclaration()
+  TemplateDecl parseTemplateDecl()
   {
     skip(T.Template);
     auto name = requireIdentifier(MSG.ExpectedTemplateName);
     auto tparams = parseTemplateParameterList();
     auto constraint = parseOptionalConstraint();
     auto decls = parseDeclarationDefinitionsBody();
-    return new TemplateDeclaration(name, tparams, constraint, decls);
+    return new TemplateDecl(name, tparams, constraint, decls);
   }
 
   /// $(BNF NewDeclaration := new ParameterList FunctionBody)
-  Declaration parseNewDeclaration()
+  Declaration parseNewDecl()
   {
     skip(T.New);
     auto parameters = parseParameterList();
     auto funcBody = parseFunctionBody();
-    return new NewDeclaration(parameters, funcBody);
+    return new NewDecl(parameters, funcBody);
   }
 
   /// $(BNF DeleteDeclaration := delete ParameterList FunctionBody)
-  Declaration parseDeleteDeclaration()
+  Declaration parseDeleteDecl()
   {
     skip(T.Delete);
     auto parameters = parseParameterList();
     auto funcBody = parseFunctionBody();
-    return new DeleteDeclaration(parameters, funcBody);
+    return new DeleteDecl(parameters, funcBody);
   }
 
   /// $(BNF TypeofType := typeof "(" Expression ")" | TypeofReturn
@@ -1807,11 +1807,11 @@ class Parser
   ////MixinTemplate := mixin TemplateDeclaration # D2
   RetT parseMixin(Class, RetT = Class)()
   {
-    static assert(is(Class == MixinDeclaration) ||
+    static assert(is(Class == MixinDecl) ||
       is(Class == MixinStatement));
     skip(T.Mixin);
 
-    static if (is(Class == MixinDeclaration))
+    static if (is(Class == MixinDecl))
     {
     if (consumed(T.LParen))
     {
@@ -1819,11 +1819,11 @@ class Parser
       auto e = parseAssignExpression();
       requireClosing(T.RParen, leftParen);
       require2(T.Semicolon);
-      return new MixinDeclaration(e);
+      return new MixinDecl(e);
     }
     else version(D2) if (token.kind == T.Template)
     {
-      auto d = parseTemplateDeclaration();
+      auto d = parseTemplateDecl();
       d.isMixin = true;
       return d;
     } // version(D2)
@@ -1882,19 +1882,19 @@ class Parser
       Token* sizetok;
       uint size = parseAlignAttribute(sizetok);
       // Restrict align attribute to structs in parsing phase.
-      StructDeclaration structDecl;
+      StructDecl structDecl;
       if (token.kind == T.Struct)
       {
         auto begin2 = token;
-        structDecl = parseStructOrUnionDeclaration().to!(StructDeclaration);
+        structDecl = parseStructOrUnionDecl().to!(StructDecl);
         structDecl.setAlignSize(size);
         set(structDecl, begin2);
       }
       else
         expected(T.Struct);
 
-      d = structDecl ? cast(Declaration)structDecl : new CompoundDeclaration;
-      d = new AlignDeclaration(sizetok, d);
+      d = structDecl ? cast(Declaration)structDecl : new CompoundDecl;
+      d = new AlignDecl(sizetok, d);
       goto LreturnDeclarationStatement;
       /+ Not applicable for statements.
          T.Private, T.Package, T.Protected, T.Public, T.Export,
@@ -2028,16 +2028,16 @@ class Parser
       version(D2)
       if (isEnumManifest())
         goto case_parseAttribute;
-      d = parseEnumDeclaration();
+      d = parseEnumDecl();
       goto LreturnDeclarationStatement;
     case T.Class:
-      d = parseClassDeclaration();
+      d = parseClassDecl();
       goto LreturnDeclarationStatement;
     case T.Interface:
-      d = parseInterfaceDeclaration();
+      d = parseInterfaceDecl();
       goto LreturnDeclarationStatement;
     case T.Struct, T.Union:
-      d = parseStructOrUnionDeclaration();
+      d = parseStructOrUnionDecl();
       // goto LreturnDeclarationStatement;
     LreturnDeclarationStatement:
       set(d, begin);
@@ -2158,12 +2158,12 @@ class Parser
     bool testAutoDecl;
 
     // Allocate dummy declarations.
-    scope emptyDecl = new EmptyDeclaration();
+    scope emptyDecl = new EmptyDecl();
     // Function as the head of the attribute chain.
-    scope AttributeDeclaration headAttr =
-      new StorageClassDeclaration(StorageClass.None, emptyDecl);
+    scope AttributeDecl headAttr =
+      new StorageClassDecl(StorageClass.None, emptyDecl);
 
-    AttributeDeclaration currentAttr, prevAttr = headAttr;
+    AttributeDecl currentAttr, prevAttr = headAttr;
 
     // Parse the attributes.
   Loop:
@@ -2179,7 +2179,7 @@ class Parser
           goto Lcommon;
         }
         checkLinkageType(linkageType, parseExternLinkageType(), begin);
-        currentAttr = new LinkageDeclaration(linkageType, emptyDecl);
+        currentAttr = new LinkageDecl(linkageType, emptyDecl);
         testAutoDecl = false;
         break;
       case T.Static:
@@ -2250,7 +2250,7 @@ class Parser
         stcs |= stc;
 
         nT();
-        currentAttr = new StorageClassDeclaration(stc, emptyDecl);
+        currentAttr = new StorageClassDecl(stc, emptyDecl);
         testAutoDecl = true;
         break;
       default:
@@ -2316,9 +2316,9 @@ class Parser
       ident = requireIdentifier(MSG.ExpectedVariableName);
       require(T.Assign);
       auto init = parseExpression();
-      auto v = new VariablesDeclaration(null, [ident], [init]);
+      auto v = new VariablesDecl(null, [ident], [init]);
       set(v, begin.nextNWS);
-      auto d = new StorageClassDeclaration(StorageClass.Auto, v);
+      auto d = new StorageClassDecl(StorageClass.Auto, v);
       set(d, begin);
       variable = new DeclarationStatement(d);
       set(variable, begin);
@@ -2334,7 +2334,7 @@ class Parser
       if (success)
       {
         auto init = parseExpression();
-        auto v = new VariablesDeclaration(type, [ident], [init]);
+        auto v = new VariablesDecl(type, [ident], [init]);
         set(v, begin);
         variable = new DeclarationStatement(v);
         set(variable, begin);

@@ -33,9 +33,9 @@ class Module : ModuleSymbol
   string moduleName; /// E.g.: Node
   uint ID; /// A unique 1-based ID. Useful for graph traversing.
 
-  CompoundDeclaration root; /// The root of the parse tree.
-  ImportDeclaration[] imports; /// ImportDeclarations found in this file.
-  ModuleDeclaration moduleDecl; /// The optional ModuleDeclaration in this file.
+  CompoundDecl root; /// The root of the parse tree.
+  ImportDecl[] imports; /// ImportDeclarations found in this file.
+  ModuleDecl moduleDecl; /// The optional ModuleDecl in this file.
   Parser parser; /// The parser used to parse this file.
 
   /// Indicates which passes have been run on this module.
@@ -113,8 +113,8 @@ class Module : ModuleSymbol
 
     // Set the fully qualified name of this module.
     if (this.root.children.length)
-    { // moduleDecl will be null if first node isn't a ModuleDeclaration.
-      this.moduleDecl = this.root.children[0].Is!(ModuleDeclaration);
+    { // moduleDecl will be null if first node isn't a ModuleDecl.
+      this.moduleDecl = this.root.children[0].Is!(ModuleDecl);
       if (this.moduleDecl)
         this.setFQN(moduleDecl.getFQN()); // E.g.: dil.ast.Node
     }

@@ -69,35 +69,35 @@ class GermanTranslator : DefaultVisitor
     this(T t)
     {
       auto t_save = t;
-      static if (is(T == ClassDeclaration) ||
-                 is(T == InterfaceDeclaration) ||
-                 is(T == StructDeclaration) ||
-                 is(T == UnionDeclaration))
+      static if (is(T == ClassDecl) ||
+                 is(T == InterfaceDecl) ||
+                 is(T == StructDecl) ||
+                 is(T == UnionDecl))
         this.outer.inAggregate = t;
-      static if (is(T == FunctionDeclaration) ||
-                 is(T == ConstructorDeclaration))
+      static if (is(T == FunctionDecl) ||
+                 is(T == ConstructorDecl))
         this.outer.inFunc = t;
     }
 
     ~this()
     {
-      static if (is(T == ClassDeclaration) ||
-                 is(T == InterfaceDeclaration) ||
-                 is(T == StructDeclaration) ||
-                 is(T == UnionDeclaration))
+      static if (is(T == ClassDecl) ||
+                 is(T == InterfaceDecl) ||
+                 is(T == StructDecl) ||
+                 is(T == UnionDecl))
         this.outer.inAggregate = t_save;
-      static if (is(T == FunctionDeclaration) ||
-                 is(T == ConstructorDeclaration))
+      static if (is(T == FunctionDecl) ||
+                 is(T == ConstructorDecl))
         this.outer.inFunc = t_save;
     }
   }
 
-  alias Enter!(ClassDeclaration) EnteredClass;
-  alias Enter!(InterfaceDeclaration) EnteredInterface;
-  alias Enter!(StructDeclaration) EnteredStruct;
-  alias Enter!(UnionDeclaration) EnteredUnion;
-  alias Enter!(FunctionDeclaration) EnteredFunction;
-  alias Enter!(ConstructorDeclaration) EnteredConstructor;
+  alias Enter!(ClassDecl) EnteredClass;
+  alias Enter!(InterfaceDecl) EnteredInterface;
+  alias Enter!(StructDecl) EnteredStruct;
+  alias Enter!(UnionDecl) EnteredUnion;
+  alias Enter!(FunctionDecl) EnteredFunction;
+  alias Enter!(ConstructorDecl) EnteredConstructor;
 
   /// Prints the location of a node: @(lin,col)
   void printLoc(Node node)
@@ -107,7 +107,7 @@ class GermanTranslator : DefaultVisitor
   }
 
 override:
-  D visit(ModuleDeclaration n)
+  D visit(ModuleDecl n)
   {
     printLoc(n);
     put.format("Dies ist das Modul '{}'", n.moduleName.text);
@@ -117,14 +117,14 @@ override:
     return n;
   }
 
-  D visit(ImportDeclaration n)
+  D visit(ImportDecl n)
   {
     printLoc(n);
     put("Importiert Symbole aus einem anderen Modul bzw. Module.").newline;
     return n;
   }
 
-  D visit(ClassDeclaration n)
+  D visit(ClassDecl n)
   {
     printLoc(n);
     scope E = new EnteredClass(n);
@@ -134,7 +134,7 @@ override:
     return n;
   }
 
-  D visit(InterfaceDeclaration n)
+  D visit(InterfaceDecl n)
   {
     printLoc(n);
     scope E = new EnteredInterface(n);
@@ -144,7 +144,7 @@ override:
     return n;
   }
 
-  D visit(StructDeclaration n)
+  D visit(StructDecl n)
   {
     printLoc(n);
     scope E = new EnteredStruct(n);
@@ -154,7 +154,7 @@ override:
     return n;
   }
 
-  D visit(UnionDeclaration n)
+  D visit(UnionDecl n)
   {
     printLoc(n);
     scope E = new EnteredUnion(n);
@@ -164,7 +164,7 @@ override:
     return n;
   }
 
-  D visit(VariablesDeclaration n)
+  D visit(VariablesDecl n)
   {
     printLoc(n);
     char[] was;
@@ -186,7 +186,7 @@ override:
     return n;
   }
 
-  D visit(FunctionDeclaration n)
+  D visit(FunctionDecl n)
   {
     printLoc(n);
     char[] was;
@@ -209,7 +209,7 @@ override:
     return n;
   }
 
-  D visit(ConstructorDeclaration n)
+  D visit(ConstructorDecl n)
   {
     printLoc(n);
     scope E = new EnteredConstructor(n);
@@ -224,35 +224,35 @@ override:
     return n;
   }
 
-  D visit(StaticConstructorDeclaration n)
+  D visit(StaticCtorDecl n)
   {
     printLoc(n);
     put(indent)("Ein statischer Konstruktor.").newline;
     return n;
   }
 
-  D visit(DestructorDeclaration n)
+  D visit(DestructorDecl n)
   {
     printLoc(n);
     put(indent)("Ein Destruktor.").newline;
     return n;
   }
 
-  D visit(StaticDestructorDeclaration n)
+  D visit(StaticDtorDecl n)
   {
     printLoc(n);
     put(indent)("Ein statischer Destruktor.").newline;
     return n;
   }
 
-  D visit(InvariantDeclaration n)
+  D visit(InvariantDecl n)
   {
     printLoc(n);
     put(indent)("Eine Unveränderliche.").newline;
     return n;
   }
 
-  D visit(UnittestDeclaration n)
+  D visit(UnittestDecl n)
   {
     printLoc(n);
     put(indent)("Ein Komponententest.").newline;

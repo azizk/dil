@@ -515,9 +515,9 @@ class NewClassExpression : Expression
   Expression[] newArgs;
   BaseClassType[] bases;
   Expression[] ctorArgs;
-  CompoundDeclaration decls;
+  CompoundDecl decls;
   this(Expression frame, Expression[] newArgs, BaseClassType[] bases,
-    Expression[] ctorArgs, CompoundDeclaration decls)
+    Expression[] ctorArgs, CompoundDecl decls)
   {
     mixin(set_kind);
     addOptChild(frame);

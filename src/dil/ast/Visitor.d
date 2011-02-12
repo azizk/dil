@@ -15,7 +15,7 @@ import common;
 ///
 /// E.g.:
 /// ---
-/// Declaration visit(ClassDeclaration node){return unhandled(node);}
+/// Declaration visit(ClassDecl node){return unhandled(node);}
 /// Expression visit(CommaExpression node){return unhandled(node);}
 /// ---
 char[] generateVisitMethods()

@@ -278,23 +278,23 @@ class PyTreeEmitter : Visitor2
 
 override
 {
-  void visit(CompoundDeclaration d)
+  void visit(CompoundDecl d)
   {
     begin(d);
     write(d.decls);
     end(d);
   }
 
-  void visit(IllegalDeclaration)
+  void visit(IllegalDecl)
   { assert(0); }
 
-  void visit(EmptyDeclaration d)
+  void visit(EmptyDecl d)
   {
     begin(d);
     end(d, false);
   }
 
-  void visit(ModuleDeclaration d)
+  void visit(ModuleDecl d)
   {
     begin(d);
     d.typeIdent ? write(indexOf(d.typeIdent)) : write("n");
@@ -307,7 +307,7 @@ override
     end(d);
   }
 
-  void visit(ImportDeclaration d)
+  void visit(ImportDecl d)
   {
     begin(d);
     write("(");
@@ -331,28 +331,28 @@ override
     end(d);
   }
 
-  void visit(AliasThisDeclaration d)
+  void visit(AliasThisDecl d)
   {
     begin(d);
     write(indexOf(d.ident));
     end(d);
   }
 
-  void visit(AliasDeclaration d)
+  void visit(AliasDecl d)
   {
     begin(d);
     visitD(d.decl);
     end(d);
   }
 
-  void visit(TypedefDeclaration d)
+  void visit(TypedefDecl d)
   {
     begin(d);
     visitD(d.decl);
     end(d);
   }
 
-  void visit(EnumDeclaration d)
+  void visit(EnumDecl d)
   {
     begin(d);
     write(indexOf(d.name));
@@ -363,7 +363,7 @@ override
     end(d);
   }
 
-  void visit(EnumMemberDeclaration d)
+  void visit(EnumMemberDecl d)
   {
     begin(d);
     d.type ? visitT(d.type) : write("n");
@@ -374,7 +374,7 @@ override
     end(d);
   }
 
-  void visit(ClassDeclaration d)
+  void visit(ClassDecl d)
   {
     begin(d);
     write(indexOf(d.name));
@@ -385,7 +385,7 @@ override
     end(d);
   }
 
-  void visit(InterfaceDeclaration d)
+  void visit(InterfaceDecl d)
   {
     begin(d);
     write(indexOf(d.name));
@@ -396,7 +396,7 @@ override
     end(d);
   }
 
-  void visit(StructDeclaration d)
+  void visit(StructDecl d)
   {
     begin(d);
     write(indexOf(d.name));
@@ -405,7 +405,7 @@ override
     end(d);
   }
 
-  void visit(UnionDeclaration d)
+  void visit(UnionDecl d)
   {
     begin(d);
     write(indexOf(d.name));
@@ -414,7 +414,7 @@ override
     end(d);
   }
 
-  void visit(ConstructorDeclaration d)
+  void visit(ConstructorDecl d)
   {
     begin(d);
     visitN(d.params);
@@ -423,28 +423,28 @@ override
     end(d);
   }
 
-  void visit(StaticConstructorDeclaration d)
+  void visit(StaticCtorDecl d)
   {
     begin(d);
     visitS(d.funcBody);
     end(d);
   }
 
-  void visit(DestructorDeclaration d)
+  void visit(DestructorDecl d)
   {
     begin(d);
     visitS(d.funcBody);
     end(d);
   }
 
-  void visit(StaticDestructorDeclaration d)
+  void visit(StaticDtorDecl d)
   {
     begin(d);
     visitS(d.funcBody);
     end(d);
   }
 
-  void visit(FunctionDeclaration d)
+  void visit(FunctionDecl d)
   {
     begin(d);
     d.returnType ? visitT(d.returnType) : write("n");
@@ -457,7 +457,7 @@ override
     end(d);
   }
 
-  void visit(VariablesDeclaration d)
+  void visit(VariablesDecl d)
   {
     begin(d);
     // Type
@@ -479,21 +479,21 @@ override
     end(d);
   }
 
-  void visit(InvariantDeclaration d)
+  void visit(InvariantDecl d)
   {
     begin(d);
     visitS(d.funcBody);
     end(d);
   }
 
-  void visit(UnittestDeclaration d)
+  void visit(UnittestDecl d)
   {
     begin(d);
     visitS(d.funcBody);
     end(d);
   }
 
-  void visit(DebugDeclaration d)
+  void visit(DebugDecl d)
   {
     begin(d);
     d.spec ? write(indexOf(d.spec)) : write("n");
@@ -506,7 +506,7 @@ override
     end(d);
   }
 
-  void visit(VersionDeclaration d)
+  void visit(VersionDecl d)
   {
     begin(d);
     d.spec ? write(indexOf(d.spec)) : write("n");
@@ -519,7 +519,7 @@ override
     end(d);
   }
 
-  void visit(TemplateDeclaration d)
+  void visit(TemplateDecl d)
   {
     begin(d);
     write(indexOf(d.name));
@@ -532,7 +532,7 @@ override
     end(d);
   }
 
-  void visit(NewDeclaration d)
+  void visit(NewDecl d)
   {
     begin(d);
     visitN(d.params);
@@ -541,7 +541,7 @@ override
     end(d);
   }
 
-  void visit(DeleteDeclaration d)
+  void visit(DeleteDecl d)
   {
     begin(d);
     visitN(d.params);
@@ -552,28 +552,28 @@ override
 
   // Attributes:
 
-  void visit(ProtectionDeclaration d)
+  void visit(ProtectionDecl d)
   {
     begin(d);
     visitD(d.decls);
     end(d);
   }
 
-  void visit(StorageClassDeclaration d)
+  void visit(StorageClassDecl d)
   {
     begin(d);
     visitD(d.decls);
     end(d);
   }
 
-  void visit(LinkageDeclaration d)
+  void visit(LinkageDecl d)
   {
     begin(d);
     visitD(d.decls);
     end(d);
   }
 
-  void visit(AlignDeclaration d)
+  void visit(AlignDecl d)
   {
     begin(d);
     d.sizetok ? write(indexOf(d.sizetok)) : write("n");
@@ -582,7 +582,7 @@ override
     end(d);
   }
 
-  void visit(StaticAssertDeclaration d)
+  void visit(StaticAssertDecl d)
   {
     begin(d);
     visitE(d.condition);
@@ -591,7 +591,7 @@ override
     end(d);
   }
 
-  void visit(StaticIfDeclaration d)
+  void visit(StaticIfDecl d)
   {
     begin(d);
     visitE(d.condition);
@@ -602,7 +602,7 @@ override
     end(d);
   }
 
-  void visit(MixinDeclaration d)
+  void visit(MixinDecl d)
   {
     begin(d);
     d.templateExpr ? visitE(d.templateExpr) : write("n");
@@ -613,7 +613,7 @@ override
     end(d);
   }
 
-  void visit(PragmaDeclaration d)
+  void visit(PragmaDecl d)
   {
     begin(d);
     write(indexOf(d.idtok));

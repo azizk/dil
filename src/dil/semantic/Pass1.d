@@ -186,23 +186,23 @@ class SemanticPass1 : Visitor
 
 override
 {
-  D visit(CompoundDeclaration d)
+  D visit(CompoundDecl d)
   {
     foreach (decl; d.decls)
       visitD(decl);
     return d;
   }
 
-  D visit(IllegalDeclaration)
+  D visit(IllegalDecl)
   { assert(0, "semantic pass on invalid AST"); return null; }
 
-  // D visit(EmptyDeclaration ed)
+  // D visit(EmptyDecl ed)
   // { return ed; }
 
-  // D visit(ModuleDeclaration)
+  // D visit(ModuleDecl)
   // { return null; }
 
-  D visit(ImportDeclaration d)
+  D visit(ImportDecl d)
   {
     if (importModule is null)
       return d;
@@ -216,17 +216,17 @@ override
     return d;
   }
 
-  D visit(AliasDeclaration ad)
+  D visit(AliasDecl ad)
   {
     return ad;
   }
 
-  D visit(TypedefDeclaration td)
+  D visit(TypedefDecl td)
   {
     return td;
   }
 
-  D visit(EnumDeclaration d)
+  D visit(EnumDecl d)
   {
     if (d.symbol)
       return d;
@@ -257,14 +257,14 @@ override
     return d;
   }
 
-  D visit(EnumMemberDeclaration d)
+  D visit(EnumMemberDecl d)
   {
     d.symbol = new EnumMember(d.nameId, protection, storageClass, linkageType, d);
     insert(d.symbol);
     return d;
   }
 
-  D visit(ClassDeclaration d)
+  D visit(ClassDecl d)
   {
     if (d.symbol)
       return d;
@@ -279,7 +279,7 @@ override
     return d;
   }
 
-  D visit(InterfaceDeclaration d)
+  D visit(InterfaceDecl d)
   {
     if (d.symbol)
       return d;
@@ -294,7 +294,7 @@ override
     return d;
   }
 
-  D visit(StructDeclaration d)
+  D visit(StructDecl d)
   {
     if (d.symbol)
       return d;
@@ -318,7 +318,7 @@ override
     return d;
   }
 
-  D visit(UnionDeclaration d)
+  D visit(UnionDecl d)
   {
     if (d.symbol)
       return d;
@@ -343,42 +343,42 @@ override
     return d;
   }
 
-  D visit(ConstructorDeclaration d)
+  D visit(ConstructorDecl d)
   {
     auto func = new FunctionSymbol(Ident.Ctor, d);
     insertOverload(func);
     return d;
   }
 
-  D visit(StaticConstructorDeclaration d)
+  D visit(StaticCtorDecl d)
   {
     auto func = new FunctionSymbol(Ident.Ctor, d);
     insertOverload(func);
     return d;
   }
 
-  D visit(DestructorDeclaration d)
+  D visit(DestructorDecl d)
   {
     auto func = new FunctionSymbol(Ident.Dtor, d);
     insertOverload(func);
     return d;
   }
 
-  D visit(StaticDestructorDeclaration d)
+  D visit(StaticDtorDecl d)
   {
     auto func = new FunctionSymbol(Ident.Dtor, d);
     insertOverload(func);
     return d;
   }
 
-  D visit(FunctionDeclaration d)
+  D visit(FunctionDecl d)
   {
     auto func = new FunctionSymbol(d.nameId, d);
     insertOverload(func);
     return d;
   }
 
-  D visit(VariablesDeclaration vd)
+  D visit(VariablesDecl vd)
   {
     // Error if we are in an interface.
     if (scop.symbol.isInterface && !(vd.isStatic || vd.isConst))
@@ -398,21 +398,21 @@ override
     return vd;
   }
 
-  D visit(InvariantDeclaration d)
+  D visit(InvariantDecl d)
   {
     auto func = new FunctionSymbol(Ident.Invariant, d);
     insert(func);
     return d;
   }
 
-  D visit(UnittestDeclaration d)
+  D visit(UnittestDecl d)
   {
     auto func = new FunctionSymbol(Ident.Unittest, d);
     insertOverload(func);
     return d;
   }
 
-  D visit(DebugDeclaration d)
+  D visit(DebugDecl d)
   {
     if (d.isSpecification)
     { // debug = Id | Int
@@ -434,7 +434,7 @@ override
     return d;
   }
 
-  D visit(VersionDeclaration d)
+  D visit(VersionDecl d)
   {
     if (d.isSpecification)
     { // version = Id | Int
@@ -456,7 +456,7 @@ override
     return d;
   }
 
-  D visit(TemplateDeclaration d)
+  D visit(TemplateDecl d)
   {
     if (d.symbol)
       return d;
@@ -467,14 +467,14 @@ override
     return d;
   }
 
-  D visit(NewDeclaration d)
+  D visit(NewDecl d)
   {
     auto func = new FunctionSymbol(Ident.New, d);
     insert(func);
     return d;
   }
 
-  D visit(DeleteDeclaration d)
+  D visit(DeleteDecl d)
   {
     auto func = new FunctionSymbol(Ident.Delete, d);
     insert(func);
@@ -483,7 +483,7 @@ override
 
   // Attributes:
 
-  D visit(ProtectionDeclaration d)
+  D visit(ProtectionDecl d)
   {
     auto saved = protection; // Save.
     protection = d.prot; // Set.
@@ -492,7 +492,7 @@ override
     return d;
   }
 
-  D visit(StorageClassDeclaration d)
+  D visit(StorageClassDecl d)
   {
     auto saved = storageClass; // Save.
     storageClass = d.stcs; // Set.
@@ -501,7 +501,7 @@ override
     return d;
   }
 
-  D visit(LinkageDeclaration d)
+  D visit(LinkageDecl d)
   {
     auto saved = linkageType; // Save.
     linkageType = d.linkageType; // Set.
@@ -510,7 +510,7 @@ override
     return d;
   }
 
-  D visit(AlignDeclaration d)
+  D visit(AlignDecl d)
   {
     auto saved = alignSize; // Save.
     alignSize = d.size; // Set.
@@ -521,25 +521,25 @@ override
 
   // Deferred declarations:
 
-  D visit(StaticAssertDeclaration d)
+  D visit(StaticAssertDecl d)
   {
     addDeferred(d);
     return d;
   }
 
-  D visit(StaticIfDeclaration d)
+  D visit(StaticIfDecl d)
   {
     addDeferred(d);
     return d;
   }
 
-  D visit(MixinDeclaration d)
+  D visit(MixinDecl d)
   {
     addDeferred(d);
     return d;
   }
 
-  D visit(PragmaDeclaration d)
+  D visit(PragmaDecl d)
   {
     if (d.ident is Ident.msg)
       addDeferred(d);

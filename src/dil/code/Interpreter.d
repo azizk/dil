@@ -38,7 +38,7 @@ class Interpreter : Visitor
 
   /// Executes the function at compile-time with the given arguments.
   /// Returns: NAR or a value.
-  static Expression interpret(FunctionDeclaration fd, Expression[] args,
+  static Expression interpret(FunctionDecl fd, Expression[] args,
                               Diagnostics diag)
   {
     return (new Interpreter(diag)).eval(fd, args);
@@ -59,7 +59,7 @@ class Interpreter : Visitor
   // TODO: are eval() methods needed for other Nodes?
 
   /// Start evaluation of a function.
-  Expression eval(FunctionDeclaration fd, Expression[] args)
+  Expression eval(FunctionDecl fd, Expression[] args)
   {
     // We cache this result so that we don't blindly try to reevaluate
     // functions that can't be evaluated at compile time
@@ -104,168 +104,168 @@ class Interpreter : Visitor
 
 override
 {
-  D visit(CompoundDeclaration d)
+  D visit(CompoundDecl d)
   {
     return d;
   }
 
-  D visit(IllegalDeclaration)
+  D visit(IllegalDecl)
   { assert(0, "interpreting invalid AST"); return null; }
 
-  // D visit(EmptyDeclaration ed)
+  // D visit(EmptyDecl ed)
   // { return ed; }
 
-  // D visit(ModuleDeclaration)
+  // D visit(ModuleDecl)
   // { return null; }
 
-  D visit(ImportDeclaration d)
+  D visit(ImportDecl d)
   {
     return d;
   }
 
-  D visit(AliasDeclaration ad)
+  D visit(AliasDecl ad)
   {
     return ad;
   }
 
-  D visit(TypedefDeclaration td)
+  D visit(TypedefDecl td)
   {
     return td;
   }
 
-  D visit(EnumDeclaration d)
+  D visit(EnumDecl d)
   {
     return d;
   }
 
-  D visit(EnumMemberDeclaration d)
+  D visit(EnumMemberDecl d)
   {
     return d;
   }
 
-  D visit(ClassDeclaration d)
+  D visit(ClassDecl d)
   {
     return d;
   }
 
-  D visit(InterfaceDeclaration d)
+  D visit(InterfaceDecl d)
   {
     return d;
   }
 
-  D visit(StructDeclaration d)
+  D visit(StructDecl d)
   {
     return d;
   }
 
-  D visit(UnionDeclaration d)
+  D visit(UnionDecl d)
   {
     return d;
   }
 
-  D visit(ConstructorDeclaration d)
+  D visit(ConstructorDecl d)
   {
     return d;
   }
 
-  D visit(StaticConstructorDeclaration d)
+  D visit(StaticCtorDecl d)
   {
     return d;
   }
 
-  D visit(DestructorDeclaration d)
+  D visit(DestructorDecl d)
   {
     return d;
   }
 
-  D visit(StaticDestructorDeclaration d)
+  D visit(StaticDtorDecl d)
   {
     return d;
   }
 
-  D visit(FunctionDeclaration d)
+  D visit(FunctionDecl d)
   {
     return d;
   }
 
-  D visit(VariablesDeclaration vd)
+  D visit(VariablesDecl vd)
   {
     return vd;
   }
 
-  D visit(InvariantDeclaration d)
+  D visit(InvariantDecl d)
   {
     return d;
   }
 
-  D visit(UnittestDeclaration d)
+  D visit(UnittestDecl d)
   {
     return d;
   }
 
-  D visit(DebugDeclaration d)
+  D visit(DebugDecl d)
   {
     return d;
   }
 
-  D visit(VersionDeclaration d)
+  D visit(VersionDecl d)
   {
     return d;
   }
 
-  D visit(TemplateDeclaration d)
+  D visit(TemplateDecl d)
   {
     return d;
   }
 
-  D visit(NewDeclaration d)
+  D visit(NewDecl d)
   {
     return d;
   }
 
-  D visit(DeleteDeclaration d)
+  D visit(DeleteDecl d)
   {
     return d;
   }
 
   // Attributes:
 
-  D visit(ProtectionDeclaration d)
+  D visit(ProtectionDecl d)
   {
     return d;
   }
 
-  D visit(StorageClassDeclaration d)
+  D visit(StorageClassDecl d)
   {
     return d;
   }
 
-  D visit(LinkageDeclaration d)
+  D visit(LinkageDecl d)
   {
     return d;
   }
 
-  D visit(AlignDeclaration d)
+  D visit(AlignDecl d)
   {
     return d;
   }
 
-  D visit(StaticAssertDeclaration d)
+  D visit(StaticAssertDecl d)
   {
     return d;
   }
 
-  D visit(StaticIfDeclaration d)
+  D visit(StaticIfDecl d)
   {
     return d;
   }
 
-  D visit(MixinDeclaration d)
+  D visit(MixinDecl d)
   {
     return d;
   }
 
-  D visit(PragmaDeclaration d)
+  D visit(PragmaDecl d)
   {
     return d;
   }
