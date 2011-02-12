@@ -621,23 +621,23 @@ abstract class DDocEmitter : DefaultVisitor2
     auto item_count = currentTParams.items.length;
     foreach (tparam; currentTParams.items)
     {
-      if (auto p = tparam.Is!(TemplateAliasParameter))
+      if (auto p = tparam.Is!(TemplateAliasParam))
         write("\1DIL_TPALIAS \1DIL_TPID ", p.nameStr, "\2"),
         writeSpecDef(p.spec, p.def),
         write("\2");
-      else if (auto p = tparam.Is!(TemplateTypeParameter))
+      else if (auto p = tparam.Is!(TemplateTypeParam))
         write("\1DIL_TPTYPE \1DIL_TPID ", p.nameStr, "\2"),
         writeSpecDef(p.specType, p.defType),
         write("\2");
-      else if (auto p = tparam.Is!(TemplateTupleParameter))
+      else if (auto p = tparam.Is!(TemplateTupleParam))
         write("\1DIL_TPTUPLE \1DIL_TPID ", p.nameStr, "\2\2");
-      else if (auto p = tparam.Is!(TemplateValueParameter))
+      else if (auto p = tparam.Is!(TemplateValueParam))
         write("\1DIL_TPVALUE "),
         write(p.valueType),
         write(" \1DIL_TPID ", p.nameStr, "\2"),
         writeSpecDef(p.specValue, p.defValue),
         write("\2");
-      else if (auto p = tparam.Is!(TemplateThisParameter))
+      else if (auto p = tparam.Is!(TemplateThisParam))
         write("\1DIL_TPTHIS \1DIL_TPID ", p.nameStr, "\2"),
         writeSpecDef(p.specType, p.defType),
         write("\2");

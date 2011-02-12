@@ -125,7 +125,7 @@ class Parameters : Node
 ~~~~~~~~~~~~~~~~~~~~~~*/
 
 /// Abstract base class for all template parameters.
-abstract class TemplateParameter : Node
+abstract class TemplateParam : Node
 {
   Token* name;
   this(Token* name)
@@ -141,8 +141,8 @@ abstract class TemplateParameter : Node
   }
 }
 
-/// $(BNF TemplateAliasParameter := "alias" Identifier SpecOrDefaultType)
-class TemplateAliasParameter : TemplateParameter
+/// $(BNF TemplateAliasParam := "alias" Identifier SpecOrDefaultType)
+class TemplateAliasParam : TemplateParam
 {
   Node spec; /// Specialization. Can be a Type or an Expression (in D2).
   Node def; /// Default. Can be a Type or an Expression (in D2).
@@ -160,8 +160,8 @@ class TemplateAliasParameter : TemplateParameter
   mixin(copyMethod);
 }
 
-/// $(BNF TemplateTypeParameter := Identifier SpecOrDefaultType)
-class TemplateTypeParameter : TemplateParameter
+/// $(BNF TemplateTypeParam := Identifier SpecOrDefaultType)
+class TemplateTypeParam : TemplateParam
 {
   TypeNode specType, defType;
   this(Token* name, TypeNode specType, TypeNode defType)
@@ -179,7 +179,7 @@ class TemplateTypeParameter : TemplateParameter
 // version(D2)
 // {
 /// $(BNF TemplateThisParam  := "this" Identifier SpecOrDefaultType)
-class TemplateThisParameter : TemplateParameter
+class TemplateThisParam : TemplateParam
 {
   TypeNode specType, defType;
   this(Token* name, TypeNode specType, TypeNode defType)
@@ -196,7 +196,7 @@ class TemplateThisParameter : TemplateParameter
 // }
 
 /// $(BNF TemplateValueParamer := Declarator SpecOrDefaultValue)
-class TemplateValueParameter : TemplateParameter
+class TemplateValueParam : TemplateParam
 {
   TypeNode valueType;
   Expression specValue, defValue;
@@ -214,8 +214,8 @@ class TemplateValueParameter : TemplateParameter
   mixin(copyMethod);
 }
 
-/// $(BNF TemplateTupleParameter := Identifier "...")
-class TemplateTupleParameter : TemplateParameter
+/// $(BNF TemplateTupleParam := Identifier "...")
+class TemplateTupleParam : TemplateParam
 {
   this(Token* name)
   {
@@ -234,14 +234,14 @@ class TemplateParameters : Node
     mixin(set_kind);
   }
 
-  void opCatAssign(TemplateParameter parameter)
+  void opCatAssign(TemplateParam parameter)
   {
     addChild(parameter);
   }
 
-  TemplateParameter[] items()
+  TemplateParam[] items()
   {
-    return cast(TemplateParameter[])children;
+    return cast(TemplateParam[])children;
   }
 
   mixin(copyMethod);

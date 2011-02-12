@@ -205,11 +205,11 @@ static const char[][] NodeClassNames = [
   // Parameters:
   "Parameter",
   "Parameters",
-  "TemplateAliasParameter",
-  "TemplateTypeParameter",
-  "TemplateThisParameter", // D2.0
-  "TemplateValueParameter",
-  "TemplateTupleParameter",
+  "TemplateAliasParam",
+  "TemplateTypeParam",
+  "TemplateThisParam", // D2.0
+  "TemplateValueParam",
+  "TemplateTupleParam",
   "TemplateParameters",
   "TemplateArguments",
 ];

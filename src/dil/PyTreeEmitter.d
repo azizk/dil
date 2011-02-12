@@ -1679,7 +1679,7 @@ override
     end(p);
   }
 
-  void visit(TemplateAliasParameter p)
+  void visit(TemplateAliasParam p)
   {
     begin(p);
     p.spec ? visitN(p.spec) : write("n");
@@ -1688,7 +1688,7 @@ override
     end(p);
   }
 
-  void visit(TemplateTypeParameter p)
+  void visit(TemplateTypeParam p)
   {
     begin(p);
     p.specType ? visitT(p.specType) : write("n");
@@ -1697,7 +1697,7 @@ override
     end(p);
   }
 
-  void visit(TemplateThisParameter p) // D2.0
+  void visit(TemplateThisParam p) // D2.0
   {
     begin(p);
     p.specType ? visitT(p.specType) : write("n");
@@ -1706,7 +1706,7 @@ override
     end(p);
   }
 
-  void visit(TemplateValueParameter p)
+  void visit(TemplateValueParam p)
   {
     begin(p);
     p.valueType ? visitT(p.valueType) : write("n");
@@ -1717,7 +1717,7 @@ override
     end(p);
   }
 
-  void visit(TemplateTupleParameter p)
+  void visit(TemplateTupleParam p)
   {
     begin(p);
     end(p, false);

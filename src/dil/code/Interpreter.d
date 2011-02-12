@@ -1205,27 +1205,27 @@ override
     return p;
   }
 
-  N visit(TemplateAliasParameter p)
+  N visit(TemplateAliasParam p)
   {
     return p;
   }
 
-  N visit(TemplateTypeParameter p)
+  N visit(TemplateTypeParam p)
   {
     return p;
   }
 
-  N visit(TemplateThisParameter p) // D2.0
+  N visit(TemplateThisParam p) // D2.0
   {
     return p;
   }
 
-  N visit(TemplateValueParameter p)
+  N visit(TemplateValueParam p)
   {
     return p;
   }
 
-  N visit(TemplateTupleParameter p)
+  N visit(TemplateTupleParam p)
   {
     return p;
   }

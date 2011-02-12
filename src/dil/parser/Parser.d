@@ -4735,8 +4735,8 @@ class Parser
   }
 
   /// Parses template parameters.
-  /// $(BNF TemplateParameters := TemplateParameter ("," TemplateParameter)
-  ////TemplateParameter := TemplateAliasParam | TemplateTypeParam |
+  /// $(BNF TemplateParameters := TemplateParam ("," TemplateParam)
+  ////TemplateParam := TemplateAliasParam | TemplateTypeParam |
   ////                     TemplateTupleParam | TemplateValueParam |
   ////                     TemplateThisParam
   ////TemplateAliasParam := alias Identifier SpecOrDefaultType
@@ -4753,7 +4753,7 @@ class Parser
     while (token.kind != T.RParen)
     {
       auto paramBegin = token;
-      TemplateParameter tp;
+      TemplateParam tp;
       Token* ident;
       Type specType, defType;
 
@@ -4768,7 +4768,7 @@ class Parser
       switch (token.kind)
       {
       case T.Alias:
-        // TemplateAliasParameter := "alias" Identifier
+        // TemplateAliasParam := "alias" Identifier
         skip(T.Alias);
         ident = requireIdentifier(MSG.ExpectedAliasTemplateParam);
         Node spec, def;
@@ -4791,44 +4791,44 @@ class Parser
         spec = specType;
         def = defType;
         }
-        tp = new TemplateAliasParameter(ident, spec, def);
+        tp = new TemplateAliasParam(ident, spec, def);
         break;
       case T.Identifier:
         ident = token;
         switch (peekNext())
         {
         case T.Ellipses:
-          // TemplateTupleParameter := Identifier "..."
+          // TemplateTupleParam := Identifier "..."
           skip(T.Identifier); skip(T.Ellipses);
           if (token.kind == T.Comma)
             error(MID.TemplateTupleParameter);
-          tp = new TemplateTupleParameter(ident);
+          tp = new TemplateTupleParam(ident);
           break;
         case T.Comma, T.RParen, T.Colon, T.Assign:
-          // TemplateTypeParameter := Identifier
+          // TemplateTypeParam := Identifier
           skip(T.Identifier);
           parseSpecAndOrDefaultType();
-          tp = new TemplateTypeParameter(ident, specType, defType);
+          tp = new TemplateTypeParam(ident, specType, defType);
           break;
         default:
-          // TemplateValueParameter := Declarator
+          // TemplateValueParam := Declarator
           ident = null;
-          goto LTemplateValueParameter;
+          goto LTemplateValueParam;
         }
         break;
       version(D2)
       {
       case T.This:
-        // TemplateThisParameter := "this" TemplateTypeParameter
+        // TemplateThisParam := "this" TemplateTypeParam
         skip(T.This);
         ident = requireIdentifier(MSG.ExpectedNameForThisTempParam);
         parseSpecAndOrDefaultType();
-        tp = new TemplateThisParameter(ident, specType, defType);
+        tp = new TemplateThisParam(ident, specType, defType);
         break;
       } // version(D2)
       default:
-      LTemplateValueParameter:
-        // TemplateValueParameter := Declarator
+      LTemplateValueParam:
+        // TemplateValueParam := Declarator
         Expression specValue, defValue;
         auto valueType = parseDeclarator(ident);
         // ":" SpecializationValue
@@ -4837,7 +4837,7 @@ class Parser
         // "=" DefaultValue
         if (consumed(T.Assign))
           defValue = parseCondExpr();
-        tp = new TemplateValueParameter(valueType, ident, specValue, defValue);
+        tp = new TemplateValueParam(valueType, ident, specValue, defValue);
       }
 
       // Push template parameter.
