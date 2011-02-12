@@ -633,23 +633,23 @@ override
 override
 {
 
-  void visit(CompoundStatement s)
+  void visit(CompoundStmt s)
   {
     begin(s);
     write(s.stmnts);
     end(s);
   }
 
-  void visit(IllegalStatement)
+  void visit(IllegalStmt)
   { assert(0, "interpreting invalid AST"); }
 
-  void visit(EmptyStatement s)
+  void visit(EmptyStmt s)
   {
     begin(s);
     end(s, false);
   }
 
-  void visit(FuncBodyStatement s)
+  void visit(FuncBodyStmt s)
   {
     begin(s);
     s.funcBody ? visitS(s.funcBody) : write("n");
@@ -662,14 +662,14 @@ override
     end(s);
   }
 
-  void visit(ScopeStatement s)
+  void visit(ScopeStmt s)
   {
     begin(s);
     visitS(s.stmnt);
     end(s);
   }
 
-  void visit(LabeledStatement s)
+  void visit(LabeledStmt s)
   {
     begin(s);
     write(indexOf(s.label));
@@ -678,21 +678,21 @@ override
     end(s);
   }
 
-  void visit(ExpressionStatement s)
+  void visit(ExpressionStmt s)
   {
     begin(s);
     visitE(s.expr);
     end(s);
   }
 
-  void visit(DeclarationStatement s)
+  void visit(DeclarationStmt s)
   {
     begin(s);
     visitD(s.decl);
     end(s);
   }
 
-  void visit(IfStatement s)
+  void visit(IfStmt s)
   {
     begin(s);
     s.variable ? visitS(s.variable) : write("n");
@@ -705,7 +705,7 @@ override
     end(s);
   }
 
-  void visit(WhileStatement s)
+  void visit(WhileStmt s)
   {
     begin(s);
     visitE(s.condition);
@@ -714,7 +714,7 @@ override
     end(s);
   }
 
-  void visit(DoWhileStatement s)
+  void visit(DoWhileStmt s)
   {
     begin(s);
     visitS(s.doBody);
@@ -723,7 +723,7 @@ override
     end(s);
   }
 
-  void visit(ForStatement s)
+  void visit(ForStmt s)
   {
     begin(s);
     s.init ? visitS(s.init) : write("n");
@@ -736,7 +736,7 @@ override
     end(s);
   }
 
-  void visit(ForeachStatement s)
+  void visit(ForeachStmt s)
   {
     begin(s);
     visitN(s.params);
@@ -748,7 +748,7 @@ override
   }
 
   // D2.0
-  void visit(ForeachRangeStatement s)
+  void visit(ForeachRangeStmt s)
   {
     begin(s);
     visitN(s.params);
@@ -761,7 +761,7 @@ override
     end(s);
   }
 
-  void visit(SwitchStatement s)
+  void visit(SwitchStmt s)
   {
     begin(s);
     visitE(s.condition);
@@ -770,7 +770,7 @@ override
     end(s);
   }
 
-  void visit(CaseStatement s)
+  void visit(CaseStmt s)
   {
     begin(s);
     write(s.values);
@@ -779,35 +779,35 @@ override
     end(s);
   }
 
-  void visit(DefaultStatement s)
+  void visit(DefaultStmt s)
   {
     begin(s);
     visitS(s.defaultBody);
     end(s);
   }
 
-  void visit(ContinueStatement s)
+  void visit(ContinueStmt s)
   {
     begin(s);
     s.ident ? write(indexOf(s.ident)) : write("n");
     end(s);
   }
 
-  void visit(BreakStatement s)
+  void visit(BreakStmt s)
   {
     begin(s);
     s.ident ? write(indexOf(s.ident)) : write("n");
     end(s);
   }
 
-  void visit(ReturnStatement s)
+  void visit(ReturnStmt s)
   {
     begin(s);
     s.expr ? visitE(s.expr) : write("n");
     end(s);
   }
 
-  void visit(GotoStatement s)
+  void visit(GotoStmt s)
   {
     begin(s);
     s.ident ? write(indexOf(s.ident)) : write("n");
@@ -816,7 +816,7 @@ override
     end(s);
   }
 
-  void visit(WithStatement s)
+  void visit(WithStmt s)
   {
     begin(s);
     visitE(s.expr);
@@ -825,7 +825,7 @@ override
     end(s);
   }
 
-  void visit(SynchronizedStatement s)
+  void visit(SynchronizedStmt s)
   {
     begin(s);
     s.expr ? visitE(s.expr) : write("n");
@@ -834,7 +834,7 @@ override
     end(s);
   }
 
-  void visit(TryStatement s)
+  void visit(TryStmt s)
   {
     begin(s);
     visitS(s.tryBody);
@@ -845,7 +845,7 @@ override
     end(s);
   }
 
-  void visit(CatchStatement s)
+  void visit(CatchStmt s)
   {
     begin(s);
     s.param ? visitN(s.param) : write("n");
@@ -854,14 +854,14 @@ override
     end(s);
   }
 
-  void visit(FinallyStatement s)
+  void visit(FinallyStmt s)
   {
     begin(s);
     visitS(s.finallyBody);
     end(s);
   }
 
-  void visit(ScopeGuardStatement s)
+  void visit(ScopeGuardStmt s)
   {
     begin(s);
     write(indexOf(s.condition));
@@ -870,28 +870,28 @@ override
     end(s);
   }
 
-  void visit(ThrowStatement s)
+  void visit(ThrowStmt s)
   {
     begin(s);
     visitE(s.expr);
     end(s);
   }
 
-  void visit(VolatileStatement s)
+  void visit(VolatileStmt s)
   {
     begin(s);
     s.volatileBody ? visitS(s.volatileBody) : write("n");
     end(s);
   }
 
-  void visit(AsmBlockStatement s)
+  void visit(AsmBlockStmt s)
   {
     begin(s);
     visitS(s.statements);
     end(s);
   }
 
-  void visit(AsmStatement s)
+  void visit(AsmStmt s)
   {
     begin(s);
     s.ident ? write(indexOf(s.begin)) : write("n");
@@ -900,17 +900,17 @@ override
     end(s);
   }
 
-  void visit(AsmAlignStatement s)
+  void visit(AsmAlignStmt s)
   {
     begin(s);
     write(indexOf(s.numtok));
     end(s);
   }
 
-  void visit(IllegalAsmStatement)
+  void visit(IllegalAsmStmt)
   { assert(0, "invalid AST"); }
 
-  void visit(PragmaStatement s)
+  void visit(PragmaStmt s)
   {
     begin(s);
     s.ident ? write(indexOf(s.ident)) : write("n");
@@ -921,7 +921,7 @@ override
     end(s);
   }
 
-  void visit(MixinStatement s)
+  void visit(MixinStmt s)
   {
     begin(s);
     visitE(s.templateExpr);
@@ -930,7 +930,7 @@ override
     end(s);
   }
 
-  void visit(StaticIfStatement s)
+  void visit(StaticIfStmt s)
   {
     begin(s);
     visitE(s.condition);
@@ -941,7 +941,7 @@ override
     end(s);
   }
 
-  void visit(StaticAssertStatement s)
+  void visit(StaticAssertStmt s)
   {
     begin(s);
     visitE(s.condition);
@@ -950,7 +950,7 @@ override
     end(s);
   }
 
-  void visit(DebugStatement s)
+  void visit(DebugStmt s)
   {
     begin(s);
     visitS(s.mainBody);
@@ -959,7 +959,7 @@ override
     end(s);
   }
 
-  void visit(VersionStatement s)
+  void visit(VersionStmt s)
   {
     begin(s);
     visitS(s.mainBody);

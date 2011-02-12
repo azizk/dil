@@ -95,40 +95,40 @@ char[] genMembersTable()
   t[N.ArrayInitExpr] = ["keys[?]", "values[]"];
   t[N.StructInitExpr] = ["values[]"];
   // Statements:
-  t[N.IllegalStatement] = t[N.EmptyStatement] =
-  t[N.ContinueStatement] = t[N.BreakStatement] =
-  t[N.AsmAlignStatement] = t[N.IllegalAsmStatement] = [];
-  t[N.CompoundStatement] = ["stmnts[]"];
-  t[N.FuncBodyStatement] = ["funcBody?", "inBody?", "outBody?"];
-  t[N.ScopeStatement] = t[N.LabeledStatement] = ["stmnt"];
-  t[N.ExpressionStatement] = ["expr"];
-  t[N.DeclarationStatement] = ["decl"];
-  t[N.IfStatement] = ["variable?", "condition?", "ifBody", "elseBody?"];
-  t[N.WhileStatement] = ["condition", "whileBody"];
-  t[N.DoWhileStatement] = ["doBody", "condition"];
-  t[N.ForStatement] = ["init?", "condition?", "increment?", "forBody"];
-  t[N.ForeachStatement] = ["params", "aggregate", "forBody"];
-  t[N.ForeachRangeStatement] = ["params", "lower", "upper", "forBody"];
-  t[N.SwitchStatement] = ["condition", "switchBody"];
-  t[N.CaseStatement] = ["values[]", "caseBody"];
-  t[N.CaseRangeStatement] = ["left", "right", "caseBody"];
-  t[N.DefaultStatement] = ["defaultBody"];
-  t[N.ReturnStatement] = t[N.GotoStatement] = ["expr?"];
-  t[N.WithStatement] = ["expr", "withBody"];
-  t[N.SynchronizedStatement] = ["expr?", "syncBody"];
-  t[N.TryStatement] = ["tryBody", "catchBodies[]", "finallyBody?"];
-  t[N.CatchStatement] = ["param?", "catchBody"];
-  t[N.FinallyStatement] = ["finallyBody"];
-  t[N.ScopeGuardStatement] = ["scopeBody"];
-  t[N.ThrowStatement] = ["expr"];
-  t[N.VolatileStatement] = ["volatileBody?"];
-  t[N.AsmBlockStatement] = ["statements"];
-  t[N.AsmStatement] = ["operands[]"];
-  t[N.PragmaStatement] = ["args[]", "pragmaBody"];
-  t[N.MixinStatement] = ["templateExpr"];
-  t[N.StaticIfStatement] = ["condition", "ifBody", "elseBody?"];
-  t[N.StaticAssertStatement] = ["condition", "message?"];
-  t[N.DebugStatement] = t[N.VersionStatement] = ["mainBody", "elseBody?"];
+  t[N.IllegalStmt] = t[N.EmptyStmt] =
+  t[N.ContinueStmt] = t[N.BreakStmt] =
+  t[N.AsmAlignStmt] = t[N.IllegalAsmStmt] = [];
+  t[N.CompoundStmt] = ["stmnts[]"];
+  t[N.FuncBodyStmt] = ["funcBody?", "inBody?", "outBody?"];
+  t[N.ScopeStmt] = t[N.LabeledStmt] = ["stmnt"];
+  t[N.ExpressionStmt] = ["expr"];
+  t[N.DeclarationStmt] = ["decl"];
+  t[N.IfStmt] = ["variable?", "condition?", "ifBody", "elseBody?"];
+  t[N.WhileStmt] = ["condition", "whileBody"];
+  t[N.DoWhileStmt] = ["doBody", "condition"];
+  t[N.ForStmt] = ["init?", "condition?", "increment?", "forBody"];
+  t[N.ForeachStmt] = ["params", "aggregate", "forBody"];
+  t[N.ForeachRangeStmt] = ["params", "lower", "upper", "forBody"];
+  t[N.SwitchStmt] = ["condition", "switchBody"];
+  t[N.CaseStmt] = ["values[]", "caseBody"];
+  t[N.CaseRangeStmt] = ["left", "right", "caseBody"];
+  t[N.DefaultStmt] = ["defaultBody"];
+  t[N.ReturnStmt] = t[N.GotoStmt] = ["expr?"];
+  t[N.WithStmt] = ["expr", "withBody"];
+  t[N.SynchronizedStmt] = ["expr?", "syncBody"];
+  t[N.TryStmt] = ["tryBody", "catchBodies[]", "finallyBody?"];
+  t[N.CatchStmt] = ["param?", "catchBody"];
+  t[N.FinallyStmt] = ["finallyBody"];
+  t[N.ScopeGuardStmt] = ["scopeBody"];
+  t[N.ThrowStmt] = ["expr"];
+  t[N.VolatileStmt] = ["volatileBody?"];
+  t[N.AsmBlockStmt] = ["statements"];
+  t[N.AsmStmt] = ["operands[]"];
+  t[N.PragmaStmt] = ["args[]", "pragmaBody"];
+  t[N.MixinStmt] = ["templateExpr"];
+  t[N.StaticIfStmt] = ["condition", "ifBody", "elseBody?"];
+  t[N.StaticAssertStmt] = ["condition", "message?"];
+  t[N.DebugStmt] = t[N.VersionStmt] = ["mainBody", "elseBody?"];
   // TypeNodes:
   t[N.IllegalType] = t[N.IntegralType] =
   t[N.ModuleScopeType] = [];

@@ -12,7 +12,7 @@ import dil.ast.Node,
        dil.ast.NodeCopier;
 import dil.lexer.IdTable;
 
-class CompoundStatement : Statement
+class CompoundStmt : Statement
 {
   this()
   {
@@ -37,7 +37,7 @@ class CompoundStatement : Statement
   mixin(copyMethod);
 }
 
-class IllegalStatement : Statement
+class IllegalStmt : Statement
 {
   this()
   {
@@ -46,7 +46,7 @@ class IllegalStatement : Statement
   mixin(copyMethod);
 }
 
-class EmptyStatement : Statement
+class EmptyStmt : Statement
 {
   this()
   {
@@ -55,7 +55,7 @@ class EmptyStatement : Statement
   mixin(copyMethod);
 }
 
-class FuncBodyStatement : Statement
+class FuncBodyStmt : Statement
 {
   Statement funcBody, inBody, outBody;
   Token* outIdent; /// $(BNF "out" "(" Identifier ")")
@@ -80,7 +80,7 @@ class FuncBodyStatement : Statement
   mixin(copyMethod);
 }
 
-class ScopeStatement : Statement
+class ScopeStmt : Statement
 {
   Statement stmnt;
   this(Statement s)
@@ -92,7 +92,7 @@ class ScopeStatement : Statement
   mixin(copyMethod);
 }
 
-class LabeledStatement : Statement
+class LabeledStmt : Statement
 {
   Token* label;
   Statement stmnt;
@@ -106,7 +106,7 @@ class LabeledStatement : Statement
   mixin(copyMethod);
 }
 
-class ExpressionStatement : Statement
+class ExpressionStmt : Statement
 {
   Expression expr;
   this(Expression e)
@@ -118,7 +118,7 @@ class ExpressionStatement : Statement
   mixin(copyMethod);
 }
 
-class DeclarationStatement : Statement
+class DeclarationStmt : Statement
 {
   Declaration decl;
   this(Declaration decl)
@@ -130,7 +130,7 @@ class DeclarationStatement : Statement
   mixin(copyMethod);
 }
 
-class IfStatement : Statement
+class IfStmt : Statement
 {
   Statement variable; // AutoDecl or VariableDecl
   Expression condition;
@@ -154,7 +154,7 @@ class IfStatement : Statement
   mixin(copyMethod);
 }
 
-class WhileStatement : Statement
+class WhileStmt : Statement
 {
   Expression condition;
   Statement whileBody;
@@ -170,7 +170,7 @@ class WhileStatement : Statement
   mixin(copyMethod);
 }
 
-class DoWhileStatement : Statement
+class DoWhileStmt : Statement
 {
   Statement doBody;
   Expression condition;
@@ -186,7 +186,7 @@ class DoWhileStatement : Statement
   mixin(copyMethod);
 }
 
-class ForStatement : Statement
+class ForStmt : Statement
 {
   Statement init;
   Expression condition, increment;
@@ -208,7 +208,7 @@ class ForStatement : Statement
   mixin(copyMethod);
 }
 
-class ForeachStatement : Statement
+class ForeachStmt : Statement
 {
   TOK tok;
   Parameters params;
@@ -237,7 +237,7 @@ class ForeachStatement : Statement
 
 // version(D2)
 // {
-class ForeachRangeStatement : Statement
+class ForeachRangeStmt : Statement
 {
   TOK tok;
   Parameters params;
@@ -259,7 +259,7 @@ class ForeachRangeStatement : Statement
 }
 // }
 
-class SwitchStatement : Statement
+class SwitchStmt : Statement
 {
   Expression condition;
   Statement switchBody;
@@ -278,7 +278,7 @@ class SwitchStatement : Statement
   mixin(copyMethod);
 }
 
-class CaseStatement : Statement
+class CaseStmt : Statement
 {
   Expression[] values;
   Statement caseBody;
@@ -296,7 +296,7 @@ class CaseStatement : Statement
 }
 
 // D2
-class CaseRangeStatement : Statement
+class CaseRangeStmt : Statement
 {
   Expression left, right;
   Statement caseBody;
@@ -315,7 +315,7 @@ class CaseRangeStatement : Statement
   mixin(copyMethod);
 }
 
-class DefaultStatement : Statement
+class DefaultStmt : Statement
 {
   Statement defaultBody;
   this(Statement defaultBody)
@@ -328,7 +328,7 @@ class DefaultStatement : Statement
   mixin(copyMethod);
 }
 
-class ContinueStatement : Statement
+class ContinueStmt : Statement
 {
   Token* ident;
   this(Token* ident)
@@ -339,7 +339,7 @@ class ContinueStatement : Statement
   mixin(copyMethod);
 }
 
-class BreakStatement : Statement
+class BreakStmt : Statement
 {
   Token* ident;
   this(Token* ident)
@@ -350,7 +350,7 @@ class BreakStatement : Statement
   mixin(copyMethod);
 }
 
-class ReturnStatement : Statement
+class ReturnStmt : Statement
 {
   Expression expr;
   this(Expression e)
@@ -362,7 +362,7 @@ class ReturnStatement : Statement
   mixin(copyMethod);
 }
 
-class GotoStatement : Statement
+class GotoStmt : Statement
 {
   Token* ident;
   Expression expr;
@@ -376,7 +376,7 @@ class GotoStatement : Statement
   mixin(copyMethod);
 }
 
-class WithStatement : Statement
+class WithStmt : Statement
 {
   Expression expr;
   Statement withBody;
@@ -392,7 +392,7 @@ class WithStatement : Statement
   mixin(copyMethod);
 }
 
-class SynchronizedStatement : Statement
+class SynchronizedStmt : Statement
 {
   Expression expr;
   Statement syncBody;
@@ -408,12 +408,12 @@ class SynchronizedStatement : Statement
   mixin(copyMethod);
 }
 
-class TryStatement : Statement
+class TryStmt : Statement
 {
   Statement tryBody;
-  CatchStatement[] catchBodies;
-  FinallyStatement finallyBody;
-  this(Statement tryBody, CatchStatement[] catchBodies, FinallyStatement finallyBody)
+  CatchStmt[] catchBodies;
+  FinallyStmt finallyBody;
+  this(Statement tryBody, CatchStmt[] catchBodies, FinallyStmt finallyBody)
   {
     mixin(set_kind);
     addChild(tryBody);
@@ -427,7 +427,7 @@ class TryStatement : Statement
   mixin(copyMethod);
 }
 
-class CatchStatement : Statement
+class CatchStmt : Statement
 {
   Parameter param;
   Statement catchBody;
@@ -442,7 +442,7 @@ class CatchStatement : Statement
   mixin(copyMethod);
 }
 
-class FinallyStatement : Statement
+class FinallyStmt : Statement
 {
   Statement finallyBody;
   this(Statement finallyBody)
@@ -454,7 +454,7 @@ class FinallyStatement : Statement
   mixin(copyMethod);
 }
 
-class ScopeGuardStatement : Statement
+class ScopeGuardStmt : Statement
 {
   Token* condition;
   Statement scopeBody;
@@ -468,7 +468,7 @@ class ScopeGuardStatement : Statement
   mixin(copyMethod);
 }
 
-class ThrowStatement : Statement
+class ThrowStmt : Statement
 {
   Expression expr;
   this(Expression e)
@@ -480,7 +480,7 @@ class ThrowStatement : Statement
   mixin(copyMethod);
 }
 
-class VolatileStatement : Statement
+class VolatileStmt : Statement
 {
   Statement volatileBody;
   this(Statement volatileBody)
@@ -492,10 +492,10 @@ class VolatileStatement : Statement
   mixin(copyMethod);
 }
 
-class AsmBlockStatement : Statement
+class AsmBlockStmt : Statement
 {
-  CompoundStatement statements;
-  this(CompoundStatement statements)
+  CompoundStmt statements;
+  this(CompoundStmt statements)
   {
     mixin(set_kind);
     addChild(statements);
@@ -504,7 +504,7 @@ class AsmBlockStatement : Statement
   mixin(copyMethod);
 }
 
-class AsmStatement : Statement
+class AsmStmt : Statement
 {
   Token* ident;
   Expression[] operands;
@@ -518,7 +518,7 @@ class AsmStatement : Statement
   mixin(copyMethod);
 }
 
-class AsmAlignStatement : Statement
+class AsmAlignStmt : Statement
 {
   int number;
   Token* numtok;
@@ -531,7 +531,7 @@ class AsmAlignStatement : Statement
   mixin(copyMethod);
 }
 
-class IllegalAsmStatement : IllegalStatement
+class IllegalAsmStmt : IllegalStmt
 {
   this()
   {
@@ -540,7 +540,7 @@ class IllegalAsmStatement : IllegalStatement
   mixin(copyMethod);
 }
 
-class PragmaStatement : Statement
+class PragmaStmt : Statement
 {
   Token* ident;
   Expression[] args;
@@ -558,7 +558,7 @@ class PragmaStatement : Statement
   mixin(copyMethod);
 }
 
-class MixinStatement : Statement
+class MixinStmt : Statement
 {
   Expression templateExpr;
   Token* mixinIdent;
@@ -572,7 +572,7 @@ class MixinStatement : Statement
   mixin(copyMethod);
 }
 
-class StaticIfStatement : Statement
+class StaticIfStmt : Statement
 {
   Expression condition;
   Statement ifBody, elseBody;
@@ -589,7 +589,7 @@ class StaticIfStatement : Statement
   mixin(copyMethod);
 }
 
-class StaticAssertStatement : Statement
+class StaticAssertStmt : Statement
 {
   Expression condition, message;
   this(Expression condition, Expression message)
@@ -603,7 +603,7 @@ class StaticAssertStatement : Statement
   mixin(copyMethod);
 }
 
-abstract class ConditionalCompilationStatement : Statement
+abstract class ConditionalCompilationStmt : Statement
 {
   Token* cond;
   Statement mainBody, elseBody;
@@ -617,7 +617,7 @@ abstract class ConditionalCompilationStatement : Statement
   }
 }
 
-class DebugStatement : ConditionalCompilationStatement
+class DebugStmt : ConditionalCompilationStmt
 {
   this(Token* cond, Statement debugBody, Statement elseBody)
   {
@@ -627,7 +627,7 @@ class DebugStatement : ConditionalCompilationStatement
   mixin(copyMethod);
 }
 
-class VersionStatement : ConditionalCompilationStatement
+class VersionStmt : ConditionalCompilationStmt
 {
   this(Token* cond, Statement versionBody, Statement elseBody)
   {

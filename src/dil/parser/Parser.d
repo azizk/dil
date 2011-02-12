@@ -773,7 +773,7 @@ class Parser
   }
 
   /// Parses the body of a function.
-  FuncBodyStatement parseFunctionBody()
+  FuncBodyStmt parseFunctionBody()
   {
     auto begin = token;
     Statement funcBody, inBody, outBody;
@@ -828,7 +828,7 @@ class Parser
     this.protection = saved_prot;
     this.linkageType = saved_link;
 
-    auto func = new FuncBodyStatement(funcBody, inBody, outBody, outIdent);
+    auto func = new FuncBodyStmt(funcBody, inBody, outBody, outIdent);
     return set(func, begin);
   }
 
@@ -1798,7 +1798,7 @@ class Parser
     return type;
   }
 
-  /// Parses a MixinDeclaration or MixinStatement.
+  /// Parses a MixinDeclaration or MixinStmt.
   /// $(BNF
   ////MixinDecl := (MixinExpr | MixinTemplateId | MixinTemplate) ";"
   ////MixinExpr := mixin "(" AssignExpr ")"
@@ -1808,7 +1808,7 @@ class Parser
   RetT parseMixin(Class, RetT = Class)()
   {
     static assert(is(Class == MixinDecl) ||
-      is(Class == MixinStatement));
+      is(Class == MixinStmt));
     skip(T.Mixin);
 
     static if (is(Class == MixinDecl))
@@ -1852,11 +1852,11 @@ class Parser
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   /// $(BNF Statements := "{" Statement* "}")
-  CompoundStatement parseStatements()
+  CompoundStmt parseStatements()
   {
     auto begin = token;
     require(T.LBrace);
-    auto statements = new CompoundStatement();
+    auto statements = new CompoundStmt();
     while (token.kind != T.RBrace && token.kind != T.EOF)
       statements ~= parseStatement();
     requireClosing(T.RBrace, begin);
@@ -1873,7 +1873,7 @@ class Parser
     if (token.isIntegralType)
     {
       d = parseVariableOrFunction();
-      goto LreturnDeclarationStatement;
+      goto LreturnDeclarationStmt;
     }
 
     switch (token.kind)
@@ -1895,7 +1895,7 @@ class Parser
 
       d = structDecl ? cast(Declaration)structDecl : new CompoundDecl;
       d = new AlignDecl(sizetok, d);
-      goto LreturnDeclarationStatement;
+      goto LreturnDeclarationStmt;
       /+ Not applicable for statements.
          T.Private, T.Package, T.Protected, T.Public, T.Export,
          T.Deprecated, T.Override, T.Abstract,+/
@@ -1907,13 +1907,13 @@ class Parser
          T.Ref, T.Nothrow, T.Thread, T.At:
     }
     case_parseAttribute:
-      s = parseAttributeStatement();
+      s = parseAttributeStmt();
       break;
     case T.Identifier:
       if (peekNext() == T.Colon)
       {
         skip(T.Identifier); skip(T.Colon);
-        s = new LabeledStatement(begin, parseNoScopeOrEmptyStatement());
+        s = new LabeledStmt(begin, parseNoScopeOrEmptyStmt());
         break;
       }
       goto case T.Dot;
@@ -1921,136 +1921,136 @@ class Parser
       bool success;
       d = tryToParse({ return parseVariableOrFunction(); }, success);
       if (success)
-        goto LreturnDeclarationStatement; // Declaration
+        goto LreturnDeclarationStmt; // Declaration
       else
-        goto case_parseExpressionStatement; // Expression
+        goto case_parseExpressionStmt; // Expression
 
     case T.If:
-      s = parseIfStatement();
+      s = parseIfStmt();
       break;
     case T.While:
-      s = parseWhileStatement();
+      s = parseWhileStmt();
       break;
     case T.Do:
-      s = parseDoWhileStatement();
+      s = parseDoWhileStmt();
       break;
     case T.For:
-      s = parseForStatement();
+      s = parseForStmt();
       break;
     case T.Foreach, T.ForeachReverse:
-      s = parseForeachStatement();
+      s = parseForeachStmt();
       break;
     case T.Final:
       version(D2)
       {
       if (peekNext() != T.Switch)
         goto case_parseAttribute;
-      // Fall through to SwitchStatement.
+      // Fall through to SwitchStmt.
       }
       else
       goto case_parseAttribute;
     case T.Switch:
-      s = parseSwitchStatement();
+      s = parseSwitchStmt();
       break;
     case T.Case:
-      s = parseCaseStatement();
+      s = parseCaseStmt();
       break;
     case T.Default:
-      s = parseDefaultStatement();
+      s = parseDefaultStmt();
       break;
     case T.Continue:
-      s = parseContinueStatement();
+      s = parseContinueStmt();
       break;
     case T.Break:
-      s = parseBreakStatement();
+      s = parseBreakStmt();
       break;
     case T.Return:
-      s = parseReturnStatement();
+      s = parseReturnStmt();
       break;
     case T.Goto:
-      s = parseGotoStatement();
+      s = parseGotoStmt();
       break;
     case T.With:
-      s = parseWithStatement();
+      s = parseWithStmt();
       break;
     case T.Synchronized:
-      s = parseSynchronizedStatement();
+      s = parseSynchronizedStmt();
       break;
     case T.Try:
-      s = parseTryStatement();
+      s = parseTryStmt();
       break;
     case T.Throw:
-      s = parseThrowStatement();
+      s = parseThrowStmt();
       break;
     case T.Scope:
       if (peekNext() != T.LParen)
         goto case_parseAttribute;
-      s = parseScopeGuardStatement();
+      s = parseScopeGuardStmt();
       break;
     case T.Volatile:
-      s = parseVolatileStatement();
+      s = parseVolatileStmt();
       break;
     case T.Asm:
-      s = parseAsmBlockStatement();
+      s = parseAsmBlockStmt();
       break;
     case T.Pragma:
-      s = parsePragmaStatement();
+      s = parsePragmaStmt();
       break;
     case T.Mixin:
       if (peekNext() == T.LParen)
-        goto case_parseExpressionStatement; // Parse as expression.
-      s = parseMixin!(MixinStatement)();
+        goto case_parseExpressionStmt; // Parse as expression.
+      s = parseMixin!(MixinStmt)();
       break;
     case T.Static:
       switch (peekNext())
       {
       case T.If:
-        s = parseStaticIfStatement();
+        s = parseStaticIfStmt();
         break;
       case T.Assert:
-        s = parseStaticAssertStatement();
+        s = parseStaticAssertStmt();
         break;
       default:
         goto case_parseAttribute;
       }
       break;
     case T.Debug:
-      s = parseDebugStatement();
+      s = parseDebugStmt();
       break;
     case T.Version:
-      s = parseVersionStatement();
+      s = parseVersionStmt();
       break;
     // DeclDef
     case T.Alias, T.Typedef:
       d = parseDeclarationDefinition();
-      goto LreturnDeclarationStatement;
+      goto LreturnDeclarationStmt;
     case T.Enum:
       version(D2)
       if (isEnumManifest())
         goto case_parseAttribute;
       d = parseEnumDecl();
-      goto LreturnDeclarationStatement;
+      goto LreturnDeclarationStmt;
     case T.Class:
       d = parseClassDecl();
-      goto LreturnDeclarationStatement;
+      goto LreturnDeclarationStmt;
     case T.Interface:
       d = parseInterfaceDecl();
-      goto LreturnDeclarationStatement;
+      goto LreturnDeclarationStmt;
     case T.Struct, T.Union:
       d = parseStructOrUnionDecl();
-      // goto LreturnDeclarationStatement;
-    LreturnDeclarationStatement:
+      // goto LreturnDeclarationStmt;
+    LreturnDeclarationStmt:
       set(d, begin);
-      s = new DeclarationStatement(d);
+      s = new DeclarationStmt(d);
       break;
     case T.LBrace:
-      s = parseScopeStatement();
+      s = parseScopeStmt();
       return s;
     case T.Semicolon:
       nT();
-      s = new EmptyStatement();
+      s = new EmptyStmt();
       break;
-    // Parse an ExpressionStatement:
+    // Parse an ExpressionStmt:
     // Tokens that start a PrimaryExpr.
     // case T.Identifier, T.Dot, T.Typeof:
     case T.This:
@@ -2079,13 +2079,13 @@ class Parser
     // Tokens that can start a UnaryExpr:
     case T.AndBinary, T.PlusPlus, T.MinusMinus, T.Mul, T.Minus,
          T.Plus, T.Not, T.Tilde, T.New, T.Delete, T.Cast:
-    case_parseExpressionStatement:
-      s = new ExpressionStatement(parseExpression());
+    case_parseExpressionStmt:
+      s = new ExpressionStmt(parseExpression());
       require2(T.Semicolon);
       break;
     default:
       if (token.isSpecialToken)
-        goto case_parseExpressionStatement;
+        goto case_parseExpressionStmt;
 
       if (token.kind != T.Dollar)
         // Assert that this isn't a valid expression.
@@ -2097,7 +2097,7 @@ class Parser
         );
 
       // Report error: it's an illegal statement.
-      s = new IllegalStatement();
+      s = new IllegalStmt();
       // Skip to next valid token.
       do
         nT();
@@ -2112,18 +2112,18 @@ class Parser
     return s;
   }
 
-  /// Parses a ScopeStatement.
-  /// $(BNF ScopeStatement := NoScopeStatement )
-  Statement parseScopeStatement()
+  /// Parses a ScopeStmt.
+  /// $(BNF ScopeStmt := NoScopeStmt )
+  Statement parseScopeStmt()
   {
-    auto s = parseNoScopeStatement();
-    return set(new ScopeStatement(s), s.begin);
+    auto s = parseNoScopeStmt();
+    return set(new ScopeStmt(s), s.begin);
   }
 
   /// $(BNF
-  ////NoScopeStatement := NonEmptyStatement | BlockStatement
-  ////BlockStatement   := Statements)
-  Statement parseNoScopeStatement()
+  ////NoScopeStmt := NonEmptyStmt | BlockStmt
+  ////BlockStmt   := Statements)
+  Statement parseNoScopeStmt()
   {
     Statement s;
     if (token.kind == T.LBrace)
@@ -2133,25 +2133,25 @@ class Parser
     else
     { // ";"
       error(prevToken, MSG.ExpectedNonEmptyStatement);
-      s = set(new EmptyStatement(), prevToken);
+      s = set(new EmptyStmt(), prevToken);
     }
     return s;
   }
 
-  /// $(BNF NoScopeOrEmptyStatement := ";" | NoScopeStatement )
-  Statement parseNoScopeOrEmptyStatement()
+  /// $(BNF NoScopeOrEmptyStmt := ";" | NoScopeStmt )
+  Statement parseNoScopeOrEmptyStmt()
   {
     if (auto semicolon = consumedToken(T.Semicolon))
-      return set(new EmptyStatement(), semicolon);
+      return set(new EmptyStmt(), semicolon);
     else
-      return parseNoScopeStatement();
+      return parseNoScopeStmt();
   }
 
-  /// $(BNF AttributeStatement := Attributes+
+  /// $(BNF AttributeStmt := Attributes+
   ////  (VariableOrFunctionDeclaration | DeclarationDefinition)
   ////Attributes := extern | ExternLinkageType | auto | static |
   ////              final | const | immutable | enum | scope)
-  Statement parseAttributeStatement()
+  Statement parseAttributeStmt()
   {
     StorageClass stcs, stc;
     LinkageType linkageType;
@@ -2239,7 +2239,7 @@ class Parser
         stc = StorageClass.Auto;
         goto Lcommon;
       case T.Scope:
-        // ScopeGuardStatement with attributes isn't allowed anyway.
+        // ScopeGuardStmt with attributes isn't allowed anyway.
         // if (peekNext() == T.LParen)
         //   break Loop;
         stc = StorageClass.Scope;
@@ -2291,13 +2291,13 @@ class Parser
     // Attach the declaration to the previously parsed attribute.
     prevAttr.setDecls(decl);
     // Return the first attribute declaration. Wrap it in a Statement.
-    return new DeclarationStatement(headAttr.decls);
+    return new DeclarationStmt(headAttr.decls);
   }
 
-  /// $(BNF IfStatement := if "(" Condition ")" ScopeStatement
-  ////               (else ScopeStatement)?
+  /// $(BNF IfStmt := if "(" Condition ")" ScopeStmt
+  ////               (else ScopeStmt)?
   ////Condition := AutoDeclaration | VariableDeclaration | Expression)
-  Statement parseIfStatement()
+  Statement parseIfStmt()
   {
     skip(T.If);
 
@@ -2320,7 +2320,7 @@ class Parser
       set(v, begin.nextNWS);
       auto d = new StorageClassDecl(StorageClass.Auto, v);
       set(d, begin);
-      variable = new DeclarationStatement(d);
+      variable = new DeclarationStmt(d);
       set(variable, begin);
     }
     else
@@ -2336,47 +2336,47 @@ class Parser
         auto init = parseExpression();
         auto v = new VariablesDecl(type, [ident], [init]);
         set(v, begin);
-        variable = new DeclarationStatement(v);
+        variable = new DeclarationStmt(v);
         set(variable, begin);
       }
       else // Normal expression.
         condition = parseExpression();
     }
     requireClosing(T.RParen, leftParen);
-    ifBody = parseScopeStatement();
+    ifBody = parseScopeStmt();
     if (consumed(T.Else))
-      elseBody = parseScopeStatement();
-    return new IfStatement(variable, condition, ifBody, elseBody);
+      elseBody = parseScopeStmt();
+    return new IfStmt(variable, condition, ifBody, elseBody);
   }
 
-  /// $(BNF WhileStatement := while "(" Expression ")" ScopeStatement)
-  Statement parseWhileStatement()
+  /// $(BNF WhileStmt := while "(" Expression ")" ScopeStmt)
+  Statement parseWhileStmt()
   {
     skip(T.While);
     auto leftParen = token;
     require2(T.LParen);
     auto condition = parseExpression();
     requireClosing(T.RParen, leftParen);
-    return new WhileStatement(condition, parseScopeStatement());
+    return new WhileStmt(condition, parseScopeStmt());
   }
 
-  /// $(BNF DoWhileStatement := do ScopeStatement while "(" Expression ")")
-  Statement parseDoWhileStatement()
+  /// $(BNF DoWhileStmt := do ScopeStmt while "(" Expression ")")
+  Statement parseDoWhileStmt()
   {
     skip(T.Do);
-    auto doBody = parseScopeStatement();
+    auto doBody = parseScopeStmt();
     require(T.While);
     auto leftParen = token;
     require2(T.LParen);
     auto condition = parseExpression();
     requireClosing(T.RParen, leftParen);
-    return new DoWhileStatement(condition, doBody);
+    return new DoWhileStmt(condition, doBody);
   }
 
-  /// $(BNF ForStatement :=
-  ////  for "(" (NoScopeStatement | ";") Expression? ";" Expression? ")"
-  ////    ScopeStatement)
-  Statement parseForStatement()
+  /// $(BNF ForStmt :=
+  ////  for "(" (NoScopeStmt | ";") Expression? ";" Expression? ")"
+  ////    ScopeStmt)
+  Statement parseForStmt()
   {
     skip(T.For);
 
@@ -2386,26 +2386,26 @@ class Parser
     auto leftParen = token;
     require2(T.LParen);
     if (!consumed(T.Semicolon))
-      init = parseNoScopeStatement();
+      init = parseNoScopeStmt();
     if (token.kind != T.Semicolon)
       condition = parseExpression();
     require2(T.Semicolon);
     if (token.kind != T.RParen)
       increment = parseExpression();
     requireClosing(T.RParen, leftParen);
-    forBody = parseScopeStatement();
-    return new ForStatement(init, condition, increment, forBody);
+    forBody = parseScopeStmt();
+    return new ForStmt(init, condition, increment, forBody);
   }
 
-  /// $(BNF ForeachStatement :=
+  /// $(BNF ForeachStmt :=
   ////  Foreach "(" ForeachVarList ";" Aggregate ")"
-  ////    ScopeStatement
+  ////    ScopeStmt
   ////Foreach := foreach | foreach_reverse
   ////ForeachVarList := ForeachVar ("," ForeachVar)*
   ////ForeachVar := ref? (Identifier | Declarator)
   ////Aggregate := Expression | ForeachRange
   ////ForeachRange := Expression ".." Expression # D2.0)
-  Statement parseForeachStatement()
+  Statement parseForeachStmt()
   {
     assert(token.kind == T.Foreach || token.kind == T.ForeachReverse);
     TOK tok = token.kind;
@@ -2451,25 +2451,25 @@ class Parser
     e = parseExpression();
 
     version(D2)
-    { //Foreach (ForeachType; LwrExpr .. UprExpr ) ScopeStatement
+    { //Foreach (ForeachType; LwrExpr .. UprExpr ) ScopeStmt
     if (consumed(T.Slice))
     {
       // if (params.length != 1)
         // error(MID.XYZ); // TODO: issue error msg
       auto upper = parseExpression();
       requireClosing(T.RParen, leftParen);
-      auto forBody = parseScopeStatement();
-      return new ForeachRangeStatement(tok, params, e, upper, forBody);
+      auto forBody = parseScopeStmt();
+      return new ForeachRangeStmt(tok, params, e, upper, forBody);
     }
     } // version(D2)
-    // Foreach (ForeachTypeList; Aggregate) ScopeStatement
+    // Foreach (ForeachTypeList; Aggregate) ScopeStmt
     requireClosing(T.RParen, leftParen);
-    auto forBody = parseScopeStatement();
-    return new ForeachStatement(tok, params, e, forBody);
+    auto forBody = parseScopeStmt();
+    return new ForeachStmt(tok, params, e, forBody);
   }
 
-  /// $(BNF SwitchStatement := switch "(" Expression ")" ScopeStatement)
-  Statement parseSwitchStatement()
+  /// $(BNF SwitchStmt := switch "(" Expression ")" ScopeStmt)
+  Statement parseSwitchStmt()
   {
     bool isFinal = consumed(T.Final);
     skip(T.Switch);
@@ -2477,17 +2477,17 @@ class Parser
     require2(T.LParen);
     auto condition = parseExpression();
     requireClosing(T.RParen, leftParen);
-    auto switchBody = parseScopeStatement();
-    return new SwitchStatement(condition, switchBody, isFinal);
+    auto switchBody = parseScopeStmt();
+    return new SwitchStmt(condition, switchBody, isFinal);
   }
 
   /// Helper function for parsing the body of a default or case statement.
-  /// $(BNF CaseOrDefaultBody := ScopeStatement)
+  /// $(BNF CaseOrDefaultBody := ScopeStmt)
   Statement parseCaseOrDefaultBody()
   {
-    // This function is similar to parseNoScopeStatement()
+    // This function is similar to parseNoScopeStmt()
     auto begin = token;
-    auto s = new CompoundStatement();
+    auto s = new CompoundStmt();
     while (token.kind != T.Case &&
            token.kind != T.Default &&
            token.kind != T.RBrace &&
@@ -2496,11 +2496,11 @@ class Parser
     if (begin is token) // Nothing consumed.
       begin = this.prevToken;
     set(s, begin);
-    return set(new ScopeStatement(s), begin);
+    return set(new ScopeStmt(s), begin);
   }
 
-  /// $(BNF CaseStatement := case ExpressionList ":" CaseOrDefaultBody)
-  Statement parseCaseStatement()
+  /// $(BNF CaseStmt := case ExpressionList ":" CaseOrDefaultBody)
+  Statement parseCaseStmt()
   {
     skip(T.Case);
     auto values = parseExpressionList();
@@ -2514,53 +2514,53 @@ class Parser
       Expression left = values[0], right = parseAssignExpr();
       require2(T.Colon);
       auto caseBody = parseCaseOrDefaultBody();
-      return new CaseRangeStatement(left, right, caseBody);
+      return new CaseRangeStmt(left, right, caseBody);
     } // version(D2)
     auto caseBody = parseCaseOrDefaultBody();
-    return new CaseStatement(values, caseBody);
+    return new CaseStmt(values, caseBody);
   }
 
-  /// $(BNF DefaultStatement := default ":" CaseOrDefaultBody)
-  Statement parseDefaultStatement()
+  /// $(BNF DefaultStmt := default ":" CaseOrDefaultBody)
+  Statement parseDefaultStmt()
   {
     skip(T.Default);
     require2(T.Colon);
     auto defaultBody = parseCaseOrDefaultBody();
-    return new DefaultStatement(defaultBody);
+    return new DefaultStmt(defaultBody);
   }
 
-  /// $(BNF ContinueStatement := continue Identifier? ";")
-  Statement parseContinueStatement()
+  /// $(BNF ContinueStmt := continue Identifier? ";")
+  Statement parseContinueStmt()
   {
     skip(T.Continue);
     auto ident = optionalIdentifier();
     require2(T.Semicolon);
-    return new ContinueStatement(ident);
+    return new ContinueStmt(ident);
   }
 
-  /// $(BNF BreakStatement := break Identifier? ";")
-  Statement parseBreakStatement()
+  /// $(BNF BreakStmt := break Identifier? ";")
+  Statement parseBreakStmt()
   {
     skip(T.Break);
     auto ident = optionalIdentifier();
     require2(T.Semicolon);
-    return new BreakStatement(ident);
+    return new BreakStmt(ident);
   }
 
-  /// $(BNF ReturnStatement := return Expression? ";")
-  Statement parseReturnStatement()
+  /// $(BNF ReturnStmt := return Expression? ";")
+  Statement parseReturnStmt()
   {
     skip(T.Return);
     Expression expr;
     if (token.kind != T.Semicolon)
       expr = parseExpression();
     require2(T.Semicolon);
-    return new ReturnStatement(expr);
+    return new ReturnStmt(expr);
   }
 
   /// $(BNF
-  ////GotoStatement := goto (case Expression? | default | Identifier) ";")
-  Statement parseGotoStatement()
+  ////GotoStmt := goto (case Expression? | default | Identifier) ";")
+  Statement parseGotoStmt()
   {
     skip(T.Goto);
     auto ident = token;
@@ -2580,23 +2580,23 @@ class Parser
       ident = requireIdentifier(MSG.ExpectedAnIdentifier);
     }
     require2(T.Semicolon);
-    return new GotoStatement(ident, caseExpr);
+    return new GotoStmt(ident, caseExpr);
   }
 
-  /// $(BNF WithStatement := with "(" Expression ")" ScopeStatement)
-  Statement parseWithStatement()
+  /// $(BNF WithStmt := with "(" Expression ")" ScopeStmt)
+  Statement parseWithStmt()
   {
     skip(T.With);
     auto leftParen = token;
     require2(T.LParen);
     auto expr = parseExpression();
     requireClosing(T.RParen, leftParen);
-    return new WithStatement(expr, parseScopeStatement());
+    return new WithStmt(expr, parseScopeStmt());
   }
 
-  /// $(BNF SynchronizedStatement :=
-  ////  synchronized ("(" Expression ")")? ScopeStatement)
-  Statement parseSynchronizedStatement()
+  /// $(BNF SynchronizedStmt :=
+  ////  synchronized ("(" Expression ")")? ScopeStmt)
+  Statement parseSynchronizedStmt()
   {
     skip(T.Synchronized);
     Expression expr;
@@ -2605,24 +2605,24 @@ class Parser
       expr = parseExpression();
       requireClosing(T.RParen, leftParen);
     }
-    return new SynchronizedStatement(expr, parseScopeStatement());
+    return new SynchronizedStmt(expr, parseScopeStmt());
   }
 
-  /// $(BNF TryStatement :=
-  ////  try ScopeStatement
-  ////  (CatchStatement* LastCatchStatement? FinallyStatement? |
-  ////   CatchStatement)
-  ////CatchStatement := catch "(" BasicType Identifier ")" NoScopeStatement
-  ////LastCatchStatement := catch NoScopeStatement
-  ////FinallyStatement := finally NoScopeStatement)
-  Statement parseTryStatement()
+  /// $(BNF TryStmt :=
+  ////  try ScopeStmt
+  ////  (CatchStmt* LastCatchStmt? FinallyStmt? |
+  ////   CatchStmt)
+  ////CatchStmt := catch "(" BasicType Identifier ")" NoScopeStmt
+  ////LastCatchStmt := catch NoScopeStmt
+  ////FinallyStmt := finally NoScopeStmt)
+  Statement parseTryStmt()
   {
     auto begin = token;
     skip(T.Try);
 
-    auto tryBody = parseScopeStatement();
-    CatchStatement[] catchBodies;
-    FinallyStatement finBody;
+    auto tryBody = parseScopeStmt();
+    CatchStmt[] catchBodies;
+    FinallyStmt finBody;
 
     while (consumed(T.Catch))
     {
@@ -2637,34 +2637,34 @@ class Parser
         set(param, paramBegin);
         requireClosing(T.RParen, leftParen);
       }
-      catchBodies ~= set(new CatchStatement(param, parseNoScopeStatement()),
+      catchBodies ~= set(new CatchStmt(param, parseNoScopeStmt()),
                          catchBegin);
       if (param is null)
         break; // This is a LastCatch
     }
 
     if (auto t = consumedToken(T.Finally))
-      finBody = set(new FinallyStatement(parseNoScopeStatement()), t);
+      finBody = set(new FinallyStmt(parseNoScopeStmt()), t);
 
     if (catchBodies is null && finBody is null)
       error(begin, MSG.MissingCatchOrFinally);
 
-    return new TryStatement(tryBody, catchBodies, finBody);
+    return new TryStmt(tryBody, catchBodies, finBody);
   }
 
-  /// $(BNF ThrowStatement := throw Expression ";")
-  Statement parseThrowStatement()
+  /// $(BNF ThrowStmt := throw Expression ";")
+  Statement parseThrowStmt()
   {
     skip(T.Throw);
     auto expr = parseExpression();
     require2(T.Semicolon);
-    return new ThrowStatement(expr);
+    return new ThrowStmt(expr);
   }
 
-  /// $(BNF ScopeGuardStatement := scope "(" ScopeCondition ")" ScopeGuardBody
+  /// $(BNF ScopeGuardStmt := scope "(" ScopeCondition ")" ScopeGuardBody
   ////ScopeCondition := "exit" | "success" | "failure"
-  ////ScopeGuardBody := ScopeStatement | NoScopeStatement)
-  Statement parseScopeGuardStatement()
+  ////ScopeGuardBody := ScopeStmt | NoScopeStmt)
+  Statement parseScopeGuardStmt()
   {
     skip(T.Scope);
     skip(T.LParen);
@@ -2679,28 +2679,28 @@ class Parser
       }
     require2(T.RParen);
     auto scopeBody = (token.kind == T.LBrace) ?
-                      parseScopeStatement() : parseNoScopeStatement();
-    return new ScopeGuardStatement(condition, scopeBody);
+                      parseScopeStmt() : parseNoScopeStmt();
+    return new ScopeGuardStmt(condition, scopeBody);
   }
 
-  /// $(BNF VolatileStatement := volatile VolatileBody? ";"
-  ////VolatileBody := ScopeStatement | NoScopeStatement)
-  Statement parseVolatileStatement()
+  /// $(BNF VolatileStmt := volatile VolatileBody? ";"
+  ////VolatileBody := ScopeStmt | NoScopeStmt)
+  Statement parseVolatileStmt()
   {
     skip(T.Volatile);
     Statement volatileBody;
     if (token.kind == T.Semicolon)
       nT();
     else if (token.kind == T.LBrace)
-      volatileBody = parseScopeStatement();
+      volatileBody = parseScopeStmt();
     else
       volatileBody = parseStatement();
-    return new VolatileStatement(volatileBody);
+    return new VolatileStmt(volatileBody);
   }
 
-  /// $(BNF PragmaStatement :=
-  ////  pragma "(" PragmaName ("," ExpressionList)? ")" NoScopeStatement)
-  Statement parsePragmaStatement()
+  /// $(BNF PragmaStmt :=
+  ////  pragma "(" PragmaName ("," ExpressionList)? ")" NoScopeStmt)
+  Statement parsePragmaStmt()
   {
     skip(T.Pragma);
 
@@ -2716,15 +2716,15 @@ class Parser
       args = parseExpressionList();
     requireClosing(T.RParen, leftParen);
 
-    pragmaBody = parseNoScopeOrEmptyStatement();
+    pragmaBody = parseNoScopeOrEmptyStmt();
 
-    return new PragmaStatement(name, args, pragmaBody);
+    return new PragmaStmt(name, args, pragmaBody);
   }
 
-  /// $(BNF StaticIfStatement :=
-  ////  static if "(" Expression ")" NoScopeStatement
-  ////  (else NoScopeStatement)?)
-  Statement parseStaticIfStatement()
+  /// $(BNF StaticIfStmt :=
+  ////  static if "(" Expression ")" NoScopeStmt
+  ////  (else NoScopeStmt)?)
+  Statement parseStaticIfStmt()
   {
     skip(T.Static);
     skip(T.If);
@@ -2735,16 +2735,16 @@ class Parser
     require2(T.LParen);
     condition = parseExpression();
     requireClosing(T.RParen, leftParen);
-    ifBody = parseNoScopeStatement();
+    ifBody = parseNoScopeStmt();
     if (consumed(T.Else))
-      elseBody = parseNoScopeStatement();
-    return new StaticIfStatement(condition, ifBody, elseBody);
+      elseBody = parseNoScopeStmt();
+    return new StaticIfStmt(condition, ifBody, elseBody);
   }
 
-  /// $(BNF StaticAssertStatement :=
+  /// $(BNF StaticAssertStmt :=
   ////  static assert "(" AssignExpr ("," Message) ")"
   ////Message := AssignExpr)
-  Statement parseStaticAssertStatement()
+  Statement parseStaticAssertStmt()
   {
     skip(T.Static);
     skip(T.Assert);
@@ -2756,13 +2756,13 @@ class Parser
       message = parseAssignExpr(); // Error message.
     require2(T.RParen);
     require2(T.Semicolon);
-    return new StaticAssertStatement(condition, message);
+    return new StaticAssertStmt(condition, message);
   }
 
-  /// $(BNF DebugStatement := debug Condition? NoScopeStatement
-  ////                  (else NoScopeStatement)?
+  /// $(BNF DebugStmt := debug Condition? NoScopeStmt
+  ////                  (else NoScopeStmt)?
   ////Condition := "(" IdentOrInt ")")
-  Statement parseDebugStatement()
+  Statement parseDebugStmt()
   {
     skip(T.Debug);
     Token* cond;
@@ -2776,18 +2776,18 @@ class Parser
     }
     // debug Statement
     // debug ( Condition ) Statement
-    debugBody = parseNoScopeStatement();
+    debugBody = parseNoScopeStmt();
     // else Statement
     if (consumed(T.Else))
-      elseBody = parseNoScopeStatement();
+      elseBody = parseNoScopeStmt();
 
-    return new DebugStatement(cond, debugBody, elseBody);
+    return new DebugStmt(cond, debugBody, elseBody);
   }
 
-  /// $(BNF VersionStatement := version Condition NoScopeStatement
-  ////                  (else NoScopeStatement)?
+  /// $(BNF VersionStmt := version Condition NoScopeStmt
+  ////                  (else NoScopeStmt)?
   ////Condition := "(" IdentOrInt ")")
-  Statement parseVersionStatement()
+  Statement parseVersionStmt()
   {
     skip(T.Version);
     Token* cond;
@@ -2798,42 +2798,42 @@ class Parser
     cond = parseVersionCondition();
     require2(T.RParen);
     // version ( Condition ) Statement
-    versionBody = parseNoScopeStatement();
+    versionBody = parseNoScopeStmt();
     // else Statement
     if (consumed(T.Else))
-      elseBody = parseNoScopeStatement();
+      elseBody = parseNoScopeStmt();
 
-    return new VersionStatement(cond, versionBody, elseBody);
+    return new VersionStmt(cond, versionBody, elseBody);
   }
 
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   |                        Assembler parsing methods                        |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
-  /// Parses an AsmBlockStatement.
-  /// $(BNF AsmBlockStatement := asm "{" AsmStatement* "}" )
-  Statement parseAsmBlockStatement()
+  /// Parses an AsmBlockStmt.
+  /// $(BNF AsmBlockStmt := asm "{" AsmStmt* "}" )
+  Statement parseAsmBlockStmt()
   {
     skip(T.Asm);
     auto leftBrace = token;
     require(T.LBrace);
-    auto ss = new CompoundStatement;
+    auto ss = new CompoundStmt;
     while (token.kind != T.RBrace && token.kind != T.EOF)
-      ss ~= parseAsmStatement();
+      ss ~= parseAsmStmt();
     requireClosing(T.RBrace, leftBrace);
-    return new AsmBlockStatement(set(ss, leftBrace));
+    return new AsmBlockStmt(set(ss, leftBrace));
   }
 
   /// $(BNF
-  ////AsmStatement := OpcodeStatement | LabeledStatement |
-  ////                AsmAlignStatement | EmptyStatement
-  ////OpcodeStatement := Opcode Operands? ";"
+  ////AsmStmt := OpcodeStmt | LabeledStmt |
+  ////                AsmAlignStmt | EmptyStmt
+  ////OpcodeStmt := Opcode Operands? ";"
   ////Opcode := Identifier
   ////Operands := AsmExpr ("," AsmExpr)*
-  ////LabeledStatement := Identifier ":" AsmStatement
-  ////AsmAlignStatement := align Integer ";"
-  ////EmptyStatement := ";")
-  Statement parseAsmStatement()
+  ////LabeledStmt := Identifier ":" AsmStmt
+  ////AsmAlignStmt := align Integer ";"
+  ////EmptyStmt := ";")
+  Statement parseAsmStmt()
   {
     auto begin = token;
     Statement s;
@@ -2846,8 +2846,8 @@ class Parser
     case T.Identifier:
       nT();
       if (consumed(T.Colon))
-      { // Identifier ":" AsmStatement
-        s = new LabeledStatement(ident, parseAsmStatement());
+      { // Identifier ":" AsmStmt
+        s = new LabeledStmt(ident, parseAsmStmt());
         break;
       }
 
@@ -2879,7 +2879,7 @@ class Parser
           es ~= parseAsmExpr();
         while (consumed(T.Comma))
       require2(T.Semicolon);
-      s = new AsmStatement(ident, es);
+      s = new AsmStmt(ident, es);
       break;
     case T.Align:
       // align Integer ";"
@@ -2888,14 +2888,14 @@ class Parser
       if (!consumed(T.Int32))
         error2(MSG.ExpectedIntegerAfterAlign, token);
       require2(T.Semicolon);
-      s = new AsmAlignStatement(number);
+      s = new AsmAlignStmt(number);
       break;
     case T.Semicolon:
-      s = new EmptyStatement();
+      s = new EmptyStmt();
       nT();
       break;
     default:
-      s = new IllegalAsmStatement();
+      s = new IllegalAsmStmt();
       // Skip to next valid token.
       do
         nT();

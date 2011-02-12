@@ -396,8 +396,8 @@ class UnionDecl : AggregateDecl
 class ConstructorDecl : Declaration
 {
   Parameters params;
-  FuncBodyStatement funcBody;
-  this(Parameters params, FuncBodyStatement funcBody)
+  FuncBodyStmt funcBody;
+  this(Parameters params, FuncBodyStmt funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -412,8 +412,8 @@ class ConstructorDecl : Declaration
 
 class StaticCtorDecl : Declaration
 {
-  FuncBodyStatement funcBody;
-  this(FuncBodyStatement funcBody)
+  FuncBodyStmt funcBody;
+  this(FuncBodyStmt funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -426,8 +426,8 @@ class StaticCtorDecl : Declaration
 
 class DestructorDecl : Declaration
 {
-  FuncBodyStatement funcBody;
-  this(FuncBodyStatement funcBody)
+  FuncBodyStmt funcBody;
+  this(FuncBodyStmt funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -440,8 +440,8 @@ class DestructorDecl : Declaration
 
 class StaticDtorDecl : Declaration
 {
-  FuncBodyStatement funcBody;
-  this(FuncBodyStatement funcBody)
+  FuncBodyStmt funcBody;
+  this(FuncBodyStmt funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -458,11 +458,11 @@ class FunctionDecl : Declaration
   Token* name;
 //   TemplateParameters tparams;
   Parameters params;
-  FuncBodyStatement funcBody;
+  FuncBodyStmt funcBody;
   LinkageType linkageType;
   bool cantInterpret = false;
   this(TypeNode returnType, Token* name,/+ TemplateParameters tparams,+/
-       Parameters params, FuncBodyStatement funcBody)
+       Parameters params, FuncBodyStmt funcBody)
   {
     super.hasBody = funcBody.funcBody !is null;
     mixin(set_kind);
@@ -553,8 +553,8 @@ class VariablesDecl : Declaration
 
 class InvariantDecl : Declaration
 {
-  FuncBodyStatement funcBody;
-  this(FuncBodyStatement funcBody)
+  FuncBodyStmt funcBody;
+  this(FuncBodyStmt funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -567,8 +567,8 @@ class InvariantDecl : Declaration
 
 class UnittestDecl : Declaration
 {
-  FuncBodyStatement funcBody;
-  this(FuncBodyStatement funcBody)
+  FuncBodyStmt funcBody;
+  this(FuncBodyStmt funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -669,8 +669,8 @@ class StaticAssertDecl : Declaration
 class NewDecl : Declaration
 {
   Parameters params;
-  FuncBodyStatement funcBody;
-  this(Parameters params, FuncBodyStatement funcBody)
+  FuncBodyStmt funcBody;
+  this(Parameters params, FuncBodyStmt funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);
@@ -686,8 +686,8 @@ class NewDecl : Declaration
 class DeleteDecl : Declaration
 {
   Parameters params;
-  FuncBodyStatement funcBody;
-  this(Parameters params, FuncBodyStatement funcBody)
+  FuncBodyStmt funcBody;
+  this(Parameters params, FuncBodyStmt funcBody)
   {
     super.hasBody = true;
     mixin(set_kind);

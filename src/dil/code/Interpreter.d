@@ -277,197 +277,197 @@ override
 
 override
 {
-  S visit(CompoundStatement s)
+  S visit(CompoundStmt s)
   {
     return s;
   }
 
-  S visit(IllegalStatement)
+  S visit(IllegalStmt)
   { assert(0, "interpreting invalid AST"); return null; }
 
-  S visit(EmptyStatement s)
+  S visit(EmptyStmt s)
   {
     return s;
   }
 
-  S visit(FuncBodyStatement s)
+  S visit(FuncBodyStmt s)
   {
     return s;
   }
 
-  S visit(ScopeStatement s)
+  S visit(ScopeStmt s)
   {
     return s;
   }
 
-  S visit(LabeledStatement s)
+  S visit(LabeledStmt s)
   {
     return s;
   }
 
-  S visit(ExpressionStatement s)
+  S visit(ExpressionStmt s)
   {
     return s;
   }
 
-  S visit(DeclarationStatement s)
+  S visit(DeclarationStmt s)
   {
     return s;
   }
 
-  S visit(IfStatement s)
+  S visit(IfStmt s)
   {
     return s;
   }
 
-  S visit(WhileStatement s)
+  S visit(WhileStmt s)
   {
     return s;
   }
 
-  S visit(DoWhileStatement s)
+  S visit(DoWhileStmt s)
   {
     return s;
   }
 
-  S visit(ForStatement s)
+  S visit(ForStmt s)
   {
     return s;
   }
 
-  S visit(ForeachStatement s)
+  S visit(ForeachStmt s)
   {
     return s;
   }
 
   // D2.0
-  S visit(ForeachRangeStatement s)
+  S visit(ForeachRangeStmt s)
   {
     return s;
   }
 
-  S visit(SwitchStatement s)
+  S visit(SwitchStmt s)
   {
     return s;
   }
 
-  S visit(CaseStatement s)
+  S visit(CaseStmt s)
   {
     return s;
   }
 
-  S visit(DefaultStatement s)
+  S visit(DefaultStmt s)
   {
     return s;
   }
 
-  S visit(ContinueStatement s)
+  S visit(ContinueStmt s)
   {
     return s;
   }
 
-  S visit(BreakStatement s)
+  S visit(BreakStmt s)
   {
     return s;
   }
 
-  S visit(ReturnStatement s)
+  S visit(ReturnStmt s)
   {
     return s;
   }
 
-  S visit(GotoStatement s)
+  S visit(GotoStmt s)
   {
     return s;
   }
 
-  S visit(WithStatement s)
+  S visit(WithStmt s)
   {
     return s;
   }
 
-  S visit(SynchronizedStatement s)
+  S visit(SynchronizedStmt s)
   {
     return s;
   }
 
-  S visit(TryStatement s)
+  S visit(TryStmt s)
   {
     return s;
   }
 
-  S visit(CatchStatement s)
+  S visit(CatchStmt s)
   {
     return s;
   }
 
-  S visit(FinallyStatement s)
+  S visit(FinallyStmt s)
   {
     return s;
   }
 
-  S visit(ScopeGuardStatement s)
+  S visit(ScopeGuardStmt s)
   {
     return s;
   }
 
-  S visit(ThrowStatement s)
+  S visit(ThrowStmt s)
   {
     return s;
   }
 
-  S visit(VolatileStatement s)
+  S visit(VolatileStmt s)
   {
     return s;
   }
 
-  S visit(AsmBlockStatement s)
+  S visit(AsmBlockStmt s)
   {
     error(s, "cannot interpret assembler statements at compile time");
     return s;
   }
 
-  S visit(AsmStatement s)
+  S visit(AsmStmt s)
   {
     assert(0);
     return s;
   }
 
-  S visit(AsmAlignStatement s)
+  S visit(AsmAlignStmt s)
   {
     assert(0);
     return s;
   }
 
-  S visit(IllegalAsmStatement)
+  S visit(IllegalAsmStmt)
   { assert(0, "interpreting invalid AST"); return null; }
 
-  S visit(PragmaStatement s)
+  S visit(PragmaStmt s)
   {
     return s;
   }
 
-  S visit(MixinStatement s)
+  S visit(MixinStmt s)
   {
     return s;
   }
 
-  S visit(StaticIfStatement s)
+  S visit(StaticIfStmt s)
   {
     return s;
   }
 
-  S visit(StaticAssertStatement s)
+  S visit(StaticAssertStmt s)
   {
     return s;
   }
 
-  S visit(DebugStatement s)
+  S visit(DebugStmt s)
   {
     return s;
   }
 
-  S visit(VersionStatement s)
+  S visit(VersionStmt s)
   {
     return s;
   }
