@@ -43,7 +43,7 @@ class EMethods
     switch (e.kind)
     {
     // TODO:
-    case NK.IntExpression:
+    case NK.IntExpr:
       break;
     default:
       //error("expected integer constant, not ‘{}’", e.toText());
@@ -69,16 +69,16 @@ class EMethods
     Float r;
     switch (e.kind)
     {
-    case NK.ComplexExpression:
-      r = e.to!(ComplexExpression).number.im; break;
-    case NK.FloatExpression:
-      auto fe = e.to!(FloatExpression);
+    case NK.ComplexExpr:
+      r = e.to!(ComplexExpr).number.im; break;
+    case NK.FloatExpr:
+      auto fe = e.to!(FloatExpr);
       if (fe.type.flagsOf().isImaginary())
         r = fe.number;
       else
         r = Float();
       break;
-    case NK.IntExpression:
+    case NK.IntExpr:
       r = Float();
       break;
     default:
@@ -93,17 +93,17 @@ class EMethods
     Float r;
     switch (e.kind)
     {
-    case NK.ComplexExpression:
-      r = e.to!(ComplexExpression).number.re; break;
-    case NK.FloatExpression:
-      auto fe = e.to!(FloatExpression);
+    case NK.ComplexExpr:
+      r = e.to!(ComplexExpr).number.re; break;
+    case NK.FloatExpr:
+      auto fe = e.to!(FloatExpr);
       if (fe.type.flagsOf().isReal())
         r = fe.number;
       else
         r = Float();
       break;
-    case NK.IntExpression:
-      auto ie = e.to!(IntExpression);
+    case NK.IntExpr:
+      auto ie = e.to!(IntExpr);
       if (ie.type.flagsOf().isSigned())
         r = Float(cast(long)ie.number);
       else
@@ -121,10 +121,10 @@ class EMethods
     Complex z;
     switch (e.kind)
     {
-    case NK.ComplexExpression:
-      z = e.to!(ComplexExpression).number; break;
-    case NK.FloatExpression:
-      auto fe = e.to!(FloatExpression);
+    case NK.ComplexExpr:
+      z = e.to!(ComplexExpr).number; break;
+    case NK.FloatExpr:
+      auto fe = e.to!(FloatExpr);
       Float re, im;
       if (fe.type.flagsOf().isReal())
         re = fe.number;
@@ -132,7 +132,7 @@ class EMethods
         im = fe.number;
       z = Complex(re, im);
       break;
-    case NK.IntExpression:
+    case NK.IntExpr:
       z = Complex(toReal(e)); break;
     default:
       errorExpectedIntOrFloat(e);
@@ -148,30 +148,30 @@ class EMethods
   Lagain:
     switch (e.kind)
     {
-    case NK.IntExpression:
-      auto num = e.to!(IntExpression).number;
+    case NK.IntExpr:
+      auto num = e.to!(IntExpr).number;
       r = num != 0; break;
-    case NK.FloatExpression:
-      auto num = e.to!(FloatExpression).number;
+    case NK.FloatExpr:
+      auto num = e.to!(FloatExpr).number;
       r = num != 0; break;
-    case NK.ComplexExpression:
-      auto num = e.to!(ComplexExpression).number;
+    case NK.ComplexExpr:
+      auto num = e.to!(ComplexExpr).number;
       r = num != 0L; break;
-    case NK.CharExpression:
-      auto num = e.to!(CharExpression).value.number;
+    case NK.CharExpr:
+      auto num = e.to!(CharExpr).value.number;
       r = num != 0; break;
-    case NK.BoolExpression:
-      auto num = e.to!(BoolExpression).value.number;
+    case NK.BoolExpr:
+      auto num = e.to!(BoolExpr).value.number;
       r = num != 0; break;
-    case NK.CommaExpression:
-      e = e.to!(CommaExpression).rhs; goto Lagain;
-    case NK.ArrayLiteralExpression:
-      r = e.to!(ArrayLiteralExpression).values.length != 0; break;
-    case NK.AArrayLiteralExpression:
-      r = e.to!(AArrayLiteralExpression).values.length != 0; break;
-    case NK.StringExpression:
+    case NK.CommaExpr:
+      e = e.to!(CommaExpr).rhs; goto Lagain;
+    case NK.ArrayLiteralExpr:
+      r = e.to!(ArrayLiteralExpr).values.length != 0; break;
+    case NK.AArrayLiteralExpr:
+      r = e.to!(AArrayLiteralExpr).values.length != 0; break;
+    case NK.StringExpr:
       r = 1; break;
-    case NK.NullExpression:
+    case NK.NullExpr:
       r = 0; break;
     default:
       r = -1; // It has no boolean value.
@@ -191,14 +191,14 @@ class EMethods
     return isBool(e) == 0;
   }
 
-  /// Returns a boolean IntExpression if e has a boolean value, otherwise NAR.
+  /// Returns a boolean IntExpr if e has a boolean value, otherwise NAR.
   static Expression toBool(Expression e)
   {
     auto boolval = isBool(e);
     Expression r = NAR;
     if (boolval != -1)
     {
-      r = new IntExpression(boolval, Types.Bool);
+      r = new IntExpr(boolval, Types.Bool);
       r.setLoc(e);
     }
     return r;
@@ -214,15 +214,15 @@ class EMethods
   static Expression arrayLength(Expression e)
   {
     size_t len;
-    if (auto se = e.Is!(StringExpression))
+    if (auto se = e.Is!(StringExpr))
       len = se.length();
-    else if (auto ae = e.Is!(ArrayLiteralExpression))
+    else if (auto ae = e.Is!(ArrayLiteralExpr))
       len = ae.values.length;
-    else if (auto aae = e.Is!(AArrayLiteralExpression))
+    else if (auto aae = e.Is!(AArrayLiteralExpr))
       len = aae.keys.length;
     else
       return NAR;
-    auto r = new IntExpression(len, e.type);
+    auto r = new IntExpr(len, e.type);
     r.setLoc(e);
     return r;
   }

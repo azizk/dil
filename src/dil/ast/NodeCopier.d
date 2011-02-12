@@ -17,27 +17,27 @@ const string copyMethod =
     return n;
   }`;
 
-/// Mixed into the body of abstract class BinaryExpression.
-const string copyMethodBinaryExpression =
+/// Mixed into the body of abstract class BinaryExpr.
+const string copyMethodBinaryExpr =
   `override typeof(this) copy()
   {
     alias typeof(this) this_t;
-    // BinaryExpression is an abstract class and not a member of NodeKind.
-    // Just take CommaExpression instead.
-    static assert(is(CommaExpression : BinaryExpression),
-      "CommaExpression doesn't inherit from BinaryExpression");
-    mixin(genCopyCode(NodeKind.CommaExpression));
+    // BinaryExpr is an abstract class and not a member of NodeKind.
+    // Just take CommaExpr instead.
+    static assert(is(CommaExpr : BinaryExpr),
+      "CommaExpr doesn't inherit from BinaryExpr");
+    mixin(genCopyCode(NodeKind.CommaExpr));
     return n;
   }`;
 
-/// Mixed into the body of abstract class UnaryExpression.
-const string copyMethodUnaryExpression =
+/// Mixed into the body of abstract class UnaryExpr.
+const string copyMethodUnaryExpr =
   `override typeof(this) copy()
   {
     alias typeof(this) this_t;
-    static assert(is(AddressExpression : UnaryExpression),
-      "AddressExpression doesn't inherit from UnaryExpression");
-    mixin(genCopyCode(NodeKind.AddressExpression));
+    static assert(is(AddressExpr : UnaryExpr),
+      "AddressExpr doesn't inherit from UnaryExpr");
+    mixin(genCopyCode(NodeKind.AddressExpr));
     return n;
   }`;
 
@@ -87,7 +87,7 @@ string genCopyCode(NodeKind nodeKind)
   string[] m; // Array of member names to be copied.
 
   // Handle special cases.
-  if (nodeKind == NodeKind.StringExpression)
+  if (nodeKind == NodeKind.StringExpr)
     m = ["%n.str = n.str.dup;"];
   else
     // Look up members for this kind of node in the table.

@@ -797,11 +797,11 @@ class PragmaDecl : AttributeDecl
 
 class MixinDecl : Declaration
 {
-  /// IdExpression := IdentifierExpression | TemplateInstanceExpression
-  /// MixinTemplate := IdExpression ("." IdExpression)*
+  /// IdExpr := IdentifierExpr | TmplInstanceExpr
+  /// MixinTemplate := IdExpr ("." IdExpr)*
   Expression templateExpr;
   Token* mixinIdent; /// Optional mixin identifier.
-  Expression argument; /// "mixin" "(" AssignExpression ")"
+  Expression argument; /// "mixin" "(" AssignExpr ")"
   Declaration decls; /// Initialized in the semantic phase.
 
   this(Expression templateExpr, Token* mixinIdent)
@@ -821,7 +821,7 @@ class MixinDecl : Declaration
     this.argument = argument;
   }
 
-  bool isMixinExpression()
+  bool isMixinExpr()
   {
     return argument !is null;
   }

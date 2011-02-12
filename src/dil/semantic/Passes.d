@@ -264,24 +264,24 @@ class FirstSemanticPass : SemanticPass
     switch (e.kind)
     {
     alias NodeKind NK;
-    case NK.IdentifierExpression,
-         NK.ThisExpression,
-         NK.IndexExpression,
-         NK.StructInitExpression,
+    case NK.IdentifierExpr,
+         NK.ThisExpr,
+         NK.IndexExpr,
+         NK.StructInitExpr,
          NK.VariablesDecl,
-         NK.DerefExpression,
-         NK.SliceExpression:
+         NK.DerefExpr,
+         NK.SliceExpr:
       // Nothing to do.
       break;
-    case NK.ArrayLiteralExpression:
+    case NK.ArrayLiteralExpr:
       // if (e.type && e.type.baseType().tid == TYP.Void)
       //   error();
       break;
-    case NK.CommaExpression:
-      e = toLValue(e.to!(CommaExpression).rhs); // (lhs, rhs)
-    case NK.CondExpression:
+    case NK.CommaExpr:
+      e = toLValue(e.to!(CommaExpr).rhs); // (lhs, rhs)
+    case NK.CondExpr:
       break;
-    case NK.CallExpression:
+    case NK.CallExpr:
       if (e.type.baseType().isStruct())
         break;
       goto default;
@@ -294,7 +294,7 @@ class FirstSemanticPass : SemanticPass
   /// Returns the expression &e.
   Expression addressOf(Expression e)
   {
-    auto e2 = new AddressExpression(toLValue(e));
+    auto e2 = new AddressExpr(toLValue(e));
     e2.setLoc(e);
     e2.type = e.type.ptrTo();
     return e2;
@@ -1024,14 +1024,14 @@ override
     assert(e.type !is null);
     switch (e.kind)
     {
-    case NodeKind.DeleteExpression:
+    case NodeKind.DeleteExpr:
       error(e, "the delete operator has no boolean result");
       break;
-    case NodeKind.AssignExpression:
+    case NodeKind.AssignExpr:
       error(e, "the assignment operator '=' has no boolean result");
       break;
-    case NodeKind.CondExpression:
-      auto cond = e.to!(CondExpression);
+    case NodeKind.CondExpr:
+      auto cond = e.to!(CondExpr);
       errorIfNonBool(cond.lhs);
       errorIfNonBool(cond.rhs);
       break;
@@ -1046,7 +1046,7 @@ override
   /// Params:
   ///   e = the binary expression to be checked.
   ///   id = the name of the overload function.
-  Expression findOverload(UnaryExpression e, Identifier* id)
+  Expression findOverload(UnaryExpr e, Identifier* id)
   {
     // TODO:
     // check e for struct or class
@@ -1061,14 +1061,14 @@ override
   ///   e = the binary expression to be checked.
   ///   id = the name of the overload function.
   ///   id_r = the name of the reverse overload function.
-  Expression findOverload(BinaryExpression e, Identifier* id, Identifier* id_r)
+  Expression findOverload(BinaryExpr e, Identifier* id, Identifier* id_r)
   {
     // TODO:
     return null;
   }
 
   /// Visit the operands of a binary operator.
-  void visitBinary(BinaryExpression e)
+  void visitBinary(BinaryExpr e)
   {
     e.lhs = visitE(e.lhs);
     e.rhs = visitE(e.rhs);
@@ -1076,15 +1076,15 @@ override
 
 override
 {
-  E visit(IllegalExpression)
+  E visit(IllegalExpr)
   { assert(0, "semantic pass on invalid AST"); return null; }
 
-  E visit(CondExpression e)
+  E visit(CondExpr e)
   {
     return e;
   }
 
-  E visit(CommaExpression e)
+  E visit(CommaExpr e)
   {
     if (!e.isChecked)
     {
@@ -1095,7 +1095,7 @@ override
     return e;
   }
 
-  E visit(OrOrExpression e)
+  E visit(OrOrExpr e)
   {
     if (!e.isChecked)
     {
@@ -1111,7 +1111,7 @@ override
     return e;
   }
 
-  E visit(AndAndExpression e)
+  E visit(AndAndExpr e)
   {
     if (!e.isChecked)
     {
@@ -1127,28 +1127,28 @@ override
     return e;
   }
 
-  E visit(OrExpression e)
+  E visit(OrExpr e)
   {
     if (auto o = findOverload(e, Ident.opOr, Ident.opOr_r))
       return o;
     return e;
   }
 
-  E visit(XorExpression e)
+  E visit(XorExpr e)
   {
     if (auto o = findOverload(e, Ident.opXor, Ident.opXor_r))
       return o;
     return e;
   }
 
-  E visit(AndExpression e)
+  E visit(AndExpr e)
   {
     if (auto o = findOverload(e, Ident.opAnd, Ident.opAnd_r))
       return o;
     return e;
   }
 
-  E visit(EqualExpression e)
+  E visit(EqualExpr e)
   {
     visitBinary(e);
     if (auto o = findOverload(e, Ident.opEquals, null))
@@ -1158,12 +1158,12 @@ override
     return e;
   }
 
-  E visit(IdentityExpression e)
+  E visit(IdentityExpr e)
   {
     return e;
   }
 
-  E visit(RelExpression e)
+  E visit(RelExpr e)
   {
     visitBinary(e);
     if (auto o = findOverload(e, Ident.opCmp, null))
@@ -1179,7 +1179,7 @@ override
     return e;
   }
 
-  E visit(InExpression e)
+  E visit(InExpr e)
   {
     visitBinary(e);
     if (auto o = findOverload(e, Ident.opIn, Ident.opIn_r))
@@ -1195,42 +1195,42 @@ override
     return e;
   }
 
-  E visit(LShiftExpression e)
+  E visit(LShiftExpr e)
   {
     if (auto o = findOverload(e, Ident.opShl, Ident.opShl_r))
       return o;
     return e;
   }
 
-  E visit(RShiftExpression e)
+  E visit(RShiftExpr e)
   {
     if (auto o = findOverload(e, Ident.opShr, Ident.opShr_r))
       return o;
     return e;
   }
 
-  E visit(URShiftExpression e)
+  E visit(URShiftExpr e)
   {
     if (auto o = findOverload(e, Ident.opUShr, Ident.opUShr_r))
       return o;
     return e;
   }
 
-  E visit(PlusExpression e)
+  E visit(PlusExpr e)
   {
     if (auto o = findOverload(e, Ident.opAdd, Ident.opAdd_r))
       return o;
     return e;
   }
 
-  E visit(MinusExpression e)
+  E visit(MinusExpr e)
   {
     if (auto o = findOverload(e, Ident.opSub, Ident.opSub_r))
       return o;
     return e;
   }
 
-  E visit(CatExpression e)
+  E visit(CatExpr e)
   {
     visitBinary(e);
     if (auto o = findOverload(e, Ident.opCat, Ident.opCat_r))
@@ -1254,28 +1254,28 @@ override
     return e;
   }
 
-  E visit(MulExpression e)
+  E visit(MulExpr e)
   {
     if (auto o = findOverload(e, Ident.opMul, Ident.opMul_r))
       return o;
     return e;
   }
 
-  E visit(DivExpression e)
+  E visit(DivExpr e)
   {
     if (auto o = findOverload(e, Ident.opDiv, Ident.opDiv_r))
       return o;
     return e;
   }
 
-  E visit(ModExpression e)
+  E visit(ModExpr e)
   {
     if (auto o = findOverload(e, Ident.opMod, Ident.opMod_r))
       return o;
     return e;
   }
 
-  E visit(AssignExpression e)
+  E visit(AssignExpr e)
   {
     if (auto o = findOverload(e, Ident.opAssign, null))
       return o;
@@ -1283,56 +1283,56 @@ override
     return e;
   }
 
-  E visit(LShiftAssignExpression e)
+  E visit(LShiftAssignExpr e)
   {
     if (auto o = findOverload(e, Ident.opShlAssign, null))
       return o;
     return e;
   }
 
-  E visit(RShiftAssignExpression e)
+  E visit(RShiftAssignExpr e)
   {
     if (auto o = findOverload(e, Ident.opShrAssign, null))
       return o;
     return e;
   }
 
-  E visit(URShiftAssignExpression e)
+  E visit(URShiftAssignExpr e)
   {
     if (auto o = findOverload(e, Ident.opUShrAssign, null))
       return o;
     return e;
   }
 
-  E visit(OrAssignExpression e)
+  E visit(OrAssignExpr e)
   {
     if (auto o = findOverload(e, Ident.opOrAssign, null))
       return o;
     return e;
   }
 
-  E visit(AndAssignExpression e)
+  E visit(AndAssignExpr e)
   {
     if (auto o = findOverload(e, Ident.opAndAssign, null))
       return o;
     return e;
   }
 
-  E visit(PlusAssignExpression e)
+  E visit(PlusAssignExpr e)
   {
     if (auto o = findOverload(e, Ident.opAddAssign, null))
       return o;
     return e;
   }
 
-  E visit(MinusAssignExpression e)
+  E visit(MinusAssignExpr e)
   {
     if (auto o = findOverload(e, Ident.opSubAssign, null))
       return o;
     return e;
   }
 
-  E visit(DivAssignExpression e)
+  E visit(DivAssignExpr e)
   {
     auto o = findOverload(e, Ident.opDivAssign, null);
     if (o)
@@ -1340,7 +1340,7 @@ override
     return e;
   }
 
-  E visit(MulAssignExpression e)
+  E visit(MulAssignExpr e)
   {
     auto o = findOverload(e, Ident.opMulAssign, null);
     if (o)
@@ -1348,7 +1348,7 @@ override
     return e;
   }
 
-  E visit(ModAssignExpression e)
+  E visit(ModAssignExpr e)
   {
     auto o = findOverload(e, Ident.opModAssign, null);
     if (o)
@@ -1356,7 +1356,7 @@ override
     return e;
   }
 
-  E visit(XorAssignExpression e)
+  E visit(XorAssignExpr e)
   {
     auto o = findOverload(e, Ident.opXorAssign, null);
     if (o)
@@ -1364,7 +1364,7 @@ override
     return e;
   }
 
-  E visit(CatAssignExpression e)
+  E visit(CatAssignExpr e)
   {
     auto o = findOverload(e, Ident.opCatAssign, null);
     if (o)
@@ -1372,7 +1372,7 @@ override
     return e;
   }
 
-  E visit(AddressExpression e)
+  E visit(AddressExpr e)
   {
     if (e.isChecked)
       return e;
@@ -1381,7 +1381,7 @@ override
     return e;
   }
 
-  E visit(PreIncrExpression e)
+  E visit(PreIncrExpr e)
   {
     if (e.isChecked)
       return e;
@@ -1392,7 +1392,7 @@ override
     return e;
   }
 
-  E visit(PreDecrExpression e)
+  E visit(PreDecrExpr e)
   {
     if (e.isChecked)
       return e;
@@ -1403,7 +1403,7 @@ override
     return e;
   }
 
-  E visit(PostIncrExpression e)
+  E visit(PostIncrExpr e)
   {
     if (e.isChecked)
       return e;
@@ -1415,7 +1415,7 @@ override
     return e;
   }
 
-  E visit(PostDecrExpression e)
+  E visit(PostDecrExpr e)
   {
     if (e.isChecked)
       return e;
@@ -1427,7 +1427,7 @@ override
     return e;
   }
 
-  E visit(DerefExpression e)
+  E visit(DerefExpr e)
   {
     if (e.isChecked)
       return e;
@@ -1449,7 +1449,7 @@ override
     return e;
   }
 
-  E visit(SignExpression e)
+  E visit(SignExpr e)
   {
     if (e.isChecked)
       return e;
@@ -1461,7 +1461,7 @@ override
     return e;
   }
 
-  E visit(NotExpression e)
+  E visit(NotExpr e)
   {
     if (e.isChecked)
       return e;
@@ -1471,7 +1471,7 @@ override
     return e;
   }
 
-  E visit(CompExpression e)
+  E visit(CompExpr e)
   {
     if (e.isChecked)
       return e;
@@ -1488,65 +1488,55 @@ override
     return e;
   }
 
-  E visit(CallExpression e)
+  E visit(CallExpr e)
   {
     if (auto o = findOverload(e, Ident.opCall))
       return o;
     return e;
   }
 
-  E visit(NewExpression e)
+  E visit(NewExpr e)
   {
     return e;
   }
 
-  E visit(NewClassExpression e)
+  E visit(NewClassExpr e)
   {
     return e;
   }
 
-  E visit(DeleteExpression e)
+  E visit(DeleteExpr e)
   {
     return e;
   }
 
-  E visit(CastExpression e)
+  E visit(CastExpr e)
   {
     if (auto o = findOverload(e, Ident.opCast))
       return o;
     return e;
   }
 
-  E visit(IndexExpression e)
+  E visit(IndexExpr e)
   {
     if (auto o = findOverload(e, Ident.opIndex))
       return o;
     return e;
   }
 
-  E visit(SliceExpression e)
+  E visit(SliceExpr e)
   {
     if (auto o = findOverload(e, Ident.opSlice))
       return o;
     return e;
   }
 
-  E visit(ModuleScopeExpression e)
+  E visit(ModuleScopeExpr e)
   {
     return e;
   }
 
-  E visit(IdentifierExpression e)
-  {
-    if (e.isChecked)
-      return e;
-    debug(sema) Stdout.formatln("", e);
-    auto idToken = e.idToken();
-    e.symbol = search(idToken);
-    return e;
-  }
-
-  E visit(TemplateInstanceExpression e)
+  E visit(IdentifierExpr e)
   {
     if (e.isChecked)
       return e;
@@ -1556,17 +1546,27 @@ override
     return e;
   }
 
-  E visit(SpecialTokenExpression e)
+  E visit(TmplInstanceExpr e)
+  {
+    if (e.isChecked)
+      return e;
+    debug(sema) Stdout.formatln("", e);
+    auto idToken = e.idToken();
+    e.symbol = search(idToken);
+    return e;
+  }
+
+  E visit(SpecialTokenExpr e)
   {
     if (e.isChecked)
       return e.value;
     switch (e.specialToken.kind)
     {
     case TOK.LINE, TOK.VERSION:
-      e.value = new IntExpression(e.specialToken.uint_, Types.UInt32);
+      e.value = new IntExpr(e.specialToken.uint_, Types.UInt32);
       break;
     case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
-      e.value = new StringExpression(e.specialToken.strval.str);
+      e.value = new StringExpr(e.specialToken.strval.str);
       break;
     default:
       assert(0);
@@ -1575,24 +1575,24 @@ override
     return e.value;
   }
 
-  E visit(ThisExpression e)
+  E visit(ThisExpr e)
   {
     return e;
   }
 
-  E visit(SuperExpression e)
+  E visit(SuperExpr e)
   {
     return e;
   }
 
-  E visit(NullExpression e)
+  E visit(NullExpr e)
   {
     if (!e.isChecked)
       e.type = Types.Void_ptr;
     return e;
   }
 
-  E visit(DollarExpression e)
+  E visit(DollarExpr e)
   {
     if (e.isChecked)
       return e;
@@ -1602,13 +1602,13 @@ override
     return e;
   }
 
-  E visit(BoolExpression e)
+  E visit(BoolExpr e)
   {
     assert(e.isChecked);
     return e.value;
   }
 
-  E visit(IntExpression e)
+  E visit(IntExpr e)
   {
     if (e.isChecked)
       return e;
@@ -1624,78 +1624,78 @@ override
     return e;
   }
 
-  E visit(FloatExpression e)
+  E visit(FloatExpr e)
   {
     if (!e.isChecked)
       e.type = Types.Float64;
     return e;
   }
 
-  E visit(ComplexExpression e)
+  E visit(ComplexExpr e)
   {
     if (!e.isChecked)
       e.type = Types.CFloat64;
     return e;
   }
 
-  E visit(CharExpression e)
+  E visit(CharExpr e)
   {
     assert(e.isChecked);
     return e.value;
   }
 
-  E visit(StringExpression e)
+  E visit(StringExpr e)
   {
     assert(e.isChecked);
     return e;
   }
 
-  E visit(ArrayLiteralExpression e)
+  E visit(ArrayLiteralExpr e)
   {
     return e;
   }
 
-  E visit(AArrayLiteralExpression e)
+  E visit(AArrayLiteralExpr e)
   {
     return e;
   }
 
-  E visit(AssertExpression e)
+  E visit(AssertExpr e)
   {
     return e;
   }
 
-  E visit(MixinExpression e)
+  E visit(MixinExpr e)
   {
     return e;
   }
 
-  E visit(ImportExpression e)
+  E visit(ImportExpr e)
   {
     return e;
   }
 
-  E visit(TypeofExpression e)
+  E visit(TypeofExpr e)
   {
     return e;
   }
 
-  E visit(TypeDotIdExpression e)
+  E visit(TypeDotIdExpr e)
   {
     return e;
   }
 
-  E visit(TypeidExpression e)
+  E visit(TypeidExpr e)
   {
     return e;
   }
 
-  E visit(IsExpression e)
+  E visit(IsExpr e)
   {
     return e;
   }
 
-  E visit(ParenExpression e)
+  E visit(ParenExpr e)
   {
     if (!e.isChecked)
     {
@@ -1705,62 +1705,62 @@ override
     return e;
   }
 
-  E visit(FunctionLiteralExpression e)
+  E visit(FuncLiteralExpr e)
   {
     return e;
   }
 
-  E visit(TraitsExpression e) // D2.0
+  E visit(TraitsExpr e) // D2.0
   {
     return e;
   }
 
-  E visit(VoidInitExpression e)
+  E visit(VoidInitExpr e)
   {
     return e;
   }
 
-  E visit(ArrayInitExpression e)
+  E visit(ArrayInitExpr e)
   {
     return e;
   }
 
-  E visit(StructInitExpression e)
+  E visit(StructInitExpr e)
   {
     return e;
   }
 
-  E visit(AsmTypeExpression e)
+  E visit(AsmTypeExpr e)
   {
     return e;
   }
 
-  E visit(AsmOffsetExpression e)
+  E visit(AsmOffsetExpr e)
   {
     return e;
   }
 
-  E visit(AsmSegExpression e)
+  E visit(AsmSegExpr e)
   {
     return e;
   }
 
-  E visit(AsmPostBracketExpression e)
+  E visit(AsmPostBracketExpr e)
   {
     return e;
   }
 
-  E visit(AsmBracketExpression e)
+  E visit(AsmBracketExpr e)
   {
     return e;
   }
 
-  E visit(AsmLocalSizeExpression e)
+  E visit(AsmLocalSizeExpr e)
   {
     return e;
   }
 
-  E visit(AsmRegisterExpression e)
+  E visit(AsmRegisterExpr e)
   {
     return e;
   }

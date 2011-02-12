@@ -68,7 +68,7 @@ override:
     error(n.begin, "invalid template argument ‘{}’", n.toText());
   }
 
-  void visit(IntExpression e)
+  void visit(IntExpr e)
   {
     if (cast(long)e.number < 0)
       text ~= 'N' ~ String(-e.number);
@@ -76,13 +76,13 @@ override:
       text ~= 'i' ~ String(e.number);
   }
 
-  void visit(FloatExpression e)
+  void visit(FloatExpr e)
   {
     text ~= 'e';
     mangleFloat(e.number);
   }
 
-  void visit(ComplexExpression e)
+  void visit(ComplexExpr e)
   {
     text ~= 'c';
     mangleFloat(e.re);
@@ -90,12 +90,12 @@ override:
     mangleFloat(e.im);
   }
 
-  void visit(NullExpression e)
+  void visit(NullExpr e)
   {
     text ~= 'n';
   }
 
-  void visit(StringExpression e)
+  void visit(StringExpr e)
   { // := MangleChar UTF8StringLength "_" UTF8StringInHex
     char mc; // Mangle character.
     char[] utf8str;
@@ -136,25 +136,25 @@ override:
     text ~= mc ~ String(utf8str.length) ~ "_" ~ StringHex(utf8str);
   }
 
-  void visit(ArrayLiteralExpression e)
+  void visit(ArrayLiteralExpr e)
   {
     text ~= 'A' ~ String(e.values.length);
     foreach (val; e.values)
       visitN(val);
   }
 
-  void visit(AArrayLiteralExpression e)
+  void visit(AArrayLiteralExpr e)
   {
     text ~= 'A' ~ String(e.values.length);
     foreach (i, key; e.keys)
       visitN(key), visitN(e.values[i]);
   }
 
-  void visit(StructInitExpression e)
+  void visit(StructInitExpr e)
   {
     text ~= 'S' ~ String(e.values.length);
     foreach (val; e.values)
-      if (val.kind == NodeKind.VoidInitExpression)
+      if (val.kind == NodeKind.VoidInitExpr)
         text ~= 'v';
       else
         visitN(val);

@@ -71,9 +71,9 @@ abstract class SettingsLoader
     if (auto result = n.Is!(T))
       return result;
     string type = T.stringof;
-    (is(T == StringExpression) && (type = "char[]").ptr) ||
-    (is(T == ArrayInitExpression) && (type = "[]").ptr) ||
-    (is(T == IntExpression) && (type = "int"));
+    (is(T == StringExpr) && (type = "char[]").ptr) ||
+    (is(T == ArrayInitExpr) && (type = "[]").ptr) ||
+    (is(T == IntExpr) && (type = "int"));
     error(n.begin, "expression is not of type {}", type);
     return null;
   }
@@ -159,46 +159,46 @@ class ConfigLoader : SettingsLoader
     pass1.run();
 
     // Initialize the dataDir member.
-    if (auto val = getValue!(StringExpression)("DATADIR"))
+    if (auto val = getValue!(StringExpr)("DATADIR"))
       this.dataDir = val.getString();
     this.dataDir = normalize(expandVariables(this.dataDir));
     GlobalSettings.dataDir = this.dataDir;
     Environment.set("DATADIR", this.dataDir);
 
-    if (auto val = getValue!(StringExpression)("KANDILDIR"))
+    if (auto val = getValue!(StringExpr)("KANDILDIR"))
     {
       auto kandilDir = normalize(expandVariables(val.getString()));
       GlobalSettings.kandilDir = kandilDir;
       Environment.set("KANDILDIR", kandilDir);
     }
 
-    if (auto array = getValue!(ArrayInitExpression)("VERSION_IDS"))
+    if (auto array = getValue!(ArrayInitExpr)("VERSION_IDS"))
       foreach (value; array.values)
-        if (auto val = castTo!(StringExpression)(value))
+        if (auto val = castTo!(StringExpr)(value))
           GlobalSettings.versionIds ~= expandVariables(val.getString());
-    if (auto val = getValue!(StringExpression)("LANG_FILE"))
+    if (auto val = getValue!(StringExpr)("LANG_FILE"))
       GlobalSettings.langFile = normalize(expandVariables(val.getString()));
-    if (auto array = getValue!(ArrayInitExpression)("IMPORT_PATHS"))
+    if (auto array = getValue!(ArrayInitExpr)("IMPORT_PATHS"))
       foreach (value; array.values)
-        if (auto val = castTo!(StringExpression)(value))
+        if (auto val = castTo!(StringExpr)(value))
           GlobalSettings.importPaths ~=
             normalize(expandVariables(val.getString()));
-    if (auto array = getValue!(ArrayInitExpression)("DDOC_FILES"))
+    if (auto array = getValue!(ArrayInitExpr)("DDOC_FILES"))
       foreach (value; array.values)
-        if (auto val = castTo!(StringExpression)(value))
+        if (auto val = castTo!(StringExpr)(value))
           GlobalSettings.ddocFilePaths ~=
             normalize(expandVariables(val.getString()));
-    if (auto val = getValue!(StringExpression)("XML_MAP"))
+    if (auto val = getValue!(StringExpr)("XML_MAP"))
       GlobalSettings.xmlMapFile = normalize(expandVariables(val.getString()));
-    if (auto val = getValue!(StringExpression)("HTML_MAP"))
+    if (auto val = getValue!(StringExpr)("HTML_MAP"))
       GlobalSettings.htmlMapFile = normalize(expandVariables(val.getString()));
-    if (auto val = getValue!(StringExpression)("LEXER_ERROR"))
+    if (auto val = getValue!(StringExpr)("LEXER_ERROR"))
       GlobalSettings.lexerErrorFormat = expandVariables(val.getString());
-    if (auto val = getValue!(StringExpression)("PARSER_ERROR"))
+    if (auto val = getValue!(StringExpr)("PARSER_ERROR"))
       GlobalSettings.parserErrorFormat = expandVariables(val.getString());
-    if (auto val = getValue!(StringExpression)("SEMANTIC_ERROR"))
+    if (auto val = getValue!(StringExpr)("SEMANTIC_ERROR"))
       GlobalSettings.semanticErrorFormat = expandVariables(val.getString());
-    if (auto val = getValue!(IntExpression)("TAB_WIDTH"))
+    if (auto val = getValue!(IntExpr)("TAB_WIDTH"))
     {
       GlobalSettings.tabWidth = cast(uint)val.number;
       Location.TAB_WIDTH = cast(uint)val.number;
@@ -217,11 +217,11 @@ class ConfigLoader : SettingsLoader
     pass1 = new SemanticPass1(mod, context);
     pass1.run();
 
-    if (auto array = getValue!(ArrayInitExpression)("messages"))
+    if (auto array = getValue!(ArrayInitExpr)("messages"))
     {
       string[] messages;
       foreach (value; array.values)
-        if (auto val = castTo!(StringExpression)(value))
+        if (auto val = castTo!(StringExpr)(value))
           messages ~= val.getString();
       if (messages.length != MID.max+1)
         error(mod.firstToken,
@@ -230,7 +230,7 @@ class ConfigLoader : SettingsLoader
       GlobalSettings.messages = messages;
       dil.Messages.SetMessages(messages);
     }
-    if (auto val = getValue!(StringExpression)("lang_code"))
+    if (auto val = getValue!(StringExpr)("lang_code"))
       GlobalSettings.langCode = val.getString();
   }
 
@@ -286,14 +286,14 @@ class TagMapLoader : SettingsLoader
     pass1.run();
 
     string[hash_t] map;
-    if (auto array = getValue!(ArrayInitExpression)("map"))
+    if (auto array = getValue!(ArrayInitExpr)("map"))
       foreach (i, value; array.values)
       {
         auto key = array.keys[i];
-        if (auto valExp = castTo!(StringExpression)(value))
+        if (auto valExp = castTo!(StringExpr)(value))
           if (!key)
             error(value.begin, "expected key : value");
-          else if (auto keyExp = castTo!(StringExpression)(key))
+          else if (auto keyExp = castTo!(StringExpr)(key))
             map[hashOf(keyExp.getString())] = valExp.getString();
       }
     return map;

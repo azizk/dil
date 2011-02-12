@@ -16,7 +16,7 @@ import dil.Float,
        dil.Complex;
 import common;
 
-class IllegalExpression : Expression
+class IllegalExpr : Expression
 {
   this()
   {
@@ -30,13 +30,13 @@ class IllegalExpression : Expression
 /// The copy method is mixed in here, not in any derived class.
 /// If a derived class has other nodes than lhs and rhs, then it has
 /// to have its own copy method which handles additional nodes.
-abstract class BinaryExpression : Expression
+abstract class BinaryExpr : Expression
 {
   Expression lhs; /// Left-hand side expression.
   Expression rhs; /// Right-hand side expression.
   Token* optok;   /// The operator token.
 
-  /// Constructs a BinaryExpression object.
+  /// Constructs a BinaryExpr object.
   this(Expression lhs, Expression rhs, Token* optok)
   {
     addChildren([lhs, rhs]);
@@ -44,10 +44,10 @@ abstract class BinaryExpression : Expression
     this.rhs = rhs;
     this.optok = optok;
   }
-  mixin(copyMethodBinaryExpression);
+  mixin(copyMethodBinaryExpr);
 }
 
-class CondExpression : BinaryExpression
+class CondExpr : BinaryExpr
 {
   Expression condition;
   Token* ctok; // Colon token.
@@ -63,7 +63,7 @@ class CondExpression : BinaryExpression
   mixin(copyMethod);
 }
 
-class CommaExpression : BinaryExpression
+class CommaExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -72,7 +72,7 @@ class CommaExpression : BinaryExpression
   }
 }
 
-class OrOrExpression : BinaryExpression
+class OrOrExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -81,7 +81,7 @@ class OrOrExpression : BinaryExpression
   }
 }
 
-class AndAndExpression : BinaryExpression
+class AndAndExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -90,7 +90,7 @@ class AndAndExpression : BinaryExpression
   }
 }
 
-class OrExpression : BinaryExpression
+class OrExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -99,7 +99,7 @@ class OrExpression : BinaryExpression
   }
 }
 
-class XorExpression : BinaryExpression
+class XorExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -108,7 +108,7 @@ class XorExpression : BinaryExpression
   }
 }
 
-class AndExpression : BinaryExpression
+class AndExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -118,7 +118,7 @@ class AndExpression : BinaryExpression
 }
 
 /// This class isn't strictly needed, just here for clarity.
-abstract class CmpExpression : BinaryExpression
+abstract class CmpExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -126,7 +126,7 @@ abstract class CmpExpression : BinaryExpression
   }
 }
 
-class EqualExpression : CmpExpression
+class EqualExpr : CmpExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -136,7 +136,7 @@ class EqualExpression : CmpExpression
 }
 
 /// Expression "!"? "is" Expression
-class IdentityExpression : CmpExpression
+class IdentityExpr : CmpExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -145,7 +145,7 @@ class IdentityExpression : CmpExpression
   }
 }
 
-class RelExpression : CmpExpression
+class RelExpr : CmpExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -154,7 +154,7 @@ class RelExpression : CmpExpression
   }
 }
 
-class InExpression : BinaryExpression
+class InExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -163,7 +163,7 @@ class InExpression : BinaryExpression
   }
 }
 
-class LShiftExpression : BinaryExpression
+class LShiftExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -172,7 +172,7 @@ class LShiftExpression : BinaryExpression
   }
 }
 
-class RShiftExpression : BinaryExpression
+class RShiftExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -181,7 +181,7 @@ class RShiftExpression : BinaryExpression
   }
 }
 
-class URShiftExpression : BinaryExpression
+class URShiftExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -190,7 +190,7 @@ class URShiftExpression : BinaryExpression
   }
 }
 
-class PlusExpression : BinaryExpression
+class PlusExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -199,7 +199,7 @@ class PlusExpression : BinaryExpression
   }
 }
 
-class MinusExpression : BinaryExpression
+class MinusExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -208,7 +208,7 @@ class MinusExpression : BinaryExpression
   }
 }
 
-class CatExpression : BinaryExpression
+class CatExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -217,7 +217,7 @@ class CatExpression : BinaryExpression
   }
 }
 
-class MulExpression : BinaryExpression
+class MulExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -226,7 +226,7 @@ class MulExpression : BinaryExpression
   }
 }
 
-class DivExpression : BinaryExpression
+class DivExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -235,7 +235,7 @@ class DivExpression : BinaryExpression
   }
 }
 
-class ModExpression : BinaryExpression
+class ModExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -245,7 +245,7 @@ class ModExpression : BinaryExpression
 }
 
 // D2
-class PowExpression : BinaryExpression
+class PowExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -254,7 +254,7 @@ class PowExpression : BinaryExpression
   }
 }
 
-class AssignExpression : BinaryExpression
+class AssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -262,7 +262,7 @@ class AssignExpression : BinaryExpression
     mixin(set_kind);
   }
 }
-class LShiftAssignExpression : BinaryExpression
+class LShiftAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -270,7 +270,7 @@ class LShiftAssignExpression : BinaryExpression
     mixin(set_kind);
   }
 }
-class RShiftAssignExpression : BinaryExpression
+class RShiftAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -278,7 +278,7 @@ class RShiftAssignExpression : BinaryExpression
     mixin(set_kind);
   }
 }
-class URShiftAssignExpression : BinaryExpression
+class URShiftAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -286,7 +286,7 @@ class URShiftAssignExpression : BinaryExpression
     mixin(set_kind);
   }
 }
-class OrAssignExpression : BinaryExpression
+class OrAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -294,7 +294,7 @@ class OrAssignExpression : BinaryExpression
     mixin(set_kind);
   }
 }
-class AndAssignExpression : BinaryExpression
+class AndAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -302,7 +302,7 @@ class AndAssignExpression : BinaryExpression
     mixin(set_kind);
   }
 }
-class PlusAssignExpression : BinaryExpression
+class PlusAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -310,7 +310,7 @@ class PlusAssignExpression : BinaryExpression
     mixin(set_kind);
   }
 }
-class MinusAssignExpression : BinaryExpression
+class MinusAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -318,7 +318,7 @@ class MinusAssignExpression : BinaryExpression
     mixin(set_kind);
   }
 }
-class DivAssignExpression : BinaryExpression
+class DivAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -326,7 +326,7 @@ class DivAssignExpression : BinaryExpression
     mixin(set_kind);
   }
 }
-class MulAssignExpression : BinaryExpression
+class MulAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -334,7 +334,7 @@ class MulAssignExpression : BinaryExpression
     mixin(set_kind);
   }
 }
-class ModAssignExpression : BinaryExpression
+class ModAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -342,7 +342,7 @@ class ModAssignExpression : BinaryExpression
     mixin(set_kind);
   }
 }
-class XorAssignExpression : BinaryExpression
+class XorAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -350,7 +350,7 @@ class XorAssignExpression : BinaryExpression
     mixin(set_kind);
   }
 }
-class CatAssignExpression : BinaryExpression
+class CatAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -359,7 +359,7 @@ class CatAssignExpression : BinaryExpression
   }
 }
 // D2
-class PowAssignExpression : BinaryExpression
+class PowAssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
   {
@@ -372,7 +372,7 @@ class PowAssignExpression : BinaryExpression
 + Unary Expressions: +
 ++++++++++++++++++++*/
 
-abstract class UnaryExpression : Expression
+abstract class UnaryExpr : Expression
 {
   Expression una;
   this(Expression e)
@@ -380,10 +380,10 @@ abstract class UnaryExpression : Expression
     addChild(e);
     this.una = e;
   }
-  mixin(copyMethodUnaryExpression);
+  mixin(copyMethodUnaryExpr);
 }
 
-class AddressExpression : UnaryExpression
+class AddressExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -392,7 +392,7 @@ class AddressExpression : UnaryExpression
   }
 }
 
-class PreIncrExpression : UnaryExpression
+class PreIncrExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -401,7 +401,7 @@ class PreIncrExpression : UnaryExpression
   }
 }
 
-class PreDecrExpression : UnaryExpression
+class PreDecrExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -410,7 +410,7 @@ class PreDecrExpression : UnaryExpression
   }
 }
 
-class PostIncrExpression : UnaryExpression
+class PostIncrExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -419,7 +419,7 @@ class PostIncrExpression : UnaryExpression
   }
 }
 
-class PostDecrExpression : UnaryExpression
+class PostDecrExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -428,7 +428,7 @@ class PostDecrExpression : UnaryExpression
   }
 }
 
-class DerefExpression : UnaryExpression
+class DerefExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -437,7 +437,7 @@ class DerefExpression : UnaryExpression
   }
 }
 
-class SignExpression : UnaryExpression
+class SignExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -458,7 +458,7 @@ class SignExpression : UnaryExpression
   }
 }
 
-class NotExpression : UnaryExpression
+class NotExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -467,7 +467,7 @@ class NotExpression : UnaryExpression
   }
 }
 
-class CompExpression : UnaryExpression
+class CompExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -476,7 +476,7 @@ class CompExpression : UnaryExpression
   }
 }
 
-class CallExpression : UnaryExpression
+class CallExpr : UnaryExpr
 {
   Expression[] args;
   this(Expression e, Expression[] args)
@@ -488,7 +488,7 @@ class CallExpression : UnaryExpression
   }
 }
 
-class NewExpression : Expression
+class NewExpr : Expression
 {
   Expression frame; /// The frame or 'this' pointer.
   Expression[] newArgs;
@@ -509,7 +509,7 @@ class NewExpression : Expression
   mixin(copyMethod);
 }
 
-class NewClassExpression : Expression
+class NewClassExpr : Expression
 {
   Expression frame; /// The frame or 'this' pointer.
   Expression[] newArgs;
@@ -534,7 +534,7 @@ class NewClassExpression : Expression
   mixin(copyMethod);
 }
 
-class DeleteExpression : UnaryExpression
+class DeleteExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -543,7 +543,7 @@ class DeleteExpression : UnaryExpression
   }
 }
 
-class CastExpression : UnaryExpression
+class CastExpr : UnaryExpr
 {
   TypeNode type;
   this(Expression e, TypeNode type)
@@ -559,7 +559,7 @@ class CastExpression : UnaryExpression
   mixin(copyMethod);
 }
 
-class IndexExpression : UnaryExpression
+class IndexExpr : UnaryExpr
 {
   Expression[] args;
   this(Expression e, Expression[] args)
@@ -572,7 +572,7 @@ class IndexExpression : UnaryExpression
   mixin(copyMethod);
 }
 
-class SliceExpression : UnaryExpression
+class SliceExpr : UnaryExpr
 {
   Expression left, right;
   this(Expression e, Expression left, Expression right)
@@ -593,7 +593,7 @@ class SliceExpression : UnaryExpression
 + Primary Expressions: +
 ++++++++++++++++++++++*/
 
-class IdentifierExpression : Expression
+class IdentifierExpr : Expression
 {
   Expression next;
   Identifier* ident;
@@ -615,8 +615,8 @@ class IdentifierExpression : Expression
 }
 
 /// Module scope operator:
-/// $(BNF ModuleScopeExpression := ".")
-class ModuleScopeExpression : Expression
+/// $(BNF ModuleScopeExpr := ".")
+class ModuleScopeExpr : Expression
 {
   this()
   {
@@ -625,7 +625,7 @@ class ModuleScopeExpression : Expression
   mixin(copyMethod);
 }
 
-class TemplateInstanceExpression : Expression
+class TmplInstanceExpr : Expression
 {
   Expression next;
   Identifier* ident;
@@ -649,7 +649,7 @@ class TemplateInstanceExpression : Expression
   mixin(copyMethod);
 }
 
-class SpecialTokenExpression : Expression
+class SpecialTokenExpr : Expression
 {
   Token* specialToken;
   this(Token* specialToken)
@@ -663,7 +663,7 @@ class SpecialTokenExpression : Expression
   mixin(copyMethod);
 }
 
-class ThisExpression : Expression
+class ThisExpr : Expression
 {
   this()
   {
@@ -672,7 +672,7 @@ class ThisExpression : Expression
   mixin(copyMethod);
 }
 
-class SuperExpression : Expression
+class SuperExpr : Expression
 {
   this()
   {
@@ -681,7 +681,7 @@ class SuperExpression : Expression
   mixin(copyMethod);
 }
 
-class NullExpression : Expression
+class NullExpr : Expression
 {
   this()
   {
@@ -697,7 +697,7 @@ class NullExpression : Expression
   mixin(copyMethod);
 }
 
-class DollarExpression : Expression
+class DollarExpr : Expression
 {
   this()
   {
@@ -706,15 +706,15 @@ class DollarExpression : Expression
   mixin(copyMethod);
 }
 
-class BoolExpression : Expression
+class BoolExpr : Expression
 {
-  IntExpression value; /// IntExpression of type bool.
+  IntExpr value; /// IntExpr of type bool.
 
   this(bool value)
   {
     mixin(set_kind);
     // Some semantic computation here.
-    this.value = new IntExpression(value, Types.Bool);
+    this.value = new IntExpr(value, Types.Bool);
     this.type = Types.Bool;
   }
 
@@ -727,7 +727,7 @@ class BoolExpression : Expression
   mixin(copyMethod);
 }
 
-class IntExpression : Expression
+class IntExpr : Expression
 {
   ulong number;
 
@@ -763,7 +763,7 @@ class IntExpression : Expression
 }
 
 /// Holds a Float number and may be a real or imaginary number.
-class FloatExpression : Expression
+class FloatExpr : Expression
 {
   Float number;
 
@@ -787,7 +787,7 @@ class FloatExpression : Expression
 
 /// This expression holds a complex number.
 /// It is only created in the semantic phase.
-class ComplexExpression : Expression
+class ComplexExpr : Expression
 {
   Complex number;
 
@@ -810,9 +810,9 @@ class ComplexExpression : Expression
   mixin(copyMethod);
 }
 
-class CharExpression : Expression
+class CharExpr : Expression
 {
-  IntExpression value; // IntExpression of type Char/Wchar/Dchar.
+  IntExpr value; // IntExpr of type Char/Wchar/Dchar.
 //  dchar character; // Replaced by value.
   this(dchar character)
   {
@@ -826,12 +826,12 @@ class CharExpression : Expression
     else
       this.type = Types.DChar;
 
-    this.value = new IntExpression(character, this.type);
+    this.value = new IntExpr(character, this.type);
   }
   mixin(copyMethod);
 }
 
-class StringExpression : Expression
+class StringExpr : Expression
 {
   ubyte[] str;   /// The string data.
   Type charType; /// The character type of the string.
@@ -883,7 +883,7 @@ class StringExpression : Expression
   mixin(copyMethod);
 }
 
-class ArrayLiteralExpression : Expression
+class ArrayLiteralExpr : Expression
 {
   Expression[] values;
   this(Expression[] values)
@@ -895,7 +895,7 @@ class ArrayLiteralExpression : Expression
   mixin(copyMethod);
 }
 
-class AArrayLiteralExpression : Expression
+class AArrayLiteralExpr : Expression
 {
   Expression[] keys, values;
   this(Expression[] keys, Expression[] values)
@@ -910,7 +910,7 @@ class AArrayLiteralExpression : Expression
   mixin(copyMethod);
 }
 
-class AssertExpression : Expression
+class AssertExpr : Expression
 {
   Expression expr, msg;
   this(Expression expr, Expression msg)
@@ -924,7 +924,7 @@ class AssertExpression : Expression
   mixin(copyMethod);
 }
 
-class MixinExpression : Expression
+class MixinExpr : Expression
 {
   Expression expr;
   this(Expression expr)
@@ -936,7 +936,7 @@ class MixinExpression : Expression
   mixin(copyMethod);
 }
 
-class ImportExpression : Expression
+class ImportExpr : Expression
 {
   Expression expr;
   this(Expression expr)
@@ -948,7 +948,7 @@ class ImportExpression : Expression
   mixin(copyMethod);
 }
 
-class TypeofExpression : Expression
+class TypeofExpr : Expression
 {
   TypeNode type;
   this(TypeNode type)
@@ -960,7 +960,7 @@ class TypeofExpression : Expression
   mixin(copyMethod);
 }
 
-class TypeDotIdExpression : Expression
+class TypeDotIdExpr : Expression
 {
   TypeNode type;
   Identifier* ident;
@@ -974,7 +974,7 @@ class TypeDotIdExpression : Expression
   mixin(copyMethod);
 }
 
-class TypeidExpression : Expression
+class TypeidExpr : Expression
 {
   TypeNode type;
   this(TypeNode type)
@@ -986,7 +986,7 @@ class TypeidExpression : Expression
   mixin(copyMethod);
 }
 
-class IsExpression : Expression
+class IsExpr : Expression
 {
   TypeNode type;
   Token* ident;
@@ -1011,7 +1011,7 @@ class IsExpression : Expression
   mixin(copyMethod);
 }
 
-class FunctionLiteralExpression : Expression
+class FuncLiteralExpr : Expression
 {
   TypeNode returnType;
   Parameters params;
@@ -1042,8 +1042,8 @@ class FunctionLiteralExpression : Expression
   mixin(copyMethod);
 }
 
-/// ParenthesisExpression := "(" Expression ")"
-class ParenExpression : Expression
+/// ParenthesisExpr := "(" Expression ")"
+class ParenExpr : Expression
 {
   Expression next;
   this(Expression next)
@@ -1057,7 +1057,7 @@ class ParenExpression : Expression
 
 // version(D2)
 // {
-class TraitsExpression : Expression
+class TraitsExpr : Expression
 {
   Token* ident;
   TemplateArguments targs;
@@ -1072,7 +1072,7 @@ class TraitsExpression : Expression
 }
 // }
 
-class VoidInitExpression : Expression
+class VoidInitExpr : Expression
 {
   this()
   {
@@ -1081,7 +1081,7 @@ class VoidInitExpression : Expression
   mixin(copyMethod);
 }
 
-class ArrayInitExpression : Expression
+class ArrayInitExpr : Expression
 {
   Expression[] keys;
   Expression[] values;
@@ -1100,7 +1100,7 @@ class ArrayInitExpression : Expression
   mixin(copyMethod);
 }
 
-class StructInitExpression : Expression
+class StructInitExpr : Expression
 {
   Token*[] idents;
   Expression[] values;
@@ -1115,7 +1115,7 @@ class StructInitExpression : Expression
   mixin(copyMethod);
 }
 
-class AsmTypeExpression : UnaryExpression
+class AsmTypeExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -1124,7 +1124,7 @@ class AsmTypeExpression : UnaryExpression
   }
 }
 
-class AsmOffsetExpression : UnaryExpression
+class AsmOffsetExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -1133,7 +1133,7 @@ class AsmOffsetExpression : UnaryExpression
   }
 }
 
-class AsmSegExpression : UnaryExpression
+class AsmSegExpr : UnaryExpr
 {
   this(Expression e)
   {
@@ -1142,7 +1142,7 @@ class AsmSegExpression : UnaryExpression
   }
 }
 
-class AsmPostBracketExpression : UnaryExpression
+class AsmPostBracketExpr : UnaryExpr
 {
   Expression index; /// Expression in brackets: una [ index ]
   this(Expression e, Expression index)
@@ -1155,7 +1155,7 @@ class AsmPostBracketExpression : UnaryExpression
   mixin(copyMethod);
 }
 
-class AsmBracketExpression : Expression
+class AsmBracketExpr : Expression
 {
   Expression expr;
   this(Expression e)
@@ -1167,7 +1167,7 @@ class AsmBracketExpression : Expression
   mixin(copyMethod);
 }
 
-class AsmLocalSizeExpression : Expression
+class AsmLocalSizeExpr : Expression
 {
   this()
   {
@@ -1176,7 +1176,7 @@ class AsmLocalSizeExpression : Expression
   mixin(copyMethod);
 }
 
-class AsmRegisterExpression : Expression
+class AsmRegisterExpr : Expression
 {
   Identifier* register; /// Name of the register.
   Expression number; /// ST(0) - ST(7) or FS:0, FS:4, FS:8

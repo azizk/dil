@@ -37,63 +37,63 @@ char[] genMembersTable()
   t[N.PragmaDecl] = ["args[]", "decls"];
   t[N.MixinDecl] = ["templateExpr?", "argument?"];
   // Expressions:
-  t[N.IllegalExpression] =
-  t[N.SpecialTokenExpression] = t[N.ThisExpression] =
-  t[N.SuperExpression] = t[N.NullExpression] =
-  t[N.DollarExpression] = t[N.BoolExpression] =
-  t[N.IntExpression] = t[N.FloatExpression] = t[N.ComplexExpression] =
-  t[N.CharExpression] = t[N.StringExpression] = t[N.VoidInitExpression] =
-  t[N.ModuleScopeExpression] = t[N.AsmLocalSizeExpression] = [];
-  t[N.AsmRegisterExpression] = ["number?"];
-  t[N.IdentifierExpression] = ["next?"];
-  t[N.TemplateInstanceExpression] = ["targs?", "next?"];
+  t[N.IllegalExpr] =
+  t[N.SpecialTokenExpr] = t[N.ThisExpr] =
+  t[N.SuperExpr] = t[N.NullExpr] =
+  t[N.DollarExpr] = t[N.BoolExpr] =
+  t[N.IntExpr] = t[N.FloatExpr] = t[N.ComplexExpr] =
+  t[N.CharExpr] = t[N.StringExpr] = t[N.VoidInitExpr] =
+  t[N.ModuleScopeExpr] = t[N.AsmLocalSizeExpr] = [];
+  t[N.AsmRegisterExpr] = ["number?"];
+  t[N.IdentifierExpr] = ["next?"];
+  t[N.TmplInstanceExpr] = ["targs?", "next?"];
   // BinaryExpressions:
-  t[N.CondExpression] = ["condition", "lhs", "rhs"];
-  t[N.CommaExpression] = t[N.OrOrExpression] = t[N.AndAndExpression] =
-  t[N.OrExpression] = t[N.XorExpression] = t[N.AndExpression] =
-  t[N.EqualExpression] = t[N.IdentityExpression] = t[N.RelExpression] =
-  t[N.InExpression] = t[N.LShiftExpression] = t[N.RShiftExpression] =
-  t[N.URShiftExpression] = t[N.PlusExpression] = t[N.MinusExpression] =
-  t[N.CatExpression] = t[N.MulExpression] = t[N.DivExpression] =
-  t[N.PowExpression] = // D2
-  t[N.ModExpression] = t[N.AssignExpression] = t[N.LShiftAssignExpression] =
-  t[N.RShiftAssignExpression] = t[N.URShiftAssignExpression] =
-  t[N.OrAssignExpression] = t[N.AndAssignExpression] =
-  t[N.PlusAssignExpression] = t[N.MinusAssignExpression] =
-  t[N.DivAssignExpression] = t[N.MulAssignExpression] =
-  t[N.ModAssignExpression] = t[N.XorAssignExpression] =
-  t[N.PowAssignExpression] = // D2
-  t[N.CatAssignExpression] = ["lhs", "rhs"];
+  t[N.CondExpr] = ["condition", "lhs", "rhs"];
+  t[N.CommaExpr] = t[N.OrOrExpr] = t[N.AndAndExpr] =
+  t[N.OrExpr] = t[N.XorExpr] = t[N.AndExpr] =
+  t[N.EqualExpr] = t[N.IdentityExpr] = t[N.RelExpr] =
+  t[N.InExpr] = t[N.LShiftExpr] = t[N.RShiftExpr] =
+  t[N.URShiftExpr] = t[N.PlusExpr] = t[N.MinusExpr] =
+  t[N.CatExpr] = t[N.MulExpr] = t[N.DivExpr] =
+  t[N.PowExpr] = // D2
+  t[N.ModExpr] = t[N.AssignExpr] = t[N.LShiftAssignExpr] =
+  t[N.RShiftAssignExpr] = t[N.URShiftAssignExpr] =
+  t[N.OrAssignExpr] = t[N.AndAssignExpr] =
+  t[N.PlusAssignExpr] = t[N.MinusAssignExpr] =
+  t[N.DivAssignExpr] = t[N.MulAssignExpr] =
+  t[N.ModAssignExpr] = t[N.XorAssignExpr] =
+  t[N.PowAssignExpr] = // D2
+  t[N.CatAssignExpr] = ["lhs", "rhs"];
   // UnaryExpressions:
-  t[N.AddressExpression] = t[N.PreIncrExpression] = t[N.PreDecrExpression] =
-  t[N.PostIncrExpression] = t[N.PostDecrExpression] = t[N.DerefExpression] =
-  t[N.SignExpression] = t[N.NotExpression] = t[N.CompExpression] =
-  t[N.CallExpression] = t[N.DeleteExpression] =
-  t[N.AsmTypeExpression] = t[N.AsmOffsetExpression] =
-  t[N.AsmSegExpression] = ["una"];
+  t[N.AddressExpr] = t[N.PreIncrExpr] = t[N.PreDecrExpr] =
+  t[N.PostIncrExpr] = t[N.PostDecrExpr] = t[N.DerefExpr] =
+  t[N.SignExpr] = t[N.NotExpr] = t[N.CompExpr] =
+  t[N.CallExpr] = t[N.DeleteExpr] =
+  t[N.AsmTypeExpr] = t[N.AsmOffsetExpr] =
+  t[N.AsmSegExpr] = ["una"];
   version(D2)
-  t[N.CastExpression] = ["type?", "una"];
+  t[N.CastExpr] = ["type?", "una"];
   else
-  t[N.CastExpression] = ["type", "una"];
-  t[N.IndexExpression] = ["una", "args[]"];
-  t[N.SliceExpression] = ["una", "left?", "right?"];
-  t[N.AsmPostBracketExpression] = ["una", "index"];
-  t[N.NewExpression] = ["frame?", "newArgs[]", "type", "ctorArgs[]"];
-  t[N.NewClassExpression] = ["frame?", "newArgs[]", "bases[]",
+  t[N.CastExpr] = ["type", "una"];
+  t[N.IndexExpr] = ["una", "args[]"];
+  t[N.SliceExpr] = ["una", "left?", "right?"];
+  t[N.AsmPostBracketExpr] = ["una", "index"];
+  t[N.NewExpr] = ["frame?", "newArgs[]", "type", "ctorArgs[]"];
+  t[N.NewClassExpr] = ["frame?", "newArgs[]", "bases[]",
     "ctorArgs[]", "decls"];
-  t[N.AsmBracketExpression] = ["expr"];
-  t[N.ArrayLiteralExpression] = ["values[]"];
-  t[N.AArrayLiteralExpression] = ["keys[]", "values[]"];
-  t[N.AssertExpression] = ["expr", "msg?"];
-  t[N.MixinExpression] = t[N.ImportExpression] = ["expr"];
-  t[N.TypeofExpression] = t[N.TypeDotIdExpression] =
-  t[N.TypeidExpression] = ["type"];
-  t[N.IsExpression] = ["type", "specType?", "tparams?"];
-  t[N.FunctionLiteralExpression] = ["returnType?", "params?", "funcBody"];
-  t[N.ParenExpression] = ["next"];
-  t[N.TraitsExpression] = ["targs"];
-  t[N.ArrayInitExpression] = ["keys[?]", "values[]"];
-  t[N.StructInitExpression] = ["values[]"];
+  t[N.AsmBracketExpr] = ["expr"];
+  t[N.ArrayLiteralExpr] = ["values[]"];
+  t[N.AArrayLiteralExpr] = ["keys[]", "values[]"];
+  t[N.AssertExpr] = ["expr", "msg?"];
+  t[N.MixinExpr] = t[N.ImportExpr] = ["expr"];
+  t[N.TypeofExpr] = t[N.TypeDotIdExpr] =
+  t[N.TypeidExpr] = ["type"];
+  t[N.IsExpr] = ["type", "specType?", "tparams?"];
+  t[N.FuncLiteralExpr] = ["returnType?", "params?", "funcBody"];
+  t[N.ParenExpr] = ["next"];
+  t[N.TraitsExpr] = ["targs"];
+  t[N.ArrayInitExpr] = ["keys[?]", "values[]"];
+  t[N.StructInitExpr] = ["values[]"];
   // Statements:
   t[N.IllegalStatement] = t[N.EmptyStatement] =
   t[N.ContinueStatement] = t[N.BreakStatement] =

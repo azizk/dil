@@ -149,7 +149,7 @@ override
         member.value = visitE(member.value);
         finalValue = interpret(member.value);
         if (finalValue is Interpreter.NAR)
-          finalValue = new IntExpression(0, d.symbol.type);
+          finalValue = new IntExpr(0, d.symbol.type);
       }
       //else
         // TODO: increment a number variable and assign that to value.
@@ -166,13 +166,13 @@ override
   {
     if (md.decls)
       return md.decls;
-    if (md.isMixinExpression)
+    if (md.isMixinExpr)
     {
       md.argument = visitE(md.argument);
       auto expr = interpret(md.argument);
       if (expr is Interpreter.NAR)
         return md;
-      auto stringExpr = expr.Is!(StringExpression);
+      auto stringExpr = expr.Is!(StringExpr);
       if (stringExpr is null)
       {
         error(md.begin, MSG.MixinArgumentMustBeString);
@@ -253,7 +253,7 @@ override
 
   // Expression nodes:
 
-  E visit(ParenExpression e)
+  E visit(ParenExpr e)
   {
     if (!e.type)
     {
@@ -263,7 +263,7 @@ override
     return e;
   }
 
-  E visit(CommaExpression e)
+  E visit(CommaExpr e)
   {
     if (!e.type)
     {
@@ -274,23 +274,23 @@ override
     return e;
   }
 
-  E visit(OrOrExpression)
+  E visit(OrOrExpr)
   { return null; }
 
-  E visit(AndAndExpression)
+  E visit(AndAndExpr)
   { return null; }
 
-  E visit(SpecialTokenExpression e)
+  E visit(SpecialTokenExpr e)
   {
     if (e.type)
       return e.value;
     switch (e.specialToken.kind)
     {
     case TOK.LINE, TOK.VERSION:
-      e.value = new IntExpression(e.specialToken.uint_, Types.UInt32);
+      e.value = new IntExpr(e.specialToken.uint_, Types.UInt32);
       break;
     case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
-      e.value = new StringExpression(e.specialToken.strval.str);
+      e.value = new StringExpr(e.specialToken.strval.str);
       break;
     default:
       assert(0);
@@ -299,7 +299,7 @@ override
     return e.value;
   }
 
-  E visit(DollarExpression e)
+  E visit(DollarExpr e)
   {
     if (e.type)
       return e;
@@ -309,23 +309,23 @@ override
     return e;
   }
 
-  E visit(NullExpression e)
+  E visit(NullExpr e)
   {
     if (!e.type)
       e.type = Types.Void_ptr;
     return e;
   }
 
-  E visit(BoolExpression e)
+  E visit(BoolExpr e)
   {
     if (e.type)
       return e;
-    e.value = new IntExpression(e.toBool(), Types.Bool);
+    e.value = new IntExpr(e.toBool(), Types.Bool);
     e.type = Types.Bool;
     return e;
   }
 
-  E visit(IntExpression e)
+  E visit(IntExpr e)
   {
     if (e.type)
       return e;
@@ -341,31 +341,31 @@ override
     return e;
   }
 
-  E visit(FloatExpression e)
+  E visit(FloatExpr e)
   {
     if (!e.type)
       e.type = Types.Float64;
     return e;
   }
 
-  E visit(ComplexExpression e)
+  E visit(ComplexExpr e)
   {
     if (!e.type)
       e.type = Types.CFloat64;
     return e;
   }
 
-  E visit(CharExpression e)
+  E visit(CharExpr e)
   {
     return e;
   }
 
-  E visit(StringExpression e)
+  E visit(StringExpr e)
   {
     return e;
   }
 
-  E visit(MixinExpression me)
+  E visit(MixinExpr me)
   {
     if (me.type)
       return me.expr;
@@ -373,7 +373,7 @@ override
     auto expr = interpret(me.expr);
     if (expr is Interpreter.NAR)
       return me;
-    auto stringExpr = expr.Is!(StringExpression);
+    auto stringExpr = expr.Is!(StringExpr);
     if (stringExpr is null)
      error(me.begin, MSG.MixinArgumentMustBeString);
     else
@@ -390,7 +390,7 @@ override
     return me.expr;
   }
 
-  E visit(ImportExpression ie)
+  E visit(ImportExpr ie)
   {
     if (ie.type)
       return ie.expr;
@@ -398,11 +398,11 @@ override
     auto expr = interpret(ie.expr);
     if (expr is Interpreter.NAR)
       return ie;
-    auto stringExpr = expr.Is!(StringExpression);
+    auto stringExpr = expr.Is!(StringExpr);
     //if (stringExpr is null)
     //  error(me.begin, MSG.ImportArgumentMustBeString);
     // TODO: load file
-    //ie.expr = new StringExpression(loadImportFile(stringExpr.getString()));
+    //ie.expr = new StringExpr(loadImportFile(stringExpr.getString()));
     return ie.expr;
   }
 }

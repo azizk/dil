@@ -976,10 +976,10 @@ override
 
 override
 {
-  void visit(IllegalExpression)
+  void visit(IllegalExpr)
   { assert(0, "interpreting invalid AST"); }
 
-  void visit(CondExpression e)
+  void visit(CondExpr e)
   {
     begin(e);
     visitE(e.condition);
@@ -1008,217 +1008,217 @@ override
     visitE(e.una);
     end(e);`;
 
-  void visit(CommaExpression e)
+  void visit(CommaExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(OrOrExpression e)
+  void visit(OrOrExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(AndAndExpression e)
+  void visit(AndAndExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(OrExpression e)
+  void visit(OrExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(XorExpression e)
+  void visit(XorExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(AndExpression e)
+  void visit(AndExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(EqualExpression e)
+  void visit(EqualExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(IdentityExpression e)
+  void visit(IdentityExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(RelExpression e)
+  void visit(RelExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(InExpression e)
+  void visit(InExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(LShiftExpression e)
+  void visit(LShiftExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(RShiftExpression e)
+  void visit(RShiftExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(URShiftExpression e)
+  void visit(URShiftExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(PlusExpression e)
+  void visit(PlusExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(MinusExpression e)
+  void visit(MinusExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(CatExpression e)
+  void visit(CatExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(MulExpression e)
+  void visit(MulExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(DivExpression e)
+  void visit(DivExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(ModExpression e)
+  void visit(ModExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(AssignExpression e)
+  void visit(AssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(LShiftAssignExpression e)
+  void visit(LShiftAssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(RShiftAssignExpression e)
+  void visit(RShiftAssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(URShiftAssignExpression e)
+  void visit(URShiftAssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(OrAssignExpression e)
+  void visit(OrAssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(AndAssignExpression e)
+  void visit(AndAssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(PlusAssignExpression e)
+  void visit(PlusAssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(MinusAssignExpression e)
+  void visit(MinusAssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(DivAssignExpression e)
+  void visit(DivAssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(MulAssignExpression e)
+  void visit(MulAssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(ModAssignExpression e)
+  void visit(ModAssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(XorAssignExpression e)
+  void visit(XorAssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(CatAssignExpression e)
+  void visit(CatAssignExpr e)
   {
     mixin(binaryExpr);
   }
 
-  void visit(AddressExpression e)
+  void visit(AddressExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(PreIncrExpression e)
+  void visit(PreIncrExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(PreDecrExpression e)
+  void visit(PreDecrExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(PostIncrExpression e)
+  void visit(PostIncrExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(PostDecrExpression e)
+  void visit(PostDecrExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(DerefExpression e)
+  void visit(DerefExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(SignExpression e)
+  void visit(SignExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(NotExpression e)
+  void visit(NotExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(CompExpression e)
+  void visit(CompExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(CallExpression e)
+  void visit(CallExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(NewExpression e)
+  void visit(NewExpr e)
   {
     begin(e);
     write(e.newArgs);
@@ -1229,7 +1229,7 @@ override
     end(e);
   }
 
-  void visit(NewClassExpression e)
+  void visit(NewClassExpr e)
   {
     begin(e);
     write(e.newArgs);
@@ -1242,12 +1242,12 @@ override
     end(e);
   }
 
-  void visit(DeleteExpression e)
+  void visit(DeleteExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(CastExpression e)
+  void visit(CastExpr e)
   {
     begin(e);
     version(D2)
@@ -1259,7 +1259,7 @@ override
     end(e);
   }
 
-  void visit(IndexExpression e)
+  void visit(IndexExpr e)
   {
     begin(e);
     visitE(e.una);
@@ -1268,7 +1268,7 @@ override
     end(e);
   }
 
-  void visit(SliceExpression e)
+  void visit(SliceExpr e)
   {
     begin(e);
     visitE(e.una);
@@ -1279,20 +1279,20 @@ override
     end(e);
   }
 
-  void visit(ModuleScopeExpression e)
+  void visit(ModuleScopeExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(IdentifierExpression e)
+  void visit(IdentifierExpr e)
   {
     begin(e);
     write(indexOf(e.idToken));
     end(e);
   }
 
-  void visit(TemplateInstanceExpression e)
+  void visit(TmplInstanceExpr e)
   {
     begin(e);
     write(indexOf(e.idToken));
@@ -1301,81 +1301,81 @@ override
     end(e);
   }
 
-  void visit(SpecialTokenExpression e)
+  void visit(SpecialTokenExpr e)
   {
     begin(e);
     write(indexOf(e.specialToken));
     end(e);
   }
 
-  void visit(ThisExpression e)
+  void visit(ThisExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(SuperExpression e)
+  void visit(SuperExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(NullExpression e)
+  void visit(NullExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(DollarExpression e)
+  void visit(DollarExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(BoolExpression e)
+  void visit(BoolExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(IntExpression e)
+  void visit(IntExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(FloatExpression e)
+  void visit(FloatExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(ComplexExpression e)
+  void visit(ComplexExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(CharExpression e)
+  void visit(CharExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(StringExpression e)
+  void visit(StringExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(ArrayLiteralExpression e)
+  void visit(ArrayLiteralExpr e)
   {
     begin(e);
     write(e.values);
     end(e);
   }
 
-  void visit(AArrayLiteralExpression e)
+  void visit(AArrayLiteralExpr e)
   {
     begin(e);
     write(e.keys);
@@ -1384,7 +1384,7 @@ override
     end(e);
   }
 
-  void visit(AssertExpression e)
+  void visit(AssertExpr e)
   {
     begin(e);
     visitE(e.expr);
@@ -1393,42 +1393,42 @@ override
     end(e);
   }
 
-  void visit(MixinExpression e)
+  void visit(MixinExpr e)
   {
     begin(e);
     visitE(e.expr);
     end(e);
   }
 
-  void visit(ImportExpression e)
+  void visit(ImportExpr e)
   {
     begin(e);
     visitE(e.expr);
     end(e);
   }
 
-  void visit(TypeofExpression e)
+  void visit(TypeofExpr e)
   {
     begin(e);
     visitT(e.type);
     end(e);
   }
 
-  void visit(TypeDotIdExpression e)
+  void visit(TypeDotIdExpr e)
   {
     begin(e);
     visitT(e.type);
     end(e);
   }
 
-  void visit(TypeidExpression e)
+  void visit(TypeidExpr e)
   {
     begin(e);
     visitT(e.type);
     end(e);
   }
 
-  void visit(IsExpression e)
+  void visit(IsExpr e)
   {
     begin(e);
     visitT(e.type);
@@ -1439,14 +1439,14 @@ override
     end(e);
   }
 
-  void visit(ParenExpression e)
+  void visit(ParenExpr e)
   {
     begin(e);
     visitE(e.next);
     end(e);
   }
 
-  void visit(FunctionLiteralExpression e)
+  void visit(FuncLiteralExpr e)
   {
     begin(e);
     e.returnType ? visitT(e.returnType) : write("n");
@@ -1457,7 +1457,7 @@ override
     end(e);
   }
 
-  void visit(TraitsExpression e) // D2.0
+  void visit(TraitsExpr e) // D2.0
   {
     begin(e);
     write(indexOf(e.ident)~",");
@@ -1465,13 +1465,13 @@ override
     end(e);
   }
 
-  void visit(VoidInitExpression e)
+  void visit(VoidInitExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(ArrayInitExpression e)
+  void visit(ArrayInitExpr e)
   {
     begin(e);
     write("(");
@@ -1482,7 +1482,7 @@ override
     end(e);
   }
 
-  void visit(StructInitExpression e)
+  void visit(StructInitExpr e)
   {
     begin(e);
     write("(");
@@ -1493,22 +1493,22 @@ override
     end(e);
   }
 
-  void visit(AsmTypeExpression e)
+  void visit(AsmTypeExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(AsmOffsetExpression e)
+  void visit(AsmOffsetExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(AsmSegExpression e)
+  void visit(AsmSegExpr e)
   {
     mixin(unaryExpr);
   }
 
-  void visit(AsmPostBracketExpression e)
+  void visit(AsmPostBracketExpr e)
   {
     begin(e);
     visitE(e.una);
@@ -1517,20 +1517,20 @@ override
     end(e);
   }
 
-  void visit(AsmBracketExpression e)
+  void visit(AsmBracketExpr e)
   {
     begin(e);
     visitE(e.expr);
     end(e);
   }
 
-  void visit(AsmLocalSizeExpression e)
+  void visit(AsmLocalSizeExpr e)
   {
     begin(e);
     end(e, false);
   }
 
-  void visit(AsmRegisterExpression e)
+  void visit(AsmRegisterExpr e)
   {
     begin(e);
     e.number ? visitE(e.number) : write("n");

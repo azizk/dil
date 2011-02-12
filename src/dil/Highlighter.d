@@ -532,7 +532,7 @@ char[] getShortClassName(Node node)
     suffixLength = "Statement".length;
     break;
   case NC.Expression:
-    suffixLength = "Expression".length;
+    suffixLength = "Expr".length;
     break;
   case NC.Type:
     suffixLength = "Type".length;

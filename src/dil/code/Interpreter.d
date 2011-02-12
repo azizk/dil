@@ -478,8 +478,8 @@ override
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   /// Calculates z1 + z2 or z1 - z2.
-  /// Returns a new ComplexExpression.
-  ComplexExpression complexPlusOrMinus(BinaryExpression e, bool minusOp)
+  /// Returns a new ComplexExpr.
+  ComplexExpr complexPlusOrMinus(BinaryExpr e, bool minusOp)
   {
     int comb = void; // Indicates which case needs to be calculated.
     Complex z = void; // Temp variable.
@@ -520,15 +520,15 @@ override
     case 8: re = re + r2; im = im + i2; break; // (re+im) + (r2+i2)
     default: assert(0);
     }
-    return new ComplexExpression(Complex(re, im), e.type);
+    return new ComplexExpr(Complex(re, im), e.type);
   }
 
 override
 {
-  E visit(IllegalExpression)
+  E visit(IllegalExpr)
   { assert(0, "interpreting invalid AST"); return null; }
 
-  E visit(CondExpression e)
+  E visit(CondExpr e)
   {
     auto r = visitE(e.condition);
     if (r !is NAR)
@@ -541,76 +541,76 @@ override
     return r;
   }
 
-  E visit(CommaExpression e)
+  E visit(CommaExpr e)
   {
     return visitE(e.lhs) is NAR ? NAR : visitE(e.rhs);
   }
 
-  E visit(OrOrExpression e)
+  E visit(OrOrExpr e)
   {
     auto r = EM.toBool(visitE(e.lhs));
-    if (r !is NAR && r.to!(IntExpression).number == 0)
+    if (r !is NAR && r.to!(IntExpr).number == 0)
       r = EM.toBool(visitE(e.rhs));
     return r;
   }
 
-  E visit(AndAndExpression e)
+  E visit(AndAndExpr e)
   {
     auto r = EM.toBool(visitE(e.lhs));
-    if (r !is NAR && r.to!(IntExpression).number == 1)
+    if (r !is NAR && r.to!(IntExpr).number == 1)
       r = EM.toBool(visitE(e.rhs));
     return r;
   }
 
-  E visit(OrExpression e)
+  E visit(OrExpr e)
   {
-    auto r = new IntExpression(EM.toInt(e.lhs) | EM.toInt(e.rhs), e.type);
+    auto r = new IntExpr(EM.toInt(e.lhs) | EM.toInt(e.rhs), e.type);
     r.setLoc(e);
     return r;
   }
 
-  E visit(XorExpression e)
+  E visit(XorExpr e)
   {
-    auto r = new IntExpression(EM.toInt(e.lhs) ^ EM.toInt(e.rhs), e.type);
+    auto r = new IntExpr(EM.toInt(e.lhs) ^ EM.toInt(e.rhs), e.type);
     r.setLoc(e);
     return r;
   }
 
-  E visit(AndExpression e)
+  E visit(AndExpr e)
   {
-    auto r = new IntExpression(EM.toInt(e.lhs) & EM.toInt(e.rhs), e.type);
+    auto r = new IntExpr(EM.toInt(e.lhs) & EM.toInt(e.rhs), e.type);
     r.setLoc(e);
     return r;
   }
 
-  E visit(EqualExpression e)
+  E visit(EqualExpr e)
   {
     return e;
   }
 
-  E visit(IdentityExpression e)
+  E visit(IdentityExpr e)
   {
     return e;
   }
 
-  E visit(RelExpression e)
+  E visit(RelExpr e)
   {
     return e;
   }
 
-  E visit(InExpression e)
+  E visit(InExpr e)
   {
     return e;
   }
 
-  E visit(LShiftExpression e)
+  E visit(LShiftExpr e)
   {
-    auto r = new IntExpression(EM.toInt(e.lhs) << EM.toInt(e.rhs), e.type);
+    auto r = new IntExpr(EM.toInt(e.lhs) << EM.toInt(e.rhs), e.type);
     r.setLoc(e);
     return r;
   }
 
-  E visit(RShiftExpression e)
+  E visit(RShiftExpr e)
   {
     Expression r;
     ulong val = EM.toInt(e.lhs), bits = EM.toInt(e.rhs);
@@ -629,12 +629,12 @@ override
     case TYP.Error:  r = e; return r;
     default: assert(0);
     }
-    r = new IntExpression(val, e.type);
+    r = new IntExpr(val, e.type);
     r.setLoc(e);
     return r;
   }
 
-  E visit(URShiftExpression e)
+  E visit(URShiftExpr e)
   {
     Expression r;
     ulong val = EM.toInt(e.lhs), bits = EM.toInt(e.rhs);
@@ -648,47 +648,47 @@ override
     case TYP.Error:  r = e; return r;
     default: assert(0);
     }
-    r = new IntExpression(val >> bits, e.type);
+    r = new IntExpr(val >> bits, e.type);
     r.setLoc(e);
     return r;
   }
 
-  E visit(PlusExpression e)
+  E visit(PlusExpr e)
   {
     Expression r, lhs = e.lhs, rhs = e.rhs;
     auto et = e.type.flagsOf();
     if (et.isReal() || et.isImaginary()) // Boths operands are real or imag.
-      r = new FloatExpression(
+      r = new FloatExpr(
         EM.toRealOrImag(lhs) + EM.toRealOrImag(rhs), e.type);
     else if (et.isComplex())
       r = complexPlusOrMinus(e, false);
     else
-      r = new IntExpression(EM.toInt(lhs) + EM.toInt(rhs), e.type);
+      r = new IntExpr(EM.toInt(lhs) + EM.toInt(rhs), e.type);
     r.setLoc(e);
     return r;
   }
 
-  E visit(MinusExpression e)
+  E visit(MinusExpr e)
   {
     Expression r, lhs = e.lhs, rhs = e.rhs;
     auto et = e.type.flagsOf();
     if (et.isReal() || et.isImaginary()) // Boths operands are real or imag.
-      r = new FloatExpression(
+      r = new FloatExpr(
         EM.toRealOrImag(lhs) - EM.toRealOrImag(rhs), e.type);
     else if (et.isComplex())
       r = complexPlusOrMinus(e, true);
     else
-      r = new IntExpression(EM.toInt(lhs) - EM.toInt(rhs), e.type);
+      r = new IntExpr(EM.toInt(lhs) - EM.toInt(rhs), e.type);
     r.setLoc(e);
     return r;
   }
 
-  E visit(CatExpression e)
+  E visit(CatExpr e)
   {
     return e;
   }
 
-  E visit(MulExpression e)
+  E visit(MulExpr e)
   {
     Expression r, lhs = e.lhs, rhs = e.rhs;
     auto et = e.type.flagsOf();
@@ -696,16 +696,16 @@ override
     {
       Complex z = EM.toComplex(lhs) * EM.toComplex(rhs);
       if (et.isReal() || et.isImaginary())
-        r = new FloatExpression(et.isReal() ? z.re : z.im, e.type);
+        r = new FloatExpr(et.isReal() ? z.re : z.im, e.type);
       else
-        assert(et.isComplex()), r = new ComplexExpression(z, e.type);
+        assert(et.isComplex()), r = new ComplexExpr(z, e.type);
     }
     else
-      r = new IntExpression(EM.toInt(lhs) * EM.toInt(rhs), e.type);
+      r = new IntExpr(EM.toInt(lhs) * EM.toInt(rhs), e.type);
     return r;
   }
 
-  E visit(DivExpression e)
+  E visit(DivExpr e)
   {
     Expression r, lhs = e.lhs, rhs = e.rhs;
     auto et = e.type.flagsOf();
@@ -713,9 +713,9 @@ override
     {
       Complex z = EM.toComplex(lhs) / EM.toComplex(rhs);
       if (et.isReal() || et.isImaginary())
-        r = new FloatExpression(et.isReal() ? z.re : z.im, e.type);
+        r = new FloatExpr(et.isReal() ? z.re : z.im, e.type);
       else
-        assert(et.isComplex()), r = new ComplexExpression(z, e.type);
+        assert(et.isComplex()), r = new ComplexExpr(z, e.type);
     }
     else
     {
@@ -726,12 +726,12 @@ override
         x = cast(long)x1 / cast(long)x2;
       else
         x = x1 / x2;
-      r = new IntExpression(x, e.type);
+      r = new IntExpr(x, e.type);
     }
     return r;
   }
 
-  E visit(ModExpression e)
+  E visit(ModExpr e)
   {
     Expression r, lhs = e.lhs, rhs = e.rhs;
     auto et = e.type.flagsOf();
@@ -739,9 +739,9 @@ override
     {
       Complex z = EM.toComplex(lhs) % EM.toComplex(rhs);
       if (et.isReal() || et.isImaginary())
-        r = new FloatExpression(et.isReal() ? z.re : z.im, e.type);
+        r = new FloatExpr(et.isReal() ? z.re : z.im, e.type);
       else
-        assert(et.isComplex()), r = new ComplexExpression(z, e.type);
+        assert(et.isComplex()), r = new ComplexExpr(z, e.type);
     }
     else
     {
@@ -752,231 +752,231 @@ override
         x = cast(long)x1 % cast(long)x2;
       else
         x = x1 % x2;
-      r = new IntExpression(x, e.type);
+      r = new IntExpr(x, e.type);
     }
     return r;
   }
 
-  E visit(AssignExpression e)
+  E visit(AssignExpr e)
   {
     return e;
   }
 
-  E visit(LShiftAssignExpression e)
+  E visit(LShiftAssignExpr e)
   {
     return e;
   }
 
-  E visit(RShiftAssignExpression e)
+  E visit(RShiftAssignExpr e)
   {
     return e;
   }
 
-  E visit(URShiftAssignExpression e)
+  E visit(URShiftAssignExpr e)
   {
     return e;
   }
 
-  E visit(OrAssignExpression e)
+  E visit(OrAssignExpr e)
   {
     return e;
   }
 
-  E visit(AndAssignExpression e)
+  E visit(AndAssignExpr e)
   {
     return e;
   }
 
-  E visit(PlusAssignExpression e)
+  E visit(PlusAssignExpr e)
   {
     return e;
   }
 
-  E visit(MinusAssignExpression e)
+  E visit(MinusAssignExpr e)
   {
     return e;
   }
 
-  E visit(DivAssignExpression e)
+  E visit(DivAssignExpr e)
   {
     return e;
   }
 
-  E visit(MulAssignExpression e)
+  E visit(MulAssignExpr e)
   {
     return e;
   }
 
-  E visit(ModAssignExpression e)
+  E visit(ModAssignExpr e)
   {
     return e;
   }
 
-  E visit(XorAssignExpression e)
+  E visit(XorAssignExpr e)
   {
     return e;
   }
 
-  E visit(CatAssignExpression e)
+  E visit(CatAssignExpr e)
   {
     return e;
   }
 
-  E visit(AddressExpression e)
+  E visit(AddressExpr e)
   {
     return e;
   }
 
-  E visit(PreIncrExpression e)
+  E visit(PreIncrExpr e)
   {
     return e;
   }
 
-  E visit(PreDecrExpression e)
+  E visit(PreDecrExpr e)
   {
     return e;
   }
 
-  E visit(PostIncrExpression e)
+  E visit(PostIncrExpr e)
   {
     return e;
   }
 
-  E visit(PostDecrExpression e)
+  E visit(PostDecrExpr e)
   {
     return e;
   }
 
-  E visit(DerefExpression e)
+  E visit(DerefExpr e)
   {
     return e;
   }
 
-  E visit(SignExpression e)
+  E visit(SignExpr e)
   {
     return e;
   }
 
-  E visit(NotExpression e)
+  E visit(NotExpr e)
   {
-    auto r = new IntExpression(EM.isBool(e) == 0, e.type);
+    auto r = new IntExpr(EM.isBool(e) == 0, e.type);
     r.setLoc(e);
     return r;
   }
 
-  E visit(CompExpression e)
+  E visit(CompExpr e)
   {
-    auto r = new IntExpression(~EM.toInt(e), e.type);
+    auto r = new IntExpr(~EM.toInt(e), e.type);
     r.setLoc(e);
     return r;
   }
 
-  E visit(CallExpression e)
+  E visit(CallExpr e)
   {
     return e;
   }
 
-  E visit(NewExpression e)
+  E visit(NewExpr e)
   {
     return e;
   }
 
-  E visit(NewClassExpression e)
+  E visit(NewClassExpr e)
   {
     return e;
   }
 
-  E visit(DeleteExpression e)
+  E visit(DeleteExpr e)
   {
     return e;
   }
 
-  E visit(CastExpression e)
+  E visit(CastExpr e)
   {
     return e;
   }
 
-  E visit(IndexExpression e)
+  E visit(IndexExpr e)
   {
     return e;
   }
 
-  E visit(SliceExpression e)
+  E visit(SliceExpr e)
   {
     return e;
   }
 
-  E visit(ModuleScopeExpression e)
+  E visit(ModuleScopeExpr e)
   {
     return e;
   }
 
-  E visit(IdentifierExpression e)
+  E visit(IdentifierExpr e)
   {
     return e;
   }
 
-  E visit(TemplateInstanceExpression e)
+  E visit(TmplInstanceExpr e)
   {
     return e;
   }
 
-  E visit(SpecialTokenExpression e)
+  E visit(SpecialTokenExpr e)
   {
     return e;
   }
 
-  E visit(ThisExpression e)
+  E visit(ThisExpr e)
   {
     return e;
   }
 
-  E visit(SuperExpression e)
+  E visit(SuperExpr e)
   {
     return e;
   }
 
-  E visit(NullExpression e)
+  E visit(NullExpr e)
   { // Just return e.
     return e;
   }
 
-  E visit(DollarExpression e)
+  E visit(DollarExpr e)
   {
     return e;
   }
 
-  E visit(BoolExpression e)
+  E visit(BoolExpr e)
   { // Just return the value of e.
     return e.value;
   }
 
-  E visit(IntExpression e)
+  E visit(IntExpr e)
   { // Just return e.
     return e;
   }
 
-  E visit(FloatExpression e)
+  E visit(FloatExpr e)
   { // Just return e.
     return e;
   }
 
-  E visit(ComplexExpression e)
+  E visit(ComplexExpr e)
   { // Just return e.
     return e;
   }
 
-  E visit(CharExpression e)
+  E visit(CharExpr e)
   { // Just return e.
     return e;
   }
 
-  E visit(StringExpression e)
+  E visit(StringExpr e)
   { // Just return e.
     return e;
   }
 
-  E visit(ArrayLiteralExpression e)
+  E visit(ArrayLiteralExpr e)
   {
     if (!e.values)
       goto Lerr;
@@ -996,7 +996,7 @@ override
     Expression r = e;
     if (elems_dup)
     { // Make a new array literal.
-      r = new ArrayLiteralExpression(elems_dup);
+      r = new ArrayLiteralExpr(elems_dup);
       r.setLoc(e);
       r.type = e.type;
     }
@@ -1006,113 +1006,113 @@ override
     return NAR;
   }
 
-  E visit(AArrayLiteralExpression e)
+  E visit(AArrayLiteralExpr e)
   {
     return e;
   }
 
-  E visit(AssertExpression e)
+  E visit(AssertExpr e)
   {
     return e;
   }
 
-  E visit(MixinExpression e)
+  E visit(MixinExpr e)
   {
     return e;
   }
 
-  E visit(ImportExpression e)
+  E visit(ImportExpr e)
   {
     return e;
   }
 
-  E visit(TypeofExpression e)
+  E visit(TypeofExpr e)
   {
     return e;
   }
 
-  E visit(TypeDotIdExpression e)
+  E visit(TypeDotIdExpr e)
   {
     return e;
   }
 
-  E visit(TypeidExpression e)
+  E visit(TypeidExpr e)
   {
     return e;
   }
 
-  E visit(IsExpression e)
+  E visit(IsExpr e)
   {
     return e;
   }
 
-  E visit(ParenExpression e)
+  E visit(ParenExpr e)
   {
     return e;
   }
 
-  E visit(FunctionLiteralExpression e)
+  E visit(FuncLiteralExpr e)
   {
     return e;
   }
 
-  E visit(TraitsExpression e) // D2.0
+  E visit(TraitsExpr e) // D2.0
   {
     return e;
   }
 
-  E visit(VoidInitExpression e)
+  E visit(VoidInitExpr e)
   {
     return e;
   }
 
-  E visit(ArrayInitExpression e)
+  E visit(ArrayInitExpr e)
   {
     return e;
   }
 
-  E visit(StructInitExpression e)
+  E visit(StructInitExpr e)
   {
     return e;
   }
 
-  E visit(AsmTypeExpression e)
-  {
-    assert(0);
-    return e;
-  }
-
-  E visit(AsmOffsetExpression e)
+  E visit(AsmTypeExpr e)
   {
     assert(0);
     return e;
   }
 
-  E visit(AsmSegExpression e)
+  E visit(AsmOffsetExpr e)
   {
     assert(0);
     return e;
   }
 
-  E visit(AsmPostBracketExpression e)
+  E visit(AsmSegExpr e)
   {
     assert(0);
     return e;
   }
 
-  E visit(AsmBracketExpression e)
+  E visit(AsmPostBracketExpr e)
   {
     assert(0);
     return e;
   }
 
-  E visit(AsmLocalSizeExpression e)
+  E visit(AsmBracketExpr e)
   {
     assert(0);
     return e;
   }
 
-  E visit(AsmRegisterExpression e)
+  E visit(AsmLocalSizeExpr e)
+  {
+    assert(0);
+    return e;
+  }
+
+  E visit(AsmRegisterExpr e)
   {
     assert(0);
     return e;

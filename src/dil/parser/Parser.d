@@ -635,7 +635,7 @@ class Parser
       version(D2)
       {
       postfix_stcs = parseFunctionPostfix();
-      if (tparams) // if "(" ConstraintExpression ")"
+      if (tparams) // if "(" ConstraintExpr ")"
         constraint = parseOptionalConstraint();
       } // version(D2)
 
@@ -687,10 +687,10 @@ class Parser
   /// $(BNF Initializer := VoidInitializer | NonVoidInitializer
   ////VoidInitializer := void
   ////NonVoidInitializer := ArrayInitializer | StructInitializer |
-  ////                      AssignExpression
+  ////                      AssignExpr
   ////ArrayInitializer :=
   ////  "[" (ArrayInitElement ("," ArrayInitElement)* ","?)? "]"
-  ////ArrayInitElement := (AssignExpression ":")? NonVoidInitializer
+  ////ArrayInitElement := (AssignExpr ":")? NonVoidInitializer
   ////StructInitializer :=
   ////  "{" (StructInitElement ("," StructInitElement)* ","?)? "}"
   ////StructInitElement := (MemberName ":")? NonVoidInitializer
@@ -701,14 +701,14 @@ class Parser
     {
       auto next = peekNext();
       if (next == T.Comma || next == T.Semicolon)
-        return skip(T.Void), set(new VoidInitExpression(), prevToken);
+        return skip(T.Void), set(new VoidInitExpr(), prevToken);
     }
     return parseNonVoidInitializer();
   }
 
   /// Parses a NonVoidInitializer.
   /// $(BNF NonVoidInitializer :=
-  ////  ArrayInitializer | StructInitializer | AssignExpression)
+  ////  ArrayInitializer | StructInitializer | AssignExpr)
   Expression parseNonVoidInitializer()
   {
     auto begin = token;
@@ -719,7 +719,7 @@ class Parser
       auto after_bracket = tokenAfterBracket(T.RBracket);
       if (after_bracket != T.Comma && after_bracket != T.RBracket &&
           after_bracket != T.RBrace && after_bracket != T.Semicolon)
-        goto default; // Parse as an AssignExpression.
+        goto default; // Parse as an AssignExpr.
       // ArrayInitializer := "[" ArrayMemberInitializations? "]"
       Expression[] keys, values;
 
@@ -730,21 +730,21 @@ class Parser
         auto value = parseNonVoidInitializer();
         if (consumed(T.Colon))
           (key = value), // Switch roles.
-          assert(!(key.Is!(ArrayInitExpression) ||
-                   key.Is!(StructInitExpression))),
+          assert(!(key.Is!(ArrayInitExpr) ||
+                   key.Is!(StructInitExpr))),
           value = parseNonVoidInitializer(); // Parse actual value.
         keys ~= key; values ~= value;
         if (!consumed(T.Comma))
           break;
       }
       requireClosing(T.RBracket, begin);
-      init = new ArrayInitExpression(keys, values);
+      init = new ArrayInitExpr(keys, values);
       break;
     case T.LBrace:
       auto after_bracket = tokenAfterBracket(T.RBrace);
       if (after_bracket != T.Comma && after_bracket != T.RBrace &&
           after_bracket != T.RBracket && after_bracket != T.Semicolon)
-        goto default; // Parse as an AssignExpression.
+        goto default; // Parse as an AssignExpr.
       // StructInitializer := "{" StructMemberInitializers? "}"
       Token*[] idents;
       Expression[] values;
@@ -763,10 +763,10 @@ class Parser
           break;
       }
       requireClosing(T.RBrace, begin);
-      init = new StructInitExpression(idents, values);
+      init = new StructInitExpr(idents, values);
       break;
     default:
-      return parseAssignExpression();
+      return parseAssignExpr();
     }
     set(init, begin);
     return init;
@@ -1287,7 +1287,7 @@ class Parser
   ////EnumBody := "{" EnumMembers "}"
   ////EnumMembers := EnumMember ("," EnumMember)* ","?
   ////EnumMembers2 := Type? EnumMember ("," Type? EnumMember)* ","? # D2.0
-  ////EnumMember := Name ("=" AssignExpression)?)
+  ////EnumMember := Name ("=" AssignExpr)?)
   Declaration parseEnumDecl()
   {
     skip(T.Enum);
@@ -1316,7 +1316,7 @@ class Parser
         version(D2)
         {
         bool success;
-        type = tryToParse({ // Type Identifier "=" AssignExpression
+        type = tryToParse({ // Type Identifier "=" AssignExpr
           return parseDeclarator(name);
         }, success);
         } // version(D2)
@@ -1325,7 +1325,7 @@ class Parser
         Expression value;
 
         if (consumed(T.Assign))
-          value = parseAssignExpression();
+          value = parseAssignExpr();
 
         auto member = new EnumMemberDecl(type, name, value);
         members ~= set(member, begin);
@@ -1540,7 +1540,7 @@ class Parser
       require2(T.LParen), skip(T.This), require2(T.RParen);
     // FIXME: |= to storageClass?? Won't this affect other decls?
     this.storageClass |= parseFunctionPostfix(); // Combine with current stcs.
-    if (tparams) // if "(" ConstraintExpression ")"
+    if (tparams) // if "(" ConstraintExpr ")"
       constraint = parseOptionalConstraint();
     auto funcBody = parseFunctionBody();
     Declaration d = new ConstructorDecl(parameters, funcBody);
@@ -1700,7 +1700,7 @@ class Parser
   }
 
   /// $(BNF StaticIfDeclaration :=
-  ////  static if "(" AssignExpression ")" DeclarationsBlock
+  ////  static if "(" AssignExpr ")" DeclarationsBlock
   ////  (else DeclarationsBlock)?)
   Declaration parseStaticIfDecl()
   {
@@ -1712,7 +1712,7 @@ class Parser
 
     auto leftParen = token;
     require2(T.LParen);
-    condition = parseAssignExpression();
+    condition = parseAssignExpr();
     requireClosing(T.RParen, leftParen);
 
     ifDecls = parseDeclarationsBlock();
@@ -1724,8 +1724,8 @@ class Parser
   }
 
   /// $(BNF StaticAsserDeclaration :=
-  ////  static assert "(" AssignExpression ("," Message)? ")" ";"
-  ////Message := AssignExpression)
+  ////  static assert "(" AssignExpr ("," Message)? ")" ";"
+  ////Message := AssignExpr)
   Declaration parseStaticAssertDecl()
   {
     skip(T.Static);
@@ -1733,9 +1733,9 @@ class Parser
     Expression condition, message;
     auto leftParen = token;
     require2(T.LParen);
-    condition = parseAssignExpression();
+    condition = parseAssignExpr();
     if (consumed(T.Comma))
-      message = parseAssignExpression();
+      message = parseAssignExpr();
     requireClosing(T.RParen, leftParen);
     require2(T.Semicolon);
     return new StaticAssertDecl(condition, message);
@@ -1800,8 +1800,8 @@ class Parser
 
   /// Parses a MixinDeclaration or MixinStatement.
   /// $(BNF
-  ////MixinDecl := (MixinExpression | MixinTemplateId | MixinTemplate) ";"
-  ////MixinExpression := mixin "(" AssignExpression ")"
+  ////MixinDecl := (MixinExpr | MixinTemplateId | MixinTemplate) ";"
+  ////MixinExpr := mixin "(" AssignExpr ")"
   ////MixinTemplateId := mixin TemplateIdentifier
   ////                   ("!" "(" TemplateArguments ")")? MixinIdentifier?)
   ////MixinTemplate := mixin TemplateDeclaration # D2
@@ -1816,7 +1816,7 @@ class Parser
     if (consumed(T.LParen))
     {
       auto leftParen = token;
-      auto e = parseAssignExpression();
+      auto e = parseAssignExpr();
       requireClosing(T.RParen, leftParen);
       require2(T.Semicolon);
       return new MixinDecl(e);
@@ -1834,12 +1834,12 @@ class Parser
     Token* mixinIdent;
 
     if (token.kind == T.Dot)
-      e = set(new ModuleScopeExpression(), begin, begin);
+      e = set(new ModuleScopeExpr(), begin, begin);
     else
-      e = parseIdentifierExpression();
+      e = parseIdentifierExpr();
 
     while (consumed(T.Dot))
-      e = parseIdentifierExpression(e);
+      e = parseIdentifierExpr(e);
 
     mixinIdent = optionalIdentifier();
     require2(T.Semicolon);
@@ -2051,7 +2051,7 @@ class Parser
       s = new EmptyStatement();
       break;
     // Parse an ExpressionStatement:
-    // Tokens that start a PrimaryExpression.
+    // Tokens that start a PrimaryExpr.
     // case T.Identifier, T.Dot, T.Typeof:
     case T.This:
     case T.Super:
@@ -2076,7 +2076,7 @@ class Parser
     {
     case T.Traits:
     }
-    // Tokens that can start a UnaryExpression:
+    // Tokens that can start a UnaryExpr:
     case T.AndBinary, T.PlusPlus, T.MinusMinus, T.Mul, T.Minus,
          T.Plus, T.Not, T.Tilde, T.New, T.Delete, T.Cast:
     case_parseExpressionStatement:
@@ -2412,7 +2412,7 @@ class Parser
     nT();
 
     auto params = new Parameters;
-    Expression e; // Aggregate or LwrExpression
+    Expression e; // Aggregate or LwrExpr
 
     auto leftParen = token;
     require2(T.LParen);
@@ -2451,7 +2451,7 @@ class Parser
     e = parseExpression();
 
     version(D2)
-    { //Foreach (ForeachType; LwrExpression .. UprExpression ) ScopeStatement
+    { //Foreach (ForeachType; LwrExpr .. UprExpr ) ScopeStatement
     if (consumed(T.Slice))
     {
       // if (params.length != 1)
@@ -2511,7 +2511,7 @@ class Parser
       if (values.length > 1)
         error(values[1].begin, MSG.CaseRangeStartExpression);
       require(T.Case);
-      Expression left = values[0], right = parseAssignExpression();
+      Expression left = values[0], right = parseAssignExpr();
       require2(T.Colon);
       auto caseBody = parseCaseOrDefaultBody();
       return new CaseRangeStatement(left, right, caseBody);
@@ -2742,8 +2742,8 @@ class Parser
   }
 
   /// $(BNF StaticAssertStatement :=
-  ////  static assert "(" AssignExpression ("," Message) ")"
-  ////Message := AssignExpression)
+  ////  static assert "(" AssignExpr ("," Message) ")"
+  ////Message := AssignExpr)
   Statement parseStaticAssertStatement()
   {
     skip(T.Static);
@@ -2751,9 +2751,9 @@ class Parser
     Expression condition, message;
 
     require2(T.LParen);
-    condition = parseAssignExpression(); // Condition.
+    condition = parseAssignExpr(); // Condition.
     if (consumed(T.Comma))
-      message = parseAssignExpression(); // Error message.
+      message = parseAssignExpr(); // Error message.
     require2(T.RParen);
     require2(T.Semicolon);
     return new StaticAssertStatement(condition, message);
@@ -2829,7 +2829,7 @@ class Parser
   ////                AsmAlignStatement | EmptyStatement
   ////OpcodeStatement := Opcode Operands? ";"
   ////Opcode := Identifier
-  ////Operands := AsmExpression ("," AsmExpression)*
+  ////Operands := AsmExpr ("," AsmExpr)*
   ////LabeledStatement := Identifier ":" AsmStatement
   ////AsmAlignStatement := align Integer ";"
   ////EmptyStatement := ";")
@@ -2876,7 +2876,7 @@ class Parser
       Expression[] es;
       if (token.kind != T.Semicolon)
         do
-          es ~= parseAsmExpression();
+          es ~= parseAsmExpr();
         while (consumed(T.Comma))
       require2(T.Semicolon);
       s = new AsmStatement(ident, es);
@@ -2909,113 +2909,113 @@ class Parser
     return s;
   }
 
-  /// $(BNF AsmExpression := AsmCondExpression
-  ////AsmCondExpression :=
-  ////  AsmOrOrExpression ("?" AsmExpression ":" AsmExpression)? )
-  Expression parseAsmExpression()
+  /// $(BNF AsmExpr := AsmCondExpr
+  ////AsmCondExpr :=
+  ////  AsmOrOrExpr ("?" AsmExpr ":" AsmExpr)? )
+  Expression parseAsmExpr()
   {
     auto begin = token;
-    auto e = parseAsmOrOrExpression();
+    auto e = parseAsmOrOrExpr();
     if (auto qtok = consumedToken(T.Question)) // "?"
     {
-      auto iftrue = parseAsmExpression();
+      auto iftrue = parseAsmExpr();
       auto ctok = token; // ":"
       require(T.Colon);
-      auto iffalse = parseAsmExpression();
-      e = new CondExpression(e, iftrue, iffalse, qtok, ctok);
+      auto iffalse = parseAsmExpr();
+      e = new CondExpr(e, iftrue, iffalse, qtok, ctok);
       set(e, begin);
     }
-    // TODO: create AsmExpression that contains e?
+    // TODO: create AsmExpr that contains e?
     return e;
   }
 
-  /// $(BNF AsmOrOrExpression :=
-  ////  AsmAndAndExpression ("||" AsmAndAndExpression)* )
-  Expression parseAsmOrOrExpression()
+  /// $(BNF AsmOrOrExpr :=
+  ////  AsmAndAndExpr ("||" AsmAndAndExpr)* )
+  Expression parseAsmOrOrExpr()
   {
-    alias parseAsmAndAndExpression parseNext;
+    alias parseAsmAndAndExpr parseNext;
     auto begin = token;
     auto e = parseNext();
     while (token.kind == T.OrLogical)
     {
       auto tok = token;
       nT();
-      e = new OrOrExpression(e, parseNext(), tok);
+      e = new OrOrExpr(e, parseNext(), tok);
       set(e, begin);
     }
     return e;
   }
 
-  /// $(BNF AsmAndAndExpression :=
-  ////  AsmOrExpression ("&&" AsmOrExpression)* )
-  Expression parseAsmAndAndExpression()
+  /// $(BNF AsmAndAndExpr :=
+  ////  AsmOrExpr ("&&" AsmOrExpr)* )
+  Expression parseAsmAndAndExpr()
   {
-    alias parseAsmOrExpression parseNext;
+    alias parseAsmOrExpr parseNext;
     auto begin = token;
     auto e = parseNext();
     while (token.kind == T.AndLogical)
     {
       auto tok = token;
       nT();
-      e = new AndAndExpression(e, parseNext(), tok);
+      e = new AndAndExpr(e, parseNext(), tok);
       set(e, begin);
     }
     return e;
   }
 
-  /// $(BNF AsmOrExpression := AsmXorExpression ("|" AsmXorExpression)* )
-  Expression parseAsmOrExpression()
+  /// $(BNF AsmOrExpr := AsmXorExpr ("|" AsmXorExpr)* )
+  Expression parseAsmOrExpr()
   {
-    alias parseAsmXorExpression parseNext;
+    alias parseAsmXorExpr parseNext;
     auto begin = token;
     auto e = parseNext();
     while (token.kind == T.OrBinary)
     {
       auto tok = token;
       nT();
-      e = new OrExpression(e, parseNext(), tok);
+      e = new OrExpr(e, parseNext(), tok);
       set(e, begin);
     }
     return e;
   }
 
-  /// $(BNF AsmXorExpression := AsmAndExpression ("^" AsmAndExpression)* )
-  Expression parseAsmXorExpression()
+  /// $(BNF AsmXorExpr := AsmAndExpr ("^" AsmAndExpr)* )
+  Expression parseAsmXorExpr()
   {
-    alias parseAsmAndExpression parseNext;
+    alias parseAsmAndExpr parseNext;
     auto begin = token;
     auto e = parseNext();
     while (token.kind == T.Xor)
     {
       auto tok = token;
       nT();
-      e = new XorExpression(e, parseNext(), tok);
+      e = new XorExpr(e, parseNext(), tok);
       set(e, begin);
     }
     return e;
   }
 
-  /// $(BNF AsmAndExpression := AsmCmpExpression ("&" AsmCmpExpression)* )
-  Expression parseAsmAndExpression()
+  /// $(BNF AsmAndExpr := AsmCmpExpr ("&" AsmCmpExpr)* )
+  Expression parseAsmAndExpr()
   {
-    alias parseAsmCmpExpression parseNext;
+    alias parseAsmCmpExpr parseNext;
     auto begin = token;
     auto e = parseNext();
     while (token.kind == T.AndBinary)
     {
       auto tok = token;
       nT();
-      e = new AndExpression(e, parseNext(), tok);
+      e = new AndExpr(e, parseNext(), tok);
       set(e, begin);
     }
     return e;
   }
 
-  /// $(BNF AsmCmpExpression := AsmShiftExpression (Op AsmShiftExpression)*
+  /// $(BNF AsmCmpExpr := AsmShiftExpr (Op AsmShiftExpr)*
   ////Op := "==" | "!=" | "<" | "<=" | ">" | ">=" )
-  Expression parseAsmCmpExpression()
+  Expression parseAsmCmpExpr()
   {
-    alias parseAsmShiftExpression parseNext;
+    alias parseAsmShiftExpr parseNext;
     auto begin = token;
     auto e = parseNext();
 
@@ -3024,11 +3024,11 @@ class Parser
     {
     case T.Equal, T.NotEqual:
       nT();
-      e = new EqualExpression(e, parseNext(), operator);
+      e = new EqualExpr(e, parseNext(), operator);
       break;
     case T.LessEqual, T.Less, T.GreaterEqual, T.Greater:
       nT();
-      e = new RelExpression(e, parseNext(), operator);
+      e = new RelExpr(e, parseNext(), operator);
       break;
     default:
       return e;
@@ -3037,11 +3037,11 @@ class Parser
     return e;
   }
 
-  /// $(BNF AsmShiftExpression := AsmAddExpression (Op AsmAddExpression)*
+  /// $(BNF AsmShiftExpr := AsmAddExpr (Op AsmAddExpr)*
   ////Op := "<<" | ">>" | ">>>" )
-  Expression parseAsmShiftExpression()
+  Expression parseAsmShiftExpr()
   {
-    alias parseAsmAddExpression parseNext;
+    alias parseAsmAddExpr parseNext;
     auto begin = token;
     auto e = parseNext();
     while (1)
@@ -3050,11 +3050,11 @@ class Parser
       switch (operator.kind)
       {
       case T.LShift:
-        nT(); e = new LShiftExpression(e, parseNext(), operator); break;
+        nT(); e = new LShiftExpr(e, parseNext(), operator); break;
       case T.RShift:
-        nT(); e = new RShiftExpression(e, parseNext(), operator); break;
+        nT(); e = new RShiftExpr(e, parseNext(), operator); break;
       case T.URShift:
-        nT(); e = new URShiftExpression(e, parseNext(), operator); break;
+        nT(); e = new URShiftExpr(e, parseNext(), operator); break;
       default:
         return e;
       }
@@ -3063,11 +3063,11 @@ class Parser
     assert(0);
   }
 
-  /// $(BNF AsmAddExpression := AsmMulExpression (Op AsmMulExpression)*
+  /// $(BNF AsmAddExpr := AsmMulExpr (Op AsmMulExpr)*
   ////Op := "+" | "-" )
-  Expression parseAsmAddExpression()
+  Expression parseAsmAddExpr()
   {
-    alias parseAsmMulExpression parseNext;
+    alias parseAsmMulExpr parseNext;
     auto begin = token;
     auto e = parseNext();
     while (1)
@@ -3076,12 +3076,12 @@ class Parser
       switch (operator.kind)
       {
       case T.Plus:
-        nT(); e = new PlusExpression(e, parseNext(), operator); break;
+        nT(); e = new PlusExpr(e, parseNext(), operator); break;
       case T.Minus:
-        nT(); e = new MinusExpression(e, parseNext(), operator); break;
+        nT(); e = new MinusExpr(e, parseNext(), operator); break;
       // Not allowed in asm
       //case T.Tilde:
-      //  nT(); e = new CatExpression(e, parseNext(), operator); break;
+      //  nT(); e = new CatExpr(e, parseNext(), operator); break;
       default:
         return e;
       }
@@ -3090,11 +3090,11 @@ class Parser
     assert(0);
   }
 
-  /// $(BNF AsmMulExpression := AsmPostExpression (Op AsmPostExpression)*
+  /// $(BNF AsmMulExpr := AsmPostExpr (Op AsmPostExpr)*
   ////Op := "*" | "/" | "%" )
-  Expression parseAsmMulExpression()
+  Expression parseAsmMulExpr()
   {
-    alias parseAsmPostExpression parseNext;
+    alias parseAsmPostExpr parseNext;
     auto begin = token;
     auto e = parseNext();
     while (1)
@@ -3102,9 +3102,9 @@ class Parser
       auto operator = token;
       switch (operator.kind)
       {
-      case T.Mul: nT(); e = new MulExpression(e, parseNext(), operator); break;
-      case T.Div: nT(); e = new DivExpression(e, parseNext(), operator); break;
-      case T.Mod: nT(); e = new ModExpression(e, parseNext(), operator); break;
+      case T.Mul: nT(); e = new MulExpr(e, parseNext(), operator); break;
+      case T.Div: nT(); e = new DivExpr(e, parseNext(), operator); break;
+      case T.Mod: nT(); e = new ModExpr(e, parseNext(), operator); break;
       default:
         return e;
       }
@@ -3113,14 +3113,14 @@ class Parser
     assert(0);
   }
 
-  /// $(BNF AsmPostExpression := AsmUnaryExpression ("[" AsmExpression "]")* )
-  Expression parseAsmPostExpression()
+  /// $(BNF AsmPostExpr := AsmUnaryExpr ("[" AsmExpr "]")* )
+  Expression parseAsmPostExpr()
   {
     Token* begin = token, leftBracket = void;
-    auto e = parseAsmUnaryExpression();
+    auto e = parseAsmUnaryExpr();
     while ((leftBracket = consumedToken(T.LBracket)) !is null)
     {
-      e = new AsmPostBracketExpression(e, parseAsmExpression());
+      e = new AsmPostBracketExpr(e, parseAsmExpr());
       requireClosing(T.RBracket, leftBracket);
       set(e, begin);
     }
@@ -3128,19 +3128,19 @@ class Parser
   }
 
   /// $(BNF
-  ////AsmUnaryExpression := AsmPrimaryExpression |
-  ////  AsmTypeExpression | AsmOffsetExpression | AsmSegExpression |
-  ////  SignExpression | NotExpression | ComplementExpression
-  ////AsmTypeExpression := TypePrefix "ptr" AsmExpression
+  ////AsmUnaryExpr := AsmPrimaryExpr |
+  ////  AsmTypeExpr | AsmOffsetExpr | AsmSegExpr |
+  ////  SignExpr | NotExpr | ComplementExpr
+  ////AsmTypeExpr := TypePrefix "ptr" AsmExpr
   ////TypePrefix := "byte" | "shor" | "int" | "float" | "double" | "real"
   ////              "near" | "far" | "word" | "dword" | "qword"
-  ////AsmOffsetExpression := "offset" AsmExpression
-  ////AsmSegExpression := "seg" AsmExpression
-  ////SignExpression := ("+" | "-") AsmUnaryExpression
-  ////NotExpression := "!" AsmUnaryExpression
-  ////ComplementExpression := "~" AsmUnaryExpression
+  ////AsmOffsetExpr := "offset" AsmExpr
+  ////AsmSegExpr := "seg" AsmExpr
+  ////SignExpr := ("+" | "-") AsmUnaryExpr
+  ////NotExpr := "!" AsmUnaryExpr
+  ////ComplementExpr := "~" AsmUnaryExpr
   ////)
-  Expression parseAsmUnaryExpression()
+  Expression parseAsmUnaryExpr()
   {
     auto begin = token;
     Expression e;
@@ -3160,81 +3160,81 @@ class Parser
           skip(T.Identifier);
         else
           error2(MID.ExpectedButFound, "ptr", token);
-        e = new AsmTypeExpression(parseAsmExpression());
+        e = new AsmTypeExpr(parseAsmExpr());
         break;
       case IDK.offsetof:
         nT();
-        e = new AsmOffsetExpression(parseAsmExpression());
+        e = new AsmOffsetExpr(parseAsmExpr());
         break;
       case IDK.seg:
         nT();
-        e = new AsmSegExpression(parseAsmExpression());
+        e = new AsmSegExpr(parseAsmExpr());
         break;
       default:
-        goto LparseAsmPrimaryExpression;
+        goto LparseAsmPrimaryExpr;
       }
       break;
     case T.Minus:
     case T.Plus:
       nT();
-      e = new SignExpression(parseAsmUnaryExpression());
+      e = new SignExpr(parseAsmUnaryExpr());
       break;
     case T.Not:
       nT();
-      e = new NotExpression(parseAsmUnaryExpression());
+      e = new NotExpr(parseAsmUnaryExpr());
       break;
     case T.Tilde:
       nT();
-      e = new CompExpression(parseAsmUnaryExpression());
+      e = new CompExpr(parseAsmUnaryExpr());
       break;
     default:
-    LparseAsmPrimaryExpression:
-      e = parseAsmPrimaryExpression();
+    LparseAsmPrimaryExpr:
+      e = parseAsmPrimaryExpr();
       return e;
     }
     set(e, begin);
     return e;
   }
 
-  /// $(BNF AsmPrimaryExpression :=
-  ////  IntExpression | FloatExpression | DollarExpression |
-  ////  AsmLocalSizeExpression | AsmRegisterExpression | AsmBracketExpression |
-  ////  QualifiedExpression
-  ////IntExpression := Integer
-  ////FloatExpression := FloatLiteral | IFloatLiteral
-  ////DollarExpression := "$"
-  ////AsmBracketExpression :=  "[" AsmExpression "]"
-  ////AsmLocalSizeExpression := "__LOCAL_SIZE"
-  ////AsmRegisterExpression := ...
-  ////QualifiedExpression := (ModuleScopeExpression | IdentifierExpression)
-  ////                 ("." IdentifierExpression)+
-  ////ModuleScopeExpression := ".")
-  Expression parseAsmPrimaryExpression()
+  /// $(BNF AsmPrimaryExpr :=
+  ////  IntExpr | FloatExpr | DollarExpr |
+  ////  AsmLocalSizeExpr | AsmRegisterExpr | AsmBracketExpr |
+  ////  QualifiedExpr
+  ////IntExpr := Integer
+  ////FloatExpr := FloatLiteral | IFloatLiteral
+  ////DollarExpr := "$"
+  ////AsmBracketExpr :=  "[" AsmExpr "]"
+  ////AsmLocalSizeExpr := "__LOCAL_SIZE"
+  ////AsmRegisterExpr := ...
+  ////QualifiedExpr := (ModuleScopeExpr | IdentifierExpr)
+  ////                 ("." IdentifierExpr)+
+  ////ModuleScopeExpr := ".")
+  Expression parseAsmPrimaryExpr()
   {
     auto begin = token;
     Expression e;
     switch (token.kind)
     {
     case T.Int32, T.Int64, T.UInt32, T.UInt64:
-      e = new IntExpression(token);
+      e = new IntExpr(token);
       nT();
       break;
     case T.Float32, T.Float64, T.Float80,
          T.IFloat32, T.IFloat64, T.IFloat80:
-      e = new FloatExpression(token);
+      e = new FloatExpr(token);
       nT();
       break;
     case T.Dollar:
-      e = new DollarExpression();
+      e = new DollarExpr();
       nT();
       break;
     case T.LBracket:
-      // [ AsmExpression ]
+      // [ AsmExpr ]
       auto leftBracket = token;
       nT();
-      e = parseAsmExpression();
+      e = parseAsmExpr();
       requireClosing(T.RBracket, leftBracket);
-      e = new AsmBracketExpression(e);
+      e = new AsmBracketExpr(e);
       break;
     case T.Identifier:
       auto register = token.ident;
@@ -3243,23 +3243,23 @@ class Parser
       // __LOCAL_SIZE
       case IDK.__LOCAL_SIZE:
         nT();
-        e = new AsmLocalSizeExpression();
+        e = new AsmLocalSizeExpr();
         break;
       // Register
       case IDK.ST:
         nT();
         Expression number; // (1) - (7)
         if (consumed(T.LParen))
-          (number = parseAsmExpression()),
+          (number = parseAsmExpr()),
           require2(T.RParen);
-        e = new AsmRegisterExpression(register, number);
+        e = new AsmRegisterExpr(register, number);
         break;
       case IDK.ES, IDK.CS, IDK.SS, IDK.DS, IDK.GS, IDK.FS:
         nT();
         Expression number;
-        if (consumed(T.Colon)) // Segment := XX ":" AsmExpression
-          number = parseAsmExpression();
-        e = new AsmRegisterExpression(register, number);
+        if (consumed(T.Colon)) // Segment := XX ":" AsmExpr
+          number = parseAsmExpr();
+        e = new AsmRegisterExpr(register, number);
         break;
       case IDK.AL, IDK.AH, IDK.AX, IDK.EAX,
            IDK.BL, IDK.BH, IDK.BX, IDK.EBX,
@@ -3275,22 +3275,22 @@ class Parser
            IDK.XMM0, IDK.XMM1, IDK.XMM2, IDK.XMM3,
            IDK.XMM4, IDK.XMM5, IDK.XMM6, IDK.XMM7:
         nT();
-        e = new AsmRegisterExpression(register);
+        e = new AsmRegisterExpr(register);
         break;
       default:
-        e = parseIdentifierExpression();
+        e = parseIdentifierExpr();
         while (consumed(T.Dot))
-          e = parseIdentifierExpression(e);
+          e = parseIdentifierExpr(e);
       } // end of switch
       break;
     case T.Dot:
-      e = set(new ModuleScopeExpression(), begin, begin);
+      e = set(new ModuleScopeExpr(), begin, begin);
       while (consumed(T.Dot))
-        e = parseIdentifierExpression(e);
+        e = parseIdentifierExpr(e);
       break;
     default:
       error2(MID.ExpectedButFound, "Expression", token);
-      e = new IllegalExpression();
+      e = new IllegalExpr();
       if (!trying)
       { // Insert a dummy token and don't consume current one.
         begin = lexer.insertEmptyTokenBefore(token);
@@ -3306,64 +3306,64 @@ class Parser
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   /// The root method for parsing an Expression.
-  /// $(BNF Expression := AssignExpression ("," AssignExpression)* )
+  /// $(BNF Expression := AssignExpr ("," AssignExpr)* )
   Expression parseExpression()
   {
-    alias parseAssignExpression parseNext;
+    alias parseAssignExpr parseNext;
     auto begin = token;
     auto e = parseNext();
     while (token.kind == T.Comma)
     {
       auto comma = token;
       nT();
-      e = new CommaExpression(e, parseNext(), comma);
+      e = new CommaExpr(e, parseNext(), comma);
       set(e, begin);
     }
     return e;
   }
 
-  /// $(BNF AssignExpression := CondExpression (Op AssignExpression)*
+  /// $(BNF AssignExpr := CondExpr (Op AssignExpr)*
   ////Op := "=" | "<<=" | ">>=" | ">>>=" | "|=" |
   ////      "&=" | "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~=" | "^^="
   ////)
-  Expression parseAssignExpression()
+  Expression parseAssignExpr()
   {
-    alias parseAssignExpression parseNext;
+    alias parseAssignExpr parseNext;
     auto begin = token;
-    auto e = parseCondExpression();
+    auto e = parseCondExpr();
     auto optok = token;
     switch (optok.kind)
     {
     case T.Assign:
-      nT(); e = new AssignExpression(e, parseNext(), optok); break;
+      nT(); e = new AssignExpr(e, parseNext(), optok); break;
     case T.LShiftAssign:
-      nT(); e = new LShiftAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new LShiftAssignExpr(e, parseNext(), optok); break;
     case T.RShiftAssign:
-      nT(); e = new RShiftAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new RShiftAssignExpr(e, parseNext(), optok); break;
     case T.URShiftAssign:
-      nT(); e = new URShiftAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new URShiftAssignExpr(e, parseNext(), optok); break;
     case T.OrAssign:
-      nT(); e = new OrAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new OrAssignExpr(e, parseNext(), optok); break;
     case T.AndAssign:
-      nT(); e = new AndAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new AndAssignExpr(e, parseNext(), optok); break;
     case T.PlusAssign:
-      nT(); e = new PlusAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new PlusAssignExpr(e, parseNext(), optok); break;
     case T.MinusAssign:
-      nT(); e = new MinusAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new MinusAssignExpr(e, parseNext(), optok); break;
     case T.DivAssign:
-      nT(); e = new DivAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new DivAssignExpr(e, parseNext(), optok); break;
     case T.MulAssign:
-      nT(); e = new MulAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new MulAssignExpr(e, parseNext(), optok); break;
     case T.ModAssign:
-      nT(); e = new ModAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new ModAssignExpr(e, parseNext(), optok); break;
     case T.XorAssign:
-      nT(); e = new XorAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new XorAssignExpr(e, parseNext(), optok); break;
     case T.CatAssign:
-      nT(); e = new CatAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new CatAssignExpr(e, parseNext(), optok); break;
     version(D2)
     {
     case T.PowAssign:
-      nT(); e = new PowAssignExpression(e, parseNext(), optok); break;
+      nT(); e = new PowAssignExpr(e, parseNext(), optok); break;
     }
     default:
       return e;
@@ -3372,86 +3372,86 @@ class Parser
     return e;
   }
 
-  /// $(BNF CondExpression :=
-  ////  OrOrExpression ("?" Expression ":" CondExpression)? )
-  Expression parseCondExpression()
+  /// $(BNF CondExpr :=
+  ////  OrOrExpr ("?" Expression ":" CondExpr)? )
+  Expression parseCondExpr()
   {
     auto begin = token;
-    auto e = parseOrOrExpression();
+    auto e = parseOrOrExpr();
     if (auto qtok = consumedToken(T.Question)) // "?"
     {
       auto iftrue = parseExpression();
       auto ctok = token; // ":"
       require(T.Colon);
-      auto iffalse = parseCondExpression();
-      e = new CondExpression(e, iftrue, iffalse, qtok, ctok);
+      auto iffalse = parseCondExpr();
+      e = new CondExpr(e, iftrue, iffalse, qtok, ctok);
       set(e, begin);
     }
     return e;
   }
 
-  /// $(BNF OrOrExpression := AndAndExpression ("||" AndAndExpression)* )
-  Expression parseOrOrExpression()
+  /// $(BNF OrOrExpr := AndAndExpr ("||" AndAndExpr)* )
+  Expression parseOrOrExpr()
   {
-    alias parseAndAndExpression parseNext;
+    alias parseAndAndExpr parseNext;
     Token* begin = token, operator = void;
     auto e = parseNext();
     while ((operator = consumedToken(T.OrLogical)) !is null)
-      e = set(new OrOrExpression(e, parseNext(), operator), begin);
+      e = set(new OrOrExpr(e, parseNext(), operator), begin);
     return e;
   }
 
-  /// $(BNF AndAndExpression := OrExpression ("&&" OrExpression)* )
-  Expression parseAndAndExpression()
+  /// $(BNF AndAndExpr := OrExpr ("&&" OrExpr)* )
+  Expression parseAndAndExpr()
   {
-    alias parseOrExpression parseNext;
+    alias parseOrExpr parseNext;
     Token* begin = token, operator = void;
     auto e = parseNext();
     while ((operator = consumedToken(T.AndLogical)) !is null)
-      e = set(new AndAndExpression(e, parseNext(), operator), begin);
+      e = set(new AndAndExpr(e, parseNext(), operator), begin);
     return e;
   }
 
-  /// $(BNF OrExpression := XorExpression ("|" XorExpression)* )
-  Expression parseOrExpression()
+  /// $(BNF OrExpr := XorExpr ("|" XorExpr)* )
+  Expression parseOrExpr()
   {
-    alias parseXorExpression parseNext;
+    alias parseXorExpr parseNext;
     Token* begin = token, operator = void;
     auto e = parseNext();
     while ((operator = consumedToken(T.OrBinary)) !is null)
-      e = set(new OrExpression(e, parseNext(), operator), begin);
+      e = set(new OrExpr(e, parseNext(), operator), begin);
     return e;
   }
 
-  /// $(BNF XorExpression := AndExpression ("^" AndExpression)* )
-  Expression parseXorExpression()
+  /// $(BNF XorExpr := AndExpr ("^" AndExpr)* )
+  Expression parseXorExpr()
   {
-    alias parseAndExpression parseNext;
+    alias parseAndExpr parseNext;
     Token* begin = token, operator = void;
     auto e = parseNext();
     while ((operator = consumedToken(T.Xor)) !is null)
-      e = set(new XorExpression(e, parseNext(), operator), begin);
+      e = set(new XorExpr(e, parseNext(), operator), begin);
     return e;
   }
 
-  /// $(BNF AndExpression := CmpExpression ("&" CmpExpression)* )
-  Expression parseAndExpression()
+  /// $(BNF AndExpr := CmpExpr ("&" CmpExpr)* )
+  Expression parseAndExpr()
   {
-    alias parseCmpExpression parseNext;
+    alias parseCmpExpr parseNext;
     Token* begin = token, operator = void;
     auto e = parseNext();
     while ((operator = consumedToken(T.AndBinary)) !is null)
-      e = set(new AndExpression(e, parseNext(), operator), begin);
+      e = set(new AndExpr(e, parseNext(), operator), begin);
     return e;
   }
 
-  /// $(BNF CmpExpression := ShiftExpression (Op ShiftExpression)?
+  /// $(BNF CmpExpr := ShiftExpr (Op ShiftExpr)?
   ////Op := "is" | "!" "is" | "in" | "==" | "!=" | "<" | "<=" | ">" |
   ////      ">=" | "!<>=" | "!<>" | "!<=" | "!<" |
   ////      "!>=" | "!>" | "<>=" | "<>")
-  Expression parseCmpExpression()
+  Expression parseCmpExpr()
   {
-    alias parseShiftExpression parseNext;
+    alias parseShiftExpr parseNext;
     auto begin = token;
     auto e = parseNext();
 
@@ -3460,7 +3460,7 @@ class Parser
     {
     case T.Equal, T.NotEqual:
       nT();
-      e = new EqualExpression(e, parseNext(), operator);
+      e = new EqualExpr(e, parseNext(), operator);
       break;
     case T.Not:
       auto next = peekNext();
@@ -3471,17 +3471,17 @@ class Parser
       break;
     case T.Is:
       skip(T.Is);
-      e = new IdentityExpression(e, parseNext(), operator);
+      e = new IdentityExpr(e, parseNext(), operator);
       break;
     case T.LessEqual, T.Less, T.GreaterEqual, T.Greater,
          T.Unordered, T.UorE, T.UorG, T.UorGorE,
          T.UorL, T.UorLorE, T.LorEorG, T.LorG:
       nT();
-      e = new RelExpression(e, parseNext(), operator);
+      e = new RelExpr(e, parseNext(), operator);
       break;
     case T.In:
       skip(T.In);
-      e = new InExpression(e, parseNext(), operator);
+      e = new InExpr(e, parseNext(), operator);
       break;
     default:
       return e;
@@ -3490,11 +3490,11 @@ class Parser
     return e;
   }
 
-  /// $(BNF ShiftExpression := AddExpression (Op AddExpression)*
+  /// $(BNF ShiftExpr := AddExpr (Op AddExpr)*
   ////Op := "<<" | ">>" | ">>>")
-  Expression parseShiftExpression()
+  Expression parseShiftExpr()
   {
-    alias parseAddExpression parseNext;
+    alias parseAddExpr parseNext;
     auto begin = token;
     auto e = parseNext();
     while (1)
@@ -3503,11 +3503,11 @@ class Parser
       switch (operator.kind)
       {
       case T.LShift:
-        nT(); e = new LShiftExpression(e, parseNext(), operator); break;
+        nT(); e = new LShiftExpr(e, parseNext(), operator); break;
       case T.RShift:
-        nT(); e = new RShiftExpression(e, parseNext(), operator); break;
+        nT(); e = new RShiftExpr(e, parseNext(), operator); break;
       case T.URShift:
-        nT(); e = new URShiftExpression(e, parseNext(), operator); break;
+        nT(); e = new URShiftExpr(e, parseNext(), operator); break;
       default:
         return e;
       }
@@ -3516,11 +3516,11 @@ class Parser
     assert(0);
   }
 
-  /// $(BNF AddExpression := MulExpression (Op MulExpression)*
+  /// $(BNF AddExpr := MulExpr (Op MulExpr)*
   ////Op := "+" | "-" | "~")
-  Expression parseAddExpression()
+  Expression parseAddExpr()
   {
-    alias parseMulExpression parseNext;
+    alias parseMulExpr parseNext;
     auto begin = token;
     auto e = parseNext();
     while (1)
@@ -3529,11 +3529,11 @@ class Parser
       switch (operator.kind)
       {
       case T.Plus:
-        nT(); e = new PlusExpression(e, parseNext(), operator); break;
+        nT(); e = new PlusExpr(e, parseNext(), operator); break;
       case T.Minus:
-        nT(); e = new MinusExpression(e, parseNext(), operator); break;
+        nT(); e = new MinusExpr(e, parseNext(), operator); break;
       case T.Tilde:
-        nT(); e = new CatExpression(e, parseNext(), operator); break;
+        nT(); e = new CatExpr(e, parseNext(), operator); break;
       default:
         return e;
       }
@@ -3542,16 +3542,16 @@ class Parser
     assert(0);
   }
 
-  /// $(BNF MulExpression := PostExpression (Op PostExpression)*
+  /// $(BNF MulExpr := PostExpr (Op PostExpr)*
   ////Op := "*" | "/" | "%")
   ///D2:
-  /// $(BNF MulExpression := PowExpression (Op PowExpression)*)
-  Expression parseMulExpression()
+  /// $(BNF MulExpr := PowExpr (Op PowExpr)*)
+  Expression parseMulExpr()
   {
     version(D2)
-    alias parsePowExpression parseNext;
+    alias parsePowExpr parseNext;
     else
-    alias parsePostExpression parseNext;
+    alias parsePostExpr parseNext;
     auto begin = token;
     auto e = parseNext();
     while (1)
@@ -3559,9 +3559,9 @@ class Parser
       auto operator = token;
       switch (operator.kind)
       {
-      case T.Mul: nT(); e = new MulExpression(e, parseNext(), operator); break;
-      case T.Div: nT(); e = new DivExpression(e, parseNext(), operator); break;
-      case T.Mod: nT(); e = new ModExpression(e, parseNext(), operator); break;
+      case T.Mul: nT(); e = new MulExpr(e, parseNext(), operator); break;
+      case T.Div: nT(); e = new DivExpr(e, parseNext(), operator); break;
+      case T.Mod: nT(); e = new ModExpr(e, parseNext(), operator); break;
       default:
         return e;
       }
@@ -3570,29 +3570,29 @@ class Parser
     assert(0);
   }
 
-  /// $(BNF PowExpression := PostExpression ("^^" PostExpression)*)
-  Expression parsePowExpression()
+  /// $(BNF PowExpr := PostExpr ("^^" PostExpr)*)
+  Expression parsePowExpr()
   {
-    alias parsePostExpression parseNext;
+    alias parsePostExpr parseNext;
     Token* begin = token, operator = void;
     auto e = parseNext();
     while ((operator = consumedToken(T.Pow)) !is null)
-      e = set(new PowExpression(e, parseNext(), operator), begin);
+      e = set(new PowExpr(e, parseNext(), operator), begin);
     return e;
   }
 
-  /// $(BNF PostExpression := UnaryExpression
-  ////  (QualifiedExpression | IncOrDecExpression | CallExpression |
-  ////   SliceExpression | IndexExpression)*
-  ////QualifiedExpression := "." (NewExpression | IdentifierExpression)
-  ////IncOrDecExpression := "++" | "--"
-  ////CallExpression := "(" Arguments? ")"
-  ////SliceExpression := "[" (AssignExpression ".." AssignExpression )? "]"
-  ////IndexExpression := "[" ExpressionList "]")
-  Expression parsePostExpression()
+  /// $(BNF PostExpr := UnaryExpr
+  ////  (QualifiedExpr | IncOrDecExpr | CallExpr |
+  ////   SliceExpr | IndexExpr)*
+  ////QualifiedExpr := "." (NewExpr | IdentifierExpr)
+  ////IncOrDecExpr := "++" | "--"
+  ////CallExpr := "(" Arguments? ")"
+  ////SliceExpr := "[" (AssignExpr ".." AssignExpr )? "]"
+  ////IndexExpr := "[" ExpressionList "]")
+  Expression parsePostExpr()
   {
     auto begin = token;
-    auto e = parseUnaryExpression();
+    auto e = parseUnaryExpr();
     while (1)
     {
       switch (token.kind)
@@ -3600,36 +3600,36 @@ class Parser
       case T.Dot:
         nT();
         if (token.kind == T.New)
-          e = parseNewExpression(e);
+          e = parseNewExpr(e);
         else
-          e = parseIdentifierExpression(e);
+          e = parseIdentifierExpr(e);
         continue;
       case T.PlusPlus:
-        e = new PostIncrExpression(e);
+        e = new PostIncrExpr(e);
         break;
       case T.MinusMinus:
-        e = new PostDecrExpression(e);
+        e = new PostDecrExpr(e);
         break;
       case T.LParen:
-        e = new CallExpression(e, parseArguments());
+        e = new CallExpr(e, parseArguments());
         goto Lset;
       case T.LBracket:
-        // parse Slice- and IndexExpression
+        // parse Slice- and IndexExpr
         auto leftBracket = token;
         nT();
-        // [] is a SliceExpression
+        // [] is a SliceExpr
         if (token.kind == T.RBracket)
         {
-          e = new SliceExpression(e, null, null);
+          e = new SliceExpr(e, null, null);
           break;
         }
 
-        Expression[] es = [parseAssignExpression()];
+        Expression[] es = [parseAssignExpr()];
 
-        // [ AssignExpression .. AssignExpression ]
+        // [ AssignExpr .. AssignExpr ]
         if (consumed(T.Slice))
         {
-          e = new SliceExpression(e, es[0], parseAssignExpression());
+          e = new SliceExpr(e, es[0], parseAssignExpr());
           requireClosing(T.RBracket, leftBracket);
           goto Lset;
         }
@@ -3639,7 +3639,7 @@ class Parser
            es ~= parseExpressionList2(T.RBracket);
         requireClosing(T.RBracket, leftBracket);
 
-        e = new IndexExpression(e, es);
+        e = new IndexExpr(e, es);
         goto Lset;
       default:
         return e;
@@ -3651,22 +3651,22 @@ class Parser
     assert(0);
   }
 
-  /// $(BNF UnaryExpression := PrimaryExpression |
-  ////  NewExpression | AddressExpression | PreIncrExpression |
-  ////  PreIncrExpression | DerefExpression | SignExpression |
-  ////  NotExpression | ComplementExpression | DeleteExpression |
-  ////  CastExpression | TypeDotIdExpression
-  ////AddressExpression     := "&" UnaryExpression
-  ////PreIncrExpression     := "++" UnaryExpression
-  ////PreDecrExpression     := "--" UnaryExpression
-  ////DerefExpression       := "*" UnaryExpression
-  ////SignExpression        := ("-" | "+") UnaryExpression
-  ////NotExpression         := "!" UnaryExpression
-  ////ComplementExpresson   := "~" UnaryExpression
-  ////DeleteExpression      := delete UnaryExpression
-  ////CastExpression        := cast "(" Type ")" UnaryExpression
-  ////TypeDotIdExpression   := "(" Type ")" "." Identifier)
-  Expression parseUnaryExpression()
+  /// $(BNF UnaryExpr := PrimaryExpr |
+  ////  NewExpr | AddressExpr | PreIncrExpr |
+  ////  PreIncrExpr | DerefExpr | SignExpr |
+  ////  NotExpr | ComplementExpr | DeleteExpr |
+  ////  CastExpr | TypeDotIdExpr
+  ////AddressExpr     := "&" UnaryExpr
+  ////PreIncrExpr     := "++" UnaryExpr
+  ////PreDecrExpr     := "--" UnaryExpr
+  ////DerefExpr       := "*" UnaryExpr
+  ////SignExpr        := ("-" | "+") UnaryExpr
+  ////NotExpr         := "!" UnaryExpr
+  ////ComplementExpresson   := "~" UnaryExpr
+  ////DeleteExpr      := delete UnaryExpr
+  ////CastExpr        := cast "(" Type ")" UnaryExpr
+  ////TypeDotIdExpr   := "(" Type ")" "." Identifier)
+  Expression parseUnaryExpr()
   {
     auto begin = token;
     Expression e;
@@ -3674,39 +3674,39 @@ class Parser
     {
     case T.AndBinary:
       nT();
-      e = new AddressExpression(parseUnaryExpression());
+      e = new AddressExpr(parseUnaryExpr());
       break;
     case T.PlusPlus:
       nT();
-      e = new PreIncrExpression(parseUnaryExpression());
+      e = new PreIncrExpr(parseUnaryExpr());
       break;
     case T.MinusMinus:
       nT();
-      e = new PreDecrExpression(parseUnaryExpression());
+      e = new PreDecrExpr(parseUnaryExpr());
       break;
     case T.Mul:
       nT();
-      e = new DerefExpression(parseUnaryExpression());
+      e = new DerefExpr(parseUnaryExpr());
       break;
     case T.Minus:
     case T.Plus:
       nT();
-      e = new SignExpression(parseUnaryExpression());
+      e = new SignExpr(parseUnaryExpr());
       break;
     case T.Not:
       nT();
-      e = new NotExpression(parseUnaryExpression());
+      e = new NotExpr(parseUnaryExpr());
       break;
     case T.Tilde:
       nT();
-      e = new CompExpression(parseUnaryExpression());
+      e = new CompExpr(parseUnaryExpr());
       break;
     case T.New:
-      e = parseNewExpression();
+      e = parseNewExpr();
       return e;
     case T.Delete:
       nT();
-      e = new DeleteExpression(parseUnaryExpression());
+      e = new DeleteExpr(parseUnaryExpr());
       break;
     case T.Cast:
       nT();
@@ -3734,7 +3734,7 @@ class Parser
        type = parseType();
       }
       require2(T.RParen);
-      e = new CastExpression(parseUnaryExpression(), type);
+      e = new CastExpr(parseUnaryExpr(), type);
       break;
     case T.LParen:
       if (!tokenAfterParenIs(T.Dot))
@@ -3751,10 +3751,10 @@ class Parser
       if (!success)
         goto default;
       auto ident = requireIdentifier2(MSG.ExpectedIdAfterTypeDot);
-      e = new TypeDotIdExpression(type, ident);
+      e = new TypeDotIdExpr(type, ident);
       break;
     default:
-      e = parsePrimaryExpression();
+      e = parsePrimaryExpr();
       return e;
     }
     assert(e !is null);
@@ -3762,9 +3762,9 @@ class Parser
     return e;
   }
 
-  /// $(BNF IdentifierExpression := Identifier | TemplateInstance
+  /// $(BNF IdentifierExpr := Identifier | TemplateInstance
   ////TemplateInstance := Identifier "!" TemplateArgumentsOneOrMore)
-  Expression parseIdentifierExpression(Expression next = null)
+  Expression parseIdentifierExpr(Expression next = null)
   {
     auto begin = token;
     auto ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
@@ -3777,56 +3777,56 @@ class Parser
       // Identifier "!" "(" TemplateArguments? ")"
       // Identifier "!" TemplateArgumentSingle
       auto tparams = parseOneOrMoreTemplateArguments();
-      e = new TemplateInstanceExpression(ident, tparams, next);
+      e = new TmplInstanceExpr(ident, tparams, next);
     }
     else // Identifier
-      e = new IdentifierExpression(ident, next);
+      e = new IdentifierExpr(ident, next);
     return set(e, begin);
   }
 
-  /// $(BNF PrimaryExpression := ... | ModuleScopeExpression
-  ////ModuleScopeExpression := ".")
-  Expression parsePrimaryExpression()
+  /// $(BNF PrimaryExpr := ... | ModuleScopeExpr
+  ////ModuleScopeExpr := ".")
+  Expression parsePrimaryExpr()
   {
     auto begin = token;
     Expression e;
     switch (token.kind)
     {
     case T.Identifier:
-      e = parseIdentifierExpression();
+      e = parseIdentifierExpr();
       return e;
     case T.Typeof:
-      e = new TypeofExpression(parseTypeofType());
+      e = new TypeofExpr(parseTypeofType());
       break;
     case T.Dot:
-      e = set(new ModuleScopeExpression(), begin, begin);
+      e = set(new ModuleScopeExpr(), begin, begin);
       nT();
-      e = parseIdentifierExpression(e);
+      e = parseIdentifierExpr(e);
       return e;
     case T.This:
-      e = new ThisExpression();
+      e = new ThisExpr();
       goto LnT_and_return;
     case T.Super:
-      e = new SuperExpression();
+      e = new SuperExpr();
       goto LnT_and_return;
     case T.Null:
-      e = new NullExpression();
+      e = new NullExpr();
       goto LnT_and_return;
     case T.True, T.False:
-      e = new BoolExpression(token.kind == T.True);
+      e = new BoolExpr(token.kind == T.True);
       goto LnT_and_return;
     case T.Dollar:
-      e = new DollarExpression();
+      e = new DollarExpr();
       goto LnT_and_return;
     case T.Int32, T.Int64, T.UInt32, T.UInt64:
-      e = new IntExpression(token);
+      e = new IntExpr(token);
       goto LnT_and_return;
     case T.Float32, T.Float64, T.Float80,
          T.IFloat32, T.IFloat64, T.IFloat80:
-      e = new FloatExpression(token);
+      e = new FloatExpr(token);
       goto LnT_and_return;
     case T.CharLiteral:
-      e = new CharExpression(token.dchar_);
+      e = new CharExpr(token.dchar_);
       goto LnT_and_return;
     LnT_and_return:
       nT();
@@ -3870,7 +3870,7 @@ class Parser
         if (begin !is prevToken)
           bin_str = cast(ubyte[])lexer.lookupString(str[0..$-1]);
       }
-      e = new StringExpression(bin_str, postfix);
+      e = new StringExpr(bin_str, postfix);
       break;
     case T.LBracket:
       Expression[] values;
@@ -3878,7 +3878,7 @@ class Parser
       nT();
       if (!consumed(T.RBracket))
       {
-        e = parseAssignExpression();
+        e = parseAssignExpr();
         if (consumed(T.Colon))
           goto LparseAssocArray;
         if (consumed(T.Comma))
@@ -3886,7 +3886,7 @@ class Parser
         requireClosing(T.RBracket, begin);
       }
 
-      e = new ArrayLiteralExpression(values);
+      e = new ArrayLiteralExpr(values);
       break;
 
     LparseAssocArray:
@@ -3895,20 +3895,20 @@ class Parser
       goto LenterLoop;
       while (token.kind != T.RBracket)
       {
-        keys ~= parseAssignExpression();
+        keys ~= parseAssignExpr();
         require(T.Colon);
       LenterLoop:
-        values ~= parseAssignExpression();
+        values ~= parseAssignExpr();
         if (!consumed(T.Comma))
           break;
       }
       requireClosing(T.RBracket, begin);
-      e = new AArrayLiteralExpression(keys, values);
+      e = new AArrayLiteralExpr(keys, values);
       break;
     case T.LBrace:
       // DelegateLiteral := { Statements }
       auto funcBody = parseFunctionBody();
-      e = new FunctionLiteralExpression(funcBody);
+      e = new FuncLiteralExpr(funcBody);
       break;
     case T.Function, T.Delegate:
       // FunctionLiteral := ("function" | "delegate")
@@ -3927,31 +3927,31 @@ class Parser
       }
       auto funcBody = parseFunctionBody();
       // TODO: set/pass stcs.
-      e = new FunctionLiteralExpression(returnType, parameters, funcBody);
+      e = new FuncLiteralExpr(returnType, parameters, funcBody);
       break;
     case T.Assert:
       requireNext(T.LParen);
-      e = parseAssignExpression();
-      auto msg = consumed(T.Comma) ? parseAssignExpression() : null;
+      e = parseAssignExpr();
+      auto msg = consumed(T.Comma) ? parseAssignExpr() : null;
       require2(T.RParen);
-      e = new AssertExpression(e, msg);
+      e = new AssertExpr(e, msg);
       break;
     case T.Mixin:
       nT();
       require2(T.LParen);
-      e = new MixinExpression(parseAssignExpression());
+      e = new MixinExpr(parseAssignExpr());
       require2(T.RParen);
       break;
     case T.Import:
       nT();
       require2(T.LParen);
-      e = new ImportExpression(parseAssignExpression());
+      e = new ImportExpr(parseAssignExpr());
       require2(T.RParen);
       break;
     case T.Typeid:
       nT();
       require2(T.LParen);
-      e = new TypeidExpression(parseType());
+      e = new TypeidExpr(parseType());
       require2(T.RParen);
       break;
     case T.Is:
@@ -4008,14 +4008,14 @@ class Parser
         tparams = parseTemplateParameterList2();
       } // version(D2)
       requireClosing(T.RParen, leftParen);
-      e = new IsExpression(type, ident, opTok, specTok, specType, tparams);
+      e = new IsExpr(type, ident, opTok, specTok, specType, tparams);
       break;
     case T.LParen:
       if (tokenAfterParenIs(T.LBrace)) // Check for "(...) {"
       { // ( ParameterList ) FunctionBody
         auto parameters = parseParameterList();
         auto funcBody = parseFunctionBody();
-        e = new FunctionLiteralExpression(null, parameters, funcBody);
+        e = new FuncLiteralExpr(null, parameters, funcBody);
       }
       else
       { // ( Expression )
@@ -4023,7 +4023,7 @@ class Parser
         skip(T.LParen);
         e = parseExpression();
         requireClosing(T.RParen, leftParen);
-        e = new ParenExpression(e);
+        e = new ParenExpr(e);
       }
       break;
     version(D2)
@@ -4035,7 +4035,7 @@ class Parser
       auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
       auto args = consumed(T.Comma) ? parseTemplateArguments2() : null;
       requireClosing(T.RParen, leftParen); // ")"
-      e = new TraitsExpression(ident, args);
+      e = new TraitsExpr(ident, args);
       break;
     } // version(D2)
     default:
@@ -4046,17 +4046,17 @@ class Parser
         set(type, begin);
         require2(T.Dot);
         auto ident = requireIdentifier2(MSG.ExpectedIdAfterTypeDot);
-        e = new TypeDotIdExpression(type, ident);
+        e = new TypeDotIdExpr(type, ident);
       }
       else if (token.isSpecialToken)
       {
-        e = new SpecialTokenExpression(token);
+        e = new SpecialTokenExpr(token);
         nT();
       }
       else
       {
         error2(MID.ExpectedButFound, "Expression", token);
-        e = new IllegalExpression();
+        e = new IllegalExpr();
         if (!trying)
         { // Insert a dummy token and don't consume current one.
           begin = lexer.insertEmptyTokenBefore(token);
@@ -4068,16 +4068,16 @@ class Parser
     return e;
   }
 
-  /// $(BNF NewExpression := NewAnonClassExpression | NewObjectExpression
-  ////NewAnonClassExpression := new NewArguments?
+  /// $(BNF NewExpr := NewAnonClassExpr | NewObjectExpr
+  ////NewAnonClassExpr := new NewArguments?
   ////                          class NewArguments?
   ////                          (SuperClass InterfaceClasses)? ClassBody
-  ////NewObjectExpression := new NewArguments? Type (NewArguments | NewArray)?
+  ////NewObjectExpr := new NewArguments? Type (NewArguments | NewArray)?
   ////NewArguments := "(" ArgumentList ")"
-  ////NewArray     := "[" AssignExpression "]")
+  ////NewArray     := "[" AssignExpr "]")
   /// Params:
   ///   frame = The frame or 'this' pointer expression.
-  Expression parseNewExpression(Expression frame = null)
+  Expression parseNewExpr(Expression frame = null)
   {
     auto begin = token;
     skip(T.New);
@@ -4088,7 +4088,7 @@ class Parser
       newArguments = parseArguments();
 
     if (consumed(T.Class))
-    { // NewAnonymousClassExpression
+    { // NewAnonymousClassExpr
       if (token.kind == T.LParen)
         ctorArguments = parseArguments();
 
@@ -4097,11 +4097,11 @@ class Parser
         bases = parseBaseClasses();
 
       auto decls = parseDeclarationDefinitionsBody();
-      return set(new NewClassExpression(frame, newArguments, bases,
+      return set(new NewClassExpr(frame, newArguments, bases,
         ctorArguments, decls), begin);
     }
 
-    // NewObjectExpression
+    // NewObjectExpr
     auto type = parseBasicTypes();
 
     // Don't parse arguments if an array type was parsed previously.
@@ -4121,7 +4121,7 @@ class Parser
     else if (token.kind == T.LParen) // NewArguments
       ctorArguments = parseArguments();
 
-    return set(new NewExpression(frame, newArguments, type, ctorArguments),
+    return set(new NewExpr(frame, newArguments, type, ctorArguments),
       begin);
   }
 
@@ -4429,8 +4429,8 @@ class Parser
     return result;
   }
 
-  /// $(BNF ArrayType := "[" (Type | Expression | SliceExpression ) "]"
-  ////SliceExpression := Expression ".." Expression )
+  /// $(BNF ArrayType := "[" (Type | Expression | SliceExpr ) "]"
+  ////SliceExpr := Expression ".." Expression )
   Type parseArrayType(Type t)
   {
     auto begin = token;
@@ -4462,25 +4462,25 @@ class Parser
   }
 
   /// Parses a list of AssignExpressions.
-  /// $(BNF ExpressionList := AssignExpression ("," AssignExpression)* )
+  /// $(BNF ExpressionList := AssignExpr ("," AssignExpr)* )
   Expression[] parseExpressionList()
   {
     Expression[] expressions;
     do
-      expressions ~= parseAssignExpression();
+      expressions ~= parseAssignExpr();
     while (consumed(T.Comma))
     return expressions;
   }
 
   /// Parses a list of AssignExpressions.
   /// Allows a trailing comma.
-  /// $(BNF ExpressionList2 := AssignExpression ("," AssignExpression)* ","?)
+  /// $(BNF ExpressionList2 := AssignExpr ("," AssignExpr)* ","?)
   Expression[] parseExpressionList2(TOK closing_tok)
   {
     Expression[] expressions;
     while (token.kind != closing_tok)
     {
-      expressions ~= parseAssignExpression();
+      expressions ~= parseAssignExpr();
       if (!consumed(T.Comma))
         break;
     }
@@ -4584,7 +4584,7 @@ class Parser
       type = parseDeclarator(name, true);
 
       if (consumed(T.Assign))
-        defValue = parseAssignExpression();
+        defValue = parseAssignExpr();
       else if (defValue !is null) // Parsed a defValue previously?
         error(name ? name : type.begin, // Position.
           MSG.ExpectedParamDefValue,
@@ -4627,7 +4627,7 @@ class Parser
         return parseBasicType();
       }, success);
       // Don't parse a full Expression. TODO: restrict further?
-      targs ~= success ? typeArg : parsePrimaryExpression();
+      targs ~= success ? typeArg : parsePrimaryExpr();
       return set(targs, begin);
     } // version(D2)
     return parseTemplateArguments();
@@ -4673,7 +4673,7 @@ class Parser
   }
 
   /// $(BNF TemplateArguments := TemplateArgument ("," TemplateArgument)*
-  ////TemplateArgument := TypeArgument | AssignExpression)
+  ////TemplateArgument := TypeArgument | AssignExpr)
   TemplateArguments parseTemplateArguments_()
   {
     auto begin = token;
@@ -4684,8 +4684,8 @@ class Parser
       auto typeArgument = tryToParse(&parseTypeArgument, success);
       if (success) // TemplateArgument := Type | Symbol
         targs ~= typeArgument;
-      else // TemplateArgument := AssignExpression
-        targs ~= parseAssignExpression();
+      else // TemplateArgument := AssignExpr
+        targs ~= parseAssignExpr();
       if (!consumed(T.Comma))
         break;
     }
@@ -4693,7 +4693,7 @@ class Parser
     return targs;
   }
 
-  /// $(BNF Constraint := "if" "(" ConstraintExpression ")")
+  /// $(BNF Constraint := "if" "(" ConstraintExpr ")")
   Expression parseOptionalConstraint()
   {
     if (!consumed(T.If))
@@ -4746,7 +4746,7 @@ class Parser
   ////TemplateThisParam  := this Identifier SpecOrDefaultType # D2.0
   ////SpecOrDefaultType  := (":" Type)? ("=" Type)?
   ////SpecOrDefaultValue := (":" Value)? ("=" Value)?
-  ////Value := CondExpression
+  ////Value := CondExpr
   ////)
   void parseTemplateParameterList_(TemplateParameters tparams)
   {
@@ -4778,7 +4778,7 @@ class Parser
         {
           bool success;
           auto typeArgument = tryToParse(&parseTypeArgument, success);
-          return success ? typeArgument : parseCondExpression();
+          return success ? typeArgument : parseCondExpr();
         }
         if (consumed(T.Colon))  // ":" Specialization
           spec = parseExpOrType();
@@ -4833,10 +4833,10 @@ class Parser
         auto valueType = parseDeclarator(ident);
         // ":" SpecializationValue
         if (consumed(T.Colon))
-          specValue = parseCondExpression();
+          specValue = parseCondExpr();
         // "=" DefaultValue
         if (consumed(T.Assign))
-          defValue = parseCondExpression();
+          defValue = parseCondExpr();
         tp = new TemplateValueParameter(valueType, ident, specValue, defValue);
       }
 
