@@ -658,8 +658,7 @@ override
     Expression r, lhs = e.lhs, rhs = e.rhs;
     auto et = e.type.flagsOf();
     if (et.isReal() || et.isImaginary()) // Boths operands are real or imag.
-      r = new FloatExpr(
-        EM.toRealOrImag(lhs) + EM.toRealOrImag(rhs), e.type);
+      r = new FloatExpr(EM.toRealOrImag(lhs) + EM.toRealOrImag(rhs), e.type);
     else if (et.isComplex())
       r = complexPlusOrMinus(e, false);
     else
@@ -673,8 +672,7 @@ override
     Expression r, lhs = e.lhs, rhs = e.rhs;
     auto et = e.type.flagsOf();
     if (et.isReal() || et.isImaginary()) // Boths operands are real or imag.
-      r = new FloatExpr(
-        EM.toRealOrImag(lhs) - EM.toRealOrImag(rhs), e.type);
+      r = new FloatExpr(EM.toRealOrImag(lhs) - EM.toRealOrImag(rhs), e.type);
     else if (et.isComplex())
       r = complexPlusOrMinus(e, true);
     else
@@ -854,7 +852,21 @@ override
 
   E visit(SignExpr e)
   {
-    return e;
+    Expression r;
+    if (e.isNeg()) // -(e.una)
+    {
+      auto et = e.type.flagsOf();
+      if (et.isReal() || et.isImaginary())
+        r = new FloatExpr(-EM.toRealOrImag(e.una), e.type);
+      else if (et.isComplex())
+        r = new ComplexExpr(-EM.toComplex(e.una), e.type);
+      else
+        r = new IntExpr(-EM.toInt(e.una), e.type);
+    }
+    else // +(e.una)
+      r = e.una;
+    r.setLoc(e);
+    return r;
   }
 
   E visit(NotExpr e)
