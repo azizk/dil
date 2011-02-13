@@ -500,7 +500,8 @@ const string COMMANDS =
   "  settings (set)\n"
   "  statistics (stats)\n"
   "  tokenize (tok)\n"
-  "  translate (trans)\n";
+  "  translate (trans)\n"
+  "  version (v)\n";
 
 /// Returns true if str starts with s.
 bool strbeg(string str, string s)
@@ -763,6 +764,14 @@ Usage:
 
 Example:
   dil set import_paths datadir";
+    break;
+  case "?", "help":
+    msg = "Gives help on a particular subcommand.
+Usage:
+  dil help subcommand
+
+Example:
+  dil help compile";
     break;
   case "main":
   default:
