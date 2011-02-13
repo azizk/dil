@@ -221,24 +221,16 @@ void main(string[] args)
       else
         switch (value = op.getArg())
         {
-        case "--dot":
-          cmd.add(IGraphCommand.Option.PrintDot); break;
-        case "--paths":
-          cmd.add(IGraphCommand.Option.PrintPaths); break;
-        case "--list":
-          cmd.add(IGraphCommand.Option.PrintList); break;
-        case "-i":
-          cmd.add(IGraphCommand.Option.IncludeUnlocatableModules); break;
-        case "-hle":
-          cmd.add(IGraphCommand.Option.HighlightCyclicEdges); break;
-        case "-hlv":
-          cmd.add(IGraphCommand.Option.HighlightCyclicVertices); break;
-        case "-gbp":
-          cmd.add(IGraphCommand.Option.GroupByPackageNames); break;
-        case "-gbf":
-          cmd.add(IGraphCommand.Option.GroupByFullPackageName); break;
-        case "-m":
-          cmd.add(IGraphCommand.Option.MarkCyclicModules); break;
+          alias IGraphCommand.Option O;
+        case "--dot":   cmd.add(O.PrintDot); break;
+        case "--paths": cmd.add(O.PrintPaths); break;
+        case "--list":  cmd.add(O.PrintList); break;
+        case "--hle":   cmd.add(O.HighlightCyclicEdges); break;
+        case "--hlv":   cmd.add(O.HighlightCyclicVertices); break;
+        case "--gbp":   cmd.add(O.GroupByPackageNames); break;
+        case "--gbf":   cmd.add(O.GroupByFullPackageName); break;
+        case "-i":      cmd.add(O.IncludeUnlocatableModules); break;
+        case "-m":      cmd.add(O.MarkCyclicModules); break;
         default:
           cmd.filePath = value;
         }
@@ -590,7 +582,7 @@ void printHelp(string command)
   case "c", "compile":
     msg = `Compile D source files.
 Usage:
-  dil compile file.d [file2.d, ...] [Options]
+  dil c[ompile] file.d [file2.d, ...] [Options]
 
   This command only parses the source files and does little semantic analysis.
   Errors are printed to standard error output.
@@ -602,23 +594,23 @@ Options:
   -debug=ident     : include debug(ident) code
   -version=level   : include version(l) code where l >= level
   -version=ident   : include version(ident) code
-  -Ipath           : add 'path' to the list of import paths
+  -I=PATH          : add PATH to the list of import paths
   -release         : compile a release build
   -unittest        : compile a unittest build
-  -32              : produce 32 bit code (default)
-  -64              : produce 64 bit code
-  -ofPROG          : output program to PROG
+  -x86             : emit 32 bit code (default)
+  -x64             : emit 64 bit code
+  -of=FILE         : output the binary to FILE
 
   -ps              : print the symbol tree of the modules
   -pm              : print the package/module tree
 
 Example:
-  dil c src/main.d -Isrc/`;
+  dil c src/main.d -I=src/`;
     break;
   case "py", "pytree":
     msg = `Exports a D parse tree to a Python source file.
 Usage:
-  dil pytree Destination file.d [file2.d, ...] [Options]
+  dil py[tree] Destination file.d [file2.d, ...] [Options]
 
 Options:
   --tokens         : only emit a list of the tokens (N/A yet)
@@ -635,7 +627,7 @@ Example:
   case "ddoc", "d":
     msg = `Generate documentation from DDoc comments in D source files.
 Usage:
-  dil ddoc Destination file.d [file2.d, ...] [Options]
+  dil d[doc] Destination file.d [file2.d, ...] [Options]
 
   Destination is the folder where the documentation files are written to.
   Files with the extension .ddoc are recognized as macro definition files.
@@ -681,33 +673,30 @@ Example:
 //     msg = GetMsg(MID.HelpImportGraph);
     msg = `Parse a module and build a module dependency graph based on its imports.
 Usage:
-  dil igraph file.d Format [Options]
+  dil i[mport]graph file.d Format [Options]
 
   The directory of file.d is implicitly added to the list of import paths.
 
 Format:
   --dot            : generate a dot document (default)
-  Options related to --dot:
-  -gbp             : Group modules by package names
-  -gbf             : Group modules by full package name
-  -hle             : highlight cyclic edges in the graph
-  -hlv             : highlight modules in cyclic relationships
-  -siSTYLE         : the edge style to use for static imports
-  -piSTYLE         : the edge style to use for public imports
-  STYLE can be: "dashed", "dotted", "solid", "invis" or "bold"
+    Options related to --dot:
+  --gbp            : Group modules by package names
+  --gbf            : Group modules by full package name
+  --hle            : highlight cyclic edges in the graph
+  --hlv            : highlight modules in cyclic relationships
+  -si=STYLE        : the edge style to use for static imports
+  -pi=STYLE        : the edge style to use for public imports
+      STYLE        : "dashed", "dotted", "solid", "invis" or "bold"
 
   --paths          : print the file paths of the modules in the graph
-
   --list           : print the names of the module in the graph
-  Options common to --paths and --list:
-  -lN              : print N levels.
+    Options common to --paths and --list:
+  -l=N             : print N levels.
   -m               : use '*' to mark modules in cyclic relationships
 
 Options:
-  -Ipath           : add 'path' to the list of import paths where modules are
-                     looked for
-  -xREGEXP         : exclude modules whose names match the regular expression
-                     REGEXP
+  -I=PATH          : add PATH to the list of import paths
+  -x=REGEXP        : exclude modules whose names match REGEXP
   -i               : include unlocatable modules
 
 Example:
@@ -717,7 +706,7 @@ Example:
   case "tok", "tokenize":
     msg = `Print the tokens of a D source file.
 Usage:
-  dil tok file.d [Options]
+  dil tok[enize] file.d [Options]
 
 Options:
   -               : read text from STDIN.
@@ -745,7 +734,7 @@ Example:
   case "stats", "statistics":
     msg = "Gather statistics about D source files.
 Usage:
-  dil stats file.d [file2.d, ...] [Options]
+  dil stat[istic]s file.d [file2.d, ...] [Options]
 
 Options:
   --toktable      : print the count of all token kinds in a table.
@@ -757,7 +746,7 @@ Example:
   case "trans", "translate":
     msg = `Translate a D source file to another language.
 Usage:
-  dil translate Language file.d
+  dil trans[late] Language file.d
 
   Languages that are supported:
     *) German
@@ -768,7 +757,7 @@ Example:
   case "settings", "set":
     msg = "Print the value of a settings variable.
 Usage:
-  dil set [name, name2...]
+  dil set[tings] [name, name2...]
 
   The names have to match the setting names in dilconf.d.
 
