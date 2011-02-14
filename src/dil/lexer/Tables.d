@@ -5,6 +5,7 @@ module dil.lexer.Tables;
 
 import dil.lexer.Token,
        dil.lexer.IdTable;
+import dil.Float;
 import common;
 
 /// Tables used by the $(MODLINK2 dil.lexer.Lexer, Lexer).
