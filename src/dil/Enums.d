@@ -72,6 +72,12 @@ enum VariadicStyle
   D,    /// E.g.: void func(int[] xs...)
 }
 
+/// Short aliases.
+alias StorageClass STC;
+alias Protection PROT; /// ditto
+alias LinkageType LINK; /// ditto
+alias VariadicStyle VARD; /// ditto
+
 /// Namespace for functions that return the string of an enum.
 struct EnumString
 {
