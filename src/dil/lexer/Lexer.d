@@ -63,8 +63,9 @@ class Lexer
 
   /// Constructs a Lexer object.
   /// Params:
-  ///   srcText = the UTF-8 source code.
-  ///   diag = used for collecting error messages.
+  ///   srcText = The UTF-8 source code.
+  ///   tables = Used to look up identifiers and token values.
+  ///   diag = Used for collecting error messages.
   this(SourceText srcText, LexerTables tables, Diagnostics diag = null)
   {
     this.srcText = srcText;

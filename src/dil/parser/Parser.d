@@ -48,6 +48,7 @@ class Parser
   /// Constructs a Parser object.
   /// Params:
   ///   srcText = The UTF-8 source code.
+  ///   tables = For the Lexer.
   ///   diag = Used for collecting error messages.
   this(SourceText srcText, LexerTables tables, Diagnostics diag = null)
   {
