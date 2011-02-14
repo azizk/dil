@@ -1220,7 +1220,7 @@ class Lexer
 
   /// Scans a nested comment.
   ///
-  /// $(BNF NestedComment := "/+" (AnyChar* | NestedComment) "+/")
+  /// $(BNF NestedComment := "/+" (NestedComment | AnyChar)* "+/")
   void scanNestedComment(ref Token t)
   {
     auto p = this.p;
@@ -1294,7 +1294,7 @@ class Lexer
 
   /// Scans a normal string literal.
   ///
-  /// $(BNF NormalStringLiteral := '"' AnyChar* '"')
+  /// $(BNF NormalStringLiteral := '"' (EscapeSequence | AnyChar)* '"')
   void scanNormalStringLiteral(ref Token t)
   {
     auto p = this.p;
@@ -1383,7 +1383,7 @@ class Lexer
 
   /// Scans a character literal.
   ///
-  /// $(BNF CharLiteral := "'" AnyChar "'")
+  /// $(BNF CharLiteral := "'" (EscapeSequence | AnyChar) "'")
   void scanCharacterLiteral(ref Token t)
   {
     assert(*p == '\'');
@@ -1475,7 +1475,8 @@ class Lexer
 
   /// Scans a hexadecimal string literal.
   ///
-  /// $(BNF HexStringLiteral := 'x"' (HexChar HexChar)* '"')
+  /// $(BNF HexStringLiteral := 'x"' (HexDigit HexDigit)* '"'
+  ////HexDigit := [a-fA-F\d])
   void scanHexStringLiteral(ref Token t)
   {
     auto p = this.p;
@@ -1846,13 +1847,14 @@ class Lexer
   ////EscapeSequence := "\\" (BinaryEsc | UnicodeEsc | CEsc | HTMLEsc)
   ////BinaryEsc := Octal{1,3} | "x" Hex{2}
   ////UnicodeEsc := "u" Hex{4} | "U" Hex{8}
-  ////HTMLEsc := "&" AlphaNumerical+ ";"
   ////CEsc := "'" | '"' | "?" | "\\" | "a" | "b" | "f" | "n" | "r" | "t" | "v"
+  ////HTMLEsc := "&" EntityName ";"
+  ////EntityName := [a-zA-Z] [a-zA-Z\d]*
   ////)
   /// Params:
   ///   ref_p = Used to scan the sequence.
   ///   isBinary = Set to true for octal and hexadecimal escapes.
-  /// Returns: the escape value.
+  /// Returns: The escape value.
   dchar scanEscapeSequence(ref char* ref_p, ref bool isBinary)
   out(result)
   { assert(isValidChar(result)); }
@@ -1991,11 +1993,11 @@ class Lexer
   ///
   /// $(BNF
   ////IntegerLiteral := (Dec | Hex | Bin | Oct) Suffix?
-  ////Dec := ("0" | [1-9] [0-9_]*)
-  ////Hex := "0" [xX] "_"* [0-9a-zA-Z] [0-9a-zA-Z_]*
+  ////Dec := "0" | [1-9] [\d_]*
+  ////Hex := "0" [xX] "_"* HexDigits
   ////Bin := "0" [bB] "_"* [01] [01_]*
   ////Oct := "0" [0-7_]*
-  ////Suffix := ("L" [uU]? | [uU] "L"?)
+  ////Suffix := "L" [uU]? | [uU] "L"?
   ////)
   /// Invalid: "0b_", "0x_", "._" etc.
   void scanNumber(ref Token t)
@@ -2314,10 +2316,11 @@ class Lexer
   /// $(BNF
   ////FloatLiteral := Float [fFL]? i?
   ////Float        := DecFloat | HexFloat
-  ////DecFloat     := ([0-9] [0-9_]* "." [0-9_]* DecExponent?) |
-  ////                "." [0-9] [0-9_]* DecExponent? |
-  ////                [0-9] [0-9_]* DecExponent
-  ////DecExponent  := [eE] [+-]? [0-9] [0-9_]*
+  ////DecFloat     := (DecDigits "." "_"* DecDigits? DecExponent?) |
+  ////                ("." DecDigits DecExponent?)
+  ////                (DecDigits DecExponent)
+  ////DecExponent  := [eE] [+-]? DecDigits
+  ////DecDigits    := \d [\d_]*
   ////)
   void scanReal(ref Token t)
   {
@@ -2361,10 +2364,9 @@ class Lexer
 
   /// Scans a hexadecimal floating point number literal.
   /// $(BNF
-  ////HexFloat := "0" [xX] (HexDigits "." HexDigits |
-  ////                      "." [0-9a-fA-F] HexDigits? |
-  ////                      HexDigits) HexExponent
-  ////HexExponent := [pP] [+-]? [0-9] [0-9_]*
+  ////HexFloat := "0" [xX] (HexDigits? "." HexDigits | HexDigits) HexExponent
+  ////HexExponent := [pP] [+-]? DecDigits
+  ////HexDigits := [a-fA-F\d] [a-fA-F\d_]*
   ////)
   void scanHexReal(ref Token t)
   {
@@ -2400,8 +2402,8 @@ class Lexer
 
   /// Sets the value of the token.
   /// Params:
-  ///   t = receives the value.
-  ///   float_string = the well-formed float string.
+  ///   t = Receives the value.
+  ///   float_string = The well-formed float number string.
   void finalizeFloat(ref Token t, string float_string)
   {
     auto p = this.p;
@@ -2621,10 +2623,10 @@ class Lexer
 
   /// Creates an error report and appends it to a list.
   /// Params:
-  ///   lineNum = the line number.
-  ///   lineBegin = points to the first character of the current line.
-  ///   columnPos = points to the character where the error is located.
-  ///   msg = the message.
+  ///   lineNum = The line number.
+  ///   lineBegin = Points to the first character of the current line.
+  ///   columnPos = Points to the character where the error is located.
+  ///   msg = The error message.
   void error_(uint lineNum, char* lineBegin, char* columnPos, char[] msg,
               TypeInfo[] _arguments, va_list _argptr)
   {
