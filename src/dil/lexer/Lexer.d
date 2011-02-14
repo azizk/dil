@@ -708,7 +708,7 @@ class Lexer
           else
             kind = TOK.Slice;
         else if (isdigit(p[1]))
-          return (this.p = p), scanReal(t);
+          return (this.p = p), scanFloat(t);
         else
           kind = TOK.Dot;
         goto Lcommon;
@@ -1113,7 +1113,7 @@ class Lexer
     }
     case '.':
       if (isdigit(p[1]))
-        return (this.p = p), scanReal(t);
+        return (this.p = p), scanFloat(t);
       kind = TOK.Dot;
       ++p;
       goto Lreturn;
@@ -2020,7 +2020,7 @@ class Lexer
       goto LscanBinary;
     case 'L':
       if (p[1] == 'i')
-        goto LscanReal; // 0Li
+        goto LscanFloat; // 0Li
       break; // 0L
     case '.':
       if (p[1] == '.')
@@ -2028,7 +2028,7 @@ class Lexer
       // 0.
     case 'i','f','F', // Imaginary and float literal suffixes.
          'e', 'E':    // Float exponent.
-      goto LscanReal;
+      goto LscanFloat;
     default:
       if (*p == '_')
         goto LscanOctal; // 0_
@@ -2076,13 +2076,13 @@ class Lexer
     {
     case '.':
       if (p[1] != '.')
-        goto LscanReal;
+        goto LscanFloat;
       break;
     case 'L':
       if (p[1] != 'i')
         break;
     case 'i', 'f', 'F', 'e', 'E':
-      goto LscanReal;
+      goto LscanFloat;
     default:
     }
 
@@ -2119,7 +2119,7 @@ class Lexer
         break;
     case 'p', 'P':
       this.p = p;
-      return scanHexReal(t);
+      return scanHexFloat(t);
     default:
     }
 
@@ -2191,13 +2191,13 @@ class Lexer
     {
     case '.':
       if (p[1] != '.')
-        goto LscanReal;
+        goto LscanFloat;
       break;
     case 'L':
       if (p[1] != 'i')
         break;
     case 'i', 'f', 'F', 'e', 'E':
-      goto LscanReal;
+      goto LscanFloat;
     default:
     }
 
@@ -2290,9 +2290,9 @@ class Lexer
       t.uint_ = cast(uint)ulong_;
     t.end = this.p = p;
     return;
-  LscanReal:
+  LscanFloat:
     this.p = p;
-    scanReal(t);
+    scanFloat(t);
     return;
   }
 
@@ -2322,7 +2322,7 @@ class Lexer
   ////DecExponent  := [eE] [+-]? DecDigits
   ////DecDigits    := \d [\d_]*
   ////)
-  void scanReal(ref Token t)
+  void scanFloat(ref Token t)
   {
     auto p = this.p;
     if (*p == '.')
@@ -2368,7 +2368,7 @@ class Lexer
   ////HexExponent := [pP] [+-]? DecDigits
   ////HexDigits := [a-fA-F\d] [a-fA-F\d_]*
   ////)
-  void scanHexReal(ref Token t)
+  void scanHexFloat(ref Token t)
   {
     auto p = this.p;
     assert(*p == '.' || *p == 'p' || *p == 'P');
