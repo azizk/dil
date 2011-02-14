@@ -145,7 +145,7 @@ body
 
 /// Advances ref_p only if this is a valid Unicode alpha character.
 /// Params:
-///   ref_p = set to the last trail byte of the valid UTF-8 sequence.
+///   ref_p = Set to the last trail byte of the valid UTF-8 sequence.
 bool isUnicodeAlpha(ref char* ref_p, char* end)
 in { assert(ref_p && ref_p < end); }
 body
@@ -162,7 +162,7 @@ body
 
 /// Decodes a character from str at index.
 /// Params:
-///   index = set to one past the ASCII char or one past the last trail byte
+///   index = Set to one past the ASCII char or one past the last trail byte
 ///           of the valid UTF-8 sequence.
 dchar decode(char[] str, ref size_t index)
 in { assert(str.length && index < str.length); }
@@ -179,7 +179,7 @@ body
 
 /// Decodes a character starting at ref_p.
 /// Params:
-///   ref_p = set to one past the ASCII char or one past the last trail byte
+///   ref_p = Set to one past the ASCII char or one past the last trail byte
 ///           of the valid UTF-8 sequence.
 dchar decode(ref char* ref_p, char* end)
 in { assert(ref_p && ref_p < end); }
@@ -338,8 +338,8 @@ body
 
 /// Decodes a character from a UTF-16 sequence.
 /// Params:
-///   str = the UTF-16 sequence.
-///   index = where to start from.
+///   str = The UTF-16 sequence.
+///   index = Where to start from.
 /// Returns: ERROR_CHAR in case of an error in the sequence.
 dchar decode(wchar[] str, ref size_t index)
 in { assert(str.length && index < str.length, "empty string or reached end"); }
@@ -367,8 +367,8 @@ body
 
 /// Decodes a character from a UTF-16 sequence.
 /// Params:
-///   p = start of the UTF-16 sequence.
-///   end = one past the end of the sequence.
+///   p = Start of the UTF-16 sequence.
+///   end = One past the end of the sequence.
 /// Returns: ERROR_CHAR in case of an error in the sequence.
 dchar decode(ref wchar* p, wchar* end)
 in { assert(p && p < end, "p is null or at the end of the string"); }
@@ -394,7 +394,7 @@ body
 
 /// Decodes a character from a zero-terminated UTF-16 string.
 /// Params:
-///   p = start of the UTF-16 sequence.
+///   p = Start of the UTF-16 sequence.
 /// Returns: ERROR_CHAR in case of an error in the sequence.
 dchar decode(ref wchar* p)
 in { assert(p && *p, "p is null or at the end of the string"); }

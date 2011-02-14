@@ -80,8 +80,8 @@ struct IdentValueParser
 
   /// Finds the next "Identifier =".
   /// Params:
-  ///   ident = set to Identifier.
-  ///   bodyBegin = set to the beginning of the text body (whitespace skipped.)
+  ///   ident = Set to Identifier.
+  ///   bodyBegin = Set to the beginning of the text body (whitespace skipped.)
   /// Returns: true if found.
   bool findNextIdent(ref string ident, ref char* bodyBegin)
   {

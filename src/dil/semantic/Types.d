@@ -26,8 +26,8 @@ abstract class Type/* : Symbol*/
 
   /// Constructs a Type object.
   /// Params:
-  ///   next = the type's next type.
-  ///   tid = the type's ID.
+  ///   next = The type's next type.
+  ///   tid = The type's ID.
   this(Type next, TYP tid)
   {
 //     this.sid = SYM.Type;
@@ -92,7 +92,7 @@ abstract class Type/* : Symbol*/
 
   /// Returns an associative array type using this type as its base.
   /// Params:
-  ///   key = the key type.
+  ///   key = The key type.
   TypeAArray arrayOf(Type key)
   {
     return new TypeAArray(this, key);
@@ -100,7 +100,7 @@ abstract class Type/* : Symbol*/
 
   /// Returns a static array type using this type as its base.
   /// Params:
-  ///   size = the number of elements in the array.
+  ///   size = The number of elements in the array.
   TypeSArray arrayOf(size_t size)
   {
     return new TypeSArray(this, size);

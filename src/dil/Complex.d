@@ -77,7 +77,7 @@ class Complex
 
   /// Constructs from a string.
   /// Params:
-  ///   x = can be "a", "aj", "-ai", "a + bj", "a - bi" etc.
+  ///   x = Can be "a", "aj", "-ai", "a + bj", "a - bi" etc.
   this(string x)
   {
     if (!x.length)

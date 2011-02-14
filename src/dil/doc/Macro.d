@@ -369,8 +369,8 @@ struct MacroExpander
 
   /// Expands "&#36;+", "&#36;0" - "&#36;9" with args[n] in text.
   /// Params:
-  ///   text = the text to scan for argument placeholders.
-  ///   args = the first element, args[0], is the whole argument string and
+  ///   text = The text to scan for argument placeholders.
+  ///   args = The first element, args[0], is the whole argument string and
   ///          the following elements are slices into it.$(BR)
   ///          The array is empty if there are no arguments.
   char[] expandArguments(char[] text, char[][] args)

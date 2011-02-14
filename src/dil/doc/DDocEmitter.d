@@ -44,11 +44,11 @@ abstract class DDocEmitter : DefaultVisitor2
 
   /// Constructs a DDocEmitter object.
   /// Params:
-  ///   modul = the module to generate text for.
-  ///   mtable = the macro table.
-  ///   includeUndocumented = whether to include undocumented symbols.
-  ///   includePrivate = whether to include private symbols.
-  ///   tokenHL = used to highlight code sections.
+  ///   modul = The module to generate text for.
+  ///   mtable = The macro table.
+  ///   includeUndocumented = Whether to include undocumented symbols.
+  ///   includePrivate = Whether to include private symbols.
+  ///   tokenHL = Used to highlight code sections.
   this(Module modul, MacroTable mtable,
        bool includeUndocumented, bool includePrivate,
        Diagnostics reportDiag, Highlighter tokenHL)
@@ -153,8 +153,8 @@ abstract class DDocEmitter : DefaultVisitor2
   }
 
   /// Params:
-  ///   paramsBegin = the left parenthesis of the parameter list.
-  ///   params = the identifier tokens of the parameter names.
+  ///   paramsBegin = The left parenthesis of the parameter list.
+  ///   params = The identifier tokens of the parameter names.
   void reportParameters(Token* paramsBegin, Token*[] params)
   {
     assert(currentDecl !is null);
@@ -285,7 +285,7 @@ abstract class DDocEmitter : DefaultVisitor2
     char[] saved_parentFQN;
     /// When constructed, variables are saved.
     /// Params:
-    ///   name = the name of the current symbol.
+    ///   name = The name of the current symbol.
     this(string name)
     { // Save the previous comment of the parent scope.
       saved_prevCmnt = this.outer.prevCmnt;

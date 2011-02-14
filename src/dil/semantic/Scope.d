@@ -23,7 +23,7 @@ class Scope
 
   /// Find a symbol in this scope.
   /// Params:
-  ///   name = the name of the symbol.
+  ///   name = The name of the symbol.
   Symbol lookup(Identifier* name)
   {
     return symbol.lookup(name);
@@ -31,7 +31,7 @@ class Scope
 
   /// Searches for a symbol in this scope and all enclosing scopes.
   /// Params:
-  ///   name = the name of the symbol.
+  ///   name = The name of the symbol.
   Symbol search(Identifier* name)
   {
     Symbol symbol;
@@ -46,8 +46,8 @@ class Scope
 
   /// Searches for a symbol in this scope and all enclosing scopes.
   /// Params:
-  ///   name = the name of the symbol.
-  ///   ignoreSymbol = the symbol that must be skipped.
+  ///   name = The name of the symbol.
+  ///   ignoreSymbol = The symbol that must be skipped.
   Symbol search(Identifier* name, Symbol ignoreSymbol)
   {
     Symbol symbol;

@@ -253,7 +253,7 @@ struct Converter
 /// Replaces invalid UTF-8 sequences with U+FFFD (if there's enough space,)
 /// and Newlines with '\n'.
 /// Params:
-///   text = the string to be sanitized; no new memory is allocated.
+///   text = The string to be sanitized; no new memory is allocated.
 char[] sanitizeText(char[] text)
 {
   if (!text.length)

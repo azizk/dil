@@ -68,8 +68,9 @@ class IllegalDecl : Declaration
   mixin(copyMethod);
 }
 
-/// FQN = fully qualified name
-alias Token*[] ModuleFQN; // Identifier ("." Identifier)*
+/// FQN means "fully qualified name".
+/// $(BNF ModuleFQN := Identifier ("." Identifier)*)
+alias Token*[] ModuleFQN;
 
 class ModuleDecl : Declaration
 {
@@ -524,7 +525,7 @@ class VariablesDecl : Declaration
 
   /// Returns the Identifier object of this declaration. May be null.
   /// Params:
-  ///   i = the index to the 'names' array member.
+  ///   i = The index to the 'names' array member.
   Identifier* nameId(uint i)
   {
     return names[i] ? names[i].ident : null;

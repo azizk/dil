@@ -205,7 +205,7 @@ class GraphBuilder
 
   /// Start building the graph and return that.
   /// Params:
-  ///   fileName = the file name of the root module.
+  ///   fileName = The file name of the root module.
   Graph start(string fileName)
   {
     loadModule(fileName);
@@ -214,7 +214,7 @@ class GraphBuilder
 
   /// Loads all modules recursively and builds the graph at the same time.
   /// Params:
-  ///   moduleFQNPath = the path version of the module FQN.$(BR)
+  ///   moduleFQNPath = The path version of the module FQN.$(BR)
   ///                   E.g.: FQN = dil.ast.Node -> FQNPath = dil/ast/Node
   Vertex loadModule(string moduleFQNPath)
   {

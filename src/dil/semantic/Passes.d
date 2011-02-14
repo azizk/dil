@@ -48,8 +48,8 @@ abstract class SemanticPass : DefaultVisitor
 
   /// Constructs a SemanticPass object.
   /// Params:
-  ///   modul = the module to be processed.
-  ///   context = the compilation context.
+  ///   modul = The module to be processed.
+  ///   context = The compilation context.
   this(Module modul, CompilationContext context)
   {
     this.modul = modul;
@@ -241,8 +241,8 @@ class FirstSemanticPass : SemanticPass
 
   /// Constructs a SemanticPass object.
   /// Params:
-  ///   modul = the module to be processed.
-  ///   context = the compilation context.
+  ///   modul = The module to be processed.
+  ///   context = The compilation context.
   this(Module modul, CompilationContext context)
   {
     super(modul, new CompilationContext(context));
@@ -1044,8 +1044,8 @@ override
   /// Returns a call expression if 'e' overrides
   /// an operatorwith the name 'id'.
   /// Params:
-  ///   e = the binary expression to be checked.
-  ///   id = the name of the overload function.
+  ///   e = The binary expression to be checked.
+  ///   id = The name of the overload function.
   Expression findOverload(UnaryExpr e, Identifier* id)
   {
     // TODO:
@@ -1058,9 +1058,9 @@ override
   /// Returns a call expression if 'e' overrides
   /// an operator with the name 'id' or 'id_r'.
   /// Params:
-  ///   e = the binary expression to be checked.
-  ///   id = the name of the overload function.
-  ///   id_r = the name of the reverse overload function.
+  ///   e = The binary expression to be checked.
+  ///   id = The name of the overload function.
+  ///   id_r = The name of the reverse overload function.
   Expression findOverload(BinaryExpr e, Identifier* id, Identifier* id_r)
   {
     // TODO:

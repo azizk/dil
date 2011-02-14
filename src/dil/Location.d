@@ -57,7 +57,7 @@ final class Location
   /// Note: Unicode compound characters and other special characters are not
   /// taken into account.
   /// Params:
-  ///   tabWidth = the width of the tabulator character.
+  ///   tabWidth = The width of the tabulator character.
   uint calculateColumn(uint tabWidth = Location.TAB_WIDTH)
   {
     uint col;

@@ -248,8 +248,8 @@ bool scanNewlineReverse(char* begin, ref char* end)
 
 /// Scans a D identifier.
 /// Params:
-///   ref_p = where to start.
-///   end = where it ends.
+///   ref_p = Where to start.
+///   end = Where it ends.
 /// Returns: the identifier if valid (sets ref_p one past the id,) or
 ///          null if invalid (leaves ref_p unchanged.)
 char[] scanIdentifier(ref char* ref_p, char* end)

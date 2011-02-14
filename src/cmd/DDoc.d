@@ -175,8 +175,8 @@ struct DDocCommand
 
   /// Writes the documentation for a module to the disk.
   /// Params:
-  ///   mod = the module to be processed.
-  ///   mtable = the main macro environment.
+  ///   mod = The module to be processed.
+  ///   mtable = The main macro environment.
   void writeDocumentationFile(Module mod, MacroTable mtable)
   {
     // Build destination file path.
@@ -237,7 +237,7 @@ struct DDocCommand
   /// Writes the list of processed modules to the disk.
   /// Also writes DEST/js/modules.js if kandil is used.
   /// Params:
-  ///   mm = has the list of modules.
+  ///   mm = Has the list of modules.
   void writeModuleLists()
   {
     if (modsTxtPath.length)
@@ -364,8 +364,8 @@ version(unused)
 
   /// Loads a macro file. Converts any Unicode encoding to UTF-8.
   /// Params:
-  ///   filePath = path to the macro file.
-  ///   diag  = for error messages.
+  ///   filePath = Path to the macro file.
+  ///   diag  = For error messages.
   static string loadMacroFile(string filePath, Diagnostics diag)
   {
     auto src = new SourceText(filePath);

@@ -34,7 +34,7 @@ class SemanticPass2 : DefaultVisitor
 
   /// Constructs a SemanticPass2 object.
   /// Params:
-  ///   modul = the module to be checked.
+  ///   modul = The module to be checked.
   this(Module modul)
   {
     this.modul = modul;

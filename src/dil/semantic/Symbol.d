@@ -57,9 +57,9 @@ class Symbol
 
   /// Constructs a Symbol object.
   /// Params:
-  ///   sid = the symbol's ID.
-  ///   name = the symbol's name.
-  ///   node = the symbol's node.
+  ///   sid = The symbol's ID.
+  ///   name = The symbol's name.
+  ///   node = The symbol's node.
   this(SYM sid, Identifier* name, Node node)
   {
     this.sid = sid;

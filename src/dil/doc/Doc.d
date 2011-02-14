@@ -92,8 +92,8 @@ static:
 
   /// Returns the surrounding documentation comment tokens.
   /// Params:
-  ///   node = the node to find doc comments for.
-  ///   isDocComment = a function predicate that checks for doc comment tokens.
+  ///   node = The node to find doc comments for.
+  ///   isDocComment = A function predicate that checks for doc comment tokens.
   /// Note: this function works correctly only if
   ///       the source text is syntactically correct.
   Token*[] getDocTokens(Node node, bool function(Token*) isDocComment = &isDDocComment)
@@ -170,7 +170,7 @@ static:
   /// Leading padding characters are removed from the lines.
   /// The various newline types are converted to '\n'.
   /// Params:
-  ///   comment = the string to be sanitized.
+  ///   comment = The string to be sanitized.
   ///   padding = '/', '+' or '*'
   string sanitize(string comment, char padding)
   {
@@ -368,8 +368,8 @@ struct DDocParser
 
   /// Find next "Identifier:".
   /// Params:
-  ///   ident = set to the Identifier.
-  ///   bodyBegin = set to the beginning of the text body (whitespace skipped.)
+  ///   ident = Set to the Identifier.
+  ///   bodyBegin = Set to the beginning of the text body (whitespace skipped.)
   /// Returns: true if found.
   bool findNextIdColon(ref char[] ident, ref char* bodyBegin)
   {

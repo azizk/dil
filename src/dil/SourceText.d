@@ -25,8 +25,8 @@ final class SourceText
 
   /// Constructs a SourceText object.
   /// Params:
-  ///   filePath = file path to the source file.
-  ///   loadFile = whether to load the file in the constructor.
+  ///   filePath = File path to the source file.
+  ///   loadFile = Whether to load the file in the constructor.
   this(string filePath, bool loadFile = false)
   {
     this.filePath = filePath;
@@ -35,8 +35,8 @@ final class SourceText
 
   /// Constructs a SourceText object.
   /// Params:
-  ///   filePath = file path for error messages.
-  ///   data = memory buffer (may be terminated with sentinelString.)
+  ///   filePath = File path for error messages.
+  ///   data = Memory buffer (may be terminated with sentinelString.)
   this(string filePath, char[] data)
   {
     this(filePath);

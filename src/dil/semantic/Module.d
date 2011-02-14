@@ -40,9 +40,9 @@ class Module : ModuleSymbol
 
   /// Indicates which passes have been run on this module.
   ///
-  /// 0 = no pass$(BR)
-  /// 1 = semantic pass 1$(BR)
-  /// 2 = semantic pass 2
+  /// 0 = No pass.$(BR)
+  /// 1 = Semantic pass 1.$(BR)
+  /// 2 = Semantic pass 2.
   uint semanticPass;
   Module[] modules; /// The imported modules.
 
@@ -61,8 +61,8 @@ class Module : ModuleSymbol
 
   /// Constructs a Module object.
   /// Params:
-  ///   filePath = file path to the source text; loaded in the constructor.
-  ///   diag = used for collecting error messages.
+  ///   filePath = File path to the source text; loaded in the constructor.
+  ///   diag = Used for collecting error messages.
   this(string filePath, CompilationContext cc, Diagnostics diag = null)
   {
     this();

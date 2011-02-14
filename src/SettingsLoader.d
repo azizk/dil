@@ -40,8 +40,8 @@ abstract class SettingsLoader
 
   /// Creates an error report.
   /// Params:
-  ///   token = where the error occurred.
-  ///   formatMsg = error message.
+  ///   token = Where the error occurred.
+  ///   formatMsg = Error message.
   void error(Token* token, string formatMsg, ...)
   {
     auto location = token.getErrorLocation(mod.filePath);
@@ -319,7 +319,7 @@ extern(C) char* realpath(char* base, char* dest);
 /// Returns the fully qualified path to this executable,
 /// or arg0 on failure or when a platform is unsupported.
 /// Params:
-///   arg0 = argv[0] from main(char[][] argv).
+///   arg0 = This is argv[0] from main(string[] argv).
 char[] GetExecutableFilePath(char[] arg0)
 {
   version(Windows)

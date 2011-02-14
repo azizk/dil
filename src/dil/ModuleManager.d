@@ -196,9 +196,9 @@ class ModuleManager
 
   /// Splits e.g. 'dil.ast.xyz' into 'dil.ast' and 'xyz'.
   /// Params:
-  ///   pckgFQN = the full package name to be split.
-  ///   prevFQN = set to 'dil.ast' in the example.
-  ///   lastName = the last package name; set to 'xyz' in the example.
+  ///   pckgFQN = The full package name to be split.
+  ///   prevFQN = Set to 'dil.ast' in the example.
+  ///   lastName = The last package name; set to 'xyz' in the example.
   void splitPackageFQN(string pckgFQN, ref string prevFQN, ref string lastName)
   {
     uint lastDotIndex;

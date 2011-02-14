@@ -46,8 +46,8 @@ class SemanticPass1 : Visitor
 
   /// Constructs a SemanticPass1 object.
   /// Params:
-  ///   modul = the module to be processed.
-  ///   context = the compilation context.
+  ///   modul = The module to be processed.
+  ///   context = The compilation context.
   this(Module modul, CompilationContext context)
   {
     this.modul = modul;

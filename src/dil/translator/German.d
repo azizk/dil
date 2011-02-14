@@ -29,8 +29,8 @@ class GermanTranslator : DefaultVisitor
 
   /// Constructs a GermanTranslator.
   /// Params:
-  ///   put = buffer to print to.
-  ///   indentStep = added at every indendation step.
+  ///   put = Buffer to print to.
+  ///   indentStep = Added at every indendation step.
   this(FormatOut put, char[] indentStep)
   {
     this.put = put;

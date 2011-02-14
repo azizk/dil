@@ -17,8 +17,8 @@ class TypePrinter : Visitor2
 
   /// Returns the type chain as a string.
   /// Params:
-  ///   type = the type node to be traversed and printed.
-  ///   outerBuffer = append to this buffer.
+  ///   type = The type node to be traversed and printed.
+  ///   outerBuffer = Append to this buffer.
   char[] print(T type, char[] outerBuffer = null)
   {
     text = outerBuffer;

@@ -182,7 +182,7 @@ static const char[][][/+NodeKind.max+1+/] NodeMembersTable = mixin(genMembersTab
 ////$(MODLINK2 dil.lexer.Identifier, Identifier)
 ////)
 /// Params:
-///   members = the member strings to be parsed.
+///   members = The member strings to be parsed.
 /// Returns:
 ///   an array of tuples (Name, Type) where Name is the exact name of the member
 ///   and Type may be one of these values: "[]", "[?]", "?", "" or "%".
