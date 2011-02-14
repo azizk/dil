@@ -3,46 +3,30 @@
 /// $(Maturity average)
 module dil.Tables;
 
-import dil.lexer.Token;
-import dil.lexer.IdTable;
+import dil.lexer.Token,
+       dil.lexer.IdTable,
+       dil.lexer.Tables;
 import dil.semantic.Types,
        dil.semantic.Symbols;
-import dil.Float;
 import common;
 
 /// A collection of tables used by the Lexer and other classes.
 class Tables
 {
+  LexerTables lxtables; /// Tables for the Lexer.
+  TypeTable types; /// A table for D types.
+  ClassTable classes; /// Special classes.
+  IdTable idents; /// Alias to lxtables.idents.
+
   /// Contructs a Tables object.
   this(bool[string] options = null)
   {
-    idents = new IdTable();
-    types = new TypeTable();
-    types.init(options);
-    classes = new ClassTable();
-  }
-
-  alias Token.StringValue StringValue;
-  alias Token.IntegerValue IntegerValue;
-  alias Token.NewlineValue NewlineValue;
-
-  TypeTable types; /// A table for D types.
-  ClassTable classes; /// Special classes.
-
-  // A collection of tables for various token values.
-  IdTable idents;
-  string[hash_t] strings; /// Maps strings to their zero-terminated equivalent.
-  StringValue*[hash_t] strvals; /// Maps string+postfix to string values.
-  Float[hash_t] floats; /// Maps float strings to Float values.
-  IntegerValue*[ulong] ulongs; /// Maps a ulong to an IntegerValue.
-  /// A list of newline values.
-  /// Only instances, where 'hlinfo' is null, are kept here.
-  NewlineValue*[] newlines;
-
-  /// Looks up an identifier.
-  Identifier* lookupIdentifier(string str)
-  {
-    return idents.lookup(str);
+    // TODO: options should probably be a class.
+    this.lxtables = new LexerTables;
+    this.types = new TypeTable();
+    this.types.init(options);
+    this.classes = new ClassTable();
+    this.idents = this.lxtables.idents;
   }
 }
 

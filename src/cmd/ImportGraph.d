@@ -255,7 +255,7 @@ class GraphBuilder
     {
       auto modul = new Module(moduleFilePath, cc);
       // Use lightweight ImportParser.
-      modul.setParser(new ImportParser(modul.sourceText, cc.tables));
+      modul.setParser(new ImportParser(modul.sourceText, cc.tables.lxtables));
       modul.parse();
 
       vertex = new Vertex;

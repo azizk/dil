@@ -4,17 +4,18 @@
 module dil.lexer.Lexer;
 
 import dil.lexer.Token,
+       dil.lexer.Funcs,
        dil.lexer.Keywords,
        dil.lexer.Identifier,
-       dil.lexer.TokenSerializer;
-import dil.Diagnostics;
-import dil.Tables;
-import dil.Messages;
-import dil.HtmlEntities;
-import dil.Version;
-import dil.Unicode;
-import dil.SourceText;
-import dil.Time;
+       dil.lexer.TokenSerializer,
+       dil.lexer.Tables;
+import dil.Diagnostics,
+       dil.Messages,
+       dil.HtmlEntities,
+       dil.Version,
+       dil.Unicode,
+       dil.SourceText,
+       dil.Time;
 import dil.Float : Float;
 import util.uni : isUniAlpha;
 import util.mpfr : mpfr_t, mpfr_strtofr, mpfr_init;
@@ -22,7 +23,6 @@ import common;
 
 import tango.core.Vararg;
 
-public import dil.lexer.Funcs;
 
 /// The Lexer analyzes the characters of a source text and
 /// produces a doubly-linked list of tokens.
@@ -35,7 +35,7 @@ class Lexer
   Token* head;  /// The head of the doubly linked token list.
   Token* tail;  /// The tail of the linked list. Set in scan().
   Token* token; /// Points to the current token in the token list.
-  Tables tables; /// Used to look up token values.
+  LexerTables tables; /// Used to look up token values.
 
   // Members used for error messages:
   Diagnostics diag; /// For diagnostics.
@@ -65,7 +65,7 @@ class Lexer
   /// Params:
   ///   srcText = the UTF-8 source code.
   ///   diag = used for collecting error messages.
-  this(SourceText srcText, Tables tables, Diagnostics diag = null)
+  this(SourceText srcText, LexerTables tables, Diagnostics diag = null)
   {
     this.srcText = srcText;
     this.tables = tables;
@@ -2962,7 +2962,7 @@ unittest
       src ~= pair.tokenText ~ " ";
 
   // Lex the constructed source text.
-  auto tables = new Tables();
+  auto tables = new LexerTables();
   auto lx = new Lexer(new SourceText("lexer_unittest", src), tables);
   lx.scanAll();
 
@@ -2982,7 +2982,7 @@ unittest
 unittest
 {
   Stdout("Testing method Lexer.peek()\n");
-  auto tables = new Tables();
+  auto tables = new LexerTables();
   auto sourceText = new SourceText("", "unittest { }");
   auto lx = new Lexer(sourceText, tables);
 

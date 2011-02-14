@@ -183,7 +183,8 @@ override
         auto loc = md.begin.getErrorLocation(modul.filePath());
         auto filePath = loc.filePath;
         auto sourceText = new SourceText(filePath, stringExpr.getString());
-        auto parser = new Parser(sourceText, modul.cc.tables, modul.diag);
+        auto lxtables = modul.cc.tables.lxtables;
+        auto parser = new Parser(sourceText, lxtables, modul.diag);
         md.decls = parser.start();
       }
     }
@@ -381,7 +382,8 @@ override
       auto loc = me.begin.getErrorLocation(modul.filePath());
       auto filePath = loc.filePath;
       auto sourceText = new SourceText(filePath, stringExpr.getString());
-      auto parser = new Parser(sourceText, modul.cc.tables, modul.diag);
+      auto lxtables = modul.cc.tables.lxtables;
+      auto parser = new Parser(sourceText, lxtables, modul.diag);
       expr = parser.start2();
       expr = visitE(expr); // Check expression.
     }

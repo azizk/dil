@@ -9,7 +9,8 @@ import dil.ast.DefaultVisitor,
        dil.ast.Statement,
        dil.ast.Expression,
        dil.ast.Types;
-import dil.lexer.Lexer;
+import dil.lexer.Lexer,
+       dil.lexer.Funcs;
 import dil.parser.Parser;
 import dil.semantic.Module;
 import dil.Compilation;
@@ -40,7 +41,7 @@ class Highlighter
   string highlightTokens(string text, string filePath, ref uint lines)
   {
     auto src = new SourceText(filePath, text);
-    auto lx = new Lexer(src, cc.tables, cc.diag);
+    auto lx = new Lexer(src, cc.tables.lxtables, cc.diag);
     lx.scanAll();
     lines = lx.lineNum;
     return highlightTokens(lx.firstToken(), lx.tail);
@@ -75,7 +76,7 @@ class Highlighter
   void highlightTokens(string filePath, bool opt_printLines)
   {
     auto src = new SourceText(filePath, true);
-    auto lx = new Lexer(src, cc.tables, cc.diag);
+    auto lx = new Lexer(src, cc.tables.lxtables, cc.diag);
     lx.scanAll();
 
     print.format(tags["DocHead"], Path(filePath).name());

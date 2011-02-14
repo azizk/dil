@@ -4,19 +4,19 @@
 module dil.parser.Parser;
 
 import dil.lexer.Lexer,
-       dil.lexer.IdTable;
+       dil.lexer.IdTable,
+       dil.lexer.Tables;
 import dil.ast.Node,
        dil.ast.Declarations,
        dil.ast.Statements,
        dil.ast.Expressions,
        dil.ast.Types,
        dil.ast.Parameters;
-import dil.Tables;
-import dil.Messages;
-import dil.Diagnostics;
-import dil.Enums;
-import dil.SourceText;
-import dil.Unicode;
+import dil.Messages,
+       dil.Diagnostics,
+       dil.Enums,
+       dil.SourceText,
+       dil.Unicode;
 import common;
 
 import tango.core.Vararg;
@@ -49,7 +49,7 @@ class Parser
   /// Params:
   ///   srcText = The UTF-8 source code.
   ///   diag = Used for collecting error messages.
-  this(SourceText srcText, Tables tables, Diagnostics diag = null)
+  this(SourceText srcText, LexerTables tables, Diagnostics diag = null)
   {
     this.diag = diag;
     this.lexer = new Lexer(srcText, tables, diag);

@@ -5,6 +5,7 @@ module main;
 
 import dil.parser.Parser;
 import dil.lexer.Lexer,
+       dil.lexer.Funcs,
        dil.lexer.Token,
        dil.lexer.TokenSerializer;
 import dil.ast.Declarations,
@@ -273,7 +274,7 @@ void main(string[] args)
 
 
     diag = new Diagnostics();
-    auto lx = new Lexer(sourceText, globalCC.tables, diag);
+    auto lx = new Lexer(sourceText, globalCC.tables.lxtables, diag);
     lx.scanAll();
     auto token = lx.firstToken();
 
@@ -305,7 +306,7 @@ void main(string[] args)
       new SourceText(srcFilePath, true);
 
     diag = new Diagnostics();
-    auto lx = new Lexer(sourceText, globalCC.tables, diag);
+    auto lx = new Lexer(sourceText, globalCC.tables.lxtables, diag);
     lx.scanAll();
 
     if (lx.errors.length || diag.hasInfo)
@@ -354,7 +355,7 @@ void main(string[] args)
     else
       filePaths = args[2..$];
 
-    auto tables = globalCC.tables;
+    auto tables = globalCC.tables.lxtables;
 
     StopWatch swatch;
     swatch.start;

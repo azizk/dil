@@ -4,12 +4,12 @@
 module dil.parser.ImportParser;
 
 import dil.parser.Parser;
+import dil.lexer.Tables;
 import dil.ast.Node,
        dil.ast.Declarations,
        dil.ast.Statements;
-import dil.SourceText;
-import dil.Tables;
-import dil.Enums;
+import dil.SourceText,
+       dil.Enums;
 import common;
 
 private alias TOK T;
@@ -18,7 +18,7 @@ private alias TOK T;
 /// in the source text.
 class ImportParser : Parser
 {
-  this(SourceText srcText, Tables tables)
+  this(SourceText srcText, LexerTables tables)
   {
     super(srcText, tables);
   }

@@ -161,7 +161,7 @@ Statistics getStatistics(CompilationContext cc, string filePath,
   Lexer lx;
   if (printNodesTable)
   {
-    parser = new Parser(sourceText, cc.tables);
+    parser = new Parser(sourceText, cc.tables.lxtables);
     auto rootNode = parser.start();
     // Count nodes.
     stats.nodesTable = (new ASTStats).count(rootNode);
@@ -169,7 +169,7 @@ Statistics getStatistics(CompilationContext cc, string filePath,
   }
   else
   {
-    lx = new Lexer(sourceText, cc.tables);
+    lx = new Lexer(sourceText, cc.tables.lxtables);
     lx.scanAll();
   }
 

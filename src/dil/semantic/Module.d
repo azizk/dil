@@ -103,7 +103,7 @@ class Module : ModuleSymbol
   void parse()
   {
     if (this.parser is null)
-      this.parser = new Parser(sourceText, cc.tables, diag);
+      this.parser = new Parser(sourceText, cc.tables.lxtables, diag);
 
     if (this.dlxFilePath.length)
       this.parser.lexer.fromDLXFile(cast(ubyte[])File.get(dlxFilePath));
