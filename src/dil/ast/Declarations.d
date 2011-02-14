@@ -462,6 +462,7 @@ class FunctionDecl : Declaration
   FuncBodyStmt funcBody;
   LinkageType linkageType;
   bool cantInterpret = false;
+
   this(TypeNode returnType, Token* name,/+ TemplateParameters tparams,+/
        Parameters params, FuncBodyStmt funcBody)
   {
@@ -477,12 +478,6 @@ class FunctionDecl : Declaration
 //     this.tparams = tparams;
     this.params = params;
     this.funcBody = funcBody;
-  }
-
-  /// Returns the Identifier object of this declaration. May be null.
-  Identifier* nameId()
-  {
-    return name ? name.ident : null;
   }
 
   // Sets the LinkageType of this function.

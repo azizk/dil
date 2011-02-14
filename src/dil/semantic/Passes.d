@@ -580,7 +580,7 @@ override
 
   D visit(FunctionDecl d)
   {
-    auto func = new FunctionSymbol(d.nameId, d);
+    auto func = new FunctionSymbol(d.name.ident, d);
     insertOverload(func);
     return d;
   }
