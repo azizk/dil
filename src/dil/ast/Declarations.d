@@ -504,15 +504,17 @@ class FunctionDecl : Declaration
 ///  Type? Identifier ("=" Init)? ("," Identifier ("=" Init)?)* ";")
 class VariablesDecl : Declaration
 {
-  TypeNode typeNode;
-  Token*[] names;
-  Expression[] inits;
+  TypeNode typeNode; /// The type of the variables.
+  Token*[] names; /// Variable names.
+  Expression[] inits; /// Respective initial values.
+  LinkageType linkageType; /// They linkage type.
+
   this(TypeNode typeNode, Token*[] names, Expression[] inits)
   {
     // No empty arrays allowed. Both arrays must be of same size.
     assert(names.length != 0 && names.length == inits.length);
     // If no type (in case of AutoDecl), first value mustn't be null.
-    assert(typeNode ? 1 : inits[0] !is null);
+    assert(typeNode || inits[0] !is null);
     mixin(set_kind);
     addOptChild(typeNode);
     foreach (init; inits)
@@ -522,16 +524,6 @@ class VariablesDecl : Declaration
     this.names = names;
     this.inits = inits;
   }
-
-  /// Returns the Identifier object of this declaration. May be null.
-  /// Params:
-  ///   i = The index to the 'names' array member.
-  Identifier* nameId(uint i)
-  {
-    return names[i] ? names[i].ident : null;
-  }
-
-  LinkageType linkageType;
 
   void setLinkageType(LinkageType linkageType)
   {

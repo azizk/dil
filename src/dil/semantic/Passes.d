@@ -595,8 +595,7 @@ override
     vd.variables = new VariableSymbol[vd.names.length];
     foreach (i, name; vd.names)
     {
-      auto nameId = vd.nameId(i);
-      auto variable = new VariableSymbol(nameId, protection, storageClass,
+      auto variable = new VariableSymbol(name.ident, protection, storageClass,
         linkageType, vd);
       variable.value = vd.inits[i];
       vd.variables[i] = variable;
