@@ -1205,9 +1205,9 @@ class Lexer
           if (isUnicodeNewlineChar(decodeUTF8(p)))
             goto case '\n';
         }
-        else if (isEOF(*p))
-        {
-          error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedBlockComment);
+        else if (isEOF(*p)) {
+          error(tokenLineNum, tokenLineBegin, t.start,
+            MID.UnterminatedBlockComment);
           break Loop;
         }
       }
@@ -1259,9 +1259,9 @@ class Lexer
           if (isUnicodeNewlineChar(decodeUTF8(p)))
             goto case '\n';
         }
-        else if (isEOF(*p))
-        {
-          error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedNestedComment);
+        else if (isEOF(*p)) {
+          error(tokenLineNum, tokenLineBegin, t.start,
+            MID.UnterminatedNestedComment);
           break Loop;
         }
       }
@@ -1530,9 +1530,9 @@ class Lexer
         }
         else if (isspace(c))
           continue; // Skip spaces.
-        else if (isEOF(c))
-        {
-          error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedHexString);
+        else if (isEOF(c)) {
+          error(tokenLineNum, tokenLineBegin, t.start,
+            MID.UnterminatedHexString);
           goto Lerr;
         }
         else
@@ -1590,7 +1590,8 @@ class Lexer
       break;
     case '[', '<', '{':
       nesting_delim = c;
-      closing_delim = c + 2; // Get to closing counterpart. Feature of ASCII table.
+      // Get to the closing counterpart. Feature of ASCII table.
+      closing_delim = c + 2; // ']', '>' or '}'
       break;
     default:
       char* idbegin = p;
@@ -2121,7 +2122,8 @@ class Lexer
     }
 
     if (digits == 0 || digits > 16)
-      error(t.start, digits == 0 ? MID.NoDigitsInHexNumber : MID.OverflowHexNumber);
+      error(t.start,
+        digits == 0 ? MID.NoDigitsInHexNumber : MID.OverflowHexNumber);
 
     goto Lfinalize;
 
@@ -2148,9 +2150,11 @@ class Lexer
     }
 
     if (digits == 0 || digits > 64)
-      error(t.start, digits == 0 ? MID.NoDigitsInBinNumber : MID.OverflowBinaryNumber);
+      error(t.start,
+        digits == 0 ? MID.NoDigitsInBinNumber : MID.OverflowBinaryNumber);
 
-    assert(p[-1] == '0' || p[-1] == '1' || p[-1] == '_' || p[-1] == 'b' || p[-1] == 'B', p[-1] ~ "");
+    assert(p[-1] == '0' || p[-1] == '1' || p[-1] == '_' ||
+           p[-1] == 'b' || p[-1] == 'B', p[-1] ~ "");
     assert( !(*p == '0' || *p == '1' || *p == '_') );
     goto Lfinalize;
 
@@ -2603,7 +2607,8 @@ class Lexer
   /// ditto
   void error(char* columnPos, MID mid, ...)
   {
-    error_(this.lineNum, this.lineBegin, columnPos, GetMsg(mid), _arguments, _argptr);
+    error_(this.lineNum, this.lineBegin, columnPos,
+      GetMsg(mid), _arguments, _argptr);
   }
 
   /// ditto
@@ -2792,7 +2797,8 @@ class Lexer
   static void encodeUTF8(ref char[] str, dchar d)
   {
     assert(!isascii(d), "check for ASCII char before calling encodeUTF8().");
-    assert(isValidChar(d), "check if character is valid before calling encodeUTF8().");
+    assert(isValidChar(d),
+      "check if character is valid before calling encodeUTF8().");
 
     char[6] b = void;
     if (d < 0x800)
@@ -2955,7 +2961,8 @@ unittest
 
   // Join all token texts into a single string.
   foreach (i, pair; pairs)
-    if (pair.kind == TOK.Comment && pair.tokenText[1] == '/' || // Line comment.
+    if (pair.kind == TOK.Comment &&
+        pair.tokenText[1] == '/' || // Line comment.
         pair.kind == TOK.Shebang)
     {
       assert(pairs[i+1].kind == TOK.Newline); // Must be followed by a newline.
