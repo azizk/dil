@@ -168,6 +168,11 @@ class Symbol
     return s.toMangle();
   }
 
+  string toCppMangle()
+  { // TODO:
+    return null;
+  }
+
   /// Returns the string representation of this symbol.
   char[] toString()
   {
