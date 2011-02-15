@@ -2936,22 +2936,25 @@ unittest
     {"@",       TOK.At},
     {"^^",      TOK.Pow},
     {"^^=",     TOK.PowAssign},
-    {"q\"d\n\nd\"", TOK.String},    {"q\"(())\"", TOK.String},
-    {"q\"{{}}\"",   TOK.String},    {"q\"[[]]\"", TOK.String},
-    {"q\"<<>>\"",   TOK.String},    {"q\"/__/\"", TOK.String},
+    {"q\"ⱷ\n\nⱷ\"", TOK.String},    {`q"(())"`, TOK.String},
+    {`q"{{}}"`,     TOK.String},    {`q"[[]]"`, TOK.String},
+    {`q"<<>>"`,     TOK.String},    {`q"/__/"`, TOK.String},
+    {`q"∆⟵✻⟶∆"`,    TOK.String},    {`q"\⣯⣻\"`, TOK.String},
     {"q{toks...}",  TOK.String},    {"q{({#line 0\n})}", TOK.String},
+    {"q\"HDOC\nq\"***\"\nHDOC\"", TOK.String},
+    {"q\"ȨÖF\nq{***}\nȨÖF\"",   TOK.String},
+    {`q{q"<>"q"()"q"[]"q"{}"q"//"q"\\"q{}}`,  TOK.String},
   ];
-  pairs ~= pairs2;
   }
   else // D1
   {
   static Pair[] pairs2 = [
     {"\\n",  TOK.String},           {"\\u2028", TOK.String}
   ];
-  pairs ~= pairs2;
   }
+  pairs ~= pairs2;
 
-  char[] src;
+  char[] src; // The source text to be scanned.
 
   // Join all token texts into a single string.
   foreach (i, pair; pairs)
@@ -2977,7 +2980,7 @@ unittest
   for (uint i; i < pairs.length && token.kind != TOK.EOF;
        ++i, (token = token.next))
     if (token.text != pairs[i].tokenText)
-      assert(0, Format("Scanned '{0}' but expected '{1}'",
+      assert(0, Format("Scanned ‘{0}’ but expected ‘{1}’",
                        token.text, pairs[i].tokenText));
 }
 
