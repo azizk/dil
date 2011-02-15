@@ -226,8 +226,10 @@ class EnumMemberDecl : Declaration
   TypeNode type; // D 2.0
   Token* name;
   Expression value;
+
   this(Token* name, Expression value)
   {
+    assert(name);
     mixin(set_kind);
     addOptChild(value);
 
@@ -241,12 +243,6 @@ class EnumMemberDecl : Declaration
     addOptChild(type);
     this.type = type;
     this(name, value);
-  }
-
-  /// Returns the Identifier object of a variable.
-  Identifier* nameId()
-  {
-    return name ? name.ident : null;
   }
 
   EnumMember symbol;

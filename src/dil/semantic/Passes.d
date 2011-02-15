@@ -461,7 +461,8 @@ override
 
   D visit(EnumMemberDecl d)
   {
-    d.symbol = new EnumMember(d.nameId, protection, storageClass, linkageType, d);
+    d.symbol = new EnumMember(
+      d.name.ident, protection, storageClass, linkageType, d);
     insert(d.symbol);
     return d;
   }
