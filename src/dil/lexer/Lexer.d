@@ -1597,13 +1597,10 @@ class Lexer
       if (scanNewline(p))
       {
         error(idbegin, MSG.DelimiterIsMissing);
-        ++lineNum;
-        setLineBegin(p);
-        // closing_delim = '\n';
+        p = idbegin; // Reset and don't consume the newline.
         goto Lerr;
       }
 
-      c = *p;
       closing_delim = c;
       // TODO: Check for non-printable characters?
       if (!isascii(c))
@@ -1624,10 +1621,10 @@ class Lexer
       // Scan a newline.
       if (scanNewline(p))
         ++lineNum,
-        setLineBegin(p),
-        --p; // Go back one because of "c = *++p;" in main loop.
+        setLineBegin(p);
       else
         error(p, MSG.NoNewlineAfterIdDelimiter, str_delim);
+      --p; // Go back one because of "c = *++p;" in main loop.
     }
     assert(closing_delim);
 
@@ -1637,8 +1634,7 @@ class Lexer
     bool checkStringDelim(char* p)
     { // Returns true if p points to the closing string delimiter.
       assert(str_delim.length != 0, ""~*p);
-      return value.length &&
-        value[$-1] == '\n' && // Last copied character must be '\n'.
+      return lineBegin is p && // Must be at the beginning of a new line.
         this.endX()-p >= str_delim.length && // Check remaining length.
         p[0..str_delim.length] == str_delim; // Compare.
     }
@@ -1714,7 +1710,8 @@ class Lexer
       postfix = scanPostfix((++p, p));
     else
       error(p, MSG.ExpectedDblQuoteAfterDelim,
-        (str_delim.length || encodeUTF8(str_delim, closing_delim), str_delim));
+        // Pass str_delim or encode and pass closing_delim as a string.
+        (str_delim.length || encode(str_delim, closing_delim), str_delim));
 
     t.strval = lookupString(value, postfix);
   Lerr:
