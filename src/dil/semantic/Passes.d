@@ -874,6 +874,25 @@ override
 
   D visit(PragmaDecl d)
   {
+    if (d.ident.ident is Ident.msg)
+    { // Write arguments to standard output.
+      foreach (arg; d.args)
+      {
+        string msg;
+        arg = visitE(arg);
+        auto r = ip.eval(arg);
+        if (auto se = r.Is!(StringExpr))
+          msg = se.getString();
+        else
+          msg = "FIXME: can't print AST yet"; // = astPrinter.print(r)
+        Stdout(msg);
+      }
+    }
+    else
+    {
+      pragmaSemantic(scop, d.begin, d.ident.ident, d.args);
+      visitD(d.decls);
+    }
     return d;
   }
 } // override
