@@ -723,9 +723,12 @@ override
 /// static ifs/asserts etc.
 class SecondSemanticPass : SemanticPass
 {
+  Interpreter ip; /// Used to evaluate expressions.
+
   this(Module modul, CompilationContext context)
   {
     super(modul, context);
+    this.ip = new Interpreter(modul.diag);
   }
 
   /// Runs the semantic pass on the module.
@@ -844,6 +847,24 @@ override
 
   D visit(StaticAssertDecl d)
   {
+    d.condition = visitE(d.condition);
+    if (d.condition.isChecked())
+    {
+      auto r = ip.eval(d.condition);
+      if (r !is Interpreter.NAR && ip.EM.isBool(r) == 0)
+      {
+        string errorMsg = "static assert is false";
+        if (d.message)
+        {
+          d.message = visitE(d.message);
+          r = ip.eval(d.message);
+          auto se = r.Is!(StringExpr);
+          if (se) // TODO: allow non-string expressions?
+            errorMsg = se.getString();
+        }
+        error(d, errorMsg);
+      }
+    }
     return d;
   }
 
