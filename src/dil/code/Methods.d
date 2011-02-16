@@ -140,6 +140,19 @@ class EMethods
     return z;
   }
 
+  /// Returns true if e is a constant expression.
+  static bool isConst(Expression e)
+  {
+    switch (e.kind)
+    {
+    case NK.IntExpr, NK.FloatExpr, NK.ComplexExpr, NK.CharExpr,
+         NK.BoolExpr, NK.StringExpr, NK.NullExpr:
+      return true;
+    default:
+    }
+    return false;
+  }
+
   /// Checks if e has a boolean value.
   /// Returns: -1 if not a bool, 0 if the value is false and 1 if true.
   static int isBool(Expression e)
