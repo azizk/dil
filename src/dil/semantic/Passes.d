@@ -229,6 +229,8 @@ abstract class SemanticPass : DefaultVisitor
   }
 }
 
+
+/// The first pass only declares symbols and handles imports.
 class FirstSemanticPass : SemanticPass
 {
   Module delegate(string) importModule; /// Called when importing a module.
@@ -249,6 +251,7 @@ class FirstSemanticPass : SemanticPass
     this.alignSize = context.structAlign;
   }
 
+  /// Runs the semantic pass on the module.
   override void run()
   {
     assert(modul.root !is null);
@@ -710,6 +713,154 @@ override
       pragmaSemantic(scop, d.begin, d.ident, d.args);
       visitD(d.decls);
     }
+    return d;
+  }
+} // override
+}
+
+
+/// The second pass resolves variable types, base classes,
+/// static ifs/asserts etc.
+class SecondSemanticPass : SemanticPass
+{
+  this(Module modul, CompilationContext context)
+  {
+    super(modul, context);
+  }
+
+  /// Runs the semantic pass on the module.
+  override void run()
+  {
+    assert(modul.root !is null);
+    // Create module scope.
+    scop = new Scope(null, modul);
+    modul.semanticPass = 2;
+    visitN(modul.root);
+  }
+
+override
+{
+  D visit(CompoundDecl d)
+  {
+    foreach (decl; d.decls)
+      visitD(decl);
+    return d;
+  }
+
+  D visit(AliasDecl d)
+  {
+    return d;
+  }
+
+  D visit(TypedefDecl d)
+  {
+    return d;
+  }
+
+  D visit(EnumDecl d)
+  {
+    return d;
+  }
+
+  D visit(EnumMemberDecl d)
+  {
+    return d;
+  }
+
+  D visit(ClassDecl d)
+  {
+    return d;
+  }
+
+  D visit(InterfaceDecl d)
+  {
+    return d;
+  }
+
+  D visit(StructDecl d)
+  {
+    return d;
+  }
+
+  D visit(UnionDecl d)
+  {
+    return d;
+  }
+
+  D visit(ConstructorDecl d)
+  {
+    return d;
+  }
+
+  D visit(StaticCtorDecl d)
+  {
+    return d;
+  }
+
+  D visit(DestructorDecl d)
+  {
+    return d;
+  }
+
+  D visit(StaticDtorDecl d)
+  {
+    return d;
+  }
+
+  D visit(FunctionDecl d)
+  {
+    return d;
+  }
+
+  D visit(VariablesDecl d)
+  {
+    return d;
+  }
+
+  D visit(InvariantDecl d)
+  {
+    return d;
+  }
+
+  D visit(UnittestDecl d)
+  {
+    return d;
+  }
+
+  D visit(TemplateDecl d)
+  {
+    return d;
+  }
+
+  D visit(NewDecl d)
+  {
+    return d;
+  }
+
+  D visit(DeleteDecl d)
+  {
+    return d;
+  }
+
+  D visit(StaticAssertDecl d)
+  {
+    return d;
+  }
+
+  D visit(StaticIfDecl d)
+  {
+    // Eval condition
+    return d;
+  }
+
+  D visit(MixinDecl d)
+  {
+    // Eval d.argument
+    return d;
+  }
+
+  D visit(PragmaDecl d)
+  {
     return d;
   }
 } // override
