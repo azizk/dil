@@ -758,7 +758,7 @@ class AlignDecl : AttributeDecl
 
 class PragmaDecl : AttributeDecl
 {
-  Token* idtok;
+  Token* ident;
   Expression[] args;
   this(Token* ident, Expression[] args, Declaration decls)
   {
@@ -766,14 +766,8 @@ class PragmaDecl : AttributeDecl
     super(decls);
     mixin(set_kind);
 
-    this.idtok = ident;
+    this.ident = ident;
     this.args = args;
-  }
-
-  /// TODO: remove this and rename 'idtok' to 'ident'.
-  Identifier* ident()
-  {
-    return idtok.ident;
   }
 
   mixin(copyMethod);

@@ -541,11 +541,11 @@ override
 
   D visit(PragmaDecl d)
   {
-    if (d.ident is Ident.msg)
+    if (d.ident.ident is Ident.msg)
       addDeferred(d);
     else
     {
-      pragmaSemantic(scop, d.begin, d.ident, d.args);
+      pragmaSemantic(scop, d.begin, d.ident.ident, d.args);
       visitD(d.decls);
     }
     return d;

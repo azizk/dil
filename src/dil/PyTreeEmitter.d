@@ -616,7 +616,7 @@ override
   void visit(PragmaDecl d)
   {
     begin(d);
-    write(indexOf(d.idtok));
+    write(indexOf(d.ident));
     write(",");
     write(d.args);
     write(",");

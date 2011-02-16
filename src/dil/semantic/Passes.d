@@ -704,15 +704,7 @@ override
 
   D visit(PragmaDecl d)
   {
-    if (d.ident is Ident.msg)
-    {
-      // TODO
-    }
-    else
-    {
-      pragmaSemantic(scop, d.begin, d.ident, d.args);
-      visitD(d.decls);
-    }
+    visitD(d.decls);
     return d;
   }
 } // override
