@@ -71,7 +71,6 @@ struct IGraphCommand
 
     auto gbuilder = new GraphBuilder(context);
 
-    gbuilder.importPaths = context.importPaths;
     gbuilder.options = options;
     gbuilder.filterPredicate = (string moduleFQNPath) {
       foreach (rx; regexps)
@@ -191,7 +190,6 @@ class GraphBuilder
 {
   Graph graph; /// The graph object.
   IGraphCommand.Options options; /// The options.
-  string[] importPaths; /// Where to look for modules.
   Vertex[hash_t] loadedModulesTable; /// Maps FQN paths to modules.
   bool delegate(string) filterPredicate;
   CompilationContext cc; /// The context.
@@ -232,10 +230,8 @@ class GraphBuilder
     }
 
     // Locate the module in the file system.
-    auto moduleFilePath = ModuleManager.findModuleFilePath(
-      moduleFQNPath,
-      importPaths
-    );
+    auto moduleFilePath = ModuleManager.findModuleFile(
+      moduleFQNPath, cc.importPaths);
 
     Vertex vertex;
 

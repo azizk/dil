@@ -70,7 +70,8 @@ class ModuleManager
     return null;
   }
 
-  /// Loads a module given a file path.
+  /// Loads and parses a module given a file path.
+  /// Returns: A new Module instance or an existing one from the table.
   Module loadModuleFile(string moduleFilePath)
   {
     if (auto existingModule = moduleByPath(moduleFilePath))
@@ -93,7 +94,7 @@ class ModuleManager
       return existingModule;
 
     // Locate the module in the file system.
-    auto moduleFilePath = findModuleFilePath(moduleFQNPath, cc.importPaths);
+    auto moduleFilePath = findModuleFile(moduleFQNPath);
     if (!moduleFilePath.length)
       return null; // No module found.
 
@@ -226,8 +227,8 @@ class ModuleManager
   }
 
   /// Searches for a module in the file system looking in importPaths.
-  /// Returns: the file path to the module, or null if it wasn't found.
-  static string findModuleFilePath(string moduleFQNPath, string[] importPaths)
+  /// Returns: The file path to the module, or null if it wasn't found.
+  static string findModuleFile(string moduleFQNPath, string[] importPaths)
   {
     auto filePath = Path();
     foreach (importPath; importPaths)
@@ -244,6 +245,12 @@ class ModuleManager
       return filePath.toString();
     }
     return null;
+  }
+
+  /// ditto
+  string findModuleFile(string moduleFQNPath)
+  {
+    return findModuleFile(moduleFQNPath, cc.importPaths);
   }
 
   /// A predicate for sorting symbols in ascending order.
