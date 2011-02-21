@@ -110,7 +110,7 @@ struct DDocCommand
 
     outFileExtension = writeXML ? ".xml" : ".html";
 
-    mm = new ModuleManager(context, diag);
+    mm = new ModuleManager(context);
 
     // Process D files.
     foreach (filePath; filePaths)

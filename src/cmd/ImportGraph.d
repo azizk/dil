@@ -316,7 +316,7 @@ void printDotDocument(CompilationContext cc, Graph graph,
 
   if (groupModules)
   {
-    mm = new ModuleManager(cc, cc.diag);
+    mm = new ModuleManager(cc);
     foreach (vertex; graph.vertices)
       mm.addModule(vertex.modul);
   }

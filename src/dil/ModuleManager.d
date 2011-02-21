@@ -43,13 +43,12 @@ class ModuleManager
   CompilationContext cc;
 
   /// Constructs a ModuleManager object.
-  this(CompilationContext cc, Diagnostics diag)
+  this(CompilationContext cc)
   {
     this.rootPackage = new Package(null, cc.tables.idents);
     packageTable[0] = this.rootPackage;
     assert(hashOf("") == 0);
     this.cc = cc;
-    this.diag = diag;
   }
 
   /// Looks up a module by its file path. E.g.: "src/dil/ModuleManager.d"
@@ -78,7 +77,7 @@ class ModuleManager
       return existingModule;
 
     // Create a new module.
-    auto newModule = new Module(moduleFilePath, cc, diag);
+    auto newModule = new Module(moduleFilePath, cc, cc.diag);
     newModule.parse();
 
     addModule(newModule);
@@ -105,7 +104,7 @@ class ModuleManager
     { // Error: the requested module is not in the correct package.
       auto location = getErrorLocation(modul);
       auto msg = Format(MSG.ModuleNotInPackage, getPackageFQN(moduleFQNPath));
-      diag ~= new SemanticError(location, msg);
+      cc.diag ~= new SemanticError(location, msg);
     }
 
     return modul;
@@ -129,7 +128,7 @@ class ModuleManager
     { // Error: two module files have the same f.q. module name.
       auto location = getErrorLocation(newModule);
       auto msg = Format(MSG.ConflictingModuleFiles, newModule.filePath());
-      diag ~= new SemanticError(location, msg);
+      cc.diag ~= new SemanticError(location, msg);
       return; // Can't insert new module, so return.
     }
 
@@ -150,7 +149,7 @@ class ModuleManager
       // There's a package dil and a module dil.
       auto location = getErrorLocation(newModule);
       auto msg = Format(MSG.ConflictingModuleAndPackage, newModule.getFQN());
-      diag ~= new SemanticError(location, msg);
+      cc.diag ~= new SemanticError(location, msg);
     }
   }
 
