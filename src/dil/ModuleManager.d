@@ -21,7 +21,7 @@ import tango.sys.Environment;
 
 alias FileConst.PathSeparatorChar dirSep;
 
-/// Manages loaded modules in a table.
+/// Manages loaded modules in various tables.
 class ModuleManager
 {
   /// The root package. Contains all other modules and packages.
@@ -37,8 +37,6 @@ class ModuleManager
   /// Loaded modules which are ordered according to the number of
   /// import statements in each module (ascending order.)
   Module[] orderedModules;
-  /// Collects error messages.
-  Diagnostics diag;
   /// Provides tables and compiler variables.
   CompilationContext cc;
 
@@ -100,12 +98,10 @@ class ModuleManager
     // Load the module file.
     auto modul = loadModuleFile(moduleFilePath);
 
-    if (getPackageFQN(modul.getFQNPath()) != getPackageFQN(moduleFQNPath))
-    { // Error: the requested module is not in the correct package.
-      auto location = getErrorLocation(modul);
-      auto msg = Format(MSG.ModuleNotInPackage, getPackageFQN(moduleFQNPath));
-      cc.diag ~= new SemanticError(location, msg);
-    }
+    auto packageFQN = getPackageFQN(moduleFQNPath);
+    if (getPackageFQN(modul.getFQNPath()) != packageFQN)
+      // Error: the requested module is not in the correct package.
+      error(modul, MSG.ModuleNotInPackage, packageFQN);
 
     return modul;
   }
@@ -123,17 +119,15 @@ class ModuleManager
     auto absFilePath = absolutePath(newModule.filePath());
 
     auto moduleFQNPath = newModule.getFQNPath();
-    auto hash = hashOf(moduleFQNPath);
-    if (auto existingModule = hash in moduleFQNPathTable)
-    { // Error: two module files have the same f.q. module name.
-      auto location = getErrorLocation(newModule);
-      auto msg = Format(MSG.ConflictingModuleFiles, newModule.filePath());
-      cc.diag ~= new SemanticError(location, msg);
-      return; // Can't insert new module, so return.
-    }
+    auto fqnPathHash = hashOf(moduleFQNPath);
+
+    if (auto existingModule = fqnPathHash in moduleFQNPathTable)
+      // Error: two module files have the same f.q. module name.
+      return error(newModule,
+        MSG.ConflictingModuleFiles, newModule.filePath());
 
     // Insert into the tables.
-    moduleFQNPathTable[hash] = newModule;
+    moduleFQNPathTable[fqnPathHash] = newModule;
     absFilePathTable[hashOf(absFilePath)] = newModule;
     loadedModules ~= newModule;
     newModule.ID = loadedModules.length;
@@ -144,13 +138,11 @@ class ModuleManager
     pckg.add(newModule);
 
     if (auto p = hashOf(newModule.getFQN()) in packageTable)
-    { // Error: module and package share the same name.
+      // Error: module and package share the same name.
       // Happens when: "src/dil/module.d", "src/dil.d"
       // There's a package dil and a module dil.
-      auto location = getErrorLocation(newModule);
-      auto msg = Format(MSG.ConflictingModuleAndPackage, newModule.getFQN());
-      cc.diag ~= new SemanticError(location, msg);
-    }
+      return error(newModule,
+        MSG.ConflictingModuleAndPackage, newModule.getFQN());
   }
 
   /// Compares the number of imports of two modules.
@@ -174,9 +166,9 @@ class ModuleManager
   /// Returns the root package for an empty string.
   Package getPackage(string pckgFQN)
   {
-    auto hash = hashOf(pckgFQN);
-    if (auto pPckg = hash in packageTable)
-      return *pPckg;
+    auto fqnHash = hashOf(pckgFQN);
+    if (auto existingPackage = fqnHash in packageTable)
+      return *existingPackage;
 
     string prevFQN, lastPckgName;
     // E.g.: pckgFQN = 'dil.ast', prevFQN = 'dil', lastPckgName = 'ast'
@@ -189,7 +181,7 @@ class ModuleManager
     parentPckg.add(pckg); // 'dil'.add('ast')
 
     // Insert the package into the table.
-    packageTable[hash] = pckg;
+    packageTable[fqnHash] = pckg;
 
     return pckg;
   }
@@ -279,5 +271,24 @@ class ModuleManager
   {
     path = Environment.toAbsolute(path);
     return pathNormalize(path); // Remove './' and '../' parts.
+  }
+
+  /// Reports an error.
+  void error(Module modul, string errorMsg, ...)
+  {
+    auto location = getErrorLocation(modul);
+    errorMsg = Format(_arguments, _argptr, errorMsg);
+    cc.diag ~= new SemanticError(location, errorMsg);
+  }
+
+  /// Reports the error that the module was not found.
+  /// Params:
+  ///   modulePath = File path to the module.
+  ///   loc = Optional source location (from an import statement.)
+  void errorModuleNotFound(string modulePath, Location loc = null)
+  {
+    if(!loc) loc = new Location(modulePath, 0);
+    auto msg = Format(MSG.CouldntLoadModule, modulePath);
+    cc.diag ~= new LexerError(loc, msg);
   }
 }

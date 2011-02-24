@@ -180,7 +180,7 @@ static:
   auto IllegalVariadicParam = "variadic parameter cannot be ‘ref’ or ‘out’";
   auto ParamsAfterVariadic = "cannot have parameters after a variadic parameter";
   // Semantic analysis:
-  auto CouldntLoadModule = "couldn’t import module ‘{}’";
+  auto CouldntLoadModule = "couldn’t find module file ‘{}’";
   auto ConflictingModuleFiles = "module is in conflict with module ‘{}’";
   auto ConflictingModuleAndPackage = "module is in conflict with package ‘{}’";
   auto ModuleNotInPackage = "expected module to be in package ‘{}’";
