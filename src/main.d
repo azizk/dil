@@ -109,7 +109,7 @@ void main(string[] args)
     // Execute the command.
     foreach (path; filePaths)
     {
-      auto modul = new Module(path, globalCC, diag);
+      auto modul = new Module(path, globalCC);
       modul.parse();
       if (!modul.hasErrors)
       {

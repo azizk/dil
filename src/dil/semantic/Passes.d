@@ -54,7 +54,7 @@ abstract class SemanticPass : DefaultVisitor
   {
     this.modul = modul;
     this.context = context;
-    this.interp = new Interpreter(modul.diag);
+    this.interp = new Interpreter(modul.cc.diag);
   }
 
   void run()
@@ -208,24 +208,20 @@ abstract class SemanticPass : DefaultVisitor
   }
 
   /// Creates an error report.
-  void error(Token* token, char[] formatMsg, ...)
+  void error(Token* token, string formatMsg, ...)
   {
-    if (!modul.diag)
-      return;
     auto location = token.getErrorLocation(modul.filePath());
     auto msg = Format(_arguments, _argptr, formatMsg);
-    modul.diag ~= new SemanticError(location, msg);
+    modul.cc.diag ~= new SemanticError(location, msg);
   }
 
   /// ditto
-  void error(Node n, char[] formatMsg, ...)
+  void error(Node n, string formatMsg, ...)
   {
-    if (!modul.diag)
-      return;
     auto token = n.begin; // Use the begin token of this node.
     auto location = token.getErrorLocation(modul.filePath());
     auto msg = Format(_arguments, _argptr, formatMsg);
-    modul.diag ~= new SemanticError(location, msg);
+    modul.cc.diag ~= new SemanticError(location, msg);
   }
 }
 
@@ -717,10 +713,10 @@ class SecondSemanticPass : SemanticPass
 {
   Interpreter ip; /// Used to evaluate expressions.
 
-  this(Module modul, CompilationContext context)
+  this(Module modul, CompilationContext cc)
   {
-    super(modul, context);
-    this.ip = new Interpreter(modul.diag);
+    super(modul, cc);
+    this.ip = new Interpreter(modul.cc.diag);
   }
 
   /// Runs the semantic pass on the module.

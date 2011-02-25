@@ -46,7 +46,6 @@ class Module : ModuleSymbol
   uint semanticPass;
   Module[] modules; /// The imported modules.
 
-  Diagnostics diag; /// Collects error messages.
   bool failedLoading; /// True if loading the source file failed.
 
   CompilationContext cc; /// The compilation context.
@@ -62,14 +61,12 @@ class Module : ModuleSymbol
   /// Constructs a Module object.
   /// Params:
   ///   filePath = File path to the source text; loaded in the constructor.
-  ///   diag = Used for collecting error messages.
-  this(string filePath, CompilationContext cc, Diagnostics diag = null)
+  this(string filePath, CompilationContext cc)
   {
     this();
     this.cc = cc;
     this.sourceText = new SourceText(filePath);
-    this.diag = diag is null ? cc.diag : diag;
-    this.failedLoading = !this.sourceText.load(diag);
+    this.failedLoading = !this.sourceText.load(cc.diag);
   }
 
   /// Returns the file path of the source text.
@@ -103,7 +100,7 @@ class Module : ModuleSymbol
   void parse()
   {
     if (this.parser is null)
-      this.parser = new Parser(sourceText, cc.tables.lxtables, diag);
+      this.parser = new Parser(sourceText, cc.tables.lxtables, cc.diag);
 
     if (this.dlxFilePath.length)
       this.parser.lexer.fromDLXFile(cast(ubyte[])File.get(dlxFilePath));
@@ -129,7 +126,7 @@ class Module : ModuleSymbol
       {
         auto location = this.firstToken().getErrorLocation(filePath());
         auto msg = Format(MSG.InvalidModuleName, str);
-        diag ~= new LexerError(location, msg);
+        cc.diag ~= new LexerError(location, msg);
         str = idtable.genModuleID().str;
       }
       this.moduleFQN = this.moduleName = str;
@@ -178,7 +175,7 @@ class Module : ModuleSymbol
     return moduleFQN;
   }
 
-  /// Set's the module's FQN.
+  /// Sets the module's FQN.
   void setFQN(string moduleFQN)
   {
     uint i = moduleFQN.length;
@@ -201,7 +198,7 @@ class Module : ModuleSymbol
   /// E.g.: dil/ast/Node
   string getFQNPath()
   {
-    string FQNPath = moduleFQN.dup;
+    char[] FQNPath = moduleFQN.dup;
     foreach (i, c; FQNPath)
       if (c == '.')
         FQNPath[i] = dirSep;

@@ -85,7 +85,8 @@ abstract class SettingsLoader
 /// Loads the configuration file of dil.
 class ConfigLoader : SettingsLoader
 {
-  static string configFileName = "dilconf.d"; /// Name of the configuration file.
+  /// Name of the configuration file.
+  static string configFileName = "dilconf.d";
   string executablePath; /// Absolute path to dil's executable.
   string executableDir; /// Absolute path to the directory of dil's executable.
   string dataDir; /// Absolute path to dil's data directory.
@@ -148,7 +149,7 @@ class ConfigLoader : SettingsLoader
       return;
     }
     // Load the file as a D module.
-    mod = new Module(filePath, cc, diag);
+    mod = new Module(filePath, cc);
     mod.parse();
 
     if (mod.hasErrors)
@@ -208,7 +209,7 @@ class ConfigLoader : SettingsLoader
     // Load language file.
     // TODO: create a separate class for this?
     filePath = expandVariables(GlobalSettings.langFile);
-    mod = new Module(filePath, cc, diag);
+    mod = new Module(filePath, cc);
     mod.parse();
 
     if (mod.hasErrors)
@@ -276,7 +277,7 @@ class TagMapLoader : SettingsLoader
 
   string[hash_t] load(string filePath)
   {
-    mod = new Module(filePath, cc, diag);
+    mod = new Module(filePath, cc);
     mod.parse();
     if (mod.hasErrors)
       return null;

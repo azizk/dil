@@ -107,7 +107,7 @@ class Highlighter
   /// Highlights the syntax in a source file.
   void highlightSyntax(string filePath, bool printHTML, bool opt_printLines)
   {
-    auto modul = new Module(filePath, cc, cc.diag);
+    auto modul = new Module(filePath, cc);
     modul.parse();
     highlightSyntax(modul, printHTML, opt_printLines);
   }

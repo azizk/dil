@@ -115,7 +115,7 @@ struct DDocCommand
     // Process D files.
     foreach (filePath; filePaths)
     {
-      auto mod = new Module(filePath, context, diag);
+      auto mod = new Module(filePath, context);
 
       // Only parse if the file is not a "Ddoc"-file.
       if (!DDocEmitter.isDDocFile(mod))

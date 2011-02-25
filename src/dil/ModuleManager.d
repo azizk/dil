@@ -75,7 +75,7 @@ class ModuleManager
       return existingModule;
 
     // Create a new module.
-    auto newModule = new Module(moduleFilePath, cc, cc.diag);
+    auto newModule = new Module(moduleFilePath, cc);
     newModule.parse();
 
     addModule(newModule);
