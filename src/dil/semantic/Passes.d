@@ -229,7 +229,7 @@ abstract class SemanticPass : DefaultVisitor
 /// The first pass only declares symbols and handles imports.
 class FirstSemanticPass : SemanticPass
 {
-  Module delegate(string) importModule; /// Called when importing a module.
+  ImportDecl[] imports; /// Modules to be imported.
 
   // Attributes:
   LinkageType linkageType; /// Current linkage type.
@@ -363,15 +363,7 @@ override
 
   D visit(ImportDecl d)
   {
-    if (importModule is null)
-      return d;
-    foreach (moduleFQNPath; d.getModuleFQNs(dirSep))
-    {
-      auto importedModule = importModule(moduleFQNPath);
-      if (importedModule is null)
-        error(d, MSG.CouldntLoadModule, moduleFQNPath ~ ".d");
-      modul.modules ~= importedModule;
-    }
+    imports ~= d;
     return d;
   }
 

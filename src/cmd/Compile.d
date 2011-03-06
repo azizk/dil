@@ -3,17 +3,23 @@
 /// $(Maturity low)
 module cmd.Compile;
 
+import dil.ast.Declarations;
+import dil.lexer.Token;
 import dil.semantic.Module,
        dil.semantic.Package,
        dil.semantic.Pass1,
        dil.semantic.Pass2,
+       dil.semantic.Passes,
        dil.semantic.Symbol,
        dil.semantic.Symbols;
 import dil.doc.Doc;
-import dil.Compilation;
-import dil.Diagnostics;
-import dil.ModuleManager;
+import dil.Compilation,
+       dil.Diagnostics,
+       dil.ModuleManager,
+       dil.Messages;
 import common;
+
+import tango.text.Util;
 
 /// The compile command.
 struct CompileCommand
@@ -113,5 +119,145 @@ struct CompileCommand
       if (auto s = cast(ScopeSymbol)member)
         printSymbolTable(s, indent ~ "→ ");
     }
+  }
+}
+
+
+/// The compile command.
+/// NOTE: The plan is to replace CompileCommand.
+struct CompileCommand2
+{
+  /// For finding and loading modules.
+  ModuleManager mm;
+  /// Context information.
+  CompilationContext cc;
+  /// Explicitly specified modules (on the command line.)
+  string[] filePaths;
+  /// Whether to print the symbol tree.
+  bool printSymbolTree;
+  /// Whether to print the module tree.
+  bool printModuleTree;
+  /// Verbose output.
+  bool verbose;
+
+  // Format strings for logging.
+  auto LogPass1  = "pass1:  {}";
+  auto LogPass2  = "pass2:  {}";
+  auto LogDeps   = "deps:   {}";
+  auto LogLoad   = "load:   {}";
+  auto LogImport = "import: {} ({})";
+  auto LogDiags  = "diagnostics:";
+
+  /// Logs compiler activity to stdout.
+  /// Params:
+  ///  format = The format string.
+  void log(string format, ...)
+  {
+    Printfln(Format(_arguments, _argptr, format));
+  }
+
+  /// Calls logfunc only when the verbose-flag is on.
+  void lzy(lazy void logfunc)
+  {
+    if (verbose) logfunc();
+  }
+
+  /// Runs semantic pass 1 on a module. Also imports its dependencies.
+  void runPass1(Module modul)
+  {
+    if (modul.hasErrors || modul.semanticPass != 0)
+      return;
+
+    lzy(log(LogPass1, modul.getFQN()));
+
+    auto pass1 = new FirstSemanticPass(modul, cc);
+    pass1.run();
+
+    lzy({if (pass1.imports.length) log(LogDeps, modul.getFQN());}());
+
+    // Load the module's imported modules.
+    foreach (d; pass1.imports)
+      importModuleByDecl(d, modul);
+      // TODO: modul.modules ~= importedModule;
+  }
+
+  /// Runs semantic pass 2 on a module.
+  void runPass2(Module modul)
+  {
+    if (modul.hasErrors || modul.semanticPass != 1)
+      return;
+
+    lzy(log(LogPass2, modul.getFQN()));
+
+    auto pass2 = new SecondSemanticPass(modul, cc);
+    pass2.run();
+  }
+
+  /// Loads a module by its file path and runs pass 1 on it.
+  /// Params:
+  ///   filePath = E.g.: src/main.d
+  void importModuleByFile(string filePath)
+  {
+    if (mm.moduleByPath(filePath))
+      return; // The module has already been loaded.
+
+    lzy(log(LogLoad, filePath));
+
+    if (auto modul = mm.loadModuleFile(filePath))
+      runPass1(modul); // Load and run pass 1 on it.
+    else
+      mm.errorModuleNotFound(filePath);
+  }
+
+  /// Loads a module by its FQN path and runs pass 1 on it.
+  /// Params:
+  ///   modFQNPath = E.g.: dil/cmd/Compile
+  ///   fqnTok = Identifier token in the import statement.
+  ///   modul = Where the import statement is located.
+  void importModuleByFQN(string modFQNPath,
+    Token* fqnTok = null, Module modul = null)
+  {
+    if (mm.moduleByFQN(modFQNPath))
+      return; // The module has already been loaded.
+    if (auto modFilePath = mm.findModuleFile(modFQNPath))
+    {
+      lzy(log(LogImport,
+        replace(modFQNPath.dup, '/', '.'), modFilePath));
+      runPass1(mm.loadModule(modFQNPath)); // Load and run pass 1 on it.
+    }
+    else
+      mm.errorModuleNotFound(modFQNPath ~ ".d",
+        fqnTok ? fqnTok.getErrorLocation(modul.filePath()) : null);
+  }
+
+  void importModuleByDecl(ImportDecl d, Module modul)
+  {
+    foreach (i, fqnPath; d.getModuleFQNs(dirSep))
+      importModuleByFQN(fqnPath, d.moduleFQNs[i][0], modul);
+  }
+
+  /// Runs the command.
+  void run()
+  {
+    mm = new ModuleManager(cc);
+
+    // Always implicitly import "object.d".
+    importModuleByFQN("object");
+    auto objectModule = mm.moduleByFQN("object");
+    if (!objectModule)
+    {} // error
+
+    // Load modules specified on the command line.
+    foreach (filePath; filePaths)
+      importModuleByFile(filePath);
+
+    // Run pass2 on all the loaded modules.
+    foreach (m; mm.orderedModules)
+    {
+      runPass2(m);
+    }
+
+    lzy({if (cc.diag.hasInfo()) log(LogDiags);}());
+    //lzy(cc.diag.hasInfo() && log(LogDiags)); // DMD bug: void has no value
   }
 }

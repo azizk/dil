@@ -67,14 +67,17 @@ void main(string[] args)
 
   switch (command)
   {
+  case "c2":
   case "c", "compile":
     if (args.length < 3)
       return printHelp(command);
+    bool useCommand2 = command == "c2";
 
     CompileCommand cmd;
     cmd.context = globalCC;
     cmd.diag = diag;
     string value;
+    bool verbose;
 
     while (op.hasArgs())
       if (parseDebugOrVersion(op, cmd.context)) {}
@@ -88,9 +91,21 @@ void main(string[] args)
       else if (op.parse("-d", cmd.context.acceptDeprecated)) {}
       else if (op.parse("-ps", cmd.printSymbolTree)) {}
       else if (op.parse("-pm", cmd.printModuleTree)) {}
+      else if (op.parse("-v", verbose)) {}
       else cmd.filePaths ~= op.getArg();
 
-    cmd.run();
+    if (useCommand2)
+    { // Temporary code to test CompileCommand2.
+      CompileCommand2 cmd2;
+      cmd2.cc = cmd.context;
+      cmd2.filePaths = cmd.filePaths;
+      cmd2.mm = cmd.moduleMan;
+      cmd2.verbose = verbose;
+
+      cmd2.run();
+    }
+    else
+      cmd.run();
     diag.hasInfo && printErrors(diag);
     break;
   case "pytree", "py":
@@ -605,6 +620,7 @@ Options:
 
   -ps              : print the symbol tree of the modules
   -pm              : print the package/module tree
+  -v               : verbose output
 
 Example:
   dil c src/main.d -I=src/`;
