@@ -96,7 +96,7 @@ void main(string[] args)
 
     if (useCommand2)
     { // Temporary code to test CompileCommand2.
-      CompileCommand2 cmd2;
+      auto cmd2 = new CompileCommand2();
       cmd2.cc = cmd.context;
       cmd2.filePaths = cmd.filePaths;
       cmd2.mm = cmd.moduleMan;

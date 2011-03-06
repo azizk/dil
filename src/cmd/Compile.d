@@ -3,6 +3,7 @@
 /// $(Maturity low)
 module cmd.Compile;
 
+import cmd.Command;
 import dil.ast.Declarations;
 import dil.lexer.Token;
 import dil.semantic.Module,
@@ -125,7 +126,7 @@ struct CompileCommand
 
 /// The compile command.
 /// NOTE: The plan is to replace CompileCommand.
-struct CompileCommand2
+class CompileCommand2 : Command
 {
   /// For finding and loading modules.
   ModuleManager mm;
@@ -137,8 +138,6 @@ struct CompileCommand2
   bool printSymbolTree;
   /// Whether to print the module tree.
   bool printModuleTree;
-  /// Verbose output.
-  bool verbose;
 
   // Format strings for logging.
   auto LogPass1  = "pass1:  {}";
@@ -147,20 +146,6 @@ struct CompileCommand2
   auto LogLoad   = "load:   {}";
   auto LogImport = "import: {} ({})";
   auto LogDiags  = "diagnostics:";
-
-  /// Logs compiler activity to stdout.
-  /// Params:
-  ///  format = The format string.
-  void log(string format, ...)
-  {
-    Printfln(Format(_arguments, _argptr, format));
-  }
-
-  /// Calls logfunc only when the verbose-flag is on.
-  void lzy(lazy void logfunc)
-  {
-    if (verbose) logfunc();
-  }
 
   /// Runs semantic pass 1 on a module. Also imports its dependencies.
   void runPass1(Module modul)
