@@ -183,6 +183,7 @@ static:
   auto CouldntLoadModule = "couldn’t find module file ‘{}’";
   auto ConflictingModuleFiles = "module is in conflict with module ‘{}’";
   auto ConflictingModuleAndPackage = "module is in conflict with package ‘{}’";
+  auto ConflictingPackageAndModule = "package ‘{0}’ is in conflict with module ‘{0}’";
   auto ModuleNotInPackage = "expected module to be in package ‘{}’";
   auto UndefinedIdentifier = "undefined identifier ‘{}’";
   auto DeclConflictsWithDecl = "declaration ‘{}’ conflicts with declaration @{}";

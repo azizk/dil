@@ -7,9 +7,10 @@ import dil.semantic.Module,
        dil.semantic.Package,
        dil.semantic.Symbol;
 import dil.lexer.Funcs : hashOf;
-import dil.Compilation;
-import dil.Diagnostics;
-import dil.Messages;
+import dil.lexer.Token;
+import dil.Compilation,
+       dil.Diagnostics,
+       dil.Messages;
 import util.Path;
 import common;
 
@@ -17,6 +18,7 @@ import tango.io.model.IFile;
 import tango.io.Path : pathNormalize = normalize;
 import tango.core.Array : lbound, sort;
 import tango.text.Ascii : icompare;
+import tango.text.Util : replace;
 import tango.sys.Environment;
 
 alias FileConst.PathSeparatorChar dirSep;
@@ -106,13 +108,6 @@ class ModuleManager
     return modul;
   }
 
-  /// Returns the error location of the module's module declaration
-  /// or the first token in the source text.
-  Location getErrorLocation(Module m)
-  {
-    return m.getModuleDeclToken().getErrorLocation(m.filePath);
-  }
-
   /// Inserts the given module into the tables.
   void addModule(Module newModule)
   {
@@ -133,6 +128,7 @@ class ModuleManager
     newModule.ID = loadedModules.length;
     insertOrdered(newModule);
 
+    auto nrOfPckgs = packageTable.length; // Remember for error checking.
     // Add the module to its package.
     auto pckg = getPackage(newModule.packageName);
     pckg.add(newModule);
@@ -143,6 +139,22 @@ class ModuleManager
       // There's a package dil and a module dil.
       return error(newModule,
         MSG.ConflictingModuleAndPackage, newModule.getFQN());
+
+    if (nrOfPckgs != packageTable.length) // Were new packages added?
+    { // Check whether any new package is in conflict with an existing module.
+      uint i; // Used to get the exact package in a module declaration.
+      auto p = newModule.parent.to!(Package);
+      for (; p.parent; p = p.parentPackage()) // Go up until root package.
+      {
+        i++;
+        auto pckgFQN = p.getFQN(); // E.g.: dil.ast
+        auto pckgFQNPath = replace(pckgFQN.dup, '.', dirSep); // E.g.: dil/ast
+        if (hashOf(pckgFQNPath) in moduleFQNPathTable)
+          // Error: package and module share the same name.
+          return error(newModule.moduleDecl.packages[$-i], newModule,
+            MSG.ConflictingPackageAndModule, pckgFQN);
+      }
+    }
   }
 
   /// Compares the number of imports of two modules.
@@ -273,10 +285,26 @@ class ModuleManager
     return pathNormalize(path); // Remove './' and '../' parts.
   }
 
+  /// Returns the error location of the module's name
+  /// or the first token in the source text.
+  Location getErrorLocation(Module m)
+  {
+    auto name = m.moduleDecl ? m.moduleDecl.moduleName : m.firstToken();
+    return name.getErrorLocation(m.filePath);
+  }
+
   /// Reports an error.
   void error(Module modul, string errorMsg, ...)
   {
     auto location = getErrorLocation(modul);
+    errorMsg = Format(_arguments, _argptr, errorMsg);
+    cc.diag ~= new SemanticError(location, errorMsg);
+  }
+
+  /// Reports an error.
+  void error(Token* locTok, Module modul, string errorMsg, ...)
+  {
+    auto location = locTok.getErrorLocation(modul.filePath());
     errorMsg = Format(_arguments, _argptr, errorMsg);
     cc.diag ~= new SemanticError(location, errorMsg);
   }

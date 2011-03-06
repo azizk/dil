@@ -145,13 +145,6 @@ class Module : ModuleSymbol
     return parser.lexer.firstToken();
   }
 
-  /// Returns the begin token of the module declaration
-  /// or, if it doesn't exist, the first token in the source text.
-  Token* getModuleDeclToken()
-  {
-    return moduleDecl ? moduleDecl.begin : firstToken();
-  }
-
   /// Returns true if there are errors in the source file.
   bool hasErrors()
   {
