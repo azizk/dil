@@ -3,6 +3,7 @@
 /// $(Maturity high)
 module cmd.DDoc;
 
+import cmd.Command;
 import dil.doc.DDocEmitter,
        dil.doc.DDocHTML,
        dil.doc.DDocXML,
@@ -35,7 +36,7 @@ import tango.time.Clock : Clock;
 import tango.io.device.File;
 
 /// The ddoc command.
-struct DDocCommand
+class DDocCommand : Command
 {
   string destDirPath;  /// Destination directory.
   string[] macroPaths; /// Macro file paths.
@@ -50,7 +51,6 @@ struct DDocCommand
   bool writeXML;     /// Whether to write XML instead of HTML docs.
   bool writeHLFiles; /// Whether to write syntax highlighted files.
   bool rawOutput;    /// Whether to expand macros or not.
-  bool verbose;      /// Whether to be verbose.
 
   CompilationContext context; /// Environment variables of the compilation.
   Diagnostics diag;           /// Collects error messages.
@@ -123,8 +123,7 @@ struct DDocCommand
         if (mm.moduleByPath(mod.filePath()))
           continue; // The same file path was already loaded. TODO: warning?
 
-        if (verbose)
-          Stdout.formatln("Parsing: {}", mod.filePath());
+        lzy(log("Parsing: {}", mod.filePath()));
 
         mod.parse();
         if (mm.moduleByFQN(mod.getFQNPath()))
@@ -153,8 +152,7 @@ struct DDocCommand
       writeModuleLists();
     if (writeReport)
       writeDDocReport();
-    if (verbose && diag.info.length)
-      Stdout("\nDiagnostic messages:").newline;
+    lzy({if (diag.hasInfo()) log("\nDdoc diagnostic messages:");}());
   }
 
   /// Writes a syntax highlighted file for mod.
@@ -162,9 +160,8 @@ struct DDocCommand
   {
     auto filePath = Path(destDirPath);
     (filePath /= "htmlsrc") /= mod.getFQN();
-    filePath.cat(outFileExtension);
-    if (verbose)
-      Stdout.formatln("hl > {}", filePath.toString());
+    filePath ~= outFileExtension;
+    lzy(log("hl > {}", filePath.toString()));
     auto file = new File(filePath.toString(), File.WriteCreate);
     auto print = hl.print; // Save.
     hl.print = new FormatOut(Format, file); // New print object.
@@ -182,9 +179,9 @@ struct DDocCommand
     // Build destination file path.
     auto destPath = Path(destDirPath);
     (destPath /= mod.getFQN()) ~= outFileExtension;
-    // Verbose output of activity.
-    if (verbose) // TODO: create a setting for this format string in dilconf.d?
-      Stdout.formatln("ddoc > {}", destPath);
+
+    // TODO: create a setting for this format string in dilconf.d?
+    lzy(log("ddoc > {}", destPath));
 
     // Create an own macro environment for this module.
     mtable = new MacroTable(mtable);
@@ -387,7 +384,7 @@ version(unused)
   }
 
   /// Used for collecting data for the report.
-  class ModuleData
+  static class ModuleData
   {
     string name; /// Module name.
     DDocProblem[] kind1, kind2, kind3, kind4;

@@ -146,7 +146,7 @@ void main(string[] args)
     if (args.length < 4)
       return printHelp(command);
 
-    DDocCommand cmd;
+    auto cmd = new DDocCommand();
     cmd.destDirPath = op.getArg();
     cmd.context = globalCC;
     cmd.diag = diag;
