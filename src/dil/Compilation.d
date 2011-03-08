@@ -15,6 +15,7 @@ class CompilationContext
   alias typeof(this) CC;
   CC parent;
   string[] importPaths; /// Import paths.
+  string[] includePaths; /// String include paths.
   uint debugLevel; /// The debug level.
   uint versionLevel; /// The version level.
   string[hash_t] debugIds; /// Set of debug identifiers.
@@ -28,6 +29,9 @@ class CompilationContext
 
   Diagnostics diag; /// Diagnostics object.
 
+  /// Constructs a CompilationContext object.
+  /// Params:
+  ///   parent = Optional parent object. Members are copied or inherited.
   this(CC parent = null)
   {
     this.parent = parent;
@@ -37,6 +41,7 @@ class CompilationContext
     else
     {
       this.importPaths = parent.importPaths.dup;
+      this.includePaths = parent.includePaths.dup;
       this.debugLevel = parent.debugLevel;
       this.versionLevel = parent.versionLevel;
       this.releaseBuild = parent.releaseBuild;

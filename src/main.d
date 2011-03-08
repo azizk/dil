@@ -83,6 +83,8 @@ void main(string[] args)
       if (parseDebugOrVersion(op, cmd.context)) {}
       else if (op.parse("-I", value))
         cmd.context.importPaths ~= value;
+      else if (op.parse("-J", value))
+        cmd.context.includePaths ~= value;
       else if (op.parse("-release", cmd.context.releaseBuild)) {}
       else if (op.parse("-unittest", cmd.context.unittestBuild)) {
       version(D2)
@@ -613,6 +615,7 @@ Options:
   -version=level   : include version(l) code where l >= level
   -version=ident   : include version(ident) code
   -I=PATH          : add PATH to the list of import paths
+  -J=PATH          : add PATH to the list of string import paths
   -release         : compile a release build
   -unittest        : compile a unittest build
   -x86             : emit 32 bit code (default)
