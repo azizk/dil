@@ -69,7 +69,7 @@ void main(string[] args)
   {
   case "c2":
   case "c", "compile":
-    if (args.length < 3)
+    if (!op.hasArgs())
       return printHelp(command);
     bool useCommand2 = command == "c2";
 
@@ -109,7 +109,7 @@ void main(string[] args)
     diag.hasInfo && printErrors(diag);
     break;
   case "pytree", "py":
-    if (args.length < 4)
+    if (op.argv.length < 2)
       return printHelp(command);
     auto dest = Path(op.getArg());
     string[] filePaths;
@@ -143,7 +143,7 @@ void main(string[] args)
     diag.hasInfo && printErrors(diag);
     break;
   case "ddoc", "d":
-    if (args.length < 4)
+    if (op.argv.length < 2)
       return printHelp(command);
 
     auto cmd = new DDocCommand();
@@ -182,7 +182,7 @@ void main(string[] args)
     diag.hasInfo && printErrors(diag);
     break;
   case "hl", "highlight":
-    if (args.length < 3)
+    if (!op.hasArgs())
       return printHelp(command);
 
     auto cmd = new HighlightCommand();
@@ -214,7 +214,7 @@ void main(string[] args)
     diag.hasInfo && printErrors(diag);
     break;
   case "importgraph", "igraph":
-    if (args.length < 3)
+    if (!op.hasArgs())
       return printHelp(command);
 
     auto cmd = new IGraphCommand();
@@ -255,7 +255,7 @@ void main(string[] args)
     cmd.run();
     break;
   case "stats", "statistics":
-    if (args.length < 3)
+    if (!op.hasArgs())
       return printHelp(command);
 
     auto cmd = new StatsCommand();
@@ -269,7 +269,7 @@ void main(string[] args)
     cmd.run();
     break;
   case "tok", "tokenize":
-    if (args.length < 3)
+    if (!op.hasArgs())
       return printHelp(command);
     SourceText sourceText;
     string srcFilePath;
@@ -305,7 +305,7 @@ void main(string[] args)
     diag.hasInfo && printErrors(diag);
     break;
   case "dlexed", "dlx":
-    if (args.length < 3)
+    if (!op.hasArgs())
       return printHelp(command);
     SourceText sourceText;
     string srcFilePath, outFilePath;
@@ -341,11 +341,12 @@ void main(string[] args)
 
     break;
   case "trans", "translate":
-    if (args.length < 3)
+    if (!op.hasArgs())
       return printHelp(command);
 
     if (args[2] != "German")
-      return Stdout.formatln("Error: unrecognized target language \"{}\"", args[2]);
+      return Stdout.formatln(
+        "Error: unrecognized target language ‘{}’", args[2]);
 
     auto filePath = args[3];
     auto mod = new Module(filePath, globalCC);
@@ -359,7 +360,7 @@ void main(string[] args)
     printErrors(diag);
     break;
   case "profile":
-    if (args.length < 3)
+    if (!op.hasArgs())
       break;
     string[] filePaths;
     if (args[2] == "dstress")
@@ -689,7 +690,8 @@ Example:
     break;
   case "importgraph", "igraph":
 //     msg = GetMsg(MID.HelpImportGraph);
-    msg = `Parse a module and build a module dependency graph based on its imports.
+    msg =
+`Parse a module and build a module dependency graph based on its imports.
 Usage:
   dil i[mport]graph file.d Format [Options]
 
