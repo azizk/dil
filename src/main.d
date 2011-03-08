@@ -415,8 +415,8 @@ void main(string[] args)
           "PARSER_ERROR", "SEMANTIC_ERROR", "TAB_WIDTH"])
         Stdout.formatln("{}={}", name, settings[name]);
     break;
-  case "?", "help":
-    printHelp(args.length >= 3 ? args[2] : "");
+  case "?", "h", "help":
+    printHelp(op.hasArgs() ? op.getArg() : "");
     break;
   case "-v", "v", "--version", "version":
     Stdout(VERSION).newline;
@@ -782,7 +782,7 @@ Usage:
 Example:
   dil set import_paths datadir";
     break;
-  case "?", "help":
+  case "?", "h", "help":
     msg = "Gives help on a particular subcommand.
 Usage:
   dil help subcommand
