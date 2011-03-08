@@ -3,7 +3,8 @@
 /// $(Maturity average)
 module cmd.Statistics;
 
-import cmd.ASTStats;
+import cmd.Command,
+       cmd.ASTStats;
 import dil.lexer.Lexer,
        dil.lexer.Token;
 import dil.parser.Parser;
@@ -13,7 +14,7 @@ import dil.SourceText;
 import common;
 
 /// The statistics comman.
-struct StatsCommand
+class StatsCommand : Command
 {
   string[] filePaths; /// Module file paths.
   bool printTokensTable; /// Whether to print the tokens table.

@@ -185,7 +185,7 @@ void main(string[] args)
     if (args.length < 3)
       return printHelp(command);
 
-    HighlightCommand cmd;
+    auto cmd = new HighlightCommand();
     cmd.cc = globalCC;
     cmd.diag = diag;
 
@@ -217,7 +217,7 @@ void main(string[] args)
     if (args.length < 3)
       return printHelp(command);
 
-    IGraphCommand cmd;
+    auto cmd = new IGraphCommand();
     cmd.context = globalCC;
     string value;
 
@@ -258,7 +258,7 @@ void main(string[] args)
     if (args.length < 3)
       return printHelp(command);
 
-    StatsCommand cmd;
+    auto cmd = new StatsCommand();
     cmd.cc = globalCC;
 
     while (op.hasArgs())

@@ -3,6 +3,7 @@
 /// $(Maturity average)
 module cmd.ImportGraph;
 
+import cmd.Command;
 import dil.ast.Node,
        dil.ast.Declarations;
 import dil.semantic.Module,
@@ -24,7 +25,7 @@ import tango.io.model.IFile;
 alias FileConst.PathSeparatorChar dirSep;
 
 /// The importgraph command.
-struct IGraphCommand
+class IGraphCommand : Command
 {
   /// Options for the command.
   enum Option

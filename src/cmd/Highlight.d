@@ -3,6 +3,7 @@
 /// $(Maturity average)
 module cmd.Highlight;
 
+import cmd.Command;
 import dil.Highlighter;
 import dil.Diagnostics;
 import dil.Compilation;
@@ -13,7 +14,7 @@ import common;
 import tango.io.device.File;
 
 /// The highlight command.
-struct HighlightCommand
+class HighlightCommand : Command
 {
   /// Options for the command.
   enum Option
