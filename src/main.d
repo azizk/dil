@@ -56,7 +56,7 @@ void main(string[] args)
   auto globalCC = newCompilationContext();
   auto diag = globalCC.diag;
   ConfigLoader(globalCC, diag, args[0]).load();
-  if (diag.hasInfo)
+  if (diag.hasInfo())
     return printErrors(diag);
 
   if (args.length <= 1)
@@ -109,7 +109,7 @@ void main(string[] args)
     }
     else
       cmd.run();
-    diag.hasInfo && printErrors(diag);
+    diag.hasInfo() && printErrors(diag);
     break;
   case "pytree", "py":
     if (op.argv.length < 2)
@@ -155,7 +155,7 @@ void main(string[] args)
 
     cmd.run();
 
-    diag.hasInfo && printErrors(diag);
+    diag.hasInfo() && printErrors(diag);
     break;
   case "ddoc", "d":
     if (op.argv.length < 2)
@@ -194,7 +194,7 @@ void main(string[] args)
     }
 
     cmd.run();
-    diag.hasInfo && printErrors(diag);
+    diag.hasInfo() && printErrors(diag);
     break;
   case "hl", "highlight":
     if (!op.hasArgs())
@@ -226,7 +226,7 @@ void main(string[] args)
     }
 
     cmd.run();
-    diag.hasInfo && printErrors(diag);
+    diag.hasInfo() && printErrors(diag);
     break;
   case "importgraph", "igraph":
     if (!op.hasArgs())
@@ -330,7 +330,7 @@ void main(string[] args)
 
     cmd.run();
 
-    diag.hasInfo && printErrors(diag);
+    diag.hasInfo() && printErrors(diag);
     break;
   case "dlexed", "dlx":
     if (!op.hasArgs())
@@ -376,7 +376,7 @@ void main(string[] args)
 
     cmd.run();
 
-    diag.hasInfo && printErrors(diag);
+    diag.hasInfo() && printErrors(diag);
     break;
   case "trans", "translate":
     if (!op.hasArgs())
