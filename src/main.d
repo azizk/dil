@@ -62,8 +62,7 @@ void main(string[] args)
   if (args.length <= 1)
     return printHelp("main");
 
-  OptParser op;
-  op.argv = args[2..$];
+  auto op = new OptParser(args[2..$]);
   string command = args[1];
 
   switch (command)
@@ -466,9 +465,71 @@ void main(string[] args)
 }
 
 /// A command line option parser.
-struct OptParser
+class OptParser
 {
   string[] argv; /// The argument vector.
+  bool delegate()[] parseDgs; /// Option parsing delegates.
+  string error; /// Holds the error message if an error occurred.
+
+  /// Constructs an OptParser object.
+  this(string[] argv)
+  {
+    this.argv = argv;
+  }
+
+  /// Parses all arguments.
+  bool parseArgs()
+  {
+    string[] remArgs; // Remaining arguments.
+    while (hasArgs())
+    {
+      auto n = argv.length; // Remember number of args.
+      foreach (parseOption; parseDgs)
+        if (!hasArgs() || parseOption())
+          break;
+        else if (error)
+          goto Lerr;
+      if (argv.length == n) // No arguments consumed?
+        remArgs ~= getArg(); // Append to remaining args.
+    }
+    argv = remArgs;
+    return true;
+  Lerr:
+    argv = remArgs ~ argv;
+    return false;
+  }
+
+  /// Adds a parser delegate.
+  void add(bool delegate() parseDg)
+  {
+    parseDgs ~= parseDg;
+  }
+
+  /// Adds an option with a string argument.
+  void add(string param, ref string out_arg)
+  {
+    auto o = new class { // Make a closure.
+      OptParser op; string param; string* out_arg;
+      bool parse() { return op.parse(param, *out_arg); }
+    };
+    o.op = this;
+    o.param = param;
+    o.out_arg = &out_arg;
+    add(&o.parse);
+  }
+
+  /// Adds a boolean flag option.
+  void add(string flag, ref bool out_arg)
+  {
+    auto o = new class { // Make a closure.
+      OptParser op; string flag; bool* out_arg;
+      bool parse() { return op.parse(flag, *out_arg); }
+    };
+    o.op = this;
+    o.flag = flag;
+    o.out_arg = &out_arg;
+    add(&o.parse);
+  }
 
   /// Parses a parameter.
   bool parse(string param, ref string out_arg)
@@ -496,6 +557,7 @@ struct OptParser
     }
     return false;
   Lerr:
+    error = Format("missing argument for option ‘{}’", param);
     return false;
   }
 
