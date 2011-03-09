@@ -79,22 +79,20 @@ void main(string[] args)
     string value;
     bool verbose;
 
-    while (op.hasArgs())
-      if (parseDebugOrVersion(op, cmd.context)) {}
-      else if (op.parse("-I", value))
-        cmd.context.importPaths ~= value;
-      else if (op.parse("-J", value))
-        cmd.context.includePaths ~= value;
-      else if (op.parse("-release", cmd.context.releaseBuild)) {}
-      else if (op.parse("-unittest", cmd.context.unittestBuild)) {
+    op.add({ return parseDebugOrVersion(op, cmd.context); });
+    op.add("-I", value, { cmd.context.importPaths ~= value; });
+    op.add("-J", value, { cmd.context.includePaths ~= value; });
+    op.add("-release", cmd.context.releaseBuild);
+    op.add("-unittest", cmd.context.unittestBuild, {
       version(D2)
         cmd.context.addVersionId("unittest");
-      }
-      else if (op.parse("-d", cmd.context.acceptDeprecated)) {}
-      else if (op.parse("-ps", cmd.printSymbolTree)) {}
-      else if (op.parse("-pm", cmd.printModuleTree)) {}
-      else if (op.parse("-v", verbose)) {}
-      else cmd.filePaths ~= op.getArg();
+    });
+    op.add("-d", cmd.context.acceptDeprecated);
+    op.add("-ps", cmd.printSymbolTree);
+    op.add("-pm", cmd.printModuleTree);
+    op.add("-v", verbose);
+    op.parseArgs();
+    cmd.filePaths = op.argv; // Remaining arguments are file paths.
 
     if (useCommand2)
     { // Temporary code to test CompileCommand2.
@@ -147,10 +145,10 @@ void main(string[] args)
     cmd.dest = Path(op.getArg());
     cmd.cc = globalCC;
 
-    while (op.hasArgs())
-      if (op.parse("--fmt", cmd.format)) {}
-      else if (op.parse("-v", cmd.verbose)) {}
-      else cmd.filePaths ~= op.getArg();
+    op.add("--fmt", cmd.format);
+    op.add("-v", cmd.verbose);
+    op.parseArgs();
+    cmd.filePaths = op.argv; // Remaining arguments are file paths.
 
     cmd.run();
 
@@ -167,30 +165,23 @@ void main(string[] args)
     string value;
 
     // Parse arguments.
-    while (op.hasArgs())
-    {
-      if (parseDebugOrVersion(op, cmd.context)) {}
-      else if (op.parse("--xml", cmd.writeXML)) {}
-      else if (op.parse("--raw", cmd.rawOutput)) {}
-      else if (op.parse("-hl", cmd.writeHLFiles)) {}
-      else if (op.parse("-i", cmd.includeUndocumented)) {}
-      else if (op.parse("--inc-private", cmd.includePrivate)) {}
-      else if (op.parse("-v", cmd.verbose)) {}
-      else if (op.parse("--kandil", cmd.useKandil)) {}
-      else if (op.parse("--report", cmd.writeReport)) {}
-      else if (op.parse("-rx", value))
-        cmd.regexps ~= new Regex(value);
-      else if (op.parse("-m", value))
-        cmd.modsTxtPath = value;
+    op.add({ return parseDebugOrVersion(op, cmd.context); });
+    op.add("--xml", cmd.writeXML);
+    op.add("--raw", cmd.rawOutput);
+    op.add("-hl", cmd.writeHLFiles);
+    op.add("-i", cmd.includeUndocumented);
+    op.add("--inc-private", cmd.includePrivate);
+    op.add("-v", cmd.verbose);
+    op.add("--kandil", cmd.useKandil);
+    op.add("--report", cmd.writeReport);
+    op.add("-rx", value, { cmd.regexps ~= new Regex(value); });
+    op.add("-m", cmd.modsTxtPath);
+    op.parseArgs();
+    foreach (arg; op.argv)
+      if (arg.length > 6 && icompare(arg[$-5..$], ".ddoc") == 0)
+        cmd.macroPaths ~= arg;
       else
-      {
-        auto arg = op.getArg();
-        if (arg.length > 6 && icompare(arg[$-5..$], ".ddoc") == 0)
-          cmd.macroPaths ~= arg;
-        else
-          cmd.filePaths ~= arg;
-      }
-    }
+        cmd.filePaths ~= arg;
 
     cmd.run();
     diag.hasInfo() && printErrors(diag);
@@ -203,26 +194,19 @@ void main(string[] args)
     cmd.cc = globalCC;
     cmd.diag = diag;
 
-    while (op.hasArgs())
-    {
-      auto arg = op.getArg();
-      switch (arg)
-      {
-      case "--syntax":
-        cmd.add(HighlightCommand.Option.Syntax); break;
-      case "--xml":
-        cmd.add(HighlightCommand.Option.XML); break;
-      case "--html":
-        cmd.add(HighlightCommand.Option.HTML); break;
-      case "--lines":
-        cmd.add(HighlightCommand.Option.PrintLines); break;
-      default:
-        if (!cmd.filePathSrc)
-          cmd.filePathSrc = arg;
-        else
-          cmd.filePathDest = arg;
-      }
-    }
+    bool dummy;
+    alias HighlightCommand.Option HO;
+
+    op.add("--syntax", dummy, { cmd.add(HO.Syntax); });
+    op.add("--xml", dummy, { cmd.add(HO.XML); });
+    op.add("--html", dummy, { cmd.add(HO.HTML); });
+    op.add("--lines", dummy, { cmd.add(HO.PrintLines); });
+    op.parseArgs();
+    foreach (arg; op.argv)
+      if (!cmd.filePathSrc)
+        cmd.filePathSrc = arg;
+      else
+        cmd.filePathDest = arg;
 
     cmd.run();
     diag.hasInfo() && printErrors(diag);
@@ -233,40 +217,31 @@ void main(string[] args)
 
     auto cmd = new IGraphCommand();
     cmd.context = globalCC;
-    string value;
 
-    while (op.hasArgs())
-    {
-      if (parseDebugOrVersion(op, cmd.context)) {}
-      else if (op.parse("-I", value))
-        cmd.context.importPaths ~= value;
-      else if (op.parse("-x", value))
-        cmd.regexps ~= value;
-      else if (op.parse("-l", value))
-        cmd.levels = Integer.toInt(value);
-      else if (op.parse("-si", value))
-        cmd.siStyle = value;
-      else if (op.parse("-pi", value))
-        cmd.piStyle = value;
-      else
-        switch (value = op.getArg())
-        {
-          alias IGraphCommand.Option O;
-        case "--dot":   cmd.add(O.PrintDot); break;
-        case "--paths": cmd.add(O.PrintPaths); break;
-        case "--list":  cmd.add(O.PrintList); break;
-        case "--hle":   cmd.add(O.HighlightCyclicEdges); break;
-        case "--hlv":   cmd.add(O.HighlightCyclicVertices); break;
-        case "--gbp":   cmd.add(O.GroupByPackageNames); break;
-        case "--gbf":   cmd.add(O.GroupByFullPackageName); break;
-        case "-i":      cmd.add(O.IncludeUnlocatableModules); break;
-        case "-m":      cmd.add(O.MarkCyclicModules); break;
-        default:
-          cmd.filePath = value;
-        }
-    }
+    string value;
+    bool dummy;
+    alias IGraphCommand.Option IO;
+
+    op.add({ return parseDebugOrVersion(op, cmd.context); });
+    op.add("-I", value, { cmd.context.importPaths ~= value; });
+    op.add("-x", value, { cmd.regexps ~= value; });
+    op.add("-l", value, { cmd.levels = Integer.toInt(value); });
+    op.add("-si", value, { cmd.siStyle = value; });
+    op.add("-pi", value, { cmd.piStyle = value; });
+    op.add("--dot", dummy,   { cmd.add(IO.PrintDot); });
+    op.add("--paths", dummy, { cmd.add(IO.PrintPaths); });
+    op.add("--list", dummy,  { cmd.add(IO.PrintList); });
+    op.add("--hle", dummy,   { cmd.add(IO.HighlightCyclicEdges); });
+    op.add("--hlv", dummy,   { cmd.add(IO.HighlightCyclicVertices); });
+    op.add("--gbp", dummy,   { cmd.add(IO.GroupByPackageNames); });
+    op.add("--gbf", dummy,   { cmd.add(IO.GroupByFullPackageName); });
+    op.add("-i", dummy,      { cmd.add(IO.IncludeUnlocatableModules); });
+    op.add("-m", dummy,      { cmd.add(IO.MarkCyclicModules); });
+    op.add({ cmd.filePath = value; return true; });
+    op.parseArgs();
 
     cmd.run();
+    diag.hasInfo() && printErrors(diag);
     break;
   case "stats", "statistics":
     if (!op.hasArgs())
@@ -275,10 +250,10 @@ void main(string[] args)
     auto cmd = new StatsCommand();
     cmd.cc = globalCC;
 
-    while (op.hasArgs())
-      if (op.parse("--toktable", cmd.printTokensTable)) {}
-      else if (op.parse("--asttable", cmd.printNodesTable)) {}
-      else cmd.filePaths ~= op.getArg();
+    op.add("--toktable", cmd.printTokensTable);
+    op.add("--asttable", cmd.printNodesTable);
+    op.parseArgs();
+    cmd.filePaths = op.argv;
 
     cmd.run();
     break;
@@ -320,12 +295,15 @@ void main(string[] args)
     auto cmd = new TokenizeCommand();
     cmd.cc = globalCC;
 
-    while (op.hasArgs())
-      if (op.parse("-s", cmd.separator)) {}
-      else if (op.parse("-", cmd.fromStdin)) {}
-      else if (op.parse("-i", cmd.ignoreWSToks)) {}
-      else if (op.parse("-ws", cmd.printWS)) {}
-      else cmd.srcFilePath = op.getArg();
+    op.add("-s", cmd.separator);
+    op.add("-", cmd.fromStdin);
+    op.add("-i", cmd.ignoreWSToks);
+    op.add("-ws", cmd.printWS);
+    op.add({ cmd.srcFilePath = op.getArg(); return true; });
+    op.parseArgs();
+
+    if (op.error)
+      return printUsageError(op);
 
     cmd.run();
 
@@ -368,10 +346,10 @@ void main(string[] args)
     auto cmd = new SerializeCommand();
     cmd.cc = globalCC;
 
-    while (op.hasArgs())
-      if (op.parse("-", cmd.fromStdin)) {}
-      else if (op.parse("-o", cmd.outFilePath)) {}
-      else cmd.srcFilePath = op.getArg();
+    op.add("-", cmd.fromStdin);
+    op.add("-o", cmd.outFilePath);
+    op.add({ cmd.srcFilePath = op.getArg(); return true; });
+    op.parseArgs();
 
     cmd.run();
 
@@ -593,6 +571,12 @@ class OptParser
     consume(1);
     return arg;
   }
+}
+
+/// Prints a command usage error.
+void printUsageError(OptParser op)
+{
+  Printfln("Usage error:\n  {}", op.error);
 }
 
 /// Reads the standard input and returns its contents.
