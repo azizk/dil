@@ -302,8 +302,11 @@ void main(string[] args)
 
         auto lx = new Lexer(sourceText, cc.tables.lxtables, cc.diag);
         lx.scanAll();
-        auto token = lx.firstToken();
 
+        if (cc.diag.hasInfo())
+          return;
+
+        auto token = lx.firstToken();
         for (; token.kind != TOK.EOF; token = token.next)
         {
           if (token.kind == TOK.Newline || ignoreWSToks && token.isWhitespace)
@@ -332,38 +335,48 @@ void main(string[] args)
   case "dlexed", "dlx":
     if (!op.hasArgs())
       return printHelp(command);
-    SourceText sourceText;
-    string srcFilePath, outFilePath;
-    bool fromStdin;
 
-    while (op.hasArgs())
-      if (op.parse("-", fromStdin)) {}
-      else if (op.parse("-o", outFilePath)) {}
-      else srcFilePath = op.getArg();
-
-    sourceText = fromStdin ?
-      new SourceText("stdin", readStdin()) :
-      new SourceText(srcFilePath, true);
-
-    diag = new Diagnostics();
-    auto lx = new Lexer(sourceText, globalCC.tables.lxtables, diag);
-    lx.scanAll();
-
-    if (lx.errors.length || diag.hasInfo)
-      printErrors(diag);
-    else
+    class SerializeCommand : Command
     {
-      auto data = TokenSerializer.serialize(lx.firstToken());
-      if (outFilePath.length)
+      CompilationContext cc;
+      string srcFilePath, outFilePath;
+      bool fromStdin;
+
+      void run()
       {
-        scope file = new File(outFilePath, File.WriteCreate);
-        file.write(data);
-        file.close();
+        auto sourceText = fromStdin ?
+          new SourceText("stdin", readStdin()) :
+          new SourceText(srcFilePath, true);
+
+        auto lx = new Lexer(sourceText, cc.tables.lxtables, cc.diag);
+        lx.scanAll();
+
+        if (cc.diag.hasInfo())
+          return;
+
+        auto data = TokenSerializer.serialize(lx.firstToken());
+        if (outFilePath.length)
+        {
+          scope file = new File(outFilePath, File.WriteCreate);
+          file.write(data);
+          file.close();
+        }
+        else
+          Stdout(cast(string)data);
       }
-      else
-        Stdout(cast(string)data);
     }
 
+    auto cmd = new SerializeCommand();
+    cmd.cc = globalCC;
+
+    while (op.hasArgs())
+      if (op.parse("-", cmd.fromStdin)) {}
+      else if (op.parse("-o", cmd.outFilePath)) {}
+      else cmd.srcFilePath = op.getArg();
+
+    cmd.run();
+
+    diag.hasInfo && printErrors(diag);
     break;
   case "trans", "translate":
     if (!op.hasArgs())
