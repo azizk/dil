@@ -23,7 +23,7 @@ import common;
 import tango.text.Util;
 
 /// The compile command.
-struct CompileCommand
+class CompileCommand : Command
 {
   string[] filePaths; /// Explicitly specified modules (on the command line.)
   bool printSymbolTree; /// Whether to print the symbol tree.

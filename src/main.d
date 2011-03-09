@@ -73,11 +73,10 @@ void main(string[] args)
       return printHelp(command);
     bool useCommand2 = command == "c2";
 
-    CompileCommand cmd;
+    auto cmd = new CompileCommand();
     cmd.context = globalCC;
     cmd.diag = diag;
     string value;
-    bool verbose;
 
     op.add({ return parseDebugOrVersion(op, cmd.context); });
     op.add("-I", value, { cmd.context.importPaths ~= value; });
@@ -90,22 +89,23 @@ void main(string[] args)
     op.add("-d", cmd.context.acceptDeprecated);
     op.add("-ps", cmd.printSymbolTree);
     op.add("-pm", cmd.printModuleTree);
-    op.add("-v", verbose);
+    op.add("-v", cmd.verbose);
     op.parseArgs();
     cmd.filePaths = op.argv; // Remaining arguments are file paths.
 
+    Command cmd_ = cmd;
     if (useCommand2)
     { // Temporary code to test CompileCommand2.
       auto cmd2 = new CompileCommand2();
       cmd2.cc = cmd.context;
       cmd2.filePaths = cmd.filePaths;
       cmd2.mm = cmd.moduleMan;
-      cmd2.verbose = verbose;
-
-      cmd2.run();
+      cmd2.verbose = cmd.verbose;
+      cmd_ = cmd2;
     }
-    else
-      cmd.run();
+
+    cmd_.run();
+
     diag.hasInfo() && printErrors(diag);
     break;
   case "pytree", "py":
