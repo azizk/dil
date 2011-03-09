@@ -506,28 +506,32 @@ class OptParser
   }
 
   /// Adds an option with a string argument.
-  void add(string param, ref string out_arg)
+  void add(string param, ref string out_arg, void delegate() cb = null)
   {
     auto o = new class { // Make a closure.
-      OptParser op; string param; string* out_arg;
-      bool parse() { return op.parse(param, *out_arg); }
+      OptParser op; string param; string* out_arg; void delegate() cb;
+      bool parse()
+      { return op.parse(param, *out_arg) && (cb && cb(), true); }
     };
     o.op = this;
     o.param = param;
     o.out_arg = &out_arg;
+    o.cb = cb;
     add(&o.parse);
   }
 
   /// Adds a boolean flag option.
-  void add(string flag, ref bool out_arg)
+  void add(string flag, ref bool out_arg, void delegate() cb = null)
   {
     auto o = new class { // Make a closure.
-      OptParser op; string flag; bool* out_arg;
-      bool parse() { return op.parse(flag, *out_arg); }
+      OptParser op; string flag; bool* out_arg; void delegate() cb;
+      bool parse()
+      { return op.parse(flag, *out_arg) && (cb && cb(), true); }
     };
     o.op = this;
     o.flag = flag;
     o.out_arg = &out_arg;
+    o.cb = cb;
     add(&o.parse);
   }
 
