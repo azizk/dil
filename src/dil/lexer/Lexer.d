@@ -120,7 +120,7 @@ class Lexer
       break;
     case TOK.CharLiteral: // May have escape sequences.
       this.p = t.start;
-      scanCharacterLiteral(*t);
+      scanCharacterLiteral(t);
       break;
     case TOK.String: // Escape sequences; token strings; etc.
       this.p = t.start;
@@ -128,29 +128,29 @@ class Lexer
       switch (c)
       {
       case chars_r:
-        ++this.p, scanRawStringLiteral(*t); break;
+        ++this.p, scanRawStringLiteral(t); break;
       case chars_x:
-        scanHexStringLiteral(*t); break;
+        scanHexStringLiteral(t); break;
       version(D2)
       {
       case chars_q:
-        scanDelimitedStringLiteral(*t); break;
+        scanDelimitedStringLiteral(t); break;
       case chars_q2:
-        scanTokenStringLiteral(*t); break;
+        scanTokenStringLiteral(t); break;
       }
       default:
       }
       switch (*p)
       {
       case '`':
-        scanRawStringLiteral(*t); break;
+        scanRawStringLiteral(t); break;
       case '"':
-        scanNormalStringLiteral(*t); break;
+        scanNormalStringLiteral(t); break;
       version(D2)
       {}
       else { // Only in D1.
       case '\\':
-        scanEscapeStringLiteral(*t); break;
+        scanEscapeStringLiteral(t); break;
       }
       default:
       }
@@ -167,7 +167,7 @@ class Lexer
       break;
     case TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64:
       this.p = t.start;
-      scanNumber(*t); // Complicated. Let the method handle this.
+      scanNumber(t); // Complicated. Let the method handle this.
       break;
     case TOK.Float32, TOK.Float64, TOK.Float80,
          TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
@@ -176,7 +176,7 @@ class Lexer
       break;
     case TOK.HashLine:
       this.p = t.start;
-      scanSpecialTokenSequence(*t); // Complicated. Let the method handle this.
+      scanSpecialTokenSequence(t); // Complicated. Let the method handle this.
       break;
     case TOK.Shebang, TOK.Empty: // Whitespace tokens.
       t.setWhitespaceFlag();
@@ -258,7 +258,7 @@ class Lexer
   }
 
   /// Sets the value of the special token.
-  void finalizeSpecialToken(ref Token t)
+  void finalizeSpecialToken(Token* t)
   {
     assert(t.text[0..2] == "__");
     char[] str;
@@ -316,7 +316,7 @@ class Lexer
     else if (t !is this.tail)
     { // Create a new token and pass it to the main scan() method.
       Token* new_t = new Token;
-      scan(*new_t);
+      scan(new_t);
       new_t.prev = t; // Link the token in.
       t.next = new_t;
       t = new_t;
@@ -471,7 +471,7 @@ class Lexer
   /// The main method which recognizes the characters that make up a token.
   ///
   /// Complicated tokens are scanned in separate methods.
-  public void scan(ref Token t)
+  public void scan(Token* t)
   in
   {
     assert(text.ptr <= p && p < end);
@@ -543,7 +543,7 @@ class Lexer
           finalizeSpecialToken(t);
         else if (kind == TOK.EOF)
         {
-          tail = &t;
+          tail = t;
           assert(t.text == "__EOF__");
         }
         else
@@ -823,7 +823,7 @@ class Lexer
       {
         assert(isEOF(*p), ""~*p);
         kind = TOK.EOF;
-        tail = &t;
+        tail = t;
         assert(t.start == p);
         goto Lreturn;
       }
@@ -925,7 +925,7 @@ class Lexer
 
   /// An alternative scan method.
   /// Profiling shows it's a bit slower.
-  public void scan_(ref Token t)
+  public void scan_(Token* t)
   in
   {
     assert(text.ptr <= p && p < end);
@@ -987,7 +987,7 @@ class Lexer
         finalizeSpecialToken(t);
       else if (kind == TOK.EOF)
       {
-        tail = &t;
+        tail = t;
         assert(t.text == "__EOF__");
       }
       else
@@ -1131,7 +1131,7 @@ class Lexer
     {
       assert(isEOF(*p), *p~"");
       kind = TOK.EOF;
-      tail = &t;
+      tail = t;
       assert(t.start == p);
       goto Lreturn;
     }
@@ -1175,7 +1175,7 @@ class Lexer
   /// Scans a block comment.
   ///
   /// $(BNF BlockComment := "/*" AnyChar* "*/")
-  void scanBlockComment(ref Token t)
+  void scanBlockComment(Token* t)
   {
     auto p = this.p;
     assert(p[-1] == '/' && *p == '*');
@@ -1221,7 +1221,7 @@ class Lexer
   /// Scans a nested comment.
   ///
   /// $(BNF NestedComment := "/+" (NestedComment | AnyChar)* "+/")
-  void scanNestedComment(ref Token t)
+  void scanNestedComment(Token* t)
   {
     auto p = this.p;
     assert(p[-1] == '/' && *p == '+');
@@ -1295,7 +1295,7 @@ class Lexer
   /// Scans a normal string literal.
   ///
   /// $(BNF NormalStringLiteral := '"' (EscapeSequence | AnyChar)* '"')
-  void scanNormalStringLiteral(ref Token t)
+  void scanNormalStringLiteral(Token* t)
   {
     auto p = this.p;
     assert(*p == '"');
@@ -1363,7 +1363,7 @@ class Lexer
   /// Scans an escape string literal.
   ///
   /// $(BNF EscapeStringLiteral := EscapeSequence+ )
-  void scanEscapeStringLiteral(ref Token t)
+  void scanEscapeStringLiteral(Token* t)
   {
     assert(*p == '\\');
     char[] value;
@@ -1384,7 +1384,7 @@ class Lexer
   /// Scans a character literal.
   ///
   /// $(BNF CharLiteral := "'" (EscapeSequence | AnyChar) "'")
-  void scanCharacterLiteral(ref Token t)
+  void scanCharacterLiteral(Token* t)
   {
     assert(*p == '\'');
     ++p;
@@ -1418,7 +1418,7 @@ class Lexer
   /// Scans a raw string literal.
   ///
   /// $(BNF RawStringLiteral := 'r"' AnyChar* '"' | "`" AnyChar* "`")
-  void scanRawStringLiteral(ref Token t)
+  void scanRawStringLiteral(Token* t)
   {
     auto p = this.p;
     assert(*p == '`' || *p == '"' && p[-1] == 'r');
@@ -1477,7 +1477,7 @@ class Lexer
   ///
   /// $(BNF HexStringLiteral := 'x"' (HexDigit HexDigit)* '"'
   ////HexDigit := [a-fA-F\d])
-  void scanHexStringLiteral(ref Token t)
+  void scanHexStringLiteral(Token* t)
   {
     auto p = this.p;
     assert(p[0] == 'x' && p[1] == '"');
@@ -1561,7 +1561,7 @@ class Lexer
   ////OpeningDelim  := "[" | "(" | "{" | "&lt;" | Identifier EndOfLine
   ////MatchingDelim := "]" | ")" | "}" | "&gt;" | EndOfLine Identifier
   ////)
-  void scanDelimitedStringLiteral(ref Token t)
+  void scanDelimitedStringLiteral(Token* t)
   {
   version(D2)
   {
@@ -1723,7 +1723,7 @@ class Lexer
   /// Scans a token string literal.
   ///
   /// $(BNF TokenStringLiteral := "q{" Token* "}")
-  void scanTokenStringLiteral(ref Token t)
+  void scanTokenStringLiteral(Token* t)
   {
   version(D2)
   {
@@ -1745,7 +1745,7 @@ class Lexer
     // Set to true, if '\r', LS, PS, or multiline tokens are encountered.
     bool convertNewlines;
 
-    auto prev_t = &t;
+    auto prev_t = t;
     Token* new_t;
   Loop:
     while (1)
@@ -1998,7 +1998,7 @@ class Lexer
   ////Suffix := "L" [uU]? | [uU] "L"?
   ////)
   /// Invalid: "0b_", "0x_", "._" etc.
-  void scanNumber(ref Token t)
+  void scanNumber(Token* t)
   {
     auto p = this.p;
     ulong ulong_; // The integer value.
@@ -2323,7 +2323,7 @@ class Lexer
   ////DecExponent  := [eE] [+-]? DecDigits
   ////DecDigits    := \d [\d_]*
   ////)
-  void scanFloat(ref Token t)
+  void scanFloat(Token* t)
   {
     auto p = this.p;
     if (*p == '.')
@@ -2369,7 +2369,7 @@ class Lexer
   ////HexExponent := [pP] [+-]? DecDigits
   ////HexDigits := [a-fA-F\d] [a-fA-F\d_]*
   ////)
-  void scanHexFloat(ref Token t)
+  void scanHexFloat(Token* t)
   {
     auto p = this.p;
     assert(*p == '.' || *p == 'p' || *p == 'P');
@@ -2405,7 +2405,7 @@ class Lexer
   /// Params:
   ///   t = Receives the value.
   ///   float_string = The well-formed float number string.
-  void finalizeFloat(ref Token t, string float_string)
+  void finalizeFloat(Token* t, string float_string)
   {
     auto p = this.p;
     assert(float_string.length && float_string[$-1] == 0);
@@ -2443,7 +2443,7 @@ class Lexer
   /// Scans a special token sequence.
   ///
   /// $(BNF SpecialTokenSequence := "#line" Integer Filespec? EndOfLine)
-  void scanSpecialTokenSequence(ref Token t)
+  void scanSpecialTokenSequence(Token* t)
   {
     auto p = this.p;
     assert(*p == '#');
@@ -2485,7 +2485,7 @@ class Lexer
         auto newtok = new Token;
         hlval.lineNum = newtok;
         this.p = p;
-        scan(*newtok);
+        scan(newtok);
         tokenEnd = p = this.p;
         if (newtok.kind != TOK.Int32 && newtok.kind != TOK.UInt32)
         {
