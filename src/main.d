@@ -19,24 +19,25 @@ import dil.semantic.Module,
        dil.semantic.Passes;
 import dil.code.Interpreter;
 import dil.translator.German;
-import dil.Messages;
-import dil.Version;
-import dil.Diagnostics;
-import dil.SourceText;
-import dil.Compilation;
-import dil.PyTreeEmitter;
+import dil.Messages,
+       dil.Version,
+       dil.Diagnostics,
+       dil.SourceText,
+       dil.Compilation,
+       dil.PyTreeEmitter;
 
 import util.Path;
 
-import cmd.Compile;
-import cmd.Highlight;
-import cmd.Statistics;
-import cmd.ImportGraph;
-import cmd.DDoc;
+import cmd.Command,
+       cmd.Compile,
+       cmd.Highlight,
+       cmd.Statistics,
+       cmd.ImportGraph,
+       cmd.DDoc;
 
-import Settings;
-import SettingsLoader;
-import common;
+import Settings,
+       SettingsLoader,
+       common;
 
 import Integer = tango.text.convert.Integer;
 import tango.stdc.stdio;
@@ -49,7 +50,7 @@ import tango.text.Ascii : icompare, toUpper;
 debug
 import tango.core.tools.TraceExceptions;
 
-/// Entry function of dil.
+/// Entry function of Dil.
 void main(string[] args)
 {
   auto globalCC = newCompilationContext();
@@ -113,35 +114,47 @@ void main(string[] args)
   case "pytree", "py":
     if (op.argv.length < 2)
       return printHelp(command);
-    auto dest = Path(op.getArg());
-    string[] filePaths;
-    string format = "d_{0}.py";
-    bool verbose;
 
-    while (op.hasArgs())
-      if (op.parse("--fmt", format)) {}
-      else if (op.parse("-v", verbose)) {}
-      else filePaths ~= op.getArg();
-
-    // Execute the command.
-    foreach (path; filePaths)
+    class PyTreeCommand : Command
     {
-      auto modul = new Module(path, globalCC);
-      modul.parse();
-      if (!modul.hasErrors)
+      CompilationContext cc;
+      Path dest;
+      string format = "d_{0}.py";
+      string[] filePaths;
+
+      void run()
       {
-        auto py = new PyTreeEmitter(modul);
-        auto modFQN = replace(modul.getFQN().dup, '.', '_');
-        auto pckgName = replace(modul.packageName.dup, '.', '_');
-        auto modName = modul.moduleName;
-        auto fileName = Format(format, modFQN, pckgName, modName);
-        auto destPath = (dest/fileName).toString;
-        if (verbose)
-          Stdout(path~" > "~destPath).newline;
-        auto f = new File(destPath, File.WriteCreate);
-        f.write(py.emit());
+        foreach (path; filePaths)
+        {
+          auto modul = new Module(path, cc);
+          lzy(log("parse: {}", path));
+          modul.parse();
+          if (modul.hasErrors())
+            continue;
+          auto py = new PyTreeEmitter(modul);
+          auto modFQN = replace(modul.getFQN().dup, '.', '_');
+          auto pckgName = replace(modul.packageName.dup, '.', '_');
+          auto modName = modul.moduleName;
+          auto fileName = Format(format, modFQN, pckgName, modName);
+          auto destPath = (dest/fileName).toString;
+          lzy(log("emit:  {}", destPath));
+          auto f = new File(destPath, File.WriteCreate);
+          f.write(py.emit());
+        }
       }
     }
+
+    auto cmd = new PyTreeCommand();
+    cmd.dest = Path(op.getArg());
+    cmd.cc = globalCC;
+
+    while (op.hasArgs())
+      if (op.parse("--fmt", cmd.format)) {}
+      else if (op.parse("-v", cmd.verbose)) {}
+      else cmd.filePaths ~= op.getArg();
+
+    cmd.run();
+
     diag.hasInfo && printErrors(diag);
     break;
   case "ddoc", "d":
