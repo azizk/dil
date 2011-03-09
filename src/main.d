@@ -286,36 +286,46 @@ void main(string[] args)
   case "tok", "tokenize":
     if (!op.hasArgs())
       return printHelp(command);
-    SourceText sourceText;
-    string srcFilePath;
-    string separator = "\n";
-    bool ignoreWSToks, printWS, fromStdin;
+
+    class TokenizeCommand : Command
+    {
+      CompilationContext cc;
+      string srcFilePath;
+      string separator = "\n";
+      bool ignoreWSToks, printWS, fromStdin;
+
+      void run()
+      {
+        auto sourceText = fromStdin ?
+          new SourceText("stdin", readStdin()) :
+          new SourceText(srcFilePath, true);
+
+        auto lx = new Lexer(sourceText, cc.tables.lxtables, cc.diag);
+        lx.scanAll();
+        auto token = lx.firstToken();
+
+        for (; token.kind != TOK.EOF; token = token.next)
+        {
+          if (token.kind == TOK.Newline || ignoreWSToks && token.isWhitespace)
+            continue;
+          if (printWS && token.ws)
+            Stdout(token.wsChars);
+          Stdout(token.text)(separator);
+        }
+      }
+    }
+
+    auto cmd = new TokenizeCommand();
+    cmd.cc = globalCC;
 
     while (op.hasArgs())
-      if (op.parse("-s", separator)) {}
-      else if (op.parse("-", fromStdin)) {}
-      else if (op.parse("-i", ignoreWSToks)) {}
-      else if (op.parse("-ws", printWS)) {}
-      else srcFilePath = op.getArg();
+      if (op.parse("-s", cmd.separator)) {}
+      else if (op.parse("-", cmd.fromStdin)) {}
+      else if (op.parse("-i", cmd.ignoreWSToks)) {}
+      else if (op.parse("-ws", cmd.printWS)) {}
+      else cmd.srcFilePath = op.getArg();
 
-    sourceText = fromStdin ?
-      new SourceText("stdin", readStdin()) :
-      new SourceText(srcFilePath, true);
-
-
-    diag = new Diagnostics();
-    auto lx = new Lexer(sourceText, globalCC.tables.lxtables, diag);
-    lx.scanAll();
-    auto token = lx.firstToken();
-
-    for (; token.kind != TOK.EOF; token = token.next)
-    {
-      if (token.kind == TOK.Newline || ignoreWSToks && token.isWhitespace)
-        continue;
-      if (printWS && token.ws)
-        Stdout(token.wsChars);
-      Stdout(token.text)(separator);
-    }
+    cmd.run();
 
     diag.hasInfo && printErrors(diag);
     break;
