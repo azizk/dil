@@ -17,10 +17,10 @@ import dil.semantic.Symbol,
        dil.semantic.Module,
        dil.semantic.Analysis;
 import dil.lexer.IdTable;
-import dil.Compilation;
-import dil.Diagnostics;
-import dil.Messages;
-import dil.Enums;
+import dil.i18n.Messages;
+import dil.Compilation,
+       dil.Diagnostics,
+       dil.Enums;
 import common;
 
 import tango.io.model.IFile;

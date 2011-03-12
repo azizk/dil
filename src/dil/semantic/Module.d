@@ -10,9 +10,9 @@ import dil.lexer.Lexer,
        dil.lexer.IdTable;
 import dil.semantic.Symbol,
        dil.semantic.Symbols;
+import dil.i18n.Messages;
 import dil.Compilation,
        dil.Location,
-       dil.Messages,
        dil.Diagnostics,
        dil.SourceText;
 import util.Path;

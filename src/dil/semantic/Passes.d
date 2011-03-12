@@ -22,11 +22,11 @@ import dil.semantic.Symbol,
        dil.semantic.Module,
        dil.semantic.Analysis;
 import dil.code.Interpreter;
-import dil.Compilation;
-import dil.SourceText;
-import dil.Diagnostics;
-import dil.Messages;
-import dil.Enums;
+import dil.i18n.Messages;
+import dil.Compilation,
+       dil.SourceText,
+       dil.Diagnostics,
+       dil.Enums;
 import common;
 
 /// Some handy aliases.

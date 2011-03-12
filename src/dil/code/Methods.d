@@ -7,10 +7,10 @@ import dil.ast.Node,
        dil.ast.Expressions;
 import dil.semantic.Types;
 import dil.code.NotAResult;
+import dil.i18n.Messages;
 import dil.Float,
        dil.Complex,
-       dil.Diagnostics,
-       dil.Messages;
+       dil.Diagnostics;
 import common;
 
 /// A collection of methods that operate on Expression nodes.

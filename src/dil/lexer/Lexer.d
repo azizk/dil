@@ -9,8 +9,8 @@ import dil.lexer.Token,
        dil.lexer.Identifier,
        dil.lexer.TokenSerializer,
        dil.lexer.Tables;
+import dil.i18n.Messages;
 import dil.Diagnostics,
-       dil.Messages,
        dil.HtmlEntities,
        dil.Version,
        dil.Unicode,

@@ -1,7 +1,7 @@
 /// Author: Aziz Köksal
 /// License: GPL3
 /// $(Maturity average)
-module dil.Messages;
+module dil.i18n.Messages;
 
 import common;
 

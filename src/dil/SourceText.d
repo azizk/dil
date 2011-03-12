@@ -3,9 +3,9 @@
 /// $(Maturity high)
 module dil.SourceText;
 
-import dil.Converter;
-import dil.Diagnostics;
-import dil.Messages;
+import dil.i18n.Messages;
+import dil.Converter,
+       dil.Diagnostics;
 import util.Path;
 import common;
 

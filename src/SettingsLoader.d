@@ -12,13 +12,13 @@ import dil.semantic.Module,
        dil.semantic.Symbols;
 import dil.lexer.Funcs,
        dil.lexer.Identifier;
-import dil.Messages;
-import dil.Diagnostics;
-import dil.Compilation;
-import dil.Unicode;
+import dil.i18n.Messages;
+import dil.Diagnostics,
+       dil.Compilation,
+       dil.Unicode;
 import util.Path;
-import Settings;
-import common;
+import Settings,
+       common;
 
 import tango.sys.Environment;
 import tango.io.Path : normalize;
@@ -229,7 +229,7 @@ class ConfigLoader : SettingsLoader
               "messages table in {} must exactly have {} entries, but not {}.",
               filePath, MID.max+1, messages.length);
       GlobalSettings.messages = messages;
-      dil.Messages.SetMessages(messages);
+      dil.i18n.Messages.SetMessages(messages);
     }
     if (auto val = getValue!(StringExpr)("lang_code"))
       GlobalSettings.langCode = val.getString();

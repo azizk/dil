@@ -8,9 +8,9 @@ import dil.semantic.Module,
        dil.semantic.Symbol;
 import dil.lexer.Funcs : hashOf;
 import dil.lexer.Token;
+import dil.i18n.Messages;
 import dil.Compilation,
-       dil.Diagnostics,
-       dil.Messages;
+       dil.Diagnostics;
 import util.Path;
 import common;
 

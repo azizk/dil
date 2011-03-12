@@ -12,8 +12,8 @@ import dil.ast.Node,
        dil.ast.Expressions,
        dil.ast.Types,
        dil.ast.Parameters;
-import dil.Messages,
-       dil.Diagnostics,
+import dil.i18n.Messages;
+import dil.Diagnostics,
        dil.Enums,
        dil.SourceText,
        dil.Unicode;

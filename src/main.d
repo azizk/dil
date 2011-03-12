@@ -19,8 +19,8 @@ import dil.semantic.Module,
        dil.semantic.Passes;
 import dil.code.Interpreter;
 import dil.translator.German;
-import dil.Messages,
-       dil.Version,
+import dil.i18n.Messages;
+import dil.Version,
        dil.Diagnostics,
        dil.SourceText,
        dil.Compilation,

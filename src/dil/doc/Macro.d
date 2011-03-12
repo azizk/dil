@@ -5,9 +5,9 @@ module dil.doc.Macro;
 
 import dil.doc.Parser;
 import dil.lexer.Funcs;
-import dil.Unicode;
-import dil.Diagnostics;
-import dil.Messages;
+import dil.i18n.Messages;
+import dil.Unicode,
+       dil.Diagnostics;
 import common;
 
 /// The DDoc macro class.

@@ -8,10 +8,10 @@ import dil.ast.Visitor,
        dil.ast.Expressions;
 import dil.lexer.Funcs : String, StringHex;
 import dil.semantic.TypesEnum;
+import dil.i18n.Messages;
 import dil.Float,
        dil.Unicode,
-       dil.Diagnostics,
-       dil.Messages;
+       dil.Diagnostics;
 import common;
 
 /// Mangles expressions used as template arguments.

@@ -3,7 +3,7 @@
 /// $(Maturity average)
 module dil.Information;
 
-import dil.Messages;
+import dil.i18n.Messages;
 import common;
 
 public import dil.Location;

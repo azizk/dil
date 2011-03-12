@@ -17,11 +17,11 @@ import dil.ast.DefaultVisitor,
 import dil.lexer.Token,
        dil.lexer.Funcs;
 import dil.semantic.Module;
+import dil.i18n.Messages;
 import dil.Unicode : isUnicodeAlpha;
 import dil.Highlighter,
        dil.Diagnostics,
        dil.SourceText,
-       dil.Messages,
        dil.Enums;
 import common;
 

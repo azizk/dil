@@ -4,11 +4,11 @@
 module dil.Converter;
 
 import dil.lexer.Funcs;
-import dil.Diagnostics;
-import dil.Location;
-import dil.Unicode;
-import dil.FileBOM;
-import dil.Messages;
+import dil.i18n.Messages;
+import dil.Diagnostics,
+       dil.Location,
+       dil.Unicode,
+       dil.FileBOM;
 import common;
 
 /// Converts various Unicode encoding formats to UTF-8.

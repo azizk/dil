@@ -10,7 +10,6 @@ import dil.ast.DefaultVisitor,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
-import dil.lexer.Identifier;
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
        dil.semantic.Types,
@@ -18,11 +17,12 @@ import dil.semantic.Symbol,
        dil.semantic.Module,
        dil.semantic.Analysis;
 import dil.code.Interpreter;
+import dil.lexer.Identifier;
 import dil.parser.Parser;
-import dil.SourceText;
-import dil.Diagnostics;
-import dil.Messages;
-import dil.Enums;
+import dil.i18n.Messages;
+import dil.SourceText,
+       dil.Diagnostics,
+       dil.Enums;
 import common;
 
 /// The second pass determines the types of symbols and the types

@@ -14,10 +14,10 @@ import dil.semantic.Module,
        dil.semantic.Symbol,
        dil.semantic.Symbols;
 import dil.doc.Doc;
+import dil.i18n.Messages;
 import dil.Compilation,
        dil.Diagnostics,
-       dil.ModuleManager,
-       dil.Messages;
+       dil.ModuleManager;
 import common;
 
 import tango.text.Util;
