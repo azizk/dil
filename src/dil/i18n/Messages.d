@@ -65,6 +65,57 @@ enum MID
   UnrecognizedLinkageType,
   ExpectedBaseClasses,
   BaseClassInForwardDeclaration,
+  InvalidUTF8SequenceInString,
+  ModuleDeclarationNotFirst,
+  StringPostfixMismatch,
+  UnexpectedIdentInType,
+  ExpectedIdAfterTypeDot,
+  ExpectedModuleIdentifier,
+  IllegalDeclaration,
+  ExpectedModuleType,
+  ExpectedFunctionName,
+  ExpectedVariableName,
+  ExpectedFunctionBody,
+  RedundantLinkageType,
+  RedundantProtection,
+  ExpectedPragmaIdentifier,
+  ExpectedAliasModuleName,
+  ExpectedAliasImportName,
+  ExpectedImportName,
+  ExpectedEnumMember,
+  ExpectedEnumBody,
+  ExpectedClassName,
+  ExpectedClassBody,
+  ExpectedInterfaceName,
+  ExpectedInterfaceBody,
+  ExpectedStructBody,
+  ExpectedUnionBody,
+  ExpectedTemplateName,
+  ExpectedAnIdentifier,
+  IllegalStatement,
+  ExpectedNonEmptyStatement,
+  ExpectedScopeIdentifier,
+  InvalidScopeIdentifier,
+  ExpectedLinkageIdentifier,
+  ExpectedAttributeId,
+  UnrecognizedAttribute,
+  ExpectedIntegerAfterAlign,
+  IllegalAsmStatement,
+  ExpectedDeclaratorIdentifier,
+  ExpectedTemplateParameters,
+  ExpectedTypeOrExpression,
+  ExpectedAliasTemplateParam,
+  ExpectedNameForThisTempParam,
+  ExpectedIdentOrInt,
+  MissingCatchOrFinally,
+  ExpectedClosing,
+  AliasHasInitializer,
+  AliasExpectsVariable,
+  TypedefExpectsVariable,
+  CaseRangeStartExpression,
+  ExpectedParamDefValue,
+  IllegalVariadicParam,
+  ParamsAfterVariadic,
 
   // Help messages:
   HelpMain,
@@ -101,57 +152,7 @@ static:
   auto ExpectedDblQuoteAfterDelim = "expected ‘\"’ after delimiter ‘{}’";
   auto UnterminatedTokenString = "unterminated token string literal";
   // Parser messages:
-  auto InvalidUTF8SequenceInString = "invalid UTF-8 sequence in string literal: ‘{}’";
-  auto ModuleDeclarationNotFirst = "a module declaration is only allowed as the first declaration in a file";
-  auto StringPostfixMismatch = "string literal has mistmatching postfix character";
-  auto UnexpectedIdentInType = "identifier ‘{}’ not allowed in a type";
-  auto ExpectedIdAfterTypeDot = "expected identifier after ‘(Type).’, not ‘{}’";
-  auto ExpectedModuleIdentifier = "expected module identifier, not ‘{}’";
-  auto IllegalDeclaration = "illegal declaration found: “{}”";
-  auto ExpectedModuleType = "expected ‘system’ or ‘safe’, not ‘{}’";
-  auto ExpectedFunctionName = "expected function name, not ‘{}’";
-  auto ExpectedVariableName = "expected variable name, not ‘{}’";
-  auto ExpectedFunctionBody = "expected function body, not ‘{}’";
-  auto RedundantLinkageType = "redundant linkage type: ‘{}’";
-  auto RedundantProtection = "redundant protection attribute: ‘{}’";
-  auto ExpectedPragmaIdentifier = "expected pragma identifier, not ‘{}’";
-  auto ExpectedAliasModuleName = "expected alias module name, not ‘{}’";
-  auto ExpectedAliasImportName = "expected alias name, not ‘{}’";
-  auto ExpectedImportName = "expected an identifier, not ‘{}’";
-  auto ExpectedEnumMember = "expected enum member, not ‘{}’";
-  auto ExpectedEnumBody = "expected enum body, not ‘{}’";
-  auto ExpectedClassName = "expected class name, not ‘{}’";
-  auto ExpectedClassBody = "expected class body, not ‘{}’";
-  auto ExpectedInterfaceName = "expected interface name, not ‘{}’";
-  auto ExpectedInterfaceBody = "expected interface body, not ‘{}’";
-  auto ExpectedStructBody = "expected struct body, not ‘{}’";
-  auto ExpectedUnionBody = "expected union body, not ‘{}’";
-  auto ExpectedTemplateName = "expected template name, not ‘{}’";
-  auto ExpectedAnIdentifier = "expected an identifier, not ‘{}’";
-  auto IllegalStatement = "illegal statement found: “{}”";
-  auto ExpectedNonEmptyStatement = "didn’t expect ‘;’, use ‘{{ }’ instead";
-  auto ExpectedScopeIdentifier = "expected ‘exit’, ‘success’ or ‘failure’, not ‘{}’";
-  auto InvalidScopeIdentifier = "‘exit’, ‘success’, ‘failure’ are valid scope identifiers, but not ‘{}’";
-  auto ExpectedLinkageIdentifier = "expected ‘C’, ‘D’, ‘Windows’, ‘Pascal’ or ‘System’, but not ‘{}’";
-  auto ExpectedAttributeId = "expected an identifier after ‘@’";
-  auto UnrecognizedAttribute = "unrecognized attribute: ‘@{}’";
-  auto ExpectedIntegerAfterAlign = "expected an integer after align, not ‘{}’";
-  auto IllegalAsmStatement = "illegal asm statement found: “{}”";
-  auto ExpectedDeclaratorIdentifier = "expected declarator identifier, not ‘{}’";
-  auto ExpectedTemplateParameters = "expected one or more template parameters, not ‘)’";
-  auto ExpectedTypeOrExpression = "expected a type or and expression, not ‘)’";
-  auto ExpectedAliasTemplateParam = "expected name for alias template parameter, not ‘{}’";
-  auto ExpectedNameForThisTempParam = "expected name for ‘this’ template parameter, not ‘{}’";
-  auto ExpectedIdentOrInt = "expected an identifier or an integer, not ‘{}’";
-  auto MissingCatchOrFinally = "try statement is missing a catch or finally body.";
-  auto ExpectedClosing = "expected closing ‘{}’ (‘{}’ @{},{}), not ‘{}’";
-  auto AliasHasInitializer = "initializers are not allowed for alias types";
-  auto AliasExpectsVariable = "expected a variable declaration in alias, not ‘{}’";
-  auto TypedefExpectsVariable = "expected a variable declaration in typedef, not ‘{}’";
-  auto CaseRangeStartExpression = "only one expression is allowed for the start of a case range";
-  auto ExpectedParamDefValue = "expected default value for parameter ‘{}’";
-  auto IllegalVariadicParam = "variadic parameter cannot be ‘ref’ or ‘out’";
-  auto ParamsAfterVariadic = "cannot have parameters after a variadic parameter";
+
   // Semantic analysis:
   auto CouldntLoadModule = "couldn’t find module file ‘{}’";
   auto ConflictingModuleFiles = "module is in conflict with module ‘{}’";

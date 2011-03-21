@@ -219,16 +219,15 @@ class Parser
     {
     if (consumed(T.LParen))
     {
-      typeId = requireIdentifier(MSG.ExpectedModuleType);
-      if (typeId && typeId.ident !is Ident.safe &&
-                    typeId.ident !is Ident.system &&
-                    typeId.ident !is Ident.Empty)
-        error(typeId, MSG.ExpectedModuleType);
+      typeId = requireIdentifier(MID.ExpectedModuleType);
+      auto ident = typeId ? typeId.ident : null;
+      if (ident && ident !is Ident.safe && ident !is Ident.system)
+        error(typeId, MID.ExpectedModuleType);
       require2(T.RParen);
     }
     } // version(D2)
     do
-      moduleFQN ~= requireIdentifier(MSG.ExpectedModuleIdentifier);
+      moduleFQN ~= requireIdentifier(MID.ExpectedModuleIdentifier);
     while (consumed(T.Dot))
     require2(T.Semicolon);
     return set(new ModuleDecl(typeId, moduleFQN), begin);
@@ -336,10 +335,10 @@ class Parser
       if (auto var = decl.Is!(VariablesDecl))
       {
         if (auto init = var.firstInit())
-          error(init.begin.prevNWS(), MSG.AliasHasInitializer);
+          error(init.begin.prevNWS(), MID.AliasHasInitializer);
       }
       else
-        error2(MSG.AliasExpectsVariable, decl.begin);
+        error2(MID.AliasExpectsVariable, decl.begin);
       decl = ad;
       break;
     case T.Typedef:
@@ -347,7 +346,7 @@ class Parser
       auto td = new TypedefDecl(parseAttributes(&decl));
       td.vardecl = decl;
       if (!decl.Is!(VariablesDecl))
-        error2(MSG.TypedefExpectsVariable, decl.begin);
+        error2(MID.TypedefExpectsVariable, decl.begin);
       decl = td;
       break;
     case T.Static:
@@ -450,7 +449,7 @@ class Parser
       else if (token.kind == T.Module)
       {
         decl = parseModuleDecl();
-        error(begin, MSG.ModuleDeclarationNotFirst);
+        error(begin, MID.ModuleDeclarationNotFirst);
         return decl;
       }
 
@@ -462,7 +461,7 @@ class Parser
               token.kind != T.RBrace &&
               token.kind != T.EOF)
       auto text = Token.textSpan(begin, this.prevToken);
-      error(begin, MSG.IllegalDeclaration, text);
+      error(begin, MID.IllegalDeclaration, text);
     }
     decl.setProtection(this.protection);
     decl.setStorageClass(this.storageClass);
@@ -583,7 +582,7 @@ class Parser
     {
       type = parseCStyleType(type, &name);
       if (name.kind != T.Identifier)
-        error2(MSG.ExpectedVariableName, name);
+        error2(MID.ExpectedVariableName, name);
     }
     else if (0/+auto leftParen = consumedToken(T.LParen)+/)
     { // FIXME: doesn't work in all cases. :(
@@ -610,8 +609,8 @@ class Parser
 
       bool isFunc = params || !funcSuffix;
       if (name.kind != T.Identifier)
-        error2(isFunc ? MSG.ExpectedFunctionName :
-                        MSG.ExpectedVariableName, name);
+        error2(isFunc ? MID.ExpectedFunctionName :
+                        MID.ExpectedVariableName, name);
 
       // Parse as a function instead of a variable?
       if (params)
@@ -621,7 +620,7 @@ class Parser
     }
     else if (peekNext() == T.LParen)
     { // ReturnType FunctionName "(" ParameterList ")" FunctionBody
-      name = requireIdentifier(MSG.ExpectedFunctionName);
+      name = requireIdentifier(MID.ExpectedFunctionName);
       if (token.kind != T.LParen)
         nT(); // Skip non-identifier token.
 
@@ -660,7 +659,7 @@ class Parser
     }
     else
     { // Type VariableName DeclaratorSuffix
-      name = requireIdentifier(MSG.ExpectedVariableName);
+      name = requireIdentifier(MID.ExpectedVariableName);
       type = parseDeclaratorSuffix(type);
     }
 
@@ -671,7 +670,7 @@ class Parser
     goto LenterLoop; // Enter the loop and check for an initializer.
     while (consumed(T.Comma))
     {
-      names ~= requireIdentifier(MSG.ExpectedVariableName);
+      names ~= requireIdentifier(MID.ExpectedVariableName);
     LenterLoop:
       if (consumed(T.Assign))
         values ~= parseInitializer();
@@ -812,17 +811,17 @@ class Parser
           error(MID.OutContract);
         nT();
         if (consumed(T.LParen))
-          (outIdent = requireIdentifier(MSG.ExpectedAnIdentifier)),
+          (outIdent = requireIdentifier(MID.ExpectedAnIdentifier)),
           require2(T.RParen);
         outBody = parseStatements();
         break;
       case T.Body:
         // if (!outBody || !inBody) // TODO:
-        //   error2(MSG.ExpectedInOutBody, token);
+        //   error2(MID.ExpectedInOutBody, token);
         nT();
         goto case T.LBrace;
       default:
-        error2(MSG.ExpectedFunctionBody, token);
+        error2(MID.ExpectedFunctionBody, token);
         break Loop;
       }
 
@@ -891,7 +890,7 @@ class Parser
       return linkageType;
     }
 
-    auto idtok = requireIdentifier(MSG.ExpectedLinkageIdentifier);
+    auto idtok = requireIdentifier(MID.ExpectedLinkageIdentifier);
 
     switch (idtok.ident.idKind)
     {
@@ -935,7 +934,7 @@ class Parser
     if (prev_lt == LinkageType.None)
       prev_lt = lt;
     else
-      error(begin, MSG.RedundantLinkageType, Token.textSpan(begin, prevToken));
+      error(begin, MID.RedundantLinkageType, Token.textSpan(begin, prevToken));
   }
 
   /// Parses one or more attributes and a Declaration at the end.
@@ -1085,7 +1084,7 @@ class Parser
         goto Lprot;
       Lprot:
         if (protection != Protection.None)
-          error2(MSG.RedundantProtection, token);
+          error2(MID.RedundantProtection, token);
         protection = prot;
         nT();
         currentAttr = new ProtectionDecl(prot, emptyDecl);
@@ -1106,7 +1105,7 @@ class Parser
 
         auto leftParen = token;
         require2(T.LParen);
-        ident = requireIdentifier(MSG.ExpectedPragmaIdentifier);
+        ident = requireIdentifier(MID.ExpectedPragmaIdentifier);
         auto args = consumed(T.Comma) ? parseExpressionList() : null;
         requireClosing(T.RParen, leftParen);
 
@@ -1183,7 +1182,7 @@ class Parser
   {
     skip(T.At); // "@"
     auto idtok = token.kind == T.Identifier ?
-      token : requireIdentifier(MSG.ExpectedAttributeId);
+      token : requireIdentifier(MID.ExpectedAttributeId);
     StorageClass stc;
     switch (idtok.ident.idKind)
     {
@@ -1195,7 +1194,7 @@ class Parser
     case IDK.Empty: break; // No Id. Avoid another error below.
     default:
       assert(idtok);
-      error2(MSG.UnrecognizedAttribute, idtok);
+      error2(MID.UnrecognizedAttribute, idtok);
     }
     // Return without skipping the identifier.
     return stc;
@@ -1227,12 +1226,12 @@ class Parser
       // AliasName = ModuleName
       if (peekNext() == T.Assign)
       {
-        moduleAlias = requireIdentifier(MSG.ExpectedAliasModuleName);
+        moduleAlias = requireIdentifier(MID.ExpectedAliasModuleName);
         skip(T.Assign);
       }
       // Identifier ("." Identifier)*
       do
-        moduleFQN ~= requireIdentifier(MSG.ExpectedModuleIdentifier);
+        moduleFQN ~= requireIdentifier(MID.ExpectedModuleIdentifier);
       while (consumed(T.Dot))
       // Push identifiers.
       moduleFQNs ~= moduleFQN;
@@ -1248,11 +1247,11 @@ class Parser
         // BindAlias = BindName
         if (peekNext() == T.Assign)
         {
-          bindAlias = requireIdentifier(MSG.ExpectedAliasImportName);
+          bindAlias = requireIdentifier(MID.ExpectedAliasImportName);
           skip(T.Assign);
         }
         // Push identifiers.
-        bindNames ~= requireIdentifier(MSG.ExpectedImportName);
+        bindNames ~= requireIdentifier(MID.ExpectedImportName);
         bindAliases ~= bindAlias;
       } while (consumed(T.Comma))
     }
@@ -1324,7 +1323,7 @@ class Parser
         }, success);
         } // version(D2)
 
-        name = requireIdentifier(MSG.ExpectedEnumMember);
+        name = requireIdentifier(MID.ExpectedEnumMember);
         Expression value;
 
         if (consumed(T.Assign))
@@ -1339,7 +1338,7 @@ class Parser
       requireClosing(T.RBrace, leftBrace); // "}"
     }
     else
-      error2(MSG.ExpectedEnumBody, token);
+      error2(MID.ExpectedEnumBody, token);
 
     return new EnumDecl(enumName, baseType, members, hasBody);
   }
@@ -1382,7 +1381,7 @@ class Parser
     BaseClassType[] bases;
     CompoundDecl decls;
 
-    name = requireIdentifier(MSG.ExpectedClassName);
+    name = requireIdentifier(MID.ExpectedClassName);
 
     if (token.kind == T.LParen)
     {
@@ -1398,7 +1397,7 @@ class Parser
     else if (token.kind == T.LBrace)
       decls = parseDeclarationDefinitionsBody();
     else
-      error2(MSG.ExpectedClassBody, token);
+      error2(MID.ExpectedClassBody, token);
 
     Declaration d = new ClassDecl(name, /+tparams, +/bases, decls);
     if (tparams)
@@ -1450,7 +1449,7 @@ class Parser
     BaseClassType[] bases;
     CompoundDecl decls;
 
-    name = requireIdentifier(MSG.ExpectedInterfaceName);
+    name = requireIdentifier(MID.ExpectedInterfaceName);
 
     if (token.kind == T.LParen)
     {
@@ -1466,7 +1465,7 @@ class Parser
     else if (token.kind == T.LBrace)
       decls = parseDeclarationDefinitionsBody();
     else
-      error2(MSG.ExpectedInterfaceBody, token);
+      error2(MID.ExpectedInterfaceBody, token);
 
     Declaration d = new InterfaceDecl(name, bases, decls);
     if (tparams)
@@ -1507,8 +1506,8 @@ class Parser
       decls = parseDeclarationDefinitionsBody();
     else
       error2(begin.kind == T.Struct ?
-             MSG.ExpectedStructBody :
-             MSG.ExpectedUnionBody, token);
+             MID.ExpectedStructBody :
+             MID.ExpectedUnionBody, token);
 
     Declaration d;
     if (begin.kind == T.Struct)
@@ -1620,7 +1619,7 @@ class Parser
   {
     if (consumed(T.Identifier) || consumed(T.Int32))
       return this.prevToken;
-    error2(MSG.ExpectedIdentOrInt, token);
+    error2(MID.ExpectedIdentOrInt, token);
     return null;
   }
 
@@ -1750,7 +1749,7 @@ class Parser
   TemplateDecl parseTemplateDecl()
   {
     skip(T.Template);
-    auto name = requireIdentifier(MSG.ExpectedTemplateName);
+    auto name = requireIdentifier(MID.ExpectedTemplateName);
     auto tparams = parseTemplateParameterList();
     auto constraint = parseOptionalConstraint();
     auto decls = parseDeclarationDefinitionsBody();
@@ -2108,7 +2107,7 @@ class Parser
               token.kind != T.RBrace &&
               token.kind != T.EOF)
       auto text = Token.textSpan(begin, this.prevToken);
-      error(begin, MSG.IllegalStatement, text);
+      error(begin, MID.IllegalStatement, text);
     }
     assert(s !is null);
     set(s, begin);
@@ -2135,7 +2134,7 @@ class Parser
       s = parseStatement();
     else
     { // ";"
-      error(prevToken, MSG.ExpectedNonEmptyStatement);
+      error(prevToken, MID.ExpectedNonEmptyStatement);
       s = set(new EmptyStmt(), prevToken);
     }
     return s;
@@ -2316,7 +2315,7 @@ class Parser
     // auto Identifier = Expression
     if (consumed(T.Auto))
     {
-      ident = requireIdentifier(MSG.ExpectedVariableName);
+      ident = requireIdentifier(MID.ExpectedVariableName);
       require(T.Assign);
       auto init = parseExpression();
       auto v = new VariablesDecl(null, [ident], [init]);
@@ -2438,7 +2437,7 @@ class Parser
         auto next = peekNext();
         if (next == T.Comma || next == T.Semicolon || next == T.RParen)
         { // (ref|inout)? Identifier
-          name = requireIdentifier(MSG.ExpectedVariableName);
+          name = requireIdentifier(MID.ExpectedVariableName);
           break;
         }
         // fall through
@@ -2512,7 +2511,7 @@ class Parser
     if (consumed(T.Slice)) // ".."
     {
       if (values.length > 1)
-        error(values[1].begin, MSG.CaseRangeStartExpression);
+        error(values[1].begin, MID.CaseRangeStartExpression);
       require(T.Case);
       Expression left = values[0], right = parseAssignExpr();
       require2(T.Colon);
@@ -2580,7 +2579,7 @@ class Parser
       nT();
       break;
     default:
-      ident = requireIdentifier(MSG.ExpectedAnIdentifier);
+      ident = requireIdentifier(MID.ExpectedAnIdentifier);
     }
     require2(T.Semicolon);
     return new GotoStmt(ident, caseExpr);
@@ -2650,7 +2649,7 @@ class Parser
       finBody = set(new FinallyStmt(parseNoScopeStmt()), t);
 
     if (catchBodies is null && finBody is null)
-      error(begin, MSG.MissingCatchOrFinally);
+      error(begin, MID.MissingCatchOrFinally);
 
     return new TryStmt(tryBody, catchBodies, finBody);
   }
@@ -2671,14 +2670,14 @@ class Parser
   {
     skip(T.Scope);
     skip(T.LParen);
-    auto condition = requireIdentifier(MSG.ExpectedScopeIdentifier);
+    auto condition = requireIdentifier(MID.ExpectedScopeIdentifier);
     if (condition)
       switch (condition.ident.idKind)
       {
       case IDK.exit, IDK.success, IDK.failure: break;
       default:
         if (condition.ident != Ident.Empty) // Don't report error twice.
-          error2(MSG.InvalidScopeIdentifier, condition);
+          error2(MID.InvalidScopeIdentifier, condition);
       }
     require2(T.RParen);
     auto scopeBody = (token.kind == T.LBrace) ?
@@ -2713,7 +2712,7 @@ class Parser
 
     auto leftParen = token;
     require2(T.LParen);
-    name = requireIdentifier(MSG.ExpectedPragmaIdentifier);
+    name = requireIdentifier(MID.ExpectedPragmaIdentifier);
 
     if (consumed(T.Comma))
       args = parseExpressionList();
@@ -2889,7 +2888,7 @@ class Parser
       nT();
       auto number = token;
       if (!consumed(T.Int32))
-        error2(MSG.ExpectedIntegerAfterAlign, token);
+        error2(MID.ExpectedIntegerAfterAlign, token);
       require2(T.Semicolon);
       s = new AsmAlignStmt(number);
       break;
@@ -2906,7 +2905,7 @@ class Parser
               token.kind != T.RBrace &&
               token.kind != T.EOF)
       auto text = Token.textSpan(begin, this.prevToken);
-      error(begin, MSG.IllegalAsmStatement, text);
+      error(begin, MID.IllegalAsmStatement, text);
     }
     set(s, begin);
     return s;
@@ -3753,7 +3752,7 @@ class Parser
       }, success);
       if (!success)
         goto default;
-      auto ident = requireIdentifier2(MSG.ExpectedIdAfterTypeDot);
+      auto ident = requireIdentifier2(MID.ExpectedIdAfterTypeDot);
       e = new TypeDotIdExpr(type, ident);
       break;
     default:
@@ -3770,7 +3769,7 @@ class Parser
   Expression parseIdentifierExpr(Expression next = null)
   {
     auto begin = token;
-    auto ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
+    auto ident = requireIdentifier2(MID.ExpectedAnIdentifier);
     Expression e;
     // Peek to avoid parsing: "id !is Exp" or "id !in Exp"
     auto nextTok = peekNext();
@@ -3850,7 +3849,7 @@ class Parser
             postfix = pf;
         else+/
         if (pf && pf != postfix)
-          error(token, MSG.StringPostfixMismatch);
+          error(token, MID.StringPostfixMismatch);
         str.length = str.length - 1; // Exclude '\0'.
         str ~= token.strval.str;
         nT();
@@ -4035,7 +4034,7 @@ class Parser
       nT();
       auto leftParen = token;
       require2(T.LParen); // "("
-      auto ident = requireIdentifier(MSG.ExpectedAnIdentifier);
+      auto ident = requireIdentifier(MID.ExpectedAnIdentifier);
       auto args = consumed(T.Comma) ? parseTemplateArguments2() : null;
       requireClosing(T.RParen, leftParen); // ")"
       e = new TraitsExpr(ident, args);
@@ -4048,7 +4047,7 @@ class Parser
         nT();
         set(type, begin);
         require2(T.Dot);
-        auto ident = requireIdentifier2(MSG.ExpectedIdAfterTypeDot);
+        auto ident = requireIdentifier2(MID.ExpectedIdAfterTypeDot);
         e = new TypeDotIdExpr(type, ident);
       }
       else if (token.isSpecialToken)
@@ -4202,7 +4201,7 @@ class Parser
       if (pIdent !is null)
         *pIdent = ident; // Found valid Id.
       else
-        error2(MSG.UnexpectedIdentInType, ident);
+        error2(MID.UnexpectedIdentInType, ident);
     else if (pIdent !is null)
       *pIdent = token; // Useful for error msg, if an Id was expected.
 
@@ -4228,7 +4227,7 @@ class Parser
     auto type = parseType(&ident);
     assert(ident !is null);
     if (ident.kind != T.Identifier)
-      (identOptional || error2(MSG.ExpectedDeclaratorIdentifier, ident)),
+      (identOptional || error2(MID.ExpectedDeclaratorIdentifier, ident)),
       (ident = null);
     return type;
   }
@@ -4246,7 +4245,7 @@ class Parser
   Type parseIdentifierType(Type next = null)
   {
     auto begin = token;
-    auto ident = requireIdentifier2(MSG.ExpectedAnIdentifier);
+    auto ident = requireIdentifier2(MID.ExpectedAnIdentifier);
     Type t;
     if (consumed(T.Not)) // TemplateInstance
       t = new TemplateInstanceType(next, ident,
@@ -4590,19 +4589,19 @@ class Parser
         defValue = parseAssignExpr();
       else if (defValue !is null) // Parsed a defValue previously?
         error(name ? name : type.begin, // Position.
-          MSG.ExpectedParamDefValue,
+          MID.ExpectedParamDefValue,
           name ? name.text() : ""); // Name.
 
       if (consumed(T.Ellipses))
       {
         if (stcs & (StorageClass.Ref | StorageClass.Out))
-          error(paramBegin, MSG.IllegalVariadicParam);
+          error(paramBegin, MID.IllegalVariadicParam);
       LvariadicParam:
         stcs |= StorageClass.Variadic;
         pushParameter();
         // TODO: allow trailing comma here? DMD doesn't...
         if (token.kind != T.RParen)
-          error(token, MSG.ParamsAfterVariadic);
+          error(token, MID.ParamsAfterVariadic);
         break;
       }
       // Add a non-variadic parameter to the list.
@@ -4657,7 +4656,7 @@ class Parser
     if (token.kind != T.RParen)
       targs = parseTemplateArguments_();
     else
-      error(token, MSG.ExpectedTypeOrExpression);
+      error(token, MID.ExpectedTypeOrExpression);
     return targs;
     } // version(D2)
     else
@@ -4731,7 +4730,7 @@ class Parser
     if (token.kind != T.RParen)
       parseTemplateParameterList_(tparams);
     else
-      error(token, MSG.ExpectedTemplateParameters);
+      error(token, MID.ExpectedTemplateParameters);
     return set(tparams, begin);
   } // version(D2)
   else return null;
@@ -4773,7 +4772,7 @@ class Parser
       case T.Alias:
         // TemplateAliasParam := "alias" Identifier
         skip(T.Alias);
-        ident = requireIdentifier(MSG.ExpectedAliasTemplateParam);
+        ident = requireIdentifier(MID.ExpectedAliasTemplateParam);
         Node spec, def;
         version(D2)
         {
@@ -4824,7 +4823,7 @@ class Parser
       case T.This:
         // TemplateThisParam := "this" TemplateTypeParam
         skip(T.This);
-        ident = requireIdentifier(MSG.ExpectedNameForThisTempParam);
+        ident = requireIdentifier(MID.ExpectedNameForThisTempParam);
         parseSpecAndOrDefaultType();
         tp = new TemplateThisParam(ident, specType, defType);
         break;
@@ -4894,34 +4893,18 @@ class Parser
     return id;
   }
 
-  /// ditto
-  Identifier* requireIdentifier2(char[] errorMsg)
-  {
-    auto idtok = requireIdentifier(errorMsg);
-    return idtok ? idtok.ident : null;
-  }
-
   /// Reports an error if the current token is not an identifier.
   /// Params:
   ///   mid = The error message ID to be used.
   /// Returns: The identifier token or null.
   Token* requireIdentifier(MID mid)
   {
-    return requireIdentifier(diag.bundle.msg(mid));
-  }
-
-  /// Reports an error if the current token is not an identifier.
-  /// Params:
-  ///   errorMsg = The error message to be used.
-  /// Returns: The identifier token or null.
-  Token* requireIdentifier(string errorMsg)
-  {
     Token* idtok;
     if (token.kind == T.Identifier)
       (idtok = token), nT();
     else
     {
-      error(token, errorMsg, token.text);
+      error(token, mid, token.text);
       if (!trying)
       {
         idtok = lexer.insertEmptyTokenBefore(token);
@@ -4933,6 +4916,13 @@ class Parser
     return idtok;
   }
 
+  /// ditto
+  Identifier* requireIdentifier2(MID mid)
+  {
+    auto idtok = requireIdentifier(mid);
+    return idtok ? idtok.ident : Ident.Empty;
+  }
+
   /// Reports an error if the closing counterpart of a token is not found.
   void requireClosing(TOK closing, Token* opening)
   {
@@ -4941,7 +4931,7 @@ class Parser
     if (!consumed(closing))
     {
       auto loc = opening.getErrorLocation(lexer.srcText.filePath);
-      error(token, MSG.ExpectedClosing,
+      error(token, MID.ExpectedClosing,
         Token.toString(closing), opening.text, loc.lineNum, loc.colNum,
         getPrintable(token));
     }
@@ -4952,14 +4942,19 @@ class Parser
   {
     auto invalidUTF8Seq = Lexer.findInvalidUTF8Sequence(str);
     if (invalidUTF8Seq.length)
-      error(begin, MSG.InvalidUTF8SequenceInString, invalidUTF8Seq);
+      error(begin, MID.InvalidUTF8SequenceInString, invalidUTF8Seq);
     return invalidUTF8Seq.length != 0;
   }
 
   /// Forwards error parameters.
+  /// ditto
   void error(Token* token, string formatMsg, ...)
   {
     error_(token, false, formatMsg, _arguments, _argptr);
+  }
+  void error(Token* token, MID mid, ...)
+  {
+    error_(token, false, diag.bundle.msg(mid), _arguments, _argptr);
   }
   /// ditto
   void error(MID mid, ...)
