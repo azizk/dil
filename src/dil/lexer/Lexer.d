@@ -1753,7 +1753,7 @@ class Lexer
     while (1)
     {
       new_t = new Token;
-      scan(*new_t);
+      scan(new_t);
       // Save the tokens in a doubly linked list.
       // Could be useful for various tools.
       new_t.prev = prev_t;
