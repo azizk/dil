@@ -68,6 +68,8 @@ class Lexer
   ///   diag = Used for collecting error messages.
   this(SourceText srcText, LexerTables tables, Diagnostics diag = null)
   {
+    if (diag is null)
+      diag = new Diagnostics();
     this.srcText = srcText;
     this.tables = tables;
     this.diag = diag;
@@ -1978,7 +1980,7 @@ class Lexer
     return c;
 
   Lerr:
-    err_msg = GetMsg(mid);
+    err_msg = diag.bundle.msg(mid);
   Lerr2:
     if (!err_arg.length)
       err_arg = String(ref_p, p);
@@ -2608,13 +2610,14 @@ class Lexer
   void error(char* columnPos, MID mid, ...)
   {
     error_(this.lineNum, this.lineBegin, columnPos,
-      GetMsg(mid), _arguments, _argptr);
+      diag.bundle.msg(mid), _arguments, _argptr);
   }
 
   /// ditto
   void error(uint lineNum, char* lineBegin, char* columnPos, MID mid, ...)
   {
-    error_(lineNum, lineBegin, columnPos, GetMsg(mid), _arguments, _argptr);
+    error_(lineNum, lineBegin, columnPos,
+      diag.bundle.msg(mid), _arguments, _argptr);
   }
 
   /// ditto
@@ -2635,11 +2638,8 @@ class Lexer
     lineNum = this.errorLineNumber(lineNum);
     auto errorPath = errorFilePath();
     auto location = new Location(errorPath, lineNum, lineBegin, columnPos);
-    msg = Format(_arguments, _argptr, msg);
-    auto error = new LexerError(location, msg);
-    errors ~= error;
-    if (diag !is null)
-      diag ~= error;
+    msg = diag.format(_arguments, _argptr, msg);
+    errors ~= new LexerError(location, msg);
   }
 
   /// Returns true if the current character to be decoded is

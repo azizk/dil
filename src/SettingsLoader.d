@@ -12,7 +12,8 @@ import dil.semantic.Module,
        dil.semantic.Symbols;
 import dil.lexer.Funcs,
        dil.lexer.Identifier;
-import dil.i18n.Messages;
+import dil.i18n.Messages,
+       dil.i18n.ResourceBundle;
 import dil.Diagnostics,
        dil.Compilation,
        dil.Unicode;
@@ -49,20 +50,27 @@ abstract class SettingsLoader
     diag ~= new SemanticError(location, msg);
   }
 
-  T getValue(T)(string name)
+  T getValue(T)(string name, bool isOptional = false)
   {
     auto var = mod.lookup(hashOf(name));
-    if (!var) // Returning T.init instead of null, because dmd gives an error.
-      return error(mod.firstToken, "variable '{}' is not defined", name), T.init;
+    if (!var && isOptional)
+      return T.init;
+    if (!var)
+      // Returning T.init instead of null, because dmd gives an error.
+      return error(mod.firstToken,
+        "variable '{}' is not defined", name), T.init;
     auto t = var.node.begin;
     if (!var.isVariable)
-      return error(t, "'{}' is not a variable declaration", name), T.init;
+      return error(t,
+        "'{}' is not a variable declaration", name), T.init;
     auto value = var.to!(VariableSymbol).value;
     if (!value)
-      return error(t, "'{}' variable has no value set", name), T.init;
+      return error(t,
+        "'{}' variable has no value set", name), T.init;
     T val = value.Is!(T); // Try casting to T.
     if (!val)
-      error(value.begin, "the value of '{}' must be of type {}", name, T.stringof);
+      error(value.begin,
+        "the value of '{}' must be of type {}", name, T.stringof);
     return val;
   }
 
@@ -91,6 +99,8 @@ class ConfigLoader : SettingsLoader
   string executableDir; /// Absolute path to the directory of dil's executable.
   string dataDir; /// Absolute path to dil's data directory.
   string homePath; /// Path to the home directory.
+
+  ResourceBundle resourceBundle; /// A bundle for compiler messages.
 
   /// Constructs a ConfigLoader object.
   this(CompilationContext cc, Diagnostics diag, string arg0)
@@ -155,8 +165,7 @@ class ConfigLoader : SettingsLoader
     if (mod.hasErrors)
       return;
 
-    auto context = new CompilationContext;
-    auto pass1 = new SemanticPass1(mod, context);
+    auto pass1 = new SemanticPass1(mod, cc);
     pass1.run();
 
     // Initialize the dataDir member.
@@ -205,34 +214,52 @@ class ConfigLoader : SettingsLoader
       Location.TAB_WIDTH = cast(uint)val.number;
     }
 
+    auto langFile = expandVariables(GlobalSettings.langFile);
+    resourceBundle = loadResource(langFile);
+  }
 
-    // Load language file.
-    // TODO: create a separate class for this?
-    filePath = expandVariables(GlobalSettings.langFile);
-    mod = new Module(filePath, cc);
+  /// Loads a language file and returns a ResouceBundle object.
+  ResourceBundle loadResource(string langFile)
+  {
+    // 1. Load language file.
+    mod = new Module(langFile, cc);
     mod.parse();
 
     if (mod.hasErrors)
-      return;
+      return null;
 
-    pass1 = new SemanticPass1(mod, context);
+    auto pass1 = new SemanticPass1(mod, cc);
     pass1.run();
 
+    // 2. Extract the values of the variables.
+    string[] messages = new string[MID.max + 1];
     if (auto array = getValue!(ArrayInitExpr)("messages"))
     {
-      string[] messages;
-      foreach (value; array.values)
-        if (auto val = castTo!(StringExpr)(value))
-          messages ~= val.getString();
-      if (messages.length != MID.max+1)
-        error(mod.firstToken,
-              "messages table in {} must exactly have {} entries, but not {}.",
-              filePath, MID.max+1, messages.length);
-      GlobalSettings.messages = messages;
-      dil.i18n.Messages.SetMessages(messages);
+      foreach (i, value; array.values)
+        if (i >= messages.length)
+          break; // More messages given than allowed.
+        else if (auto val = castTo!(StringExpr)(value))
+          messages[i] = val.getString();
+      //if (messages.length != MID.max+1)
+        //error(mod.firstToken,
+          //"messages table in {} must exactly have {} entries, but not {}.",
+          //langFile, MID.max+1, messages.length);
     }
+    string langCode;
     if (auto val = getValue!(StringExpr)("lang_code"))
-      GlobalSettings.langCode = val.getString();
+      langCode = val.getString();
+    string parentLangFile;
+    if (auto val = getValue!(StringExpr)("inherit", true))
+      parentLangFile = expandVariables(val.getString());
+
+    // 3. Load the parent bundle if one is specified.
+    auto parentRB = parentLangFile ? loadResource(parentLangFile) : null;
+
+    // 4. Return a new bundle.
+    auto rb =  new ResourceBundle(messages, parentRB);
+    rb.langCode = langCode;
+
+    return rb;
   }
 
   /// Searches for the configuration file of dil.

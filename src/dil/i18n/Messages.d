@@ -72,33 +72,6 @@ enum MID
   HelpImportGraph,
 }
 
-/// The table of compiler messages.
-private string[] g_compilerMessages;
-
-static this()
-{
-  g_compilerMessages = new string[MID.max+1];
-}
-
-/// Sets the compiler messages.
-void SetMessages(string[] msgs)
-{
-  assert(MID.max+1 == msgs.length);
-  g_compilerMessages = msgs;
-}
-
-/// Returns the compiler message for mid.
-string GetMsg(MID mid)
-{
-  assert(mid < g_compilerMessages.length);
-  return g_compilerMessages[mid];
-}
-
-/// Returns a formatted string.
-char[] FormatMsg(MID mid, ...)
-{
-  return Format(_arguments, _argptr, GetMsg(mid));
-}
 
 /// Collection of error messages with no MID yet.
 struct MSG

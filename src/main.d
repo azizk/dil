@@ -53,15 +53,23 @@ import tango.core.tools.TraceExceptions;
 /// Entry function of Dil.
 void main(string[] args)
 {
+  if (args.length == 0)
+    throw new Exception("main() received 0 arguments");
+
+  // 1. Create a global compilation context.
   auto globalCC = newCompilationContext();
   auto diag = globalCC.diag;
-  ConfigLoader(globalCC, diag, args[0]).load();
+  // 2. Load the configuration file of Dil.
+  auto config = ConfigLoader(globalCC, diag, args[0]);
+  config.load();
+  diag.bundle = config.resourceBundle;
+
   if (diag.hasInfo())
     return printErrors(diag);
-
   if (args.length <= 1)
-    return printHelp("main");
+    return printHelp("main", diag);
 
+  // 3. Execute a command.
   auto op = new OptParser(args[2..$]);
   string command = args[1];
 
@@ -70,7 +78,7 @@ void main(string[] args)
   case "c2":
   case "c", "compile":
     if (!op.hasArgs())
-      return printHelp(command);
+      return printHelp(command, diag);
     bool useCommand2 = command == "c2";
 
     auto cmd = new CompileCommand();
@@ -110,7 +118,7 @@ void main(string[] args)
     break;
   case "pytree", "py":
     if (op.argv.length < 2)
-      return printHelp(command);
+      return printHelp(command, diag);
 
     class PyTreeCommand : Command
     {
@@ -156,7 +164,7 @@ void main(string[] args)
     break;
   case "ddoc", "d":
     if (op.argv.length < 2)
-      return printHelp(command);
+      return printHelp(command, diag);
 
     auto cmd = new DDocCommand();
     cmd.destDirPath = op.getArg();
@@ -188,7 +196,7 @@ void main(string[] args)
     break;
   case "hl", "highlight":
     if (!op.hasArgs())
-      return printHelp(command);
+      return printHelp(command, diag);
 
     auto cmd = new HighlightCommand();
     cmd.cc = globalCC;
@@ -213,7 +221,7 @@ void main(string[] args)
     break;
   case "importgraph", "igraph":
     if (!op.hasArgs())
-      return printHelp(command);
+      return printHelp(command, diag);
 
     auto cmd = new IGraphCommand();
     cmd.context = globalCC;
@@ -245,7 +253,7 @@ void main(string[] args)
     break;
   case "stats", "statistics":
     if (!op.hasArgs())
-      return printHelp(command);
+      return printHelp(command, diag);
 
     auto cmd = new StatsCommand();
     cmd.cc = globalCC;
@@ -259,7 +267,7 @@ void main(string[] args)
     break;
   case "tok", "tokenize":
     if (!op.hasArgs())
-      return printHelp(command);
+      return printHelp(command, diag);
 
     class TokenizeCommand : Command
     {
@@ -311,7 +319,7 @@ void main(string[] args)
     break;
   case "dlexed", "dlx":
     if (!op.hasArgs())
-      return printHelp(command);
+      return printHelp(command, diag);
 
     class SerializeCommand : Command
     {
@@ -357,7 +365,7 @@ void main(string[] args)
     break;
   case "trans", "translate":
     if (!op.hasArgs())
-      return printHelp(command);
+      return printHelp(command, diag);
 
     if (args[2] != "German")
       return Stdout.formatln(
@@ -432,13 +440,13 @@ void main(string[] args)
         Stdout.formatln("{}={}", name, settings[name]);
     break;
   case "?", "h", "help":
-    printHelp(op.hasArgs() ? op.getArg() : "");
+    printHelp(op.hasArgs() ? op.getArg() : "", diag);
     break;
   case "-v", "v", "--version", "version":
     Stdout(VERSION).newline;
     break;
   default:
-    printHelp("main");
+    printHelp("main", diag);
   }
 }
 
@@ -680,7 +688,7 @@ void printErrors(Diagnostics diag)
 
 /// Prints the help message of a command.
 /// If the command wasn't found, the main help message is printed.
-void printHelp(string command)
+void printHelp(string command, Diagnostics diag)
 {
   string msg;
   switch (command)
@@ -888,11 +896,11 @@ Example:
     else
     {
       auto COMPILED_WITH = __VENDOR__;
-      auto COMPILED_VERSION = Format("{}.{,:d3}",
+      auto COMPILED_VERSION = diag.format("{}.{,:d3}",
         __VERSION__/1000, __VERSION__%1000);
       auto COMPILED_DATE = __TIMESTAMP__;
-      msg = FormatMsg(MID.HelpMain, VERSION, COMMANDS, COMPILED_WITH,
-                      COMPILED_VERSION, COMPILED_DATE);
+      msg = diag.formatMsg(MID.HelpMain, VERSION, COMMANDS,
+        COMPILED_WITH, COMPILED_VERSION, COMPILED_DATE);
     }
   }
   Stdout(msg).newline;

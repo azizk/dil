@@ -52,6 +52,8 @@ class Parser
   ///   diag = Used for collecting error messages.
   this(SourceText srcText, LexerTables tables, Diagnostics diag = null)
   {
+    if (diag is null)
+      diag = new Diagnostics();
     this.diag = diag;
     this.lexer = new Lexer(srcText, tables, diag);
   }
@@ -4905,7 +4907,7 @@ class Parser
   /// Returns: The identifier token or null.
   Token* requireIdentifier(MID mid)
   {
-    return requireIdentifier(GetMsg(mid));
+    return requireIdentifier(diag.bundle.msg(mid));
   }
 
   /// Reports an error if the current token is not an identifier.
@@ -4962,12 +4964,12 @@ class Parser
   /// ditto
   void error(MID mid, ...)
   {
-    error_(this.token, false, GetMsg(mid), _arguments, _argptr);
+    error_(this.token, false, diag.bundle.msg(mid), _arguments, _argptr);
   }
   /// ditto
   void error_eL(MID mid, ...)
   {
-    error_(this.prevToken, true, GetMsg(mid), _arguments, _argptr);
+    error_(this.prevToken, true, diag.bundle.msg(mid), _arguments, _argptr);
   }
 
   /// ditto
@@ -5008,10 +5010,7 @@ class Parser
     auto location = endLoc ?
       token.errorLocationOfEnd(filePath) :
       token.getErrorLocation(filePath);
-    auto msg = Format(_arguments, _argptr, formatMsg);
-    auto error = new ParserError(location, msg);
-    errors ~= error;
-    if (diag !is null)
-      diag ~= error;
+    auto msg = diag.format(_arguments, _argptr, formatMsg);
+    errors ~= new ParserError(location, msg);
   }
 }
