@@ -27,5 +27,6 @@ abstract class Command
   }
 
   /// Runs the command.
-  void run();
+  void run()
+  {}
 }
