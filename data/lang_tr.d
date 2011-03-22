@@ -53,6 +53,18 @@ string[] messages = [
   "heksadesimal float üsler desimal sayı ile başlamalı.",
   "üsler desimal sayı ile başlamalı.",
 
+  // TODO: to be translated
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+
   // Parser messages
   "'{0}' beklendi, ama '{1}' bulundu.",
   "'{0}' lüzumsuz.",

@@ -11,33 +11,33 @@ string[] messages = [
 //   "ungültiges Unicodezeichen.",
   "ungültige UTF-8-Sequenz: '{0}'",
   // ''
-  "unterminiertes Zeichenliteral.",
+  "ungeschlossenes Zeichenliteral",
   "leeres Zeichenliteral.",
   // #line
   "erwartete 'line' nach '#'.",
   "Ganzzahl nach #line erwartet.",
 //   `erwartete Dateispezifikation (z.B. "pfad\zur\datei".)`,
-  "unterminierte Dateispezifikation (filespec.)",
+  "ungeschlossene Dateispezifikation (filespec)",
   "ein Special Token muss mit einem Zeilenumbruch abgeschlossen werden.",
   // ""
-  "unterminiertes Zeichenkettenliteral.",
+  "ungeschlossene Zeichenkette",
   // x""
   "Nicht-Hexzeichen '{0}' in Hexzeichenkette gefunden.",
   "ungerade Anzahl von Hexziffern in Hexzeichenkette.",
-  "unterminierte Hexzeichenkette.",
+  "ungeschlossene Hexzeichenkette",
   // /* */ /+ +/
-  "unterminierter Blockkommentar (/* */).",
-  "unterminierter verschachtelter Kommentar (/+ +/).",
+  "ungeschlossener Blockkommentar (/* */)",
+  "ungeschlossener verschachtelter Kommentar (/+ +/)",
   // `` r""
-  "unterminierte rohe Zeichenkette.",
-  "unterminierte Backquote-Zeichenkette.",
+  "ungeschlossene rohe Zeichenkette.",
+  "ungeschlossene Backquote-Zeichenkette.",
   // \x \u \U
   "undefinierte Escapesequenz '{0}' gefunden.",
   "ungültige Unicode-Escapesequenz '{0}' gefunden.",
   "unzureichende Anzahl von Hexziffern in Escapesequenz: '{0}'",
   // \&[a-zA-Z][a-zA-Z0-9]+;
-  "undefinierte HTML-Entität '{0}'",
-  "unterminierte HTML-Entität '{0}'.",
+  "undefinierte HTML-Entität ‚{0}‘",
+  "ungeschlossene HTML-Entität ‚{0}‘",
   "HTML-Entitäten müssen mit einem Buchstaben beginnen.",
   // integer overflows
   "Dezimalzahl überläuft im Vorzeichenbit.",
@@ -52,6 +52,16 @@ string[] messages = [
   "der Exponent einer hexadezimalen Fließkommazahl ist erforderlich.",
   "Hexadezimal-Exponenten müssen mit einer Dezimalziffer anfangen.",
   "Exponenten müssen mit einer Dezimalziffer anfangen.",
+  "die Moduldatei konnte nicht gelesen werden",
+  "die Moduldatei existiert nicht",
+  "die Oktalzahl ist größer als 0xFF: ‘{}’",
+  "der Dateiname ‘{}’ kann nicht als Modulname benutzt werden; es ist ein ungültiger oder reservierter D-Bezeichner",
+  "das Trennzeichen darf kein Leerzeichen sein",
+  "erwartete ein Trennzeichen oder einen Bezeichner nach ‘q\"’",
+  "erwartete eine neue Zeile nach dem Trennbezeichner ‘{}’",
+  "ungeschlossene abgegrenzte Zeichenkette",
+  "erwartete ‘\"’ nach dem Trenner ‘{}’",
+  "ungeschlossene Tokenzeichenkette",
 
   // Parser messages:
   "erwartete ‚{0}‘, fand aber ‚{1}‘",

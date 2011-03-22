@@ -54,6 +54,16 @@ enum MID
   HexFloatExponentRequired,
   HexFloatExpMustStartWithDigit,
   FloatExpMustStartWithDigit,
+  CantReadFile,
+  InexistantFile,
+  InvalidOctalEscapeSequence,
+  InvalidModuleName,
+  DelimiterIsWhitespace,
+  DelimiterIsMissing,
+  NoNewlineAfterIdDelimiter,
+  UnterminatedDelimitedString,
+  ExpectedDblQuoteAfterDelim,
+  UnterminatedTokenString,
 
   // Parser messages:
   ExpectedButFound,
@@ -140,18 +150,6 @@ static:
   auto EmptyDDocComment = "empty comment";
   auto MissingParamsSection = "missing params section";
   auto UndocumentedParam = "undocumented parameter ‘{}’";
-  // Lexer messages:
-  auto CantReadFile = "cannot read module file";
-  auto InexistantFile = "module file doesn’t exist";
-  auto InvalidOctalEscapeSequence = "value of octal escape sequence is greater than 0xFF: ‘{}’";
-  auto InvalidModuleName = "the file name ‘{}’ can't be used as a module name; it’s an invalid or reserved D identifier.";
-  auto DelimiterIsWhitespace = "the delimiter character cannot be whitespace";
-  auto DelimiterIsMissing = "expected delimiter character or identifier after ‘q\"’";
-  auto NoNewlineAfterIdDelimiter = "expected a newline after identifier delimiter ‘{}’";
-  auto UnterminatedDelimitedString = "unterminated delimited string literal";
-  auto ExpectedDblQuoteAfterDelim = "expected ‘\"’ after delimiter ‘{}’";
-  auto UnterminatedTokenString = "unterminated token string literal";
-  // Parser messages:
 
   // Semantic analysis:
   auto CouldntLoadModule = "couldn’t find module file ‘{}’";

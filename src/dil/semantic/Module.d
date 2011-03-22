@@ -125,7 +125,7 @@ class Module : ModuleSymbol
       if (!idtable.isValidUnreservedIdentifier(str))
       {
         auto location = this.firstToken().getErrorLocation(filePath());
-        auto msg = Format(MSG.InvalidModuleName, str);
+        auto msg = cc.diag.formatMsg(MID.InvalidModuleName, str);
         cc.diag ~= new LexerError(location, msg);
         str = idtable.genModuleID().str;
       }

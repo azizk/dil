@@ -61,9 +61,9 @@ final class SourceText
     scope(failure)
     {
       auto loc = new Location(filePath, 0);
-      auto msg = Path(this.filePath).exists() ?
-        MSG.CantReadFile : MSG.InexistantFile;
-      diag ~= new LexerError(loc, msg);
+      auto mid = Path(this.filePath).exists() ?
+        MID.CantReadFile : MID.InexistantFile;
+      diag ~= new LexerError(loc, diag.bundle.msg(mid));
       data = sentinelString;
       return false;
     }

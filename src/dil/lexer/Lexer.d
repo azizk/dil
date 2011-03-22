@@ -865,7 +865,7 @@ class Lexer
   }
 
   /// CTF: Casts a string literal to an integer.
-  static uint toUint(char[] s)
+  static uint toUint(string s)
   {
     assert(s.length <= 4);
     uint x, i = s.length;
@@ -878,7 +878,7 @@ class Lexer
   static assert(toUint("\xAA\xBB\xCC\xDD") == 0xAABBCCDD);
 
   /// CTF: Like toUint(), but considers the endianness of the CPU.
-  static uint toUintE(char[] s)
+  static uint toUintE(string s)
   {
     version(BigEndian)
     return toUint(s);
@@ -904,7 +904,7 @@ class Lexer
   ///   kind = TOK.Less;
   ///   goto Lcommon;
   /// ---
-  static char[] case_(char[] str, char[] kind)
+  static char[] case_(string str, string kind)
   {
     char[] label_str = "Lcommon";
     if (str.length != 1) // Append length as a suffix.
@@ -915,7 +915,7 @@ class Lexer
   // pragma(msg, case_("<", "Less"));
 
   /// CTF: Maps a flat list to case_().
-  static char[] cases(char[][] cs ...)
+  static char[] cases(string[] cs ...)
   {
     assert(cs.length % 2 == 0);
     char[] result;
@@ -1599,7 +1599,7 @@ class Lexer
       char* idbegin = p;
       if (scanNewline(p))
       {
-        error(idbegin, MSG.DelimiterIsMissing);
+        error(idbegin, MID.DelimiterIsMissing);
         p = idbegin; // Reset and don't consume the newline.
         goto Lerr;
       }
@@ -1626,13 +1626,13 @@ class Lexer
         ++lineNum,
         setLineBegin(p);
       else
-        error(p, MSG.NoNewlineAfterIdDelimiter, str_delim);
+        error(p, MID.NoNewlineAfterIdDelimiter, str_delim);
       --p; // Go back one because of "c = *++p;" in main loop.
     }
     assert(closing_delim);
 
     if (isspace(closing_delim))
-      error(p, MSG.DelimiterIsWhitespace);
+      error(p, MID.DelimiterIsWhitespace);
 
     bool checkStringDelim(char* p)
     { // Returns true if p points to the closing string delimiter.
@@ -1658,7 +1658,7 @@ class Lexer
         break;
       case 0, _Z_:
         error(tokenLineNum, tokenLineBegin, t.start,
-          MSG.UnterminatedDelimitedString);
+          MID.UnterminatedDelimitedString);
         goto Lerr;
       default:
         if (!isascii(c))
@@ -1712,7 +1712,7 @@ class Lexer
     if (*p == '"')
       postfix = scanPostfix((++p, p));
     else
-      error(p, MSG.ExpectedDblQuoteAfterDelim,
+      error(p, MID.ExpectedDblQuoteAfterDelim,
         // Pass str_delim or encode and pass closing_delim as a string.
         (str_delim.length || encode(str_delim, closing_delim), str_delim));
 
@@ -1782,7 +1782,7 @@ class Lexer
         break;
       case TOK.EOF:
         error(tokenLineNum, tokenLineBegin, t.start,
-          MSG.UnterminatedTokenString);
+          MID.UnterminatedTokenString);
         inner_tokens = t.next;
         t.next = new_t;
         break Loop;
@@ -1864,7 +1864,7 @@ class Lexer
     assert(*p == '\\');
     // Used for error reporting.
     MID mid;
-    char[] err_msg, err_arg;
+    char[] err_arg;
 
     ++p; // Skip '\\'.
     uint c = char2ev(*p); // Table lookup.
@@ -1932,8 +1932,8 @@ class Lexer
         if (c <= 0xFF)
           goto Lreturn;
 
-        err_msg = MSG.InvalidOctalEscapeSequence;
-        goto Lerr2;
+        mid = MID.InvalidOctalEscapeSequence;
+        goto Lerr;
       }
       else if (*p == '&')
       {
@@ -1980,11 +1980,9 @@ class Lexer
     return c;
 
   Lerr:
-    err_msg = diag.bundle.msg(mid);
-  Lerr2:
     if (!err_arg.length)
       err_arg = String(ref_p, p);
-    error(ref_p, err_msg, err_arg);
+    error(ref_p, mid, err_arg);
     ref_p = p; // Is at the beginning of the sequence. Update now.
     return REPLACEMENT_CHAR; // Error: return replacement character.
   }
@@ -2433,9 +2431,9 @@ class Lexer
     if (f.isPInf())
       error(t.start, MID.OverflowFloatNumber);
     // else if (f.isNInf())
-      // error(t.start, MSG.UnderflowFloatNumber);
+      // error(t.start, MID.UnderflowFloatNumber);
     // else if (f.isNaN())
-      // error(t.start, MSG.NaNFloat);
+      // error(t.start, MID.NaNFloat);
     t.mpfloat = f;
     t.kind = kind;
     t.end = this.p = p;
@@ -2601,29 +2599,17 @@ class Lexer
   }
 
   /// Forwards error parameters.
-  void error(char* columnPos, char[] msg, ...)
-  {
-    error_(this.lineNum, this.lineBegin, columnPos, msg, _arguments, _argptr);
-  }
-
-  /// ditto
   void error(char* columnPos, MID mid, ...)
   {
-    error_(this.lineNum, this.lineBegin, columnPos,
-      diag.bundle.msg(mid), _arguments, _argptr);
+    error(_arguments, _argptr, this.lineNum, this.lineBegin, columnPos,
+      diag.bundle.msg(mid));
   }
 
   /// ditto
   void error(uint lineNum, char* lineBegin, char* columnPos, MID mid, ...)
   {
-    error_(lineNum, lineBegin, columnPos,
-      diag.bundle.msg(mid), _arguments, _argptr);
-  }
-
-  /// ditto
-  void error(uint lineNum, char* lineBegin, char* columnPos, char[] msg, ...)
-  {
-    error_(lineNum, lineBegin, columnPos, msg, _arguments, _argptr);
+    error(_arguments, _argptr, lineNum, lineBegin, columnPos,
+      diag.bundle.msg(mid));
   }
 
   /// Creates an error report and appends it to a list.
@@ -2632,8 +2618,8 @@ class Lexer
   ///   lineBegin = Points to the first character of the current line.
   ///   columnPos = Points to the character where the error is located.
   ///   msg = The error message.
-  void error_(uint lineNum, char* lineBegin, char* columnPos, char[] msg,
-              TypeInfo[] _arguments, va_list _argptr)
+  void error(TypeInfo[] _arguments, va_list _argptr,
+    uint lineNum, char* lineBegin, char* columnPos, string msg)
   {
     lineNum = this.errorLineNumber(lineNum);
     auto errorPath = errorFilePath();
@@ -2666,9 +2652,9 @@ class Lexer
       if ((d & 0xFE) == 0xC0) // 1100000x
         return false;
     }
-    const char[] checkNextByte = "if (!isTrailByte(*++p))"
+    const string checkNextByte = "if (!isTrailByte(*++p))"
                                  "  return false;";
-    const char[] appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
+    const string appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
     // Decode
     if ((d & 0b1110_0000) == 0b1100_0000)
     {
@@ -2728,9 +2714,9 @@ class Lexer
         goto Lerr;
     }
 
-    const char[] checkNextByte = "if (!isTrailByte(*++p))"
+    const string checkNextByte = "if (!isTrailByte(*++p))"
                                  "  goto Lerr2;";
-    const char[] appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
+    const string appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
 
     // See how many bytes need to be decoded.
     if ((d & 0b1110_0000) == 0b1100_0000)
@@ -2887,7 +2873,7 @@ unittest
   Stdout("Testing Lexer.\n");
   struct Pair
   {
-    char[] tokenText;
+    string tokenText;
     TOK kind;
   }
   static Pair[] pairs = [

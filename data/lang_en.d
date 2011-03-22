@@ -52,6 +52,16 @@ string[] messages = [
   "the exponent of a hexadecimal float number is required.",
   "hexadecimal float exponents must start with a digit.",
   "exponents must start with a digit.",
+  "cannot read module file",
+  "module file doesn’t exist",
+  "value of octal escape sequence is greater than 0xFF: ‘{}’",
+  "the file name ‘{}’ can’t be used as a module name; it’s an invalid or reserved D identifier",
+  "the delimiter character cannot be whitespace",
+  "expected delimiter character or identifier after ‘q\"’",
+  "expected a newline after identifier delimiter ‘{}’",
+  "unterminated delimited string literal",
+  "expected ‘\"’ after delimiter ‘{}’",
+  "unterminated token string literal",
 
   // Parser messages
   "expected ‘{0}’, but found ‘{1}’.",

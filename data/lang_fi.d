@@ -53,6 +53,18 @@ string[] messages = [
   "heksadesimaalisen liukuluvun eksponentin tulee alkaa numerolla.",
   "eksponenttien tulee alkaa numerolla.",
 
+  // TODO: to be translated
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+
   // Parser messages
   "odotettiin '{0}':a, mutta luettiin '{1}'.",
   "'{0}' on redundantti.",
