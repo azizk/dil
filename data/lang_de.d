@@ -110,6 +110,7 @@ string[] messages = [
   "unbekanntes Attribut: ‚@{}‘",
   "erwartete eine Ganzzahl nach align, nicht ‚{}‘",
   "ungültige Asm-Anweisung gefunden: „{}“",
+  "ungültiger binärer Operator ‘{}’ in Asm-Anweisung",
   "erwartete einen Bezeichner für die Deklaration, nicht ‚{}‘",
   "erwartete einen oder mehrere Templateparameter, nicht ‚)‘",
   "erwartete einen Typ oder einen Ausdruck, nicht ‚)‘",

@@ -109,6 +109,7 @@ string[] messages = [
   "unrecognized attribute: ‘@{}’",
   "expected an integer after align, not ‘{}’",
   "illegal asm statement found: “{}”",
+  "illegal binary operator ‘{}’ in asm statement",
   "expected declarator identifier, not ‘{}’",
   "expected one or more template parameters, not ‘)’",
   "expected a type or and expression, not ‘)’",

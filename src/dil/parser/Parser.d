@@ -2912,12 +2912,11 @@ class Parser
   }
 
   /// $(BNF AsmExpr := AsmCondExpr
-  ////AsmCondExpr :=
-  ////  AsmOrOrExpr ("?" AsmExpr ":" AsmExpr)? )
+  ////AsmCondExpr := AsmBinaryExpr ("?" AsmExpr ":" AsmExpr)? )
   Expression parseAsmExpr()
   {
     auto begin = token;
-    auto e = parseAsmOrOrExpr();
+    auto e = parseAsmBinaryExpr();
     if (auto qtok = consumedToken(T.Question)) // "?"
     {
       auto iftrue = parseAsmExpr();
@@ -2931,188 +2930,49 @@ class Parser
     return e;
   }
 
-  /// $(BNF AsmOrOrExpr :=
-  ////  AsmAndAndExpr ("||" AsmAndAndExpr)* )
-  Expression parseAsmOrOrExpr()
+  /// $(BNF AsmBinaryExpr := AsmOrOrExpr
+  ////AsmOrOrExpr := AsmAndAndExpr ("||" AsmAndAndExpr)*
+  ////AsmAndAndExpr := AsmOrExpr ("&&" AsmOrExpr)*
+  ////AsmOrExpr := AsmXorExpr ("|" AsmXorExpr)*
+  ////AsmXorExpr := AsmAndExpr ("^" AsmAndExpr)*
+  ////AsmAndExpr := AsmCmpExpr ("&" AsmCmpExpr)*
+  ////AsmCmpExpr := AsmShiftExpr (AsmCmpOp AsmShiftExpr)*
+  ////AsmCmpOp := "==" | "!=" | "<" | "<=" | ">" | ">="
+  ////AsmShiftExpr := AsmAddExpr (AsmShiftOp AsmAddExpr)*
+  ////AsmShiftOp := "<<" | ">>" | ">>>"
+  ////AsmAddExpr := AsmMulExpr (AsmAddOp AsmMulExpr)*
+  ////AsmAddOp := "+" | "-"
+  ////AsmMulExpr := AsmPostExpr (AsmMulOp AsmPostExpr)*
+  ////AsmMulOp := "*" | "/" | "%"
+  ////)
+  /// Params:
+  ///   prevPrec = The precedence of the previous operator plus 1.
+  Expression parseAsmBinaryExpr(int prevPrec = 0)
   {
-    alias parseAsmAndAndExpr parseNext;
     auto begin = token;
-    auto e = parseNext();
-    while (token.kind == T.OrLogical)
-    {
-      auto tok = token;
-      nT();
-      e = new OrOrExpr(e, parseNext(), tok);
-      set(e, begin);
-    }
-    return e;
-  }
+    auto e = parseAsmPostExpr(); // Parse the left-hand side.
 
-  /// $(BNF AsmAndAndExpr :=
-  ////  AsmOrExpr ("&&" AsmOrExpr)* )
-  Expression parseAsmAndAndExpr()
-  {
-    alias parseAsmOrExpr parseNext;
-    auto begin = token;
-    auto e = parseNext();
-    while (token.kind == T.AndLogical)
-    {
-      auto tok = token;
-      nT();
-      e = new AndAndExpr(e, parseNext(), tok);
-      set(e, begin);
-    }
-    return e;
-  }
-
-  /// $(BNF AsmOrExpr := AsmXorExpr ("|" AsmXorExpr)* )
-  Expression parseAsmOrExpr()
-  {
-    alias parseAsmXorExpr parseNext;
-    auto begin = token;
-    auto e = parseNext();
-    while (token.kind == T.OrBinary)
-    {
-      auto tok = token;
-      nT();
-      e = new OrExpr(e, parseNext(), tok);
-      set(e, begin);
-    }
-    return e;
-  }
-
-  /// $(BNF AsmXorExpr := AsmAndExpr ("^" AsmAndExpr)* )
-  Expression parseAsmXorExpr()
-  {
-    alias parseAsmAndExpr parseNext;
-    auto begin = token;
-    auto e = parseNext();
-    while (token.kind == T.Xor)
-    {
-      auto tok = token;
-      nT();
-      e = new XorExpr(e, parseNext(), tok);
-      set(e, begin);
-    }
-    return e;
-  }
-
-  /// $(BNF AsmAndExpr := AsmCmpExpr ("&" AsmCmpExpr)* )
-  Expression parseAsmAndExpr()
-  {
-    alias parseAsmCmpExpr parseNext;
-    auto begin = token;
-    auto e = parseNext();
-    while (token.kind == T.AndBinary)
-    {
-      auto tok = token;
-      nT();
-      e = new AndExpr(e, parseNext(), tok);
-      set(e, begin);
-    }
-    return e;
-  }
-
-  /// $(BNF AsmCmpExpr := AsmShiftExpr (Op AsmShiftExpr)*
-  ////Op := "==" | "!=" | "<" | "<=" | ">" | ">=" )
-  Expression parseAsmCmpExpr()
-  {
-    alias parseAsmShiftExpr parseNext;
-    auto begin = token;
-    auto e = parseNext();
-
-    auto operator = token;
-    switch (operator.kind)
-    {
-    case T.Equal, T.NotEqual:
-      nT();
-      e = new EqualExpr(e, parseNext(), operator);
-      break;
-    case T.LessEqual, T.Less, T.GreaterEqual, T.Greater:
-      nT();
-      e = new RelExpr(e, parseNext(), operator);
-      break;
-    default:
-      return e;
-    }
-    set(e, begin);
-    return e;
-  }
-
-  /// $(BNF AsmShiftExpr := AsmAddExpr (Op AsmAddExpr)*
-  ////Op := "<<" | ">>" | ">>>" )
-  Expression parseAsmShiftExpr()
-  {
-    alias parseAsmAddExpr parseNext;
-    auto begin = token;
-    auto e = parseNext();
+    NewBinaryExpr makeBinaryExpr;
     while (1)
     {
       auto operator = token;
-      switch (operator.kind)
+      auto opPrec = parseBinaryOp(makeBinaryExpr);
+      if (opPrec < prevPrec) // Parse as long as the operators
+        break;               // have equal or higher precedence.
+      switch (token.kind)
       {
-      case T.LShift:
-        nT(); e = new LShiftExpr(e, parseNext(), operator); break;
-      case T.RShift:
-        nT(); e = new RShiftExpr(e, parseNext(), operator); break;
-      case T.URShift:
-        nT(); e = new URShiftExpr(e, parseNext(), operator); break;
+      case T.Is, T.In, T.Unordered, T.UorE, T.UorG, T.UorGorE,
+           T.UorL, T.UorLorE, T.LorEorG, T.LorG, T.Tilde, T.Pow:
+        //error(operator, MID.IllegalBinOpInAsm, operator.text());
+        break;
       default:
-        return e;
       }
+      nT(); // Skip the binary operator.
+      auto rhs = parseAsmBinaryExpr(opPrec + 1); // Parse the right-hand side.
+      e = makeBinaryExpr(e, rhs, operator);
       set(e, begin);
     }
-    assert(0);
-  }
-
-  /// $(BNF AsmAddExpr := AsmMulExpr (Op AsmMulExpr)*
-  ////Op := "+" | "-" )
-  Expression parseAsmAddExpr()
-  {
-    alias parseAsmMulExpr parseNext;
-    auto begin = token;
-    auto e = parseNext();
-    while (1)
-    {
-      auto operator = token;
-      switch (operator.kind)
-      {
-      case T.Plus:
-        nT(); e = new PlusExpr(e, parseNext(), operator); break;
-      case T.Minus:
-        nT(); e = new MinusExpr(e, parseNext(), operator); break;
-      // Not allowed in asm
-      //case T.Tilde:
-      //  nT(); e = new CatExpr(e, parseNext(), operator); break;
-      default:
-        return e;
-      }
-      set(e, begin);
-    }
-    assert(0);
-  }
-
-  /// $(BNF AsmMulExpr := AsmPostExpr (Op AsmPostExpr)*
-  ////Op := "*" | "/" | "%" )
-  Expression parseAsmMulExpr()
-  {
-    alias parseAsmPostExpr parseNext;
-    auto begin = token;
-    auto e = parseNext();
-    while (1)
-    {
-      auto operator = token;
-      switch (operator.kind)
-      {
-      case T.Mul: nT(); e = new MulExpr(e, parseNext(), operator); break;
-      case T.Div: nT(); e = new DivExpr(e, parseNext(), operator); break;
-      case T.Mod: nT(); e = new ModExpr(e, parseNext(), operator); break;
-      default:
-        return e;
-      }
-      set(e, begin);
-    }
-    assert(0);
+    return e;
   }
 
   /// $(BNF AsmPostExpr := AsmUnaryExpr ("[" AsmExpr "]")* )
@@ -3307,6 +3167,15 @@ class Parser
   |                       Expression parsing methods                        |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
+
+  /// Instantiates a function that returns a new binary expression.
+  static Expression newBinaryExpr(E)(Expression l, Expression r, Token* op)
+  {
+    return new E(l, r, op);
+  }
+  /// The function signature of newBinaryExpr.
+  alias Expression function(Expression, Expression, Token*) NewBinaryExpr;
+
   /// The root method for parsing an Expression.
   /// $(BNF Expression := AssignExpr ("," AssignExpr)* )
   Expression parseExpression()
@@ -3324,62 +3193,51 @@ class Parser
     return e;
   }
 
-  /// $(BNF AssignExpr := CondExpr (Op AssignExpr)*
-  ////Op := "=" | "<<=" | ">>=" | ">>>=" | "|=" |
-  ////      "&=" | "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~=" | "^^="
+  /// $(BNF AssignExpr := CondExpr (AssignOp AssignExpr)*
+  ////AssignOp := "=" | "<<=" | ">>=" | ">>>=" | "|=" |
+  ////            "&=" | "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~=" | "^^="
   ////)
   Expression parseAssignExpr()
   {
-    alias parseAssignExpr parseNext;
     auto begin = token;
     auto e = parseCondExpr();
     auto optok = token;
+    NewBinaryExpr f = void;
     switch (optok.kind)
     {
-    case T.Assign:
-      nT(); e = new AssignExpr(e, parseNext(), optok); break;
-    case T.LShiftAssign:
-      nT(); e = new LShiftAssignExpr(e, parseNext(), optok); break;
-    case T.RShiftAssign:
-      nT(); e = new RShiftAssignExpr(e, parseNext(), optok); break;
-    case T.URShiftAssign:
-      nT(); e = new URShiftAssignExpr(e, parseNext(), optok); break;
-    case T.OrAssign:
-      nT(); e = new OrAssignExpr(e, parseNext(), optok); break;
-    case T.AndAssign:
-      nT(); e = new AndAssignExpr(e, parseNext(), optok); break;
-    case T.PlusAssign:
-      nT(); e = new PlusAssignExpr(e, parseNext(), optok); break;
-    case T.MinusAssign:
-      nT(); e = new MinusAssignExpr(e, parseNext(), optok); break;
-    case T.DivAssign:
-      nT(); e = new DivAssignExpr(e, parseNext(), optok); break;
-    case T.MulAssign:
-      nT(); e = new MulAssignExpr(e, parseNext(), optok); break;
-    case T.ModAssign:
-      nT(); e = new ModAssignExpr(e, parseNext(), optok); break;
-    case T.XorAssign:
-      nT(); e = new XorAssignExpr(e, parseNext(), optok); break;
-    case T.CatAssign:
-      nT(); e = new CatAssignExpr(e, parseNext(), optok); break;
+    case T.Assign:        f = &newBinaryExpr!(AssignExpr); goto Lcommon;
+    case T.LShiftAssign:  f = &newBinaryExpr!(LShiftAssignExpr); goto Lcommon;
+    case T.RShiftAssign:  f = &newBinaryExpr!(RShiftAssignExpr); goto Lcommon;
+    case T.URShiftAssign: f = &newBinaryExpr!(URShiftAssignExpr); goto Lcommon;
+    case T.OrAssign:      f = &newBinaryExpr!(OrAssignExpr); goto Lcommon;
+    case T.AndAssign:     f = &newBinaryExpr!(AndAssignExpr); goto Lcommon;
+    case T.PlusAssign:    f = &newBinaryExpr!(PlusAssignExpr); goto Lcommon;
+    case T.MinusAssign:   f = &newBinaryExpr!(MinusAssignExpr); goto Lcommon;
+    case T.DivAssign:     f = &newBinaryExpr!(DivAssignExpr); goto Lcommon;
+    case T.MulAssign:     f = &newBinaryExpr!(MulAssignExpr); goto Lcommon;
+    case T.ModAssign:     f = &newBinaryExpr!(ModAssignExpr); goto Lcommon;
+    case T.XorAssign:     f = &newBinaryExpr!(XorAssignExpr); goto Lcommon;
+    case T.CatAssign:     f = &newBinaryExpr!(CatAssignExpr); goto Lcommon;
     version(D2)
     {
-    case T.PowAssign:
-      nT(); e = new PowAssignExpr(e, parseNext(), optok); break;
+    case T.PowAssign:     f = &newBinaryExpr!(PowAssignExpr); goto Lcommon;
     }
+    Lcommon:
+      skip(optok.kind);
+      // Parse the right-hand side and create the expression.
+      e = f(e, parseAssignExpr(), optok);
+      set(e, begin);
+      break;
     default:
-      return e;
     }
-    set(e, begin);
     return e;
   }
 
-  /// $(BNF CondExpr :=
-  ////  OrOrExpr ("?" Expression ":" CondExpr)? )
+  /// $(BNF CondExpr := BinaryExpr ("?" Expression ":" CondExpr)? )
   Expression parseCondExpr()
   {
     auto begin = token;
-    auto e = parseOrOrExpr();
+    auto e = parseBinaryExpr();
     if (auto qtok = consumedToken(T.Question)) // "?"
     {
       auto iftrue = parseExpression();
@@ -3392,194 +3250,100 @@ class Parser
     return e;
   }
 
-  /// $(BNF OrOrExpr := AndAndExpr ("||" AndAndExpr)* )
-  Expression parseOrOrExpr()
+  /// Returns the precedence of a binary operator, or -1 if it's not binary.
+  /// The higher the value the stronger the operator binds.
+  /// Params:
+  ///   f = Receives a function that creates the binary Expression.
+  int parseBinaryOp(ref NewBinaryExpr fn)
   {
-    alias parseAndAndExpr parseNext;
-    Token* begin = token, operator = void;
-    auto e = parseNext();
-    while ((operator = consumedToken(T.OrLogical)) !is null)
-      e = set(new OrOrExpr(e, parseNext(), operator), begin);
-    return e;
-  }
-
-  /// $(BNF AndAndExpr := OrExpr ("&&" OrExpr)* )
-  Expression parseAndAndExpr()
-  {
-    alias parseOrExpr parseNext;
-    Token* begin = token, operator = void;
-    auto e = parseNext();
-    while ((operator = consumedToken(T.AndLogical)) !is null)
-      e = set(new AndAndExpr(e, parseNext(), operator), begin);
-    return e;
-  }
-
-  /// $(BNF OrExpr := XorExpr ("|" XorExpr)* )
-  Expression parseOrExpr()
-  {
-    alias parseXorExpr parseNext;
-    Token* begin = token, operator = void;
-    auto e = parseNext();
-    while ((operator = consumedToken(T.OrBinary)) !is null)
-      e = set(new OrExpr(e, parseNext(), operator), begin);
-    return e;
-  }
-
-  /// $(BNF XorExpr := AndExpr ("^" AndExpr)* )
-  Expression parseXorExpr()
-  {
-    alias parseAndExpr parseNext;
-    Token* begin = token, operator = void;
-    auto e = parseNext();
-    while ((operator = consumedToken(T.Xor)) !is null)
-      e = set(new XorExpr(e, parseNext(), operator), begin);
-    return e;
-  }
-
-  /// $(BNF AndExpr := CmpExpr ("&" CmpExpr)* )
-  Expression parseAndExpr()
-  {
-    alias parseCmpExpr parseNext;
-    Token* begin = token, operator = void;
-    auto e = parseNext();
-    while ((operator = consumedToken(T.AndBinary)) !is null)
-      e = set(new AndExpr(e, parseNext(), operator), begin);
-    return e;
-  }
-
-  /// $(BNF CmpExpr := ShiftExpr (Op ShiftExpr)?
-  ////Op := "is" | "!" "is" | "in" | "==" | "!=" | "<" | "<=" | ">" |
-  ////      ">=" | "!<>=" | "!<>" | "!<=" | "!<" |
-  ////      "!>=" | "!>" | "<>=" | "<>")
-  Expression parseCmpExpr()
-  {
-    alias parseShiftExpr parseNext;
-    auto begin = token;
-    auto e = parseNext();
-
-    auto operator = token;
-    switch (operator.kind)
+    int p = -1;
+    NewBinaryExpr f;
+    switch (token.kind)
     {
+    case T.OrLogical:  p = 1; f = &newBinaryExpr!(OrOrExpr); break;
+    case T.AndLogical: p = 2; f = &newBinaryExpr!(AndAndExpr); break;
+    case T.OrBinary:   p = 3; f = &newBinaryExpr!(OrExpr); break;
+    case T.Xor:        p = 4; f = &newBinaryExpr!(XorExpr); break;
+    case T.AndBinary:  p = 5; f = &newBinaryExpr!(AndExpr); break;
+    case T.Is:         p = 6; f = &newBinaryExpr!(IdentityExpr); break;
+    case T.In:         p = 6; f = &newBinaryExpr!(InExpr); break;
     case T.Equal, T.NotEqual:
-      nT();
-      e = new EqualExpr(e, parseNext(), operator);
-      break;
+                       p = 6; f = &newBinaryExpr!(EqualExpr); break;
     case T.Not:
       auto next = peekNext();
-      if (next == T.Is)
-      { nT(); goto case T.Is; }
-      else version(D2) if (next == T.In)
-      { nT(); goto case T.In; }
-      break;
-    case T.Is:
-      skip(T.Is);
-      e = new IdentityExpr(e, parseNext(), operator);
-      break;
+      if (next == T.Is) { // "!" is
+        nT(); goto case T.Is;
+      }
+      else version(D2) if (next == T.In) { // "!" in
+        nT(); goto case T.In;
+      }
+      break; // Not a binary operator.
     case T.LessEqual, T.Less, T.GreaterEqual, T.Greater,
          T.Unordered, T.UorE, T.UorG, T.UorGorE,
          T.UorL, T.UorLorE, T.LorEorG, T.LorG:
-      nT();
-      e = new RelExpr(e, parseNext(), operator);
-      break;
-    case T.In:
-      skip(T.In);
-      e = new InExpr(e, parseNext(), operator);
-      break;
-    default:
-      return e;
-    }
-    set(e, begin);
-    return e;
-  }
-
-  /// $(BNF ShiftExpr := AddExpr (Op AddExpr)*
-  ////Op := "<<" | ">>" | ">>>")
-  Expression parseShiftExpr()
-  {
-    alias parseAddExpr parseNext;
-    auto begin = token;
-    auto e = parseNext();
-    while (1)
-    {
-      auto operator = token;
-      switch (operator.kind)
-      {
-      case T.LShift:
-        nT(); e = new LShiftExpr(e, parseNext(), operator); break;
-      case T.RShift:
-        nT(); e = new RShiftExpr(e, parseNext(), operator); break;
-      case T.URShift:
-        nT(); e = new URShiftExpr(e, parseNext(), operator); break;
-      default:
-        return e;
-      }
-      set(e, begin);
-    }
-    assert(0);
-  }
-
-  /// $(BNF AddExpr := MulExpr (Op MulExpr)*
-  ////Op := "+" | "-" | "~")
-  Expression parseAddExpr()
-  {
-    alias parseMulExpr parseNext;
-    auto begin = token;
-    auto e = parseNext();
-    while (1)
-    {
-      auto operator = token;
-      switch (operator.kind)
-      {
-      case T.Plus:
-        nT(); e = new PlusExpr(e, parseNext(), operator); break;
-      case T.Minus:
-        nT(); e = new MinusExpr(e, parseNext(), operator); break;
-      case T.Tilde:
-        nT(); e = new CatExpr(e, parseNext(), operator); break;
-      default:
-        return e;
-      }
-      set(e, begin);
-    }
-    assert(0);
-  }
-
-  /// $(BNF MulExpr := PostExpr (Op PostExpr)*
-  ////Op := "*" | "/" | "%")
-  ///D2:
-  /// $(BNF MulExpr := PowExpr (Op PowExpr)*)
-  Expression parseMulExpr()
-  {
+                    p = 6; f = &newBinaryExpr!(RelExpr); break;
+    case T.LShift:  p = 7; f = &newBinaryExpr!(LShiftExpr); break;
+    case T.RShift:  p = 7; f = &newBinaryExpr!(RShiftExpr); break;
+    case T.URShift: p = 7; f = &newBinaryExpr!(URShiftExpr); break;
+    case T.Plus:    p = 8; f = &newBinaryExpr!(PlusExpr); break;
+    case T.Minus:   p = 8; f = &newBinaryExpr!(MinusExpr); break;
+    case T.Tilde:   p = 8; f = &newBinaryExpr!(CatExpr); break;
+    case T.Mul:     p = 9; f = &newBinaryExpr!(MulExpr); break;
+    case T.Div:     p = 9; f = &newBinaryExpr!(DivExpr); break;
+    case T.Mod:     p = 9; f = &newBinaryExpr!(ModExpr); break;
     version(D2)
-    alias parsePowExpr parseNext;
-    else
-    alias parsePostExpr parseNext;
+    {
+    case T.Pow:     p = 10; f = &newBinaryExpr!(PowExpr); break;
+    }
+    default:
+    }
+    if (f)
+      fn = f;
+    return p;
+  }
+
+  /// Parses a binary operator expression.
+  ///
+  /// $(BNF BinaryExpr := OrOrExpr
+  ////OrOrExpr := AndAndExpr ("||" AndAndExpr)*
+  ////AndAndExpr := OrExpr ("&&" OrExpr)*
+  ////OrExpr := XorExpr ("|" XorExpr)*
+  ////XorExpr := AndExpr ("^" AndExpr)*
+  ////AndExpr := CmpExpr ("&" CmpExpr)*
+  ////CmpExpr := ShiftExpr (CmpOp ShiftExpr)?
+  ////CmpOp := "is" | "!" "is" | "in" | "==" | "!=" | "<" | "<=" | ">" |
+  ////         ">=" | "!<>=" | "!<>" | "!<=" | "!<" |
+  ////         "!>=" | "!>" | "<>=" | "<>"
+  ////ShiftExpr := AddExpr (ShiftOp AddExpr)*
+  ////ShiftOp := "<<" | ">>" | ">>>"
+  ////AddExpr := MulExpr (AddOp MulExpr)*
+  ////AddOp := "+" | "-" | "~"
+  ////MulExpr := PostExpr (MulOp PostExpr)*
+  ////MulExpr := PowExpr (MulOp PowExpr)* # D2
+  ////MulOp := "*" | "/" | "%"
+  ////PowExpr := PostExpr ("^^" PostExpr)* # D2
+  ////)
+  /// Params:
+  ///   prevPrec = The precedence of the previous operator plus 1.
+  /// Note: Uses the "precedence climbing" method as described here:
+  /// $(LINK http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm#climbing)
+  Expression parseBinaryExpr(int prevPrec = 0)
+  {
     auto begin = token;
-    auto e = parseNext();
+    auto e = parsePostExpr(); // Parse the left-hand side.
+
+    NewBinaryExpr makeBinaryExpr = void;
     while (1)
     {
       auto operator = token;
-      switch (operator.kind)
-      {
-      case T.Mul: nT(); e = new MulExpr(e, parseNext(), operator); break;
-      case T.Div: nT(); e = new DivExpr(e, parseNext(), operator); break;
-      case T.Mod: nT(); e = new ModExpr(e, parseNext(), operator); break;
-      default:
-        return e;
-      }
+      auto opPrec = parseBinaryOp(makeBinaryExpr);
+      if (opPrec < prevPrec) // Parse as long as the operators
+        break;               // have equal or higher precedence.
+      nT(); // Skip the binary operator.
+      auto rhs = parseBinaryExpr(opPrec + 1); // Parse the right-hand side.
+      e = makeBinaryExpr(e, rhs, operator);
       set(e, begin);
     }
-    assert(0);
-  }
-
-  /// $(BNF PowExpr := PostExpr ("^^" PostExpr)*)
-  Expression parsePowExpr()
-  {
-    alias parsePostExpr parseNext;
-    Token* begin = token, operator = void;
-    auto e = parseNext();
-    while ((operator = consumedToken(T.Pow)) !is null)
-      e = set(new PowExpr(e, parseNext(), operator), begin);
     return e;
   }
 
@@ -3656,18 +3420,18 @@ class Parser
   /// $(BNF UnaryExpr := PrimaryExpr |
   ////  NewExpr | AddressExpr | PreIncrExpr |
   ////  PreIncrExpr | DerefExpr | SignExpr |
-  ////  NotExpr | ComplementExpr | DeleteExpr |
+  ////  NotExpr | CompExpr | DeleteExpr |
   ////  CastExpr | TypeDotIdExpr
-  ////AddressExpr     := "&" UnaryExpr
-  ////PreIncrExpr     := "++" UnaryExpr
-  ////PreDecrExpr     := "--" UnaryExpr
-  ////DerefExpr       := "*" UnaryExpr
-  ////SignExpr        := ("-" | "+") UnaryExpr
-  ////NotExpr         := "!" UnaryExpr
-  ////ComplementExpresson   := "~" UnaryExpr
-  ////DeleteExpr      := delete UnaryExpr
-  ////CastExpr        := cast "(" Type ")" UnaryExpr
-  ////TypeDotIdExpr   := "(" Type ")" "." Identifier)
+  ////AddressExpr   := "&" UnaryExpr
+  ////PreIncrExpr   := "++" UnaryExpr
+  ////PreDecrExpr   := "--" UnaryExpr
+  ////DerefExpr     := "*" UnaryExpr
+  ////SignExpr      := ("-" | "+") UnaryExpr
+  ////NotExpr       := "!" UnaryExpr
+  ////CompExpr      := "~" UnaryExpr
+  ////DeleteExpr    := delete UnaryExpr
+  ////CastExpr      := cast "(" Type ")" UnaryExpr
+  ////TypeDotIdExpr := "(" Type ")" "." Identifier)
   Expression parseUnaryExpr()
   {
     auto begin = token;

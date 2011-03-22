@@ -128,6 +128,7 @@ string[] messages = [
   null,
   null,
   null,
+  null,
 
   // Help messages:
   `dil v{0}
