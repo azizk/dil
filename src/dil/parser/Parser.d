@@ -2956,7 +2956,7 @@ class Parser
     while (1)
     {
       auto operator = token;
-      auto opPrec = parseBinaryOp(makeBinaryExpr);
+      auto opPrec = parseBinaryOp(makeBinaryExpr, prevPrec);
       if (opPrec < prevPrec) // Parse as long as the operators
         break;               // have equal or higher precedence.
       switch (prevToken.kind)
@@ -3254,7 +3254,8 @@ class Parser
   /// The higher the value the stronger the operator binds.
   /// Params:
   ///   f = Receives a function that creates the binary Expression.
-  int parseBinaryOp(ref NewBinaryExpr fn)
+  ///   prevPrec = The precedence value of the previous operator.
+  int parseBinaryOp(ref NewBinaryExpr fn, int prevPrec)
   {
     int p = -1;
     NewBinaryExpr f;
@@ -3271,12 +3272,10 @@ class Parser
                        p = 6; f = &newBinaryExpr!(EqualExpr); break;
     case T.Not:
       auto next = peekNext();
-      if (next == T.Is) { // "!" is
-        nT(); goto case T.Is;
-      }
-      else version(D2) if (next == T.In) { // "!" in
-        nT(); goto case T.In;
-      }
+      if (next == T.Is) // "!" is
+        goto case T.Is;
+      else version(D2) if (next == T.In) // "!" in
+        goto case T.In;
       break; // Not a binary operator.
     case T.LessEqual, T.Less, T.GreaterEqual, T.Greater,
          T.Unordered, T.UorE, T.UorG, T.UorGorE,
@@ -3297,8 +3296,14 @@ class Parser
     }
     default:
     }
-    if (f) {
+    // Consume if we have a binary operator
+    // and the precedence is greater or equal to prevPrec.
+    if (p >= prevPrec)
+    {
+      assert(f !is null && p != -1);
       fn = f;
+      if (token.kind == T.Not)
+        nT(); // Consume "!" part.
       nT(); // Consume the binary operator.
     }
     return p;
@@ -3338,7 +3343,7 @@ class Parser
     while (1)
     {
       auto operator = token;
-      auto opPrec = parseBinaryOp(makeBinaryExpr);
+      auto opPrec = parseBinaryOp(makeBinaryExpr, prevPrec);
       if (opPrec < prevPrec) // Parse as long as the operators
         break;               // have equal or higher precedence.
       auto rhs = parseBinaryExpr(opPrec + 1); // Parse the right-hand side.
