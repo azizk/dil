@@ -2952,22 +2952,22 @@ class Parser
     auto begin = token;
     auto e = parseAsmPostExpr(); // Parse the left-hand side.
 
-    NewBinaryExpr makeBinaryExpr;
+    NewBinaryExpr makeBinaryExpr = void;
     while (1)
     {
       auto operator = token;
       auto opPrec = parseBinaryOp(makeBinaryExpr);
       if (opPrec < prevPrec) // Parse as long as the operators
         break;               // have equal or higher precedence.
-      switch (token.kind)
+      switch (prevToken.kind)
       {
-      case T.Is, T.In, T.Unordered, T.UorE, T.UorG, T.UorGorE,
+      case /*T.Not,*/ T.Is, T.In, T.Unordered, T.UorE, T.UorG, T.UorGorE,
            T.UorL, T.UorLorE, T.LorEorG, T.LorG, T.Tilde, T.Pow:
-        //error(operator, MID.IllegalBinOpInAsm, operator.text());
+        // Use textSpan() for operators like "!is" and "!in".
+        error(operator, MID.IllegalAsmBinaryOp, operator.textSpan(prevToken));
         break;
       default:
       }
-      nT(); // Skip the binary operator.
       auto rhs = parseAsmBinaryExpr(opPrec + 1); // Parse the right-hand side.
       e = makeBinaryExpr(e, rhs, operator);
       set(e, begin);
@@ -3297,8 +3297,10 @@ class Parser
     }
     default:
     }
-    if (f)
+    if (f) {
       fn = f;
+      nT(); // Consume the binary operator.
+    }
     return p;
   }
 
@@ -3339,7 +3341,6 @@ class Parser
       auto opPrec = parseBinaryOp(makeBinaryExpr);
       if (opPrec < prevPrec) // Parse as long as the operators
         break;               // have equal or higher precedence.
-      nT(); // Skip the binary operator.
       auto rhs = parseBinaryExpr(opPrec + 1); // Parse the right-hand side.
       e = makeBinaryExpr(e, rhs, operator);
       set(e, begin);

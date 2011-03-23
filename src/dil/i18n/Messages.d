@@ -111,6 +111,7 @@ enum MID
   UnrecognizedAttribute,
   ExpectedIntegerAfterAlign,
   IllegalAsmStatement,
+  IllegalAsmBinaryOp,
   ExpectedDeclaratorIdentifier,
   ExpectedTemplateParameters,
   ExpectedTypeOrExpression,
