@@ -688,8 +688,8 @@ class Parser
   /// Parses a variable initializer.
   /// $(BNF Initializer := VoidInitializer | NonVoidInitializer
   ////VoidInitializer := void
-  ////NonVoidInitializer := ArrayInitializer | StructInitializer |
-  ////                      AssignExpr
+  ////NonVoidInitializer :=
+  ////  ArrayInitializer | StructInitializer | AssignExpr
   ////ArrayInitializer :=
   ////  "[" (ArrayInitElement ("," ArrayInitElement)* ","?)? "]"
   ////ArrayInitElement := (AssignExpr ":")? NonVoidInitializer
@@ -876,8 +876,8 @@ class Parser
     assert(0);
   }
 
-  /// $(BNF ExternLinkageType :=
-  ///  extern "(" ("C" | "C" "++" | "D" | "Windows" | "Pascal" | "System") ")")
+  /// $(BNF ExternLinkageType := extern "(" LinkageType ")"
+  ///LinkageType := "C" | "C" "++" | "D" | "Windows" | "Pascal" | "System")
   LinkageType parseExternLinkageType()
   {
     LinkageType linkageType;
@@ -940,15 +940,14 @@ class Parser
   /// Parses one or more attributes and a Declaration at the end.
   ///
   /// $(BNF
-  ////Attributes := (StorageAttribute | OtherAttributes)*
+  ////Attributes :=
+  ////  (StorageAttribute | AlignAttribute | PragmaAttribute | ProtAttribute)*
   ////  (DeclarationsBlock | Declaration)
   ////StorageAttribute := extern | ExternLinkageType | override | abstract |
   ////  auto | synchronized | static | final | const | immutable | enum | scope
-  ////
-  ////OtherAttributes := AlignAttribute | PragmaAttribute | ProtectionAttribute
-  ////AlignAttribute := align ("(" Integer ")")?
-  ////PragmaAttribute := pragma "(" Identifier ("," ExpressionList)? ")"
-  ////ProtectionAttribute := private | public | package | protected | export)
+  ////AlignAttribute   := align ("(" Integer ")")?
+  ////PragmaAttribute  := pragma "(" Identifier ("," ExpressionList)? ")"
+  ////ProtAttribute    := private | public | package | protected | export)
   /// Params:
   ///   pDecl = Set to the non-attribute Declaration if non-null.
   Declaration parseAttributes(Declaration* pDecl = null)
@@ -1205,10 +1204,10 @@ class Parser
   ////                     (":" ImportBind ("," ImportBind)*)?
   ////                     ";"
   ////ImportModule := (AliasName "=")? ModuleName
-  ////ImportBind := (AliasName "=")? BindName
-  ////ModuleName := Identifier ("." Identifier)*
-  ////AliasName := Identifier
-  ////BindName := Identifier)
+  ////ImportBind   := (AliasName "=")? BindName
+  ////ModuleName   := Identifier ("." Identifier)*
+  ////AliasName    := Identifier
+  ////BindName     := Identifier)
   ImportDecl parseImportDecl()
   {
     bool isStatic = consumed(T.Static);
@@ -1284,12 +1283,13 @@ class Parser
   }
 
   /// $(BNF
-  ////EnumDeclaration := enum Name? (":" BasicType)? EnumBody |
-  ////                   enum Name ";"
-  ////EnumBody := "{" EnumMembers "}"
-  ////EnumMembers := EnumMember ("," EnumMember)* ","?
+  ////EnumDeclaration :=
+  ////  enum Name? (":" BasicType)? EnumBody |
+  ////  enum Name ";"
+  ////EnumBody     := "{" EnumMembers "}"
+  ////EnumMembers  := EnumMember ("," EnumMember)* ","?
   ////EnumMembers2 := Type? EnumMember ("," Type? EnumMember)* ","? # D2.0
-  ////EnumMember := Name ("=" AssignExpr)?)
+  ////EnumMember   := Name ("=" AssignExpr)?)
   Declaration parseEnumDecl()
   {
     skip(T.Enum);
@@ -1406,8 +1406,8 @@ class Parser
   }
 
   /// $(BNF BaseClasses := BaseClass ("," BaseClass)
-  ////BaseClass := Protection? BasicType
-  ////Protection := private | public | protected | package)
+  ////BaseClass   := Protection? BasicType
+  ////Protection  := private | public | protected | package)
   BaseClassType[] parseBaseClasses()
   {
     BaseClassType[] bases;
@@ -1632,9 +1632,9 @@ class Parser
     return parseIdentOrInt();
   }
 
-  /// $(BNF DebugDeclaration := debug "=" IdentOrInt ";" |
-  ////                    debug Condition? DeclarationsBlock
-  ////                    (else DeclarationsBlock)?
+  /// $(BNF DebugDeclaration :=
+  ////  debug "=" IdentOrInt ";" |
+  ////  debug Condition? DeclarationsBlock (else DeclarationsBlock)?
   ////Condition := "(" IdentOrInt ")")
   Declaration parseDebugDecl()
   {
@@ -1668,9 +1668,9 @@ class Parser
     return new DebugDecl(spec, cond, decls, elseDecls);
   }
 
-  /// $(BNF VersionDeclaration := version "=" IdentOrInt ";" |
-  ////                      version Condition DeclarationsBlock
-  ////                      (else DeclarationsBlock)?
+  /// $(BNF VersionDeclaration :=
+  ////  version "=" IdentOrInt ";" |
+  ////  version Condition DeclarationsBlock (else DeclarationsBlock)?
   ////Condition := "(" IdentOrInt ")")
   Declaration parseVersionDecl()
   {
@@ -1774,7 +1774,7 @@ class Parser
     return new DeleteDecl(parameters, funcBody);
   }
 
-  /// $(BNF TypeofType := typeof "(" Expression ")" | TypeofReturn
+  /// $(BNF TypeofType   := typeof "(" Expression ")" | TypeofReturn
   ////TypeofReturn := typeof "(" return ")")
   Type parseTypeofType()
   {
@@ -2297,7 +2297,7 @@ class Parser
   }
 
   /// $(BNF IfStmt := if "(" Condition ")" ScopeStmt
-  ////               (else ScopeStmt)?
+  ////          (else ScopeStmt)?
   ////Condition := AutoDeclaration | VariableDeclaration | Expression)
   Statement parseIfStmt()
   {
@@ -2402,11 +2402,11 @@ class Parser
   /// $(BNF ForeachStmt :=
   ////  Foreach "(" ForeachVarList ";" Aggregate ")"
   ////    ScopeStmt
-  ////Foreach := foreach | foreach_reverse
+  ////Foreach        := foreach | foreach_reverse
   ////ForeachVarList := ForeachVar ("," ForeachVar)*
-  ////ForeachVar := ref? (Identifier | Declarator)
-  ////Aggregate := Expression | ForeachRange
-  ////ForeachRange := Expression ".." Expression # D2.0)
+  ////ForeachVar     := ref? (Identifier | Declarator)
+  ////Aggregate      := Expression | ForeachRange
+  ////ForeachRange   := Expression ".." Expression # D2.0)
   Statement parseForeachStmt()
   {
     assert(token.kind == T.Foreach || token.kind == T.ForeachReverse);
@@ -2761,8 +2761,8 @@ class Parser
     return new StaticAssertStmt(condition, message);
   }
 
-  /// $(BNF DebugStmt := debug Condition? NoScopeStmt
-  ////                  (else NoScopeStmt)?
+  /// $(BNF DebugStmt :=
+  ////  debug Condition? NoScopeStmt (else NoScopeStmt)?
   ////Condition := "(" IdentOrInt ")")
   Statement parseDebugStmt()
   {
@@ -2786,8 +2786,8 @@ class Parser
     return new DebugStmt(cond, debugBody, elseBody);
   }
 
-  /// $(BNF VersionStmt := version Condition NoScopeStmt
-  ////                  (else NoScopeStmt)?
+  /// $(BNF VersionStmt :=
+  ////  version Condition NoScopeStmt (else NoScopeStmt)?
   ////Condition := "(" IdentOrInt ")")
   Statement parseVersionStmt()
   {
@@ -2827,14 +2827,14 @@ class Parser
   }
 
   /// $(BNF
-  ////AsmStmt := OpcodeStmt | LabeledStmt |
-  ////                AsmAlignStmt | EmptyStmt
-  ////OpcodeStmt := Opcode Operands? ";"
-  ////Opcode := Identifier
-  ////Operands := AsmExpr ("," AsmExpr)*
-  ////LabeledStmt := Identifier ":" AsmStmt
+  ////AsmStmt :=
+  ////  OpcodeStmt | LabeledStmt | AsmAlignStmt | EmptyStmt
+  ////OpcodeStmt   := Opcode Operands? ";"
+  ////Opcode       := Identifier
+  ////Operands     := AsmExpr ("," AsmExpr)*
+  ////LabeledStmt  := Identifier ":" AsmStmt
   ////AsmAlignStmt := align Integer ";"
-  ////EmptyStmt := ";")
+  ////EmptyStmt    := ";")
   Statement parseAsmStmt()
   {
     auto begin = token;
@@ -2911,7 +2911,7 @@ class Parser
     return s;
   }
 
-  /// $(BNF AsmExpr := AsmCondExpr
+  /// $(BNF AsmExpr     := AsmCondExpr
   ////AsmCondExpr := AsmBinaryExpr ("?" AsmExpr ":" AsmExpr)? )
   Expression parseAsmExpr()
   {
@@ -2931,19 +2931,19 @@ class Parser
   }
 
   /// $(BNF AsmBinaryExpr := AsmOrOrExpr
-  ////AsmOrOrExpr := AsmAndAndExpr ("||" AsmAndAndExpr)*
+  ////AsmOrOrExpr   := AsmAndAndExpr ("||" AsmAndAndExpr)*
   ////AsmAndAndExpr := AsmOrExpr ("&&" AsmOrExpr)*
-  ////AsmOrExpr := AsmXorExpr ("|" AsmXorExpr)*
-  ////AsmXorExpr := AsmAndExpr ("^" AsmAndExpr)*
-  ////AsmAndExpr := AsmCmpExpr ("&" AsmCmpExpr)*
-  ////AsmCmpExpr := AsmShiftExpr (AsmCmpOp AsmShiftExpr)*
-  ////AsmCmpOp := "==" | "!=" | "<" | "<=" | ">" | ">="
-  ////AsmShiftExpr := AsmAddExpr (AsmShiftOp AsmAddExpr)*
-  ////AsmShiftOp := "<<" | ">>" | ">>>"
-  ////AsmAddExpr := AsmMulExpr (AsmAddOp AsmMulExpr)*
-  ////AsmAddOp := "+" | "-"
-  ////AsmMulExpr := AsmPostExpr (AsmMulOp AsmPostExpr)*
-  ////AsmMulOp := "*" | "/" | "%"
+  ////AsmOrExpr     := AsmXorExpr ("|" AsmXorExpr)*
+  ////AsmXorExpr    := AsmAndExpr ("^" AsmAndExpr)*
+  ////AsmAndExpr    := AsmCmpExpr ("&" AsmCmpExpr)*
+  ////AsmCmpExpr    := AsmShiftExpr (AsmCmpOp AsmShiftExpr)*
+  ////AsmCmpOp      := "==" | "!=" | "<" | "<=" | ">" | ">="
+  ////AsmShiftExpr  := AsmAddExpr (AsmShiftOp AsmAddExpr)*
+  ////AsmShiftOp    := "<<" | ">>" | ">>>"
+  ////AsmAddExpr    := AsmMulExpr (AsmAddOp AsmMulExpr)*
+  ////AsmAddOp      := "+" | "-"
+  ////AsmMulExpr    := AsmPostExpr (AsmMulOp AsmPostExpr)*
+  ////AsmMulOp      := "*" | "/" | "%"
   ////)
   /// Params:
   ///   prevPrec = The precedence of the previous operator plus 1.
@@ -2990,16 +2990,16 @@ class Parser
   }
 
   /// $(BNF
-  ////AsmUnaryExpr := AsmPrimaryExpr |
-  ////  AsmTypeExpr | AsmOffsetExpr | AsmSegExpr |
+  ////AsmUnaryExpr :=
+  ////  AsmPrimaryExpr | AsmTypeExpr | AsmOffsetExpr | AsmSegExpr |
   ////  SignExpr | NotExpr | ComplementExpr
   ////AsmTypeExpr := TypePrefix "ptr" AsmExpr
-  ////TypePrefix := "byte" | "shor" | "int" | "float" | "double" | "real"
-  ////              "near" | "far" | "word" | "dword" | "qword"
-  ////AsmOffsetExpr := "offset" AsmExpr
-  ////AsmSegExpr := "seg" AsmExpr
-  ////SignExpr := ("+" | "-") AsmUnaryExpr
-  ////NotExpr := "!" AsmUnaryExpr
+  ////TypePrefix  := "byte" | "shor" | "int" | "float" | "double" | "real"
+  ////               "near" | "far" | "word" | "dword" | "qword"
+  ////AsmOffsetExpr  := "offset" AsmExpr
+  ////AsmSegExpr     := "seg" AsmExpr
+  ////SignExpr       := ("+" | "-") AsmUnaryExpr
+  ////NotExpr        := "!" AsmUnaryExpr
   ////ComplementExpr := "~" AsmUnaryExpr
   ////)
   Expression parseAsmUnaryExpr()
@@ -3062,15 +3062,15 @@ class Parser
   ////  IntExpr | FloatExpr | DollarExpr |
   ////  AsmLocalSizeExpr | AsmRegisterExpr | AsmBracketExpr |
   ////  QualifiedExpr
-  ////IntExpr := Integer
-  ////FloatExpr := FloatLiteral | IFloatLiteral
-  ////DollarExpr := "$"
-  ////AsmBracketExpr :=  "[" AsmExpr "]"
+  ////IntExpr          := Integer
+  ////FloatExpr        := FloatLiteral | IFloatLiteral
+  ////DollarExpr       := "$"
+  ////AsmBracketExpr   := "[" AsmExpr "]"
   ////AsmLocalSizeExpr := "__LOCAL_SIZE"
-  ////AsmRegisterExpr := ...
-  ////QualifiedExpr := (ModuleScopeExpr | IdentifierExpr)
-  ////                 ("." IdentifierExpr)+
-  ////ModuleScopeExpr := ".")
+  ////AsmRegisterExpr  := ...
+  ////QualifiedExpr    := (ModuleScopeExpr | IdentifierExpr)
+  ////                    ("." IdentifierExpr)+
+  ////ModuleScopeExpr  := ".")
   Expression parseAsmPrimaryExpr()
   {
     auto begin = token;
@@ -3194,8 +3194,8 @@ class Parser
   }
 
   /// $(BNF AssignExpr := CondExpr (AssignOp AssignExpr)*
-  ////AssignOp := "=" | "<<=" | ">>=" | ">>>=" | "|=" |
-  ////            "&=" | "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~=" | "^^="
+  ////AssignOp   := "=" | "<<=" | ">>=" | ">>>=" | "|=" | "&=" |
+  ////              "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~=" | "^^="
   ////)
   Expression parseAssignExpr()
   {
@@ -3268,8 +3268,8 @@ class Parser
     case T.AndBinary:  p = 5; f = &newBinaryExpr!(AndExpr); break;
     case T.Is:         p = 6; f = &newBinaryExpr!(IdentityExpr); break;
     case T.In:         p = 6; f = &newBinaryExpr!(InExpr); break;
-    case T.Equal, T.NotEqual:
-                       p = 6; f = &newBinaryExpr!(EqualExpr); break;
+    case T.Equal,
+         T.NotEqual:   p = 6; f = &newBinaryExpr!(EqualExpr); break;
     case T.Not:
       auto next = peekNext();
       if (next == T.Is) // "!" is
@@ -3312,23 +3312,23 @@ class Parser
   /// Parses a binary operator expression.
   ///
   /// $(BNF BinaryExpr := OrOrExpr
-  ////OrOrExpr := AndAndExpr ("||" AndAndExpr)*
+  ////OrOrExpr   := AndAndExpr ("||" AndAndExpr)*
   ////AndAndExpr := OrExpr ("&&" OrExpr)*
-  ////OrExpr := XorExpr ("|" XorExpr)*
-  ////XorExpr := AndExpr ("^" AndExpr)*
-  ////AndExpr := CmpExpr ("&" CmpExpr)*
-  ////CmpExpr := ShiftExpr (CmpOp ShiftExpr)?
-  ////CmpOp := "is" | "!" "is" | "in" | "==" | "!=" | "<" | "<=" | ">" |
-  ////         ">=" | "!<>=" | "!<>" | "!<=" | "!<" |
-  ////         "!>=" | "!>" | "<>=" | "<>"
-  ////ShiftExpr := AddExpr (ShiftOp AddExpr)*
-  ////ShiftOp := "<<" | ">>" | ">>>"
-  ////AddExpr := MulExpr (AddOp MulExpr)*
-  ////AddOp := "+" | "-" | "~"
-  ////MulExpr := PostExpr (MulOp PostExpr)*
-  ////MulExpr := PowExpr (MulOp PowExpr)* # D2
-  ////MulOp := "*" | "/" | "%"
-  ////PowExpr := PostExpr ("^^" PostExpr)* # D2
+  ////OrExpr     := XorExpr ("|" XorExpr)*
+  ////XorExpr    := AndExpr ("^" AndExpr)*
+  ////AndExpr    := CmpExpr ("&" CmpExpr)*
+  ////CmpExpr    := ShiftExpr (CmpOp ShiftExpr)?
+  ////CmpOp      := "is" | "!" "is" | "in" | "==" | "!=" | "<" | "<=" | ">" |
+  ////              ">=" | "!<>=" | "!<>" | "!<=" | "!<" |
+  ////              "!>=" | "!>" | "<>=" | "<>"
+  ////ShiftExpr  := AddExpr (ShiftOp AddExpr)*
+  ////ShiftOp    := "<<" | ">>" | ">>>"
+  ////AddExpr    := MulExpr (AddOp MulExpr)*
+  ////AddOp      := "+" | "-" | "~"
+  ////MulExpr    := PostExpr (MulOp PostExpr)*
+  ////MulExpr    := PowExpr (MulOp PowExpr)* # D2
+  ////MulOp      := "*" | "/" | "%"
+  ////PowExpr    := PostExpr ("^^" PostExpr)* # D2
   ////)
   /// Params:
   ///   prevPrec = The precedence of the previous operator plus 1.
@@ -3357,10 +3357,10 @@ class Parser
   ////  (QualifiedExpr | IncOrDecExpr | CallExpr |
   ////   SliceExpr | IndexExpr)*
   ////QualifiedExpr := "." (NewExpr | IdentifierExpr)
-  ////IncOrDecExpr := "++" | "--"
-  ////CallExpr := "(" Arguments? ")"
-  ////SliceExpr := "[" (AssignExpr ".." AssignExpr )? "]"
-  ////IndexExpr := "[" ExpressionList "]")
+  ////IncOrDecExpr  := "++" | "--"
+  ////CallExpr      := "(" Arguments? ")"
+  ////SliceExpr     := "[" (AssignExpr ".." AssignExpr )? "]"
+  ////IndexExpr     := "[" ExpressionList "]")
   Expression parsePostExpr()
   {
     auto begin = token;
@@ -3534,7 +3534,7 @@ class Parser
     return e;
   }
 
-  /// $(BNF IdentifierExpr := Identifier | TemplateInstance
+  /// $(BNF IdentifierExpr   := Identifier | TemplateInstance
   ////TemplateInstance := Identifier "!" TemplateArgumentsOneOrMore)
   Expression parseIdentifierExpr(Expression next = null)
   {
@@ -3841,12 +3841,12 @@ class Parser
   }
 
   /// $(BNF NewExpr := NewAnonClassExpr | NewObjectExpr
-  ////NewAnonClassExpr := new NewArguments?
-  ////                          class NewArguments?
-  ////                          (SuperClass InterfaceClasses)? ClassBody
+  ////NewAnonClassExpr :=
+  ////  new NewArguments? class NewArguments?
+  ////  (SuperClass InterfaceClasses)? ClassBody
   ////NewObjectExpr := new NewArguments? Type (NewArguments | NewArray)?
-  ////NewArguments := "(" ArgumentList ")"
-  ////NewArray     := "[" AssignExpr "]")
+  ////NewArguments  := "(" ArgumentList ")"
+  ////NewArray      := "[" AssignExpr "]")
   /// Params:
   ///   frame = The frame or 'this' pointer expression.
   Expression parseNewExpr(Expression frame = null)
@@ -3911,8 +3911,8 @@ class Parser
 
   /// Parses a full Type.
   ///
-  /// $(BNF Type := Modifier BasicType BasicType2 CStyleType?
-  //// Modifier := const | immutable | shared)
+  /// $(BNF Type     := Modifier BasicType BasicType2 CStyleType?
+  ////Modifier := const | immutable | shared)
   Type parseType(Token** pIdent = null)
   {
     version(D2)
@@ -4083,9 +4083,9 @@ class Parser
     return set(t, begin);
   }
 
-  /// $(BNF BasicType2 := Type
-  ////              (PointerType | ArrayType | FunctionType | DelegateType)*
-  ////PointerType := "*"
+  /// $(BNF BasicType2 :=
+  ////  Type (PointerType | ArrayType | FunctionType | DelegateType)*
+  ////PointerType  := "*"
   ////FunctionType := function ParameterList
   ////DelegateType := delegate ParameterList)
   Type parseBasicType2(Type t)
@@ -4417,7 +4417,7 @@ class Parser
     return set(targs, leftParen);
   }
 
-  /// $(BNF TemplateArgumentList2 := TemplateArguments (?="$(RP)"))
+  /// $(BNF TemplateArgumentList2 := TemplateArguments (?= "$(RP)"))
   TemplateArguments parseTemplateArguments2()
   {
     version(D2)
@@ -4465,7 +4465,7 @@ class Parser
     return targs;
   }
 
-  /// $(BNF Constraint := "if" "(" ConstraintExpr ")")
+  /// $(BNF Constraint := if "(" ConstraintExpr ")")
   Expression parseOptionalConstraint()
   {
     if (!consumed(T.If))
@@ -4507,10 +4507,10 @@ class Parser
   }
 
   /// Parses template parameters.
-  /// $(BNF TemplateParameters := TemplateParam ("," TemplateParam)
-  ////TemplateParam := TemplateAliasParam | TemplateTypeParam |
-  ////                     TemplateTupleParam | TemplateValueParam |
-  ////                     TemplateThisParam
+  /// $(BNF TemplateParameters := TemplateParam ("," TemplateParam)*
+  ////TemplateParam      :=
+  ////  TemplateAliasParam | TemplateTypeParam | TemplateTupleParam |
+  ////  TemplateValueParam | TemplateThisParam
   ////TemplateAliasParam := alias Identifier SpecOrDefaultType
   ////TemplateTypeParam  := Identifier SpecOrDefaultType
   ////TemplateTupleParam := Identifier "..."
