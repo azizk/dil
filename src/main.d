@@ -63,7 +63,8 @@ void main(string[] args)
   // 2. Load the configuration file of Dil.
   auto config = ConfigLoader(globalCC, diag, args[0]);
   config.load();
-  diag.bundle = config.resourceBundle;
+  if (config.resourceBundle)
+    diag.bundle = config.resourceBundle;
 
   if (diag.hasInfo())
     return printErrors(diag);

@@ -55,7 +55,7 @@ final class SourceText
   bool load(Diagnostics diag = null)
   {
     if (!diag)
-      diag = new Diagnostics;
+      diag = new Diagnostics();
     assert(filePath.length);
 
     scope(failure)
@@ -63,7 +63,7 @@ final class SourceText
       auto loc = new Location(filePath, 0);
       auto mid = Path(this.filePath).exists() ?
         MID.CantReadFile : MID.InexistantFile;
-      diag ~= new LexerError(loc, diag.bundle.msg(mid));
+      diag ~= new LexerError(loc, diag.formatMsg(mid));
       data = sentinelString;
       return false;
     }

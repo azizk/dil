@@ -226,7 +226,7 @@ class ConfigLoader : SettingsLoader
     mod.parse();
 
     if (mod.hasErrors)
-      return null;
+      return new ResourceBundle();
 
     auto pass1 = new SemanticPass1(mod, cc);
     pass1.run();
@@ -309,8 +309,7 @@ class TagMapLoader : SettingsLoader
     if (mod.hasErrors)
       return null;
 
-    auto context = new CompilationContext;
-    auto pass1 = new SemanticPass1(mod, context);
+    auto pass1 = new SemanticPass1(mod, cc);
     pass1.run();
 
     string[hash_t] map;

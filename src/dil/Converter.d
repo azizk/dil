@@ -320,7 +320,7 @@ unittest
     {"\x00\x00\xFE\xFF\0\0\0s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e"},
     {"\xFF\xFE\x00\x00s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e\0\0\0"},
   ];
-  auto converter = Converter("", new Diagnostics);
+  auto converter = Converter("", new Diagnostics());
   foreach (i, pair; map)
     assert(converter.data2UTF8(pair.data) == pair.expected, Format("failed at item {}", i));
 }
