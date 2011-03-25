@@ -208,7 +208,7 @@ class Parser
   |                       Declaration parsing methods                       |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
-  /// $(BNF ModuleDeclaration := module Identifier ("." Identifier)* ";")
+  /// $(BNF ModuleDecl := module Identifier ("." Identifier)* ";")
   Declaration parseModuleDecl()
   {
     auto begin = token;
@@ -234,7 +234,7 @@ class Parser
   }
 
   /// Parses DeclarationDefinitions until the end of file is hit.
-  /// $(BNF DeclDefs := DeclDef* )
+  /// $(BNF DeclDefs := DeclDef*)
   Declaration[] parseDeclarationDefinitions()
   {
     Declaration[] decls;
@@ -244,7 +244,7 @@ class Parser
   }
 
   /// Parse the body of a template, class, interface, struct or union.
-  /// $(BNF DeclDefsBlock := "{" DeclDefs? "}" )
+  /// $(BNF DeclDefsBlock := "{" DeclDefs? "}")
   CompoundDecl parseDeclarationDefinitionsBody()
   {
     // Save attributes.
@@ -274,6 +274,8 @@ class Parser
   }
 
   /// Parses a DeclarationDefinition.
+  ///
+  /// $(BNF DeclDef := Attributes | ...)
   Declaration parseDeclarationDefinition()
   out(decl)
   { assert(isNodeSet(decl)); }
@@ -471,7 +473,7 @@ class Parser
   }
 
   /// Parses a DeclarationsBlock.
-  /// $(BNF DeclarationsBlock := ":" DeclDefs | "{" DeclDefs? "}" | DeclDef )
+  /// $(BNF DeclsBlock := ":" DeclDefs | "{" DeclDefs? "}" | DeclDef)
   Declaration parseDeclarationsBlock(/+bool noColon = false+/)
   {
     Declaration d;
@@ -511,16 +513,16 @@ class Parser
   /// Parses either a VariableDeclaration or a FunctionDeclaration.
   /// $(BNF
   ////VariableOrFunctionDeclaration :=
-  ////  AutoDeclaration | VariableDeclaration | FunctionDeclaration
-  ////AutoDeclaration := AutoVariable | AutoTemplate
-  ////AutoVariable := Name "=" Initializer MoreVariables? ";"
-  ////VariableDeclaration := Type Name TypeSuffix? ("=" Initializer)?
-  ////                       MoreVariables? ";"
+  ////  AutoDecl | VariableDecl | FunctionDecl
+  ////AutoDecl      := AutoVariable | AutoTemplate
+  ////AutoVariable  := Name "=" Initializer MoreVariables? ";"
+  ////VariableDec   :=
+  ////  Type Name TypeSuffix? ("=" Initializer)? MoreVariables? ";"
   ////MoreVariables := ("," Name ("=" Initializer)?)+
-  ////FunctionDeclaration := Type Name TemplateParameterList?
-  ////                       ParameterList FunctionBody
-  ////AutoTemplate := Name TemplateParameterList ParameterList FunctionBody
-  ////Name := Identifier
+  ////FunctionDec   :=
+  ////  Type Name TemplateParameterList? ParameterList FunctionBody
+  ////AutoTemplate  := Name TemplateParameterList ParameterList FunctionBody
+  ////Name          := Identifier
   ////)
   /// Params:
   ///   stcs = Previously parsed storage classes.
@@ -686,17 +688,17 @@ class Parser
   }
 
   /// Parses a variable initializer.
-  /// $(BNF Initializer := VoidInitializer | NonVoidInitializer
-  ////VoidInitializer := void
+  /// $(BNF Initializer        := VoidInitializer | NonVoidInitializer
+  ////VoidInitializer    := void
   ////NonVoidInitializer :=
   ////  ArrayInitializer | StructInitializer | AssignExpr
-  ////ArrayInitializer :=
-  ////  "[" (ArrayInitElement ("," ArrayInitElement)* ","?)? "]"
-  ////ArrayInitElement := (AssignExpr ":")? NonVoidInitializer
-  ////StructInitializer :=
-  ////  "{" (StructInitElement ("," StructInitElement)* ","?)? "}"
-  ////StructInitElement := (MemberName ":")? NonVoidInitializer
-  ////MemberName := Identifier)
+  ////ArrayInitializer   := "[" ArrayInitElements? "]"
+  ////ArrayInitElements  := ArrayInitElement ("," ArrayInitElement)* ","?
+  ////ArrayInitElement   := (AssignExpr ":")? NonVoidInitializer
+  ////StructInitializer  := "{" StructInitElements? "}"
+  ////StructInitElements := StructInitElement ("," StructInitElement)* ","?
+  ////StructInitElement  := (MemberName ":")? NonVoidInitializer
+  ////MemberName         := Identifier)
   Expression parseInitializer()
   {
     if (token.kind == T.Void)
@@ -942,7 +944,7 @@ class Parser
   /// $(BNF
   ////Attributes :=
   ////  (StorageAttribute | AlignAttribute | PragmaAttribute | ProtAttribute)*
-  ////  (DeclarationsBlock | Declaration)
+  ////  DeclsBlock
   ////StorageAttribute := extern | ExternLinkageType | override | abstract |
   ////  auto | synchronized | static | final | const | immutable | enum | scope
   ////AlignAttribute   := align ("(" Integer ")")?
@@ -1199,10 +1201,10 @@ class Parser
     return stc;
   }
 
-  /// $(BNF ImportDeclaration := static? import
-  ////                     ImportModule ("," ImportModule)*
-  ////                     (":" ImportBind ("," ImportBind)*)?
-  ////                     ";"
+  /// $(BNF ImportDecl := static? import
+  ////              ImportModule ("," ImportModule)*
+  ////              (":" ImportBind ("," ImportBind)*)?
+  ////              ";"
   ////ImportModule := (AliasName "=")? ModuleName
   ////ImportBind   := (AliasName "=")? BindName
   ////ModuleName   := Identifier ("." Identifier)*
@@ -1283,7 +1285,7 @@ class Parser
   }
 
   /// $(BNF
-  ////EnumDeclaration :=
+  ////EnumDecl :=
   ////  enum Name? (":" BasicType)? EnumBody |
   ////  enum Name ";"
   ////EnumBody     := "{" EnumMembers "}"
@@ -1366,10 +1368,10 @@ class Parser
     return new TemplateDecl(name, tparams, constraint, cd);
   }
 
-  /// $(BNF ClassDeclaration :=
+  /// $(BNF ClassDecl :=
   ////  class Name TemplateParameterList? (":" BaseClasses) ClassBody |
   ////  class Name ";"
-  ////ClassBody := DeclarationDefinitionsBody)
+  ////ClassBody := DeclDefsBlock)
   Declaration parseClassDecl()
   {
     auto begin = token;
@@ -1434,10 +1436,10 @@ class Parser
     return bases;
   }
 
-  /// $(BNF InterfaceDeclaration :=
+  /// $(BNF InterfaceDecl :=
   ////  interface Name TemplateParameterList? (":" BaseClasses) InterfaceBody |
   ////  interface Name ";"
-  ////InterfaceBody := DeclarationDefinitionsBody)
+  ////InterfaceBody := DeclDefsBlock)
   Declaration parseInterfaceDecl()
   {
     auto begin = token;
@@ -1473,14 +1475,14 @@ class Parser
     return d;
   }
 
-  /// $(BNF StructDeclaration :=
+  /// $(BNF StructDecl :=
   ////  struct Name? TemplateParameterList? StructBody |
   ////  struct Name ";"
-  ////StructBody := DeclarationDefinitionsBody
-  ////UnionDeclaration :=
+  ////StructBody := DeclDefsBlock
+  ////UnionDecl  :=
   ////  union Name? TemplateParameterList? UnionBody |
   ////  union Name ";"
-  ////UnionBody := DeclarationDefinitionsBody)
+  ////UnionBody  := DeclDefsBlock)
   Declaration parseStructOrUnionDecl()
   {
     assert(token.kind == T.Struct || token.kind == T.Union);
@@ -1524,7 +1526,7 @@ class Parser
     return d;
   }
 
-  /// $(BNF ConstructorDeclaration := this ParameterList FunctionBody)
+  /// $(BNF ConstructorDecl := this ParameterList FunctionBody)
   Declaration parseConstructorDecl()
   {
     version(D2)
@@ -1594,7 +1596,7 @@ class Parser
     return new StaticDtorDecl(funcBody);
   }
 
-  /// $(BNF InvariantDeclaration := invariant ("(" ")")? FunctionBody)
+  /// $(BNF InvariantDecl := invariant ("(" ")")? FunctionBody)
   Declaration parseInvariantDecl()
   {
     skip(T.Invariant);
@@ -1605,7 +1607,7 @@ class Parser
     return new InvariantDecl(funcBody);
   }
 
-  /// $(BNF UnittestDeclaration := unittest FunctionBody)
+  /// $(BNF UnittestDecl := unittest FunctionBody)
   Declaration parseUnittestDecl()
   {
     skip(T.Unittest);
@@ -1632,10 +1634,10 @@ class Parser
     return parseIdentOrInt();
   }
 
-  /// $(BNF DebugDeclaration :=
+  /// $(BNF DebugDecl :=
   ////  debug "=" IdentOrInt ";" |
-  ////  debug Condition? DeclarationsBlock (else DeclarationsBlock)?
-  ////Condition := "(" IdentOrInt ")")
+  ////  debug DebugCondition? DeclsBlock (else DeclsBlock)?
+  ////DebugCondition := "(" IdentOrInt ")")
   Declaration parseDebugDecl()
   {
     skip(T.Debug);
@@ -1657,10 +1659,10 @@ class Parser
         cond = parseIdentOrInt();
         require2(T.RParen);
       }
-      // debug DeclarationsBlock
-      // debug ( Condition ) DeclarationsBlock
+      // debug DeclsBlock
+      // debug ( Condition ) DeclsBlock
       decls = parseDeclarationsBlock();
-      // else DeclarationsBlock
+      // else DeclsBlock
       if (consumed(T.Else))
         elseDecls = parseDeclarationsBlock();
     }
@@ -1668,10 +1670,10 @@ class Parser
     return new DebugDecl(spec, cond, decls, elseDecls);
   }
 
-  /// $(BNF VersionDeclaration :=
+  /// $(BNF VersionDecl :=
   ////  version "=" IdentOrInt ";" |
-  ////  version Condition DeclarationsBlock (else DeclarationsBlock)?
-  ////Condition := "(" IdentOrInt ")")
+  ////  version VCondition DeclsBlock (else DeclsBlock)?
+  ////VCondition  := "(" VersionCondition ")")
   Declaration parseVersionDecl()
   {
     skip(T.Version);
@@ -1691,9 +1693,9 @@ class Parser
       require2(T.LParen);
       cond = parseVersionCondition();
       require2(T.RParen);
-      // version ( Condition ) DeclarationsBlock
+      // version ( Condition ) DeclsBlock
       decls = parseDeclarationsBlock();
-      // else DeclarationsBlock
+      // else DeclsBlock
       if (consumed(T.Else))
         elseDecls = parseDeclarationsBlock();
     }
@@ -1701,9 +1703,8 @@ class Parser
     return new VersionDecl(spec, cond, decls, elseDecls);
   }
 
-  /// $(BNF StaticIfDeclaration :=
-  ////  static if "(" AssignExpr ")" DeclarationsBlock
-  ////  (else DeclarationsBlock)?)
+  /// $(BNF StaticIfDecl :=
+  ////  static if "(" AssignExpr ")" DeclsBlock (else DeclsBlock)?)
   Declaration parseStaticIfDecl()
   {
     skip(T.Static);
@@ -1725,9 +1726,9 @@ class Parser
     return new StaticIfDecl(condition, ifDecls, elseDecls);
   }
 
-  /// $(BNF StaticAsserDeclaration :=
+  /// $(BNF StaticAssertDecl :=
   ////  static assert "(" AssignExpr ("," Message)? ")" ";"
-  ////Message := AssignExpr)
+  ////Message          := AssignExpr)
   Declaration parseStaticAssertDecl()
   {
     skip(T.Static);
@@ -1743,9 +1744,8 @@ class Parser
     return new StaticAssertDecl(condition, message);
   }
 
-  /// $(BNF TemplateDeclaration :=
-  ////  template Name TemplateParameterList Constraint?
-  ////  DeclarationDefinitionsBody)
+  /// $(BNF TemplateDecl :=
+  ////  template Name TemplateParameterList Constraint? DeclDefsBlock)
   TemplateDecl parseTemplateDecl()
   {
     skip(T.Template);
@@ -1756,7 +1756,7 @@ class Parser
     return new TemplateDecl(name, tparams, constraint, decls);
   }
 
-  /// $(BNF NewDeclaration := new ParameterList FunctionBody)
+  /// $(BNF NewDecl := new ParameterList FunctionBody)
   Declaration parseNewDecl()
   {
     skip(T.New);
@@ -1765,7 +1765,7 @@ class Parser
     return new NewDecl(parameters, funcBody);
   }
 
-  /// $(BNF DeleteDeclaration := delete ParameterList FunctionBody)
+  /// $(BNF DeleteDecl := delete ParameterList FunctionBody)
   Declaration parseDeleteDecl()
   {
     skip(T.Delete);
@@ -1800,13 +1800,13 @@ class Parser
     return type;
   }
 
-  /// Parses a MixinDeclaration or MixinStmt.
+  /// Parses a MixinDecl or MixinStmt.
   /// $(BNF
-  ////MixinDecl := (MixinExpr | MixinTemplateId | MixinTemplate) ";"
-  ////MixinExpr := mixin "(" AssignExpr ")"
+  ////MixinDecl       := (MixinExpr | MixinTemplate | MixinTemplateId) ";"
+  ////MixinExpr       := mixin "(" AssignExpr ")"
+  ////MixinTemplate   := mixin TemplateDecl # D2
   ////MixinTemplateId := mixin TemplateIdentifier
   ////                   ("!" "(" TemplateArguments ")")? MixinIdentifier?)
-  ////MixinTemplate := mixin TemplateDeclaration # D2
   RetT parseMixin(Class, RetT = Class)()
   {
     static assert(is(Class == MixinDecl) ||
@@ -2115,7 +2115,7 @@ class Parser
   }
 
   /// Parses a ScopeStmt.
-  /// $(BNF ScopeStmt := NoScopeStmt )
+  /// $(BNF ScopeStmt := NoScopeStmt)
   Statement parseScopeStmt()
   {
     auto s = parseNoScopeStmt();
@@ -2140,7 +2140,7 @@ class Parser
     return s;
   }
 
-  /// $(BNF NoScopeOrEmptyStmt := ";" | NoScopeStmt )
+  /// $(BNF NoScopeOrEmptyStmt := ";" | NoScopeStmt)
   Statement parseNoScopeOrEmptyStmt()
   {
     if (auto semicolon = consumedToken(T.Semicolon))
@@ -2150,7 +2150,7 @@ class Parser
   }
 
   /// $(BNF AttributeStmt := Attributes+
-  ////  (VariableOrFunctionDeclaration | DeclarationDefinition)
+  ////  (VariableOrFunctionDecl | DeclDef)
   ////Attributes := extern | ExternLinkageType | auto | static |
   ////              final | const | immutable | enum | scope)
   Statement parseAttributeStmt()
@@ -2296,9 +2296,8 @@ class Parser
     return new DeclarationStmt(headAttr.decls);
   }
 
-  /// $(BNF IfStmt := if "(" Condition ")" ScopeStmt
-  ////          (else ScopeStmt)?
-  ////Condition := AutoDeclaration | VariableDeclaration | Expression)
+  /// $(BNF IfStmt    := if "(" Condition ")" ScopeStmt (else ScopeStmt)?
+  ////Condition := AutoDecl | VariableDecl | Expression)
   Statement parseIfStmt()
   {
     skip(T.If);
@@ -2311,7 +2310,7 @@ class Parser
     require2(T.LParen);
 
     Token* ident;
-    auto begin = token; // For start of AutoDeclaration or normal Declaration.
+    auto begin = token; // For start of AutoDecl or normal Declaration.
     // auto Identifier = Expression
     if (consumed(T.Auto))
     {
@@ -2596,8 +2595,7 @@ class Parser
     return new WithStmt(expr, parseScopeStmt());
   }
 
-  /// $(BNF SynchronizedStmt :=
-  ////  synchronized ("(" Expression ")")? ScopeStmt)
+  /// $(BNF SynchronizedStmt := synchronized ("(" Expression ")")? ScopeStmt)
   Statement parseSynchronizedStmt()
   {
     skip(T.Synchronized);
@@ -2614,9 +2612,9 @@ class Parser
   ////  try ScopeStmt
   ////  (CatchStmt* LastCatchStmt? FinallyStmt? |
   ////   CatchStmt)
-  ////CatchStmt := catch "(" BasicType Identifier ")" NoScopeStmt
+  ////CatchStmt     := catch "(" BasicType Identifier ")" NoScopeStmt
   ////LastCatchStmt := catch NoScopeStmt
-  ////FinallyStmt := finally NoScopeStmt)
+  ////FinallyStmt   := finally NoScopeStmt)
   Statement parseTryStmt()
   {
     auto begin = token;
@@ -2724,8 +2722,7 @@ class Parser
   }
 
   /// $(BNF StaticIfStmt :=
-  ////  static if "(" Expression ")" NoScopeStmt
-  ////  (else NoScopeStmt)?)
+  ////  static if "(" Expression ")" NoScopeStmt (else NoScopeStmt)?)
   Statement parseStaticIfStmt()
   {
     skip(T.Static);
@@ -2762,8 +2759,7 @@ class Parser
   }
 
   /// $(BNF DebugStmt :=
-  ////  debug Condition? NoScopeStmt (else NoScopeStmt)?
-  ////Condition := "(" IdentOrInt ")")
+  ////  debug DebugCondition? NoScopeStmt (else NoScopeStmt)?)
   Statement parseDebugStmt()
   {
     skip(T.Debug);
@@ -2787,8 +2783,7 @@ class Parser
   }
 
   /// $(BNF VersionStmt :=
-  ////  version Condition NoScopeStmt (else NoScopeStmt)?
-  ////Condition := "(" IdentOrInt ")")
+  ////  version VCondition NoScopeStmt (else NoScopeStmt)?)
   Statement parseVersionStmt()
   {
     skip(T.Version);
@@ -2813,7 +2808,7 @@ class Parser
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   /// Parses an AsmBlockStmt.
-  /// $(BNF AsmBlockStmt := asm "{" AsmStmt* "}" )
+  /// $(BNF AsmBlockStmt := asm "{" AsmStmt* "}")
   Statement parseAsmBlockStmt()
   {
     skip(T.Asm);
@@ -2912,7 +2907,7 @@ class Parser
   }
 
   /// $(BNF AsmExpr     := AsmCondExpr
-  ////AsmCondExpr := AsmBinaryExpr ("?" AsmExpr ":" AsmExpr)? )
+  ////AsmCondExpr := AsmBinaryExpr ("?" AsmExpr ":" AsmExpr)?)
   Expression parseAsmExpr()
   {
     auto begin = token;
@@ -2932,7 +2927,7 @@ class Parser
 
   /// $(BNF AsmBinaryExpr := AsmOrOrExpr
   ////AsmOrOrExpr   := AsmAndAndExpr ("||" AsmAndAndExpr)*
-  ////AsmAndAndExpr := AsmOrExpr ("&&" AsmOrExpr)*
+  ////AsmAndAndExpr := AsmOrExpr  ("&&" AsmOrExpr)*
   ////AsmOrExpr     := AsmXorExpr ("|" AsmXorExpr)*
   ////AsmXorExpr    := AsmAndExpr ("^" AsmAndExpr)*
   ////AsmAndExpr    := AsmCmpExpr ("&" AsmCmpExpr)*
@@ -2975,7 +2970,7 @@ class Parser
     return e;
   }
 
-  /// $(BNF AsmPostExpr := AsmUnaryExpr ("[" AsmExpr "]")* )
+  /// $(BNF AsmPostExpr := AsmUnaryExpr ("[" AsmExpr "]")*)
   Expression parseAsmPostExpr()
   {
     Token* begin = token, leftBracket = void;
@@ -3177,7 +3172,7 @@ class Parser
   alias Expression function(Expression, Expression, Token*) NewBinaryExpr;
 
   /// The root method for parsing an Expression.
-  /// $(BNF Expression := AssignExpr ("," AssignExpr)* )
+  /// $(BNF Expression := AssignExpr ("," AssignExpr)*)
   Expression parseExpression()
   {
     alias parseAssignExpr parseNext;
@@ -3233,7 +3228,7 @@ class Parser
     return e;
   }
 
-  /// $(BNF CondExpr := BinaryExpr ("?" Expression ":" CondExpr)? )
+  /// $(BNF CondExpr := BinaryExpr ("?" Expression ":" CondExpr)?)
   Expression parseCondExpr()
   {
     auto begin = token;
@@ -3313,7 +3308,7 @@ class Parser
   ///
   /// $(BNF BinaryExpr := OrOrExpr
   ////OrOrExpr   := AndAndExpr ("||" AndAndExpr)*
-  ////AndAndExpr := OrExpr ("&&" OrExpr)*
+  ////AndAndExpr := OrExpr  ("&&" OrExpr)*
   ////OrExpr     := XorExpr ("|" XorExpr)*
   ////XorExpr    := AndExpr ("^" AndExpr)*
   ////AndExpr    := CmpExpr ("&" CmpExpr)*
@@ -3326,7 +3321,7 @@ class Parser
   ////AddExpr    := MulExpr (AddOp MulExpr)*
   ////AddOp      := "+" | "-" | "~"
   ////MulExpr    := PostExpr (MulOp PostExpr)*
-  ////MulExpr    := PowExpr (MulOp PowExpr)* # D2
+  ////MulExpr    := PowExpr  (MulOp PowExpr)* # D2
   ////MulOp      := "*" | "/" | "%"
   ////PowExpr    := PostExpr ("^^" PostExpr)* # D2
   ////)
@@ -3354,12 +3349,11 @@ class Parser
   }
 
   /// $(BNF PostExpr := UnaryExpr
-  ////  (QualifiedExpr | IncOrDecExpr | CallExpr |
-  ////   SliceExpr | IndexExpr)*
+  ////  (QualifiedExpr | IncOrDecExpr | CallExpr | SliceExpr | IndexExpr)*
   ////QualifiedExpr := "." (NewExpr | IdentifierExpr)
   ////IncOrDecExpr  := "++" | "--"
   ////CallExpr      := "(" Arguments? ")"
-  ////SliceExpr     := "[" (AssignExpr ".." AssignExpr )? "]"
+  ////SliceExpr     := "[" (AssignExpr ".." AssignExpr)? "]"
   ////IndexExpr     := "[" ExpressionList "]")
   Expression parsePostExpr()
   {
@@ -3903,7 +3897,7 @@ class Parser
 
   /// Parses the basic types.
   ///
-  /// $(BNF Type := BasicType BasicType2 )
+  /// $(BNF Type := BasicType BasicType2)
   Type parseBasicTypes()
   {
     return parseBasicType2(parseBasicType());
@@ -4026,7 +4020,7 @@ class Parser
   }
 
   /// $(BNF QualifiedType := (ModuleScopeType | TypeofType | IdentifierType)
-  ////                 ("." IdentifierType)* )
+  ////                 ("." IdentifierType)*)
   Type parseQualifiedType()
   {
     auto begin = token;
@@ -4044,7 +4038,7 @@ class Parser
   }
 
   /// $(BNF BasicType := IntegralType | QualifiedType |
-  ////             ConstType | ImmutableType | SharedType # D2.0 )
+  ////             ConstType | ImmutableType | SharedType # D2.0)
   Type parseBasicType()
   {
     auto begin = token;
@@ -4083,7 +4077,7 @@ class Parser
     return set(t, begin);
   }
 
-  /// $(BNF BasicType2 :=
+  /// $(BNF BasicType2   :=
   ////  Type (PointerType | ArrayType | FunctionType | DelegateType)*
   ////PointerType  := "*"
   ////FunctionType := function ParameterList
@@ -4201,8 +4195,8 @@ class Parser
     return result;
   }
 
-  /// $(BNF ArrayType := "[" (Type | Expression | SliceExpr ) "]"
-  ////SliceExpr := Expression ".." Expression )
+  /// $(BNF ArrayType := "[" (Type | Expression | SliceExpr) "]"
+  ////SliceExpr := Expression ".." Expression)
   Type parseArrayType(Type t)
   {
     auto begin = token;
@@ -4234,7 +4228,7 @@ class Parser
   }
 
   /// Parses a list of AssignExpressions.
-  /// $(BNF ExpressionList := AssignExpr ("," AssignExpr)* )
+  /// $(BNF ExpressionList := AssignExpr ("," AssignExpr)*)
   Expression[] parseExpressionList()
   {
     Expression[] expressions;
@@ -4260,7 +4254,7 @@ class Parser
   }
 
   /// Parses a list of Arguments.
-  /// $(BNF Arguments := "(" ExpressionList? ")" )
+  /// $(BNF Arguments := "(" ExpressionList? ")")
   Expression[] parseArguments()
   {
     auto leftParen = token;
@@ -4445,7 +4439,7 @@ class Parser
   }
 
   /// $(BNF TemplateArguments := TemplateArgument ("," TemplateArgument)*
-  ////TemplateArgument := TypeArgument | AssignExpr)
+  ////TemplateArgument  := TypeArgument | AssignExpr)
   TemplateArguments parseTemplateArguments_()
   {
     auto begin = token;
