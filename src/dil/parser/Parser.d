@@ -103,7 +103,7 @@ class Parser
   /// This method executes the delegate parseMethod and when an error occurs
   /// the state of the lexer and parser is restored.
   /// Returns: The return value of parseMethod().
-  RetType tryToParse(RetType)(RetType delegate() parseMethod, out bool success)
+  RetType tryToParse(RetType)(RetType delegate() parseMethod, ref bool success)
   {
     // Save members.
     auto oldToken     = this.token;
@@ -674,10 +674,7 @@ class Parser
     {
       names ~= requireIdentifier(MID.ExpectedVariableName);
     LenterLoop:
-      if (consumed(T.Assign))
-        values ~= parseInitializer();
-      else
-        values ~= null;
+      values ~= consumed(T.Assign) ? parseInitializer() : null;
     }
     require2(T.Semicolon);
     auto d = new VariablesDecl(type, names, values);
@@ -1809,8 +1806,7 @@ class Parser
   ////                   ("!" "(" TemplateArguments ")")? MixinIdentifier?)
   RetT parseMixin(Class, RetT = Class)()
   {
-    static assert(is(Class == MixinDecl) ||
-      is(Class == MixinStmt));
+    static assert(is(Class == MixinDecl) || is(Class == MixinStmt));
     skip(T.Mixin);
 
     static if (is(Class == MixinDecl))
@@ -3738,16 +3734,8 @@ class Parser
         nT();
         switch (token.kind)
         {
-        case T.Typedef,
-             T.Struct,
-             T.Union,
-             T.Class,
-             T.Interface,
-             T.Enum,
-             T.Function,
-             T.Delegate,
-             T.Super,
-             T.Return:
+        case T.Typedef, T.Struct, T.Union, T.Class, T.Interface,
+             T.Enum, T.Function, T.Delegate, T.Super, T.Return:
         case_Const_Immutable_Shared: // D2
           specTok = token;
           nT();
@@ -4625,18 +4613,14 @@ class Parser
   /// Requires a token of kind tok.
   void require(TOK tok)
   {
-    if (token.kind == tok)
-      nT();
-    else
+    if (!consumed(tok))
       error2(MID.ExpectedButFound, Token.toString(tok), token);
   }
 
   /// Requires a token of kind tok. Uses the token end as the error location.
   void require2(TOK tok)
   {
-    if (token.kind == tok)
-      nT();
-    else
+    if (!consumed(tok))
       error2_eL(MID.ExpectedButFound, Token.toString(tok), token);
   }
 
@@ -4651,10 +4635,8 @@ class Parser
   /// Returns: null or the identifier.
   Token* optionalIdentifier()
   {
-    Token* id;
-    if (token.kind == T.Identifier)
-      (id = token), nT();
-    return id;
+    Token* id = token;
+    return consumed(T.Identifier) ? id : null;
   }
 
   /// Reports an error if the current token is not an identifier.
@@ -4663,10 +4645,8 @@ class Parser
   /// Returns: The identifier token or null.
   Token* requireIdentifier(MID mid)
   {
-    Token* idtok;
-    if (token.kind == T.Identifier)
-      (idtok = token), nT();
-    else
+    Token* idtok = token;
+    if (!consumed(T.Identifier))
     {
       error(token, mid, token.text);
       if (!trying)
@@ -4676,6 +4656,8 @@ class Parser
         idtok.ident = Ident.Empty;
         this.prevToken = idtok;
       }
+      else
+        idtok = null;
     }
     return idtok;
   }
@@ -4711,31 +4693,21 @@ class Parser
   }
 
   /// Forwards error parameters.
-  /// ditto
-  void error(Token* token, string formatMsg, ...)
-  {
-    error_(token, false, formatMsg, _arguments, _argptr);
-  }
   void error(Token* token, MID mid, ...)
   {
-    error_(token, false, diag.bundle.msg(mid), _arguments, _argptr);
+    error(_arguments, _argptr, token, false, mid);
   }
   /// ditto
   void error(MID mid, ...)
   {
-    error_(this.token, false, diag.bundle.msg(mid), _arguments, _argptr);
+    error(_arguments, _argptr, this.token, false, mid);
   }
   /// ditto
   void error_eL(MID mid, ...)
   {
-    error_(this.prevToken, true, diag.bundle.msg(mid), _arguments, _argptr);
+    error(_arguments, _argptr, this.prevToken, true, mid);
   }
 
-  /// ditto
-  void error2(string formatMsg, Token* token)
-  {
-    error(token, formatMsg, getPrintable(token));
-  }
   /// ditto
   void error2(MID mid, Token* token)
   {
@@ -4757,8 +4729,8 @@ class Parser
   ///   token = Used to get the location of the error.
   ///   endLoc = Get the position of the token's end or start character?
   ///   formatMsg = The parser error message.
-  void error_(Token* token, bool endLoc, string formatMsg,
-              TypeInfo[] _arguments, va_list _argptr)
+  void error(TypeInfo[] _arguments, va_list _argptr,
+             Token* token, bool endLoc, string formatMsg)
   {
     if (trying)
     {
@@ -4771,5 +4743,11 @@ class Parser
       token.getErrorLocation(filePath);
     auto msg = diag.format(_arguments, _argptr, formatMsg);
     errors ~= new ParserError(location, msg);
+  }
+  /// ditto
+  void error(TypeInfo[] _arguments, va_list _argptr,
+             Token* token, bool endLoc, MID mid)
+  {
+    error(_arguments, _argptr, token, endLoc, diag.bundle.msg(mid));
   }
 }
