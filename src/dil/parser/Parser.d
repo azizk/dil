@@ -4740,7 +4740,9 @@ class Parser
       token.errorLocationOfEnd(filePath) :
       token.getErrorLocation(filePath);
     auto msg = diag.format(_arguments, _argptr, formatMsg);
-    errors ~= new ParserError(location, msg);
+    auto error = new ParserError(location, msg);
+    errors ~= error;
+    diag ~= error;
   }
   /// ditto
   void error(TypeInfo[] _arguments, va_list _argptr,

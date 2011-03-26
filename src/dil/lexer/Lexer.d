@@ -2625,7 +2625,9 @@ class Lexer
     auto errorPath = errorFilePath();
     auto location = new Location(errorPath, lineNum, lineBegin, columnPos);
     msg = diag.format(_arguments, _argptr, msg);
-    errors ~= new LexerError(location, msg);
+    auto error = new LexerError(location, msg);
+    errors ~= error;
+    diag ~= error;
   }
 
   /// Returns true if the current character to be decoded is
