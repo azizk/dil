@@ -120,7 +120,7 @@ class Lexer
       t.setWhitespaceFlag();
       t.nlval = lookupNewline();
       break;
-    case TOK.CharLiteral: // May have escape sequences.
+    case TOK.Character: // May have escape sequences.
       this.p = t.start;
       scanCharacterLiteral(t);
       break;
@@ -575,7 +575,7 @@ class Lexer
         {
         case '=':
           ++p;
-          kind = TOK.DivAssign;
+          kind = TOK.SlashEql;
           goto Lreturn;
         case '+':
           return (this.p = p), scanNestedComment(t);
@@ -588,7 +588,7 @@ class Lexer
           t.setWhitespaceFlag();
           goto Lreturn;
         default:
-          kind = TOK.Div;
+          kind = TOK.Slash;
           goto Lreturn;
         }
 
@@ -598,9 +598,9 @@ class Lexer
       case '=': /* =  == */
         if (p[1] == '=')
           ++p,
-          kind = TOK.Equal;
+          kind = TOK.Equal2;
         else
-          kind = TOK.Assign;
+          kind = TOK.Equal;
         goto Lcommon;
       case '\'':
         return scanCharacterLiteral(t);
@@ -619,7 +619,7 @@ class Lexer
         switch (c)
         {
         case '=':
-          kind = TOK.GreaterEqual;
+          kind = TOK.GreaterEql;
           goto Lcommon;
         case '>':
           if (p[1] == '>')
@@ -627,15 +627,15 @@ class Lexer
             ++p;
             if (p[1] == '=')
               ++p,
-              kind = TOK.URShiftAssign;
+              kind = TOK.Greater3Eql;
             else
-              kind = TOK.URShift;
+              kind = TOK.Greater3;
           }
           else if (p[1] == '=')
             ++p,
-            kind = TOK.RShiftAssign;
+            kind = TOK.Greater2Eql;
           else
-            kind = TOK.RShift;
+            kind = TOK.Greater2;
           goto Lcommon;
         default:
           kind = TOK.Greater;
@@ -647,14 +647,14 @@ class Lexer
         switch (c)
         {
         case '=':
-          kind = TOK.LessEqual;
+          kind = TOK.LessEql;
           goto Lcommon;
         case '<':
           if (p[1] == '=')
             ++p,
-            kind = TOK.LShiftAssign;
+            kind = TOK.Less2Eql;
           else
-            kind = TOK.LShift;
+            kind = TOK.Less2;
           goto Lcommon;
         case '>':
           if (p[1] == '=')
@@ -695,10 +695,10 @@ class Lexer
             kind = TOK.UorLorE;
           goto Lcommon;
         case '=':
-          kind = TOK.NotEqual;
+          kind = TOK.ExclaimEql;
           goto Lcommon;
         default:
-          kind = TOK.Not;
+          kind = TOK.Exclaim;
           goto Lreturn;
         }
         assert(0);
@@ -706,9 +706,9 @@ class Lexer
         if (p[1] == '.')
           if ((++p)[1] == '.')
             ++p,
-            kind = TOK.Ellipses;
+            kind = TOK.Dot3;
           else
-            kind = TOK.Slice;
+            kind = TOK.Dot2;
         else if (isdigit(p[1]))
           return (this.p = p), scanFloat(t);
         else
@@ -717,31 +717,31 @@ class Lexer
       case '|': /* |  ||  |= */
         c = *++p;
         if (c == '=')
-          kind = TOK.OrAssign;
+          kind = TOK.PipeEql;
         else if (c == '|')
-          kind = TOK.OrLogical;
+          kind = TOK.Pipe2;
         else {
-          kind = TOK.OrBinary;
+          kind = TOK.Pipe;
           goto Lreturn;
         }
         goto Lcommon;
       case '&': /* &  &&  &= */
         c = *++p;
         if (c == '=')
-          kind = TOK.AndAssign;
+          kind = TOK.AmpEql;
         else if (c == '&')
-          kind = TOK.AndLogical;
+          kind = TOK.Amp2;
         else {
-          kind = TOK.AndBinary;
+          kind = TOK.Amp;
           goto Lreturn;
         }
         goto Lcommon;
       case '+': /* +  ++  += */
         c = *++p;
         if (c == '=')
-          kind = TOK.PlusAssign;
+          kind = TOK.PlusEql;
         else if (c == '+')
-          kind = TOK.PlusPlus;
+          kind = TOK.Plus2;
         else {
           kind = TOK.Plus;
           goto Lreturn;
@@ -750,9 +750,9 @@ class Lexer
       case '-': /* -  --  -= */
         c = *++p;
         if (c == '=')
-          kind = TOK.MinusAssign;
+          kind = TOK.MinusEql;
         else if (c == '-')
-          kind = TOK.MinusMinus;
+          kind = TOK.Minus2;
         else {
           kind = TOK.Minus;
           goto Lreturn;
@@ -761,34 +761,34 @@ class Lexer
       case '~': /* ~  ~= */
         if (p[1] == '=')
           ++p,
-          kind = TOK.CatAssign;
+          kind = TOK.TildeEql;
         else
           kind = TOK.Tilde;
         goto Lcommon;
       case '*': /* *  *= */
         if (p[1] == '=')
           ++p,
-          kind = TOK.MulAssign;
+          kind = TOK.StarEql;
         else
-          kind = TOK.Mul;
+          kind = TOK.Star;
         goto Lcommon;
       version(D2)
       {
       case '^': /* ^  ^=  ^^  ^^= */
         if (p[1] == '=')
           ++p,
-          kind = TOK.XorAssign;
+          kind = TOK.CaretEql;
         else if (p[1] == '^')
         {
           ++p;
           if (p[1] == '=')
             ++p,
-            kind = TOK.PowAssign;
+            kind = TOK.Caret2Eql;
           else
-            kind = TOK.Pow;
+            kind = TOK.Caret2;
         }
         else
-          kind = TOK.Xor;
+          kind = TOK.Caret;
         goto Lcommon;
       } // end of version(D2)
       else
@@ -796,17 +796,17 @@ class Lexer
       case '^': /* ^  ^= */
         if (p[1] == '=')
           ++p,
-          kind = TOK.XorAssign;
+          kind = TOK.CaretEql;
         else
-          kind = TOK.Xor;
+          kind = TOK.Caret;
         goto Lcommon;
       }
       case '%': /* %  %= */
         if (p[1] == '=')
           ++p,
-          kind = TOK.ModAssign;
+          kind = TOK.PercentEql;
         else
-          kind = TOK.Mod;
+          kind = TOK.Percent;
         goto Lcommon;
       // Single character tokens:
       mixin(cases(
@@ -1008,7 +1008,7 @@ class Lexer
     // 4 character tokens.
     switch (c)
     {
-    mixin(cases(">>>=", "RShiftAssign", "!<>=", "Unordered"));
+    mixin(cases(">>>=", "Greater3Eql", "!<>=", "Unordered"));
     default:
     }
 
@@ -1021,11 +1021,11 @@ class Lexer
     switch (c)
     {
     mixin(cases(
-      "<<=", "LShiftAssign", ">>=", "RShiftAssign",
-      ">>>", "URShift",      "...", "Ellipses",
-      "!<=", "UorG",         "!>=", "UorL",
-      "!<>", "UorE",         "<>=", "LorEorG",
-      "^^=", "PowAssign"
+      "<<=", "Less2Eql",    ">>=", "Greater2Eql",
+      ">>>", "Greater3Eql", "...", "Dot3",
+      "!<=", "UorG",        "!>=", "UorL",
+      "!<>", "UorE",        "<>=", "LorEorG",
+      "^^=", "Caret2Eql"
     ));
     case toUintE(LS), toUintE(PS):
       p += 2;
@@ -1056,18 +1056,18 @@ class Lexer
       t.setWhitespaceFlag();
       goto Lreturn;
     mixin(cases(
-      "<=", "LessEqual",  ">=", "GreaterEqual",
-      "<<", "LShift",     ">>", "RShift",
-      "==", "Equal",      "!=", "NotEqual",
+      "<=", "LessEql",    ">=", "GreaterEql",
+      "<<", "Less2" ,     ">>", "Greater2",
+      "==", "Equal2",     "!=", "ExclaimEql",
       "!<", "UorGorE",    "!>", "UorLorE",
-      "<>", "LorG",       "..", "Slice",
-      "&&", "AndLogical", "&=", "AndAssign",
-      "||", "OrLogical",  "|=", "OrAssign",
-      "++", "PlusPlus",   "+=", "PlusAssign",
-      "--", "MinusMinus", "-=", "MinusAssign",
-      "*=", "MulAssign",  "/=", "DivAssign",
-      "%=", "ModAssign",  "^=", "XorAssign",
-      "~=", "CatAssign",  "^^", "Pow"
+      "<>", "LorG",       "..", "Dot2",
+      "&&", "Amp2",       "&=", "AmpEql",
+      "||", "Pipe2",      "|=", "PipeEql",
+      "++", "Plus2",      "+=", "PlusEql",
+      "--", "Minus2",     "-=", "MinusEql",
+      "*=", "SlashEql",   "/=", "SlashEql",
+      "%=", "PercentEql", "^=", "CaretEql",
+      "~=", "TildeEql",   "^^", "Caret2"
     ));
     case toUintE("\r\n"):
       ++p;
@@ -1076,10 +1076,10 @@ class Lexer
     }
 
     static TOK[127] char2tok = [
-      '<':TOK.Greater,   '>':TOK.Less,     '^':TOK.Xor,    '!':TOK.Not,
-      '&':TOK.AndBinary, '|':TOK.OrBinary, '+':TOK.Plus,   '-':TOK.Minus,
-      '=':TOK.Assign,    '~':TOK.Tilde,    '*':TOK.Mul,    '/':TOK.Div,
-      '%':TOK.Mod,       '(':TOK.LParen,   ')':TOK.RParen, '[':TOK.LBracket,
+      '<':TOK.Greater,   '>':TOK.Less,     '^':TOK.Caret,  '!':TOK.Exclaim,
+      '&':TOK.Amp,       '|':TOK.Pipe,     '+':TOK.Plus,   '-':TOK.Minus,
+      '=':TOK.Equal,     '~':TOK.Tilde,    '*':TOK.Star,   '/':TOK.Slash,
+      '%':TOK.Percent,   '(':TOK.LParen,   ')':TOK.RParen, '[':TOK.LBracket,
       ']':TOK.RBracket,  '{':TOK.LBrace,   '}':TOK.RBrace, ':':TOK.Colon,
       ';':TOK.Semicolon, '?':TOK.Question, ',':TOK.Comma,  '$':TOK.Dollar,
       '@':TOK.At
@@ -1390,7 +1390,7 @@ class Lexer
   {
     assert(*p == '\'');
     ++p;
-    t.kind = TOK.CharLiteral;
+    t.kind = TOK.Character;
     switch (*p)
     {
     case '\\':
@@ -2879,42 +2879,42 @@ unittest
   static Pair[] pairs = [
     {"#!äöüß",  TOK.Shebang},       {"\n",      TOK.Newline},
     {"//çay",   TOK.Comment},       {"\n",      TOK.Newline},
-                                    {"&",       TOK.AndBinary},
-    {"/*çağ*/", TOK.Comment},       {"&&",      TOK.AndLogical},
-    {"/+çak+/", TOK.Comment},       {"&=",      TOK.AndAssign},
+                                    {"&",       TOK.Amp},
+    {"/*çağ*/", TOK.Comment},       {"&&",      TOK.Amp2},
+    {"/+çak+/", TOK.Comment},       {"&=",      TOK.AmpEql},
     {">",       TOK.Greater},       {"+",       TOK.Plus},
-    {">=",      TOK.GreaterEqual},  {"++",      TOK.PlusPlus},
-    {">>",      TOK.RShift},        {"+=",      TOK.PlusAssign},
-    {">>=",     TOK.RShiftAssign},  {"-",       TOK.Minus},
-    {">>>",     TOK.URShift},       {"--",      TOK.MinusMinus},
-    {">>>=",    TOK.URShiftAssign}, {"-=",      TOK.MinusAssign},
-    {"<",       TOK.Less},          {"=",       TOK.Assign},
-    {"<=",      TOK.LessEqual},     {"==",      TOK.Equal},
+    {">=",      TOK.GreaterEql},    {"++",      TOK.Plus2},
+    {">>",      TOK.Greater2},      {"+=",      TOK.PlusEql},
+    {">>=",     TOK.Greater2Eql},   {"-",       TOK.Minus},
+    {">>>",     TOK.Greater3},      {"--",      TOK.Minus2},
+    {">>>=",    TOK.Greater3Eql},   {"-=",      TOK.MinusEql},
+    {"<",       TOK.Less},          {"=",       TOK.Equal},
+    {"<=",      TOK.LessEql},       {"==",      TOK.Equal2},
     {"<>",      TOK.LorG},          {"~",       TOK.Tilde},
-    {"<>=",     TOK.LorEorG},       {"~=",      TOK.CatAssign},
-    {"<<",      TOK.LShift},        {"*",       TOK.Mul},
-    {"<<=",     TOK.LShiftAssign},  {"*=",      TOK.MulAssign},
-    {"!",       TOK.Not},           {"/",       TOK.Div},
-    {"!=",      TOK.NotEqual},      {"/=",      TOK.DivAssign},
-    {"!<",      TOK.UorGorE},       {"^",       TOK.Xor},
-    {"!>",      TOK.UorLorE},       {"^=",      TOK.XorAssign},
-    {"!<=",     TOK.UorG},          {"%",       TOK.Mod},
-    {"!>=",     TOK.UorL},          {"%=",      TOK.ModAssign},
+    {"<>=",     TOK.LorEorG},       {"~=",      TOK.TildeEql},
+    {"<<",      TOK.Less2},         {"*",       TOK.Star},
+    {"<<=",     TOK.Less2Eql},      {"*=",      TOK.StarEql},
+    {"!",       TOK.Exclaim},       {"/",       TOK.Slash},
+    {"!=",      TOK.ExclaimEql},    {"/=",      TOK.SlashEql},
+    {"!<",      TOK.UorGorE},       {"^",       TOK.Caret},
+    {"!>",      TOK.UorLorE},       {"^=",      TOK.CaretEql},
+    {"!<=",     TOK.UorG},          {"%",       TOK.Percent},
+    {"!>=",     TOK.UorL},          {"%=",      TOK.PercentEql},
     {"!<>",     TOK.UorE},          {"(",       TOK.LParen},
     {"!<>=",    TOK.Unordered},     {")",       TOK.RParen},
     {".",       TOK.Dot},           {"[",       TOK.LBracket},
-    {"..",      TOK.Slice},         {"]",       TOK.RBracket},
-    {"...",     TOK.Ellipses},      {"{",       TOK.LBrace},
-    {"|",       TOK.OrBinary},      {"}",       TOK.RBrace},
-    {"||",      TOK.OrLogical},     {":",       TOK.Colon},
-    {"|=",      TOK.OrAssign},      {";",       TOK.Semicolon},
+    {"..",      TOK.Dot2},          {"]",       TOK.RBracket},
+    {"...",     TOK.Dot3},          {"{",       TOK.LBrace},
+    {"|",       TOK.Pipe},          {"}",       TOK.RBrace},
+    {"||",      TOK.Pipe2},         {":",       TOK.Colon},
+    {"|=",      TOK.PipeEql},       {";",       TOK.Semicolon},
     {"?",       TOK.Question},      {",",       TOK.Comma},
     {"$",       TOK.Dollar},        {"cam",     TOK.Identifier},
     {"çay",     TOK.Identifier},    {".0",      TOK.Float64},
     {"0",       TOK.Int32},         {"\n",      TOK.Newline},
     {"\r",      TOK.Newline},       {"\r\n",    TOK.Newline},
     {"\u2028",  TOK.Newline},       {"\u2029",  TOK.Newline},
-    {"'c'",     TOK.Char},          {`'\''`,    TOK.Char},
+    {"'c'",     TOK.Character},     {`'\''`,    TOK.Character},
     {`"dblq"`,  TOK.String},        {"`raw`",   TOK.String},
     {`r"aw"`,   TOK.String},        {`x"0123456789abcdef"`, TOK.String},
   ];
@@ -2923,8 +2923,8 @@ unittest
   {
   static Pair[] pairs2 = [
     {"@",       TOK.At},
-    {"^^",      TOK.Pow},
-    {"^^=",     TOK.PowAssign},
+    {"^^",      TOK.Caret2},
+    {"^^=",     TOK.Caret2Eql},
     {"q\"ⱷ\n\nⱷ\"", TOK.String},    {`q"(())"`, TOK.String},
     {`q"{{}}"`,     TOK.String},    {`q"[[]]"`, TOK.String},
     {`q"<<>>"`,     TOK.String},    {`q"/__/"`, TOK.String},

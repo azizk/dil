@@ -20,7 +20,7 @@ enum TOK : ushort
 
   Identifier,
   String,
-  CharLiteral,
+  Character,
 
   // Special tokens
   FILE,
@@ -47,7 +47,8 @@ enum TOK : ushort
   LBrace,
   RBrace,
 
-  Dot, Slice, Ellipses,
+  // Dots
+  Dot, Dot2, Dot3,
 
   // Floating point number operators
   Unordered,
@@ -60,22 +61,23 @@ enum TOK : ushort
   LorG,
 
   // Normal operators
-  Assign, Equal, NotEqual, Not,
-  LessEqual, Less,
-  GreaterEqual, Greater,
-  LShiftAssign, LShift,
-  RShiftAssign,RShift,
-  URShiftAssign, URShift,
-  OrAssign, OrLogical, OrBinary,
-  AndAssign, AndLogical, AndBinary,
-  PlusAssign, PlusPlus, Plus,
-  MinusAssign, MinusMinus, Minus,
-  DivAssign, Div,
-  MulAssign, Mul,
-  ModAssign, Mod,
-  XorAssign, Xor,
-  PowAssign, Pow,
-  CatAssign, Tilde,
+  Equal,    Equal2,
+  Exclaim,  ExclaimEql,
+  Less,     LessEql,
+  Greater,  GreaterEql,
+  Less2,    Less2Eql,
+  Greater2, Greater2Eql,
+  Greater3, Greater3Eql,
+  Pipe,     PipeEql,     Pipe2,
+  Amp,      AmpEql,      Amp2,
+  Plus,     PlusEql,     Plus2,
+  Minus,    MinusEql,    Minus2,
+  Slash,    SlashEql,
+  Star,     StarEql,
+  Percent,  PercentEql,
+  Caret,    CaretEql,
+  Caret2,   Caret2Eql,
+  Tilde,    TildeEql,
 
   Colon,
   Semicolon,
@@ -137,7 +139,7 @@ const string[TOK.MAX] tokToString = [
 
   "Identifier",
   "String",
-  "CharLiteral",
+  "Character",
 
   "__FILE__",
   "__LINE__",
@@ -169,22 +171,23 @@ const string[TOK.MAX] tokToString = [
   "<>=",  // LorEorG
   "<>",   // LorG
 
-  "=", "==", "!=", "!",
-  "<=", "<",
-  ">=", ">",
-  "<<=", "<<",
-  ">>=",">>",
-  ">>>=", ">>>",
-  "|=", "||", "|",
-  "&=", "&&", "&",
-  "+=", "++", "+",
-  "-=", "--", "-",
-  "/=", "/",
-  "*=", "*",
-  "%=", "%",
-  "^=", "^",
-  "^^=", "^^",
-  "~=", "~",
+  "=",   "==",
+  "!",   "!=",
+  "<",   "<=",
+  ">",   ">=",
+  "<<",  "<<=",
+  ">>",  ">>=",
+  ">>>", ">>>=",
+  "|",   "|=", "||",
+  "&",   "&=", "&&",
+  "+",   "+=", "++",
+  "-",   "-=", "--",
+  "/",   "/=",
+  "*",   "*=",
+  "%",   "%=",
+  "^",   "^=",
+  "^^",  "^^=",
+  "~",   "~=",
 
   ":",
   ";",

@@ -238,7 +238,7 @@ class Highlighter
           xml_escape(text);
       print.format(tags.String, text);
       break;
-    case TOK.CharLiteral:
+    case TOK.Character:
       auto text = token.text;
       text = (text.length > 1 && text[1] == '\\') ?
         scanEscapeSequences(text, tags.Escape) :

@@ -270,7 +270,7 @@ class ImportParser : Parser
       break;
     case T.Debug:
       nT();
-      if (token.kind == T.Assign)
+      if (token.kind == T.Equal)
       {
         nT(), nT(), nT(); // = Condition ;
         break;
@@ -283,7 +283,7 @@ class ImportParser : Parser
       break;
     case T.Version:
       nT();
-      if (token.kind == T.Assign)
+      if (token.kind == T.Equal)
       {
         nT(), nT(), nT(); // = Condition ;
         break;

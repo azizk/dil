@@ -547,7 +547,7 @@ class Parser
     if (testAutoDeclaration && token.kind == T.Identifier)
     {
       auto next_kind = peekNext();
-      if (next_kind == T.Assign) // "auto" Identifier "="
+      if (next_kind == T.Equal) // "auto" Identifier "="
       { // Auto variable declaration.
         name = token;
         skip(T.Identifier);
@@ -674,7 +674,7 @@ class Parser
     {
       names ~= requireIdentifier(MID.ExpectedVariableName);
     LenterLoop:
-      values ~= consumed(T.Assign) ? parseInitializer() : null;
+      values ~= consumed(T.Equal) ? parseInitializer() : null;
     }
     require2(T.Semicolon);
     auto d = new VariablesDecl(type, names, values);
@@ -894,7 +894,7 @@ class Parser
     switch (idtok.ident.idKind)
     {
     case IDK.C:
-      if (consumed(T.PlusPlus))
+      if (consumed(T.Plus2))
       {
         linkageType = LinkageType.Cpp;
         break;
@@ -1222,10 +1222,10 @@ class Parser
       ModuleFQN moduleFQN;
       Token* moduleAlias;
       // AliasName = ModuleName
-      if (peekNext() == T.Assign)
+      if (peekNext() == T.Equal)
       {
         moduleAlias = requireIdentifier(MID.ExpectedAliasModuleName);
-        skip(T.Assign);
+        skip(T.Equal);
       }
       // Identifier ("." Identifier)*
       do
@@ -1243,10 +1243,10 @@ class Parser
       {
         Token* bindAlias;
         // BindAlias = BindName
-        if (peekNext() == T.Assign)
+        if (peekNext() == T.Equal)
         {
           bindAlias = requireIdentifier(MID.ExpectedAliasImportName);
-          skip(T.Assign);
+          skip(T.Equal);
         }
         // Push identifiers.
         bindNames ~= requireIdentifier(MID.ExpectedImportName);
@@ -1325,7 +1325,7 @@ class Parser
         name = requireIdentifier(MID.ExpectedEnumMember);
         Expression value;
 
-        if (consumed(T.Assign))
+        if (consumed(T.Equal))
           value = parseAssignExpr();
 
         auto member = new EnumMemberDecl(type, name, value);
@@ -1643,7 +1643,7 @@ class Parser
     Token* cond;
     Declaration decls, elseDecls;
 
-    if (consumed(T.Assign))
+    if (consumed(T.Equal))
     { // debug = Integer ;
       // debug = Identifier ;
       spec = parseIdentOrInt();
@@ -1679,7 +1679,7 @@ class Parser
     Token* cond;
     Declaration decls, elseDecls;
 
-    if (consumed(T.Assign))
+    if (consumed(T.Equal))
     { // version = Integer ;
       // version = Identifier ;
       spec = parseIdentOrInt();
@@ -2059,7 +2059,7 @@ class Parser
     case T.Int32, T.Int64, T.UInt32, T.UInt64:
     case T.Float32, T.Float64, T.Float80,
          T.IFloat32, T.IFloat64, T.IFloat80:
-    case T.CharLiteral:
+    case T.Character:
     case T.String:
     case T.LBracket:
     // case T.LBrace:
@@ -2075,8 +2075,8 @@ class Parser
     case T.Traits:
     }
     // Tokens that can start a UnaryExpr:
-    case T.AndBinary, T.PlusPlus, T.MinusMinus, T.Mul, T.Minus,
-         T.Plus, T.Not, T.Tilde, T.New, T.Delete, T.Cast:
+    case T.Amp, T.Plus2, T.Minus2, T.Star, T.Minus,
+         T.Plus, T.Exclaim, T.Tilde, T.New, T.Delete, T.Cast:
     case_parseExpressionStmt:
       s = new ExpressionStmt(parseExpression());
       require2(T.Semicolon);
@@ -2311,7 +2311,7 @@ class Parser
     if (consumed(T.Auto))
     {
       ident = requireIdentifier(MID.ExpectedVariableName);
-      require(T.Assign);
+      require(T.Equal);
       auto init = parseExpression();
       auto v = new VariablesDecl(null, [ident], [init]);
       set(v, begin.nextNWS);
@@ -2325,7 +2325,7 @@ class Parser
       bool success;
       auto type = tryToParse({
         auto type = parseDeclarator(ident);
-        require(T.Assign);
+        require(T.Equal);
         return type;
       }, success);
       if (success)
@@ -2449,7 +2449,7 @@ class Parser
 
     version(D2)
     { //Foreach (ForeachType; LwrExpr .. UprExpr ) ScopeStmt
-    if (consumed(T.Slice))
+    if (consumed(T.Dot2))
     {
       // if (params.length != 1)
         // error(MID.XYZ); // TODO: issue error msg
@@ -2503,7 +2503,7 @@ class Parser
     auto values = parseExpressionList();
     require2(T.Colon);
     version(D2)
-    if (consumed(T.Slice)) // ".."
+    if (consumed(T.Dot2)) // ".."
     {
       if (values.length > 1)
         error(values[1].begin, MID.CaseRangeStartExpression);
@@ -2952,8 +2952,8 @@ class Parser
         break;               // have equal or higher precedence.
       switch (prevToken.kind)
       {
-      case /*T.Not,*/ T.Is, T.In, T.Unordered, T.UorE, T.UorG, T.UorGorE,
-           T.UorL, T.UorLorE, T.LorEorG, T.LorG, T.Tilde, T.Pow:
+      case /*T.Exclaim,*/ T.Is, T.In, T.Unordered, T.UorE, T.UorG, T.UorGorE,
+           T.UorL, T.UorLorE, T.LorEorG, T.LorG, T.Tilde, T.Caret2:
         // Use textSpan() for operators like "!is" and "!in".
         error(operator, MID.IllegalAsmBinaryOp, operator.textSpan(prevToken));
         break;
@@ -3032,7 +3032,7 @@ class Parser
       nT();
       e = new SignExpr(parseAsmUnaryExpr());
       break;
-    case T.Not:
+    case T.Exclaim:
       nT();
       e = new NotExpr(parseAsmUnaryExpr());
       break;
@@ -3196,22 +3196,22 @@ class Parser
     NewBinaryExpr f = void;
     switch (optok.kind)
     {
-    case T.Assign:        f = &newBinaryExpr!(AssignExpr); goto Lcommon;
-    case T.LShiftAssign:  f = &newBinaryExpr!(LShiftAssignExpr); goto Lcommon;
-    case T.RShiftAssign:  f = &newBinaryExpr!(RShiftAssignExpr); goto Lcommon;
-    case T.URShiftAssign: f = &newBinaryExpr!(URShiftAssignExpr); goto Lcommon;
-    case T.OrAssign:      f = &newBinaryExpr!(OrAssignExpr); goto Lcommon;
-    case T.AndAssign:     f = &newBinaryExpr!(AndAssignExpr); goto Lcommon;
-    case T.PlusAssign:    f = &newBinaryExpr!(PlusAssignExpr); goto Lcommon;
-    case T.MinusAssign:   f = &newBinaryExpr!(MinusAssignExpr); goto Lcommon;
-    case T.DivAssign:     f = &newBinaryExpr!(DivAssignExpr); goto Lcommon;
-    case T.MulAssign:     f = &newBinaryExpr!(MulAssignExpr); goto Lcommon;
-    case T.ModAssign:     f = &newBinaryExpr!(ModAssignExpr); goto Lcommon;
-    case T.XorAssign:     f = &newBinaryExpr!(XorAssignExpr); goto Lcommon;
-    case T.CatAssign:     f = &newBinaryExpr!(CatAssignExpr); goto Lcommon;
+    case T.Equal:       f = &newBinaryExpr!(AssignExpr); goto Lcommon;
+    case T.Less2Eql:    f = &newBinaryExpr!(LShiftAssignExpr); goto Lcommon;
+    case T.Greater2Eql: f = &newBinaryExpr!(RShiftAssignExpr); goto Lcommon;
+    case T.Greater3Eql: f = &newBinaryExpr!(URShiftAssignExpr); goto Lcommon;
+    case T.PipeEql:     f = &newBinaryExpr!(OrAssignExpr); goto Lcommon;
+    case T.AmpEql:      f = &newBinaryExpr!(AndAssignExpr); goto Lcommon;
+    case T.PlusEql:     f = &newBinaryExpr!(PlusAssignExpr); goto Lcommon;
+    case T.MinusEql:    f = &newBinaryExpr!(MinusAssignExpr); goto Lcommon;
+    case T.SlashEql:    f = &newBinaryExpr!(DivAssignExpr); goto Lcommon;
+    case T.StarEql:     f = &newBinaryExpr!(MulAssignExpr); goto Lcommon;
+    case T.PercentEql:  f = &newBinaryExpr!(ModAssignExpr); goto Lcommon;
+    case T.CaretEql:    f = &newBinaryExpr!(XorAssignExpr); goto Lcommon;
+    case T.TildeEql:    f = &newBinaryExpr!(CatAssignExpr); goto Lcommon;
     version(D2)
     {
-    case T.PowAssign:     f = &newBinaryExpr!(PowAssignExpr); goto Lcommon;
+    case T.Caret2Eql:   f = &newBinaryExpr!(PowAssignExpr); goto Lcommon;
     }
     Lcommon:
       skip(optok.kind);
@@ -3252,38 +3252,38 @@ class Parser
     NewBinaryExpr f;
     switch (token.kind)
     {
-    case T.OrLogical:  p = 1; f = &newBinaryExpr!(OrOrExpr); break;
-    case T.AndLogical: p = 2; f = &newBinaryExpr!(AndAndExpr); break;
-    case T.OrBinary:   p = 3; f = &newBinaryExpr!(OrExpr); break;
-    case T.Xor:        p = 4; f = &newBinaryExpr!(XorExpr); break;
-    case T.AndBinary:  p = 5; f = &newBinaryExpr!(AndExpr); break;
+    case T.Pipe2:      p = 1; f = &newBinaryExpr!(OrOrExpr); break;
+    case T.Amp2:       p = 2; f = &newBinaryExpr!(AndAndExpr); break;
+    case T.Pipe:       p = 3; f = &newBinaryExpr!(OrExpr); break;
+    case T.Caret:      p = 4; f = &newBinaryExpr!(XorExpr); break;
+    case T.Amp:        p = 5; f = &newBinaryExpr!(AndExpr); break;
     case T.Is:         p = 6; f = &newBinaryExpr!(IdentityExpr); break;
     case T.In:         p = 6; f = &newBinaryExpr!(InExpr); break;
-    case T.Equal,
-         T.NotEqual:   p = 6; f = &newBinaryExpr!(EqualExpr); break;
-    case T.Not:
+    case T.Equal2,
+         T.ExclaimEql: p = 6; f = &newBinaryExpr!(EqualExpr); break;
+    case T.Exclaim:
       auto next = peekNext();
       if (next == T.Is) // "!" is
         goto case T.Is;
       else version(D2) if (next == T.In) // "!" in
         goto case T.In;
       break; // Not a binary operator.
-    case T.LessEqual, T.Less, T.GreaterEqual, T.Greater,
+    case T.LessEql, T.Less, T.GreaterEql, T.Greater,
          T.Unordered, T.UorE, T.UorG, T.UorGorE,
          T.UorL, T.UorLorE, T.LorEorG, T.LorG:
-                    p = 6; f = &newBinaryExpr!(RelExpr); break;
-    case T.LShift:  p = 7; f = &newBinaryExpr!(LShiftExpr); break;
-    case T.RShift:  p = 7; f = &newBinaryExpr!(RShiftExpr); break;
-    case T.URShift: p = 7; f = &newBinaryExpr!(URShiftExpr); break;
-    case T.Plus:    p = 8; f = &newBinaryExpr!(PlusExpr); break;
-    case T.Minus:   p = 8; f = &newBinaryExpr!(MinusExpr); break;
-    case T.Tilde:   p = 8; f = &newBinaryExpr!(CatExpr); break;
-    case T.Mul:     p = 9; f = &newBinaryExpr!(MulExpr); break;
-    case T.Div:     p = 9; f = &newBinaryExpr!(DivExpr); break;
-    case T.Mod:     p = 9; f = &newBinaryExpr!(ModExpr); break;
+                     p = 6; f = &newBinaryExpr!(RelExpr); break;
+    case T.Less2:    p = 7; f = &newBinaryExpr!(LShiftExpr); break;
+    case T.Greater2: p = 7; f = &newBinaryExpr!(RShiftExpr); break;
+    case T.Greater3: p = 7; f = &newBinaryExpr!(URShiftExpr); break;
+    case T.Plus:     p = 8; f = &newBinaryExpr!(PlusExpr); break;
+    case T.Minus:    p = 8; f = &newBinaryExpr!(MinusExpr); break;
+    case T.Tilde:    p = 8; f = &newBinaryExpr!(CatExpr); break;
+    case T.Star:     p = 9; f = &newBinaryExpr!(MulExpr); break;
+    case T.Slash:    p = 9; f = &newBinaryExpr!(DivExpr); break;
+    case T.Percent:  p = 9; f = &newBinaryExpr!(ModExpr); break;
     version(D2)
     {
-    case T.Pow:     p = 10; f = &newBinaryExpr!(PowExpr); break;
+    case T.Caret2:  p = 10; f = &newBinaryExpr!(PowExpr); break;
     }
     default:
     }
@@ -3293,7 +3293,7 @@ class Parser
     {
       assert(f !is null && p != -1);
       fn = f;
-      if (token.kind == T.Not)
+      if (token.kind == T.Exclaim)
         nT(); // Consume "!" part.
       nT(); // Consume the binary operator.
     }
@@ -3366,10 +3366,10 @@ class Parser
         else
           e = parseIdentifierExpr(e);
         continue;
-      case T.PlusPlus:
+      case T.Plus2:
         e = new PostIncrExpr(e);
         break;
-      case T.MinusMinus:
+      case T.Minus2:
         e = new PostDecrExpr(e);
         break;
       case T.LParen:
@@ -3389,7 +3389,7 @@ class Parser
         Expression[] es = [parseAssignExpr()];
 
         // [ AssignExpr .. AssignExpr ]
-        if (consumed(T.Slice))
+        if (consumed(T.Dot2))
         {
           e = new SliceExpr(e, es[0], parseAssignExpr());
           requireClosing(T.RBracket, leftBracket);
@@ -3434,19 +3434,19 @@ class Parser
     Expression e;
     switch (token.kind)
     {
-    case T.AndBinary:
+    case T.Amp:
       nT();
       e = new AddressExpr(parseUnaryExpr());
       break;
-    case T.PlusPlus:
+    case T.Plus2:
       nT();
       e = new PreIncrExpr(parseUnaryExpr());
       break;
-    case T.MinusMinus:
+    case T.Minus2:
       nT();
       e = new PreDecrExpr(parseUnaryExpr());
       break;
-    case T.Mul:
+    case T.Star:
       nT();
       e = new DerefExpr(parseUnaryExpr());
       break;
@@ -3455,7 +3455,7 @@ class Parser
       nT();
       e = new SignExpr(parseUnaryExpr());
       break;
-    case T.Not:
+    case T.Exclaim:
       nT();
       e = new NotExpr(parseUnaryExpr());
       break;
@@ -3533,9 +3533,9 @@ class Parser
     Expression e;
     // Peek to avoid parsing: "id !is Exp" or "id !in Exp"
     auto nextTok = peekNext();
-    if (token.kind == T.Not && nextTok != T.Is && nextTok != T.In)
+    if (token.kind == T.Exclaim && nextTok != T.Is && nextTok != T.In)
     {
-      skip(T.Not);
+      skip(T.Exclaim);
       // Identifier "!" "(" TemplateArguments? ")"
       // Identifier "!" TemplateArgumentSingle
       auto tparams = parseOneOrMoreTemplateArguments();
@@ -3587,7 +3587,7 @@ class Parser
          T.IFloat32, T.IFloat64, T.IFloat80:
       e = new FloatExpr(token);
       goto LnT_and_return;
-    case T.CharLiteral:
+    case T.Character:
       e = new CharExpr(token.dchar_);
       goto LnT_and_return;
     LnT_and_return:
@@ -3729,7 +3729,7 @@ class Parser
 
       switch (token.kind)
       {
-      case T.Colon, T.Equal:
+      case T.Colon, T.Equal2:
         opTok = token;
         nT();
         switch (token.kind)
@@ -3999,7 +3999,7 @@ class Parser
     auto begin = token;
     auto ident = requireIdentifier2(MID.ExpectedAnIdentifier);
     Type t;
-    if (consumed(T.Not)) // TemplateInstance
+    if (consumed(T.Exclaim)) // TemplateInstance
       t = new TemplateInstanceType(next, ident,
         parseOneOrMoreTemplateArguments());
     else // Identifier
@@ -4077,7 +4077,7 @@ class Parser
       auto begin = token;
       switch (token.kind)
       {
-      case T.Mul:
+      case T.Star:
         t = new PointerType(t);
         nT();
         break;
@@ -4206,7 +4206,7 @@ class Parser
       else
       {
         Expression e = parseExpression(), e2;
-        if (consumed(T.Slice))
+        if (consumed(T.Dot2))
           e2 = parseExpression();
         requireClosing(T.RBracket, begin);
         t = new ArrayType(t, e, e2);
@@ -4278,7 +4278,7 @@ class Parser
         params ~= set(param, paramBegin);
       }
 
-      if (consumed(T.Ellipses)) // "..."
+      if (consumed(T.Dot3)) // "..."
         goto LvariadicParam; // Go to common code and leave the loop.
 
       while (1)
@@ -4337,14 +4337,14 @@ class Parser
       }
       type = parseDeclarator(name, true);
 
-      if (consumed(T.Assign))
+      if (consumed(T.Equal))
         defValue = parseAssignExpr();
       else if (defValue !is null) // Parsed a defValue previously?
         error(name ? name : type.begin, // Position.
           MID.ExpectedParamDefValue,
           name ? name.text() : ""); // Name.
 
-      if (consumed(T.Ellipses))
+      if (consumed(T.Dot3))
       {
         if (stcs & (StorageClass.Ref | StorageClass.Out))
           error(paramBegin, MID.IllegalVariadicParam);
@@ -4513,7 +4513,7 @@ class Parser
       {
         if (consumed(T.Colon))  // ":" SpecializationType
           specType = parseType();
-        if (consumed(T.Assign)) // "=" DefaultType
+        if (consumed(T.Equal)) // "=" DefaultType
           defType = parseType();
       }
 
@@ -4534,7 +4534,7 @@ class Parser
         }
         if (consumed(T.Colon))  // ":" Specialization
           spec = parseExpOrType();
-        if (consumed(T.Assign)) // "=" Default
+        if (consumed(T.Equal)) // "=" Default
           def = parseExpOrType();
         } // version(D2)
         else
@@ -4549,14 +4549,14 @@ class Parser
         ident = token;
         switch (peekNext())
         {
-        case T.Ellipses:
+        case T.Dot3:
           // TemplateTupleParam := Identifier "..."
-          skip(T.Identifier); skip(T.Ellipses);
+          skip(T.Identifier); skip(T.Dot3);
           if (token.kind == T.Comma)
             error(MID.TemplateTupleParameter);
           tp = new TemplateTupleParam(ident);
           break;
-        case T.Comma, T.RParen, T.Colon, T.Assign:
+        case T.Comma, T.RParen, T.Colon, T.Equal:
           // TemplateTypeParam := Identifier
           skip(T.Identifier);
           parseSpecAndOrDefaultType();
@@ -4587,7 +4587,7 @@ class Parser
         if (consumed(T.Colon))
           specValue = parseCondExpr();
         // "=" DefaultValue
-        if (consumed(T.Assign))
+        if (consumed(T.Equal))
           defValue = parseCondExpr();
         tp = new TemplateValueParam(valueType, ident, specValue, defValue);
       }

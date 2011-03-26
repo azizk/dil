@@ -81,7 +81,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   for (auto token = first_token; token; token = token.next)
     switch (token.kind)
     {
-    case TOK.Identifier, TOK.Comment, TOK.String, TOK.CharLiteral,
+    case TOK.Identifier, TOK.Comment, TOK.String, TOK.Character,
          TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64,
          TOK.Float32, TOK.Float64, TOK.Float80,
          TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
@@ -138,7 +138,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
     line ~= ',';
     switch (token.kind)
     {
-    case TOK.Identifier, TOK.Comment, TOK.String, TOK.CharLiteral:
+    case TOK.Identifier, TOK.Comment, TOK.String, TOK.Character:
     case TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64,
          TOK.Float32, TOK.Float64, TOK.Float80,
          TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:

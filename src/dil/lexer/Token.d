@@ -451,10 +451,10 @@ bool isStatementStartToken(TOK tok)
         T.Enum, T.Class, T.Interface, T.Struct, T.Union, T.LBrace, T.Typedef,
         T.This, T.Super, T.Null, T.True, T.False, T.Int32, T.Int64, T.UInt32,
         T.UInt64, T.Float32, T.Float64, T.Float80, T.IFloat32,
-        T.IFloat64, T.IFloat80, T.CharLiteral, T.String, T.LBracket,
+        T.IFloat64, T.IFloat80, T.Character, T.String, T.LBracket,
         T.Function, T.Delegate, T.Assert, T.Import, T.Typeid, T.Is, T.LParen,
-        T.AndBinary, T.PlusPlus, T.MinusMinus, T.Mul,
-        T.Minus, T.Plus, T.Not, T.Tilde, T.New, T.Delete, T.Cast:
+        T.Amp, T.Plus2, T.Minus2, T.Star,
+        T.Minus, T.Plus, T.Exclaim, T.Tilde, T.New, T.Delete, T.Cast:
     return true;
   version(D2)
   {
