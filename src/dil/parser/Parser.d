@@ -462,7 +462,7 @@ class Parser
       while (!token.isDeclDefStart &&
               token.kind != T.RBrace &&
               token.kind != T.EOF)
-      auto text = Token.textSpan(begin, this.prevToken);
+      auto text = begin.textSpan(this.prevToken);
       error(begin, MID.IllegalDeclaration, text);
     }
     decl.setProtection(this.protection);
@@ -753,11 +753,11 @@ class Parser
       skip(T.LBrace);
       while (token.kind != T.RBrace)
       { // Peek for colon to see if this is a member identifier.
+        Token* ident;
         if (token.kind == T.Identifier && peekNext() == T.Colon)
-          (idents ~= token),
+          (ident = token),
           skip(T.Identifier), skip(T.Colon); // Identifier ":"
-        else
-          idents ~= null;
+        idents ~= ident;
         // NonVoidInitializer
         values ~= parseNonVoidInitializer();
         if (!consumed(T.Comma))
@@ -933,7 +933,7 @@ class Parser
     if (prev_lt == LinkageType.None)
       prev_lt = lt;
     else
-      error(begin, MID.RedundantLinkageType, Token.textSpan(begin, prevToken));
+      error(begin, MID.RedundantLinkageType, begin.textSpan(prevToken));
   }
 
   /// Parses one or more attributes and a Declaration at the end.
@@ -2102,7 +2102,7 @@ class Parser
       while (!token.isStatementStart &&
               token.kind != T.RBrace &&
               token.kind != T.EOF)
-      auto text = Token.textSpan(begin, this.prevToken);
+      auto text = begin.textSpan(this.prevToken);
       error(begin, MID.IllegalStatement, text);
     }
     assert(s !is null);
@@ -2895,7 +2895,7 @@ class Parser
       while (!token.isAsmStatementStart &&
               token.kind != T.RBrace &&
               token.kind != T.EOF)
-      auto text = Token.textSpan(begin, this.prevToken);
+      auto text = begin.textSpan(this.prevToken);
       error(begin, MID.IllegalAsmStatement, text);
     }
     set(s, begin);
@@ -4436,10 +4436,8 @@ class Parser
     {
       bool success;
       auto typeArgument = tryToParse(&parseTypeArgument, success);
-      if (success) // TemplateArgument := Type | Symbol
-        targs ~= typeArgument;
-      else // TemplateArgument := AssignExpr
-        targs ~= parseAssignExpr();
+      // TemplateArgument := Type | AssignExpr
+      targs ~= success ? typeArgument : parseAssignExpr();
       if (!consumed(T.Comma))
         break;
     }
