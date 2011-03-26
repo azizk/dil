@@ -122,7 +122,7 @@ class Lexer
       break;
     case TOK.Character: // May have escape sequences.
       this.p = t.start;
-      scanCharacterLiteral(t);
+      scanCharacter(t);
       break;
     case TOK.String: // Escape sequences; token strings; etc.
       this.p = t.start;
@@ -130,29 +130,29 @@ class Lexer
       switch (c)
       {
       case chars_r:
-        ++this.p, scanRawStringLiteral(t); break;
+        ++this.p, scanRawString(t); break;
       case chars_x:
-        scanHexStringLiteral(t); break;
+        scanHexString(t); break;
       version(D2)
       {
       case chars_q:
-        scanDelimitedStringLiteral(t); break;
+        scanDelimitedString(t); break;
       case chars_q2:
-        scanTokenStringLiteral(t); break;
+        scanTokenString(t); break;
       }
       default:
       }
       switch (*p)
       {
       case '`':
-        scanRawStringLiteral(t); break;
+        scanRawString(t); break;
       case '"':
-        scanNormalStringLiteral(t); break;
+        scanNormalString(t); break;
       version(D2)
       {}
       else { // Only in D1.
       case '\\':
-        scanEscapeStringLiteral(t); break;
+        scanEscapeString(t); break;
       }
       default:
       }
@@ -517,15 +517,15 @@ class Lexer
       {
         c = *cast(ushort*)p;
         if (c == chars_r)
-          return ++this.p, scanRawStringLiteral(t);
+          return ++this.p, scanRawString(t);
         if (c == chars_x)
-          return scanHexStringLiteral(t);
+          return scanHexString(t);
         version(D2)
         {
         if (c == chars_q)
-          return scanDelimitedStringLiteral(t);
+          return scanDelimitedString(t);
         if (c == chars_q2)
-          return scanTokenStringLiteral(t);
+          return scanTokenString(t);
         }
 
         // Scan identifier.
@@ -603,16 +603,16 @@ class Lexer
           kind = TOK.Equal;
         goto Lcommon;
       case '\'':
-        return scanCharacterLiteral(t);
+        return scanCharacter(t);
       case '`':
-        return scanRawStringLiteral(t);
+        return scanRawString(t);
       case '"':
-        return scanNormalStringLiteral(t);
+        return scanNormalString(t);
       version(D2)
       {}
       else { // Only in D1.
       case '\\':
-        return scanEscapeStringLiteral(t);
+        return scanEscapeString(t);
       }
       case '>': /* >  >=  >>  >>=  >>>  >>>= */
         c = *++p;
@@ -961,15 +961,15 @@ class Lexer
     {
       c = *cast(ushort*)p;
       if (c == chars_r)
-        return (this.p = ++p), scanRawStringLiteral(t);
+        return (this.p = ++p), scanRawString(t);
       if (c == chars_x)
-        return scanHexStringLiteral(t);
+        return scanHexString(t);
       version(D2)
       {
       if (c == chars_q)
-        return scanDelimitedStringLiteral(t);
+        return scanDelimitedString(t);
       if (c == chars_q2)
-        return scanTokenStringLiteral(t);
+        return scanTokenString(t);
       }
 
       // Scan an identifier.
@@ -1102,16 +1102,16 @@ class Lexer
     case '\r', '\n':
       goto Lnewline;
     case '\'':
-      return scanCharacterLiteral(t);
+      return scanCharacter(t);
     case '`':
-      return scanRawStringLiteral(t);
+      return scanRawString(t);
     case '"':
-      return scanNormalStringLiteral(t);
+      return scanNormalString(t);
     version(D2)
     {}
     else { // Only in D1.
     case '\\':
-      return scanEscapeStringLiteral(t);
+      return scanEscapeString(t);
     }
     case '.':
       if (isdigit(p[1]))
@@ -1297,7 +1297,7 @@ class Lexer
   /// Scans a normal string literal.
   ///
   /// $(BNF NormalStringLiteral := '"' (EscapeSequence | AnyChar)* '"')
-  void scanNormalStringLiteral(Token* t)
+  void scanNormalString(Token* t)
   {
     auto p = this.p;
     assert(*p == '"');
@@ -1365,7 +1365,7 @@ class Lexer
   /// Scans an escape string literal.
   ///
   /// $(BNF EscapeStringLiteral := EscapeSequence+ )
-  void scanEscapeStringLiteral(Token* t)
+  void scanEscapeString(Token* t)
   {
     assert(*p == '\\');
     char[] value;
@@ -1385,8 +1385,8 @@ class Lexer
 
   /// Scans a character literal.
   ///
-  /// $(BNF CharLiteral := "'" (EscapeSequence | AnyChar) "'")
-  void scanCharacterLiteral(Token* t)
+  /// $(BNF CharacterLiteral := "'" (EscapeSequence | AnyChar) "'")
+  void scanCharacter(Token* t)
   {
     assert(*p == '\'');
     ++p;
@@ -1420,7 +1420,7 @@ class Lexer
   /// Scans a raw string literal.
   ///
   /// $(BNF RawStringLiteral := 'r"' AnyChar* '"' | "`" AnyChar* "`")
-  void scanRawStringLiteral(Token* t)
+  void scanRawString(Token* t)
   {
     auto p = this.p;
     assert(*p == '`' || *p == '"' && p[-1] == 'r');
@@ -1479,7 +1479,7 @@ class Lexer
   ///
   /// $(BNF HexStringLiteral := 'x"' (HexDigit HexDigit)* '"'
   ////HexDigit := [a-fA-F\d])
-  void scanHexStringLiteral(Token* t)
+  void scanHexString(Token* t)
   {
     auto p = this.p;
     assert(p[0] == 'x' && p[1] == '"');
@@ -1563,7 +1563,7 @@ class Lexer
   ////OpeningDelim  := "[" | "(" | "{" | "&lt;" | Identifier EndOfLine
   ////MatchingDelim := "]" | ")" | "}" | "&gt;" | EndOfLine Identifier
   ////)
-  void scanDelimitedStringLiteral(Token* t)
+  void scanDelimitedString(Token* t)
   {
   version(D2)
   {
@@ -1725,7 +1725,7 @@ class Lexer
   /// Scans a token string literal.
   ///
   /// $(BNF TokenStringLiteral := "q{" Token* "}")
-  void scanTokenStringLiteral(Token* t)
+  void scanTokenString(Token* t)
   {
   version(D2)
   {
