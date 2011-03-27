@@ -131,6 +131,9 @@ string[] messages = [
   null,
 
   // Help messages:
+  null,
+
+  // HelpMain
   `dil v{0}
 Copyright (c) 2007-2011, Aziz Köksal. GPL3-lisensöity.
 
@@ -140,6 +143,14 @@ Lisäohjeita tietystä alitoiminnosta saa kirjoittamalla 'dil help <toiminto>'.
 
 Käännetty {2}:n versiolla {3} {4}.`,
 
+  // HelpCompile,
+  null,
+  // HelpPytree,
+  null,
+  // HelpDdoc,
+  null,
+
+  // HelpHighlight,
   `Luo XML- tai HTML-dokumentti D-lähdekoodista.
 
 Käyttö:
@@ -153,5 +164,18 @@ Valinnat:
 Esimerkki:
   dil gen Parser.d --html --syntax > Parser.html`,
 
-  ``,
+  // HelpImportGraph
+  null,
+  // HelpTokenize
+  null,
+  // HelpDlexed
+  null,
+  // HelpStatistics
+  null,
+  // HelpTranslate
+  null,
+  // HelpSettings
+  null,
+  // HelpHelp
+  null,
 ];

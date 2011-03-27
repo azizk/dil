@@ -131,6 +131,9 @@ string[] messages = [
   null,
 
   // Help messages:
+  "Bilinmeyen komut: ‘{}’",
+
+  // HelpMain
   `dil v{0}
 Copyright (c) 2007-2011, Aziz Köksal. Lisans GPL3.
 
@@ -140,17 +143,39 @@ Belirli komut'a yardım edinmek için 'dil help <komut>' yazınız.
 
 Bu yazılım {2} v{3} ile {4} tarihinde derletilmiş.`,
 
+  // HelpCompile,
+  null,
+  // HelpPytree,
+  null,
+  // HelpDdoc,
+  null,
+
+  // HelpHighlight,
   `Bir D kaynak kodundan XML veya HTML dosyası oluştur.
 Kullanım:
-  dil gen dosya.d [Seçenekler]
+  dil gen dosya.d [Hedef] [Seçenekler]
 
 Seçenekler:
   --syntax         : söz dizimi için etiketler yazdır
-  --xml            : XML biçimi kullan (varsayılır)
-  --html           : HTML biçimi kullan
+  --html           : HTML biçimi kullan (varsayılır)
+  --xml            : XML biçimi kullan
+  --lines          : satır numaraları yazdır
 
 Örnek:
   dil gen Parser.d --html --syntax > Parser.html`,
 
-  ``,
+  // HelpImportGraph
+  null,
+  // HelpTokenize
+  null,
+  // HelpDlexed
+  null,
+  // HelpStatistics
+  null,
+  // HelpTranslate
+  null,
+  // HelpSettings
+  null,
+  // HelpHelp
+  null,
 ];

@@ -128,27 +128,210 @@ string[] messages = [
   "weitere Parameter nach einem variadischen Parameter sind nicht erlaubt",
 
   // Help messages:
+  "Unbekannter Befehl: ‚{}‘",
+
+  // HelpMain
   `dil v{0}
-Copyright (c) 2007-2011, Aziz Köksal. Lizensiert unter der GPL3.
+Copyright (c) 2007-2011, Aziz Köksal. Lizenziert unter der GPL3.
 
 Befehle:
 {1}
-Geben Sie 'dil help <Befehl>' ein, um mehr Hilfe zu einem bestimmten Befehl zu
-erhalten.
+Gib 'dil help <Befehl>' ein, um mehr Hilfe zu einem bestimmten Befehl
+zu erhalten.
 
 Kompiliert mit {2} v{3} am {4}.`,
 
-  `Generiere ein XML- oder HTML-Dokument aus einer D-Quelltextdatei.
-Verwendung:
-  dil gen datei.d [Optionen]
+  // HelpCompile
+  `Kompiliert D-Quelldateien.
+Benutzung:
+  dil c[ompile] datei.d [datei2.d, ...] [Optionen]
+
+  Dieser Befehl parst die Quelldateien und führt nur wenig
+  semantische Analysen durch.
+  Fehlermeldungen werden in die Standardfehlerausgabe geschrieben.
+
+Optionen:
+  -d               : akzeptiere veralteten Code
+  -debug           : inkludiere „debug“-Code
+  -debug=LEVEL     : inkludiere „debug(l)“-Code, wo „l <= LEVEL“ gilt
+  -debug=IDENT     : inkludiere „debug(IDENT)"-Code
+  -version=LEVEL   : inkludiere „version(l)“-Code, wo „l >= LEVEL“ gilt
+  -version=IDENT   : inkludiere „version(IDENT)“-Code
+  -I=PFAD          : füge PFAD zu der Liste von Importpfaden hinzu
+  -J=PATH          : füge PFAD zu der Liste von Stringimport-Pfaden
+  -release         : kompiliere eine Release-Version
+  -unittest        : kompiliere Unittests
+  -x86             : gib 32bit-Code aus (Default auf 32bit-Maschinen)
+  -x64             : gib 64bit-Code aus (Default auf 64bit-Maschinen)
+  -of=DATEI        : schreibe den binären Code zu DATEI
+
+  -v               : detaillierte Ausgabe
+
+Beispiel:
+  dil c src/main.d -I=src/`,
+
+  // HelpPytree
+  `Exportiert einen D-Syntaxbaum zu einer Python-Quelldatei.
+Benutzung:
+  dil py[tree] Ziel datei.d [datei2.d, ...] [Optionen]
+
+Optionen:
+  --tokens         : schreibe nur eine Liste von Tokens (noch nicht möglich)
+  --fmt            : der Formatstring für die Zieldateinamen
+                     Default: d_{0}.py
+                     {0} = vollqualifizierter Modulname (z.B. dil_PyTreeEmitter)
+                     {1} = Paketname (z.B. dil, dil_ast, dil_lexer etc.)
+                     {2} = Modulname (z.B. PyTreeEmitter)
+  -v               : detaillierte Ausgabe
+
+Beispiel:
+  dil py pyfiles/ src/dil/PyTreeEmitter.d`,
+
+  // HelpDdoc
+  `Generiert Dokumentation aus Ddoc-Kommentaren in D-Quelldateien.
+Benutzung:
+  dil d[doc] Ziel datei.d [datei2.d, ...] [Optionen]
+
+  ‚Ziel‘ ist der Ordner, in dem die Dokumentationsdateien geschrieben werden.
+  Dateien mit der Erweiterung ‚.ddoc‘ werden als Makrodateien erkannt.
+
+Optionen:
+  --kandil         : benutze Kandil als Interface
+  --report         : schreibe einen Problembericht nach Ziel/report.txt
+  -rx=REGEXP       : exkludiere Module vom Problembericht wenn ihr Name
+                     mit REGEXP übereinstimmt (kann mehrmals verwendet werden)
+  --xml            : schreibe XML statt HTML-Dokumente
+  --raw            : keine Makroexpansion in der Ausgabe (für Debugging)
+  -hl              : schreibe syntaxhervorgehobene Dateien nach Ziel/htmlsrc
+  -i               : inkludiere undokumentierte Symbole
+  --inc-private    : inkludiere private Symbole
+  -v               : detaillierte Ausgabe
+  -m=PFAD          : schreibe eine Liste der bearbeiteten Module nach PFAD
+  -version=IDENT   : siehe "dil help compile" für mehr Details
+
+Beispiele:
+  dil d doc/ src/main.d data/macros_dil.ddoc -i -m=doc/modules.txt
+  dil d tangodoc/ -v -version=Windows -version=Tango \
+        --kandil tangosrc/file_1.d tangosrc/file_n.d`,
+
+  // HelpHighlight
+  `Markiert eine D-Quelldatei mit XML- oder HTML-Elementen.
+Benutzung:
+  dil hl datei.d [Ziel] [Optionen]
+
+  Die Datei wird nach Stdout ausgegeben, wenn ‚Ziel‘ nicht angegeben ist.
 
 Optionen:
   --syntax         : generiere Elemente für den Syntaxbaum
-  --xml            : verwende XML-Format (voreingestellt)
-  --html           : verwende HTML-Format
+  --html           : benutze das HTML-Format (Default)
+  --xml            : benutze das XML-Format
+  --lines          : gib Zeilennummern aus
+
+Beispiele:
+  dil hl src/main.d --syntax > main.html
+  dil hl --xml src/main.d main.xml`,
+
+  // HelpImportgraph
+  `Parst ein Modul und bildet einen Abhängigkeitsgraph.
+Benutzung:
+  dil i[mport]graph datei.d Format [Optionen]
+
+  Der Ordner von datei.d wird implizit zu der Liste von Importpfaden
+  hinzugefügt.
+
+Format:
+  --dot            : generiere ein „dot“-Dokument (Default)
+    Optionen zu --dot:
+  --gbp            : Gruppiere Module nach Paketnamen
+  --gbf            : Gruppiere Module nach vollen Paketnamen
+  --hle            : markiere zyklische Kanten im Graph
+  --hlv            : markiere Module in zyklischer Relation
+  -si=STIL         : der Stil der Kanten von statischen Imports
+  -pi=STIL         : der Stil der Kanten von publiken Imports
+      STIL         : „dashed“, „dotted“, „solid“, „invis“ or „bold“
+
+  --paths          : gib die Dateipfade der Module im Graph aus
+  --list           : gib die Namen der Module im Graph aus
+    Optionen gemein zu --paths und --list:
+  -l=N             : gib N Levels aus
+  -m               : benutze ‚*‘ um zyklische Module zu markieren
+
+Optionen:
+  -I=PFAD          : füge PFAD zu der Liste von Importpfaden hinzu
+  -x=REGEXP        : exkludiere Module deren Name mit REGEXP übereinstimmen
+  -i               : inkludiere unauffindbare Module
+
+Beispiele:
+  dil igraph src/main.d --list
+  dil igraph src/main.d | dot -Tpng > main.png`,
+
+  // HelpTokenize
+  `Gibt die Tokens einer D-Quelldatei aus.
+Benutzung:
+  dil tok[enize] datei.d [Optionen]
+
+Optionen:
+  -               : lies den Text von STDIN aus
+  -s=SEPARATOR    : gib zwischen den Tokens SEPARATOR aus, statt '\n'
+  -i              : ignoriere Leerzeichen-Tokens (z.B. Kommentare, etc.)
+  -ws             : gib die vorangehenden Leerzeichen eines Tokens aus
+
+Beispiele:
+  echo 'module foo; void func(){}' | dil tok -
+  dil tok src/main.d | grep ^[0-9]`,
+
+  // HelpDlexed
+  `Schreibt die Anfangs- u. Endwerte aller Tokens in einem binären Format.
+Benutzung:
+  dil dlx datei.d [Optionen]
+
+Optionen:
+  -               : lies den Text von STDIN aus
+  -o=FILE         : Ausgabe zu FILE statt STDOUT
+
+Beispiele:
+  echo 'module foo; void func(){}' | dil dlx - > test.dlx
+  dil dlx src/main.d -o dlx/main.dlx`,
+
+  // HelpStatistics
+  "Zeigt Statistiken für D-Quelldateien an.
+Benutzung:
+  dil stat[istic]s datei.d [datei2.d, ...] [Optionen]
+
+Optionen:
+  --toktable      : gib die Zahl aller Tokenarten in einer Tabelle aus
+  --asttable      : gib die Zahl aller Nodearten in einer Tabelle aus
 
 Beispiel:
-  dil gen Parser.d --html --syntax > Parser.html`,
+  dil stats src/main.d src/dil/Unicode.d",
 
-  ``,
+  // HelpTranslate
+  `Übersetzt eine D-Quelldatei in eine andere Sprache.
+Benutzung:
+  dil trans[late] Sprache datei.d
+
+  Unterstützte Sprachen:
+    *) German
+
+Beispiel:
+  dil trans German src/main.d`,
+
+  // HelpSettings
+  "Gibt den Wert einer Einstellungsvariable aus.
+Benutzung:
+  dil set[tings] [name, name2...]
+
+  Die Namen müssen mit den Einstellungsnamen in dilconf.d übereinstimmen.
+
+Beispiel:
+  dil set import_paths datadir",
+
+  // HelpHelp
+  "Gibt Hilfestellung zu einem Befehl.
+Benutzung:
+  dil help Befehl
+
+Beispiele:
+  dil help compile
+  dil ? hl",
 ];

@@ -127,6 +127,9 @@ string[] messages = [
   "cannot have parameters after a variadic parameter",
 
   // Help messages:
+  "Unknown command: ‘{}’",
+
+  // HelpMain
   `dil v{0}
 Copyright (c) 2007-2011 by Aziz Köksal. Licensed under the GPL3.
 
@@ -136,45 +139,197 @@ Type 'dil help <subcommand>' for more help on a particular subcommand.
 
 Compiled with {2} v{3} on {4}.`,
 
-  `Generate an XML or HTML document from a D source file.
+  // HelpCompile
+  `Compile D source files.
 Usage:
-  dil gen file.d [Options]
+  dil c[ompile] file.d [file2.d, ...] [Options]
+
+  This command only parses the source files and does little semantic analysis.
+  Errors are printed to standard error output.
+
+Options:
+  -d               : accept deprecated code
+  -debug           : include debug code
+  -debug=LEVEL     : include debug(l) code where l <= LEVEL
+  -debug=IDENT     : include debug(IDENT) code
+  -version=LEVEL   : include version(l) code where l >= LEVEL
+  -version=IDENT   : include version(IDENT) code
+  -I=PATH          : add PATH to the list of import paths
+  -J=PATH          : add PATH to the list of string import paths
+  -release         : compile a release build
+  -unittest        : compile a unittest build
+  -x86             : emit 32 bit code (default on 32 bit machines)
+  -x64             : emit 64 bit code (default on 64 bit machines)
+  -of=FILE         : output the binary to FILE
+
+  -ps              : print the symbol tree of the modules
+  -pm              : print the package/module tree
+  -v               : verbose output
+
+Example:
+  dil c src/main.d -I=src/`,
+
+  // HelpPytree
+  `Export a D parse tree to a Python source file.
+Usage:
+  dil py[tree] Destination file.d [file2.d, ...] [Options]
+
+Options:
+  --tokens         : only emit a list of the tokens (N/A yet)
+  --fmt            : the format string for the destination file names
+                     Default: d_{0}.py
+                     {0} = fully qualified module name (e.g. dil_PyTreeEmitter)
+                     {1} = package name (e.g. dil, dil_ast, dil_lexer etc.)
+                     {2} = module name (e.g. PyTreeEmitter)
+  -v               : verbose output
+
+Example:
+  dil py pyfiles/ src/dil/PyTreeEmitter.d`,
+
+  // HelpDdoc
+  `Generate documentation from DDoc comments in D source files.
+Usage:
+  dil d[doc] Destination file.d [file2.d, ...] [Options]
+
+  Destination is the folder where the documentation files are written to.
+  Files with the extension .ddoc are recognized as macro definition files.
+
+Options:
+  --kandil         : use kandil as the documentation front-end
+  --report         : write a problem report to Destination/report.txt
+  -rx=REGEXP       : exclude modules from the report if their names
+                     match REGEXP (can be used many times)
+  --xml            : write XML instead of HTML documents
+  --raw            : don't expand macros in the output (useful for debugging)
+  -hl              : write syntax highlighted files to Destination/htmlsrc
+  -i               : include undocumented symbols
+  --inc-private    : include private symbols
+  -v               : verbose output
+  -m=PATH          : write list of processed modules to PATH
+  -version=ident   : see "dil help compile" for more details
+
+Examples:
+  dil d doc/ src/main.d data/macros_dil.ddoc -i -m=doc/modules.txt
+  dil d tangodoc/ -v -version=Windows -version=Tango \
+        --kandil tangosrc/file_1.d tangosrc/file_n.d`,
+
+  // HelpHighlight
+  `Highlight a D source file with XML or HTML tags.
+Usage:
+  dil hl file.d [Destination] [Options]
+
+  The file will be output to stdout if ‘Destination’ is not specified.
 
 Options:
   --syntax         : generate tags for the syntax tree
-  --xml            : use XML format (default)
-  --html           : use HTML format
+  --html           : use HTML format (default)
+  --xml            : use XML format
+  --lines          : print line numbers
 
-Example:
-  dil gen Parser.d --html --syntax > Parser.html`,
+Examples:
+  dil hl src/main.d --syntax > main.html
+  dil hl --xml src/main.d main.xml`,
 
-  `Parse a module and extract information from the resulting module dependency graph.
+  // HelpImportgraph
+  `Parse a module and build a module dependency graph based on its imports.
 Usage:
-  dil igraph file.d Format [Options]
+  dil i[mport]graph file.d Format [Options]
 
   The directory of file.d is implicitly added to the list of import paths.
 
 Format:
-  --dot            : generate a dot document
-  Further options for --dot:
-  -gbp             : Group modules by package names
-  -gbf             : Group modules by full package name
-  -hle             : highlight cyclic edges in the graph
-  -hlv             : highlight modules in cyclic relationship
+  --dot            : generate a dot document (default)
+    Options related to --dot:
+  --gbp            : Group modules by package names
+  --gbf            : Group modules by full package name
+  --hle            : highlight cyclic edges in the graph
+  --hlv            : highlight modules in cyclic relationships
+  -si=STYLE        : the edge style to use for static imports
+  -pi=STYLE        : the edge style to use for public imports
+      STYLE        : “dashed”, “dotted”, “solid”, “invis” or “bold”
 
-  --paths          : print a list of paths to the modules imported by file.d
-  --list           : print a list of the module names imported by file.d
-  Options common to --paths and --list:
-  -lN              : print N levels.
-  -m               : mark modules in cyclic relationships with a star.
+  --paths          : print the file paths of the modules in the graph
+  --list           : print the names of the module in the graph
+    Options common to --paths and --list:
+  -l=N             : print N levels
+  -m               : use ‘*’ to mark modules in cyclic relationships
 
 Options:
-  -Ipath           : add 'path' to the list of import paths where modules are
-                     looked for
-  -rREGEXP         : exclude modules whose names match the regular expression
-                     REGEXP
+  -I=PATH          : add PATH to the list of import paths
+  -x=REGEXP        : exclude modules whose names match REGEXP
   -i               : include unlocatable modules
 
+Examples:
+  dil igraph src/main.d --list
+  dil igraph src/main.d | dot -Tpng > main.png`,
+
+  // HelpTokenize
+  `Print the tokens of a D source file.
+Usage:
+  dil tok[enize] file.d [Options]
+
+Options:
+  -               : read text from STDIN
+  -s=SEPARATOR    : print SEPARATOR instead of '\n' between tokens
+  -i              : ignore whitespace tokens (e.g. comments, shebang etc.)
+  -ws             : print a token's preceding whitespace characters
+
+Examples:
+  echo 'module foo; void func(){}' | dil tok -
+  dil tok src/main.d | grep ^[0-9]`,
+
+  // HelpDlexed
+  `Write the begin/end indices of all tokens in a binary format.
+Usage:
+  dil dlx file.d [Options]
+
+Options:
+  -               : read text from STDIN
+  -o=FILE         : output to FILE instead of STDOUT
+
+Examples:
+  echo 'module foo; void func(){}' | dil dlx - > test.dlx
+  dil dlx src/main.d -o dlx/main.dlx`,
+
+  // HelpStatistics
+  "Gather statistics about D source files.
+Usage:
+  dil stat[istic]s file.d [file2.d, ...] [Options]
+
+Options:
+  --toktable      : print the count of all token kinds in a table
+  --asttable      : print the count of all node kinds in a table
+
 Example:
-  dil igraph src/main.d`,
+  dil stats src/main.d src/dil/Unicode.d",
+
+  // HelpTranslate
+  `Translate a D source file to another language.
+Usage:
+  dil trans[late] Language file.d
+
+  Languages that are supported:
+    *) German
+
+Example:
+  dil trans German src/main.d`,
+
+  // HelpSettings
+  "Print the value of a settings variable.
+Usage:
+  dil set[tings] [name, name2...]
+
+  The names have to match the setting names in dilconf.d.
+
+Example:
+  dil set import_paths datadir",
+
+  // HelpHelp
+  "Give help on a particular subcommand.
+Usage:
+  dil help subcommand
+
+Examples:
+  dil help compile
+  dil ? hl",
 ];

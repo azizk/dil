@@ -129,9 +129,19 @@ enum MID
   ParamsAfterVariadic,
 
   // Help messages:
+  UnknownCommand,
   HelpMain,
-  HelpGenerate,
+  HelpCompile,
+  HelpPytree,
+  HelpDdoc,
+  HelpHighlight,
   HelpImportGraph,
+  HelpTokenize,
+  HelpDlexed,
+  HelpStatistics,
+  HelpTranslate,
+  HelpSettings,
+  HelpHelp,
 }
 
 

@@ -555,217 +555,33 @@ void printErrors(Diagnostics diag)
 void printHelp(string command, Diagnostics diag)
 {
   string msg;
+  MID mid;
   switch (command)
   {
-  case "c", "compile":
-    msg = `Compile D source files.
-Usage:
-  dil c[ompile] file.d [file2.d, ...] [Options]
-
-  This command only parses the source files and does little semantic analysis.
-  Errors are printed to standard error output.
-
-Options:
-  -d               : accept deprecated code
-  -debug           : include debug code
-  -debug=level     : include debug(l) code where l <= level
-  -debug=ident     : include debug(ident) code
-  -version=level   : include version(l) code where l >= level
-  -version=ident   : include version(ident) code
-  -I=PATH          : add PATH to the list of import paths
-  -J=PATH          : add PATH to the list of string import paths
-  -release         : compile a release build
-  -unittest        : compile a unittest build
-  -x86             : emit 32 bit code (default)
-  -x64             : emit 64 bit code
-  -of=FILE         : output the binary to FILE
-
-  -ps              : print the symbol tree of the modules
-  -pm              : print the package/module tree
-  -v               : verbose output
-
-Example:
-  dil c src/main.d -I=src/`;
+  case "c", "compile":          mid = MID.HelpCompile;     goto Lcommon;
+  case "py", "pytree":          mid = MID.HelpPytree;      goto Lcommon;
+  case "ddoc", "d":             mid = MID.HelpDdoc;        goto Lcommon;
+  case "hl", "highlight":       mid = MID.HelpHighlight;   goto Lcommon;
+  case "importgraph", "igraph": mid = MID.HelpImportGraph; goto Lcommon;
+  case "tok", "tokenize":       mid = MID.HelpTokenize;    goto Lcommon;
+  case "dlexed", "dlx":         mid = MID.HelpDlexed;      goto Lcommon;
+  case "stats", "statistics":   mid = MID.HelpStatistics;  goto Lcommon;
+  case "trans", "translate":    mid = MID.HelpTranslate;   goto Lcommon;
+  case "settings", "set":       mid = MID.HelpSettings;    goto Lcommon;
+  case "?", "h", "help":        mid = MID.HelpHelp;        goto Lcommon;
+  Lcommon:
+    msg = diag.formatMsg(mid);
     break;
-  case "py", "pytree":
-    msg = `Exports a D parse tree to a Python source file.
-Usage:
-  dil py[tree] Destination file.d [file2.d, ...] [Options]
-
-Options:
-  --tokens         : only emit a list of the tokens (N/A yet)
-  --fmt            : the format string for the destination file names
-                     Default: d_{0}.py
-                     {0} = fully qualified module name (e.g. dil_PyTreeEmitter)
-                     {1} = package name (e.g. dil, dil_ast, dil_lexer etc.)
-                     {2} = module name (e.g. PyTreeEmitter)
-  -v               : verbose output
-
-Example:
-  dil py pyfiles/ src/dil/PyTreeEmitter.d`;
+  case "main", "":
+    auto COMPILED_WITH = __VENDOR__;
+    auto COMPILED_VERSION = diag.format("{}.{,:d3}",
+      __VERSION__/1000, __VERSION__%1000);
+    auto COMPILED_DATE = __TIMESTAMP__;
+    msg = diag.formatMsg(MID.HelpMain, VERSION, COMMANDS,
+      COMPILED_WITH, COMPILED_VERSION, COMPILED_DATE);
     break;
-  case "ddoc", "d":
-    msg = `Generate documentation from DDoc comments in D source files.
-Usage:
-  dil d[doc] Destination file.d [file2.d, ...] [Options]
-
-  Destination is the folder where the documentation files are written to.
-  Files with the extension .ddoc are recognized as macro definition files.
-
-Options:
-  --kandil         : use kandil as the documentation front-end
-  --report         : write a problem report to Destination/report.txt
-  -rx=REGEXP       : exclude modules from the report if their names
-                     match REGEXP (can be used many times)
-  --xml            : write XML instead of HTML documents
-  --raw            : don't expand macros in the output (useful for debugging)
-  -hl              : write syntax highlighted files to Destination/htmlsrc
-  -i               : include undocumented symbols
-  --inc-private    : include private symbols
-  -v               : verbose output
-  -m=PATH          : write list of processed modules to PATH
-  -version=ident   : see "dil help compile" for more details
-
-Example:
-  dil d doc/ src/main.d data/macros_dil.ddoc -i -m=doc/modules.txt
-  dil d tangodoc/ -v -version=Windows -version=Tango \
-        --kandil tangosrc/file_1.d tangosrc/file_n.d`;
-    break;
-  case "hl", "highlight":
-//     msg = GetMsg(MID.HelpGenerate);
-    msg = `Highlight a D source file with XML or HTML tags.
-Usage:
-  dil hl file.d [Destination] [Options]
-
-  The file will be output to stdout if 'Destination' is not specified.
-
-Options:
-  --syntax         : generate tags for the syntax tree
-  --html           : use HTML format (default)
-  --xml            : use XML format
-  --lines          : print line numbers
-
-Example:
-  dil hl src/main.d --syntax > main.html
-  dil hl --xml src/main.d main.xml`;
-    break;
-  case "importgraph", "igraph":
-//     msg = GetMsg(MID.HelpImportGraph);
-    msg =
-`Parse a module and build a module dependency graph based on its imports.
-Usage:
-  dil i[mport]graph file.d Format [Options]
-
-  The directory of file.d is implicitly added to the list of import paths.
-
-Format:
-  --dot            : generate a dot document (default)
-    Options related to --dot:
-  --gbp            : Group modules by package names
-  --gbf            : Group modules by full package name
-  --hle            : highlight cyclic edges in the graph
-  --hlv            : highlight modules in cyclic relationships
-  -si=STYLE        : the edge style to use for static imports
-  -pi=STYLE        : the edge style to use for public imports
-      STYLE        : "dashed", "dotted", "solid", "invis" or "bold"
-
-  --paths          : print the file paths of the modules in the graph
-  --list           : print the names of the module in the graph
-    Options common to --paths and --list:
-  -l=N             : print N levels.
-  -m               : use '*' to mark modules in cyclic relationships
-
-Options:
-  -I=PATH          : add PATH to the list of import paths
-  -x=REGEXP        : exclude modules whose names match REGEXP
-  -i               : include unlocatable modules
-
-Example:
-  dil igraph src/main.d --list
-  dil igraph src/main.d | dot -Tpng > main.png`;
-    break;
-  case "tok", "tokenize":
-    msg = `Print the tokens of a D source file.
-Usage:
-  dil tok[enize] file.d [Options]
-
-Options:
-  -               : read text from STDIN.
-  -sSEPARATOR     : print SEPARATOR instead of '\n' between tokens.
-  -i              : ignore whitespace tokens (e.g. comments, shebang etc.)
-  -ws             : print a token's preceding whitespace characters.
-
-Example:
-  echo 'module foo; void func(){}' | dil tok -
-  dil tok src/main.d | grep ^[0-9]`;
-    break;
-  case "dlexed", "dlx":
-    msg = `Write the begin/end indices of all tokens in a binary format.
-Usage:
-  dil dlx file.d [Options]
-
-Options:
-  -               : read text from STDIN.
-  -o FILE         : output to FILE instead of STDOUT.
-
-Example:
-  echo 'module foo; void func(){}' | dil dlx - > test.dlx
-  dil dlx src/main.d -o dlx/main.dlx`;
-    break;
-  case "stats", "statistics":
-    msg = "Gather statistics about D source files.
-Usage:
-  dil stat[istic]s file.d [file2.d, ...] [Options]
-
-Options:
-  --toktable      : print the count of all token kinds in a table.
-  --asttable      : print the count of all node kinds in a table.
-
-Example:
-  dil stats src/main.d src/dil/Unicode.d";
-    break;
-  case "trans", "translate":
-    msg = `Translate a D source file to another language.
-Usage:
-  dil trans[late] Language file.d
-
-  Languages that are supported:
-    *) German
-
-Example:
-  dil trans German src/main.d`;
-    break;
-  case "settings", "set":
-    msg = "Print the value of a settings variable.
-Usage:
-  dil set[tings] [name, name2...]
-
-  The names have to match the setting names in dilconf.d.
-
-Example:
-  dil set import_paths datadir";
-    break;
-  case "?", "h", "help":
-    msg = "Gives help on a particular subcommand.
-Usage:
-  dil help subcommand
-
-Example:
-  dil help compile";
-    break;
-  case "main":
   default:
-    if (command != "" && command != "main")
-      msg = Format("Unknown command: ‘{}’", command);
-    else
-    {
-      auto COMPILED_WITH = __VENDOR__;
-      auto COMPILED_VERSION = diag.format("{}.{,:d3}",
-        __VERSION__/1000, __VERSION__%1000);
-      auto COMPILED_DATE = __TIMESTAMP__;
-      msg = diag.formatMsg(MID.HelpMain, VERSION, COMMANDS,
-        COMPILED_WITH, COMPILED_VERSION, COMPILED_DATE);
-    }
+    msg = diag.formatMsg(MID.UnknownCommand, command);
   }
   Stdout(msg).newline;
 }
