@@ -247,7 +247,7 @@ void main(string[] args)
     op.add("--gbf", dummy,   { cmd.add(IO.GroupByFullPackageName); });
     op.add("-i", dummy,      { cmd.add(IO.IncludeUnlocatableModules); });
     op.add("-m", dummy,      { cmd.add(IO.MarkCyclicModules); });
-    op.add({ cmd.filePath = value; return true; });
+    op.add({ cmd.filePath = op.getArg(); return true; });
     op.parseArgs();
 
     cmd.run();
