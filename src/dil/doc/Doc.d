@@ -86,17 +86,20 @@ static:
 
   /// Returns true if token is a DDoc comment.
   bool isDDocComment(Token* token)
-  { // DDOC: '/++' '/**' '///'
-    return token.kind == TOK.Comment && token.start[1] == token.start[2];
+  { // Ddoc: '/++' '/**' '///'
+    return token.kind == TOK.Comment && token.start[1] == token.start[2] &&
+      // Exclude special cases: '/++/' and '/**/'
+      (isLineComment(token) ? 1 : token.text().length > 4);
   }
 
   /// Returns the surrounding documentation comment tokens.
   /// Params:
   ///   node = The node to find doc comments for.
   ///   isDocComment = A function predicate that checks for doc comment tokens.
-  /// Note: this function works correctly only if
+  /// Note: This function works correctly only if
   ///       the source text is syntactically correct.
-  Token*[] getDocTokens(Node node, bool function(Token*) isDocComment = &isDDocComment)
+  Token*[] getDocTokens(Node node,
+    bool function(Token*) isDocComment = &isDDocComment)
   {
     Token*[] comments;
     auto isEnumMember = node.kind == NodeKind.EnumMemberDecl;
