@@ -296,40 +296,24 @@ class FirstSemanticPass : SemanticPass
     {
       switch (name.idKind)
       {
-      case IDK.TypeInfo:
-        ps = &table.tinfo; break;
-      case IDK.TypeInfo_Array:
-        ps = &table.tinfoArray; break;
-      case IDK.TypeInfo_AssociativeArray:
-        ps = &table.tinfoAArray; break;
-      case IDK.TypeInfo_Class:
-        ps = &table.tinfoClass; break;
-      case IDK.TypeInfo_Delegate:
-        ps = &table.tinfoDelegate; break;
-      case IDK.TypeInfo_Enum:
-        ps = &table.tinfoEnum; break;
-      case IDK.TypeInfo_Function:
-        ps = &table.tinfoFunction; break;
-      case IDK.TypeInfo_Interface:
-        ps = &table.tinfoInterface; break;
-      case IDK.TypeInfo_Pointer:
-        ps = &table.tinfoPointer; break;
-      case IDK.TypeInfo_StaticArray:
-        ps = &table.tinfoSArray; break;
-      case IDK.TypeInfo_Struct:
-        ps = &table.tinfoStruct; break;
-      case IDK.TypeInfo_Tuple:
-        ps = &table.tinfoTuple; break;
-      case IDK.TypeInfo_Typedef:
-        ps = &table.tinfoTypedef; break;
+      case IDK.TypeInfo:                  ps = &table.tinfo;          break;
+      case IDK.TypeInfo_Array:            ps = &table.tinfoArray;     break;
+      case IDK.TypeInfo_AssociativeArray: ps = &table.tinfoAArray;    break;
+      case IDK.TypeInfo_Class:            ps = &table.tinfoClass;     break;
+      case IDK.TypeInfo_Delegate:         ps = &table.tinfoDelegate;  break;
+      case IDK.TypeInfo_Enum:             ps = &table.tinfoEnum;      break;
+      case IDK.TypeInfo_Function:         ps = &table.tinfoFunction;  break;
+      case IDK.TypeInfo_Interface:        ps = &table.tinfoInterface; break;
+      case IDK.TypeInfo_Pointer:          ps = &table.tinfoPointer;   break;
+      case IDK.TypeInfo_StaticArray:      ps = &table.tinfoSArray;    break;
+      case IDK.TypeInfo_Struct:           ps = &table.tinfoStruct;    break;
+      case IDK.TypeInfo_Tuple:            ps = &table.tinfoTuple;     break;
+      case IDK.TypeInfo_Typedef:          ps = &table.tinfoTypedef;   break;
       version(D2)
       {
-      case IDK.TypeInfo_Const:
-        ps = &table.tinfoConst; break;
-      case IDK.TypeInfo_Invariant:
-        ps = &table.tinfoInvariant; break;
-      case IDK.TypeInfo_Shared:
-        ps = &table.tinfoShared; break;
+      case IDK.TypeInfo_Const:            ps = &table.tinfoConst;     break;
+      case IDK.TypeInfo_Invariant:        ps = &table.tinfoInvariant; break;
+      case IDK.TypeInfo_Shared:           ps = &table.tinfoShared;    break;
       } //version(D2)
       default:
       }
