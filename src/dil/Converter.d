@@ -99,7 +99,7 @@ struct Converter
       {
         diag ~= new LexerError(
           new Location(filePath, lineNum),
-          Format(MSG.InvalidUTF32Character, c)
+          diag.formatMsg(MID.InvalidUTF32Character, c)
         );
         c = REPLACEMENT_CHAR;
       }
@@ -112,7 +112,7 @@ struct Converter
     if (data.length % 4)
       diag ~= new LexerError(
         new Location(filePath, lineNum),
-        MSG.UTF32FileMustBeDivisibleBy4
+        diag.formatMsg(MID.UTF32FileMustBeDivisibleBy4)
       );
 
     return result;
@@ -164,7 +164,7 @@ struct Converter
       {
         diag ~= new LexerError(
           new Location(filePath, lineNum),
-          Format(MSG.InvalidUTF16Character, c)
+          diag.formatMsg(MID.InvalidUTF16Character, c)
         );
         c = REPLACEMENT_CHAR;
       }
@@ -177,7 +177,7 @@ struct Converter
     if (data.length % 2)
       diag ~= new LexerError(
         new Location(filePath, lineNum),
-        MSG.UTF16FileMustBeDivisibleBy2
+        diag.formatMsg(MID.UTF16FileMustBeDivisibleBy2)
       );
     return result;
   }

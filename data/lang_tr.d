@@ -130,6 +130,34 @@ string[] messages = [
   null,
   null,
 
+  // Semantic analysis:
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+
+  // Converter:
+  null,
+  null,
+  null,
+  null,
+
+  // DDoc messages:
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+
   // Help messages:
   "Bilinmeyen komut: ‘{}’",
 

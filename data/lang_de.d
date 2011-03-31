@@ -127,6 +127,34 @@ string[] messages = [
   "variadischer Parameter darf nicht ‚ref‘ oder ‚out‘ sein",
   "weitere Parameter nach einem variadischen Parameter sind nicht erlaubt",
 
+  // Semantic analysis:
+  "das Modul ‚{}‘ konnte nicht gefunden werden",
+  "das Modul steht im Konflikt mit dem Modul ‚{}‘",
+  "das Modul steht im Konflikt mit dem Paket ‚{}‘",
+  "das Paket ‚{0}‘ steht im Konflikt mit dem Modul ‚{0}‘",
+  "das Modul sollte im Paket ‚{}‘ sein",
+  "undefinierter Bezeichner ‚{}‘",
+  "die Deklaration ‚{}‘ ist in Konflikt mit der Deklaration @{}",
+  "die Variable ‚{}‘ ist in Konflikt mit der Deklaration @{}",
+  "ein Interface darf keine Mitgliedsvariablen haben",
+  "das Mixin-Argument muss zu einem String evaluieren",
+  "debug={} muss auf der Modulebene stehen",
+  "version={} muss auf der Modulebene stehen",
+
+  // Converter:
+  "ungültiges UTF-16-Zeichen: '\\u{:X4}'",
+  "ungültiges UTF-32-Zeichen: '\\U{:X8}'",
+  "die Bytelänge einer UTF-16-Quelldatei muss durch 2 teilbar sein",
+  "die Bytelänge einer UTF-32-Quelldatei muss durch 4 teilbar sein",
+
+  // DDoc messages:
+  "das Ddoc-Makro ‚{}‘ ist nicht definiert",
+  "das Ddoc-Makro ‚{}‘ hat keine schließende Klammer ‚)‘",
+  "undokumentiertes Symbol",
+  "leerer Kommentar",
+  "fehlender ‚Params:‘-Teil",
+  "undokumentierter Parameter ‘{}’",
+
   // Help messages:
   "Unbekannter Befehl: ‚{}‘",
 

@@ -103,7 +103,7 @@ class ModuleManager
     auto packageFQN = getPackageFQN(moduleFQNPath);
     if (getPackageFQN(modul.getFQNPath()) != packageFQN)
       // Error: the requested module is not in the correct package.
-      error(modul, MSG.ModuleNotInPackage, packageFQN);
+      error(modul, MID.ModuleNotInPackage, packageFQN);
 
     return modul;
   }
@@ -119,7 +119,7 @@ class ModuleManager
     if (auto existingModule = fqnPathHash in moduleFQNPathTable)
       // Error: two module files have the same f.q. module name.
       return error(newModule,
-        MSG.ConflictingModuleFiles, newModule.filePath());
+        MID.ConflictingModuleFiles, newModule.filePath());
 
     // Insert into the tables.
     moduleFQNPathTable[fqnPathHash] = newModule;
@@ -138,7 +138,7 @@ class ModuleManager
       // Happens when: "src/dil/module.d", "src/dil.d"
       // There's a package dil and a module dil.
       return error(newModule,
-        MSG.ConflictingModuleAndPackage, newModule.getFQN());
+        MID.ConflictingModuleAndPackage, newModule.getFQN());
 
     if (nrOfPckgs != packageTable.length) // Were new packages added?
     { // Check whether any new package is in conflict with an existing module.
@@ -152,7 +152,7 @@ class ModuleManager
         if (hashOf(pckgFQNPath) in moduleFQNPathTable)
           // Error: package and module share the same name.
           return error(newModule.moduleDecl.packages[$-i], newModule,
-            MSG.ConflictingPackageAndModule, pckgFQN);
+            MID.ConflictingPackageAndModule, pckgFQN);
       }
     }
   }
@@ -294,19 +294,19 @@ class ModuleManager
   }
 
   /// Reports an error.
-  void error(Module modul, string errorMsg, ...)
+  void error(Module modul, MID mid, ...)
   {
     auto location = getErrorLocation(modul);
-    errorMsg = Format(_arguments, _argptr, errorMsg);
-    cc.diag ~= new SemanticError(location, errorMsg);
+    auto msg = cc.diag.formatMsg(mid, _arguments, _argptr);
+    cc.diag ~= new SemanticError(location, msg);
   }
 
   /// Reports an error.
-  void error(Token* locTok, Module modul, string errorMsg, ...)
+  void error(Token* locTok, Module modul, MID mid, ...)
   {
     auto location = locTok.getErrorLocation(modul.filePath());
-    errorMsg = Format(_arguments, _argptr, errorMsg);
-    cc.diag ~= new SemanticError(location, errorMsg);
+    auto msg = cc.diag.formatMsg(mid, _arguments, _argptr);
+    cc.diag ~= new SemanticError(location, msg);
   }
 
   /// Reports the error that the module was not found.
@@ -316,7 +316,7 @@ class ModuleManager
   void errorModuleNotFound(string modulePath, Location loc = null)
   {
     if(!loc) loc = new Location(modulePath, 0);
-    auto msg = Format(MSG.CouldntLoadModule, modulePath);
+    auto msg = cc.diag.formatMsg(MID.CouldntLoadModule, modulePath);
     cc.diag ~= new LexerError(loc, msg);
   }
 }

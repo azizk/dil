@@ -128,6 +128,34 @@ enum MID
   IllegalVariadicParam,
   ParamsAfterVariadic,
 
+  // Semantic analysis:
+  CouldntLoadModule,
+  ConflictingModuleFiles,
+  ConflictingModuleAndPackage,
+  ConflictingPackageAndModule,
+  ModuleNotInPackage,
+  UndefinedIdentifier,
+  DeclConflictsWithDecl,
+  VariableConflictsWithDecl,
+  InterfaceCantHaveVariables,
+  MixinArgumentMustBeString,
+  DebugSpecModuleLevel,
+  VersionSpecModuleLevel,
+
+  // Converter:
+  InvalidUTF16Character,
+  InvalidUTF32Character,
+  UTF16FileMustBeDivisibleBy2,
+  UTF32FileMustBeDivisibleBy4,
+
+  // DDoc messages:
+  UndefinedDDocMacro,
+  UnterminatedDDocMacro,
+  UndocumentedSymbol,
+  EmptyDDocComment,
+  MissingParamsSection,
+  UndocumentedParam,
+
   // Help messages:
   UnknownCommand,
   HelpMain,
@@ -142,37 +170,4 @@ enum MID
   HelpTranslate,
   HelpSettings,
   HelpHelp,
-}
-
-
-/// Collection of error messages with no MID yet.
-struct MSG
-{
-static:
-  // Converter:
-  auto InvalidUTF16Character = "invalid UTF-16 character '\\u{:X4}'.";
-  auto InvalidUTF32Character = "invalid UTF-32 character '\\U{:X8}'.";
-  auto UTF16FileMustBeDivisibleBy2 = "the byte length of a UTF-16 source file must be divisible by 2.";
-  auto UTF32FileMustBeDivisibleBy4 = "the byte length of a UTF-32 source file must be divisible by 4.";
-  // DDoc messages:
-  auto UndefinedDDocMacro = "DDoc macro ‘{}’ is undefined";
-  auto UnterminatedDDocMacro = "DDoc macro ‘{}’ has no closing ‘)’";
-  auto UndocumentedSymbol = "undocumented symbol";
-  auto EmptyDDocComment = "empty comment";
-  auto MissingParamsSection = "missing params section";
-  auto UndocumentedParam = "undocumented parameter ‘{}’";
-
-  // Semantic analysis:
-  auto CouldntLoadModule = "couldn’t find module file ‘{}’";
-  auto ConflictingModuleFiles = "module is in conflict with module ‘{}’";
-  auto ConflictingModuleAndPackage = "module is in conflict with package ‘{}’";
-  auto ConflictingPackageAndModule = "package ‘{0}’ is in conflict with module ‘{0}’";
-  auto ModuleNotInPackage = "expected module to be in package ‘{}’";
-  auto UndefinedIdentifier = "undefined identifier ‘{}’";
-  auto DeclConflictsWithDecl = "declaration ‘{}’ conflicts with declaration @{}";
-  auto VariableConflictsWithDecl = "variable ‘{}’ conflicts with declaration @{}";
-  auto InterfaceCantHaveVariables = "an interface can't have member variables";
-  auto MixinArgumentMustBeString = "the mixin argument must evaluate to a string";
-  auto DebugSpecModuleLevel = "debug={} must be at module level";
-  auto VersionSpecModuleLevel = "version={} must be at module level";
 }

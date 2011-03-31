@@ -126,6 +126,34 @@ string[] messages = [
   "variadic parameter cannot be ‘ref’ or ‘out’",
   "cannot have parameters after a variadic parameter",
 
+  // Semantic analysis:
+  "couldn’t find module file ‘{}’",
+  "module is in conflict with module ‘{}’",
+  "module is in conflict with package ‘{}’",
+  "package ‘{0}’ is in conflict with module ‘{0}’",
+  "expected module to be in package ‘{}’",
+  "undefined identifier ‘{}’",
+  "declaration ‘{}’ conflicts with declaration @{}",
+  "variable ‘{}’ conflicts with declaration @{}",
+  "an interface can't have member variables",
+  "the mixin argument must evaluate to a string",
+  "debug={} must be at module level",
+  "version={} must be at module level",
+
+  // Converter:
+  "invalid UTF-16 character: '\\u{:X4}'",
+  "invalid UTF-32 character: '\\U{:X8}'",
+  "the byte length of a UTF-16 source file must be divisible by 2",
+  "the byte length of a UTF-32 source file must be divisible by 4",
+
+  // DDoc messages:
+  "Ddoc macro ‘{}’ is undefined",
+  "Ddoc macro ‘{}’ has no closing ‘)’",
+  "undocumented symbol",
+  "empty comment",
+  "missing params section",
+  "undocumented parameter ‘{}’",
+
   // Help messages:
   "Unknown command: ‘{}’",
 

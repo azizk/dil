@@ -91,12 +91,14 @@ unittest
 /// Maps macro names to Macro objects.
 ///
 /// MacroTables can be chained so that they build a linear hierarchy.
-/// Macro definitions in the current table override the ones in the parent tables.
+/// Macro definitions in the current table
+/// override the ones in the parent tables.
 class MacroTable
 {
   /// The parent in the hierarchy. Or null if this is the root.
   MacroTable parent;
-  Macro[hash_t] table; /// The associative array that holds the macro definitions.
+  /// The associative array that holds the macro definitions.
+  Macro[hash_t] table;
 
   /// Constructs a MacroTable instance.
   this(MacroTable parent = null)
@@ -123,13 +125,14 @@ class MacroTable
       insert(m);
   }
 
-  /// Creates a macro using name and text and inserts that into the table.
+  /// Creates a macro using name and text and inserts it into the table.
   void insert(string name, string text)
   {
     insert(new Macro(name, text));
   }
 
-  /// Creates a macro using name[n] and text[n] and inserts that into the table.
+  /// Creates a macro using name[n] and text[n] pairs
+  /// and inserts it into the table.
   void insert(string[] names, string[] texts)
   {
     assert(names.length == texts.length);
@@ -206,14 +209,16 @@ struct MacroExpander
   }
 
   /// Reports a warning message.
-  void warning(char[] msg, char[] macroName)
+  void warning(MID mid, string macroName)
   {
     if (diag !is null)
-      diag ~= new Warning(new Location(filePath, 0), Format(msg, macroName));
+      diag ~= new Warning(new Location(filePath, 0),
+        diag.formatMsg(mid, macroName));
   }
 
   /// Expands the macros from the table in the text.
-  char[] expandMacros(char[] text/+, char[] prevArg0 = null, uint depth = 1000+/)
+  char[] expandMacros(char[] text
+    /+, char[] prevArg0 = null, uint depth = 1000+/)
   { // prevArg0 and depth are commented out, causes problems with recursion.
     // if (depth == 0)
     //   return  text;
@@ -239,14 +244,14 @@ struct MacroExpander
           macroEnd = p;
           // Closing parenthesis not found?
           if (p == textEnd || *p == Macro.Marker.Unclosed)
-            warning(MSG.UnterminatedDDocMacro, macroName),
+            warning(MID.UnterminatedDDocMacro, macroName),
             (result ~= "$(" ~ macroName ~ " ");
           else // p points to the closing marker.
             macroEnd = p+1; // Point past the closing marker.
 
           auto macro_ = mtable.search(macroName);
           if (!macro_)
-            warning(MSG.UndefinedDDocMacro, macroName),
+            warning(MID.UndefinedDDocMacro, macroName),
             // Insert into the table to avoid more warnings.
             mtable.insert(macro_ = new Macro(macroName, "$0"));
           // Ignore recursive macro if:

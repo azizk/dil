@@ -102,9 +102,9 @@ abstract class DDocEmitter : DefaultVisitor2
   }
 
   /// Returns the location of t.
-  Location locationOf(Token* t)
+  Location locationOf(Token* t, string filePath = null)
   {
-    return t.getRealLocation(modul.filePath);
+    return t.getRealLocation(filePath ? filePath : modul.filePath);
   }
 
   /// Reports an undocumented symbol.
@@ -112,10 +112,9 @@ abstract class DDocEmitter : DefaultVisitor2
   {
     if (reportDiag is null)
       return;
-    auto loc = locationOf(currentDecl.begin);
-    loc.setFilePath(modul.getFQN());
-    auto kind = DDocProblem.Kind.UndocumentedSymbol;
-    reportDiag ~= new DDocProblem(loc, kind, MSG.UndocumentedSymbol);
+    auto loc = locationOf(currentDecl.begin, modul.getFQN());
+    reportDDocProblem(loc, DDocProblem.Kind.UndocumentedSymbol,
+      MID.UndocumentedSymbol);
   }
 
   /// Reports an empty comment.
@@ -123,10 +122,15 @@ abstract class DDocEmitter : DefaultVisitor2
   {
     if (reportDiag is null || !this.cmnt.isEmpty())
       return;
-    auto loc = locationOf(currentDecl.begin);
-    loc.setFilePath(modul.getFQN());
-    auto kind = DDocProblem.Kind.EmptyComment;
-    reportDiag ~= new DDocProblem(loc, kind, MSG.EmptyDDocComment);
+    auto loc = locationOf(currentDecl.begin, modul.getFQN());
+    reportDDocProblem(loc, DDocProblem.Kind.EmptyComment, MID.EmptyDDocComment);
+  }
+
+  /// Reports a problem.
+  void reportDDocProblem(Location loc, DDocProblem.Kind kind, MID mid, ...)
+  {
+    reportDiag ~= new DDocProblem(loc, kind,
+      reportDiag.formatMsg(mid, _arguments, _argptr));
   }
 
   /// Reports a missing params section or undocumented parameters.
@@ -166,10 +170,9 @@ abstract class DDocEmitter : DefaultVisitor2
         paramsSection = s;
     if (paramsSection is null)
     {
-      auto loc = locationOf(paramsBegin);
-      loc.setFilePath(modul.getFQN());
-      auto kind = DDocProblem.Kind.NoParamsSection;
-      reportDiag ~= new DDocProblem(loc, kind, MSG.MissingParamsSection);
+      auto loc = locationOf(paramsBegin, modul.getFQN());
+      reportDDocProblem(loc, DDocProblem.Kind.NoParamsSection,
+        MID.MissingParamsSection);
       return;
     }
     // Search for undocumented parameters.
@@ -180,11 +183,9 @@ abstract class DDocEmitter : DefaultVisitor2
     foreach (param; params) // Find undocumented parameters.
       if (!(hashOf(param.ident.str) in documentedParams))
       {
-        auto loc = locationOf(param);
-        loc.setFilePath(modul.getFQN());
-        auto kind = DDocProblem.Kind.UndocumentedParam;
-        auto msg = Format(MSG.MissingParamsSection, param);
-        reportDiag ~= new DDocProblem(loc, kind, msg);
+        auto loc = locationOf(param, modul.getFQN());
+        reportDDocProblem(loc, DDocProblem.Kind.UndocumentedParam,
+          MID.UndocumentedParam, param);
       }
   }
 

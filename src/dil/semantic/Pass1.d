@@ -136,18 +136,18 @@ class SemanticPass1 : Visitor
   void reportSymbolConflict(Symbol s1, Symbol s2, Identifier* name)
   {
     auto loc = s2.node.begin.getErrorLocation(modul.filePath());
-    auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
-    error(s1.node.begin, MSG.DeclConflictsWithDecl, name.str, locString);
+    auto locString = modul.cc.diag.format("{}({},{})",
+      loc.filePath, loc.lineNum, loc.colNum);
+    error(s1.node.begin, MID.DeclConflictsWithDecl, name.str, locString);
   }
 
   /// Creates an error report.
-  void error(Token* token, char[] formatMsg, ...)
+  void error(Token* token, MID mid, ...)
   {
     auto location = token.getErrorLocation(modul.filePath());
-    auto msg = Format(_arguments, _argptr, formatMsg);
+    auto msg = modul.cc.diag.formatMsg(mid, _arguments, _argptr);
     modul.cc.diag ~= new SemanticError(location, msg);
   }
-
 
   /// Collects info about nodes which have to be evaluated later.
   static class Deferred
@@ -208,7 +208,7 @@ override
     {
       auto importedModule = importModule(moduleFQNPath);
       if (importedModule is null)
-        error(d.begin, MSG.CouldntLoadModule, moduleFQNPath ~ ".d");
+        error(d.begin, MID.CouldntLoadModule, moduleFQNPath ~ ".d");
       modul.modules ~= importedModule;
     }
     return d;
@@ -381,7 +381,7 @@ override
   {
     // Error if we are in an interface.
     if (scop.symbol.isInterface && !(vd.isStatic || vd.isConst))
-      return error(vd.begin, MSG.InterfaceCantHaveVariables), vd;
+      return error(vd.begin, MID.InterfaceCantHaveVariables), vd;
 
     // Insert variable symbols in this declaration into the symbol table.
     vd.variables = new VariableSymbol[vd.names.length];
@@ -415,7 +415,7 @@ override
     if (d.isSpecification)
     { // debug = Id | Int
       if (!isModuleScope())
-        error(d.begin, MSG.DebugSpecModuleLevel, d.spec.text);
+        error(d.begin, MID.DebugSpecModuleLevel, d.spec.text);
       else if (d.spec.kind == TOK.Identifier)
         context.addDebugId(d.spec.ident.str);
       else
@@ -437,7 +437,7 @@ override
     if (d.isSpecification)
     { // version = Id | Int
       if (!isModuleScope())
-        error(d.begin, MSG.VersionSpecModuleLevel, d.spec.text);
+        error(d.begin, MID.VersionSpecModuleLevel, d.spec.text);
       else if (d.spec.kind == TOK.Identifier)
         context.addVersionId(d.spec.ident.str);
       else

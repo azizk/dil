@@ -124,7 +124,7 @@ override:
       dchar[] tmp = (cast(dchar[])e.str)[0..$-1];
       foreach (dchar c; tmp)
         if (!isValidChar(c)) {
-          error(e.begin, MSG.InvalidUTF32Character, c+0);
+          error(e.begin, diag.formatMsg(MID.InvalidUTF32Character), c+0);
           break;
         }
         else

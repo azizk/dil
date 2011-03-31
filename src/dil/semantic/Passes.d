@@ -29,6 +29,8 @@ import dil.Compilation,
        dil.Enums;
 import common;
 
+import tango.core.Vararg;
+
 /// Some handy aliases.
 private alias Declaration D;
 private alias Expression E; /// ditto
@@ -134,7 +136,7 @@ abstract class SemanticPass : DefaultVisitor
   {
     auto loc = s2.node.begin.getErrorLocation(modul.filePath());
     auto locString = Format("{}({},{})", loc.filePath, loc.lineNum, loc.colNum);
-    error(s1.node, MSG.DeclConflictsWithDecl, name.str, locString);
+    error(s1.node, MID.DeclConflictsWithDecl, name.str, locString);
   }
 
   /// Error messages are reported for undefined identifiers if true.
@@ -196,32 +198,49 @@ abstract class SemanticPass : DefaultVisitor
                scop.search(id, ignoreSymbol) :
                scop.search(id);
     else
+      // Search: symbol.id
       symbol = idScope.lookup(id);
 
-    if (symbol)
-      return symbol;
+    if (!symbol)
+    {
+      if (reportUndefinedIds)
+        error(idTok, MID.UndefinedIdentifier, id.str);
+      undefinedIdsCount++;
+    }
 
-    if (reportUndefinedIds)
-      error(idTok, MSG.UndefinedIdentifier, id.str);
-    undefinedIdsCount++;
-    return null;
+    return symbol;
   }
 
   /// Creates an error report.
   void error(Token* token, string formatMsg, ...)
   {
-    auto location = token.getErrorLocation(modul.filePath());
-    auto msg = Format(_arguments, _argptr, formatMsg);
-    modul.cc.diag ~= new SemanticError(location, msg);
+    error(_arguments, _argptr, formatMsg, token);
   }
 
   /// ditto
   void error(Node n, string formatMsg, ...)
   {
-    auto token = n.begin; // Use the begin token of this node.
-    auto location = token.getErrorLocation(modul.filePath());
-    auto msg = Format(_arguments, _argptr, formatMsg);
-    modul.cc.diag ~= new SemanticError(location, msg);
+    error(_arguments, _argptr, formatMsg, n.begin);
+  }
+
+  /// ditto
+  void error(Token* token, MID mid, ...)
+  {
+    error(_arguments, _argptr, modul.cc.diag.formatMsg(mid), token);
+  }
+
+  /// ditto
+  void error(Node n, MID mid, ...)
+  {
+    error(_arguments, _argptr, modul.cc.diag.formatMsg(mid), n.begin);
+  }
+
+  /// ditto
+  void error(TypeInfo[] _arguments, va_list _argptr, string msg, Token* token)
+  {
+    auto loc = token.getErrorLocation(modul.filePath());
+    msg = modul.cc.diag.format(_arguments, _argptr, msg);
+    modul.cc.diag ~= new SemanticError(loc, msg);
   }
 }
 
@@ -539,7 +558,7 @@ override
   {
     // Error if we are in an interface.
     if (scop.symbol.isInterface && !(vd.isStatic || vd.isConst))
-      return error(vd, MSG.InterfaceCantHaveVariables), vd;
+      return error(vd, MID.InterfaceCantHaveVariables), vd;
 
     // Insert variable symbols in this declaration into the symbol table.
     vd.variables = new VariableSymbol[vd.names.length];
@@ -573,7 +592,7 @@ override
     if (d.isSpecification)
     { // debug = Id | Int
       if (!isModuleScope())
-        error(d, MSG.DebugSpecModuleLevel, d.spec.text);
+        error(d, MID.DebugSpecModuleLevel, d.spec.text);
       else if (d.spec.kind == TOK.Identifier)
         context.addDebugId(d.spec.ident.str);
       else
@@ -595,7 +614,7 @@ override
     if (d.isSpecification)
     { // version = Id | Int
       if (!isModuleScope())
-        error(d, MSG.VersionSpecModuleLevel, d.spec.text);
+        error(d, MID.VersionSpecModuleLevel, d.spec.text);
       else if (d.spec.kind == TOK.Identifier)
         context.addVersionId(d.spec.ident.str);
       else

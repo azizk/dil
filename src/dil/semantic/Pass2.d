@@ -69,10 +69,10 @@ class SemanticPass2 : DefaultVisitor
   }
 
   /// Creates an error report.
-  void error(Token* token, char[] formatMsg, ...)
+  void error(Token* token, MID mid, ...)
   {
     auto location = token.getErrorLocation(modul.filePath());
-    auto msg = Format(_arguments, _argptr, formatMsg);
+    auto msg = modul.cc.diag.formatMsg(mid, _arguments, _argptr);
     modul.cc.diag ~= new SemanticError(location, msg);
   }
 
@@ -112,7 +112,7 @@ class SemanticPass2 : DefaultVisitor
       symbol = idScope.lookup(id);
 
     if (symbol is null)
-      error(idTok, MSG.UndefinedIdentifier, id.str);
+      error(idTok, MID.UndefinedIdentifier, id.str);
     else if (auto scopSymbol = cast(ScopeSymbol)symbol)
       idScope = scopSymbol;
 
@@ -175,7 +175,7 @@ override
       auto stringExpr = expr.Is!(StringExpr);
       if (stringExpr is null)
       {
-        error(md.begin, MSG.MixinArgumentMustBeString);
+        error(md.begin, MID.MixinArgumentMustBeString);
         return md;
       }
       else
@@ -376,7 +376,7 @@ override
       return me;
     auto stringExpr = expr.Is!(StringExpr);
     if (stringExpr is null)
-     error(me.begin, MSG.MixinArgumentMustBeString);
+     error(me.begin, MID.MixinArgumentMustBeString);
     else
     {
       auto loc = me.begin.getErrorLocation(modul.filePath());
@@ -402,7 +402,7 @@ override
       return ie;
     auto stringExpr = expr.Is!(StringExpr);
     //if (stringExpr is null)
-    //  error(me.begin, MSG.ImportArgumentMustBeString);
+    //  error(me.begin, MID.ImportArgumentMustBeString);
     // TODO: load file
     //ie.expr = new StringExpr(loadImportFile(stringExpr.getString()));
     return ie.expr;
