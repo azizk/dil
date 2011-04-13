@@ -238,6 +238,8 @@ class ConfigLoader : SettingsLoader
       foreach (i, value; array.values)
         if (i >= messages.length)
           break; // More messages given than allowed.
+        else if (value.Is!(NullExpr))
+        {} // messages[i] = null;
         else if (auto val = castTo!(StringExpr)(value))
           messages[i] = val.getString();
       //if (messages.length != MID.max+1)
