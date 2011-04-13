@@ -721,7 +721,7 @@ class Parser
       if (after_bracket != T.Comma && after_bracket != T.RBracket &&
           after_bracket != T.RBrace && after_bracket != T.Semicolon)
         goto default; // Parse as an AssignExpr.
-      // ArrayInitializer := "[" ArrayMemberInitializations? "]"
+      // ArrayInitializer := "[" ArrayInitElements? "]"
       Expression[] keys, values;
 
       skip(T.LBracket);
@@ -731,8 +731,7 @@ class Parser
         auto value = parseNonVoidInitializer();
         if (consumed(T.Colon))
           (key = value), // Switch roles.
-          assert(!(key.Is!(ArrayInitExpr) ||
-                   key.Is!(StructInitExpr))),
+          assert(!(key.Is!(ArrayInitExpr) || key.Is!(StructInitExpr))),
           value = parseNonVoidInitializer(); // Parse actual value.
         keys ~= key; values ~= value;
         if (!consumed(T.Comma))
@@ -746,7 +745,7 @@ class Parser
       if (after_bracket != T.Comma && after_bracket != T.RBrace &&
           after_bracket != T.RBracket && after_bracket != T.Semicolon)
         goto default; // Parse as an AssignExpr.
-      // StructInitializer := "{" StructMemberInitializers? "}"
+      // StructInitializer := "{" StructInitElements? "}"
       Token*[] idents;
       Expression[] values;
 
@@ -833,8 +832,8 @@ class Parser
     return set(func, begin);
   }
 
-  /// $(BNF FunctionPostfix := (const | immutable | nothrow | shared |
-  ////  pure | "@" Identifier)*)
+  /// $(BNF FunctionPostfix :=
+  ////  (const | immutable | nothrow | shared | pure | "@" Identifier)*)
   StorageClass parseFunctionPostfix()
   {
     version(D2)
@@ -844,24 +843,12 @@ class Parser
     {
       switch (token.kind)
       {
-      case T.Const:
-        stc = StorageClass.Const;
-        break;
-      case T.Immutable:
-        stc = StorageClass.Immutable;
-        break;
-      case T.Nothrow:
-        stc = StorageClass.Nothrow;
-        break;
-      case T.Shared:
-        stc = StorageClass.Shared;
-        break;
-      case T.Pure:
-        stc = StorageClass.Pure;
-        break;
-      case T.At:
-        stc = parseAtAttribute();
-        break;
+      case T.Const:     stc = StorageClass.Const;     break;
+      case T.Immutable: stc = StorageClass.Immutable; break;
+      case T.Nothrow:   stc = StorageClass.Nothrow;   break;
+      case T.Shared:    stc = StorageClass.Shared;    break;
+      case T.Pure:      stc = StorageClass.Pure;      break;
+      case T.At:        stc = parseAtAttribute();     break;
       default:
         return stcs;
       }
@@ -893,32 +880,14 @@ class Parser
 
     switch (idtok.ident.idKind)
     {
-    case IDK.C:
-      if (consumed(T.Plus2))
-      {
-        linkageType = LinkageType.Cpp;
-        break;
-      }
-      linkageType = LinkageType.C;
-      break;
-    case IDK.D:
-      linkageType = LinkageType.D;
-      break;
-    case IDK.Windows:
-      linkageType = LinkageType.Windows;
-      break;
-    case IDK.Pascal:
-      linkageType = LinkageType.Pascal;
-      break;
-    case IDK.System:
-      // Do this in the semantic analysis phase:
-      // version(Windows)
-      //   linkageType = LinkageType.Windows;
-      // else
-      //   linkageType = LinkageType.C;
-      linkageType = LinkageType.System;
-      break;
-    case IDK.Empty: break; // Avoid reporting another error below.
+    case IDK.C:       linkageType = consumed(T.Plus2) ?
+                                    LinkageType.Cpp :
+                                    LinkageType.C;       break;
+    case IDK.D:       linkageType = LinkageType.D;       break;
+    case IDK.Windows: linkageType = LinkageType.Windows; break;
+    case IDK.Pascal:  linkageType = LinkageType.Pascal;  break;
+    case IDK.System:  linkageType = LinkageType.System;  break;
+    case IDK.Empty:   break; // Avoid reporting another error below.
     default:
       assert(idtok);
       error2(MID.UnrecognizedLinkageType, idtok);
