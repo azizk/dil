@@ -256,7 +256,7 @@ table.params td {
 }
 
 table.params td:first-child {
-  padding-right: 0.2em;
+  padding-right: 0.5em;
   text-align: right;
 }
 
