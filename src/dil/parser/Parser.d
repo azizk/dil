@@ -944,27 +944,18 @@ class Parser
       switch (token.kind)
       {
       case T.Extern:
-        if (peekNext() != T.LParen)
+        if (peekNext() == T.LParen)
         {
-          stc = StorageClass.Extern;
-          goto Lcommon;
+          checkLinkageType(linkageType, parseExternLinkageType(), begin);
+          currentAttr = new LinkageDecl(linkageType, emptyDecl);
+          testAutoDecl = false;
+          break;
         }
-        checkLinkageType(linkageType, parseExternLinkageType(), begin);
-        currentAttr = new LinkageDecl(linkageType, emptyDecl);
-        testAutoDecl = false;
-        break;
-      case T.Override:
-        stc = StorageClass.Override;
-        goto Lcommon;
-      case T.Deprecated:
-        stc = StorageClass.Deprecated;
-        goto Lcommon;
-      case T.Abstract:
-        stc = StorageClass.Abstract;
-        goto Lcommon;
-      case T.Synchronized:
-        stc = StorageClass.Synchronized;
-        goto Lcommon;
+                           stc = StorageClass.Extern;       goto Lcommon;
+      case T.Override:     stc = StorageClass.Override;     goto Lcommon;
+      case T.Deprecated:   stc = StorageClass.Deprecated;   goto Lcommon;
+      case T.Abstract:     stc = StorageClass.Abstract;     goto Lcommon;
+      case T.Synchronized: stc = StorageClass.Synchronized; goto Lcommon;
       case T.Static:
         switch (peekNext())
         { // Avoid parsing static import, static this etc.
@@ -972,11 +963,8 @@ class Parser
           break Loop;
         default:
         }
-        stc = StorageClass.Static;
-        goto Lcommon;
-      case T.Final:
-        stc = StorageClass.Final;
-        goto Lcommon;
+                           stc = StorageClass.Static;       goto Lcommon;
+      case T.Final:        stc = StorageClass.Final;        goto Lcommon;
       version(D2)
       {
       case T.Const, T.Immutable, T.Shared:
@@ -989,66 +977,36 @@ class Parser
       case T.Enum:
         if (!isEnumManifest())
           break Loop;
-        stc = StorageClass.Manifest; // enum as StorageClass.
-        goto Lcommon;
-      case T.Ref:
-        stc = StorageClass.Ref;
-        goto Lcommon;
-      case T.Pure:
-        stc = StorageClass.Pure;
-        goto Lcommon;
-      case T.Nothrow:
-        stc = StorageClass.Nothrow;
-        goto Lcommon;
-      case T.Gshared:
-        stc = StorageClass.Gshared;
-        goto Lcommon;
-      case T.Thread:
-        stc = StorageClass.Thread;
-        goto Lcommon;
-      case T.At:
-        stc = parseAtAttribute();
-        goto Lcommon;
+                           stc = StorageClass.Manifest;     goto Lcommon;
+      case T.Ref:          stc = StorageClass.Ref;          goto Lcommon;
+      case T.Pure:         stc = StorageClass.Pure;         goto Lcommon;
+      case T.Nothrow:      stc = StorageClass.Nothrow;      goto Lcommon;
+      case T.Gshared:      stc = StorageClass.Gshared;      goto Lcommon;
+      case T.Thread:       stc = StorageClass.Thread;       goto Lcommon;
+      case T.At:           stc = parseAtAttribute();        goto Lcommon;
       } // version(D2)
       else
       { // D1
-      case T.Const:
-        stc = StorageClass.Const;
-        goto Lcommon;
+      case T.Const:        stc = StorageClass.Const;        goto Lcommon;
       }
-      case T.Auto:
-        stc = StorageClass.Auto;
-        goto Lcommon;
-      case T.Scope:
-        stc = StorageClass.Scope;
-        goto Lcommon;
+      case T.Auto:         stc = StorageClass.Auto;         goto Lcommon;
+      case T.Scope:        stc = StorageClass.Scope;        goto Lcommon;
       Lcommon:
         if (stcs & stc) // Issue error if redundant.
           error2(MID.RedundantStorageClass, token);
         stcs |= stc;
-
-        nT();
+        nT(); // Skip the storage class token.
         currentAttr = new StorageClassDecl(stc, emptyDecl);
         testAutoDecl = true;
         break;
 
       // Non-StorageClass attributes:
       // Protection attributes:
-      case T.Private:
-        prot = Protection.Private;
-        goto Lprot;
-      case T.Package:
-        prot = Protection.Package;
-        goto Lprot;
-      case T.Protected:
-        prot = Protection.Protected;
-        goto Lprot;
-      case T.Public:
-        prot = Protection.Public;
-        goto Lprot;
-      case T.Export:
-        prot = Protection.Export;
-        goto Lprot;
+      case T.Private:   prot = Protection.Private;   goto Lprot;
+      case T.Package:   prot = Protection.Package;   goto Lprot;
+      case T.Protected: prot = Protection.Protected; goto Lprot;
+      case T.Public:    prot = Protection.Public;    goto Lprot;
+      case T.Export:    prot = Protection.Export;    goto Lprot;
       Lprot:
         if (protection != Protection.None)
           error2(MID.RedundantProtection, token);
@@ -1863,9 +1821,7 @@ class Parser
       d = structDecl ? cast(Declaration)structDecl : new CompoundDecl;
       d = new AlignDecl(sizetok, d);
       goto LreturnDeclarationStmt;
-      /+ Not applicable for statements.
-         T.Private, T.Package, T.Protected, T.Public, T.Export,
-         T.Deprecated, T.Override, T.Abstract,+/
+
     case T.Extern, T.Const, T.Auto:
          //T.Final, T.Scope, T.Static:
     version(D2)
@@ -1873,9 +1829,8 @@ class Parser
     case T.Immutable, T.Pure, T.Shared, T.Gshared,
          T.Ref, T.Nothrow, T.Thread, T.At:
     }
-    case_parseAttribute:
-      s = parseAttributeStmt();
-      break;
+      goto case_parseAttribute;
+
     case T.Identifier:
       if (peekNext() == T.Colon)
       {
@@ -1892,21 +1847,41 @@ class Parser
       else
         goto case_parseExpressionStmt; // Expression
 
-    case T.If:
-      s = parseIfStmt();
-      break;
-    case T.While:
-      s = parseWhileStmt();
-      break;
-    case T.Do:
-      s = parseDoWhileStmt();
-      break;
-    case T.For:
-      s = parseForStmt();
-      break;
-    case T.Foreach, T.ForeachReverse:
-      s = parseForeachStmt();
-      break;
+    case T.If:             s = parseIfStmt();            break;
+    case T.While:          s = parseWhileStmt();         break;
+    case T.Do:             s = parseDoWhileStmt();       break;
+    case T.For:            s = parseForStmt();           break;
+    case T.Foreach,
+         T.ForeachReverse: s = parseForeachStmt();       break;
+    case T.Switch:         s = parseSwitchStmt();        break;
+    case T.Case:           s = parseCaseStmt();          break;
+    case T.Default:        s = parseDefaultStmt();       break;
+    case T.Continue:       s = parseContinueStmt();      break;
+    case T.Break:          s = parseBreakStmt();         break;
+    case T.Return:         s = parseReturnStmt();        break;
+    case T.Goto:           s = parseGotoStmt();          break;
+    case T.With:           s = parseWithStmt();          break;
+    case T.Synchronized:   s = parseSynchronizedStmt();  break;
+    case T.Try:            s = parseTryStmt();           break;
+    case T.Throw:          s = parseThrowStmt();         break;
+    case T.Volatile:       s = parseVolatileStmt();      break;
+    case T.Asm:            s = parseAsmBlockStmt();      break;
+    case T.Pragma:         s = parsePragmaStmt();        break;
+    case T.Debug:          s = parseDebugStmt();         break;
+    case T.Version:        s = parseVersionStmt();       break;
+    case T.LBrace:         s = parseScopeStmt();         break;
+    case T.Semicolon: nT(); s = new EmptyStmt();         break;
+    case_T_Scope:          s = parseScopeGuardStmt();    break;
+    case_T_Mixin:          s = parseMixin!(MixinStmt)(); break;
+    case_parseAttribute:   s = parseAttributeStmt();     break;
+    case T.Scope:
+      if (peekNext() != T.LParen)
+        goto case_parseAttribute;
+      goto case_T_Scope;
+    case T.Mixin:
+      if (peekNext() == T.LParen)
+        goto case_parseExpressionStmt; // Parse as expression.
+      goto case_T_Mixin;
     case T.Final:
       version(D2)
       {
@@ -1916,76 +1891,13 @@ class Parser
       }
       else
       goto case_parseAttribute;
-    case T.Switch:
-      s = parseSwitchStmt();
-      break;
-    case T.Case:
-      s = parseCaseStmt();
-      break;
-    case T.Default:
-      s = parseDefaultStmt();
-      break;
-    case T.Continue:
-      s = parseContinueStmt();
-      break;
-    case T.Break:
-      s = parseBreakStmt();
-      break;
-    case T.Return:
-      s = parseReturnStmt();
-      break;
-    case T.Goto:
-      s = parseGotoStmt();
-      break;
-    case T.With:
-      s = parseWithStmt();
-      break;
-    case T.Synchronized:
-      s = parseSynchronizedStmt();
-      break;
-    case T.Try:
-      s = parseTryStmt();
-      break;
-    case T.Throw:
-      s = parseThrowStmt();
-      break;
-    case T.Scope:
-      if (peekNext() != T.LParen)
-        goto case_parseAttribute;
-      s = parseScopeGuardStmt();
-      break;
-    case T.Volatile:
-      s = parseVolatileStmt();
-      break;
-    case T.Asm:
-      s = parseAsmBlockStmt();
-      break;
-    case T.Pragma:
-      s = parsePragmaStmt();
-      break;
-    case T.Mixin:
-      if (peekNext() == T.LParen)
-        goto case_parseExpressionStmt; // Parse as expression.
-      s = parseMixin!(MixinStmt)();
-      break;
     case T.Static:
       switch (peekNext())
       {
-      case T.If:
-        s = parseStaticIfStmt();
-        break;
-      case T.Assert:
-        s = parseStaticAssertStmt();
-        break;
-      default:
-        goto case_parseAttribute;
+      case T.If:     s = parseStaticIfStmt();     break;
+      case T.Assert: s = parseStaticAssertStmt(); break;
+      default:       goto case_parseAttribute;
       }
-      break;
-    case T.Debug:
-      s = parseDebugStmt();
-      break;
-    case T.Version:
-      s = parseVersionStmt();
       break;
     // DeclDef
     case T.Alias, T.Typedef:
@@ -2009,13 +1921,6 @@ class Parser
     LreturnDeclarationStmt:
       set(d, begin);
       s = new DeclarationStmt(d);
-      break;
-    case T.LBrace:
-      s = parseScopeStmt();
-      return s;
-    case T.Semicolon:
-      nT();
-      s = new EmptyStmt();
       break;
     // Parse an ExpressionStmt:
     // Tokens that start a PrimaryExpr.
@@ -2140,29 +2045,16 @@ class Parser
       switch (token.kind)
       {
       case T.Extern:
-        if (peekNext() != T.LParen)
+        if (peekNext() == T.LParen)
         {
-          stc = StorageClass.Extern;
-          goto Lcommon;
+          checkLinkageType(linkageType, parseExternLinkageType(), begin);
+          currentAttr = new LinkageDecl(linkageType, emptyDecl);
+          testAutoDecl = false;
+          break;
         }
-        checkLinkageType(linkageType, parseExternLinkageType(), begin);
-        currentAttr = new LinkageDecl(linkageType, emptyDecl);
-        testAutoDecl = false;
-        break;
-      case T.Static:
-        // Commented out: These stmnts with attributes before them
-        // would be illegal anyway.
-        // switch (peekNext())
-        // { // Avoid parsing static if and static assert.
-        // case T.If, T.Assert:
-        //   break Loop;
-        // default:
-        // }
-        stc = StorageClass.Static;
-        goto Lcommon;
-      case T.Final:
-        stc = StorageClass.Final;
-        goto Lcommon;
+                        stc = StorageClass.Extern; goto Lcommon;
+      case T.Static:    stc = StorageClass.Static; goto Lcommon;
+      case T.Final:     stc = StorageClass.Final;  goto Lcommon;
       version(D2)
       {
       case T.Const, T.Immutable, T.Shared:
@@ -2175,48 +2067,25 @@ class Parser
       case T.Enum:
         if (!isEnumManifest())
           break Loop;
-        stc = StorageClass.Manifest; // enum as StorageClass.
-        goto Lcommon;
-      case T.Ref:
-        stc = StorageClass.Ref;
-        goto Lcommon;
-      case T.Pure:
-        stc = StorageClass.Pure;
-        goto Lcommon;
-      case T.Nothrow:
-        stc = StorageClass.Nothrow;
-        goto Lcommon;
-      case T.Gshared:
-        stc = StorageClass.Gshared;
-        goto Lcommon;
-      case T.Thread:
-        stc = StorageClass.Thread;
-        goto Lcommon;
-      case T.At:
-        stc = parseAtAttribute();
-        goto Lcommon;
+                        stc = StorageClass.Manifest; goto Lcommon;
+      case T.Ref:       stc = StorageClass.Ref;      goto Lcommon;
+      case T.Pure:      stc = StorageClass.Pure;     goto Lcommon;
+      case T.Nothrow:   stc = StorageClass.Nothrow;  goto Lcommon;
+      case T.Gshared:   stc = StorageClass.Gshared;  goto Lcommon;
+      case T.Thread:    stc = StorageClass.Thread;   goto Lcommon;
+      case T.At:        stc = parseAtAttribute();    goto Lcommon;
       } // version(D2)
       else
       { // D1
-      case T.Const:
-        stc = StorageClass.Const;
-        goto Lcommon;
+      case T.Const:     stc = StorageClass.Const;    goto Lcommon;
       }
-      case T.Auto:
-        stc = StorageClass.Auto;
-        goto Lcommon;
-      case T.Scope:
-        // ScopeGuardStmt with attributes isn't allowed anyway.
-        // if (peekNext() == T.LParen)
-        //   break Loop;
-        stc = StorageClass.Scope;
-        goto Lcommon;
+      case T.Auto:      stc = StorageClass.Auto;     goto Lcommon;
+      case T.Scope:     stc = StorageClass.Scope;    goto Lcommon;
       Lcommon:
         if (stcs & stc) // Issue error if redundant.
           error2(MID.RedundantStorageClass, token);
         stcs |= stc;
-
-        nT();
+        nT(); // Skip the storage class token.
         currentAttr = new StorageClassDecl(stc, emptyDecl);
         testAutoDecl = true;
         break;
