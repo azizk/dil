@@ -47,6 +47,7 @@ string[] messages = [
   "Überlauf in Oktalzahl.",
   "Überlauf in Fließkommazahl.",
   "die Ziffern 8 und 9 sind in Oktalzahlen unzulässig.",
+  "Oktalzahlen sind seit D2 nicht mehr erlaubt",
   "ungültige Hexzahl; mindestens eine Hexziffer erforderlich.",
   "ungültige Binärzahl; mindestens eine Binärziffer erforderlich.",
   "der Exponent einer hexadezimalen Fließkommazahl ist erforderlich.",

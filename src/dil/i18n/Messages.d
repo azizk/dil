@@ -49,6 +49,7 @@ enum MID
   OverflowOctalNumber,
   OverflowFloatNumber,
   OctalNumberHasDecimals,
+  OctalNumbersDeprecated,
   NoDigitsInHexNumber,
   NoDigitsInBinNumber,
   HexFloatExponentRequired,

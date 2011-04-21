@@ -47,6 +47,7 @@ string[] messages = [
   "oktaaliluvun ylivuoto.",
   "liukuluvun ylivuoto.",
   "numerot 8 ja 9 eivät ole sallittuja oktaaliluvuissa.",
+  null,
   "virheellinen heksaluku; odotettiin vähintään yhtä heksanumeroa.",
   "virheellinen binääriluku; odotettiin vähintään yhtä binäärinumeroa.",
   "heksadesimaalisen liukuluvun eksponentti vaaditaan.",

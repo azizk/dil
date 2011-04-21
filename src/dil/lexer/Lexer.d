@@ -2202,6 +2202,12 @@ class Lexer
     default:
     }
 
+    version(D2)
+    {
+    error(t.start, MID.OctalNumbersDeprecated);
+    goto Lfinalize;
+    }
+
     if (hasDecimalDigits)
       error(t.start, MID.OctalNumberHasDecimals);
 
@@ -2279,6 +2285,7 @@ class Lexer
     default:
       assert(0);
     }
+
     t.kind = kind;
     if (kind == TOK.Int64 || kind == TOK.UInt64)
     {
@@ -2291,6 +2298,7 @@ class Lexer
       t.uint_ = cast(uint)ulong_;
     t.end = this.p = p;
     return;
+
   LscanFloat:
     this.p = p;
     scanFloat(t);

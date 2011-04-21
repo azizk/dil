@@ -14,15 +14,15 @@ string[] messages = [
   "kapanmamış karakter sabiti.",
   "boş karakter sabiti.",
   // #line
-  "'#' karakter'den sonra 'line' beklendi.",
-  "'#line''den sonra rakam beklendi.",
+  "‘#’ karakter’den sonra ‘line’ beklendi",
+  "‘#line’den sonra rakam beklendi",
 //   `filespec dizgisi beklendi (e.g. "yol\dosya".)`,
   "kapanmamış filespec dizgisi.",
-  "özel belirtici'den (special token) sonra yeni bir satır beklendi.",
+  "özel belirtici’den (special token) sonra yeni bir satır beklendi.",
   // ""
   "kapanmamış çift tırnak dizgisi.",
   // x""
-  "heks sayı olmayan karakter '{0}' heks dizgisi içinde bulundu.",
+  "heks sayı olmayan karakter ‘{0}’ heks dizgisi içinde bulundu",
   "heks dizginin içindeki sayılar çifter çifter olmalıdır.",
   "kapanmamış heks dizgisi.",
   // /* */ /+ +/
@@ -46,7 +46,8 @@ string[] messages = [
   "binari rakam taşması.",
   "oktal rakam taşması.",
   "float rakam taşması.",
-  "8 ve 9 sayılar oktal rakamlar'da geçersizdir.",
+  "8 ve 9 sayılar oktal rakamlarda geçersizdir.",
+  "oktal rakamlar geçersiz",
   "geçersiz heks rakam; minimum bir heks sayı gereklidir.",
   "geçersiz binari rakam; minimum bir binari sayı gereklidir.",
   "bir heksadesimal float rakamın üsü gereklidir.",
