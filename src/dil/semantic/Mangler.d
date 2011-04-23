@@ -37,35 +37,34 @@ class TArgMangler : Visitor2
   }
 
   /// Issues an error message.
-  void error(Token* tok, string msg, ...)
+  void error(Token* tok, MID mid, ...)
   {
     auto location = tok.getErrorLocation(filePath);
-    msg = Format(_arguments, _argptr, msg);
+    auto msg = diag.formatMsg(mid, _arguments, _argptr);
     auto error = new SemanticError(location, msg);
-    if (diag !is null)
-      diag ~= error;
+    diag ~= error;
   }
 
   void utf16Error(Token* tok, wchar[] s, size_t i)
   {
     auto e = dil.Unicode.utf16Error(s, i);
     ushort arg1 = s[i-1], arg2 = arg1;
-    string msg;
-    if (e == UTF16Error.Invalid) { // TODO: add msgs to struct MSG.
-      msg = "invalid UTF-16 sequence \\u{:X4}\\u{:X4}";
+    MID mid = MID.InvalidUTF16Sequence;
+    if (e == UTF16Error.Invalid)
       arg1 = s[i-2];
-    }
     else if (e == UTF16Error.LoSurrogate)
-      msg = "missing low surrogate in UTF-16 sequence \\u{:X4}\\uXXXX";
+      mid = MID.MissingLowSurrogate;
     else if (e == UTF16Error.HiSurrogate)
-      msg = "missing high surrogate in UTF-16 sequence \\uXXXX\\u{:X4}";
-    error(tok, msg, arg1, arg2);
+      mid = MID.MissingHighSurrogate;
+    else
+      assert(0);
+    error(tok, mid, arg1, arg2);
   }
 
 override:
   void unhandled(Node n)
-  { // TODO: add to struct MSG.
-    error(n.begin, "invalid template argument ‘{}’", n.toText());
+  {
+    error(n.begin, MID.InvalidTemplateArgument, n.toText());
   }
 
   void visit(IntExpr e)
@@ -124,7 +123,7 @@ override:
       dchar[] tmp = (cast(dchar[])e.str)[0..$-1];
       foreach (dchar c; tmp)
         if (!isValidChar(c)) {
-          error(e.begin, diag.formatMsg(MID.InvalidUTF32Character), c+0);
+          error(e.begin, MID.InvalidUTF32Character, c+0);
           break;
         }
         else

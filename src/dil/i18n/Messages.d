@@ -142,6 +142,10 @@ enum MID
   MixinArgumentMustBeString,
   DebugSpecModuleLevel,
   VersionSpecModuleLevel,
+  InvalidUTF16Sequence,
+  MissingLowSurrogate,
+  MissingHighSurrogate,
+  InvalidTemplateArgument,
 
   // Converter:
   InvalidUTF16Character,

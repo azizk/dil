@@ -142,6 +142,11 @@ string[] messages = [
   "debug={} muss auf der Modulebene stehen",
   "version={} muss auf der Modulebene stehen",
 
+  "ungültige UTF-16-Sequenz \\u{:X4}\\u{:X4}",
+  "fehlendes niedriges Surrogatzeichen in UTF-16-Sequenz \\u{:X4}\\uXXXX",
+  "fehlendes hohes Surrogatzeichen in UTF-16-Sequenz \\uXXXX\\u{:X4}",
+  "ungültiges Template-Argument ‘{}’",
+
   // Converter:
   "ungültiges UTF-16-Zeichen: '\\u{:X4}'",
   "ungültiges UTF-32-Zeichen: '\\U{:X8}'",

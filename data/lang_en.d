@@ -141,6 +141,11 @@ string[] messages = [
   "debug={} must be at module level",
   "version={} must be at module level",
 
+  "invalid UTF-16 sequence \\u{:X4}\\u{:X4}",
+  "missing low surrogate in UTF-16 sequence \\u{:X4}\\uXXXX",
+  "missing high surrogate in UTF-16 sequence \\uXXXX\\u{:X4}",
+  "invalid template argument ‘{}’",
+
   // Converter:
   "invalid UTF-16 character: '\\u{:X4}'",
   "invalid UTF-32 character: '\\U{:X8}'",
