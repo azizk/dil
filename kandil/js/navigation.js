@@ -34,7 +34,8 @@ var kandil = {
     default_tab: "#apitab", /// Initial, active tab ("#apitab", "#modtab").
     apitab_label: getPNGIcon("variable")+"Symbols",
     modtab_label: getPNGIcon("module")+"Modules",
-    dynamic_mod_loading: true, /// Load modules with JavaScript?
+    /// Load modules with JavaScript?
+    dynamic_mod_loading: true && !!window.history,
     tview_save_delay: 5*1000, /// Delay for saving a treeview's state after
                               /// each collapse and expand event of a node.
     tooltip: {
@@ -153,6 +154,10 @@ var kandil = {
 
   Object.getter(kandil, "symbolTree", kandil.symbolTree_getter);
 
+
+  window.onpopstate = function(event) {
+    event.state && loadNewModule(event.state.fqn, false);
+  }
 })();
 
 /// Execute when document is ready.
@@ -223,7 +228,12 @@ function initTabs()
     });
 
     if (kandil.settings.dynamic_mod_loading)
-      this.panel.find(".tview a").click(handleLoadingModule);
+      this.panel.find(".tview a").click(function(event) {
+        event.preventDefault();
+        var modFQN = this.parentNode.title; // Fqn is in title attribute.
+        if (kandil.moduleFQN != modFQN.slice())
+          loadNewModule(modFQN, true);
+      });
     kandil.packageTree.initList(); // Init the list property.
   };
   modtab.click(makeCurrentTab).click(modtab.lazyLoad);
@@ -392,13 +402,6 @@ function createSplitbar()
   return splitbar;
 }
 
-/// Handles a mouse click on a module list item.
-function handleLoadingModule(event)
-{
-  event.preventDefault();
-  var modFQN = this.href.rpartition('/', 1).partition('.html', 0);
-  loadNewModule(modFQN);
-}
 
 function initSymbolTags(kandil)
 {
@@ -428,14 +431,6 @@ function initSymbolTags(kandil)
     var plink = decl.find('>.plink');
     // Set the title of the permalinks.
     plink.attr("title", kandil.msg.permalink);
-    // Prevent permalinks from loading a new page,
-    // in case a different module is loaded.
-    // TODO: this code will be removed once the History object can be used.
-    if (kandil.originalModuleFQN != kandil.moduleFQN)
-      plink.click(function(event) {
-        event.preventDefault();
-        this.scrollIntoView();
-      });
   }
 
   // Prepare 'dt.decl' tags.
@@ -473,7 +468,7 @@ function fadeOutRemove(tag, delay, fade)
 }
 
 /// Loads a new module and updates the content pane.
-function loadNewModule(moduleFQN)
+function loadNewModule(moduleFQN, addHistory)
 {
   var kandil = window.kandil;
   // Load the module's file.
@@ -506,12 +501,11 @@ function loadNewModule(moduleFQN)
       success: function(text) {
         if (text == "")
           return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
-        text = new String(text);
-        var parts = extractParts(text);
+
+        var parts = extractParts(new String(text));
         // Reset some global variables.
         kandil.moduleFQN = moduleFQN;
         kandil.sourceCode = null;
-        document.title = parts.title;
         $("html")[0].scrollTop = 0; // Scroll the document to the top.
         kandil.$.content[0].innerHTML = parts.content;
         initSymbolTags(kandil);
@@ -522,7 +516,12 @@ function loadNewModule(moduleFQN)
         if (kandil.$.apitab.hasClass("current")) // Is the API tab selected?
           kandil.$.apitab.lazyLoad(); // Load the contents then.
         $("#apiqs")[0].qs.resetFirstFocusHandler();
+        // Change the title and hide the loading animation.
+        document.title = parts.title;
         hideLoadingGif();
+
+        if (addHistory)
+          window.history.pushState({fqn:moduleFQN}, parts.title, doc_url);
       }
     });
   }
