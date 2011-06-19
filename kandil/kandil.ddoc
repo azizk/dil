@@ -26,6 +26,7 @@ DOC_HEAD = <title>$(TITLE)</title>
   <script type="text/javascript" src="js/symbols.js"></script>
   <script type="text/javascript" src="js/modules.js"></script>
   <script type="text/javascript" src="js/quicksearch.js"></script>
+  <script type="text/javascript" src="js/treeview.js"></script>
   <script type="text/javascript" src="js/navigation.js"></script>
 DOC_HEAD_EXTRA =
 

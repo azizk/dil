@@ -41,8 +41,8 @@ def kandil_path(where="kandil"):
   P.ddoc    = P/"kandil.ddoc"
   P.style   = P.CSS/"style.css"
   P.jsfiles = P.JS//("navigation.js", "jquery.js", "quicksearch.js",
-    "utilities.js", "symbols.js")
-  P.navi, P.jquery, P.qsearch, P.utils, P.syms = P.jsfiles
+    "utilities.js", "symbols.js", "treeview.js")
+  P.navi, P.jquery, P.qsearch, P.utils, P.syms, P.tview = P.jsfiles
   P.images = P.IMG.glob("*.png") + P.IMG.glob("*.gif")
   return P
 
