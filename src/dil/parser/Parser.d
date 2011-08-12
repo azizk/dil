@@ -1915,6 +1915,16 @@ class Parser
     case T.Class:
       d = parseClassDecl();
       goto LreturnDeclarationStmt;
+    case T.Import:
+      version(D2)
+      {
+      if (peekNext() != T.LParen)
+      {
+        d = parseImportDecl();
+        goto LreturnDeclarationStmt;
+      }
+      }
+      goto case_parseExpressionStmt;
     case T.Interface:
       d = parseInterfaceDecl();
       goto LreturnDeclarationStmt;
@@ -1943,7 +1953,6 @@ class Parser
     case T.Function, T.Delegate:
     case T.Assert:
     // case T.Mixin:
-    case T.Import:
     case T.Typeid:
     case T.Is:
     case T.LParen:
