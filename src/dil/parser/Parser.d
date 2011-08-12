@@ -825,6 +825,12 @@ class Parser
         nT();
         goto case T.LBrace;
       default:
+        version (D2)
+        {
+        if (inBody || outBody)
+          // In D2, having in or out contracts without a body is valid.
+          break Loop;
+        } // version (D2)
         error2(MID.ExpectedFunctionBody, token);
         break Loop;
       }
