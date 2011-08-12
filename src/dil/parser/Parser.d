@@ -1890,11 +1890,9 @@ class Parser
     case T.Final:
       version(D2)
       {
-      if (peekNext() != T.Switch)
-        goto case_parseAttribute;
-      // Fall through to SwitchStmt.
+      if (peekNext() == T.Switch)
+        goto case T.Switch;
       }
-      else
       goto case_parseAttribute;
     case T.Static:
       switch (peekNext())
