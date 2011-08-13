@@ -108,13 +108,41 @@ class Highlighter
   void highlightSyntax(string filePath, bool printHTML, bool opt_printLines)
   {
     auto modul = new Module(filePath, cc);
-    modul.parse();
+    if (!modul.isDDocFile)
+      modul.parse();
     highlightSyntax(modul, printHTML, opt_printLines);
   }
 
   /// ditto
   void highlightSyntax(Module modul, bool printHTML, bool opt_printLines)
   {
+    if (modul.isDDocFile)
+    {
+      print.format(tags["DocHead"], modul.getFQN());
+
+      auto text = modul.sourceText.text;
+
+      if (opt_printLines)
+      {
+        size_t lineCount;
+        foreach (dchar c; text)
+        {
+          if (c == '\n')
+            ++lineCount;
+        }
+
+        print(tags["LineNumberBegin"]);
+        printLines(lineCount);
+        print(tags["LineNumberEnd"]);
+      }
+
+      print(tags["SourceBegin"]);
+      print(text);
+      print(tags["SourceEnd"]);
+      print(tags["DocEnd"]);
+      return;
+    }
+
     auto parser = modul.parser;
     auto lx = parser.lexer;
     auto builder = new TokenExBuilder();

@@ -6,7 +6,8 @@ module dil.semantic.Module;
 import dil.ast.Node,
        dil.ast.Declarations;
 import dil.parser.Parser;
-import dil.lexer.Lexer,
+import dil.lexer.Funcs,
+       dil.lexer.Lexer,
        dil.lexer.IdTable;
 import dil.semantic.Symbol,
        dil.semantic.Symbols;
@@ -20,6 +21,7 @@ import common;
 
 import tango.io.model.IFile,
        tango.io.device.File;
+import tango.text.Ascii : icompare;
 import tango.text.Util;
 
 alias FileConst.PathSeparatorChar dirSep;
@@ -196,5 +198,17 @@ class Module : ModuleSymbol
       if (c == '.')
         FQNPath[i] = dirSep;
     return FQNPath;
+  }
+
+  /// Returns true if the source text starts with "Ddoc\n" (ignores letter case.)
+  bool isDDocFile()
+  {
+    auto data = this.sourceText.data;
+    // 5 = "ddoc\n".length; +1 = trailing '\0' in data.
+    if (data.length >= 5 + 1 && // Check for minimum length.
+        icompare(data[0..4], "ddoc") == 0 && // Check first four characters.
+        isNewline(data.ptr + 4)) // Check for a newline.
+      return true;
+    return false;
   }
 }
