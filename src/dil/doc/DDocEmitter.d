@@ -75,7 +75,7 @@ abstract class DDocEmitter : DefaultVisitor2
           mtable.insert(ms.macroNames, ms.macroTexts);
         }
         else
-          write(s.wholeText);
+          write(scanCommentText(s.wholeText));
       return text;
     }
 
