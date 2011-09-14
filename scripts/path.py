@@ -99,6 +99,14 @@ class Path(unicode):
     """ '/home/a' -> '/home' """
     return Path(op.dirname(self))
 
+  def up(self, n=1):
+    """ Returns a new Path, """
+    """ which goes n levels back in the directory hierarchy. """
+    while n:
+      n -= 1
+      self = self.folder
+    return self
+
   @property
   def exists(self):
     """ Returns True if the path exists. """
