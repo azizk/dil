@@ -292,7 +292,7 @@ class DDocCommand : Command
     if (writeHLFiles)
       (destDir / "htmlsrc" /= "html.css").copy(data / "html.css");
     foreach (js_file; ["navigation.js", "jquery.js", "quicksearch.js",
-                       "symbols.js", "utilities.js"])
+                       "symbols.js", "treeview.js", "utilities.js"])
       (destDir / "js" /= js_file).copy(kandil / "js" /= js_file);
     foreach (file; ["alias", "class", "enummem", "enum", "function",
                     "interface", "module", "package", "struct", "template",
