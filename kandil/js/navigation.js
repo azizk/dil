@@ -157,7 +157,8 @@ title="Go to the HTML source file">#</a>',
 
 
   window.onpopstate = function(event) {
-    event.state && app.loadNewModule(event.state.fqn, false);
+    var fqn = (event.state && event.state.fqn) || kandil.originalModuleFQN;
+    app.loadNewModule(fqn, false);
   }
 })();
 
