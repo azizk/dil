@@ -825,6 +825,12 @@ class Parser
         nT();
         goto case T.LBrace;
       default:
+        version (D2)
+        {
+        if (inBody || outBody)
+          // In D2, having in or out contracts without a body is valid.
+          break Loop;
+        } // version (D2)
         error2(MID.ExpectedFunctionBody, token);
         break Loop;
       }
@@ -1890,11 +1896,9 @@ class Parser
     case T.Final:
       version(D2)
       {
-      if (peekNext() != T.Switch)
-        goto case_parseAttribute;
-      // Fall through to SwitchStmt.
+      if (peekNext() == T.Switch)
+        goto case T.Switch;
       }
-      else
       goto case_parseAttribute;
     case T.Static:
       switch (peekNext())
@@ -1917,6 +1921,16 @@ class Parser
     case T.Class:
       d = parseClassDecl();
       goto LreturnDeclarationStmt;
+    case T.Import:
+      version(D2)
+      {
+      if (peekNext() != T.LParen)
+      {
+        d = parseImportDecl();
+        goto LreturnDeclarationStmt;
+      }
+      }
+      goto case_parseExpressionStmt;
     case T.Interface:
       d = parseInterfaceDecl();
       goto LreturnDeclarationStmt;
@@ -1945,7 +1959,6 @@ class Parser
     case T.Function, T.Delegate:
     case T.Assert:
     // case T.Mixin:
-    case T.Import:
     case T.Typeid:
     case T.Is:
     case T.LParen:

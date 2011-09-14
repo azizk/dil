@@ -79,9 +79,12 @@ abstract class SettingsLoader
     if (auto result = n.Is!(T))
       return result;
     string type = T.stringof;
-    (is(T == StringExpr) && (type = "char[]").ptr) ||
-    (is(T == ArrayInitExpr) && (type = "[]").ptr) ||
-    (is(T == IntExpr) && (type = "int"));
+    if (is(T == StringExpr))
+      type = "char[]";
+    else if (is(T == ArrayInitExpr))
+      type = "[]";
+    else if(is(T == IntExpr))
+      type = "int";
     error(n.begin, "expression is not of type {}", type);
     return null;
   }
