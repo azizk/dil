@@ -408,6 +408,7 @@ abstract class DDocEmitter : DefaultVisitor2
   char[] scanCommentText(char[] text)
   {
     char* p = text.ptr;
+    char* lastLineEnd = p; // The position of the last \n seen.
     char* end = p + text.length;
     char[] result = new char[text.length]; // Reserve space.
     result.length = 0;
@@ -488,13 +489,18 @@ abstract class DDocEmitter : DefaultVisitor2
         continue;
       case '\n':
         if (!(p+1 < end && p[1] == '\n'))
+        {
+          lastLineEnd = p;
           goto default;
+        }
         ++p;
         result ~= "\n\1DDOC_BLANKLINE\2\n";
+        lastLineEnd = p;
         break;
       case '-':
-        if (p+2 < end && p[1] == '-' && p[2] == '-')
-        { // Found "---".
+        if (p+2 < end && p[1] == '-' && p[2] == '-' &&
+            isAllSpace(lastLineEnd + 1, p))
+        { // Found "---" at start of line.
           while (p < end && *p == '-') // Skip trailing dashes.
             p++;
           auto codeBegin = p;
@@ -504,8 +510,14 @@ abstract class DDocEmitter : DefaultVisitor2
             codeBegin = ++p;
           // Find closing dashes.
           while (p < end && !(*p == '-' && p+2 < end &&
-                            p[1] == '-' && p[2] == '-'))
+                            p[1] == '-' && p[2] == '-' &&
+                            isAllSpace(lastLineEnd + 1, p)))
+          {
+            if (*p == '\n')
+              lastLineEnd = p;
             p++;
+          }
+
           // Remove last newline if present.
           auto codeEnd = p;
           while (isspace(*--codeEnd))
