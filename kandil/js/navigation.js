@@ -108,13 +108,14 @@ title="Go to the HTML source file">#</a>',
     code_expand: "Double-click to expand.",
     code_shrink: "Double-click to shrink.",
   },
-  resize_func: function f() {
+  resize_func: function() {
     // Unfortunately the layout must be scripted. Couldn't find a way
     // to make it work with pure CSS in all targeted browsers.
     // The height is set so that the panel is scrollable.
     // h = viewport_height - y_offset_from_viewport - 2px_margin.
     // offsetTop comes from a dummy div, which has 'position:relative'.
-    var new_height = f.html.clientHeight - this.firstChild.offsetTop - 2;
+    var docelem = document.documentElement;
+    var new_height = docelem.clientHeight - this.firstChild.offsetTop - 2;
     this.style.height = (new_height < 0 ? 0 : new_height)+"px";
   },
   symbolTree_getter: function f() {
@@ -181,12 +182,10 @@ $(function main() {
   app.initTabs();
 
   // Scripted layout. :´(
-  kandil.resize_func.panels = document.getElementById("panels");
-  kandil.resize_func.html = document.documentElement;
-  var divs = $(">div>div.scroll", kandil.resize_func.panels);
-  divs.resize(kandil.resize_func);
-  $(window).resize(function(){ divs.resize() });
-  divs.resize();
+  var divs = $("#panels>div>div.scroll");
+  function resize_divs(){ divs.each(kandil.resize_func); }
+  $(window).resize(resize_divs);
+  resize_divs();
 });
 
 var app = {
