@@ -74,7 +74,7 @@ class IdTable
       auto c = dil.Unicode.decode(str, idx);
       if (c == ERROR_CHAR || !(isident(c) || !isascii(c) && isUniAlpha(c)))
         return false;
-    } while (idx < str.length)
+    } while (idx < str.length);
     return true;
   }
 

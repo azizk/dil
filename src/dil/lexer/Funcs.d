@@ -12,7 +12,7 @@ char[] StringCTF(uint x)
   char[] str;
   do
     str = cast(char)('0' + (x % 10)) ~ str;
-  while (x /= 10)
+  while (x /= 10);
   return str;
 }
 
@@ -24,7 +24,7 @@ char[] String(ulong x)
   auto p = end;
   do
     *--p = '0' + x % 10;
-  while (x /= 10)
+  while (x /= 10);
   return String(p, end).dup;
 }
 
@@ -261,7 +261,7 @@ body
   {
     do // IdChar*
       p++;
-    while (p < end && (isident(*p) || isUnicodeAlpha(p, end)))
+    while (p < end && (isident(*p) || isUnicodeAlpha(p, end)));
     auto identifier = ref_p[0 .. p-ref_p];
     ref_p = p;
     return identifier;

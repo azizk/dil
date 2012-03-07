@@ -73,7 +73,7 @@ class Parser
     {
       lexer.nextToken();
       token = lexer.token;
-    } while (token.isWhitespace) // Skip whitespace
+    } while (token.isWhitespace); // Skip whitespace
   }
 
   /// Start the parser and return the parsed Declarations.
@@ -176,7 +176,7 @@ class Parser
     Token* next = token;
     do
       lexer.peek(next);
-    while (next.isWhitespace) // Skip whitespace
+    while (next.isWhitespace); // Skip whitespace
     return next.kind;
   }
 
@@ -186,7 +186,7 @@ class Parser
     assert(t !is null);
     do
       lexer.peek(t);
-    while (t.isWhitespace) // Skip whitespace
+    while (t.isWhitespace); // Skip whitespace
     return t.kind;
   }
 
@@ -234,7 +234,7 @@ class Parser
     } // version(D2)
     do
       moduleFQN ~= requireIdentifier(MID.ExpectedModuleIdentifier);
-    while (consumed(T.Dot))
+    while (consumed(T.Dot));
     require2(T.Semicolon);
     return set(new ModuleDecl(typeId, moduleFQN), begin);
   }
@@ -467,7 +467,7 @@ class Parser
         nT();
       while (!token.isDeclDefStart() &&
              !tokenIs(T.RBrace) &&
-             !tokenIs(T.EOF))
+             !tokenIs(T.EOF));
       auto text = begin.textSpan(this.prevToken);
       error(begin, MID.IllegalDeclaration, text);
     }
@@ -1169,11 +1169,11 @@ class Parser
       // Identifier ("." Identifier)*
       do
         moduleFQN ~= requireIdentifier(MID.ExpectedModuleIdentifier);
-      while (consumed(T.Dot))
+      while (consumed(T.Dot));
       // Push identifiers.
       moduleFQNs ~= moduleFQN;
       moduleAliases ~= moduleAlias;
-    } while (consumed(T.Comma))
+    } while (consumed(T.Comma));
 
     if (consumed(T.Colon))
     { // ImportBind := (BindAlias "=")? BindName
@@ -1190,7 +1190,7 @@ class Parser
         // Push identifiers.
         bindNames ~= requireIdentifier(MID.ExpectedImportName);
         bindAliases ~= bindAlias;
-      } while (consumed(T.Comma))
+      } while (consumed(T.Comma));
     }
     require2(T.Semicolon);
 
@@ -1368,7 +1368,7 @@ class Parser
       auto begin = token;
       auto type = parseBasicType();
       bases ~= set(new BaseClassType(prot, type), begin);
-    } while (consumed(T.Comma))
+    } while (consumed(T.Comma));
     return bases;
   }
 
@@ -1993,7 +1993,7 @@ class Parser
         nT();
       while (!token.isStatementStart() &&
              !tokenIs(T.RBrace) &&
-             !tokenIs(T.EOF))
+             !tokenIs(T.EOF));
       auto text = begin.textSpan(this.prevToken);
       error(begin, MID.IllegalStatement, text);
     }
@@ -2297,7 +2297,7 @@ class Parser
       }
 
       params ~= set(new Parameter(stc, stctok, type, name, null), paramBegin);
-    } while (consumed(T.Comma))
+    } while (consumed(T.Comma));
     set(params, paramsBegin);
 
     require2(T.Semicolon);
@@ -2722,7 +2722,7 @@ class Parser
       if (!tokenIs(T.Semicolon))
         do
           es ~= parseAsmExpr();
-        while (consumed(T.Comma))
+        while (consumed(T.Comma));
       require2(T.Semicolon);
       s = new AsmStmt(ident, es);
       break;
@@ -2746,7 +2746,7 @@ class Parser
         nT();
       while (!token.isAsmStatementStart() &&
              !tokenIs(T.RBrace) &&
-             !tokenIs(T.EOF))
+             !tokenIs(T.EOF));
       auto text = begin.textSpan(this.prevToken);
       error(begin, MID.IllegalAsmStatement, text);
     }
@@ -4066,7 +4066,7 @@ class Parser
     Expression[] expressions;
     do
       expressions ~= parseAssignExpr();
-    while (consumed(T.Comma))
+    while (consumed(T.Comma));
     return expressions;
   }
 

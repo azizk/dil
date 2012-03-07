@@ -83,7 +83,7 @@ class Scope
       if (scop.symbol.isClass)
         return scop;
       scop = scop.parent;
-    } while (scop)
+    } while (scop);
     return null;
   }
 
@@ -96,7 +96,7 @@ class Scope
       if (scop.symbol.isModule)
         return scop;
       scop = scop.parent;
-    } while (scop)
+    } while (scop);
     return null;
   }
 }

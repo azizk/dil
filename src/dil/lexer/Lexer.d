@@ -532,7 +532,7 @@ class Lexer
       Lidentifier:
         do
         { c = *++p; }
-        while (isident(c) || !isascii(c) && isUnicodeAlpha(p))
+        while (isident(c) || !isascii(c) && isUnicodeAlpha(p));
         t.end = this.p = p;
 
         auto id = tables.lookupIdentifier(t.text);
@@ -976,7 +976,7 @@ class Lexer
     Lidentifier:
       do
       { c = *++p; }
-      while (isident(c) || !isascii(c) && isUnicodeAlpha(p))
+      while (isident(c) || !isascii(c) && isUnicodeAlpha(p));
       t.end = this.p = p;
 
       auto id = tables.lookupIdentifier(t.text);
@@ -1377,7 +1377,7 @@ class Lexer
         value ~= c;
       else
         encodeUTF8(value, c);
-    } while (*p == '\\')
+    } while (*p == '\\');
     t.strval = lookupString(value, 0);
     t.kind = TOK.String;
     t.end = p;
@@ -1618,7 +1618,7 @@ class Lexer
       // Scan: Identifier + EndOfLine
       do
       { c = *++p; }
-      while (isident(c) || !isascii(c) && isUnicodeAlpha(p))
+      while (isident(c) || !isascii(c) && isUnicodeAlpha(p));
       // Store the identifier.
       str_delim = String(idbegin, p);
       // Scan a newline.
