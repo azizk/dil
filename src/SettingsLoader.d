@@ -347,6 +347,7 @@ string resolvePath(string execPath, string filePath)
 extern(Windows) uint GetModuleFileNameW(void*, wchar*, uint);
 extern(C) size_t readlink(char* path, char* buf, size_t bufsize);
 extern(C) char* realpath(char* base, char* dest);
+extern(C) int _NSGetExecutablePath(char* buf, uint* bufsize);
 
 /// Returns the fully qualified path to this executable,
 /// or arg0 on failure or when a platform is unsupported.
@@ -393,8 +394,16 @@ char[] GetExecutableFilePath(char[] arg0)
   } // version(linux)
   else version(darwin)
   {
+  // First, get the executable path.
+  uint size = 256;
+  char[] path = new char[size];
+  while (_NSGetExecutablePath(path.ptr, &size) == -1) {
+    path = new char[size];
+  }
+
+  // Then, convert it to the »real path«, resolving symlinks, etc.
   char[] buffer = new char[1024];  // 1024 = PATH_MAX on Mac OS X 10.5
-  if (!realpath(arg0.ptr, buffer.ptr))
+  if (!realpath(path.ptr, buffer.ptr))
     return arg0;
   return fromStringz(buffer.ptr);
   } // version(darwin)
