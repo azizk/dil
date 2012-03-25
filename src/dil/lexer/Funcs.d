@@ -307,8 +307,12 @@ private alias CProperty CP;
 int isoctal(char c) { return ptable[c] & CP.Octal; }
 /// Returns: true if c is a decimal digit.
 int isdigit(char c) { return ptable[c] & CP.Digit; }
+/// Returns: true if c is a decimal digit or '_'.
+int isdigi_(char c) { return ptable[c] & (CP.Digit | CP.Underscore); }
 /// Returns: true if c is a hexadecimal digit.
 int ishexad(char c) { return ptable[c] & CP.Hex; }
+/// Returns: true if c is a hexadecimal digit or '_'.
+int ishexa_(char c) { return ptable[c] & (CP.Hex | CP.Underscore); }
 /// Returns: true if c is a letter.
 int isalpha(char c) { return ptable[c] & CP.Alpha; }
 /// Returns: true if c is an alphanumeric.

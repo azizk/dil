@@ -2041,7 +2041,7 @@ class Lexer
 
     // Number 0
     assert(p[-1] == '0');
-    assert(*p != '_' && !isdigit(*p));
+    assert(!isdigi_(*p));
     assert(ulong_ == 0);
     isDecimal = true;
     goto Lfinalize;
@@ -2087,7 +2087,7 @@ class Lexer
     if (overflow)
       error(t.start, MID.OverflowDecimalNumber);
 
-    assert((isdigit(p[-1]) || p[-1] == '_') && !isdigit(*p) && *p != '_');
+    assert(isdigi_(p[-1]) && !isdigi_(*p));
     goto Lfinalize;
 
   LscanHex:
@@ -2107,8 +2107,8 @@ class Lexer
         ulong_ += (*p|0x20) - 87; // ('a'-10) = 87
     }
 
-    assert(ishexad(p[-1]) || p[-1] == '_' || p[-1] == 'x' || p[-1] == 'X');
-    assert(!ishexad(*p) && *p != '_');
+    assert(ishexa_(p[-1]) || p[-1] == 'x' || p[-1] == 'X');
+    assert(!ishexa_(*p));
 
     switch (*p)
     {
@@ -2338,7 +2338,8 @@ class Lexer
     {
       assert(p[1] != '.');
       // This function was called by scan() or scanNumber().
-      while (isdigit(*++p) || *p == '_') {}
+      while (isdigi_(*++p))
+      {}
     }
     else // This function was called by scanNumber().
       assert(delegate () {
@@ -2362,7 +2363,8 @@ class Lexer
       if (*p == '-' || *p == '+')
         ++p;
       if (isdigit(*p))
-        while (isdigit(*++p) || *p == '_') {}
+        while (isdigi_(*++p))
+        {}
       else
         error(p, MID.FloatExpMustStartWithDigit);
     }
@@ -2383,7 +2385,8 @@ class Lexer
     assert(*p == '.' || *p == 'p' || *p == 'P');
     MID mid = MID.HexFloatExponentRequired;
     if (*p == '.')
-      while (ishexad(*++p) || *p == '_') {}
+      while (ishexa_(*++p))
+      {}
     // Decimal exponent is required.
     if (*p != 'p' && *p != 'P')
       goto Lerr;
@@ -2397,7 +2400,7 @@ class Lexer
       mid = MID.HexFloatExpMustStartWithDigit;
       goto Lerr;
     }
-    while (isdigit(*++p) || *p == '_')
+    while (isdigi_(*++p))
     {}
 
     this.p = p;
