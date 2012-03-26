@@ -421,12 +421,12 @@ abstract class DDocEmitter : DefaultVisitor2
       {
       case '$':
         auto p2 = p+2;
-        if (p+2 < end && p[1] == '(' &&
-            (isidbeg(p[2]) || isUnicodeAlpha(p2, end))) // IdStart
+        if (p2 < end && p[1] == '(' &&
+            (isidbeg(*p2) || isUnicodeAlpha(p2, end))) // IdStart
         {
           parens ~= Macro.Marker.Closing;
           result ~= Macro.Marker.Opening; // Relace "$(".
-          p += 2; // Skip "$(".
+          p = p2; // Skip "$(".
         }
         goto default;
       case '(':

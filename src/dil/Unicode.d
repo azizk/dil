@@ -146,18 +146,36 @@ body
 /// Advances ref_p only if this is a valid Unicode alpha character.
 /// Params:
 ///   ref_p = Set to the last trail byte of the valid UTF-8 sequence.
-bool isUnicodeAlpha(ref char* ref_p, char* end)
+/// Returns: The valid alpha character or 0.
+dchar decodeUnicodeAlpha(ref char* ref_p, char* end)
 in { assert(ref_p && ref_p < end); }
+out(c) { assert(c == 0 || isUniAlpha(c)); }
 body
 {
-  if (*ref_p < 0x80)
-    return false;
-  auto p = ref_p;
-  auto c = decode(p, end);
-  if (!isUniAlpha(c))
-    return false;
-  ref_p = p-1; // Subtract 1 because of decode().
-  return true;
+  dchar c = 0;
+  if (*ref_p >= 0x80)
+  {
+    auto p = ref_p;
+    c = decode(p, end);
+    if (isUniAlpha(c))
+      ref_p = p-1; // Subtract 1 because of decode().
+    else
+      c = 0;
+  }
+  return c;
+}
+
+/// Returns true when p points to a valid Unicode alpha character
+/// (also advances p.)
+bool scanUnicodeAlpha(ref char* p, char* end)
+{
+  return !!decodeUnicodeAlpha(p, end);
+}
+
+/// Returns true when p points to a valid Unicode alpha character.
+bool isUnicodeAlpha(char* p, char* end)
+{
+  return !!decodeUnicodeAlpha(p, end);
 }
 
 /// Decodes a character from str at index.

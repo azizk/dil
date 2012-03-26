@@ -46,8 +46,8 @@ class Macro
       {
       case '$':
         auto p2 = p+2;
-        if (p+2 < end && p[1] == '(' &&
-            (isidbeg(p[2]) || isUnicodeAlpha(p2, end))) // IdStart
+        if (p2 < end && p[1] == '(' &&
+            (isidbeg(*p2) || isUnicodeAlpha(p2, end))) // IdStart
         { // Scanned: "$(IdStart"
           prev != p && (result ~= String(prev, p)); // Copy previous text.
           parens ~= Macro.Marker.Closing;

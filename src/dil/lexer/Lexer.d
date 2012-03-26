@@ -532,7 +532,7 @@ class Lexer
       Lidentifier:
         do
         { c = *++p; }
-        while (isident(c) || !isascii(c) && isUnicodeAlpha(p));
+        while (isident(c) || !isascii(c) && scanUnicodeAlpha(p));
         t.end = this.p = p;
 
         auto id = tables.lookupIdentifier(t.text);
@@ -976,7 +976,7 @@ class Lexer
     Lidentifier:
       do
       { c = *++p; }
-      while (isident(c) || !isascii(c) && isUnicodeAlpha(p));
+      while (isident(c) || !isascii(c) && scanUnicodeAlpha(p));
       t.end = this.p = p;
 
       auto id = tables.lookupIdentifier(t.text);
@@ -1618,7 +1618,7 @@ class Lexer
       // Scan: Identifier + EndOfLine
       do
       { c = *++p; }
-      while (isident(c) || !isascii(c) && isUnicodeAlpha(p));
+      while (isident(c) || !isascii(c) && scanUnicodeAlpha(p));
       // Store the identifier.
       str_delim = String(idbegin, p);
       // Scan a newline.
@@ -2065,7 +2065,8 @@ class Lexer
       }
       // Overflow: skip following digits.
       overflow = true;
-      while (isdigit(*++p)) {}
+      while (isdigit(*++p))
+      {}
       break;
     }
 
@@ -2175,7 +2176,8 @@ class Lexer
       }
       // Overflow: skip following digits.
       overflow = true;
-      while (isoctal(*++p)) {}
+      while (isoctal(*++p))
+      {}
       break;
     }
 
@@ -2184,7 +2186,8 @@ class Lexer
     {
     Loctal_hasDecimalDigits:
       hasDecimalDigits = true;
-      while (isdigit(*++p)) {}
+      while (isdigit(*++p))
+      {}
     }
 
     // The number could be a float, so check errors below.
@@ -2645,11 +2648,11 @@ class Lexer
   /// a Unicode alpha character.
   /// Params:
   ///   ref_p = Is set to the last trail byte if true is returned.
-  static bool isUnicodeAlpha(ref char* ref_p)
+  static bool scanUnicodeAlpha(ref char* ref_p)
   {
     char* p = ref_p;
     assert(!isascii(*p),
-      "check for ASCII char before calling isUnicodeAlpha().");
+      "check for ASCII char before calling scanUnicodeAlpha().");
     dchar d = *p;
     ++p; // Move to second byte.
     // Error if second byte is not a trail byte.

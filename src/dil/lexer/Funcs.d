@@ -3,7 +3,7 @@
 /// $(Maturity very high)
 module dil.lexer.Funcs;
 
-import dil.Unicode : isUnicodeAlpha;
+import dil.Unicode : scanUnicodeAlpha;
 import common;
 
 /// Converts an unsigned integer to a string (CTF version.)
@@ -257,11 +257,11 @@ in { assert(ref_p && ref_p < end); }
 body
 {
   auto p = ref_p;
-  if (isidbeg(*p) || isUnicodeAlpha(p, end)) // IdStart
+  if (isidbeg(*p) || scanUnicodeAlpha(p, end)) // IdStart
   {
     do // IdChar*
       p++;
-    while (p < end && (isident(*p) || isUnicodeAlpha(p, end)));
+    while (p < end && (isident(*p) || scanUnicodeAlpha(p, end)));
     auto identifier = ref_p[0 .. p-ref_p];
     ref_p = p;
     return identifier;
