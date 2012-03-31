@@ -86,7 +86,7 @@ class Warning : Problem
 }
 
 /// For reporting a compiler error.
-class Error : Problem
+class GeneralError : Problem
 {
   this(Location location, string message)
   {
@@ -95,7 +95,7 @@ class Error : Problem
 }
 
 /// An error reported by the Lexer.
-class LexerError : Error
+class LexerError : GeneralError
 {
   this(Location location, string message)
   {
@@ -104,7 +104,7 @@ class LexerError : Error
 }
 
 /// An error reported by the Parser.
-class ParserError : Error
+class ParserError : GeneralError
 {
   this(Location location, string message)
   {
@@ -113,7 +113,7 @@ class ParserError : Error
 }
 
 /// An error reported by a semantic analyzer.
-class SemanticError : Error
+class SemanticError : GeneralError
 {
   this(Location location, string message)
   {
