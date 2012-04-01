@@ -117,15 +117,17 @@
     <Compile Include="..\..\src\dil\semantic\Types.d" />
     <Compile Include="..\..\src\dil\semantic\TypesEnum.d" />
     <Compile Include="..\..\src\dil\translator\German.d" />
-    <Compile Include="..\..\src\tests\cstyle_decls.d" />
-    <Compile Include="..\..\src\tests\forward01.d" />
-    <Compile Include="..\..\src\tests\forward02.d" />
-    <Compile Include="..\..\src\tests\forward03.d" />
-    <Compile Include="..\..\src\tests\forward04.d" />
-    <Compile Include="..\..\src\tests\forward05.d" />
     <Compile Include="..\..\src\util\OptParser.d" />
     <Compile Include="..\..\src\util\Path.d" />
     <Compile Include="..\..\src\util\mpfr.d" />
     <Compile Include="..\..\src\util\uni.d" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\tests\cstyle_decls.d" />
+    <None Include="..\..\src\tests\forward01.d" />
+    <None Include="..\..\src\tests\forward02.d" />
+    <None Include="..\..\src\tests\forward03.d" />
+    <None Include="..\..\src\tests\forward04.d" />
+    <None Include="..\..\src\tests\forward05.d" />
   </ItemGroup>
 </Project>

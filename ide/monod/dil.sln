@@ -18,6 +18,7 @@ Global
 		{37C836E6-3EDA-46A3-93E8-13FBE0A7D722}.Unittest|Any CPU.Build.0 = Unittest|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
+		BaseDirectory = ..\..
 		StartupItem = dil.dproj
 	EndGlobalSection
 EndGlobal
