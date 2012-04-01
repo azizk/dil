@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="3.5" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{37C836E6-3EDA-46A3-93E8-13FBE0A7D722}</ProjectGuid>
+    <Target>Executable</Target>
+    <IncrementalLinking>true</IncrementalLinking>
+    <UseDefaultCompiler>true</UseDefaultCompiler>
+    <BaseDirectory>..\..</BaseDirectory>
+    <PreferOneStepBuild>true</PreferOneStepBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug</OutputPath>
+    <ObjectsDirectory>obj/Debug</ObjectsDirectory>
+    <OutputName>dil</OutputName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release</OutputPath>
+    <ObjectsDirectory>obj/Release</ObjectsDirectory>
+    <OutputName>dil</OutputName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Unittest|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Unittest</OutputPath>
+    <ObjectsDirectory>obj/Unittest</ObjectsDirectory>
+    <ExtraCompilerArguments>-unittest </ExtraCompilerArguments>
+    <OutputName>dil</OutputName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="..\..\src\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\src\Settings.d" />
+    <Compile Include="..\..\src\SettingsLoader.d" />
+    <Compile Include="..\..\src\common.d" />
+    <Compile Include="..\..\src\main.d" />
+    <Compile Include="..\..\src\cmd\ASTStats.d" />
+    <Compile Include="..\..\src\cmd\Command.d" />
+    <Compile Include="..\..\src\cmd\Compile.d" />
+    <Compile Include="..\..\src\cmd\DDoc.d" />
+    <Compile Include="..\..\src\cmd\Highlight.d" />
+    <Compile Include="..\..\src\cmd\ImportGraph.d" />
+    <Compile Include="..\..\src\cmd\Statistics.d" />
+    <Compile Include="..\..\src\dil\Compilation.d" />
+    <Compile Include="..\..\src\dil\Complex.d" />
+    <Compile Include="..\..\src\dil\Converter.d" />
+    <Compile Include="..\..\src\dil\Diagnostics.d" />
+    <Compile Include="..\..\src\dil\Enums.d" />
+    <Compile Include="..\..\src\dil\FileBOM.d" />
+    <Compile Include="..\..\src\dil\Float.d" />
+    <Compile Include="..\..\src\dil\Highlighter.d" />
+    <Compile Include="..\..\src\dil\HtmlEntities.d" />
+    <Compile Include="..\..\src\dil\Information.d" />
+    <Compile Include="..\..\src\dil\Location.d" />
+    <Compile Include="..\..\src\dil\ModuleManager.d" />
+    <Compile Include="..\..\src\dil\PyTreeEmitter.d" />
+    <Compile Include="..\..\src\dil\SourceText.d" />
+    <Compile Include="..\..\src\dil\Tables.d" />
+    <Compile Include="..\..\src\dil\Time.d" />
+    <Compile Include="..\..\src\dil\Unicode.d" />
+    <Compile Include="..\..\src\dil\Version.d" />
+    <Compile Include="..\..\src\dil\ast\Declaration.d" />
+    <Compile Include="..\..\src\dil\ast\Declarations.d" />
+    <Compile Include="..\..\src\dil\ast\DefaultVisitor.d" />
+    <Compile Include="..\..\src\dil\ast\Expression.d" />
+    <Compile Include="..\..\src\dil\ast\Expressions.d" />
+    <Compile Include="..\..\src\dil\ast\Node.d" />
+    <Compile Include="..\..\src\dil\ast\NodeCopier.d" />
+    <Compile Include="..\..\src\dil\ast\NodeMembers.d" />
+    <Compile Include="..\..\src\dil\ast\NodesEnum.d" />
+    <Compile Include="..\..\src\dil\ast\Parameters.d" />
+    <Compile Include="..\..\src\dil\ast\Statement.d" />
+    <Compile Include="..\..\src\dil\ast\Statements.d" />
+    <Compile Include="..\..\src\dil\ast\Type.d" />
+    <Compile Include="..\..\src\dil\ast\TypePrinter.d" />
+    <Compile Include="..\..\src\dil\ast\Types.d" />
+    <Compile Include="..\..\src\dil\ast\Visitor.d" />
+    <Compile Include="..\..\src\dil\code\Interpreter.d" />
+    <Compile Include="..\..\src\dil\code\Methods.d" />
+    <Compile Include="..\..\src\dil\code\NotAResult.d" />
+    <Compile Include="..\..\src\dil\doc\DDocEmitter.d" />
+    <Compile Include="..\..\src\dil\doc\DDocHTML.d" />
+    <Compile Include="..\..\src\dil\doc\DDocXML.d" />
+    <Compile Include="..\..\src\dil\doc\Doc.d" />
+    <Compile Include="..\..\src\dil\doc\Macro.d" />
+    <Compile Include="..\..\src\dil\doc\Parser.d" />
+    <Compile Include="..\..\src\dil\i18n\Messages.d" />
+    <Compile Include="..\..\src\dil\i18n\ResourceBundle.d" />
+    <Compile Include="..\..\src\dil\lexer\Funcs.d" />
+    <Compile Include="..\..\src\dil\lexer\IdTable.d" />
+    <Compile Include="..\..\src\dil\lexer\Identifier.d" />
+    <Compile Include="..\..\src\dil\lexer\IdentsEnum.d" />
+    <Compile Include="..\..\src\dil\lexer\IdentsGenerator.d" />
+    <Compile Include="..\..\src\dil\lexer\Keywords.d" />
+    <Compile Include="..\..\src\dil\lexer\Lexer.d" />
+    <Compile Include="..\..\src\dil\lexer\Tables.d" />
+    <Compile Include="..\..\src\dil\lexer\Token.d" />
+    <Compile Include="..\..\src\dil\lexer\TokenSerializer.d" />
+    <Compile Include="..\..\src\dil\lexer\TokensEnum.d" />
+    <Compile Include="..\..\src\dil\parser\ImportParser.d" />
+    <Compile Include="..\..\src\dil\parser\Parser.d" />
+    <Compile Include="..\..\src\dil\semantic\Analysis.d" />
+    <Compile Include="..\..\src\dil\semantic\Mangler.d" />
+    <Compile Include="..\..\src\dil\semantic\Module.d" />
+    <Compile Include="..\..\src\dil\semantic\Package.d" />
+    <Compile Include="..\..\src\dil\semantic\Pass1.d" />
+    <Compile Include="..\..\src\dil\semantic\Pass2.d" />
+    <Compile Include="..\..\src\dil\semantic\Passes.d" />
+    <Compile Include="..\..\src\dil\semantic\Scope.d" />
+    <Compile Include="..\..\src\dil\semantic\Symbol.d" />
+    <Compile Include="..\..\src\dil\semantic\SymbolTable.d" />
+    <Compile Include="..\..\src\dil\semantic\Symbols.d" />
+    <Compile Include="..\..\src\dil\semantic\Types.d" />
+    <Compile Include="..\..\src\dil\semantic\TypesEnum.d" />
+    <Compile Include="..\..\src\dil\translator\German.d" />
+    <Compile Include="..\..\src\tests\cstyle_decls.d" />
+    <Compile Include="..\..\src\tests\forward01.d" />
+    <Compile Include="..\..\src\tests\forward02.d" />
+    <Compile Include="..\..\src\tests\forward03.d" />
+    <Compile Include="..\..\src\tests\forward04.d" />
+    <Compile Include="..\..\src\tests\forward05.d" />
+    <Compile Include="..\..\src\util\OptParser.d" />
+    <Compile Include="..\..\src\util\Path.d" />
+    <Compile Include="..\..\src\util\mpfr.d" />
+    <Compile Include="..\..\src\util\uni.d" />
+  </ItemGroup>
+</Project>
