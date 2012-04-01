@@ -157,7 +157,7 @@ class ConfigLoader : SettingsLoader
     auto filePath = findConfigurationFilePath();
     if (filePath is null)
     {
-      diag ~= new Error(new Location("",0),
+      diag ~= new GeneralError(new Location("",0),
         "the configuration file "~configFileName~" could not be found.");
       return;
     }

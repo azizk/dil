@@ -541,7 +541,7 @@ void printErrors(Diagnostics diag)
       errorFormat = GlobalSettings.semanticErrorFormat;
     else if (info.classinfo is Warning.classinfo)
       errorFormat = "{0}: Warning: {3}";
-    else if (info.classinfo is dil.Information.Error.classinfo)
+    else if (info.classinfo is GeneralError.classinfo)
       errorFormat = "Error: {3}";
     else
       continue;
