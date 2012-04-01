@@ -328,14 +328,12 @@ int char2ev(char c) { return ptable[c] >> 8; /*(ptable[c] & EVMask) >> 8;*/ }
 /// Returns: true if c is an ASCII character.
 int isascii(uint c) { return c < 128; }
 
+/// Returns true if the string is empty or has only whitespace characters.
 bool isAllSpace(char* start, char* end)
 {
-  while (start < end)
-  {
+  for (; start < end; start++)
     if (!isspace(*start))
       return false;
-    ++start;
-  }
   return true;
 }
 
