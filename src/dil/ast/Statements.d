@@ -31,7 +31,7 @@ class CompoundStmt : Statement
 
   void stmnts(Statement[] stmnts)
   {
-    this.children = stmnts;
+    this.children = cast(Node[])stmnts;
   }
 
   mixin(copyMethod);

@@ -51,7 +51,7 @@ abstract class Node
   }
 
   /// Adds a list of child nodes.
-  void addChildren(Node[] children)
+  void addChildren(N)(N children)
   {
     assert(children !is null && delegate{
       foreach (child; children)
@@ -60,11 +60,11 @@ abstract class Node
       return true; }(),
       "failed in " ~ this.classinfo.name
     );
-    this.children ~= children;
+    this.children ~= cast(Node[])children;
   }
 
   /// Adds a list of child nodes if not null.
-  void addOptChildren(Node[] children)
+  void addOptChildren(N)(N children)
   {
     children is null || addChildren(children);
   }

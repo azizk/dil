@@ -40,7 +40,7 @@ class CompoundDecl : Declaration
 
   void decls(Declaration[] decls)
   {
-    this.children = decls;
+    this.children = cast(Node[])decls;
   }
 
   mixin(copyMethod);

@@ -260,6 +260,11 @@ class PyTreeEmitter : Visitor2
     write(")");
   }
 
+  void writeNodes(T)(T nodes)
+  {
+    write(cast(Node[])nodes);
+  }
+
   void begin(Node n)
   {
     write("N"~String(n.kind)~"(");
