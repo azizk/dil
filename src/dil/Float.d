@@ -69,9 +69,9 @@ class Float
     if (x >> 32)
       mpfr_set_ui(&f, x >> 32, RND), // Initialize with higher dword.
       mpfr_mul_2ui(&f, &f, 32, RND), // Shift to the left 32 bits.
-      mpfr_add_ui(&f, &f, x, RND);   // Add lower dword.
+      mpfr_add_ui(&f, &f, cast(uint)x, RND); // Add lower dword.
     else
-      mpfr_set_ui(&f, x, RND);
+      mpfr_set_ui(&f, cast(uint)x, RND);
   }
 
   /// Constructs from a double.

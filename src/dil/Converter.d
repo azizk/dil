@@ -37,7 +37,7 @@ struct Converter
   /// Byte-swaps c.
   wchar swapBytes(wchar c)
   {
-    return (c << 8) | (c >> 8);
+    return cast(wchar)(c << 8) | (c >> 8);
   }
 
   /// Swaps the bytes of c on a little-endian machine.
@@ -139,9 +139,9 @@ struct Converter
     {
       dchar c = *p;
       static if (isBigEndian)
-        c = BEtoMachineWord(c);
+        c = BEtoMachineWord(cast(wchar)c);
       else
-        c = LEtoMachineWord(c);
+        c = LEtoMachineWord(cast(wchar)c);
 
       if (0xD800 > c || c > 0xDFFF)
       {}

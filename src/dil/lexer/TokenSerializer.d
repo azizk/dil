@@ -83,9 +83,9 @@ static:
         else
           id_index = *pindex;
         // Write the bytes.
-        write1B(t.kind); // TOK
-        write2B(t.start - prev_end); // OffsetToStart
-        write2B(id_index); // IdentsIndex
+        write1B(cast(ubyte)t.kind); // TOK
+        write2B(cast(ushort)(t.start - prev_end)); // OffsetToStart
+        write2B(cast(ushort)id_index); // IdentsIndex
         break;
       // case TOK.Newline:
       //   break;
@@ -95,9 +95,9 @@ static:
       //   break;
       default:
         // Format: <1B:TOK><2B:OffsetToStart><2B:TokenLength>
-        write1B(t.kind); // TOK
-        write2B(t.start - prev_end); // OffsetToStart
-        write2B(t.end - t.start); // TokenLength
+        write1B(cast(ubyte)t.kind); // TOK
+        write2B(cast(ushort)(t.start - prev_end)); // OffsetToStart
+        write2B(cast(ushort)(t.end - t.start)); // TokenLength
       }
       prev_end = t.end;
     }
@@ -107,11 +107,11 @@ static:
     // Write file header.
     writeS(HEADER);
     writeS("Ids:");
-    write2B(idents.length);
+    write2B(cast(ushort)idents.length);
     auto text_begin = first_token.prev.end;
     foreach (id; idents)
       write4B(id.start - text_begin),
-      write2B(id.end - id.start);
+      write2B(cast(ushort)(id.end - id.start));
     writeS("\n");
     writeS("Toks:");
     write4B(token_count);

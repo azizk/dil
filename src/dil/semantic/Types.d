@@ -872,7 +872,7 @@ class TypeFunction : Type
     version(D2)
     m ~= attrsToMangle();
     m ~= params.toMangle();
-    mc = 'Z' - variadic;
+    mc = cast(char)('Z' - variadic);
     assert(mc == 'X' || mc == 'Y' || mc == 'Z');
     m ~= mc; // Marks end of parameter list.
     m ~= retType.toMangle();

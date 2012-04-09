@@ -2805,13 +2805,13 @@ class Lexer
     char[6] b = void;
     if (d < 0x800)
     {
-      b[0] = 0xC0 | (d >> 6);
+      b[0] = 0xC0 | cast(char)(d >> 6);
       b[1] = 0x80 | (d & 0x3F);
       str ~= b[0..2];
     }
     else if (d < 0x10000)
     {
-      b[0] = 0xE0 | (d >> 12);
+      b[0] = 0xE0 | cast(char)(d >> 12);
       b[1] = 0x80 | ((d >> 6) & 0x3F);
       b[2] = 0x80 | (d & 0x3F);
       str ~= b[0..3];

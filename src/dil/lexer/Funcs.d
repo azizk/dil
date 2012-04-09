@@ -307,10 +307,14 @@ private alias CProperty CP;
 int isoctal(char c) { return ptable[c] & CP.Octal; }
 /// Returns: true if c is a decimal digit.
 int isdigit(char c) { return ptable[c] & CP.Digit; }
+/// ditto
+int isdigit(uint c) { return isdigit(cast(char)c); }
 /// Returns: true if c is a decimal digit or '_'.
 int isdigi_(char c) { return ptable[c] & (CP.Digit | CP.Underscore); }
 /// Returns: true if c is a hexadecimal digit.
 int ishexad(char c) { return ptable[c] & CP.Hex; }
+/// ditto
+int ishexad(uint c) { return ishexad(cast(char)c); }
 /// Returns: true if c is a hexadecimal digit or '_'.
 int ishexa_(char c) { return ptable[c] & (CP.Hex | CP.Underscore); }
 /// Returns: true if c is a letter.
@@ -319,10 +323,18 @@ int isalpha(char c) { return ptable[c] & CP.Alpha; }
 int isalnum(char c) { return ptable[c] & (CP.Alpha | CP.Digit); }
 /// Returns: true if c is the beginning of a D identifier (only ASCII.)
 int isidbeg(char c) { return ptable[c] & (CP.Alpha | CP.Underscore); }
+/// ditto
+int isidbeg(dchar c) { return isidbeg(cast(char)c); }
+/// ditto
+int isidbeg(uint c) { return isidbeg(cast(char)c); }
 /// Returns: true if c is a D identifier character (only ASCII.)
 int isident(char c) { return ptable[c] & (CP.Alpha | CP.Underscore | CP.Digit); }
+/// ditto
+int isident(uint c) { return isident(cast(char)c); }
 /// Returns: true if c is a whitespace character.
 int isspace(char c) { return ptable[c] & CP.Whitespace; }
+/// ditto
+int isspace(uint c) { return isspace(cast(char)c); }
 /// Returns: the escape value for c.
 int char2ev(char c) { return ptable[c] >> 8; /*(ptable[c] & EVMask) >> 8;*/ }
 /// Returns: true if c is an ASCII character.

@@ -291,13 +291,13 @@ void encode(ref char[] str, dchar c)
     str ~= c;
   else if (c < 0x800)
   {
-    b[0] = 0xC0 | (c >> 6);
+    b[0] = 0xC0 | cast(char)(c >> 6);
     b[1] = 0x80 | (c & 0x3F);
     str ~= b[0..2];
   }
   else if (c < 0x10000)
   {
-    b[0] = 0xE0 | (c >> 12);
+    b[0] = 0xE0 | cast(char)(c >> 12);
     b[1] = 0x80 | ((c >> 6) & 0x3F);
     b[2] = 0x80 | (c & 0x3F);
     str ~= b[0..3];
