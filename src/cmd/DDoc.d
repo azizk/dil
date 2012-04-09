@@ -216,7 +216,7 @@ class DDocCommand : Command
       MacroExpander.expand(mtable, DDOC, mod.filePath, dg);
 
     // Finally write the XML/XHTML file out to the harddisk.
-    scope file = new File(destPath.toString(), File.WriteCreate);
+    auto file = new File(destPath.toString(), File.WriteCreate);
     file.write(fileText);
     file.close();
 
@@ -228,6 +228,7 @@ class DDocCommand : Command
       file = new File(filePath.toString(), File.WriteCreate);
       char[] text;
       file.write(symbolsToJSON(ddocEmitter.symbolTree[0], text));
+      file.close();
     }
   }
 
