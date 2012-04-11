@@ -25,7 +25,7 @@ import dil.Highlighter,
        dil.Enums;
 import common;
 
-import tango.text.Ascii : toUpper, icompare;
+import tango.text.Ascii : toUpper;
 
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
 abstract class DDocEmitter : DefaultVisitor2
@@ -65,7 +65,7 @@ abstract class DDocEmitter : DefaultVisitor2
   /// Entry method.
   char[] emit()
   {
-    if (isDDocFile(modul))
+    if (modul.isDDocFile)
     { // The module is actually a DDoc text file.
       auto c = DDocUtils.getDDocComment(getDDocText(modul));
       foreach (s; c.sections)
@@ -75,7 +75,7 @@ abstract class DDocEmitter : DefaultVisitor2
           mtable.insert(ms.macroNames, ms.macroTexts);
         }
         else
-          write(s.wholeText);
+          write(scanCommentText(s.wholeText));
       return text;
     }
 
@@ -187,18 +187,6 @@ abstract class DDocEmitter : DefaultVisitor2
         reportDDocProblem(loc, DDocProblem.Kind.UndocumentedParam,
           MID.UndocumentedParam, param);
       }
-  }
-
-  /// Returns true if the source text starts with "Ddoc\n" (ignores letter case.)
-  static bool isDDocFile(Module mod)
-  {
-    auto data = mod.sourceText.data;
-    // 5 = "ddoc\n".length; +1 = trailing '\0' in data.
-    if (data.length >= 5 + 1 && // Check for minimum length.
-        icompare(data[0..4], "ddoc") == 0 && // Check first four characters.
-        isNewline(data.ptr + 4)) // Check for a newline.
-      return true;
-    return false;
   }
 
   /// Returns the DDoc text of this module.

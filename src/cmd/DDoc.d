@@ -118,7 +118,7 @@ class DDocCommand : Command
       auto mod = new Module(filePath, context);
 
       // Only parse if the file is not a "Ddoc"-file.
-      if (!DDocEmitter.isDDocFile(mod))
+      if (!mod.isDDocFile)
       {
         if (mm.moduleByPath(mod.filePath()))
           continue; // The same file path was already loaded. TODO: warning?
@@ -139,8 +139,13 @@ class DDocCommand : Command
         auto pass1 = new SemanticPass1(mod, context);
         pass1.run();
       }
-      else // Normally done in mod.parse().
+      else
+      {
+        // Normally done in mod.parse().
         mod.setFQN(Path(filePath).name());
+        if (writeHLFiles)
+          writeSyntaxHighlightedFile(mod);
+      }
 
       // Write the documentation file.
       writeDocumentationFile(mod, mtable);
