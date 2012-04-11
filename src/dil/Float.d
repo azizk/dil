@@ -294,6 +294,8 @@ class Float
     return this;
   }
 
+  alias super.opEquals opEquals;
+
   /// Compares $(f) to x.
   int opEquals(Float x)
   {
@@ -317,6 +319,8 @@ class Float
   {
     return mpfr_cmp_ui(&f, x) == 0;
   }
+
+  alias super.opCmp opCmp;
 
   /// Compares $(f) to x.
   int opCmp(Float x)

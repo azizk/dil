@@ -62,6 +62,8 @@ class TArgMangler : Visitor2
   }
 
 override:
+  alias super.visit visit;
+
   void unhandled(Node n)
   {
     error(n.begin, MID.InvalidTemplateArgument, n.toText());

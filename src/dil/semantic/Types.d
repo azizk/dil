@@ -69,6 +69,8 @@ abstract class Type/* : Symbol*/
     return tid == TYP.Enum || tid == TYP.Typedef;
   }
 
+  alias super.opEquals opEquals;
+
   /// Returns true if this type equals the other one.
   bool opEquals(Type other)
   {

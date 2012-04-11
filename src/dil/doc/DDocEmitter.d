@@ -894,6 +894,8 @@ abstract class DDocEmitter : DefaultVisitor2
   alias DocSymbol.Kind K;
 
 override:
+  alias super.visit visit;
+
   void visit(AliasDecl d)
   {
     if (ddoc(d))

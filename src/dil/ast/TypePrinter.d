@@ -71,6 +71,8 @@ class TypePrinter : Visitor2
   }
 
 override:
+  alias super.visit visit;
+
   void visit(IntegralType t)
   {
     write(t.begin.text);

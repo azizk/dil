@@ -121,6 +121,8 @@ class SemanticPass2 : DefaultVisitor
 
 override
 {
+  alias super.visit visit;
+
   D visit(CompoundDecl d)
   {
     return super.visit(d);

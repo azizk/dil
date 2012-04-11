@@ -348,6 +348,8 @@ class FirstSemanticPass : SemanticPass
 
 override
 {
+  alias super.visit visit;
+
   D visit(CompoundDecl d)
   {
     foreach (decl; d.decls)

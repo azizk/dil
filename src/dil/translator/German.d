@@ -107,6 +107,8 @@ class GermanTranslator : DefaultVisitor
   }
 
 override:
+  alias super.visit visit;
+
   D visit(ModuleDecl n)
   {
     printLoc(n);
