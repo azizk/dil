@@ -17,7 +17,7 @@ class LexerTables
 
   // A collection of tables for various token values.
   IdTable idents; /// Maps id strings to Identifier objects.
-  string[hash_t] strings; /// Maps strings to their zero-terminated equivalent.
+  cstring[hash_t] strings; /// Maps strings to their zero-terminated equivalent.
   StringValue*[hash_t] strvals; /// Maps string+postfix to string values.
   Float[hash_t] floats; /// Maps float strings to Float values.
   IntegerValue*[ulong] ulongs; /// Maps a ulong to an IntegerValue.
@@ -32,7 +32,7 @@ class LexerTables
   }
 
   /// Looks up an identifier.
-  Identifier* lookupIdentifier(string str)
+  Identifier* lookupIdentifier(cstring str)
   {
     return idents.lookup(str);
   }

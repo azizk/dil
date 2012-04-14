@@ -20,12 +20,10 @@ import dil.Compilation,
        dil.ModuleManager;
 import common;
 
-import tango.text.Util;
-
 /// The compile command.
 class CompileCommand : Command
 {
-  string[] filePaths; /// Explicitly specified modules (on the command line.)
+  cstring[] filePaths; /// Explicitly specified modules (on the command line.)
   bool printSymbolTree; /// Whether to print the symbol tree.
   bool printModuleTree; /// Whether to print the module tree.
   ModuleManager moduleMan;
@@ -65,7 +63,7 @@ class CompileCommand : Command
   }
 
   /// Prints the package/module tree including the root.
-  void printMTree(Package pckg, string indent)
+  void printMTree(Package pckg, cstring indent)
   {
     Stdout(indent)(pckg.pckgName)("/").newline; // PackageName/
     foreach (p; pckg.packages)
@@ -75,7 +73,7 @@ class CompileCommand : Command
   }
 
   /// Prints the package/module tree excluding the root.
-  void printMTree2(Package pckg, string indent)
+  void printMTree2(Package pckg, cstring indent)
   {
     foreach (p; pckg.packages)
     {
@@ -98,7 +96,7 @@ class CompileCommand : Command
   }
 
   /// Imports a module and runs the first pass on it.
-  Module importModule(string moduleFQNPath)
+  Module importModule(cstring moduleFQNPath)
   {
     auto modul = moduleMan.loadModule(moduleFQNPath);
     modul && runPass1(modul);
@@ -106,7 +104,7 @@ class CompileCommand : Command
   }
 
   /// Prints all symbols recursively (for debugging.)
-  static void printSymbolTable(ScopeSymbol scopeSym, char[] indent)
+  static void printSymbolTable(ScopeSymbol scopeSym, cstring indent)
   {
     foreach (member; scopeSym.members)
     {
@@ -133,7 +131,7 @@ class CompileCommand2 : Command
   /// Context information.
   CompilationContext cc;
   /// Explicitly specified modules (on the command line.)
-  string[] filePaths;
+  cstring[] filePaths;
   /// Whether to print the symbol tree.
   bool printSymbolTree;
   /// Whether to print the module tree.
@@ -181,7 +179,7 @@ class CompileCommand2 : Command
   /// Loads a module by its file path and runs pass 1 on it.
   /// Params:
   ///   filePath = E.g.: src/main.d
-  void importModuleByFile(string filePath)
+  void importModuleByFile(cstring filePath)
   {
     if (mm.moduleByPath(filePath))
       return; // The module has already been loaded.
@@ -199,15 +197,14 @@ class CompileCommand2 : Command
   ///   modFQNPath = E.g.: dil/cmd/Compile
   ///   fqnTok = Identifier token in the import statement.
   ///   modul = Where the import statement is located.
-  void importModuleByFQN(string modFQNPath,
+  void importModuleByFQN(cstring modFQNPath,
     Token* fqnTok = null, Module modul = null)
   {
     if (mm.moduleByFQN(modFQNPath))
       return; // The module has already been loaded.
     if (auto modFilePath = mm.findModuleFile(modFQNPath))
     {
-      lzy(log(LogImport,
-        replace(modFQNPath.dup, '/', '.'), modFilePath));
+      lzy(log(LogImport, modFQNPath.replace('/', '.'), modFilePath));
       runPass1(mm.loadModule(modFQNPath)); // Load and run pass 1 on it.
     }
     else

@@ -26,16 +26,16 @@ abstract class DeclarationSymbol : Symbol
     super(sid, name, node);
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     return toMangle(this, linkage);
   }
 
-  static string toMangle(Symbol s, LinkageType linkage)
+  static cstring toMangle(Symbol s, LinkageType linkage)
   {
-    string toCppMangle(Symbol s){ /+TODO+/ return ""; }
+    cstring toCppMangle(Symbol s){ /+TODO+/ return ""; }
 
-    char[] m;
+    cstring m;
     if (!s.parent || s.parent.isModule())
       switch (linkage)
       {
@@ -44,7 +44,7 @@ abstract class DeclarationSymbol : Symbol
       case LinkageType.C:
       case LinkageType.Windows:
       case LinkageType.Pascal:
-        m = s.name.str.dup;
+        m = s.name.str;
         break;
       case LinkageType.Cpp:
         version(D2)version(Windows)
@@ -62,9 +62,9 @@ abstract class DeclarationSymbol : Symbol
     return m;
   }
 
-  static string toMangle2(Symbol s)
+  static cstring toMangle2(Symbol s)
   { // Recursive function.
-    string m;
+    cstring m;
     Symbol s2 = s;
     for (; s2; s2 = s2.parent)
       if (s2.name is Ident.Empty)
@@ -178,7 +178,7 @@ abstract class Aggregate : ScopeSymbol
     return type;
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     return Symbol.toMangle(this);
   }
@@ -208,7 +208,7 @@ class SpecialClassSymbol : ClassSymbol
   }
 
   /// Handle mangling differently for special classes.
-  string toMangle()
+  cstring toMangle()
   {
     auto parent_save = parent;
     parent = null;
@@ -296,12 +296,12 @@ class FunctionSymbol : ScopeSymbol
     return type;
   }
 
-  string toString()
+  cstring toText()
   { // := ReturnType Name ParameterList
     return type.retType.toString() ~ name.str ~ params.toString();
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     if (isDMain())
       return "_Dmain";
@@ -351,7 +351,7 @@ class ParameterSymbol : Symbol
     this.type = new TypeParameter(ptype, stcs, variadic);
   }
 
-  string toString()
+  cstring toText()
   { // := StorageClasses? ParamType? ParamName? (" = " DefaultValue)? "..."?
     char[] s;
     foreach (stc; EnumString.all(stcs))
@@ -368,7 +368,7 @@ class ParameterSymbol : Symbol
     return s;
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     return type.toMangle();
   }
@@ -396,7 +396,7 @@ class ParametersSymbol : Symbol
     return type.getVariadic();
   }
 
-  string toString()
+  cstring toText()
   { // := "(" ParameterList ")"
     char[] s;
     s ~= "(";
@@ -408,7 +408,7 @@ class ParametersSymbol : Symbol
     return s;
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     return type.toMangle();
   }
@@ -440,7 +440,7 @@ class VariableSymbol : Symbol
     this(name, Protection.None, StorageClass.None, LinkageType.None, node);
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     return DeclarationSymbol.toMangle(this, linkage);
   }
@@ -601,7 +601,7 @@ class TupleSymbol : Symbol
     return new TypeTuple(types);
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     return DeclarationSymbol.toMangle(this, LinkageType.D /+FIXME+/);
   }
@@ -623,7 +623,7 @@ class AliasSymbol : Symbol
     super(SYM.Alias, name, aliasNode);
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     return DeclarationSymbol.toMangle(this, LinkageType.D /+FIXME+/);
   }
@@ -637,7 +637,7 @@ class TypedefSymbol : Symbol
     super(SYM.Typedef, name, aliasNode);
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     return Symbol.toMangle(this);
   }
@@ -662,11 +662,11 @@ class TemplInstanceSymbol : ScopeSymbol
     super(SYM.TemplateInstance, name, node);
   }
 
-  string toMangle()
+  cstring toMangle()
   { // := ParentMangle? NameMangleLength NameMangle
     if (name is Ident.Empty)
     {} // TODO: ?
-    string pm; // Parent mangle.
+    cstring pm; // Parent mangle.
     if (!tplSymbol)
     {} // Error: undefined
     else if (tplSymbol.parent)
@@ -675,7 +675,7 @@ class TemplInstanceSymbol : ScopeSymbol
       if (pm.length >= 2 && pm[0..2] == "_D")
         pm = pm[2..$]; // Skip the prefix.
     }
-    string id = name.str;
+    cstring id = name.str;
     return pm ~ String(id.length) ~ id;
   }
 }
@@ -689,7 +689,7 @@ class TemplMixinSymbol : TemplInstanceSymbol
     this.sid = SYM.TemplateMixin;
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     return Symbol.toMangle(this);
   }

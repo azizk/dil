@@ -12,6 +12,6 @@ mixin(
   // Enumerates predefined identifiers.
   "enum IDK : ushort {"
     "Null,"
-    ~ generateIDMembers ~
+    ~ generateIDMembers() ~
   "}"
 );

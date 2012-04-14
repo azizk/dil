@@ -3,13 +3,15 @@
 /// $(Maturity very high)
 module dil.Unicode;
 
+import common;
+
 public import util.uni : isUniAlpha;
 
 /// U+FFFD = �. Used to replace invalid Unicode characters.
-const dchar REPLACEMENT_CHAR = '\uFFFD';
-const char[3] REPLACEMENT_STR = "\uFFFD"; /// Ditto
+enum cdchar REPLACEMENT_CHAR = '\uFFFD';
+enum cchar[3] REPLACEMENT_STR = "\uFFFD"; /// Ditto
 /// Invalid character, returned on errors.
-const dchar ERROR_CHAR = 0xD800;
+enum dchar ERROR_CHAR = 0xD800;
 
 /// Returns: true if this character is not a surrogate
 /// code point and not higher than 0x10FFFF.
@@ -75,15 +77,15 @@ enum UTF16Error
 }
 
 /// Returns the precise error in a UTF-8 sequence.
-UTF8Error utf8Error(char[] s, ref size_t i)
+UTF8Error utf8Error(cstring s, ref size_t i)
 {
-  char* p = s.ptr + i;
+  auto p = s.ptr + i;
   auto e = utf8Error(p, s.ptr + s.length);
   i = p - s.ptr;
   return e;
 }
 /// ditto
-UTF8Error utf8Error(ref char* p, char* end)
+UTF8Error utf8Error(ref cchar* p, cchar* end)
 in { auto p_ = p; assert(decode(p_, end) == ERROR_CHAR); }
 body
 {
@@ -118,15 +120,15 @@ body
   return error;
 }
 /// Returns the precise error in a UTF-16 sequence.
-UTF16Error utf16Error(wchar[] s, ref size_t i)
+UTF16Error utf16Error(cwstring s, ref size_t i)
 {
-  wchar* p = s.ptr + i;
+  auto p = s.ptr + i;
   auto e = utf16Error(p, s.ptr + s.length);
   i = p - s.ptr;
   return e;
 }
 /// ditto
-UTF16Error utf16Error(ref wchar* p, wchar* end)
+UTF16Error utf16Error(ref cwchar* p, cwchar* end)
 in { auto p_ = p; assert(decode(p_, end) == ERROR_CHAR); }
 body
 {
@@ -147,7 +149,7 @@ body
 /// Params:
 ///   ref_p = Set to the last trail byte of the valid UTF-8 sequence.
 /// Returns: The valid alpha character or 0.
-dchar decodeUnicodeAlpha(ref char* ref_p, char* end)
+dchar decodeUnicodeAlpha(ref cchar* ref_p, cchar* end)
 in { assert(ref_p && ref_p < end); }
 out(c) { assert(c == 0 || isUniAlpha(c)); }
 body
@@ -167,13 +169,19 @@ body
 
 /// Returns true when p points to a valid Unicode alpha character
 /// (also advances p.)
-bool scanUnicodeAlpha(ref char* p, char* end)
+bool scanUnicodeAlpha(ref cchar* ref_p, cchar* end)
 {
-  return !!decodeUnicodeAlpha(p, end);
+  return !!decodeUnicodeAlpha(ref_p, end);
+}
+
+/// ditto
+bool scanUnicodeAlpha(ref char* ref_p, cchar* end)
+{
+  return !!decodeUnicodeAlpha(*cast(cchar**)&ref_p, end);
 }
 
 /// Returns true when p points to a valid Unicode alpha character.
-bool isUnicodeAlpha(char* p, char* end)
+bool isUnicodeAlpha(cchar* p, cchar* end)
 {
   return !!decodeUnicodeAlpha(p, end);
 }
@@ -182,13 +190,13 @@ bool isUnicodeAlpha(char* p, char* end)
 /// Params:
 ///   index = Set to one past the ASCII char or one past the last trail byte
 ///           of the valid UTF-8 sequence.
-dchar decode(char[] str, ref size_t index)
+dchar decode(cstring str, ref size_t index)
 in { assert(str.length && index < str.length); }
 out { assert(index <= str.length); }
 body
 {
-  char* p = str.ptr + index;
-  char* end = str.ptr + str.length;
+  auto p = str.ptr + index;
+  auto end = str.ptr + str.length;
   dchar c = decode(p, end);
   if (c != ERROR_CHAR)
     index = p - str.ptr;
@@ -199,12 +207,12 @@ body
 /// Params:
 ///   ref_p = Set to one past the ASCII char or one past the last trail byte
 ///           of the valid UTF-8 sequence.
-dchar decode(ref char* ref_p, char* end)
+dchar decode(ref cchar* ref_p, cchar* end)
 in { assert(ref_p && ref_p < end); }
 out(c) { assert(ref_p <= end && (isValidChar(c) || c == ERROR_CHAR)); }
 body
 {
-  char* p = ref_p;
+  auto p = ref_p;
   dchar c = *p;
   char c2 = void;
 
@@ -229,9 +237,9 @@ body
       goto Lerr;
   }
 
-  const char[] checkNextByte = "if (!isTrailByte(c2 = *++p))"
+  immutable checkNextByte = "if (!isTrailByte(c2 = *++p))"
                                "  goto Lerr;";
-  const char[] appendSixBits = "c = (c << 6) | c2 & 0b0011_1111;";
+  immutable appendSixBits = "c = (c << 6) | c2 & 0b0011_1111;";
 
   // See how many bytes need to be decoded.
   assert(p == ref_p+1, "p doesn't point to the second byte");
@@ -281,10 +289,16 @@ Lerr:
   goto LreturnError;
 }
 
+/// ditto
+dchar decode(ref char* ref_p, cchar* end)
+{
+  return decode(*cast(cchar**)&ref_p, end);
+}
+
 /// Encodes c and appends it to str.
 void encode(ref char[] str, dchar c)
 {
-  assert(isValidChar(c), "check if character is valid before calling encode().");
+  assert(isValidChar(c), "check for valid character before calling encode().");
 
   char[6] b = void;
   if (c < 0x80)
@@ -359,7 +373,7 @@ body
 ///   str = The UTF-16 sequence.
 ///   index = Where to start from.
 /// Returns: ERROR_CHAR in case of an error in the sequence.
-dchar decode(wchar[] str, ref size_t index)
+dchar decode(cwstring str, ref size_t index)
 in { assert(str.length && index < str.length, "empty string or reached end"); }
 out(c) { assert(index <= str.length && (isValidChar(c) || c == ERROR_CHAR)); }
 body
@@ -388,7 +402,7 @@ body
 ///   p = Start of the UTF-16 sequence.
 ///   end = One past the end of the sequence.
 /// Returns: ERROR_CHAR in case of an error in the sequence.
-dchar decode(ref wchar* p, wchar* end)
+dchar decode(ref cwchar* p, cwchar* end)
 in { assert(p && p < end, "p is null or at the end of the string"); }
 out(c) { assert(p <= end && (isValidChar(c) || c == ERROR_CHAR)); }
 body
@@ -414,7 +428,7 @@ body
 /// Params:
 ///   p = Start of the UTF-16 sequence.
 /// Returns: ERROR_CHAR in case of an error in the sequence.
-dchar decode(ref wchar* p)
+dchar decode(ref cwchar* p)
 in { assert(p && *p, "p is null or at the end of the string"); }
 out(c) { assert(isValidChar(c) || c == ERROR_CHAR); }
 body
@@ -438,7 +452,7 @@ body
 }
 
 /// Converts a string from type A to B.
-B[] convertString(A, B)(A[] str)
+B[] convertString(A, B)(const(A)[] str)
 {
   B[] result;
   size_t idx, len = str.length;

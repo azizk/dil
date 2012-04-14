@@ -82,20 +82,20 @@ private string createCode(string[] members)
 // pragma(msg, createCode(["expr?", "decls[]", "type"]));
 
 /// Generates code for copying a node.
-string genCopyCode(NodeKind nodeKind)
+char[] genCopyCode(NodeKind nodeKind)
 {
-  string[] m; // Array of member names to be copied.
+   string[] m; // Array of member names to be copied.
 
-  // Handle special cases.
-  if (nodeKind == NodeKind.StringExpr)
-    m = ["%n.str = n.str.dup;"];
-  else
-    // Look up members for this kind of node in the table.
-    m = NodeMembersTable[nodeKind];
+   // Handle special cases.
+   if (nodeKind == NodeKind.StringExpr)
+     m = ["%n.data = n.data.dup;"];
+   else
+     // Look up members for this kind of node in the table.
+     m = NodeMembersTable[nodeKind];
 
   char[] code =
-  // First do a shallow copy.
-  "auto n = cast(this_t)cast(void*)this.dup;\n";
+    // First do a shallow copy.
+    "auto n = cast(this_t)cast(void*)this.dup;\n".dup;
 
   // Then copy the members.
   if (m.length)

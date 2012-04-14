@@ -12,12 +12,12 @@ import common;
 /// A package groups modules and other packages.
 class Package : PackageSymbol
 {
-  string pckgName;    /// The name of the package. E.g.: 'dil'.
+  cstring pckgName;    /// The name of the package. E.g.: 'dil'.
   Package[] packages; /// The sub-packages contained in this package.
   Module[] modules;   /// The modules contained in this package.
 
   /// Constructs a Package object.
-  this(string pckgName, IdTable idtable)
+  this(cstring pckgName, IdTable idtable)
   {
     auto name = idtable.lookup(pckgName);
     super(name);

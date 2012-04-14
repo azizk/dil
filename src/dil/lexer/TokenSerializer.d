@@ -36,15 +36,15 @@ import common;
 struct TokenSerializer
 {
 static:
-  const string HEADER = "DIL1.0TOKS\x1A\x04\n";
+  immutable string HEADER = "DIL1.0TOKS\x1A\x04\n";
 
   ubyte[] serialize(Token* first_token)
   {
     ubyte[] data;
 
-    void writeS(string x)
+    void writeS(cstring x)
     {
-      data ~= cast(ubyte[])x;
+      data ~= cast(const(ubyte)[])x;
     }
     void write1B(ubyte x)
     {
@@ -63,7 +63,7 @@ static:
     size_t[hash_t] idtable; // Table of ids seen so far.
                             // Maps the id hash to an index into idents.
     auto t = first_token; // Get first token.
-    char* prev_end = t.prev.end; // End of the previous token.
+    auto prev_end = t.prev.end; // End of the previous token.
     uint token_count; // The number of tokens in this file.
 
     for (; t; t = t.next)
@@ -121,7 +121,7 @@ static:
     return data;
   }
 
-  Token[] deserialize(ubyte[] data, string srcText, IdTable idtable,
+  Token[] deserialize(ubyte[] data, cstring srcText, IdTable idtable,
     bool delegate(Token* next_token) callback)
   {
     ubyte* p = data.ptr;
@@ -130,10 +130,11 @@ static:
     // Define nested functions for reading data and advancing the pointer.
     bool match(string x)
     {
-      return p+x.length <= end && p[0..x.length] == cast(ubyte[])x &&
+      return p+x.length <= end &&
+        p[0..x.length] == cast(immutable(ubyte)[])x &&
         ((p += x.length), 1);
     }
-    bool read(ref string x, uint len)
+    bool read(ref char[] x, uint len)
     {
       return p+len <= end && ((x = (cast(char*)p)[0..len]), (p += len), 1);
     }
@@ -187,8 +188,8 @@ static:
     // We can allocate the exact amount of tokens we need.
     tokens = new Token[token_count];
     Token* token = &tokens[0];
-    char* prev_end = srcText.ptr;
-    char* src_end = srcText.ptr+srcText.length;
+    auto prev_end = srcText.ptr;
+    auto src_end = srcText.ptr+srcText.length;
 
     // Main loop that reads and initializes the tokens.
     while (p < end && token_count)

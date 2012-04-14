@@ -10,36 +10,36 @@ import common;
 /// Represents a location in a source text.
 final class Location
 {
-  string filePath; /// The file path.
+  cstring filePath; /// The file path.
   size_t lineNum; /// The line number.
-  char* lineBegin, to; /// Used to calculate the column.
+  cchar* lineBegin, to; /// Used to calculate the column.
 
   static uint TAB_WIDTH = 4; /// The default width of the tabulator character.
 
   /// Forwards the parameters to the second constructor.
-  this(string filePath, size_t lineNum)
+  this(cstring filePath, size_t lineNum)
   {
     set(filePath, lineNum);
   }
 
   /// Constructs a Location object.
-  this(string filePath, size_t lineNum, char* lineBegin, char* to)
+  this(cstring filePath, size_t lineNum, cchar* lineBegin, cchar* to)
   {
     set(filePath, lineNum, lineBegin, to);
   }
 
-  void set(string filePath, size_t lineNum)
+  void set(cstring filePath, size_t lineNum)
   {
     set(filePath, lineNum, null, null);
   }
 
-  void set(string filePath, size_t lineNum, char* lineBegin, char* to)
+  void set(cstring filePath, size_t lineNum, cchar* lineBegin, cchar* to)
   {
     this.filePath  = filePath;
     set(lineNum, lineBegin, to);
   }
 
-  void set(size_t lineNum, char* lineBegin, char* to)
+  void set(size_t lineNum, cchar* lineBegin, cchar* to)
   {
     assert(lineBegin <= to);
     this.lineNum   = lineNum;
@@ -47,7 +47,7 @@ final class Location
     this.to        = to;
   }
 
-  void setFilePath(string filePath)
+  void setFilePath(cstring filePath)
   {
     this.filePath = filePath;
   }
@@ -92,7 +92,7 @@ final class Location
   }
   alias calculateColumn colNum;
 
-  string str(string format = "({},{})")
+  char[] str(cstring format = "({},{})")
   {
     return Format(format, lineNum, colNum);
   }

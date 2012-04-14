@@ -14,10 +14,10 @@ import common;
 /// Converts various Unicode encoding formats to UTF-8.
 struct Converter
 {
-  char[] filePath; /// For error messages.
+  cstring filePath; /// For error messages.
   Diagnostics diag;
 
-  static Converter opCall(char[] filePath, Diagnostics diag)
+  static Converter opCall(cstring filePath, Diagnostics diag)
   {
     Converter conv;
     conv.filePath = filePath;
@@ -77,7 +77,7 @@ struct Converter
   }
 
   /// Converts a UTF-32 text to UTF-8.
-  char[] UTF32toUTF8(bool isBigEndian)(ubyte[] data)
+  char[] UTF32toUTF8(bool isBigEndian)(const(ubyte)[] data)
   {
     if (data.length == 0)
       return null;
@@ -86,7 +86,7 @@ struct Converter
     uint lineNum = 1;
     // Used to clear first 2 bits to make len multiple of 4.
     const bmask = ~cast(size_t)0b11;
-    dchar[] text = cast(dchar[])data[0 .. $ & bmask];
+    auto text = cast(const(dchar)[]) data[0 .. $ & bmask];
 
     foreach (dchar c; text)
     {
@@ -122,16 +122,16 @@ struct Converter
   alias UTF32toUTF8!(false) UTF32LEtoUTF8; /// Instantiation for UTF-32 LE.
 
   /// Converts a UTF-16 text to UTF-8.
-  char[] UTF16toUTF8(bool isBigEndian)(ubyte[] data)
+  char[] UTF16toUTF8(bool isBigEndian)(const(ubyte)[] data)
   {
     if (data.length == 0)
       return null;
 
     // Used to clear first bit to make len multiple of 2.
     const bmask = ~cast(size_t)0b1;
-    wchar[] text = cast(wchar[]) data[0 .. $ & bmask];
-    wchar* p = text.ptr,
-         end = text.ptr + text.length;
+    auto text = cast(const(wchar)[]) data[0 .. $ & bmask];
+    auto p = text.ptr;
+    auto end = p + text.length;
     char[] result;
     uint lineNum = 1;
 
@@ -190,24 +190,23 @@ struct Converter
   char[] data2UTF8(ubyte[] data)
   {
     if (data.length == 0)
-      return "";
+      return null;
 
     char[] text;
-    BOM bom = tellBOM(data);
 
-    switch (bom)
+    switch (tellBOM(data))
     {
     case BOM.None:
       // No BOM found. According to the specs the first character
       // must be an ASCII character.
       if (data.length >= 4)
       {
-        if (data[0..3] == cast(ubyte[3])x"00 00 00")
+        if (data[0..3] == x"00 00 00")
         {
           text = UTF32BEtoUTF8(data); // UTF-32BE: 00 00 00 XX
           break;
         }
-        else if (data[1..4] == cast(ubyte[3])x"00 00 00")
+        else if (data[1..4] == x"00 00 00")
         {
           text = UTF32LEtoUTF8(data); // UTF-32LE: XX 00 00 00
           break;
@@ -259,9 +258,9 @@ char[] sanitizeText(char[] text)
   if (!text.length)
     return null;
 
-  char* p = text.ptr; // Reader.
-  char* q = p; // Writer.
-  char* end = p + text.length;
+  auto p = text.ptr; // Reader.
+  auto q = p; // Writer.
+  auto end = p + text.length;
 
   while (p < end)
   {
@@ -301,12 +300,12 @@ unittest
   Stdout("Testing function Converter.\n");
   struct Data2Text
   {
-    char[] text;
-    char[] expected = "source";
+    cstring text;
+    cstring expected = "source";
     ubyte[] data()
-    { return cast(ubyte[])text; }
+    { return cast(ubyte[])text.dup; }
   }
-  const Data2Text[] map = [
+  Data2Text[] map = [
     // Without BOM
     {"source"},
     {"s\0o\0u\0r\0c\0e\0"},
@@ -322,5 +321,6 @@ unittest
   ];
   auto converter = Converter("", new Diagnostics());
   foreach (i, pair; map)
-    assert(converter.data2UTF8(pair.data) == pair.expected, Format("failed at item {}", i));
+    assert(converter.data2UTF8(pair.data) == pair.expected,
+      Format("failed at item {}", i));
 }

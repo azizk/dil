@@ -82,7 +82,7 @@ class Float
   }
 
   /// Constructs from a string.
-  this(string x, int base=10)
+  this(cstring x, int base=10)
   {
     if (!x.length)
       this();
@@ -90,16 +90,17 @@ class Float
     {
       if (x[$-1] != '\0')
         x = x ~ '\0'; // Terminate with zero
-      this(x.ptr, base);
+      this(x.dup.ptr, base);
     }
   }
 
-  /// Constructs from a zero-terminated char*.
-  this(char* x, int base=10)
+  /// Constructs from a zero-terminated string.
+  this(cchar* x, int base = 10)
   {
     mpfr_init(&f);
     if (x && *x)
-      mpfr_set_str(&f, x, base, RND); // Returns 0 for success, -1 on failure.
+      // Returns 0 for success, -1 on failure.
+      mpfr_set_str(&f, cast(char*)x, base, RND);
   }
 
   ~this()
@@ -447,15 +448,15 @@ class Float
   /// Returns this float as a string.
   string toString()
   {
-    return toString(30);
+    return toString(30).idup;
   }
 
   /// Returns this float as a string.
   /// Formatted in the scientific representation.
-  string toString(uint precision)
+  char[] toString(uint precision)
   {
     char* str;
-    int len = mpfr_asprintf(&str, "%.*R*g", precision, RND, &f);
+    int len = mpfr_asprintf(&str, "%.*R*g".dup.ptr, precision, RND, &f);
     if (len == -1)
       return null;
     // TODO: find a way to avoid duplicating.
@@ -465,7 +466,7 @@ class Float
   }
 
   /// Returns the internals of the data structure as a hex string.
-  string toHex()
+  char[] toHex()
   {
     char[] mantissa;
     foreach (l; limbs())

@@ -38,11 +38,11 @@ import tango.io.device.File;
 /// The ddoc command.
 class DDocCommand : Command
 {
-  string destDirPath;  /// Destination directory.
-  string[] macroPaths; /// Macro file paths.
-  string[] filePaths;  /// Module file paths.
-  string modsTxtPath;  /// Write list of modules to this file if specified.
-  string outFileExtension;  /// The extension of the output files.
+  cstring destDirPath;  /// Destination directory.
+  cstring[] macroPaths; /// Macro file paths.
+  cstring[] filePaths;  /// Module file paths.
+  cstring modsTxtPath;  /// Write list of modules to this file if specified.
+  cstring outFileExtension;  /// The extension of the output files.
   Regex[] regexps; /// Regular expressions.
   bool includeUndocumented; /// Whether to include undocumented symbols.
   bool includePrivate; /// Whether to include private symbols.
@@ -76,11 +76,12 @@ class DDocCommand : Command
         srcDir.exists || srcDir.createFolder();
 
     if (useKandil && writeXML)
-      return Stdout("Error: kandil uses only HTML at the moment.").newline;
+      return cast(void)
+        Stdout("Error: kandil uses only HTML at the moment.").newline;
 
     // Prepare macro files:
     // Get file paths from the config file.
-    string[] macroPaths = GlobalSettings.ddocFilePaths.dup;
+    cstring[] macroPaths = GlobalSettings.ddocFilePaths.dup;
 
     if (useKandil)
       macroPaths ~=
@@ -100,7 +101,7 @@ class DDocCommand : Command
       reportDiag = new Diagnostics();
 
     // For Ddoc code sections.
-    string mapFilePath = GlobalSettings.htmlMapFile;
+    auto mapFilePath = GlobalSettings.htmlMapFile;
     if (writeXML)
       mapFilePath = GlobalSettings.xmlMapFile;
     auto map = TagMapLoader(context, diag).load(mapFilePath);
@@ -209,7 +210,7 @@ class DDocCommand : Command
     mtable.insert("BODY", ddocText);
     // Do the macro expansion pass.
     auto dg = verbose ? this.diag : null;
-    string DDOC = "$(DDOC)";
+    cstring DDOC = "$(DDOC)";
     if (auto ddocMacro = mtable.search("DDOC"))
       DDOC = ddocMacro.text;
     auto fileText = rawOutput ? ddocText :
@@ -307,7 +308,7 @@ class DDocCommand : Command
   }
 
   /// Writes the sub-packages and sub-modules of a package to the disk.
-  static void writePackage(File f, Package pckg, string indent = "  ")
+  static void writePackage(File f, Package pckg, cstring indent = "  ")
   {
     foreach (p; pckg.packages)
     {
@@ -341,11 +342,12 @@ class DDocCommand : Command
 version(unused)
 {
   /// Converts the symbol tree into JSON.
-  static char[] symbolsToJSON(DocSymbol symbol, string indent = "\t")
+  static char[] symbolsToJSON(DocSymbol symbol, cstring indent = "\t")
   {
     char[] text;
     auto locbeg = symbol.begin.lineNum, locend = symbol.end.lineNum;
-    text ~= Format("{{\n"`{}"name":"{}","fqn":"{}","kind":"{}","loc":[{},{}],`"\n",
+    text ~= Format(
+      "{{\n"`{}"name":"{}","fqn":"{}","kind":"{}","loc":[{},{}],`"\n",
       indent, symbol.name, symbol.fqn, symbol.kind, locbeg, locend);
     text ~= indent~`"sub":[`;
     foreach (s; symbol.members)
@@ -364,19 +366,19 @@ version(unused)
   /// Params:
   ///   filePath = Path to the macro file.
   ///   diag  = For error messages.
-  static string loadMacroFile(string filePath, Diagnostics diag)
+  static char[] loadMacroFile(cstring filePath, Diagnostics diag)
   {
     auto src = new SourceText(filePath);
     src.load(diag);
-    auto text = src.text(); // Exclude '\0'.
-    return sanitizeText(text);
+    // Casting away const is okay here.
+    return sanitizeText(cast(char[])src.text());
   }
 
   // Report functions:
 
   /// Returns the reportDiag for moduleName if it is not filtered
   /// by the -rx=REGEXP option.
-  Diagnostics getReportDiag(string moduleName)
+  Diagnostics getReportDiag(cstring moduleName)
   {
     foreach (rx; regexps)
       if (rx.test(moduleName))
@@ -387,7 +389,7 @@ version(unused)
   /// Used for collecting data for the report.
   static class ModuleData
   {
-    string name; /// Module name.
+    cstring name; /// Module name.
     DDocProblem[] kind1, kind2, kind3, kind4;
 
   static:
@@ -395,7 +397,7 @@ version(unused)
     ModuleData[] sortedList;
     /// Returns a ModuleData for name.
     /// Inserts a new instance into the table if not present.
-    ModuleData get(string name)
+    ModuleData get(cstring name)
     {
       auto hash = hashOf(name);
       auto mod = hash in table;
@@ -436,7 +438,7 @@ version(unused)
     {
       auto p = cast(DDocProblem)info;
       auto mod = ModuleData.get(p.filePath);
-      switch (p.kind)
+      final switch (p.kind)
       { alias DDocProblem P;
       case P.Kind.UndocumentedSymbol:
         kind1Total++; mod.kind1 ~= p; break;
@@ -498,7 +500,7 @@ version(unused)
         { // (x,y) (x,y) etc.
           line ~= p.location.str("({},{}) ");
           if (line.length > 80)
-            file.write("  "~line[0..$-1]~"\n"), (line = "");
+            file.write("  "~line[0..$-1]~"\n"), (line = null);
         }
         if (line.length)
           file.write("  "~line[0..$-1]~"\n");

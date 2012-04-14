@@ -69,7 +69,7 @@ class Complex
   }
 
   /// Constructs from two strings.
-  this(string r, string i)
+  this(cstring r, cstring i)
   {
     re = new Float(r);
     im = new Float(i);
@@ -78,7 +78,7 @@ class Complex
   /// Constructs from a string.
   /// Params:
   ///   x = Can be "a", "aj", "-ai", "a + bj", "a - bi" etc.
-  this(string x)
+  this(cstring x)
   {
     if (!x.length)
       this();
@@ -91,17 +91,17 @@ class Complex
   }
 
   /// Constructs a Complex from a zero-terminated string.
-  this(char* x)
+  this(cchar* x)
   {
     set(x);
   }
 
   /// Parses the string and sets the real and imaginary parts. Returns itself.
-  Complex set(char* x)
+  Complex set(cchar* x)
   {
     x = x && *x ? x : "0";
 
-    char[] r_str, i_str;
+    cstring r_str, i_str;
     bool i_neg;
     auto p = x;
     while (*p == ' ')
@@ -284,13 +284,13 @@ class Complex
   }
 
   /// ditto
-  Complex opDiv_r(string x)
+  Complex opDiv_r(cstring x)
   {
     return new Complex(x) /= this;
   }
 
   /// ditto
-  Complex opDiv_r(char* x)
+  Complex opDiv_r(cchar* x)
   {
     return new Complex(x) /= this;
   }
@@ -523,14 +523,14 @@ class Complex
     return hypot(re, im);
   }
 
-  /// Returns this float as a string.
+  /// Returns this number as a string.
   string toString()
   {
-    return toString(30);
+    return toString(30).idup;
   }
 
-  /// Returns this float as a string.
-  string toString(uint precision)
+  /// Returns this number as a string.
+  char[] toString(uint precision)
   {
     auto im_sign = im.isNeg() ? "" : "+";
     return re.toString(precision) ~ im_sign ~ im.toString(precision) ~ "i";

@@ -43,7 +43,7 @@ import Settings,
 import Integer = tango.text.convert.Integer;
 import tango.stdc.stdio;
 import tango.io.device.File;
-import tango.text.Util;
+import tango.text.Util : split;
 import tango.text.Regex : Regex;
 import tango.time.StopWatch;
 import tango.text.Ascii : icompare, toUpper;
@@ -52,7 +52,7 @@ debug
 import tango.core.tools.TraceExceptions;
 
 /// Entry function of Dil.
-void main(string[] args)
+void main(cstring[] args)
 {
   if (args.length == 0)
     throw new Exception("main() received 0 arguments");
@@ -73,7 +73,7 @@ void main(string[] args)
 
   // 3. Execute a command.
   auto op = new OptParser(args[2..$]);
-  string command = args[1];
+  cstring command = args[1];
 
   switch (command)
   {
@@ -86,7 +86,7 @@ void main(string[] args)
     auto cmd = new CompileCommand();
     cmd.context = globalCC;
     cmd.diag = diag;
-    string value;
+    cstring value;
 
     op.add({ return parseDebugOrVersion(op, cmd.context); });
     op.add("-I", value, { cmd.context.importPaths ~= value; });
@@ -126,8 +126,8 @@ void main(string[] args)
     {
       CompilationContext cc;
       Path dest;
-      string format = "d_{0}.py";
-      string[] filePaths;
+      cstring format = "d_{0}.py";
+      cstring[] filePaths;
 
       void run()
       {
@@ -139,8 +139,8 @@ void main(string[] args)
           if (modul.hasErrors())
             continue;
           auto py = new PyTreeEmitter(modul);
-          auto modFQN = replace(modul.getFQN().dup, '.', '_');
-          auto pckgName = replace(modul.packageName.dup, '.', '_');
+          auto modFQN = modul.getFQN().replace('.', '_');
+          auto pckgName = modul.packageName.replace('.', '_');
           auto modName = modul.moduleName;
           auto fileName = Format(format, modFQN, pckgName, modName);
           auto destPath = (dest/fileName).toString;
@@ -172,7 +172,7 @@ void main(string[] args)
     cmd.destDirPath = op.getArg();
     cmd.context = globalCC;
     cmd.diag = diag;
-    string value;
+    cstring value;
 
     // Parse arguments.
     op.add({ return parseDebugOrVersion(op, cmd.context); });
@@ -228,7 +228,7 @@ void main(string[] args)
     auto cmd = new IGraphCommand();
     cmd.context = globalCC;
 
-    string value;
+    cstring value;
     bool dummy;
     alias IGraphCommand.Option IO;
 
@@ -274,8 +274,8 @@ void main(string[] args)
     class TokenizeCommand : Command
     {
       CompilationContext cc;
-      string srcFilePath;
-      string separator = "\n";
+      cstring srcFilePath;
+      cstring separator = "\n";
       bool ignoreWSToks, printWS, fromStdin;
 
       void run()
@@ -326,7 +326,7 @@ void main(string[] args)
     class SerializeCommand : Command
     {
       CompilationContext cc;
-      string srcFilePath, outFilePath;
+      cstring srcFilePath, outFilePath;
       bool fromStdin;
 
       void run()
@@ -349,7 +349,7 @@ void main(string[] args)
           file.close();
         }
         else
-          Stdout(cast(string)data);
+          Stdout(cast(cstring)data);
       }
     }
 
@@ -370,7 +370,7 @@ void main(string[] args)
       return printHelp(command, diag);
 
     if (args[2] != "German")
-      return Stdout.formatln(
+      return cast(void)Stdout.formatln(
         "Error: unrecognized target language ‘{}’", args[2]);
 
     auto filePath = args[3];
@@ -387,10 +387,10 @@ void main(string[] args)
   case "profile":
     if (!op.hasArgs())
       break;
-    string[] filePaths;
+    cstring[] filePaths;
     if (args[2] == "dstress")
     {
-      auto text = cast(string) File.get("dstress_files");
+      auto text = cast(cstring) File.get("dstress_files");
       filePaths = split(text, "\0");
     }
     else
@@ -408,15 +408,15 @@ void main(string[] args)
     break;
   case "settings", "set":
     alias GlobalSettings GS;
-    string versionIds, importPaths, ddocPaths;
+    cstring versionIds, importPaths, ddocPaths;
     foreach (item; GS.versionIds)
       versionIds ~= item ~ ";";
     foreach (item; GS.importPaths)
       importPaths ~= item ~ ";";
     foreach (item; GS.ddocFilePaths)
       ddocPaths ~= item ~ ";";
-    string[string] settings = [
-      "DATADIR"[]:GS.dataDir, "VERSION_IDS":versionIds,
+    cstring[cstring] settings = [
+      "DATADIR":GS.dataDir, "VERSION_IDS":versionIds,
       "KANDILDIR":GS.kandilDir,
       "IMPORT_PATHS":importPaths, "DDOC_FILES":ddocPaths,
       "LANG_FILE":GS.langFile, "XML_MAP":GS.xmlMapFile,
@@ -425,13 +425,14 @@ void main(string[] args)
       "SEMANTIC_ERROR":GS.semanticErrorFormat,
       "TAB_WIDTH":Format("{}", GS.tabWidth)
     ];
-    string[] retrieve_settings;
+
+    cstring[] retrieve_settings;
     if (args.length > 2)
       retrieve_settings = args[2..$];
     if (retrieve_settings.length) // Print select settings.
       foreach (name; retrieve_settings)
       {
-        if (auto psetting = (name = toUpper(name)) in settings)
+        if (auto psetting = (name = toUpper(name.dup)) in settings)
           Stdout.formatln("{}={}", name, *psetting);
       }
     else // Print all settings.
@@ -459,7 +460,7 @@ void printUsageError(OptParser op)
 }
 
 /// Reads the standard input and returns its contents.
-string readStdin()
+char[] readStdin()
 {
   char[] text;
   while (1)
@@ -473,7 +474,7 @@ string readStdin()
 }
 
 /// Available commands.
-const string COMMANDS =
+enum string COMMANDS =
   "  help (?)\n"
   "  compile (c)\n"
   "  ddoc (d)\n"
@@ -505,7 +506,7 @@ version(D2)
 /// Parses a debug or version command line option.
 bool parseDebugOrVersion(ref OptParser op, CompilationContext context)
 {
-  string val;
+  cstring val;
   if (op.argv[0] == "-debug")
     context.debugLevel = 1;
   else if (op.parse("-debug", val))
@@ -532,7 +533,7 @@ void printErrors(Diagnostics diag)
 {
   foreach (info; diag.info)
   {
-    string errorFormat;
+    cstring errorFormat;
     if (info.classinfo is LexerError.classinfo)
       errorFormat = GlobalSettings.lexerErrorFormat;
     else if (info.classinfo is ParserError.classinfo)
@@ -552,9 +553,9 @@ void printErrors(Diagnostics diag)
 
 /// Prints the help message of a command.
 /// If the command wasn't found, the main help message is printed.
-void printHelp(string command, Diagnostics diag)
+void printHelp(cstring command, Diagnostics diag)
 {
-  string msg;
+  cstring msg;
   MID mid;
   switch (command)
   {

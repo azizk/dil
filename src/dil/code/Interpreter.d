@@ -80,7 +80,7 @@ class Interpreter : Visitor
     return NAR;
   }
 
-  void error(Node n, string msg, ...)
+  void error(Node n, cstring msg, ...)
   {
     auto location = n.begin.getErrorLocation(/+filePath+/""); // FIXME
     msg = Format(_arguments, _argptr, msg);

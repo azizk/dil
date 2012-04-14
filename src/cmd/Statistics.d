@@ -16,7 +16,7 @@ import common;
 /// The statistics comman.
 class StatsCommand : Command
 {
-  string[] filePaths; /// Module file paths.
+  cstring[] filePaths; /// Module file paths.
   bool printTokensTable; /// Whether to print the tokens table.
   bool printNodesTable; /// Whether to print the nodes table.
   CompilationContext cc; /// The context.
@@ -144,14 +144,8 @@ struct Statistics
   }
 }
 
-/// Executes the statistics command.
-void execute(string[] filePaths, bool printTokensTable, bool printNodesTable)
-{
-
-}
-
 /// Returns the statistics for a D source file.
-Statistics getStatistics(CompilationContext cc, string filePath,
+Statistics getStatistics(CompilationContext cc, cstring filePath,
   bool printTokensTable, bool printNodesTable)
 {
   // Create a new record.

@@ -6,7 +6,7 @@ module dil.lexer.Token;
 import dil.lexer.Identifier,
        dil.lexer.Funcs;
 import dil.Location;
-import dil.Float : Float;
+import dil.Float;
 import common;
 
 import tango.stdc.stdlib : malloc, free;
@@ -40,14 +40,14 @@ struct Token
   Token* next, prev;
 
   /// Start of whitespace characters before token. Null if no WS.
-  char* ws;
-  char* start; /// Points to the first character of the token.
-  char* end;   /// Points one character past the end of the token.
+  cchar* ws;
+  cchar* start; /// Points to the first character of the token.
+  cchar* end;   /// Points one character past the end of the token.
 
   /// Represents the string value of a string literal.
   struct StringValue
   {
-    string str; /// Zero-terminated string. The length includes '\0'.
+    cstring str; /// Zero-terminated string. The length includes '\0'.
     char pf = 0;    /// Postfix: 'c', 'w', 'd'. '\0' for none.
     version(D2)
     Token* tok_str; /// Points to the contents of a token string stored as a
@@ -80,7 +80,7 @@ struct Token
   struct HashLineInfo
   {
     uint lineNum; /// Delta line number calculated from #line Number.
-    string path;  /// File path set by #line num Filespec.
+    cstring path;  /// File path set by #line num Filespec.
     /// Calculates and returns the line number.
     uint getLineNum(uint realnum)
     {
@@ -113,14 +113,14 @@ struct Token
 //   static assert(TokenValue.sizeof == (void*).sizeof);
 
   /// Returns the text of the token.
-  string text()
+  cstring text()
   {
     assert(end && start <= end);
     return start[0 .. end - start];
   }
 
   /// Returns the preceding whitespace of the token.
-  string wsChars()
+  cstring wsChars()
   {
     assert(ws && start);
     return ws[0 .. start - ws];
@@ -139,7 +139,7 @@ struct Token
     while (token !is null && token.isWhitespace)
       token = token.next;
     if (token is null || token.kind == TOK.EOF)
-      return this;
+      return &this;
     return token;
   }
 
@@ -156,12 +156,12 @@ struct Token
     while (token !is null && token.isWhitespace)
       token = token.prev;
     if (token is null || token.kind == TOK.HEAD)
-      return this;
+      return &this;
     return token;
   }
 
   /// Returns the text of this token.
-  string toString()
+  cstring toString()
   {
     return text();
   }
@@ -259,7 +259,7 @@ version(D2)
   }
 
   /// Returns the Location of this token.
-  Location getLocation(bool realLocation)(string filePath)
+  Location getLocation(bool realLocation)(cstring filePath)
   {
     auto search_t = this.prev;
     // Find previous newline token.
@@ -278,7 +278,7 @@ version(D2)
     }
     auto lineBegin = search_t.end;
     // Determine actual line begin and line number.
-    for (; search_t != this; search_t = search_t.next)
+    for (; search_t != &this; search_t = search_t.next)
       // Multiline tokens must be rescanned for newlines.
       if (search_t.isMultiline)
         for (auto p = search_t.start, end = search_t.end; p < end;)
@@ -294,7 +294,7 @@ version(D2)
   alias getLocation!(false) getErrorLocation;
 
   /// Returns the location of the character past the end of this token.
-  Location errorLocationOfEnd(string filePath)
+  Location errorLocationOfEnd(cstring filePath)
   {
     auto loc = getErrorLocation(filePath);
     loc.to = end;
@@ -321,16 +321,16 @@ version(D2)
   }
 
   /// Return the source text enclosed by the left and right token.
-  static char[] textSpan(Token* left, Token* right)
+  static cstring textSpan(Token* left, Token* right)
   {
     assert(left.end <= right.start || left is right );
     return left.start[0 .. right.end - left.start];
   }
 
   /// ditto
-  char[] textSpan(Token* right)
+  cstring textSpan(Token* right)
   {
-    return textSpan(this, right);
+    return textSpan(&this, right);
   }
 
   /// Deletes a linked list beginning from this token.
@@ -338,7 +338,7 @@ version(D2)
   {
     version(token_malloc)
     {
-    auto token_iter = this;
+    auto token_iter = &this;
     while (token_iter !is null)
     {
       auto token = token_iter; // Remember current token to be deleted.
@@ -357,7 +357,7 @@ version(token_malloc)
   {
     void* p = malloc(size);
     if (p is null)
-      throw new OutOfMemoryException(__FILE__, __LINE__);
+      throw new Exception("Error: out of memory", __FILE__, __LINE__);
     // TODO: Token.init should be all zeros.
     // Maybe use calloc() to avoid this line?
     *cast(Token*)p = Token.init;

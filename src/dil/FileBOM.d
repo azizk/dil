@@ -17,29 +17,29 @@ enum BOM
 }
 
 /// Looks at the first bytes of data and returns the corresponding BOM.
-BOM tellBOM(ubyte[] data)
+BOM tellBOM(const(ubyte)[] data)
 {
   BOM bom = BOM.None;
-  if (data.length < 2)
-    return bom;
 
-  if (data[0..2] == cast(ubyte[2])x"FE FF")
+  if (data.length < 2)
+  { /+bom = BOM.None;+/ }
+  else if (data[0..2] == x"FE FF")
   {
     bom = BOM.UTF16BE; // FE FF
   }
-  else if (data[0..2] == cast(ubyte[2])x"FF FE")
+  else if (data[0..2] == x"FF FE")
   {
-    if (data.length >= 4 && data[2..4] == cast(ubyte[2])x"00 00")
+    if (data.length >= 4 && data[2..4] == x"00 00")
       bom = BOM.UTF32LE; // FF FE 00 00
     else
       bom = BOM.UTF16LE; // FF FE XX XX
   }
   else if (data[0..2] == cast(ubyte[2])x"00 00")
   {
-    if (data.length >= 4 && data[2..4] == cast(ubyte[2])x"FE FF")
+    if (data.length >= 4 && data[2..4] == x"FE FF")
       bom = BOM.UTF32BE; // 00 00 FE FF
   }
-  else if (data[0..2] ==  cast(ubyte[2])x"EF BB")
+  else if (data[0..2] ==  x"EF BB")
   {
     if (data.length >= 3 && data[2] == '\xBF')
       bom =  BOM.UTF8; // EF BB BF

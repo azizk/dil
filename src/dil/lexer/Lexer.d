@@ -29,8 +29,8 @@ import tango.core.Vararg;
 class Lexer
 {
   SourceText srcText; /// The source text.
-  char* p;            /// Points to the current character in the source text.
-  char* end;          /// Points one character past the end of the source text.
+  cchar* p;            /// Points to the current character in the source text.
+  cchar* end;          /// Points one character past the end of the source text.
 
   Token* head;  /// The head of the doubly linked token list.
   Token* tail;  /// The tail of the linked list. Set in scan().
@@ -41,7 +41,7 @@ class Lexer
   Diagnostics diag; /// For diagnostics.
   LexerError[] errors; /// List of errors.
   /// Always points to the first character of the current line.
-  char* lineBegin;
+  cchar* lineBegin;
   uint lineNum; /// Current, actual source text line number.
   uint inTokenString; /// > 0 if inside q{ }
   /// Holds the original file path and the modified one (by #line.)
@@ -215,13 +215,13 @@ class Lexer
   }
 
   /// Returns the source text string.
-  string text()
+  cstring text()
   {
     return srcText.data;
   }
 
   /// Returns the end pointer excluding the sentinel string.
-  char* endX()
+  cchar* endX()
   {
     return this.end - SourceText.sentinelString.length;
   }
@@ -263,11 +263,11 @@ class Lexer
   void finalizeSpecialToken(Token* t)
   {
     assert(t.text[0..2] == "__");
-    char[] str;
+    cstring str;
     switch (t.kind)
     {
     case TOK.FILE:
-      str = errorFilePath().dup;
+      str = errorFilePath();
       break;
     case TOK.LINE:
       t.uint_ = this.errorLineNumber(this.lineNum);
@@ -286,7 +286,7 @@ class Lexer
       }
       break;
     case TOK.VENDOR:
-      str = VENDOR.dup;
+      str = VENDOR;
       break;
     case TOK.VERSION:
       t.uint_ = VERSION_MAJOR*1000 + VERSION_MINOR;
@@ -298,7 +298,7 @@ class Lexer
       t.strval = lookupString(str, 0);
   }
 
-  private void setLineBegin(char* p)
+  private void setLineBegin(cchar* p)
   {
     // Check that we can look behind one character.
     assert((p-1) >= text.ptr && p < end);
@@ -339,7 +339,7 @@ class Lexer
   }
 
   /// Returns true if p points to the last character of a Newline.
-  bool isNewlineEnd(char* p)
+  bool isNewlineEnd(cchar* p)
   {
     if (*p == '\n' || *p == '\r')
       return true;
@@ -358,7 +358,7 @@ class Lexer
   /// Params:
   ///   str = The string to be looked up, which is not zero-terminated.
   ///   pf = The postfix character.
-  StringValue* lookupString(char[] str, char postfix)
+  StringValue* lookupString(cstring str, char postfix)
   {
     auto hash = hashOf(str);
     auto psv = (hash + postfix) in tables.strvals;
@@ -377,15 +377,13 @@ class Lexer
   /// Params:
   ///   hash = The hash of str.
   ///   str = The string to be looked up, which is not zero-terminated.
-  string lookupString(hash_t hash, string str)
+  cstring lookupString(hash_t hash, cstring str)
   {
+    assert(hash == hashOf(str));
     auto pstr = hash in tables.strings;
     if (!pstr)
     { // Insert a new string into the table.
-      auto new_str = str;
-      if (text.ptr <= str.ptr && str.ptr < this.endX()) // Inside the text?
-        new_str = new_str.dup; // A copy is needed.
-      new_str ~= '\0'; // Terminate with a zero.
+      auto new_str = str ~ '\0'; // Copy and terminate with a zero.
       tables.strings[hash] = new_str;
       return new_str;
     }
@@ -393,7 +391,7 @@ class Lexer
   }
 
   /// Calls lookupString(hash_t, string).
-  string lookupString(string str)
+  cstring lookupString(cstring str)
   {
     return lookupString(hashOf(str), str);
   }
@@ -417,7 +415,7 @@ class Lexer
   /// Looks up a Float in the table.
   /// Params:
   ///   str = The zero-terminated string of the float number.
-  Float lookupFloat(string str)
+  Float lookupFloat(char[] str)
   {
     assert(str.length && str[$-1] == 0);
     auto hash = hashOf(str);
@@ -487,7 +485,7 @@ class Lexer
   body
   {
     TOK kind; // The token kind that will be assigned to t.kind.
-    char* p = this.p; // Incrementing a stack variable is faster.
+    auto p = this.p; // Incrementing a stack variable is faster.
     // Scan whitespace.
     if (isspace(*p))
     {
@@ -865,7 +863,7 @@ class Lexer
   }
 
   /// CTF: Casts a string literal to an integer.
-  static uint toUint(string s)
+  static uint toUint(cstring s)
   {
     assert(s.length <= 4);
     uint x, i = s.length;
@@ -878,7 +876,7 @@ class Lexer
   static assert(toUint("\xAA\xBB\xCC\xDD") == 0xAABBCCDD);
 
   /// CTF: Like toUint(), but considers the endianness of the CPU.
-  static uint toUintE(string s)
+  static uint toUintE(cstring s)
   {
     version(BigEndian)
     return toUint(s);
@@ -906,7 +904,7 @@ class Lexer
   /// ---
   static char[] case_(string str, string kind)
   {
-    char[] label_str = "Lcommon";
+    char[] label_str = "Lcommon".dup;
     if (str.length != 1) // Append length as a suffix.
       label_str ~= '0' + str.length;
     return "case toUintE(\""~str~"\"): kind = TOK."~kind~";"
@@ -941,7 +939,7 @@ class Lexer
   body
   {
     TOK kind; // The token kind that will be assigned to t.kind.
-    char* p = this.p; // Incrementing a stack variable is faster.
+    auto p = this.p; // Incrementing a stack variable is faster.
     // Scan whitespace.
     if (isspace(*p))
     {
@@ -1277,7 +1275,7 @@ class Lexer
   /// Scans the postfix character of a string literal.
   ///
   /// $(BNF PostfixChar := "c" | "w" | "d")
-  static char scanPostfix(ref char* p)
+  static char scanPostfix(ref cchar* p)
   {
     assert(p[-1] == '"' || p[-1] == '`' ||
       { version(D2) return p[-1] == '}';
@@ -1305,7 +1303,7 @@ class Lexer
     auto tokenLineBegin = lineBegin;
     t.kind = TOK.String;
     char[] value;
-    char* prev = ++p; // Skip '"'. prev is used to copy chunks to value.
+    auto prev = ++p; // Skip '"'. prev is used to copy chunks to value.
     uint c;
   Loop:
     while (1)
@@ -1350,13 +1348,11 @@ class Lexer
         ++p;
       }
     assert(*p == '"');
-    auto str = String(prev, p);
+    auto finalString = String(prev, p);
     if (value.length)
-      value ~= str; // Append previous string.
-    else
-      value = str; // A slice from the text.
+      finalString = (value ~= finalString); // Append previous string.
     ++p; // Skip '"'.
-    t.strval = lookupString(value, scanPostfix(p));
+    t.strval = lookupString(finalString, scanPostfix(p));
   Lerr:
     t.end = this.p = p;
     return;
@@ -1550,7 +1546,7 @@ class Lexer
       error(tokenLineNum, tokenLineBegin, t.start,
         MID.OddNumberOfDigitsInHexString);
     ++p;
-    t.strval = lookupString(cast(string)value, scanPostfix(p));
+    t.strval = lookupString(cast(char[])value, scanPostfix(p));
   Lerr:
     t.end = this.p = p;
     return;
@@ -1579,7 +1575,7 @@ class Lexer
           closing_delim; // Will be ']', ')', '>', '},
                          // the first character of an identifier or
                          // any other Unicode/ASCII character.
-    char[] str_delim; // Identifier delimiter.
+    cstring str_delim; // Identifier delimiter.
     uint level = 1; // Counter for nestable delimiters.
 
     ++p; ++p; // Skip q"
@@ -1596,7 +1592,7 @@ class Lexer
       closing_delim = c + 2; // ']', '>' or '}'
       break;
     default:
-      char* idbegin = p;
+      auto idbegin = p;
       if (scanNewline(p))
       {
         error(idbegin, MID.DelimiterIsMissing);
@@ -1634,7 +1630,7 @@ class Lexer
     if (isspace(closing_delim))
       error(p, MID.DelimiterIsWhitespace);
 
-    bool checkStringDelim(char* p)
+    bool checkStringDelim(cchar* p)
     { // Returns true if p points to the closing string delimiter.
       assert(str_delim.length != 0, ""~*p);
       return lineBegin is p && // Must be at the beginning of a new line.
@@ -1712,10 +1708,15 @@ class Lexer
     if (*p == '"')
       postfix = scanPostfix((++p, p));
     else
-      error(p, MID.ExpectedDblQuoteAfterDelim,
-        // Pass str_delim or encode and pass closing_delim as a string.
-        (str_delim.length || encode(str_delim, closing_delim), str_delim));
-
+    { // Pass str_delim or encode and pass closing_delim as a string.
+      if (!str_delim.length)
+      {
+        char[] tmp;
+        encode(tmp, closing_delim);
+        str_delim = tmp;
+      }
+      error(p, MID.ExpectedDblQuoteAfterDelim, str_delim);
+    }
     t.strval = lookupString(value, postfix);
   Lerr:
     t.end = this.p = p;
@@ -1742,7 +1743,7 @@ class Lexer
     uint level = 1;
 
     ++p; ++p; // Skip q{
-    char* str_begin = p, str_end = void;
+    cchar* str_begin = p, str_end = void;
     Token* inner_tokens; // The tokens inside this string.
     // Set to true, if '\r', LS, PS, or multiline tokens are encountered.
     bool convertNewlines;
@@ -1808,8 +1809,9 @@ class Lexer
     // Convert newlines to '\n'.
     if (convertNewlines)
     { // Copy the value and convert the newlines.
-      value = new char[value.length];
-      auto q = str_begin, s = value.ptr;
+      auto tmp = new char[value.length];
+      auto q = str_begin; // Reader.
+      auto s = tmp.ptr; // Writer.
       for (; q < str_end; ++q)
         switch (*q)
         {
@@ -1828,7 +1830,8 @@ class Lexer
           }
           *s++ = *q; // Copy current character.
         }
-      value.length = s - value.ptr;
+      tmp.length = s - tmp.ptr;
+      value = tmp;
     }
 
     auto strval = new StringValue;
@@ -1855,7 +1858,7 @@ class Lexer
   ///   ref_p = Used to scan the sequence.
   ///   isBinary = Set to true for octal and hexadecimal escapes.
   /// Returns: The escape value.
-  dchar scanEscapeSequence(ref char* ref_p, ref bool isBinary)
+  dchar scanEscapeSequence(ref cchar* ref_p, ref bool isBinary)
   out(result)
   { assert(isValidChar(result)); }
   body
@@ -1864,7 +1867,7 @@ class Lexer
     assert(*p == '\\');
     // Used for error reporting.
     MID mid;
-    char[] err_arg;
+    cstring err_arg;
 
     ++p; // Skip '\\'.
     uint c = char2ev(*p); // Table lookup.
@@ -1963,12 +1966,13 @@ class Lexer
         (err_arg = isEOF(*p) ? `\EOF` : `\NewLine`);
       else
       {
-        err_arg = `\`;
+        auto tmp = `\`.dup;
         // TODO: check for non-printable character?
         if (isascii(*p))
-          err_arg ~= *p;
+          tmp ~= *p;
         else
-          encodeUTF8(err_arg, decodeUTF8(p));
+          encodeUTF8(tmp, decodeUTF8(p));
+        err_arg = tmp;
         ++p;
         mid = MID.UndefinedEscapeSequence;
       }
@@ -2310,11 +2314,12 @@ class Lexer
 
   /// Returns a zero-terminated copy of the string where all
   /// underscores are removed.
-  static char[] copySansUnderscores(char* begin, char* end)
+  static char[] copySansUnderscores(cchar* begin, cchar* end)
   {
     assert(begin && begin < end);
     auto str = new char[end-begin+1]; // +1 for '\0'.
-    auto p = begin, s = str.ptr;
+    auto p = begin;
+    auto s = str.ptr;
     for (; p < end; ++p)
       if (*p != '_')
         *s++ = *p;
@@ -2419,7 +2424,7 @@ class Lexer
   /// Params:
   ///   t = Receives the value.
   ///   float_string = The well-formed float number string.
-  void finalizeFloat(Token* t, string float_string)
+  void finalizeFloat(Token* t, char[] float_string)
   {
     auto p = this.p;
     assert(float_string.length && float_string[$-1] == 0);
@@ -2465,8 +2470,8 @@ class Lexer
     auto hlval = new Token.HashLineValue;
 
     MID mid;
-    char* errorAtColumn = p;
-    char* tokenEnd = ++p;
+    cchar* errorAtColumn = p;
+    cchar* tokenEnd = ++p;
 
     if (*cast(uint*)p != chars_line)
     {
@@ -2607,20 +2612,20 @@ class Lexer
   }
 
   /// Returns the file path for error messages.
-  string errorFilePath()
+  cstring errorFilePath()
   {
     return hlinfo ? hlinfo.path : srcText.filePath;
   }
 
   /// Forwards error parameters.
-  void error(char* columnPos, MID mid, ...)
+  void error(cchar* columnPos, MID mid, ...)
   {
     error(_arguments, _argptr, this.lineNum, this.lineBegin, columnPos,
       diag.bundle.msg(mid));
   }
 
   /// ditto
-  void error(uint lineNum, char* lineBegin, char* columnPos, MID mid, ...)
+  void error(uint lineNum, cchar* lineBegin, cchar* columnPos, MID mid, ...)
   {
     error(_arguments, _argptr, lineNum, lineBegin, columnPos,
       diag.bundle.msg(mid));
@@ -2633,7 +2638,7 @@ class Lexer
   ///   columnPos = Points to the character where the error is located.
   ///   msg = The error message.
   void error(TypeInfo[] _arguments, va_list _argptr,
-    uint lineNum, char* lineBegin, char* columnPos, string msg)
+    uint lineNum, cchar* lineBegin, cchar* columnPos, cstring msg)
   {
     lineNum = this.errorLineNumber(lineNum);
     auto errorPath = errorFilePath();
@@ -2648,9 +2653,9 @@ class Lexer
   /// a Unicode alpha character.
   /// Params:
   ///   ref_p = Is set to the last trail byte if true is returned.
-  static bool scanUnicodeAlpha(ref char* ref_p)
+  static bool scanUnicodeAlpha(ref cchar* ref_p)
   {
-    char* p = ref_p;
+    auto p = ref_p;
     assert(!isascii(*p),
       "check for ASCII char before calling scanUnicodeAlpha().");
     dchar d = *p;
@@ -2705,9 +2710,9 @@ class Lexer
   ///
   /// Params:
   ///   ref_p = Set to the last trail byte.
-  dchar decodeUTF8(ref char* ref_p)
+  dchar decodeUTF8(ref cchar* ref_p)
   {
-    char* p = ref_p;
+    auto p = ref_p;
     assert(!isascii(*p), "check for ASCII char before calling decodeUTF8().");
     dchar d = *p;
 
@@ -2851,7 +2856,7 @@ class Lexer
 
   /// Formats the bytes between start and end (excluding end.)
   /// Returns: e.g.: "abc" -> "\x61\x62\x63"
-  static char[] formatBytes(char* start, char* end)
+  static cstring formatBytes(cchar* start, cchar* end)
   {
     const formatLen = 4; // `\xXX`.length
     const H = "0123456789ABCDEF"; // Hex numerals.
@@ -2866,9 +2871,9 @@ class Lexer
 
   /// Searches for an invalid UTF-8 sequence in str.
   /// Returns: a formatted string of the invalid sequence (e.g. "\xC0\x80").
-  static string findInvalidUTF8Sequence(string str)
+  static cstring findInvalidUTF8Sequence(cstring str)
   {
-    char* p = str.ptr, end = p + str.length;
+    auto p = str.ptr, end = p + str.length;
     while (p < end)
       if (decode(p, end) == ERROR_CHAR)
       {

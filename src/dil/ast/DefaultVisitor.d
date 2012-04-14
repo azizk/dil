@@ -14,18 +14,16 @@ import dil.ast.Visitor,
 import common;
 
 /// Generates the actual code for visiting a node's members.
-private string createCode(NodeKind nodeKind)
+private char[] createCode(NodeKind nodeKind)
 {
-  string[] members; // Array of member names to be visited.
-
   // Look up members for this kind of node in the table.
-  members = NodeMembersTable[nodeKind];
-
-  if (!members.length)
-    return "";
+  auto members = NodeMembersTable[nodeKind];
+  // members = e.g.: ["condition", "ifDecls", "elseDecls?"]
+  if (members.length == 0)
+    return null;
 
   string[2][] list = parseMembers(members);
-  string code;
+  char[] code;
   foreach (m; list)
   {
     auto name = m[0], type = m[1];
@@ -63,9 +61,9 @@ private string createCode(NodeKind nodeKind)
 /// override returnType!(ClassDecl) visit(ClassDecl n)
 /// { /* Code that visits the subnodes... */ return n; }
 /// ---
-string generateDefaultVisitMethods()
+char[] generateDefaultVisitMethods()
 {
-  string code;
+  char[] code;
   foreach (i, className; NodeClassNames)
     code ~= "override returnType!("~className~") visit("~className~" n)"
             "{"
@@ -77,9 +75,9 @@ string generateDefaultVisitMethods()
 // pragma(msg, generateDefaultVisitMethods());
 
 /// Same as above but returns void.
-string generateDefaultVisitMethods2()
+char[] generateDefaultVisitMethods2()
 {
-  string code;
+  char[] code;
   foreach (i, className; NodeClassNames)
     code ~= "override void visit("~className~" n)"
             "{"

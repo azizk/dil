@@ -102,7 +102,7 @@ abstract class DDocEmitter : DefaultVisitor2
   }
 
   /// Returns the location of t.
-  Location locationOf(Token* t, string filePath = null)
+  Location locationOf(Token* t, cstring filePath = null)
   {
     return t.getRealLocation(filePath ? filePath : modul.filePath);
   }
@@ -192,26 +192,25 @@ abstract class DDocEmitter : DefaultVisitor2
   /// Returns true if the source text starts with "Ddoc\n" (ignores letter case.)
   static bool isDDocFile(Module mod)
   {
-    auto data = mod.sourceText.data;
-    // 5 = "ddoc\n".length; +1 = trailing '\0' in data.
-    if (data.length >= 5 + 1 && // Check for minimum length.
-        icompare(data[0..4], "ddoc") == 0 && // Check first four characters.
-        isNewline(data.ptr + 4)) // Check for a newline.
+    auto text = mod.sourceText.text();
+    if (text.length >= "ddoc\n".length && // Check for minimum length.
+        icompare(text[0..4], "ddoc") == 0 && // Check first four characters.
+        isNewline(text.ptr + 4)) // Check for a newline.
       return true;
     return false;
   }
 
   /// Returns the DDoc text of this module.
-  static char[] getDDocText(Module mod)
+  static cstring getDDocText(Module mod)
   {
-    auto data = mod.sourceText.data;
-    char* p = data.ptr + "ddoc".length;
+    auto text = mod.sourceText.text();
+    auto p = text.ptr + "ddoc".length;
     if (scanNewline(p)) // Skip the newline.
-      // Exclude preceding "Ddoc\n" and trailing '\0'.
-      return data[p-data.ptr .. $-1];
+      // Exclude preceding "Ddoc\n".
+      return text[p-text.ptr .. $];
     return null;
   }
-
+/+
   char[] textSpan(Token* left, Token* right)
   {
     //assert(left && right && (left.end <= right.start || left is right));
@@ -219,7 +218,7 @@ abstract class DDocEmitter : DefaultVisitor2
     //TODO: filter out whitespace tokens.
     return Token.textSpan(left, right);
   }
-
++/
   /// The current declaration.
   Node currentDecl;
 
@@ -227,13 +226,13 @@ abstract class DDocEmitter : DefaultVisitor2
   TemplateParameters currentTParams;
 
   /// Reflects the fully qualified name of the current symbol's parent.
-  string parentFQN;
+  cstring parentFQN;
   /// Counts symbols with the same FQN.
   /// This is useful for anchor names that require unique strings.
   uint[hash_t] fqnCount;
 
   /// Appends to parentFQN.
-  void pushFQN(string name)
+  void pushFQN(cstring name)
   {
     if (parentFQN.length)
       parentFQN ~= ".";
@@ -246,9 +245,9 @@ abstract class DDocEmitter : DefaultVisitor2
   }
 
   /// Returns a unique, identifying string for the current symbol.
-  string getSymbolFQN(string name)
+  cstring getSymbolFQN(cstring name)
   {
-    char[] fqn = parentFQN;
+    char[] fqn = parentFQN.dup;
     if (fqn.length)
       fqn ~= ".";
     fqn ~= name;
@@ -269,7 +268,7 @@ abstract class DDocEmitter : DefaultVisitor2
   DDocComment cmnt; /// Current comment.
   DDocComment prevCmnt; /// Previous comment in scope.
   /// An empty comment. Used for undocumented symbols.
-  static const DDocComment emptyCmnt;
+  static DDocComment emptyCmnt;
 
   /// Initializes the empty comment.
   static this()
@@ -283,11 +282,11 @@ abstract class DDocEmitter : DefaultVisitor2
     DDocComment saved_prevCmnt;
     bool saved_cmntIsDitto;
     uint saved_prevDeclOffset;
-    char[] saved_parentFQN;
+    cstring saved_parentFQN;
     /// When constructed, variables are saved.
     /// Params:
     ///   name = The name of the current symbol.
-    this(string name)
+    this(cstring name)
     { // Save the previous comment of the parent scope.
       saved_prevCmnt = this.outer.prevCmnt;
       saved_cmntIsDitto = this.outer.cmntIsDitto;
@@ -383,19 +382,11 @@ abstract class DDocEmitter : DefaultVisitor2
           continue;
         }
         else
-          write("\n\1DDOC_SECTION \1DDOC_SECTION_H ", replace_(s.name), ":\2");
+          write("\n\1DDOC_SECTION "
+            "\1DDOC_SECTION_H ", s.name.replace('_', ' '), ":\2");
         write("\1DIL_CMT ", scanCommentText(s.text), "\2\2");
       }
     write("\2");
-  }
-
-  /// Replaces occurrences of '_' with ' ' in a copy of str.
-  char[] replace_(char[] str)
-  {
-    str = str.dup;
-    foreach (ref c; str)
-      if (c == '_') c = ' ';
-    return str;
   }
 
   /// Scans the comment text and:
@@ -405,11 +396,11 @@ abstract class DDocEmitter : DefaultVisitor2
   /// $(LI inserts $&#40;DDOC_BLANKLINE&#41; in place of '\n\n')
   /// $(LI highlights the tokens in code sections)
   /// )
-  char[] scanCommentText(char[] text)
+  cstring scanCommentText(cstring text)
   {
-    char* p = text.ptr;
-    char* lastLineEnd = p; // The position of the last \n seen.
-    char* end = p + text.length;
+    auto p = text.ptr;
+    auto lastLineEnd = p; // The position of the last \n seen.
+    auto end = p + text.length;
     char[] result = new char[text.length]; // Reserve space.
     result.length = 0;
     uint level = 0; // Nesting level of macro invocations and
@@ -526,14 +517,13 @@ abstract class DDocEmitter : DefaultVisitor2
             codeEnd++; // Include the non-newline character.
           if (codeBegin < codeEnd)
           { // Highlight the extracted source code.
-            auto codeText = String(codeBegin, codeEnd).dup;
+            auto codeText = String(codeBegin, codeEnd);
             uint lines; // Number of lines in the code text.
 
             codeExamplesCounter++; // Found a code section. Increment counter.
 
             codeText = DDocUtils.unindentText(codeText);
-            codeText = tokenHL.highlightTokens(
-              codeText, modul.getFQN(), lines);
+            codeText = tokenHL.highlightTokens(codeText, modul.getFQN(), lines);
             result ~= "\1D_CODE\n"
               "\1DIL_CODELINES ";
               for (uint num = 1; num <= lines; num++)
@@ -565,7 +555,7 @@ abstract class DDocEmitter : DefaultVisitor2
   }
 
   /// Writes an array of strings to the text buffer.
-  void write(char[][] strings...)
+  void write(cstring[] strings...)
   {
     foreach (s; strings)
       text ~= s;
@@ -697,7 +687,7 @@ abstract class DDocEmitter : DefaultVisitor2
       alias prevDeclOffset offs;
       assert(offs != 0);
       auto savedText = text;
-      text = "";
+      text = null;
       writeDECL();
       // Insert text at offset.
       auto len = text.length;
@@ -730,18 +720,18 @@ abstract class DDocEmitter : DefaultVisitor2
   }
 
   /// Saves the attributes of the current symbol.
-  string currentSymbolParams;
+  cstring currentSymbolParams;
 
   /// Writes a symbol to the text buffer.
   /// E.g: &#36;(DIL_SYMBOL scan, Lexer.scan, func, 229, 646);
-  void SYMBOL(string name, K kind, Declaration d)
+  void SYMBOL(cstring name, K kind, Declaration d)
   {
     auto kindStr = DocSymbol.kindIDToStr[kind];
     auto fqn = getSymbolFQN(name);
     auto loc = locationOf(d.begin);
     auto loc_end = locationOf(d.end);
     storeAttributes(d);
-    addSymbol(name, fqn.dup, kind, loc, loc_end);
+    addSymbol(name, fqn, kind, loc, loc_end);
     currentSymbolParams = Format("{}, {}, {}, {}, {}",
       name, fqn, kindStr, loc.lineNum, loc_end.lineNum);
     write("\1DIL_SYMBOL ", currentSymbolParams, "\2");
@@ -752,7 +742,7 @@ abstract class DDocEmitter : DefaultVisitor2
   DocSymbol[hash_t] symbolTree;
 
   /// Adds a symbol to the symbol tree.
-  void addSymbol(string name, string fqn, K kind,
+  void addSymbol(cstring name, cstring fqn, K kind,
     Location begin, Location end)
   {
     auto attrs = currentAttributes.asArray();
@@ -763,7 +753,7 @@ abstract class DDocEmitter : DefaultVisitor2
 
   /// Wraps the DDOC_kind_MEMBERS macro around the text
   /// written by visit(members).
-  void MEMBERS(D)(string kind, string name, D members)
+  void MEMBERS(D)(cstring kind, cstring name, D members)
   {
     scope s = new DDocScope(name);
     write("\n\1DDOC_"~kind~"_MEMBERS ");
@@ -797,7 +787,7 @@ abstract class DDocEmitter : DefaultVisitor2
     const kind = is(T == StructDecl) ? "struct" : "union";
     const kindID = is(T == StructDecl) ? K.Struct : K.Union;
     const KIND = is(T == StructDecl) ? "STRUCT" : "UNION";
-    string name = d.name ? d.name.text : kind;
+    cstring name = d.name ? d.name.text : kind;
     DECL({
       d.name && write("\1DIL_KW ", kind, "\2 ");
       SYMBOL(name, kindID, d);
@@ -912,7 +902,7 @@ override:
   {
     if (!ddoc(d))
       return;
-    string name = d.name ? d.name.text : "enum";
+    cstring name = d.name ? d.name.text : "enum";
     DECL({
       d.name && write("\1DIL_KW enum\2 ");
       SYMBOL(name, K.Enum, d);
@@ -1097,14 +1087,14 @@ class DocSymbol
     Invariant, New, Delete, Unittest, Ctor, Dtor, Sctor, Sdtor
   }
 
-  string name, fqn; /// Name and fully qualified name.
+  cstring name, fqn; /// Name and fully qualified name.
   Kind kind; /// The kind of this symbol.
   Location begin, end; /// Beginning and end locations.
   DocSymbol[] members; /// All symbol members.
   string[] attrs; /// All attributes of this symbol.
 
   /// Constructs a DocSymbol object.
-  this(string name, string fqn, Kind kind, string[] attrs,
+  this(cstring name, cstring fqn, Kind kind, string[] attrs,
     Location begin, Location end)
   {
     this.name = name;
@@ -1141,11 +1131,11 @@ class DocSymbol
   }
 
   /// Return the attributes as IDs. E.g.: "[1,9,22]"
-  string formatAttrsAsIDs()
+  cstring formatAttrsAsIDs()
   {
     if (!attrs.length)
       return "[]";
-    char[] result = "[";
+    char[] result = "[".dup;
     foreach (attr; attrs)
       result ~= String(attrToID[hashOf(attr)]) ~ ",";
     result[$-1] = ']';

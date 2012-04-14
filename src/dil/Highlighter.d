@@ -38,7 +38,7 @@ class Highlighter
 
   /// Highlights tokens in a string.
   /// Returns: A string with the highlighted tokens.
-  string highlightTokens(string text, string filePath, ref uint lines)
+  cstring highlightTokens(cstring text, cstring filePath, ref uint lines)
   {
     auto src = new SourceText(filePath, text);
     auto lx = new Lexer(src, cc.tables.lxtables, cc.diag);
@@ -51,7 +51,7 @@ class Highlighter
   /// Returns: A string with the highlighted tokens.
   /// Params:
   ///   skipWS = Skips whitespace tokens (e.g. comments) if true.
-  string highlightTokens(Token* begin, Token* end, bool skipWS = false)
+  char[] highlightTokens(Token* begin, Token* end, bool skipWS = false)
   {
     scope buffer = new Array(512, 512); // Allocate 512B, grow by 512B.
     auto print_saved = this.print; // Save;
@@ -73,7 +73,7 @@ class Highlighter
   }
 
   /// Highlights all tokens of a source file.
-  void highlightTokens(string filePath, bool opt_printLines)
+  void highlightTokens(cstring filePath, bool opt_printLines)
   {
     auto src = new SourceText(filePath, true);
     auto lx = new Lexer(src, cc.tables.lxtables, cc.diag);
@@ -105,7 +105,7 @@ class Highlighter
   }
 
   /// Highlights the syntax in a source file.
-  void highlightSyntax(string filePath, bool printHTML, bool opt_printLines)
+  void highlightSyntax(cstring filePath, bool printHTML, bool opt_printLines)
   {
     auto modul = new Module(filePath, cc);
     modul.parse();
@@ -198,7 +198,7 @@ class Highlighter
       print.format(tags.Identifier, token.text);
       break;
     case TOK.Comment:
-      string formatStr;
+      cstring formatStr;
       switch (token.start[1])
       {
       case '/': formatStr = tags.LineC; break;
@@ -209,7 +209,7 @@ class Highlighter
       print.format(formatStr, xml_escape(token.text));
       break;
     case TOK.String:
-      auto text = token.text;
+      cstring text = token.text;
       assert(text.length);
       if (text.length > 1 && text[0] == 'q' && text[1] == '{')
       {
@@ -239,7 +239,7 @@ class Highlighter
       print.format(tags.String, text);
       break;
     case TOK.Character:
-      auto text = token.text;
+      cstring text = token.text;
       text = (text.length > 1 && text[1] == '\\') ?
         scanEscapeSequences(text, tags.Escape) :
         xml_escape(text);
@@ -257,14 +257,14 @@ class Highlighter
       // The text to be inserted into formatStr.
       char[] lineText;
 
-      void printWS(char* start, char* end)
+      void printWS(cchar* start, cchar* end)
       {
         if (start != end) lineText ~= start[0 .. end - start];
       }
 
       auto num = token.hlval.lineNum;
       if (num is null) // Malformed #line
-        lineText = token.text;
+        lineText = token.text.dup;
       else
       {
         // Print whitespace between #line and number.
@@ -303,15 +303,16 @@ class Highlighter
   /// Params:
   ///   text = The text to search in.
   ///   fmt  = The format string passed to the function Format().
-  static char[] scanEscapeSequences(char[] text, char[] fmt)
+  static cstring scanEscapeSequences(cstring text, cstring fmt)
   {
-    char* p = text.ptr, end = p + text.length;
-    char* prev = p;
-    char[] result, escape_str;
+    auto p = text.ptr, end = p + text.length;
+    auto prev = p;
+    char[] result;
+    cstring escape_str;
 
     while (p < end)
     {
-      char[] xml_entity = void;
+      string xml_entity = void;
       switch (*p)
       {
       case '\\': break; // Found beginning of an escape sequence.
@@ -391,11 +392,11 @@ class Highlighter
 
 /// Escapes '<', '>' and '&' with named HTML entities.
 /// Returns: The escaped text, or the original if no entities were found.
-char[] xml_escape(char[] text)
+cstring xml_escape(cstring text)
 {
-  char* p = text.ptr, end = p + text.length;
-  char* prev = p; // Points to the end of the previous escape char.
-  char[] entity; // Current entity to be appended.
+  auto p = text.ptr, end = p + text.length;
+  auto prev = p; // Points to the end of the previous escape char.
+  string entity; // Current entity to be appended.
   char[] result;
   while (p < end)
     switch (*p)
@@ -422,10 +423,10 @@ char[] xml_escape(char[] text)
 /// Maps tokens to (format) strings.
 class TagMap
 {
-  string[hash_t] table;
-  string[TOK.MAX] tokenTable;
+  cstring[hash_t] table;
+  cstring[TOK.MAX] tokenTable;
 
-  this(string[hash_t] table)
+  this(cstring[hash_t] table)
   {
     this.table = table;
     Identifier   = this["Identifier", "{0}"];
@@ -456,7 +457,7 @@ class TagMap
   }
 
   /// Returns the value for str, or 'fallback' if str is not in the table.
-  string opIndex(string str, string fallback = "")
+  cstring opIndex(cstring str, cstring fallback = "")
   {
     if (auto p = hashOf(str) in table)
       return *p;
@@ -464,26 +465,26 @@ class TagMap
   }
 
   /// Returns the value for tok in O(1) time.
-  string opIndex(TOK tok)
+  cstring opIndex(TOK tok)
   {
     return tokenTable[tok];
   }
 
   /// Assigns str to tokenTable[tok].
-  void opIndexAssign(string str, TOK tok)
+  void opIndexAssign(cstring str, TOK tok)
   {
     tokenTable[tok] = str;
   }
 
   /// Shortcuts for quick access.
-  string Identifier, String, Char, Number, Keyword, LineC, BlockC, Escape,
+  cstring Identifier, String, Char, Number, Keyword, LineC, BlockC, Escape,
          NestedC, Shebang, HLine, Filespec, Illegal, Newline, SpecialToken,
          Declaration, Statement, Expression, Type, Other, EOF;
 
   /// Returns the tag for the category 'nc'.
-  string getTag(NodeCategory nc)
+  cstring getTag(NodeCategory nc)
   {
-    string tag;
+    cstring tag;
     switch (nc)
     { alias NodeCategory NC;
     case NC.Declaration: tag = Declaration; break;
@@ -499,7 +500,7 @@ class TagMap
 
 /// Find the last occurrence of object in subject.
 /// Returns: the index if found, or -1 if not.
-int rfind(char[] subject, char object)
+int rfind(cstring subject, char object)
 {
   foreach_reverse (i, c; subject)
     if (c == object)
@@ -509,13 +510,13 @@ int rfind(char[] subject, char object)
 
 /// Returns the short class name of a class descending from Node.$(BR)
 /// E.g.: dil.ast.Declarations.ClassDecl -> Class
-char[] getShortClassName(Node node)
+cstring getShortClassName(Node node)
 {
-  static char[][] name_table;
+  static cstring[] name_table;
   if (name_table is null)
-    name_table = new char[][NodeKind.max+1]; // Create a new table.
+    name_table = new cstring[NodeKind.max+1]; // Create a new table.
   // Look up in table.
-  char[] name = name_table[node.kind];
+  cstring name = name_table[node.kind];
   if (name !is null)
     return name; // Return cached name.
 

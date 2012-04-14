@@ -20,7 +20,7 @@ import common;
 /// ---
 char[] generateVisitMethods()
 {
-  char[] text = "void _beforeFirstVisitMethod(){}";
+  char[] text = "void _beforeFirstVisitMethod(){}".dup;
   foreach (className; NodeClassNames)
     text ~= "returnType!("~className~") visit("~
       className~" node){return unhandled(node).to!("~className~");}\n";
@@ -30,7 +30,7 @@ char[] generateVisitMethods()
 /// Same as generateVisitMethods, but return void instead.
 char[] generateVisitMethods2()
 {
-  char[] text = "void _beforeFirstVisitMethod(){}";
+  char[] text = "void _beforeFirstVisitMethod(){}".dup;
   foreach (className; NodeClassNames)
     text ~= "void visit("~className~" node){unhandled(node);}\n";
   return text;
@@ -153,3 +153,7 @@ static this()
   assert(i, "couldn't find first visit method in the vtable");
   indexOfFirstVisitMethod = i;
 }
+
+/// TODO: implement.
+unittest
+{}

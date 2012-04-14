@@ -14,7 +14,7 @@ module dil.lexer.IdentsGenerator;
 ////Identifier := see module $(MODLINK dil.lexer.Identifier).
 ////)
 /// If IdText is not defined it defaults to SourceCodeName.
-private static const char[][] predefIdents = [
+enum string[] predefIdents = [
   // Special empty identifier:
   "Empty:",
   // Predefined version identifiers:
@@ -121,7 +121,7 @@ private static const char[][] predefIdents = [
 ];
 
 /// Splits idText at ':' and returns a tuple.
-char[][] getPair(char[] idText)
+string[] getPair(string idText)
 {
   foreach (i, c; idText)
     if (c == ':')
@@ -143,41 +143,53 @@ unittest
 
   The resulting string looks similar to this:
   ---
+  // etc.
   private struct Ids {static const:
     Identifier _Empty = {"", TOK.Identifier, IDK.Empty};
     Identifier _main = {"main", TOK.Identifier, IDK.main};
-    // etc.
+    // ...
   }
-  Identifier* Empty = &Ids._Empty;
-  Identifier* main = &Ids._main;
-  // etc.
-  private Identifier*[] __allIds = [
-    Empty,
-    main,
-    // etc.
-  ];
+  static union {static:
+      struct {static const:
+        Identifier* c_Empty = &Ids._Empty;
+        Identifier* c_main = &Ids._main;
+        // ...
+      }
+      struct {static:
+        Identifier* Empty;
+        Identifier* main;
+        // ...
+      }
+  }
   ---
 +/
-char[] generateIdentMembers()
+char[] generateIdentMembers(string[] identList, bool isKeywordList)
 {
-  char[] private_members = "private struct Ids {static const:";
-  char[] public_members = "";
-  char[] array = "private Identifier*[] __allIds = [";
+  char[] private_members;
+  char[] const_members;
+  char[] nonconst_members;
 
-  foreach (ident; predefIdents)
+  foreach (ident; identList)
   {
-    char[][] pair = getPair(ident);
-    // Identifier _name = {"name", TOK.Identifier, ID.name};
-    private_members ~= "Identifier _"~pair[0]~` = {"`~pair[1]~`", TOK.Identifier, IDK.`~pair[0]~"};\n";
-    // Identifier* name = &_name;
-    public_members ~= "Identifier* "~pair[0]~" = &Ids._"~pair[0]~";\n";
-    array ~= pair[0]~",";
+    auto pair = getPair(ident);
+    auto name = pair[0], id = pair[1];
+    // Identifier _name = {"id", TOK.name};
+    // or:
+    // Identifier _name = {"id", TOK.Identifier, IDK.name};
+    private_members ~=  isKeywordList ?
+      "Identifier _"~name~` = {"`~id~`", TOK.`~name~"};\n" :
+      "Identifier _"~name~` = {"`~id~`", TOK.Identifier, IDK.`~name~"};\n";
+    // Identifier* c_name = &_name;
+    const_members ~= "Identifier* c_"~name~" = &Ids._"~name~";\n";
+    // Identifier* name;
+    nonconst_members ~= "Identifier* "~name~";\n";
   }
 
-  private_members ~= "}"; // Close private {
-  array ~= "];";
-
-  return private_members ~ public_members ~ array;
+  return "private struct Ids {static const:\n" ~ private_members ~ "}\n" ~
+    "static union {static:\n" ~
+      "struct {static const:\n" ~ const_members ~ "}\n" ~
+      "struct {static:\n" ~ nonconst_members ~ "}\n" ~
+    "}\n";
 }
 
 /// CTF for generating the members of the enum IDK.
@@ -189,5 +201,5 @@ char[] generateIDMembers()
   return members;
 }
 
-// pragma(msg, generateIdentMembers());
+// pragma(msg, generateIdentMembers(predefIdents, false));
 // pragma(msg, generateIDMembers());

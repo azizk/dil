@@ -14,12 +14,12 @@ class CompilationContext
 {
   alias typeof(this) CC;
   CC parent;
-  string[] importPaths; /// Import paths.
-  string[] includePaths; /// String include paths.
+  cstring[] importPaths; /// Import paths.
+  cstring[] includePaths; /// String include paths.
   uint debugLevel; /// The debug level.
   uint versionLevel; /// The version level.
-  string[hash_t] debugIds; /// Set of debug identifiers.
-  string[hash_t] versionIds; /// Set of version identifiers.
+  cstring[hash_t] debugIds; /// Set of debug identifiers.
+  cstring[hash_t] versionIds; /// Set of version identifiers.
   bool releaseBuild; /// Build release version?
   bool unittestBuild; /// Include unittests?
   bool acceptDeprecated; /// Allow deprecated symbols/features?
@@ -57,17 +57,17 @@ class CompilationContext
     tables.idents.setThreadsafe(safe);
   }
 
-  void addDebugId(string id)
+  void addDebugId(cstring id)
   {
     debugIds[hashOf(id)] = id;
   }
 
-  void addVersionId(string id)
+  void addVersionId(cstring id)
   {
     versionIds[hashOf(id)] = id;
   }
 
-  bool findDebugId(string id)
+  bool findDebugId(cstring id)
   {
     if (auto pId = hashOf(id) in debugIds)
       return true;
@@ -76,7 +76,7 @@ class CompilationContext
     return false;
   }
 
-  bool findVersionId(string id)
+  bool findVersionId(cstring id)
   {
     if (auto pId = hashOf(id) in versionIds)
       return true;

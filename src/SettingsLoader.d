@@ -43,14 +43,14 @@ abstract class SettingsLoader
   /// Params:
   ///   token = Where the error occurred.
   ///   formatMsg = Error message.
-  void error(Token* token, string formatMsg, ...)
+  void error(Token* token, cstring formatMsg, ...)
   {
     auto location = token.getErrorLocation(mod.filePath);
     auto msg = Format(_arguments, _argptr, formatMsg);
     diag ~= new SemanticError(location, msg);
   }
 
-  T getValue(T)(string name, bool isOptional = false)
+  T getValue(T)(cstring name, bool isOptional = false)
   {
     auto var = mod.lookup(hashOf(name));
     if (!var && isOptional)
@@ -78,7 +78,7 @@ abstract class SettingsLoader
   {
     if (auto result = n.Is!(T))
       return result;
-    string type = T.stringof;
+    auto type = T.stringof;
     if (is(T == StringExpr))
       type = "char[]";
     else if (is(T == ArrayInitExpr))
@@ -97,16 +97,16 @@ abstract class SettingsLoader
 class ConfigLoader : SettingsLoader
 {
   /// Name of the configuration file.
-  static string configFileName = "dilconf.d";
-  string executablePath; /// Absolute path to dil's executable.
-  string executableDir; /// Absolute path to the directory of dil's executable.
-  string dataDir; /// Absolute path to dil's data directory.
-  string homePath; /// Path to the home directory.
+  static cstring configFileName = "dilconf.d";
+  cstring executablePath; /// Absolute path to dil's executable.
+  cstring executableDir; /// Absolute path to the directory of dil's executable.
+  cstring dataDir; /// Absolute path to dil's data directory.
+  cstring homePath; /// Path to the home directory.
 
   ResourceBundle resourceBundle; /// A bundle for compiler messages.
 
   /// Constructs a ConfigLoader object.
-  this(CompilationContext cc, Diagnostics diag, string arg0)
+  this(CompilationContext cc, Diagnostics diag, cstring arg0)
   {
     super(cc, diag);
     this.homePath = Environment.get("HOME");
@@ -116,17 +116,17 @@ class ConfigLoader : SettingsLoader
   }
 
   static ConfigLoader opCall(CompilationContext cc, Diagnostics diag,
-    string arg0)
+    cstring arg0)
   {
     return new ConfigLoader(cc, diag, arg0);
   }
 
   /// Expands environment variables such as ${HOME} in a string.
-  static string expandVariables(string val)
+  static cstring expandVariables(cstring val)
   {
     char[] result;
-    char* p = val.ptr, end = p + val.length;
-    char* pieceBegin = p; // Points to the piece of the string after a variable.
+    auto p = val.ptr, end = p + val.length;
+    auto pieceBegin = p; // Points to the piece of the string after a variable.
 
     while (p+3 < end)
     {
@@ -222,7 +222,7 @@ class ConfigLoader : SettingsLoader
   }
 
   /// Loads a language file and returns a ResouceBundle object.
-  ResourceBundle loadResource(string langFile)
+  ResourceBundle loadResource(cstring langFile)
   {
     // 1. Load language file.
     mod = new Module(langFile, cc);
@@ -235,7 +235,7 @@ class ConfigLoader : SettingsLoader
     pass1.run();
 
     // 2. Extract the values of the variables.
-    string[] messages = new string[MID.max + 1];
+    cstring[] messages = new cstring[MID.max + 1];
     if (auto array = getValue!(ArrayInitExpr)("messages"))
     {
       foreach (i, value; array.values)
@@ -250,10 +250,10 @@ class ConfigLoader : SettingsLoader
           //"messages table in {} must exactly have {} entries, but not {}.",
           //langFile, MID.max+1, messages.length);
     }
-    string langCode;
+    cstring langCode;
     if (auto val = getValue!(StringExpr)("lang_code"))
       langCode = val.getString();
-    string parentLangFile;
+    cstring parentLangFile;
     if (auto val = getValue!(StringExpr)("inherit", true))
       parentLangFile = expandVariables(val.getString());
 
@@ -269,7 +269,7 @@ class ConfigLoader : SettingsLoader
 
   /// Searches for the configuration file of dil.
   /// Returns: the filePath or null if the file couldn't be found.
-  string findConfigurationFilePath()
+  cstring findConfigurationFilePath()
   {
     // 1. Look in environment variable DILCONF.
     auto filePath = Path(Environment.get("DILCONF"));
@@ -307,7 +307,7 @@ class TagMapLoader : SettingsLoader
     return new TagMapLoader(cc, diag);
   }
 
-  string[hash_t] load(string filePath)
+  cstring[hash_t] load(cstring filePath)
   {
     mod = new Module(filePath, cc);
     mod.parse();
@@ -317,7 +317,7 @@ class TagMapLoader : SettingsLoader
     auto pass1 = new SemanticPass1(mod, cc);
     pass1.run();
 
-    string[hash_t] map;
+    cstring[hash_t] map;
     if (auto array = getValue!(ArrayInitExpr)("map"))
       foreach (i, value; array.values)
       {
@@ -335,7 +335,7 @@ class TagMapLoader : SettingsLoader
 /// Resolves the path to a file from the executable's dir path
 /// if it is relative.
 /// Returns: filePath if it is absolute or execPath + filePath.
-string resolvePath(string execPath, string filePath)
+cstring resolvePath(cstring execPath, cstring filePath)
 {
   scope path = Path(filePath);
   if (path.isAbsolute())
@@ -352,8 +352,8 @@ extern(C) int _NSGetExecutablePath(char* buf, uint* bufsize);
 /// Returns the fully qualified path to this executable,
 /// or arg0 on failure or when a platform is unsupported.
 /// Params:
-///   arg0 = This is argv[0] from main(string[] argv).
-char[] GetExecutableFilePath(char[] arg0)
+///   arg0 = This is argv[0] from main(cstring[] argv).
+cstring GetExecutableFilePath(cstring arg0)
 {
   version(Windows)
   {
@@ -375,6 +375,7 @@ char[] GetExecutableFilePath(char[] arg0)
   buffer.length = count;
   return toUTF8(buffer);
   } // version(Windows)
+
   else version(linux)
   {
   char[] buffer = new char[256];
@@ -382,7 +383,7 @@ char[] GetExecutableFilePath(char[] arg0)
 
   while (1)
   { // This won't work on very old Linux systems.
-    count = readlink("/proc/self/exe".ptr, buffer.ptr, buffer.length);
+    count = readlink("/proc/self/exe".dup.ptr, buffer.ptr, buffer.length);
     if (count == -1)
       return arg0;
     if (count < buffer.length)
@@ -392,14 +393,14 @@ char[] GetExecutableFilePath(char[] arg0)
   buffer.length = count;
   return buffer;
   } // version(linux)
+
   else version(darwin)
   {
   // First, get the executable path.
   uint size = 256;
   char[] path = new char[size];
-  while (_NSGetExecutablePath(path.ptr, &size) == -1) {
+  while (_NSGetExecutablePath(path.ptr, &size) == -1)
     path = new char[size];
-  }
 
   // Then, convert it to the »real path«, resolving symlinks, etc.
   char[] buffer = new char[1024];  // 1024 = PATH_MAX on Mac OS X 10.5
@@ -407,6 +408,7 @@ char[] GetExecutableFilePath(char[] arg0)
     return arg0;
   return fromStringz(buffer.ptr);
   } // version(darwin)
+
   else
   {
   pragma(msg, "Warning: GetExecutableFilePath() is not implemented on this platform.");

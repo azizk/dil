@@ -10,25 +10,25 @@ struct GlobalSettings
 {
 static:
   /// Path to the data directory.
-  string dataDir = "data/";
+  cstring dataDir = "data/";
   /// Path to the directory of kandil.
-  string kandilDir = "kandil/";
+  cstring kandilDir = "kandil/";
   /// Predefined version identifiers.
-  string[] versionIds;
+  cstring[] versionIds;
   /// Path to the language file.
-  string langFile = "lang_en.d";
+  cstring langFile = "lang_en.d";
   /// Language code of loaded messages catalogue.
   string langCode = "en";
   /// Table of localized compiler messages.
-  string[] messages;
+  cstring[] messages;
   /// Array of import paths to look for modules.
-  string[] importPaths;
+  cstring[] importPaths;
   /// Array of DDoc macro file paths.
-  string[] ddocFilePaths;
-  string xmlMapFile = "xml_map.d"; /// XML map file.
-  string htmlMapFile = "html_map.d"; /// HTML map file.
-  string lexerErrorFormat = "{0}({1},{2})L: {3}"; /// Lexer error.
-  string parserErrorFormat = "{0}({1},{2})P: {3}"; /// Parser error.
-  string semanticErrorFormat = "{0}({1},{2})S: {3}"; /// Semantic error.
+  cstring[] ddocFilePaths;
+  cstring xmlMapFile = "xml_map.d"; /// XML map file.
+  cstring htmlMapFile = "html_map.d"; /// HTML map file.
+  cstring lexerErrorFormat = "{0}({1},{2})L: {3}"; /// Lexer error.
+  cstring parserErrorFormat = "{0}({1},{2})P: {3}"; /// Parser error.
+  cstring semanticErrorFormat = "{0}({1},{2})S: {3}"; /// Semantic error.
   uint tabWidth = 4; /// Tabulator character width.
 }

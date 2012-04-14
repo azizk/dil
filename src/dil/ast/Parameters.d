@@ -10,6 +10,8 @@ import dil.ast.Node,
 import dil.lexer.Identifier;
 import dil.Enums;
 
+import common;
+
 /// A function or foreach parameter.
 class Parameter : Node
 {
@@ -42,7 +44,7 @@ class Parameter : Node
   }
 
   /// Returns the name of the parameter as a string.
-  char[] nameStr()
+  cstring nameStr()
   {
     assert(hasName);
     return name.ident.str;
@@ -135,7 +137,7 @@ abstract class TemplateParam : Node
   }
 
   /// Returns the name of the parameter as a string.
-  char[] nameStr()
+  cstring nameStr()
   {
     return name.ident.str;
   }

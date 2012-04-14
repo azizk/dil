@@ -36,7 +36,7 @@ class SemanticPass1 : Visitor
   Scope scop; /// The current scope.
   Module modul; /// The module to be semantically checked.
   CompilationContext context; /// The compilation context.
-  Module delegate(string) importModule; /// Called when importing a module.
+  Module delegate(cstring) importModule; /// Called when importing a module.
 
   // Attributes:
   LinkageType linkageType; /// Current linkage type.

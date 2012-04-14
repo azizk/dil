@@ -19,7 +19,7 @@ class Tables
   IdTable idents; /// Alias to lxtables.idents.
 
   /// Contructs a Tables object.
-  this(bool[string] options = null)
+  this(bool[cstring] options = null)
   {
     // TODO: options should probably be a class.
     this.lxtables = new LexerTables;

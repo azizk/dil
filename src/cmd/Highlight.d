@@ -29,8 +29,8 @@ class HighlightCommand : Command
   alias Option Options;
 
   Options options; /// Command options.
-  string filePathSrc; /// File path to the module to be highlighted.
-  string filePathDest; /// Where to write the highlighted file.
+  cstring filePathSrc; /// File path to the module to be highlighted.
+  cstring filePathDest; /// Where to write the highlighted file.
   Diagnostics diag; /// Collects error messages.
   CompilationContext cc; /// The context.
 

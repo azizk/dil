@@ -7,10 +7,14 @@ import tango.io.stream.Format;
 public import tango.io.Stdout;
 public import tango.text.convert.Layout : Layout;
 
-/// String aliases.
-alias char[] string;
-alias wchar[] wstring; /// ditto
-alias dchar[] dstring; /// ditto
+/// Const character aliases.
+alias const(char) cchar;
+alias const(wchar) cwchar; /// ditto
+alias const(dchar) cdchar; /// ditto
+/// Constant string aliases.
+alias const(char)[] cstring;
+alias const(wchar)[] cwstring; /// ditto
+alias const(dchar)[] cdstring; /// ditto
 
 alias FormatOutput!(char) FormatOut;
 /// Global formatter instance.
@@ -22,6 +26,17 @@ static this()
   Format = new typeof(Format);
   Printf = &Stdout.format;
   Printfln = &Stdout.formatln;
+}
+
+/// Replaces a with b in str.
+/// Returns: A copy.
+cstring replace(cstring str, char a, char b)
+{
+  auto tmp = str.dup;
+  foreach (ref c; tmp)
+    if (c == a)
+      c = b;
+  return tmp;
 }
 
 // Check version IDs.

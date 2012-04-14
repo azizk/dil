@@ -18,8 +18,8 @@ class GermanTranslator : DefaultVisitor
 {
   FormatOut put; /// Output buffer.
 
-  char[] indent; /// Current indendation string.
-  char[] indentStep; /// Appended to indent at each indendation level.
+  string indent; /// Current indendation string.
+  string indentStep; /// Appended to indent at each indendation level.
 
   Declaration inAggregate; /// Current aggregate.
   Declaration inFunc; /// Current function.
@@ -31,7 +31,7 @@ class GermanTranslator : DefaultVisitor
   /// Params:
   ///   put = Buffer to print to.
   ///   indentStep = Added at every indendation step.
-  this(FormatOut put, char[] indentStep)
+  this(FormatOut put, string indentStep)
   {
     this.put = put;
     this.indentStep = indentStep;
@@ -47,7 +47,7 @@ class GermanTranslator : DefaultVisitor
   /// The indentation is restored when the instance goes out of scope.
   scope class Indent
   {
-    char[] old_indent;
+    string old_indent;
     this()
     {
       old_indent = this.outer.indent;
@@ -57,7 +57,7 @@ class GermanTranslator : DefaultVisitor
     ~this()
     { this.outer.indent = old_indent; }
 
-    char[] toString()
+    string toString()
     { return this.outer.indent; }
   }
 
@@ -169,7 +169,7 @@ override:
   D visit(VariablesDecl n)
   {
     printLoc(n);
-    char[] was;
+    string was;
     if (inAggregate)
       was = "Membervariable";
     else if (inFunc)
@@ -191,7 +191,7 @@ override:
   D visit(FunctionDecl n)
   {
     printLoc(n);
-    char[] was;
+    string was;
     if (inAggregate)
       was = "Methode";
     else if (inFunc)
@@ -284,7 +284,7 @@ override:
 
   TypeNode visit(ArrayType n)
   {
-    char[] c1 = "s", c2 = "";
+    string c1 = "s", c2 = "";
     if (pluralize)
       (c1 = pointer ? ""[] : "n"), (c2 = "s");
     pointer = false;
@@ -308,7 +308,7 @@ override:
 
   TypeNode visit(PointerType n)
   {
-    char[] c = pluralize ? (pointer ? ""[] : "n") : "";
+    auto c = pluralize ? (pointer ? ""[] : "n") : "";
     pointer = true;
     put.format("Zeiger{} auf ", c), visitT(n.next);
     return n;
@@ -322,7 +322,7 @@ override:
 
   TypeNode visit(IntegralType n)
   {
-    char[] c = pluralize ? "s"[] : "";
+    string c = pluralize ? "s"[] : "";
     if (n.tok == TOK.Void) // Avoid pluralizing "void"
       c = "";
     put.format("{}{}", n.begin.text, c);

@@ -11,14 +11,14 @@ import common;
 class Path : FilePath
 {
   /// Constructs from a string.
-  this(string s)
+  this(cstring s)
   {
-    super(s);
+    super(s.dup);
   }
   /// Constructs from a FilePath.
   this(FilePath s)
   {
-    super(s.toString());
+    super(s.toString().dup);
   }
   /// Constructs an empty Path.
   this()
@@ -27,7 +27,7 @@ class Path : FilePath
   }
 
   /// Returns a new Path object.
-  static Path opCall(string s)
+  static Path opCall(cstring s)
   {
     return new Path(s);
   }
@@ -42,13 +42,13 @@ class Path : FilePath
     return new Path();
   }
 
-  Path append(string s)
+  Path append(cstring s)
   {
     super.append(s);
     return this;
   }
 
-  Path cat(string s)
+  Path cat(cstring s)
   {
     super.cat(s);
     return this;
@@ -66,9 +66,18 @@ class Path : FilePath
     return Path(toString()[0..$-ext_len]);
   }
 
+  cstring name()
+  {
+    return super.name();
+  }
+
+  cstring folder()
+  {
+    return super.folder();
+  }
 
   /// Append s. p /= s
-  Path opDivAssign(string s)
+  Path opDivAssign(cstring s)
   {
     return this.append(s);
   }
@@ -80,7 +89,7 @@ class Path : FilePath
   }
 
   /// Concatenate s. path ~= s
-  Path opCatAssign(string s)
+  Path opCatAssign(cstring s)
   {
     return this.cat(s);
   }
@@ -92,7 +101,7 @@ class Path : FilePath
   }
 
   /// Append s. Returns a copy.
-  Path opDiv(string s)
+  Path opDiv(cstring s)
   {
     return this.dup().append(s);
   }
@@ -103,7 +112,7 @@ class Path : FilePath
   }
 
   /// Concatenate s. Returns a copy.
-  Path opCat(string s)
+  Path opCat(cstring s)
   {
     return this.dup().cat(s);
   }

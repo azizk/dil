@@ -10,9 +10,9 @@ import common;
 /// A pair of strings.
 class IdentValue
 {
-  string ident;
-  string value;
-  this (string ident, string value)
+  cstring ident;
+  cstring value;
+  this(cstring ident, cstring value)
   {
     this.ident = ident;
     this.value = value;
@@ -27,12 +27,12 @@ class IdentValue
 ////)
 struct IdentValueParser
 {
-  char* p; /// Current pointer.
-  char* textEnd;
+  cchar* p; /// Current pointer.
+  cchar* textEnd;
 
   /// Parses the text into a list of IdentValues.
   /// All newlines in text must be converted to '\n'.
-  IdentValue[] parse(string text)
+  IdentValue[] parse(cstring text)
   {
     if (!text.length)
       return null;
@@ -42,8 +42,8 @@ struct IdentValueParser
 
     IdentValue[] idvalues;
 
-    string ident, nextIdent;
-    char* bodyBegin = p, nextBodyBegin;
+    cstring ident, nextIdent;
+    cchar* bodyBegin = p, nextBodyBegin;
 
     // Init.
     findNextIdent(ident, bodyBegin);
@@ -61,7 +61,7 @@ struct IdentValueParser
 
   /// Strips off leading and trailing whitespace characters.
   /// Returns: the text body, or null if empty.
-  static char[] textBody(char* begin, char* end)
+  static cstring textBody(cchar* begin, cchar* end)
   {
     while (begin < end && (isspace(*begin) || *begin == '\n'))
       begin++;
@@ -83,7 +83,7 @@ struct IdentValueParser
   ///   ident = Set to Identifier.
   ///   bodyBegin = Set to the beginning of the text body (whitespace skipped.)
   /// Returns: true if found.
-  bool findNextIdent(ref string ident, ref char* bodyBegin)
+  bool findNextIdent(ref cstring ident, ref cchar* bodyBegin)
   {
     while (p < textEnd)
     {
@@ -123,7 +123,7 @@ struct IdentValueParser
 unittest
 {
   Stdout("Testing dil.doc.Parser.\n");
-  char[] text = "A =
+  auto text = "A =
 B = text
 C =
  <b>text</b>
@@ -134,7 +134,7 @@ F = G = H
 A6İ=µ
 End=";
 
-  IdentValue iv(string s1, string s2)
+  IdentValue iv(cstring s1, cstring s2)
   {
     return new IdentValue(s1, s2);
   }

@@ -3441,11 +3441,9 @@ class Parser
       set(e, begin, begin);
       return e;
     case T.String:
-      char[] str = token.strval.str;
+      cstring str = token.strval.str;
       char postfix = token.strval.pf;
       nT();
-      if (tokenIs(T.String))
-        str = str.dup; // Only copy when strings have to be appended.
       // Concatenate adjacent string literals.
       while (tokenIs(T.String))
       {
@@ -3461,21 +3459,21 @@ class Parser
       }
       assert(str[$-1] == 0);
 
-      ubyte[] bin_str = cast(ubyte[])str;
+      auto bin_str = cast(const(ubyte)[])str;
       if (postfix == 'w')
-      {
+      { // Convert to UTF16.
         if (!hasInvalidUTF8(str, begin))
-          bin_str = cast(ubyte[])dil.Unicode.toUTF16(str);
+          bin_str = cast(typeof(bin_str))dil.Unicode.toUTF16(str);
       }
       else if (postfix == 'd')
-      {
+      { // Convert to UTF32.
         if (!hasInvalidUTF8(str, begin))
-          bin_str = cast(ubyte[])dil.Unicode.toUTF32(str);
+          bin_str = cast(typeof(bin_str))dil.Unicode.toUTF32(str);
       }
       else
       {
-        if (begin !is prevToken)
-          bin_str = cast(ubyte[])lexer.lookupString(str[0..$-1]);
+        if (begin !is prevToken) // Multiple string literals?
+          bin_str = cast(typeof(bin_str))lexer.lookupString(str[0..$-1]);
       }
       e = new StringExpr(bin_str, postfix);
       break;
@@ -4430,7 +4428,7 @@ class Parser
   }
 
   /// Returns the string of a token printable to the client.
-  char[] getPrintable(Token* token)
+  cstring getPrintable(Token* token)
   { // TODO: there are some other tokens that have to be handled, e.g. strings.
     return token.kind == T.EOF ? "EOF" : token.text;
   }
@@ -4511,7 +4509,7 @@ class Parser
   }
 
   /// Returns true if the string str has an invalid UTF-8 sequence.
-  bool hasInvalidUTF8(string str, Token* begin)
+  bool hasInvalidUTF8(cstring str, Token* begin)
   {
     auto invalidUTF8Seq = Lexer.findInvalidUTF8Sequence(str);
     if (invalidUTF8Seq.length)
@@ -4557,7 +4555,7 @@ class Parser
   ///   endLoc = Get the position of the token's end or start character?
   ///   formatMsg = The parser error message.
   void error(TypeInfo[] _arguments, va_list _argptr,
-             Token* token, bool endLoc, string formatMsg)
+             Token* token, bool endLoc, cstring formatMsg)
   {
     if (trying)
     {

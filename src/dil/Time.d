@@ -3,6 +3,8 @@
 /// $(Maturity high)
 module dil.Time;
 
+import common;
+
 import tango.stdc.time : time_t, time, ctime;
 import tango.stdc.string : strlen;
 
@@ -14,26 +16,26 @@ static:
   char[] toString()
   {
     time_t time_val;
-    .time(&time_val);
-    char* str = ctime(&time_val); // ctime returns a pointer to a static array.
-    char[] timeStr = str[0 .. strlen(str)-1]; // -1 removes trailing '\n'.
-    return timeStr.dup;
+    tango.stdc.time.time(&time_val);
+    // ctime returns a pointer to a static array.
+    char* timeStr = ctime(&time_val);
+    return timeStr[0 .. strlen(timeStr)-1]; // -1 removes trailing '\n'.
   }
 
   /// Returns the time of timeStr: hh:mm:ss
-  char[] time(char[] timeStr)
+  cstring time(cstring timeStr)
   {
     return timeStr[11..19];
   }
 
   /// Returns the month and day of timeStr: Mmm dd
-  char[] month_day(char[] timeStr)
+  cstring month_day(cstring timeStr)
   {
     return timeStr[4..10];
   }
 
   /// Returns the year of timeStr: yyyy
-  char[] year(char[] timeStr)
+  cstring year(cstring timeStr)
   {
     return timeStr[20..24];
   }

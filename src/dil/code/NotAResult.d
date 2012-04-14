@@ -14,7 +14,7 @@ class NARExpr : Expression
 
 /// A global, unique instance.
 /// Returned when an expression could not be interpreted at compile-time.
-const NARExpr NAR;
+NARExpr NAR = null;
 
 static this()
 {

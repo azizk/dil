@@ -43,13 +43,13 @@ class Diagnostics
   }
 
   /// Returns a formatted msg.
-  string formatMsg(MID mid, ...)
+  char[] formatMsg(MID mid, ...)
   {
     return formatMsg(mid, _arguments, _argptr);
   }
 
   /// ditto
-  string formatMsg(MID mid, TypeInfo[] _arguments, va_list _argptr)
+  char[] formatMsg(MID mid, TypeInfo[] _arguments, va_list _argptr)
   {
     return format(_arguments, _argptr, bundle.msg(mid));
   }

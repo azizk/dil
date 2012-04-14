@@ -833,38 +833,38 @@ class CharExpr : Expression
 
 class StringExpr : Expression
 {
-  ubyte[] str;   /// The string data.
+  const(ubyte)[] data; /// The string data (includes terminating zero(s).)
   Type charType; /// The character type of the string.
 
-  this(ubyte[] str, Type charType)
+  this(const(ubyte)[] data, Type charType)
   {
     mixin(set_kind);
-    this.str = str;
+    this.data = data;
     this.charType = charType;
-    this.type = charType.arrayOf(str.length/charType.sizeOf());
+    this.type = charType.arrayOf(data.length/charType.sizeOf());
   }
 
-  this(ubyte[] str, char kind)
+  this(const(ubyte)[] data, char kind)
   {
     Type t = Types.Char;
     if (kind == 'w') t = Types.WChar;
     else if (kind == 'd') t = Types.DChar;
-    this(str, t);
+    this(data, t);
   }
 
-  this(char[] str)
+  this(cstring str)
   {
-    this(cast(ubyte[])str, Types.Char);
+    this(cast(typeof(data))str, Types.Char);
   }
 
-  this(wchar[] str)
+  this(cwstring str)
   {
-    this(cast(ubyte[])str, Types.WChar);
+    this(cast(typeof(data))str, Types.WChar);
   }
 
-  this(dchar[] str)
+  this(cdstring str)
   {
-    this(cast(ubyte[])str, Types.DChar);
+    this(cast(typeof(data))str, Types.DChar);
   }
 
   /// Returns the number of chars/wchar/dchars in this string.
@@ -874,10 +874,24 @@ class StringExpr : Expression
   }
 
   /// Returns the string excluding the terminating 0.
-  char[] getString()
+  cstring getString()
   {
     // TODO: convert to char[] if charType !is Types.Char.
-    return cast(char[])str[0..$-1];
+    return (cast(cstring)data)[0..$-1];
+  }
+
+  /// Returns the string excluding the terminating 0.
+  cwstring getWString()
+  {
+    assert(charType is Types.WChar);
+    return (cast(cwstring)data)[0..$-1];
+  }
+
+  /// Returns the string excluding the terminating 0.
+  cdstring getDString()
+  {
+    assert(charType is Types.DChar);
+    return (cast(cdstring)data)[0..$-1];
   }
 
   mixin(copyMethod);

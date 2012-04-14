@@ -184,7 +184,7 @@ override
       { // Parse the declarations in the string.
         auto loc = md.begin.getErrorLocation(modul.filePath());
         auto filePath = loc.filePath;
-        auto sourceText = new SourceText(filePath, stringExpr.getString());
+        auto sourceText = new SourceText(filePath, stringExpr.getString().dup);
         auto lxtables = modul.cc.tables.lxtables;
         auto parser = new Parser(sourceText, lxtables, modul.cc.diag);
         md.decls = parser.start();
@@ -293,7 +293,7 @@ override
       e.value = new IntExpr(e.specialToken.uint_, Types.UInt32);
       break;
     case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
-      e.value = new StringExpr(e.specialToken.strval.str);
+      e.value = new StringExpr(e.specialToken.strval.str.dup);
       break;
     default:
       assert(0);
@@ -383,7 +383,7 @@ override
     {
       auto loc = me.begin.getErrorLocation(modul.filePath());
       auto filePath = loc.filePath;
-      auto sourceText = new SourceText(filePath, stringExpr.getString());
+      auto sourceText = new SourceText(filePath, stringExpr.getString().dup);
       auto lxtables = modul.cc.tables.lxtables;
       auto parser = new Parser(sourceText, lxtables, modul.cc.diag);
       expr = parser.start2();

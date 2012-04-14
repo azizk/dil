@@ -122,9 +122,9 @@ class Symbol
 
   /// Returns: the fully qualified name of this symbol.
   /// E.g.: dil.semantic.Symbol.Symbol.getFQN
-  string getFQN()
+  cstring getFQN()
   {
-    char[] fqn = name.str.dup;
+    cstring fqn = name.str;
     if (parent) // Iter upwards until the root package is reached.
       for (auto s = parent; s.parent; s = s.parent)
         fqn = s.name.str ~ '.' ~ fqn;
@@ -148,34 +148,34 @@ class Symbol
   }
 
   /// Returns the mangled name of this symbol.
-  string toMangle()
+  cstring toMangle()
   { // := ParentMangle? NameMangleLength NameMangle
     if (name is Ident.Empty)
     {} // TODO: ?
-    string pm; // Parent mangle.
+    cstring pm; // Parent mangle.
     if (parent)
     {
       pm = parent.toMangle();
       if (pm.length >= 2 && pm[0..2] == "_D")
         pm = pm[2..$]; // Skip the prefix.
     }
-    string id = name.str;
+    cstring id = name.str;
     return pm ~ String(id.length) ~ id;
   }
 
-  static string toMangle(Symbol s)
+  static cstring toMangle(Symbol s)
   {
     return s.toMangle();
   }
 
-  string toCppMangle()
+  cstring toCppMangle()
   { // TODO:
     return null;
   }
 
   /// Returns the string representation of this symbol.
-  char[] toString()
+  string toString()
   {
-    return name.str.dup;
+    return name.str;
   }
 }

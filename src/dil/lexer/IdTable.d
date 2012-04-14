@@ -16,19 +16,17 @@ public import dil.lexer.Identifier,
 /// A namespace for the predefined identifiers.
 struct Ident
 {
-  const static
-  {
-    mixin(generateIdentMembers());
-  }
+static:
+  mixin(generateIdentMembers(predefIdents, false));
 
   /// Returns an array of all predefined identifiers.
-  static Identifier*[] allIds()
+  Identifier*[] allIds()
   {
-    return __allIds;
+    return cast(Identifier*[])((&Empty)[0..predefIdents.length]);
   }
 
   /// Returns true for assembler jump opcode identifiers.
-  static bool isJumpOpcode(IDK kind)
+  bool isJumpOpcode(IDK kind)
   {
     return IDK.ja <= kind && kind <= IDK.jz;
   }
@@ -42,7 +40,7 @@ class IdTable
   /// A table that grows with every newly found, unique identifier.
   Identifier*[hash_t] growingTable;
 
-  alias Identifier* delegate(hash_t, string) LookupMethod;
+  alias Identifier* delegate(hash_t, cstring) LookupMethod;
   /// Looks up idString in the growing table.
   LookupMethod inGrowing;
 
@@ -55,8 +53,8 @@ class IdTable
 
     if (staticTable is null) // Initialize global static table?
     {
-      foreach (ref k; Keyword.list)
-        staticTable[hashOf(k.str)] = &k;
+      foreach (kw; Keyword.allIds())
+        staticTable[hashOf(kw.str)] = kw;
       staticTable.rehash;
     }
     foreach (id; Ident.allIds())
@@ -64,7 +62,7 @@ class IdTable
   }
 
   /// Returns true if str is a valid D identifier.
-  static bool isIdentifierString(string str)
+  static bool isIdentifierString(cstring str)
   {
     if (str.length == 0 || isdigit(str[0]))
       return false;
@@ -80,7 +78,7 @@ class IdTable
 
   /// Returns true if str is a keyword or
   /// a special token (__FILE__, __LINE__ etc.)
-  bool isReservedIdentifier(string str)
+  bool isReservedIdentifier(cstring str)
   {
     if (str.length == 0)
       return false;
@@ -90,13 +88,13 @@ class IdTable
   }
 
   /// Returns true if this is a valid identifier and if it's not reserved.
-  bool isValidUnreservedIdentifier(string str)
+  bool isValidUnreservedIdentifier(cstring str)
   {
     return isIdentifierString(str) && !isReservedIdentifier(str);
   }
 
   /// Looks up idString in both tables.
-  Identifier* lookup(string idString)
+  Identifier* lookup(cstring idString)
   {
     auto idHash = hashOf(idString);
     auto id = inStatic(idHash);
@@ -116,7 +114,7 @@ class IdTable
   }
 
   /// Looks up idString in the static table.
-  Identifier* inStatic(string idString)
+  Identifier* inStatic(cstring idString)
   {
     auto id = hashOf(idString) in staticTable;
     return id ? *id : null;
@@ -137,7 +135,7 @@ class IdTable
   /// Looks up idString in the table.
   ///
   /// Adds idString to the table if not found.
-  private Identifier* _inGrowing_unsafe(hash_t idHash, string idString)
+  private Identifier* _inGrowing_unsafe(hash_t idHash, cstring idString)
   out(id)
   { assert(id !is null); }
   body
@@ -147,7 +145,7 @@ class IdTable
       Format("bad hash function:\n ‘{}’ != ‘{}’", idString, (*id).str));
     if (id)
       return *id;
-    auto newID = Identifier(idString, TOK.Identifier);
+    auto newID = Identifier(idString.idup, TOK.Identifier);
     growingTable[idHash] = newID;
     return newID;
   }
@@ -156,7 +154,7 @@ class IdTable
   ///
   /// Adds idString to the table if not found.
   /// Access to the data structure is synchronized.
-  private Identifier* _inGrowing_safe(hash_t idHash, string idString)
+  private Identifier* _inGrowing_safe(hash_t idHash, cstring idString)
   {
     synchronized
       return _inGrowing_unsafe(idHash, idString);
@@ -169,10 +167,10 @@ class IdTable
   ///
   /// Concatenates prefix with anonCount.
   /// The identifier is not inserted into the table.
-  Identifier* genAnonymousID(string prefix)
+  Identifier* genAnonymousID(cstring prefix)
   {
     auto num = String(++anonCount);
-    return Identifier(prefix ~ num, TOK.Identifier);
+    return Identifier((prefix ~ num).idup, TOK.Identifier);
   }
 
   /// Generates an identifier for an anonymous enum.

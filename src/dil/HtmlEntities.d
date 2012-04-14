@@ -2153,10 +2153,10 @@ static const Entity[] namedEntities = [
 
 /// Generates the hashes and values array.
 /// ---
-/// private static const hash_t[] hashes = [
+/// private static immutable hash_t[] hashes = [
 ///   19829,20085,20585, // ...
 /// ];
-/// private static const dchar[] values = [
+/// private static immutable dchar[] values = [
 ///   924,925,928, // ...
 /// ];
 /// ---
@@ -2197,15 +2197,15 @@ char[] generateHashAndValueArrays()
   }
 
   // Build source text:
-  char[] hashesText = "private static const hash_t[] hashes = [",
-         valuesText = "private static const dchar[] values = [";
+  char[] hashesText = "private static immutable hash_t[] hashes = [".dup,
+         valuesText = "private static immutable dchar[] values = [".dup;
   foreach (i, hash; hashes)
   {
     hashesText ~= StringCTF(hash) ~ ",";
     valuesText ~= StringCTF(values[i]) ~ ",";
   }
-  hashesText ~= "];";
-  valuesText ~= "];";
+  hashesText ~= "];".dup;
+  valuesText ~= "];".dup;
   return hashesText ~"\n"~ valuesText;
 }
 
@@ -2222,7 +2222,7 @@ else
 
 /// Converts a named HTML entity to its equivalent Unicode codepoint.
 /// Returns: The entity's value or 0 if it does not exist.
-dchar entity2Unicode(string entity)
+dchar entity2Unicode(cstring entity)
 {
   auto hash = hashOf(entity);
   // Binary search:

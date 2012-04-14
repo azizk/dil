@@ -19,7 +19,7 @@ class TArgMangler : Visitor2
 {
   char[] text; /// The mangled text.
   Diagnostics diag;
-  char[] filePath;
+  string filePath;
 
   void mangleFloat(Float f)
   {
@@ -45,7 +45,7 @@ class TArgMangler : Visitor2
     diag ~= error;
   }
 
-  void utf16Error(Token* tok, wchar[] s, size_t i)
+  void utf16Error(Token* tok, cwstring s, size_t i)
   {
     auto e = dil.Unicode.utf16Error(s, i);
     ushort arg1 = s[i-1], arg2 = arg1;
@@ -99,37 +99,40 @@ override:
   void visit(StringExpr e)
   { // := MangleChar UTF8StringLength "_" UTF8StringInHex
     char mc; // Mangle character.
-    char[] utf8str;
+    cstring utf8str;
+    char[] tmp;
     switch (e.charType.tid)
     {
     case TYP.Char:
       mc = 'a';
-      utf8str = cast(char[])e.str;
+      utf8str = e.getString();
       break;
     case TYP.WChar:
       mc = 'w';
-      wchar[] tmp = (cast(wchar[])e.str)[0..$-1];
-      for (size_t i; i < tmp.length;)
+      auto str = e.getWString();
+      for (size_t i; i < str.length;)
       {
-        auto c = decode(tmp, i);
+        auto c = decode(str, i);
         if (c == ERROR_CHAR) {
-          utf16Error(e.begin, tmp, i);
+          utf16Error(e.begin, str, i);
           break;
         }
         else
-          encode(utf8str, c);
+          encode(tmp, c);
       }
+      utf8str = tmp;
       break;
     case TYP.DChar:
       mc = 'd';
-      dchar[] tmp = (cast(dchar[])e.str)[0..$-1];
-      foreach (dchar c; tmp)
+      auto str = e.getDString();
+      foreach (dchar c; str)
         if (!isValidChar(c)) {
           error(e.begin, MID.InvalidUTF32Character, c+0);
           break;
         }
         else
-          encode(utf8str, c);
+          encode(tmp, c);
+      utf8str = tmp;
       break;
     default: assert(0);
     }

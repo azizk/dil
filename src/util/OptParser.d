@@ -8,20 +8,25 @@ import common;
 /// A command line option parser.
 class OptParser
 {
-  string[] argv; /// The argument vector.
+  cstring[] argv; /// The argument vector.
   bool delegate()[] parseDgs; /// Option parsing delegates.
-  string error; /// Holds the error message if an error occurred.
+  cstring error; /// Holds the error message if an error occurred.
 
   /// Constructs an OptParser object.
-  this(string[] argv)
+  this(cstring[] argv)
   {
     this.argv = argv;
+  }
+  /// ditto
+  this(string[] argv)
+  {
+    this.argv = cast(cstring[])argv;
   }
 
   /// Parses all arguments.
   bool parseArgs()
   {
-    string[] remArgs; // Remaining arguments.
+    cstring[] remArgs; // Remaining arguments.
     while (hasArgs())
     {
       auto n = argv.length; // Remember number of args.
@@ -47,10 +52,10 @@ class OptParser
   }
 
   /// Adds an option with a string argument.
-  void add(string param, ref string out_arg, void delegate() cb = null)
+  void add(cstring param, ref cstring out_arg, void delegate() cb = null)
   {
     auto o = new class { // Make a closure.
-      OptParser op; string param; string* out_arg; void delegate() cb;
+      OptParser op; cstring param; cstring* out_arg; void delegate() cb;
       bool parse()
       { return op.parse(param, *out_arg) && (cb && cb(), true); }
     };
@@ -62,10 +67,10 @@ class OptParser
   }
 
   /// Adds a boolean flag option.
-  void add(string flag, ref bool out_arg, void delegate() cb = null)
+  void add(cstring flag, ref bool out_arg, void delegate() cb = null)
   {
     auto o = new class { // Make a closure.
-      OptParser op; string flag; bool* out_arg; void delegate() cb;
+      OptParser op; cstring flag; bool* out_arg; void delegate() cb;
       bool parse()
       { return op.parse(flag, *out_arg) && (cb && cb(), true); }
     };
@@ -77,7 +82,7 @@ class OptParser
   }
 
   /// Parses a parameter.
-  bool parse(string param, ref string out_arg)
+  bool parse(cstring param, ref cstring out_arg)
   {
     if (!hasArgs()) return false;
     auto arg0 = argv[0];
@@ -107,7 +112,7 @@ class OptParser
   }
 
   /// Parses a flag.
-  bool parse(string flag, ref bool out_arg)
+  bool parse(cstring flag, ref bool out_arg)
   {
     if (hasArgs() && argv[0] == flag) {
       out_arg = true;
@@ -128,7 +133,7 @@ class OptParser
     return argv.length != 0;
   }
 
-  string getArg()
+  cstring getArg()
   {
     auto arg = argv[0];
     consume(1);
@@ -136,7 +141,7 @@ class OptParser
   }
 
   /// Returns true if str starts with s.
-  static bool strbeg(string str, string s)
+  static bool strbeg(cstring str, cstring s)
   {
     return str.length >= s.length &&
            str[0 .. s.length] == s;

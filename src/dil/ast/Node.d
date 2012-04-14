@@ -70,7 +70,7 @@ abstract class Node
   }
 
   /// Returns the text spanned by the begin and end tokens.
-  string toText()
+  cstring toText()
   {
     assert(begin && end);
     return begin.textSpan(end);

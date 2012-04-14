@@ -17,7 +17,7 @@ import common;
 
 import tango.core.Array : sort;
 
-char[] escape_quotes(char[] text)
+cstring escape_quotes(cstring text)
 {
   char[] result;
   foreach (c; text)
@@ -25,7 +25,7 @@ char[] escape_quotes(char[] text)
   return result;
 }
 
-char[] countWhitespace(char[] ws)
+cstring countWhitespace(cstring ws)
 {
   foreach (c; ws)
     if (c != ' ') return "'"~ws~"'";
@@ -42,8 +42,8 @@ enum Flags
 }
 
 /// Searches for backslashes, quotes and newlines in a string.
-/// Returns: a
-Flags analyzeString(char[] str/*, out uint newlines*/)
+/// Returns: A set of flags.
+Flags analyzeString(cstring str)
 {
   Flags flags;
   foreach (c; str)
@@ -57,15 +57,15 @@ Flags analyzeString(char[] str/*, out uint newlines*/)
 
 char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
 {
-  char[] result = "token_list = (\n";
+  char[] result = "token_list = (\n".dup;
   char[] line;
   class Tuple
   {
     uint count;
-    char[] str;
+    cstring str;
     TOK kind;
     alias count pos;
-    this(uint count, char[] str, TOK kind)
+    this(uint count, cstring str, TOK kind)
     {
       this.count = count;
       this.str = str;
@@ -104,7 +104,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   { // By analyzing the string we can determine the optimal
     // way to represent strings in the Python source code.
     uint flags = analyzeString(item.str);
-    char[] sgl_quot = "'", dbl_quot = `"`;
+    string sgl_quot = "'", dbl_quot = `"`;
     if (flags & Flags.Newline) // Use triple quotes for multiline strings.
       (sgl_quot = "'''"), (dbl_quot = `"""`);
 
@@ -126,7 +126,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   if (result[$-1] == '\n')
     result = result[0..$-1];
   result ~= "),\n[\n";
-  line = "";
+  line = null;
 
   // Print the list of all tokens, encoded with IDs and indices.
   uint index;
@@ -149,7 +149,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
       break;
     case TOK.HashLine:
       // The text to be inserted into formatStr.
-      void printWS(char* start, char* end) {
+      void printWS(cchar* start, cchar* end) {
         line ~= '"' ~ start[0 .. end - start] ~ `",`;
       }
       auto num = token.hlval.lineNum;
@@ -197,7 +197,7 @@ class PyTreeEmitter : Visitor2
   /// Entry method.
   char[] emit()
   {
-    char[] d_version = "1.0";
+    string d_version = "1.0";
     version(D2)
       d_version = "2.0";
     text = Format("# -*- coding: utf-8 -*-\n"
@@ -238,7 +238,7 @@ class PyTreeEmitter : Visitor2
     return "t["~String(index[token])~"]";
   }
 
-  void write(char[] str)
+  void write(cstring str)
   {
     line ~= str;
     if (line.length > 100)
@@ -286,7 +286,7 @@ override
   void visit(CompoundDecl d)
   {
     begin(d);
-    write(d.decls);
+    writeNodes(d.decls);
     end(d);
   }
 
@@ -364,7 +364,7 @@ override
     write(",");
     d.baseType ? visitT(d.baseType) : write("n");
     write(",");
-    write(d.members);
+    writeNodes(d.members);
     end(d);
   }
 
@@ -384,7 +384,7 @@ override
     begin(d);
     write(indexOf(d.name));
     write(",");
-    write(d.bases);
+    writeNodes(d.bases);
     write(",");
     d.decls ? visitD(d.decls) : write("n");
     end(d);
@@ -395,7 +395,7 @@ override
     begin(d);
     write(indexOf(d.name));
     write(",");
-    write(d.bases);
+    writeNodes(d.bases);
     write(",");
     d.decls ? visitD(d.decls) : write("n");
     end(d);
@@ -623,7 +623,7 @@ override
     begin(d);
     write(indexOf(d.ident));
     write(",");
-    write(d.args);
+    writeNodes(d.args);
     write(",");
     visitD(d.decls);
     end(d);
@@ -641,7 +641,7 @@ override
   void visit(CompoundStmt s)
   {
     begin(s);
-    write(s.stmnts);
+    writeNodes(s.stmnts);
     end(s);
   }
 
@@ -778,7 +778,7 @@ override
   void visit(CaseStmt s)
   {
     begin(s);
-    write(s.values);
+    writeNodes(s.values);
     write(",");
     visitS(s.caseBody);
     end(s);
@@ -844,7 +844,7 @@ override
     begin(s);
     visitS(s.tryBody);
     write(",");
-    write(s.catchBodies);
+    writeNodes(s.catchBodies);
     write(",");
     s.finallyBody ? visitS(s.finallyBody) : write("n");
     end(s);
@@ -901,7 +901,7 @@ override
     begin(s);
     s.ident ? write(indexOf(s.begin)) : write("n");
     write(",");
-    write(s.operands);
+    writeNodes(s.operands);
     end(s);
   }
 
@@ -920,7 +920,7 @@ override
     begin(s);
     s.ident ? write(indexOf(s.ident)) : write("n");
     write(",");
-    write(s.args);
+    writeNodes(s.args);
     write(",");
     visitS(s.pragmaBody);
     end(s);
@@ -979,6 +979,20 @@ override
   |                                Expressions                                |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
+  immutable binaryExpr = `
+    begin(e);
+    visitE(e.lhs);
+    write(",");
+    visitE(e.rhs);
+    write(",");
+    write(indexOf(e.optok));
+    end(e);`;
+
+  immutable unaryExpr = `
+    begin(e);
+    visitE(e.una);
+    end(e);`;
+
 override
 {
   void visit(IllegalExpr)
@@ -998,20 +1012,6 @@ override
     write(indexOf(e.ctok));
     end(e);
   }
-
-  const binaryExpr = `
-    begin(e);
-    visitE(e.lhs);
-    write(",");
-    visitE(e.rhs);
-    write(",");
-    write(indexOf(e.optok));
-    end(e);`;
-
-  const unaryExpr = `
-    begin(e);
-    visitE(e.una);
-    end(e);`;
 
   void visit(CommaExpr e)
   {
@@ -1226,22 +1226,22 @@ override
   void visit(NewExpr e)
   {
     begin(e);
-    write(e.newArgs);
+    writeNodes(e.newArgs);
     write(",");
     visitT(e.type);
     write(",");
-    write(e.ctorArgs);
+    writeNodes(e.ctorArgs);
     end(e);
   }
 
   void visit(NewClassExpr e)
   {
     begin(e);
-    write(e.newArgs);
+    writeNodes(e.newArgs);
     write(",");
-    write(e.bases);
+    writeNodes(e.bases);
     write(",");
-    write(e.ctorArgs);
+    writeNodes(e.ctorArgs);
     write(",");
     visitD(e.decls);
     end(e);
@@ -1269,7 +1269,7 @@ override
     begin(e);
     visitE(e.una);
     write(",");
-    write(e.args);
+    writeNodes(e.args);
     end(e);
   }
 
@@ -1376,16 +1376,16 @@ override
   void visit(ArrayLiteralExpr e)
   {
     begin(e);
-    write(e.values);
+    writeNodes(e.values);
     end(e);
   }
 
   void visit(AArrayLiteralExpr e)
   {
     begin(e);
-    write(e.keys);
+    writeNodes(e.keys);
     write(",");
-    write(e.values);
+    writeNodes(e.values);
     end(e);
   }
 
@@ -1483,7 +1483,7 @@ override
     foreach (k; e.keys)
       (k ? visitE(k) : write("n")), write(",");
     write("),");
-    write(e.values);
+    writeNodes(e.values);
     end(e);
   }
 
@@ -1494,7 +1494,7 @@ override
     foreach (i; e.idents)
       (i ? write(indexOf(i)) : write("n")), write(",");
     write("),");
-    write(e.values);
+    writeNodes(e.values);
     end(e);
   }
 

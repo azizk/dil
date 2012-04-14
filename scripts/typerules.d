@@ -10,20 +10,20 @@ import tango.io.Stdout;
 void main(char[][] args)
 {
   Stdout(
-    `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">`\n
-    `<html>`\n
-    `<head>`\n
-    `  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">`\n
-    `  <link href="" rel="stylesheet" type="text/css">`\n
-    `  <style type="text/css">`\n
-    `    .E { color: darkred; } /* Error */`\n
-    `    .R { font-size: 0.8em; } /* Result */`\n
-    `    .X { color: darkorange; }`\n
-    `    .Y { color: darkblue; }`\n
-    `  </style>`\n
-    `</head>`\n
-    `<body>`\n
-    `<p>The following tables show the type results of different expressions. Compiler used: `
+    `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <link href="" rel="stylesheet" type="text/css">
+  <style type="text/css">
+    .E { color: darkred; } /* Error */
+    .R { font-size: 0.8em; } /* Result */
+    .X { color: darkorange; }
+    .Y { color: darkblue; }
+  </style>
+</head>
+<body>
+<p>The following tables show the type results of different expressions. Compiler used: `
   );
 
   Stdout.format("{} {}.{,:d3}.</p>\n", __VENDOR__, __VERSION__/1000, __VERSION__%1000);
@@ -52,7 +52,7 @@ void main(char[][] args)
 
   foreach (i, expResults; binaryExpsResults)
   {
-    auto binaryExpression = binaryExpressions[i];
+    const(char)[] binaryExpression = binaryExpressions[i];
     binaryExpression = `<span class="X">x</span> ` ~
                        xml_escape(binaryExpression[1..$-1]) ~
                        ` <span class="Y">y</span>`;
@@ -79,7 +79,7 @@ void main(char[][] args)
 
 /// Escapes the characters '<', '>' and '&' with named character entities.
 /// Taken from module cmd.Highlight;
-char[] xml_escape(char[] text)
+const(char)[] xml_escape(const(char)[] text)
 {
   char[] result;
   foreach (c; text)
@@ -105,7 +105,7 @@ float float_; double double_; real real_;
 ifloat ifloat_; idouble idouble_; ireal ireal_;
 cfloat cfloat_; cdouble cdouble_; creal creal_;
 
-static const char[][] basicTypes = [
+enum string[] basicTypes = [
   "char"[],   "wchar",   "dchar", "bool",
   "byte",   "ubyte",   "short", "ushort",
   "int",    "uint",    "long",  "ulong",
@@ -115,7 +115,7 @@ static const char[][] basicTypes = [
   "cfloat", "cdouble", "creal"/+, "void"+/
 ];
 
-static const char[][] unaryExpressions = [
+enum string[] unaryExpressions = [
   "!x",
   "&x",
   "~x",
@@ -127,7 +127,7 @@ static const char[][] unaryExpressions = [
   "x--",
 ];
 
-static const char[][] binaryExpressions = [
+enum string[] binaryExpressions = [
   "x!<>=y",
   "x!<>y",
   "x!<=y",
@@ -156,23 +156,23 @@ static const char[][] binaryExpressions = [
   "x,y"
 ];
 
-template ExpressionType(alias x, alias y, char[] expression)
+template ExpressionType(alias x, alias y, string expression)
 {
   static if (is(typeof(mixin(expression)) ResultType))
-    const char[] result = ResultType.stringof;
+    immutable result = ResultType.stringof;
   else
-    const char[] result = "Error";
+    immutable result = "Error";
 }
 alias ExpressionType EType;
 
-char[] genBinaryExpArray(char[] expression)
+char[] genBinaryExpArray(string expression)
 {
-  char[] result = "[\n";
+  char[] result = "[\n".dup;
   foreach (t1; basicTypes)
   {
-    result ~= "[\n";
+    result ~= "[\n".dup;
     foreach (t2; basicTypes)
-      result ~= `EType!(`~t1~`_, `~t2~`_, "`~expression~`").result,`\n;
+      result ~= `EType!(`~t1~`_, `~t2~`_, "`~expression~`").result,`"\n";
     result[result.length-2] = ']'; // Overwrite last comma.
     result[result.length-1] = ','; // Overwrite last \n.
   }
@@ -183,30 +183,27 @@ char[] genBinaryExpArray(char[] expression)
 
 char[] genBinaryExpsArray()
 {
-  char[] result = "[\n";
+  char[] result = "[\n".dup;
   foreach (expression; binaryExpressions)
-  {
-    result ~= genBinaryExpArray(expression);
-    result ~= ",\n";
-  }
+    result ~= genBinaryExpArray(expression) ~ ",\n";
   result[result.length-2] = ']';
   return result;
 }
 
 // pragma(msg, mixin(genBinaryExpsArray()).stringof);
 
-char[] genUnaryExpArray(char[] expression)
+char[] genUnaryExpArray(string expression)
 {
-  char[] result = "[\n";
+  char[] result = "[\n".dup;
   foreach (t1; basicTypes)
-    result ~= `EType!(`~t1~`_, int_, "`~expression~`").result,`\n;
+    result ~= `EType!(`~t1~`_, int_, "`~expression~`").result,`"\n";
   result[result.length-2] = ']'; // Overwrite last comma.
   return result;
 }
 
 char[] genUnaryExpsArray()
 {
-  char[] result = "[\n";
+  char[] result = "[\n".dup;
   foreach (expression; unaryExpressions)
     result ~= genUnaryExpArray(expression) ~ ",\n";
   result[result.length-2] = ']';
@@ -217,4 +214,3 @@ char[] genUnaryExpsArray()
 
 auto unaryExpsResults = mixin(genUnaryExpsArray());
 auto binaryExpsResults = mixin(genBinaryExpsArray());
-

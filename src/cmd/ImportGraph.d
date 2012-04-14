@@ -19,7 +19,6 @@ import Settings;
 import common;
 
 import tango.text.Regex : RegExp = Regex;
-import tango.text.Util;
 import tango.io.model.IFile;
 
 alias FileConst.PathSeparatorChar dirSep;
@@ -44,10 +43,10 @@ class IGraphCommand : Command
   alias Option Options;
 
   Options options; /// Command options.
-  string filePath; /// File path to the root module.
-  string[] regexps; /// Regular expressions.
-  string siStyle = "dashed"; /// Static import style.
-  string piStyle = "bold";   /// Public import style.
+  cstring filePath; /// File path to the root module.
+  cstring[] regexps; /// Regular expressions.
+  cstring siStyle = "dashed"; /// Static import style.
+  cstring piStyle = "bold";   /// Public import style.
   uint levels; /// How many levels to print.
 
   CompilationContext context;
@@ -73,10 +72,10 @@ class IGraphCommand : Command
     auto gbuilder = new GraphBuilder(context);
 
     gbuilder.options = options;
-    gbuilder.filterPredicate = (string moduleFQNPath) {
+    gbuilder.filterPredicate = (cstring moduleFQNPath) {
       foreach (rx; regexps)
         // Replace slashes: dil/ast/Node -> dil.ast.Node
-        if (rx.test(replace(moduleFQNPath.dup, dirSep, '.')))
+        if (rx.test(moduleFQNPath.replace(dirSep, '.')))
           return true;
       return false;
     };
@@ -192,7 +191,7 @@ class GraphBuilder
   Graph graph; /// The graph object.
   IGraphCommand.Options options; /// The options.
   Vertex[hash_t] loadedModulesTable; /// Maps FQN paths to modules.
-  bool delegate(string) filterPredicate;
+  bool delegate(cstring) filterPredicate;
   CompilationContext cc; /// The context.
 
   /// Constructs a GraphBuilder object.
@@ -205,7 +204,7 @@ class GraphBuilder
   /// Start building the graph and return that.
   /// Params:
   ///   fileName = The file name of the root module.
-  Graph start(string fileName)
+  Graph start(cstring fileName)
   {
     loadModule(fileName);
     return graph;
@@ -215,7 +214,7 @@ class GraphBuilder
   /// Params:
   ///   moduleFQNPath = The path version of the module FQN.$(BR)
   ///                   E.g.: FQN = dil.ast.Node -> FQNPath = dil/ast/Node
-  Vertex loadModule(string moduleFQNPath)
+  Vertex loadModule(cstring moduleFQNPath)
   {
     // Look up in table if the module is already loaded.
     auto hash = hashOf(moduleFQNPath);
@@ -242,7 +241,8 @@ class GraphBuilder
       { // Include module nevertheless.
         vertex = new Vertex;
         vertex.modul = new Module("", cc);
-        vertex.modul.setFQN(replace(moduleFQNPath, dirSep, '.'));
+        auto fqn = moduleFQNPath.replace(dirSep, '.');
+        vertex.modul.setFQN(fqn);
         graph.addVertex(vertex);
       }
       // Store vertex in the table (vertex may be null.)
@@ -281,7 +281,7 @@ class GraphBuilder
 }
 
 /// Prints the file paths to the modules.
-void printModulePaths(Vertex[] vertices, uint level, char[] indent)
+void printModulePaths(Vertex[] vertices, uint level, cstring indent)
 {
   if (level == 0)
     return;
@@ -294,7 +294,7 @@ void printModulePaths(Vertex[] vertices, uint level, char[] indent)
 }
 
 /// Prints a list of module FQNs.
-void printModuleList(Vertex[] vertices, uint level, char[] indent)
+void printModuleList(Vertex[] vertices, uint level, cstring indent)
 {
   if (level == 0)
     return;
@@ -308,7 +308,7 @@ void printModuleList(Vertex[] vertices, uint level, char[] indent)
 
 /// Prints the graph as a graphviz dot document.
 void printDotDocument(CompilationContext cc, Graph graph,
-  string siStyle, string piStyle, IGraphCommand.Options options)
+  cstring siStyle, cstring piStyle, IGraphCommand.Options options)
 {
   // Needed for grouping by package names.
   ModuleManager mm;
@@ -340,7 +340,7 @@ void printDotDocument(CompilationContext cc, Graph graph,
   // Output edges.
   foreach (edge; graph.edges)
   {
-    string edgeStyles = "";
+    cstring edgeStyles = "";
     if (edge.isStatic || edge.isPublic)
     {
       edgeStyles = `[style="`;
@@ -356,7 +356,7 @@ void printDotDocument(CompilationContext cc, Graph graph,
 
   if (options & IGraphCommand.Option.GroupByFullPackageName)
   {
-    Vertex[][string] verticesByPckgName;
+    Vertex[][cstring] verticesByPckgName;
     foreach (vertex; graph.vertices)
       verticesByPckgName[vertex.modul.packageName] ~= vertex;
     foreach (packageFQN, vertices; verticesByPckgName)
@@ -375,7 +375,7 @@ void printDotDocument(CompilationContext cc, Graph graph,
     uint[Module] idTable;
     foreach (vertex; graph.vertices)
       idTable[vertex.modul] = vertex.id;
-    void printSubgraph(Package pckg, string indent)
+    void printSubgraph(Package pckg, cstring indent)
     { // Output nodes in a cluster.
       foreach (p; pckg.packages)
       {

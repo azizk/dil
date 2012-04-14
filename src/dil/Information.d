@@ -19,9 +19,9 @@ class Problem : Information
 {
   Location location;
   uint column; /// Cache variable for column.
-  string message;
+  cstring message;
 
-  this(Location location, string message)
+  this(Location location, cstring message)
   {
     assert(location !is null);
     this.location = location;
@@ -29,7 +29,7 @@ class Problem : Information
   }
 
   /// Returns the message.
-  string getMsg()
+  cstring getMsg()
   {
     return this.message;
   }
@@ -49,7 +49,7 @@ class Problem : Information
   }
 
   /// Returns the file path.
-  string filePath()
+  cstring filePath()
   {
     return location.filePath;
   }
@@ -68,7 +68,7 @@ class DDocProblem : Problem
   }
   Kind kind; /// The kind of problem.
   /// Constructs a DDocProblem object.
-  this(Location location, Kind kind, string message)
+  this(Location location, Kind kind, cstring message)
   {
     super(location, message);
     this.kind = kind;
@@ -79,7 +79,7 @@ class DDocProblem : Problem
 class Warning : Problem
 {
   /// Constructs a Warning object.
-  this(Location location, string message)
+  this(Location location, cstring message)
   {
     super(location, message);
   }
@@ -88,7 +88,7 @@ class Warning : Problem
 /// For reporting a compiler error.
 class GeneralError : Problem
 {
-  this(Location location, string message)
+  this(Location location, cstring message)
   {
     super(location, message);
   }
@@ -97,7 +97,7 @@ class GeneralError : Problem
 /// An error reported by the Lexer.
 class LexerError : GeneralError
 {
-  this(Location location, string message)
+  this(Location location, cstring message)
   {
     super(location, message);
   }
@@ -106,7 +106,7 @@ class LexerError : GeneralError
 /// An error reported by the Parser.
 class ParserError : GeneralError
 {
-  this(Location location, string message)
+  this(Location location, cstring message)
   {
     super(location, message);
   }
@@ -115,7 +115,7 @@ class ParserError : GeneralError
 /// An error reported by a semantic analyzer.
 class SemanticError : GeneralError
 {
-  this(Location location, string message)
+  this(Location location, cstring message)
   {
     super(location, message);
   }

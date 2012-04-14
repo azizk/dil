@@ -17,17 +17,17 @@ import tango.io.device.File;
 final class SourceText
 {
   /// The file path to the source text. Mainly used for error messages.
-  string filePath;
-  string data; /// The UTF-8, zero-terminated source text.
+  cstring filePath;
+  cstring data; /// The UTF-8, zero-terminated source text.
   /// The data member must be terminated with this string.
   /// Four zeros are used to make certain optimizations possible in the Lexer.
-  static const string sentinelString = "\0\0\0\0";
+  static immutable  sentinelString = "\0\0\0\0";
 
   /// Constructs a SourceText object.
   /// Params:
   ///   filePath = File path to the source file.
   ///   loadFile = Whether to load the file in the constructor.
-  this(string filePath, bool loadFile = false)
+  this(cstring filePath, bool loadFile = false)
   {
     this.filePath = filePath;
     loadFile && load();
@@ -37,7 +37,7 @@ final class SourceText
   /// Params:
   ///   filePath = File path for error messages.
   ///   data = Memory buffer (may be terminated with sentinelString.)
-  this(string filePath, char[] data)
+  this(cstring filePath, cstring data)
   {
     this(filePath);
     addSentinelString(data);
@@ -45,7 +45,7 @@ final class SourceText
   }
 
   /// Returns a slice to the source text, excluding the sentinel string.
-  string text()
+  cstring text()
   {
     return data[0..$-4];
   }
@@ -64,7 +64,7 @@ final class SourceText
       auto mid = Path(this.filePath).exists() ?
         MID.CantReadFile : MID.InexistantFile;
       diag ~= new LexerError(loc, diag.formatMsg(mid));
-      data = sentinelString;
+      data = sentinelString.dup;
       return false;
     }
 
@@ -72,14 +72,14 @@ final class SourceText
     auto rawdata = cast(ubyte[]) File.get(filePath);
     // Convert the data.
     auto converter = Converter(filePath, diag);
-    auto text = converter.data2UTF8(rawdata);
+    cstring text = converter.data2UTF8(rawdata);
     addSentinelString(text);
     this.data = text;
     return true;
   }
 
   /// Appends the sentinel string to the text (if not already there.)
-  static void addSentinelString(ref char[] text)
+  static void addSentinelString(ref cstring text)
   {
     if (text.length < 4 ||
         // Same as: text[$-4..$] != sentinelString

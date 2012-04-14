@@ -22,24 +22,24 @@ class Macro
     ArgsStart = '\4', /// Marks the start of a macro's arguments.
   }
 
-  string name; /// The name of the macro.
-  string text; /// The substitution text.
+  cstring name; /// The name of the macro.
+  cstring text; /// The substitution text.
   uint callLevel; /// The recursive call level.
 
   /// Constructs a Macro object.
-  this (string name, string text)
+  this(cstring name, cstring text)
   {
     this.name = name;
     this.text = text;
   }
 
   /// Converts a macro text to the internal format.
-  static string convert(string text)
+  static cstring convert(cstring text)
   {
     char[] result;
-    char* p = text.ptr;
-    char* end = p + text.length;
-    char* prev = p;
+    auto p = text.ptr;
+    auto end = p + text.length;
+    auto prev = p;
     char[] parens; // Stack of parentheses and markers.
     for (; p < end; p++)
       switch (*p)
@@ -126,14 +126,14 @@ class MacroTable
   }
 
   /// Creates a macro using name and text and inserts it into the table.
-  void insert(string name, string text)
+  void insert(cstring name, cstring text)
   {
     insert(new Macro(name, text));
   }
 
   /// Creates a macro using name[n] and text[n] pairs
   /// and inserts it into the table.
-  void insert(string[] names, string[] texts)
+  void insert(cstring[] names, cstring[] texts)
   {
     assert(names.length == texts.length);
     foreach (i, name; names)
@@ -145,7 +145,7 @@ class MacroTable
   /// If the macro isn't found in this table the search
   /// continues upwards in the table hierarchy.
   /// Returns: the macro if found, or null if not.
-  Macro search(string name)
+  Macro search(cstring name)
   {
     if (auto pmacro = hashOf(name) in table)
       return *pmacro;
@@ -163,7 +163,7 @@ class MacroTable
 struct MacroParser
 {
 static:
-  Macro[] parse(string text)
+  Macro[] parse(cstring text)
   {
     IdentValueParser parser;
     auto idvalues = parser.parse(text);
@@ -176,7 +176,7 @@ static:
   /// Scans for a macro invocation. E.g.: &#36;(DDOC)
   /// Returns: a pointer set to one char past the closing parenthesis,
   /// or null if this isn't a macro invocation.
-  char* scanMacro(char* p, char* textEnd)
+  cchar* scanMacro(cchar* p, cchar* textEnd)
   {
     assert(*p == '$');
     if (p+2 < textEnd && p[1] == '(')
@@ -195,11 +195,11 @@ struct MacroExpander
 {
   MacroTable mtable; /// Used to look up macros.
   Diagnostics diag; /// Collects warning messages.
-  char[] filePath; /// Used in warning messages.
+  cstring filePath; /// Used in warning messages.
 
   /// Starts expanding the macros.
-  static char[] expand(MacroTable mtable, char[] text, char[] filePath,
-                       Diagnostics diag = null)
+  static cstring expand(MacroTable mtable, cstring text, cstring filePath,
+                        Diagnostics diag = null)
   {
     MacroExpander me;
     me.mtable = mtable;
@@ -209,7 +209,7 @@ struct MacroExpander
   }
 
   /// Reports a warning message.
-  void warning(MID mid, string macroName)
+  void warning(MID mid, cstring macroName)
   {
     if (diag !is null)
       diag ~= new Warning(new Location(filePath, 0),
@@ -217,17 +217,17 @@ struct MacroExpander
   }
 
   /// Expands the macros from the table in the text.
-  char[] expandMacros(char[] text
-    /+, char[] prevArg0 = null, uint depth = 1000+/)
+  cstring expandMacros(cstring text
+    /+, cstring prevArg0 = null, uint depth = 1000+/)
   { // prevArg0 and depth are commented out, causes problems with recursion.
     // if (depth == 0)
     //   return  text;
     // depth--;
 
     char[] result;
-    char* p = text.ptr;
-    char* textEnd = p + text.length;
-    char* macroEnd = p;
+    auto p = text.ptr;
+    auto textEnd = p + text.length;
+    auto macroEnd = p;
 
     // Scan for: "\1MacroName ...\2"
     for (; p+2 < textEnd; p++) // 2 chars look-ahead.
@@ -279,7 +279,7 @@ struct MacroExpander
   /// Params:
   ///   ref_p = Will point to Macro.Marker.Closing or Marker.Unclosed,
   ///           or to textEnd if it wasn't found.
-  static char[][] scanArguments(ref char* ref_p, char* textEnd)
+  static cstring[] scanArguments(ref cchar* ref_p, cchar* textEnd)
   out(args) { assert(args.length != 1); }
   body
   {
@@ -287,7 +287,7 @@ struct MacroExpander
     //           "" or '' strings, comments, or tags."
     uint mlevel = 1; // Nesting level of macros.
     uint plevel = 0; // Nesting level of parentheses.
-    char[][] args;
+    cstring[] args;
     auto p = ref_p; // Use a non-ref variable to scan the text.
 
     // Skip leading spaces.
@@ -299,8 +299,8 @@ struct MacroExpander
     if (p < textEnd && *p == Macro.Marker.ArgsStart)
       p++;
 
-    char* arg0Begin = p; // Begin of all arguments.
-    char* argBegin = p;
+    auto arg0Begin = p; // Begin of all arguments.
+    auto argBegin = p;
   MainLoop:
     while (p < textEnd)
     {
@@ -378,14 +378,14 @@ struct MacroExpander
   ///   args = The first element, args[0], is the whole argument string and
   ///          the following elements are slices into it.$(BR)
   ///          The array is empty if there are no arguments.
-  char[] expandArguments(char[] text, char[][] args)
+  cstring expandArguments(cstring text, cstring[] args)
   in { assert(args.length != 1, "zero or more than 1 args expected"); }
   body
   {
     char[] result;
-    char* p = text.ptr;
-    char* textEnd = p + text.length;
-    char* placeholderEnd = p;
+    auto p = text.ptr;
+    auto textEnd = p + text.length;
+    auto placeholderEnd = p;
 
     while (p+1 < textEnd)
     {

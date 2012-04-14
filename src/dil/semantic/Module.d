@@ -20,7 +20,6 @@ import common;
 
 import tango.io.model.IFile,
        tango.io.device.File;
-import tango.text.Util;
 
 alias FileConst.PathSeparatorChar dirSep;
 
@@ -28,9 +27,9 @@ alias FileConst.PathSeparatorChar dirSep;
 class Module : ModuleSymbol
 {
   SourceText sourceText; /// The source file of this module.
-  string moduleFQN; /// Fully qualified name of the module. E.g.: dil.ast.Node
-  string packageName; /// E.g.: dil.ast
-  string moduleName; /// E.g.: Node
+  cstring moduleFQN; /// Fully qualified name of the module. E.g.: dil.ast.Node
+  cstring packageName; /// E.g.: dil.ast
+  cstring moduleName; /// E.g.: Node
   uint ID; /// A unique 1-based ID. Useful for graph traversing.
 
   CompoundDecl root; /// The root of the parse tree.
@@ -61,7 +60,7 @@ class Module : ModuleSymbol
   /// Constructs a Module object.
   /// Params:
   ///   filePath = File path to the source text; loaded in the constructor.
-  this(string filePath, CompilationContext cc)
+  this(cstring filePath, CompilationContext cc)
   {
     this();
     this.cc = cc;
@@ -70,19 +69,19 @@ class Module : ModuleSymbol
   }
 
   /// Returns the file path of the source text.
-  string filePath()
+  cstring filePath()
   {
     return sourceText.filePath;
   }
 
   /// Returns filePath and escapes '/' or '\' with '_'.
-  string filePathEsc()
+  cstring filePathEsc()
   {
-    return replace(filePath().dup, dirSep, '_');
+    return filePath().replace(dirSep, '_');
   }
 
   /// Returns the file extension: "d" or "di".
-  string fileExtension()
+  cstring fileExtension()
   {
     foreach_reverse (i, c; filePath)
       if (c == '.')
@@ -153,9 +152,9 @@ class Module : ModuleSymbol
 
   /// Returns a list of import paths.
   /// E.g.: ["dil/ast/Node", "dil/semantic/Module"]
-  string[] getImportPaths()
+  cstring[] getImportPaths()
   {
-    string[] result;
+    cstring[] result;
     foreach (import_; imports)
       result ~= import_.getModuleFQNs(dirSep);
     return result;
@@ -163,13 +162,13 @@ class Module : ModuleSymbol
 
   /// Returns the fully qualified name of this module.
   /// E.g.: dil.ast.Node
-  string getFQN()
+  cstring getFQN()
   {
     return moduleFQN;
   }
 
   /// Sets the module's FQN.
-  void setFQN(string moduleFQN)
+  void setFQN(cstring moduleFQN)
   {
     uint i = moduleFQN.length;
     if (i != 0) // Don't decrement if string has zero length.
@@ -189,7 +188,7 @@ class Module : ModuleSymbol
 
   /// Returns the module's FQN with slashes instead of dots.
   /// E.g.: dil/ast/Node
-  string getFQNPath()
+  cstring getFQNPath()
   {
     char[] FQNPath = moduleFQN.dup;
     foreach (i, c; FQNPath)

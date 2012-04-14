@@ -18,7 +18,6 @@ import tango.io.model.IFile;
 import tango.io.Path : pathNormalize = normalize;
 import tango.core.Array : lbound, sort;
 import tango.text.Ascii : icompare;
-import tango.text.Util : replace;
 import tango.sys.Environment;
 
 alias FileConst.PathSeparatorChar dirSep;
@@ -53,7 +52,7 @@ class ModuleManager
 
   /// Looks up a module by its file path. E.g.: "src/dil/ModuleManager.d"
   /// Relative paths are made absolute.
-  Module moduleByPath(string moduleFilePath)
+  Module moduleByPath(cstring moduleFilePath)
   {
     auto absFilePath = absolutePath(moduleFilePath);
     if (auto existingModule = hashOf(absFilePath) in absFilePathTable)
@@ -62,7 +61,7 @@ class ModuleManager
   }
 
   /// Looks up a module by its f.q.n. path. E.g.: "dil/ModuleManager"
-  Module moduleByFQN(string moduleFQNPath)
+  Module moduleByFQN(cstring moduleFQNPath)
   {
     if (auto existingModule = hashOf(moduleFQNPath) in moduleFQNPathTable)
       return *existingModule;
@@ -71,7 +70,7 @@ class ModuleManager
 
   /// Loads and parses a module given a file path.
   /// Returns: A new Module instance or an existing one from the table.
-  Module loadModuleFile(string moduleFilePath)
+  Module loadModuleFile(cstring moduleFilePath)
   {
     if (auto existingModule = moduleByPath(moduleFilePath))
       return existingModule;
@@ -86,7 +85,7 @@ class ModuleManager
   }
 
   /// Loads a module given an FQN path. Searches import paths.
-  Module loadModule(string moduleFQNPath)
+  Module loadModule(cstring moduleFQNPath)
   {
     // Look up in table if the module is already loaded.
     if (auto existingModule = moduleByFQN(moduleFQNPath))
@@ -148,7 +147,7 @@ class ModuleManager
       {
         i++;
         auto pckgFQN = p.getFQN(); // E.g.: dil.ast
-        auto pckgFQNPath = replace(pckgFQN.dup, '.', dirSep); // E.g.: dil/ast
+        auto pckgFQNPath = pckgFQN.replace('.', dirSep); // E.g.: dil/ast
         if (hashOf(pckgFQNPath) in moduleFQNPathTable)
           // Error: package and module share the same name.
           return error(newModule.moduleDecl.packages[$-i], newModule,
@@ -176,13 +175,13 @@ class ModuleManager
 
   /// Returns the package given a f.q. package name.
   /// Returns the root package for an empty string.
-  Package getPackage(string pckgFQN)
+  Package getPackage(cstring pckgFQN)
   {
     auto fqnHash = hashOf(pckgFQN);
     if (auto existingPackage = fqnHash in packageTable)
       return *existingPackage;
 
-    string prevFQN, lastPckgName;
+    cstring prevFQN, lastPckgName;
     // E.g.: pckgFQN = 'dil.ast', prevFQN = 'dil', lastPckgName = 'ast'
     splitPackageFQN(pckgFQN, prevFQN, lastPckgName);
     // Recursively build package hierarchy.
@@ -203,7 +202,8 @@ class ModuleManager
   ///   pckgFQN = The full package name to be split.
   ///   prevFQN = Set to 'dil.ast' in the example.
   ///   lastName = The last package name; set to 'xyz' in the example.
-  void splitPackageFQN(string pckgFQN, ref string prevFQN, ref string lastName)
+  void splitPackageFQN(cstring pckgFQN,
+    ref cstring prevFQN, ref cstring lastName)
   {
     uint lastDotIndex;
     foreach_reverse (i, c; pckgFQN)
@@ -219,9 +219,9 @@ class ModuleManager
   }
 
   /// Returns e.g. 'dil.ast' for 'dil/ast/Node'.
-  static string getPackageFQN(string moduleFQNPath)
+  static char[] getPackageFQN(cstring moduleFQNPath)
   {
-    string pckg = moduleFQNPath.dup;
+    char[] pckg = moduleFQNPath.dup;
     uint lastDirSep;
     foreach (i, c; pckg)
       if (c == dirSep)
@@ -231,7 +231,7 @@ class ModuleManager
 
   /// Searches for a module in the file system looking in importPaths.
   /// Returns: The file path to the module, or null if it wasn't found.
-  static string findModuleFile(string moduleFQNPath, string[] importPaths)
+  static cstring findModuleFile(cstring moduleFQNPath, cstring[] importPaths)
   {
     auto filePath = Path();
     foreach (importPath; importPaths)
@@ -251,7 +251,7 @@ class ModuleManager
   }
 
   /// ditto
-  string findModuleFile(string moduleFQNPath)
+  cstring findModuleFile(cstring moduleFQNPath)
   {
     return findModuleFile(moduleFQNPath, cc.importPaths);
   }
@@ -279,10 +279,10 @@ class ModuleManager
   }
 
   /// Returns a normalized, absolute path.
-  static string absolutePath(string path)
+  static cstring absolutePath(cstring path)
   {
-    path = Environment.toAbsolute(path);
-    return pathNormalize(path); // Remove './' and '../' parts.
+    auto p = Environment.toAbsolute(path.dup);
+    return pathNormalize(p); // Remove './' and '../' parts.
   }
 
   /// Returns the error location of the module's name
@@ -313,7 +313,7 @@ class ModuleManager
   /// Params:
   ///   modulePath = File path to the module.
   ///   loc = Optional source location (from an import statement.)
-  void errorModuleNotFound(string modulePath, Location loc = null)
+  void errorModuleNotFound(cstring modulePath, Location loc = null)
   {
     if(!loc) loc = new Location(modulePath, 0);
     auto msg = cc.diag.formatMsg(MID.CouldntLoadModule, modulePath);

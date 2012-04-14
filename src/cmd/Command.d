@@ -14,7 +14,7 @@ abstract class Command
   /// Logs messages to stdout.
   /// Params:
   ///  format = The format string.
-  void log(string format, ...)
+  void log(cstring format, ...)
   { // TODO: use thread-safe logging classes of Tango?
     Printfln(Format(_arguments, _argptr, format));
   }

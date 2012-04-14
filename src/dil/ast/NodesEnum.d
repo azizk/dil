@@ -15,7 +15,7 @@ enum NodeCategory : ushort
 }
 
 /// A list of all class names that inherit from Node.
-static const char[][] NodeClassNames = [
+enum string[] NodeClassNames = [
   // Declarations:
   "CompoundDecl",
   "EmptyDecl",

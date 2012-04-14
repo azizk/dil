@@ -10,7 +10,7 @@ private alias NodeKind N;
 /// CTF: Returns a table of Node class members as a string.
 char[] genMembersTable()
 {
-  char[][][NodeClassNames.length] t;
+  string[][NodeClassNames.length] t;
 
   t[N.CompoundDecl] = ["decls[]"];
   t[N.EmptyDecl] = t[N.IllegalDecl] =
@@ -152,13 +152,13 @@ else
   t[N.TemplateValueParam] = ["valueType", "specValue?", "defValue?"];
   t[N.TemplateTupleParam] = [];
 
-  char[] code = "[ ";
+  char[] code = "[ ".dup;
   // Iterate over the elements in the table and create an array.
-  foreach (m; t)
+  foreach (members; t)
   {
-    code ~= "[ ";
-    foreach (n; m)
-      code ~= `"` ~ n ~ `",`;
+    code ~= "[ ".dup;
+    foreach (member; members)
+      code ~= `"` ~ member ~ `",`;
     code[$-1] = ']'; // Overwrite last comma or space.
     code ~= ',';
   }
@@ -167,7 +167,7 @@ else
 }
 
 /// A table listing the subnodes of all classes inheriting from Node.
-static const char[][][/+NodeKind.max+1+/] NodeMembersTable = mixin(genMembersTable());
+enum string[][/+NodeKind.max+1+/] NodeMembersTable = mixin(genMembersTable());
 
 /// A helper function that parses the special strings in NodeMembersTable.
 ///
@@ -186,9 +186,9 @@ static const char[][][/+NodeKind.max+1+/] NodeMembersTable = mixin(genMembersTab
 /// Returns:
 ///   an array of tuples (Name, Type) where Name is the exact name of the member
 ///   and Type may be one of these values: "[]", "[?]", "?", "" or "%".
-char[][2][] parseMembers(char[][] members)
+string[2][] parseMembers(string[] members)
 {
-  char[][2][] result;
+  string[2][] result;
   foreach (member; members)
     if (member.length > 2 && member[$-2..$] == "[]")
       result ~= [member[0..$-2], "[]"]; // Strip off trailing '[]'.

@@ -34,9 +34,15 @@ char[] String(char* begin, char* end)
   assert(begin && end && begin <= end);
   return begin[0..end-begin];
 }
+/// ditto
+cstring String(cchar* begin, cchar* end)
+{
+  assert(begin && end && begin <= end);
+  return begin[0..end-begin];
+}
 
 /// Encodes a string's characters with hexadecimal digits.
-char[] StringHex(char[] str)
+char[] StringHex(cstring str)
 {
   const hexdigits = "0123456789abcdef";
   char[] inhex = new char[str.length*2]; // Reserve space.
@@ -49,17 +55,17 @@ char[] StringHex(char[] str)
 /// Calculates a hash value for str.
 /// Note: The value will differ between 32bit and 64bit systems.
 /// It will also differ between little and big endian systems.
-hash_t hashOf(string str)
+hash_t hashOf(cstring str)
 {
   hash_t hash;
-  char* pstr = str.ptr;
+  auto pstr = str.ptr;
   size_t len = str.length;
 
   ubyte rem_len = len % hash_t.sizeof; // Remainder.
   if (len == rem_len)
     goto Lonly_remainder;
 
-  auto hptr = cast(hash_t*)pstr;
+  auto hptr = cast(const(hash_t)*)pstr;
   // Divide the length by 4 or 8 (x86 vs. x86_64).
   auto hlen = len / hash_t.sizeof;
   assert(hlen, "can't be zero");
@@ -69,7 +75,7 @@ hash_t hashOf(string str)
 
   if (rem_len)
   { // Calculate the hash of the remaining characters.
-    pstr = cast(char*)hptr; // hptr points exactly to the remainder.
+    pstr = cast(typeof(pstr))hptr; // hptr points exactly to the remainder.
   Lonly_remainder:
     size_t chunk;
     while (rem_len--) // Remainder loop.
@@ -137,7 +143,7 @@ bool isUnicodeNewlineChar(dchar d)
 }
 
 /// Returns: true if p points to a line or paragraph separator.
-bool isUnicodeNewline(char* p)
+bool isUnicodeNewline(cchar* p)
 {
   return *p == LS[0] && p[1] == LS[1] && (p[2] == LS[2] || p[2] == PS[2]);
 }
@@ -148,7 +154,7 @@ bool isUnicodeNewline(char* p)
 ////LS := "\u2028"
 ////PS := "\u2029"
 ////)
-bool isNewline(char* p)
+bool isNewline(cchar* p)
 {
   return *p == '\n' || *p == '\r' || isUnicodeNewline(p);
 }
@@ -171,14 +177,14 @@ bool isEOF(dchar c)
 
 /// Returns: true if p points to the first character of an EndOfLine.
 /// $(BNF EndOfLine := Newline | EOF)
-bool isEndOfLine(char* p)
+bool isEndOfLine(cchar* p)
 {
   return isNewline(p) || isEOF(*p);
 }
 
 /// Scans a Newline and sets p one character past it.
 /// Returns: true if found or false otherwise.
-bool scanNewline(ref char* p)
+bool scanNewline(ref cchar* p)
 in { assert(p); }
 body
 {
@@ -201,7 +207,7 @@ body
 
 /// Scans a Newline and sets p one character past it.
 /// Returns: true if found or false otherwise.
-bool scanNewline(ref char* p, char* end)
+bool scanNewline(ref cchar* p, cchar* end)
 in { assert(p && p < end); }
 body
 {
@@ -222,10 +228,16 @@ body
   return true;
 }
 
+/// ditto
+bool scanNewline(ref char* p, cchar* end)
+{
+  return scanNewline(*cast(cchar**)&p, end);
+}
+
 /// Scans a Newline in reverse direction and sets end
 /// on the first character of the newline.
 /// Returns: true if found or false otherwise.
-bool scanNewlineReverse(char* begin, ref char* end)
+bool scanNewlineReverse(cchar* begin, ref cchar* end)
 {
   switch (*end)
   {
@@ -252,7 +264,7 @@ bool scanNewlineReverse(char* begin, ref char* end)
 ///   end = Where it ends.
 /// Returns: the identifier if valid (sets ref_p one past the id,) or
 ///          null if invalid (leaves ref_p unchanged.)
-char[] scanIdentifier(ref char* ref_p, char* end)
+cstring scanIdentifier(ref cchar* ref_p, cchar* end)
 in { assert(ref_p && ref_p < end); }
 body
 {
@@ -267,6 +279,11 @@ body
     return identifier;
   }
   return null;
+}
+
+cstring scanIdentifier(ref char* ref_p, cchar* end)
+{
+   return scanIdentifier(*cast(cchar**)&ref_p, end);
 }
 
 /// ASCII character properties table.
@@ -341,7 +358,7 @@ int char2ev(char c) { return ptable[c] >> 8; /*(ptable[c] & EVMask) >> 8;*/ }
 int isascii(uint c) { return c < 128; }
 
 /// Returns true if the string is empty or has only whitespace characters.
-bool isAllSpace(char* start, char* end)
+bool isAllSpace(cchar* start, cchar* end)
 {
   for (; start < end; start++)
     if (!isspace(*start))
@@ -385,7 +402,7 @@ static this()
   p['t'] |= 9 << 8;
   p['v'] |= 11 << 8;
   // Print a formatted array literal.
-  char[] array = "[\n";
+  char[] array = "[\n".dup;
   foreach (i, c; ptable)
   {
     array ~= Format((c>255?" 0x{0:x},":"{0,2},"), c) ~ (((i+1) % 16) ? "":"\n");

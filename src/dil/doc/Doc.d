@@ -70,7 +70,7 @@ static:
   }
 
   /// Returns a DDocComment created from a text.
-  DDocComment getDDocComment(string text)
+  DDocComment getDDocComment(cstring text)
   {
     text = sanitize(text, '\0'); // May be unnecessary.
     DDocParser p;
@@ -152,11 +152,11 @@ static:
   }
 
   /// Extracts the text body of the comment tokens.
-  string getDDocText(Token*[] tokens)
+  cstring getDDocText(Token*[] tokens)
   {
     if (tokens.length == 0)
       return null;
-    string result;
+    char[] result;
     foreach (token; tokens)
     { // Determine how many characters to slice off from the end of the comment.
       // 0 for "//", 2 for "+/" and "*/".
@@ -175,12 +175,12 @@ static:
   /// Params:
   ///   comment = The string to be sanitized.
   ///   padding = '/', '+' or '*'
-  string sanitize(string comment, char padding)
+  cstring sanitize(char[] comment, char padding)
   {
     bool isNewline = true; // True when at the beginning of a new line.
-    char* p = comment.ptr; // Reader.
-    char* q = p; // Writer.
-    char* end = p + comment.length;
+    auto p = comment.ptr; // Reader.
+    auto q = p; // Writer.
+    auto end = p + comment.length;
 
     while (p < end)
     {
@@ -217,15 +217,20 @@ static:
     comment.length = p - comment.ptr + 1;
     return comment;
   }
+  /// ditto
+  cstring sanitize(cstring comment, char padding)
+  {
+    return sanitize(comment.dup, padding);
+  }
 
   /// Unindents all lines in text by the maximum amount possible.
   /// Note: counts tabulators the same as single spaces.
   /// Returns: the unindented text or the original text.
-  char[] unindentText(char[] text)
+  cstring unindentText(cstring text)
   {
-    char* p = text.ptr, end = p + text.length;
+    auto p = text.ptr, end = p + text.length;
     uint indent = uint.max; // Start with the largest number.
-    char* lbegin = p; // The beginning of a line.
+    auto lbegin = p; // The beginning of a line.
     // First determine the maximum amount we may remove.
     while (p < end)
     {
@@ -248,7 +253,8 @@ static:
 
     p = text.ptr, end = p + text.length;
     lbegin = p;
-    char* q = p; // Writer.
+    auto newText = text.dup;
+    auto q = newText.ptr; // Writer.
     // Remove the determined amount.
     while (p < end)
     {
@@ -263,36 +269,37 @@ static:
       // Skip to the end of the line.
       while (p < end && *p != '\n')
         *q++ = *p++;
+      // Skip multiple newlines.
       while (p < end && *p == '\n')
         *q++ = *p++;
       lbegin = p;
     }
-    text.length = q - text.ptr;
-    return text;
+    newText.length = q - newText.ptr;
+    return newText;
   }
 }
 
 /// Parses a DDoc comment string.
 struct DDocParser
 {
-  char* p; /// Current character pointer.
-  char* textEnd; /// Points one character past the end of the text.
+  cchar* p; /// Current character pointer.
+  cchar* textEnd; /// Points one character past the end of the text.
   Section[] sections; /// Parsed sections.
   Section summary; /// Optional summary section.
   Section description; /// Optional description section.
 
   /// Parses the DDoc text into sections.
   /// All newlines in the text must be converted to '\n'.
-  Section[] parse(string text)
+  Section[] parse(cstring text)
   {
     if (!text.length)
       return null;
     p = text.ptr;
     textEnd = p + text.length;
 
-    char* summaryBegin;
-    string ident, nextIdent;
-    char* bodyBegin, nextBodyBegin;
+    cchar* summaryBegin;
+    cstring ident, nextIdent;
+    cchar* bodyBegin, nextBodyBegin;
 
     while (p < textEnd && (isspace(*p) || *p == '\n'))
       p++;
@@ -324,10 +331,10 @@ struct DDocParser
 
   /// Separates the text between p and end
   /// into a summary and an optional description section.
-  void scanSummaryAndDescription(char* p, char* end)
+  void scanSummaryAndDescription(cchar* p, cchar* end)
   {
     assert(p <= end);
-    char* sectionBegin = p;
+    auto sectionBegin = p;
     // Search for the end of the first paragraph.
     while (p < end && !(*p == '\n' && p+1 < end && p[1] == '\n'))
       if (skipCodeSection(p, end) == false)
@@ -343,7 +350,7 @@ struct DDocParser
   }
 
   /// Returns true if p points to "$(DDD)".
-  static bool isCodeSection(char* p, char* end)
+  static bool isCodeSection(cchar* p, cchar* end)
   {
     return p < end && *p == '-' && p+2 < end && p[1] == '-' && p[2] == '-';
   }
@@ -354,7 +361,7 @@ struct DDocParser
   /// parsing DDoc sections. However, from experience it seems
   /// to be a good idea to do that.
   /// Returns: true if a code section was skipped.
-  static bool skipCodeSection(ref char* p, char* end)
+  static bool skipCodeSection(ref cchar* p, cchar* end)
   {
     if (!isCodeSection(p, end))
       return false;
@@ -374,7 +381,7 @@ struct DDocParser
   ///   ident = Set to the Identifier.
   ///   bodyBegin = Set to the beginning of the text body (whitespace skipped.)
   /// Returns: true if found.
-  bool findNextIdColon(ref char[] ident, ref char* bodyBegin)
+  bool findNextIdColon(ref cstring ident, ref cchar* bodyBegin)
   {
     while (p < textEnd)
     {
@@ -418,43 +425,43 @@ struct DDocParser
 /// Represents a DDoc section.
 class Section
 {
-  string name; /// The name of the section.
-  string text; /// The text of the section.
+  cstring name; /// The name of the section.
+  cstring text; /// The text of the section.
   /// Constructs a Section object.
-  this(string name, string text)
+  this(cstring name, cstring text)
   {
     this.name = name;
     this.text = text;
   }
 
   /// Case-insensitively compares the section's name with name2.
-  bool Is(char[] name2)
+  bool Is(cstring name2)
   {
     return icompare(name, name2) == 0;
   }
 
   /// Returns the section's text including its name.
-  char[] wholeText()
+  cstring wholeText()
   {
     if (name.length == 0)
       return text;
-    return String(name.ptr, text.ptr+text.length);
+    return name ~ ": " ~ text;
   }
 }
 
 /// Represents a params section.
 class ParamsSection : Section
 {
-  string[] paramNames; /// Parameter names.
-  string[] paramDescs; /// Parameter descriptions.
+  cstring[] paramNames; /// Parameter names.
+  cstring[] paramDescs; /// Parameter descriptions.
   /// Constructs a ParamsSection object.
-  this(string name, string text)
+  this(cstring name, cstring text)
   {
     super(name, text);
     IdentValueParser parser;
     auto idvalues = parser.parse(text);
-    this.paramNames = new string[idvalues.length];
-    this.paramDescs = new string[idvalues.length];
+    this.paramNames = new cstring[idvalues.length];
+    this.paramDescs = new cstring[idvalues.length];
     foreach (i, idvalue; idvalues)
     {
       this.paramNames[i] = idvalue.ident;
@@ -466,16 +473,16 @@ class ParamsSection : Section
 /// Represents a macros section.
 class MacrosSection : Section
 {
-  string[] macroNames; /// Macro names.
-  string[] macroTexts; /// Macro texts.
+  cstring[] macroNames; /// Macro names.
+  cstring[] macroTexts; /// Macro texts.
   /// Constructs a MacrosSection object.
-  this(string name, string text)
+  this(cstring name, cstring text)
   {
     super(name, text);
     IdentValueParser parser;
     auto idvalues = parser.parse(text);
-    this.macroNames = new string[idvalues.length];
-    this.macroTexts = new string[idvalues.length];
+    this.macroNames = new cstring[idvalues.length];
+    this.macroTexts = new cstring[idvalues.length];
     foreach (i, idvalue; idvalues)
     {
       this.macroNames[i] = idvalue.ident;

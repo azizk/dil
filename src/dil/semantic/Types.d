@@ -20,7 +20,7 @@ abstract class Type/* : Symbol*/
   Type next;     /// The next type in the type structure.
   TYP tid;       /// The ID of the type.
   Symbol symbol; /// Not null if this type has a symbol.
-  string mangled; /// The mangled identifier of the type.
+  cstring mangled; /// The mangled identifier of the type.
 
   this(){}
 
@@ -151,7 +151,7 @@ abstract class Type/* : Symbol*/
   }
 
   /// Returns the type as a human-readable string.
-  abstract string toString();
+  abstract cstring toText();
 
   /// Returns true if error type.
   final bool isError()
@@ -398,7 +398,7 @@ abstract class Type/* : Symbol*/
   }
 
   /// Returns the mangled name of this type.
-  string toMangle()
+  cstring toMangle()
   {
     if (mangled.length)
       return mangled;
@@ -418,12 +418,12 @@ class TypeError : Type
     super(null, TYP.Error);
   }
 
-  string toString()
+  cstring toText()
   {
     return "{TypeError}";
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     return "{TypeError}";
   }
@@ -445,9 +445,9 @@ class TypeBasic : Type
     return 0;
   }
 
-  string toString()
+  cstring toText()
   {
-    return ident.str.dup;
+    return ident.str;
   }
 }
 
@@ -469,9 +469,9 @@ class TypeDArray : Type
     return tti.ptrSize;
   }
 
-  string toString()
+  cstring toText()
   {
-    return next.toString() ~ "[]";
+    return next.toText() ~ "[]";
   }
 }
 
@@ -490,12 +490,12 @@ class TypeAArray : Type
     return tti.ptrSize * 2;
   }
 
-  string toString()
+  cstring toText()
   {
-    return next.toString() ~ "[" ~ keyType.toString() ~ "]";
+    return next.toText() ~ "[" ~ keyType.toText() ~ "]";
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     if (mangled.length)
       return mangled;
@@ -531,12 +531,12 @@ class TypeSArray : Type
     return tf;
   }
 
-  string toString()
+  cstring toText()
   {
-    return next.toString() ~ "[" ~ String(dimension) ~ "]";
+    return next.toText() ~ "[" ~ String(dimension) ~ "]";
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     if (mangled.length)
       return mangled;
@@ -557,9 +557,9 @@ class TypePointer : Type
     return tti.ptrSize;
   }
 
-  string toString()
+  cstring toText()
   {
-    return next.toString() ~ "*";
+    return next.toText() ~ "*";
   }
 }
 
@@ -576,9 +576,9 @@ class TypeReference : Type
     return tti.ptrSize;
   }
 
-  string toString()
+  cstring toText()
   { // FIXME: this is probably wrong.
-    return next.toString() ~ "&";
+    return next.toText() ~ "&";
   }
 }
 
@@ -617,12 +617,12 @@ class TypeEnum : Type
     return tf;
   }
 
-  string toString()
+  cstring toText()
   {
     return symbol.name.str;
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     if (mangled.length)
       return mangled;
@@ -649,12 +649,12 @@ class TypeStruct : Type
     return 0;
   }
 
-  string toString()
+  cstring toText()
   {
     return symbol.name.str;
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     if (mangled.length)
       return mangled;
@@ -676,12 +676,12 @@ class TypeClass : Type
     return tti.ptrSize;
   }
 
-  string toString()
+  cstring toText()
   {
     return symbol.name.str;
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     if (mangled.length)
       return mangled;
@@ -715,12 +715,12 @@ class TypeTypedef : Type
     return tf;
   }
 
-  string toString()
+  cstring toText()
   {
-    return next.toString();
+    return next.toText();
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     if (mangled.length)
       return mangled;
@@ -749,21 +749,21 @@ class TypeParameter : Type
   }
 
   /// NB: the parameter's name and the optional default value are not printed.
-  string toString()
+  cstring toText()
   { // := StorageClasses? ParamType? "..."?
     char[] s;
     // TODO: exclude STC.In?
     foreach (stc; EnumString.all(stcs/+ & ~StorageClass.In+/))
       s ~= stc ~ " ";
     if (type)
-      s ~= type.toString();
+      s ~= type.toText();
     else if (variadic)
       s ~= "...";
     assert(s.length, "empty parameter?");
     return s;
   }
 
-  string toMangle()
+  cstring toMangle()
   { // := StorageClassMangleChar TypeMangle
     if (mangled.length)
       return mangled;
@@ -807,19 +807,19 @@ class TypeParameters : Type
     return params.length ? params[$-1].variadic : VariadicStyle.None;
   }
 
-  string toString()
+  cstring toText()
   { // := "(" ParameterList ")"
     char[] s;
     s ~= "(";
     foreach (i, p; params) {
       if (i) s ~= ", "; // Append comma if more than one param.
-      s ~= p.toString();
+      s ~= p.toText();
     }
     s ~= ")";
     return s;
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     if (mangled.length)
       return mangled;
@@ -848,12 +848,12 @@ class TypeFunction : Type
     this.variadic = params.getVariadic();
   }
 
-  string toString()
+  cstring toText()
   { // := ReturnType ParameterList
-    return retType.toString() ~ params.toString();
+    return retType.toText() ~ params.toText();
   }
 
-  string toMangle()
+  cstring toMangle()
   { // := MangleChar LinkageChar ParamsMangle ReturnChar ReturnTypeMangle
     if (mangled.length)
       return mangled;
@@ -884,7 +884,7 @@ class TypeFunction : Type
   version(D2)
   {
   /// Mangles the modifiers of this function.
-  string modsToMangle()
+  cstring modsToMangle()
   out(m) { assert(m in ["O"[]:1, "Ox":1, "ONg":1, "x":1, "y":1, "Ng":1]); }
   body
   {
@@ -901,7 +901,7 @@ class TypeFunction : Type
   }
 
   /// Mangles the attributes of this function.
-  string attrsToMangle()
+  cstring attrsToMangle()
   {
     char[] m;
     if (stcs & StorageClass.Pure)
@@ -939,13 +939,13 @@ class TypeFuncPtr : Type
     return tti.ptrSize;
   }
 
-  string toString()
+  cstring toText()
   {
     auto f = funcType();
-    return f.retType.toString() ~ " function" ~ f.params.toString();
+    return f.retType.toText() ~ " function" ~ f.params.toText();
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     return mangleChar() ~ next.toMangle();
   }
@@ -974,13 +974,13 @@ class TypeDelegate : Type
     return tti.ptrSize;
   }
 
-  string toString()
+  cstring toText()
   {
     auto f = funcType();
-    return f.retType.toString() ~ " delegate" ~ f.params.toString();
+    return f.retType.toText() ~ " delegate" ~ f.params.toText();
   }
 
-  string toMangle()
+  cstring toMangle()
   {
     return mangleChar() ~ next.toMangle();
   }
@@ -1000,12 +1000,12 @@ class TypeIdentifier : Type
     return 0;
   }
 
-  string toString()
+  cstring toText()
   {
     return ident.str;
   }
 
-  string toMangle()
+  cstring toMangle()
   { // := MangleChar IDLength ID
     if (mangled.length)
       return mangled;
@@ -1027,7 +1027,7 @@ class TypeTemplInstance : Type
     return 0;
   }
 
-  string toString()
+  cstring toText()
   { // TODO:
     return "tpl!()";
   }
@@ -1049,19 +1049,19 @@ class TypeTuple : Type
     return 0;
   }
 
-  string toString()
+  cstring toText()
   { // := "(" TypeList ")"
     char[] s;
     s ~= "(";
     foreach (i, t; types) {
       if (i) s ~= ", "; // Append comma if more than one type.
-      s ~= t.toString();
+      s ~= t.toText();
     }
     s ~= ")";
     return s;
   }
 
-  string toMangle()
+  cstring toMangle()
   { // := MangleChar TypesMangleLength TypesMangle
     if (mangled.length)
       return mangled;
@@ -1085,9 +1085,9 @@ class TypeConst : Type
     return next.sizeOf(tti);
   }
 
-  string toString()
+  cstring toText()
   {
-    return "const(" ~ next.toString() ~ ")";
+    return "const(" ~ next.toText() ~ ")";
   }
 }
 
@@ -1104,9 +1104,9 @@ class TypeImmutable : Type
     return next.sizeOf(tti);
   }
 
-  string toString()
+  cstring toText()
   {
-    return "immutable(" ~ next.toString() ~ ")";
+    return "immutable(" ~ next.toText() ~ ")";
   }
 }
 
@@ -1117,7 +1117,7 @@ class TypeTable
 
   /// Looks up a type by its mangled id.
   /// Returns: the symbol if there, otherwise null.
-  Type lookup(string mangled)
+  Type lookup(cstring mangled)
   {
     assert(mangled.length);
     return lookup(hashOf(mangled));
@@ -1171,7 +1171,7 @@ class TypeTable
   // TODO: change bool[string] to a different structure if necessary.
   /// Initializes the table and
   /// takes the target machine's properties into account.
-  void init(bool[string] args)
+  void init(bool[cstring] args)
   {
     synchronized Types.init();
 
@@ -1232,7 +1232,7 @@ union Value
 struct TypeFlags
 {
   /// The actual flags.
-  enum
+  immutable enum
   {
     None      = 0,      /// No flags are set.
     ZeroInit  = 1 << 0, /// All bytes of the type can be initialized to 0.
@@ -1284,23 +1284,23 @@ struct TypeFlags
   TypeFlags opOrAssign(TypeFlags tf)
   {
     flags |= tf.flags;
-    return *this;
+    return this;
   }
 
   TypeFlags opOr(TypeFlags tf)
   {
-    return *this |= tf;
+    return this |= tf;
   }
 
   TypeFlags opAndAssign(TypeFlags tf)
   {
     flags &= tf.flags;
-    return *this;
+    return this;
   }
 
   TypeFlags opAnd(TypeFlags tf)
   {
-    return *this &= tf;
+    return this &= tf;
   }
 }
 
@@ -1318,7 +1318,7 @@ struct TypeMetaInfo
   char mangle; /// Mangle character of the type.
   ushort size; /// Byte size of the type.
   ushort alignsize; /// Align size of the type.
-  Value* defaultInit; /// Default initialization value.
+  const Value* defaultInit; /// Default initialization value.
   TypeFlags.Flags flags; /// The flags of the type.
 }
 
@@ -1339,18 +1339,18 @@ static:
   {
   alias SIZE_NOT_AVAILABLE SNA;
   alias ALIGN_NOT_AVAILABLE ANA;
-  const ushort PS = 0; // Used for documentation purposes below.
+  const ushort PS = 0/+1?+/; // Used for documentation purposes below.
   alias TypeFlags TF;    /// Shortcuts.
-  alias TF.ZeroInit Z;   /// ditto
-  alias TF.Unsigned U;   /// ditto
-  alias TF.Signed S;     /// ditto
-  alias TF.Integral I;   /// ditto
-  alias TF.Floating F;   /// ditto
-  alias TF.Real Re;      /// ditto
-  alias TF.Imaginary Im; /// ditto
-  alias TF.Complex Cx;   /// ditto
-  alias TF.Pointer P;    /// ditto
-  alias TF.BoolVal BV;   /// ditto
+  const Z = TF.ZeroInit;
+  const U = TF.Unsigned;;   /// ditto
+  const S = TF.Signed;;     /// ditto
+  const I = TF.Integral;;   /// ditto
+  const F = TF.Floating;;   /// ditto
+  const Re = TF.Real;;      /// ditto
+  const Im = TF.Imaginary;; /// ditto
+  const Cx = TF.Complex;;   /// ditto
+  const P = TF.Pointer;;    /// ditto
+  const BV = TF.BoolVal;;   /// ditto
   }
   /// The meta info table.
   private const TypeMetaInfo table[] = [

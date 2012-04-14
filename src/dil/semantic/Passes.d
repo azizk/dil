@@ -170,7 +170,7 @@ abstract class SemanticPass : DefaultVisitor
 
   /// This object is assigned to idScope when a symbol lookup
   /// returned no valid symbol.
-  static const ScopeSymbol emptyIdScope;
+  static ScopeSymbol emptyIdScope;
   static this()
   {
     this.emptyIdScope = new ScopeSymbol();
@@ -179,10 +179,12 @@ abstract class SemanticPass : DefaultVisitor
   // Sets a new idScope symbol.
   void setIdScope(Symbol symbol)
   {
-    if (symbol)
+    if (symbol) {
       if (auto scopSymbol = cast(ScopeSymbol)symbol)
-        return idScope = scopSymbol;
-    idScope = emptyIdScope;
+        idScope = scopSymbol;
+    }
+    else
+      idScope = emptyIdScope;
   }
 
   /// Searches for a symbol.
@@ -212,13 +214,13 @@ abstract class SemanticPass : DefaultVisitor
   }
 
   /// Creates an error report.
-  void error(Token* token, string formatMsg, ...)
+  void error(Token* token, cstring formatMsg, ...)
   {
     error(_arguments, _argptr, formatMsg, token);
   }
 
   /// ditto
-  void error(Node n, string formatMsg, ...)
+  void error(Node n, cstring formatMsg, ...)
   {
     error(_arguments, _argptr, formatMsg, n.begin);
   }
@@ -236,7 +238,7 @@ abstract class SemanticPass : DefaultVisitor
   }
 
   /// ditto
-  void error(TypeInfo[] _arguments, va_list _argptr, string msg, Token* token)
+  void error(TypeInfo[] _arguments, va_list _argptr, cstring msg, Token* token)
   {
     auto loc = token.getErrorLocation(modul.filePath());
     msg = modul.cc.diag.format(_arguments, _argptr, msg);
@@ -336,7 +338,7 @@ class FirstSemanticPass : SemanticPass
       if (*ps !is null)
         error(d.name,
           "special class ‘{}’ already defined at ‘{}’",
-          name, *ps.getFQN());
+          name, (*ps).getFQN());
       else
         d.symbol = *ps = new SpecialClassSymbol(s.name, s.node);
     }
@@ -838,7 +840,7 @@ override
       auto r = ip.eval(d.condition);
       if (r !is Interpreter.NAR && ip.EM.isBool(r) == 0)
       {
-        string errorMsg = "static assert is false";
+        cstring errorMsg = "static assert is false";
         if (d.message)
         {
           d.message = visitE(d.message);
@@ -871,7 +873,7 @@ override
     { // Write arguments to standard output.
       foreach (arg; d.args)
       {
-        string msg;
+        cstring msg;
         arg = visitE(arg);
         auto r = ip.eval(arg);
         if (auto se = r.Is!(StringExpr))

@@ -60,7 +60,7 @@ class TypePrinter : Visitor2
     write(")");
   }
 
-  void write(string text)
+  void write(cstring text)
   {
     this.text ~= text;
   }

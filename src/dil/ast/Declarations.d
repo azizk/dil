@@ -77,6 +77,7 @@ class ModuleDecl : Declaration
   Token* typeIdent;
   Token* moduleName;
   Token*[] packages;
+
   this(Token* ident, ModuleFQN moduleFQN)
   {
     mixin(set_kind);
@@ -86,22 +87,24 @@ class ModuleDecl : Declaration
     this.packages = moduleFQN[0..$-1];
   }
 
-  char[] getFQN()
+  /// Returns the fully qualified name. E.g.: "dil.ast.Declarations"
+  cstring getFQN()
   {
-    auto pname = getPackageName('.');
-    if (pname.length)
-      return pname ~ "." ~ getName();
-    else
-      return getName();
+    auto fqn = getPackageName('.');
+    if (fqn.length)
+      fqn ~= '.';
+    fqn ~= getName();
+    return fqn;
   }
 
-  char[] getName()
+  /// Returns the name of this module. E.ǵ.: "Declarations"
+  cstring getName()
   {
-    if (moduleName)
-      return moduleName.ident.str;
-    return null;
+    assert(moduleName !is null);
+    return moduleName.ident.str;
   }
 
+  /// Returns the packages of this module. E.g.: "dil.ast"
   char[] getPackageName(char separator)
   {
     char[] pname;
@@ -136,9 +139,9 @@ class ImportDecl : Declaration
       this.stcs |= StorageClass.Static;
   }
 
-  char[][] getModuleFQNs(char separator)
+  cstring[] getModuleFQNs(char separator)
   {
-    char[][] FQNs;
+    cstring[] FQNs;
     foreach (moduleFQN; moduleFQNs)
     {
       char[] FQN;
