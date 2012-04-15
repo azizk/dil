@@ -4,8 +4,8 @@ This program is free software, licensed under the GPL3.
 Please, read the license file "COPYING" for further information.
 
 ==Description==
-This software is a command line utility, a compiler written in D2
-for the D programming languages, version 1.0 and 2.0.
+This software is a command line utility, a compiler written in D v2
+for the D programming language (supporting versions 1.0 and 2.0.)
 
 ==How To Compile DIL==
 In order to compile DIL you must have:

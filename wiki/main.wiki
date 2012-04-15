@@ -1,5 +1,5 @@
 =Purpose=
-Dil is a hand-crafted compiler implementation for the D programming language written in D 1.0 using the [http://dsource.org/projects/tango Tango] standard library. The lexer and the parser are fully implemented. Semantic analysis is being worked on. The backend will most probably be [http://llvm.org LLVM] ('cause it's sexy).
+Dil is a hand-crafted compiler implementation for the D programming language written in D v2 using the [http://dsource.org/projects/tango Tango] standard library. The lexer and the parser are fully implemented. Semantic analysis is being worked on. The backend will most probably be [http://llvm.org LLVM].
 
 <wiki:gadget url="http://www.ohloh.net/p/8880/widgets/project_partner_badge.xml" height="53" border="0"/>
 
@@ -9,6 +9,9 @@ Dil is a hand-crafted compiler implementation for the D programming language wri
   * Binaries cannot be generated yet.
 
 =News=
+  * 2012/04/15: Finished porting Dil to D version 2. The code just compiles, but I couldn't run it because the linker keeps complaining about missing symbols although it is able to find all necessary libraries.
+  * 2011/09/21: First merge of a [https://github.com/azizk/dil/commit/570329e6e2a0173d8904c66ce2a59fd234c29c84 pull request] made by [https://github.com/klickverbot klickverbot]. Thanks for the contribution!
+  * 2011/07/14: The project is still [http://www.youtube.com/watch?v=Y6ljFaKRTrI still alive]. Just busy with life in general, especially with [http://www.reddit.com/r/running running] and weight training. ;-)
   * 2010/12/25: Uploaded docs for Derelict2, DMDScript2, !LanguageMachine, VisualD and Yage. PDFs and archives included.
   * 2010/12/22: Generated docs for Tango 1.0.0, Phobos 1.066/2.051, !MiniD2.0 and Dil.<br>Uploaded all files to a folder on [http://dl.dropbox.com/u/17101773/doc/index.html Dropbox]. More projects and PDF files to follow.
 
