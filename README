@@ -4,21 +4,18 @@ This program is free software, licensed under the GPL3.
 Please, read the license file "COPYING" for further information.
 
 ==Description==
-This software is a command line utility, a compiler written in D 1.0
+This software is a command line utility, a compiler written in D2
 for the D programming languages, version 1.0 and 2.0.
 
 ==How To Compile DIL==
 In order to compile DIL you must have:
- *) DMD 1.063 (http://www.digitalmars.com/d/1.0/changelog.html)
- *) Tango 0.99.9 (http://dsource.org/projects/tango/)
+ *) DMD 2.059 (http://dlang.org/changelog.html)
+ *) Tango D2 (https://github.com/SiegeLord/Tango-D2)
  *) MPFR 3.0.0 (http://mpfr.org)
- *) Python 2.6.6 (2.5 might work too)
-    (DSSS ist unmaintained and can't compile DIL anymore.)
+ *) Python 2.7.2 (older versions might work, too)
 
-If you can't compile DIL because you have newer versions of these programs
-then report the problem to me, please (see Bugs section.)
-I hope you won't find it frustrating to successfully compile this software,
-and apologize if you do.
+If you can't compile DIL because you have newer versions of these programs,
+please, report the problem to me (see Bugs section.)
 
 Regarding MPFR:
 Windows users have to use Visual C/C++ or Cygwin in order to compile
