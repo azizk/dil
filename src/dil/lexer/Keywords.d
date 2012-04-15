@@ -15,6 +15,7 @@ static:
     "OverloadSet:__overloadset", // D2.0
     "Thread:__thread", // D2.0
     "Traits:__traits", // D2.0
+    "Vector:__vector", // D2.0
     "Abstract:abstract",
     "Alias:alias",
     "Align:align",
