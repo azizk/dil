@@ -173,7 +173,7 @@ abstract class SemanticPass : DefaultVisitor
   static ScopeSymbol emptyIdScope;
   static this()
   {
-    this.emptyIdScope = new ScopeSymbol();
+    emptyIdScope = new ScopeSymbol();
   }
 
   // Sets a new idScope symbol.

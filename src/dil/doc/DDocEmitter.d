@@ -273,7 +273,7 @@ abstract class DDocEmitter : DefaultVisitor2
   /// Initializes the empty comment.
   static this()
   {
-    this.emptyCmnt = new DDocComment(null, null, null);
+    emptyCmnt = new DDocComment(null, null, null);
   }
 
   /// Keeps track of previous comments in each scope.
