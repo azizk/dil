@@ -170,7 +170,7 @@ class Module : ModuleSymbol
   /// Sets the module's FQN.
   void setFQN(cstring moduleFQN)
   {
-    uint i = moduleFQN.length;
+    size_t i = moduleFQN.length;
     if (i != 0) // Don't decrement if string has zero length.
       i--;
     // Find last dot.

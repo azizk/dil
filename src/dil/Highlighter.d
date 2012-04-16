@@ -504,7 +504,7 @@ int rfind(cstring subject, char object)
 {
   foreach_reverse (i, c; subject)
     if (c == object)
-      return i;
+      return cast(int)i;
   return -1;
 }
 

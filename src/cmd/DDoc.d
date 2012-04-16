@@ -256,8 +256,8 @@ class DDocCommand : Command
     scope file = new File(filePath.toString(), File.WriteCreate);
 
     file.write("var g_moduleList = [\n "); // Write a flat list of FQNs.
-    uint max_line_len = 80;
-    uint line_len;
+    size_t max_line_len = 80;
+    size_t line_len;
     foreach (modul; mm.loadedModules)
     {
       auto fragment = ` "` ~ modul.getFQN() ~ `",`;
@@ -459,7 +459,7 @@ version(unused)
     ));
 
     // Calculate the maximum module name length.
-    uint maxNameLength;
+    size_t maxNameLength;
     foreach (mod; ModuleData.sortedList)
       if (maxNameLength < mod.name.length)
         maxNameLength = mod.name.length;

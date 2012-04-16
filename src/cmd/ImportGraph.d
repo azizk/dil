@@ -178,7 +178,7 @@ class Edge
 class Vertex
 {
   Module modul;      /// The module represented by this vertex.
-  uint id;           /// The nth vertex in the graph.
+  size_t id;         /// The nth vertex in the graph.
   Vertex[] incoming; /// Also called predecessors.
   Vertex[] outgoing; /// Also called successors.
   bool isCyclic;     /// Whether this vertex is in a cyclic relationship
@@ -372,7 +372,7 @@ void printDotDocument(CompilationContext cc, Graph graph,
   else if (options & IGraphCommand.Option.GroupByPackageNames)
   {
     Stdout("  // Warning: some nested clusters may crash dot.\n");
-    uint[Module] idTable;
+    size_t[Module] idTable;
     foreach (vertex; graph.vertices)
       idTable[vertex.modul] = vertex.id;
     void printSubgraph(Package pckg, cstring indent)

@@ -6,6 +6,7 @@ module common;
 import tango.io.stream.Format;
 public import tango.io.Stdout;
 public import tango.text.convert.Layout : Layout;
+public import tango.core.Vararg;
 
 /// Const character aliases.
 alias const(char) cchar;

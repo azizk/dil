@@ -75,7 +75,7 @@ static:
         // Format: <1B:TOK><2B:OffsToStart><2B:IdentsIndex>
         auto hash = hashOf(t.ident.str);
         auto pindex = hash in idtable;
-        uint id_index;
+        size_t id_index;
         if (!pindex)
           (id_index = idents.length),
           (idents ~= t),
@@ -110,12 +110,12 @@ static:
     write2B(cast(ushort)idents.length);
     auto text_begin = first_token.prev.end;
     foreach (id; idents)
-      write4B(id.start - text_begin),
+      write4B(cast(uint)(id.start - text_begin)),
       write2B(cast(ushort)(id.end - id.start));
     writeS("\n");
     writeS("Toks:");
     write4B(token_count);
-    write4B(data_body.length);
+    write4B(cast(uint)data_body.length);
     data ~= data_body;
     writeS("\n");
     return data;
@@ -211,7 +211,7 @@ static:
         uint index = void;
         if (!read2B(index) && index < idents.length) goto Lerr;
         token.ident = idents[index];
-        token_len = token.ident.str.length;
+        token_len = cast(uint)token.ident.str.length;
         break;
       default:
         if (!read2B(token_len)) goto Lerr;

@@ -134,14 +134,14 @@ final:
 }
 
 /// Index into the vtable of the Visitor classes.
-private static const uint indexOfFirstVisitMethod;
+private static const size_t indexOfFirstVisitMethod;
 
 /// Initializes indexOfFirstVisitMethod for both Visitor classes.
 static this()
 {
   auto vtbl = Visitor.classinfo.vtbl;
   auto vtbl2 = Visitor2.classinfo.vtbl;
-  uint i;
+  size_t i;
   foreach (j, func; vtbl)
     if (func is &Visitor._beforeFirstVisitMethod &&
         vtbl2[j] is &Visitor2._beforeFirstVisitMethod)
