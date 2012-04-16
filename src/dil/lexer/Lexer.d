@@ -593,10 +593,13 @@ class Lexer
       assert(this.p == p);
       switch (c)
       {
-      case '=': /* =  == */
+      case '=': /* =  ==  => */
         if (p[1] == '=')
           ++p,
           kind = TOK.Equal2;
+        else if (p[1] == '>') // D2
+          ++p,
+          kind = TOK.EqlLess;
         else
           kind = TOK.Equal;
         goto Lcommon;
@@ -1056,7 +1059,7 @@ class Lexer
     mixin(cases(
       "<=", "LessEql",    ">=", "GreaterEql",
       "<<", "Less2" ,     ">>", "Greater2",
-      "==", "Equal2",     "!=", "ExclaimEql",
+      "==", "Equal2",     "=>", "EqlLess",    "!=", "ExclaimEql",
       "!<", "UorGorE",    "!>", "UorLorE",
       "<>", "LorG",       "..", "Dot2",
       "&&", "Amp2",       "&=", "AmpEql",

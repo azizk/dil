@@ -61,7 +61,7 @@ enum TOK : ushort
   LorG,
 
   // Normal operators
-  Equal,    Equal2,
+  Equal,    Equal2,      EqlLess,
   Exclaim,  ExclaimEql,
   Less,     LessEql,
   Greater,  GreaterEql,
@@ -171,7 +171,7 @@ const string[TOK.MAX] tokToString = [
   "<>=",  // LorEorG
   "<>",   // LorG
 
-  "=",   "==",
+  "=",   "==", "=>",
   "!",   "!=",
   "<",   "<=",
   ">",   ">=",
