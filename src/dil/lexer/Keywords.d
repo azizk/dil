@@ -138,3 +138,5 @@ static:
     return cast(Identifier*[])((&Gshared)[0..list.length]);
   }
 }
+
+// pragma(msg, generateIdentMembers(Keyword.list, true));

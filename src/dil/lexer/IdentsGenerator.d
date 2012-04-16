@@ -144,15 +144,15 @@ unittest
   The resulting string looks similar to this:
   ---
   // etc.
-  private struct Ids {static const:
-    Identifier _Empty = {"", TOK.Identifier, IDK.Empty};
-    Identifier _main = {"main", TOK.Identifier, IDK.main};
+  private struct Ids_ {static const:
+    Identifier Empty = {"", TOK.Identifier, IDK.Empty};
+    Identifier main = {"main", TOK.Identifier, IDK.main};
     // ...
   }
   static union {static:
       struct {static const:
-        Identifier* c_Empty = &Ids._Empty;
-        Identifier* c_main = &Ids._main;
+        Identifier* c_Empty = &Ids_.Empty;
+        Identifier* c_main = &Ids_.main;
         // ...
       }
       struct {static:
@@ -173,19 +173,19 @@ char[] generateIdentMembers(string[] identList, bool isKeywordList)
   {
     auto pair = getPair(ident);
     auto name = pair[0], id = pair[1];
-    // Identifier _name = {"id", TOK.name};
+    // Identifier name = {"id", TOK.name};
     // or:
-    // Identifier _name = {"id", TOK.Identifier, IDK.name};
+    // Identifier name = {"id", TOK.Identifier, IDK.name};
     private_members ~=  isKeywordList ?
-      "Identifier _"~name~` = {"`~id~`", TOK.`~name~"};\n" :
-      "Identifier _"~name~` = {"`~id~`", TOK.Identifier, IDK.`~name~"};\n";
+      "Identifier "~name~` = {"`~id~`", TOK.`~name~"};\n" :
+      "Identifier "~name~` = {"`~id~`", TOK.Identifier, IDK.`~name~"};\n";
     // Identifier* c_name = &_name;
-    const_members ~= "Identifier* c_"~name~" = &Ids._"~name~";\n";
+    const_members ~= "Identifier* c_"~name~" = &Ids_."~name~";\n";
     // Identifier* name;
     nonconst_members ~= "Identifier* "~name~";\n";
   }
 
-  return "private struct Ids {static const:\n" ~ private_members ~ "}\n" ~
+  return "private struct Ids_ {static const:\n" ~ private_members ~ "}\n" ~
     "static union {static:\n" ~
       "struct {static const:\n" ~ const_members ~ "}\n" ~
       "struct {static:\n" ~ nonconst_members ~ "}\n" ~
