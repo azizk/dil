@@ -869,7 +869,8 @@ class Lexer
   static uint toUint(cstring s)
   {
     assert(s.length <= 4);
-    uint x, i = s.length;
+    uint x;
+    size_t i = s.length;
     if (i) x |= s[--i];
     if (i) x |= s[--i] << 8;
     if (i) x |= s[--i] << 16;
@@ -886,7 +887,8 @@ class Lexer
     else
     {
     assert(s.length <= 4);
-    uint x, i = s.length;
+    uint x;
+    size_t i = s.length;
     if (i) x |= s[--i] << 24;
     if (i) x |= s[--i] << 16;
     if (i) x |= s[--i] << 8;
@@ -909,7 +911,7 @@ class Lexer
   {
     char[] label_str = "Lcommon".dup;
     if (str.length != 1) // Append length as a suffix.
-      label_str ~= '0' + str.length;
+      label_str ~= '0' + cast(char)str.length;
     return "case toUintE(\""~str~"\"): kind = TOK."~kind~";"
              "goto "~label_str~";\n";
   }

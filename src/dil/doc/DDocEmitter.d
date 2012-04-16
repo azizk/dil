@@ -281,7 +281,7 @@ abstract class DDocEmitter : DefaultVisitor2
   {
     DDocComment saved_prevCmnt;
     bool saved_cmntIsDitto;
-    uint saved_prevDeclOffset;
+    size_t saved_prevDeclOffset;
     cstring saved_parentFQN;
     /// When constructed, variables are saved.
     /// Params:
@@ -664,7 +664,7 @@ abstract class DDocEmitter : DefaultVisitor2
   }
 
   /// Offset at which to insert a declaration with a "ditto" comment.
-  uint prevDeclOffset;
+  size_t prevDeclOffset;
 
   /// Writes a declaration to the text buffer.
   void DECL(void delegate() dg, Declaration d, bool writeSemicolon = true)

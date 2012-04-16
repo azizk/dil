@@ -2201,7 +2201,7 @@ char[] generateHashAndValueArrays()
          valuesText = "private static immutable dchar[] values = [".dup;
   foreach (i, hash; hashes)
   {
-    hashesText ~= StringCTF(hash) ~ ",";
+    hashesText ~= StringCTF(cast(uint)hash) ~ ",";
     valuesText ~= StringCTF(values[i]) ~ ",";
   }
   hashesText ~= "];".dup;

@@ -124,7 +124,7 @@ class ModuleManager
     moduleFQNPathTable[fqnPathHash] = newModule;
     absFilePathTable[hashOf(absFilePath)] = newModule;
     loadedModules ~= newModule;
-    newModule.ID = loadedModules.length;
+    newModule.ID = cast(uint)loadedModules.length;
     insertOrdered(newModule);
 
     auto nrOfPckgs = packageTable.length; // Remember for error checking.
@@ -205,7 +205,7 @@ class ModuleManager
   void splitPackageFQN(cstring pckgFQN,
     ref cstring prevFQN, ref cstring lastName)
   {
-    uint lastDotIndex;
+    size_t lastDotIndex;
     foreach_reverse (i, c; pckgFQN)
       if (c == '.')
       { lastDotIndex = i; break; } // Found last dot.
@@ -222,7 +222,7 @@ class ModuleManager
   static char[] getPackageFQN(cstring moduleFQNPath)
   {
     char[] pckg = moduleFQNPath.dup;
-    uint lastDirSep;
+    size_t lastDirSep;
     foreach (i, c; pckg)
       if (c == dirSep)
         (pckg[i] = '.'), (lastDirSep = i);

@@ -229,7 +229,7 @@ static:
   cstring unindentText(cstring text)
   {
     auto p = text.ptr, end = p + text.length;
-    uint indent = uint.max; // Start with the largest number.
+    size_t indent = size_t.max; // Start with the largest number.
     auto lbegin = p; // The beginning of a line.
     // First determine the maximum amount we may remove.
     while (p < end)

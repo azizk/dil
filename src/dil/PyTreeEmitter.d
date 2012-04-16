@@ -61,7 +61,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   char[] line;
   class Tuple
   {
-    uint count;
+    size_t count;
     cstring str;
     TOK kind;
     alias count pos;

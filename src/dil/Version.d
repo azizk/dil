@@ -9,7 +9,7 @@ private char[] toString(uint x, uint pad)
 {
   char[] str = StringCTF(x);
   if (pad > str.length)
-    for (uint i = pad-str.length; i; i--)
+    for (size_t i = pad-str.length; i; i--)
       str = "0" ~ str;
   return str;
 }
