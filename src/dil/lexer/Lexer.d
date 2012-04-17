@@ -870,7 +870,7 @@ class Lexer
   {
     assert(s.length <= 4);
     uint x;
-    size_t i = s.length;
+    auto i = s.length;
     if (i) x |= s[--i];
     if (i) x |= s[--i] << 8;
     if (i) x |= s[--i] << 16;
@@ -888,7 +888,7 @@ class Lexer
     {
     assert(s.length <= 4);
     uint x;
-    size_t i = s.length;
+    auto i = s.length;
     if (i) x |= s[--i] << 24;
     if (i) x |= s[--i] << 16;
     if (i) x |= s[--i] << 8;
@@ -922,7 +922,7 @@ class Lexer
   {
     assert(cs.length % 2 == 0);
     char[] result;
-    for (int i = 0; i < cs.length; i += 2)
+    for (size_t i; i < cs.length; i += 2)
       result ~= case_(cs[i], cs[i+1]);
     return result;
   }
@@ -2993,7 +2993,7 @@ unittest
 
   auto token = lx.firstToken();
 
-  for (uint i; i < pairs.length && token.kind != TOK.EOF;
+  for (size_t i; i < pairs.length && token.kind != TOK.EOF;
        ++i, (token = token.next))
     if (token.text != pairs[i].tokenText)
       assert(0, Format("Scanned ‘{0}’ but expected ‘{1}’",

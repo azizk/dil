@@ -523,7 +523,7 @@ cstring getShortClassName(Node node)
   name = node.classinfo.name; // Get the fully qualified name of the class.
   name = name[rfind(name, '.')+1 .. $]; // Remove package and module name.
 
-  uint suffixLength;
+  size_t suffixLength;
   switch (node.category)
   {
   alias NodeCategory NC;

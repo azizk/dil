@@ -408,7 +408,7 @@ void findCyclesInGraph(Graph g)
 RestartLoop:
   foreach (idx, vertex; vertices)
   { // 1. See if this vertex has outgoing and/or incoming edges.
-    uint outgoing, incoming;
+    size_t outgoing, incoming;
     alias outgoing i; // Reuse below.
     alias incoming j;
     foreach (edge; edges)

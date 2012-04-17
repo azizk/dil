@@ -45,8 +45,8 @@ cstring String(cchar* begin, cchar* end)
 char[] StringHex(cstring str)
 {
   const hexdigits = "0123456789abcdef";
-  char[] inhex = new char[str.length*2]; // Reserve space.
-  char* p = inhex.ptr;
+  auto inhex = new char[str.length*2]; // Reserve space.
+  auto p = inhex.ptr;
   foreach (ubyte c; str)
     (*p = hexdigits[c >> 4]), (*++p = hexdigits[c & 0xF]);
   return inhex;
@@ -59,9 +59,9 @@ hash_t hashOf(cstring str)
 {
   hash_t hash;
   auto pstr = str.ptr;
-  size_t len = str.length;
+  auto len = str.length;
 
-  ubyte rem_len = len % hash_t.sizeof; // Remainder.
+  auto rem_len = len % hash_t.sizeof; // Remainder.
   if (len == rem_len)
     goto Lonly_remainder;
 
@@ -113,7 +113,7 @@ hash_t hashOfCTF(string str)
   }
 
   hash_t hash;
-  ubyte rem_len = str.length % hash_t.sizeof; // Remainder.
+  auto rem_len = str.length % hash_t.sizeof; // Remainder.
   hash_t[] ha = toHashArray(str);
   if (rem_len)
   { // Append remainder hash character.
@@ -372,7 +372,7 @@ static this()
   alias ptable p;
   assert(p.length == 256);
   // Initialize character properties table.
-  for (int i; i < p.length; ++i)
+  for (size_t i; i < p.length; ++i)
   {
     p[i] = 0; // Reset
     if ('0' <= i && i <= '7')
@@ -389,7 +389,8 @@ static this()
       p[i] |= CP.Whitespace;
   }
   // Store escape sequence values in second byte.
-  assert(CProperty.max <= ubyte.max, "character property flags and escape value byte overlap.");
+  assert(CProperty.max <= ubyte.max,
+    "character property flags and escape value byte overlap.");
   p['\''] |= 39 << 8;
   p['"'] |= 34 << 8;
   p['?'] |= 63 << 8;

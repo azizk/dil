@@ -33,7 +33,7 @@ class TypePrinter : Visitor2
   {
     assert(params !is null);
     write("(");
-    size_t item_count = params.items.length;
+    auto item_count = params.items.length;
     foreach (param; params.items)
     {
       if (param.isCVariadic)

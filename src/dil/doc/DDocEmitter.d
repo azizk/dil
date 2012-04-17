@@ -578,7 +578,7 @@ abstract class DDocEmitter : DefaultVisitor2
   {
     reportParameters(params);
     write("\1DIL_PARAMS ");
-    size_t item_count = params.items.length;
+    auto item_count = params.items.length;
     foreach (param; params.items)
     {
       if (param.isCVariadic)
@@ -1120,14 +1120,14 @@ class DocSymbol
   /// Initialize the associative arrays.
   static this()
   {
-    for (int i; i < Kind.max+1; i++)
-      kindStrToID[hashOf(kindIDToStr[i])] = i;
+    foreach (i, kind; kindIDToStr)
+      kindStrToID[hashOf(kind)] = i;
 
     // Combine attributes and add them to attrToID.
     auto attrs = EnumString.prots[1..$] ~
       EnumString.stcs[1..$] ~ EnumString.ltypes[1..$];
-    for (int i; i < attrs.length; i++)
-      attrToID[hashOf(attrs[i])] = i;
+    foreach (i, attr; attrs)
+      attrToID[hashOf(attr)] = i;
   }
 
   /// Return the attributes as IDs. E.g.: "[1,9,22]"

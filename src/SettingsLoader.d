@@ -358,7 +358,7 @@ cstring GetExecutableFilePath(cstring arg0)
   version(Windows)
   {
   wchar[] buffer = new wchar[256];
-  uint count;
+  size_t count;
 
   while (1)
   {

@@ -98,7 +98,7 @@ abstract class Node
   {
     // Find out the size of this object.
     alias typeof(this.classinfo.init[0]) byte_t;
-    size_t size = this.classinfo.init.length;
+    auto size = this.classinfo.init.length;
     // Copy this object's data.
     byte_t[] data = (cast(byte_t*)this)[0..size].dup;
     return cast(Node)data.ptr;

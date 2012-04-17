@@ -131,7 +131,7 @@ static:
   /// Returns the string of a storage class. Only one bit may be set.
   string opCall(StorageClass stc)
   {
-    int index = stc ? bsf(stc)+1 : 0;
+    size_t index = stc ? bsf(stc)+1 : 0;
     assert(index < stcs.length);
     return stcs[index];
   }
