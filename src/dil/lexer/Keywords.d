@@ -134,8 +134,8 @@ static:
 
   /// Returns an array of all keywords.
   Identifier*[] allIds()
-  {
-    return cast(Identifier*[])((&Gshared)[0..list.length]);
+  { // "Gshared" is the first Identifier in the list.
+    return (&Gshared)[0..list.length];
   }
 }
 

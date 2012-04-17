@@ -21,8 +21,8 @@ static:
 
   /// Returns an array of all predefined identifiers.
   Identifier*[] allIds()
-  {
-    return cast(Identifier*[])((&Empty)[0..predefIdents.length]);
+  { // "Empty" is the first Identifier in the list.
+    return (&Empty)[0..predefIdents.length];
   }
 
   /// Returns true for assembler jump opcode identifiers.
