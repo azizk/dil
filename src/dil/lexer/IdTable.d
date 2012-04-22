@@ -50,10 +50,10 @@ class IdTable
     {
       foreach (kw; Keyword.allIds())
         staticTable[hashOf(kw.str)] = kw;
+      foreach (id; Ident.allIds())
+        staticTable[hashOf(id.str)] = id;
       staticTable.rehash;
     }
-    foreach (id; Ident.allIds())
-      staticTable[hashOf(id.str)] = id;
   }
 
   /// Returns true if str is a valid D identifier.
