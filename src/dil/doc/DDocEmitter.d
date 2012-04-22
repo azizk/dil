@@ -517,7 +517,7 @@ abstract class DDocEmitter : DefaultVisitor2
             codeEnd++; // Include the non-newline character.
           if (codeBegin < codeEnd)
           { // Highlight the extracted source code.
-            auto codeText = String(codeBegin, codeEnd);
+            cstring codeText = String(codeBegin, codeEnd);
             uint lines; // Number of lines in the code text.
 
             codeExamplesCounter++; // Found a code section. Increment counter.

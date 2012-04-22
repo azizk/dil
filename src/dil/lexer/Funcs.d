@@ -35,10 +35,11 @@ char[] String(char* begin, char* end)
   return begin[0..end-begin];
 }
 /// ditto
-cstring String(cchar* begin, cchar* end)
+// Should return cstring without ".dup". Remove when $(DMDBUG 7967) is fixed.
+char[] String(cchar* begin, cchar* end)
 {
   assert(begin && end && begin <= end);
-  return begin[0..end-begin];
+  return begin[0..end-begin].dup;
 }
 
 /// Encodes a string's characters with hexadecimal digits.
