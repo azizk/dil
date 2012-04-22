@@ -3,8 +3,6 @@
 /// $(Maturity average)
 module dil.i18n.Messages;
 
-import common;
-
 /// Enumeration of indices into the table of compiler messages.
 enum MID
 {

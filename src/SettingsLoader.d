@@ -122,10 +122,10 @@ class ConfigLoader : SettingsLoader
   }
 
   /// Expands environment variables such as ${HOME} in a string.
-  static cstring expandVariables(cstring val)
+  static cstring expandVariables(cstring str)
   {
     char[] result;
-    auto p = val.ptr, end = p + val.length;
+    auto p = str.ptr, end = p + str.length;
     auto pieceBegin = p; // Points to the piece of the string after a variable.
 
     while (p+3 < end)
@@ -135,9 +135,9 @@ class ConfigLoader : SettingsLoader
         auto variableBegin = p;
         while (p < end && *p != '}')
           p++;
-        if (p == end)
+        if (p is end)
           break; // Don't expand unterminated variables.
-        result ~= String(pieceBegin, variableBegin);
+        result ~= String(pieceBegin, variableBegin); // Copy previous string.
         variableBegin += 2; // Skip ${
         // Get the environment variable and append it to the result.
         result ~= Environment.get(String(variableBegin, p));
@@ -145,7 +145,9 @@ class ConfigLoader : SettingsLoader
       }
       p++;
     }
-    if (pieceBegin < end)
+    if (pieceBegin is str.ptr)
+      return str; // Return unchanged string.
+    if (pieceBegin < end) // Copy end piece.
       result ~= String(pieceBegin, end);
     return result;
   }
