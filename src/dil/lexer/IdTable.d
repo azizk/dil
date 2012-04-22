@@ -17,13 +17,8 @@ public import dil.lexer.Identifier,
 struct Ident
 {
 static:
+  alias predefIdents list;
   mixin(generateIdentMembers(predefIdents, false));
-
-  /// Returns an array of all predefined identifiers.
-  Identifier*[] allIds()
-  { // "Empty" is the first Identifier in the list.
-    return (&Empty)[0..predefIdents.length];
-  }
 
   /// Returns true for assembler jump opcode identifiers.
   bool isJumpOpcode(IDK kind)

@@ -143,16 +143,15 @@ unittest
 
   The resulting string looks similar to this:
   ---
-  // etc.
   private struct Ids_ {static const:
     Identifier Empty = {"", TOK.Identifier, IDK.Empty};
     Identifier main = {"main", TOK.Identifier, IDK.main};
     // ...
   }
-  static union {static:
-      struct {static const:
-        Identifier* c_Empty = &Ids_.Empty;
-        Identifier* c_main = &Ids_.main;
+  union {static:
+      struct {static:
+        const(Identifier)* c_Empty = &Ids_.Empty;
+        const(Identifier)* c_main = &Ids_.main;
         // ...
       }
       struct {static:
@@ -161,6 +160,7 @@ unittest
         // ...
       }
   }
+  // ...
   ---
 +/
 char[] generateIdentMembers(string[] identList, bool isKeywordList)
@@ -179,17 +179,36 @@ char[] generateIdentMembers(string[] identList, bool isKeywordList)
     private_members ~=  isKeywordList ?
       "Identifier "~name~` = {"`~id~`", TOK.`~name~"};\n" :
       "Identifier "~name~` = {"`~id~`", TOK.Identifier, IDK.`~name~"};\n";
-    // Identifier* c_name = &_name;
-    const_members ~= "Identifier* c_"~name~" = &Ids_."~name~";\n";
+    // const(Identifier)* c_name = &Ids_.name;
+    const_members ~= "const(Identifier)* c_"~name~" = &Ids_."~name~";\n";
     // Identifier* name;
     nonconst_members ~= "Identifier* "~name~";\n";
   }
 
-  return "private struct Ids_ {static const:\n" ~ private_members ~ "}\n" ~
-    "static union {static:\n" ~
-      "struct {static const:\n" ~ const_members ~ "}\n" ~
-      "struct {static:\n" ~ nonconst_members ~ "}\n" ~
-    "}\n";
+  auto firstIdent = getPair(identList[0])[0];
+
+  auto code = "private struct Ids_ {static const:\n" ~ private_members ~ "}
+union {
+  struct {static:\n" ~ const_members ~ "}
+  struct {static:\n" ~ nonconst_members ~ "}
+}
+const(Identifier)*[] c_allIds()
+{
+  return (&c_" ~ firstIdent ~ ")[0..list.length];
+}
+Identifier*[] allIds()
+{
+  return (&" ~ firstIdent ~ ")[0..list.length];
+}
+// Non-const members have to be initialized at runtime.
+static this()
+{
+  auto constIds = cast(Identifier*[])c_allIds();
+  auto nonconstIds = allIds();
+  foreach (i, ref id; nonconstIds)
+    id = constIds[i]; // Assign address of const identifier.
+}";
+  return code;
 }
 
 /// CTF for generating the members of the enum IDK.

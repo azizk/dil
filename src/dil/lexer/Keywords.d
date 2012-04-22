@@ -131,12 +131,6 @@ static:
   ];
 
   mixin(generateIdentMembers(list, true));
-
-  /// Returns an array of all keywords.
-  Identifier*[] allIds()
-  { // "Gshared" is the first Identifier in the list.
-    return (&Gshared)[0..list.length];
-  }
 }
 
 // pragma(msg, generateIdentMembers(Keyword.list, true));
