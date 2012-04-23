@@ -19,7 +19,7 @@ import common;
 /// See_Also:
 ///  Unicode alphas are defined in Unicode 5.0.0.
 align(1)
-struct Identifier
+struct Identifier_
 {
   string str; /// The UTF-8 string of the identifier.
   TOK kind;   /// The token kind. Either TOK.Identifier or TOK.{KEYWORD}.
@@ -39,6 +39,7 @@ struct Identifier
     this.idKind = idKind;
   }
 
+const:
   /// Calculates a hash for this id.
   hash_t toHash()
   {
@@ -59,3 +60,6 @@ struct Identifier
   }
 }
 // pragma(msg, Identifier.sizeof.stringof);
+
+/// Identifiers are const by default.
+alias const(Identifier_) Identifier;

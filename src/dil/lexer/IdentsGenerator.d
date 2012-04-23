@@ -148,26 +148,15 @@ unittest
     auto main = Identifier("main", TOK.Identifier, IDK.main);
     // ...
   }
-  union {static:
-      struct {static:
-        const(Identifier)* c_Empty = &Ids_.Empty;
-        const(Identifier)* c_main = &Ids_.main;
-        // ...
-      }
-      struct {static:
-        Identifier* Empty;
-        Identifier* main;
-        // ...
-      }
-  }
+  Identifier* Empty = &Ids_.Empty;
+  Identifier* main = &Ids_.main;
   // ...
   ---
 +/
 char[] generateIdentMembers(string[] identList, bool isKeywordList)
 {
-  char[] private_members;
-  char[] const_members;
-  char[] nonconst_members;
+  char[] struct_literals;
+  char[] ident_pointers;
 
   foreach (ident; identList)
   {
@@ -176,37 +165,20 @@ char[] generateIdentMembers(string[] identList, bool isKeywordList)
     // auto name = Identifier("id", TOK.name);
     // or:
     // auto name = Identifier("id", TOK.Identifier, IDK.name);
-    private_members ~=  isKeywordList ?
+    struct_literals ~=  isKeywordList ?
       "auto "~name~` = Identifier("`~id~`", TOK.`~name~");\n" :
       "auto "~name~` = Identifier("`~id~`", TOK.Identifier, IDK.`~name~");\n";
-    // const(Identifier)* c_name = &Ids_.name;
-    const_members ~= "const(Identifier)* c_"~name~" = &Ids_."~name~";\n";
-    // Identifier* name;
-    nonconst_members ~= "Identifier* "~name~";\n";
+    // Identifier* name = &Ids_.name;
+    ident_pointers ~= "Identifier* "~name~" = &Ids_."~name~";\n";
   }
 
   auto firstIdent = getPair(identList[0])[0];
 
-  auto code = "private struct Ids_ {static const:\n" ~ private_members ~ "}
-union {
-  struct {static:\n" ~ const_members ~ "}
-  struct {static:\n" ~ nonconst_members ~ "}
-}
-const(Identifier)*[] c_allIds()
-{
-  return (&c_" ~ firstIdent ~ ")[0..list.length];
-}
+  auto code = "private struct Ids_ {static const:\n" ~ struct_literals ~ "}
+  " ~ ident_pointers ~ "
 Identifier*[] allIds()
 {
   return (&" ~ firstIdent ~ ")[0..list.length];
-}
-// Non-const members have to be initialized at runtime.
-static this()
-{
-  auto constIds = cast(Identifier*[])c_allIds();
-  auto nonconstIds = allIds();
-  foreach (i, ref id; nonconstIds)
-    id = constIds[i]; // Assign address of const identifier.
 }";
   return code;
 }
