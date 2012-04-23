@@ -22,25 +22,21 @@ align(1)
 struct Identifier
 {
   string str; /// The UTF-8 string of the identifier.
-  TOK kind;   /// The token kind.
+  TOK kind;   /// The token kind. Either TOK.Identifier or TOK.{KEYWORD}.
   IDK idKind; /// Only for predefined identifiers.
 
   /// Constructs an Identifier.
-  static Identifier* opCall(string str, TOK kind)
+  this(string str, TOK kind)
   {
-    auto id = new Identifier;
-    id.str = str;
-    id.kind = kind;
-    return id;
+    this.str = str;
+    this.kind = kind;
   }
   /// ditto
-  static Identifier* opCall(string str, TOK kind, IDK idKind)
+  this(string str, TOK kind, IDK idKind)
   {
-    auto id = new Identifier;
-    id.str = str;
-    id.kind = kind;
-    id.idKind = idKind;
-    return id;
+    this.str = str;
+    this.kind = kind;
+    this.idKind = idKind;
   }
 
   /// Calculates a hash for this id.

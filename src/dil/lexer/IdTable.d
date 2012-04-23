@@ -140,7 +140,7 @@ class IdTable
       Format("bad hash function:\n ‘{}’ != ‘{}’", idString, (*id).str));
     if (id)
       return *id;
-    auto newID = Identifier(idString.idup, TOK.Identifier);
+    auto newID = new Identifier(idString.idup, TOK.Identifier);
     growingTable[idHash] = newID;
     return newID;
   }
@@ -165,7 +165,7 @@ class IdTable
   Identifier* genAnonymousID(cstring prefix)
   {
     auto num = String(++anonCount);
-    return Identifier((prefix ~ num).idup, TOK.Identifier);
+    return new Identifier((prefix ~ num).idup, TOK.Identifier);
   }
 
   /// Generates an identifier for an anonymous enum.

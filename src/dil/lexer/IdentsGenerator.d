@@ -144,8 +144,8 @@ unittest
   The resulting string looks similar to this:
   ---
   private struct Ids_ {static const:
-    Identifier Empty = {"", TOK.Identifier, IDK.Empty};
-    Identifier main = {"main", TOK.Identifier, IDK.main};
+    auto Empty = Identifier("", TOK.Identifier, IDK.Empty);
+    auto main = Identifier("main", TOK.Identifier, IDK.main);
     // ...
   }
   union {static:
@@ -173,12 +173,12 @@ char[] generateIdentMembers(string[] identList, bool isKeywordList)
   {
     auto pair = getPair(ident);
     auto name = pair[0], id = pair[1];
-    // Identifier name = {"id", TOK.name};
+    // auto name = Identifier("id", TOK.name);
     // or:
-    // Identifier name = {"id", TOK.Identifier, IDK.name};
+    // auto name = Identifier("id", TOK.Identifier, IDK.name);
     private_members ~=  isKeywordList ?
-      "Identifier "~name~` = {"`~id~`", TOK.`~name~"};\n" :
-      "Identifier "~name~` = {"`~id~`", TOK.Identifier, IDK.`~name~"};\n";
+      "auto "~name~` = Identifier("`~id~`", TOK.`~name~");\n" :
+      "auto "~name~` = Identifier("`~id~`", TOK.Identifier, IDK.`~name~");\n";
     // const(Identifier)* c_name = &Ids_.name;
     const_members ~= "const(Identifier)* c_"~name~" = &Ids_."~name~";\n";
     // Identifier* name;
