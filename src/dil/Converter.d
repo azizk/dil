@@ -17,14 +17,8 @@ struct Converter
   cstring filePath; /// For error messages.
   Diagnostics diag;
 
-  static Converter opCall(cstring filePath, Diagnostics diag)
-  {
-    Converter conv;
-    conv.filePath = filePath;
-    conv.diag = diag;
-    return conv;
-  }
-
+static
+{
   /// Byte-swaps c.
   dchar swapBytes(dchar c)
   {
@@ -75,6 +69,7 @@ struct Converter
     else
       return swapBytes(c);
   }
+}
 
   /// Converts a UTF-32 text to UTF-8.
   char[] UTF32toUTF8(bool isBigEndian)(const(ubyte)[] data)
@@ -298,14 +293,16 @@ char[] sanitizeText(char[] text)
 unittest
 {
   Stdout("Testing function Converter.\n");
+
   struct Data2Text
   {
     cstring text;
     cstring expected = "source";
-    ubyte[] data()
+    @property ubyte[] data()
     { return cast(ubyte[])text.dup; }
   }
-  Data2Text[] map = [
+
+  static Data2Text[] map = [
     // Without BOM
     {"source"},
     {"s\0o\0u\0r\0c\0e\0"},
@@ -319,6 +316,7 @@ unittest
     {"\x00\x00\xFE\xFF\0\0\0s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e"},
     {"\xFF\xFE\x00\x00s\0\0\0o\0\0\0u\0\0\0r\0\0\0c\0\0\0e\0\0\0"},
   ];
+
   auto converter = Converter("", new Diagnostics());
   foreach (i, pair; map)
     assert(converter.data2UTF8(pair.data) == pair.expected,
