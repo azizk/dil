@@ -295,31 +295,39 @@ class Float
     return this;
   }
 
-  alias super.opEquals opEquals;
+  /// Compares $(f) to x.
+  bool opEquals(Object x)
+  {
+    if (auto y = cast(Float)x)
+      return opEquals(y);
+    return true;
+  }
 
   /// Compares $(f) to x.
-  int opEquals(Float x)
+  bool opEquals(Float x)
   {
-    return mpfr_equal_p(&f, &x.f);
+    return mpfr_equal_p(&f, &x.f) != 0;
   }
 
   /// ditto
-  int opEquals(double x)
+  bool opEquals(double x)
   {
     return mpfr_cmp_d(&f, x) == 0;
   }
 
   /// ditto
-  int opEquals(int x)
+  bool opEquals(int x)
   {
     return mpfr_cmp_si(&f, x) == 0;
   }
 
   /// ditto
-  int opEquals(uint x)
+  bool opEquals(uint x)
   {
     return mpfr_cmp_ui(&f, x) == 0;
   }
+
+  alias opEquals equals;
 
   alias super.opCmp opCmp;
 

@@ -384,16 +384,31 @@ class Complex
     return this;
   }
 
-  /// Compares z with x.
-  int opEquals(T)(T x)
+  /// Compares z to x.
+  bool opEquals(Object x)
   {
-    static if (is(T == Complex))
-      alias x z;
-    else
-      auto z = new Complex(x);
-    return re == z.re && im == z.im;
+    if (auto f = cast(Float)x)
+      return opEquals(f);
+    if (auto c = cast(Complex)x)
+      return opEquals(c);
+    return true;
   }
 
+  /// Compares z to x.
+  bool opEquals(Complex x)
+  {
+    return re.equals(x.re) && im.equals(x.im);
+  }
+
+  static string opEqualsMacro(string s)
+  {
+    return "bool opEquals(" ~ s ~ " x) { return opEquals(new Complex(x)); }";
+  }
+
+  mixin(opEqualsMacro("long"));
+  mixin(opEqualsMacro("Float"));
+
+  alias opEquals equals;
   /// Returns a negated copy of this number.
   Complex opNeg()
   {
@@ -544,6 +559,8 @@ unittest
   alias Float F;
   alias Complex C;
 
+  assert(C(F(3)) == F(3));
+  assert(F(99) == C(F(99)));
   assert(-C(F(10), F(9)) == C(F(-10), F(-9)));
   assert(C(5., 20.) / 5. == C(1., 4.));
   assert(1. / C(5., 20.) == C(5., 20.).inverse());
