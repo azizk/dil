@@ -424,8 +424,9 @@ class Lexer
     { // Insert a new Float into the table.
       mpfr_t mpfloat;
       mpfr_init(&mpfloat);
+      char* end;
       // Convert to multiprecision float.
-      int res = mpfr_strtofr(&mpfloat, str.ptr, null, 0, Float.RND);
+      int res = mpfr_strtofr(&mpfloat, str.ptr, end, 0, Float.RND);
       // if (res == 0) // Exact precision.
       // else if (res < 0) // Lower precision.
       // {}

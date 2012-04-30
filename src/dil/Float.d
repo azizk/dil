@@ -90,7 +90,7 @@ class Float
     {
       if (x[$-1] != '\0')
         x = x ~ '\0'; // Terminate with zero
-      this(x.dup.ptr, base);
+      this(x.ptr, base);
     }
   }
 
@@ -101,6 +101,8 @@ class Float
     if (x && *x)
       // Returns 0 for success, -1 on failure.
       mpfr_set_str(&f, cast(char*)x, base, RND);
+    else
+      mpfr_set_ui(&f, 0, RND);
   }
 
   ~this()
@@ -464,10 +466,9 @@ class Float
   char[] toString(uint precision)
   {
     char* str;
-    int len = mpfr_asprintf(&str, "%.*R*g".dup.ptr, precision, RND, &f);
-    if (len == -1)
+    int len = mpfr_asprintf(str, "%.*R*g".ptr, precision, RND, &f);
+    if (len < 0)
       return null;
-    // TODO: find a way to avoid duplicating.
     auto res = str[0..len].dup;
     mpfr_free_str(str);
     return res;
@@ -685,13 +686,15 @@ unittest
   assert(F() == 0);
   assert(F("").toString() == "0");
   assert(F("0").toString() == "0");
-  assert(F("123456789") == F(123456789));
-  assert(F("12345678.9") == F(123456789) / 10);
-  assert(F("123456.789") == F(123456789) / 1000);
-  assert(F("123.456789") == F(123456789) / 1000000);
-  assert(F("1.23456789") == F(123456789) / 100000000);
-  assert(F(".123456789") == F(123456789) / 1000000000);
-  assert(F("12345678.9") == F(123456789.0)/10);
+  assert(F("1.125").toString() == "1.125");
+
+  size_t i = "123456789".length,
+         n = 1;
+  for (; i < i.max; (i--), (n *= 10))
+    // E.g.: F("12345678.9") == F(123456789) / 10
+    assert(F("123456789"[0..i] ~ "." ~ "123456789"[i..$]) == F(123456789) / n);
+
+  assert(F("12345678.9") == F(123456789.0) / 10);
   assert(F("12345678.9") == F(Format("{}", 12345678.9)));
   // FIXME: The same as the line above, but the mpfr_set_d() routine is
   //        inaccurate apparently.

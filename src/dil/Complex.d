@@ -409,6 +409,7 @@ class Complex
   mixin(opEqualsMacro("Float"));
 
   alias opEquals equals;
+
   /// Returns a negated copy of this number.
   Complex opNeg()
   {
