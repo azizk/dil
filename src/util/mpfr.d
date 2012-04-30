@@ -50,7 +50,7 @@ struct mpfr_struct
 
 extern(C)
 {
-char* mpfr_get_version();
+const(char)* mpfr_get_version();
 
 void mpfr_init(mpfr_ptr);
 void mpfr_init2(mpfr_ptr, mpfr_prec_t);
@@ -59,7 +59,7 @@ void mpfr_clear(mpfr_ptr);
 void mpfr_set(mpfr_ptr, mpfr_srcptr, mpfr_rnd_t);
 void mpfr_set_d(mpfr_ptr, double, mpfr_rnd_t);
 void mpfr_set_si(mpfr_ptr, int, mpfr_rnd_t);
-int  mpfr_set_str(mpfr_ptr, char*, int, mpfr_rnd_t);
+int  mpfr_set_str(mpfr_ptr, const(char)*, int, mpfr_rnd_t);
 void mpfr_set_ui(mpfr_ptr, uint, mpfr_rnd_t);
 
 int  mpfr_set_exp(mpfr_ptr, mpfr_exp_t);
@@ -111,11 +111,8 @@ int  mpfr_equal_p(mpfr_srcptr, mpfr_srcptr);
 int  mpfr_eq(mpfr_srcptr, mpfr_srcptr, uint);
 
 // Format functions:
-int mpfr_strtofr(mpfr_ptr, char*, char**, int base, mpfr_rnd_t);
-int mpfr_snprintf(char*, size_t, char*, ...);
-// int mpfr_vsnprintf(char*, size_t, char*, va_list);
-int mpfr_asprintf(char** str, char*, ...);
-// int mpfr_vasprintf(char** str, char*, va_list);
+int mpfr_strtofr(mpfr_ptr, const(char)*, out char*, int base, mpfr_rnd_t);
+int mpfr_asprintf(out char*, const(char)*, ...);
 void mpfr_free_str(char*);
 char* mpfr_get_str(char*, mpfr_exp_t*, int, size_t, mpfr_srcptr, mpfr_rnd_t);
 
