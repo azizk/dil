@@ -47,6 +47,7 @@ import tango.text.Util : split;
 import tango.text.Regex : Regex;
 import tango.time.StopWatch;
 import tango.text.Ascii : icompare, toUpper;
+import tango.core.Array : sort;
 
 debug
 import tango.core.tools.TraceExceptions;
@@ -415,7 +416,8 @@ void main(cstring[] args)
       importPaths ~= item ~ ";";
     foreach (item; GS.ddocFilePaths)
       ddocPaths ~= item ~ ";";
-    cstring[cstring] settings = [
+
+    cstring[string] settings = [
       "DATADIR":GS.dataDir, "VERSION_IDS":versionIds,
       "KANDILDIR":GS.kandilDir,
       "IMPORT_PATHS":importPaths, "DDOC_FILES":ddocPaths,
@@ -429,6 +431,7 @@ void main(cstring[] args)
     cstring[] retrieve_settings;
     if (args.length > 2)
       retrieve_settings = args[2..$];
+
     if (retrieve_settings.length) // Print select settings.
       foreach (name; retrieve_settings)
       {
@@ -436,11 +439,12 @@ void main(cstring[] args)
           Stdout.formatln("{}={}", name, *psetting);
       }
     else // Print all settings.
-      foreach (name; ["DATADIR", "VERSION_IDS", "IMPORT_PATHS", "DDOC_FILES",
-          "KANDILDIR",
-          "LANG_FILE", "XML_MAP", "HTML_MAP", "LEXER_ERROR",
-          "PARSER_ERROR", "SEMANTIC_ERROR", "TAB_WIDTH"])
+    {
+      auto names = settings.keys;
+      names.sort((string a, string b){ return a < b; });
+      foreach (name; names)
         Stdout.formatln("{}={}", name, settings[name]);
+    }
     break;
   case "?", "h", "help":
     printHelp(op.hasArgs() ? op.getArg() : "", diag);
