@@ -1,4 +1,4 @@
-/// The configuration file of dil.
+/// The configuration file of DIL.
 ///
 /// The file is searched for in the following order:
 /// $(OL
@@ -10,17 +10,17 @@
 /// The program will fail with an error msg if this file couldn't be found.$(BR)
 ///
 /// Any environment variable used inside a string is expanded to its value.
-/// The variables BINDIR and DATADIR are set by dil. Examples:
+/// The variables BINDIR and DATADIR are set by DIL. Examples:
 /// $(UL
 ///   $(LI ${HOME} -> the home directory (e.g. "/home/name" or "C:\Documents and Settings\name").)
 ///   $(LI ${BINDIR} -> the absolute path to the executable's directory (e.g. "/home/name/dil/bin" or "C:\dil\bin").)
-///   $(LI ${DATADIR} -> the data directory of dil (e.g. "/home/name/dil/data" or "C:\dil\data").)
+///   $(LI ${DATADIR} -> the data directory of DIL (e.g. "/home/name/dil/data" or "C:\dil\data").)
 /// )
 ///
 /// Relative paths are resolved and made absolute using the current working directory.
 module dilconf;
 
-/// Files needed by dil are located in this directory.
+/// Files needed by DIL are located in this directory.
 var DATADIR = "${BINDIR}/../data";
 
 /// Predefined version identifiers.

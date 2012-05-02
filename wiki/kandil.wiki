@@ -32,7 +32,7 @@ DIL improves upon Ddoc with unique features and introduces small differences:
 == FAQ ==
 ||How do I generate docs for my project?||
 
- # [http://code.google.com/p/dil/wiki/Source?tm=4 Download Dil] and follow the instructions in the README to compile it.
+ # [http://code.google.com/p/dil/wiki/Source?tm=4 Download DIL] and follow the instructions in the README to compile it.
  # Type `bin/dil help ddoc` to get help on how to use the command.
  # Try this example script:
 {{{
@@ -42,7 +42,7 @@ mkdir -p myproject_doc/ # Destination.
 FILES=`find ~/path/to/myproject/src/ -iname '*.d'`
 
 bin/dil ddoc myproject_doc/ $FILES -v --kandil -hl
-# Run this script from the source dir of Dil.
+# Run this script from the source dir of DIL.
 }}}
 
 ||How can I create PDF files?||

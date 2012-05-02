@@ -52,7 +52,7 @@ import tango.core.Array : sort;
 debug
 import tango.core.tools.TraceExceptions;
 
-/// Entry function of Dil.
+/// Entry function of DIL.
 void main(cstring[] args)
 {
   if (args.length == 0)
@@ -61,7 +61,7 @@ void main(cstring[] args)
   // 1. Create a global compilation context.
   auto globalCC = newCompilationContext();
   auto diag = globalCC.diag;
-  // 2. Load the configuration file of Dil.
+  // 2. Load the configuration file of DIL.
   auto config = ConfigLoader(globalCC, diag, args[0]);
   config.load();
   if (config.resourceBundle)
@@ -497,7 +497,7 @@ CompilationContext newCompilationContext()
 {
   auto cc = new CompilationContext;
   cc.importPaths = GlobalSettings.importPaths;
-  cc.addVersionId("dil");
+  cc.addVersionId("DIL");
   cc.addVersionId("all");
 version(D2)
   cc.addVersionId("D_Version2");

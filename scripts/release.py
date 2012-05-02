@@ -3,7 +3,7 @@
 # Author: Aziz Köksal
 # License: zlib/libpng
 #
-# This is the script that creates release packages for dil.
+# This is the script that creates release packages for DIL.
 #
 from __future__ import unicode_literals, print_function
 from common import *
@@ -25,7 +25,7 @@ def copy_files(DIL):
     img.copy(DIL.DOC.IMG)
 
 def writeMakefile():
-  """ Writes a Makefile for building dil to the disk. """
+  """ Writes a Makefile for building DIL. """
   # TODO: implement.
   pass
 
@@ -52,11 +52,11 @@ def write_PDF(DIL, SRC, VERSION, TMP):
   sym_url = "http://dl.dropbox.com/u/17101773/doc/dil/{0}" # % VERSION
 
   params = {
-    "pdf_title": "dil %s API" % VERSION,
-    "cover_title": "dil %s<br/><b>API</b>" % VERSION,
+    "pdf_title": "DIL %s API" % VERSION,
+    "cover_title": "DIL %s<br/><b>API</b>" % VERSION,
     "author": "Aziz Köksal",
     "subject": "Compiler API",
-    "keywords": "dil D compiler API documentation",
+    "keywords": "DIL D compiler API documentation",
     "x_html": "XHTML",
     "nested_toc": True,
     "sym_url": sym_url
@@ -72,7 +72,7 @@ def write_CHM(DIL, SRC, VERSION, TMP):
   chm_gen.fetch_files(DIL.DOC, TMP)
   html_files = SRC.glob("*.html")
   params = {
-    "title": "dil %s API" % VERSION,
+    "title": "DIL %s API" % VERSION,
     "default_window": "main",
     "default_topic": "dilconf.html",
   }
@@ -128,11 +128,11 @@ def main():
   m = re.match(r"((\d)\.(\d\d\d)(-\w+)?)", args[0])
   if not m:
     parser.error("invalid VERSION; format: /\d.\d\d\d(-\w+)?/ E.g.: 1.123")
-  # The version of dil to be built.
+  # The version of DIL to be built.
   VERSION, V_MAJOR, V_MINOR, V_SUFFIX = m.groups()
   V_SUFFIX = V_SUFFIX or ''
 
-  # Pick a compiler for compiling dil.
+  # Pick a compiler for compiling DIL.
   CmdClass = (DMDCommand, LDCCommand)[options.ldc]
   COMPILER = Path(options.cmp_exe if options.cmp_exe else CmdClass.cmd)
   COMPILER.cmd = CmdClass
@@ -140,7 +140,7 @@ def main():
     parser.error("The executable '%s' couldn't be located or does not exist." %
                  COMPILER)
 
-  # Path to dil's root folder.
+  # Path to DIL's root folder.
   DIL       = dil_path()
 
   # Build folder.

@@ -50,5 +50,5 @@ MsgIDs:
 - {ID: 45, Name: HelpMain, Order: 45}
 - {ID: 46, Name: HelpGenerate, Order: 46}
 - {ID: 47, Name: HelpImportGraph, Order: 47}
-Name: dil
+Name: DIL
 SourceLangFile: en.cat

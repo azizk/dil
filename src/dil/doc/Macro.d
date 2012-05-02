@@ -294,7 +294,7 @@ struct MacroExpander
     while (p < textEnd && isspace(*p))
       p++;
 
-    // Skip special arguments marker. (Dil extension!)
+    // Skip special arguments marker. (DIL extension!)
     // This is needed to preserve the whitespace that comes after the marker.
     if (p < textEnd && *p == Macro.Marker.ArgsStart)
       p++;

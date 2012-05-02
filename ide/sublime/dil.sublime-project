@@ -3,7 +3,7 @@
   [
     {
       "path": "../../src",
-      "name": "Dil Source Code",
+      "name": "DIL Source Code",
       "file_exclude_patterns": [".directory"],
       "folder_exclude_patterns": []
     },

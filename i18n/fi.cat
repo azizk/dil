@@ -55,7 +55,7 @@ Messages:
     tyyppejä ovat C, C++, D, Windows, Pascal ja System.'}
 - {Annot: '', ID: 43, LastEd: 0, Text: 'expected one or more base classes, not ''{0}''.'}
 - {Annot: '', ID: 44, LastEd: 0, Text: base classes are not allowed in forward declarations.}
-- {Annot: '', ID: 45, LastEd: 0, Text: 'dil v{0}
+- {Annot: '', ID: 45, LastEd: 0, Text: 'DIL v{0}
 
     Copyright (c) 2007, Aziz Köksal. GPL3-lisensöity.
 

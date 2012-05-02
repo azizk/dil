@@ -29,4 +29,4 @@ immutable VERSION_SUFFIX = "";
 immutable VERSION =
   (StringCTF(VERSION_MAJOR)~"."~toString(VERSION_MINOR, 3)~VERSION_SUFFIX).idup;
 /// The name of the compiler.
-immutable VENDOR = "dil";
+immutable VENDOR = "DIL";

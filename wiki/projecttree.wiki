@@ -1,14 +1,14 @@
-#summary A walk through the directory structure of dil.
+#summary A walk through the directory structure of DIL.
 
 = Project Tree =
 
-As dil has grown quite a bit in its life time, it has become a necessity to document its structure. Interested developers can view this guide and quickly gain a good understanding of the location of various components in the system.
+As DIL has grown quite a bit in its life time, it has become a necessity to document its structure. Interested developers can view this guide and quickly gain a good understanding of the location of various components in the system.
 
-  * *`data/`*<br>Contains dilconf.d (the configuration file of dil,) language files and other files that are required by some subcommands in dil.
+  * *`data/`*<br>Contains dilconf.d (the configuration file of DIL,) language files and other files that are required by some subcommands in DIL.
   * *`i18n/`*<br>Language catalogue files. Part of src/translator/. Not in use at the moment.
-  * *`kandil/`*<br>An XHTML/JS front-end for documentation of D source files. See [http://code.google.com/p/dil/wiki/Kandil kandil's wiki page].
+  * *`kandil/`*<br>An XHTML/JS front-end for documentation of D source files. See [http://code.google.com/p/dil/wiki/Kandil Kandil's wiki page].
   * *`scripts/`*<br>Very useful utility scripts are located here.
-    * `build.py`: Build dil with this if you don't have or want [http://dsource.org/projects/dsss DSSS].
+    * `build.py`: Build DIL with this if you don't have or want [http://dsource.org/projects/dsss DSSS].
     * `phobos_doc.py`: Generates documentation for Phobos and optionally creates a zip archive.
     * `tango_doc.py`: Like phobos_doc.py, but for Tango.
     * `typerules.d`: Generates interesting tables of type rules in the compiler that compiles it.
@@ -39,9 +39,9 @@ As dil has grown quite a bit in its life time, it has become a necessity to docu
       * `Version.d`: Know the version of the compiler.
     * *`tests/`*<br>Some test cases for the compiler.
     * *`translator/`*<br>My failed attempt at writing a GUI app with !PyQt4 for managing language catalogues (using the YAML format.)
-    * `main.d`: The main application with a command-line interface that drives the functions of dil.
+    * `main.d`: The main application with a command-line interface that drives the functions of DIL.
   * *`wiki/`*<br>Contains the wiki pages, like this one you're reading.
   * `AUTHORS`: Lists people contributing to this project. Contains my personal testament; just in case I get struck down by a lightning from Zeus (I keep having naughty thoughts of Aphrodite.)
   * `COPYING`: The main license of this project (GPL3.)
-  * `dsss.conf`: A makefile used by DSSS to build dil.
-  * `README`: Mostly describes how to build dil.
+  * `dsss.conf`: A makefile used by DSSS to build DIL.
+  * `README`: Mostly describes how to build DIL.

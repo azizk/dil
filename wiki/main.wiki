@@ -1,24 +1,24 @@
 =Purpose=
-Dil is a hand-crafted compiler implementation for the D programming language written in D v2 using the [http://dsource.org/projects/tango Tango] standard library. The lexer and the parser are fully implemented. Semantic analysis is being worked on. The backend will most probably be [http://llvm.org LLVM].
+DIL is a hand-crafted compiler implementation for the D programming language written in D v2 using the [http://dsource.org/projects/tango Tango] standard library. The lexer and the parser are fully implemented. Semantic analysis is being worked on. The backend will most probably be [http://llvm.org LLVM].
 
 <wiki:gadget url="http://www.ohloh.net/p/8880/widgets/project_partner_badge.xml" height="53" border="0"/>
 
 =Status=
-  * Dil shines at generating documentation from source files.
-  * Semantic analysis is very difficult. Only a little bit of it exists in Dil.
+  * DIL shines at generating documentation from source files.
+  * Semantic analysis is very difficult. Only a little bit of it exists in DIL.
   * Binaries cannot be generated yet.
 
 =News=
-  * 2012/04/15: Finished porting Dil to D version 2. The code just compiles, but I couldn't run it because the linker keeps complaining about missing symbols although it is able to find all necessary libraries.
+  * 2012/04/15: Finished porting DIL to D version 2. The code just compiles, but I couldn't run it because the linker keeps complaining about missing symbols although it is able to find all necessary libraries.
   * 2011/09/21: First merge of a [https://github.com/azizk/dil/commit/570329e6e2a0173d8904c66ce2a59fd234c29c84 pull request] made by [https://github.com/klickverbot klickverbot]. Thanks for the contribution!
   * 2011/07/14: The project is still [http://www.youtube.com/watch?v=Y6ljFaKRTrI still alive]. Just busy with life in general, especially with [http://www.reddit.com/r/running running] and weight training. ;-)
   * 2010/12/25: Uploaded docs for Derelict2, DMDScript2, !LanguageMachine, VisualD and Yage. PDFs and archives included.
-  * 2010/12/22: Generated docs for Tango 1.0.0, Phobos 1.066/2.051, !MiniD2.0 and Dil.<br>Uploaded all files to a folder on [http://dl.dropbox.com/u/17101773/doc/index.html Dropbox]. More projects and PDF files to follow.
+  * 2010/12/22: Generated docs for Tango 1.0.0, Phobos 1.066/2.051, !MiniD2.0 and DIL.<br>Uploaded all files to a folder on [http://dl.dropbox.com/u/17101773/doc/index.html Dropbox]. More projects and PDF files to follow.
 
-=What Dil Can Do=
+=What DIL Can Do=
 
-  * Generate documentation from Ddoc comments.<br>In comparison to DMD, Dil has fewer bugs and also offers a few treats. It is possible to generate PDF documents from the HTML files using [http://princexml.com PrinceXML]. See [http://code.google.com/p/dil/wiki/Kandil Kandil] for more information. Example documentation of some projects ([http://dl.dropbox.com/u/17101773/doc/index.html in one folder]):
-    * [http://dl.dropbox.com/u/17101773/doc/dil/index.html Dil] ([http://dl.dropbox.com/u/17101773/doc/dil.7z 7z])
+  * Generate documentation from Ddoc comments.<br>In comparison to DMD, DIL has fewer bugs and also offers a few treats. It is possible to generate PDF documents from the HTML files using [http://princexml.com PrinceXML]. See [http://code.google.com/p/dil/wiki/Kandil Kandil] for more information. Example documentation of some projects ([http://dl.dropbox.com/u/17101773/doc/index.html in one folder]):
+    * [http://dl.dropbox.com/u/17101773/doc/dil/index.html DIL] ([http://dl.dropbox.com/u/17101773/doc/dil.7z 7z])
     * [http://dl.dropbox.com/u/17101773/doc/tango.1.0.0/index.html Tango 1.0.0] ([http://dl.dropbox.com/u/17101773/doc/tango.1.0.0.7z 7z], [http://dl.dropbox.com/u/17101773/doc/tango.1.0.0/Tango.1.0.0.API.pdf PDF], [http://docs.google.com/viewer?url=http%3A%2F%2Fdl.dropbox.com%2Fu%2F17101773%2Fdoc%2Ftango.1.0.0%2FTango.1.0.0.API.pdf Google PDF Viewer])
     * [http://dl.dropbox.com/u/17101773/doc/phobos.1.066/index.html Phobos 1.066] ([http://dl.dropbox.com/u/17101773/doc/phobos.1.066.7z 7z], [http://dl.dropbox.com/u/17101773/doc/phobos.1.066/Phobos.1.066.pdf PDF])
     * [http://dl.dropbox.com/u/17101773/doc/phobos.2.051/index.html Phobos 2.051] ([http://dl.dropbox.com/u/17101773/doc/phobos.2.051.7z 7z])
@@ -29,22 +29,22 @@ Dil is a hand-crafted compiler implementation for the D programming language wri
     * [http://dl.dropbox.com/u/17101773/doc/dmdscript2/index.html DMDScript2] ([http://dl.dropbox.com/u/17101773/doc/dmdscript2.7z 7z], [http://dl.dropbox.com/u/17101773/doc/dmdscript2/DMDScript.2_API.pdf PDF])
     * [http://dl.dropbox.com/u/17101773/doc/lmn/index.html LanguageMachine] ([http://dl.dropbox.com/u/17101773/doc/lmn.7z 7z], [http://dl.dropbox.com/u/17101773/doc/lmn/LMN.x.x_API.pdf PDF])
 
-  * Generate highlighted source files in HTML or XML.<br>Tokens only are highlighted by default, but the whole parse tree can be unparsed as well. The whitespace of the original source file is preserved. Any browser can display the HTML documents, but the XML documents can only be viewed in W3C-standards compatible browsers in combination with an XML formatting CSS document. Dil provides two ordinary CSS documents (for XML/HTML) which can be easily customized. Example: Dil's source code in [http://dil.googlecode.com/files/xml_rev709.zip XML] or [http://dil.googlecode.com/files/html_rev709.zip HTML] (files are outdated).
+  * Generate highlighted source files in HTML or XML.<br>Tokens only are highlighted by default, but the whole parse tree can be unparsed as well. The whitespace of the original source file is preserved. Any browser can display the HTML documents, but the XML documents can only be viewed in W3C-standards compatible browsers in combination with an XML formatting CSS document. DIL provides two ordinary CSS documents (for XML/HTML) which can be easily customized. Example: DIL's source code in [http://dil.googlecode.com/files/xml_rev709.zip XML] or [http://dil.googlecode.com/files/html_rev709.zip HTML] (files are outdated).
 
-  * Produce module dependency graphs using the graphviz dot format.<br>For example, see the [http://dil.googlecode.com/files/main.2.dot dot file] of Dil: rendered in [http://dil.googlecode.com/files/main.2.svg SVG], [http://dil.googlecode.com/files/main.2.png PNG] (2.7MB) or [http://dil.googlecode.com/files/main.2.gif GIF]. Cyclic edges (import statements) and nodes (modules) are highlighted in red. The edges of public imports are bold.
+  * Produce module dependency graphs using the graphviz dot format.<br>For example, see the [http://dil.googlecode.com/files/main.2.dot dot file] of DIL: rendered in [http://dil.googlecode.com/files/main.2.svg SVG], [http://dil.googlecode.com/files/main.2.png PNG] (2.7MB) or [http://dil.googlecode.com/files/main.2.gif GIF]. Cyclic edges (import statements) and nodes (modules) are highlighted in red. The edges of public imports are bold.
 
-  * Output code statistics (lines of code, count syntax tree nodes and tokens, number of whitespace characters etc.) When Dil has advanced enough [http://www.aivosto.com/project/help/pm-oo-ck.html OO-metrics] will be supported. Example: [http://dil.googlecode.com/files/stats_dstress_r1835_2.txt dstress] (1.5MB text; totals are at the bottom)
+  * Output code statistics (lines of code, count syntax tree nodes and tokens, number of whitespace characters etc.) When DIL has advanced enough [http://www.aivosto.com/project/help/pm-oo-ck.html OO-metrics] will be supported. Example: [http://dil.googlecode.com/files/stats_dstress_r1835_2.txt dstress] (1.5MB text; totals are at the bottom)
 
-  * Dil is fully internationalized.<br>It can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in the [http://dil.googlecode.com/svn/doc/dil/dilconf.html#LANG_FILE configuration file].
+  * DIL is fully internationalized.<br>It can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in the [http://dil.googlecode.com/svn/doc/dil/dilconf.html#LANG_FILE configuration file].
 
-  * Dil can parse [http://code.google.com/p/dil/wiki/D2Syntax the syntax changes in D2].
+  * DIL can parse [http://code.google.com/p/dil/wiki/D2Syntax the syntax changes in D2].
 
 == Help ==
-Writing a fully functional compiler is a huge undertaking and can therefore take months and years for a single person. Perhaps you would like to give a hand and speed up the development of this project. Here are some of the things you could do for Dil and the D community:
+Writing a fully functional compiler is a huge undertaking and can therefore take months and years for a single person. Perhaps you would like to give a hand and speed up the development of this project. Here are some of the things you could do for DIL and the D community:
 
-  * Document the inner workings of DMD's front-end, specifically semantic analysis (SA.) This would help me immensely to implement SA for Dil and be as close to the official D compiler as possible. Or you could:
+  * Document the inner workings of DMD's front-end, specifically semantic analysis (SA.) This would help me immensely to implement SA for DIL and be as close to the official D compiler as possible. Or you could:
   * Lobby for better and clearer D language specifications.
-  * Learn git and start writing code for Dil. The code you write will be credited to you, even if I commit the patches (as git distinguishes between author and submitter of revisions.)
+  * Learn git and start writing code for DIL. The code you write will be credited to you, even if I commit the patches (as git distinguishes between author and submitter of revisions.)
   * Any kind of interesting feedback is always welcome.
 
 == Planned Features ==
@@ -66,7 +66,7 @@ Feel free to join my IRC channel, #dil, which I've set up on freenode.net.
 You can also send me a plain e-Mail if you have questions regarding my project.
 
 ===License===
-Some people might not like the license under which Dil is currently being developed.
+Some people might not like the license under which DIL is currently being developed.
 In fact, it could be off-putting for some programmers who would like to contribute to it or make use of it as a client.
 However, please keep in mind that a lot of hours were spent in order to come up with a compiler that is well documented and has a solid design.
 It is not unlikely that the author will put the project under a less restrictive license one time or another.

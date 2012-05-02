@@ -343,7 +343,7 @@ abstract class DDocEmitter : DefaultVisitor2
     foreach (name; ["AUTHORS", "BUGS", "COPYRIGHT", "DATE", "DEPRECATED",
                     "EXAMPLES", "HISTORY", "LICENSE", "RETURNS", "SEE_ALSO",
                     "STANDARDS", "THROWS", "VERSION"] ~
-                   ["AUTHOR"]) // Addition by dil.
+                   ["AUTHOR"]) // Additions by DIL.
       specialSections[hashOf(name)] = name;
   }
 

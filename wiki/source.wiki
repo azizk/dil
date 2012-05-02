@@ -5,7 +5,7 @@ Use this command to anonymously check out the latest project source code:
 This will download the whole repository and put it into the 'dil' folder.
 ||`git clone git://github.com/azizk/dil.git dil`||
 
-Or if you like, use *SVN* to fetch a copy of Dil:
+Or if you like, use *SVN* to fetch a copy of DIL:
 ||`svn co http://svn.github.com/azizk/dil.git dil`||
 
 To update the repository type these commands:

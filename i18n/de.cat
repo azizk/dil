@@ -62,7 +62,7 @@ Messages:
     nicht ''{0}''.'}
 - {Annot: '', ID: 44, LastEd: 0, Text: Basisklassen sind in Vorwärtsdeklarationen
     nicht erlaubt.}
-- {Annot: '', ID: 45, LastEd: 0, Text: 'dil v{0}
+- {Annot: '', ID: 45, LastEd: 0, Text: 'DIL v{0}
 
     Copyright (c) 2007, Aziz Köksal. Lizensiert unter der GPL3.
 

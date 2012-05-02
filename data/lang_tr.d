@@ -168,7 +168,7 @@ string[] messages = [
   "Bilinmeyen komut: ‘{}’",
 
   // HelpMain
-  `dil v{0}
+  `DIL v{0}
 Copyright (c) 2007-2012, Aziz Köksal. Lisans GPL3.
 
 Komutlar:

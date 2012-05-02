@@ -93,14 +93,14 @@ abstract class SettingsLoader
   {}
 }
 
-/// Loads the configuration file of dil.
+/// Loads the configuration file of DIL.
 class ConfigLoader : SettingsLoader
 {
   /// Name of the configuration file.
   static cstring configFileName = "dilconf.d";
-  cstring executablePath; /// Absolute path to dil's executable.
-  cstring executableDir; /// Absolute path to the directory of dil's executable.
-  cstring dataDir; /// Absolute path to dil's data directory.
+  cstring executablePath; /// Absolute path to DIL's executable.
+  cstring executableDir; /// Absolute path to the directory of DIL's executable.
+  cstring dataDir; /// Absolute path to DIL's data directory.
   cstring homePath; /// Path to the home directory.
 
   ResourceBundle resourceBundle; /// A bundle for compiler messages.
@@ -269,7 +269,7 @@ class ConfigLoader : SettingsLoader
     return rb;
   }
 
-  /// Searches for the configuration file of dil.
+  /// Searches for the configuration file of DIL.
   /// Returns: the filePath or null if the file couldn't be found.
   cstring findConfigurationFilePath()
   {

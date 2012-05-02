@@ -165,7 +165,7 @@ string[] messages = [
   "Unbekannter Befehl: ‚{}‘",
 
   // HelpMain
-  `dil v{0}
+  `DIL v{0}
 Copyright (c) 2007-2012, Aziz Köksal. Lizenziert unter der GPL3.
 
 Befehle:

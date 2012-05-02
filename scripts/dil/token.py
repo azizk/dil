@@ -157,7 +157,7 @@ def get_line(t, more):
 def get_file(t, more):
   return "" # TODO:
 def get_vendor(t, more):
-  return "dil"
+  return "DIL"
 def get_version(t, more):
   return "x.xxx" # TODO:
 

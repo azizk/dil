@@ -127,7 +127,7 @@ def main():
   parser.add_option("--pdf", dest="pdf", default=False, action="store_true",
     help="create a PDF document")
   parser.add_option("--pykandil", dest="pykandil", default=False, action="store_true",
-    help="use Python code to handle kandil, don't pass --kandil to dil")
+    help="use Python code to handle Kandil, don't pass --kandil to DIL")
 
   (options, args) = parser.parse_args(sys.uargv[1:])
 
@@ -141,8 +141,8 @@ def main():
   options.docs = options.docs or not (options.pdf or options._7z)
 
   # 1. Initialize some path variables.
-  # Path to dil's root folder.
-  dil_dir   = script_parent_folder(__file__) # Look here for dil by default.
+  # Path to DIL's root folder.
+  dil_dir   = script_parent_folder(__file__) # Look here for DIL by default.
   DIL       = dil_path(dil_dir)
   # The version of Tango we're dealing with.
   VERSION   = ""
@@ -192,7 +192,7 @@ def main():
       DOC_FILES, versions, dil_options, cwd=DIL)
 
     if dil_retcode != 0:
-      return print("Error: dil return code: %d" % dil_retcode)
+      return print("Error: DIL return code: %d" % dil_retcode)
 
     # 4. Post processing.
     processed_files = read_modules_list(MODLIST)

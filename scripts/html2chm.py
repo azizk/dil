@@ -95,7 +95,7 @@ Title=%(title)s
     (tmp/html_file.name).open("w", encoding=None).write(text)
 
   doc_head = """<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
-<html>\n<head><meta name="generator" content="dil"></head>
+<html>\n<head><meta name="generator" content="DIL"></head>
 <body>\n"""
   doc_end = "</body>\n</html>"
 

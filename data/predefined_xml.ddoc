@@ -7,7 +7,7 @@ $(GENERATOR)
 
 GENERATOR =
 <generator>
-  <name>dil</name>
+  <name>DIL</name>
   <version><!--TODO:define runtime macro for this--></version>
   <link>http://code.google.com/p/dil</link>
   <date>$(DATETIME)</date>
