@@ -55,6 +55,8 @@ import tango.core.tools.TraceExceptions;
 /// Entry function of DIL.
 void main(cstring[] args)
 {
+  version(unittest)
+    return; // Don't run anything when unittests are executed.
   if (args.length == 0)
     throw new Exception("main() received 0 arguments");
 

@@ -49,7 +49,7 @@ BOM tellBOM(const(ubyte)[] data)
 
 unittest
 {
-  Stdout("Testing function tellBOM().\n");
+  scope msg = new UnittestMsg("Testing function tellBOM().");
 
   struct Data2BOM
   {

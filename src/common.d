@@ -40,6 +40,28 @@ cstring replace(cstring str, char a, char b)
   return tmp;
 }
 
+version(unittest)
+{
+/// Writes a message to stdout.
+scope class UnittestMsg
+{
+  cstring msg;
+  cstring passed = "Passed!\n";
+  this(cstring msg)
+  {
+    this.msg = msg;
+    Stdout(msg);
+  }
+  ~this()
+  {
+    auto tabs = "\t\t\t\t\t\t\t\t\t\t";
+    // FIXME: the calculation could be more accurate.
+    auto num = (80 - msg.length - passed.length) / 8;
+    Stdout(tabs[0..num] ~ passed);
+  }
+}
+}
+
 // Check version IDs.
 version(D1) {
   version(D2)

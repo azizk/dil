@@ -2897,7 +2897,7 @@ class Lexer
 /// Tests the lexer with a list of tokens.
 unittest
 {
-  Stdout("Testing Lexer.\n");
+  scope msg = new UnittestMsg("Testing class Lexer.");
   struct Pair
   {
     string tokenText;
@@ -3004,7 +3004,7 @@ unittest
 /// Tests the Lexer's peek() method.
 unittest
 {
-  Stdout("Testing method Lexer.peek()\n");
+  scope msg = new UnittestMsg("Testing method Lexer.peek()");
   auto tables = new LexerTables();
   auto sourceText = new SourceText("", "unittest { }");
   auto lx = new Lexer(sourceText, tables);

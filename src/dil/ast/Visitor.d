@@ -157,7 +157,7 @@ static this()
 
 unittest
 {
-  Stdout("Testing class Visitor.\n");
+  scope msg = new UnittestMsg("Testing class Visitor.");
   import dil.lexer.IdTable;
 
   class TestVisitor : Visitor

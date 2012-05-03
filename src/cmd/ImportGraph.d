@@ -130,7 +130,7 @@ class Graph
 
 unittest
 {
-  Stdout("Testing class Graph.").newline;
+  scope msg = new UnittestMsg("Testing class Graph.");
   auto g = new Graph();
 
   auto V = [new Vertex(), new Vertex(), new Vertex(),

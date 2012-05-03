@@ -679,7 +679,7 @@ Float hypot(Float x, Float y)
 
 unittest
 {
-  Stdout("Testing class Float.\n");
+  scope msg = new UnittestMsg("Testing class Float.");
 
   alias Float F;
 

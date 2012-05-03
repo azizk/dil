@@ -122,7 +122,7 @@ struct IdentValueParser
 
 unittest
 {
-  Stdout("Testing dil.doc.Parser.\n");
+  scope msg = new UnittestMsg("Testing struct dil.doc.Parser.");
   auto text = "A =
 B = text
 C =

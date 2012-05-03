@@ -292,7 +292,7 @@ char[] sanitizeText(char[] text)
 
 unittest
 {
-  Stdout("Testing function Converter.\n");
+  scope msg = new UnittestMsg("Testing struct Converter.");
 
   struct Data2Text
   {

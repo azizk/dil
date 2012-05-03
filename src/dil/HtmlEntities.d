@@ -2244,7 +2244,7 @@ dchar entity2Unicode(cstring entity)
 
 unittest
 {
-  Stdout("Testing entity2Unicode().").newline;
+  scope msg = new UnittestMsg("Testing function entity2Unicode().");
   alias entity2Unicode f;
 
   // Test extreme values.

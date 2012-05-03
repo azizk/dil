@@ -555,7 +555,7 @@ class Complex
 
 unittest
 {
-  Stdout("Testing class Complex.\n");
+  scope msg = new UnittestMsg("Testing class Complex.");
 
   alias Float F;
   alias Complex C;
