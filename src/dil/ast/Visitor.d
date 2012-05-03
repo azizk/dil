@@ -22,8 +22,8 @@ char[] generateVisitMethods()
 {
   char[] text = "void _beforeFirstVisitMethod(){}".dup;
   foreach (className; NodeClassNames)
-    text ~= "returnType!("~className~") visit("~
-      className~" node){return unhandled(node).to!("~className~");}\n";
+    text ~= "returnType!("~className~") visit("~className~" node)"~
+            "{return unhandled(node).to!("~className~");}\n";
   return text;
 }
 
@@ -141,19 +141,49 @@ static this()
 {
   auto vtbl = Visitor.classinfo.vtbl;
   auto vtbl2 = Visitor2.classinfo.vtbl;
+  assert(vtbl.length == vtbl2.length);
   size_t i;
   foreach (j, func; vtbl)
     if (func is &Visitor._beforeFirstVisitMethod &&
         vtbl2[j] is &Visitor2._beforeFirstVisitMethod)
     {
       i = j + 1;
-      assert(vtbl.length > i);
+      assert(i < vtbl.length);
       break;
     }
   assert(i, "couldn't find first visit method in the vtable");
   indexOfFirstVisitMethod = i;
 }
 
-/// TODO: implement.
 unittest
-{}
+{
+  Stdout("Testing class Visitor.\n");
+  import dil.lexer.IdTable;
+
+  class TestVisitor : Visitor
+  {
+    alias super.visit visit;
+    Expression visit(IdentifierExpr e)
+    {
+      return e;
+    }
+  }
+
+  class TestVisitor2 : Visitor2
+  {
+    IdentifierExpr ie;
+    alias super.visit visit;
+    void visit(IdentifierExpr e)
+    {
+      ie = e;
+    }
+  }
+
+  auto ie = new IdentifierExpr(Ident.Empty);
+  auto v1 = new TestVisitor();
+  auto v2 = new TestVisitor2();
+
+  assert(v1.visit(ie) is ie, "Visitor.visit(IdentifierExpr) was not called");
+  v2.visit(ie);
+  assert(v2.ie is ie, "Visitor2.visit(IdentifierExpr) was not called");
+}
