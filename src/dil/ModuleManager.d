@@ -124,7 +124,7 @@ class ModuleManager
     moduleFQNPathTable[fqnPathHash] = newModule;
     absFilePathTable[hashOf(absFilePath)] = newModule;
     loadedModules ~= newModule;
-    newModule.ID = cast(uint)loadedModules.length;
+    newModule.ID = loadedModules.length;
     insertOrdered(newModule);
 
     auto nrOfPckgs = packageTable.length; // Remember for error checking.

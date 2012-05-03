@@ -30,7 +30,7 @@ class Module : ModuleSymbol
   cstring moduleFQN; /// Fully qualified name of the module. E.g.: dil.ast.Node
   cstring packageName; /// E.g.: dil.ast
   cstring moduleName; /// E.g.: Node
-  uint ID; /// A unique 1-based ID. Useful for graph traversing.
+  size_t ID; /// A unique 1-based ID. Useful for graph traversing.
 
   CompoundDecl root; /// The root of the parse tree.
   ImportDecl[] imports; /// ImportDeclarations found in this file.
