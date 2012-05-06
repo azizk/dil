@@ -3,7 +3,7 @@
 /// $(Maturity very high)
 module dil.lexer.Funcs;
 
-import dil.Unicode : scanUnicodeAlpha;
+import dil.Unicode : scanUnicodeAlpha, isUnicodeAlpha;
 import common;
 
 /// Converts an unsigned integer to a string (CTF version.)
@@ -278,6 +278,12 @@ body
 cstring scanIdentifier(ref char* ref_p, cchar* end)
 {
    return scanIdentifier(*cast(cchar**)&ref_p, end);
+}
+
+/// Returns true if p points to the start of a D identifier.
+bool isIdentifierStart(cchar* p, cchar* end)
+{
+  return isidbeg(*p) || isUnicodeAlpha(p, end);
 }
 
 /// ASCII character properties table.

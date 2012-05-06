@@ -18,7 +18,6 @@ import dil.lexer.Token,
        dil.lexer.Funcs;
 import dil.semantic.Module;
 import dil.i18n.Messages;
-import dil.Unicode : isUnicodeAlpha;
 import dil.Highlighter,
        dil.Diagnostics,
        dil.SourceText,
@@ -412,8 +411,7 @@ abstract class DDocEmitter : DefaultVisitor2
       {
       case '$':
         auto p2 = p+2;
-        if (p2 < end && p[1] == '(' &&
-            (isidbeg(*p2) || isUnicodeAlpha(p2, end))) // IdStart
+        if (p2 < end && p[1] == '(' && isIdentifierStart(p2, end)) // IdStart
         {
           parens ~= Macro.Marker.Closing;
           result ~= Macro.Marker.Opening; // Relace "$(".
