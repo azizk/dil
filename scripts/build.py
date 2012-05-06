@@ -123,7 +123,8 @@ def build_dil(cmd_kwargs):
 
 
 def build_dil_release(**kwargs):
-  options = {'release':1, 'optimize':1, 'inline':1}
+  # Enable inlining when DMDBUG #7967 is fixed.
+  options = {'release':1, 'optimize':1, 'inline':0}
   build_dil(dict(kwargs, **options))
 
 def build_dil_debug(**kwargs):
@@ -145,8 +146,8 @@ def main():
   parser.add_option(
     "--debug", dest="debug", action="store_true", default=False,
     help="build a debug version")
-  parser.add_option("-2", dest="d2", action="store_true", default=False,
-    help="build with -version=D2")
+  parser.add_option("-1", dest="d1", action="store_true", default=False,
+    help="build with -version=D1")
   parser.add_option("--ldc", dest="ldc", action="store_true", default=False,
     help="use ldc instead of dmd")
   parser.add_option(
@@ -168,7 +169,7 @@ def main():
   for_win = is_win32 or options.wine
 
   command = (DMDCommand, LDCCommand)[options.ldc]
-  versions = (["D1"], ["D2"])[options.d2]
+  versions = (["D2"], ["D1"])[options.d1]
   lnk_args = (["-lmpfr", "-ldl"], ["+mpfr"])[for_win]
   # Remove -ldl if release build.
   lnk_args = (lnk_args[:1], lnk_args)[options.debug]
