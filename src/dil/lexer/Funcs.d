@@ -29,17 +29,10 @@ char[] String(ulong x)
 }
 
 /// Returns a string slice ranging from begin to end.
-char[] String(char* begin, char* end)
+inout(char)[] String(inout(char)* begin, inout(char)* end)
 {
-  assert(begin && end && begin <= end);
+  assert(begin && end && begin <= end, Format("{} > {}", begin, end));
   return begin[0..end-begin];
-}
-/// ditto
-// Should return cstring without ".dup". Remove when $(DMDBUG 7967) is fixed.
-char[] String(cchar* begin, cchar* end)
-{
-  assert(begin && end && begin <= end);
-  return begin[0..end-begin].dup;
 }
 
 /// Encodes a string's characters with hexadecimal digits.
