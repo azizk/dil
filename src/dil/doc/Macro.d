@@ -48,21 +48,32 @@ class Macro
         auto p2 = p+2;
         if (p2 < end && p[1] == '(' && isIdentifierStart(p2, end)) // IdStart
         { // Scanned: "$(IdStart"
-          prev != p && (result ~= String(prev, p)); // Copy previous text.
-          parens ~= Macro.Marker.Closing;
+          if (prev != p)
+            result ~= String(prev, p); // Copy previous text.
+          parens ~= Macro.Marker.Opening;
           result ~= Macro.Marker.Opening; // Relace "$(".
-          p++; // Move to '('.
-          prev = p+1;
+          prev = p = p2; // Move to IdStart.
         }
         break;
       case '(': // Only push on the stack, when inside a macro.
-        if (parens.length) parens ~= ')'; break;
+        if (parens.length)
+          parens ~= '(';
+        break;
       case ')':
-        if (!parens.length) break;
-        if (parens[$-1] == Macro.Marker.Closing)
-          (prev != p && (result ~= String(prev, p)), prev = p+1),
-          (result ~= Macro.Marker.Closing); // Replace ')'.
+        if (!parens.length)
+          break; // Ignore parentheses outside macro.
+        if (parens[$-1] == Macro.Marker.Opening)
+        { // Found matching closing parenthesis.
+          if (prev != p) {
+            result ~= String(prev, p);
+            prev = p+1;
+          }
+          result ~= Macro.Marker.Closing; // Replace ')'.
+        }
+        else
+          assert(parens[$-1] == '(');
         parens = parens[0..$-1];
+        break;
       default:
       }
     if (prev == text.ptr)
@@ -70,14 +81,17 @@ class Macro
     if (prev < end)
       result ~= String(prev, end);
     foreach_reverse (c; parens)
-      if (c == Macro.Marker.Closing) // Unclosed macros?
+      if (c == Macro.Marker.Opening) // Unclosed macros?
         result ~= Macro.Marker.Unclosed; // Add marker for errors.
+      //else
+      //  result ~= ')';
     return result;
   }
 }
 
 unittest
 {
+  scope msg = new UnittestMsg("Testing function Macro.convert().");
   alias Macro.convert fn;
   auto r = fn("$(bla())");
   assert(r == "\1bla()\2");
@@ -286,7 +300,7 @@ struct MacroExpander
     //           "" or '' strings, comments, or tags."
     uint mlevel = 1; // Nesting level of macros.
     uint plevel = 0; // Nesting level of parentheses.
-    cstring[] args;
+    cstring[] args = [null]; // First element will be arg0.
     auto p = ref_p; // Use a non-ref variable to scan the text.
 
     // Skip leading spaces.
@@ -299,7 +313,7 @@ struct MacroExpander
       p++;
 
     auto arg0Begin = p; // Begin of all arguments.
-    auto argBegin = p;
+    auto argBegin = p; // Begin of current argument.
   MainLoop:
     while (p < textEnd)
     {
@@ -359,16 +373,14 @@ struct MacroExpander
       p++;
     }
     assert(mlevel == 0 &&
-    (*p == Macro.Marker.Closing || *p == Macro.Marker.Unclosed) ||
+      (*p == Macro.Marker.Closing || *p == Macro.Marker.Unclosed) ||
       p == textEnd);
     ref_p = p;
     if (arg0Begin == p)
       return null; // No arguments.
-    // arg0 spans the whole argument list.
-    auto arg0 = String(arg0Begin, p);
-    // Add last argument.
-    args ~= String(argBegin, p);
-    return arg0 ~ args;
+    args[0] = String(arg0Begin, p); // arg0 spans the whole argument list.
+    args ~= String(argBegin, p); // Add last argument.
+    return args;
   }
 
   /// Expands "&#36;+", "&#36;0" - "&#36;9" with args[n] in text.
@@ -401,7 +413,12 @@ struct MacroExpander
         if (*p == '+')
         { // $+ = $2 to $n
           if (args.length > 2)
+          {
+            assert(args[0].ptr < args[2].ptr &&
+                   args[2].ptr < args[0].ptr + args[0].length,
+                   "arg[2] is not a slice of arg[0]");
             result ~= String(args[2].ptr, args[0].ptr + args[0].length);
+          }
         }
         else
         { // 0 - 9
