@@ -175,6 +175,17 @@ override:
     }
   }
 
+  void visit(InoutType t)
+  {
+    write("inout");
+    if (t.next !is null)
+    {
+      write("(");
+      visitT(t.next);
+      write(")");
+    }
+  }
+
   void visit(SharedType t)
   {
     write("shared");

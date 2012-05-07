@@ -1990,6 +1990,16 @@ override
   {
     return t;
   }
+
+  T visit(InoutType t) // D2.0
+  {
+    return t;
+  }
+
+  T visit(SharedType t) // D2.0
+  {
+    return t;
+  }
 } // override
 
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

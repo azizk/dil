@@ -315,6 +315,7 @@ class Parser
     case //T.Shared,
          T.Gshared,
          //T.Immutable,
+         //T.Inout,
          T.Ref,
          T.Pure,
          T.Nothrow,
@@ -411,7 +412,7 @@ class Parser
       break;
     version(D2)
     {
-    case T.Const, T.Immutable, T.Shared:
+    case T.Const, T.Immutable, T.Inout, T.Shared:
       if (peekNext() == T.LParen)
         goto case_Declaration;
       goto case_parseAttributes;
@@ -853,7 +854,7 @@ class Parser
   }
 
   /// $(BNF FunctionPostfix :=
-  ////  (const | immutable | nothrow | shared | pure | "@" Identifier)*)
+  ////  (const|immutable|inout|nothrow|shared|pure| "@" Identifier)*)
   StorageClass parseFunctionPostfix()
   {
     version(D2)
@@ -865,6 +866,7 @@ class Parser
       {
       case T.Const:     stc = StorageClass.Const;     break;
       case T.Immutable: stc = StorageClass.Immutable; break;
+      case T.Inout:     stc = StorageClass.Wild;      break;
       case T.Nothrow:   stc = StorageClass.Nothrow;   break;
       case T.Shared:    stc = StorageClass.Shared;    break;
       case T.Pure:      stc = StorageClass.Pure;      break;
@@ -987,11 +989,12 @@ class Parser
       case T.Final:        stc = StorageClass.Final;        goto Lcommon;
       version(D2)
       {
-      case T.Const, T.Immutable, T.Shared:
+      case T.Const, T.Immutable, T.Inout, T.Shared:
         if (peekNext() == T.LParen)
           break Loop;
                            stc = tokenIs(T.Const) ? StorageClass.Const :
                              tokenIs(T.Immutable) ? StorageClass.Immutable :
+                                 tokenIs(T.Inout) ? StorageClass.Wild :
                                                     StorageClass.Shared;
         goto Lcommon;
       case T.Enum:
@@ -1845,7 +1848,7 @@ class Parser
          //T.Final, T.Scope, T.Static:
     version(D2)
     {
-    case T.Immutable, T.Pure, T.Shared, T.Gshared,
+    case T.Immutable, T.Inout, T.Pure, T.Shared, T.Gshared,
          T.Ref, T.Nothrow, T.Thread, T.At:
     }
       goto case_parseAttribute;
@@ -2090,11 +2093,12 @@ class Parser
       case T.Final:     stc = StorageClass.Final;  goto Lcommon;
       version(D2)
       {
-      case T.Const, T.Immutable, T.Shared:
+      case T.Const, T.Immutable, T.Inout, T.Shared:
         if (peekNext() == T.LParen)
           break Loop;
                         stc = tokenIs(T.Const) ? StorageClass.Const :
                           tokenIs(T.Immutable) ? StorageClass.Immutable :
+                              tokenIs(T.Inout) ? StorageClass.Wild :
                                                  StorageClass.Shared;
         goto Lcommon;
       case T.Enum:
@@ -2294,7 +2298,11 @@ class Parser
 
       switch (token.kind)
       {
-      case T.Ref, T.Inout: // T.Inout is deprecated in D2.
+      version(D1)
+      {
+      case T.Inout:
+      }
+      case T.Ref:
         stc = StorageClass.Ref;
         stctok = token;
         nT();
@@ -3345,9 +3353,10 @@ class Parser
         auto begin2 = token;
         if (peekNext() != T.RParen)
           goto default; // (const|immutable|shared) "(" Type ")"
-        type = tokenIs(T.Const) ? new ConstType(type) :
-           tokenIs(T.Immutable) ? new ImmutableType(type) :
-                                  new SharedType(type);
+        type = tokenIs(T.Const) ? new ConstType(null) :
+           tokenIs(T.Immutable) ? new ImmutableType(null) :
+               tokenIs(T.Inout) ? new InoutType(null) :
+                                  new SharedType(null);
         nT();
         set(type, begin2);
         break;
@@ -3594,17 +3603,17 @@ class Parser
         {
         case T.Typedef, T.Struct, T.Union, T.Class, T.Interface,
              T.Enum, T.Function, T.Delegate, T.Super, T.Return:
-        case_Const_Immutable_Shared: // D2
+        case_Const_Immutable_Inout_Shared: // D2
           specTok = token;
           nT();
           break;
         version(D2)
         {
-        case T.Const, T.Immutable, T.Shared:
+        case T.Const, T.Immutable, T.Inout, T.Shared:
           auto next = peekNext();
           if (next == T.RParen || next == T.Comma)
-            goto case_Const_Immutable_Shared;
-          // Fall through. It's a type.
+            goto case_Const_Immutable_Inout_Shared;
+          goto default; // It's a type.
         } // version(D2)
         default:
           specType = parseType();
@@ -3752,7 +3761,7 @@ class Parser
   /// Parses a full Type.
   ///
   /// $(BNF Type     := Modifier BasicType BasicType2 CStyleType?
-  ////Modifier := const | immutable | shared)
+  ////Modifier := inout | const | immutable | shared)
   Type parseType(Token** pIdent = null)
   {
     version(D2)
@@ -3763,11 +3772,12 @@ class Parser
       auto kind = token.kind;
       switch (kind)
       {
-      case T.Inout, T.Const, T.Immutable, T.Shared:
+      case T.Const, T.Immutable, T.Inout, T.Shared:
         nT();
         auto t = parseType(pIdent);
         t = (kind == T.Const) ?   new ConstType(t) :
           (kind == T.Immutable) ? new ImmutableType(t) :
+            (kind == T.Inout) ?   new InoutType(t) :
                                   new SharedType(t);
         return set(t, begin);
       default:
@@ -3893,7 +3903,7 @@ class Parser
   }
 
   /// $(BNF BasicType := IntegralType | QualifiedType |
-  ////             ConstType | ImmutableType | SharedType # D2.0)
+  ////             ConstType | ImmutableType | InoutType | SharedType # D2.0)
   Type parseBasicType()
   {
     auto begin = token;
@@ -3915,8 +3925,8 @@ class Parser
       t = parseQualifiedType();
       return t;
     version(D2)
-    { // (const|immutable|shared) "(" Type ")"
-    case T.Const, T.Immutable, T.Shared:
+    { // (const|immutable|inout|shared) "(" Type ")"
+    case T.Const, T.Immutable, T.Inout, T.Shared:
       auto kind = token.kind;
       nT();
       require2(T.LParen); // "("
@@ -3925,6 +3935,7 @@ class Parser
       requireClosing(T.RParen, lParen); // ")"
       t = (kind == T.Const) ?   new ConstType(t) :
         (kind == T.Immutable) ? new ImmutableType(t) :
+          (kind == T.Inout) ?   new InoutType(t) :
                                 new SharedType(t);
       break;
     } // version(D2)
@@ -4158,11 +4169,12 @@ class Parser
         {
         version(D2)
         {
-        case T.Const, T.Immutable, T.Shared:
+        case T.Const, T.Immutable, T.Inout, T.Shared:
           if (peekNext() == T.LParen)
             break;
                        stc = tokenIs(T.Const) ? StorageClass.Const :
                          tokenIs(T.Immutable) ? StorageClass.Immutable :
+                             tokenIs(T.Inout) ? StorageClass.Wild :
                                                 StorageClass.Shared;
           goto Lcommon;
         case T.Final:  stc = StorageClass.Final;  goto Lcommon;
@@ -4172,7 +4184,11 @@ class Parser
         } // version(D2)
         case T.In:     stc = StorageClass.In;     goto Lcommon;
         case T.Out:    stc = StorageClass.Out;    goto Lcommon;
-        case T.Inout, T.Ref: // T.Inout is deprecated in D2.
+        version (D1)
+        {
+        case T.Inout:
+        }
+        case T.Ref:
                        stc = StorageClass.Ref;    goto Lcommon;
         case T.Lazy:   stc = StorageClass.Lazy;   goto Lcommon;
         Lcommon:

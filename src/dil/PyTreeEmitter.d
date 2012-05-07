@@ -1660,6 +1660,20 @@ override
     t.next && visitT(t.next);
     end(t);
   }
+
+  void visit(InoutType t) // D2.0
+  {
+    begin(t);
+    t.next && visitT(t.next);
+    end(t);
+  }
+
+  void visit(SharedType t) // D2.0
+  {
+    begin(t);
+    t.next && visitT(t.next);
+    end(t);
+  }
 } // override
 
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

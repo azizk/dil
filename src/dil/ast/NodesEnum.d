@@ -200,6 +200,7 @@ enum string[] NodeClassNames = [
   "BaseClassType",
   "ConstType", // D2.0
   "ImmutableType", // D2.0
+  "InoutType", // D2.0
   "SharedType", // D2.0
 
   // Parameters:

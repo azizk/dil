@@ -253,6 +253,16 @@ class ImmutableType : TypeNode
   mixin(copyMethod);
 }
 
+class InoutType : TypeNode
+{
+  this(TypeNode next)
+  { // If t is null: cast(inout)
+    super(next);
+    mixin(set_kind);
+  }
+  mixin(copyMethod);
+}
+
 /// $(BNF SharedType := shared "(" Type ")")
 class SharedType : TypeNode
 {
