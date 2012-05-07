@@ -3,6 +3,8 @@
 /// License: Public Domain
 module util.mpfr;
 
+import tango.stdc.config : c_long;
+
 /// Enumeration of rounding methods.
 enum mpfr_rnd_t : int
 {
@@ -15,9 +17,9 @@ enum mpfr_rnd_t : int
   RNDNA = -1, /// Round to nearest with ties away from zero.
 }
 
-alias int    mpfr_prec_t; /// Precision type.
+alias c_long mpfr_prec_t; /// Precision type.
 alias int    mpfr_sign_t; /// Sign type.
-alias int    mpfr_exp_t;  /// Exponent type.
+alias c_long mpfr_exp_t;  /// Exponent type.
 alias size_t mpfr_limb_t; /// Limb type.
 alias mpfr_struct mpfr_t; /// Float type.
 alias mpfr_t*     mpfr_ptr, mpfr_srcptr; /// Pointer to float type.
