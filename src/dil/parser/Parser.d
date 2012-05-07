@@ -401,7 +401,10 @@ class Parser
       decl = parseStructOrUnionDecl();
       break;
     case T.This:
-      decl = parseConstructorDecl();
+      if (peekNext() == T.LParen)
+        decl = parseConstructorDecl();
+      else
+        goto case_Declaration;
       break;
     case T.Tilde:
       decl = parseDestructorDecl();
@@ -447,6 +450,11 @@ class Parser
       decl = new EmptyDecl();
       break;
     // Declaration
+    version(D2)
+    {
+    //case T.This:
+    case T.Super:
+    }
     case T.Identifier, T.Dot, T.Typeof:
     case_Declaration:
       return parseVariableOrFunction(this.storageClass, this.protection,
@@ -1850,6 +1858,10 @@ class Parser
         break;
       }
       goto case T.Dot;
+    version(D2)
+    {
+    case T.This, T.Super:
+    }
     case T.Dot, T.Typeof:
       bool success;
       d = tryToParse({ return parseVariableOrFunction(); }, success);
@@ -1944,8 +1956,11 @@ class Parser
     // Parse an ExpressionStmt:
     // Tokens that start a PrimaryExpr.
     // case T.Identifier, T.Dot, T.Typeof:
+    version(D1)
+    {
     case T.This:
     case T.Super:
+    }
     case T.Null:
     case T.True, T.False:
     // case T.Dollar:
@@ -3746,14 +3761,16 @@ class Parser
     if (peekNext() != T.LParen)
     {
       auto kind = token.kind;
-      if (kind == T.Const || kind == T.Immutable || kind == T.Shared)
+      switch (kind)
       {
+      case T.Inout, T.Const, T.Immutable, T.Shared:
         nT();
         auto t = parseType(pIdent);
         t = (kind == T.Const) ?   new ConstType(t) :
           (kind == T.Immutable) ? new ImmutableType(t) :
                                   new SharedType(t);
         return set(t, begin);
+      default:
       }
     }
     } // version(D2)
@@ -3850,20 +3867,28 @@ class Parser
     return set(t, begin);
   }
 
-  /// $(BNF QualifiedType := (ModuleScopeType | TypeofType | IdentifierType)
-  ////                 ("." IdentifierType)*)
+  /// $(BNF QualifiedType :=
+  //// (this | super | ModuleScopeType | TypeofType | IdentifierType)
+  //// ("." IdentifierType)*)
   Type parseQualifiedType()
   {
     auto begin = token;
-    Type type =
-      tokenIs(T.Dot) ?
-        set(new ModuleScopeType(), begin, begin) :
-      tokenIs(T.Typeof) ?
-        parseTypeofType() :
-        parseIdentifierType();
+    Type type;
+
+    if (tokenIs(T.Dot))
+      type = set(new ModuleScopeType(), begin, begin);
+    else if (tokenIs(T.Typeof))
+      type = parseTypeofType();
+    else if (tokenIs(T.This) || tokenIs(T.Super)) { // D2
+      type = set(new IdentifierType(null, token.ident), begin, begin);
+      nT();
+    }
+    else
+      type = parseIdentifierType();
 
     while (consumed(T.Dot))
       type = parseIdentifierType(type);
+
     return type;
   }
 
@@ -3882,6 +3907,10 @@ class Parser
     else
     switch (token.kind)
     {
+    version (D2)
+    {
+    case T.This, T.Super:
+    }
     case T.Identifier, T.Typeof, T.Dot:
       t = parseQualifiedType();
       return t;
