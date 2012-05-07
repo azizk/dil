@@ -3349,10 +3349,10 @@ class Parser
       {
       case T.RParen: // Mutable cast: cast "(" ")"
         break;
-      case T.Const, T.Immutable, T.Shared:
+      case T.Const, T.Immutable, T.Inout, T.Shared:
         auto begin2 = token;
         if (peekNext() != T.RParen)
-          goto default; // (const|immutable|shared) "(" Type ")"
+          goto default; // (const|immutable|inout|shared) "(" Type ")"
         type = tokenIs(T.Const) ? new ConstType(null) :
            tokenIs(T.Immutable) ? new ImmutableType(null) :
                tokenIs(T.Inout) ? new InoutType(null) :
