@@ -1119,13 +1119,13 @@ class DocSymbol
   static this()
   {
     foreach (i, kind; kindIDToStr)
-      kindStrToID[hashOf(kind)] = i;
+      kindStrToID[hashOf(kind)] = cast(uint)i;
 
     // Combine attributes and add them to attrToID.
     auto attrs = EnumString.prots[1..$] ~
       EnumString.stcs[1..$] ~ EnumString.ltypes[1..$];
     foreach (i, attr; attrs)
-      attrToID[hashOf(attr)] = i;
+      attrToID[hashOf(attr)] = cast(uint)i;
   }
 
   /// Return the attributes as IDs. E.g.: "[1,9,22]"
