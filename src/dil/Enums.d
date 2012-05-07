@@ -118,7 +118,7 @@ static:
     "shared",
     "gshared",
     "thread",
-    "wild",
+    "inout",
     "@disable",
     "@property",
     "@safe",
