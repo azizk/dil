@@ -105,6 +105,14 @@ class Float
       mpfr_set_ui(&f, 0, RND);
   }
 
+  /// Constructs from a string and outputs a precision return code.
+  this(out int retcode, cstring str)
+  {
+    mpfr_init(&f);
+    char* end;
+    retcode = mpfr_strtofr(&f, str.ptr, end, 0, Float.RND);
+  }
+
   ~this()
   {
     mpfr_clear(&f);

@@ -18,7 +18,6 @@ import dil.Diagnostics,
        dil.Time;
 import dil.Float : Float;
 import util.uni : isUniAlpha;
-import util.mpfr : mpfr_t, mpfr_strtofr, mpfr_init;
 import common;
 
 import tango.core.Vararg;
@@ -415,24 +414,21 @@ class Lexer
   /// Looks up a Float in the table.
   /// Params:
   ///   str = The zero-terminated string of the float number.
-  Float lookupFloat(char[] str)
+  Float lookupFloat(cstring str)
   {
     assert(str.length && str[$-1] == 0);
     auto hash = hashOf(str);
     auto pFloat = hash in tables.floats;
     if (!pFloat)
-    { // Insert a new Float into the table.
-      mpfr_t mpfloat;
-      mpfr_init(&mpfloat);
-      char* end;
-      // Convert to multiprecision float.
-      int res = mpfr_strtofr(&mpfloat, str.ptr, end, 0, Float.RND);
-      // if (res == 0) // Exact precision.
-      // else if (res < 0) // Lower precision.
+    {
+      int precision;
+      auto f = new Float(precision, str);
+      // if (precision == 0) // Exact precision.
       // {}
-      // else /*if (res > 0)*/ // Higher precision.
+      // else if (precision < 0) // Lower precision.
       // {}
-      auto f = new Float(&mpfloat);
+      // else /*if (precision > 0)*/ // Higher precision.
+      // {}
       tables.floats[hash] = f;
       return f;
     }
