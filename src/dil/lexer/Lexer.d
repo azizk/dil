@@ -2213,15 +2213,16 @@ class Lexer
 
     version(D2)
     {
-    error(t.start, MID.OctalNumbersDeprecated);
-    goto Lfinalize;
+    if (ulong_ >= 8 || hasDecimalDigits)
+      error(t.start, MID.OctalNumbersDeprecated);
     }
-
+    else
+    {
     if (hasDecimalDigits)
       error(t.start, MID.OctalNumberHasDecimals);
-
     if (overflow)
       error(t.start, MID.OverflowOctalNumber);
+    }
 //     goto Lfinalize;
 
   Lfinalize:
