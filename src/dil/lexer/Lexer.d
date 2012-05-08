@@ -225,37 +225,12 @@ class Lexer
     return this.end - SourceText.sentinelString.length;
   }
 
-  /// Scans the whole source text until EOF is encountered.
-  void scanAll()
-  {
-    while (nextToken() != TOK.EOF)
-    {}
-  }
-
   /// Returns the first token of the source text.
   /// This can be the EOF token.
   /// Structure: HEAD -> Newline -> First Token
   Token* firstToken()
   {
     return this.head.next.next;
-  }
-
-  /// The "shebang" may optionally appear once at the beginning of a file.
-  /// $(BNF Shebang := "#!" AnyChar* EndOfLine)
-  void scanShebang()
-  {
-    auto p = this.p;
-    assert(*p == '#' && p[1] == '!');
-    auto t = new Token;
-    t.kind = TOK.Shebang;
-    t.setWhitespaceFlag();
-    t.start = p++;
-    while (!isEndOfLine(++p))
-      isascii(*p) || decodeUTF8(p);
-    t.end = this.p = p;
-    // Link it in.
-    this.token.next = t;
-    t.prev = this.token;
   }
 
   /// Sets the value of the special token.
@@ -297,6 +272,7 @@ class Lexer
       t.strval = lookupString(str, 0);
   }
 
+  /// Sets the member lineBegin (with safety checks.)
   private void setLineBegin(cchar* p)
   {
     // Check that we can look behind one character.
@@ -304,37 +280,6 @@ class Lexer
     // Check that previous character is a newline.
     assert(isNewlineEnd(p - 1));
     this.lineBegin = p;
-  }
-
-  /// Scans the next token in the source text.
-  ///
-  /// Creates a new token if t.next is null and appends it to the list.
-  private void scanNext(ref Token* t)
-  {
-    assert(t !is null);
-    if (t.next) // Simply go to the next token if there is one.
-      t = t.next;
-    else if (t !is this.tail)
-    { // Create a new token and pass it to the main scan() method.
-      Token* new_t = new Token;
-      scan(new_t);
-      new_t.prev = t; // Link the token in.
-      t.next = new_t;
-      t = new_t;
-    }
-  }
-
-  /// Advance t one token forward.
-  void peek(ref Token* t)
-  {
-    scanNext(t);
-  }
-
-  /// Advance to the next token in the source text.
-  TOK nextToken()
-  {
-    scanNext(this.token);
-    return this.token.kind;
   }
 
   /// Returns true if p points to the last character of a Newline.
@@ -348,6 +293,7 @@ class Lexer
           return true;
     return false;
   }
+
 
   alias Token.StringValue StringValue;
   alias Token.IntegerValue IntegerValue;
@@ -464,6 +410,62 @@ class Lexer
     return nl;
   }
 
+
+  /// Scans the next token in the source text.
+  ///
+  /// Creates a new token if t.next is null and appends it to the list.
+  private void scanNext(ref Token* t)
+  {
+    assert(t !is null);
+    if (t.next) // Simply go to the next token if there is one.
+      t = t.next;
+    else if (t !is this.tail)
+    { // Create a new token and pass it to the main scan() method.
+      Token* new_t = new Token;
+      scan(new_t);
+      new_t.prev = t; // Link the token in.
+      t.next = new_t;
+      t = new_t;
+    }
+  }
+
+  /// Advance t one token forward.
+  void peek(ref Token* t)
+  {
+    scanNext(t);
+  }
+
+  /// Advance to the next token in the source text.
+  TOK nextToken()
+  {
+    scanNext(this.token);
+    return this.token.kind;
+  }
+
+  /// Scans the whole source text until EOF is encountered.
+  void scanAll()
+  {
+    while (nextToken() != TOK.EOF)
+    {}
+  }
+
+  /// The "shebang" may optionally appear once at the beginning of a file.
+  /// $(BNF Shebang := "#!" AnyChar* EndOfLine)
+  void scanShebang()
+  {
+    auto p = this.p;
+    assert(*p == '#' && p[1] == '!');
+    auto t = new Token;
+    t.kind = TOK.Shebang;
+    t.setWhitespaceFlag();
+    t.start = p++;
+    while (!isEndOfLine(++p))
+      isascii(*p) || decodeUTF8(p);
+    t.end = this.p = p;
+    // Link it in.
+    this.token.next = t;
+    t.prev = this.token;
+  }
 
   /// The main method which recognizes the characters that make up a token.
   ///
