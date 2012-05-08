@@ -117,7 +117,6 @@ static:
     "Volatile:volatile",
     "Wchar:wchar",
     "While:while",
-    "Wild:wild", // D2.0
     "With:with",
     // Special tokens:
     "FILE:__FILE__",

@@ -866,7 +866,7 @@ class Parser
       {
       case T.Const:     stc = StorageClass.Const;     break;
       case T.Immutable: stc = StorageClass.Immutable; break;
-      case T.Inout:     stc = StorageClass.Wild;      break;
+      case T.Inout:     stc = StorageClass.Inout;      break;
       case T.Nothrow:   stc = StorageClass.Nothrow;   break;
       case T.Shared:    stc = StorageClass.Shared;    break;
       case T.Pure:      stc = StorageClass.Pure;      break;
@@ -994,7 +994,7 @@ class Parser
           break Loop;
                            stc = tokenIs(T.Const) ? StorageClass.Const :
                              tokenIs(T.Immutable) ? StorageClass.Immutable :
-                                 tokenIs(T.Inout) ? StorageClass.Wild :
+                                 tokenIs(T.Inout) ? StorageClass.Inout :
                                                     StorageClass.Shared;
         goto Lcommon;
       case T.Enum:
@@ -2098,7 +2098,7 @@ class Parser
           break Loop;
                         stc = tokenIs(T.Const) ? StorageClass.Const :
                           tokenIs(T.Immutable) ? StorageClass.Immutable :
-                              tokenIs(T.Inout) ? StorageClass.Wild :
+                              tokenIs(T.Inout) ? StorageClass.Inout :
                                                  StorageClass.Shared;
         goto Lcommon;
       case T.Enum:
@@ -4174,7 +4174,7 @@ class Parser
             break;
                        stc = tokenIs(T.Const) ? StorageClass.Const :
                          tokenIs(T.Immutable) ? StorageClass.Immutable :
-                             tokenIs(T.Inout) ? StorageClass.Wild :
+                             tokenIs(T.Inout) ? StorageClass.Inout :
                                                 StorageClass.Shared;
           goto Lcommon;
         case T.Final:  stc = StorageClass.Final;  goto Lcommon;

@@ -144,7 +144,7 @@ class ModuleJSON(Module):
   SymAttr = ("private protected package public export abstract auto const "
     "deprecated extern final override scope static synchronized "
     "in out ref lazy variadic immutable manifest nothrow pure "
-    "shared gshared thread wild disable property safe system trusted "
+    "shared gshared thread inout disable property safe system trusted "
     "C C++ D Windows Pascal System").split(" ")
   SymAttr = tuple(SymAttr).__getitem__
 

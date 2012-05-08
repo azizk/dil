@@ -103,7 +103,7 @@ enum TOK : ushort
   Shared/+D2.0+/, Scope, Static, Struct, Super, Switch, Synchronized,
   Template, This, Thread/+D2.0+/, Throw, Traits/+D2.0+/, True, Try, Typedef, Typeid,
   Typeof, Union, Unittest, Vector/*D2.0*/,
-  Version, Volatile, While, Wild, With,
+  Version, Volatile, While, With,
   // Integral types.
   Char,   Wchar,   Dchar, Bool,
   Byte,   Ubyte,   Short, Ushort,
@@ -210,7 +210,7 @@ const string[TOK.MAX] tokToString = [
   "shared","scope","static","struct","super","switch","synchronized",
   "template","this","__thread","throw","__traits","true","try","typedef",
   "typeid","typeof","union","unittest","__vector",
-  "version","volatile","while","wild","with",
+  "version","volatile","while","with",
   // Integral types.
   "char",   "wchar",   "dchar", "bool",
   "byte",   "ubyte",   "short", "ushort",

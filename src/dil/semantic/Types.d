@@ -895,7 +895,7 @@ class TypeFunction : Type
       m ~= "x";
     if (stcs & StorageClass.Immutable)
       m ~= "y";
-    if (stcs & StorageClass.Wild)
+    if (stcs & StorageClass.Inout)
       m ~= "Ng";
     return m;
   }

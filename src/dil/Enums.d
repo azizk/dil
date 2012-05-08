@@ -32,7 +32,7 @@ enum StorageClass
   Shared       = 1<<19,
   Gshared      = 1<<20,
   Thread       = 1<<21,
-  Wild         = 1<<22,
+  Inout        = 1<<22,
   // Attributes:
   Disable      = 1<<23,
   Property     = 1<<24,
@@ -118,7 +118,7 @@ static:
     "shared",
     "gshared",
     "thread",
-    "wild",
+    "inout",
     "@disable",
     "@property",
     "@safe",
