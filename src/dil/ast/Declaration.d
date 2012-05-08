@@ -19,6 +19,11 @@ abstract class Declaration : Node
   StorageClass stcs; /// The storage classes of this declaration.
   Protection prot;  /// The protection attribute of this declaration.
 
+  final bool isManifest()
+  {
+    return !!(stcs & StorageClass.Manifest);
+  }
+
   final bool isStatic()
   {
     return !!(stcs & StorageClass.Static);

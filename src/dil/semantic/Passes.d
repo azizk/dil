@@ -545,7 +545,8 @@ override
   D visit(VariablesDecl vd)
   {
     // Error if we are in an interface.
-    if (scop.symbol.isInterface && !(vd.isStatic || vd.isConst))
+    if (scop.symbol.isInterface &&
+        !(vd.isStatic || vd.isConst || vd.isManifest))
       return error(vd, MID.InterfaceCantHaveVariables), vd;
 
     // Insert variable symbols in this declaration into the symbol table.
