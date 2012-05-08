@@ -61,7 +61,7 @@ enum TOK : ushort
   LorG,
 
   // Normal operators
-  Equal,    Equal2,      EqlLess,
+  Equal,    Equal2,      EqlGreater,
   Exclaim,  ExclaimEql,
   Less,     LessEql,
   Greater,  GreaterEql,

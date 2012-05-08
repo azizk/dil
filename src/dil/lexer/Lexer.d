@@ -596,7 +596,7 @@ class Lexer
           kind = TOK.Equal2;
         else if (p[1] == '>') // D2
           ++p,
-          kind = TOK.EqlLess;
+          kind = TOK.EqlGreater;
         else
           kind = TOK.Equal;
         goto Lcommon;
@@ -1058,7 +1058,7 @@ class Lexer
     mixin(cases(
       "<=", "LessEql",    ">=", "GreaterEql",
       "<<", "Less2" ,     ">>", "Greater2",
-      "==", "Equal2",     "=>", "EqlLess",    "!=", "ExclaimEql",
+      "==", "Equal2",     "=>", "EqlGreater", "!=", "ExclaimEql",
       "!<", "UorGorE",    "!>", "UorLorE",
       "<>", "LorG",       "..", "Dot2",
       "&&", "Amp2",       "&=", "AmpEql",
@@ -2949,10 +2949,11 @@ unittest
     {"@",       TOK.At},
     {"^^",      TOK.Caret2},
     {"^^=",     TOK.Caret2Eql},
+    {"=>",      TOK.EqlGreater},
     {"q\"ⱷ\n\nⱷ\"", TOK.String},    {`q"(())"`, TOK.String},
     {`q"{{}}"`,     TOK.String},    {`q"[[]]"`, TOK.String},
     {`q"<<>>"`,     TOK.String},    {`q"/__/"`, TOK.String},
-    {`q"∆⟵✻⟶∆"`,    TOK.String},    {`q"\⣯⣻\"`, TOK.String},
+    {`q"∆⟵✻⟶∆"`, TOK.String},    {`q"\⣯⣻\"`, TOK.String},
     {"q{toks...}",  TOK.String},    {"q{({#line 0\n})}", TOK.String},
     {"q\"HDOC\nq\"***\"\nHDOC\"", TOK.String},
     {"q\"ȨÖF\nq{***}\nȨÖF\"",   TOK.String},
