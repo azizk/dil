@@ -61,3 +61,7 @@ def insert_svn_info(FILES, SRC_ROOT, DEST,
     # 6. Write the rest back and close.
     f.write(text)
     f.close()
+
+def insert_git_info():
+  # TODO: implement
+  pass

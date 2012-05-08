@@ -100,12 +100,10 @@ def create_index(dest, prefix_path, files):
 
 def get_tango_path(path):
   path = firstof(Path, path, Path(path))
-  path.SRC = path/"import"
-  path.is_svn = not path.SRC.exists
-  if path.is_svn:
-    path.SRC = path/"tango"
-    path.SRC.ROOT = path
-  path.SRC.object_di = path/"object.di"
+  path.is_git = (path/".git").exists
+  path.SRC = path/"tango" if path.is_git else path/"import"
+  path.SRC.ROOT = path
+  # path.SRC.object_di = path/"object.di"
   path.license = path/"LICENSE.txt"
   path.favicon = Path("tango_favicon.png") # Look in CWD atm.
   return path
@@ -173,7 +171,8 @@ def main():
     # 1. Find source files.
     def filter_func(path):
       return path.folder.name in (".svn", "vendor", "rt")
-    FILES = [TANGO.SRC.object_di] + find_source_files(TANGO.SRC, filter_func)
+    # FILES = [TANGO.SRC.object_di] + find_source_files(TANGO.SRC, filter_func)
+    FILES = find_source_files(TANGO.SRC, filter_func)
 
     # 2. Prepare files and options to call generate_docs().
     create_index(TMP/"index.d", TANGO.SRC.ROOT, FILES)
@@ -196,11 +195,8 @@ def main():
 
     # 4. Post processing.
     processed_files = read_modules_list(MODLIST)
-    if TANGO.is_svn:
-      author_link = 'https://www.ohloh.net/p/dtango/contributors?query={0}'
-      rev_link = 'http://www.dsource.org/projects/tango/browser/trunk/{0}?rev={1}'
-      insert_svn_info(processed_files, TANGO.SRC.ROOT, DEST,
-        rev_link, author_link)
+    if TANGO.is_git:
+      pass
 
     # Use Python code to do some stuff for 'kandil'.
     if options.pykandil:
