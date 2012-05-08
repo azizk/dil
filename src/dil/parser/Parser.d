@@ -1262,20 +1262,19 @@ class Parser
       {
         Token* begin = token,
                name; // Name of the enum member.
+        Type type; // Optional member type.
+        Expression value; // Optional value.
 
-        Type type;
         version(D2)
         {
-        bool success;
-        type = tryToParse({ // Type Identifier "=" AssignExpr
-          return parseDeclarator(name);
-        }, success);
-        } // version(D2)
+        auto kind = peekNext();
+        if (kind != T.Equal && kind != T.Comma && kind != T.RBrace)
+          type = parseType();
+        }
 
         name = requireIdentifier(MID.ExpectedEnumMember);
-        Expression value;
 
-        if (consumed(T.Equal))
+        if (consumed(T.Equal)) // "=" AssignExpr
           value = parseAssignExpr();
 
         auto member = new EnumMemberDecl(type, name, value);
