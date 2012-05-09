@@ -18,7 +18,7 @@ struct Ident
 {
 static:
   alias predefIdents list;
-  mixin(generateIdentMembers(predefIdents, false));
+  mixin(generatePredefinedIdentMembers());
 
   /// Returns true for assembler jump opcode identifiers.
   bool isJumpOpcode(IDK kind)

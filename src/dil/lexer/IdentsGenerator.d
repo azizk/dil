@@ -3,6 +3,8 @@
 /// $(Maturity high)
 module dil.lexer.IdentsGenerator;
 
+import dil.lexer.Funcs;
+
 /// Table of predefined identifiers.
 ///
 /// The format ('#' start comments):
@@ -138,49 +140,78 @@ unittest
   );
 }
 
-/++
-  CTF for generating the members of the struct Ident.
 
-  The resulting string looks similar to this:
+/// CTF for generating the members of the struct Ident and struct Keyword.
+///
+/// The resulting string looks similar to this:
+/++
   ---
+  alias Identifier I;
+  enum TI = TOK.Identifier;
   private struct Ids_ {static const:
-    auto Empty = Identifier("", TOK.Identifier, IDK.Empty);
-    auto main = Identifier("main", TOK.Identifier, IDK.main);
-    // ...
+  I Empty = I("", TI, IDK.Empty),
+  main = I("main", TI, IDK.main);
+  // ...
   }
-  Identifier* Empty = &Ids_.Empty;
-  Identifier* main = &Ids_.main;
+  I* Empty = &Ids_.Empty,
+  main = &Ids_.main;
   // ...
   ---
 +/
 char[] generateIdentMembers(string[] identList, bool isKeywordList)
 {
-  char[] struct_literals;
-  char[] ident_pointers;
+  char[] struct_literals = "I ".dup;
+  char[] ident_pointers = "I* ".dup;
+  auto len = identList.length;
 
-  foreach (ident; identList)
+  for (size_t i; i < len; i++)
   {
-    auto pair = getPair(ident);
-    auto name = pair[0], id = pair[1];
-    // auto name = Identifier("id", TOK.name);
+    auto name = identList[i], id = identList[++i];
+    // auto name = I("id", TOK.name);
     // or:
-    // auto name = Identifier("id", TOK.Identifier, IDK.name);
+    // auto name = I("id", TI, IDK.name);
     struct_literals ~=  isKeywordList ?
-      "auto "~name~` = Identifier("`~id~`", TOK.`~name~");\n" :
-      "auto "~name~` = Identifier("`~id~`", TOK.Identifier, IDK.`~name~");\n";
-    // Identifier* name = &Ids_.name;
-    ident_pointers ~= "Identifier* "~name~" = &Ids_."~name~";\n";
+      name~` = I("`~id~`", TOK.`~name~"),\n" :
+      name~` = I("`~id~`", TI, IDK.`~name~"),\n";
+    // I* name = &Ids_.name;
+    ident_pointers ~= name~" = &Ids_."~name~",\n";
   }
+  // Terminate the variable lists with a semicolon.
+  struct_literals[$-2] = ident_pointers[$-2] = ';';
 
-  auto firstIdent = getPair(identList[0])[0];
+  auto firstIdent = identList[0];
 
-  auto code = "private struct Ids_ {static const:\n" ~ struct_literals ~ "}
-  " ~ ident_pointers ~ "
+  auto code = "
+alias Identifier I;
+enum TI = TOK.Identifier;\n
+private struct Ids_ {static const:\n" ~ struct_literals ~ "}\n
+" ~ ident_pointers ~ "
 Identifier*[] allIds()
 {
-  return (&" ~ firstIdent ~ ")[0..list.length];
+  return (&" ~ firstIdent ~ ")[0.." ~ StringCTF(len/2) ~ "];
 }";
   return code;
+}
+
+/// Parses the elements of identList and passes a flat list
+/// to generateIdentMembers().
+char[] generatePredefinedIdentMembers()
+{
+  auto list = new string[predefIdents.length * 2];
+  foreach (i, identStr; predefIdents)
+  {
+    auto j = i * 2;
+    auto pair = getPair(identStr);
+    list[j]   = pair[0];
+    list[j+1] = pair[1];
+  }
+  return generateIdentMembers(list, false);
+}
+
+/// Forwards flatList to generateIdentMembers().
+char[] generateKeywordMembers(string[] flatList)
+{
+  return generateIdentMembers(flatList, true);
 }
 
 /// CTF for generating the members of the enum IDK.
@@ -192,5 +223,5 @@ char[] generateIDMembers()
   return members;
 }
 
-// pragma(msg, generateIdentMembers(predefIdents, false));
+// pragma(msg, generatePredefinedIdentMembers());
 // pragma(msg, generateIDMembers());
