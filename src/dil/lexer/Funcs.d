@@ -7,7 +7,7 @@ import dil.Unicode : scanUnicodeAlpha, isUnicodeAlpha;
 import common;
 
 /// Converts an unsigned integer to a string (CTF version.)
-char[] StringCTF(uint x)
+char[] StringCTF(ulong x)
 {
   char[] str;
   do
@@ -268,7 +268,7 @@ body
     do // IdChar*
       p++;
     while (p < end && (isident(*p) || scanUnicodeAlpha(p, end)));
-    auto identifier = ref_p[0 .. p-ref_p];
+    auto identifier = String(ref_p, p);
     ref_p = p;
     return identifier;
   }
