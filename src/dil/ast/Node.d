@@ -97,16 +97,17 @@ abstract class Node
   final Node dup()
   {
     // Find out the size of this object.
-    alias typeof(this.classinfo.init[0]) byte_t;
-    auto size = this.classinfo.init.length;
-    // Copy this object's data.
-    byte_t[] data = (cast(byte_t*)this)[0..size].dup;
-    return cast(Node)data.ptr;
+    auto init = typeid(this).init;
+    auto size = init.length;
+    alias typeof(init[0]) byte_t; // Get the element type.
+    auto bytes = (cast(byte_t*)this)[0..size].dup; // Make an array and copy.
+    return cast(Node)bytes.ptr; // Cast back to Node.
   }
 
   /// This string is mixed into the constructor of a class that inherits
   /// from Node. It sets the member kind.
-  const string set_kind = `this.kind = mixin("NodeKind." ~ typeof(this).stringof);`;
+  const string set_kind =
+    `this.kind = mixin("NodeKind." ~ typeof(this).stringof);`;
 
   /// Returns true if Declaration.
   final bool isDeclaration()
