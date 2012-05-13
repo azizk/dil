@@ -113,7 +113,7 @@ class CompileCommand : Command
       foreach (token; tokens)
         docText ~= token.text;
       Stdout(indent).formatln("Id:{}, Symbol:{}, DocText:{}",
-                              member.name.str, member.classinfo.name,
+                              member.name.str, typeid(member).name,
                               docText);
       if (auto s = cast(ScopeSymbol)member)
         printSymbolTable(s, indent ~ "→ ");

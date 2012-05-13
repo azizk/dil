@@ -520,7 +520,7 @@ cstring getShortClassName(Node node)
   if (name !is null)
     return name; // Return cached name.
 
-  name = node.classinfo.name; // Get the fully qualified name of the class.
+  name = typeid(node).name; // Get the fully qualified name of the class.
   name = name[rfind(name, '.')+1 .. $]; // Remove package and module name.
 
   size_t suffixLength;

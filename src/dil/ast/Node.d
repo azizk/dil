@@ -40,7 +40,7 @@ abstract class Node
   /// Adds a child node.
   void addChild(Node child)
   {
-    assert(child !is null, "failed in " ~ this.classinfo.name);
+    assert(child !is null, "failed in " ~ typeid(this).name);
     this.children ~= child;
   }
 
@@ -58,7 +58,7 @@ abstract class Node
         if (child is null)
           return false;
       return true; }(),
-      "failed in " ~ this.classinfo.name
+      "failed in " ~ typeid(this).name
     );
     this.children ~= cast(Node[])children;
   }

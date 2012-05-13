@@ -540,15 +540,16 @@ void printErrors(Diagnostics diag)
   foreach (info; diag.info)
   {
     cstring errorFormat;
-    if (info.classinfo is LexerError.classinfo)
+    auto tid = typeid(info);
+    if (tid is typeid(LexerError))
       errorFormat = GlobalSettings.lexerErrorFormat;
-    else if (info.classinfo is ParserError.classinfo)
+    else if (tid is typeid(ParserError))
       errorFormat = GlobalSettings.parserErrorFormat;
-    else if (info.classinfo is SemanticError.classinfo)
+    else if (tid is typeid(SemanticError))
       errorFormat = GlobalSettings.semanticErrorFormat;
-    else if (info.classinfo is Warning.classinfo)
+    else if (tid is typeid(Warning))
       errorFormat = "{0}: Warning: {3}";
-    else if (info.classinfo is GeneralError.classinfo)
+    else if (tid is typeid(GeneralError))
       errorFormat = "Error: {3}";
     else
       continue;

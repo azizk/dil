@@ -57,8 +57,8 @@ template returnType(Class)
 /// Returns a delegate to the method that can visit the node n.
 Ret delegate(Node) getVisitMethod(Ret)(Object o, Node n)
 { // Get the method's address from the vtable.
-  assert(indexOfFirstVisitMethod+n.kind < o.classinfo.vtbl.length);
-  auto funcptr = o.classinfo.vtbl[indexOfFirstVisitMethod+n.kind];
+  assert(indexOfFirstVisitMethod+n.kind < typeid(o).vtbl.length);
+  auto funcptr = typeid(o).vtbl[indexOfFirstVisitMethod+n.kind];
   // Make a delegate and return it.
   Ret delegate(Node) visitMethod = void;
   visitMethod.ptr = cast(void*)o; // Frame pointer.
@@ -139,8 +139,8 @@ private static const size_t indexOfFirstVisitMethod;
 /// Initializes indexOfFirstVisitMethod for both Visitor classes.
 static this()
 {
-  auto vtbl = Visitor.classinfo.vtbl;
-  auto vtbl2 = Visitor2.classinfo.vtbl;
+  auto vtbl = typeid(Visitor).vtbl;
+  auto vtbl2 = typeid(Visitor2).vtbl;
   assert(vtbl.length == vtbl2.length);
   size_t i;
   foreach (j, func; vtbl)
