@@ -253,21 +253,27 @@ struct StringT(C)
   }
 
   /// Returns true if pointers are null.
-  bool isNull() inout
+  @property bool isNull() inout
   {
     return ptr is null;
   }
 
   /// Returns true if the string is empty.
-  bool isEmpty() inout
+  @property bool isEmpty() inout
   {
     return ptr is end;
   }
 
   /// Returns an array string.
-  inout(C)[] toChars() inout
+  @property inout(C)[] toChars() inout
   {
     return ptr[0..len];
+  }
+
+  /// ditto
+  immutable(C)[] toString()
+  {
+    return toChars().idup;
   }
 
   /// Calculates a hash value.
