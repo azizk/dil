@@ -350,20 +350,60 @@ struct StringT(C)
     return -1;
   }
 
-  /// Splits by character c and returns a list of string slices.
-  inout(S)[] split(inout(C) c) inout
+  /// Splits by String s and returns a list of slices.
+  inout(S)[] split(const(S) s) inout
   {
-    inout(S)[] result;
+    S2[] result;
     inout(C)* p = ptr, prev = p;
-    for (; p < end; p++)
-      if (*p == c) {
-        result ~= *new S(prev, p);
+    if (s.len == 0)
+    {
+      result = new S2[len + 2]; // +2 for first and last empty elements.
+      auto elem = result.ptr;
+
+      for (; p <= end; p++, elem++)
+      {
+        elem.set(prev, p);
         prev = p;
       }
-    return result;
+      elem.set(p, p);
+    }
+    else
+    if (s.len == 1)
+    {
+      const c = *s.ptr;
+      for (; p < end; p++)
+        if (*p == c)
+        {
+          result ~= S2(prev, p);
+          prev = p+1;
+        }
+      result ~= S2(prev, end);
+    }
+    else
+    {
+      size_t i;
+      while ((i = S(p, end).find(s)) != -1)
+      {
+        result ~= S2(p, p+i);
+        p += i + s.len;
+        assert(p <= end);
+      }
+      result ~= S2(p, end);
+    }
+    return cast(inout(S)[])result;
   }
 
-  /// Substitutes a with b in this string.
+  /// ditto
+  inout(S)[] split(const(C) c) inout
+  {
+    return split(S(&c, (&c)+1));
+  }
+
+  /// ditto
+  inout(S)[] split(const(C)[] s) inout
+  {
+    return split(S(s));
+  }
   /// Returns: Itself.
   ref S sub(C a, C b)
   {
@@ -433,6 +473,12 @@ unittest
 
   assert(S("abcdef").pieces(2) == [S("ab"), S("cd"), S("ef")]);
   assert(S("abcdef").pieces(4) == [S("abcd"), S("ef")]);
+
+  // Splitting.
+  assert(S("") == S(""));
+  assert(S("").split("") == [S(""), S("")]);
+  assert(S("abc").split("") == [S(""), S("a"), S("b"), S("c"), S("")]);
+  assert(S("abc").split("b") == [S("a"), S("c")]);
 
   // Searching.
   assert("Mundo" in S("¡Hola Mundo!"));
