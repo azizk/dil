@@ -404,7 +404,8 @@ struct StringT(C)
   {
     return split(S(s));
   }
-  /// Returns: Itself.
+
+  /// Substitutes a with b.
   ref S sub(C a, C b)
   {
     auto p = ptr;
@@ -412,6 +413,91 @@ struct StringT(C)
       if (*p == a)
         *p = b;
     return this;
+  }
+
+  /// ditto
+  S sub(C a, C b) const
+  {
+    return dup.sub(a, b);
+  }
+
+  /// ditto
+  ref S sub(C a, const(S) b)
+  {
+    if (b.len == 1)
+      sub(a, b[0]);
+    //else
+    //if (b.len == 0)
+    //{ //TODO: implement
+    //}
+    else
+    {
+      auto i = find(a);
+      if (i != -1)
+      {
+        C[] result;
+        const bstr = b.toChars();
+        C* p = ptr;
+
+        do
+        {
+          result ~= S(p, p + i).toChars();
+          result ~= bstr;
+          p += i + bstr.length;
+        } while ((i = S(p, end).find(a)) != -1);
+        if (p < end)
+          result ~= S(p, end).toChars();
+        this = S(result);
+      }
+    }
+    return this;
+  }
+
+  /// ditto
+  S sub(C a, const(S) b) const
+  {
+    return dup.sub(a, b);
+  }
+
+  /// ditto
+  ref S sub(C a, const(C)[] b)
+  {
+    return sub(a, S(b));
+  }
+
+  /// ditto
+  S sub(C a, const(C)[] b) const
+  {
+    return dup.sub(a, S(b));
+  }
+
+  /// ditto
+  ref S sub(const(S) a, const(S) b)
+  {
+    auto i = find(a);
+    if (i != -1)
+    {
+      C[] result;
+      const bstr = b.toChars();
+      C* p = ptr;
+
+      do
+      {
+        result ~= S(p, p + i).toChars();
+        result ~= bstr;
+        p += i + bstr.length;
+      } while ((i = S(p, end).find(a)) != -1);
+      if (p < end)
+        result ~= S(p, end).toChars();
+      this = S(result);
+    }
+    return this;
+  }
+
+  /// ditto
+  S sub(const(S) a, const(S) b) const
+  {
+    return dup.sub(a, b);
   }
 }
 
@@ -424,15 +510,17 @@ unittest
   scope msg = new UnittestMsg("Testing struct String.");
   alias String S;
 
+  // Boolean conversion.
   if (S("is cool")) {}
   else assert(0);
   assert(S() == false && !S());
   assert(S("") == false && !S(""));
   assert(S("verdad") == true);
 
-
+  // Substitution.
   assert(S("abce".dup).sub('e', 'd') == S("abcd"));
 
+  // Duplication.
   assert(S("chica").dup == S("chica"));
 
   // Comparison.
