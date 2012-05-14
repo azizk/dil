@@ -8,6 +8,9 @@ public import tango.io.Stdout;
 public import tango.text.convert.Layout : Layout;
 public import tango.core.Vararg;
 
+/// Signed size type.
+alias sizediff_t ssize_t;
+
 /// Const character aliases.
 alias const(char) cchar;
 alias const(wchar) cwchar; /// ditto
