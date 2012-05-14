@@ -119,18 +119,26 @@ struct StringT(C)
   }
 
   /// Concatenates x copies of this string.
-  S opBinary(string op)(uint rhs) inout if (op == "*")
+  S times(size_t x) inout
   {
-    C[] result;
-    for (; rhs; rhs--)
-      result ~= this.toChars();
+    auto str = toChars();
+    auto slen = str.length;
+    C[] result = new C[x * slen];
+    for (size_t i, n; i < x; i++, (n += slen))
+      result[n .. n+slen] = str;
     return S(result);
   }
 
-  /// Concatenates x copies of this string.
-  S opBinaryRight(string op)(uint lhs) inout if (op == "*")
+  /// ditto
+  S opBinary(string op)(size_t rhs) inout if (op == "*")
   {
-    return opBinary!("*")(lhs);
+    return times(rhs);
+  }
+
+  /// ditto
+  S opBinaryRight(string op)(size_t lhs) inout if (op == "*")
+  {
+    return times(lhs);
   }
 
   /// Converts to bool.
@@ -232,7 +240,9 @@ unittest
   assert(S() == S());
   assert(S() == S("") && "" == null);
 
+  // Multiplication.
   assert(S("ha") * 6 == S("hahahahahaha"));
+  assert(S("oi") * 3 == S("oioioi"));
   assert(S("palabra") * 0 == S());
   assert(1 * S("mundo") == S("mundo"));
 
