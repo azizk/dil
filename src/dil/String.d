@@ -13,6 +13,31 @@ struct StringT(C)
   C* ptr; /// Points to the beginning of the string.
   C* end; /// Points one past the end of the string.
 
+  /// A dummy struct to simulate "tail const".
+  ///
+  /// When a local variable with the type inout(S) has to be defined,
+  /// one cannot modify it or its members.
+  /// This issue can be worked around with this struct.
+  struct S2
+  {
+    const(C)* ptr;
+    const(C)* end;
+    void set(const(C)* p, const(C)* e)
+    {
+      ptr = p;
+      end = e;
+    }
+    void set(const(S) s)
+    {
+      ptr = s.ptr;
+      end = s.end;
+    }
+    void opAssign(const(S) s)
+    {
+      set(s);
+    }
+  }
+
   /// Constructs from an array string.
   this(inout(C)[] str) inout
   {
