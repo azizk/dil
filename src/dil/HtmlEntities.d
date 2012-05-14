@@ -2224,7 +2224,11 @@ else
 /// Returns: The entity's value or 0 if it does not exist.
 dchar entity2Unicode(cstring entity)
 {
-  auto hash = hashOf(entity);
+  return entity2Unicode(hashOf(entity));
+}
+/// ditto
+dchar entity2Unicode(hash_t hash)
+{
   // Binary search:
   size_t index = void,
          lower = 0,
