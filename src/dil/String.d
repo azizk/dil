@@ -310,6 +310,46 @@ struct StringT(C)
     return hash;
   }
 
+  /// Searches for character c.
+  size_t find(const(C) c) const
+  {
+    const(C)* p = ptr;
+    for (; p < end; p++)
+      if (*p == c)
+        return p - ptr;
+    return -1;
+  }
+
+  /// Searches for String s.
+  /// Returns: The position index or -1 if not found.
+  size_t find(inout(S) s) inout
+  {
+    if (s.len == 1)
+      return find(s[0]);
+    else
+    if (s.len <= len) // Return when the argument string is longer.
+    {
+      inout(C)* p = ptr;
+      const firstChar = *s.ptr;
+
+      for (; p < end; p++)
+      {
+        if (*p == firstChar) // Find first matching character.
+        {
+          inout(C)* p2 = s.ptr, matchBegin = p;
+          while (p < end)
+          {
+            if (*p++ != *p2++)
+              break;
+            if (p2 is s.end) // If at the end, we have a match.
+              return matchBegin - ptr;
+          }
+        }
+      }
+    }
+    return -1;
+  }
+
   /// Splits by character c and returns a list of string slices.
   inout(S)[] split(inout(C) c) inout
   {
@@ -393,4 +433,8 @@ unittest
 
   assert(S("abcdef").pieces(2) == [S("ab"), S("cd"), S("ef")]);
   assert(S("abcdef").pieces(4) == [S("abcd"), S("ef")]);
+
+  // Searching.
+  assert("Mundo" in S("¡Hola Mundo!"));
+  assert(S("abcd").find(S("cd")) == 2);
 }
