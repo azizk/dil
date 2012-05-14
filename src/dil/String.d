@@ -141,6 +141,93 @@ struct StringT(C)
     return times(lhs);
   }
 
+  /// Returns a list of Strings where each piece is of length n.
+  /// The last piece may be shorter.
+  inout(S)[] pieces(size_t n) inout
+  {
+    if (n == 0)
+      return null; // TODO: throw Exception?
+    if (n >= len)
+      return [this];
+
+    const roundlen = (len + len % n) / n;
+    S2[] result = new S2[roundlen];
+    inout(C)* p = ptr;
+    auto elem = result.ptr;
+
+    for (; p + n <= end; (p += n), elem++)
+      elem.set(p, p + n);
+    if (p < end)
+      elem.set(p, end);
+
+    return cast(inout(S)[])result;
+  }
+
+  /// Divides the String into num parts.
+  /// The remainder is appended to the last piece.
+  inout(S)[] divide(size_t num) inout
+  {
+    if (num == 0)
+      return null; // TODO: throw Exception?
+    if (num == 1)
+      return [this];
+
+    const piecelen = len / num; // Length of one piece.
+    S2[] result = new S2[num];
+    inout(C)* p = ptr;
+    auto elem = result.ptr;
+
+    for (; num--; (p += piecelen), elem++)
+      elem.set(p, p + piecelen);
+    if (p < end) // Update last element and include the rest of the String.
+      (--elem).set(p-piecelen, end);
+
+    return cast(inout(S)[])result;
+  }
+
+  /// ditto
+  inout(S)[] opBinary(string op)(size_t rhs) inout if (op == "/")
+  {
+    return divide(rhs);
+  }
+
+  /// Concatenates another string array.
+  S opBinary(string op)(inout(S) rhs) inout if (op == "~")
+  {
+    return S(toChars() ~ rhs.toChars());
+  }
+
+  /// ditto
+  S opBinary(string op)(inout(C)[] rhs) inout if (op == "~")
+  {
+    return S(toChars() ~ rhs);
+  }
+
+  /// Appends another String.
+  ref S opOpAssign(string op)(inout(S) rhs) if (op == "~=")
+  {
+    this = this ~ rhs;
+    return this;
+  }
+
+  /// Returns true if lhs is in this String.
+  bool opBinary(string op)(inout(S) rhs) inout if (op == "in")
+  {
+    return rhs.find(this) != size_t.max;
+  }
+
+  /// Returns true if lhs is in this String.
+  bool opBinaryRight(string op)(inout(S) lhs) inout if (op == "in")
+  {
+    return find(lhs) != size_t.max;
+  }
+
+  /// ditto
+  bool opBinaryRight(string op)(inout(C)[] lhs) inout if (op == "in")
+  {
+    return find(/+*new +/S(lhs)) != size_t.max;
+  }
+
   /// Converts to bool.
   bool opCast(T : bool)() inout
   {
@@ -256,4 +343,14 @@ unittest
   assert(S("abcd")[0] == 'a');
   assert(S("abcd")[2] == 'c');
   assert(S("abcd")[-1] == 'd');
+
+  // Dividing.
+  assert(S("abcd") / 1 == [S("abcd")]);
+  assert(S("abcd") / 2 == [S("ab"), S("cd")]);
+  assert(S("abcd") / 3 == [S("a"), S("b"), S("cd")]);
+  assert(S("abcdefghi") / 2 == [S("abcd"), S("efghi")]);
+  assert(S("abcdefghijk") / 4 == [S("ab"), S("cd"), S("ef"), S("ghijk")]);
+
+  assert(S("abcdef").pieces(2) == [S("ab"), S("cd"), S("ef")]);
+  assert(S("abcdef").pieces(4) == [S("abcd"), S("ef")]);
 }
