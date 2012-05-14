@@ -270,6 +270,40 @@ struct StringT(C)
     return ptr[0..len];
   }
 
+  /// Calculates a hash value.
+  /// Note: The value will differ between 32bit and 64bit systems,
+  /// and also between little and big endian systems.
+  hash_t hashOf() const
+  {
+    hash_t hash;
+    const(C)* sptr = ptr;
+    auto slen = len;
+
+    auto rem_len = slen % hash_t.sizeof; // Remainder.
+    if (slen == rem_len)
+      goto Lonly_remainder;
+
+    auto hptr = cast(const(hash_t)*)sptr;
+    // Divide the length by 4 or 8 (x86 vs. x86_64).
+    auto hlen = slen / hash_t.sizeof;
+    assert(hlen, "can't be zero");
+
+    while (hlen--) // Main loop.
+      hash = hash * 11 + *hptr++;
+
+    if (rem_len)
+    { // Calculate the hash of the remaining characters.
+      sptr = cast(typeof(sptr))hptr; // hptr points exactly to the remainder.
+    Lonly_remainder:
+      hash_t chunk;
+      while (rem_len--) // Remainder loop.
+        chunk = (chunk << 8) | *sptr++;
+      hash = hash * 11 + chunk;
+    }
+
+    return hash;
+  }
+
   /// Splits by character c and returns a list of string slices.
   inout(S)[] split(inout(C) c) inout
   {
