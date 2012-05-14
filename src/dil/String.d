@@ -59,10 +59,29 @@ struct StringT(C)
     if (ptr is null) assert(end is null);
   }
 
-  /// Returns a slice.
-  inout(S) opSlice(size_t x, size_t y) inout
+  /// Returns itself.
+  ref inout(S) opSlice() inout
   {
-    return *new S(ptr + x, ptr + y);
+    return this;
+  }
+
+  /// Returns a slice.
+  /// Params:
+  ///   x = Start index. Negative values are subtracted from the end.
+  ///   y = End index. Negative values are subtracted from the end.
+  inout(S) opSlice(ssize_t x, ssize_t y) inout
+  {
+    return *new S(x < 0 ? end + x : ptr + x,
+                  y < 0 ? end + y : ptr + y);
+  }
+
+  /// Returns the character at position x.
+  /// Params:
+  ///   x = Character index. Negative values are subtracted from the end.
+  inout(C) opIndex(ssize_t x) inout
+  {
+    assert(x < 0 ? end + x >= ptr : ptr + x < end);
+    return x < 0 ? end[x] : ptr[x];
   }
 
   /// Compares the bytes of two Strings for exact equality.
@@ -208,5 +227,14 @@ unittest
   assert(S("palabra") * 0 == S());
   assert(1 * S("mundo") == S("mundo"));
 
-  assert(S("rapido")[1..5] == S("apid"));
+  // Slicing.
+  assert(S("rapido")[1..4] == S("api"));
+  assert(S("rapido")[2..-3] == S("p"));
+  assert(S("rapido")[-3..3] == S(""));
+  assert(S("rapido")[-4..-1] == S("pid"));
+
+  // Indexing.
+  assert(S("abcd")[0] == 'a');
+  assert(S("abcd")[2] == 'c');
+  assert(S("abcd")[-1] == 'd');
 }
