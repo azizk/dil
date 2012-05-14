@@ -85,7 +85,7 @@ struct StringT(C)
   }
 
   /// Compares the bytes of two Strings for exact equality.
-  int opEquals(ref inout(S) s) inout
+  int opEquals(inout(S) s) inout
   {
     if (len != s.len)
       return 0;
@@ -103,17 +103,17 @@ struct StringT(C)
   }
 
   /// Compares the bytes of two Strings.
-  int opCmp(ref inout(S) s) inout
+  int opCmp(inout(S) s) inout
   {
     auto l = len, l2 = s.len;
     if (l != l2)
       return l < l2 ? -1 : 1;
     inout(C)* p = ptr, p2 = s.ptr;
-    while (p < end)
+    for (; p < end; p++, p2++)
       if (*p < *p2)
         return -1;
       else
-      if (*p++ < *p2++)
+      if (*p > *p2)
         return  1;
     return 0;
   }
@@ -213,7 +213,6 @@ unittest
   else assert(0);
   assert(S() == false && !S());
   assert(S("") == false && !S(""));
-  assert(S() == S("") && "" == null);
   assert(S("verdad") == true);
 
 
@@ -221,7 +220,17 @@ unittest
 
   assert(S("chica").dup == S("chica"));
 
+  // Comparison.
   assert(S("a") < S("b"));
+  assert(S("b") > S("a"));
+  assert(S("a") <= S("a"));
+  assert(S("b") >= S("b"));
+  assert(S("a") == S("a"));
+  assert(S("a") != S("b"));
+  assert(S("abcd") == S("abcd"));
+  assert(S("") == S(""));
+  assert(S() == S());
+  assert(S() == S("") && "" == null);
 
   assert(S("ha") * 6 == S("hahahahahaha"));
   assert(S("palabra") * 0 == S());
