@@ -665,6 +665,14 @@ alias StringT!(char)  String;  /// Instantiation for char.
 alias StringT!(wchar) WString; /// Instantiation for wchar.
 alias StringT!(dchar) DString; /// Instantiation for dchar.
 
+
+/// Returns a string slice ranging from begin to end.
+inout(char)[] slice(inout(char)* begin, inout(char)* end)
+{
+  assert(begin && end && begin <= end, Format("{} > {}", begin, end));
+  return begin[0..end-begin];
+}
+
 unittest
 {
   scope msg = new UnittestMsg("Testing struct String.");
