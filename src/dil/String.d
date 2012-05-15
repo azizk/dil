@@ -384,6 +384,9 @@ struct StringT(C)
   /// Returns: The position index, or -1 if not found.
   ssize_t find(const(S) s) const
   {
+    if (s.len == 0)
+      return 0;
+    else
     if (s.len == 1)
       return find(s[0]);
     else
@@ -425,6 +428,9 @@ struct StringT(C)
   /// Returns: A pointer to the beginning of s, or null if not found.
   inout(C)* findp(const(S) s) inout
   {
+    if (s.len == 0)
+      return ptr;
+    else
     if (s.len == 1)
       return findp(s[0]);
     else
