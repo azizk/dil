@@ -310,6 +310,66 @@ struct StringT(C)
     return hash;
   }
 
+  /// Returns true if this String starts with prefix.
+  bool startsWith(const(S) prefix) const
+  {
+    return prefix.len <= len && S(ptr, ptr + prefix.len) == prefix;
+  }
+
+  /// ditto
+  bool startsWith(const(C)[] prefix) const
+  {
+    return startsWith(S(prefix));
+  }
+
+  /// Returns true if this String starts with one of the specified prefixes.
+  bool startsWith(const(S)[] prefixes) const
+  {
+    foreach (prefix; prefixes)
+      if (startsWith(prefix))
+        return true;
+    return false;
+  }
+
+  /// ditto
+  bool startsWith(const(C)[][] prefixes) const
+  {
+    foreach (prefix; prefixes)
+      if (startsWith(S(prefix)))
+        return true;
+    return false;
+  }
+
+  /// Returns true if this String ends with suffix.
+  bool endsWith(const(S) suffix) const
+  {
+    return suffix.len <= len && S(end - suffix.len, end) == suffix;
+  }
+
+  /// ditto
+  bool endsWith(const(C)[] suffix) const
+  {
+    return endsWith(S(suffix));
+  }
+
+  /// Returns true if this String ends with one of the specified suffixes.
+  bool endsWith(const(S)[] suffixes) const
+  {
+    foreach (suffix; suffixes)
+      if (endsWith(suffix))
+        return true;
+    return false;
+  }
+
+  /// ditto
+  bool endsWith(const(C)[][] suffixes) const
+  {
+    foreach (suffix; suffixes)
+      if (endsWith(S(suffix)))
+        return true;
+    return false;
+  }
+
   /// Searches for character c.
   size_t find(const(C) c) const
   {
@@ -599,4 +659,12 @@ unittest
   assert(S("abcd").reverse() == S("dcba"));
   assert(S("abc").reverse() == S("cba"));
   assert(S("abc").reverse().reverse() == S("abc"));
+
+  // Matching prefixes and suffixes.
+  assert(S("abcdefg").startsWith("abc"));
+  assert(S("abcdefg").startsWith([" ", "abc"]));
+  assert(!S("ab").startsWith("abc"));
+  assert(S("abcdefg").endsWith("efg"));
+  assert(S("abcdefg").endsWith([" ", "efg"]));
+  assert(!S("fg").endsWith("efg"));
 }
