@@ -499,6 +499,26 @@ struct StringT(C)
   {
     return dup.sub(a, b);
   }
+
+  /// Returns itself reversed.
+  ref S reverse()
+  {
+    auto lft = ptr;
+    auto rgt = end - 1;
+    for (auto n = len / 2; n != 0; n--, lft++, rgt--)
+    { // Swap left and right characters.
+      const c = *lft;
+      *lft = *rgt;
+      *rgt = c;
+    }
+    return this;
+  }
+
+  /// Returns a reversed String.
+  S reverse() const
+  {
+    return dup.reverse();
+  }
 }
 
 alias StringT!(char)  String;  /// Instantiation for char.
@@ -571,4 +591,12 @@ unittest
   // Searching.
   assert("Mundo" in S("¡Hola Mundo!"));
   assert(S("abcd").find(S("cd")) == 2);
+
+  // Reversing.
+  assert(S("").reverse() == S(""));
+  assert(S("a").reverse() == S("a"));
+  assert(S("abc").reverse() == S("cba"));
+  assert(S("abcd").reverse() == S("dcba"));
+  assert(S("abc").reverse() == S("cba"));
+  assert(S("abc").reverse().reverse() == S("abc"));
 }
