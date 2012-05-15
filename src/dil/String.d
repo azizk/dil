@@ -29,12 +29,17 @@ struct StringT(C)
     }
     void set(const(S) s)
     {
-      ptr = s.ptr;
-      end = s.end;
+      set(s.ptr, s.end);
     }
-    void opAssign(const(S) s)
+    void set(const(C)[] a)
     {
-      set(s);
+      set(a.ptr, a.ptr + a.length);
+    }
+    static S2 ctor(T)(T x)
+    {
+      S2 s = void;
+      s.set(x);
+      return s;
     }
   }
 
