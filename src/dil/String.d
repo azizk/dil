@@ -213,19 +213,19 @@ struct StringT(C)
   /// Returns true if lhs is in this String.
   bool opBinary(string op)(const(S) rhs) const if (op == "in")
   {
-    return rhs.find(this) != size_t.max;
+    return rhs.find(this) != -1;
   }
 
   /// Returns true if lhs is in this String.
   bool opBinaryRight(string op)(const(S) lhs) const if (op == "in")
   {
-    return find(lhs) != size_t.max;
+    return find(lhs) != -1;
   }
 
   /// ditto
   bool opBinaryRight(string op)(const(C)[] lhs) const if (op == "in")
   {
-    return find(/+*new +/S(lhs)) != size_t.max;
+    return find(S(lhs)) != -1;
   }
 
   /// Converts to bool.
@@ -371,7 +371,7 @@ struct StringT(C)
   }
 
   /// Searches for character c.
-  size_t find(const(C) c) const
+  ssize_t find(const(C) c) const
   {
     const(C)* p = ptr;
     for (; p < end; p++)
@@ -382,7 +382,7 @@ struct StringT(C)
 
   /// Searches for String s.
   /// Returns: The position index or -1 if not found.
-  size_t find(const(S) s) const
+  ssize_t find(const(S) s) const
   {
     if (s.len == 1)
       return find(s[0]);
@@ -441,7 +441,7 @@ struct StringT(C)
     }
     else
     {
-      size_t i;
+      ssize_t i;
       while ((i = S(p, end).find(s)) != -1)
       {
         result ~= S2(p, p+i);
