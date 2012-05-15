@@ -85,11 +85,11 @@ struct StringT(C)
   }
 
   /// Compares the bytes of two Strings for exact equality.
-  int opEquals(inout(S) s) inout
+  int opEquals(const(S) s) const
   {
     if (len != s.len)
       return 0;
-    inout(C)* p = ptr, p2 = s.ptr;
+    const(C)* p = ptr, p2 = s.ptr;
     while (p < end)
       if (*p++ != *p2++)
         return 0;
@@ -97,18 +97,18 @@ struct StringT(C)
   }
 
   /// Compares to a boolean value.
-  int opEquals(bool b) inout
+  int opEquals(bool b) const
   {
     return cast(bool)this == b;
   }
 
   /// Compares the bytes of two Strings.
-  int opCmp(inout(S) s) inout
+  int opCmp(const(S) s) const
   {
     auto l = len, l2 = s.len;
     if (l != l2)
       return l < l2 ? -1 : 1;
-    inout(C)* p = ptr, p2 = s.ptr;
+    const(C)* p = ptr, p2 = s.ptr;
     for (; p < end; p++, p2++)
       if (*p < *p2)
         return -1;
@@ -119,7 +119,7 @@ struct StringT(C)
   }
 
   /// Concatenates x copies of this string.
-  S times(size_t x) inout
+  S times(size_t x) const
   {
     auto str = toChars();
     auto slen = str.length;
@@ -130,13 +130,13 @@ struct StringT(C)
   }
 
   /// ditto
-  S opBinary(string op)(size_t rhs) inout if (op == "*")
+  S opBinary(string op)(size_t rhs) const if (op == "*")
   {
     return times(rhs);
   }
 
   /// ditto
-  S opBinaryRight(string op)(size_t lhs) inout if (op == "*")
+  S opBinaryRight(string op)(size_t lhs) const if (op == "*")
   {
     return times(lhs);
   }
@@ -152,7 +152,7 @@ struct StringT(C)
 
     const roundlen = (len + len % n) / n;
     S2[] result = new S2[roundlen];
-    inout(C)* p = ptr;
+    const(C)* p = ptr;
     auto elem = result.ptr;
 
     for (; p + n <= end; (p += n), elem++)
@@ -174,7 +174,7 @@ struct StringT(C)
 
     const piecelen = len / num; // Length of one piece.
     S2[] result = new S2[num];
-    inout(C)* p = ptr;
+    const(C)* p = ptr;
     auto elem = result.ptr;
 
     for (; num--; (p += piecelen), elem++)
@@ -192,44 +192,44 @@ struct StringT(C)
   }
 
   /// Concatenates another string array.
-  S opBinary(string op)(inout(S) rhs) inout if (op == "~")
+  S opBinary(string op)(const(S) rhs) const if (op == "~")
   {
     return S(toChars() ~ rhs.toChars());
   }
 
   /// ditto
-  S opBinary(string op)(inout(C)[] rhs) inout if (op == "~")
+  S opBinary(string op)(const(C)[] rhs) const if (op == "~")
   {
     return S(toChars() ~ rhs);
   }
 
   /// Appends another String.
-  ref S opOpAssign(string op)(inout(S) rhs) if (op == "~=")
+  ref S opOpAssign(string op)(const(S) rhs) if (op == "~=")
   {
     this = this ~ rhs;
     return this;
   }
 
   /// Returns true if lhs is in this String.
-  bool opBinary(string op)(inout(S) rhs) inout if (op == "in")
+  bool opBinary(string op)(const(S) rhs) const if (op == "in")
   {
     return rhs.find(this) != size_t.max;
   }
 
   /// Returns true if lhs is in this String.
-  bool opBinaryRight(string op)(inout(S) lhs) inout if (op == "in")
+  bool opBinaryRight(string op)(const(S) lhs) const if (op == "in")
   {
     return find(lhs) != size_t.max;
   }
 
   /// ditto
-  bool opBinaryRight(string op)(inout(C)[] lhs) inout if (op == "in")
+  bool opBinaryRight(string op)(const(C)[] lhs) const if (op == "in")
   {
     return find(/+*new +/S(lhs)) != size_t.max;
   }
 
   /// Converts to bool.
-  bool opCast(T : bool)() inout
+  bool opCast(T : bool)() const
   {
     return !isEmpty();
   }
@@ -241,25 +241,25 @@ struct StringT(C)
   }
 
   /// Returns the byte length.
-  @property size_t len() inout
+  @property size_t len() const
   {
     return end - ptr;
   }
 
   /// Returns a copy.
-  @property S dup() inout
+  @property S dup() const
   {
     return S(ptr[0..len].dup);
   }
 
   /// Returns true if pointers are null.
-  @property bool isNull() inout
+  @property bool isNull() const
   {
     return ptr is null;
   }
 
   /// Returns true if the string is empty.
-  @property bool isEmpty() inout
+  @property bool isEmpty() const
   {
     return ptr is end;
   }
@@ -322,21 +322,21 @@ struct StringT(C)
 
   /// Searches for String s.
   /// Returns: The position index or -1 if not found.
-  size_t find(inout(S) s) inout
+  size_t find(const(S) s) const
   {
     if (s.len == 1)
       return find(s[0]);
     else
     if (s.len <= len) // Return when the argument string is longer.
     {
-      inout(C)* p = ptr;
+      const(C)* p = ptr;
       const firstChar = *s.ptr;
 
       for (; p < end; p++)
       {
         if (*p == firstChar) // Find first matching character.
         {
-          inout(C)* p2 = s.ptr, matchBegin = p;
+          const(C)* p2 = s.ptr, matchBegin = p;
           while (p < end)
           {
             if (*p++ != *p2++)
@@ -354,7 +354,7 @@ struct StringT(C)
   inout(S)[] split(const(S) s) inout
   {
     S2[] result;
-    inout(C)* p = ptr, prev = p;
+    const(C)* p = ptr, prev = p;
     if (s.len == 0)
     {
       result = new S2[len + 2]; // +2 for first and last empty elements.
