@@ -135,13 +135,13 @@ struct StringT(C)
   }
 
   /// ditto
-  S opBinary(string op)(size_t rhs) const if (op == "*")
+  S opBinary(string op : "*")(size_t rhs) const
   {
     return times(rhs);
   }
 
   /// ditto
-  S opBinaryRight(string op)(size_t lhs) const if (op == "*")
+  S opBinaryRight(string op : "*")(size_t lhs) const
   {
     return times(lhs);
   }
@@ -191,45 +191,45 @@ struct StringT(C)
   }
 
   /// ditto
-  inout(S)[] opBinary(string op)(size_t rhs) inout if (op == "/")
+  inout(S)[] opBinary(string op : "/")(size_t rhs) inout
   {
     return divide(rhs);
   }
 
   /// Concatenates another string array.
-  S opBinary(string op)(const(S) rhs) const if (op == "~")
+  S opBinary(string op : "~")(const(S) rhs) const
   {
     return S(toChars() ~ rhs.toChars());
   }
 
   /// ditto
-  S opBinary(string op)(const(C)[] rhs) const if (op == "~")
+  S opBinary(string op : "~")(const(C)[] rhs) const
   {
     return S(toChars() ~ rhs);
   }
 
   /// Appends another String.
-  ref S opOpAssign(string op)(const(S) rhs) if (op == "~=")
+  ref S opOpAssign(string op : "~=")(const(S) rhs)
   {
     this = this ~ rhs;
     return this;
   }
 
   /// Returns a pointer to the first character, if this String is in rhs.
-  inout(C)* opBinary(string op)(inout(C)[] rhs) const if (op == "in")
+  inout(C)* opBinary(string op : "in")(inout(C)[] rhs) const
   {
     auto s = S2.ctor(rhs);
     return (cast(inout(S))s).findp(this);
   }
 
   /// Returns a pointer to the first character, if lhs is in this String.
-  inout(C)* opBinaryRight(string op)(const(S) lhs) inout if (op == "in")
+  inout(C)* opBinaryRight(string op : "in")(const(S) lhs) inout
   {
     return findp(lhs);
   }
 
   /// ditto
-  inout(C)* opBinaryRight(string op)(const(C)[] lhs) inout if (op == "in")
+  inout(C)* opBinaryRight(string op : "in")(const(C)[] lhs) inout
   {
     return findp(S(lhs));
   }
