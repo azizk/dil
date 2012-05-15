@@ -57,6 +57,15 @@ struct StringT(C)
     end = e;
   }
 
+  /// Constructs from a character terminated string.
+  this(inout(C)* p, const(C) terminator) inout
+  {
+    ptr = p;
+    while (*p != terminator)
+      p++;
+    end = p;
+  }
+
   /// Checks pointers.
   invariant()
   {
@@ -660,6 +669,11 @@ unittest
 {
   scope msg = new UnittestMsg("Testing struct String.");
   alias String S;
+
+  // Constructing.
+  assert(S("", 0) == S("")); // String literals are always zero terminated.
+  assert(S("abcd", 0) == S("abcd"));
+  assert(S("abcd", 'c') == S("ab"));
 
   // Boolean conversion.
   if (S("is cool")) {}
