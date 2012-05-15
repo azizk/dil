@@ -482,12 +482,18 @@ struct StringT(C)
   }
 
   /// ditto
-  ref S sub(C a, const(S) b)
+  ref S sub(const(S) a, const(S) b)
   {
-    if (b.len == 1)
-      sub(a, b[0]);
+    auto alen = a.len, blen = b.len;
+    //if (alen == 0)
+    //{}
+    if (alen == 0 && blen == 0)
+      return this;
+    else
+    if (alen == 1 && blen == 1)
+      sub(a[0], b[0]);
     //else
-    //if (b.len == 0)
+    //if (blen == 0)
     //{ //TODO: implement
     //}
     else
@@ -497,13 +503,14 @@ struct StringT(C)
       {
         C[] result;
         const bstr = b.toChars();
-        C* p = ptr;
+        const(C)* p = ptr;
 
         do
         {
-          result ~= S(p, p + i).toChars();
+          if (i != 0) // Append previous string?
+            result ~= S(p, p + i).toChars();
           result ~= bstr;
-          p += i + bstr.length;
+          p += i + alen;
         } while ((i = S(p, end).find(a)) != -1);
         if (p < end)
           result ~= S(p, end).toChars();
@@ -514,7 +521,7 @@ struct StringT(C)
   }
 
   /// ditto
-  S sub(C a, const(S) b) const
+  S sub(const(S) a, const(S) b) const
   {
     return dup.sub(a, b);
   }
@@ -522,42 +529,13 @@ struct StringT(C)
   /// ditto
   ref S sub(C a, const(C)[] b)
   {
-    return sub(a, S(b));
+    return sub(S(&a, (&a)+1), S(b));
   }
 
   /// ditto
   S sub(C a, const(C)[] b) const
   {
-    return dup.sub(a, S(b));
-  }
-
-  /// ditto
-  ref S sub(const(S) a, const(S) b)
-  {
-    auto i = find(a);
-    if (i != -1)
-    {
-      C[] result;
-      const bstr = b.toChars();
-      C* p = ptr;
-
-      do
-      {
-        result ~= S(p, p + i).toChars();
-        result ~= bstr;
-        p += i + bstr.length;
-      } while ((i = S(p, end).find(a)) != -1);
-      if (p < end)
-        result ~= S(p, end).toChars();
-      this = S(result);
-    }
-    return this;
-  }
-
-  /// ditto
-  S sub(const(S) a, const(S) b) const
-  {
-    return dup.sub(a, b);
+    return dup.sub(S(&a, (&a)+1), S(b));
   }
 
   /// Returns itself reversed.
@@ -598,7 +576,9 @@ unittest
   assert(S("verdad") == true);
 
   // Substitution.
-  assert(S("abce".dup).sub('e', 'd') == S("abcd"));
+  assert(S("abce").sub('e', 'd') == S("abcd"));
+  assert(S("abc ef").sub(' ', 'd') == S("abcdef"));
+  assert(S("abc f").sub(' ', "de") == S("abcdef"));
 
   // Duplication.
   assert(S("chica").dup == S("chica"));
