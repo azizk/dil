@@ -527,21 +527,47 @@ struct StringT(C)
   ref S sub(const(S) a, const(S) b)
   {
     auto alen = a.len, blen = b.len;
-    //if (alen == 0)
-    //{}
+
     if (alen == 0 && blen == 0)
-      return this;
+    {}
+    else
+    if (alen == 0)
+    {
+      C[] result;
+      const bstr = b.toChars();
+      const(C)* p = ptr;
+
+      while (p < end)
+        result ~= bstr ~ *p++;
+      result ~= bstr;
+      this = S(result);
+    }
     else
     if (alen == 1 && blen == 1)
       sub(a[0], b[0]);
-    //else
-    //if (blen == 0)
-    //{ //TODO: implement
-    //}
+    else
+    if (blen == 0)
+    {
+      C* pwriter = ptr;
+      const(C)* preader = pwriter, pa;
+
+      while ((pa = S(preader, end).findp(a)) !is null)
+      {
+        while (preader < pa) // Copy till beginning of a.
+          *pwriter++ = *preader++;
+        preader += alen; // Skip a.
+      }
+      if (preader !is pwriter)
+      { // Write the rest.
+        while (preader < end)
+          *pwriter++ = *preader++;
+        end = pwriter;
+      }
+    }
     else
     {
-      auto i = find(a);
-      if (i != -1)
+      const(C)* pa = findp(a);
+      if (pa)
       {
         C[] result;
         const bstr = b.toChars();
@@ -549,11 +575,11 @@ struct StringT(C)
 
         do
         {
-          if (i != 0) // Append previous string?
-            result ~= S(p, p + i).toChars();
+          if (pa) // Append previous string?
+            result ~= S(p, pa).toChars();
           result ~= bstr;
-          p += i + alen;
-        } while ((i = S(p, end).find(a)) != -1);
+          p = pa + alen; // Skip a.
+        } while ((pa = S(p, end).findp(a)) !is null);
         if (p < end)
           result ~= S(p, end).toChars();
         this = S(result);
@@ -566,6 +592,18 @@ struct StringT(C)
   S sub(const(S) a, const(S) b) const
   {
     return dup.sub(a, b);
+  }
+
+  /// ditto
+  ref S sub(const(C)[] a, const(C)[] b)
+  {
+    return sub(S(a), S(b));
+  }
+
+  /// ditto
+  S sub(const(C)[] a, const(C)[] b) const
+  {
+    return sub(S(a), S(b));
   }
 
   /// ditto
@@ -621,6 +659,12 @@ unittest
   assert(S("abce").sub('e', 'd') == S("abcd"));
   assert(S("abc ef").sub(' ', 'd') == S("abcdef"));
   assert(S("abc f").sub(' ', "de") == S("abcdef"));
+  assert(S("abcd").sub("", " ") == S(" a b c d "));
+  assert(S("").sub("", "a") == S("a"));
+  assert(S(" a b c d ").sub(" ", "") == S("abcd"));
+  assert(S("ab_cd").sub("_", "") == S("abcd"));
+  assert(S("abcd").sub("abcd", "") == S(""));
+  assert(S("aaaa").sub("a", "") == S(""));
 
   // Duplication.
   assert(S("chica").dup == S("chica"));
