@@ -457,7 +457,8 @@ struct StringT(C)
   {
     S2[] result;
     const(C)* p = ptr, prev = p;
-    if (s.len == 0)
+    auto slen = s.len;
+    if (slen == 0)
     {
       result = new S2[len + 2]; // +2 for first and last empty elements.
       auto elem = result.ptr;
@@ -470,7 +471,7 @@ struct StringT(C)
       elem.set(p, p);
     }
     else
-    if (s.len == 1)
+    if (slen == 1)
     {
       const c = *s.ptr;
       for (; p < end; p++)
@@ -483,11 +484,11 @@ struct StringT(C)
     }
     else
     {
-      ssize_t i;
-      while ((i = S(p, end).find(s)) != -1)
+      const(C)* ps;
+      while ((ps = S(p, end).findp(s)) !is null)
       {
-        result ~= S2(p, p+i);
-        p += i + s.len;
+        result ~= S2(p, ps);
+        p = ps + slen;
         assert(p <= end);
       }
       result ~= S2(p, end);
