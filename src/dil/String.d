@@ -215,22 +215,23 @@ struct StringT(C)
     return this;
   }
 
-  /// Returns true if lhs is in this String.
-  bool opBinary(string op)(const(S) rhs) const if (op == "in")
+  /// Returns a pointer to the first character, if this String is in rhs.
+  inout(C)* opBinary(string op)(inout(C)[] rhs) const if (op == "in")
   {
-    return rhs.find(this) != -1;
+    auto s = S2.ctor(rhs);
+    return (cast(inout(S))s).findp(this);
   }
 
-  /// Returns true if lhs is in this String.
-  bool opBinaryRight(string op)(const(S) lhs) const if (op == "in")
+  /// Returns a pointer to the first character, if lhs is in this String.
+  inout(C)* opBinaryRight(string op)(const(S) lhs) inout if (op == "in")
   {
-    return find(lhs) != -1;
+    return findp(lhs);
   }
 
   /// ditto
-  bool opBinaryRight(string op)(const(C)[] lhs) const if (op == "in")
+  inout(C)* opBinaryRight(string op)(const(C)[] lhs) inout if (op == "in")
   {
-    return find(S(lhs)) != -1;
+    return findp(S(lhs));
   }
 
   /// Converts to bool.
@@ -728,10 +729,13 @@ unittest
 
   // Searching.
   assert("Mundo" in S("¡Hola Mundo!"));
+  assert(S("") in "a");
   assert(S("abcd").find(S("cd")) == 2);
+  assert(S("").find(S("")) == 0);
   {
   auto s = S("abcd");
   assert(s.findp(S("abcd")) is s.ptr);
+  assert(s.findp(S("d")) is s.end - 1);
   }
 
   // Reversing.
