@@ -380,8 +380,8 @@ struct StringT(C)
     return -1;
   }
 
-  /// Searches for String s.
-  /// Returns: The position index or -1 if not found.
+  /// Searches for s.
+  /// Returns: The position index, or -1 if not found.
   ssize_t find(const(S) s) const
   {
     if (s.len == 1)
@@ -408,6 +408,48 @@ struct StringT(C)
       }
     }
     return -1;
+  }
+
+  /// Searches for character c.
+  /// Returns: A pointer to c, or null if not found.
+  inout(C)* findp(const(C) c) inout
+  {
+    inout(C)* p = ptr;
+    for (; p < end; p++)
+      if (*p == c)
+        return p;
+    return null;
+  }
+
+  /// Searches for s.
+  /// Returns: A pointer to the beginning of s, or null if not found.
+  inout(C)* findp(const(S) s) inout
+  {
+    if (s.len == 1)
+      return findp(s[0]);
+    else
+    if (s.len <= len) // Return when the argument string is longer.
+    {
+      inout(C)* p = ptr;
+      const firstChar = *s.ptr;
+
+      for (; p < end; p++)
+      {
+        if (*p == firstChar) // Find first matching character.
+        {
+          const(C)* p2 = s.ptr;
+          inout(C)* matchBegin = p;
+          while (p < end)
+          {
+            if (*p++ != *p2++)
+              break;
+            if (p2 is s.end) // If at the end, we have a match.
+              return matchBegin;
+          }
+        }
+      }
+    }
+    return null;
   }
 
   /// Splits by String s and returns a list of slices.
@@ -631,6 +673,10 @@ unittest
   // Searching.
   assert("Mundo" in S("¡Hola Mundo!"));
   assert(S("abcd").find(S("cd")) == 2);
+  {
+  auto s = S("abcd");
+  assert(s.findp(S("abcd")) is s.ptr);
+  }
 
   // Reversing.
   assert(S("").reverse() == S(""));
