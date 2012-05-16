@@ -4,7 +4,8 @@
 module dil.doc.Parser;
 
 import dil.lexer.Funcs;
-import dil.Unicode;
+import dil.Unicode,
+       dil.String;
 import common;
 
 /// A pair of strings.
@@ -75,7 +76,7 @@ struct IdentValueParser
     while (isspace(*--end) || *end == '\n')
     {}
     end++;
-    return String(begin, end);
+    return slice(begin, end);
   }
 
   /// Finds the next "Identifier =".

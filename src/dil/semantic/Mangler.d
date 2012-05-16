@@ -6,11 +6,12 @@ module dil.semantic.Mangler;
 import dil.ast.Visitor,
        dil.ast.Node,
        dil.ast.Expressions;
-import dil.lexer.Funcs : String, StringHex;
+import dil.lexer.Funcs : StringHex;
 import dil.semantic.TypesEnum;
 import dil.i18n.Messages;
 import dil.Float,
        dil.Unicode,
+       dil.String,
        dil.Diagnostics;
 import common;
 
@@ -72,9 +73,9 @@ override:
   void visit(IntExpr e)
   {
     if (cast(long)e.number < 0)
-      text ~= 'N' ~ String(-e.number);
+      text ~= 'N' ~ itoa(-e.number);
     else
-      text ~= 'i' ~ String(e.number);
+      text ~= 'i' ~ itoa(e.number);
   }
 
   void visit(FloatExpr e)
@@ -137,26 +138,26 @@ override:
     default: assert(0);
     }
     // Finally append the mangled string.
-    text ~= mc ~ String(utf8str.length) ~ "_" ~ StringHex(utf8str);
+    text ~= mc ~ itoa(utf8str.length) ~ "_" ~ StringHex(utf8str);
   }
 
   void visit(ArrayLiteralExpr e)
   {
-    text ~= 'A' ~ String(e.values.length);
+    text ~= 'A' ~ itoa(e.values.length);
     foreach (val; e.values)
       visitN(val);
   }
 
   void visit(AArrayLiteralExpr e)
   {
-    text ~= 'A' ~ String(e.values.length);
+    text ~= 'A' ~ itoa(e.values.length);
     foreach (i, key; e.keys)
       visitN(key), visitN(e.values[i]);
   }
 
   void visit(StructInitExpr e)
   {
-    text ~= 'S' ~ String(e.values.length);
+    text ~= 'S' ~ itoa(e.values.length);
     foreach (val; e.values)
       if (val.kind == NodeKind.VoidInitExpr)
         text ~= 'v';

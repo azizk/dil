@@ -9,9 +9,9 @@ import dil.semantic.Symbol,
        dil.semantic.SymbolTable,
        dil.semantic.Types;
 import dil.lexer.IdTable,
-       dil.lexer.Keywords,
-       dil.lexer.Funcs : String;
-import dil.Enums;
+       dil.lexer.Keywords;
+import dil.Enums,
+       dil.String;
 import common;
 
 /// Declaration symbol.
@@ -77,7 +77,7 @@ abstract class DeclarationSymbol : Symbol
       else
       {
         auto id = s2.name.str;
-        m = String(id.length) ~ id ~ m;
+        m = itoa(id.length) ~ id ~ m;
       }
 
     auto fs = s.isFunction() ? s.to!(FunctionSymbol) : null;
@@ -676,7 +676,7 @@ class TemplInstanceSymbol : ScopeSymbol
         pm = pm[2..$]; // Skip the prefix.
     }
     cstring id = name.str;
-    return pm ~ String(id.length) ~ id;
+    return pm ~ itoa(id.length) ~ id;
   }
 }
 

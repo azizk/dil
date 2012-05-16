@@ -15,6 +15,7 @@ import dil.parser.Parser;
 import dil.semantic.Module;
 import dil.Compilation;
 import dil.SourceText;
+import dil.String;
 import util.Path;
 import common;
 
@@ -321,7 +322,7 @@ class Highlighter
       case '>': xml_entity = "&gt;";  goto Lxml;
       case '&': xml_entity = "&amp;"; goto Lxml;
       Lxml:
-        if (prev < p) result ~= String(prev, p); // Append previous string.
+        if (prev < p) result ~= slice(prev, p); // Append previous string.
         result ~= xml_entity; // Append entity.
         prev = ++p;
         continue; // End of "XML" code.
@@ -366,17 +367,17 @@ class Highlighter
           {}
           if (p < end && *p == ';')
             p++; // Skip ';'.
-          escape_str = "\\&amp;" ~ String(entity_name_begin, p);
+          escape_str = "\\&amp;" ~ slice(entity_name_begin, p);
           goto Lescape_str_assigned;
         }
         // else
           // continue; // Broken escape sequence.
       }
 
-      escape_str = String(escape_str_begin, p);
+      escape_str = slice(escape_str_begin, p);
     Lescape_str_assigned:
       if (prev < p) // Append previous string.
-        result ~= String(prev, escape_str_begin);
+        result ~= slice(prev, escape_str_begin);
       result ~= Format(fmt, escape_str); // Finally format the escape sequence.
       prev = p; // Update prev pointer.
     }
@@ -385,7 +386,7 @@ class Highlighter
     if (prev is text.ptr)
       return text; // Nothing escaped. Return original, unchanged text.
     if (prev < end)
-      result ~= String(prev, end);
+      result ~= slice(prev, end);
     return result;
   }
 }
@@ -405,7 +406,7 @@ cstring xml_escape(cstring text)
     case '>': entity = "&gt;";  goto Lcommon;
     case '&': entity = "&amp;"; goto Lcommon;
     Lcommon:
-      prev != p && (result ~= String(prev, p)); // Append previous string.
+      prev != p && (result ~= slice(prev, p)); // Append previous string.
       result ~= entity; // Append entity.
       p++; // Skip '<', '>' or '&'.
       prev = p;
@@ -416,7 +417,7 @@ cstring xml_escape(cstring text)
   if (prev is text.ptr)
     return text; // Nothing escaped. Return original, unchanged text.
   if (prev < end)
-    result ~= String(prev, end);
+    result ~= slice(prev, end);
   return result;
 }
 

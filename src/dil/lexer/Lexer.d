@@ -15,7 +15,8 @@ import dil.Diagnostics,
        dil.Version,
        dil.Unicode,
        dil.SourceText,
-       dil.Time;
+       dil.Time,
+       dil.String;
 import dil.Float : Float;
 import util.uni : isUniAlpha;
 import common;
@@ -938,7 +939,7 @@ class Lexer
   {
     assert(text.ptr <= t.start && t.start < end, t.kindAsString());
     assert(text.ptr <= t.end && t.end <= end, t.kindAsString());
-    assert(t.kind != TOK.Invalid, String(t.start, t.end));
+    assert(t.kind != TOK.Invalid, String(t.start, t.end).array);
   }
   body
   {
@@ -1316,7 +1317,7 @@ class Lexer
       case '"':
         break Loop;
       case '\\':
-        if (prev != p) value ~= String(prev, p);
+        if (prev != p) value ~= slice(prev, p);
         bool isBinary;
         c = scanEscapeSequence(p, isBinary);
         prev = p;
@@ -1332,7 +1333,7 @@ class Lexer
         // goto LconvertNewline;
       LconvertNewline:
         // Need to substract c to get to the start of the newline.
-        value ~= String(prev, p-c + 1); // +1 is for '\n'.
+        value ~= slice(prev, p-c + 1); // +1 is for '\n'.
         value[$-1] = '\n'; // Convert Newline to '\n'.
         prev = p+1;
       case '\n':
@@ -1352,7 +1353,7 @@ class Lexer
         ++p;
       }
     assert(*p == '"');
-    auto finalString = String(prev, p);
+    auto finalString = slice(prev, p);
     if (value.length)
       finalString = (value ~= finalString); // Append previous string.
     ++p; // Skip '"'.
@@ -1620,7 +1621,7 @@ class Lexer
       { c = *++p; }
       while (isident(c) || !isascii(c) && scanUnicodeAlpha(p));
       // Store the identifier.
-      str_delim = String(idbegin, p);
+      str_delim = slice(idbegin, p);
       // Scan a newline.
       if (scanNewline(p))
         ++lineNum,
@@ -1809,7 +1810,7 @@ class Lexer
       t.end = p;
     }
 
-    auto value = String(str_begin, str_end);
+    auto value = slice(str_begin, str_end);
     // Convert newlines to '\n'.
     if (convertNewlines)
     { // Copy the value and convert the newlines.
@@ -1952,7 +1953,7 @@ class Lexer
 
           if (*p == ';')
           { // Pass entity excluding '&' and ';'.
-            c = entity2Unicode(String(begin, p));
+            c = entity2Unicode(slice(begin, p));
             ++p; // Skip ;
             if (c)
               goto Lreturn; // Return valid escape value.
@@ -1989,7 +1990,7 @@ class Lexer
 
   Lerr:
     if (!err_arg.length)
-      err_arg = String(ref_p, p);
+      err_arg = slice(ref_p, p);
     error(ref_p, mid, err_arg);
     ref_p = p; // Is at the beginning of the sequence. Update now.
     return REPLACEMENT_CHAR; // Error: return replacement character.
@@ -2539,7 +2540,7 @@ class Lexer
         }
         auto start = fs.start +1; // +1 skips '"'
         auto strval = new StringValue;
-        strval.str = String(start, p); // No need to zero-terminate.
+        strval.str = slice(start, p); // No need to zero-terminate.
         fs.strval = strval;
         fs.end = tokenEnd = ++p;
         state = State.End;

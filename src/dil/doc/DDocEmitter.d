@@ -21,7 +21,8 @@ import dil.i18n.Messages;
 import dil.Highlighter,
        dil.Diagnostics,
        dil.SourceText,
-       dil.Enums;
+       dil.Enums,
+       dil.String;
 import common;
 
 import tango.text.Ascii : toUpper, icompare;
@@ -240,7 +241,7 @@ abstract class DDocEmitter : DefaultVisitor2
     auto pfqn = hashOf(parentFQN) in fqnCount;
     uint count = pfqn ? *pfqn : 0;
     if (count > 1) // Start adding suffixes with 2.
-      parentFQN ~= ":" ~ String(count);
+      parentFQN ~= ":" ~ itoa(count);
   }
 
   /// Returns a unique, identifying string for the current symbol.
@@ -260,7 +261,7 @@ abstract class DDocEmitter : DefaultVisitor2
       fqnCount[hash] = 1; // Start counting with 1.
 
     if (count > 1) // Start adding suffixes with 2.
-      fqn ~= ":" ~ String(count);
+      fqn ~= ":" ~ itoa(count);
     return fqn;
   }
 
@@ -439,7 +440,7 @@ abstract class DDocEmitter : DefaultVisitor2
               p += 3; // Point one past '>'.
               break;
             }
-          result ~= String(begin, p);
+          result ~= slice(begin, p);
         } // <tag ...> or </tag>
         else if (p < end && (isalpha(*p) || *p == '/'))
         {
@@ -452,7 +453,7 @@ abstract class DDocEmitter : DefaultVisitor2
             continue;
           }
           p++; // Skip '>'.
-          result ~= String(begin, p);
+          result ~= slice(begin, p);
         }
         else
           result ~= "&lt;";
@@ -469,7 +470,7 @@ abstract class DDocEmitter : DefaultVisitor2
           else
             while (++p < end && isalpha(*p)){} // Named entity.
           if (p < end && *p == ';') {
-            result ~= String(entityBegin, ++p); // Copy valid entity.
+            result ~= slice(entityBegin, ++p); // Copy valid entity.
             continue;
           }
           p = entityBegin + 1; // Reset. It's not a valid entity.
@@ -515,7 +516,7 @@ abstract class DDocEmitter : DefaultVisitor2
             codeEnd++; // Include the non-newline character.
           if (codeBegin < codeEnd)
           { // Highlight the extracted source code.
-            cstring codeText = String(codeBegin, codeEnd);
+            cstring codeText = slice(codeBegin, codeEnd);
             uint lines; // Number of lines in the code text.
 
             codeExamplesCounter++; // Found a code section. Increment counter.
@@ -526,8 +527,8 @@ abstract class DDocEmitter : DefaultVisitor2
               "\1DIL_CODELINES ";
               for (uint num = 1; num <= lines; num++)
               {
-                auto numtxt = String(num);
-                auto id = "L"~numtxt~"_ex"~String(codeExamplesCounter);
+                auto numtxt = itoa(num);
+                auto id = "L"~numtxt~"_ex"~itoa(codeExamplesCounter);
                 result ~= `<a href="#`~id~`" name="`~id~`">`;
                 result ~= numtxt;
                 result ~= `</a>`"\n";
@@ -1135,7 +1136,7 @@ class DocSymbol
       return "[]";
     char[] result = "[".dup;
     foreach (attr; attrs)
-      result ~= String(attrToID[hashOf(attr)]) ~ ",";
+      result ~= itoa(attrToID[hashOf(attr)]) ~ ",";
     result[$-1] = ']';
     return result;
   }

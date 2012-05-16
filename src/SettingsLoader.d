@@ -16,14 +16,14 @@ import dil.i18n.Messages,
        dil.i18n.ResourceBundle;
 import dil.Diagnostics,
        dil.Compilation,
-       dil.Unicode;
+       dil.Unicode,
+       dil.String;
 import util.Path;
 import Settings,
        common;
 
 import tango.sys.Environment;
 import tango.io.Path : normalize;
-import tango.stdc.stringz : fromStringz;
 
 /// Loads settings from a D module file.
 abstract class SettingsLoader
@@ -137,10 +137,10 @@ class ConfigLoader : SettingsLoader
           p++;
         if (p is end)
           break; // Don't expand unterminated variables.
-        result ~= String(pieceBegin, variableBegin); // Copy previous string.
+        result ~= slice(pieceBegin, variableBegin); // Copy previous string.
         variableBegin += 2; // Skip ${
         // Get the environment variable and append it to the result.
-        result ~= Environment.get(String(variableBegin, p));
+        result ~= Environment.get(slice(variableBegin, p));
         pieceBegin = p + 1; // Point to character after '}'.
       }
       p++;
@@ -148,7 +148,7 @@ class ConfigLoader : SettingsLoader
     if (pieceBegin is str.ptr)
       return str; // Return unchanged string.
     if (pieceBegin < end) // Copy end piece.
-      result ~= String(pieceBegin, end);
+      result ~= slice(pieceBegin, end);
     return result;
   }
 
@@ -408,7 +408,7 @@ cstring GetExecutableFilePath(cstring arg0)
   char[] buffer = new char[1024];  // 1024 = PATH_MAX on Mac OS X 10.5
   if (!realpath(path.ptr, buffer.ptr))
     return arg0;
-  return fromStringz(buffer.ptr);
+  return String(buffer.ptr, 0).array;
   } // version(darwin)
 
   else

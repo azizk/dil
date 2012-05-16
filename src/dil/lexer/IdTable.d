@@ -7,7 +7,8 @@ import dil.lexer.TokensEnum,
        dil.lexer.IdentsGenerator,
        dil.lexer.Keywords,
        dil.lexer.Funcs;
-import dil.Unicode;
+import dil.Unicode,
+       dil.String;
 import common;
 
 public import dil.lexer.Identifier,
@@ -164,7 +165,7 @@ class IdTable
   /// The identifier is not inserted into the table.
   Identifier* genAnonymousID(cstring prefix)
   {
-    auto num = String(++anonCount);
+    auto num = itoa(++anonCount);
     return new Identifier((prefix ~ num).idup, TOK.Identifier);
   }
 

@@ -4,6 +4,7 @@
 module dil.lexer.Funcs;
 
 import dil.Unicode : scanUnicodeAlpha, isUnicodeAlpha;
+import dil.String;
 import common;
 
 /// Converts an unsigned integer to a string (CTF version.)
@@ -14,25 +15,6 @@ char[] StringCTF(ulong x)
     str = cast(char)('0' + (x % 10)) ~ str;
   while (x /= 10);
   return str;
-}
-
-/// Converts an unsigned integer to a string.
-char[] String(ulong x)
-{
-  char[20] buffer; // ulong.max -> "18446744073709551616".len = 20
-  auto end = buffer.ptr + buffer.length;
-  auto p = end;
-  do
-    *--p = '0' + x % 10;
-  while (x /= 10);
-  return String(p, end).dup;
-}
-
-/// Returns a string slice ranging from begin to end.
-inout(char)[] String(inout(char)* begin, inout(char)* end)
-{
-  assert(begin && end && begin <= end, Format("{} > {}", begin, end));
-  return begin[0..end-begin];
 }
 
 /// Encodes a string's characters with hexadecimal digits.
@@ -268,7 +250,7 @@ body
     do // IdChar*
       p++;
     while (p < end && (isident(*p) || scanUnicodeAlpha(p, end)));
-    auto identifier = String(ref_p, p);
+    auto identifier = slice(ref_p, p);
     ref_p = p;
     return identifier;
   }

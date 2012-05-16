@@ -5,8 +5,8 @@ module dil.semantic.Symbol;
 
 import dil.ast.Node;
 import dil.lexer.Identifier,
-       dil.lexer.IdTable,
-       dil.lexer.Funcs : String;
+       dil.lexer.IdTable;
+import dil.String : itoa;
 import common;
 
 /// Enumeration of Symbol IDs.
@@ -160,7 +160,7 @@ class Symbol
         pm = pm[2..$]; // Skip the prefix.
     }
     cstring id = name.str;
-    return pm ~ String(id.length) ~ id;
+    return pm ~ itoa(id.length) ~ id;
   }
 
   static cstring toMangle(Symbol s)

@@ -678,14 +678,18 @@ alias StringT!(wchar) WString; /// Instantiation for wchar.
 alias StringT!(dchar) DString; /// Instantiation for dchar.
 
 
-/// Returns a string slice ranging from begin to end.
+/// Returns a string array slice ranging from begin to end.
 inout(char)[] slice(inout(char)* begin, inout(char)* end)
 {
-  assert(begin && end && begin <= end, Format("{} > {}", begin, end));
-  return begin[0..end-begin];
+  alias inout(String) S;
+  return S(begin, end).array;
 }
 
-
+/// Converts x to a string array.
+char[] itoa(ulong x)
+{
+  return String(x).array;
+}
 
 unittest
 {

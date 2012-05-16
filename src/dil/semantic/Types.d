@@ -9,8 +9,9 @@ import dil.lexer.Identifier,
        dil.lexer.Keywords,
        dil.lexer.IdTable,
        dil.lexer.TokensEnum,
-       dil.lexer.Funcs : hashOf, String;
-import dil.Enums;
+       dil.lexer.Funcs : hashOf;
+import dil.Enums,
+       dil.String;
 
 import common;
 
@@ -50,7 +51,7 @@ abstract class Type/* : Symbol*/
   final Identifier* mangledTypeInfoIdent(IdTable idtable)
   {
     auto m = toMangle();
-    m = "_D" ~ String(m.length+9) ~ "TypeInfo_" ~ m ~ "6__initZ";
+    m = "_D" ~ itoa(m.length+9) ~ "TypeInfo_" ~ m ~ "6__initZ";
     return idtable.lookup(m);
   }
 
@@ -533,14 +534,14 @@ class TypeSArray : Type
 
   cstring toText()
   {
-    return next.toText() ~ "[" ~ String(dimension) ~ "]";
+    return next.toText() ~ "[" ~ itoa(dimension) ~ "]";
   }
 
   cstring toMangle()
   {
     if (mangled.length)
       return mangled;
-    return mangleChar() ~ String(dimension) ~ next.toMangle();
+    return mangleChar() ~ itoa(dimension) ~ next.toMangle();
   }
 }
 
@@ -1010,7 +1011,7 @@ class TypeIdentifier : Type
     if (mangled.length)
       return mangled;
     auto id = ident.str;
-    return mangleChar() ~ String(id.length) ~ id;
+    return mangleChar() ~ itoa(id.length) ~ id;
   }
 }
 
@@ -1068,7 +1069,7 @@ class TypeTuple : Type
     char[] tm;
     foreach (t; types)
       tm ~= t.toMangle();
-    return mangleChar() ~ String(tm.length) ~ tm;
+    return mangleChar() ~ itoa(tm.length) ~ tm;
   }
 }
 

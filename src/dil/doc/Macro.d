@@ -7,7 +7,8 @@ import dil.doc.Parser;
 import dil.lexer.Funcs;
 import dil.i18n.Messages;
 import dil.Unicode,
-       dil.Diagnostics;
+       dil.Diagnostics,
+       dil.String;
 import common;
 
 /// The DDoc macro class.
@@ -49,7 +50,7 @@ class Macro
         if (p2 < end && p[1] == '(' && isIdentifierStart(p2, end)) // IdStart
         { // Scanned: "$(IdStart"
           if (prev != p)
-            result ~= String(prev, p); // Copy previous text.
+            result ~= slice(prev, p); // Copy previous text.
           parens ~= Macro.Marker.Opening;
           result ~= Macro.Marker.Opening; // Relace "$(".
           prev = p = p2; // Move to IdStart.
@@ -65,7 +66,7 @@ class Macro
         if (parens[$-1] == Macro.Marker.Opening)
         { // Found matching closing parenthesis.
           if (prev != p) {
-            result ~= String(prev, p);
+            result ~= slice(prev, p);
             prev = p+1;
           }
           result ~= Macro.Marker.Closing; // Replace ')'.
@@ -79,7 +80,7 @@ class Macro
     if (prev == text.ptr)
       return text; // No macros found. Return original text.
     if (prev < end)
-      result ~= String(prev, end);
+      result ~= slice(prev, end);
     foreach_reverse (c; parens)
       if (c == Macro.Marker.Opening) // Unclosed macros?
         result ~= Macro.Marker.Unclosed; // Add marker for errors.
@@ -248,7 +249,7 @@ struct MacroExpander
       {
         // Copy string between macros.
         if (macroEnd != p)
-          result ~= String(macroEnd, p);
+          result ~= slice(macroEnd, p);
         p++;
         if (auto macroName = scanIdentifier(p, textEnd))
         { // Scanned "\1MacroName" so far.
@@ -283,7 +284,7 @@ struct MacroExpander
     if (macroEnd == text.ptr)
       return text; // No macros found. Return original text.
     if (macroEnd < textEnd)
-      result ~= String(macroEnd, textEnd);
+      result ~= slice(macroEnd, textEnd);
     return result;
   }
 
@@ -332,7 +333,7 @@ struct MacroExpander
         if ((plevel+mlevel) != 1) // Ignore comma if inside ( ).
           break;
         // Add a new argument.
-        args ~= String(argBegin, p);
+        args ~= slice(argBegin, p);
         while (++p < textEnd && isspace(*p)) // Skip spaces.
         {}
         argBegin = p;
@@ -378,8 +379,8 @@ struct MacroExpander
     ref_p = p;
     if (arg0Begin == p)
       return null; // No arguments.
-    args[0] = String(arg0Begin, p); // arg0 spans the whole argument list.
-    args ~= String(argBegin, p); // Add last argument.
+    args[0] = slice(arg0Begin, p); // arg0 spans the whole argument list.
+    args ~= slice(argBegin, p); // Add last argument.
     return args;
   }
 
@@ -404,7 +405,7 @@ struct MacroExpander
       {
         // Copy string between argument placeholders.
         if (placeholderEnd != p-1)
-          result ~= String(placeholderEnd, p-1);
+          result ~= slice(placeholderEnd, p-1);
         placeholderEnd = p+1; // Set new placeholder end.
 
         if (args.length == 0)
@@ -417,7 +418,7 @@ struct MacroExpander
             assert(args[0].ptr < args[2].ptr &&
                    args[2].ptr < args[0].ptr + args[0].length,
                    "arg[2] is not a slice of arg[0]");
-            result ~= String(args[2].ptr, args[0].ptr + args[0].length);
+            result ~= slice(args[2].ptr, args[0].ptr + args[0].length);
           }
         }
         else
@@ -432,7 +433,7 @@ struct MacroExpander
     if (placeholderEnd == text.ptr)
       return text; // No placeholders found. Return original text.
     if (placeholderEnd < textEnd)
-      result ~= String(placeholderEnd, textEnd);
+      result ~= slice(placeholderEnd, textEnd);
     return result;
   }
 }

@@ -12,7 +12,8 @@ import dil.ast.Visitor,
        dil.ast.Types;
 import dil.semantic.Module;
 import dil.lexer.Funcs;
-import dil.Time;
+import dil.Time,
+       dil.String;
 import common;
 
 import tango.core.Array : sort;
@@ -29,7 +30,7 @@ cstring countWhitespace(cstring ws)
 {
   foreach (c; ws)
     if (c != ' ') return "'"~ws~"'";
-  return String(ws.length);
+  return itoa(ws.length);
 }
 
 enum Flags
@@ -133,7 +134,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   for (auto token = first_token; token; ++index, token = token.next)
   {
     indexMap[token] = index;
-    line ~= '(' ~ String(token.kind) ~ ',';
+    line ~= '(' ~ itoa(token.kind) ~ ',';
     line ~= (token.ws) ? countWhitespace(token.wsChars) : `0`;
     line ~= ',';
     switch (token.kind)
@@ -142,7 +143,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
     case TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64,
          TOK.Float32, TOK.Float64, TOK.Float80,
          TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
-      line ~= String(map[hashOf(token.text)].pos);
+      line ~= itoa(map[hashOf(token.text)].pos);
       break;
     case TOK.Shebang:
       line ~= '"' ~ escape_quotes(token.text) ~ '"';
@@ -235,7 +236,7 @@ class PyTreeEmitter : Visitor2
   /// Returns the index number of a token as a string.
   char[] indexOf(Token* token)
   {
-    return "t["~String(index[token])~"]";
+    return "t["~itoa(index[token])~"]";
   }
 
   void write(cstring str)
@@ -267,7 +268,7 @@ class PyTreeEmitter : Visitor2
 
   void begin(Node n)
   {
-    write("N"~String(n.kind)~"(");
+    write("N"~itoa(n.kind)~"(");
   }
 
   void end(Node n, bool writeComma = true)
@@ -278,7 +279,7 @@ class PyTreeEmitter : Visitor2
       Format("ops, Parser or AST buggy? {}@{},i1={},i2={}",
         NodeClassNames[n.kind],
         n.begin.getRealLocation(modul.filePath()).str(), i1, i2));
-    write((writeComma ? ",":"") ~ "p("~String(i1)~","~String(i2-i1)~"))");
+    write((writeComma ? ",":"") ~ "p("~itoa(i1)~","~itoa(i2-i1)~"))");
   }
 
 override
