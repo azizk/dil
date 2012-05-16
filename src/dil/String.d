@@ -66,6 +66,18 @@ struct StringT(C)
     end = p;
   }
 
+  /// Constructs from an unsigned long.
+  this(ulong x) inout
+  {
+    C[20] buffer; // ulong.max -> "18446744073709551616".len == 20
+    auto end = buffer.ptr + buffer.length;
+    auto p = end;
+    do
+      *--p = '0' + x % 10;
+    while (x /= 10);
+    this(S(p, end).array.dup);
+  }
+
   /// Checks pointers.
   invariant()
   {
@@ -673,6 +685,8 @@ inout(char)[] slice(inout(char)* begin, inout(char)* end)
   return begin[0..end-begin];
 }
 
+
+
 unittest
 {
   scope msg = new UnittestMsg("Testing struct String.");
@@ -682,6 +696,7 @@ unittest
   assert(S("", 0) == S("")); // String literals are always zero terminated.
   assert(S("abcd", 0) == S("abcd"));
   assert(S("abcd", 'c') == S("ab"));
+  assert(S(0) == S("0") && S(1999) == S("1999"));
 
   // Boolean conversion.
   if (S("is cool")) {}
