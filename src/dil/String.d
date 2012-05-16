@@ -135,7 +135,7 @@ struct StringT(C)
   /// Concatenates x copies of this string.
   S times(size_t x) const
   {
-    auto str = toChars();
+    auto str = array;
     auto slen = str.length;
     C[] result = new C[x * slen];
     for (size_t i, n; i < x; i++, (n += slen))
@@ -208,13 +208,13 @@ struct StringT(C)
   /// Concatenates another string array.
   S opBinary(string op : "~")(const(S) rhs) const
   {
-    return S(toChars() ~ rhs.toChars());
+    return S(array ~ rhs.array);
   }
 
   /// ditto
   S opBinary(string op : "~")(const(C)[] rhs) const
   {
-    return S(toChars() ~ rhs);
+    return S(array ~ rhs);
   }
 
   /// Appends another String.
@@ -280,7 +280,7 @@ struct StringT(C)
   }
 
   /// Returns an array string.
-  @property inout(C)[] toChars() inout
+  @property inout(C)[] array() inout
   {
     return ptr[0..len];
   }
@@ -288,7 +288,7 @@ struct StringT(C)
   /// ditto
   immutable(C)[] toString()
   {
-    return toChars().idup;
+    return array.idup;
   }
 
   /// Calculates a hash value.
@@ -556,7 +556,7 @@ struct StringT(C)
     if (alen == 0)
     {
       C[] result;
-      const bstr = b.toChars();
+      const bstr = b.array;
       const(C)* p = ptr;
 
       while (p < end)
@@ -592,18 +592,18 @@ struct StringT(C)
       if (pa)
       {
         C[] result;
-        const bstr = b.toChars();
+        const bstr = b.array;
         const(C)* p = ptr;
 
         do
         {
           if (pa) // Append previous string?
-            result ~= S(p, pa).toChars();
+            result ~= S(p, pa).array;
           result ~= bstr;
           p = pa + alen; // Skip a.
         } while ((pa = S(p, end).findp(a)) !is null);
         if (p < end)
-          result ~= S(p, end).toChars();
+          result ~= S(p, end).array;
         this = S(result);
       }
     }
