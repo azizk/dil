@@ -53,7 +53,7 @@ hash_t hashOf(cstring str)
   { // Calculate the hash of the remaining characters.
     pstr = cast(typeof(pstr))hptr; // hptr points exactly to the remainder.
   Lonly_remainder:
-    size_t chunk;
+    hash_t chunk;
     while (rem_len--) // Remainder loop.
       chunk = (chunk << 8) | *pstr++;
     hash = hash * 11 + chunk;
@@ -327,7 +327,7 @@ int isidbeg(dchar c) { return isidbeg(cast(char)c); }
 /// ditto
 int isidbeg(uint c) { return isidbeg(cast(char)c); }
 /// Returns: true if c is a D identifier character (only ASCII.)
-int isident(char c) { return ptable[c] & (CP.Alpha | CP.Underscore | CP.Digit); }
+int isident(char c) { return ptable[c] & (CP.Alpha|CP.Underscore|CP.Digit); }
 /// ditto
 int isident(uint c) { return isident(cast(char)c); }
 /// Returns: true if c is a whitespace character.
