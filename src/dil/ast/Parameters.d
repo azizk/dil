@@ -89,6 +89,8 @@ class Parameter : Node
 /// Array of parameters.
 class Parameters : Node
 {
+  StorageClass postSTCs;
+
   this()
   {
     super(NodeCategory.Other);

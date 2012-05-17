@@ -652,7 +652,7 @@ class Parser
       StorageClass postfix_stcs; // const | immutable | @property | ...
       version(D2)
       {
-      postfix_stcs = parseFunctionPostfix();
+      params.postSTCs = postfix_stcs = parseFunctionPostfix();
       if (tparams) // if "(" ConstraintExpr ")"
         constraint = parseOptionalConstraint();
       } // version(D2)
@@ -1486,8 +1486,9 @@ class Parser
       parameters = parseParameterList(); // "(" ParameterList ")"
     else // TODO: Create own class PostBlit?: this "(" this ")"
       require2(T.LParen), skip(T.This), require2(T.RParen);
+    parameters.postSTCs = parseFunctionPostfix();
     // FIXME: |= to storageClass?? Won't this affect other decls?
-    this.storageClass |= parseFunctionPostfix(); // Combine with current stcs.
+    this.storageClass |= parameters.postSTCs; // Combine with current stcs.
     if (tparams) // if "(" ConstraintExpr ")"
       constraint = parseOptionalConstraint();
     auto funcBody = parseFunctionBody();
@@ -3543,17 +3544,15 @@ class Parser
       nT(); // Skip function or delegate keyword.
       Type returnType;
       Parameters parameters;
-      StorageClass stcs;
       if (!tokenIs(T.LBrace))
       {
         if (!tokenIs(T.LParen)) // Optional return type
           returnType = parseBasicTypes();
         parameters = parseParameterList();
         version(D2)
-        stcs = parseFunctionPostfix();
+        parameters.postSTCs = parseFunctionPostfix();
       }
       auto funcBody = parseFunctionBody();
-      // TODO: set/pass stcs.
       e = new FuncLiteralExpr(returnType, parameters, funcBody);
       break;
     case T.Assert:
@@ -3969,7 +3968,7 @@ class Parser
         nT();
         auto parameters = parseParameterList();
         version(D2)
-        auto stcs = parseFunctionPostfix();
+        parameters.postSTCs = parseFunctionPostfix();
         // TODO: add stcs to t.
         if (tok == T.Function)
           t = new FunctionType(t, parameters);
