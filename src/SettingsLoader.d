@@ -122,27 +122,24 @@ class ConfigLoader : SettingsLoader
   static cstring expandVariables(cstring str)
   {
     char[] result;
-    auto p = str.ptr, end = p + str.length;
-    auto pieceBegin = p; // Points to the piece of the string after a variable.
+    const s = String(str);
+    cchar* p = s.ptr, end = s.end;
+    auto pieceBegin = p; // Points past the closing brace '}' of a variable.
 
     while (p+3 < end)
     {
-      if (p[0] == '$' && p[1] == '{')
-      {
-        auto variableBegin = p;
-        while (p < end && *p != '}')
-          p++;
-        if (p is end)
-          break; // Don't expand unterminated variables.
-        result ~= slice(pieceBegin, variableBegin); // Copy previous string.
-        variableBegin += 2; // Skip ${
-        // Get the environment variable and append it to the result.
-        result ~= Environment.get(slice(variableBegin, p));
-        pieceBegin = p + 1; // Point to character after '}'.
-      }
-      p++;
+      auto variableBegin = String(p, end).findp(String("${"));
+      if (!variableBegin)
+        break;
+      auto variableEnd = String(variableBegin + 2, end).findp('}');
+      if (!variableEnd)
+        break; // Don't expand unterminated variables.
+      result ~= slice(pieceBegin, variableBegin); // Copy previous string.
+      // Get the environment variable and append it to the result.
+      result ~= Environment.get(slice(variableBegin + 2, variableEnd));
+      pieceBegin = p = variableEnd + 1; // Point to character after '}'.
     }
-    if (pieceBegin is str.ptr)
+    if (pieceBegin is s.ptr)
       return str; // Return unchanged string.
     if (pieceBegin < end) // Copy end piece.
       result ~= slice(pieceBegin, end);
