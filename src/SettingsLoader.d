@@ -53,25 +53,22 @@ abstract class SettingsLoader
   T getValue(T)(cstring name, bool isOptional = false)
   {
     auto var = mod.lookup(hashOf(name));
+    T value;
     if (!var && isOptional)
-      return T.init;
-    if (!var)
-      // Returning T.init instead of null, because dmd gives an error.
-      return error(mod.firstToken,
-        "variable '{}' is not defined", name), T.init;
-    auto t = var.node.begin;
-    if (!var.isVariable)
-      return error(t,
-        "'{}' is not a variable declaration", name), T.init;
-    auto value = var.to!(VariableSymbol).value;
-    if (!value)
-      return error(t,
-        "'{}' variable has no value set", name), T.init;
-    T val = value.Is!(T); // Try casting to T.
-    if (!val)
-      error(value.begin,
-        "the value of '{}' must be of type {}", name, T.stringof);
-    return val;
+    {}
+    else if (!var)
+      error(mod.firstToken, "variable ‘{}’ is not defined", name);
+    else if (!var.isVariable)
+      error(var.node.begin, "‘{}’ is not a variable declaration", name);
+    else if (auto e = var.to!(VariableSymbol).value)
+    {
+      if ((value = e.Is!(T)) is null) // Try casting to T.
+        error(e.begin,
+          "the value of ‘{}’ must be of type ‘{}’", name, T.stringof);
+    }
+    else
+      error(var.node.begin, "‘{}’ variable has no value set", name);
+    return value;
   }
 
   T castTo(T)(Node n)
@@ -85,7 +82,7 @@ abstract class SettingsLoader
       type = "[]";
     else if(is(T == IntExpr))
       type = "int";
-    error(n.begin, "expression is not of type {}", type);
+    error(n.begin, "expression is not of type ‘{}’", type);
     return null;
   }
 
