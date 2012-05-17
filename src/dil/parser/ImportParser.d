@@ -251,10 +251,10 @@ class ImportParser : Parser
     case T.Invariant:
     version(D2)
     {
-      auto next = token;
-      if (peekAfter(next) == T.LParen)
+      auto next = peekAfter(token);
+      if (next.kind == T.LParen)
       {
-        if (peekAfter(next) != T.RParen)
+        if (peekAfter(next).kind != T.RParen)
           goto case_Declaration;
       }
       else

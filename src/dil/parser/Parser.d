@@ -180,14 +180,14 @@ class Parser
     return next.kind;
   }
 
-  /// Returns the token kind of the token that comes after t.
-  TOK peekAfter(ref Token* t)
+  /// Returns the token that comes after t.
+  Token* peekAfter(Token* t)
   {
     assert(t !is null);
     do
       lexer.peek(t);
     while (t.isWhitespace); // Skip whitespace
-    return t.kind;
+    return t;
   }
 
   /// Consumes the current token if its kind matches k and returns true.
@@ -572,9 +572,8 @@ class Parser
       { // Check for auto return type (template) function.
         // StorageClasses Name
         //  ("(" TemplateParameterList ")")? "(" ParameterList ")"
-        auto peek_token = token;
-        peekAfter(peek_token); // Move to the next token, after the Identifier.
-        next_kind = skipParens(peek_token, T.RParen);
+        auto peek_token = peekAfter(token); // Skip the Identifier.
+        next_kind = skipParens(peek_token, T.RParen).kind;
         if (next_kind == T.LParen)
         {
           name = token;
@@ -1216,13 +1215,13 @@ class Parser
     version(D2)
     {
     assert(tokenIs(T.Enum));
-    auto next = token;
-    auto kind = peekAfter(next);
+    auto next = peekAfter(token);
+    auto kind = next.kind;
     if (kind == T.Colon || kind == T.LBrace)
       return false; // Anonymous enum.
     else if (kind == T.Identifier)
     {
-      kind = peekAfter(next);
+      kind = peekAfter(next).kind;
       if (kind == T.Colon || kind == T.LBrace || kind == T.Semicolon)
         return false; // Named enum.
     }
@@ -3988,45 +3987,40 @@ class Parser
   /// Returns true if the token after the closing parenthesis
   /// matches the searched kind.
   /// Params:
-  ///   kind = The kind of token to test for.
+  ///   kind = The token kind to test for.
   bool tokenAfterParenIs(TOK kind)
   {
-    auto peek_token = token;
-    return tokenAfterParenIs(kind, peek_token);
+    assert(tokenIs(T.LParen));
+    return skipParens(token, T.RParen).kind == kind;
   }
 
-  /// ditto
-  bool tokenAfterParenIs(TOK kind, ref Token* peek_token)
-  {
-    assert(peek_token !is null && peek_token.kind == T.LParen);
-    return skipParens(peek_token, T.RParen) == kind;
-  }
-
-  /// Returns the kind of the token behind the closing bracket.
+  /// Returns the token kind behind the closing bracket.
   TOK tokenAfterBracket(TOK closing)
   {
     assert(tokenIs(T.LBracket) || tokenIs(T.LBrace));
-    auto peek_token = token;
-    return skipParens(peek_token, closing);
+    return skipParens(token, closing).kind;
   }
 
-  /// Skips to the token behind the 'closing' token.
+  /// Skips to the token behind the closing parenthesis token.
   /// Takes nesting into account.
   /// Params:
-  ///   peek_token = Opening token to start from; used to peek further.
-  ///   closing = Kind of the closing token.
-  /// Returns: The kind of the searched token or TOK.EOF.
-  TOK skipParens(ref Token* peek_token, TOK closing)
+  ///   peek_token = Opening token to start from.
+  ///   closing = Matching closing token kind.
+  /// Returns: The token searched for, or the EOF token.
+  Token* skipParens(Token* peek_token, TOK closing)
   {
     assert(peek_token !is null);
-    uint level = 1;
-    TOK opening = peek_token.kind, current_kind;
-    while ((current_kind = peekAfter(peek_token)) != T.EOF)
-      if (current_kind == opening)
+    size_t level = 1;
+    TOK opening = peek_token.kind;
+    while ((peek_token = peekAfter(peek_token)).kind != T.EOF)
+      if (peek_token.kind == opening)
         ++level;
-      else if (current_kind == closing && --level == 0)
-        return peekAfter(peek_token); // Closing token found.
-    return T.EOF;
+      else
+      if (peek_token.kind == closing && --level == 0) {
+        peek_token = peekAfter(peek_token); // Closing token found.
+        break;
+      }
+    return peek_token;
   }
 
   /// Parse the array types after the declarator (C-style.) E.g.: int a[]
