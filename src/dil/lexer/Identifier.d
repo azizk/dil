@@ -4,8 +4,8 @@
 module dil.lexer.Identifier;
 
 import dil.lexer.TokensEnum,
-       dil.lexer.IdentsEnum,
-       dil.lexer.Funcs : hashOf;
+       dil.lexer.IdentsEnum;
+import dil.String : hashOf;
 import common;
 
 /// Represents an identifier as defined in the D specs.

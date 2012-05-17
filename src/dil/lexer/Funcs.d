@@ -4,7 +4,7 @@
 module dil.lexer.Funcs;
 
 import dil.Unicode : scanUnicodeAlpha, isUnicodeAlpha;
-import dil.String;
+import dil.String : slice;
 import common;
 
 const char[3] LS = "\u2028"; /// Unicode line separator.

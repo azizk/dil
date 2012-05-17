@@ -4,9 +4,9 @@
 module dil.Compilation;
 
 import dil.semantic.Types;
-import dil.lexer.Funcs : hashOf;
-import dil.Tables;
-import dil.Diagnostics;
+import dil.String : hashOf;
+import dil.Tables,
+       dil.Diagnostics;
 import common;
 
 /// A group of settings relevant to the compilation process.

@@ -8,12 +8,12 @@ import dil.ast.Node,
        dil.ast.Declarations;
 import dil.semantic.Module,
        dil.semantic.Package;
-import dil.parser.ImportParser,
-       dil.lexer.Funcs : hashOf;
+import dil.parser.ImportParser;
 import dil.SourceText,
        dil.Compilation,
        dil.ModuleManager,
-       dil.Diagnostics;
+       dil.Diagnostics,
+       dil.String;
 import util.Path;
 import Settings;
 import common;

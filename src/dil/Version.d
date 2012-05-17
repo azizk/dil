@@ -3,7 +3,7 @@
 /// $(Maturity high)
 module dil.Version;
 
-import dil.lexer.Funcs : itoactf;
+import dil.String : itoactf;
 
 private char[] toString(uint x, uint pad)
 {

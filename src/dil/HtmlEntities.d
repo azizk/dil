@@ -3,7 +3,6 @@
 /// $(Maturity very high)
 module dil.HtmlEntities;
 
-import dil.lexer.Funcs : hashOfCTF, hashOf;
 import dil.String;
 import common;
 

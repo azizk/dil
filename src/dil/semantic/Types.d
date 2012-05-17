@@ -8,11 +8,9 @@ import dil.semantic.Symbol,
 import dil.lexer.Identifier,
        dil.lexer.Keywords,
        dil.lexer.IdTable,
-       dil.lexer.TokensEnum,
-       dil.lexer.Funcs : hashOf;
+       dil.lexer.TokensEnum;
 import dil.Enums,
        dil.String;
-
 import common;
 
 /// The base type for all type structures.

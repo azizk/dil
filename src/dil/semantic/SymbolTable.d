@@ -4,8 +4,8 @@
 module dil.semantic.SymbolTable;
 
 import dil.semantic.Symbol,
-       dil.lexer.Identifier,
-       dil.lexer.Funcs : hashOf;
+       dil.lexer.Identifier;
+import dil.String;
 import common;
 
 /// Maps an identifier string to a Symbol.
