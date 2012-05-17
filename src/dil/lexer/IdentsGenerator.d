@@ -3,7 +3,7 @@
 /// $(Maturity high)
 module dil.lexer.IdentsGenerator;
 
-import dil.lexer.Funcs;
+import dil.String;
 
 /// Table of predefined identifiers.
 ///
@@ -188,7 +188,7 @@ private struct Ids_ {static const:\n" ~ struct_literals ~ "}\n
 " ~ ident_pointers ~ "
 Identifier*[] allIds()
 {
-  return (&" ~ firstIdent ~ ")[0.." ~ StringCTF(len/2) ~ "];
+  return (&" ~ firstIdent ~ ")[0.." ~ itoactf(len/2) ~ "];
 }";
   return code;
 }

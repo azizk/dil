@@ -3,11 +3,11 @@
 /// $(Maturity high)
 module dil.Version;
 
-import dil.lexer.Funcs : StringCTF;
+import dil.lexer.Funcs : itoactf;
 
 private char[] toString(uint x, uint pad)
 {
-  char[] str = StringCTF(x);
+  char[] str = itoactf(x);
   if (pad > str.length)
     for (size_t i = pad-str.length; i; i--)
       str = "0" ~ str;
@@ -27,6 +27,6 @@ immutable VERSION_MINOR = 0;
 immutable VERSION_SUFFIX = "";
 /// The compiler version formatted as a string.
 immutable VERSION =
-  (StringCTF(VERSION_MAJOR)~"."~toString(VERSION_MINOR, 3)~VERSION_SUFFIX).idup;
+  (itoactf(VERSION_MAJOR)~"."~toString(VERSION_MINOR, 3)~VERSION_SUFFIX).idup;
 /// The name of the compiler.
 immutable VENDOR = "DIL";

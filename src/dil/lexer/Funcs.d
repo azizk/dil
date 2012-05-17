@@ -7,27 +7,6 @@ import dil.Unicode : scanUnicodeAlpha, isUnicodeAlpha;
 import dil.String;
 import common;
 
-/// Converts an unsigned integer to a string (CTF version.)
-char[] StringCTF(ulong x)
-{
-  char[] str;
-  do
-    str = cast(char)('0' + (x % 10)) ~ str;
-  while (x /= 10);
-  return str;
-}
-
-/// Encodes a string's characters with hexadecimal digits.
-char[] StringHex(cstring str)
-{
-  const hexdigits = "0123456789abcdef";
-  auto inhex = new char[str.length*2]; // Reserve space.
-  auto p = inhex.ptr;
-  foreach (ubyte c; str)
-    (*p = hexdigits[c >> 4]), (*++p = hexdigits[c & 0xF]);
-  return inhex;
-}
-
 /// Calculates a hash value for str.
 /// Note: The value will differ between 32bit and 64bit systems.
 /// It will also differ between little and big endian systems.

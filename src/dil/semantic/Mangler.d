@@ -6,7 +6,6 @@ module dil.semantic.Mangler;
 import dil.ast.Visitor,
        dil.ast.Node,
        dil.ast.Expressions;
-import dil.lexer.Funcs : StringHex;
 import dil.semantic.TypesEnum;
 import dil.i18n.Messages;
 import dil.Float,
@@ -137,8 +136,9 @@ override:
       break;
     default: assert(0);
     }
+    auto s = String(utf8str);
     // Finally append the mangled string.
-    text ~= mc ~ itoa(utf8str.length) ~ "_" ~ StringHex(utf8str);
+    text ~= mc ~ itoa(s.len) ~ "_" ~ s.toHex().array;
   }
 
   void visit(ArrayLiteralExpr e)

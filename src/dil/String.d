@@ -303,6 +303,17 @@ struct StringT(C)
     return array.idup;
   }
 
+  /// Encodes the byte characters with hexadecimal digits.
+  S toHex(bool lowercase = true) const
+  {
+    immutable hexdigits = lowercase ? "0123456789abcdef" : "0123456789ABCDEF";
+    auto result = S(new C[len * 2]); // Reserve space.
+    auto pr = result.ptr;
+    for (const(C)* p = ptr; p < end; p++)
+      (*pr++ = hexdigits[*p >> 4]), (*pr++ = hexdigits[*p & 0x0F]);
+    return result;
+  }
+
   /// Calculates a hash value.
   /// Note: The value will differ between 32bit and 64bit systems,
   /// and also between little and big endian systems.
@@ -691,6 +702,16 @@ char[] itoa(ulong x)
   return String(x).array;
 }
 
+/// Converts x to a string array (CTF version.)
+char[] itoactf(ulong x)
+{
+  char[] str;
+  do
+    str = cast(char)('0' + (x % 10)) ~ str;
+  while (x /= 10);
+  return str;
+}
+
 unittest
 {
   scope msg = new UnittestMsg("Testing struct String.");
@@ -794,4 +815,8 @@ unittest
   assert(S("abcdefg").endsWith("efg"));
   assert(S("abcdefg").endsWith([" ", "efg"]));
   assert(!S("fg").endsWith("efg"));
+
+  // Converting to hex string.
+  assert(S("äöü").toHex() == S("c3a4c3b6c3bc"));
+  assert(S("äöü").toHex(false) == S("C3A4C3B6C3BC"));
 }

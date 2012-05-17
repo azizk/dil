@@ -3,7 +3,8 @@
 /// $(Maturity very high)
 module dil.HtmlEntities;
 
-import dil.lexer.Funcs : StringCTF, hashOfCTF, hashOf;
+import dil.lexer.Funcs : hashOfCTF, hashOf;
+import dil.String;
 import common;
 
 /// A named HTML entity.
@@ -2201,8 +2202,8 @@ char[] generateHashAndValueArrays()
          valuesText = "private static immutable dchar[] values = [".dup;
   foreach (i, hash; hashes)
   {
-    hashesText ~= StringCTF(hash) ~ "UL,";
-    valuesText ~= StringCTF(values[i]) ~ ",";
+    hashesText ~= itoactf(hash) ~ "UL,";
+    valuesText ~= itoactf(values[i]) ~ ",";
   }
   hashesText ~= "];".dup;
   valuesText ~= "];".dup;
