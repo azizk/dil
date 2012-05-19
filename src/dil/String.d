@@ -66,6 +66,12 @@ struct StringT(C)
     end = p;
   }
 
+  /// Constructs from a single character.
+  this(ref inout(C) c) inout
+  {
+    this(&c, &c + 1);
+  }
+
   /// Constructs from an unsigned long.
   this(ulong x) inout
   {
@@ -543,7 +549,7 @@ struct StringT(C)
   /// ditto
   inout(S)[] split(const(C) c) inout
   {
-    return split(S(&c, (&c)+1));
+    return split(S(c));
   }
 
   /// ditto
@@ -654,13 +660,13 @@ struct StringT(C)
   /// ditto
   ref S sub(C a, const(C)[] b)
   {
-    return sub(S(&a, (&a)+1), S(b));
+    return sub(S(a), S(b));
   }
 
   /// ditto
   S sub(C a, const(C)[] b) const
   {
-    return dup.sub(S(&a, (&a)+1), S(b));
+    return dup.sub(S(a), S(b));
   }
 
   /// Returns itself reversed.
