@@ -282,10 +282,10 @@ class Highlighter
       print.format(tags.HLine, lineText);
       break;
     case TOK.Illegal:
-      print.format(tags.Illegal, token.text());
+      print.format(tags.Illegal, token.text);
       break;
     case TOK.Newline:
-      print.format(tags.Newline, token.text());
+      print.format(tags.Newline, token.text);
       break;
     case TOK.EOF:
       print(tags.EOF);

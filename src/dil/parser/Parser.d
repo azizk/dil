@@ -206,7 +206,7 @@ class Parser
   /// and then moves to the next token.
   void skip()(TOK expectedKind)
   {
-    assert(tokenIs(expectedKind) /+|| *(int*).init+/, token.text());
+    assert(tokenIs(expectedKind) /+|| *(int*).init+/, token.text);
     nT();
   }
 
@@ -3679,7 +3679,7 @@ class Parser
         else if (token.kind == T.EqlGreater) // "(" ... ")" "=>" ...
           fstmt = parseLambdaExprBody(parameters);
         else
-          error(token, MID.ExpectedFunctionBody, token.text());
+          error(token, MID.ExpectedFunctionBody, token.text);
         e = new FuncLiteralExpr(null, parameters, fstmt);
       }
       else
@@ -4253,7 +4253,7 @@ class Parser
       else if (defValue !is null) // Parsed a defValue previously?
         error(name ? name : type.begin, // Position.
           MID.ExpectedParamDefValue,
-          name ? name.text() : ""); // Name.
+          name ? name.text : ""); // Name.
 
       if (consumed(T.Dot3))
       {

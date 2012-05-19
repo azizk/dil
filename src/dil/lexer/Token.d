@@ -113,7 +113,7 @@ struct Token
 //   static assert(TokenValue.sizeof == (void*).sizeof);
 
   /// Returns the text of the token.
-  cstring text()
+  @property cstring text()
   {
     assert(end && start <= end);
     return start[0 .. end - start];

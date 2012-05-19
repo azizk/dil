@@ -89,7 +89,7 @@ static:
   { // Ddoc: '/++' '/**' '///'
     return token.kind == TOK.Comment && token.start[1] == token.start[2] &&
       // Exclude special cases: '/++/' and '/**/'
-      (isLineComment(token) ? 1 : token.text().length > 4);
+      (isLineComment(token) ? 1 : token.text.length > 4);
   }
 
   /// Returns the surrounding documentation comment tokens.

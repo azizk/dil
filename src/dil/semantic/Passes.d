@@ -1310,7 +1310,7 @@ override
     {
       auto whichOp = e.lhs.type.isBaseComplex() ? e.lhs.begin : e.rhs.begin;
       error(whichOp, "the operator '{}' is undefined for complex numbers",
-            e.optok.text());
+            e.optok.text);
     }
     e.type = Types.Bool;
     return e;
