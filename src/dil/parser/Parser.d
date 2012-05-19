@@ -883,6 +883,18 @@ class Parser
     assert(0);
   }
 
+  /// Returns true if t points to a postfix attribute.
+  bool isFunctionPostfix(Token* t)
+  {
+    switch (t.kind)
+    {
+    case T.Const, T.Immutable, T.Inout, T.Nothrow, T.Shared, T.Pure, T.At:
+      return true;
+    default:
+    }
+    return false;
+  }
+
   /// $(BNF ExternLinkageType := extern "(" LinkageType ")"
   ///LinkageType := "C" | "C" "++" | "D" | "Windows" | "Pascal" | "System")
   LinkageType parseExternLinkageType()
@@ -3414,6 +3426,29 @@ class Parser
     return set(e, begin);
   }
 
+  /// $(BNF LambdaExpr := ParameterList ParamsPostfix "=>" LambdaBody
+  ////LambdaBody := AssignExpr)
+  FuncBodyStmt parseLambdaExprBody(Parameters params)
+  {
+    skip(T.EqlGreater);
+    auto begin = token;
+    auto ae = parseAssignExpr();
+    auto estmt = set(new ExpressionStmt(ae), begin);
+    return set(new FuncBodyStmt(estmt, null, null, null), begin);
+  }
+
+  /// $(BNF LambdaExpr := Identifier "=>" AssignExpr)
+  Expression parseSingleParamLambdaExpr()
+  {
+    auto begin = token;
+    skip(T.Identifier);
+    auto params = set(new Parameters(), begin);
+    auto param = new Parameter(StorageClass.None, null, null, token, null);
+    params ~= set(param, begin);
+    auto fstmt = parseLambdaExprBody(params);
+    return set(new FuncLiteralExpr(null, params, fstmt), begin);
+  }
+
   /// $(BNF PrimaryExpr := ... | ModuleScopeExpr
   ////ModuleScopeExpr := ".")
   Expression parsePrimaryExpr()
@@ -3423,7 +3458,10 @@ class Parser
     switch (token.kind)
     {
     case T.Identifier:
-      e = parseIdentifierExpr();
+      if (peekNext() == T.EqlGreater)
+        e = parseSingleParamLambdaExpr();
+      else
+        e = parseIdentifierExpr();
       return e;
     case T.Typeof:
       e = new TypeofExpr(parseTypeofType());
@@ -3629,11 +3667,20 @@ class Parser
       e = new IsExpr(type, ident, opTok, specTok, specType, tparams);
       break;
     case T.LParen:
-      if (tokenAfterParenIs(T.LBrace)) // Check for "(...) {"
-      { // ( ParameterList ) FunctionBody
-        auto parameters = parseParameterList();
-        auto funcBody = parseFunctionBody();
-        e = new FuncLiteralExpr(null, parameters, funcBody);
+      auto t = skipParens(token, T.RParen);
+      if (isFunctionPostfix(t) || // E.g.: "(" int "a" ")" pure
+          t.kind == T.LBrace || t.kind == T.EqlGreater) // ("{" | "=>")
+      {
+        auto parameters = parseParameterList(); // "(" ParameterList ")"
+        parameters.postSTCs = parseFunctionPostfix(); // Optional attributes.
+        FuncBodyStmt fstmt;
+        if (token.kind == T.LBrace) // "(" ... ")" "{" ...
+          fstmt = parseFunctionBody();
+        else if (token.kind == T.EqlGreater) // "(" ... ")" "=>" ...
+          fstmt = parseLambdaExprBody(parameters);
+        else
+          error(token, MID.ExpectedFunctionBody, token.text());
+        e = new FuncLiteralExpr(null, parameters, fstmt);
       }
       else
       { // ( Expression )
