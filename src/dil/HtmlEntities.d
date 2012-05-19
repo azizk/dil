@@ -2252,10 +2252,8 @@ unittest
   alias entity2Unicode f;
 
   // Test extreme values.
-  assert(hashOf("") < hashes[0]);
-  assert(f("") == 0);
-  assert(hashOf("\xFF\xFF\xFF\xFF") > hashes[$-1]);
-  assert(f("\xFF\xFF\xFF\xFF") == 0);
+  assert(hashes[0] != 0 && f(hashes[0] - 1) == 0);
+  assert(hashes[$-1] != hash_t.max && f(hashes[$-1] + 1) == 0);
 
   // Test all entities in the Entity array.
   foreach (entity; namedEntities)
