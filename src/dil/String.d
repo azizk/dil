@@ -173,6 +173,31 @@ struct StringT(C)
     return n;
   }
 
+  /// Compares two Strings ignoring case (only ASCII.)
+  int icmp(const(S) s) const
+  {
+    auto n = (len <= s.len) ? len : s.len;
+    const(C)* p = ptr, p2 = s.ptr;
+    for (; n; n--, p++, p2++)
+      if (tolower(*p) != tolower(*p2))
+        return *p - *p2;
+    if (len != s.len)
+      n = len - s.len;
+    return n;
+  }
+
+  /// Returns the lower-case version of c.
+  static inout(C) tolower(inout(C) c)
+  {
+    return 'A' <= c && c <= 'Z' ? cast(typeof(c))(c - 0x20) : c;
+  }
+
+  /// Returns the upper-case version of c.
+  static inout(C) toupper(inout(C) c)
+  {
+    return 'a' <= c && c <= 'z' ? cast(typeof(c))(c + 0x20) : c;
+  }
+
   /// Concatenates x copies of this string.
   S times(size_t x) const
   {
