@@ -91,6 +91,16 @@ struct StringT(C)
     if (ptr is null) assert(end is null);
   }
 
+  /// Generates a constructor expression when arg is not of type StringT.
+  static string ConvertToS(T)(string arg)
+  {
+    static if (is(T : const(S)))
+      auto expr = arg;
+    else
+      auto expr = "S("~arg~")";
+    return expr;
+  }
+
   /// Returns itself.
   ref inout(S) opSlice() inout
   {
@@ -559,7 +569,7 @@ struct StringT(C)
   }
 
   /// Substitutes a with b.
-  ref S sub(C a, C b)
+  ref S sub_(C a, C b)
   {
     auto p = ptr;
     for (; p < end; p++)
@@ -569,13 +579,13 @@ struct StringT(C)
   }
 
   /// ditto
-  S sub(C a, C b) const
+  S sub_(C a, C b) const
   {
-    return dup.sub(a, b);
+    return dup.sub_(a, b);
   }
 
   /// ditto
-  ref S sub(const(S) a, const(S) b)
+  ref S sub_(const(S) a, const(S) b)
   {
     auto alen = a.len, blen = b.len;
 
@@ -595,7 +605,7 @@ struct StringT(C)
     }
     else
     if (alen == 1 && blen == 1)
-      sub(a[0], b[0]);
+      sub_(a[0], b[0]);
     else
     if (blen == 0)
     {
@@ -640,33 +650,23 @@ struct StringT(C)
   }
 
   /// ditto
-  S sub(const(S) a, const(S) b) const
+  S sub_(const(S) a, const(S) b) const
   {
-    return dup.sub(a, b);
+    return dup.sub_(a, b);
   }
 
   /// ditto
-  ref S sub(const(C)[] a, const(C)[] b)
+  ref S sub(A, B)(A a, B b)
   {
-    return sub(S(a), S(b));
+    auto aS = mixin(ConvertToS!(A)("a"));
+    auto bS = mixin(ConvertToS!(B)("b"));
+    return sub_(aS, bS);
   }
 
   /// ditto
-  S sub(const(C)[] a, const(C)[] b) const
+  S sub(A, B)(A a, B b) const
   {
-    return sub(S(a), S(b));
-  }
-
-  /// ditto
-  ref S sub(C a, const(C)[] b)
-  {
-    return sub(S(a), S(b));
-  }
-
-  /// ditto
-  S sub(C a, const(C)[] b) const
-  {
-    return dup.sub(S(a), S(b));
+    return dup.sub!(A, B)(a, b);
   }
 
   /// Returns itself reversed.
