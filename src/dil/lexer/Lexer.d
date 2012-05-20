@@ -2322,16 +2322,9 @@ class Lexer
   /// underscores are removed.
   static char[] copySansUnderscores(cchar* begin, cchar* end)
   {
-    assert(begin && begin < end);
-    auto str = new char[end-begin+1]; // +1 for '\0'.
-    auto p = begin;
-    auto s = str.ptr;
-    for (; p < end; ++p)
-      if (*p != '_')
-        *s++ = *p;
-    *s = 0;
-    str.length = s - str.ptr +1; // Adjust length.
-    return str;
+    auto s = String(begin, end + 1).dup;
+    s[-1] = 0;
+    return s.sub('_', "").array;
   }
 
   /// Scans a floating point number literal.
