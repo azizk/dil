@@ -186,18 +186,6 @@ struct StringT(C)
     return n;
   }
 
-  /// Returns the lower-case version of c.
-  static inout(C) tolower(inout(C) c)
-  {
-    return 'A' <= c && c <= 'Z' ? cast(typeof(c))(c - 0x20) : c;
-  }
-
-  /// Returns the upper-case version of c.
-  static inout(C) toupper(inout(C) c)
-  {
-    return 'a' <= c && c <= 'z' ? cast(typeof(c))(c + 0x20) : c;
-  }
-
   /// Concatenates x copies of this string.
   S times(size_t x) const
   {
@@ -355,6 +343,60 @@ struct StringT(C)
   immutable(C)[] toString()
   {
     return array.idup;
+  }
+
+  /// Return true if lower-case.
+  static bool islower(inout(C) c)
+  {
+    return 'a' <= c && c <= 'z';
+  }
+
+  /// Return true if upper-case.
+  static bool isupper(inout(C) c)
+  {
+    return 'A' <= c && c <= 'Z';
+  }
+
+  /// Returns the lower-case version of c.
+  static inout(C) tolower(inout(C) c)
+  {
+    return isupper(c) ? cast(typeof(c))(c + 0x20) : c;
+  }
+
+  /// Returns the upper-case version of c.
+  static inout(C) toupper(inout(C) c)
+  {
+    return islower(c) ? cast(typeof(c))(c - 0x20) : c;
+  }
+
+  /// Converts to lower-case (only ASCII.)
+  ref S tolower()
+  {
+    auto p = ptr;
+    for (; p < end; p++)
+      *p = tolower(*p);
+    return this;
+  }
+
+  /// ditto
+  S tolower() const
+  {
+    return dup.tolower();
+  }
+
+  /// Converts to upper-case (only ASCII.)
+  ref S toupper()
+  {
+    auto p = ptr;
+    for (; p < end; p++)
+      *p = toupper(*p);
+    return this;
+  }
+
+  /// ditto
+  S toupper() const
+  {
+    return dup.toupper();
   }
 
   /// Encodes the byte characters with hexadecimal digits.
@@ -912,4 +954,8 @@ unittest
   // Converting to hex string.
   assert(S("äöü").toHex() == S("c3a4c3b6c3bc"));
   assert(S("äöü").toHex(false) == S("C3A4C3B6C3BC"));
+
+  // Case conversion.
+  assert(S("^agmtz$").toupper() == S("^AGMTZ$"));
+  assert(S("^AGMTZ$").tolower() == S("^agmtz$"));
 }
