@@ -159,20 +159,18 @@ struct StringT(C)
     return cast(bool)this == b;
   }
 
-  /// Compares the bytes of two Strings.
+  /// Compares the chars of two Strings.
+  /// Returns: 0 if borth are equal.
   int opCmp(const(S) s) const
   {
-    auto l = len, l2 = s.len;
-    if (l != l2)
-      return l < l2 ? -1 : 1;
+    auto n = (len <= s.len) ? len : s.len;
     const(C)* p = ptr, p2 = s.ptr;
-    for (; p < end; p++, p2++)
-      if (*p < *p2)
-        return -1;
-      else
-      if (*p > *p2)
-        return  1;
-    return 0;
+    for (; n; n--, p++, p2++)
+      if (*p != *p2)
+        return *p - *p2;
+    if (len != s.len)
+      n = len - s.len;
+    return n;
   }
 
   /// Concatenates x copies of this string.
