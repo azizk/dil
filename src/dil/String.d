@@ -107,14 +107,23 @@ struct StringT(C)
     return this;
   }
 
+  /// Returns a pointer from an index number.
+  /// When x is negative it is subtracted from the end pointer.
+  inout(C)* indexPtr(ssize_t x) inout
+  {
+    auto p = x < 0 ? end + x : ptr + x;
+    assert(ptr <= p && p < end);
+    return p;
+  }
+
   /// Returns a slice.
   /// Params:
   ///   x = Start index. Negative values are subtracted from the end.
   ///   y = End index. Negative values are subtracted from the end.
   inout(S) opSlice(ssize_t x, ssize_t y) inout
   {
-    return *new S(x < 0 ? end + x : ptr + x,
-                  y < 0 ? end + y : ptr + y);
+    alias inout(StringT) S;
+    return S(indexPtr(x), indexPtr(y));
   }
 
   /// Returns the character at position x.
@@ -122,8 +131,14 @@ struct StringT(C)
   ///   x = Character index. Negative values are subtracted from the end.
   inout(C) opIndex(ssize_t x) inout
   {
-    assert(x < 0 ? end + x >= ptr : ptr + x < end);
-    return x < 0 ? end[x] : ptr[x];
+    return *indexPtr(x);
+  }
+
+  /// Assigns c at position x.
+  ref S opIndexAssign(C c, ssize_t x)
+  {
+    *indexPtr(x) = c;
+    return this;
   }
 
   /// Compares the bytes of two Strings for exact equality.
