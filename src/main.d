@@ -20,7 +20,8 @@ import dil.semantic.Module,
 import dil.code.Interpreter;
 import dil.translator.German;
 import dil.i18n.Messages;
-import dil.Version,
+import dil.String,
+       dil.Version,
        dil.Diagnostics,
        dil.SourceText,
        dil.Compilation,
@@ -46,7 +47,6 @@ import tango.io.device.File;
 import tango.text.Util : split;
 import tango.text.Regex : Regex;
 import tango.time.StopWatch;
-import tango.text.Ascii : icompare, toUpper;
 import tango.core.Array : sort;
 
 debug
@@ -191,7 +191,7 @@ void main(cstring[] args)
     op.add("-m", cmd.modsTxtPath);
     op.parseArgs();
     foreach (arg; op.argv)
-      if (arg.length > 6 && icompare(arg[$-5..$], ".ddoc") == 0)
+      if (arg.length > 6 && String(arg[$-5..$]).icmp(String(".ddoc")) == 0)
         cmd.macroPaths ~= arg;
       else
         cmd.filePaths ~= arg;
@@ -437,7 +437,7 @@ void main(cstring[] args)
     if (retrieve_settings.length) // Print select settings.
       foreach (name; retrieve_settings)
       {
-        if (auto psetting = (name = toUpper(name.dup)) in settings)
+        if (auto psetting = (name = String(name).toupper().array) in settings)
           Stdout.formatln("{}={}", name, *psetting);
       }
     else // Print all settings.
