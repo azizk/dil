@@ -174,7 +174,7 @@ struct StringT(C)
   }
 
   /// Compares two Strings ignoring case (only ASCII.)
-  int icmp(const(S) s) const
+  int icmp_(const(S) s) const
   {
     auto n = (len <= s.len) ? len : s.len;
     const(C)* p = ptr, p2 = s.ptr;
@@ -184,6 +184,13 @@ struct StringT(C)
     if (len != s.len)
       n = len - s.len;
     return n;
+  }
+
+  /// ditto
+  int icmp(T)(T s) const
+  {
+    auto s_ = mixin(ConvertToS!(T)("s"));
+    return icmp_(s_);
   }
 
   /// Concatenates x copies of this string.
