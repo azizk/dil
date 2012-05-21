@@ -5,7 +5,7 @@ module dil.lexer.Identifier;
 
 import dil.lexer.TokensEnum,
        dil.lexer.IdentsEnum;
-import dil.String : hashOf;
+import dil.String;
 import common;
 
 /// Represents an identifier as defined in the D specs.
@@ -55,8 +55,7 @@ const:
   /// Returns true if this id starts with prefix.
   bool startsWith(string prefix)
   {
-    auto plen = prefix.length;
-    return str.length > plen && str[0..plen] == prefix;
+    return String(str).startsWith(prefix);
   }
 }
 // pragma(msg, Identifier.sizeof.stringof);

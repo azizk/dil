@@ -7,7 +7,8 @@ import dil.lexer.Identifier,
        dil.lexer.IdTable,
        dil.lexer.Funcs,
        dil.lexer.Token;
-import dil.Location;
+import dil.Location,
+       dil.String;
 import dil.Float : Float;
 import common;
 
