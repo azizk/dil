@@ -9,7 +9,8 @@ import dil.semantic.Module,
 import dil.lexer.Token;
 import dil.i18n.Messages;
 import dil.Compilation,
-       dil.Diagnostics;
+       dil.Diagnostics,
+       dil.String;
 import util.Path;
 import common;
 

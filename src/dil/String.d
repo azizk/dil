@@ -782,6 +782,13 @@ inout(char)[] slice(inout(char)* begin, inout(char)* end)
   return S(begin, end).array;
 }
 
+/// Replaces a with b in str.
+/// Returns: A copy.
+cstring replace(cstring str, char a, char b)
+{
+  return String(str).sub_(a, b).array;
+}
+
 /// Converts x to a string array.
 char[] itoa(ulong x)
 {

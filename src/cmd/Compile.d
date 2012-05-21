@@ -17,7 +17,8 @@ import dil.doc.Doc;
 import dil.i18n.Messages;
 import dil.Compilation,
        dil.Diagnostics,
-       dil.ModuleManager;
+       dil.ModuleManager,
+       dil.String;
 import common;
 
 /// The compile command.

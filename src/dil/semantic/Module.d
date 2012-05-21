@@ -14,7 +14,8 @@ import dil.i18n.Messages;
 import dil.Compilation,
        dil.Location,
        dil.Diagnostics,
-       dil.SourceText;
+       dil.SourceText,
+       dil.String;
 import util.Path;
 import common;
 

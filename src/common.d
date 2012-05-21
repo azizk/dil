@@ -32,17 +32,6 @@ static this()
   Printfln = &Stdout.formatln;
 }
 
-/// Replaces a with b in str.
-/// Returns: A copy.
-cstring replace(cstring str, char a, char b)
-{
-  auto tmp = str.dup;
-  foreach (ref c; tmp)
-    if (c == a)
-      c = b;
-  return tmp;
-}
-
 version(unittest)
 {
 /// Writes a message to stdout.
