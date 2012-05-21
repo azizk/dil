@@ -193,6 +193,13 @@ struct StringT(C)
     return icmp_(s_);
   }
 
+  /// Compares two Strings ignoring case for equality (only ASCII.)
+  bool ieql(T)(T s) const
+  {
+    auto s_ = mixin(ConvertToS!(T)("s"));
+    return icmp_(s_) == 0;
+  }
+
   /// Concatenates x copies of this string.
   S times(size_t x) const
   {
