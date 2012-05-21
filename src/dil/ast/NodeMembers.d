@@ -5,11 +5,10 @@ module dil.ast.NodeMembers;
 
 import dil.ast.NodesEnum;
 
-private alias NodeKind N;
-
 /// CTF: Returns a table of Node class members as a string.
 char[] genMembersTable()
 {
+  alias NodeKind N;
   string[][NodeClassNames.length] t;
 
   t[N.CompoundDecl] = ["decls[]"];

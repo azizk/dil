@@ -104,4 +104,4 @@ char[] genCopyCode(NodeKind nodeKind)
   return code;
 }
 
-// pragma(msg, genCopyCode("ArrayType"));
+// pragma(msg, genCopyCode(NodeKind.ArrayType));
