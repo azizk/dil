@@ -537,6 +537,9 @@ Lis:
 
 unittest
 {
+  import common;
+  scope msg = new UnittestMsg("Testing function isUniAlpha().");
+
   // Check correctness of the ranges.
   foreach (i, range; uniAlphaTable)
   {
