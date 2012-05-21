@@ -30,7 +30,6 @@ import SettingsLoader;
 import Settings;
 import common;
 
-import tango.text.Ascii : toUpper;
 import tango.text.Regex : Regex;
 import tango.time.Clock : Clock;
 import tango.io.device.File;

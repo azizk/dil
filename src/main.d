@@ -191,7 +191,7 @@ void main(cstring[] args)
     op.add("-m", cmd.modsTxtPath);
     op.parseArgs();
     foreach (arg; op.argv)
-      if (arg.length > 6 && String(arg[$-5..$]).icmp(String(".ddoc")) == 0)
+      if (arg.length > 6 && String(arg[$-5..$]).ieql(".ddoc"))
         cmd.macroPaths ~= arg;
       else
         cmd.filePaths ~= arg;

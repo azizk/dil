@@ -17,7 +17,6 @@ import common;
 import tango.io.model.IFile;
 import tango.io.Path : pathNormalize = normalize;
 import tango.core.Array : lbound, sort;
-import tango.text.Ascii : icompare;
 import tango.sys.Environment;
 
 alias FileConst.PathSeparatorChar dirSep;
@@ -260,7 +259,7 @@ class ModuleManager
   /// Compares symbol names ignoring case.
   static bool compareSymbolNames(Symbol a, Symbol b)
   {
-    return icompare(a.name.str, b.name.str) < 0;
+    return String(a.name.str).icmp(b.name.str) < 0;
   }
 
   /// Sorts the the subpackages and submodules of pckg.

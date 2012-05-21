@@ -6,10 +6,9 @@ module dil.doc.Doc;
 import dil.doc.Parser;
 import dil.ast.Node;
 import dil.lexer.Funcs;
-import dil.Unicode;
+import dil.Unicode,
+       dil.String;
 import common;
-
-import tango.text.Ascii : icompare;
 
 alias dil.doc.Parser.IdentValueParser.textBody textBody;
 
@@ -44,7 +43,7 @@ class DDocComment
   bool isDitto()
   {
     return summary && sections.length == 1 &&
-           icompare(summary.text, "ditto") == 0;
+           String(summary.text).ieql("ditto");
   }
 
   /// Returns true when this comment has no text.
@@ -437,7 +436,7 @@ class Section
   /// Case-insensitively compares the section's name with name2.
   bool Is(cstring name2)
   {
-    return icompare(name, name2) == 0;
+    return String(name).ieql(name2);
   }
 
   /// Returns the section's text including its name.

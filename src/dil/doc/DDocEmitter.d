@@ -25,8 +25,6 @@ import dil.Highlighter,
        dil.String;
 import common;
 
-import tango.text.Ascii : toUpper, icompare;
-
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
 abstract class DDocEmitter : DefaultVisitor2
 {
@@ -194,7 +192,7 @@ abstract class DDocEmitter : DefaultVisitor2
   {
     auto text = mod.sourceText.text();
     if (text.length >= "ddoc\n".length && // Check for minimum length.
-        icompare(text[0..4], "ddoc") == 0 && // Check first four characters.
+        String(text[0..4]).ieql("ddoc") && // Check first four characters.
         isNewline(text.ptr + 4)) // Check for a newline.
       return true;
     return false;
@@ -359,7 +357,8 @@ abstract class DDocEmitter : DefaultVisitor2
           write("\n\1DDOC_SUMMARY ");
         else if (s is c.description)
           write("\n\1DDOC_DESCRIPTION ");
-        else if (auto name = hashOf(toUpper(s.name.dup)) in specialSections)
+        else if (auto name =
+            String(s.name).toupper().hashOf() in specialSections)
           write("\n\1DDOC_", *name, " ");
         else if (s.Is("params"))
         { // Process parameters section.
