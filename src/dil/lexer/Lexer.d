@@ -248,7 +248,7 @@ class Lexer
       t.uint_ = this.errorLineNumber(this.lineNum);
       break;
     case TOK.DATE, TOK.TIME, TOK.TIMESTAMP:
-      str = Time.toString();
+      str = Time.now();
       switch (t.kind)
       {
       case TOK.DATE:

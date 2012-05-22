@@ -210,7 +210,7 @@ class PyTreeEmitter : Visitor2
                   "format_version = '1.0'\n"
                   "d_version= '{}'\n"
                   "date = '{}'\n\n",
-                  d_version, Time.toString());
+                  d_version, Time.now());
 
     text ~= writeTokenList(modul.firstToken(), index);
     text ~= "t = tokens = dil.token.create_tokens(token_list)\n\n";

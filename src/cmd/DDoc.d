@@ -191,7 +191,7 @@ class DDocCommand : Command
     mtable.insert("DIL_MODFQN", modFQN);
     mtable.insert("DIL_DOCFILENAME", modFQN ~ outFileExtension);
     mtable.insert("TITLE", modFQN);
-    auto timeStr = Time.toString();
+    auto timeStr = Time.now();
     mtable.insert("DATETIME", timeStr);
     mtable.insert("YEAR", Time.year(timeStr));
 

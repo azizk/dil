@@ -3,23 +3,23 @@
 /// $(Maturity high)
 module dil.Time;
 
+import dil.String;
 import common;
 
 import tango.stdc.time : time_t, time, ctime;
-import tango.stdc.string : strlen;
 
 /// Some convenience functions for dealing with C's time functions.
 struct Time
 {
 static:
   /// Returns the current date as a string.
-  char[] toString()
+  char[] now()
   {
     time_t time_val;
     tango.stdc.time.time(&time_val);
     // ctime returns a pointer to a static array.
     char* timeStr = ctime(&time_val);
-    return timeStr[0 .. strlen(timeStr)-1]; // -1 removes trailing '\n'.
+    return String(timeStr, '\n').array;
   }
 
   /// Returns the time of timeStr: hh:mm:ss
