@@ -75,7 +75,7 @@ struct StringT(C)
   /// Constructs from an unsigned long.
   this(ulong x) inout
   {
-    C[20] buffer; // ulong.max -> "18446744073709551616".len == 20
+    C[20] buffer; // ulong.max -> "18446744073709551615".len == 20
     auto end = buffer.ptr + buffer.length;
     auto p = end;
     do
@@ -528,6 +528,16 @@ struct StringT(C)
     return -1;
   }
 
+  /// Searches for character c starting from the end.
+  ssize_t findr(const(C) c) const
+  {
+    const(C)* p = end;
+    while (--p >= ptr)
+      if (*p == c)
+        return p - ptr;
+    return -1;
+  }
+
   /// Searches for s.
   /// Returns: The position index, or -1 if not found.
   ssize_t find(const(S) s) const
@@ -559,6 +569,17 @@ struct StringT(C)
       }
     }
     return -1;
+  }
+
+  /// Searches for character c starting from the end.
+  /// Returns: A pointer to c, or null if not found.
+  inout(C)* findrp(const(C) c) inout
+  {
+    inout(C)* p = ptr;
+    while (--p >= end)
+      if (*p == c)
+        return p;
+    return null;
   }
 
   /// Searches for character c.
@@ -950,6 +971,9 @@ unittest
   assert(S("") in "a");
   assert(S("abcd").find(S("cd")) == 2);
   assert(S("").find(S("")) == 0);
+  assert(S("abcd").findr('d') == 3);
+  assert(S("abcd").findr('a') == 0);
+  assert(S("abcd").findr('e') == -1);
   {
   auto s = S("abcd");
   assert(s.findp(S("abcd")) is s.ptr);
