@@ -84,10 +84,8 @@ class Module : ModuleSymbol
   /// Returns the file extension: "d" or "di".
   cstring fileExtension()
   {
-    foreach_reverse (i, c; filePath)
-      if (c == '.')
-        return filePath[i+1..$];
-    return "";
+    auto i = String(filePath).findr('.');
+    return i != -1 ? filePath[i..$] : "";
   }
 
   /// Sets the parser to be used for parsing the source text.
@@ -171,30 +169,17 @@ class Module : ModuleSymbol
   /// Sets the module's FQN.
   void setFQN(cstring moduleFQN)
   {
-    size_t i = moduleFQN.length;
-    if (i != 0) // Don't decrement if string has zero length.
-      i--;
-    // Find last dot.
-    for (; i != 0 && moduleFQN[i] != '.'; i--)
-    {}
     this.moduleFQN = moduleFQN;
-    if (i == 0)
-      this.moduleName = moduleFQN; // No dot found.
-    else
-    {
+    auto i = String(moduleFQN).findr('.');
+    if (i != -1)
       this.packageName = moduleFQN[0..i];
-      this.moduleName = moduleFQN[i+1..$];
-    }
+    this.moduleName = moduleFQN[i+1..$];
   }
 
   /// Returns the module's FQN with slashes instead of dots.
-  /// E.g.: dil/ast/Node
+  /// E.g.: dil.ast.Node -> dil/ast/Node
   cstring getFQNPath()
   {
-    char[] FQNPath = moduleFQN.dup;
-    foreach (i, c; FQNPath)
-      if (c == '.')
-        FQNPath[i] = dirSep;
-    return FQNPath;
+    return moduleFQN.replace('.', dirSep);
   }
 }
