@@ -518,89 +518,60 @@ struct StringT(C)
   }
 
   /// Searches for character c.
-  ssize_t find(const(C) c) const
+  RT findChar(RT, string pred = q{*p == c})(const(C) c) inout
   {
-    const(C)* p = ptr;
+    inout(C)* p = ptr;
     for (; p < end; p++)
-      if (*p == c)
-        return p - ptr;
-    return -1;
-  }
-
-  /// Searches for character c starting from the end.
-  ssize_t findr(const(C) c) const
-  {
-    const(C)* p = end;
-    while (--p >= ptr)
-      if (*p == c)
-        return p - ptr;
-    return -1;
-  }
-
-  /// Searches for s.
-  /// Returns: The position index, or -1 if not found.
-  ssize_t find(const(S) s) const
-  {
-    if (s.len == 0)
-      return 0;
-    else
-    if (s.len == 1)
-      return find(s[0]);
-    else
-    if (s.len <= len) // Return when the argument string is longer.
-    {
-      const(C)* p = ptr;
-      const firstChar = *s.ptr;
-
-      for (; p < end; p++)
+      if (mixin(pred))
       {
-        if (*p == firstChar) // Find first matching character.
-        {
-          const(C)* p2 = s.ptr, matchBegin = p;
-          while (p < end)
-          {
-            if (*p++ != *p2++)
-              break;
-            if (p2 is s.end) // If at the end, we have a match.
-              return matchBegin - ptr;
-          }
-        }
+        static if (is(RT == ssize_t))
+          return p - ptr;
+        else
+          return p;
       }
-    }
-    return -1;
+    static if (is(RT == ssize_t))
+      return -1;
+    else
+      return null;
   }
 
   /// Searches for character c starting from the end.
-  /// Returns: A pointer to c, or null if not found.
-  inout(C)* findrp(const(C) c) inout
+  RT findrChar(RT, string pred = q{*p == c})(const(C) c) inout
   {
-    inout(C)* p = ptr;
-    while (--p >= end)
-      if (*p == c)
-        return p;
-    return null;
-  }
-
-  /// Searches for character c.
-  /// Returns: A pointer to c, or null if not found.
-  inout(C)* findp(const(C) c) inout
-  {
-    inout(C)* p = ptr;
-    for (; p < end; p++)
-      if (*p == c)
-        return p;
-    return null;
+    inout(C)* p = end;
+    while (--p >= ptr)
+      if (mixin(pred))
+      {
+        static if (is(RT == ssize_t))
+          return p - ptr;
+        else
+          return p;
+      }
+    static if (is(RT == ssize_t))
+      return -1;
+    else
+      return null;
   }
 
   /// Searches for s.
-  /// Returns: A pointer to the beginning of s, or null if not found.
-  inout(C)* findp(const(S) s) inout
+  RT findS(RT)(const(S) s) inout
   {
+    enum is_ssize_t = is(RT : ssize_t);
     if (s.len == 0)
-      return ptr;
+    {
+      static if (is_ssize_t)
+        return 0;
+      else
+        return ptr;
+    }
     else
     if (s.len == 1)
-      return findp(s[0]);
+    {
+      static if (is_ssize_t)
+        return find(s[0]);
+      else
+        return findp(s[0]);
+    }
     else
     if (s.len <= len) // Return when the argument string is longer.
     {
@@ -618,13 +589,41 @@ struct StringT(C)
             if (*p++ != *p2++)
               break;
             if (p2 is s.end) // If at the end, we have a match.
-              return matchBegin;
+            {
+              static if (is_ssize_t)
+                return matchBegin - ptr;
+              else
+                return matchBegin;
+            }
           }
         }
       }
     }
-    return null;
+    static if (is_ssize_t)
+      return -1;
+    else
+      return null;
   }
+
+  /// Searches for character c.
+  alias findChar!(ssize_t) find;
+  /// Searches for character c.
+  /// Returns: A pointer to c, or null if not found.
+  alias findChar!(inout(C)*) findp;
+
+  /// Searches for character c starting from the end.
+  alias findrChar!(ssize_t) findr;
+
+  /// Searches for character c, returning a pointer to it.
+  alias findrChar!(inout(C)*) findrp;
+
+  /// Searches for s.
+  /// Returns: The position index, or -1 if not found.
+  alias findS!(ssize_t) find;
+
+  /// Searches for s.
+  /// Returns: A pointer to the beginning of s, or null if not found.
+  alias findS!(inout(C)*) findp;
 
   /// Splits by String s and returns a list of slices.
   inout(S)[] split(const(S) s) inout
@@ -815,8 +814,7 @@ inout(char)[] slice(inout(char)* begin, inout(char)* end)
   return String.inoutS(begin, end).array;
 }
 
-/// Replaces a with b in str.
-/// Returns: A copy.
+/// Returns a copy of str where a is replaced with b.
 cstring replace(cstring str, char a, char b)
 {
   return String(str).sub_(a, b).array;
