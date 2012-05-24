@@ -10,6 +10,7 @@ import common;
 struct StringT(C)
 {
   alias StringT S; /// Shortcut to own type.
+  alias inout(S) inoutS; /// Useful for explicit construction of inout Strings.
   C* ptr; /// Points to the beginning of the string.
   C* end; /// Points one past the end of the string.
 
@@ -122,8 +123,7 @@ struct StringT(C)
   ///   y = End index. Negative values are subtracted from the end.
   inout(S) opSlice(ssize_t x, ssize_t y) inout
   {
-    alias inout(StringT) S;
-    return S(indexPtr(x), indexPtr(y));
+    return inoutS(indexPtr(x), indexPtr(y));
   }
 
   /// Returns the character at position x.
@@ -295,8 +295,7 @@ struct StringT(C)
   /// Returns a pointer to the first character, if this String is in rhs.
   inout(C)* opBinary(string op : "in")(inout(C)[] rhs) const
   {
-    auto s = S2.ctor(rhs);
-    return (cast(inout(S))s).findp(this);
+    return inoutS(rhs).findp(this);
   }
 
   /// Returns a pointer to the first character, if lhs is in this String.
@@ -813,8 +812,7 @@ alias StringT!(dchar) DString; /// Instantiation for dchar.
 /// Returns a string array slice ranging from begin to end.
 inout(char)[] slice(inout(char)* begin, inout(char)* end)
 {
-  alias inout(String) S;
-  return S(begin, end).array;
+  return String.inoutS(begin, end).array;
 }
 
 /// Replaces a with b in str.
