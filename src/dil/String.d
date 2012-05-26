@@ -413,15 +413,42 @@ struct StringT(C)
   }
 
   /// Encodes the byte characters with hexadecimal digits.
-  S toHex(bool lowercase = true) const
+  S toHex(bool lowercase)() const
   {
     immutable hexdigits = lowercase ? "0123456789abcdef" : "0123456789ABCDEF";
-    auto result = S(new C[len * 2]); // Reserve space.
+    auto result = S(new C[len * C.sizeof * 2]); // Reserve space.
     auto pr = result.ptr;
     for (const(C)* p = ptr; p < end; p++)
-      (*pr++ = hexdigits[*p >> 4]), (*pr++ = hexdigits[*p & 0x0F]);
+      static if (C.sizeof == 4)
+      {
+        *pr++ = hexdigits[*p >> 28];
+        *pr++ = hexdigits[*p >> 24 & 0x0F];
+        *pr++ = hexdigits[*p >> 20 & 0x0F];
+        *pr++ = hexdigits[*p >> 16 & 0x0F];
+        *pr++ = hexdigits[*p >> 12 & 0x0F];
+        *pr++ = hexdigits[*p >> 8 & 0x0F];
+        *pr++ = hexdigits[*p >> 4 & 0x0F];
+        *pr++ = hexdigits[*p & 0x0F];
+      }
+      else
+      static if (C.sizeof == 2)
+      {
+        *pr++ = hexdigits[*p >> 12];
+        *pr++ = hexdigits[*p >> 8 & 0x0F];
+        *pr++ = hexdigits[*p >> 4 & 0x0F];
+        *pr++ = hexdigits[*p & 0x0F];
+      }
+      else
+      {
+        *pr++ = hexdigits[*p >> 4];
+        *pr++ = hexdigits[*p & 0x0F];
+      }
+    assert(pr is result.end);
     return result;
   }
+
+  alias toHex!(true) tohex;
+  alias toHex!(false) toHEX;
 
   /// Calculates a hash value.
   /// Note: The value will differ between 32bit and 64bit systems,
@@ -993,8 +1020,8 @@ unittest
   assert(!S("fg").endsWith("efg"));
 
   // Converting to hex string.
-  assert(S("äöü").toHex() == S("c3a4c3b6c3bc"));
-  assert(S("äöü").toHex(false) == S("C3A4C3B6C3BC"));
+  assert(S("äöü").tohex() == S("c3a4c3b6c3bc"));
+  assert(S("äöü").toHEX() == S("C3A4C3B6C3BC"));
 
   // Case conversion.
   assert(S("^agmtz$").toupper() == S("^AGMTZ$"));
