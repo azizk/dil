@@ -347,7 +347,7 @@ class Parser
           error(init.begin.prevNWS(), MID.AliasHasInitializer);
       }
       else
-        error2(MID.AliasExpectsVariable, decl.begin);
+        error(decl.begin, MID.AliasExpectsVariable, decl.toText());
       decl = ad;
       break;
     case T.Typedef:
@@ -355,7 +355,7 @@ class Parser
       auto td = new TypedefDecl(parseAttributes(&decl));
       td.vardecl = decl;
       if (!decl.Is!(VariablesDecl))
-        error2(MID.TypedefExpectsVariable, decl.begin);
+        error(decl.begin, MID.TypedefExpectsVariable, decl.toText());
       decl = td;
       break;
     case T.Static:
