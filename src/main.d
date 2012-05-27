@@ -44,7 +44,6 @@ import Settings,
 import Integer = tango.text.convert.Integer;
 import tango.stdc.stdio;
 import tango.io.device.File;
-import tango.text.Util : split;
 import tango.text.Regex : Regex;
 import tango.time.StopWatch;
 import tango.core.Array : sort;
@@ -390,14 +389,11 @@ void main(cstring[] args)
   case "profile":
     if (!op.hasArgs())
       break;
-    cstring[] filePaths;
+    const(String)[] filePaths;
     if (args[2] == "dstress")
-    {
-      auto text = cast(cstring) File.get("dstress_files");
-      filePaths = split(text, "\0");
-    }
+      filePaths = String(cast(cstring)File.get("dstress_files")).split('\0');
     else
-      filePaths = args[2..$];
+      filePaths = toStrings(args[2..$]);
 
     auto tables = globalCC.tables.lxtables;
 
@@ -405,7 +401,7 @@ void main(cstring[] args)
     swatch.start;
 
     foreach (filePath; filePaths)
-      (new Lexer(new SourceText(filePath, true), tables)).scanAll();
+      (new Lexer(new SourceText(filePath.array, true), tables)).scanAll();
 
     Stdout.formatln("Scanned in {:f10}s.", swatch.stop);
     break;
