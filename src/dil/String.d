@@ -871,6 +871,16 @@ hash_t hashOf(cstring str)
   return String(str).hashOf();
 }
 
+/// Returns a list of Strings from a list of char arrays.
+inout(String)[] toStrings(inout(char[])[] strs)
+{
+   auto result = new String.S2[strs.length];
+   auto elem = result.ptr - 1;
+   foreach (i, s; strs)
+     (++elem).set(s);
+   return cast(inout(String)[])result;
+}
+
 /// ditto
 hash_t hashOfCTF(string str)
 { /// Nested func because DMD can't do: cast(hash_t[])str
