@@ -23,6 +23,12 @@ class CompoundDecl : Declaration
     mixin(set_kind);
   }
 
+  this(Declaration[] decls)
+  {
+    this();
+    this.decls = decls;
+  }
+
   void opCatAssign(Declaration d)
   {
     addChild(d);
@@ -230,7 +236,7 @@ class EnumMemberDecl : Declaration
   Token* name;
   Expression value;
 
-  this(Token* name, Expression value)
+  private this(Token* name, Expression value)
   {
     assert(name);
     mixin(set_kind);
@@ -783,7 +789,6 @@ class MixinDecl : Declaration
   Expression templateExpr;
   Token* mixinIdent; /// Optional mixin identifier.
   Expression argument; /// "mixin" "(" AssignExpr ")"
-  Declaration decls; /// Initialized in the semantic phase.
 
   this(Expression templateExpr, Token* mixinIdent)
   {
@@ -802,10 +807,21 @@ class MixinDecl : Declaration
     this.argument = argument;
   }
 
+  /// Constructor for the deserializer.
+  this(Expression templateExpr, Token* mixinIdent, Expression argument)
+  {
+    if (argument)
+      this(argument);
+    else
+      this(templateExpr, mixinIdent);
+  }
+
   bool isMixinExpr()
   {
     return argument !is null;
   }
+
+  Declaration decls; /// Initialized in the semantic phase.
 
   mixin(copyMethod);
 }

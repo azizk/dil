@@ -19,6 +19,12 @@ class CompoundStmt : Statement
     mixin(set_kind);
   }
 
+  this(Statement[] stmnts)
+  {
+    this();
+    addChildren(stmnts);
+  }
+
   void opCatAssign(Statement s)
   {
     addChild(s);

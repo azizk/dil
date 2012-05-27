@@ -28,21 +28,25 @@ class ASTSerializer : Visitor2
   enum ArrayTID : ubyte
   {
     Declaration,
+    Statement,
     Expression,
     Token,
     Tokens,
     EnumMemberDecl,
     BaseClassType,
+    CatchStmt,
   }
 
   /// Array of TypeInfos.
   static TypeInfo[ArrayTID.max+1] arrayTIs = [
     typeid(Declaration),
+    typeid(Statement),
     typeid(Expression),
     typeid(Token*),
     typeid(Token*[]),
     typeid(EnumMemberDecl),
     typeid(BaseClassType),
+    typeid(CatchStmt),
   ];
 
   this()
@@ -155,6 +159,11 @@ class ASTSerializer : Visitor2
     visitNodes(nodes, ArrayTID.Declaration);
   }
 
+  void write(Statement[] nodes)
+  {
+    visitNodes(nodes, ArrayTID.Statement);
+  }
+
   void write(Expression[] nodes)
   {
     visitNodes(nodes, ArrayTID.Expression);
@@ -170,11 +179,22 @@ class ASTSerializer : Visitor2
     visitNodes(nodes, ArrayTID.BaseClassType);
   }
 
+  void write(CatchStmt[] nodes)
+  {
+    visitNodes(nodes, ArrayTID.CatchStmt);
+  }
+
   /// Writes a boolean.
   void write(bool b)
   {
     write("B");
     write1B(b);
+  }
+
+  void write(TOK tok)
+  {
+    assert(TOK.max <= ushort.max);
+    write2B(cast(ushort)tok);
   }
 
   /// Writes a Token.
@@ -230,6 +250,16 @@ class ASTSerializer : Visitor2
     assert(0);
   }
 
+  void visit(IllegalStmt n)
+  {
+    assert(0);
+  }
+
+  void visit(IllegalAsmStmt n)
+  {
+    assert(0);
+  }
+
   // TODO: what if we could pass a delegate to avoid string mixins?
   //mixin visitX!(XYZ, n => Tuple!(n.name, n.decls));
 
@@ -272,7 +302,45 @@ class ASTSerializer : Visitor2
   alias super.visit visit;
 
   // Statements:
-  // TODO:
+
+  mixin visitX!(CompoundStmt, "stmnts");
+  mixin visitX!(EmptyStmt);
+  mixin visitX!(FuncBodyStmt, "funcBody", "inBody", "outBody", "outIdent");
+  mixin visitX!(ScopeStmt, "stmnt");
+  mixin visitX!(LabeledStmt, "label", "stmnt");
+  mixin visitX!(ExpressionStmt, "expr");
+  mixin visitX!(DeclarationStmt, "decl");
+  mixin visitX!(IfStmt, "variable", "condition", "ifBody", "elseBody");
+  mixin visitX!(WhileStmt, "condition", "whileBody");
+  mixin visitX!(DoWhileStmt, "condition", "doBody");
+  mixin visitX!(ForStmt, "init", "condition", "increment", "forBody");
+  mixin visitX!(ForeachStmt, "tok", "params", "aggregate", "forBody");
+  mixin visitX!(ForeachRangeStmt, "tok", "params", "lower", "upper", "forBody");
+  mixin visitX!(SwitchStmt, "condition", "switchBody", "isFinal");
+  mixin visitX!(CaseStmt, "values", "caseBody");
+  mixin visitX!(CaseRangeStmt, "left", "right", "caseBody");
+  mixin visitX!(DefaultStmt, "defaultBody");
+  mixin visitX!(ContinueStmt, "ident");
+  mixin visitX!(BreakStmt, "ident");
+  mixin visitX!(ReturnStmt, "expr");
+  mixin visitX!(GotoStmt, "ident", "expr");
+  mixin visitX!(WithStmt, "expr", "withBody");
+  mixin visitX!(SynchronizedStmt, "expr", "syncBody");
+  mixin visitX!(TryStmt, "tryBody", "catchBodies", "finallyBody");
+  mixin visitX!(CatchStmt, "param", "catchBody");
+  mixin visitX!(FinallyStmt, "finallyBody");
+  mixin visitX!(ScopeGuardStmt, "condition", "scopeBody");
+  mixin visitX!(ThrowStmt, "expr");
+  mixin visitX!(VolatileStmt, "volatileBody");
+  mixin visitX!(AsmBlockStmt, "statements");
+  mixin visitX!(AsmStmt, "ident", "operands");
+  mixin visitX!(AsmAlignStmt, "numtok");
+  mixin visitX!(PragmaStmt, "ident", "args", "pragmaBody");
+  mixin visitX!(MixinStmt, "templateExpr", "mixinIdent");
+  mixin visitX!(StaticIfStmt, "condition", "ifBody", "elseBody");
+  mixin visitX!(StaticAssertStmt, "condition", "message");
+  mixin visitX!(DebugStmt, "cond", "mainBody", "elseBody");
+  mixin visitX!(VersionStmt, "cond", "mainBody", "elseBody");
 
   // Expressions:
   // TODO:
