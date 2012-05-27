@@ -54,16 +54,16 @@ template returnType(Class)
     alias Node returnType;
 }
 
-/// Returns a delegate to the method that can visit the node n.
-Ret delegate(Node) getVisitMethod(Ret)(Object o, Node n)
+/// Calls the visitor method that can handle node n.
+Ret callVisitMethod(Ret)(Object visitorInstance, Node n)
 { // Get the method's address from the vtable.
-  assert(indexOfFirstVisitMethod+n.kind < typeid(o).vtbl.length);
-  auto funcptr = typeid(o).vtbl[indexOfFirstVisitMethod+n.kind];
-  // Make a delegate and return it.
+  const funcIndex = indexOfFirstVisitMethod + n.kind;
+  auto funcptr = typeid(visitorInstance).vtbl[funcIndex];
+  // Construct a delegate and call it.
   Ret delegate(Node) visitMethod = void;
-  visitMethod.ptr = cast(void*)o; // Frame pointer.
+  visitMethod.ptr = cast(void*)visitorInstance; // Frame pointer.
   visitMethod.funcptr = cast(Ret function(Node))funcptr;
-  return visitMethod;
+  return visitMethod(n);
 }
 
 /// Implements a variation of the visitor pattern.
@@ -77,7 +77,7 @@ abstract class Visitor
   /// Calls the appropriate visit() method for a node.
   Node dispatch(Node n)
   {
-    return getVisitMethod!(Node)(this, n)(n);
+    return callVisitMethod!(Node)(this, n);
   }
 
   /// Called by visit() methods that were not overridden.
@@ -121,7 +121,7 @@ abstract class Visitor2
   /// Calls the appropriate visit() method for a node.
   void dispatch(Node n)
   {
-    getVisitMethod!(void)(this, n)(n);
+    callVisitMethod!(void)(this, n);
   }
 
   /// Called by visit() methods that were not overridden.
