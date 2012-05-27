@@ -573,16 +573,19 @@ class Parser
         // StorageClasses Name
         //  ("(" TemplateParameterList ")")? "(" ParameterList ")"
         auto peek_token = peekAfter(token); // Skip the Identifier.
-        next_kind = skipParens(peek_token, T.RParen).kind;
+        peek_token = skipParens(peek_token, T.RParen);
+        next_kind = peek_token.kind; // Token after "(" ... ")"
         if (next_kind == T.LParen)
-        {
+        { // "(" TemplateParameterList ")" "(" ParameterList ")"
           name = token;
           skip(T.Identifier);
           assert(tokenIs(T.LParen));
           goto LparseTPList; // Continue with parsing a template function.
         }
-        else if (next_kind == T.LBrace)
-        {
+        else
+        if (next_kind == T.LBrace || isFunctionPostfix(peek_token) ||
+            next_kind == T.In || next_kind == T.Out || next_kind == T.Body)
+        { // "(" ParameterList ")" ("{" | FunctionPostfix | in | out | body)
           name = token;
           skip(T.Identifier);
           assert(tokenIs(T.LParen));
@@ -645,6 +648,7 @@ class Parser
       if (tokenAfterParenIs(T.LParen))
       LparseTPList: // "(" TemplateParameterList ")"
         tparams = parseTemplateParameterList();
+
     LparseBeforeParams: // "(" ParameterList ")"
       params = parseParameterList();
 
