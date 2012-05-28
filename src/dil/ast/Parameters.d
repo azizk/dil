@@ -211,7 +211,8 @@ class TemplateValueParam : TemplateParam
 {
   TypeNode valueType;
   Expression specValue, defValue;
-  this(TypeNode valueType, Token* name, Expression specValue, Expression defValue)
+  this(TypeNode valueType, Token* name, Expression specValue,
+    Expression defValue)
   {
     super(name);
     mixin(set_kind);

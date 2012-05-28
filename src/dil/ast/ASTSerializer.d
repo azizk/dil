@@ -25,35 +25,57 @@ class ASTSerializer : Visitor2
 
   immutable HEADER = "DIL1.0AST\x1A\x04\n";
 
-  /// Enumeration of array types.
-  enum ArrayTID : ubyte
+  /// Enumeration of types.
+  enum TID : ubyte
   {
+    Array = 'A',
+    Char,
+    Bool,
+    TOK,
+    Protection,
+    LinkageType,
+    StorageClass,
+    NodeKind,
     Node,
-    Declaration,
-    Statement,
-    Expression,
-    Parameter,
-    TemplateParam,
+    Nodes,
+    Declarations,
+    Statements,
+    Expressions,
+    Parameters,
+    TemplateParams,
+    EnumMemberDecls,
+    BaseClassTypes,
+    CatchStmts,
+    Identifier,
     Token,
     Tokens,
-    EnumMemberDecl,
-    BaseClassType,
-    CatchStmt,
+    TokenArrays,
   }
 
   /// Array of TypeInfos.
-  static TypeInfo[ArrayTID.max+1] arrayTIs = [
+  static TypeInfo[TID.max+1] arrayTIs = [
+    typeid(void[]),
+    typeid(char),
+    typeid(bool),
+    typeid(TOK),
+    typeid(Protection),
+    typeid(LinkageType),
+    typeid(StorageClass),
+    typeid(NodeKind),
     typeid(Node),
-    typeid(Declaration),
-    typeid(Statement),
-    typeid(Expression),
-    typeid(Parameter),
-    typeid(TemplateParam),
+    typeid(Node[]),
+    typeid(Declaration[]),
+    typeid(Statement[]),
+    typeid(Expression[]),
+    typeid(Parameter[]),
+    typeid(TemplateParam[]),
+    typeid(EnumMemberDecl[]),
+    typeid(BaseClassType[]),
+    typeid(CatchStmt[]),
+    typeid(Identifier),
     typeid(Token*),
     typeid(Token*[]),
-    typeid(EnumMemberDecl),
-    typeid(BaseClassType),
-    typeid(CatchStmt),
+    typeid(Token*[][]),
   ];
 
   this()
@@ -116,10 +138,12 @@ class ASTSerializer : Visitor2
   /// Writes size_t.sizeof bytes.
   alias writeXB!(size_t) writeSB;
 
+
   /// Writes the kind of a Node.
   void write(NodeKind k)
   {
     static assert(NodeKind.max <= ubyte.max);
+    write1B(TID.NodeKind);
     write1B(cast(ubyte)k);
   }
 
@@ -127,6 +151,7 @@ class ASTSerializer : Visitor2
   void write(Protection prot)
   {
     static assert(Protection.max <= ubyte.max);
+    write1B(TID.Protection);
     write1B(cast(ubyte)prot);
   }
 
@@ -134,6 +159,7 @@ class ASTSerializer : Visitor2
   void write(StorageClass stcs)
   {
     static assert(StorageClass.max <= uint.max);
+    write1B(TID.StorageClass);
     write4B(cast(uint)stcs);
   }
 
@@ -141,6 +167,7 @@ class ASTSerializer : Visitor2
   void write(LinkageType lnkg)
   {
     static assert(LinkageType.max <= ubyte.max);
+    write1B(TID.LinkageType);
     write1B(cast(ubyte)lnkg);
   }
 
@@ -151,11 +178,10 @@ class ASTSerializer : Visitor2
   }
 
   /// Writes the mangled array type and then visits each node.
-  void visitNodes(N)(N[] nodes, ArrayTID tid)
+  void visitNodes(N)(N[] nodes, TID tid)
   {
-    write("A");
+    write1B(TID.Array);
     write1B(tid);
-    write("L");
     writeSB(nodes.length);
     foreach (n; nodes)
       visitN(n);
@@ -163,53 +189,60 @@ class ASTSerializer : Visitor2
 
   void write(Node[] nodes)
   {
-    visitNodes(nodes, ArrayTID.Node);
+    visitNodes(nodes, TID.Nodes);
   }
 
   void write(Declaration[] nodes)
   {
-    visitNodes(nodes, ArrayTID.Declaration);
+    visitNodes(nodes, TID.Declarations);
   }
 
   void write(Statement[] nodes)
   {
-    visitNodes(nodes, ArrayTID.Statement);
+    visitNodes(nodes, TID.Statements);
   }
 
   void write(Expression[] nodes)
   {
-    visitNodes(nodes, ArrayTID.Expression);
+    visitNodes(nodes, TID.Expressions);
   }
 
   void write(Parameter[] nodes)
   {
-    visitNodes(nodes, ArrayTID.Parameter);
+    visitNodes(nodes, TID.Parameters);
   }
 
   void write(TemplateParam[] nodes)
   {
-    visitNodes(nodes, ArrayTID.TemplateParam);
+    visitNodes(nodes, TID.TemplateParams);
   }
 
   void write(EnumMemberDecl[] nodes)
   {
-    visitNodes(nodes, ArrayTID.EnumMemberDecl);
+    visitNodes(nodes, TID.EnumMemberDecls);
   }
 
   void write(BaseClassType[] nodes)
   {
-    visitNodes(nodes, ArrayTID.BaseClassType);
+    visitNodes(nodes, TID.BaseClassTypes);
   }
 
   void write(CatchStmt[] nodes)
   {
-    visitNodes(nodes, ArrayTID.CatchStmt);
+    visitNodes(nodes, TID.CatchStmts);
+  }
+
+  /// Writes a char.
+  void write(char c)
+  {
+    write1B(TID.Char);
+    write1B(c);
   }
 
   /// Writes a boolean.
   void write(bool b)
   {
-    write("B");
+    write1B(TID.Bool);
     write1B(b);
   }
 
@@ -217,19 +250,14 @@ class ASTSerializer : Visitor2
   void write(TOK tok)
   {
     assert(TOK.max <= ushort.max);
+    write1B(TID.TOK);
     write2B(cast(ushort)tok);
-  }
-
-  /// Writes a char.
-  void write(char c)
-  {
-    write1B(c);
   }
 
   /// Writes an Identifier.
   void write(Identifier* id)
   {
-    write("I");
+    write1B(TID.Identifier);
     writeSB(id.str.length);
     write(id.str);
   }
@@ -237,16 +265,14 @@ class ASTSerializer : Visitor2
   /// Writes a Token.
   void write(Token* t)
   {
-    write("T");
+    write1B(TID.Token);
     writeSB(indexOf(t));
   }
 
   /// Writes an array of Tokens.
   void write(Token*[] tokens)
   {
-    write("A");
-    write1B(ArrayTID.Token);
-    write("L");
+    write1B(TID.Tokens);
     writeSB(tokens.length);
     foreach (t; tokens)
       writeSB(indexOf(t));
@@ -255,25 +281,27 @@ class ASTSerializer : Visitor2
   /// Writes an array of arrays of Tokens.
   void write(Token*[][] tokenLists)
   {
-    write("A");
-    write1B(ArrayTID.Tokens);
-    write("L");
+    write1B(TID.TokenArrays);
     writeSB(tokenLists.length);
     foreach (tokens; tokenLists)
-      write(tokenLists);
+      write(tokens);
   }
 
   /// Calls write() on each member.
   void writeMembers(N, Members...)(N n)
   {
-    write("N");
+    write1B(TID.Node);
     write(n.kind);
+    write(n.begin);
+    write(n.end);
+    // TODO: write attributes if Declaration.
     foreach (m; Members)
       write(mixin("n."~m));
   }
 
   // Visitor methods:
 
+  /// Generates a visit method for a specific Node.
   mixin template visitX(N, Members...)
   {
     void visit(N n)
@@ -342,12 +370,9 @@ class ASTSerializer : Visitor2
   mixin visitX!(ProtectionDecl, "prot", "decls");
   mixin visitX!(StorageClassDecl, "stcs", "decls");
   mixin visitX!(LinkageDecl, "linkageType", "decls");
-
   mixin visitX!(AlignDecl, "sizetok", "decls");
   mixin visitX!(PragmaDecl, "ident", "args", "decls");
   mixin visitX!(MixinDecl, "templateExpr", "mixinIdent", "argument");
-
-  alias super.visit visit;
 
   // Statements:
   mixin visitX!(CompoundStmt, "stmnts");
@@ -502,7 +527,8 @@ class ASTSerializer : Visitor2
   mixin visitX!(TemplateAliasParam, "name", "spec", "def");
   mixin visitX!(TemplateTypeParam, "name", "specType", "defType");
   mixin visitX!(TemplateThisParam, "name", "specType", "defType");
-  mixin visitX!(TemplateValueParam, "valueType", "name", "specValue", "defValue");
+  mixin visitX!(TemplateValueParam, "valueType", "name", "specValue",
+    "defValue");
   mixin visitX!(TemplateTupleParam, "name");
   mixin visitX!(TemplateParameters, "items");
   mixin visitX!(TemplateArguments, "items");
