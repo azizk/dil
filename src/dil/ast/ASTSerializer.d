@@ -11,6 +11,7 @@ import dil.ast.Visitor,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
+import dil.lexer.IdTable;
 import dil.semantic.Module;
 import dil.Enums,
        dil.String;
@@ -191,10 +192,25 @@ class ASTSerializer : Visitor2
     write1B(b);
   }
 
+  /// Writes a TOK.
   void write(TOK tok)
   {
     assert(TOK.max <= ushort.max);
     write2B(cast(ushort)tok);
+  }
+
+  /// Writes a char.
+  void write(char c)
+  {
+    write1B(c);
+  }
+
+  /// Writes an Identifier.
+  void write(Identifier* id)
+  {
+    write("I");
+    writeSB(id.str.length);
+    write(id.str);
   }
 
   /// Writes a Token.
@@ -260,6 +276,11 @@ class ASTSerializer : Visitor2
     assert(0);
   }
 
+  void visit(IllegalExpr n)
+  {
+    assert(0);
+  }
+
   // TODO: what if we could pass a delegate to avoid string mixins?
   //mixin visitX!(XYZ, n => Tuple!(n.name, n.decls));
 
@@ -302,7 +323,6 @@ class ASTSerializer : Visitor2
   alias super.visit visit;
 
   // Statements:
-
   mixin visitX!(CompoundStmt, "stmnts");
   mixin visitX!(EmptyStmt);
   mixin visitX!(FuncBodyStmt, "funcBody", "inBody", "outBody", "outIdent");
@@ -343,8 +363,94 @@ class ASTSerializer : Visitor2
   mixin visitX!(VersionStmt, "cond", "mainBody", "elseBody");
 
   // Expressions:
-  // TODO:
-
+  mixin visitX!(CondExpr, "lhs", "rhs", "optok", "ctok");
+  mixin visitX!(CommaExpr, "lhs", "rhs", "optok");
+  mixin visitX!(OrOrExpr, "lhs", "rhs", "optok");
+  mixin visitX!(AndAndExpr, "lhs", "rhs", "optok");
+  mixin visitX!(OrExpr, "lhs", "rhs", "optok");
+  mixin visitX!(XorExpr, "lhs", "rhs", "optok");
+  mixin visitX!(AndExpr, "lhs", "rhs", "optok");
+  mixin visitX!(EqualExpr, "lhs", "rhs", "optok");
+  mixin visitX!(IdentityExpr, "lhs", "rhs", "optok");
+  mixin visitX!(RelExpr, "lhs", "rhs", "optok");
+  mixin visitX!(InExpr, "lhs", "rhs", "optok");
+  mixin visitX!(LShiftExpr, "lhs", "rhs", "optok");
+  mixin visitX!(RShiftExpr, "lhs", "rhs", "optok");
+  mixin visitX!(URShiftExpr, "lhs", "rhs", "optok");
+  mixin visitX!(PlusExpr, "lhs", "rhs", "optok");
+  mixin visitX!(MinusExpr, "lhs", "rhs", "optok");
+  mixin visitX!(CatExpr, "lhs", "rhs", "optok");
+  mixin visitX!(MulExpr, "lhs", "rhs", "optok");
+  mixin visitX!(DivExpr, "lhs", "rhs", "optok");
+  mixin visitX!(ModExpr, "lhs", "rhs", "optok");
+  mixin visitX!(PowExpr, "lhs", "rhs", "optok");
+  mixin visitX!(AssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(LShiftAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(RShiftAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(URShiftAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(OrAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(AndAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(PlusAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(MinusAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(DivAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(MulAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(ModAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(XorAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(CatAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(PowAssignExpr, "lhs", "rhs", "optok");
+  mixin visitX!(AddressExpr, "una");
+  mixin visitX!(PreIncrExpr, "una");
+  mixin visitX!(PreDecrExpr, "una");
+  mixin visitX!(PostIncrExpr, "una");
+  mixin visitX!(PostDecrExpr, "una");
+  mixin visitX!(DerefExpr, "una");
+  mixin visitX!(SignExpr, "una");
+  mixin visitX!(NotExpr, "una");
+  mixin visitX!(CompExpr, "una");
+  mixin visitX!(CallExpr, "una", "args");
+  mixin visitX!(NewExpr, "frame", "newArgs", "type", "ctorArgs");
+  mixin visitX!(NewClassExpr, "frame", "newArgs", "bases", "ctorArgs", "decls");
+  mixin visitX!(DeleteExpr, "una");
+  mixin visitX!(CastExpr, "type", "una");
+  mixin visitX!(IndexExpr, "una", "args");
+  mixin visitX!(SliceExpr, "una", "left", "right");
+  mixin visitX!(ModuleScopeExpr);
+  mixin visitX!(IdentifierExpr, "next", "ident");
+  mixin visitX!(SpecialTokenExpr, "specialToken");
+  mixin visitX!(TmplInstanceExpr, "next", "ident", "targs");
+  mixin visitX!(ThisExpr);
+  mixin visitX!(SuperExpr);
+  mixin visitX!(NullExpr);
+  mixin visitX!(DollarExpr);
+  mixin visitX!(BoolExpr, "toBool");
+  mixin visitX!(IntExpr, "begin"); // TODO: add method that returns begin?
+  mixin visitX!(FloatExpr, "begin");
+  mixin visitX!(ComplexExpr, "begin");
+  mixin visitX!(CharExpr, "begin");
+  mixin visitX!(StringExpr, "tokens");
+  mixin visitX!(ArrayLiteralExpr, "values");
+  mixin visitX!(AArrayLiteralExpr, "keys", "values");
+  mixin visitX!(AssertExpr, "expr", "msg");
+  mixin visitX!(MixinExpr, "expr");
+  mixin visitX!(ImportExpr, "expr");
+  mixin visitX!(TypeofExpr, "type");
+  mixin visitX!(TypeDotIdExpr, "type");
+  mixin visitX!(TypeidExpr, "type");
+  mixin visitX!(IsExpr, "type", "ident", "opTok", "specTok", "specType",
+    "tparams");
+  mixin visitX!(ParenExpr, "next");
+  mixin visitX!(FuncLiteralExpr, "returnType", "params", "funcBody");
+  mixin visitX!(TraitsExpr, "ident", "targs");
+  mixin visitX!(VoidInitExpr);
+  mixin visitX!(ArrayInitExpr, "keys", "values");
+  mixin visitX!(StructInitExpr, "idents", "values");
+  mixin visitX!(AsmTypeExpr, "una");
+  mixin visitX!(AsmOffsetExpr, "una");
+  mixin visitX!(AsmSegExpr, "una");
+  mixin visitX!(AsmPostBracketExpr, "una", "index");
+  mixin visitX!(AsmBracketExpr, "expr");
+  mixin visitX!(AsmLocalSizeExpr);
+  mixin visitX!(AsmRegisterExpr, "register", "number");
   // Types:
   // TODO:
 

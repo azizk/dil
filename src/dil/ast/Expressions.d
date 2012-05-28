@@ -688,6 +688,7 @@ class NullExpr : Expression
     mixin(set_kind);
   }
 
+  // For semantic analysis.
   this(Type type)
   {
     this();
@@ -813,11 +814,11 @@ class ComplexExpr : Expression
 class CharExpr : Expression
 {
   IntExpr value; // IntExpr of type Char/Wchar/Dchar.
-//  dchar character; // Replaced by value.
-  this(dchar character)
+
+  this(Token* chartok)
   {
     mixin(set_kind);
-//    this.character = character;
+    const character = chartok.dchar_;
     // Some semantic computation here.
     if (character <= 0xFF)
       this.type = Types.Char;
@@ -865,6 +866,45 @@ class StringExpr : Expression
   this(cdstring str)
   {
     this(cast(typeof(data))str, Types.DChar);
+  }
+
+  /// For ASTSerializer.
+  this(Token*[] tokens)
+  {
+    assert(tokens.length >= 1);
+    cstring str = tokens[0].strval.str;
+    char postfix = tokens[0].strval.pf;
+    // Concatenate adjacent string literals.
+    foreach (token; tokens[1..$])
+    {
+      auto pf = token.strval.pf;
+      assert(!(pf && pf != postfix), "StringPostfixMismatch");
+      str.length = str.length - 1; // Exclude '\0'.
+      str ~= token.strval.str;
+    }
+    assert(str[$-1] == 0);
+
+    auto bin_str = cast(const(ubyte)[])str;
+    if (postfix == 'w')      // Convert to UTF16.
+      bin_str = cast(typeof(bin_str))dil.Unicode.toUTF16(str);
+    else if (postfix == 'd') // Convert to UTF32.
+      bin_str = cast(typeof(bin_str))dil.Unicode.toUTF32(str);
+    //else // FIXME: insert into table if multiple literals.
+    //  if (tokens.length > 1) // Multiple string literals?
+    //    bin_str = cast(typeof(bin_str))lexer.lookupString(str[0..$-1]);
+
+    this(bin_str, postfix);
+  }
+
+  /// Returns the tokens this literal comprises.
+  Token*[] tokens() @property
+  {
+    assert(begin && end);
+    Token*[] ts;
+    for (auto t = begin; t !is end; t = t.next)
+      if (t.kind == TOK.String)
+        ts ~= t;
+    return ts ? ts : [begin];
   }
 
   /// Returns the number of chars/wchar/dchars in this string.

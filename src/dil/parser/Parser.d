@@ -3498,7 +3498,7 @@ class Parser
       e = new FloatExpr(token);
       goto LnT_and_return;
     case T.Character:
-      e = new CharExpr(token.dchar_);
+      e = new CharExpr(token);
       goto LnT_and_return;
     LnT_and_return:
       nT();
