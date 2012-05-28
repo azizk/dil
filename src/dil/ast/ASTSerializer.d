@@ -28,9 +28,12 @@ class ASTSerializer : Visitor2
   /// Enumeration of array types.
   enum ArrayTID : ubyte
   {
+    Node,
     Declaration,
     Statement,
     Expression,
+    Parameter,
+    TemplateParam,
     Token,
     Tokens,
     EnumMemberDecl,
@@ -40,9 +43,12 @@ class ASTSerializer : Visitor2
 
   /// Array of TypeInfos.
   static TypeInfo[ArrayTID.max+1] arrayTIs = [
+    typeid(Node),
     typeid(Declaration),
     typeid(Statement),
     typeid(Expression),
+    typeid(Parameter),
+    typeid(TemplateParam),
     typeid(Token*),
     typeid(Token*[]),
     typeid(EnumMemberDecl),
@@ -155,6 +161,11 @@ class ASTSerializer : Visitor2
       visitN(n);
   }
 
+  void write(Node[] nodes)
+  {
+    visitNodes(nodes, ArrayTID.Node);
+  }
+
   void write(Declaration[] nodes)
   {
     visitNodes(nodes, ArrayTID.Declaration);
@@ -168,6 +179,16 @@ class ASTSerializer : Visitor2
   void write(Expression[] nodes)
   {
     visitNodes(nodes, ArrayTID.Expression);
+  }
+
+  void write(Parameter[] nodes)
+  {
+    visitNodes(nodes, ArrayTID.Parameter);
+  }
+
+  void write(TemplateParam[] nodes)
+  {
+    visitNodes(nodes, ArrayTID.TemplateParam);
   }
 
   void write(EnumMemberDecl[] nodes)
@@ -476,5 +497,13 @@ class ASTSerializer : Visitor2
   mixin visitX!(SharedType, "next");
 
   // Parameters:
-  // TODO:
+  mixin visitX!(Parameter, "stcs", "stok", "type", "name", "defValue");
+  mixin visitX!(Parameters, "items");
+  mixin visitX!(TemplateAliasParam, "name", "spec", "def");
+  mixin visitX!(TemplateTypeParam, "name", "specType", "defType");
+  mixin visitX!(TemplateThisParam, "name", "specType", "defType");
+  mixin visitX!(TemplateValueParam, "valueType", "name", "specValue", "defValue");
+  mixin visitX!(TemplateTupleParam, "name");
+  mixin visitX!(TemplateParameters, "items");
+  mixin visitX!(TemplateArguments, "items");
 }

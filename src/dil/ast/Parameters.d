@@ -97,6 +97,13 @@ class Parameters : Node
     mixin(set_kind);
   }
 
+  /// For ASTSerializer.
+  this(Parameter[] params)
+  {
+    this();
+    addChildren(params);
+  }
+
   bool hasVariadic()
   {
     if (children.length != 0)
@@ -238,6 +245,13 @@ class TemplateParameters : Node
     mixin(set_kind);
   }
 
+  /// For ASTSerializer.
+  this(TemplateParam[] params)
+  {
+    this();
+    addChildren(params);
+  }
+
   void opCatAssign(TemplateParam parameter)
   {
     addChild(parameter);
@@ -260,9 +274,21 @@ class TemplateArguments : Node
     mixin(set_kind);
   }
 
+  /// For ASTSerializer.
+  this(Node[] args)
+  {
+    this();
+    addChildren(args);
+  }
+
   void opCatAssign(Node argument)
   {
     addChild(argument);
+  }
+
+  Node[] items()
+  {
+    return children;
   }
 
   mixin(copyMethod);
