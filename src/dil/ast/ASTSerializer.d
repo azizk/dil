@@ -281,6 +281,12 @@ class ASTSerializer : Visitor2
     assert(0);
   }
 
+  void visit(IllegalType n)
+  {
+    assert(0);
+  }
+
+
   // TODO: what if we could pass a delegate to avoid string mixins?
   //mixin visitX!(XYZ, n => Tuple!(n.name, n.decls));
 
@@ -451,8 +457,23 @@ class ASTSerializer : Visitor2
   mixin visitX!(AsmBracketExpr, "expr");
   mixin visitX!(AsmLocalSizeExpr);
   mixin visitX!(AsmRegisterExpr, "register", "number");
+
   // Types:
-  // TODO:
+  mixin visitX!(IntegralType, "tok");
+  mixin visitX!(ModuleScopeType);
+  mixin visitX!(IdentifierType, "next", "ident");
+  mixin visitX!(TypeofType, "expr");
+  mixin visitX!(TemplateInstanceType, "next", "ident", "targs");
+  mixin visitX!(PointerType, "next");
+  mixin visitX!(ArrayType, "next", "index1", "index2", "assocType");
+  mixin visitX!(FunctionType, "returnType", "params");
+  mixin visitX!(DelegateType, "returnType", "params");
+  mixin visitX!(CFuncType, "next", "params");
+  mixin visitX!(BaseClassType, "prot", "next");
+  mixin visitX!(ConstType, "next");
+  mixin visitX!(ImmutableType, "next");
+  mixin visitX!(InoutType, "next");
+  mixin visitX!(SharedType, "next");
 
   // Parameters:
   // TODO:

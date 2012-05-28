@@ -1743,19 +1743,15 @@ class Parser
     skip(T.Typeof);
     auto leftParen = token;
     require2(T.LParen);
-    Type type;
-    switch (token.kind)
+    Expression e;
+    if (tokenIs(T.Return))
     {
     version(D2)
-    {
-    case T.Return:
       nT();
-      type = new TypeofType();
-      break;
     }
-    default:
-      type = new TypeofType(parseExpression());
-    }
+    else
+      e = parseExpression();
+    auto type = new TypeofType(e);
     requireClosing(T.RParen, leftParen);
     set(type, begin);
     return type;

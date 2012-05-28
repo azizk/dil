@@ -61,21 +61,15 @@ class ModuleScopeType : TypeNode
 class TypeofType : TypeNode
 {
   Expression expr;
-  /// $(BNF typeof "(" Expression ")")
+
   this(Expression e)
   {
-    this();
-    addChild(e);
+    mixin(set_kind);
+    addOptChild(e);
     this.expr = e;
   }
 
-  /// For D2.0: $(BNF typeof "(" return ")")
-  this()
-  {
-    mixin(set_kind);
-  }
-
-  /// Returns true if this is a "typeof(return)".
+  /// Returns true for typeof "(" return ")".
   bool isTypeofReturn()
   {
     return expr is null;
@@ -146,6 +140,17 @@ class ArrayType : TypeNode
     this(next);
     addChild(assocType);
     this.assocType = assocType;
+  }
+
+  /// For ASTSerializer.
+  this(TypeNode next, Expression e1, Expression e2, TypeNode assocType)
+  {
+    if (e1)
+      this(next, e1, e2);
+    else if (assocType)
+      this(next, assocType);
+    else
+      this(next);
   }
 
   bool isDynamic()
