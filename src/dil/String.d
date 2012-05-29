@@ -52,14 +52,14 @@ struct StringT(C)
   }
 
   /// Constructs from start and end pointers.
-  this(inout(C)* p, inout(C)* e) inout
+  this(inout C* p, inout C* e) inout
   {
     ptr = p;
     end = e;
   }
 
   /// Constructs from a character terminated string.
-  this(inout(C)* p, const(C) terminator) inout
+  this(inout(C)* p, const C terminator) inout
   {
     ptr = p;
     while (*p != terminator)
@@ -68,7 +68,7 @@ struct StringT(C)
   }
 
   /// Constructs from a single character.
-  this(ref inout(C) c) inout
+  this(ref inout C c) inout
   {
     this(&c, &c + 1);
   }
@@ -154,7 +154,7 @@ struct StringT(C)
   }
 
   /// Compares the bytes of two Strings for exact equality.
-  int opEquals(const(S) s) const
+  int opEquals(const S s) const
   {
     if (len != s.len)
       return 0;
@@ -173,7 +173,7 @@ struct StringT(C)
 
   /// Compares the chars of two Strings.
   /// Returns: 0 if borth are equal.
-  int opCmp(const(S) s) const
+  int opCmp(const S s) const
   {
     auto n = (len <= s.len) ? len : s.len;
     const(C)* p = ptr, p2 = s.ptr;
@@ -186,7 +186,7 @@ struct StringT(C)
   }
 
   /// Compares two Strings ignoring case (only ASCII.)
-  int icmp_(const(S) s) const
+  int icmp_(const S s) const
   {
     auto n = (len <= s.len) ? len : s.len;
     const(C)* p = ptr, p2 = s.ptr;
@@ -286,38 +286,38 @@ struct StringT(C)
   }
 
   /// Concatenates another string array.
-  S opBinary(string op : "~")(const(S) rhs) const
+  S opBinary(string op : "~")(const S rhs) const
   {
     return S(array ~ rhs.array);
   }
 
   /// ditto
-  S opBinary(string op : "~")(const(C)[] rhs) const
+  S opBinary(string op : "~")(const C[] rhs) const
   {
     return S(array ~ rhs);
   }
 
   /// Appends another String.
-  ref S opOpAssign(string op : "~=")(const(S) rhs)
+  ref S opOpAssign(string op : "~=")(const S rhs)
   {
     this = this ~ rhs;
     return this;
   }
 
   /// Returns a pointer to the first character, if this String is in rhs.
-  inout(C)* opBinary(string op : "in")(inout(C)[] rhs) const
+  inout(C)* opBinary(string op : "in")(inout C[] rhs) const
   {
     return inoutS(rhs).findp(this);
   }
 
   /// Returns a pointer to the first character, if lhs is in this String.
-  inout(C)* opBinaryRight(string op : "in")(const(S) lhs) inout
+  inout(C)* opBinaryRight(string op : "in")(const S lhs) inout
   {
     return findp(lhs);
   }
 
   /// ditto
-  inout(C)* opBinaryRight(string op : "in")(const(C)[] lhs) inout
+  inout(C)* opBinaryRight(string op : "in")(const C[] lhs) inout
   {
     return findp(S(lhs));
   }
@@ -329,7 +329,7 @@ struct StringT(C)
   }
 
   /// Converts to an array string.
-  inout(C)[] opCast(T : inout(C)[])() inout
+  inout(C)[] opCast(T : inout C[])() inout
   {
     return ptr[0..len];
   }
@@ -371,25 +371,25 @@ struct StringT(C)
   }
 
   /// Return true if lower-case.
-  static bool islower(inout(C) c)
+  static bool islower(const C c)
   {
     return 'a' <= c && c <= 'z';
   }
 
   /// Return true if upper-case.
-  static bool isupper(inout(C) c)
+  static bool isupper(const C c)
   {
     return 'A' <= c && c <= 'Z';
   }
 
   /// Returns the lower-case version of c.
-  static inout(C) tolower(inout(C) c)
+  static inout(C) tolower(inout C c)
   {
     return isupper(c) ? cast(typeof(c))(c + 0x20) : c;
   }
 
   /// Returns the upper-case version of c.
-  static inout(C) toupper(inout(C) c)
+  static inout(C) toupper(inout C c)
   {
     return islower(c) ? cast(typeof(c))(c - 0x20) : c;
   }
@@ -497,19 +497,19 @@ struct StringT(C)
   }
 
   /// Returns true if this String starts with prefix.
-  bool startsWith(const(S) prefix) const
+  bool startsWith(const S prefix) const
   {
     return prefix.len <= len && S(ptr, ptr + prefix.len) == prefix;
   }
 
   /// ditto
-  bool startsWith(const(C)[] prefix) const
+  bool startsWith(const C[] prefix) const
   {
     return startsWith(S(prefix));
   }
 
   /// Returns true if this String starts with one of the specified prefixes.
-  bool startsWith(const(S)[] prefixes) const
+  bool startsWith(const S[] prefixes) const
   {
     foreach (prefix; prefixes)
       if (startsWith(prefix))
@@ -518,7 +518,7 @@ struct StringT(C)
   }
 
   /// ditto
-  bool startsWith(const(C)[][] prefixes) const
+  bool startsWith(const C[][] prefixes) const
   {
     foreach (prefix; prefixes)
       if (startsWith(S(prefix)))
@@ -527,19 +527,19 @@ struct StringT(C)
   }
 
   /// Returns true if this String ends with suffix.
-  bool endsWith(const(S) suffix) const
+  bool endsWith(const S suffix) const
   {
     return suffix.len <= len && S(end - suffix.len, end) == suffix;
   }
 
   /// ditto
-  bool endsWith(const(C)[] suffix) const
+  bool endsWith(const C[] suffix) const
   {
     return endsWith(S(suffix));
   }
 
   /// Returns true if this String ends with one of the specified suffixes.
-  bool endsWith(const(S)[] suffixes) const
+  bool endsWith(const S[] suffixes) const
   {
     foreach (suffix; suffixes)
       if (endsWith(suffix))
@@ -548,7 +548,7 @@ struct StringT(C)
   }
 
   /// ditto
-  bool endsWith(const(C)[][] suffixes) const
+  bool endsWith(const C[][] suffixes) const
   {
     foreach (suffix; suffixes)
       if (endsWith(S(suffix)))
@@ -557,7 +557,7 @@ struct StringT(C)
   }
 
   /// Searches for character c.
-  RT findChar(RT, string pred = q{*p == c})(const(C) c) inout
+  RT findChar(RT, string pred = q{*p == c})(const C c) inout
   {
     inout(C)* p = ptr;
     for (; p < end; p++)
@@ -575,7 +575,7 @@ struct StringT(C)
   }
 
   /// Searches for character c starting from the end.
-  RT findrChar(RT, string pred = q{*p == c})(const(C) c) inout
+  RT findrChar(RT, string pred = q{*p == c})(const C c) inout
   {
     inout(C)* p = end;
     while (--p >= ptr)
@@ -593,7 +593,7 @@ struct StringT(C)
   }
 
   /// Searches for s.
-  RT findS(RT)(const(S) s) inout
+  RT findS(RT)(const S s) inout
   {
     enum is_ssize_t = is(RT : ssize_t);
     if (s.len == 0)
@@ -639,7 +639,7 @@ struct StringT(C)
   }
 
   /// Searches for s starting from the end.
-  RT findrS(RT)(const(S) s) inout
+  RT findrS(RT)(const S s) inout
   {
     enum is_ssize_t = is(RT : ssize_t);
     if (s.len == 0)
@@ -707,7 +707,7 @@ struct StringT(C)
   alias findrS!(inout(C)*) findrp;
 
   /// Splits by String s and returns a list of slices.
-  inout(S)[] split(const(S) s) inout
+  inout(S)[] split(const S s) inout
   {
     S2[] result;
     const(C)* p = ptr, prev = p;
@@ -751,13 +751,13 @@ struct StringT(C)
   }
 
   /// ditto
-  inout(S)[] split(const(C) c) inout
+  inout(S)[] split(const C c) inout
   {
     return split(S(c));
   }
 
   /// ditto
-  inout(S)[] split(const(C)[] s) inout
+  inout(S)[] split(const C[] s) inout
   {
     return split(S(s));
   }
@@ -779,7 +779,7 @@ struct StringT(C)
   }
 
   /// ditto
-  ref S sub_(const(S) a, const(S) b)
+  ref S sub_(const S a, const S b)
   {
     auto alen = a.len, blen = b.len;
 
@@ -844,7 +844,7 @@ struct StringT(C)
   }
 
   /// ditto
-  S sub_(const(S) a, const(S) b) const
+  S sub_(const S a, const S b) const
   {
     return dup.sub_(a, b);
   }
@@ -864,7 +864,7 @@ struct StringT(C)
   }
 
   /// Searches for sep and returns the part before and after that.
-  inout(S)[2] partition(const(S) sep) inout
+  inout(S)[2] partition(const S sep) inout
   {
     auto psep = findp(sep);
     return psep ?
@@ -872,13 +872,13 @@ struct StringT(C)
       [this, inoutS()];
   }
   /// ditto
-  inout(S)[2] partition(const(C)[] sep) inout
+  inout(S)[2] partition(const C[] sep) inout
   {
     return partition(S(sep));
   }
 
   /// Searches for sep and returns the part before and after that.
-  inout(S)[2] rpartition(const(S) sep) inout
+  inout(S)[2] rpartition(const S sep) inout
   {
     auto psep = findrp(sep);
     return psep ?
@@ -886,7 +886,7 @@ struct StringT(C)
       [inoutS(), this];
   }
   /// ditto
-  inout(S)[2] rpartition(const(C)[] sep) inout
+  inout(S)[2] rpartition(const C[] sep) inout
   {
     return rpartition(S(sep));
   }
