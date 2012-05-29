@@ -606,15 +606,11 @@ struct StringT(C)
       const firstChar = *s.ptr;
 
       for (; p < end; p++)
-      {
         if (*p == firstChar) // Find first matching character.
         {
           const(C)* p2 = s.ptr;
           inout(C)* matchBegin = p;
-          while (p < end)
-          {
-            if (*p++ != *p2++)
-              break;
+          while (p < end && *p++ == *p2++)
             if (p2 is s.end) // If at the end, we have a match.
             {
               static if (is_ssize_t)
@@ -622,9 +618,55 @@ struct StringT(C)
               else
                 return matchBegin;
             }
-          }
         }
-      }
+    }
+    static if (is_ssize_t)
+      return -1;
+    else
+      return null;
+  }
+
+  /// Searches for s starting from the end.
+  RT findrS(RT)(const(S) s) inout
+  {
+    enum is_ssize_t = is(RT : ssize_t);
+    if (s.len == 0)
+    {
+      static if (is_ssize_t)
+        return len;
+      else
+        return end;
+    }
+    else
+    if (s.len == 1)
+    {
+      static if (is_ssize_t)
+        return findr(s[0]);
+      else
+        return findrp(s[0]);
+    }
+    else
+    if (s.len <= len) // Return when the argument string is longer.
+    {
+      inout(C)* p = end;
+      const lastChar = *(s.end - 1);
+
+      while (--p >= ptr)
+        if (*p == lastChar) // Find first matching character.
+        {
+          const(C)* p2 = s.end - 1;
+          while (--p >= ptr)
+            if (*p != *--p2)
+              break;
+            else
+            if (p2 is s.ptr) // If at the start, we have a match.
+            {
+              static if (is_ssize_t)
+                return p - ptr;
+              else
+                return p;
+            }
+        }
     }
     static if (is_ssize_t)
       return -1;
@@ -641,16 +683,18 @@ struct StringT(C)
   /// Searches for character c starting from the end.
   alias findrChar!(ssize_t) findr;
 
-  /// Searches for character c, returning a pointer to it.
+  /// Searches for character c, returning a pointer.
   alias findrChar!(inout(C)*) findrp;
-
   /// Searches for s.
   /// Returns: The position index, or -1 if not found.
   alias findS!(ssize_t) find;
-
   /// Searches for s.
   /// Returns: A pointer to the beginning of s, or null if not found.
   alias findS!(inout(C)*) findp;
+  /// Searches for s starting from the end, returning the index.
+  alias findrS!(ssize_t) findr;
+  /// Searches for s starting from the end, returning a pointer.
+  alias findrS!(inout(C)*) findrp;
 
   /// Splits by String s and returns a list of slices.
   inout(S)[] split(const(S) s) inout
@@ -1025,7 +1069,12 @@ unittest
   auto s = S("abcd");
   assert(s.findp(S("abcd")) is s.ptr);
   assert(s.findp(S("d")) is s.end - 1);
+  assert(s.findrp(S("ab")) is s.ptr);
+  assert(s.findrp(S("cd")) is s.end - 2);
+  assert(s.findrp(S("")) is s.end);
   }
+  assert(S("abcd").findr(S("ab")) == 0);
+  assert(S("abcd").findr(S("cd")) == 2);
 
   // Reversing.
   assert(S("").reverse() == S(""));
