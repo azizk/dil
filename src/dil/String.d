@@ -867,6 +867,20 @@ struct StringT(C)
     return partition(S(sep));
   }
 
+  /// Searches for sep and returns the part before and after that.
+  inout(S)[2] rpartition(const(S) sep) inout
+  {
+    auto psep = findrp(sep);
+    return psep ?
+      [inoutS(ptr, psep), inoutS(psep + sep.len, end)] :
+      [inoutS(), this];
+  }
+  /// ditto
+  inout(S)[2] rpartition(const(C)[] sep) inout
+  {
+    return rpartition(S(sep));
+  }
+
   /// Returns itself reversed.
   ref S reverse()
   {
@@ -1098,6 +1112,12 @@ unittest
   assert(S("abcd.").partition(".") == [S("abcd"), S("")]);
   assert(S(".abcd").partition(".") == [S(""), S("abcd")]);
   assert(S("abcd").partition("") == [S(""), S("abcd")]);
+
+  assert(S("ab.cd").rpartition(".") == [S("ab"), S("cd")]);
+  assert(S("abcd").rpartition(".") == [S(""), S("abcd")]);
+  assert(S("abcd.").rpartition(".") == [S("abcd"), S("")]);
+  assert(S(".abcd").rpartition(".") == [S(""), S("abcd")]);
+  assert(S("abcd").rpartition("") == [S("abcd"), S("")]);
 
   // Converting to hex string.
   assert(S("äöü").tohex() == S("c3a4c3b6c3bc"));
