@@ -85,6 +85,18 @@ struct StringT(C)
     this(S(p, end).array.dup);
   }
 
+  /// Constructs from Strings by joining them with joinStr.
+  this(const S[] strs, const S joinStr)
+  {
+    this = joinStr.join(strs);
+  }
+
+  /// ditto
+  this(const C[][] strs, const C[] joinStr)
+  {
+    this = S(joinStr).join(strs);
+  }
+
   /// Checks pointers.
   invariant()
   {
@@ -679,10 +691,8 @@ struct StringT(C)
   /// Searches for character c.
   /// Returns: A pointer to c, or null if not found.
   alias findChar!(inout(C)*) findp;
-
   /// Searches for character c starting from the end.
   alias findrChar!(ssize_t) findr;
-
   /// Searches for character c, returning a pointer.
   alias findrChar!(inout(C)*) findrp;
   /// Searches for s.
@@ -879,6 +889,34 @@ struct StringT(C)
   inout(S)[2] rpartition(const(C)[] sep) inout
   {
     return rpartition(S(sep));
+  }
+
+  /// Concatenates strs using this String as a separator.
+  S join(const S[] strs) const
+  {
+    C[] result;
+    if (strs.length)
+    {
+      const joinStr = this.array;
+      result = strs[0].array.dup;
+      foreach (str; strs[1..$])
+        result ~= joinStr ~ str.array;
+    }
+    return S(result);
+  }
+
+  /// ditto
+  S join(const C[][] strs) const
+  {
+    C[] result;
+    if (strs.length)
+    {
+      const joinStr = this.array;
+      result = strs[0].dup;
+      foreach (str; strs[1..$])
+        result ~= joinStr ~ str;
+    }
+    return S(result);
   }
 
   /// Returns itself reversed.
@@ -1126,4 +1164,9 @@ unittest
   // Case conversion.
   assert(S("^agmtz$").toupper() == S("^AGMTZ$"));
   assert(S("^AGMTZ$").tolower() == S("^agmtz$"));
+
+  // Joining.
+  assert(S(["a","b","c","d"], ".") == S("a.b.c.d"));
+  assert(S(["a","b","c","d"], "") == S("abcd"));
+  assert(S(["a"], ".") == S("a"));
 }
