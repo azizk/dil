@@ -2823,8 +2823,8 @@ class Parser
   ////AsmMulOp      := "*" | "/" | "%"
   ////)
   /// Params:
-  ///   prevPrec = The precedence of the previous operator plus 1.
-  Expression parseAsmBinaryExpr(int prevPrec = 0)
+  ///   prevPrec = The precedence of the previous operator.
+  Expression parseAsmBinaryExpr(PREC prevPrec = PREC.None)
   {
     auto begin = token;
     auto e = parseAsmPostExpr(); // Parse the left-hand side.
@@ -2834,8 +2834,8 @@ class Parser
     {
       auto operator = token;
       auto opPrec = parseBinaryOp(makeBinaryExpr, prevPrec);
-      if (opPrec < prevPrec) // Parse as long as the operators
-        break;               // have equal or higher precedence.
+      if (opPrec <= prevPrec) // Parse as long as the operators
+        break;                // have equal or higher precedence.
       switch (prevToken.kind)
       {
       case /*T.Exclaim,*/ T.Is, T.In, T.Unordered, T.UorE, T.UorG, T.UorGorE,
@@ -2845,7 +2845,7 @@ class Parser
         break;
       default:
       }
-      auto rhs = parseAsmBinaryExpr(opPrec + 1); // Parse the right-hand side.
+      auto rhs = parseAsmBinaryExpr(opPrec); // Parse the right-hand side.
       e = makeBinaryExpr(e, rhs, operator);
       set(e, begin);
     }
@@ -3121,26 +3121,34 @@ class Parser
     return e;
   }
 
-  /// Returns the precedence of a binary operator, or -1 if it's not binary.
-  /// The higher the value the stronger the operator binds.
+  /// Enumeration of binary operator precedence values.
+  enum PREC
+  {
+    None,  /// No precedence.
+    OOr,   /// ||
+    AAnd,  /// &&
+    Or,    /// |
+    Xor,   /// ^
+    And,   /// &
+    Cmp,   /// in !in is !is == != < > <= >= etc.
+    Shift, /// << >> >>>
+    Plus,  /// + - ~
+    Mul,   /// * / %
+    Pow,   /// ^^
+  }
+
+  /// Consumes the tokens of a binary operator.
   /// Params:
   ///   fn = Receives a function that creates the binary Expression.
   ///   prevPrec = The precedence value of the previous operator.
-  int parseBinaryOp(ref NewBinaryExpr fn, int prevPrec)
+  /// Returns: The precedence value of the binary operator.
+  ///   The higher the value the stronger the operator binds.
+  PREC parseBinaryOp(out NewBinaryExpr fn, PREC prevPrec)
   {
-    int p = -1;
+    PREC p;
     NewBinaryExpr f;
     switch (token.kind)
     {
-    case T.Pipe2:      p = 1; f = &newBinaryExpr!(OrOrExpr); break;
-    case T.Amp2:       p = 2; f = &newBinaryExpr!(AndAndExpr); break;
-    case T.Pipe:       p = 3; f = &newBinaryExpr!(OrExpr); break;
-    case T.Caret:      p = 4; f = &newBinaryExpr!(XorExpr); break;
-    case T.Amp:        p = 5; f = &newBinaryExpr!(AndExpr); break;
-    case T.Is:         p = 6; f = &newBinaryExpr!(IdentityExpr); break;
-    case T.In:         p = 6; f = &newBinaryExpr!(InExpr); break;
-    case T.Equal2,
-         T.ExclaimEql: p = 6; f = &newBinaryExpr!(EqualExpr); break;
     case T.Exclaim:
       auto next = peekNext();
       if (next == T.Is) // "!" is
@@ -3148,33 +3156,41 @@ class Parser
       else version(D2) if (next == T.In) // "!" in
         goto case T.In;
       break; // Not a binary operator.
+    case T.Pipe2:    p = PREC.OOr;  f = &newBinaryExpr!(OrOrExpr); break;
+    case T.Amp2:     p = PREC.AAnd; f = &newBinaryExpr!(AndAndExpr); break;
+    case T.Pipe:     p = PREC.Or;   f = &newBinaryExpr!(OrExpr); break;
+    case T.Caret:    p = PREC.Xor;  f = &newBinaryExpr!(XorExpr); break;
+    case T.Amp:      p = PREC.And;  f = &newBinaryExpr!(AndExpr); break;
+    case T.Is:       p = PREC.Cmp;  f = &newBinaryExpr!(IdentityExpr); break;
+    case T.In:       p = PREC.Cmp;  f = &newBinaryExpr!(InExpr); break;
+    case T.ExclaimEql,
+         T.Equal2:   p = PREC.Cmp;  f = &newBinaryExpr!(EqualExpr); break;
     case T.LessEql, T.Less, T.GreaterEql, T.Greater,
          T.Unordered, T.UorE, T.UorG, T.UorGorE,
          T.UorL, T.UorLorE, T.LorEorG, T.LorG:
-                     p = 6; f = &newBinaryExpr!(RelExpr); break;
-    case T.Less2:    p = 7; f = &newBinaryExpr!(LShiftExpr); break;
-    case T.Greater2: p = 7; f = &newBinaryExpr!(RShiftExpr); break;
-    case T.Greater3: p = 7; f = &newBinaryExpr!(URShiftExpr); break;
-    case T.Plus:     p = 8; f = &newBinaryExpr!(PlusExpr); break;
-    case T.Minus:    p = 8; f = &newBinaryExpr!(MinusExpr); break;
-    case T.Tilde:    p = 8; f = &newBinaryExpr!(CatExpr); break;
-    case T.Star:     p = 9; f = &newBinaryExpr!(MulExpr); break;
-    case T.Slash:    p = 9; f = &newBinaryExpr!(DivExpr); break;
-    case T.Percent:  p = 9; f = &newBinaryExpr!(ModExpr); break;
+                     p = PREC.Cmp;   f = &newBinaryExpr!(RelExpr); break;
+    case T.Less2:    p = PREC.Shift; f = &newBinaryExpr!(LShiftExpr); break;
+    case T.Greater2: p = PREC.Shift; f = &newBinaryExpr!(RShiftExpr); break;
+    case T.Greater3: p = PREC.Shift; f = &newBinaryExpr!(URShiftExpr); break;
+    case T.Plus:     p = PREC.Plus;  f = &newBinaryExpr!(PlusExpr); break;
+    case T.Minus:    p = PREC.Plus;  f = &newBinaryExpr!(MinusExpr); break;
+    case T.Tilde:    p = PREC.Plus;  f = &newBinaryExpr!(CatExpr); break;
+    case T.Star:     p = PREC.Mul;   f = &newBinaryExpr!(MulExpr); break;
+    case T.Slash:    p = PREC.Mul;   f = &newBinaryExpr!(DivExpr); break;
+    case T.Percent:  p = PREC.Mul;   f = &newBinaryExpr!(ModExpr); break;
     version(D2)
     {
-    case T.Caret2:  p = 10; f = &newBinaryExpr!(PowExpr); break;
+    case T.Caret2:   p = PREC.Pow;   f = &newBinaryExpr!(PowExpr); break;
     }
     default:
     }
-    // 6 is the precedence of comparison operators.
-    if (p == prevPrec - 1 && p == 6)
+    if (p == prevPrec && p == PREC.Cmp)
       error(token, MID.CannotChainComparisonOps); // E.g.: a == b == c
     // Consume if we have a binary operator
     // and the precedence is greater or equal to prevPrec.
-    if (p >= prevPrec)
+    if (p >= prevPrec + 1)
     {
-      assert(f !is null && p != -1);
+      assert(f !is null && p != PREC.None);
       fn = f;
       if (tokenIs(T.Exclaim))
         nT(); // Consume "!" part.
@@ -3205,10 +3221,10 @@ class Parser
   ////PowExpr    := PostExpr ("^^" PostExpr)* # D2
   ////)
   /// Params:
-  ///   prevPrec = The precedence of the previous operator plus 1.
+  ///   prevPrec = The precedence of the previous operator.
   /// Note: Uses the "precedence climbing" method as described here:
   /// $(LINK http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm#climbing)
-  Expression parseBinaryExpr(int prevPrec = 0)
+  Expression parseBinaryExpr(PREC prevPrec = PREC.None)
   {
     auto begin = token;
     auto e = parsePostExpr(); // Parse the left-hand side.
@@ -3218,9 +3234,9 @@ class Parser
     {
       auto operator = token;
       auto opPrec = parseBinaryOp(makeBinaryExpr, prevPrec);
-      if (opPrec < prevPrec) // Parse as long as the operators
-        break;               // have equal or higher precedence.
-      auto rhs = parseBinaryExpr(opPrec + 1); // Parse the right-hand side.
+      if (opPrec <= prevPrec) // Parse as long as the operators
+        break;                // have equal or higher precedence.
+      auto rhs = parseBinaryExpr(opPrec); // Parse the right-hand side.
       e = makeBinaryExpr(e, rhs, operator);
       set(e, begin);
     }
