@@ -3,6 +3,12 @@
 /// $(Maturity average)
 module dil.i18n.Messages;
 
+// How to add a new message:
+// 1. Insert short but descriptive identifier in MID.
+// 2. Open all data/lang_*.d files.
+// 3. Insert the new message at the same position.
+// 4. Insert null when the translation is not available yet.
+
 /// Enumeration of indices into the table of compiler messages.
 enum MID
 {
@@ -126,6 +132,7 @@ enum MID
   ExpectedParamDefValue,
   IllegalVariadicParam,
   ParamsAfterVariadic,
+  CannotChainComparisonOps,
 
   // Semantic analysis:
   CouldntLoadModule,

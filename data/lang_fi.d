@@ -76,8 +76,8 @@ string[] messages = [
   "tunnistamaton linkitystyyppi '{0}'; sallittuja tyyppejä ovat C, C++, D, Windows, Pascal ja System.",
   "odotettiin yhtä tai useampaa luokkaa, ei '{0}':ta.",
   "kantaluokat eivät ole sallittuja etukäteismäärittelyissä.",
-
   // TODO: to be translated
+  null,
   null,
   null,
   null,

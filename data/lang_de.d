@@ -127,6 +127,7 @@ string[] messages = [
   "erwartete einen Standardwert für den Parameter ‚{}‘",
   "variadischer Parameter darf nicht ‚ref‘ oder ‚out‘ sein",
   "weitere Parameter nach einem variadischen Parameter sind nicht erlaubt",
+  "Vergleichsoperatoren können nicht verkettet werden, w.z.B. a == b == c",
 
   // Semantic analysis:
   "das Modul ‚{}‘ konnte nicht gefunden werden",

@@ -126,6 +126,7 @@ string[] messages = [
   "expected default value for parameter ‘{}’",
   "variadic parameter cannot be ‘ref’ or ‘out’",
   "cannot have parameters after a variadic parameter",
+  "cannot chain comparison operators, like a == b == c",
 
   // Semantic analysis:
   "couldn’t find module file ‘{}’",

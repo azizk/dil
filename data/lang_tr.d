@@ -76,8 +76,8 @@ string[] messages = [
   "bilinmeyen bağlantı tüpü (linkage type) '{0}'; geçerli olanlar C, C++, D, Windows, Pascal ve System.",
   "expected one or more base classes, not '{0}'.", // TODO: translate
   "base classes are not allowed in forward declarations.", // TODO: translate
-
   // TODO: to be translated
+  null,
   null,
   null,
   null,
@@ -173,7 +173,7 @@ Copyright (c) 2007-2012, Aziz Köksal. Lisans GPL3.
 
 Komutlar:
 {1}
-Belirli komut'a yardım edinmek için 'dil help <komut>' yazınız.
+Belirli komuta yardım edinmek için 'dil help <komut>' yazınız.
 
 Bu yazılım {2} v{3} ile {4} tarihinde derletilmiş.`,
 
