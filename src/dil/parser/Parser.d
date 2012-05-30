@@ -3124,7 +3124,7 @@ class Parser
   /// Returns the precedence of a binary operator, or -1 if it's not binary.
   /// The higher the value the stronger the operator binds.
   /// Params:
-  ///   f = Receives a function that creates the binary Expression.
+  ///   fn = Receives a function that creates the binary Expression.
   ///   prevPrec = The precedence value of the previous operator.
   int parseBinaryOp(ref NewBinaryExpr fn, int prevPrec)
   {
@@ -3167,6 +3167,9 @@ class Parser
     }
     default:
     }
+    // 6 is the precedence of comparison operators.
+    if (p == prevPrec - 1 && p == 6)
+      error(token, MID.CannotChainComparisonOps); // E.g.: a == b == c
     // Consume if we have a binary operator
     // and the precedence is greater or equal to prevPrec.
     if (p >= prevPrec)
