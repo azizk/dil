@@ -356,7 +356,7 @@ class ASTSerializer : Visitor2
   mixin visitX!(AliasDecl, "decl");
   mixin visitX!(AliasThisDecl, "ident");
   mixin visitX!(TypedefDecl, "decl");
-  mixin visitX!(EnumDecl, "name", "baseType", "members", "hasBody");
+  mixin visitX!(EnumDecl, "name", "baseType", "members");
   mixin visitX!(EnumMemberDecl, "type", "name", "value");
   mixin visitX!(ClassDecl, "name", "bases", "decls");
   mixin visitX!(StructDecl, "name", "decls", "alignSize");

@@ -1261,7 +1261,6 @@ class Parser
     Token* enumName;
     Type baseType;
     EnumMemberDecl[] members;
-    bool hasBody;
 
     enumName = optionalIdentifier();
 
@@ -1272,7 +1271,6 @@ class Parser
     {}
     else if (auto leftBrace = consumedToken(T.LBrace)) // "{"
     {
-      hasBody = true;
       while (!tokenIs(T.RBrace))
       {
         Token* begin = token,
@@ -1303,7 +1301,7 @@ class Parser
     else
       error2(MID.ExpectedEnumBody, token);
 
-    return new EnumDecl(enumName, baseType, members, hasBody);
+    return new EnumDecl(enumName, baseType, members);
   }
 
   /// Wraps a declaration inside a template declaration.

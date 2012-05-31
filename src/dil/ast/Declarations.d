@@ -19,7 +19,6 @@ class CompoundDecl : Declaration
 {
   this()
   {
-    hasBody = true;
     mixin(set_kind);
   }
 
@@ -208,9 +207,8 @@ class EnumDecl : Declaration
   Token* name;
   TypeNode baseType;
   EnumMemberDecl[] members;
-  this(Token* name, TypeNode baseType, EnumMemberDecl[] members, bool hasBody)
+  this(Token* name, TypeNode baseType, EnumMemberDecl[] members)
   {
-    super.hasBody = hasBody;
     mixin(set_kind);
     addOptChild(baseType);
     addOptChildren(members);
@@ -271,7 +269,6 @@ class TemplateDecl : Declaration
   this(Token* name, TemplateParameters tparams, Expression constraint,
        CompoundDecl decls)
   {
-    super.hasBody = true;
     mixin(set_kind);
     addChild(tparams);
     addOptChild(constraint);
@@ -311,7 +308,6 @@ abstract class AggregateDecl : Declaration
   CompoundDecl decls;
   this(Token* name, /+TemplateParameters tparams, +/CompoundDecl decls)
   {
-    super.hasBody = decls !is null;
     this.name = name;
 //     this.tparams = tparams;
     this.decls = decls;
@@ -413,7 +409,6 @@ class ConstructorDecl : Declaration
   FuncBodyStmt funcBody;
   this(Parameters params, FuncBodyStmt funcBody)
   {
-    super.hasBody = true;
     mixin(set_kind);
     addChild(params);
     addChild(funcBody);
@@ -429,7 +424,6 @@ class StaticCtorDecl : Declaration
   FuncBodyStmt funcBody;
   this(FuncBodyStmt funcBody)
   {
-    super.hasBody = true;
     mixin(set_kind);
     addChild(funcBody);
 
@@ -443,7 +437,6 @@ class DestructorDecl : Declaration
   FuncBodyStmt funcBody;
   this(FuncBodyStmt funcBody)
   {
-    super.hasBody = true;
     mixin(set_kind);
     addChild(funcBody);
 
@@ -457,7 +450,6 @@ class StaticDtorDecl : Declaration
   FuncBodyStmt funcBody;
   this(FuncBodyStmt funcBody)
   {
-    super.hasBody = true;
     mixin(set_kind);
     addChild(funcBody);
 
@@ -479,7 +471,6 @@ class FunctionDecl : Declaration
   this(TypeNode returnType, Token* name,/+ TemplateParameters tparams,+/
        Parameters params, FuncBodyStmt funcBody)
   {
-    super.hasBody = funcBody.funcBody !is null;
     mixin(set_kind);
     addOptChild(returnType);
 //     addChild(tparams);
@@ -557,7 +548,6 @@ class InvariantDecl : Declaration
   FuncBodyStmt funcBody;
   this(FuncBodyStmt funcBody)
   {
-    super.hasBody = true;
     mixin(set_kind);
     addChild(funcBody);
 
@@ -571,7 +561,6 @@ class UnittestDecl : Declaration
   FuncBodyStmt funcBody;
   this(FuncBodyStmt funcBody)
   {
-    super.hasBody = true;
     mixin(set_kind);
     addChild(funcBody);
 
@@ -588,7 +577,6 @@ abstract class ConditionalCompilationDecl : Declaration
 
   this(Token* spec, Token* cond, Declaration decls, Declaration elseDecls)
   {
-    super.hasBody = decls !is null;
     addOptChild(decls);
     addOptChild(elseDecls);
 
@@ -638,7 +626,6 @@ class StaticIfDecl : Declaration
   Declaration ifDecls, elseDecls;
   this(Expression condition, Declaration ifDecls, Declaration elseDecls)
   {
-    super.hasBody = true;
     mixin(set_kind);
     addChild(condition);
     addChild(ifDecls);
@@ -656,7 +643,6 @@ class StaticAssertDecl : Declaration
   Expression condition, message;
   this(Expression condition, Expression message)
   {
-    super.hasBody = true;
     mixin(set_kind);
     addChild(condition);
     addOptChild(message);
@@ -673,7 +659,6 @@ class NewDecl : Declaration
   FuncBodyStmt funcBody;
   this(Parameters params, FuncBodyStmt funcBody)
   {
-    super.hasBody = true;
     mixin(set_kind);
     addChild(params);
     addChild(funcBody);
@@ -690,7 +675,6 @@ class DeleteDecl : Declaration
   FuncBodyStmt funcBody;
   this(Parameters params, FuncBodyStmt funcBody)
   {
-    super.hasBody = true;
     mixin(set_kind);
     addChild(params);
     addChild(funcBody);
@@ -706,7 +690,6 @@ abstract class AttributeDecl : Declaration
   Declaration decls;
   this(Declaration decls)
   {
-    super.hasBody = true;
     addChild(decls);
     this.decls = decls;
   }

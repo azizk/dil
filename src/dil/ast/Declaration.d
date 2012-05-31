@@ -9,7 +9,6 @@ import dil.Enums;
 /// The root class of all declarations.
 abstract class Declaration : Node
 {
-  bool hasBody;
   this()
   {
     super(NodeCategory.Declaration);
