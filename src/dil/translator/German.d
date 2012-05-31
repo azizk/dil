@@ -112,7 +112,7 @@ override:
   D visit(ModuleDecl n)
   {
     printLoc(n);
-    put.format("Dies ist das Modul '{}'", n.moduleName.text);
+    put.format("Dies ist das Modul '{}'", n.name.text);
     if (n.packages.length)
       put.format(" im Paket '{}'", n.getPackageName('.'));
     put(".").newline;

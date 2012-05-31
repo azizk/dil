@@ -31,6 +31,7 @@ class ASTSerializer : Visitor2
     Array = 'A',
     Char,
     Bool,
+    Uint,
     TOK,
     Protection,
     LinkageType,
@@ -57,6 +58,7 @@ class ASTSerializer : Visitor2
     typeid(void[]),
     typeid(char),
     typeid(bool),
+    typeid(uint),
     typeid(TOK),
     typeid(Protection),
     typeid(LinkageType),
@@ -246,6 +248,13 @@ class ASTSerializer : Visitor2
     write1B(b);
   }
 
+  /// Writes a uint.
+  void write(uint u)
+  {
+    write1B(TID.Uint);
+    write4B(u);
+  }
+
   /// Writes a TOK.
   void write(TOK tok)
   {
@@ -341,7 +350,7 @@ class ASTSerializer : Visitor2
 
   mixin visitX!(CompoundDecl, "decls");
   mixin visitX!(EmptyDecl);
-  mixin visitX!(ModuleDecl, "typeIdent"/+, n.packages ~ n.moduleName+/);
+  mixin visitX!(ModuleDecl, "type", "fqn");
   mixin visitX!(ImportDecl, "moduleFQNs", "moduleAliases", "bindNames",
     "bindAliases", "isStatic");
   mixin visitX!(AliasDecl, "decl");
@@ -350,7 +359,7 @@ class ASTSerializer : Visitor2
   mixin visitX!(EnumDecl, "name", "baseType", "members", "hasBody");
   mixin visitX!(EnumMemberDecl, "type", "name", "value");
   mixin visitX!(ClassDecl, "name", "bases", "decls");
-  mixin visitX!(StructDecl, /+alignSize, +/"name", "decls");
+  mixin visitX!(StructDecl, "name", "decls", "alignSize");
   mixin visitX!(UnionDecl, "name", "decls");
   mixin visitX!(ConstructorDecl, "params", "funcBody");
   mixin visitX!(StaticCtorDecl, "funcBody");

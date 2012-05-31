@@ -80,17 +80,19 @@ alias Token*[] ModuleFQN;
 
 class ModuleDecl : Declaration
 {
-  Token* typeIdent;
-  Token* moduleName;
-  Token*[] packages;
+  Token* type; /// safe | system
+  Token* name; /// E.g.: Declarations
+  Token*[] packages; /// E.g.: [dil, ast]
+  Token*[] fqn; /// E.g.: [dil, ast, Declarations]
 
-  this(Token* ident, ModuleFQN moduleFQN)
+  this(Token* type, ModuleFQN fqn)
   {
     mixin(set_kind);
-    assert(moduleFQN.length != 0);
-    this.typeIdent = ident;
-    this.moduleName = moduleFQN[$-1];
-    this.packages = moduleFQN[0..$-1];
+    assert(fqn.length != 0);
+    this.type = type;
+    this.fqn = fqn;
+    this.name = fqn[$-1];
+    this.packages = fqn[0..$-1];
   }
 
   /// Returns the fully qualified name. E.g.: "dil.ast.Declarations"
@@ -106,8 +108,7 @@ class ModuleDecl : Declaration
   /// Returns the name of this module. E.ǵ.: "Declarations"
   cstring getName()
   {
-    assert(moduleName !is null);
-    return moduleName.ident.str;
+    return name.ident.str;
   }
 
   /// Returns the packages of this module. E.g.: "dil.ast"
@@ -372,6 +373,13 @@ class StructDecl : AggregateDecl
     mixin(set_kind);
 //     addChild(tparams);
     addOptChild(decls);
+  }
+
+  /// For ASTSerializer.
+  this(Token* name, CompoundDecl decls, uint alignSize)
+  {
+    this(name, decls);
+    setAlignSize(alignSize);
   }
 
   void setAlignSize(uint alignSize)

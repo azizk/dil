@@ -303,9 +303,9 @@ override
   void visit(ModuleDecl d)
   {
     begin(d);
-    d.typeIdent ? write(indexOf(d.typeIdent)) : write("n");
+    d.type ? write(indexOf(d.type)) : write("n");
     write(",");
-    write(indexOf(d.moduleName)~",");
+    write(indexOf(d.name)~",");
     write("(");
     foreach (tok; d.packages)
       write(indexOf(tok)~",");

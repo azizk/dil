@@ -288,7 +288,7 @@ class ModuleManager
   /// or the first token in the source text.
   Location getErrorLocation(Module m)
   {
-    auto name = m.moduleDecl ? m.moduleDecl.moduleName : m.firstToken();
+    auto name = m.moduleDecl ? m.moduleDecl.name : m.firstToken();
     return name.getErrorLocation(m.filePath);
   }
 
