@@ -2834,8 +2834,8 @@ class Parser
     {
       auto operator = token;
       auto opPrec = parseBinaryOp(makeBinaryExpr, prevPrec);
-      if (opPrec <= prevPrec) // Parse as long as the operators
-        break;                // have equal or higher precedence.
+      if (opPrec <= prevPrec) // Continue as long as the operators
+        break;                // have higher precedence.
       switch (prevToken.kind)
       {
       case /*T.Exclaim,*/ T.Is, T.In, T.Unordered, T.UorE, T.UorG, T.UorGorE,
@@ -3187,8 +3187,8 @@ class Parser
     if (p == prevPrec && p == PREC.Cmp)
       error(token, MID.CannotChainComparisonOps); // E.g.: a == b == c
     // Consume if we have a binary operator
-    // and the precedence is greater or equal to prevPrec.
-    if (p >= prevPrec + 1)
+    // and the precedence is greater than prevPrec.
+    if (p > prevPrec)
     {
       assert(f !is null && p != PREC.None);
       fn = f;
@@ -3234,8 +3234,8 @@ class Parser
     {
       auto operator = token;
       auto opPrec = parseBinaryOp(makeBinaryExpr, prevPrec);
-      if (opPrec <= prevPrec) // Parse as long as the operators
-        break;                // have equal or higher precedence.
+      if (opPrec <= prevPrec) // Continue as long as the operators
+        break;                // have higher precedence.
       auto rhs = parseBinaryExpr(opPrec); // Parse the right-hand side.
       e = makeBinaryExpr(e, rhs, operator);
       set(e, begin);
