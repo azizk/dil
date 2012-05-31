@@ -1294,14 +1294,14 @@ override
   void visit(IdentifierExpr e)
   {
     begin(e);
-    write(indexOf(e.idToken));
+    write(indexOf(e.ident));
     end(e);
   }
 
   void visit(TmplInstanceExpr e)
   {
     begin(e);
-    write(indexOf(e.idToken));
+    write(indexOf(e.ident));
     write(",");
     e.targs ? visitN(e.targs) : write("n");
     end(e);

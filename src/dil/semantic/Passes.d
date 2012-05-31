@@ -1678,8 +1678,7 @@ override
     if (e.isChecked)
       return e;
     debug(sema) Stdout.formatln("", e);
-    auto idToken = e.idToken();
-    e.symbol = search(idToken);
+    e.symbol = search(e.ident);
     return e;
   }
 
@@ -1688,8 +1687,7 @@ override
     if (e.isChecked)
       return e;
     debug(sema) Stdout.formatln("", e);
-    auto idToken = e.idToken();
-    e.symbol = search(idToken);
+    e.symbol = search(e.ident);
     return e;
   }
 

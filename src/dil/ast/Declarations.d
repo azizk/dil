@@ -220,7 +220,7 @@ class EnumDecl : Declaration
     this.members = members;
   }
 
-  /// Returns the Identifier object of a variable.
+  /// Returns the Identifier of this enum, or null if anonymous.
   Identifier* nameId()
   {
     return name ? name.ident : null;
@@ -277,16 +277,16 @@ class TemplateDecl : Declaration
     addOptChild(constraint);
     addChild(decls);
 
+    assert(name !is null);
     this.name = name;
     this.tparams = tparams;
     this.constraint = constraint;
     this.decls = decls;
   }
 
-  /// Returns the Identifier object of this declaration. May be null.
+  /// Returns the Identifier of this template.
   Identifier* nameId()
   {
-    assert(name !is null);
     return name.ident;
   }
 
@@ -317,7 +317,7 @@ abstract class AggregateDecl : Declaration
     this.decls = decls;
   }
 
-  /// Returns the Identifier object of this declaration. May be null.
+  /// Returns the Identifier of this declaration, or null if anonymous.
   Identifier* nameId()
   {
     return name ? name.ident : null;

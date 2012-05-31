@@ -2976,8 +2976,8 @@ class Parser
       e = new AsmBracketExpr(e);
       break;
     case T.Identifier:
-      auto register = token.ident;
-      switch (register.idKind)
+      auto register = token;
+      switch (register.ident.idKind)
       {
       // __LOCAL_SIZE
       case IDK.__LOCAL_SIZE:
@@ -3411,7 +3411,7 @@ class Parser
       }, success);
       if (!success)
         goto default;
-      auto ident = requireIdentifier2(MID.ExpectedIdAfterTypeDot);
+      auto ident = requireIdentifier(MID.ExpectedIdAfterTypeDot);
       e = new TypeDotIdExpr(type, ident);
       break;
     default:
@@ -3428,7 +3428,7 @@ class Parser
   Expression parseIdentifierExpr(Expression next = null)
   {
     auto begin = token;
-    auto ident = requireIdentifier2(MID.ExpectedAnIdentifier);
+    auto ident = requireIdentifier(MID.ExpectedAnIdentifier);
     Expression e;
     // Peek to avoid parsing: "id !is Exp" or "id !in Exp"
     auto nextTok = peekNext();
@@ -3729,7 +3729,7 @@ class Parser
         nT();
         set(type, begin);
         require2(T.Dot);
-        auto ident = requireIdentifier2(MID.ExpectedIdAfterTypeDot);
+        auto ident = requireIdentifier(MID.ExpectedIdAfterTypeDot);
         e = new TypeDotIdExpr(type, ident);
       }
       else if (token.isSpecialToken)
@@ -3930,7 +3930,7 @@ class Parser
   Type parseIdentifierType(Type next = null)
   {
     auto begin = token;
-    auto ident = requireIdentifier2(MID.ExpectedAnIdentifier);
+    auto ident = requireIdentifier(MID.ExpectedAnIdentifier);
     Type t;
     if (consumed(T.Exclaim)) // TemplateInstance
       t = new TemplateInstanceType(next, ident,
@@ -3953,7 +3953,7 @@ class Parser
     else if (tokenIs(T.Typeof))
       type = parseTypeofType();
     else if (tokenIs(T.This) || tokenIs(T.Super)) { // D2
-      type = set(new IdentifierType(null, token.ident), begin, begin);
+      type = set(new IdentifierType(null, token), begin, begin);
       nT();
     }
     else
@@ -4588,13 +4588,6 @@ class Parser
         idtok = null;
     }
     return idtok;
-  }
-
-  /// ditto
-  Identifier* requireIdentifier2(MID mid)
-  {
-    auto idtok = requireIdentifier(mid);
-    return idtok ? idtok.ident : Ident.Empty;
   }
 
   /// Reports an error if the closing counterpart of a token is not found.

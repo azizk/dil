@@ -158,12 +158,11 @@ static this()
 unittest
 {
   scope msg = new UnittestMsg("Testing class Visitor.");
-  import dil.lexer.IdTable;
 
   class TestVisitor : Visitor
   {
     alias super.visit visit;
-    Expression visit(IdentifierExpr e)
+    Expression visit(NullExpr e)
     {
       return e;
     }
@@ -171,15 +170,15 @@ unittest
 
   class TestVisitor2 : Visitor2
   {
-    IdentifierExpr ie;
+    NullExpr ie;
     alias super.visit visit;
-    void visit(IdentifierExpr e)
+    void visit(NullExpr e)
     {
       ie = e;
     }
   }
 
-  auto ie = new IdentifierExpr(Ident.Empty);
+  auto ie = new NullExpr();
   auto v1 = new TestVisitor();
   auto v2 = new TestVisitor2();
 

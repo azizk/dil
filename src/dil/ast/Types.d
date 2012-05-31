@@ -37,13 +37,19 @@ class IntegralType : TypeNode
 /// Identifier
 class IdentifierType : TypeNode
 {
-  Identifier* ident;
-  this(TypeNode next, Identifier* ident)
+  Token* ident;
+  this(TypeNode next, Token* ident)
   {
     super(next);
     mixin(set_kind);
     this.ident = ident;
   }
+
+  @property Identifier* id()
+  {
+    return ident.ident;
+  }
+
   mixin(copyMethod);
 }
 
@@ -81,9 +87,9 @@ class TypeofType : TypeNode
 /// Identifier "!" "(" TemplateParameters? ")"
 class TemplateInstanceType : TypeNode
 {
-  Identifier* ident;
+  Token* ident;
   TemplateArguments targs;
-  this(TypeNode next, Identifier* ident, TemplateArguments targs)
+  this(TypeNode next, Token* ident, TemplateArguments targs)
   {
     super(next);
     mixin(set_kind);
@@ -91,6 +97,12 @@ class TemplateInstanceType : TypeNode
     this.ident = ident;
     this.targs = targs;
   }
+
+  @property Identifier* id()
+  {
+    return ident.ident;
+  }
+
   mixin(copyMethod);
 }
 

@@ -316,7 +316,7 @@ override:
 
   TypeNode visit(IdentifierType n)
   {
-    put(n.ident.str);
+    put(n.id.str);
     return n;
   }
 

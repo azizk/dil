@@ -596,8 +596,8 @@ class SliceExpr : UnaryExpr
 class IdentifierExpr : Expression
 {
   Expression next;
-  Identifier* ident;
-  this(Identifier* ident, Expression next = null)
+  Token* ident;
+  this(Token* ident, Expression next = null)
   {
     mixin(set_kind);
     addOptChild(next);
@@ -605,10 +605,9 @@ class IdentifierExpr : Expression
     this.ident = ident;
   }
 
-  Token* idToken()
+  @property Identifier* id()
   {
-    assert(begin !is null);
-    return begin;
+    return ident.ident;
   }
 
   mixin(copyMethod);
@@ -628,9 +627,9 @@ class ModuleScopeExpr : Expression
 class TmplInstanceExpr : Expression
 {
   Expression next;
-  Identifier* ident;
+  Token* ident;
   TemplateArguments targs;
-  this(Identifier* ident, TemplateArguments targs, Expression next = null)
+  this(Token* ident, TemplateArguments targs, Expression next = null)
   {
     mixin(set_kind);
     addOptChild(targs);
@@ -640,10 +639,9 @@ class TmplInstanceExpr : Expression
     this.targs = targs;
   }
 
-  Token* idToken()
+  @property Identifier* id()
   {
-    assert(begin !is null);
-    return begin;
+    return ident.ident;
   }
 
   mixin(copyMethod);
@@ -1017,8 +1015,8 @@ class TypeofExpr : Expression
 class TypeDotIdExpr : Expression
 {
   TypeNode type;
-  Identifier* ident;
-  this(TypeNode type, Identifier* ident)
+  Token* ident;
+  this(TypeNode type, Token* ident)
   {
     mixin(set_kind);
     addChild(type);
@@ -1232,9 +1230,9 @@ class AsmLocalSizeExpr : Expression
 
 class AsmRegisterExpr : Expression
 {
-  Identifier* register; /// Name of the register.
+  Token* register; /// Name of the register.
   Expression number; /// ST(0) - ST(7) or FS:0, FS:4, FS:8
-  this(Identifier* register, Expression number = null)
+  this(Token* register, Expression number = null)
   {
     mixin(set_kind);
     addOptChild(number);

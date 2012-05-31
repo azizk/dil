@@ -81,13 +81,13 @@ override:
   void visit(IdentifierType t)
   {
     t.next && (visitT(t.next), write("."));
-    write(t.ident.str);
+    write(t.id.str);
   }
 
   void visit(TemplateInstanceType t)
   {
     t.next && (visitT(t.next), write("."));
-    write(t.ident.str), write("!");
+    write(t.id.str), write("!");
     auto a = t.targs;
     write(a.begin, a.end);
   }
