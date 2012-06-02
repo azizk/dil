@@ -20,12 +20,11 @@ import common;
 /// Serializes a complete parse tree.
 class ASTSerializer : Visitor2
 {
+  immutable HEADER = "DIL1.0AST\x1A\x04\n"; /// Appears at the start.
   ubyte[] data; /// The binary text.
   size_t[Token*] tokenIndex; /// Maps tokens to index numbers.
 
-  immutable HEADER = "DIL1.0AST\x1A\x04\n";
-
-  /// Enumeration of types.
+  /// An enumeration of types that may appear in the data.
   enum TID : ubyte
   {
     Array = 'A',
@@ -47,7 +46,6 @@ class ASTSerializer : Visitor2
     EnumMemberDecls,
     BaseClassTypes,
     CatchStmts,
-    Identifier,
     Token,
     Tokens,
     TokenArrays,
@@ -74,7 +72,6 @@ class ASTSerializer : Visitor2
     typeid(EnumMemberDecl[]),
     typeid(BaseClassType[]),
     typeid(CatchStmt[]),
-    typeid(Identifier),
     typeid(Token*),
     typeid(Token*[]),
     typeid(Token*[][]),
@@ -82,22 +79,27 @@ class ASTSerializer : Visitor2
 
   this()
   {
-    data ~= HEADER;
   }
 
   /// Starts serialization.
   ubyte[] serialize(Module mod)
   {
+    data ~= HEADER;
+    tokenIndex = buildTokenIndex(mod.firstToken());
     visitN(mod.root);
     return data;
   }
 
-  Module deserialize()
+  /// Builds a token index from a linked list of Tokens.
+  /// The address of a token is mapped to its position index in the list.
+  static size_t[Token*] buildTokenIndex(Token* head)
   {
-    // TODO: implement
-    // When node is constructed:
-    // * Set stcs/prot/lnkg; * Set begin/end Nodes
-    return null;
+    size_t[Token*] map;
+    map[null] = size_t.max;
+    size_t index;
+    for (auto t = head; t; index++, t = t.next)
+      map[t] = index;
+    return map;
   }
 
   /// Returns the index number of a token.
@@ -176,7 +178,8 @@ class ASTSerializer : Visitor2
   /// Writes a node.
   void write(Node n)
   {
-    visitN(n);
+    if (n)
+      visitN(n);
   }
 
   /// Writes the mangled array type and then visits each node.
@@ -186,7 +189,7 @@ class ASTSerializer : Visitor2
     write1B(tid);
     writeSB(nodes.length);
     foreach (n; nodes)
-      visitN(n);
+      write(n);
   }
 
   void write(Node[] nodes)
@@ -263,14 +266,6 @@ class ASTSerializer : Visitor2
     write2B(cast(ushort)tok);
   }
 
-  /// Writes an Identifier.
-  void write(Identifier* id)
-  {
-    write1B(TID.Identifier);
-    writeSB(id.str.length);
-    write(id.str);
-  }
-
   /// Writes a Token.
   void write(Token* t)
   {
@@ -303,7 +298,13 @@ class ASTSerializer : Visitor2
     write(n.kind);
     write(n.begin);
     write(n.end);
-    // TODO: write attributes if Declaration.
+    static if (is(N : Declaration))
+    { // Write the attributes of Declarations.
+      write(n.stcs);
+      write(n.prot);
+    }
+    assert(Members.length < ubyte.max);
+    write1B(Members.length);
     foreach (m; Members)
       write(mixin("n."~m));
   }
@@ -541,4 +542,21 @@ class ASTSerializer : Visitor2
   mixin visitX!(TemplateTupleParam, "name");
   mixin visitX!(TemplateParameters, "items");
   mixin visitX!(TemplateArguments, "items");
+}
+
+
+class ASTDeserializer
+{
+  this()
+  {
+
+  }
+
+  Module deserialize(const ubyte[] data)
+  {
+    // TODO: implement
+    // When node is constructed:
+    // * Set stcs/prot/lnkg; * Set begin/end Nodes
+    return null;
+  }
 }
