@@ -96,4 +96,9 @@ final class Location
   {
     return Format(format, lineNum, colNum);
   }
+
+  char[] repr(cstring format = "{}({},{})")
+  {
+    return Format(format, filePath, lineNum, colNum);
+  }
 }

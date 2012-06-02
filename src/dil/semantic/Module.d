@@ -69,6 +69,14 @@ class Module : ModuleSymbol
     this.failedLoading = !this.sourceText.load(cc.diag);
   }
 
+  /// Constructs from a ready-to-use SourceText instance.
+  this(SourceText src, CompilationContext cc)
+  {
+    this();
+    this.cc = cc;
+    this.sourceText = src;
+  }
+
   /// Returns the file path of the source text.
   cstring filePath()
   {
