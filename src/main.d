@@ -11,7 +11,8 @@ import dil.lexer.Lexer,
 import dil.ast.Declarations,
        dil.ast.Expressions,
        dil.ast.Node,
-       dil.ast.Visitor;
+       dil.ast.Visitor,
+       dil.ast.ASTSerializer;
 import dil.semantic.Module,
        dil.semantic.Symbols,
        dil.semantic.Pass1,
@@ -367,12 +368,60 @@ void main(cstring[] args)
 
     diag.hasInfo() && printErrors(diag);
     break;
+  case "serialize", "sz":
+    if (!op.hasArgs())
+      return printHelp(command, diag);
+
+    class SerializeASTCommand : Command
+    {
+      CompilationContext cc;
+      cstring srcFilePath, outFilePath;
+      bool fromStdin;
+
+      void run()
+      {
+        auto sourceText = fromStdin ?
+          new SourceText("stdin", readStdin()) :
+          new SourceText(srcFilePath, true);
+
+        auto mod = new Module(sourceText, cc);
+        mod.parse();
+
+        if (cc.diag.hasInfo())
+          return;
+
+        auto astWriter = new ASTSerializer();
+        const data = astWriter.serialize(mod);
+
+        if (outFilePath.length)
+        {
+          scope file = new File(outFilePath, File.WriteCreate);
+          file.write(data);
+          file.close();
+        }
+        else
+          Stdout(cast(cstring)data);
+      }
+    }
+
+    auto cmd = new SerializeASTCommand();
+    cmd.cc = globalCC;
+
+    op.add("-", cmd.fromStdin);
+    op.add("-o", cmd.outFilePath);
+    op.add({ cmd.srcFilePath = op.getArg(); return true; });
+    op.parseArgs();
+
+    cmd.run();
+
+    diag.hasInfo() && printErrors(diag);
+    break;
   case "trans", "translate":
     if (!op.hasArgs())
       return printHelp(command, diag);
 
     if (args[2] != "German")
-      return cast(void)Stdout.formatln(
+      return cast(void)Printfln(
         "Error: unrecognized target language ‘{}’", args[2]);
 
     auto filePath = args[3];
@@ -403,7 +452,7 @@ void main(cstring[] args)
     foreach (filePath; filePaths)
       (new Lexer(new SourceText(filePath.array, true), tables)).scanAll();
 
-    Stdout.formatln("Scanned in {:f10}s.", swatch.stop);
+    Printfln("Scanned in {:f10}s.", swatch.stop);
     break;
   case "settings", "set":
     alias GlobalSettings GS;
@@ -434,14 +483,14 @@ void main(cstring[] args)
       foreach (name; retrieve_settings)
       {
         if (auto psetting = (name = String(name).toupper().array) in settings)
-          Stdout.formatln("{}={}", name, *psetting);
+          Printfln("{}={}", name, *psetting);
       }
     else // Print all settings.
     {
       auto names = settings.keys;
       names.sort((string a, string b){ return a < b; });
       foreach (name; names)
-        Stdout.formatln("{}={}", name, settings[name]);
+        Printfln("{}={}", name, settings[name]);
     }
     break;
   case "?", "h", "help":
@@ -569,6 +618,7 @@ void printHelp(cstring command, Diagnostics diag)
   case "importgraph", "igraph": mid = MID.HelpImportGraph; goto Lcommon;
   case "tok", "tokenize":       mid = MID.HelpTokenize;    goto Lcommon;
   case "dlexed", "dlx":         mid = MID.HelpDlexed;      goto Lcommon;
+  case "serialize", "sz":       mid = MID.HelpSerialize;   goto Lcommon;
   case "stats", "statistics":   mid = MID.HelpStatistics;  goto Lcommon;
   case "trans", "translate":    mid = MID.HelpTranslate;   goto Lcommon;
   case "settings", "set":       mid = MID.HelpSettings;    goto Lcommon;

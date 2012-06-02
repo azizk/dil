@@ -176,6 +176,7 @@ enum MID
   HelpImportGraph,
   HelpTokenize,
   HelpDlexed,
+  HelpSerialize,
   HelpStatistics,
   HelpTranslate,
   HelpSettings,

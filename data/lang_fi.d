@@ -204,6 +204,8 @@ Esimerkki:
   null,
   // HelpDlexed
   null,
+  // HelpSerialize
+  null,
   // HelpStatistics
   null,
   // HelpTranslate

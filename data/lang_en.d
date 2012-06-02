@@ -310,7 +310,7 @@ Options:
   -ws             : print a token's preceding whitespace characters
 
 Examples:
-  echo 'module foo; void func(){}' | dil tok -
+  echo 'module xyz; void func(){{}' | dil tok -
   dil tok src/main.d | grep ^[0-9]`,
 
   // HelpDlexed
@@ -323,8 +323,21 @@ Options:
   -o=FILE         : output to FILE instead of STDOUT
 
 Examples:
-  echo 'module foo; void func(){}' | dil dlx - > test.dlx
+  echo 'module xyz; void func(){{}' | dil dlx - > test.dlx
   dil dlx src/main.d -o dlx/main.dlx`,
+
+  // HelpSerialize
+  `Serializes the entire parse tree of a module in a binary format.
+Usage:
+  dil sz file.d [Options]
+
+Options:
+  -               : read text from STDIN
+  -o=FILE         : output to FILE instead of STDOUT
+
+Examples:
+  echo 'module xyz; void func(){{}' | dil sz - > test.dpt
+  dil sz src/main.d -o dlx/main.dpt`,
 
   // HelpStatistics
   "Gather statistics about D source files.

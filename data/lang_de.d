@@ -312,7 +312,7 @@ Optionen:
   -ws             : gib die vorangehenden Leerzeichen eines Tokens aus
 
 Beispiele:
-  echo 'module foo; void func(){}' | dil tok -
+  echo 'module xyz; void func(){{}' | dil tok -
   dil tok src/main.d | grep ^[0-9]`,
 
   // HelpDlexed
@@ -325,8 +325,21 @@ Optionen:
   -o=FILE         : Ausgabe zu FILE statt STDOUT
 
 Beispiele:
-  echo 'module foo; void func(){}' | dil dlx - > test.dlx
+  echo 'module xyz; void func(){{}' | dil dlx - > test.dlx
   dil dlx src/main.d -o dlx/main.dlx`,
+
+  // HelpSerialize
+  `Serialisiert den gesamten Syntaxbaum eines Moduls im Binärformat.
+Benutzung:
+  dil sz datei.d [Options]
+
+Optionen:
+  -               : lies den Text von STDIN aus
+  -o=FILE         : Ausgabe zu FILE statt STDOUT
+
+Beispiele:
+  echo 'module xyz; void func(){{}' | dil sz - > test.dpt
+  dil sz src/main.d -o dlx/main.dpt`,
 
   // HelpStatistics
   "Zeigt Statistiken für D-Quelldateien an.
