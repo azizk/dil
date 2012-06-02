@@ -841,7 +841,7 @@ abstract class DDocEmitter : DefaultVisitor2
   void storeAttributes(Declaration d)
   {
     alias currentAttributes attrs;
-    attrs.prot = d.prot == Protection.None ? null : EnumString(d.prot);
+    attrs.prot = (d.prot == Protection.None) ? null : EnumString(d.prot);
 
     auto stcs = d.stcs;
     stcs &= ~StorageClass.Auto; // Ignore "auto".
@@ -849,11 +849,11 @@ abstract class DDocEmitter : DefaultVisitor2
 
     LinkageType ltype;
     if (auto vd = d.Is!(VariablesDecl))
-      ltype = vd.linkageType;
+      ltype = vd.lnkg;
     else if (auto fd = d.Is!(FunctionDecl))
-      ltype = fd.linkageType;
+      ltype = fd.lnkg;
 
-    attrs.link = ltype == LinkageType.None ? null : EnumString(ltype);
+    attrs.link = (ltype == LinkageType.None) ? null : EnumString(ltype);
   }
 
   /// Writes the attributes of a declaration in brackets.

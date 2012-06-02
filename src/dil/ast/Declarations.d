@@ -465,11 +465,12 @@ class FunctionDecl : Declaration
 //   TemplateParameters tparams;
   Parameters params;
   FuncBodyStmt funcBody;
-  LinkageType linkageType;
+  LinkageType lnkg;
   bool cantInterpret = false;
 
   this(TypeNode returnType, Token* name,/+ TemplateParameters tparams,+/
-       Parameters params, FuncBodyStmt funcBody)
+       Parameters params, FuncBodyStmt funcBody,
+       LinkageType lnkg = LinkageType.None)
   {
     mixin(set_kind);
     addOptChild(returnType);
@@ -482,12 +483,7 @@ class FunctionDecl : Declaration
 //     this.tparams = tparams;
     this.params = params;
     this.funcBody = funcBody;
-  }
-
-  // Sets the LinkageType of this function.
-  void setLinkageType(LinkageType linkageType)
-  {
-    this.linkageType = linkageType;
+    this.lnkg = lnkg;
   }
 
   bool isTemplatized()
@@ -506,9 +502,10 @@ class VariablesDecl : Declaration
   TypeNode typeNode; /// The type of the variables.
   Token*[] names; /// Variable names.
   Expression[] inits; /// Respective initial values.
-  LinkageType linkageType; /// They linkage type.
+  LinkageType lnkg; /// They linkage type.
 
-  this(TypeNode typeNode, Token*[] names, Expression[] inits)
+  this(TypeNode typeNode, Token*[] names, Expression[] inits,
+       LinkageType lnkg = LinkageType.None)
   {
     // No empty arrays allowed. Both arrays must be of same size.
     assert(names.length != 0 && names.length == inits.length);
@@ -522,11 +519,7 @@ class VariablesDecl : Declaration
     this.typeNode = typeNode;
     this.names = names;
     this.inits = inits;
-  }
-
-  void setLinkageType(LinkageType linkageType)
-  {
-    this.linkageType = linkageType;
+    this.lnkg = lnkg;
   }
 
   /// Returns the first non-null init expression, or null if there is none.

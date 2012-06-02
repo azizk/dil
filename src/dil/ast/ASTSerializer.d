@@ -366,8 +366,9 @@ class ASTSerializer : Visitor2
   mixin visitX!(StaticCtorDecl, "funcBody");
   mixin visitX!(DestructorDecl, "funcBody");
   mixin visitX!(StaticDtorDecl, "funcBody");
-  mixin visitX!(FunctionDecl, "returnType", "name", "params", "funcBody");
-  mixin visitX!(VariablesDecl, "typeNode", "names", "inits");
+  mixin visitX!(FunctionDecl, "returnType", "name", "params", "funcBody",
+    "lnkg");
+  mixin visitX!(VariablesDecl, "typeNode", "names", "inits", "lnkg");
   mixin visitX!(InvariantDecl, "funcBody");
   mixin visitX!(UnittestDecl, "funcBody");
   mixin visitX!(DebugDecl, "spec", "cond", "decls", "elseDecls");

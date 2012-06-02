@@ -663,7 +663,7 @@ class Parser
 
       // FunctionBody
       auto funcBody = parseFunctionBody();
-      auto fd = new FunctionDecl(type, name, params, funcBody);
+      auto fd = new FunctionDecl(type, name, params, funcBody, linkType);
       Declaration decl = fd;
       if (tparams)
       {
@@ -672,7 +672,6 @@ class Parser
         decl.setStorageClass(stcs);
         decl.setProtection(protection);
       }
-      fd.setLinkageType(linkType);
       fd.setStorageClass(stcs | postfix_stcs); // Combine prefix/postfix stcs.
       fd.setProtection(protection);
       return set(decl, begin);
@@ -695,9 +694,8 @@ class Parser
       values ~= consumed(T.Equal) ? parseInitializer() : null;
     }
     require2(T.Semicolon);
-    auto d = new VariablesDecl(type, names, values);
+    auto d = new VariablesDecl(type, names, values, linkType);
     d.setStorageClass(stcs);
-    d.setLinkageType(linkType);
     d.setProtection(protection);
     return set(d, begin);
   }
