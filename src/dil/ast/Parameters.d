@@ -83,7 +83,7 @@ class Parameter : Node
     return stok;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// Array of parameters.
@@ -128,7 +128,7 @@ class Parameters : Node
   size_t length()
   { return children.length; }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /*~~~~~~~~~~~~~~~~~~~~~~
@@ -168,7 +168,7 @@ class TemplateAliasParam : TemplateParam
     this.spec = spec;
     this.def = def;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// $(BNF TemplateTypeParam := Identifier SpecOrDefaultType)
@@ -184,7 +184,7 @@ class TemplateTypeParam : TemplateParam
     this.specType = specType;
     this.defType = defType;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 // version(D2)
@@ -202,7 +202,7 @@ class TemplateThisParam : TemplateParam
     this.specType = specType;
     this.defType = defType;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 // }
 
@@ -223,7 +223,7 @@ class TemplateValueParam : TemplateParam
     this.specValue = specValue;
     this.defValue = defValue;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// $(BNF TemplateTupleParam := Identifier "...")
@@ -234,7 +234,7 @@ class TemplateTupleParam : TemplateParam
     super(name);
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// Array of template parameters.
@@ -263,7 +263,7 @@ class TemplateParameters : Node
     return cast(TemplateParam[])children;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// Array of template arguments.
@@ -292,5 +292,5 @@ class TemplateArguments : Node
     return children;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }

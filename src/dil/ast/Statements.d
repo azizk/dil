@@ -40,7 +40,7 @@ class CompoundStmt : Statement
     this.children = cast(Node[])stmnts;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class IllegalStmt : Statement
@@ -49,7 +49,7 @@ class IllegalStmt : Statement
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class EmptyStmt : Statement
@@ -58,7 +58,7 @@ class EmptyStmt : Statement
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class FuncBodyStmt : Statement
@@ -83,7 +83,7 @@ class FuncBodyStmt : Statement
     return funcBody is null;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ScopeStmt : Statement
@@ -95,7 +95,7 @@ class ScopeStmt : Statement
     addChild(s);
     this.stmnt = s;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class LabeledStmt : Statement
@@ -109,7 +109,7 @@ class LabeledStmt : Statement
     this.label = label;
     this.stmnt = s;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ExpressionStmt : Statement
@@ -121,7 +121,7 @@ class ExpressionStmt : Statement
     addChild(e);
     this.expr = e;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class DeclarationStmt : Statement
@@ -133,7 +133,7 @@ class DeclarationStmt : Statement
     addChild(decl);
     this.decl = decl;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class IfStmt : Statement
@@ -157,7 +157,7 @@ class IfStmt : Statement
     this.ifBody = ifBody;
     this.elseBody = elseBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class WhileStmt : Statement
@@ -173,7 +173,7 @@ class WhileStmt : Statement
     this.condition = condition;
     this.whileBody = whileBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class DoWhileStmt : Statement
@@ -189,7 +189,7 @@ class DoWhileStmt : Statement
     this.condition = condition;
     this.doBody = doBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ForStmt : Statement
@@ -211,7 +211,7 @@ class ForStmt : Statement
     this.increment = increment;
     this.forBody = forBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ForeachStmt : Statement
@@ -238,7 +238,7 @@ class ForeachStmt : Statement
     return tok == TOK.ForeachReverse;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 // version(D2)
@@ -261,7 +261,7 @@ class ForeachRangeStmt : Statement
     this.upper = upper;
     this.forBody = forBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 // }
 
@@ -281,7 +281,7 @@ class SwitchStmt : Statement
     this.switchBody = switchBody;
     this.isFinal = isFinal;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class CaseStmt : Statement
@@ -298,7 +298,7 @@ class CaseStmt : Statement
     this.values = values;
     this.caseBody = caseBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 // D2
@@ -318,7 +318,7 @@ class CaseRangeStmt : Statement
     this.right = right;
     this.caseBody = caseBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class DefaultStmt : Statement
@@ -331,7 +331,7 @@ class DefaultStmt : Statement
 
     this.defaultBody = defaultBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ContinueStmt : Statement
@@ -342,7 +342,7 @@ class ContinueStmt : Statement
     mixin(set_kind);
     this.ident = ident;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class BreakStmt : Statement
@@ -353,7 +353,7 @@ class BreakStmt : Statement
     mixin(set_kind);
     this.ident = ident;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ReturnStmt : Statement
@@ -365,7 +365,7 @@ class ReturnStmt : Statement
     addOptChild(e);
     this.expr = e;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class GotoStmt : Statement
@@ -379,7 +379,7 @@ class GotoStmt : Statement
     this.ident = ident;
     this.expr = expr;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class WithStmt : Statement
@@ -395,7 +395,7 @@ class WithStmt : Statement
     this.expr = e;
     this.withBody = withBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class SynchronizedStmt : Statement
@@ -411,7 +411,7 @@ class SynchronizedStmt : Statement
     this.expr = e;
     this.syncBody = syncBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class TryStmt : Statement
@@ -430,7 +430,7 @@ class TryStmt : Statement
     this.catchBodies = catchBodies;
     this.finallyBody = finallyBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class CatchStmt : Statement
@@ -445,7 +445,7 @@ class CatchStmt : Statement
     this.param = param;
     this.catchBody = catchBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class FinallyStmt : Statement
@@ -457,7 +457,7 @@ class FinallyStmt : Statement
     addChild(finallyBody);
     this.finallyBody = finallyBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ScopeGuardStmt : Statement
@@ -471,7 +471,7 @@ class ScopeGuardStmt : Statement
     this.condition = condition;
     this.scopeBody = scopeBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ThrowStmt : Statement
@@ -483,7 +483,7 @@ class ThrowStmt : Statement
     addChild(e);
     this.expr = e;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class VolatileStmt : Statement
@@ -495,7 +495,7 @@ class VolatileStmt : Statement
     addOptChild(volatileBody);
     this.volatileBody = volatileBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class AsmBlockStmt : Statement
@@ -507,7 +507,7 @@ class AsmBlockStmt : Statement
     addChild(statements);
     this.statements = statements;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class AsmStmt : Statement
@@ -521,7 +521,7 @@ class AsmStmt : Statement
     this.ident = ident;
     this.operands = operands;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class AsmAlignStmt : Statement
@@ -534,7 +534,7 @@ class AsmAlignStmt : Statement
     this.numtok = numtok;
     this.number = numtok.int_;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class IllegalAsmStmt : IllegalStmt
@@ -543,7 +543,7 @@ class IllegalAsmStmt : IllegalStmt
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class PragmaStmt : Statement
@@ -561,7 +561,7 @@ class PragmaStmt : Statement
     this.args = args;
     this.pragmaBody = pragmaBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class MixinStmt : Statement
@@ -575,7 +575,7 @@ class MixinStmt : Statement
     this.templateExpr = templateExpr;
     this.mixinIdent = mixinIdent;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class StaticIfStmt : Statement
@@ -592,7 +592,7 @@ class StaticIfStmt : Statement
     this.ifBody = ifBody;
     this.elseBody = elseBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class StaticAssertStmt : Statement
@@ -606,7 +606,7 @@ class StaticAssertStmt : Statement
     this.condition = condition;
     this.message = message;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 abstract class ConditionalCompilationStmt : Statement
@@ -630,7 +630,7 @@ class DebugStmt : ConditionalCompilationStmt
     super(cond, debugBody, elseBody);
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class VersionStmt : ConditionalCompilationStmt
@@ -640,5 +640,5 @@ class VersionStmt : ConditionalCompilationStmt
     super(cond, versionBody, elseBody);
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }

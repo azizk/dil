@@ -48,7 +48,7 @@ class CompoundDecl : Declaration
     this.children = cast(Node[])decls;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// Single semicolon.
@@ -58,7 +58,7 @@ class EmptyDecl : Declaration
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// Illegal declarations encompass all tokens that don't
@@ -70,7 +70,7 @@ class IllegalDecl : Declaration
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// FQN means "fully qualified name".
@@ -122,7 +122,7 @@ class ModuleDecl : Declaration
     return pname;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ImportDecl : Declaration
@@ -159,7 +159,7 @@ class ImportDecl : Declaration
     return FQNs;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class AliasDecl : Declaration
@@ -175,7 +175,7 @@ class AliasDecl : Declaration
     addChild(decl);
     this.decl = decl;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class AliasThisDecl : Declaration
@@ -186,7 +186,7 @@ class AliasThisDecl : Declaration
     mixin(set_kind);
     this.ident = ident;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class TypedefDecl : Declaration
@@ -199,7 +199,7 @@ class TypedefDecl : Declaration
     addChild(decl);
     this.decl = decl;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class EnumDecl : Declaration
@@ -226,7 +226,7 @@ class EnumDecl : Declaration
 
   EnumSymbol symbol;
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class EnumMemberDecl : Declaration
@@ -255,7 +255,7 @@ class EnumMemberDecl : Declaration
 
   EnumMember symbol;
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class TemplateDecl : Declaration
@@ -295,7 +295,7 @@ class TemplateDecl : Declaration
 
   TemplateSymbol symbol; /// The template symbol for this declaration.
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 // Note: tparams is commented out because the Parser wraps declarations
@@ -336,7 +336,7 @@ class ClassDecl : AggregateDecl
 
   ClassSymbol symbol; /// The class symbol for this declaration.
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class InterfaceDecl : AggregateDecl
@@ -357,7 +357,7 @@ class InterfaceDecl : AggregateDecl
 
   InterfaceSymbol symbol; /// The interface symbol for this declaration.
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class StructDecl : AggregateDecl
@@ -385,7 +385,7 @@ class StructDecl : AggregateDecl
 
   StructSymbol symbol; /// The struct symbol for this declaration.
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class UnionDecl : AggregateDecl
@@ -400,7 +400,7 @@ class UnionDecl : AggregateDecl
 
   UnionSymbol symbol; /// The union symbol for this declaration.
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ConstructorDecl : Declaration
@@ -416,7 +416,7 @@ class ConstructorDecl : Declaration
     this.params = params;
     this.funcBody = funcBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class StaticCtorDecl : Declaration
@@ -429,7 +429,7 @@ class StaticCtorDecl : Declaration
 
     this.funcBody = funcBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class DestructorDecl : Declaration
@@ -442,7 +442,7 @@ class DestructorDecl : Declaration
 
     this.funcBody = funcBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class StaticDtorDecl : Declaration
@@ -455,7 +455,7 @@ class StaticDtorDecl : Declaration
 
     this.funcBody = funcBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class FunctionDecl : Declaration
@@ -492,7 +492,7 @@ class FunctionDecl : Declaration
     return params.begin.prevNWS.kind == TOK.RParen;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// $(BNF VariablesDecl :=
@@ -533,7 +533,7 @@ class VariablesDecl : Declaration
 
   VariableSymbol[] variables;
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class InvariantDecl : Declaration
@@ -546,7 +546,7 @@ class InvariantDecl : Declaration
 
     this.funcBody = funcBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class UnittestDecl : Declaration
@@ -559,7 +559,7 @@ class UnittestDecl : Declaration
 
     this.funcBody = funcBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 abstract class ConditionalCompilationDecl : Declaration
@@ -600,7 +600,7 @@ class DebugDecl : ConditionalCompilationDecl
     super(spec, cond, decls, elseDecls);
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class VersionDecl : ConditionalCompilationDecl
@@ -610,7 +610,7 @@ class VersionDecl : ConditionalCompilationDecl
     super(spec, cond, decls, elseDecls);
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class StaticIfDecl : Declaration
@@ -628,7 +628,7 @@ class StaticIfDecl : Declaration
     this.ifDecls = ifDecls;
     this.elseDecls = elseDecls;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class StaticAssertDecl : Declaration
@@ -643,7 +643,7 @@ class StaticAssertDecl : Declaration
     this.condition = condition;
     this.message = message;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class NewDecl : Declaration
@@ -659,7 +659,7 @@ class NewDecl : Declaration
     this.params = params;
     this.funcBody = funcBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class DeleteDecl : Declaration
@@ -675,7 +675,7 @@ class DeleteDecl : Declaration
     this.params = params;
     this.funcBody = funcBody;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 abstract class AttributeDecl : Declaration
@@ -706,7 +706,7 @@ class ProtectionDecl : AttributeDecl
     mixin(set_kind);
     this.prot = prot;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class StorageClassDecl : AttributeDecl
@@ -719,7 +719,7 @@ class StorageClassDecl : AttributeDecl
 
     this.stcs = stcs;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class LinkageDecl : AttributeDecl
@@ -732,7 +732,7 @@ class LinkageDecl : AttributeDecl
 
     this.linkageType = linkageType;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class AlignDecl : AttributeDecl
@@ -746,7 +746,7 @@ class AlignDecl : AttributeDecl
     this.size = sizetok ? sizetok.int_ : -1;
     this.sizetok = sizetok;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class PragmaDecl : AttributeDecl
@@ -763,7 +763,7 @@ class PragmaDecl : AttributeDecl
     this.args = args;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class MixinDecl : Declaration
@@ -807,5 +807,5 @@ class MixinDecl : Declaration
 
   Declaration decls; /// Initialized in the semantic phase.
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }

@@ -8,38 +8,40 @@ import dil.ast.NodesEnum,
 
 import common;
 
-/// Mixed into the body of a class that inherits from Node.
-const string copyMethod =
-  `override typeof(this) copy()
+/// Provides a copy() method for subclasses of Node.
+mixin template copyMethod()
+{
+  override typeof(this) copy()
   {
-    alias typeof(this) this_t;
-    mixin(genCopyCode(mixin("NodeKind."~this_t.stringof)));
+    mixin(genCopyCode(mixin("NodeKind."~typeof(this).stringof)));
     return n;
-  }`;
+  }
+}
 
-/// Mixed into the body of abstract class BinaryExpr.
-const string copyMethodBinaryExpr =
-  `override typeof(this) copy()
-  {
-    alias typeof(this) this_t;
-    // BinaryExpr is an abstract class and not a member of NodeKind.
+/// Provides a copy() method for class BinaryExpr (and its subclasses.)
+mixin template copyBinaryExprMethod()
+{
+  override typeof(this) copy()
+  { // BinaryExpr is an abstract class and not a member of NodeKind.
     // Just take CommaExpr instead.
     static assert(is(CommaExpr : BinaryExpr),
       "CommaExpr doesn't inherit from BinaryExpr");
     mixin(genCopyCode(NodeKind.CommaExpr));
     return n;
-  }`;
+  }
+}
 
-/// Mixed into the body of abstract class UnaryExpr.
-const string copyMethodUnaryExpr =
-  `override typeof(this) copy()
+/// Provides a copy() method for class UnaryExpr (and its subclasses.)
+mixin template copyUnaryExprMethod()
+{
+  override typeof(this) copy()
   {
-    alias typeof(this) this_t;
     static assert(is(AddressExpr : UnaryExpr),
       "AddressExpr doesn't inherit from UnaryExpr");
     mixin(genCopyCode(NodeKind.AddressExpr));
     return n;
-  }`;
+  }
+}
 
 /// Generates the actual code for copying the provided members.
 private string createCode(string[] members)
@@ -95,7 +97,7 @@ char[] genCopyCode(NodeKind nodeKind)
 
   char[] code =
     // First do a shallow copy.
-    "auto n = cast(this_t)cast(void*)this.dup;\n".dup;
+    "auto n = cast(typeof(this))cast(void*)this.dup;\n".dup;
 
   // Then copy the members.
   if (m.length)

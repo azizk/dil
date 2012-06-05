@@ -19,7 +19,7 @@ class IllegalType : TypeNode
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// char, int, float etc.
@@ -31,7 +31,7 @@ class IntegralType : TypeNode
     mixin(set_kind);
     this.tok = tok;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// Identifier
@@ -50,7 +50,7 @@ class IdentifierType : TypeNode
     return ident.ident;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// $(BNF ModuleScopeType := ".")
@@ -60,7 +60,7 @@ class ModuleScopeType : TypeNode
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// $(BNF TypeofType := typeof "(" (Expression | return) ")")
@@ -81,7 +81,7 @@ class TypeofType : TypeNode
     return expr is null;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// Identifier "!" "(" TemplateParameters? ")"
@@ -103,7 +103,7 @@ class TemplateInstanceType : TypeNode
     return ident.ident;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// $(BNF PointerType:= Type "*")
@@ -114,7 +114,7 @@ class PointerType : TypeNode
     super(next);
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// $(BNF
@@ -185,7 +185,7 @@ class ArrayType : TypeNode
     return assocType !is null;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// $(BNF FunctionType := ReturnType function ParameterList?)
@@ -200,7 +200,7 @@ class FunctionType : TypeNode
     addChild(params);
     this.params = params;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// $(BNF DelegateType := ReturnType delegate ParameterList?)
@@ -215,7 +215,7 @@ class DelegateType : TypeNode
     addChild(params);
     this.params = params;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// Function parameters in a C-style type.
@@ -230,7 +230,7 @@ class CFuncType : TypeNode
     addChild(params);
     this.params = params;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// $(BNF BaseClassType := Protection? BasicType)
@@ -243,7 +243,7 @@ class BaseClassType : TypeNode
     mixin(set_kind);
     this.prot = prot;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 // version(D2)
@@ -256,7 +256,7 @@ class ConstType : TypeNode
     super(next);
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// $(BNF ImmutableType := immutable "(" Type ")")
@@ -267,7 +267,7 @@ class ImmutableType : TypeNode
     super(next);
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class InoutType : TypeNode
@@ -277,7 +277,7 @@ class InoutType : TypeNode
     super(next);
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// $(BNF SharedType := shared "(" Type ")")
@@ -288,6 +288,6 @@ class SharedType : TypeNode
     super(next);
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 // } // version(D2)

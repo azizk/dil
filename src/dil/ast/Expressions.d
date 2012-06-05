@@ -22,7 +22,7 @@ class IllegalExpr : Expression
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// The base class for every binary operator.
@@ -44,7 +44,7 @@ abstract class BinaryExpr : Expression
     this.rhs = rhs;
     this.optok = optok;
   }
-  mixin(copyMethodBinaryExpr);
+  mixin copyBinaryExprMethod;
 }
 
 class CondExpr : BinaryExpr
@@ -60,7 +60,7 @@ class CondExpr : BinaryExpr
     this.condition = condition;
     this.ctok = ctok;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class CommaExpr : BinaryExpr
@@ -380,7 +380,7 @@ abstract class UnaryExpr : Expression
     addChild(e);
     this.una = e;
   }
-  mixin(copyMethodUnaryExpr);
+  mixin copyUnaryExprMethod;
 }
 
 class AddressExpr : UnaryExpr
@@ -506,7 +506,7 @@ class NewExpr : Expression
     this.type = type;
     this.ctorArgs = ctorArgs;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class NewClassExpr : Expression
@@ -531,7 +531,7 @@ class NewClassExpr : Expression
     this.ctorArgs = ctorArgs;
     this.decls = decls;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class DeleteExpr : UnaryExpr
@@ -556,7 +556,7 @@ class CastExpr : UnaryExpr
     mixin(set_kind);
     this.type = type;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class IndexExpr : UnaryExpr
@@ -569,7 +569,7 @@ class IndexExpr : UnaryExpr
     addChildren(args);
     this.args = args;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class SliceExpr : UnaryExpr
@@ -586,7 +586,7 @@ class SliceExpr : UnaryExpr
     this.left = left;
     this.right = right;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /*++++++++++++++++++++++
@@ -610,7 +610,7 @@ class IdentifierExpr : Expression
     return ident.ident;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// Module scope operator:
@@ -621,7 +621,7 @@ class ModuleScopeExpr : Expression
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class TmplInstanceExpr : Expression
@@ -644,7 +644,7 @@ class TmplInstanceExpr : Expression
     return ident.ident;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class SpecialTokenExpr : Expression
@@ -658,7 +658,7 @@ class SpecialTokenExpr : Expression
 
   Expression value; /// The expression created in the semantic phase.
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ThisExpr : Expression
@@ -667,7 +667,7 @@ class ThisExpr : Expression
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class SuperExpr : Expression
@@ -676,7 +676,7 @@ class SuperExpr : Expression
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class NullExpr : Expression
@@ -693,7 +693,7 @@ class NullExpr : Expression
     this.type = type;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class DollarExpr : Expression
@@ -702,7 +702,7 @@ class DollarExpr : Expression
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class BoolExpr : Expression
@@ -723,7 +723,7 @@ class BoolExpr : Expression
     return begin.kind == TOK.True ? true : false;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class IntExpr : Expression
@@ -758,7 +758,7 @@ class IntExpr : Expression
     this(number, type);
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// Holds a Float number and may be a real or imaginary number.
@@ -780,7 +780,7 @@ class FloatExpr : Expression
     this(token.mpfloat, type);
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 
@@ -806,7 +806,7 @@ class ComplexExpr : Expression
     return number.im;
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class CharExpr : Expression
@@ -827,7 +827,7 @@ class CharExpr : Expression
 
     this.value = new IntExpr(character, this.type);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class StringExpr : Expression
@@ -932,7 +932,7 @@ class StringExpr : Expression
     return (cast(cdstring)data)[0..$-1];
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ArrayLiteralExpr : Expression
@@ -944,7 +944,7 @@ class ArrayLiteralExpr : Expression
     addOptChildren(values);
     this.values = values;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class AArrayLiteralExpr : Expression
@@ -959,7 +959,7 @@ class AArrayLiteralExpr : Expression
     this.keys = keys;
     this.values = values;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class AssertExpr : Expression
@@ -973,7 +973,7 @@ class AssertExpr : Expression
     this.expr = expr;
     this.msg = msg;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class MixinExpr : Expression
@@ -985,7 +985,7 @@ class MixinExpr : Expression
     addChild(expr);
     this.expr = expr;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ImportExpr : Expression
@@ -997,7 +997,7 @@ class ImportExpr : Expression
     addChild(expr);
     this.expr = expr;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class TypeofExpr : Expression
@@ -1009,7 +1009,7 @@ class TypeofExpr : Expression
     addChild(type);
     this.type = type;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class TypeDotIdExpr : Expression
@@ -1023,7 +1023,7 @@ class TypeDotIdExpr : Expression
     this.type = type;
     this.ident = ident;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class TypeidExpr : Expression
@@ -1035,7 +1035,7 @@ class TypeidExpr : Expression
     addChild(type);
     this.type = type;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class IsExpr : Expression
@@ -1060,7 +1060,7 @@ class IsExpr : Expression
     this.specType = specType;
     this.tparams = tparams;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class FuncLiteralExpr : Expression
@@ -1091,7 +1091,7 @@ class FuncLiteralExpr : Expression
     this();
   }
 
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 /// ParenthesisExpr := "(" Expression ")"
@@ -1104,7 +1104,7 @@ class ParenExpr : Expression
     addChild(next);
     this.next = next;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 // version(D2)
@@ -1120,7 +1120,7 @@ class TraitsExpr : Expression
     this.ident = ident;
     this.targs = targs;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 // }
 
@@ -1130,7 +1130,7 @@ class VoidInitExpr : Expression
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class ArrayInitExpr : Expression
@@ -1149,7 +1149,7 @@ class ArrayInitExpr : Expression
     this.keys = keys;
     this.values = values;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class StructInitExpr : Expression
@@ -1164,7 +1164,7 @@ class StructInitExpr : Expression
     this.idents = idents;
     this.values = values;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class AsmTypeExpr : UnaryExpr
@@ -1204,7 +1204,7 @@ class AsmPostBracketExpr : UnaryExpr
     addChild(index);
     this.index = index;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class AsmBracketExpr : Expression
@@ -1216,7 +1216,7 @@ class AsmBracketExpr : Expression
     addChild(e);
     this.expr = e;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class AsmLocalSizeExpr : Expression
@@ -1225,7 +1225,7 @@ class AsmLocalSizeExpr : Expression
   {
     mixin(set_kind);
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
 
 class AsmRegisterExpr : Expression
@@ -1239,5 +1239,5 @@ class AsmRegisterExpr : Expression
     this.register = register;
     this.number = number;
   }
-  mixin(copyMethod);
+  mixin copyMethod;
 }
