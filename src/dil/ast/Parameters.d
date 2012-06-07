@@ -6,7 +6,8 @@ module dil.ast.Parameters;
 import dil.ast.Node,
        dil.ast.Type,
        dil.ast.Expression,
-       dil.ast.NodeCopier;
+       dil.ast.NodeCopier,
+       dil.ast.Meta;
 import dil.lexer.Identifier;
 import dil.Enums;
 
@@ -20,6 +21,8 @@ class Parameter : Node
   TypeNode type; /// The parameter's type.
   Token* name; /// The name of the parameter.
   Expression defValue; /// The default initialization value.
+
+  mixin(memberInfo("stcs", "stok", "type", "name", "defValue"));
 
   this(StorageClass stcs, Token* stok, TypeNode type,
     Token* name, Expression defValue)
@@ -83,7 +86,7 @@ class Parameter : Node
     return stok;
   }
 
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// Array of parameters.
@@ -122,13 +125,14 @@ class Parameters : Node
   void opCatAssign(Parameter param)
   { addChild(param); }
 
-  Parameter[] items()
+  Parameter[] items() @property
   { return cast(Parameter[])children; }
 
   size_t length()
   { return children.length; }
 
-  mixin copyMethod;
+  mixin(memberInfo("items"));
+  mixin methods;
 }
 
 /*~~~~~~~~~~~~~~~~~~~~~~
@@ -157,6 +161,7 @@ class TemplateAliasParam : TemplateParam
 {
   Node spec; /// Specialization. Can be a Type or an Expression (in D2).
   Node def; /// Default. Can be a Type or an Expression (in D2).
+  mixin(memberInfo("name", "spec", "def"));
   this(Token* name, Node spec, Node def)
   {
     assert(!spec || spec.isType() || spec.isExpression());
@@ -168,13 +173,14 @@ class TemplateAliasParam : TemplateParam
     this.spec = spec;
     this.def = def;
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// $(BNF TemplateTypeParam := Identifier SpecOrDefaultType)
 class TemplateTypeParam : TemplateParam
 {
   TypeNode specType, defType;
+  mixin(memberInfo("name", "specType", "defType"));
   this(Token* name, TypeNode specType, TypeNode defType)
   {
     super(name);
@@ -184,7 +190,7 @@ class TemplateTypeParam : TemplateParam
     this.specType = specType;
     this.defType = defType;
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 // version(D2)
@@ -193,6 +199,7 @@ class TemplateTypeParam : TemplateParam
 class TemplateThisParam : TemplateParam
 {
   TypeNode specType, defType;
+  mixin(memberInfo("name", "specType", "defType"));
   this(Token* name, TypeNode specType, TypeNode defType)
   {
     super(name);
@@ -202,7 +209,7 @@ class TemplateThisParam : TemplateParam
     this.specType = specType;
     this.defType = defType;
   }
-  mixin copyMethod;
+  mixin methods;
 }
 // }
 
@@ -211,6 +218,7 @@ class TemplateValueParam : TemplateParam
 {
   TypeNode valueType;
   Expression specValue, defValue;
+  mixin(memberInfo("valueType", "name", "specValue", "defValue"));
   this(TypeNode valueType, Token* name, Expression specValue,
     Expression defValue)
   {
@@ -223,18 +231,19 @@ class TemplateValueParam : TemplateParam
     this.specValue = specValue;
     this.defValue = defValue;
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// $(BNF TemplateTupleParam := Identifier "...")
 class TemplateTupleParam : TemplateParam
 {
+  mixin(memberInfo("name"));
   this(Token* name)
   {
     super(name);
     mixin(set_kind);
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// Array of template parameters.
@@ -258,12 +267,13 @@ class TemplateParameters : Node
     addChild(parameter);
   }
 
-  TemplateParam[] items()
+  TemplateParam[] items() @property
   {
     return cast(TemplateParam[])children;
   }
 
-  mixin copyMethod;
+  mixin(memberInfo("items"));
+  mixin methods;
 }
 
 /// Array of template arguments.
@@ -287,10 +297,11 @@ class TemplateArguments : Node
     addChild(argument);
   }
 
-  Node[] items()
+  Node[] items() @property
   {
     return children;
   }
 
-  mixin copyMethod;
+  mixin(memberInfo("items"));
+  mixin methods;
 }

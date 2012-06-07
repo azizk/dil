@@ -64,3 +64,20 @@ version(D2)
 {}
 else
   static assert(0, "Either -version=D1 or D2 must be defined.");
+
+/// Constructs a compile-time tuple.
+template Tuple(T...)
+{
+  alias T Tuple;
+}
+
+/// Converts an array to a tuple.
+template Array2Tuple(alias T)
+{
+  static if (T.length == 0)
+    alias Tuple!() Array2Tuple;
+  else static if (T.length == 1)
+    alias Tuple!(T[0]) Array2Tuple;
+  else
+    alias Tuple!(T[0], Array2Tuple!(T[1..$])) Array2Tuple;
+}

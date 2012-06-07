@@ -7,37 +7,53 @@ public import dil.ast.Type;
 import dil.ast.Node,
        dil.ast.Expression,
        dil.ast.Parameters,
-       dil.ast.NodeCopier;
+       dil.ast.NodeCopier,
+       dil.ast.Meta;
 import dil.lexer.Identifier;
 import dil.semantic.Types;
 import dil.Enums;
+import common;
 
 /// Syntax error.
 class IllegalType : TypeNode
 {
+  mixin(memberInfo());
   this()
   {
     mixin(set_kind);
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// char, int, float etc.
 class IntegralType : TypeNode
 {
   TOK tok;
+  mixin(memberInfo("tok"));
   this(TOK tok)
   {
     mixin(set_kind);
     this.tok = tok;
   }
-  mixin copyMethod;
+  mixin methods;
+}
+
+/// $(BNF ModuleScopeType := ".")
+class ModuleScopeType : TypeNode
+{
+  mixin(memberInfo());
+  this()
+  {
+    mixin(set_kind);
+  }
+  mixin methods;
 }
 
 /// Identifier
 class IdentifierType : TypeNode
 {
   Token* ident;
+  mixin(memberInfo("next", "ident"));
   this(TypeNode next, Token* ident)
   {
     super(next);
@@ -50,17 +66,7 @@ class IdentifierType : TypeNode
     return ident.ident;
   }
 
-  mixin copyMethod;
-}
-
-/// $(BNF ModuleScopeType := ".")
-class ModuleScopeType : TypeNode
-{
-  this()
-  {
-    mixin(set_kind);
-  }
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// $(BNF TypeofType := typeof "(" (Expression | return) ")")
@@ -68,6 +74,7 @@ class TypeofType : TypeNode
 {
   Expression expr;
 
+  mixin(memberInfo("expr"));
   this(Expression e)
   {
     mixin(set_kind);
@@ -81,7 +88,7 @@ class TypeofType : TypeNode
     return expr is null;
   }
 
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// Identifier "!" "(" TemplateParameters? ")"
@@ -89,6 +96,7 @@ class TemplateInstanceType : TypeNode
 {
   Token* ident;
   TemplateArguments targs;
+  mixin(memberInfo("next", "ident", "targs"));
   this(TypeNode next, Token* ident, TemplateArguments targs)
   {
     super(next);
@@ -103,18 +111,19 @@ class TemplateInstanceType : TypeNode
     return ident.ident;
   }
 
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// $(BNF PointerType:= Type "*")
 class PointerType : TypeNode
 {
+  mixin(memberInfo("next"));
   this(TypeNode next)
   {
     super(next);
     mixin(set_kind);
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// $(BNF
@@ -129,6 +138,7 @@ class ArrayType : TypeNode
   Expression index1, index2;
   TypeNode assocType;
 
+  mixin(memberInfo("next", "index1", "index2", "assocType"));
   /// DynamicArray.
   this(TypeNode next)
   {
@@ -185,7 +195,7 @@ class ArrayType : TypeNode
     return assocType !is null;
   }
 
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// $(BNF FunctionType := ReturnType function ParameterList?)
@@ -193,6 +203,7 @@ class FunctionType : TypeNode
 {
   alias next returnType;
   Parameters params;
+  mixin(memberInfo("returnType", "params"));
   this(TypeNode returnType, Parameters params)
   {
     super(returnType);
@@ -200,7 +211,7 @@ class FunctionType : TypeNode
     addChild(params);
     this.params = params;
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// $(BNF DelegateType := ReturnType delegate ParameterList?)
@@ -208,6 +219,7 @@ class DelegateType : TypeNode
 {
   alias next returnType;
   Parameters params;
+  mixin(memberInfo("returnType", "params"));
   this(TypeNode returnType, Parameters params)
   {
     super(returnType);
@@ -215,7 +227,7 @@ class DelegateType : TypeNode
     addChild(params);
     this.params = params;
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// Function parameters in a C-style type.
@@ -223,6 +235,7 @@ class DelegateType : TypeNode
 class CFuncType : TypeNode
 {
   Parameters params;
+  mixin(memberInfo("next", "params"));
   this(TypeNode returnType, Parameters params)
   {
     super(returnType);
@@ -230,20 +243,21 @@ class CFuncType : TypeNode
     addChild(params);
     this.params = params;
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// $(BNF BaseClassType := Protection? BasicType)
 class BaseClassType : TypeNode
 {
   Protection prot;
+  mixin(memberInfo("prot", "next"));
   this(Protection prot, TypeNode type)
   {
     super(type);
     mixin(set_kind);
     this.prot = prot;
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 // version(D2)
@@ -251,43 +265,47 @@ class BaseClassType : TypeNode
 /// $(BNF ConstType := const "(" Type ")")
 class ConstType : TypeNode
 {
+  mixin(memberInfo("next"));
   this(TypeNode next)
   { // If t is null: cast(const)
     super(next);
     mixin(set_kind);
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// $(BNF ImmutableType := immutable "(" Type ")")
 class ImmutableType : TypeNode
 {
+  mixin(memberInfo("next"));
   this(TypeNode next)
   { // If t is null: cast(immutable)
     super(next);
     mixin(set_kind);
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 class InoutType : TypeNode
 {
+  mixin(memberInfo("next"));
   this(TypeNode next)
   { // If t is null: cast(inout)
     super(next);
     mixin(set_kind);
   }
-  mixin copyMethod;
+  mixin methods;
 }
 
 /// $(BNF SharedType := shared "(" Type ")")
 class SharedType : TypeNode
 {
+  mixin(memberInfo("next"));
   this(TypeNode next)
   { // If t is null: cast(shared)
     super(next);
     mixin(set_kind);
   }
-  mixin copyMethod;
+  mixin methods;
 }
 // } // version(D2)

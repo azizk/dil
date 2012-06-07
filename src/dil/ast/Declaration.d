@@ -18,22 +18,22 @@ abstract class Declaration : Node
   StorageClass stcs; /// The storage classes of this declaration.
   Protection prot;  /// The protection attribute of this declaration.
 
-  final bool isManifest()
+  final bool isManifest() @property
   {
     return !!(stcs & StorageClass.Manifest);
   }
 
-  final bool isStatic()
+  final bool isStatic() @property
   {
     return !!(stcs & StorageClass.Static);
   }
 
-  final bool isConst()
+  final bool isConst() @property
   {
     return !!(stcs & StorageClass.Const);
   }
 
-  final bool isPublic()
+  final bool isPublic() @property
   {
     return !!(prot & Protection.Public);
   }
