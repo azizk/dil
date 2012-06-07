@@ -43,7 +43,6 @@ import Settings,
        common;
 
 import Integer = tango.text.convert.Integer;
-import tango.stdc.stdio;
 import tango.io.device.File;
 import tango.text.Regex : Regex;
 import tango.time.StopWatch;
@@ -513,31 +512,29 @@ void printUsageError(OptParser op)
 /// Reads the standard input and returns its contents.
 char[] readStdin()
 {
+  import tango.stdc.stdio;
   char[] text;
-  while (1)
-  {
-    auto c = getc(stdin);
-    if (c == EOF)
-      break;
+  int c;
+  while ((c = getc(stdin)) != EOF)
     text ~= c;
-  }
   return text;
 }
 
 /// Available commands.
 enum string COMMANDS =
-  "  help (?)\n"
-  "  compile (c)\n"
-  "  ddoc (d)\n"
-  "  dlexed (dlx)\n"
-  "  highlight (hl)\n"
-  "  importgraph (igraph)\n"
-  "  pytree (py)\n"
-  "  settings (set)\n"
-  "  statistics (stats)\n"
-  "  tokenize (tok)\n"
-  "  translate (trans)\n"
-  "  version (v)\n";
+  "  help (?)
+  compile (c)
+  ddoc (d)
+  dlexed (dlx)
+  serialize (sz)
+  highlight (hl)
+  importgraph (igraph)
+  pytree (py)
+  settings (set)
+  statistics (stats)
+  tokenize (tok)
+  translate (trans)
+  version (v)";
 
 /// Creates the global compilation context.
 CompilationContext newCompilationContext()
