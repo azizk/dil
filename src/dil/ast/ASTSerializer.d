@@ -28,6 +28,7 @@ class ASTSerializer : Visitor2
   enum TID : ubyte
   {
     Array = 'A',
+    Null,
     Char,
     Bool,
     Uint,
@@ -37,6 +38,12 @@ class ASTSerializer : Visitor2
     StorageClass,
     NodeKind,
     Node,
+    Declaration,
+    Statement,
+    Expression,
+    TypeNode,
+    Parameter,
+    TemplateParam,
     Nodes,
     Declarations,
     Statements,
@@ -54,6 +61,7 @@ class ASTSerializer : Visitor2
   /// Array of TypeInfos.
   static TypeInfo[TID.max+1] arrayTIs = [
     typeid(void[]),
+    typeid(typeof(null)),
     typeid(char),
     typeid(bool),
     typeid(uint),
@@ -63,6 +71,12 @@ class ASTSerializer : Visitor2
     typeid(StorageClass),
     typeid(NodeKind),
     typeid(Node),
+    typeid(Declaration),
+    typeid(Statement),
+    typeid(Expression),
+    typeid(TypeNode),
+    typeid(Parameter),
+    typeid(TemplateParam),
     typeid(Node[]),
     typeid(Declaration[]),
     typeid(Statement[]),
@@ -176,10 +190,49 @@ class ASTSerializer : Visitor2
   }
 
   /// Writes a node.
+  void write(Node n, TID tid)
+  {
+    if (n is null) {
+      write1B(TID.Null);
+      write1B(tid);
+    }
+    else
+      visitN(n);
+  }
+
   void write(Node n)
   {
-    if (n)
-      visitN(n);
+    write(n, TID.Node);
+  }
+
+  void write(Declaration n)
+  {
+    write(n, TID.Declaration);
+  }
+
+  void write(Statement n)
+  {
+    write(n, TID.Statement);
+  }
+
+  void write(Expression n)
+  {
+    write(n, TID.Expression);
+  }
+
+  void write(TypeNode n)
+  {
+    write(n, TID.TypeNode);
+  }
+
+  void write(Parameter n)
+  {
+    write(n, TID.Parameter);
+  }
+
+  void write(TemplateParam n)
+  {
+    write(n, TID.TemplateParam);
   }
 
   /// Writes the mangled array type and then visits each node.
@@ -291,24 +344,6 @@ class ASTSerializer : Visitor2
       write(tokens);
   }
 
-  /// Calls write() on each member.
-  void writeMembers(N, Members...)(N n)
-  {
-    write1B(TID.Node);
-    write(n.kind);
-    write(n.begin);
-    write(n.end);
-    static if (is(N : Declaration))
-    { // Write the attributes of Declarations.
-      write(n.stcs);
-      write(n.prot);
-    }
-    assert(Members.length < ubyte.max);
-    write1B(Members.length);
-    foreach (m; Members)
-      write(mixin("n."~m));
-  }
-
   // Visitor methods:
 
   /// Generates a visit method for a specific Node.
@@ -316,7 +351,21 @@ class ASTSerializer : Visitor2
   {
     void visit(N n)
     {
-      writeMembers!(N, Array2Tuple!(N._members))(n);
+      alias Array2Tuple!(N._members) Members;
+      assert(n);
+      write1B(TID.Node);
+      write(n.kind);
+      write(n.begin);
+      write(n.end);
+      static if (is(N : Declaration))
+      { // Write the attributes of Declarations.
+        write(n.stcs);
+        write(n.prot);
+      }
+      assert(Members.length < ubyte.max);
+      write1B(Members.length);
+      foreach (m; Members)
+        write(mixin("n."~m));
     }
   }
 
