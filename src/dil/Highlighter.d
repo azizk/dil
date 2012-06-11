@@ -155,7 +155,7 @@ class Highlighter
       // <node>
       foreach (node; tokenEx.beginNodes)
         print.format(tagNodeBegin, tags.getTag(node.kind),
-                     getShortClassName(node));
+                     node.getShortClassName());
       // Token text.
       printToken(token);
       // </node>
@@ -501,39 +501,25 @@ class TagMap
   }
 }
 
-/// Find the last occurrence of object in subject.
-/// Returns: the index if found, or -1 if not.
-int rfind(cstring subject, char object)
-{
-  foreach_reverse (i, c; subject)
-    if (c == object)
-      return cast(int)i;
-  return -1;
-}
-
 /// Returns the short class name of a class descending from Node.$(BR)
 /// E.g.: dil.ast.Declarations.ClassDecl -> Class
 cstring getShortClassName(Node node)
 {
-  static cstring[] name_table;
+  static String[] name_table;
   if (name_table is null)
-    name_table = new cstring[NodeKind.max+1]; // Create a new table.
+    name_table = new String[NodeKind.max+1]; // Create a new table.
   // Look up in table.
-  cstring name = name_table[node.kind];
-  if (name !is null)
-    return name; // Return cached name.
-
-  name = typeid(node).name; // Get the fully qualified name of the class.
-  name = name[rfind(name, '.')+1 .. $]; // Remove package and module name.
-
-  size_t suffixLength = 4; // Decl, Stmt, Expr, Type have length 4.
-  if (node.kind.isParameter)
-    suffixLength = 0;
-  // Remove common suffix.
-  name = name[0 .. $ - suffixLength];
-  // Store the name in the table.
-  name_table[node.kind] = name;
-  return name;
+  auto name = name_table[node.kind];
+  if (name.isNull)
+  { // Get fully qualified name of the class and extract just the name.
+    name = String(typeid(node).name).rpartition(".")[1].dup;
+    size_t suffixLength = 4; // Decl, Stmt, Expr, Type have length 4.
+    if (node.isParameter)
+      suffixLength = 0;
+    name = name[0 .. -suffixLength]; // Remove common suffix.
+    name_table[node.kind] = name; // Store the name in the table.
+  }
+  return name.array;
 }
 
 /// Extended token structure.
