@@ -27,7 +27,6 @@ class Parameter : Node
   this(StorageClass stcs, Token* stok, TypeNode type,
     Token* name, Expression defValue)
   {
-    super(NodeCategory.Other);
     mixin(set_kind);
     // type can be null when param in foreach statement
     addOptChild(type);
@@ -96,7 +95,6 @@ class Parameters : Node
 
   this()
   {
-    super(NodeCategory.Other);
     mixin(set_kind);
   }
 
@@ -145,7 +143,6 @@ abstract class TemplateParam : Node
   Token* name;
   this(Token* name)
   {
-    super(NodeCategory.Other);
     this.name = name;
   }
 
@@ -251,7 +248,6 @@ class TemplateParameters : Node
 {
   this()
   {
-    super(NodeCategory.Other);
     mixin(set_kind);
   }
 
@@ -281,7 +277,6 @@ class TemplateArguments : Node
 {
   this()
   {
-    super(NodeCategory.Other);
     mixin(set_kind);
   }
 

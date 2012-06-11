@@ -154,7 +154,8 @@ class Highlighter
       }
       // <node>
       foreach (node; tokenEx.beginNodes)
-        print.format(tagNodeBegin, tags.getTag(node.category), getShortClassName(node));
+        print.format(tagNodeBegin, tags.getTag(node.kind),
+                     getShortClassName(node));
       // Token text.
       printToken(token);
       // </node>
@@ -163,7 +164,7 @@ class Highlighter
           print(tagNodeEnd);
       else
         foreach_reverse (node; tokenEx.endNodes)
-          print.format(tagNodeEnd, tags.getTag(node.category));
+          print.format(tagNodeEnd, tags.getTag(node.kind));
     }
     print(tags["SourceEnd"]);
     print(tags["DocEnd"]);
@@ -482,19 +483,20 @@ class TagMap
          NestedC, Shebang, HLine, Filespec, Illegal, Newline, SpecialToken,
          Declaration, Statement, Expression, Type, Other, EOF;
 
-  /// Returns the tag for the category 'nc'.
-  cstring getTag(NodeCategory nc)
+  /// Returns the tag for the category 'k'.
+  cstring getTag(NodeKind k)
   {
     cstring tag;
-    switch (nc)
-    { alias NodeCategory NC;
-    case NC.Declaration: tag = Declaration; break;
-    case NC.Statement:   tag = Statement; break;
-    case NC.Expression:  tag = Expression; break;
-    case NC.Type:        tag = Type; break;
-    case NC.Other:       tag = Other; break;
-    default: assert(0);
-    }
+    if (k.isDeclaration)
+      tag = Declaration;
+    else if (k.isStatement)
+      tag = Statement;
+    else if (k.isExpression)
+      tag = Expression;
+    else if (k.isType)
+      tag = Type;
+    else if (k.isParameter)
+      tag = Other;
     return tag;
   }
 }
@@ -524,27 +526,9 @@ cstring getShortClassName(Node node)
   name = typeid(node).name; // Get the fully qualified name of the class.
   name = name[rfind(name, '.')+1 .. $]; // Remove package and module name.
 
-  size_t suffixLength;
-  switch (node.category)
-  {
-  alias NodeCategory NC;
-  case NC.Declaration:
-    suffixLength = "Decl".length;
-    break;
-  case NC.Statement:
-    suffixLength = "Stmt".length;
-    break;
-  case NC.Expression:
-    suffixLength = "Expr".length;
-    break;
-  case NC.Type:
-    suffixLength = "Type".length;
-    break;
-  case NC.Other:
-    break;
-  default:
-    assert(0);
-  }
+  size_t suffixLength = 4; // Decl, Stmt, Expr, Type have length 4.
+  if (node.kind.isParameter)
+    suffixLength = 0;
   // Remove common suffix.
   name = name[0 .. $ - suffixLength];
   // Store the name in the table.

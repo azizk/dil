@@ -11,17 +11,9 @@ public import dil.ast.NodesEnum;
 /// The root class of all D syntax tree elements.
 abstract class Node
 {
-  NodeCategory category; /// The category of this node.
   NodeKind kind; /// The kind of this node.
-  Node[] children; // Will be probably removed sometime.
+  Node[] children; /// List of subnodes. (May be removed to save space.)
   Token* begin, end; /// The begin and end tokens of this node.
-
-  /// Constructs a node object.
-  this(NodeCategory category)
-  {
-    assert(category != NodeCategory.Undefined);
-    this.category = category;
-  }
 
   /// Sets the begin and end tokens.
   void setTokens(Token* begin, Token* end)
@@ -70,6 +62,7 @@ abstract class Node
   }
 
   /// Returns the text spanned by the begin and end tokens.
+  /// Warning: The Tokens must refer to the same piece of text.
   cstring toText()
   {
     assert(begin && end);
@@ -112,32 +105,30 @@ abstract class Node
   /// Returns true if Declaration.
   final bool isDeclaration()
   {
-    return category == NodeCategory.Declaration;
+    return kind.isDeclaration;
   }
 
   /// Returns true if Statement.
   final bool isStatement()
   {
-    return category == NodeCategory.Statement;
+    return kind.isStatement;
   }
 
   /// Returns true if Expression.
   final bool isExpression()
   {
-    return category == NodeCategory.Expression;
+    return kind.isExpression;
   }
 
   /// Returns true if Type.
   final bool isType()
   {
-    return category == NodeCategory.Type;
+    return kind.isType;
   }
 
-  /// Returns true if Other.
-  final bool isOther()
+  /// Returns true if Parameter.
+  final bool isParameter()
   {
-    return category == NodeCategory.Other;
+    return kind.isParameter;
   }
-  /// The only nodes in this category are Parameter classes.
-  alias isOther isParameter;
 }

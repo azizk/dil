@@ -14,11 +14,6 @@ abstract class Expression : Node
   Type type; /// The semantic type of this expression.
   Symbol symbol;
 
-  this()
-  {
-    super(NodeCategory.Expression);
-  }
-
   /// Returns true if the member 'type' is not null.
   bool hasType()
   {

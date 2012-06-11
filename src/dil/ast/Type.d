@@ -22,7 +22,6 @@ abstract class TypeNode : Node
 
   this(TypeNode next)
   {
-    super(NodeCategory.Type);
     addOptChild(next);
     if (next !is null)
       next.parent = this;

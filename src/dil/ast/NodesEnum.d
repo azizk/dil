@@ -4,22 +4,22 @@
 module dil.ast.NodesEnum;
 
 /// Enumerates the categories of a node.
-enum NodeCategory : ushort
+enum NodeCategory : ubyte
 {
   Undefined,
   Declaration,
   Statement,
   Expression,
   Type,
-  Other // Parameter
+  Parameter,
 }
 
 /// A list of all class names that inherit from Node.
 enum string[] NodeClassNames = [
   // Declarations:
+  "IllegalDecl",
   "CompoundDecl",
   "EmptyDecl",
-  "IllegalDecl",
   "ModuleDecl",
   "ImportDecl",
   "AliasDecl",
@@ -54,8 +54,8 @@ enum string[] NodeClassNames = [
   "MixinDecl",
 
   // Statements:
-  "CompoundStmt",
   "IllegalStmt",
+  "CompoundStmt",
   "EmptyStmt",
   "FuncBodyStmt",
   "ScopeStmt",
@@ -235,3 +235,44 @@ mixin(
     ~ generateNodeKindMembers ~
   "}"
 );
+
+bool isDeclaration(NodeKind k)
+{
+  return NodeKind.CompoundDecl <= k && k <= NodeKind.MixinDecl;
+}
+
+bool isStatement(NodeKind k)
+{
+  return NodeKind.CompoundStmt <= k && k <= NodeKind.VersionStmt;
+}
+
+bool isExpression(NodeKind k)
+{
+  return NodeKind.IllegalExpr <= k && k <= NodeKind.AsmRegisterExpr;
+}
+
+bool isType(NodeKind k)
+{
+  return NodeKind.IllegalType <= k && k <= NodeKind.SharedType;
+}
+
+bool isParameter(NodeKind k)
+{
+  return NodeKind.Parameter <= k && k <= NodeKind.TemplateArguments;
+}
+
+/// Returns the category of a node kind.
+NodeCategory category(NodeKind k)
+{
+  if (k.isDeclaration)
+    return NodeCategory.Declaration;
+  if (k.isStatement)
+    return NodeCategory.Statement;
+  if (k.isExpression)
+    return NodeCategory.Expression;
+  if (k.isType)
+    return NodeCategory.Type;
+  if (k.isParameter)
+    return NodeCategory.Parameter;
+  return NodeCategory.Undefined;
+}

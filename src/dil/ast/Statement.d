@@ -8,10 +8,5 @@ import dil.ast.Node;
 /// The root class of all statements.
 abstract class Statement : Node
 {
-  this()
-  {
-    super(NodeCategory.Statement);
-  }
-
   override abstract Statement copy();
 }

@@ -9,11 +9,6 @@ import dil.Enums;
 /// The root class of all declarations.
 abstract class Declaration : Node
 {
-  this()
-  {
-    super(NodeCategory.Declaration);
-  }
-
   // Members relevant to semantic phase.
   StorageClass stcs; /// The storage classes of this declaration.
   Protection prot;  /// The protection attribute of this declaration.
