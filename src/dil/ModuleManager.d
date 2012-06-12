@@ -204,28 +204,15 @@ class ModuleManager
   void splitPackageFQN(cstring pckgFQN,
     out cstring prevFQN, out cstring lastName)
   {
-    size_t lastDotIndex;
-    foreach_reverse (i, c; pckgFQN)
-      if (c == '.')
-      { lastDotIndex = i; break; } // Found last dot.
-    if (lastDotIndex == 0)
-      lastName = pckgFQN; // Special case - no dot found.
-    else
-    {
-      prevFQN = pckgFQN[0..lastDotIndex];
-      lastName = pckgFQN[lastDotIndex+1..$];
-    }
+    auto s = String(pckgFQN).rpartition(".");
+    prevFQN = s[0].array;
+    lastName = s[1].array;
   }
 
   /// Returns e.g. 'dil.ast' for 'dil/ast/Node'.
   static char[] getPackageFQN(cstring moduleFQNPath)
   {
-    char[] pckg = moduleFQNPath.dup;
-    size_t lastDirSep;
-    foreach (i, c; pckg)
-      if (c == dirSep)
-        (pckg[i] = '.'), (lastDirSep = i);
-    return pckg[0..lastDirSep];
+    return String(moduleFQNPath).sub(dirSep, '.').rpartition(".")[0].array;
   }
 
   /// Searches for a module in the file system looking in importPaths.
