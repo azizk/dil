@@ -1863,7 +1863,7 @@ class Lexer
   ///   ref_p = Used to scan the sequence.
   ///   isBinary = Set to true for octal and hexadecimal escapes.
   /// Returns: The escape value.
-  dchar scanEscapeSequence(ref cchar* ref_p, ref bool isBinary)
+  dchar scanEscapeSequence(ref cchar* ref_p, out bool isBinary)
   out(result)
   { assert(isValidChar(result)); }
   body

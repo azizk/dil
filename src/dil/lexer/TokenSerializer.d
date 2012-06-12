@@ -135,15 +135,15 @@ static:
         p[0..x.length] == cast(immutable(ubyte)[])x &&
         ((p += x.length), 1);
     }
-    bool read(ref char[] x, uint len)
+    bool read(out char[] x, uint len)
     {
       return p+len <= end && ((x = (cast(char*)p)[0..len]), (p += len), 1);
     }
-    bool read2B(ref uint x)
+    bool read2B(out uint x)
     {
       return p+1 < end && ((x = *cast(ushort*)p), (p += 2), 1);
     }
-    bool read4B(ref uint x)
+    bool read4B(out uint x)
     {
       return p+3 < end && ((x = *cast(uint*)p), (p += 4), 1);
     }

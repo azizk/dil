@@ -84,7 +84,7 @@ struct IdentValueParser
   ///   ident = Set to Identifier.
   ///   bodyBegin = Set to the beginning of the text body (whitespace skipped.)
   /// Returns: true if found.
-  bool findNextIdent(ref cstring ident, ref cchar* bodyBegin)
+  bool findNextIdent(out cstring ident, out cchar* bodyBegin)
   {
     while (p < textEnd)
     {

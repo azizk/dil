@@ -39,7 +39,7 @@ class Highlighter
 
   /// Highlights tokens in a string.
   /// Returns: A string with the highlighted tokens.
-  cstring highlightTokens(cstring text, cstring filePath, ref uint lines)
+  cstring highlightTokens(cstring text, cstring filePath, out uint lines)
   {
     auto src = new SourceText(filePath, text);
     auto lx = new Lexer(src, cc.tables.lxtables, cc.diag);

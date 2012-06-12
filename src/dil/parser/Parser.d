@@ -103,7 +103,7 @@ class Parser
   /// This method executes the delegate parseMethod and when an error occurs
   /// the state of the lexer and parser is restored.
   /// Returns: The return value of parseMethod().
-  RetType tryToParse(RetType)(RetType delegate() parseMethod, ref bool success)
+  RetType tryToParse(RetType)(RetType delegate() parseMethod, out bool success)
   {
     // Save members.
     auto oldToken     = this.token;
@@ -120,7 +120,6 @@ class Parser
       prevToken   = oldPrevToken;
       lexer.token = oldToken;
       errorCount  = oldCount;
-      success = false;
     }
     else
       success = true;
@@ -1123,7 +1122,7 @@ class Parser
   }
 
   /// $(BNF AlignAttribute := align ("(" Integer ")")?)
-  uint parseAlignAttribute(ref Token* sizetok)
+  uint parseAlignAttribute(out Token* sizetok)
   {
     skip(T.Align);
     uint size;

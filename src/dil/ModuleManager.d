@@ -202,7 +202,7 @@ class ModuleManager
   ///   prevFQN = Set to 'dil.ast' in the example.
   ///   lastName = The last package name; set to 'xyz' in the example.
   void splitPackageFQN(cstring pckgFQN,
-    ref cstring prevFQN, ref cstring lastName)
+    out cstring prevFQN, out cstring lastName)
   {
     size_t lastDotIndex;
     foreach_reverse (i, c; pckgFQN)
