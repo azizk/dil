@@ -165,6 +165,12 @@ string[] messages = [
   // Help messages:
   "Unbekannter Befehl: ‚{}‘",
 
+  // UsageError
+  "Benutzungsfehler:\n  {}",
+
+  // MissingOptionArgument
+  "fehlendes Argument für Option ‚{}‘",
+
   // HelpMain
   `DIL v{0}
 Copyright (c) 2007-2012, Aziz Köksal. Lizenziert unter der GPL3.
@@ -326,7 +332,7 @@ Optionen:
 
 Beispiele:
   echo 'module xyz; void func(){{}' | dil dlx - > test.dlx
-  dil dlx src/main.d -o dlx/main.dlx`,
+  dil dlx src/main.d -o src/main.dlx`,
 
   // HelpSerialize
   `Serialisiert den gesamten Syntaxbaum eines Moduls im Binärformat.
@@ -339,7 +345,7 @@ Optionen:
 
 Beispiele:
   echo 'module xyz; void func(){{}' | dil sz - > test.dpt
-  dil sz src/main.d -o dlx/main.dpt`,
+  dil sz src/main.d -o src/main.dpt`,
 
   // HelpStatistics
   "Zeigt Statistiken für D-Quelldateien an.

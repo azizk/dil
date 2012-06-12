@@ -35,7 +35,7 @@ class OptParser
       foreach (parseOption; parseDgs)
         if (!hasArgs() || parseOption())
           break;
-        else if (error)
+        else if (error !is null)
           goto Lerr;
       if (argv.length == n) // No arguments consumed?
         remArgs ~= getArg(); // Append to remaining args.

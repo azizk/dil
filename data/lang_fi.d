@@ -167,6 +167,12 @@ string[] messages = [
   // Help messages:
   null,
 
+  // UsageError
+  null,
+
+  // MissingOptionArgument
+  null,
+
   // HelpMain
   `DIL v{0}
 Copyright (c) 2007-2012, Aziz Köksal. GPL3-lisensöity.

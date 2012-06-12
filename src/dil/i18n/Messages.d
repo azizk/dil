@@ -168,6 +168,8 @@ enum MID
 
   // Help messages:
   UnknownCommand,
+  UsageError,
+  MissingOptionArgument,
   HelpMain,
   HelpCompile,
   HelpPytree,

@@ -167,6 +167,12 @@ string[] messages = [
   // Help messages:
   "Bilinmeyen komut: ‘{}’",
 
+  // UsageError
+  "Kullanım hatası:\n  {}",
+
+  // MissingOptionArgument
+  "‘{}’ parametrenin gerekli argümanı eksik",
+
   // HelpMain
   `DIL v{0}
 Copyright (c) 2007-2012, Aziz Köksal. Lisans GPL3.

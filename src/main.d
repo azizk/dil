@@ -75,6 +75,7 @@ void main(cstring[] args)
 
   // 3. Execute a command.
   auto op = new OptParser(args[2..$]);
+  op.errorMessageFormat = config.resourceBundle.msg(MID.MissingOptionArgument);
   cstring command = args[1];
 
   switch (command)
@@ -102,7 +103,9 @@ void main(cstring[] args)
     op.add("-ps", cmd.printSymbolTree);
     op.add("-pm", cmd.printModuleTree);
     op.add("-v", cmd.verbose);
-    op.parseArgs();
+    if (!op.parseArgs())
+      return printUsageError(op, diag);
+
     cmd.filePaths = op.argv; // Remaining arguments are file paths.
 
     Command cmd_ = cmd;
@@ -159,7 +162,8 @@ void main(cstring[] args)
 
     op.add("--fmt", cmd.format);
     op.add("-v", cmd.verbose);
-    op.parseArgs();
+    if (!op.parseArgs())
+      return printUsageError(op, diag);
     cmd.filePaths = op.argv; // Remaining arguments are file paths.
 
     cmd.run();
@@ -188,7 +192,8 @@ void main(cstring[] args)
     op.add("--report", cmd.writeReport);
     op.add("-rx", value, { cmd.regexps ~= new Regex(value); });
     op.add("-m", cmd.modsTxtPath);
-    op.parseArgs();
+    if (!op.parseArgs())
+      return printUsageError(op, diag);
     foreach (arg; op.argv)
       if (arg.length > 6 && String(arg[$-5..$]).ieql(".ddoc"))
         cmd.macroPaths ~= arg;
@@ -213,7 +218,8 @@ void main(cstring[] args)
     op.add("--xml", dummy, { cmd.add(HO.XML); });
     op.add("--html", dummy, { cmd.add(HO.HTML); });
     op.add("--lines", dummy, { cmd.add(HO.PrintLines); });
-    op.parseArgs();
+    if (!op.parseArgs())
+      return printUsageError(op, diag);
     foreach (arg; op.argv)
       if (!cmd.filePathSrc)
         cmd.filePathSrc = arg;
@@ -250,7 +256,8 @@ void main(cstring[] args)
     op.add("-i", dummy,      { cmd.add(IO.IncludeUnlocatableModules); });
     op.add("-m", dummy,      { cmd.add(IO.MarkCyclicModules); });
     op.addDefault({ cmd.filePath = op.getArg(); });
-    op.parseArgs();
+    if (!op.parseArgs())
+      return printUsageError(op, diag);
 
     cmd.run();
     diag.hasInfo() && printErrors(diag);
@@ -264,7 +271,8 @@ void main(cstring[] args)
 
     op.add("--toktable", cmd.printTokensTable);
     op.add("--asttable", cmd.printNodesTable);
-    op.parseArgs();
+    if (!op.parseArgs())
+      return printUsageError(op, diag);
     cmd.filePaths = op.argv;
 
     cmd.run();
@@ -312,10 +320,8 @@ void main(cstring[] args)
     op.add("-i", cmd.ignoreWSToks);
     op.add("-ws", cmd.printWS);
     op.addDefault({ cmd.srcFilePath = op.getArg(); });
-    op.parseArgs();
-
-    if (op.error)
-      return printUsageError(op);
+    if (!op.parseArgs())
+      return printUsageError(op, diag);
 
     cmd.run();
 
@@ -361,7 +367,8 @@ void main(cstring[] args)
     op.add("-", cmd.fromStdin);
     op.add("-o", cmd.outFilePath);
     op.addDefault({ cmd.srcFilePath = op.getArg(); });
-    op.parseArgs();
+    if (!op.parseArgs())
+      return printUsageError(op, diag);
 
     cmd.run();
 
@@ -409,7 +416,8 @@ void main(cstring[] args)
     op.add("-", cmd.fromStdin);
     op.add("-o", cmd.outFilePath);
     op.addDefault({ cmd.srcFilePath = op.getArg(); });
-    op.parseArgs();
+    if (!op.parseArgs())
+      return printUsageError(op, diag);
 
     cmd.run();
 
@@ -504,9 +512,9 @@ void main(cstring[] args)
 }
 
 /// Prints a command usage error.
-void printUsageError(OptParser op)
+void printUsageError(ref OptParser op, Diagnostics diag)
 {
-  Printfln("Usage error:\n  {}", op.error);
+  Stdout(diag.formatMsg(MID.UsageError, op.error)).newline;
 }
 
 /// Reads the standard input and returns its contents.
