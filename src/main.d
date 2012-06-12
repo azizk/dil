@@ -249,7 +249,7 @@ void main(cstring[] args)
     op.add("--gbf", dummy,   { cmd.add(IO.GroupByFullPackageName); });
     op.add("-i", dummy,      { cmd.add(IO.IncludeUnlocatableModules); });
     op.add("-m", dummy,      { cmd.add(IO.MarkCyclicModules); });
-    op.add({ cmd.filePath = op.getArg(); return true; });
+    op.addDefault({ cmd.filePath = op.getArg(); });
     op.parseArgs();
 
     cmd.run();
@@ -311,7 +311,7 @@ void main(cstring[] args)
     op.add("-", cmd.fromStdin);
     op.add("-i", cmd.ignoreWSToks);
     op.add("-ws", cmd.printWS);
-    op.add({ cmd.srcFilePath = op.getArg(); return true; });
+    op.addDefault({ cmd.srcFilePath = op.getArg(); });
     op.parseArgs();
 
     if (op.error)
@@ -360,7 +360,7 @@ void main(cstring[] args)
 
     op.add("-", cmd.fromStdin);
     op.add("-o", cmd.outFilePath);
-    op.add({ cmd.srcFilePath = op.getArg(); return true; });
+    op.addDefault({ cmd.srcFilePath = op.getArg(); });
     op.parseArgs();
 
     cmd.run();
@@ -408,7 +408,7 @@ void main(cstring[] args)
 
     op.add("-", cmd.fromStdin);
     op.add("-o", cmd.outFilePath);
-    op.add({ cmd.srcFilePath = op.getArg(); return true; });
+    op.addDefault({ cmd.srcFilePath = op.getArg(); });
     op.parseArgs();
 
     cmd.run();

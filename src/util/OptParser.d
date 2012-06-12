@@ -11,6 +11,8 @@ class OptParser
   cstring[] argv; /// The argument vector.
   bool delegate()[] parseDgs; /// Option parsing delegates.
   cstring error; /// Holds the error message if an error occurred.
+  /// The format of the error message.
+  cstring errorMessageFormat = "missing argument for option ‘{}’";
 
   /// Constructs an OptParser object.
   this(cstring[] argv)
@@ -46,39 +48,25 @@ class OptParser
   }
 
   /// Adds a parser delegate.
-  void add(bool delegate() parseDg)
+  void add()(bool delegate() parseDg)
   {
     parseDgs ~= parseDg;
   }
 
-  /// Adds an option with a string argument.
-  void add(cstring param, ref cstring out_arg, void delegate() cb = null)
-  {
-    auto o = new class { // Make a closure.
-      OptParser op; cstring param; cstring* out_arg; void delegate() cb;
-      bool parse()
-      { return op.parse(param, *out_arg) && (cb && cb(), true); }
-    };
-    o.op = this;
-    o.param = param;
-    o.out_arg = &out_arg;
-    o.cb = cb;
-    add(&o.parse);
+  /// A dummy variable used to force the compiler to create a closure.
+  private bool delegate() closureDelegate;
+
+  /// Adds a delegate for parsing an option.
+  void add(T)(cstring param, ref T out_arg, void delegate() cb = null)
+  { // Have to assign to outer variable first to create a closure.
+    add(closureDelegate =
+      { return parse(param, out_arg) && (cb && cb(), true); });
   }
 
-  /// Adds a boolean flag option.
-  void add(cstring flag, ref bool out_arg, void delegate() cb = null)
+  /// Adds a delegate accepting any option.
+  void addDefault(void delegate() defaultDg)
   {
-    auto o = new class { // Make a closure.
-      OptParser op; cstring flag; bool* out_arg; void delegate() cb;
-      bool parse()
-      { return op.parse(flag, *out_arg) && (cb && cb(), true); }
-    };
-    o.op = this;
-    o.flag = flag;
-    o.out_arg = &out_arg;
-    o.cb = cb;
-    add(&o.parse);
+    add(closureDelegate = { defaultDg(); return true; });
   }
 
   /// Parses a parameter.
@@ -107,7 +95,7 @@ class OptParser
     }
     return false;
   Lerr:
-    error = Format("missing argument for option ‘{}’", param);
+    error = Format(errorMessageFormat, param);
     return false;
   }
 
@@ -143,7 +131,6 @@ class OptParser
   /// Returns true if str starts with s.
   static bool strbeg(cstring str, cstring s)
   {
-    return str.length >= s.length &&
-           str[0 .. s.length] == s;
+    return str.length >= s.length && str[0 .. s.length] == s;
   }
 }
