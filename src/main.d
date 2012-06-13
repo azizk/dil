@@ -65,8 +65,7 @@ void main(cstring[] args)
   // 2. Load the configuration file of DIL.
   auto config = ConfigLoader(globalCC, diag, args[0]);
   config.load();
-  if (config.resourceBundle)
-    diag.bundle = config.resourceBundle;
+  diag.bundle = config.resourceBundle;
 
   if (diag.hasInfo())
     return printErrors(diag);
@@ -75,14 +74,15 @@ void main(cstring[] args)
 
   // 3. Execute a command.
   auto op = new OptParser(args[2..$]);
-  op.errorMessageFormat = config.resourceBundle.msg(MID.MissingOptionArgument);
+  op.missingArgMessage = diag.bundle.msg(MID.MissingOptionArgument);
+  op.usageErrorMessage = diag.bundle.msg(MID.UsageError);
   cstring command = args[1];
 
   switch (command)
   {
   case "c2":
   case "c", "compile":
-    if (!op.hasArgs())
+    if (!op.hasArgs)
       return printHelp(command, diag);
     bool useCommand2 = command == "c2";
 
@@ -104,7 +104,7 @@ void main(cstring[] args)
     op.add("-pm", cmd.printModuleTree);
     op.add("-v", cmd.verbose);
     if (!op.parseArgs())
-      return printUsageError(op, diag);
+      return op.printUsageError();
 
     cmd.filePaths = op.argv; // Remaining arguments are file paths.
 
@@ -157,13 +157,13 @@ void main(cstring[] args)
     }
 
     auto cmd = new PyTreeCommand();
-    cmd.dest = Path(op.getArg());
+    cmd.dest = Path(op.popArg());
     cmd.cc = globalCC;
 
     op.add("--fmt", cmd.format);
     op.add("-v", cmd.verbose);
     if (!op.parseArgs())
-      return printUsageError(op, diag);
+      return op.printUsageError();
     cmd.filePaths = op.argv; // Remaining arguments are file paths.
 
     cmd.run();
@@ -175,7 +175,7 @@ void main(cstring[] args)
       return printHelp(command, diag);
 
     auto cmd = new DDocCommand();
-    cmd.destDirPath = op.getArg();
+    cmd.destDirPath = op.popArg();
     cmd.context = globalCC;
     cmd.diag = diag;
     cstring value;
@@ -193,7 +193,7 @@ void main(cstring[] args)
     op.add("-rx", value, { cmd.regexps ~= new Regex(value); });
     op.add("-m", cmd.modsTxtPath);
     if (!op.parseArgs())
-      return printUsageError(op, diag);
+      return op.printUsageError();
     foreach (arg; op.argv)
       if (arg.length > 6 && String(arg[$-5..$]).ieql(".ddoc"))
         cmd.macroPaths ~= arg;
@@ -204,7 +204,7 @@ void main(cstring[] args)
     diag.hasInfo() && printErrors(diag);
     break;
   case "hl", "highlight":
-    if (!op.hasArgs())
+    if (!op.hasArgs)
       return printHelp(command, diag);
 
     auto cmd = new HighlightCommand();
@@ -219,7 +219,7 @@ void main(cstring[] args)
     op.add("--html", dummy, { cmd.add(HO.HTML); });
     op.add("--lines", dummy, { cmd.add(HO.PrintLines); });
     if (!op.parseArgs())
-      return printUsageError(op, diag);
+      return op.printUsageError();
     foreach (arg; op.argv)
       if (!cmd.filePathSrc)
         cmd.filePathSrc = arg;
@@ -230,7 +230,7 @@ void main(cstring[] args)
     diag.hasInfo() && printErrors(diag);
     break;
   case "importgraph", "igraph":
-    if (!op.hasArgs())
+    if (!op.hasArgs)
       return printHelp(command, diag);
 
     auto cmd = new IGraphCommand();
@@ -255,15 +255,15 @@ void main(cstring[] args)
     op.add("--gbf", dummy,   { cmd.add(IO.GroupByFullPackageName); });
     op.add("-i", dummy,      { cmd.add(IO.IncludeUnlocatableModules); });
     op.add("-m", dummy,      { cmd.add(IO.MarkCyclicModules); });
-    op.addDefault({ cmd.filePath = op.getArg(); });
+    op.addDefault({ cmd.filePath = op.popArg(); });
     if (!op.parseArgs())
-      return printUsageError(op, diag);
+      return op.printUsageError();
 
     cmd.run();
     diag.hasInfo() && printErrors(diag);
     break;
   case "stats", "statistics":
-    if (!op.hasArgs())
+    if (!op.hasArgs)
       return printHelp(command, diag);
 
     auto cmd = new StatsCommand();
@@ -272,13 +272,13 @@ void main(cstring[] args)
     op.add("--toktable", cmd.printTokensTable);
     op.add("--asttable", cmd.printNodesTable);
     if (!op.parseArgs())
-      return printUsageError(op, diag);
+      return op.printUsageError();
     cmd.filePaths = op.argv;
 
     cmd.run();
     break;
   case "tok", "tokenize":
-    if (!op.hasArgs())
+    if (!op.hasArgs)
       return printHelp(command, diag);
 
     class TokenizeCommand : Command
@@ -319,16 +319,16 @@ void main(cstring[] args)
     op.add("-", cmd.fromStdin);
     op.add("-i", cmd.ignoreWSToks);
     op.add("-ws", cmd.printWS);
-    op.addDefault({ cmd.srcFilePath = op.getArg(); });
+    op.addDefault({ cmd.srcFilePath = op.popArg(); });
     if (!op.parseArgs())
-      return printUsageError(op, diag);
+      return op.printUsageError();
 
     cmd.run();
 
     diag.hasInfo() && printErrors(diag);
     break;
   case "dlexed", "dlx":
-    if (!op.hasArgs())
+    if (!op.hasArgs)
       return printHelp(command, diag);
 
     class SerializeCommand : Command
@@ -366,16 +366,16 @@ void main(cstring[] args)
 
     op.add("-", cmd.fromStdin);
     op.add("-o", cmd.outFilePath);
-    op.addDefault({ cmd.srcFilePath = op.getArg(); });
+    op.addDefault({ cmd.srcFilePath = op.popArg(); });
     if (!op.parseArgs())
-      return printUsageError(op, diag);
+      return op.printUsageError();
 
     cmd.run();
 
     diag.hasInfo() && printErrors(diag);
     break;
   case "serialize", "sz":
-    if (!op.hasArgs())
+    if (!op.hasArgs)
       return printHelp(command, diag);
 
     class SerializeASTCommand : Command
@@ -415,16 +415,16 @@ void main(cstring[] args)
 
     op.add("-", cmd.fromStdin);
     op.add("-o", cmd.outFilePath);
-    op.addDefault({ cmd.srcFilePath = op.getArg(); });
+    op.addDefault({ cmd.srcFilePath = op.popArg(); });
     if (!op.parseArgs())
-      return printUsageError(op, diag);
+      return op.printUsageError();
 
     cmd.run();
 
     diag.hasInfo() && printErrors(diag);
     break;
   case "trans", "translate":
-    if (!op.hasArgs())
+    if (!op.hasArgs)
       return printHelp(command, diag);
 
     if (args[2] != "German")
@@ -443,7 +443,7 @@ void main(cstring[] args)
     printErrors(diag);
     break;
   case "profile":
-    if (!op.hasArgs())
+    if (!op.hasArgs)
       break;
     const(String)[] filePaths;
     if (args[2] == "dstress")
@@ -501,7 +501,7 @@ void main(cstring[] args)
     }
     break;
   case "?", "h", "help":
-    printHelp(op.hasArgs() ? op.getArg() : "", diag);
+    printHelp(op.hasArgs ? op.popArg() : "", diag);
     break;
   case "-v", "v", "--version", "version":
     Stdout(VERSION).newline;
@@ -509,12 +509,6 @@ void main(cstring[] args)
   default:
     printHelp("main", diag);
   }
-}
-
-/// Prints a command usage error.
-void printUsageError(ref OptParser op, Diagnostics diag)
-{
-  Stdout(diag.formatMsg(MID.UsageError, op.error)).newline;
 }
 
 /// Reads the standard input and returns its contents.
@@ -534,10 +528,10 @@ enum string COMMANDS =
   compile (c)
   ddoc (d)
   dlexed (dlx)
-  serialize (sz)
   highlight (hl)
   importgraph (igraph)
   pytree (py)
+  serialize (sz)
   settings (set)
   statistics (stats)
   tokenize (tok)

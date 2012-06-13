@@ -11,8 +11,10 @@ class OptParser
   cstring[] argv; /// The argument vector.
   bool delegate()[] parseDgs; /// Option parsing delegates.
   cstring error; /// Holds the error message if an error occurred.
-  /// The format of the error message.
-  cstring errorMessageFormat = "missing argument for option ‘{}’";
+  /// Missing argument error message.
+  cstring missingArgMessage = "missing argument for option ‘{}’";
+  /// Usage error message.
+  cstring usageErrorMessage = "Usage error:\n  {}";
 
   /// Constructs an OptParser object.
   this(cstring[] argv)
@@ -29,16 +31,16 @@ class OptParser
   bool parseArgs()
   {
     cstring[] remArgs; // Remaining arguments.
-    while (hasArgs())
+    while (hasArgs)
     {
       auto n = argv.length; // Remember number of args.
       foreach (parseOption; parseDgs)
-        if (!hasArgs() || parseOption())
+        if (!hasArgs || parseOption())
           break;
         else if (error !is null)
           goto Lerr;
       if (argv.length == n) // No arguments consumed?
-        remArgs ~= getArg(); // Append to remaining args.
+        remArgs ~= popArg(); // Append to remaining args.
     }
     argv = remArgs;
     return true;
@@ -72,10 +74,10 @@ class OptParser
   /// Parses a parameter.
   bool parse(cstring param, ref cstring out_arg)
   {
-    if (!hasArgs()) return false;
+    if (!hasArgs) return false;
     auto arg0 = argv[0];
     auto n = param.length;
-    if (strbeg(arg0, param))
+    if (arg0.startsWith(param))
     {
       if (arg0.length == n) // arg0 == param
       { // Eg: -I /include/path
@@ -95,14 +97,14 @@ class OptParser
     }
     return false;
   Lerr:
-    error = Format(errorMessageFormat, param);
+    error = Format(missingArgMessage, param);
     return false;
   }
 
   /// Parses a flag.
   bool parse(cstring flag, ref bool out_arg)
   {
-    if (hasArgs() && argv[0] == flag) {
+    if (hasArgs && argv[0] == flag) {
       out_arg = true;
       consume(1);
       return true;
@@ -116,21 +118,29 @@ class OptParser
     argv = argv[n..$];
   }
 
-  bool hasArgs()
+  /// Returns true if arguments are available.
+  bool hasArgs() @property
   {
     return argv.length != 0;
   }
 
-  cstring getArg()
+  /// Returns the first argument and removes it from the list.
+  cstring popArg()
   {
     auto arg = argv[0];
     consume(1);
     return arg;
   }
 
-  /// Returns true if str starts with s.
-  static bool strbeg(cstring str, cstring s)
+  /// Prints the usage error message.
+  void printUsageError()
   {
-    return str.length >= s.length && str[0 .. s.length] == s;
+    Printfln(usageErrorMessage, error);
   }
+}
+
+/// Returns true if str starts with s.
+bool startsWith(cstring str, cstring s)
+{
+  return str.length >= s.length && str[0 .. s.length] == s;
 }
