@@ -55,9 +55,9 @@ template returnType(Class)
 }
 
 /// Calls the visitor method that can handle node n.
-Ret callVisitMethod(Ret)(Object visitorInstance, Node n)
+Ret callVisitMethod(Ret)(Object visitorInstance, Node n, NodeKind k)
 { // Get the method's address from the vtable.
-  const funcIndex = indexOfFirstVisitMethod + n.kind;
+  const funcIndex = indexOfFirstVisitMethod + k;
   auto funcptr = typeid(visitorInstance).vtbl[funcIndex];
   // Construct a delegate and call it.
   Ret delegate(Node) visitMethod = void;
@@ -77,7 +77,13 @@ abstract class Visitor
   /// Calls the appropriate visit() method for a node.
   Node dispatch(Node n)
   {
-    return callVisitMethod!(Node)(this, n);
+    return callVisitMethod!(Node)(this, n, n.kind);
+  }
+
+  /// Allows calling the visit() method with a null node.
+  Node dispatch(Node n, NodeKind k)
+  {
+    return callVisitMethod!(Node)(this, n, k);
   }
 
   /// Called by visit() methods that were not overridden.
@@ -121,7 +127,13 @@ abstract class Visitor2
   /// Calls the appropriate visit() method for a node.
   void dispatch(Node n)
   {
-    callVisitMethod!(void)(this, n);
+    callVisitMethod!(void)(this, n, n.kind);
+  }
+
+  /// Allows calling the visit() method with a null node.
+  void dispatch(Node n, NodeKind k)
+  {
+    callVisitMethod!(void)(this, n, k);
   }
 
   /// Called by visit() methods that were not overridden.
