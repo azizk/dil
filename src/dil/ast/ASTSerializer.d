@@ -91,6 +91,11 @@ class ASTSerializer : Visitor2
     typeid(Token*[][]),
   ];
 
+  static TypeInfo getTypeInfo(TID tid)
+  {
+    return arrayTIs[tid - TID.Array];
+  }
+
   this()
   {
   }
@@ -121,18 +126,6 @@ class ASTSerializer : Visitor2
   size_t indexOf(Token* token)
   {
     return tokenIndex[token];
-  }
-
-  /// Writes a string array.
-  void write(cstring str)
-  {
-    data ~= str;
-  }
-
-  /// Writes a String.
-  void write(const(String) str)
-  {
-    data ~= str.array;
   }
 
   /// Writes 1 byte.
@@ -236,58 +229,58 @@ class ASTSerializer : Visitor2
   }
 
   /// Writes the mangled array type and then visits each node.
-  void visitNodes(N)(N[] nodes, TID tid)
+  void write(Node[] nodes, TID tid)
   {
     write1B(TID.Array);
     write1B(tid);
     writeSB(nodes.length);
     foreach (n; nodes)
-      write(n);
+      write(n, tid);
   }
 
   void write(Node[] nodes)
   {
-    visitNodes(nodes, TID.Nodes);
+    write(nodes, TID.Nodes);
   }
 
   void write(Declaration[] nodes)
   {
-    visitNodes(nodes, TID.Declarations);
+    write(cast(Node[])nodes, TID.Declarations);
   }
 
   void write(Statement[] nodes)
   {
-    visitNodes(nodes, TID.Statements);
+    write(cast(Node[])nodes, TID.Statements);
   }
 
   void write(Expression[] nodes)
   {
-    visitNodes(nodes, TID.Expressions);
+    write(cast(Node[])nodes, TID.Expressions);
   }
 
   void write(Parameter[] nodes)
   {
-    visitNodes(nodes, TID.Parameters);
+    write(cast(Node[])nodes, TID.Parameters);
   }
 
   void write(TemplateParam[] nodes)
   {
-    visitNodes(nodes, TID.TemplateParams);
+    write(cast(Node[])nodes, TID.TemplateParams);
   }
 
   void write(EnumMemberDecl[] nodes)
   {
-    visitNodes(nodes, TID.EnumMemberDecls);
+    write(cast(Node[])nodes, TID.EnumMemberDecls);
   }
 
   void write(BaseClassType[] nodes)
   {
-    visitNodes(nodes, TID.BaseClassTypes);
+    write(cast(Node[])nodes, TID.BaseClassTypes);
   }
 
   void write(CatchStmt[] nodes)
   {
-    visitNodes(nodes, TID.CatchStmts);
+    write(cast(Node[])nodes, TID.CatchStmts);
   }
 
   /// Writes a char.
