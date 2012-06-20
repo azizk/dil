@@ -11,23 +11,10 @@ for the D programming language (supporting versions 1.0 and 2.0.)
 In order to compile DIL you must have:
  *) DMD 2.059 (http://dlang.org/changelog.html)
  *) Tango D2 (https://github.com/SiegeLord/Tango-D2)
- *) MPFR 3.0.0 (http://mpfr.org)
  *) Python 2.7.2 (older versions might work, too)
 
 If you can't compile DIL because you have newer versions of these programs,
 please, report the problem to me (see Bugs section.)
-
-Regarding MPFR:
-Windows users have to use Visual C/C++ or Cygwin in order to compile
-the MPFR library for their system. Precompiled libraries are available here:
-
-  http://holoborodko.com/pavel/downloads/win32_gmp_mpfr.zip
-
-I have not tested compiling a Windows binary yet. DIL should compile
-if you put one of the debug or release mpfr.lib files into a path
-where the linker can find them. E.g.: pass the following to build.py:
-  > python scripts\build.py -- -L+mpfr.lib -L+C:\downloads\mpfr\Win32\Release\
-
 
 ==Compile DIL with Python==
 # Note: The binary is placed in the bin/ folder.

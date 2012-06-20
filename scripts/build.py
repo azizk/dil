@@ -170,7 +170,7 @@ def main():
 
   command = (DMDCommand, LDCCommand)[options.ldc]
   versions = (["D2"], ["D1"])[options.d1]
-  lnk_args = (["-lmpfr", "-ldl"], ["+mpfr"])[for_win]
+  lnk_args = (["-ldl"], [])[for_win]
   # Remove -ldl if release build.
   lnk_args = (lnk_args[:1], lnk_args)[options.debug]
 

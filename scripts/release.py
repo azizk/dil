@@ -247,7 +247,6 @@ def main():
 
   if build_linux_binaries:
     print("\n***** Building Linux binaries *****\n")
-    linker_args[0] = "-lmpfr"
     # Linux Debug Binaries
     build_dil_dbg(BIN/"dil_d")
     build_dil_dbg(BIN/"dil2_d", versions=["D2"])
@@ -258,7 +257,6 @@ def main():
   if build_windows_binaries:
     print("\n***** Building Windows binaries *****\n")
     COMPILER.use_wine = use_wine
-    linker_args[0] = "+mpfr.lib"
     # Windows Debug Binaries
     build_dil_dbg(BIN/"dil_d.exe")
     build_dil_dbg(BIN/"dil2_d.exe", versions=["D2"])

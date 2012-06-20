@@ -119,7 +119,6 @@
     <Compile Include="..\..\src\dil\translator\German.d" />
     <Compile Include="..\..\src\util\OptParser.d" />
     <Compile Include="..\..\src\util\Path.d" />
-    <Compile Include="..\..\src\util\mpfr.d" />
     <Compile Include="..\..\src\util\uni.d" />
   </ItemGroup>
   <ItemGroup>
