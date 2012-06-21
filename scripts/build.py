@@ -20,10 +20,11 @@ class Command:
       args = [exe] + args
       exe = "wine"
     try:
-      subprocess.call([exe] + args)
+      retcode = subprocess.call([exe] + args)
     except OSError as e:
       e.exe = exe
       raise e
+    return retcode
 
 class CmdParameters(dict):
   def __getattr__(self, name): return self[name]
@@ -116,21 +117,22 @@ def build_dil(cmd_kwargs):
   cmd.use_wine = use_wine
   print(cmd)
   try:
-    cmd.call()
+    retcode = cmd.call()
   except OSError as e:
     if e.errno == 2:
       print("Error: command not found: '%s'" % e.exe)
+  return retcode
 
 
 def build_dil_release(**kwargs):
   # Enable inlining when DMDBUG #7967 is fixed.
   options = {'release':1, 'optimize':1, 'inline':0}
-  build_dil(dict(kwargs, **options))
+  return build_dil(dict(kwargs, **options))
 
 def build_dil_debug(**kwargs):
   options = {'debug_info':1}
   kwargs.setdefault('other', []).append('-debug')
-  build_dil(dict(kwargs, **options))
+  return build_dil(dict(kwargs, **options))
 
 def main():
   from optparse import OptionParser
@@ -170,16 +172,19 @@ def main():
 
   command = (DMDCommand, LDCCommand)[options.ldc]
   versions = (["D2"], ["D1"])[options.d1]
-  lnk_args = (["-ldl"], [])[for_win]
-  # Remove -ldl if release build.
-  lnk_args = (lnk_args[:1], lnk_args)[options.debug]
+  lnk_args = []
+  if options.debug and not for_win:
+    # -ldl needs to come last to avoid linker errors.
+    lnk_args = ["-ltango-dmd", "-lphobos2", "-ldl"]
 
   if options.unittest: other_args += ["-unittest"]
 
   build_func = (build_dil_release, build_dil_debug)[options.debug]
   # Call the compiler with the provided options.
-  build_func(CMDCLASS=command, wine=options.wine, versions=versions,
+  retcode = build_func(CMDCLASS=command, wine=options.wine, versions=versions,
     lnk_args=lnk_args, other=other_args)
+
+  sys.exit(retcode)
 
 if __name__ == '__main__':
   main()
