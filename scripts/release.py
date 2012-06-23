@@ -29,12 +29,10 @@ def writeMakefile():
   # TODO: implement.
   pass
 
-def build_dil(COMPILER, *args, **kwargs):
-  kwargs.update(exe=COMPILER)
-  cmd = COMPILER.cmd(*args, **kwargs)
-  cmd.use_wine = COMPILER.use_wine
+def build_dil(CmdClass, *args, **kwargs):
+  cmd = CmdClass(*args, **kwargs)
   print(cmd)
-  cmd.call()
+  return cmd.call()
 
 def update_version(path, major, minor, suffix):
   """ Updates the version info in the compiler's source code. """
@@ -78,6 +76,58 @@ def write_CHM(DIL, SRC, VERSION, TMP):
   }
   dest = SRC/("dil.%s.API.chm" % VERSION)
   chm_gen.run(html_files, dest, TMP, params)
+
+def build_binaries(COMPILER, FILES, DEST):
+  from functools import partial as func_partial
+  BIN = DEST.BIN
+  CmdClass = COMPILER.CmdClass
+
+  use_wine = False
+  if is_win32:
+    build_linux_binaries = False
+    build_windows_binaries = True
+  else:
+    build_linux_binaries = True
+    build_windows_binaries = use_wine = locate_command("wine") != None
+    class BINPath(Path):
+      def __div__(self, name):
+        """ Converts a Unix path to a Windows path. """
+        name = Path.__div__(self, name)
+        return name if name.ext != '.exe' else name.replace("/", r"\\")
+    BIN = BINPath(BIN)
+    if not build_windows_binaries:
+      print("Warning: cannot build Windows binaries: "
+            "wine is not installed or not in PATH.")
+
+  # Create partial functions with common parameters (aka. currying).
+  # Note: the -inline switch makes the binaries significantly larger on Linux.
+  linker_args = []
+  # Enable inlining when DMDBUG #7967 is fixed.
+  build_dil_rls = func_partial(build_dil, CmdClass, FILES, exe=COMPILER,
+    release=True, optimize=True, inline=False, lnk_args=linker_args)
+  build_dil_dbg = func_partial(build_dil, CmdClass, FILES, exe=COMPILER,
+    debug_info=False, lnk_args=linker_args)
+
+  if build_linux_binaries:
+    print("\n***** Building Linux binaries *****\n")
+    # Linux Debug Binaries
+    build_dil_dbg(BIN/"dil1_dbg", versions=["D1"])
+    build_dil_dbg(BIN/"dil2_dbg", versions=["D2"])
+    # Linux Release Binaries
+    build_dil_rls(BIN/"dil1", versions=["D1"])
+    build_dil_rls(BIN/"dil2", versions=["D2"])
+
+  if build_windows_binaries:
+    print("\n***** Building Windows binaries *****\n")
+    kwargs = {"wine" : use_wine}
+    # Windows Debug Binaries
+    build_dil_dbg(BIN/"dil1_dbg.exe", versions=["D1"], **kwargs)
+    build_dil_dbg(BIN/"dil2_dbg.exe", versions=["D2"], **kwargs)
+    # Windows Release Binaries
+    build_dil_rls(BIN/"dil1.exe", versions=["D1"], **kwargs)
+    build_dil_rls(BIN/"dil2.exe", versions=["D2"], **kwargs)
+
+
 
 def main():
   from functools import partial as func_partial
@@ -134,11 +184,10 @@ def main():
 
   # Pick a compiler for compiling DIL.
   CmdClass = (DMDCommand, LDCCommand)[options.ldc]
-  COMPILER = Path(options.cmp_exe if options.cmp_exe else CmdClass.cmd)
-  COMPILER.cmd = CmdClass
+  COMPILER = Path(options.cmp_exe if options.cmp_exe else CmdClass.exe)
+  COMPILER.CmdClass = CmdClass
   if not COMPILER.exists and not locate_command(COMPILER):
-    parser.error("The executable '%s' couldn't be located or does not exist." %
-                 COMPILER)
+    parser.error("The executable '%s' could not be located." % COMPILER)
 
   # Path to DIL's root folder.
   DIL       = dil_path()
@@ -215,55 +264,10 @@ def main():
   #if options.chm:
     #write_CHM(DEST, DEST.DOC, VERSION, TMP)
 
-  COMPILER.use_wine = False
-  use_wine = False
-  if is_win32:
-    build_linux_binaries = False
-    build_windows_binaries = True
-  else:
-    build_linux_binaries = True
-    build_windows_binaries = locate_command("wine") != None
-    class BINPath(Path):
-      def __div__(self, name):
-        """ Converts a Unix path to a Windows path. """
-        name = Path.__div__(self, name)
-        return name if name.ext != '.exe' else name.replace("/", r"\\")
-    BIN = BINPath(BIN)
-    use_wine = True # Use wine on Linux to build Windows binaries.
-    if not build_windows_binaries:
-      print("Error: can't build windows binaries: "
-            "wine is not installed or not in PATH.")
+  if not options.no_binaries:
+    build_binaries(COMPILER, FILES, DEST)
 
-  if options.no_binaries:
-    build_linux_binaries = build_windows_binaries = False
-
-  # Create partial functions with common parameters (aka. currying).
-  # Note: the -inline switch makes the binaries significantly larger on Linux.
-  linker_args = [None]
-  build_dil_rls = func_partial(build_dil, COMPILER, FILES,
-    release=True, optimize=True, inline=True, lnk_args=linker_args)
-  build_dil_dbg = func_partial(build_dil, COMPILER, FILES,
-    debug_info=options.debug_symbols, lnk_args=linker_args)
-
-  if build_linux_binaries:
-    print("\n***** Building Linux binaries *****\n")
-    # Linux Debug Binaries
-    build_dil_dbg(BIN/"dil_d")
-    build_dil_dbg(BIN/"dil2_d", versions=["D2"])
-    # Linux Release Binaries
-    build_dil_rls(BIN/"dil")
-    build_dil_rls(BIN/"dil2", versions=["D2"])
-
-  if build_windows_binaries:
-    print("\n***** Building Windows binaries *****\n")
-    COMPILER.use_wine = use_wine
-    # Windows Debug Binaries
-    build_dil_dbg(BIN/"dil_d.exe")
-    build_dil_dbg(BIN/"dil2_d.exe", versions=["D2"])
-    # Windows Release Binaries
-    build_dil_rls(BIN/"dil.exe")
-    build_dil_rls(BIN/"dil2.exe", versions=["D2"])
-
+  # Removed unneeded directories.
   options.docs or DEST.DOC.rmtree()
   TMP.rmtree()
 
