@@ -7,8 +7,8 @@ from common import *
 __file__ = tounicode(__file__)
 
 class Command:
-  def __init__(self, exe):
-    self.use_wine = False
+  def __init__(self, exe, wine):
+    self.use_wine = wine
     self.exe = exe
   def args(self):
     return []
@@ -32,7 +32,7 @@ class CmdParameters(dict):
   def __delattr__(self, name): del self[name]
 
 class DMDCommand(Command):
-  cmd = "dmd"
+  exe = "dmd"
   P = CmdParameters( # Parameter template strings.
     I = "-I%s", # Include-directory.
     L = "-L%s", # Linker option.
@@ -48,11 +48,11 @@ class DMDCommand(Command):
     op = "-op", # Don't strip paths from source files.
     o_ = "-o-" # Don't output object file.
   )
-  def __init__(self, files, out_exe, exe=cmd, objdir='obj',
+  def __init__(self, files, out_exe, exe=exe, wine=False, objdir='obj',
                release=False, optimize=False, inline=False, debug_info=False,
                no_obj=False, warnings=False, strip_paths=False,
                lnk_args=[], includes=[], versions=[], other=[]):
-    Command.__init__(self, exe)
+    Command.__init__(self, exe, wine)
     P = self.P
     self.files = files
     self.out_exe = P.of%out_exe if out_exe else None
@@ -81,7 +81,8 @@ class DMDCommand(Command):
     return cmd_str
 
 class LDCCommand(DMDCommand):
-  cmd = "ldc"
+  """ Overrides members where needed. """
+  exe = "ldc"
   P = CmdParameters(DMDCommand.P,
     I = "-I=%s",
     L = "-L=%s",
@@ -90,7 +91,7 @@ class LDCCommand(DMDCommand):
     inline = "-enable-inlining",
     version = "-d-version=%s",
   )
-  def __init__(self, files, out_exe, exe=cmd, **kwargs):
+  def __init__(self, files, out_exe, exe=exe, **kwargs):
     DMDCommand.__init__(self, files, out_exe, exe=exe, **kwargs)
 
 def build_dil(cmd_kwargs):
@@ -103,18 +104,14 @@ def build_dil(cmd_kwargs):
   # Find the source files.
   FILES = find_dil_source_files(Path("src"))
   # Pick a compiler class.
-  Command = cmd_kwargs.get("CMDCLASS", DMDCommand)
-  use_wine = cmd_kwargs.get("wine", False)
-  del cmd_kwargs["CMDCLASS"]
-  del cmd_kwargs["wine"]
+  Command = cmd_kwargs.pop("cmdclass", DMDCommand)
   # Run the compiler.
   exe_dest = BIN/"dil"
-  if use_wine:
+  if "wine" in cmd_kwargs:
     exe_dest = (exe_dest+".exe").replace("/", "\\")
   if "-c" in cmd_kwargs["other"]: # Only compile objects?
     exe_dest = None
   cmd = Command(FILES, exe_dest, **cmd_kwargs)
-  cmd.use_wine = use_wine
   print(cmd)
   try:
     retcode = cmd.call()
@@ -181,7 +178,7 @@ def main():
 
   build_func = (build_dil_release, build_dil_debug)[options.debug]
   # Call the compiler with the provided options.
-  retcode = build_func(CMDCLASS=command, wine=options.wine, versions=versions,
+  retcode = build_func(cmdclass=command, wine=options.wine, versions=versions,
     lnk_args=lnk_args, other=other_args)
 
   sys.exit(retcode)
