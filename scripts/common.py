@@ -62,7 +62,7 @@ def dil_path(where="", dilconf=True):
       P.BIN = exe_path.folder # Update binary folder.
       P.EXE = exe_path # Update exe path.
       # Get the settings from dil.
-      sttngs = call_read([exe_path, "set"])
+      sttngs = call_read(exe_path, "set")
       sttngs = dict(re.findall("^(\w+)=(.+)", sttngs[:-1], re.MULTILINE))
       # Set the actual paths.
       P.DATA = Path(sttngs['DATADIR']).normpath
@@ -206,9 +206,11 @@ def build_dil_if_inexistant(dil_exe):
     else:
       raise Exception("can't proceed without dil executable")
 
-def call_read(args, **kwargs):
+def call_read(*args, **kwargs):
   """ Calls a process and returns the contents of stdout in Unicode. """
-  kwargs = dict({'stdout':subprocess.PIPE}, **kwargs)
+  if len(args) == 1 and isinstance(args[0], list): # E.g.: call_read([...])
+    args = args[0] # Replace if the sole argument is a list.
+  kwargs.update(stdout=subprocess.PIPE)
   return subprocess.Popen(args, **kwargs).communicate()[0].decode('u8')
 
 class VersionInfo:

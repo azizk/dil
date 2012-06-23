@@ -7,7 +7,7 @@ from symbols import *
 
 def win_path(p):
   """ Converts a Unix path to a Windows path. """
-  return call_read(["winepath", "-w", p])[:-1]
+  return call_read("winepath", "-w", p)[:-1]
 
 def win_paths(ps):
   return map(win_path, ps)
@@ -169,7 +169,7 @@ def call_hhc(project_hhp):
   hhc_exe = ProgramFiles + "\\HTML Help Workshop\\hhc.exe"
   # Convert back to Unix path if not on Windows.
   if not is_win32:
-    hhc_exe = call_read(["winepath", "-u", hhc_exe])[:-1]
+    hhc_exe = call_read("winepath", "-u", hhc_exe)[:-1]
   if not Path(hhc_exe).exists:
     hhc_exe = "hhc.exe" # Assume the exe is in PATH.
 

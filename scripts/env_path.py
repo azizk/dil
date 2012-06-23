@@ -17,7 +17,7 @@ def append2PATH(paths, tmp_path):
   CUR_PATH = call_read(echo_cmd).rstrip('\r\n') # Remove trailing \r\n.
   CUR_PATH = tounicode(CUR_PATH)
   if not is_win32 and '/' in paths: # Convert the Unix paths to Windows paths.
-    winepath = lambda p: call_read(["winepath", "-w", p])[:-1]
+    winepath = lambda p: call_read("winepath", "-w", p)[:-1]
     path_list = map(winepath, path_list)
     path_list = tounicodes(path_list)
 

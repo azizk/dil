@@ -235,7 +235,7 @@ def main():
     subprocess.call(["tar", "-xf", TARFILE.name], cwd=DEST)
     TARFILE.rm()
     if options.copy_modified:
-      modified_files = call_read(["git", "ls-files", "-m"])[:-1]
+      modified_files = call_read("git", "ls-files", "-m")[:-1]
       if modified_files != "":
         for f in modified_files.split("\n"):
           Path(f).copy(DEST/f)
