@@ -43,6 +43,11 @@ def update_version(path, major, minor, suffix):
   code = re.sub(r'(VERSION_SUFFIX\s*=\s*)"";', r'\g<1>"%s";' % suffix, code)
   path.open("w").write(code)
 
+def write_VERSION(VERSION, DEST):
+  f = (DEST/"VERSION").open("w")
+  f.write("%s\n" % VERSION)
+  f.close()
+
 def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen = PDFGenerator()
   pdf_gen.fetch_files(DIL, TMP)
@@ -218,7 +223,11 @@ def main():
     #if src.ext in ('.zip', '.gz', 'bz2'):
       # TODO:
     src.copytree(DEST)
-  elif locate_command('git'):
+  else:
+    if not locate_command('git'):
+      parser.error("'git' is not in your PATH; specify --src instead")
+    if not locate_command('tar'):
+      parser.error("program 'tar' is not in your PATH")
     # Use git to checkout a clean copy.
     DEST.mkdir()
     TARFILE = DEST/"dil.tar"
@@ -230,8 +239,6 @@ def main():
       if modified_files != "":
         for f in modified_files.split("\n"):
           Path(f).copy(DEST/f)
-  else:
-    parser.error("git is not in your PATH; specify --src instead")
   # Create other directories not available in a clean checkout.
   DOC = DEST.DOC
   map(Path.mkdir, (DEST.BIN, DOC, DOC.HTMLSRC,
@@ -247,8 +254,8 @@ def main():
   FILES = find_dil_source_files(DEST.SRC)
 
   # Update the version info.
-  VERSION_FILE = DEST.SRC/"dil"/"Version.d"
-  update_version(VERSION_FILE, V_MAJOR, V_MINOR, V_SUFFIX)
+  update_version(DEST.SRC/"dil"/"Version.d", V_MAJOR, V_MINOR, V_SUFFIX)
+  write_VERSION(VERSION, DEST)
 
   if options.docs:
     build_dil_if_inexistant(DIL.EXE)
