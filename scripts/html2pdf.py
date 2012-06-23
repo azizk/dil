@@ -364,7 +364,7 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   call_prince(html_src, dest)
 
 def call_prince(src, dest):
-  subprocess.call(["prince", src, "-o", dest, "-v"])
+  call_proc("prince", src, "-o", dest, "-v")
 
 class PDFGenerator:
   def fetch_files(self, SRC, TMP):

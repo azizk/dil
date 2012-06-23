@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 def append2PATH(paths, tmp_path):
   """ Appends the given argument to the PATH in the registry.
       The paths argument can contain multiple paths separated by ';'. """
-  from common import is_win32, Path, call_read, subprocess, \
+  from common import is_win32, Path, call_proc, call_read, subprocess, \
     chunks, tounicode, tounicodes
   paths, tmp_path = tounicodes((paths, tmp_path))
   sep = ";"
@@ -46,4 +46,4 @@ Control\\Session Manager\\Environment]\r
 
   # 4. Apply the reg file to the registry. "/s" means run silently.
   regedit = ["wine", "regedit.exe", "/s", tmp_reg][is_win32:]
-  subprocess.call(regedit)
+  call_proc(regedit)

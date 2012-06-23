@@ -20,7 +20,7 @@ class Command:
       args = [exe] + args
       exe = "wine"
     try:
-      retcode = subprocess.call([exe] + args)
+      retcode = call_proc(exe, *args)
     except OSError as e:
       e.exe = exe
       raise e

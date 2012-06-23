@@ -231,8 +231,8 @@ def main():
     # Use git to checkout a clean copy.
     DEST.mkdir()
     TARFILE = DEST/"dil.tar"
-    subprocess.call(["git", "archive", "-o", TARFILE, "HEAD"])
-    subprocess.call(["tar", "-xf", TARFILE.name], cwd=DEST)
+    call_proc("git", "archive", "-o", TARFILE, "HEAD")
+    call_proc("tar", "-xf", TARFILE.name, cwd=DEST)
     TARFILE.rm()
     if options.copy_modified:
       modified_files = call_read("git", "ls-files", "-m")[:-1]
@@ -281,6 +281,8 @@ def main():
   # Build archives.
   assert DEST[-1] != Path.sep
   create_archives(options, DEST.name, DEST.name, DEST.folder)
+
+  print("Done!")
 
 if __name__ == '__main__':
   main()

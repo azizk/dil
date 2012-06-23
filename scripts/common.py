@@ -148,11 +148,11 @@ def generate_docs(dil_exe, dest, modlist, files,
   """ Generates documenation files. """
   versions = ["-version="+v for v in versions]
   args = ["ddoc", dest, "-m="+modlist] + options + versions + files
-  return subprocess.call([dil_exe] + args, cwd=cwd)
+  return call_proc(dil_exe, *args, cwd=cwd)
 
 def generate_pymodules(dil_exe, dest, files, options=[], cwd=None):
   """ Generates Python source files. """
-  subprocess.call([dil_exe, "py", dest] + options + files, cwd=cwd)
+  return call_proc(dil_exe, "py", dest, *options + files, cwd=cwd)
 
 def create_archives(opts, src, dest, cwd):
   """ Calls archiving programs to archive the src folder. """
@@ -171,7 +171,7 @@ def create_archives(opts, src, dest, cwd):
     cmd[-1] = cmd[-1] % {'name':dest} # Format the destination parameter.
     cmd += [src] # Append the src parameter.
     print("\n", " ".join(cmd))
-    subprocess.call(cmd, cwd=cwd) # Call the program.
+    call_proc(cmd, cwd=cwd) # Call the program.
 
 def load_pymodules(folder):
   """ Loads all python modules (names matching 'd_*.py') from a folder. """
@@ -205,6 +205,12 @@ def build_dil_if_inexistant(dil_exe):
       build_dil_release()
     else:
       raise Exception("can't proceed without dil executable")
+
+def call_proc(*args, **kwargs):
+  """ Calls a process and returns its return-code. """
+  if len(args) == 1 and isinstance(args[0], list): # E.g.: call_proc([...])
+    args = args[0] # Replace if the sole argument is a list.
+  return subprocess.call(args, **kwargs)
 
 def call_read(*args, **kwargs):
   """ Calls a process and returns the contents of stdout in Unicode. """
