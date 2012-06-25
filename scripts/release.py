@@ -67,8 +67,7 @@ def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen.run(html_files, dest, TMP, params)
 
 def write_CHM(DIL, SRC, VERSION, TMP):
-  TMP = TMP/"chm"
-  TMP.mkdir()
+  TMP = (TMP/"chm").mkdir()
 
   chm_gen = CHMGenerator()
   chm_gen.fetch_files(DIL.DOC, TMP)
@@ -103,33 +102,35 @@ def build_binaries(COMPILER, FILES, DEST):
 
   # Create partial functions with common parameters (aka. currying).
   # Note: the -inline switch makes the binaries significantly larger on Linux.
-  linker_args = []
   # Enable inlining when DMDBUG #7967 is fixed.
   build_dil_rls = func_partial(build_dil, CmdClass, FILES, exe=COMPILER,
-    release=True, optimize=True, inline=False, lnk_args=linker_args)
-  build_dil_dbg = func_partial(build_dil, CmdClass, FILES, exe=COMPILER,
-    debug_info=False, lnk_args=linker_args)
+    release=True, optimize=True, inline=False)
+  build_dil_dbg = func_partial(build_dil, CmdClass, FILES, exe=COMPILER)
 
-  if build_linux_binaries:
-    print("\n***** Building Linux binaries *****\n")
-    B = (DEST/"linux"/"bin").mkdirs()
-    # Linux Debug Binaries
-    build_dil_dbg(B/"dil1_dbg", versions=["D1"])
-    build_dil_dbg(B/"dil2_dbg", versions=["D2"])
-    # Linux Release Binaries
-    build_dil_rls(B/"dil1", versions=["D1"])
-    build_dil_rls(B/"dil2", versions=["D2"])
+  for arch in ("32", "64"):
+    # TODO: some day it should be possible to crosscompile
+    if build_linux_binaries and arch == "32":
+      print("\n***** Building Linux binaries *****\n")
+      B = (DEST/"linux"/("bin%s" % arch)).mkdirs()
+      kwargs = {"debug_info" : True,
+        "lnk_args" : ["-ltango-dmd", "-lphobos2", "-ldl"]}
+      # Linux Debug Binaries
+      build_dil_dbg(B/"dil1_dbg", versions=["D1"], **kwargs)
+      build_dil_dbg(B/"dil2_dbg", versions=["D2"], **kwargs)
+      # Linux Release Binaries
+      build_dil_rls(B/"dil1", versions=["D1"])
+      build_dil_rls(B/"dil2", versions=["D2"])
 
-  if build_windows_binaries:
-    print("\n***** Building Windows binaries *****\n")
-    kwargs = {"wine" : use_wine}
-    B = (DEST/"windows"/"bin").mkdirs()
-    # Windows Debug Binaries
-    build_dil_dbg(B/"dil1_dbg.exe", versions=["D1"], **kwargs)
-    build_dil_dbg(B/"dil2_dbg.exe", versions=["D2"], **kwargs)
-    # Windows Release Binaries
-    build_dil_rls(B/"dil1.exe", versions=["D1"], **kwargs)
-    build_dil_rls(B/"dil2.exe", versions=["D2"], **kwargs)
+    if build_windows_binaries and arch == "32":
+      print("\n***** Building Windows binaries *****\n")
+      kwargs = {"wine" : use_wine}
+      B = (DEST/"windows"/("bin%s" % arch)).mkdirs()
+      # Windows Debug Binaries
+      build_dil_dbg(B/"dil1_dbg.exe", versions=["D1"], **kwargs)
+      build_dil_dbg(B/"dil2_dbg.exe", versions=["D2"], **kwargs)
+      # Windows Release Binaries
+      build_dil_rls(B/"dil1.exe", versions=["D1"], **kwargs)
+      build_dil_rls(B/"dil2.exe", versions=["D2"], **kwargs)
 
 
 
@@ -271,8 +272,8 @@ def main():
   if not options.no_binaries:
     build_binaries(COMPILER, FILES, DEST)
     for p in ("linux", "windows"):
-      if (DEST/p).exists:
-        (DIL.DATA/"dilconf.d").copy(DEST/p/"bin")
+      bin = DEST/p/"bin32"
+      bin.exists and (DIL.DATA/"dilconf.d").copy(bin)
 
   # Removed unneeded directories.
   options.docs or DEST.DOC.rmtree()
