@@ -107,7 +107,7 @@ def build_dil(cmd_kwargs):
   Command = cmd_kwargs.pop("cmdclass", DMDCommand)
   # Run the compiler.
   exe_dest = BIN/"dil"
-  if "wine" in cmd_kwargs:
+  if cmd_kwargs.get("wine", False):
     exe_dest = (exe_dest+".exe").replace("/", "\\")
   if "-c" in cmd_kwargs["other"]: # Only compile objects?
     exe_dest = None
