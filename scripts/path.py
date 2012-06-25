@@ -205,9 +205,10 @@ class Path(unicode):
   def rxglob(self, byname=None, bypath=None, prunedir=None):
     """ Walks through a dir tree using regular expressions.
         Also accepts callback functions. """
-    byname, bypath, prunedir = [(rx if callable(rx) else
-      re_compile(rx).search if rx else lambda x: False)
-      for rx in (byname, bypath, prunedir)]
+    def check(rx):
+      return rx if callable(rx) else rx.search if hasattr(rx, "search") else \
+        re_compile(rx).search if rx else lambda x: False
+    byname, bypath, prunedir = map(check, (byname, bypath, prunedir))
     found = []
     for root, dirs, files in self.walk(followlinks=True):
       dirs[:] = [dir for dir in dirs if not prunedir(Path(root, dir))]
