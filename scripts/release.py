@@ -15,7 +15,6 @@ __file__ = tounicode(__file__)
 def copy_files(DIL):
   """ Copies required files to the destination folder. """
   for FILE, DIR in (
-      (DIL.DATA/"dilconf.d", DIL.BIN),
       (DIL.DATA/"html.css",  DIL.DOC.HTMLSRC),
       (DIL.KANDIL.style,     DIL.DOC.CSS)):
     FILE.copy(DIR)
@@ -69,7 +68,7 @@ def write_PDF(DIL, SRC, VERSION, TMP):
 
 def write_CHM(DIL, SRC, VERSION, TMP):
   TMP = TMP/"chm"
-  TMP.exists or TMP.mkdir()
+  TMP.mkdir()
 
   chm_gen = CHMGenerator()
   chm_gen.fetch_files(DIL.DOC, TMP)
@@ -84,7 +83,6 @@ def write_CHM(DIL, SRC, VERSION, TMP):
 
 def build_binaries(COMPILER, FILES, DEST):
   from functools import partial as func_partial
-  BIN = DEST.BIN
   CmdClass = COMPILER.CmdClass
 
   use_wine = False
@@ -97,12 +95,11 @@ def build_binaries(COMPILER, FILES, DEST):
     class BINPath(Path):
       def __div__(self, name):
         """ Converts a Unix path to a Windows path. """
-        name = Path.__div__(self, name)
+        name = BINPath(Path.__div__(self, name))
         return name if name.ext != '.exe' else name.replace("/", r"\\")
-    BIN = BINPath(BIN)
+    DEST = BINPath(DEST)
     if not build_windows_binaries:
-      print("Warning: cannot build Windows binaries: "
-            "wine is not installed or not in PATH.")
+      print("Warning: cannot build Windows binaries: 'wine' is not in PATH.")
 
   # Create partial functions with common parameters (aka. currying).
   # Note: the -inline switch makes the binaries significantly larger on Linux.
@@ -115,22 +112,24 @@ def build_binaries(COMPILER, FILES, DEST):
 
   if build_linux_binaries:
     print("\n***** Building Linux binaries *****\n")
+    B = (DEST/"linux"/"bin").mkdirs()
     # Linux Debug Binaries
-    build_dil_dbg(BIN/"dil1_dbg", versions=["D1"])
-    build_dil_dbg(BIN/"dil2_dbg", versions=["D2"])
+    build_dil_dbg(B/"dil1_dbg", versions=["D1"])
+    build_dil_dbg(B/"dil2_dbg", versions=["D2"])
     # Linux Release Binaries
-    build_dil_rls(BIN/"dil1", versions=["D1"])
-    build_dil_rls(BIN/"dil2", versions=["D2"])
+    build_dil_rls(B/"dil1", versions=["D1"])
+    build_dil_rls(B/"dil2", versions=["D2"])
 
   if build_windows_binaries:
     print("\n***** Building Windows binaries *****\n")
     kwargs = {"wine" : use_wine}
+    B = (DEST/"windows"/"bin").mkdirs()
     # Windows Debug Binaries
-    build_dil_dbg(BIN/"dil1_dbg.exe", versions=["D1"], **kwargs)
-    build_dil_dbg(BIN/"dil2_dbg.exe", versions=["D2"], **kwargs)
+    build_dil_dbg(B/"dil1_dbg.exe", versions=["D1"], **kwargs)
+    build_dil_dbg(B/"dil2_dbg.exe", versions=["D2"], **kwargs)
     # Windows Release Binaries
-    build_dil_rls(BIN/"dil1.exe", versions=["D1"], **kwargs)
-    build_dil_rls(BIN/"dil2.exe", versions=["D2"], **kwargs)
+    build_dil_rls(B/"dil1.exe", versions=["D1"], **kwargs)
+    build_dil_rls(B/"dil2.exe", versions=["D2"], **kwargs)
 
 
 
@@ -201,14 +200,13 @@ def main():
   BUILD_DIR = Path(options.builddir or "build")
   # Destination of distributable files.
   DEST      = dil_path(BUILD_DIR/("dil."+VERSION), dilconf=False)
-  BIN       = DEST.BIN # Shortcut to the bin/ folder.
   DEST.DOC  = doc_path(DEST.DOC)
 
   # Temporary directory, deleted in the end.
   TMP       = DEST/"tmp"
   # The list of module files (with info) that have been processed.
   MODLIST   = TMP/"modules.txt"
-  # The files to generate documentation for.
+  # The source files that need to be compiled and documentation generated for.
   FILES     = []
 
   # Create the build directory.
@@ -241,8 +239,7 @@ def main():
           Path(f).copy(DEST/f)
   # Create other directories not available in a clean checkout.
   DOC = DEST.DOC
-  map(Path.mkdir, (DEST.BIN, DOC, DOC.HTMLSRC,
-                   DOC.CSS, DOC.IMG, DOC.JS, TMP))
+  map(Path.mkdir, (DOC, DOC.HTMLSRC, DOC.CSS, DOC.IMG, DOC.JS, TMP))
 
   # Rebuild the path object for kandil. (Images are globbed.)
   DEST.KANDIL = kandil_path(DEST/"kandil")
@@ -273,6 +270,9 @@ def main():
 
   if not options.no_binaries:
     build_binaries(COMPILER, FILES, DEST)
+    for p in ("linux", "windows"):
+      if (DEST/p).exists:
+        (DIL.DATA/"dilconf.d").copy(DEST/p/"bin")
 
   # Removed unneeded directories.
   options.docs or DEST.DOC.rmtree()
