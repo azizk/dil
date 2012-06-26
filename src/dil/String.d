@@ -288,20 +288,20 @@ struct StringT(C)
   /// Concatenates another string array.
   S opBinary(string op : "~")(const S rhs) const
   {
-    return S(array ~ rhs.array);
+    return this ~ rhs.array;
   }
 
   /// ditto
   S opBinary(string op : "~")(const C[] rhs) const
   {
-    return S(array ~ rhs);
+    C[] result = array ~ rhs.dup;
+    return S(result);
   }
 
   /// Appends another String.
   ref S opOpAssign(string op : "~=")(const S rhs)
   {
-    this = this ~ rhs;
-    return this;
+    return this = this ~ rhs;
   }
 
   /// Returns a pointer to the first character, if this String is in rhs.
@@ -897,10 +897,10 @@ struct StringT(C)
     C[] result;
     if (strs.length)
     {
-      const joinStr = this.array;
+      const sep = this.array;
       result = strs[0].array.dup;
       foreach (str; strs[1..$])
-        result ~= joinStr ~ str.array;
+        result ~= sep ~ str.array;
     }
     return S(result);
   }
@@ -911,12 +911,44 @@ struct StringT(C)
     C[] result;
     if (strs.length)
     {
-      const joinStr = this.array;
+      const sep = this.array;
       result = strs[0].dup;
       foreach (str; strs[1..$])
-        result ~= joinStr ~ str;
+        result ~= sep ~ str;
     }
     return S(result);
+  }
+
+  /// Like join, but also appends the separator.
+  S rjoin(const S[] strs) const
+  {
+     C[] result;
+     const sep = this.array;
+     foreach (str; strs)
+       (result ~= str.array) ~= sep;
+     return S(result);
+  }
+
+  /// ditto
+  S rjoin(const C[][] strs) const
+  {
+    return rjoin(strs.toStrings());
+  }
+
+  /// Like join, but also prepends the separator.
+  S ljoin(const S[] strs) const
+  {
+     C[] result;
+     const sep = this.array;
+     foreach (str; strs)
+       (result ~= sep) ~= str.array;
+     return S(result);
+  }
+
+  /// ditto
+  S ljoin(const C[][] strs) const
+  {
+    return ljoin(strs.toStrings());
   }
 
   /// Returns itself reversed.
@@ -982,13 +1014,13 @@ hash_t hashOf(cstring str)
 }
 
 /// Returns a list of Strings from a list of char arrays.
-inout(String)[] toStrings(inout(char[])[] strs)
+inout(StringT!C)[] toStrings(C)(inout C[][] strs) inout
 {
-   auto result = new String.S2[strs.length];
+   auto result = new StringT!C.S2[strs.length];
    auto elem = result.ptr - 1;
    foreach (i, s; strs)
      (++elem).set(s);
-   return cast(inout(String)[])result;
+   return cast(inout(StringT!C)[])result;
 }
 
 /// ditto
@@ -1169,4 +1201,11 @@ unittest
   assert(S(["a","b","c","d"], ".") == S("a.b.c.d"));
   assert(S(["a","b","c","d"], "") == S("abcd"));
   assert(S(["a"], ".") == S("a"));
+  assert(S(",").rjoin(["a"]) == S("a,"));
+  assert(S(",").ljoin(["a"]) == S(",a"));
+  assert(S(",").rjoin(["a", "b"]) == S("a,b,"));
+  assert(S(",").ljoin(["a", "b"]) == S(",a,b"));
+  string[] strs;
+  assert(S(",").rjoin(strs) == S());
+  assert(S(",").ljoin(strs) == S());
 }
