@@ -172,8 +172,8 @@ struct StringT(C)
   }
 
   /// Compares the chars of two Strings.
-  /// Returns: 0 if borth are equal.
-  int opCmp(const S s) const
+  /// Returns: 0 if both are equal.
+  ssize_t opCmp(const S s) const
   {
     auto n = (len <= s.len) ? len : s.len;
     const(C)* p = ptr, p2 = s.ptr;
@@ -186,7 +186,7 @@ struct StringT(C)
   }
 
   /// Compares two Strings ignoring case (only ASCII.)
-  int icmp_(const S s) const
+  ssize_t icmp_(const S s) const
   {
     auto n = (len <= s.len) ? len : s.len;
     const(C)* p = ptr, p2 = s.ptr;
@@ -199,7 +199,7 @@ struct StringT(C)
   }
 
   /// ditto
-  int icmp(T)(T s) const
+  ssize_t icmp(T)(T s) const
   {
     auto s_ = mixin(ConvertToS!(T)("s"));
     return icmp_(s_);
