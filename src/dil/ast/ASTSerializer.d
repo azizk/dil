@@ -472,7 +472,7 @@ class ASTDeserializer : Visitor
   bool read(ref Node[] nodes, TID tid)
   {
     size_t len;
-    if (!check(TID.Array) || !check(tid) || !read(len))
+    if (!check(TID.Array) || !check(tid) || !readSB(len))
       return false;
     nodes = new Node[len];
     foreach (ref n; nodes)
