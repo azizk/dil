@@ -28,6 +28,59 @@ def writeMakefile():
   # TODO: implement.
   pass
 
+def get_totalsize_and_md5sums(FILES, root_index):
+  from md5 import new as md5
+  totalsize = 0
+  md5sums = ""
+  for f in FILES:
+    totalsize += f.size
+    data = f.open("rb", None).read()
+    checksum = md5(data).hexdigest()
+    md5sums += "%s  %s\n" % (checksum, f[root_index + 1:])
+  return (totalsize, md5sums)
+
+def make_deb_package(DIL, VERSION, ARCH, TMP, PACKAGENUM=1):
+  # 1. Create folders.
+  TMP = (TMP/"debian").mkdir()
+  (TMP/"usr"/"bin").mkdirs()
+  (TMP/"etc").mkdir()
+  DEBIAN = (TMP/"DEBIAN").mkdir()
+
+  # 2. Copy DIL's files.
+  for binary in DIL.BINS:
+    binary.copy(TMP/"usr"/"bin")
+  DIL.CONF.copy(TMP/"etc")
+
+  FILES = TMP.rxglob("^dil")
+
+  # 3. Generate package files.
+  SIZE, md5sums = get_totalsize_and_md5sums(FILES, len(TMP))
+
+  control = """Package: dil
+Version: {VERSION}-{PACKAGENUM}
+Section: devel
+Priority: optional
+Architecture: {ARCH}
+Depends:
+Provides: d-compiler
+Installed-Size: {SIZE}
+Maintainer: Aziz Köksal <aziz.koeksal@gmail.com>
+Bugs: https://github.com/azizk/dil/issues
+Homepage: http://code.google.com/p/dil
+Description: D compiler
+  DIL is a feature-rich compiler for the D programming language
+  written entirely in D.
+"""
+  control = control.format(**locals())
+
+  # 4. Write the files.
+  (DEBIAN/"control").open("w").write(control)
+  (DEBIAN/"md5sums").open("w").write(md5sums)
+
+  # 5. Create the package.
+  NAME = "dil_%s-%s_%s.deb" % (VERSION, PACKAGENUM, ARCH)
+  call_proc("dpkg-deb", "--build", TMP, DIL.DEST/NAME)
+
 def build_dil(CmdClass, *args, **kwargs):
   cmd = CmdClass(*args, **kwargs)
   print(cmd)
@@ -150,6 +203,7 @@ def main():
   add_option("--gz", dest="tar_gz", help="create a tar.gz archive")
   add_option("--bz2", dest="tar_bz2", help="create a tar.bz2 archive")
   add_option("--zip", dest="zip", help="create a zip archive")
+  add_option("--deb", dest="deb", help="create deb files")
   add_option("--pdf", dest="pdf", help="create a PDF document")
   #add_option("--chm", dest="chm", help="create a CHM file")
   add_option("-m", dest="copy_modified",
