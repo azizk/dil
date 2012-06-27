@@ -127,6 +127,11 @@ class Path(unicode):
     """ Returns last changed time. """
     return op.getctime(self)
 
+  @property
+  def size(self):
+    """ Returns the byte size of a file. """
+    return op.getsize(self)
+
   @classmethod
   def supports_unicode(cls):
     """ Returns True if the system can handle Unicode file names. """
