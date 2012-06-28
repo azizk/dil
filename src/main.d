@@ -464,13 +464,10 @@ void main(cstring[] args)
     break;
   case "settings", "set":
     alias GlobalSettings GS;
-    cstring versionIds, importPaths, ddocPaths;
-    foreach (item; GS.versionIds)
-      versionIds ~= item ~ ";";
-    foreach (item; GS.importPaths)
-      importPaths ~= item ~ ";";
-    foreach (item; GS.ddocFilePaths)
-      ddocPaths ~= item ~ ";";
+    cstring
+      versionIds = String(";").join(GS.versionIds).array,
+      importPaths = String(";").join(GS.importPaths).array,
+      ddocPaths = String(";").join(GS.ddocFilePaths).array;
 
     cstring[string] settings = [
       "DATADIR":GS.dataDir, "VERSION_IDS":versionIds,
