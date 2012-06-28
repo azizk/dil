@@ -66,6 +66,7 @@ void main(cstring[] args)
   auto config = ConfigLoader(globalCC, diag, args[0]);
   config.load();
   diag.bundle = config.resourceBundle;
+  updateWithSettings(globalCC);
 
   if (diag.hasInfo())
     return printErrors(diag);
@@ -541,16 +542,40 @@ enum string COMMANDS =
 /// Creates the global compilation context.
 CompilationContext newCompilationContext()
 {
+  /// Generates code: Adds a version id to a list if defined.
+  /// E.g.: version(X86) ids ~= "X86";
+  char[] defineVersionIds(string[] ids...)
+  {
+    char[] code;
+    foreach (id; ids)
+      code ~= "version(" ~ id ~ ") ids ~= \"" ~ id ~ "\";";
+    return code;
+  }
+
   auto cc = new CompilationContext;
-  cc.importPaths = GlobalSettings.importPaths;
-  cc.addVersionId("DIL");
-  cc.addVersionId("all");
+  string[] ids = ["DIL", "all"];
+  mixin(defineVersionIds(
+    "Windows", "Win32", "Win64", "linux", "OSX", "FreeBSD", "OpenBSD", "BSD",
+    "Solaris", "Posix", "AIX", "SkyOS", "SysV3", "SysV4", "Hurd", "Android",
+    "Cygwin", "MinGW", "X86", "X86_64", "ARM", "PPC", "PPC64", "IA64", "MIPS",
+    "MIPS64", "SPARC", "SPARC64", "S390", "S390X", "HPPA", "HPPA64", "SH",
+    "SH64", "Alpha", "LittleEndian", "BigEndian", "D_InlineAsm_X86",
+    "D_InlineAsm_X86_64", "D_LP64", "D_PIC", "D_SIMD"
+  ));
 version(D2)
-  cc.addVersionId("D_Version2");
+  ids ~= "D_Version2";
+  foreach (id; ids)
+    cc.addVersionId(id);
+  return cc;
+}
+
+/// Updates cc with variables from GlobalSettings.
+void updateWithSettings(CompilationContext cc)
+{
+  cc.importPaths = GlobalSettings.importPaths;
   foreach (versionId; GlobalSettings.versionIds)
     if (cc.tables.idents.isValidUnreservedIdentifier(versionId))
       cc.addVersionId(versionId);
-  return cc;
 }
 
 /// Parses a debug or version command line option.

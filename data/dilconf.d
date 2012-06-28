@@ -24,8 +24,7 @@ module dilconf;
 var DATADIR = "${BINDIR}/../data";
 
 /// Predefined version identifiers.
-var VERSION_IDS = ["X86", "linux", "LittleEndian"];
-// "X86_64", "Windows", "Win32", "Win64", "BigEndian"
+var VERSION_IDS = [];
 
 /// An array of import paths to look for modules.
 var IMPORT_PATHS = []; /// E.g.: ["src/", "import/"]
