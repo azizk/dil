@@ -18,28 +18,51 @@ import common;
 
 import tango.core.Array : sort;
 
-cstring escape_quotes(cstring text)
+/// Replaces \ with \\ and " with \".
+cstring escapeDblQuotes(cstring text)
 {
   char[] result;
-  foreach (c; text)
-    result ~= (c == '"') ? `\"`[] : (c == '\\' ? `\\` : c~"");
+  auto p = text.ptr;
+  auto end = p + text.length;
+  auto prev = p;
+  string esc;
+  for (; p < end; p++)
+    switch (*p)
+    {
+    case '"':  esc = `\"`;  goto case_common;
+    case '\\': esc = `\\`;  goto case_common;
+    case_common:
+      if (prev < p) // Copy previous piece.
+        result ~= String(prev, p).array;
+      result ~= esc;
+      prev = p + 1;
+    default:
+    }
+  if (prev == text.ptr)
+    return text; // Nothing to escape.
+  if (prev < end) // Copy last piece.
+    result ~= String(prev, p).array;
   return result;
 }
 
-cstring countWhitespace(cstring ws)
+/// Returns the number of characters if ws contains only ' ' chars,
+/// otherwise returns ws in single quotes.
+cstring quoteOrCountWhitespace(cstring ws)
 {
   foreach (c; ws)
     if (c != ' ') return "'"~ws~"'";
   return itoa(ws.length);
 }
 
+/// Enumeration of flags that indicate what's contained in a string.
 enum Flags
 {
-  None = 0,
-  Backslash = 1,
-  DblQuote = 2,
-  SglQuote = 4,
-  Newline = 8
+  None = 0,      /// No special characters.
+  Backslash = 1, /// \
+  DblQuote = 2,  /// "
+  SglQuote = 4,  /// '
+  Newline = 8,   /// \n, \r, \u2028, \u2029
+  SglAndDbl = DblQuote | SglQuote, /// " and '
 }
 
 /// Searches for backslashes, quotes and newlines in a string.
@@ -104,20 +127,28 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   foreach (i, item; list)
   { // By analyzing the string we can determine the optimal
     // way to represent strings in the Python source code.
-    uint flags = analyzeString(item.str);
-    string sgl_quot = "'", dbl_quot = `"`;
-    if (flags & Flags.Newline) // Use triple quotes for multiline strings.
-      (sgl_quot = "'''"), (dbl_quot = `"""`);
+    auto str = item.str;
+    Flags flags = analyzeString(str);
+    string quote = `"`; // Default to double quotemarks.
 
     if (flags & Flags.Backslash ||
-        flags == (Flags.SglQuote | Flags.DblQuote))
-      line ~= dbl_quot ~ escape_quotes(item.str) ~ dbl_quot;
-    else if (flags & Flags.SglQuote)
-      line ~= dbl_quot ~ item.str ~ dbl_quot;
-    else
-      line ~= sgl_quot ~ item.str ~ sgl_quot;
+        (flags & Flags.SglAndDbl) == Flags.SglAndDbl)
+    { // Use triple quotes for multiline strings.
+      quote = (flags & Flags.Newline) ? `"""` : `"`;
+      str = escapeDblQuotes(str);
+    }
+    else if (flags & Flags.Newline)
+      quote = (flags & Flags.DblQuote) ? "'''" : `"""`;
+    else if (flags & Flags.DblQuote)
+      quote = "'";
+    //else if (flags & Flags.SglQuote)
+    //  quote = `"`;
 
+    line ~= quote;
+    line ~= str;
+    line ~= quote;
     line ~= ',';
+
     if (line.length > 100)
       (result ~= line ~ "\n"), line = null;
     item.pos = i; /// Update position.
@@ -125,7 +156,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   if (line.length)
     result ~= line;
   if (result[$-1] == '\n')
-    result = result[0..$-1];
+    result.length--;
   result ~= "),\n[\n";
   line = null;
 
@@ -135,7 +166,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   {
     indexMap[token] = index;
     line ~= '(' ~ itoa(token.kind) ~ ',';
-    line ~= (token.ws) ? countWhitespace(token.wsChars) : `0`;
+    line ~= (token.ws) ? quoteOrCountWhitespace(token.wsChars) : `0`;
     line ~= ',';
     switch (token.kind)
     {
@@ -146,7 +177,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
       line ~= itoa(map[hashOf(token.text)].pos);
       break;
     case TOK.Shebang:
-      line ~= '"' ~ escape_quotes(token.text) ~ '"';
+      line ~= '"' ~ escapeDblQuotes(token.text) ~ '"';
       break;
     case TOK.HashLine:
       // The text to be inserted into formatStr.
@@ -162,12 +193,12 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
         if (auto filespec = token.hlval.filespec)
         { // Print whitespace between number and filespec.
           printWS(num.end, filespec.start);
-          line ~= '"' ~ escape_quotes(filespec.text) ~ '"';
+          line ~= '"' ~ escapeDblQuotes(filespec.text) ~ '"';
         }
       }
       break;
     case TOK.Illegal:
-      line ~= '"' ~ escape_quotes(token.text) ~ '"';
+      line ~= '"' ~ escapeDblQuotes(token.text) ~ '"';
       break;
     default:
       line = line[0..$-1];
@@ -228,7 +259,7 @@ class PyTreeEmitter : Visitor2
     visitD(modul.root);
     if (line.length)
       text ~= line ~ "\n";
-    text ~= ")";
+    text ~= ")\n";
     return text;
   }
 
