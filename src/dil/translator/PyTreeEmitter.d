@@ -1,7 +1,7 @@
 /// Author: Aziz Köksal
 /// License: GPL3
 /// $(Maturity average)
-module dil.PyTreeEmitter;
+module dil.translator.PyTreeEmitter;
 
 import dil.ast.Visitor,
        dil.ast.Node,

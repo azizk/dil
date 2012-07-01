@@ -19,14 +19,14 @@ import dil.semantic.Module,
        dil.semantic.Pass2,
        dil.semantic.Passes;
 import dil.code.Interpreter;
-import dil.translator.German;
+import dil.translator.German,
+       dil.translator.PyTreeEmitter;
 import dil.i18n.Messages;
 import dil.String,
        dil.Version,
        dil.Diagnostics,
        dil.SourceText,
-       dil.Compilation,
-       dil.PyTreeEmitter;
+       dil.Compilation;
 
 import util.Path,
        util.OptParser;
