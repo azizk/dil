@@ -365,10 +365,10 @@ Benutzung:
   dil trans[late] Sprache datei.d
 
   Unterstützte Sprachen:
-    *) German
+    *) Keine
 
 Beispiel:
-  dil trans German src/main.d`,
+  dil trans X src/main.d`,
 
   // HelpSettings
   "Gibt den Wert einer Einstellungsvariable aus.

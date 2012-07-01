@@ -19,8 +19,7 @@ import dil.semantic.Module,
        dil.semantic.Pass2,
        dil.semantic.Passes;
 import dil.code.Interpreter;
-import dil.translator.German,
-       dil.translator.PyTreeEmitter;
+import dil.translator.PyTreeEmitter;
 import dil.i18n.Messages;
 import dil.String,
        dil.Version,
@@ -424,25 +423,6 @@ void main(cstring[] args)
 
     diag.hasInfo() && printErrors(diag);
     break;
-  case "trans", "translate":
-    if (!op.hasArgs)
-      return printHelp(command, diag);
-
-    if (args[2] != "German")
-      return cast(void)Printfln(
-        "Error: unrecognized target language ‘{}’", args[2]);
-
-    auto filePath = args[3];
-    auto mod = new Module(filePath, globalCC);
-    // Parse the file.
-    mod.parse();
-    if (!mod.hasErrors)
-    { // Translate
-      auto german = new GermanTranslator(Stdout, "  ");
-      german.translate(mod.root);
-    }
-    printErrors(diag);
-    break;
   case "profile":
     if (!op.hasArgs)
       break;
@@ -533,7 +513,6 @@ enum string COMMANDS =
   settings (set)
   statistics (stats)
   tokenize (tok)
-  translate (trans)
   version (v)";
 
 /// Creates the global compilation context.
@@ -641,7 +620,6 @@ void printHelp(cstring command, Diagnostics diag)
   case "dlexed", "dlx":         mid = MID.HelpDlexed;      goto Lcommon;
   case "serialize", "sz":       mid = MID.HelpSerialize;   goto Lcommon;
   case "stats", "statistics":   mid = MID.HelpStatistics;  goto Lcommon;
-  case "trans", "translate":    mid = MID.HelpTranslate;   goto Lcommon;
   case "settings", "set":       mid = MID.HelpSettings;    goto Lcommon;
   case "?", "h", "help":        mid = MID.HelpHelp;        goto Lcommon;
   Lcommon:

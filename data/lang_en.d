@@ -363,10 +363,10 @@ Usage:
   dil trans[late] Language file.d
 
   Languages that are supported:
-    *) German
+    *) None
 
 Example:
-  dil trans German src/main.d`,
+  dil trans X src/main.d`,
 
   // HelpSettings
   "Print the value of a settings variable.
