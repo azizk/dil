@@ -219,14 +219,14 @@ Benutzung:
 Optionen:
   --tokens         : schreibe nur eine Liste von Tokens (noch nicht möglich)
   --fmt            : der Formatstring für die Zieldateinamen
-                     Default: d_{0}.py
-                     {0} = vollqualifizierter Modulname (z.B. dil_PyTreeEmitter)
-                     {1} = Paketname (z.B. dil, dil_ast, dil_lexer etc.)
-                     {2} = Modulname (z.B. PyTreeEmitter)
+                     Default: d_{{0}.py
+                     {{0} = vollqualifizierter Modulname (z.B. dil_PyTreeEmitter)
+                     {{1} = Paketname (z.B. dil, dil_ast, dil_lexer etc.)
+                     {{2} = Modulname (z.B. PyTreeEmitter)
   -v               : detaillierte Ausgabe
 
 Beispiel:
-  dil py pyfiles/ src/dil/PyTreeEmitter.d`,
+  dil py pyfiles/ src/dil/translator/PyTreeEmitter.d`,
 
   // HelpDdoc
   `Generiert Dokumentation aus Ddoc-Kommentaren in D-Quelldateien.

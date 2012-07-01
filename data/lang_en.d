@@ -218,14 +218,14 @@ Usage:
 Options:
   --tokens         : only emit a list of the tokens (N/A yet)
   --fmt            : the format string for the destination file names
-                     Default: d_{0}.py
-                     {0} = fully qualified module name (e.g. dil_PyTreeEmitter)
-                     {1} = package name (e.g. dil, dil_ast, dil_lexer etc.)
-                     {2} = module name (e.g. PyTreeEmitter)
+                     Default: d_{{0}.py
+                     {{0} = fully qualified module name (e.g. dil_PyTreeEmitter)
+                     {{1} = package name (e.g. dil, dil_ast, dil_lexer etc.)
+                     {{2} = module name (e.g. PyTreeEmitter)
   -v               : verbose output
 
 Example:
-  dil py pyfiles/ src/dil/PyTreeEmitter.d`,
+  dil py pyfiles/ src/dil/translator/PyTreeEmitter.d`,
 
   // HelpDdoc
   `Generate documentation from DDoc comments in D source files.
