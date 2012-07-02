@@ -39,21 +39,31 @@ def get_totalsize_and_md5sums(FILES, root_index):
     md5sums += "%s  %s\n" % (checksum, f[root_index + 1:])
   return (totalsize, md5sums)
 
-def make_deb_package(DIL, VERSION, ARCH, TMP, PACKAGENUM=1):
+def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, PACKAGENUM=1):
   # 1. Create folders.
-  TMP = (TMP/"debian").mkdir()
-  (TMP/"usr"/"bin").mkdirs()
-  (TMP/"etc").mkdir()
+  TMP = (TMP/"debian").mkdir() # The root folder.
+  BIN = (TMP/"usr"/"bin").mkdirs()
+  DOC = (TMP/"usr"/"share"/"doc"/("dil-"+VERSION)).mkdirs()
+  OPT = (TMP/"opt"/"dil").mkdirs()
+  ETC = (TMP/"etc").mkdir()
   DEBIAN = (TMP/"DEBIAN").mkdir()
 
   # 2. Copy DIL's files.
-  for binary in DIL.BINS:
-    binary.copy(TMP/"usr"/"bin")
-  DIL.CONF.copy(TMP/"etc")
+  for binary in SRC.BINS:
+    binary.copy(BIN)
+  dilconf = (SRC.DATA/"dilconf.d").open("r").read().replace(
+    'DATADIR = "${BINDIR}/../data"', 'DATADIR = "/opt/dil/data"')
+  (ETC/"dilconf.d").open("w").write(dilconf)
+  copyright = "License: GPL3\nAuthors: See AUTHORS file.\n"
+  (DOC/"copyright").open("w").write(copyright)
+  (SRC/"AUTHORS").copy(DOC)
+  (SRC.DATA).copytree(OPT/"data")
+  (SRC.DOC).copytree(DOC/"api")
 
-  FILES = TMP.rxglob("^dil")
+  # 3. Get all package files excluding the special DEBIAN folder.
+  FILES = TMP.rxglob(".", prunedir=lambda p: p.name == "DEBIAN")
 
-  # 3. Generate package files.
+  # 4. Generate package files.
   SIZE, md5sums = get_totalsize_and_md5sums(FILES, len(TMP))
 
   control = """Package: dil
@@ -73,13 +83,14 @@ Description: D compiler
 """
   control = control.format(**locals())
 
-  # 4. Write the files.
+  # 5. Write the special files.
   (DEBIAN/"control").open("w").write(control)
   (DEBIAN/"md5sums").open("w").write(md5sums)
 
-  # 5. Create the package.
+  # 6. Create the package.
   NAME = "dil_%s-%s_%s.deb" % (VERSION, PACKAGENUM, ARCH)
-  call_proc("dpkg-deb", "--build", TMP, DIL.DEST/NAME)
+  call_proc("dpkg-deb", "--build", TMP, DEST/NAME)
+  TMP.rmtree()
 
 def build_dil(CmdClass, *args, **kwargs):
   cmd = CmdClass(*args, **kwargs)
@@ -328,6 +339,19 @@ def main():
     for p in ("linux", "windows"):
       bin = DEST/p/"bin32"
       bin.exists and (DIL.DATA/"dilconf.d").copy(bin)
+
+    if options.deb:
+      # Make an archive for each version and architecture.
+      # 32bit package:
+      SRC = Path(DEST)
+      SRC.BIN32 = SRC/"linux"/"bin32"
+      SRC.DATA  = DEST.DATA
+      SRC.DOC   = DEST.DOC
+      SRC.BINS  = BIN32//("dil1", "dil1_dbg")
+      make_deb_package(SRC, DEST.folder, VERSION, "i386", DEST)
+      # 64bit package:
+      # SRC.BINS = BIN32//("dil2", "dil2_dbg")
+      # make_deb_package(SRC, DEST.folder, VERSION, "amd64", DEST)
 
   # Removed unneeded directories.
   options.docs or DEST.DOC.rmtree()
