@@ -57,8 +57,7 @@ CLN = :
   )
 
 def write_PDF(DIL, SRC, VERSION, TMP):
-  TMP = TMP/"pdf"
-  TMP.mkdir()
+  TMP = (TMP/"pdf").mkdir()
 
   pdf_gen = PDFGenerator()
   pdf_gen.fetch_files(DIL, TMP)
@@ -163,8 +162,7 @@ def main():
   VERSION = get_tango_version(TANGO.SRC.ROOT/"tango"/"core"/"Version.d")
 
   # 3. Create directories.
-  DEST.makedirs()
-  map(Path.mkdir, (DEST.HTMLSRC, DEST.JS, DEST.CSS, DEST.IMG, TMP))
+  map(Path.mkdir, (DEST, DEST.HTMLSRC, DEST.JS, DEST.CSS, DEST.IMG, TMP))
 
   dil_retcode = 0
   if options.docs:

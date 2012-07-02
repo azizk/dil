@@ -153,17 +153,10 @@ class Path(unicode):
     return os.walk(self, **kwargs)
 
   def mkdir(self, mode=0777):
-    """ Creates a directory, if it doesn't exist already. """
-    if not self.exists:
-      os.mkdir(self, mode)
-    return self
-
-  def makedirs(self, mode=0777):
-    """ Like mkdir(), but also creates parent directories. """
+    """ Creates a directory (and its parents), if it doesn't exist already. """
     if not self.exists:
       os.makedirs(self, mode)
     return self
-  mkdirs = makedirs
 
   def remove(self):
     """ Removes a file. """

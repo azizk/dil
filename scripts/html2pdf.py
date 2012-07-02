@@ -369,9 +369,9 @@ def call_prince(src, dest):
 class PDFGenerator:
   def fetch_files(self, SRC, TMP):
     (SRC.DATA/"pdf.css").copy(TMP)
-    (TMP/"img").mkdir()
+    IMG = (TMP/"img").mkdir()
     for img in ("icon_module.svg", "icon_package.svg"):
-      (SRC.KANDIL.IMG/img).copy(TMP/"img")
+      (SRC.KANDIL.IMG/img).copy(IMG)
 
   def run(self, *args):
     html_files = args[0]
@@ -404,8 +404,7 @@ def main():
   SRC = Path(args[0])
   DIL = dil_path()
   DEST_PDF = doc_path(args[1])
-  TMP = DEST_PDF.folder/"pdf_tmp"
-  TMP.mkdirs()
+  TMP = (DEST_PDF.folder/"pdf_tmp").mkdir()
 
   pdf_gen = PDFGenerator()
   pdf_gen.fetch_files(DIL, TMP)
@@ -416,4 +415,3 @@ def main():
 
 if __name__ == "__main__":
   main()
-

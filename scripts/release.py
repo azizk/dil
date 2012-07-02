@@ -42,9 +42,9 @@ def get_totalsize_and_md5sums(FILES, root_index):
 def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, PACKAGENUM=1):
   # 1. Create folders.
   TMP = (TMP/"debian").mkdir() # The root folder.
-  BIN = (TMP/"usr"/"bin").mkdirs()
-  DOC = (TMP/"usr"/"share"/"doc"/("dil-"+VERSION)).mkdirs()
-  OPT = (TMP/"opt"/"dil").mkdirs()
+  BIN = (TMP/"usr"/"bin").mkdir()
+  DOC = (TMP/"usr"/"share"/"doc"/("dil-"+VERSION)).mkdir()
+  OPT = (TMP/"opt"/"dil").mkdir()
   ETC = (TMP/"etc").mkdir()
   DEBIAN = (TMP/"DEBIAN").mkdir()
 
@@ -175,7 +175,7 @@ def build_binaries(COMPILER, FILES, DEST):
     # TODO: some day it should be possible to crosscompile
     if build_linux_binaries and arch == "32":
       print("\n***** Building Linux binaries *****\n")
-      B = (DEST/"linux"/("bin%s" % arch)).mkdirs()
+      B = (DEST/"linux"/("bin%s" % arch)).mkdir()
       kwargs = {"debug_info" : True,
         "lnk_args" : ["-ltango-dmd", "-lphobos2", "-ldl"]}
       # Linux Debug Binaries
@@ -188,7 +188,7 @@ def build_binaries(COMPILER, FILES, DEST):
     if build_windows_binaries and arch == "32":
       print("\n***** Building Windows binaries *****\n")
       kwargs = {"wine" : use_wine}
-      B = (DEST/"windows"/("bin%s" % arch)).mkdirs()
+      B = (DEST/"windows"/("bin%s" % arch)).mkdir()
       # Windows Debug Binaries
       build_dil_dbg(B/"dil1_dbg.exe", versions=["D1"], **kwargs)
       build_dil_dbg(B/"dil2_dbg.exe", versions=["D2"], **kwargs)
@@ -276,7 +276,7 @@ def main():
   FILES     = []
 
   # Create the build directory.
-  BUILD_DIR.makedirs()
+  BUILD_DIR.mkdir()
   # Check out a new working copy.
   DEST.rmtree() # First remove the tree.
   if options.src != None:

@@ -187,8 +187,7 @@ def main():
   use_kandil = options.use_kandil
 
   # Create the destination folders.
-  DEST.makedirs()
-  map(Path.mkdir, (DEST.HTMLSRC, TMP))
+  map(Path.mkdir, (DEST, DEST.HTMLSRC, TMP))
   if use_kandil:
     map(Path.mkdir, (DEST.JS, DEST.CSS, DEST.IMG))
 
