@@ -46,9 +46,12 @@ class DMDCommand(Command):
     g = "-g", # Include debug symbols.
     w = "-w", # Enable warnings.
     op = "-op", # Don't strip paths from source files.
-    o_ = "-o-" # Don't output object file.
+    o_ = "-o-", # Don't output object file.
+    m32 = "-m32", # Generate 32bit code.
+    m64 = "-m64", # Generate 64bit code.
   )
   def __init__(self, files, out_exe, exe=exe, wine=False, objdir='obj',
+               m32=False, m64=False,
                release=False, optimize=False, inline=False, debug_info=False,
                no_obj=False, warnings=False, strip_paths=False,
                lnk_args=[], includes=[], versions=[], other=[]):
@@ -57,6 +60,7 @@ class DMDCommand(Command):
     self.files = files
     self.out_exe = P.of%out_exe if out_exe else None
     options = ((release, P.release), (optimize, P.O), (inline, P.inline),
+              (m32, P.m32), (m64, P.m64),
               (objdir, P.od%objdir), (warnings, P.w), (debug_info, P.g),
               (not strip_paths, P.op), (no_obj, P.o_))
     self.options  = [o for enabled, o in options if enabled]
