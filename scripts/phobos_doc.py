@@ -27,7 +27,7 @@ def modify_std_ddoc(std_ddoc, phobos_ddoc, version):
   # Add a link to the index in the navigation sidebar.
   ddoc = re.sub('(NAVIGATION_PHOBOS=\r\n<div class="navblock">)', '\\1\r\n$(UL\r\n$(LI<a href="index.html" title="Index of all HTML files">Index</a>)\r\n)', ddoc)
   # Write new ddoc file.
-  phobos_ddoc.open("w").write(ddoc)
+  phobos_ddoc.write(ddoc)
 
 # Create an index file.
 def create_index_file(index_d, prefix_path, FILES):
@@ -36,7 +36,7 @@ def create_index_file(index_d, prefix_path, FILES):
     fqn = get_module_fqn(prefix_path, filepath)
     text += '  <li><a href="{0}.html">{0}.html</a></li>\n'.format(fqn)
   text = "Ddoc\n<ul>\n%s\n</ul>\nMacros:\nTITLE = Index" % text
-  index_d.open("w").write(text)
+  index_d.write(text)
 
 def copy_files(DIL, PHOBOS, DEST, use_kandil):
   """ Copies required files to the destination folder. """
@@ -71,11 +71,11 @@ def modify_phobos_html(phobos_html, version):
   # De-linkify the title.
   ddoc = re.sub("<h1><a[^>]+>(.+?)</a></h1>", "<h1>\\1</h1>", ddoc)
   # Write the contents back to the file.
-  phobos_html.open("w").write(ddoc)
+  phobos_html.write(ddoc)
 
 def write_missing_macros(path):
   """ These macros are missing in std.ddoc. """
-  path.open("w").write("""WIKI =
+  path.write("""WIKI =
 COMMENT = <!-- -->
 D = $0
 DOLLAR = $
@@ -91,8 +91,7 @@ SUB = <sub>$0</sub>
 PRE = <pre>$0</pre>
 TDNW = $0
 XREFMODULE = $0
-"""
-  )
+""")
 
 def write_overrides_ddoc(path, kandil):
   """ Override some macros. """
@@ -106,7 +105,7 @@ DIL_SYMBOL = <a href="$(SRCFILE)#L$4" class="sym$3" name="$2" title="At line $4.
     macros = """
 COPYRIGHT = Copyright © 1999-2009 by Digital Mars ®, All Rights Reserved.
 """
-  path.open("w").write(macros)
+  path.write(macros)
 
 def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen = PDFGenerator()

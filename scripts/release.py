@@ -53,9 +53,9 @@ def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, PACKAGENUM=1):
     binary.copy(BIN)
   dilconf = (SRC.DATA/"dilconf.d").open("r").read().replace(
     'DATADIR = "${BINDIR}/../data"', 'DATADIR = "/opt/dil/data"')
-  (ETC/"dilconf.d").open("w").write(dilconf)
+  (ETC/"dilconf.d").write(dilconf)
   copyright = "License: GPL3\nAuthors: See AUTHORS file.\n"
-  (DOC/"copyright").open("w").write(copyright)
+  (DOC/"copyright").write(copyright)
   (SRC/"AUTHORS").copy(DOC)
   (SRC.DATA).copytree(OPT/"data")
   (SRC.DOC).copytree(DOC/"api")
@@ -84,8 +84,8 @@ Description: D compiler
   control = control.format(**locals())
 
   # 5. Write the special files.
-  (DEBIAN/"control").open("w").write(control)
-  (DEBIAN/"md5sums").open("w").write(md5sums)
+  (DEBIAN/"control").write(control)
+  (DEBIAN/"md5sums").write(md5sums)
 
   # 6. Create the package.
   NAME = "dil_%s-%s_%s.deb" % (VERSION, PACKAGENUM, ARCH)
@@ -104,12 +104,10 @@ def update_version(path, major, minor, suffix):
   code = re.sub(r"(VERSION_MAJOR\s*=\s*)[\w\d]+;", r"\g<1>%s;" % major, code)
   code = re.sub(r"(VERSION_MINOR\s*=\s*)\d+;", r"\g<1>%s;" % minor, code)
   code = re.sub(r'(VERSION_SUFFIX\s*=\s*)"";', r'\g<1>"%s";' % suffix, code)
-  path.open("w").write(code)
+  path.write(code)
 
 def write_VERSION(VERSION, DEST):
-  f = (DEST/"VERSION").open("w")
-  f.write("%s\n" % VERSION)
-  f.close()
+  (DEST/"VERSION").write("%s\n" % VERSION)
 
 def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen = PDFGenerator()

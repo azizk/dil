@@ -43,8 +43,7 @@ def generate_chm(module_files, dest, tmp, params, jsons):
 
   # Write the project file.
   # -----------------------
-  hpp_file = open(hhp, "w")
-  hpp_file.write("""[OPTIONS]
+  hhp.write("""[OPTIONS]
 Compiled file=%(dest)s
 Compatibility=%(compatibility)s
 Full-text search=%(full_text_search)s
@@ -59,8 +58,6 @@ Title=%(title)s
 [FILES]
 %(file_list)s
 """ % dict(locals(), **params))
-  # Close the project file.
-  hpp_file.close()
 
   # Extract symbols and build the package tree.
   package_tree = PackageTree()
