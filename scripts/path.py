@@ -219,3 +219,17 @@ class Path(unicode):
   def open(self, mode='rb', encoding='utf-8'):
     """ Opens a file with an encoding (default=UTF-8.) """
     return open(self, mode=mode, encoding=encoding)
+
+  def write(self, content, mode='w', encoding='utf-8'):
+    """ Writes content to a file. """
+    f = self.open(mode, encoding)
+    f.write(content)
+    f.close()
+    return self
+
+  def read(self, mode='rb', encoding='utf-8'):
+    """ Reads the contents of a file. """
+    f = self.open(mode, encoding)
+    content = f.read()
+    f.close()
+    return content
