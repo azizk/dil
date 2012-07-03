@@ -168,21 +168,21 @@ def build_binaries(COMPILER, V_MAJOR, FILES, DEST):
   build_dil_rls = func_partial(build_dil, CmdClass, FILES, exe=COMPILER,
     release=True, optimize=True, inline=False, versions=["D"+V_MAJOR])
   build_dil_dbg = func_partial(build_dil, CmdClass, FILES, exe=COMPILER,
-    versions=["D"+V_MAJOR])
+    debug_info=True, versions=["D"+V_MAJOR])
 
   for arch in ("32", "64"):
-    # TODO: some day it should be possible to crosscompile
-    if build_linux_binaries and arch == "32":
-      print("\n***** Building Linux binaries *****\n")
+    kwargs = {"m"+arch:True}
+    if build_linux_binaries:
+      print("\n***** Building Linux %sbit binaries *****\n" % arch)
       B = (DEST/"linux"/("bin" + arch)).mkdir()
-      kwargs = {"debug_info" : True,
-        "lnk_args" : ["-ltango-dmd", "-lphobos2", "-ldl"]}
-      build_dil_dbg(B/"dil%s_dbg"%V_MAJOR, **kwargs)
-      build_dil_rls(B/"dil"+V_MAJOR)
+      dbgargs = dict(kwargs, lnk_args=["-ltango-dmd", "-lphobos2", "-ldl"])
+      build_dil_dbg(B/"dil%s_dbg"%V_MAJOR, **dbgargs)
+      build_dil_rls(B/"dil"+V_MAJOR, **kwargs)
 
+    # No 64bit binaries for Windows yet.
     if build_windows_binaries and arch == "32":
-      print("\n***** Building Windows binaries *****\n")
-      kwargs = {"wine" : use_wine}
+      print("\n***** Building Windows %sbit binaries *****\n" % arch)
+      kwargs.update(wine=use_wine)
       B = (DEST/"windows"/("bin" + arch)).mkdir()
       build_dil_dbg(B/"dil%s_dbg.exe"%V_MAJOR, **kwargs)
       build_dil_rls(B/"dil%s.exe"%V_MAJOR, **kwargs)
@@ -236,7 +236,7 @@ def main():
   change_cwd(__file__)
 
   # Validate the version argument.
-  m = re.match(r"((\d)\.(\d\d\d)(-\w+)?)", args[0])
+  m = re.match(r"((\d)\.(\d{3})(?:-(\w+))?)", args[0])
   if not m:
     parser.error("invalid VERSION; format: /\d.\d\d\d(-\w+)?/ E.g.: 1.123")
   # The version of DIL to be built.
@@ -328,21 +328,20 @@ def main():
   if not options.no_binaries:
     build_binaries(COMPILER, V_MAJOR, FILES, DEST)
     for p in ("linux", "windows"):
-      bin = DEST/p/"bin32"
-      bin.exists and (DIL.DATA/"dilconf.d").copy(bin)
+      for bin in ("bin32", "bin64"):
+        bin = DEST/p/bin
+        if bin.exists: (DIL.DATA/"dilconf.d").copy(bin)
 
     if options.deb:
       # Make an archive for each version and architecture.
-      # 32bit package:
       SRC = Path(DEST)
-      SRC.BIN32 = SRC/"linux"/"bin32"
       SRC.DATA  = DEST.DATA
       SRC.DOC   = DEST.DOC
-      SRC.BINS  = SRC.BIN32//("dil"+V_MAJOR, "dil%s_dbg"%V_MAJOR)
-      make_deb_package(SRC, DEST.folder, VERSION, "i386", DEST)
-      # 64bit package:
-      # SRC.BINS = BIN32//("dil2", "dil2_dbg")
-      # make_deb_package(SRC, DEST.folder, VERSION, "amd64", DEST)
+      BIN_NAMES = ("dil"+V_MAJOR, "dil%s_dbg"%V_MAJOR)
+      for bit, arch in (("32", "i386"), ("64", "amd64")):
+        # Make 32bit and 64bit packages:
+        SRC.BINS  = (SRC/"linux"/"bin"+bit)//BIN_NAMES
+        make_deb_package(SRC, DEST.folder, VERSION, arch, DEST)
 
   # Removed unneeded directories.
   options.docs or DEST.DOC.rmtree()
