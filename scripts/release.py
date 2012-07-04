@@ -165,27 +165,29 @@ def build_binaries(COMPILER, V_MAJOR, FILES, DEST):
   # Create partial functions with common parameters (aka. currying).
   # Note: the -inline switch makes the binaries significantly larger on Linux.
   # Enable inlining when DMDBUG #7967 is fixed.
-  build_dil_rls = func_partial(build_dil, CmdClass, FILES, exe=COMPILER,
+  build_common  = func_partial(build_dil, CmdClass, FILES, exe=COMPILER,
+    versions=["D"+V_MAJOR])
+  build_release = func_partial(build_common,
     release=True, optimize=True, inline=False, versions=["D"+V_MAJOR])
-  build_dil_dbg = func_partial(build_dil, CmdClass, FILES, exe=COMPILER,
-    debug_info=True, versions=["D"+V_MAJOR])
+  build_debug   = func_partial(build_common, debug_info=True)
 
   for arch in ("32", "64"):
     kwargs = {"m"+arch:True}
     if build_linux_binaries:
       print("\n***** Building Linux %sbit binaries *****\n" % arch)
       B = (DEST/"linux"/("bin" + arch)).mkdir()
+      # Important order: ldl must come last, or it won't compile.
       dbgargs = dict(kwargs, lnk_args=["-ltango-dmd", "-lphobos2", "-ldl"])
-      build_dil_dbg(B/"dil%s_dbg"%V_MAJOR, **dbgargs)
-      build_dil_rls(B/"dil"+V_MAJOR, **kwargs)
+      build_debug(B/"dil%s_dbg"%V_MAJOR, **dbgargs)
+      build_release(B/"dil"+V_MAJOR, **kwargs)
 
     # No 64bit binaries for Windows yet.
     if build_windows_binaries and arch == "32":
       print("\n***** Building Windows %sbit binaries *****\n" % arch)
       kwargs.update(wine=use_wine)
       B = (DEST/"windows"/("bin" + arch)).mkdir()
-      build_dil_dbg(B/"dil%s_dbg.exe"%V_MAJOR, **kwargs)
-      build_dil_rls(B/"dil%s.exe"%V_MAJOR, **kwargs)
+      build_debug(B/"dil%s_dbg.exe"%V_MAJOR, **kwargs)
+      build_release(B/"dil%s.exe"%V_MAJOR, **kwargs)
 
 
 
