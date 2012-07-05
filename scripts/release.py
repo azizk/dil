@@ -142,53 +142,80 @@ def write_CHM(DIL, SRC, VERSION, TMP):
   dest = SRC/("dil.%s.API.chm" % VERSION)
   chm_gen.run(html_files, dest, TMP, params)
 
-def build_binaries(COMPILER, V_MAJOR, FILES, DEST):
+class Target(dict):
+  """ Provides specific properties that apply to a target machine/platform. """
+  def __getattr__(self, name): return self.get(name, None)
+  def __setattr__(self, name, value): self[name] = value
+  def __delattr__(self, name): del self[name]
+
+twindows32 = Target(
+  name="Windows",
+  dir="windows",
+  iswin=True,
+  bits=32,
+  dbgexe="dil%s_dbg.exe",
+  rlsexe="dil%s.exe",
+  libsffx=".lib",
+  objsffx=".obj",
+  binsffx=".exe",
+)
+
+twindows64 = Target(twindows32, bits=64)
+
+tlinux32 = Target(
+  name="Linux",
+  dir="linux",
+  islin=True,
+  bits=32,
+  arch="i386",
+  dbgexe="dil%s_dbg",
+  rlsexe="dil%s",
+  libsffx=".a",
+  objsffx=".o",
+  binsffx="",
+)
+
+tlinux64 = Target(tlinux32, bits=64, arch="amd64")
+
+def build_binaries(TARGETS, COMPILER, V_MAJOR, FILES, DEST):
   from functools import partial as func_partial
   CmdClass = COMPILER.CmdClass
 
-  use_wine = False
-  if is_win32:
-    build_linux_binaries = False
-    build_windows_binaries = True
-  else:
-    build_linux_binaries = True
-    build_windows_binaries = use_wine = locate_command("wine") != None
-    class BINPath(Path):
-      def __div__(self, name):
-        """ Converts a Unix path to a Windows path. """
-        name = BINPath(Path.__div__(self, name))
-        return name if name.ext != '.exe' else name.replace("/", r"\\")
-    DEST = BINPath(DEST)
-    if not build_windows_binaries:
-      print("Warning: cannot build Windows binaries: 'wine' is not in PATH.")
+  def fix_dirsep(path, target):
+    if not is_win32 and target.iswin: # Wine needs Windows-style paths.
+      path = path.replace(Path.sep, r"\\")
+    return path
 
-  # Create partial functions with common parameters (aka. currying).
-  # Note: the -inline switch makes the binaries significantly larger on Linux.
-  # Enable inlining when DMDBUG #7967 is fixed.
-  build_common  = func_partial(build_dil, CmdClass, FILES, exe=COMPILER,
+  if not is_win32 and any(t.iswin for t in TARGETS) and \
+     not locate_command("wine"):
+    print("Warning: cannot build Windows binaries: 'wine' is not in PATH.")
+    TARGETS = [t for t in TARGETS if not t.iswin]
+
+  # Create a curried build function with common parameters.
+  build_binary  = func_partial(build_dil, CmdClass, FILES, exe=COMPILER,
     versions=["D"+V_MAJOR])
-  build_release = func_partial(build_common,
-    release=True, optimize=True, inline=False, versions=["D"+V_MAJOR])
-  build_debug   = func_partial(build_common, debug_info=True)
 
-  for arch in ("32", "64"):
-    kwargs = {"m"+arch:True}
-    if build_linux_binaries:
-      print("\n***** Building Linux %sbit binaries *****\n" % arch)
-      B = (DEST/"linux"/("bin" + arch)).mkdir()
-      # Important order: ldl must come last, or it won't compile.
-      dbgargs = dict(kwargs, lnk_args=["-ltango-dmd", "-lphobos2", "-ldl"])
-      build_debug(B/"dil%s_dbg"%V_MAJOR, **dbgargs)
-      build_release(B/"dil"+V_MAJOR, **kwargs)
+  BINS = [] # Successfully compiled binaries.
 
-    # No 64bit binaries for Windows yet.
-    if build_windows_binaries and arch == "32":
-      print("\n***** Building Windows %sbit binaries *****\n" % arch)
-      kwargs.update(wine=use_wine)
-      B = (DEST/"windows"/("bin" + arch)).mkdir()
-      build_debug(B/"dil%s_dbg.exe"%V_MAJOR, **kwargs)
-      build_release(B/"dil%s.exe"%V_MAJOR, **kwargs)
+  for target in TARGETS:
+    print("== Building {name} {bits}bit binary ==".format(**target))
+    dbgargs = rlsargs = {"m%d" % target.bits : True}
+    if target.iswin:
+      dbgargs = rlsargs = dict(rlsargs, wine=not is_win32)
+    if target.islin:
+      dbgargs = dict(rlsargs, lnk_args=["-ltango-dmd", "-lphobos2", "-ldl"])
+    # Destination dir for the binary.
+    B = (DEST/target.dir/"bin%d"%target.bits).mkdir()
+    DBGEXE, RLSEXE = (B/target[exe] % V_MAJOR for exe in ("dbgexe", "rlsexe"))
+    dbgargs.update(debug_info=True)
+    build_binary(fix_dirsep(DBGEXE, target), **dbgargs)
+    # NB: the -inline switch makes the binaries significantly larger on Linux.
+    # Enable inlining when DMDBUG #7967 is fixed.
+    rlsargs.update(release=True, optimize=True, inline=False)
+    build_binary(fix_dirsep(RLSEXE, target), **rlsargs)
+    BINS += [exe for exe in (DBGEXE, RLSEXE) if exe.exists]
 
+  return BINS
 
 
 def main():
@@ -303,7 +330,7 @@ def main():
   # Rebuild the path object for kandil. (Images are globbed.)
   DEST.KANDIL = kandil_path(DEST/"kandil")
 
-  print("***** Copying files *****")
+  print("== Copying files ==")
   copy_files(DEST)
 
   # Find the source code files.
@@ -316,7 +343,7 @@ def main():
   if options.docs:
     build_dil_if_inexistant(DIL.EXE)
 
-    print("***** Generating documentation *****")
+    print("== Generating documentation ==")
     DOC_FILES = DEST.DATA//("macros_dil.ddoc", "dilconf.d") + FILES
     versions = ["DDoc"]
     generate_docs(DIL.EXE, DEST.DOC, MODLIST, DOC_FILES,
@@ -327,23 +354,12 @@ def main():
   #if options.chm:
     #write_CHM(DEST, DEST.DOC, VERSION, TMP)
 
-  if not options.no_binaries:
-    build_binaries(COMPILER, V_MAJOR, FILES, DEST)
-    for p in ("linux", "windows"):
-      for bin in ("bin32", "bin64"):
-        bin = DEST/p/bin
-        if bin.exists: (DIL.DATA/"dilconf.d").copy(bin)
+  TARGETS = (tlinux32, tlinux64, twindows32)
 
-    if options.deb:
-      # Make an archive for each version and architecture.
-      SRC = Path(DEST)
-      SRC.DATA  = DEST.DATA
-      SRC.DOC   = DEST.DOC
-      BIN_NAMES = ("dil"+V_MAJOR, "dil%s_dbg"%V_MAJOR)
-      for bit, arch in (("32", "i386"), ("64", "amd64")):
-        # Make 32bit and 64bit packages:
-        SRC.BINS  = (SRC/"linux"/"bin"+bit)//BIN_NAMES
-        make_deb_package(SRC, DEST.folder, VERSION, arch, DEST)
+  if not options.no_binaries:
+    BINS = build_binaries(TARGETS, COMPILER, V_MAJOR, FILES, DEST)
+    for bin in BINS:
+      (DIL.DATA/"dilconf.d").copy(bin.folder)
 
   # Removed unneeded directories.
   options.docs or DEST.DOC.rmtree()
@@ -352,6 +368,16 @@ def main():
   # Build archives.
   assert DEST[-1] != Path.sep
   create_archives(options, DEST.name, DEST.name, DEST.folder)
+  if options.deb and not options.no_binaries:
+    # Make an archive for each version and architecture.
+    SRC = Path(DEST)
+    SRC.DATA = DEST.DATA
+    SRC.DOC  = DEST.DOC
+    for t in (t for t in TARGETS if t.islin):
+      # Make 32bit and 64bit packages:
+      BIN_NAMES = (t[exe] % V_MAJOR for exe in ("rlsexe", "dbgexe"))
+      SRC.BINS  = (SRC/t.dir/"bin%d" % t.bits)//BIN_NAMES
+      make_deb_package(SRC, DEST.folder, VERSION, t.arch, DEST)
 
   print("Done!")
 
