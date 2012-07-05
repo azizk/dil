@@ -48,6 +48,14 @@ class Path(unicode):
     """ '/home/a' + Path('bc.d') -> '/home/abc.d' """
     return Path(path + unicode(self))
 
+  def __mod__(self, args):
+    """ Path('/bin%d') % 32 -> Path('/bin32') """
+    return Path(unicode.__mod__(self, args))
+
+  def format(self, *args, **kwargs):
+    """ Path('/{x}/lib').format(x='usr') -> Path('/usr/lib') """
+    return Path(unicode.format(self, *args, **kwargs))
+
   def __repr__(self):
     return "Path(%s)" % unicode.__repr__(self)
 
