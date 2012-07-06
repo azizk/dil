@@ -103,8 +103,10 @@ def build_dil(cmd_kwargs):
   BIN = Path("bin")
   DATA = Path("data")
   BIN.mkdir()
-  # Copy the config file if non-existent.
-  (BIN/"dilconf.d").exists or (DATA/"dilconf.d").copy(BIN)
+  # Copy the config file if non-existent (and adjust DATADIR.)
+  if not (BIN/"dilconf.d").exists:
+    text = (DATA/"dilconf.d").read().replace("../../data", "../data")
+    (BIN/"dilconf.d").write(text)
   # Find the source files.
   FILES = find_dil_source_files(Path("src"))
   # Pick a compiler class.

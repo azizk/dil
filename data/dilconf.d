@@ -21,7 +21,7 @@
 module dilconf;
 
 /// Files needed by DIL are located in this directory.
-var DATADIR = "${BINDIR}/../data";
+var DATADIR = "${BINDIR}/../../data";
 
 /// Predefined version identifiers.
 var VERSION_IDS = [];
