@@ -34,16 +34,17 @@ def get_totalsize_and_md5sums(FILES, root_index):
   md5sums = ""
   for f in FILES:
     totalsize += f.size
-    data = f.open("rb", None).read()
+    data = f.read(encoding=None)
     checksum = md5(data).hexdigest()
     md5sums += "%s  %s\n" % (checksum, f[root_index + 1:])
   return (totalsize/1024, md5sums)
 
 def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, PACKAGENUM=1):
+  V_MAJOR = VERSION.MAJ
   # 1. Create folders.
   TMP = (TMP/"debian").mkdir() # The root folder.
   BIN = (TMP/"usr"/"bin").mkdir()
-  DOC = (TMP/"usr"/"share"/"doc"/("dil-"+VERSION)).mkdir()
+  DOC = (TMP/"usr"/"share"/"doc"/("dil"+V_MAJOR)).mkdir()
   OPT = (TMP/"opt"/"dil").mkdir()
   ETC = (TMP/"etc").mkdir()
   DEBIAN = (TMP/"DEBIAN").mkdir()
@@ -52,13 +53,14 @@ def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, PACKAGENUM=1):
   for binary in SRC.BINS:
     binary.copy(BIN)
   dilconf = (SRC.DATA/"dilconf.d").open("r").read().replace(
-    'DATADIR = "${BINDIR}/../data"', 'DATADIR = "/opt/dil/data"')
+    'DATADIR = "${BINDIR}/../../data"', 'DATADIR = "/opt/dil%s/data"' % V_MAJOR)
   (ETC/"dilconf.d").write(dilconf)
   copyright = "License: GPL3\nAuthors: See AUTHORS file.\n"
   (DOC/"copyright").write(copyright)
   (SRC/"AUTHORS").copy(DOC)
   (SRC.DATA).copytree(OPT/"data")
-  (SRC.DOC).copytree(DOC/"api")
+  if SRC.DOC.exists:
+    (SRC.DOC).copytree(DOC/"api")
 
   # 3. Get all package files excluding the special DEBIAN folder.
   FILES = TMP.rxglob(".", prunedir=lambda p: p.name == "DEBIAN")
@@ -66,7 +68,10 @@ def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, PACKAGENUM=1):
   # 4. Generate package files.
   SIZE, md5sums = get_totalsize_and_md5sums(FILES, len(TMP))
 
-  control = """Package: dil
+  # Replace the dash with a dot, because there may be a suffix.
+  VERSION = VERSION.replace("-", ".")
+
+  control = """Package: dil{V_MAJOR}
 Version: {VERSION}-{PACKAGENUM}
 Section: devel
 Priority: optional
@@ -74,13 +79,14 @@ Architecture: {ARCH}
 Depends:
 Provides: d-compiler
 Installed-Size: {SIZE}
-Maintainer: Aziz Köksal <aziz.koeksal@gmail.com>
+Maintainer: {MAINTAINER}
 Bugs: https://github.com/azizk/dil/issues
 Homepage: http://code.google.com/p/dil
 Description: D compiler
   DIL is a feature-rich compiler for the D programming language
   written entirely in D.
 """
+  MAINTAINER = "Aziz Köksal <aziz.koeksal@gmail.com>"
   control = control.format(**locals())
 
   # 5. Write the special files.
@@ -88,7 +94,7 @@ Description: D compiler
   (DEBIAN/"md5sums").write(md5sums)
 
   # 6. Create the package.
-  NAME = "dil_%s-%s_%s.deb" % (VERSION, PACKAGENUM, ARCH)
+  NAME = "dil%s_%s-%s_%s.deb" % (V_MAJOR, VERSION, PACKAGENUM, ARCH)
   call_proc("dpkg-deb", "--build", TMP, DEST/NAME)
   TMP.rmtree()
 
@@ -97,13 +103,12 @@ def build_dil(CmdClass, *args, **kwargs):
   print(cmd)
   return cmd.call()
 
-def update_version(path, major, minor, suffix):
+def update_VERSION(path, V):
   """ Updates the version info in the compiler's source code. """
-  major, minor = int(major), int(minor)
-  code = path.open().read()
-  code = re.sub(r"(VERSION_MAJOR\s*=\s*)[\w\d]+;", r"\g<1>%s;" % major, code)
-  code = re.sub(r"(VERSION_MINOR\s*=\s*)\d+;", r"\g<1>%s;" % minor, code)
-  code = re.sub(r'(VERSION_SUFFIX\s*=\s*)"";', r'\g<1>"%s";' % suffix, code)
+  code = path.read()
+  for args in (("MAJOR", V.MAJ), ("MINOR", int(V.MIN)),
+               ("SUFFIX", '"%s"' % V.SFX)):
+    code = re.sub("(VERSION_%s =).+?;" % args[0], r"\g<1> %s;" % args[1], code)
   path.write(code)
 
 def write_VERSION(VERSION, DEST):
@@ -266,12 +271,17 @@ def main():
   change_cwd(__file__)
 
   # Validate the version argument.
-  m = re.match(r"((\d)\.(\d{3})(?:-(\w+))?)", args[0])
+  m = re.match(r"^((\d)\.(\d{3})(?:-(\w+))?)$", args[0])
   if not m:
     parser.error("invalid VERSION; format: /\d.\d\d\d(-\w+)?/ E.g.: 1.123")
   # The version of DIL to be built.
-  VERSION, V_MAJOR, V_MINOR, V_SUFFIX = m.groups()
-  V_SUFFIX = V_SUFFIX or ''
+  class Version(unicode):
+    def __new__(cls, parts):
+      v = unicode.__new__(cls, parts[0])
+      v.MAJ, v.MIN, SFX = parts[1:]
+      v.SFX = SFX or ''
+      return v
+  VERSION = Version(m.groups())
 
   # Pick a compiler for compiling DIL.
   CmdClass = (DMDCommand, LDCCommand)[options.ldc]
@@ -338,7 +348,7 @@ def main():
   FILES = find_dil_source_files(DEST.SRC)
 
   # Update the version info.
-  update_version(DEST.SRC/"dil"/"Version.d", V_MAJOR, V_MINOR, V_SUFFIX)
+  update_VERSION(DEST.SRC/"dil"/"Version.d", VERSION)
   write_VERSION(VERSION, DEST)
 
   if options.docs:
@@ -358,7 +368,7 @@ def main():
   TARGETS = (tlinux32, tlinux64, twindows32)
 
   if not options.no_binaries:
-    BINS = build_binaries(TARGETS, COMPILER, V_MAJOR, FILES, DEST)
+    BINS = build_binaries(TARGETS, COMPILER, VERSION.MAJ, FILES, DEST)
     for bin in BINS:
       (DIL.DATA/"dilconf.d").copy(bin.folder)
 
