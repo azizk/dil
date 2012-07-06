@@ -213,6 +213,7 @@ def build_binaries(TARGETS, COMPILER, V_MAJOR, FILES, DEST):
     # Enable inlining when DMDBUG #7967 is fixed.
     rlsargs.update(release=True, optimize=True, inline=False)
     build_binary(fix_dirsep(RLSEXE, target), **rlsargs)
+    DBGEXE.target = RLSEXE.target = target
     BINS += [exe for exe in (DBGEXE, RLSEXE) if exe.exists]
 
   return BINS
@@ -369,15 +370,15 @@ def main():
   assert DEST[-1] != Path.sep
   create_archives(options, DEST.name, DEST.name, DEST.folder)
   if options.deb and not options.no_binaries:
-    # Make an archive for each version and architecture.
+    # Make an archive for each architecture.
     SRC = Path(DEST)
     SRC.DATA = DEST.DATA
     SRC.DOC  = DEST.DOC
-    for t in (t for t in TARGETS if t.islin):
-      # Make 32bit and 64bit packages:
-      BIN_NAMES = (t[exe] % V_MAJOR for exe in ("rlsexe", "dbgexe"))
-      SRC.BINS  = (SRC/t.dir/"bin%d" % t.bits)//BIN_NAMES
-      make_deb_package(SRC, DEST.folder, VERSION, t.arch, DEST)
+    LINUX_BINS = [bin for bin in BINS if bin.target.islin]
+    for arch in ("i386", "amd64"):
+      # Gather the binaries that belong to arch.
+      SRC.BINS  = [bin for bin in LINUX_BINS if bin.target.arch == arch]
+      make_deb_package(SRC, DEST.folder, VERSION, arch, DEST)
 
   print("Done!")
 
