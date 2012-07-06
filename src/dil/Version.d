@@ -26,7 +26,8 @@ immutable VERSION_MINOR = 0;
 /// The optional suffix.
 immutable VERSION_SUFFIX = "";
 /// The compiler version formatted as a string.
-immutable VERSION =
-  (itoactf(VERSION_MAJOR)~"."~toString(VERSION_MINOR, 3)~VERSION_SUFFIX).idup;
+immutable VERSION = (itoactf(VERSION_MAJOR) ~ "." ~
+                     toString(VERSION_MINOR, 3) ~
+                     (VERSION_SUFFIX.length ? "-" ~ VERSION_SUFFIX : "")).idup;
 /// The name of the compiler.
 immutable VENDOR = "DIL";
