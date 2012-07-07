@@ -44,23 +44,33 @@ def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, PACKAGENUM=1):
   # 1. Create folders.
   TMP = (TMP/"debian").mkdir() # The root folder.
   BIN = (TMP/"usr"/"bin").mkdir()
-  DOC = (TMP/"usr"/"share"/"doc"/("dil"+V_MAJOR)).mkdir()
-  OPT = (TMP/"opt"/"dil").mkdir()
+  DOC = (TMP/"usr"/"share"/"doc"/"dil"+V_MAJOR).mkdir()
+  MAN = (TMP/"usr"/"share"/"man"/"man1").mkdir()
+  SHR = (TMP/"usr"/"share"/"dil"+V_MAJOR).mkdir()
   ETC = (TMP/"etc").mkdir()
   DEBIAN = (TMP/"DEBIAN").mkdir()
 
   # 2. Copy DIL's files.
   for binary in SRC.BINS:
     binary.copy(BIN)
-  dilconf = (SRC.DATA/"dilconf.d").open("r").read().replace(
-    'DATADIR = "${BINDIR}/../../data"', 'DATADIR = "/opt/dil%s/data"' % V_MAJOR)
+  dilconf = re.sub('DATADIR = ".+?"', 'DATADIR = "%s/data"' % SHR[len(TMP):],
+    (SRC.DATA/"dilconf.d").read())
   (ETC/"dilconf.d").write(dilconf)
   copyright = "License: GPL3\nAuthors: See AUTHORS file.\n"
   (DOC/"copyright").write(copyright)
+  CLOG = DOC/"changelog"
+  CLOG.write("\n")
+  CLOGDEB = DOC/"changelog.Debian"
+  CLOGDEB.write("\n")
   (SRC/"AUTHORS").copy(DOC)
-  (SRC.DATA).copytree(OPT/"data")
+  SRC.DATA.copytree(SHR/"data")
   if SRC.DOC.exists:
-    (SRC.DOC).copytree(DOC/"api")
+    SRC.DOC.copytree(DOC/"api")
+  MANPAGE = MAN/"dil%s.1" % V_MAJOR
+  MANPAGE.write("\n")
+  for f in (MANPAGE, CLOG, CLOGDEB):
+    call_proc("gzip", "--best", f)
+  (MANPAGE+".gz").copy(MAN/"dil%s_dbg.1.gz" % V_MAJOR)
 
   # 3. Get all package files excluding the special DEBIAN folder.
   FILES = TMP.rxglob(".", prunedir=lambda p: p.name == "DEBIAN")
@@ -76,15 +86,15 @@ Version: {VERSION}-{PACKAGENUM}
 Section: devel
 Priority: optional
 Architecture: {ARCH}
-Depends:
+Depends: libc6
 Provides: d-compiler
 Installed-Size: {SIZE}
 Maintainer: {MAINTAINER}
 Bugs: https://github.com/azizk/dil/issues
 Homepage: http://code.google.com/p/dil
 Description: D compiler
-  DIL is a feature-rich compiler for the D programming language
-  written entirely in D.
+ DIL is a feature-rich compiler for the D programming language
+ written entirely in D.
 """
   MAINTAINER = "Aziz Köksal <aziz.koeksal@gmail.com>"
   control = control.format(**locals())
@@ -92,10 +102,23 @@ Description: D compiler
   # 5. Write the special files.
   (DEBIAN/"control").write(control)
   (DEBIAN/"md5sums").write(md5sums)
+  SCRIPTS = DEBIAN//("postinst", "prerm")
+  for script in SCRIPTS:
+    script.write("#!/bin/sh\nexit 0\n") # Write empty scripts for now.
 
-  # 6. Create the package.
+  # 6. Set file/dir permissions.
+  ALLDIRS = []
+  TMP.rxglob(".", prunedir=lambda p: ALLDIRS.append(p))
+
+  for d in ALLDIRS + BIN.rxglob(".") + SCRIPTS:
+    call_proc("chmod", "755", d)
+
+  for f in FILES + [DEBIAN/"md5sums"]:
+    call_proc("chmod", "644", f)
+
+  # 7. Create the package.
   NAME = "dil%s_%s-%s_%s.deb" % (V_MAJOR, VERSION, PACKAGENUM, ARCH)
-  call_proc("dpkg-deb", "--build", TMP, DEST/NAME)
+  call_proc("fakeroot", "dpkg-deb", "--build", TMP, DEST/NAME)
   TMP.rmtree()
 
 def build_dil(CmdClass, *args, **kwargs):
