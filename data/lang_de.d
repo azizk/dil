@@ -202,9 +202,9 @@ Optionen:
   -J=PATH          : füge PFAD zu der Liste von Stringimport-Pfaden
   -release         : kompiliere eine Release-Version
   -unittest        : kompiliere Unittests
-  -x86             : gib 32bit-Code aus (Default auf 32bit-Maschinen)
-  -x64             : gib 64bit-Code aus (Default auf 64bit-Maschinen)
-  -of=DATEI        : schreibe den binären Code zu DATEI
+  -m32             : generiere 32bit-Code (Default auf 32bit-Maschinen)
+  -m64             : generiere 64bit-Code (Default auf 64bit-Maschinen)
+  -of=DATEI        : Ausgabe des binären Codes in DATEI
 
   -v               : detaillierte Ausgabe
 

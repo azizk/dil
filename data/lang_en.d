@@ -199,8 +199,8 @@ Options:
   -J=PATH          : add PATH to the list of string import paths
   -release         : compile a release build
   -unittest        : compile a unittest build
-  -x86             : emit 32 bit code (default on 32 bit machines)
-  -x64             : emit 64 bit code (default on 64 bit machines)
+  -m32             : emit 32 bit code (default on 32 bit machines)
+  -m64             : emit 64 bit code (default on 64 bit machines)
   -of=FILE         : output the binary to FILE
 
   -ps              : print the symbol tree of the modules
