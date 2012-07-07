@@ -27,6 +27,11 @@ class CompileCommand : Command
   cstring[] filePaths; /// Explicitly specified modules (on the command line.)
   bool printSymbolTree; /// Whether to print the symbol tree.
   bool printModuleTree; /// Whether to print the module tree.
+  bool m32; /// Emit 32bit code.
+  bool m64; /// Emit 64bit code.
+
+  cstring binOutput; /// Output destination.
+
   ModuleManager moduleMan;
   SemanticPass1[] passes1;
 

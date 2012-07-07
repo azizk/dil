@@ -87,19 +87,22 @@ void main(cstring[] args)
     bool useCommand2 = command == "c2";
 
     auto cmd = new CompileCommand();
-    cmd.context = globalCC;
+    auto cc = cmd.context = globalCC;
     cmd.diag = diag;
     cstring value;
 
-    op.add({ return parseDebugOrVersion(op, cmd.context); });
-    op.add("-I", value, { cmd.context.importPaths ~= value; });
-    op.add("-J", value, { cmd.context.includePaths ~= value; });
-    op.add("-release", cmd.context.releaseBuild);
-    op.add("-unittest", cmd.context.unittestBuild, {
+    op.add({ return parseDebugOrVersion(op, cc); });
+    op.add("-I", value, { cc.importPaths ~= value; });
+    op.add("-J", value, { cc.includePaths ~= value; });
+    op.add("-m32", cmd.m32);
+    op.add("-m64", cmd.m64);
+    op.add("-of", value, { cmd.binOutput = value; });
+    op.add("-release", cc.releaseBuild);
+    op.add("-unittest", cc.unittestBuild, {
       version(D2)
-        cmd.context.addVersionId("unittest");
+        cc.addVersionId("unittest");
     });
-    op.add("-d", cmd.context.acceptDeprecated);
+    op.add("-d", cc.acceptDeprecated);
     op.add("-ps", cmd.printSymbolTree);
     op.add("-pm", cmd.printModuleTree);
     op.add("-v", cmd.verbose);
@@ -112,12 +115,28 @@ void main(cstring[] args)
     if (useCommand2)
     { // Temporary code to test CompileCommand2.
       auto cmd2 = new CompileCommand2();
-      cmd2.cc = cmd.context;
+      cmd2.cc = cc;
       cmd2.filePaths = cmd.filePaths;
       cmd2.mm = cmd.moduleMan;
       cmd2.verbose = cmd.verbose;
       cmd_ = cmd2;
     }
+
+    // TODO:
+    //if (cmd.m32)
+    //{
+    //  cc.removeVersionId("D_InlineAsm_X86_64");
+    //  cc.removeVersionId("X86_64");
+    //  cc.addVersionId("D_InlineAsm_X86");
+    //  cc.addVersionId("X86");
+    //}
+    //if (cmd.m64)
+    //{
+    //  cc.addVersionId("D_InlineAsm_X86_64");
+    //  cc.addVersionId("X86_64");
+    //  cc.removeVersionId("D_InlineAsm_X86");
+    //  cc.removeVersionId("X86");
+    //}
 
     cmd_.run();
 
