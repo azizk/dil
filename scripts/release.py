@@ -99,8 +99,11 @@ Description: D compiler
   MAINTAINER = "Aziz Köksal <aziz.koeksal@gmail.com>"
   control = control.format(**locals())
 
+  conffiles = "/etc/dilconf.d\n"
+
   # 5. Write the special files.
   (DEBIAN/"control").write(control)
+  (DEBIAN/"conffiles").write(conffiles)
   (DEBIAN/"md5sums").write(md5sums)
   SCRIPTS = DEBIAN//("postinst", "prerm")
   for script in SCRIPTS:
@@ -113,7 +116,7 @@ Description: D compiler
   for d in ALLDIRS + BIN.rxglob(".") + SCRIPTS:
     call_proc("chmod", "755", d)
 
-  for f in FILES + [DEBIAN/"md5sums"]:
+  for f in FILES + DEBIAN//("control", "conffiles", "md5sums"):
     call_proc("chmod", "644", f)
 
   # 7. Create the package.
