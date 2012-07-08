@@ -192,7 +192,7 @@ Benutzung:
   Fehlermeldungen werden in die Standardfehlerausgabe geschrieben.
 
 Optionen:
-  -d               : akzeptiere veralteten Code
+  -d               : akzeptiere veralteten Quelltext
   -debug           : inkludiere „debug“-Code
   -debug=LEVEL     : inkludiere „debug(l)“-Code, wo „l <= LEVEL“ gilt
   -debug=IDENT     : inkludiere „debug(IDENT)"-Code
@@ -202,8 +202,8 @@ Optionen:
   -J=PATH          : füge PFAD zu der Liste von Stringimport-Pfaden
   -release         : kompiliere eine Release-Version
   -unittest        : kompiliere Unittests
-  -m32             : generiere 32bit-Code (Default auf 32bit-Maschinen)
-  -m64             : generiere 64bit-Code (Default auf 64bit-Maschinen)
+  -m32             : erzeuge 32bit-Code
+  -m64             : erzeuge 64bit-Code
   -of=DATEI        : Ausgabe des binären Codes in DATEI
 
   -v               : detaillierte Ausgabe
