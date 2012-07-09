@@ -198,7 +198,7 @@ class Path(unicode):
   rm = remove # Alias.
 
   def rmdir(self):
-    """ Removes a directory. """
+    """ Removes a directory (only if it's empty.) """
     return os.rmdir(self)
 
   def rmtree(self, noerrors=True):
@@ -215,9 +215,19 @@ class Path(unicode):
     return self
 
   def move(self, to):
-    """ Moves a file or directory to another path. """
+    """ Moves a file or directory to another path.
+        Deletes the destination first, if existent. """
+    to = Path(to)
+    if to.exists:
+      if to.isfile: to.remove()
+      else: # Check if the source dir/file is in the destination dir.
+        to = to/self.name
+        if to.exists:
+          if to.isfile: to.remove()
+          else: to.rmtree()
     shutil.move(self, to)
     return self
+  mv = move
 
   def rename(self, to):
     """ Renames a file or directory. May throw an OSError. """
