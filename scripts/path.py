@@ -140,6 +140,31 @@ class Path(unicode):
     """ Returns the byte size of a file. """
     return op.getsize(self)
 
+  @property
+  def isabs(self):
+    """ Returns True if the path is absolute. """
+    return op.isabs(self)
+
+  @property
+  def isfile(self):
+    """ Returns True if the path is a file. """
+    return op.isfile(self)
+
+  @property
+  def isdir(self):
+    """ Returns True if the path is a directory. """
+    return op.isdir(self)
+
+  @property
+  def islink(self):
+    """ Returns True if the path is a symlink. """
+    return op.islink(self)
+
+  @property
+  def ismount(self):
+    """ Returns True if the path is a mount point. """
+    return op.ismount(self)
+
   @classmethod
   def supports_unicode(cls):
     """ Returns True if the system can handle Unicode file names. """
