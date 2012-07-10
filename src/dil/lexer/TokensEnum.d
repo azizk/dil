@@ -224,3 +224,9 @@ const string[TOK.MAX] tokToString = [
   "EOF"
 ];
 static assert(tokToString.length == TOK.EOF+1);
+
+/// Returns the string representation of a token kind.
+cstring toString(TOK k)
+{
+  return tokToString[k];
+}
