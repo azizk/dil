@@ -7,9 +7,8 @@ from common import *
 from build import DMDCommand, LDCCommand
 __file__ = tounicode(__file__)
 
-# Linux:
 def make_Linux(TANGO):
-  bob = "build/bin/linux32/bob"
+  bob = Path("build")/"bin"/"linux%d"/"bob" % cpu_bits
   lib = "libtango-dmd.a"
   LIB32, LIB64 = map(Path.mkdir, TANGO//("lib32", "lib64"))
   for bits in (32, 64):
@@ -28,7 +27,7 @@ def make_Linux(TANGO):
     (TANGO/lib).move(DEST/"libtango-dmd-dbg.a")
 
 def make_Windows(TANGO):
-  bob = "build/bin/win32/bob.exe"
+  bob = Path("build")/"bin"/"win32"/"bob.exe"
   lib = "libtango-dmd.lib"
   build = call_proc
   if not is_win32:

@@ -8,6 +8,11 @@ from path import Path
 
 # Are we on a Windows system?
 is_win32 = sys.platform == "win32"
+def cpu_bitness():
+  from math import log
+  return int(log((sys.maxint+1)*2, 2))
+# What bit size is the CPU?
+cpu_bits = cpu_bitness()
 
 def find_source_files(src_path, filter_pred=lambda x: False):
   """ Searches for source files (*.d and *.di) and returns a list of them.
