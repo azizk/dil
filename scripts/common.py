@@ -9,8 +9,8 @@ from path import Path
 # Are we on a Windows system?
 is_win32 = sys.platform == "win32"
 def cpu_bitness():
-  from math import log
-  return int(log((sys.maxint+1)*2, 2))
+  """ Determines the address space size, based on the interpreter's bitness. """
+  return len(bin(sys.maxint)[2:]) + 1
 # What bit size is the CPU?
 cpu_bits = cpu_bitness()
 
