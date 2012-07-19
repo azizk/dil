@@ -483,3 +483,19 @@ bool isAsmStatementStartToken(TOK tok)
   }
   return false;
 }
+
+/// A list of tokens that point to tokToString[kind] as their text.
+Token[TOK.MAX] staticTokens;
+
+/// Initializes staticTokens.
+static this()
+{
+  foreach (i, t; staticTokens)
+  {
+    auto kind = cast(TOK)i;
+    auto text = kind.toString();
+    t.kind = kind;
+    t.start = text.ptr;
+    t.end = text.ptr + text.length;
+  }
+}
