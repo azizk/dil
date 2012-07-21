@@ -12,14 +12,165 @@ import dil.ast.Visitor,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
-
+import dil.Compilation;
+import dil.String;
 import common;
 
+/// Converts expressions like "TokenList.XYZ" to "toToken(TOK.XYZ)".
+static struct TokenList
+{
+  static Token* opDispatch(string kind)()
+  {
+    return mixin("toToken(TOK."~kind~")");
+  }
+}
+
+/// Traverses a Node tree and constructs a string representation.
 class ASTPrinter : Visitor2
 {
-  char[] text;
-  Token*[] tokens;
-  bool buildTokens;
+  char[] text;      /// The printed text.
+  Token*[] tokens;  /// The pre-built tokens of the text (Lexer not required.)
+  bool buildTokens; /// True if the tokens should be built.
+  Token* Newline;   /// Provides a newline token (depends on the platform).
+  Token* wsToken;   /// Integer token with the current number of whitespaces.
+  cstring spaces;   /// String of whitespaces to slice from.
+
+  CompilationContext cc;
+  alias TokenList T;
+
+  /// Constructs an ASTPrinter.
+  this(bool buildTokens, CompilationContext cc)
+  {
+    this.buildTokens = buildTokens;
+    this.cc = cc;
+    this.Newline = makeNewlineToken();
+  }
+
+  /// Creates a newline token with a platform dependent string as its text.
+  Token* makeNewlineToken()
+  {
+    auto t = new Token;
+    t.kind = TOK.Newline;
+    version(Windows)
+    const nl = "\r\n";
+    else version(OSX)
+    const nl = "\r";
+    else
+    const nl = "\n";
+    t.start = nl.ptr;
+    t.end   = nl.ptr + nl.length;
+    return t;
+  }
+
+  /// Starts the printer.
+  char[] print(Node n)
+  {
+    visitN(n);
+    fixTokens();
+    return text;
+  }
+
+  /// Constructs a new Token with the given parameters and pushes to an array.
+  void pushToken(TOK k, size_t start, size_t end, void* value)
+  { // Create new token and set its members.
+    cchar* prevEnd;
+    auto t = new Token;
+    if (tokens.length)
+    { // Link in, if not the first element.
+      Token* prev = tokens[$-1];
+      prev.next = t;
+      t.prev = prev;
+      prevEnd = prev.end;
+    }
+    t.kind = k;
+    t.ws = start ? prevEnd : null;
+    t.start = prevEnd + start;
+    t.end = prevEnd + end;
+    t.pvoid = value;
+    // Push to array.
+    tokens ~= t;
+  }
+
+  /// When the emitted text is complete, the pointers in the tokens
+  /// are updated to point to the correct text fragments.
+  /// (Considering the text buffer might get relocated when appending to it.)
+  void fixTokens()
+  {
+    if (!buildTokens || !tokens.length)
+      return;
+    const offset = cast(ssize_t)text.ptr;
+    for (auto t = tokens[0]; t !is null; t = t.next)
+    {
+      if (t.ws)
+        t.ws += offset;
+      t.start += offset;
+      t.end += offset;
+    }
+  }
+
+  /// Writes str to the text buffer.
+  void writeS(cstring str)
+  {
+    text ~= str;
+  }
+
+  /// Writes a list of tokens.
+  void write(Token*[] ts)
+  {
+    foreach (t; ts)
+      writeToken(t);
+  }
+
+  /// Writes the contents of a token to the text.
+  void writeToken(Token* t)
+  {
+    if (t.kind == TOK.Invalid)
+    { // Special whitespace token?
+      if (!wsToken)
+        wsToken = t; // Make t the current whitespace token.
+      else
+        wsToken.uint_ += t.uint_; // Add to current whitespace token.
+      return;
+    }
+    auto wsChars = getWhitespace();
+    auto tokenText = t.text();
+    if (buildTokens)
+    {
+      auto start = wsChars.length;
+      auto end = start + tokenText.length;
+      pushToken(t.kind, start, end, t.pvoid);
+    }
+    writeS(wsChars);
+    writeS(tokenText);
+    wsToken = null; // Clear the whitespace token.
+  }
+
+  alias writeToken write;
+
+  /// Writes the tokens between b and e (inclusive.)
+  void write(Token* b, Token* e)
+  {
+    for (auto t = b; b !is e; t = t.next)
+      if (!t.isWhitespace())
+        writeToken(t);
+  }
+
+  /// Returns a new token with the number of spaces to be written.
+  Token* ws(uint n = 1)
+  {
+    auto t = new Token;
+    t.uint_ = n;
+    return t;
+  }
+
+  /// Returns a whitespace string. The length is taken from wsToken.
+  cstring getWhitespace()
+  {
+    const count = wsToken ? wsToken.uint_ : 0;
+    if (count >= spaces.length)
+      spaces = (String(" ") * count).array;
+    return spaces[0..count];
+  }
 
   void visit(IllegalDecl n)
   {
