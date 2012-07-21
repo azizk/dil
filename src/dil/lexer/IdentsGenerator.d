@@ -19,6 +19,8 @@ import dil.String;
 enum string[] predefIdents = [
   // Special empty identifier:
   "Empty:",
+  // Just "Identifier" (with '_' to avoid compiler errors):
+  "Identifier_:Identifier",
   // Predefined version identifiers:
   "DigitalMars", "X86", "X86_64",
   /*"Windows", */"Win32", "Win64",

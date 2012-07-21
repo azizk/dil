@@ -496,6 +496,8 @@ Token* toToken(TOK kind)
 /// Initializes staticTokens.
 static this()
 {
+  import dil.lexer.Keywords, dil.lexer.IdTable;
+
   foreach (i, ref t; staticTokens)
   {
     auto kind = cast(TOK)i;
@@ -504,4 +506,9 @@ static this()
     t.start = text.ptr;
     t.end = text.ptr + text.length;
   }
+
+  /// Set the ident member of the keyword tokens and the one Identifier token.
+  foreach (i, kw; Keyword.allIds())
+    kw.kind.toToken().ident = kw;
+  TOK.Identifier.toToken().ident = Ident.Identifier_;
 }

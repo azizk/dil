@@ -3,7 +3,7 @@
 /// $(Maturity high)
 module dil.lexer.Keywords;
 
-import dil.lexer.Token,
+import dil.lexer.TokensEnum,
        dil.lexer.Identifier,
        dil.lexer.IdentsGenerator;
 
