@@ -174,22 +174,61 @@ class ASTPrinter : Visitor2
 
   void visit(IllegalDecl n)
   {
+    if (n.begin && n.end)
+      write(n.begin, n.end);
   }
 
   void visit(CompoundDecl n)
   {
+    foreach (x; n.decls)
+      visitN(x);
   }
 
   void visit(EmptyDecl n)
   {
+    write([T.Semicolon, Newline]);
   }
 
   void visit(ModuleDecl n)
   {
+    write(T.Module);
+    if (n.type)
+      write([ws(), T.LParen, n.type, T.RParen]);
+    write([ws(), n.fqn[0]]);
+    foreach (id; n.fqn[1..$])
+      write([T.Dot, id]);
+    write([T.Semicolon, Newline]);
   }
 
   void visit(ImportDecl n)
   {
+    if (n.isStatic)
+      write([T.Static, ws()]);
+    write([T.Import, ws()]);
+    foreach (i, fqn; n.moduleFQNs)
+    {
+      if (i)
+        write([T.Comma, ws()]);
+      if (auto aliasId = n.moduleAliases[i])
+        write([aliasId, ws(), T.Equal, ws()]);
+      foreach (j, id; fqn)
+      {
+        if (j)
+          write(T.Dot);
+        write(id);
+      }
+    }
+    foreach (i, bindName; n.bindNames)
+    {
+      if (i == 0)
+        write([ws(), T.Colon, ws()]);
+      else
+        write([T.Comma, ws()]);
+      if (auto bindAlias = n.bindAliases[i])
+        write([bindAlias, ws(), T.Equal, ws()]);
+      write(bindName);
+    }
+    write([T.Semicolon, Newline]);
   }
 
   void visit(AliasDecl n)
