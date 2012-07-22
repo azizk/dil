@@ -255,7 +255,7 @@ class Path(unicode):
       dirs[:] = [dir for dir in dirs if not prunedir(Path(root, dir))]
       for filename in files:
         fullpath = Path(root, filename)
-        if byname(filename) or bypath(fullpath):
+        if byname(Path(filename)) or bypath(fullpath):
           found.append(fullpath)
     return found
 
