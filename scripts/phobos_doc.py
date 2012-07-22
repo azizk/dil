@@ -195,9 +195,8 @@ def main():
   # Filter out files in the internal/ folder and in the ignore list.
   # Ignore the internal/ dir because it has files with keywords in their names.
   # E.g.: "cast.d", "invariant.d", "switch.d", "unittest.d"
-  def filter_func(f):
-    return f.name in IGNORE_LIST or f.folder.name == "internal"
-  FILES = find_source_files(PHOBOS_SRC, filter_func)
+  def prunefile(filename): return filename in IGNORE_LIST
+  FILES = find_source_files(PHOBOS_SRC, prunefile, prunedir=r'internal$')
   FILES.sort() # Sort for index.
 
   modify_std_ddoc(PHOBOS_SRC/"std.ddoc", TMP/"phobos.ddoc", D_VERSION)

@@ -167,10 +167,9 @@ def main():
   dil_retcode = 0
   if options.docs:
     # 1. Find source files.
-    def filter_func(path):
-      return path.folder.name in (".svn", "vendor", "rt")
+    def prunedir(path): return path.name in (".svn", ".git", "vendor", "rt")
     # FILES = [TANGO.SRC.object_di] + find_source_files(TANGO.SRC, filter_func)
-    FILES = find_source_files(TANGO.SRC, filter_func)
+    FILES = find_source_files(TANGO.SRC, prunedir=prunedir)
 
     # 2. Prepare files and options to call generate_docs().
     create_index(TMP/"index.d", TANGO.SRC.ROOT, FILES)

@@ -14,24 +14,19 @@ def cpu_bitness():
 # What bit size is the CPU?
 cpu_bits = cpu_bitness()
 
-def find_source_files(src_path, filter_pred=lambda x: False):
-  """ Searches for source files (*.d and *.di) and returns a list of them.
-    Passes dir and file names to filter_pred() to be filtered.
-    Dir names have a trailing path separator ('/'). """
-  found = []
-  for root, dirs, files in Path(src_path).walk(followlinks=True):
-    root = Path(root) # Make root a Path object.
-    dirs[:] = [d for d in dirs if not filter_pred(root/d/"")] # Filter folders.
-    for f in files:
-      f = root / f # Join the root and the file name.
-      if f.ext.lower() in ('.d','.di') and not filter_pred(f):
-        found.append(f) # Found a source file.
-  return found
+def find_source_files(src_path, prunefile=None, prunedir=None):
+  """ Searches for source files (*.d and *.di)
+      and returns a list of matching files. """
+  nofilter = lambda x: False
+  prunefile, prunedir = (prunefile or nofilter), (prunedir or nofilter)
+  srcrx = re.compile(r'\.di?$', re.I)
+  def byname(f):
+    return srcrx.search(f) and not prunefile(f)
+  return Path(src_path).rxglob(byname, prunedir=prunedir)
 
 def find_dil_source_files(source):
   """ Filters out files in "src/tests/". """
-  filter_func = lambda f: f.folder.name == "tests"
-  return find_source_files(source, filter_func)
+  return find_source_files(source, prunedir=r'src[/\\]tests$')
 
 def script_parent_folder(script_path):
   return Path(script_path).realpath.folder.folder
