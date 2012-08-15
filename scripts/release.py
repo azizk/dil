@@ -40,7 +40,7 @@ def get_totalsize_and_md5sums(FILES, root_index):
     md5sums += "%s  %s\n" % (checksum, f[root_index + 1:])
   return (totalsize/1024, md5sums)
 
-def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, PACKAGENUM=1):
+def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, MAINTAINER, PACKAGENUM=1):
   V_MAJOR = VERSION.MAJ
   # 1. Create folders.
   TMP = (TMP/"debian").mkdir() # The root folder.
@@ -97,7 +97,6 @@ Description: D compiler
  DIL is a feature-rich compiler for the D programming language
  written entirely in D.
 """
-  MAINTAINER = "Aziz Köksal <aziz.koeksal@gmail.com>"
   control = control.format(**locals())
 
   conffiles = "/etc/dilconf.d\n"
@@ -124,6 +123,19 @@ Description: D compiler
   NAME = "dil%s_%s-%s_%s.deb" % (V_MAJOR, VERSION, PACKAGENUM, ARCH)
   call_proc("fakeroot", "dpkg-deb", "--build", TMP, DEST/NAME)
   TMP.rmtree()
+
+def get_MAINTAINER(M):
+  if M == None:
+    if locate_command("git"): # Fetch from git if available.
+      name_email = [call_read("git", "config", "user."+x)[:-1]
+                    for x in ("name", "email")]
+      M = "{} <{}>".format(*name_email)
+    else:
+      M = "Unknown <un@kn.own>"
+  if not re.match(r"^.+? <[^>@]+@[^>]+>$", M):
+    print("Warning: 'deb package maintainer' seems to be in the wrong format")
+  return M
+
 
 def build_dil(CmdClass, *args, **kwargs):
   cmd = CmdClass(*args, **kwargs)
@@ -218,7 +230,7 @@ def build_binaries(TARGETS, COMPILER, V_MAJOR, FILES, DEST):
 
 def main():
   from functools import partial as func_partial
-  from optparse import OptionParser
+  from optparse import OptionParser, SUPPRESS_HELP
 
   usage = "Usage: %s VERSION [Options]" % __file__
   parser = OptionParser(usage=usage)
@@ -247,6 +259,10 @@ def main():
   parser.add_option("--winpath", dest="winpath", metavar="P", default=None,
     help="permanently append P to PATH in the Windows (or wine's) registry. "
          "Exits the script.")
+  parser.add_option("--debm", dest="deb_mntnr", metavar="MTR", default=None,
+    help=SUPPRESS_HELP) # Sets the maintainer info of the package.
+  parser.add_option("--debnum", dest="deb_num", metavar="NUM", default=1,
+    help=SUPPRESS_HELP) # Sets the package number.
 
   (options, args) = parser.parse_args(sys.uargv[1:])
 
@@ -372,6 +388,8 @@ def main():
   assert DEST[-1] != Path.sep
   create_archives(options, DEST.name, DEST.name, DEST.folder)
   if options.deb and not options.no_binaries:
+    MTR = get_MAINTAINER(options.deb_mntnr)
+    NUM = int(options.deb_num)
     # Make an archive for each architecture.
     SRC = Path(DEST)
     SRC.DATA = DEST.DATA
@@ -380,7 +398,7 @@ def main():
     for arch in ("i386", "amd64"):
       # Gather the binaries that belong to arch.
       SRC.BINS  = [bin for bin in LINUX_BINS if bin.target.arch == arch]
-      make_deb_package(SRC, DEST.folder, VERSION, arch, DEST)
+      make_deb_package(SRC, DEST.folder, VERSION, arch, DEST, MTR, NUM)
 
   print("Done!")
 
