@@ -155,6 +155,9 @@ class ASTPrinter : Visitor2
         writeToken(t);
   }
 
+  /// Shortcut.
+  alias write w;
+
   /// Returns a new token with the number of spaces to be written.
   Token* ws(uint n = 1)
   {
@@ -175,7 +178,7 @@ class ASTPrinter : Visitor2
   void visit(IllegalDecl n)
   {
     if (n.begin && n.end)
-      write(n.begin, n.end);
+      w(n.begin, n.end);
   }
 
   void visit(CompoundDecl n)
@@ -186,49 +189,49 @@ class ASTPrinter : Visitor2
 
   void visit(EmptyDecl n)
   {
-    write([T.Semicolon, Newline]);
+    w([T.Semicolon, Newline]);
   }
 
   void visit(ModuleDecl n)
   {
-    write(T.Module);
+    w(T.Module);
     if (n.type)
-      write([ws(), T.LParen, n.type, T.RParen]);
-    write([ws(), n.fqn[0]]);
+      w([ws(), T.LParen, n.type, T.RParen]);
+    w([ws(), n.fqn[0]]);
     foreach (id; n.fqn[1..$])
-      write([T.Dot, id]);
-    write([T.Semicolon, Newline]);
+      w([T.Dot, id]);
+    w([T.Semicolon, Newline]);
   }
 
   void visit(ImportDecl n)
   {
     if (n.isStatic)
-      write([T.Static, ws()]);
-    write([T.Import, ws()]);
+      w([T.Static, ws()]);
+    w([T.Import, ws()]);
     foreach (i, fqn; n.moduleFQNs)
     {
       if (i)
-        write([T.Comma, ws()]);
+        w([T.Comma, ws()]);
       if (auto aliasId = n.moduleAliases[i])
-        write([aliasId, ws(), T.Equal, ws()]);
+        w([aliasId, ws(), T.Equal, ws()]);
       foreach (j, id; fqn)
       {
         if (j)
-          write(T.Dot);
-        write(id);
+          w(T.Dot);
+        w(id);
       }
     }
     foreach (i, bindName; n.bindNames)
     {
       if (i == 0)
-        write([ws(), T.Colon, ws()]);
+        w([ws(), T.Colon, ws()]);
       else
-        write([T.Comma, ws()]);
+        w([T.Comma, ws()]);
       if (auto bindAlias = n.bindAliases[i])
-        write([bindAlias, ws(), T.Equal, ws()]);
-      write(bindName);
+        w([bindAlias, ws(), T.Equal, ws()]);
+      w(bindName);
     }
-    write([T.Semicolon, Newline]);
+    w([T.Semicolon, Newline]);
   }
 
   void visit(AliasDecl n)
