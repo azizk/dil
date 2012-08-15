@@ -236,18 +236,38 @@ class ASTPrinter : Visitor2
 
   void visit(AliasDecl n)
   {
+    w(T.Alias);
+    visitN(n.decl);
+    w([T.Semicolon, Newline]);
   }
 
   void visit(AliasThisDecl n)
   {
+    w([T.Alias, T.This, n.ident, T.Semicolon, Newline]);
   }
 
   void visit(TypedefDecl n)
   {
+    w(T.Typedef);
+    visitN(n.decl);
+    w([T.Semicolon, Newline]);
   }
 
   void visit(EnumDecl n)
   {
+    w(T.Enum);
+    if (n.name)
+      w([ws(), n.name]);
+    if (n.baseType) {
+      w([ws(), T.Colon, ws()]);
+      visitN(n.baseType);
+    }
+    w([Newline, T.LBrace]);
+    foreach (m; n.members) {
+      visitN(m);
+      w([T.Comma, Newline]);
+    }
+    w([T.RBrace, Newline]);
   }
 
   void visit(EnumMemberDecl n)
