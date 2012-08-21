@@ -308,23 +308,18 @@ struct DDocParser
     { // Check if there's text before the explicit section.
       if (summaryBegin != ident.ptr)
         scanSummaryAndDescription(summaryBegin, ident.ptr);
+      // Continue parsing.
+      while (findNextIdColon(nextIdent, nextBodyBegin))
+      {
+        sections ~= new Section(ident, textBody(bodyBegin, nextIdent.ptr));
+        ident = nextIdent;
+        bodyBegin = nextBodyBegin;
+      }
+      // Add last section.
+      sections ~= new Section(ident, textBody(bodyBegin, textEnd));
     }
     else // There are no explicit sections.
-    {
       scanSummaryAndDescription(summaryBegin, textEnd);
-      return sections;
-    }
-
-    assert(ident.length);
-    // Continue parsing.
-    while (findNextIdColon(nextIdent, nextBodyBegin))
-    {
-      sections ~= new Section(ident, textBody(bodyBegin, nextIdent.ptr));
-      ident = nextIdent;
-      bodyBegin = nextBodyBegin;
-    }
-    // Add last section.
-    sections ~= new Section(ident, textBody(bodyBegin, textEnd));
     return sections;
   }
 
@@ -390,10 +385,11 @@ struct DDocParser
       if (skipCodeSection(p, textEnd))
         continue;
       assert(p < textEnd && (isascii(*p) || isLeadByte(*p)));
-      ident = scanIdentifier(p, textEnd);
-      if (ident && p < textEnd && *p == ':')
+      auto id = scanIdentifier(p, textEnd);
+      if (id && p < textEnd && *p == ':')
         if (!(++p < textEnd && *p == '/')) // Ignore links: http:// ftp:// etc.
         {
+          ident = id;
           bodyBegin = p;
           skipLine();
           return true;

@@ -44,17 +44,19 @@ struct IdentValueParser
     IdentValue[] idvalues;
 
     cstring ident, nextIdent;
-    cchar* bodyBegin = p, nextBodyBegin;
+    cchar* bodyBegin, nextBodyBegin;
 
     // Init.
-    findNextIdent(ident, bodyBegin);
-    // Continue.
-    while (findNextIdent(nextIdent, nextBodyBegin))
-    {
-      idvalues ~= new IdentValue(ident, textBody(bodyBegin, nextIdent.ptr));
-      ident = nextIdent;
-      bodyBegin = nextBodyBegin;
-    }
+    if (findNextIdent(ident, bodyBegin))
+      // Continue.
+      while (findNextIdent(nextIdent, nextBodyBegin))
+      {
+        idvalues ~= new IdentValue(ident, textBody(bodyBegin, nextIdent.ptr));
+        ident = nextIdent;
+        bodyBegin = nextBodyBegin;
+      }
+    else // No "ident = value" pair found.
+      bodyBegin = p; // Take the whole text and give it an empty ident.
     // Add last ident value.
     idvalues ~= new IdentValue(ident, textBody(bodyBegin, textEnd));
     return idvalues;
@@ -92,10 +94,11 @@ struct IdentValueParser
       if (p is textEnd)
         break;
       assert(p < textEnd && (isascii(*p) || isLeadByte(*p)));
-      ident = scanIdentifier(p, textEnd);
+      auto id = scanIdentifier(p, textEnd);
       skipWhitespace();
-      if (ident && p < textEnd && *p == '=')
+      if (id && p < textEnd && *p == '=')
       {
+        ident = id;
         bodyBegin = ++p;
         skipLine();
         return true;
