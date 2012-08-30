@@ -183,8 +183,11 @@ class ASTPrinter : Visitor2
 
   void visit(CompoundDecl n)
   {
+    w([T.LBrace, Newline]);
+    // TODO: inc indent
     foreach (x; n.decls)
       visitN(x);
+    w([Newline, T.RBrace]);
   }
 
   void visit(EmptyDecl n)
@@ -263,6 +266,7 @@ class ASTPrinter : Visitor2
       visitN(n.baseType);
     }
     w([Newline, T.LBrace]);
+    // TODO: increase indentation
     foreach (m; n.members) {
       visitN(m);
       w([T.Comma, Newline]);
@@ -272,10 +276,34 @@ class ASTPrinter : Visitor2
 
   void visit(EnumMemberDecl n)
   {
+    if (n.type) {
+      visitN(n.type);
+      w(ws());
+    }
+    w(n.name);
+    if (n.value) {
+      w([ws(), T.Equal, ws()]);
+      visitN(n.value);
+    }
+    w([T.Comma, Newline]);
   }
 
   void visit(TemplateDecl n)
   {
+    if (n.isMixin)
+      w([T.Mixin, ws()]);
+    w([T.Template, ws(), n.name]);
+    visitN(n.tparams);
+    if (n.constraint)
+    {
+      w([ws(), T.If, T.LParen]);
+      visitN(n.constraint);
+      w([T.RParen]);
+    }
+    w(Newline);
+    // TODO: inc indent
+    visitN(n.decls);
+    w(Newline);
   }
 
   void visit(ClassDecl n)
@@ -988,6 +1016,14 @@ class ASTPrinter : Visitor2
 
   void visit(TemplateParameters n)
   {
+    w(T.LParen);
+    foreach (i, param; n.items())
+    {
+      if (i)
+        w([T.Comma, ws()]);
+      visitN(param);
+    }
+    w(T.RParen);
   }
 
   void visit(TemplateArguments n)
