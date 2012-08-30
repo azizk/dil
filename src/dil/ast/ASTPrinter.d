@@ -308,18 +308,74 @@ class ASTPrinter : Visitor2
 
   void visit(ClassDecl n)
   {
+    w([T.Class, ws(), n.name]);
+    if (n.bases)
+    {
+      w([ws(), T.Colon, ws()]);
+      foreach (i, b; n.bases)
+      {
+        if (i)
+          w([T.Comma, ws()]);
+        visitN(b);
+      }
+    }
+    if (n.decls) {
+      w(Newline);
+      visitN(n.decls);
+    }
+    else
+      w(T.Semicolon);
+    w(Newline);
   }
 
   void visit(InterfaceDecl n)
   {
+    w([T.Interface, ws(), n.name]);
+    if (n.bases)
+    {
+      w([ws(), T.Colon, ws()]);
+      foreach (i, b; n.bases)
+      {
+        if (i)
+          w([T.Comma, ws()]);
+        visitN(b);
+      }
+    }
+    if (n.decls) {
+      w(Newline);
+      visitN(n.decls);
+    }
+    else
+      w(T.Semicolon);
+    w(Newline);
   }
 
   void visit(StructDecl n)
   {
+    w(T.Struct);
+    if (n.name)
+      w([ws(), n.name]);
+    if (n.decls) {
+      w(Newline);
+      visitN(n.decls);
+    }
+    else
+      w(T.Semicolon);
+    w(Newline);
   }
 
   void visit(UnionDecl n)
   {
+    w(T.Union);
+    if (n.name)
+      w([ws(), n.name]);
+    if (n.decls) {
+      w(Newline);
+      visitN(n.decls);
+    }
+    else
+      w(T.Semicolon);
+    w(Newline);
   }
 
   void visit(ConstructorDecl n)
