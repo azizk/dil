@@ -382,18 +382,28 @@ class ASTPrinter : Visitor2
 
   void visit(ConstructorDecl n)
   {
+    w(T.This);
+    v(n.params);
+    w(Newline);
+    v(n.funcBody);
   }
 
   void visit(StaticCtorDecl n)
   {
+    w([T.Static, ws(), T.This, T.LParen, T.RParen, Newline]);
+    v(n.funcBody);
   }
 
   void visit(DestructorDecl n)
   {
+    w([T.Tilde, T.This, T.LParen, T.RParen, Newline]);
+    v(n.funcBody);
   }
 
   void visit(StaticDtorDecl n)
   {
+    w([T.Static, ws(), T.Tilde, T.This, T.LParen, T.RParen, Newline]);
+    v(n.funcBody);
   }
 
   void visit(FunctionDecl n)
@@ -1050,6 +1060,14 @@ class ASTPrinter : Visitor2
 
   void visit(Parameters n)
   {
+    w(T.LParen);
+    foreach (i, param; n.items())
+    {
+      if (i)
+        w([T.Comma, ws()]);
+      v(param);
+    }
+    w(T.RParen);
   }
 
   void visit(TemplateAliasParam n)
