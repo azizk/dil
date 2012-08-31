@@ -199,11 +199,13 @@ class Path(unicode):
 
   def rmdir(self):
     """ Removes a directory (only if it's empty.) """
-    return os.rmdir(self)
+    os.rmdir(self)
+    return self
 
   def rmtree(self, noerrors=True):
     """ Removes a directory tree. Ignores errors by default. """
-    return shutil.rmtree(self, ignore_errors=noerrors)
+    shutil.rmtree(self, ignore_errors=noerrors)
+    return self
 
   def copy(self, to):
     shutil.copy(self, to)
