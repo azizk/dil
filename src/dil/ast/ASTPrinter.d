@@ -157,6 +157,7 @@ class ASTPrinter : Visitor2
 
   /// Shortcut.
   alias write w;
+  alias visitN v;
 
   /// Returns a new token with the number of spaces to be written.
   Token* ws(uint n = 1)
@@ -186,7 +187,7 @@ class ASTPrinter : Visitor2
     w([T.LBrace, Newline]);
     // TODO: inc indent
     foreach (x; n.decls)
-      visitN(x);
+      v(x);
     w([Newline, T.RBrace]);
   }
 
@@ -240,7 +241,7 @@ class ASTPrinter : Visitor2
   void visit(AliasDecl n)
   {
     w(T.Alias);
-    visitN(n.decl);
+    v(n.decl);
     w([T.Semicolon, Newline]);
   }
 
@@ -252,7 +253,7 @@ class ASTPrinter : Visitor2
   void visit(TypedefDecl n)
   {
     w(T.Typedef);
-    visitN(n.decl);
+    v(n.decl);
     w([T.Semicolon, Newline]);
   }
 
@@ -263,12 +264,12 @@ class ASTPrinter : Visitor2
       w([ws(), n.name]);
     if (n.baseType) {
       w([ws(), T.Colon, ws()]);
-      visitN(n.baseType);
+      v(n.baseType);
     }
     w([Newline, T.LBrace]);
     // TODO: increase indentation
     foreach (m; n.members) {
-      visitN(m);
+      v(m);
       w([T.Comma, Newline]);
     }
     w([T.RBrace, Newline]);
@@ -277,32 +278,33 @@ class ASTPrinter : Visitor2
   void visit(EnumMemberDecl n)
   {
     if (n.type) {
-      visitN(n.type);
+      v(n.type);
       w(ws());
     }
     w(n.name);
     if (n.value) {
       w([ws(), T.Equal, ws()]);
-      visitN(n.value);
+      v(n.value);
     }
     w([T.Comma, Newline]);
   }
+
 
   void visit(TemplateDecl n)
   {
     if (n.isMixin)
       w([T.Mixin, ws()]);
     w([T.Template, ws(), n.name]);
-    visitN(n.tparams);
+    v(n.tparams);
     if (n.constraint)
     {
       w([ws(), T.If, T.LParen]);
-      visitN(n.constraint);
+      v(n.constraint);
       w([T.RParen]);
     }
     w(Newline);
     // TODO: inc indent
-    visitN(n.decls);
+    v(n.decls);
     w(Newline);
   }
 
@@ -316,12 +318,12 @@ class ASTPrinter : Visitor2
       {
         if (i)
           w([T.Comma, ws()]);
-        visitN(b);
+        v(b);
       }
     }
     if (n.decls) {
       w(Newline);
-      visitN(n.decls);
+      v(n.decls);
     }
     else
       w(T.Semicolon);
@@ -338,12 +340,12 @@ class ASTPrinter : Visitor2
       {
         if (i)
           w([T.Comma, ws()]);
-        visitN(b);
+        v(b);
       }
     }
     if (n.decls) {
       w(Newline);
-      visitN(n.decls);
+      v(n.decls);
     }
     else
       w(T.Semicolon);
@@ -357,7 +359,7 @@ class ASTPrinter : Visitor2
       w([ws(), n.name]);
     if (n.decls) {
       w(Newline);
-      visitN(n.decls);
+      v(n.decls);
     }
     else
       w(T.Semicolon);
@@ -371,7 +373,7 @@ class ASTPrinter : Visitor2
       w([ws(), n.name]);
     if (n.decls) {
       w(Newline);
-      visitN(n.decls);
+      v(n.decls);
     }
     else
       w(T.Semicolon);
@@ -1077,7 +1079,7 @@ class ASTPrinter : Visitor2
     {
       if (i)
         w([T.Comma, ws()]);
-      visitN(param);
+      v(param);
     }
     w(T.RParen);
   }
