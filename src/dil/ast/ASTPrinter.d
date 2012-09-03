@@ -33,7 +33,7 @@ class ASTPrinter : Visitor2
   bool buildTokens; /// True if the tokens should be built.
   Token* Newline;   /// Provides a newline token (depends on the platform).
   Token* wsToken;   /// Integer token with the current number of whitespaces.
-  cstring spaces;   /// String of whitespaces to slice from.
+  cstring spaces;   /// The current whitespace string.
 
   CompilationContext cc;
   alias TokenList T;
@@ -126,23 +126,19 @@ class ASTPrinter : Visitor2
   {
     if (t.kind == TOK.Invalid)
     { // Special whitespace token?
-      if (!wsToken)
-        wsToken = t; // Make t the current whitespace token.
-      else
-        wsToken.uint_ += t.uint_; // Add to current whitespace token.
+      spaces ~= t.text();
       return;
     }
-    auto wsChars = getWhitespace();
     auto tokenText = t.text();
     if (buildTokens)
     {
-      auto start = wsChars.length;
+      auto start = spaces.length;
       auto end = start + tokenText.length;
       pushToken(t.kind, start, end, t.pvoid);
     }
-    writeS(wsChars);
+    writeS(spaces);
     writeS(tokenText);
-    wsToken = null; // Clear the whitespace token.
+    spaces = null; // Clear whitespace.
   }
 
   alias writeToken write;
@@ -162,18 +158,11 @@ class ASTPrinter : Visitor2
   /// Returns a new token with the number of spaces to be written.
   Token* ws(uint n = 1)
   {
+    auto s = String(" ") * n;
     auto t = new Token;
-    t.uint_ = n;
+    t.start = s.ptr;
+    t.end = s.end;
     return t;
-  }
-
-  /// Returns a whitespace string. The length is taken from wsToken.
-  cstring getWhitespace()
-  {
-    const count = wsToken ? wsToken.uint_ : 0;
-    if (count >= spaces.length)
-      spaces = (String(" ") * count).array;
-    return spaces[0..count];
   }
 
   void visit(IllegalDecl n)
