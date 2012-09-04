@@ -34,6 +34,8 @@ class ASTPrinter : Visitor2
   Token* Newline;   /// Provides a newline token (depends on the platform).
   Token* wsToken;   /// Integer token with the current number of whitespaces.
   cstring spaces;   /// The current whitespace string.
+  cstring indent;   /// The current indendation string.
+  cstring indentStep; /// The string used to increase the indentation level.
 
   CompilationContext cc;
   alias TokenList T;
@@ -44,6 +46,7 @@ class ASTPrinter : Visitor2
     this.buildTokens = buildTokens;
     this.cc = cc;
     this.Newline = makeNewlineToken();
+    this.indentStep = "  ";
   }
 
   /// Creates a newline token with a platform dependent string as its text.
@@ -163,6 +166,29 @@ class ASTPrinter : Visitor2
     t.start = s.ptr;
     t.end = s.end;
     return t;
+  }
+
+  /// Returns the current indentation as a token.
+  Token* ind()
+  {
+    auto t = new Token;
+    t.start = indent.ptr;
+    t.end = indent.ptr + indent.length;
+    return t;
+  }
+
+  /// Increases/decreases indentation on construction/destruction.
+  scope class IndentLevel
+  {
+    this()
+    {
+      indent ~= indentStep;
+    }
+
+    ~this()
+    {
+      indent = indent[0 .. $-indentStep.length];
+    }
   }
 
   void visit(IllegalDecl n)
