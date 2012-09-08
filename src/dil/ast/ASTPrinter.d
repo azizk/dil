@@ -291,27 +291,38 @@ class ASTPrinter : Visitor2
       w([ws, T.Colon, ws]);
       v(n.baseType);
     }
-    w([Newline, T.LBrace]);
-    // TODO: increase indentation
-    foreach (m; n.members) {
-      v(m);
-      w([T.Comma, Newline]);
+    if (!n.members)
+      w([T.Semicolon, Newline]);
+    else
+    {
+      w([Newline, ind, T.LBrace, Newline]);
+      {
+        scope il = new IndentLevel();
+        foreach (i, m; n.members)
+        {
+          if (i)
+            w([T.Comma, Newline]);
+          v(m);
+        }
+      }
+      w([Newline, ind, T.RBrace, Newline]);
     }
-    w([T.RBrace, Newline]);
+    w(Newline);
   }
 
   void visit(EnumMemberDecl n)
   {
     if (n.type) {
+      w(ind);
       v(n.type);
-      w(ws);
+      w([ws, n.name]);
     }
-    w(n.name);
+    else
+      w([ind, n.name]);
     if (n.value) {
       w([ws, T.Equal, ws]);
       v(n.value);
     }
-    w([T.Comma, Newline]);
   }
 
 
