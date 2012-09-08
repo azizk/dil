@@ -413,27 +413,26 @@ class ASTPrinter : Visitor2
 
   void visit(ConstructorDecl n)
   {
-    w(T.This);
+    w([ind, T.This]);
     v(n.params);
-    w(Newline);
     v(n.funcBody);
   }
 
   void visit(StaticCtorDecl n)
   {
-    w([T.Static, ws, T.This, T.LParen, T.RParen, Newline]);
+    w([ind, T.Static, ws, T.This, T.LParen, T.RParen]);
     v(n.funcBody);
   }
 
   void visit(DestructorDecl n)
   {
-    w([T.Tilde, T.This, T.LParen, T.RParen, Newline]);
+    w([ind, T.Tilde, T.This, T.LParen, T.RParen]);
     v(n.funcBody);
   }
 
   void visit(StaticDtorDecl n)
   {
-    w([T.Static, ws, T.Tilde, T.This, T.LParen, T.RParen, Newline]);
+    w([ind, T.Static, ws, T.Tilde, T.This, T.LParen, T.RParen]);
     v(n.funcBody);
   }
 
@@ -447,10 +446,14 @@ class ASTPrinter : Visitor2
 
   void visit(InvariantDecl n)
   {
+    w([ind, T.Invariant, T.LParen, T.RParen]);
+    v(n.funcBody);
   }
 
   void visit(UnittestDecl n)
   {
+    w([ind, T.Unittest]);
+    v(n.funcBody);
   }
 
   void visit(DebugDecl n)
@@ -475,6 +478,9 @@ class ASTPrinter : Visitor2
 
   void visit(DeleteDecl n)
   {
+    w([ind, T.Delete]);
+    v(n.params);
+    v(n.funcBody);
   }
 
   void visit(ProtectionDecl n)
@@ -517,6 +523,25 @@ class ASTPrinter : Visitor2
 
   void visit(FuncBodyStmt n)
   {
+    if (n.isEmpty())
+      w([T.Semicolon, Newline]);
+    else
+    {
+      if (n.inBody) {
+        w([ind, T.In]);
+        writeBlock(n.inBody);
+      }
+      if (n.outBody) {
+        w([ind, T.Out]);
+        if (n.outIdent)
+          w([T.LParen, n.outIdent, T.RParen]);
+        writeBlock(n.outBody);
+      }
+      if (n.inBody || n.outBody)
+        w([ind, T.Body]);
+      writeBlock(n.funcBody);
+    }
+    w(Newline);
   }
 
   void visit(ScopeStmt n)
