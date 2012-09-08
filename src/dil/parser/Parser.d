@@ -2248,6 +2248,8 @@ class Parser
     require2(T.LParen);
     auto condition = parseExpression();
     requireClosing(T.RParen, leftParen);
+    version(D2)
+    require2(T.Semicolon);
     return new DoWhileStmt(condition, doBody);
   }
 
