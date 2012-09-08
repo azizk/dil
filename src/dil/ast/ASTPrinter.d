@@ -158,8 +158,8 @@ class ASTPrinter : Visitor2
   alias write w;
   alias visitN v;
 
-  /// Returns a new token with the number of spaces to be written.
-  Token* ws(uint n = 1)
+  /// Returns a new token containing 'n' number of whitespace characters.
+  Token* ws(uint n) @property
   {
     auto s = String(" ") * n;
     auto t = new Token;
@@ -168,8 +168,18 @@ class ASTPrinter : Visitor2
     return t;
   }
 
+  /// Returns a new token containing a single whitespace character.
+  Token* ws() @property
+  {
+    auto s = String(" ");
+    auto t = new Token;
+    t.start = s.ptr;
+    t.end = s.end;
+    return t;
+  }
+
   /// Returns the current indentation as a token.
-  Token* ind()
+  Token* ind() @property
   {
     auto t = new Token;
     t.start = indent.ptr;
@@ -215,8 +225,8 @@ class ASTPrinter : Visitor2
   {
     w(T.Module);
     if (n.type)
-      w([ws(), T.LParen, n.type, T.RParen]);
-    w([ws(), n.fqn[0]]);
+      w([ws, T.LParen, n.type, T.RParen]);
+    w([ws, n.fqn[0]]);
     foreach (id; n.fqn[1..$])
       w([T.Dot, id]);
     w([T.Semicolon, Newline]);
@@ -225,14 +235,14 @@ class ASTPrinter : Visitor2
   void visit(ImportDecl n)
   {
     if (n.isStatic)
-      w([T.Static, ws()]);
-    w([T.Import, ws()]);
+      w([T.Static, ws]);
+    w([T.Import, ws]);
     foreach (i, fqn; n.moduleFQNs)
     {
       if (i)
-        w([T.Comma, ws()]);
+        w([T.Comma, ws]);
       if (auto aliasId = n.moduleAliases[i])
-        w([aliasId, ws(), T.Equal, ws()]);
+        w([aliasId, ws, T.Equal, ws]);
       foreach (j, id; fqn)
       {
         if (j)
@@ -243,11 +253,11 @@ class ASTPrinter : Visitor2
     foreach (i, bindName; n.bindNames)
     {
       if (i == 0)
-        w([ws(), T.Colon, ws()]);
+        w([ws, T.Colon, ws]);
       else
-        w([T.Comma, ws()]);
+        w([T.Comma, ws]);
       if (auto bindAlias = n.bindAliases[i])
-        w([bindAlias, ws(), T.Equal, ws()]);
+        w([bindAlias, ws, T.Equal, ws]);
       w(bindName);
     }
     w([T.Semicolon, Newline]);
@@ -276,9 +286,9 @@ class ASTPrinter : Visitor2
   {
     w(T.Enum);
     if (n.name)
-      w([ws(), n.name]);
+      w([ws, n.name]);
     if (n.baseType) {
-      w([ws(), T.Colon, ws()]);
+      w([ws, T.Colon, ws]);
       v(n.baseType);
     }
     w([Newline, T.LBrace]);
@@ -294,11 +304,11 @@ class ASTPrinter : Visitor2
   {
     if (n.type) {
       v(n.type);
-      w(ws());
+      w(ws);
     }
     w(n.name);
     if (n.value) {
-      w([ws(), T.Equal, ws()]);
+      w([ws, T.Equal, ws]);
       v(n.value);
     }
     w([T.Comma, Newline]);
@@ -308,12 +318,12 @@ class ASTPrinter : Visitor2
   void visit(TemplateDecl n)
   {
     if (n.isMixin)
-      w([T.Mixin, ws()]);
-    w([T.Template, ws(), n.name]);
+      w([T.Mixin, ws]);
+    w([T.Template, ws, n.name]);
     v(n.tparams);
     if (n.constraint)
     {
-      w([ws(), T.If, T.LParen]);
+      w([ws, T.If, T.LParen]);
       v(n.constraint);
       w([T.RParen]);
     }
@@ -325,14 +335,14 @@ class ASTPrinter : Visitor2
 
   void visit(ClassDecl n)
   {
-    w([T.Class, ws(), n.name]);
+    w([T.Class, ws, n.name]);
     if (n.bases)
     {
-      w([ws(), T.Colon, ws()]);
+      w([ws, T.Colon, ws]);
       foreach (i, b; n.bases)
       {
         if (i)
-          w([T.Comma, ws()]);
+          w([T.Comma, ws]);
         v(b);
       }
     }
@@ -347,14 +357,14 @@ class ASTPrinter : Visitor2
 
   void visit(InterfaceDecl n)
   {
-    w([T.Interface, ws(), n.name]);
+    w([T.Interface, ws, n.name]);
     if (n.bases)
     {
-      w([ws(), T.Colon, ws()]);
+      w([ws, T.Colon, ws]);
       foreach (i, b; n.bases)
       {
         if (i)
-          w([T.Comma, ws()]);
+          w([T.Comma, ws]);
         v(b);
       }
     }
@@ -371,7 +381,7 @@ class ASTPrinter : Visitor2
   {
     w(T.Struct);
     if (n.name)
-      w([ws(), n.name]);
+      w([ws, n.name]);
     if (n.decls) {
       w(Newline);
       v(n.decls);
@@ -385,7 +395,7 @@ class ASTPrinter : Visitor2
   {
     w(T.Union);
     if (n.name)
-      w([ws(), n.name]);
+      w([ws, n.name]);
     if (n.decls) {
       w(Newline);
       v(n.decls);
@@ -405,7 +415,7 @@ class ASTPrinter : Visitor2
 
   void visit(StaticCtorDecl n)
   {
-    w([T.Static, ws(), T.This, T.LParen, T.RParen, Newline]);
+    w([T.Static, ws, T.This, T.LParen, T.RParen, Newline]);
     v(n.funcBody);
   }
 
@@ -417,7 +427,7 @@ class ASTPrinter : Visitor2
 
   void visit(StaticDtorDecl n)
   {
-    w([T.Static, ws(), T.Tilde, T.This, T.LParen, T.RParen, Newline]);
+    w([T.Static, ws, T.Tilde, T.This, T.LParen, T.RParen, Newline]);
     v(n.funcBody);
   }
 
@@ -1079,7 +1089,7 @@ class ASTPrinter : Visitor2
     foreach (i, param; n.items())
     {
       if (i)
-        w([T.Comma, ws()]);
+        w([T.Comma, ws]);
       v(param);
     }
     w(T.RParen);
@@ -1111,7 +1121,7 @@ class ASTPrinter : Visitor2
     foreach (i, param; n.items())
     {
       if (i)
-        w([T.Comma, ws()]);
+        w([T.Comma, ws]);
       v(param);
     }
     w(T.RParen);
