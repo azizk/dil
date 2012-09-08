@@ -1567,6 +1567,8 @@ class Parser
   Declaration parseUnittestDecl()
   {
     skip(T.Unittest);
+    if (!tokenIs(T.LBrace))
+      error2(MID.ExpectedUnittestBody, token);
     auto funcBody = parseFunctionBody();
     return new UnittestDecl(funcBody);
   }

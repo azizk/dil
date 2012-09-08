@@ -100,6 +100,7 @@ string[] messages = [
   "erwartete einen Interfacekörper, nicht ‚{}‘",
   "erwartete einen Structkörper, nicht ‚{}‘",
   "erwartete einen Unionkörper, nicht ‚{}‘",
+  "erwartete Unittest-Körper, nicht ‚{}‘",
   "erwartete einen Templatenamen, nicht ‚{}‘",
   "erwartete einen Bezeichner, nicht ‚{}‘",
   "ungültige Anweisung gefunden: „{}“",

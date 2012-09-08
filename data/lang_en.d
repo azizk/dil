@@ -99,6 +99,7 @@ string[] messages = [
   "expected interface body, not ‘{}’",
   "expected struct body, not ‘{}’",
   "expected union body, not ‘{}’",
+  "expected unittest body, not ‘{}’",
   "expected template name, not ‘{}’",
   "expected an identifier, not ‘{}’",
   "illegal statement found: “{}”",

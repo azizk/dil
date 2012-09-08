@@ -105,6 +105,7 @@ enum MID
   ExpectedInterfaceBody,
   ExpectedStructBody,
   ExpectedUnionBody,
+  ExpectedUnittestBody,
   ExpectedTemplateName,
   ExpectedAnIdentifier,
   IllegalStatement,
