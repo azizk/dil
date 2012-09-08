@@ -201,6 +201,24 @@ class ASTPrinter : Visitor2
     }
   }
 
+  void writeBlock(Node n)
+  {
+    w([Newline, ind, T.LBrace, Newline]);
+    {
+      scope il = new IndentLevel();
+      v(n);
+    }
+    w([Newline, ind, T.RBrace, Newline]);
+  }
+
+  void writeAggregateBody(Node n)
+  {
+    if (n is null)
+      w([T.Semicolon, Newline]);
+    else
+      writeBlock(n);
+  }
+
   void visit(IllegalDecl n)
   {
     if (n.begin && n.end)
