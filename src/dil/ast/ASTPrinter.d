@@ -227,11 +227,8 @@ class ASTPrinter : Visitor2
 
   void visit(CompoundDecl n)
   {
-    w([T.LBrace, Newline]);
-    // TODO: inc indent
     foreach (x; n.decls)
       v(x);
-    w([Newline, T.RBrace]);
   }
 
   void visit(EmptyDecl n)
@@ -247,7 +244,7 @@ class ASTPrinter : Visitor2
     w([ws, n.fqn[0]]);
     foreach (id; n.fqn[1..$])
       w([T.Dot, id]);
-    w([T.Semicolon, Newline]);
+    w([T.Semicolon, Newline, Newline]);
   }
 
   void visit(ImportDecl n)
@@ -347,7 +344,9 @@ class ASTPrinter : Visitor2
   void visit(TemplateDecl n)
   {
     if (n.isMixin)
-      w([T.Mixin, ws]);
+      w([ind, T.Mixin, ws]);
+    else
+      w(ind);
     w([T.Template, ws, n.name]);
     v(n.tparams);
     if (n.constraint)
@@ -356,15 +355,13 @@ class ASTPrinter : Visitor2
       v(n.constraint);
       w([T.RParen]);
     }
-    w(Newline);
-    // TODO: inc indent
-    v(n.decls);
+    writeBlock(n.decls);
     w(Newline);
   }
 
   void visit(ClassDecl n)
   {
-    w([T.Class, ws, n.name]);
+    w([ind, T.Class, ws, n.name]);
     if (n.bases)
     {
       w([ws, T.Colon, ws]);
@@ -375,18 +372,13 @@ class ASTPrinter : Visitor2
         v(b);
       }
     }
-    if (n.decls) {
-      w(Newline);
-      v(n.decls);
-    }
-    else
-      w(T.Semicolon);
+    writeAggregateBody(n.decls);
     w(Newline);
   }
 
   void visit(InterfaceDecl n)
   {
-    w([T.Interface, ws, n.name]);
+    w([ind, T.Interface, ws, n.name]);
     if (n.bases)
     {
       w([ws, T.Colon, ws]);
@@ -397,40 +389,25 @@ class ASTPrinter : Visitor2
         v(b);
       }
     }
-    if (n.decls) {
-      w(Newline);
-      v(n.decls);
-    }
-    else
-      w(T.Semicolon);
+    writeAggregateBody(n.decls);
     w(Newline);
   }
 
   void visit(StructDecl n)
   {
-    w(T.Struct);
+    w(ind, T.Struct);
     if (n.name)
       w([ws, n.name]);
-    if (n.decls) {
-      w(Newline);
-      v(n.decls);
-    }
-    else
-      w(T.Semicolon);
+    writeAggregateBody(n.decls);
     w(Newline);
   }
 
   void visit(UnionDecl n)
   {
-    w(T.Union);
+    w(ind, T.Union);
     if (n.name)
       w([ws, n.name]);
-    if (n.decls) {
-      w(Newline);
-      v(n.decls);
-    }
-    else
-      w(T.Semicolon);
+    writeAggregateBody(n.decls);
     w(Newline);
   }
 
