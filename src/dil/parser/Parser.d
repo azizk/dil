@@ -512,6 +512,9 @@ class Parser
         decls ~= parseDeclarationDefinition();
       d = set(decls, begin);
       break;
+    case T.Semicolon:
+      error(MID.ExpectedNonEmptyDeclaration, token);
+      // goto default;
     default:
       d = parseDeclarationDefinition();
     }
@@ -2044,12 +2047,11 @@ class Parser
     Statement s;
     if (tokenIs(T.LBrace))
       s = parseStatements();
-    else if (!consumed(T.Semicolon))
-      s = parseStatement();
     else
-    { // ";"
-      error(prevToken, MID.ExpectedNonEmptyStatement);
-      s = set(new EmptyStmt(), prevToken);
+    {
+      if (tokenIs(T.Semicolon))
+        error(MID.ExpectedNonEmptyStatement, token);
+      s = parseStatement();
     }
     return s;
   }

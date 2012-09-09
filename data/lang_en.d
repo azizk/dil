@@ -104,6 +104,7 @@ string[] messages = [
   "expected an identifier, not ‘{}’",
   "illegal statement found: “{}”",
   "didn’t expect ‘;’, use ‘{{ }’ instead",
+  "didn’t expect ‘;’, use ‘{{ }’ instead",
   "expected ‘exit’, ‘success’ or ‘failure’, not ‘{}’",
   "‘exit’, ‘success’, ‘failure’ are valid scope identifiers, but not ‘{}’",
   "expected ‘C’, ‘C++’, ‘D’, ‘Windows’, ‘Pascal’ or ‘System’, but not ‘{}’",

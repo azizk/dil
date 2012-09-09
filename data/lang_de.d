@@ -104,6 +104,7 @@ string[] messages = [
   "erwartete einen Templatenamen, nicht ‚{}‘",
   "erwartete einen Bezeichner, nicht ‚{}‘",
   "ungültige Anweisung gefunden: „{}“",
+  "erwartete nicht ‚;‘, verwende ‚{{ }‘ stattdessen"
   "erwartete nicht ‚;‘, verwende ‚{{ }‘ stattdessen",
   "erwartete ‚exit‘, ‚success‘ oder ‚failure‘, nicht ‚{}‘",
   "‚{}‘ ist kein gültiger Scopebezeichner (gültig sind: ‚exit‘, ‚success‘, ‚failure‘)",

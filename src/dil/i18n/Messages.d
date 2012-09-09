@@ -109,6 +109,7 @@ enum MID
   ExpectedTemplateName,
   ExpectedAnIdentifier,
   IllegalStatement,
+  ExpectedNonEmptyDeclaration,
   ExpectedNonEmptyStatement,
   ExpectedScopeIdentifier,
   InvalidScopeIdentifier,
