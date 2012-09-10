@@ -1787,19 +1787,8 @@ class Parser
     } // version(D2)
     }
 
-    auto begin = token;
-    Expression e;
-    Token* mixinIdent;
-
-    if (tokenIs(T.Dot))
-      e = set(new ModuleScopeExpr(), begin, begin);
-    else
-      e = parseIdentifierExpr();
-
-    while (consumed(T.Dot))
-      e = parseIdentifierExpr(e);
-
-    mixinIdent = optionalIdentifier();
+    auto e = parseIdentifiersExpr();
+    auto mixinIdent = optionalIdentifier();
     require2(T.Semicolon);
 
     return new Class(e, mixinIdent);
@@ -3018,15 +3007,11 @@ class Parser
         e = new AsmRegisterExpr(register);
         break;
       default:
-        e = parseIdentifierExpr();
-        while (consumed(T.Dot))
-          e = parseIdentifierExpr(e);
+        e = parseIdentifiersExpr();
       } // end of switch
       break;
     case T.Dot:
-      e = set(new ModuleScopeExpr(), begin, begin);
-      while (consumed(T.Dot))
-        e = parseIdentifierExpr(e);
+      e = parseIdentifiersExpr();
       break;
     default:
       error2(MID.ExpectedButFound, "Expression", token);
@@ -3424,6 +3409,20 @@ class Parser
     return e;
   }
 
+  /// $(BNF IdentifiersExpr :=
+  ////  ModuleScopeExpr? IdentifierExpr ("." IdentifierExpr)*)
+  Expression parseIdentifiersExpr()
+  {
+    Expression e;
+    if (tokenIs(T.Dot))
+      e = set(new ModuleScopeExpr(), token, token);
+    else
+      e = parseIdentifierExpr();
+    while (consumed(T.Dot))
+      e = parseIdentifierExpr(e);
+    return e;
+  }
+
   /// $(BNF IdentifierExpr   := Identifier | TemplateInstance
   ////TemplateInstance := Identifier "!" TemplateArgumentsOneOrMore)
   Expression parseIdentifierExpr(Expression next = null)
@@ -3489,6 +3488,7 @@ class Parser
     case T.Dot:
       e = set(new ModuleScopeExpr(), begin, begin);
       nT();
+      // parseIdentifiersExpr() isn't used; see case T.Dot in parsePostExpr().
       e = parseIdentifierExpr(e);
       return e;
     case T.This:
