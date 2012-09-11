@@ -147,7 +147,7 @@ class ASTPrinter : Visitor2
   alias writeToken write;
 
   /// Writes the tokens between b and e (inclusive.)
-  void write(Token* b, Token* e)
+  void writeSpan(Token* b, Token* e)
   {
     for (auto t = b; b !is e; t = t.next)
       if (!t.isWhitespace())
@@ -222,7 +222,7 @@ class ASTPrinter : Visitor2
   void visit(IllegalDecl n)
   {
     if (n.begin && n.end)
-      w(n.begin, n.end);
+      writeSpan(n.begin, n.end);
   }
 
   void visit(CompoundDecl n)
@@ -543,6 +543,9 @@ class ASTPrinter : Visitor2
 
   void visit(NewDecl n)
   {
+    w([ind, T.New]);
+    v(n.params);
+    v(n.funcBody);
   }
 
   void visit(DeleteDecl n)
@@ -574,6 +577,20 @@ class ASTPrinter : Visitor2
 
   void visit(MixinDecl n)
   {
+    w([ind, T.Mixin]);
+    if (n.isMixinExpr)
+    {
+      w(T.LParen);
+      v(n.argument);
+      w(T.RParen);
+    }
+    else
+    {
+      w(ws);
+      v(n.templateExpr);
+      if (n.mixinIdent)
+        w([ws, n.mixinIdent]);
+    }
   }
 
 
