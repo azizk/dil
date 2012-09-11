@@ -14,6 +14,7 @@ import dil.ast.Visitor,
        dil.ast.Parameters;
 import dil.Compilation;
 import dil.String;
+import dil.Enums;
 import common;
 
 /// Converts expressions like "TokenList.XYZ" to "toToken(TOK.XYZ)".
@@ -109,6 +110,22 @@ class ASTPrinter : Visitor2
       t.start += offset;
       t.end += offset;
     }
+  }
+
+  /// Returns the token kind for p.
+  TOK protToTOK(PROT p)
+  {
+    TOK tk;
+    final switch (p)
+    {
+    case Protection.Private:   tk = TOK.Private;   break;
+    case Protection.Protected: tk = TOK.Protected; break;
+    case Protection.Package:   tk = TOK.Package;   break;
+    case Protection.Public:    tk = TOK.Public;    break;
+    case Protection.Export:    tk = TOK.Export;    break;
+    case Protection.None:
+    }
+    return tk;
   }
 
   /// Writes str to the text buffer.
@@ -669,7 +686,7 @@ class ASTPrinter : Visitor2
   void visit(ForeachRangeStmt n)
   {
   }
- // D2.0
+
   void visit(SwitchStmt n)
   {
   }
@@ -863,7 +880,7 @@ class ASTPrinter : Visitor2
   void visit(PowExpr n)
   {
   }
- // D2
+
   void visit(AssignExpr n)
   {
   }
@@ -919,7 +936,7 @@ class ASTPrinter : Visitor2
   void visit(PowAssignExpr n)
   {
   }
- // D2
+
   void visit(AddressExpr n)
   {
   }
@@ -1087,7 +1104,7 @@ class ASTPrinter : Visitor2
   void visit(TraitsExpr n)
   {
   }
- // D2.0
+
   void visit(VoidInitExpr n)
   {
   }
@@ -1132,68 +1149,134 @@ class ASTPrinter : Visitor2
   // Types:
   void visit(IllegalType n)
   {
+    assert(0);
   }
 
   void visit(IntegralType n)
   {
+    w(n.tok.toToken());
   }
 
   void visit(ModuleScopeType n)
   {
+    w(T.Dot);
   }
 
   void visit(IdentifierType n)
   {
+    if (n.next) {
+      v(n.next);
+      w(T.Dot);
+    }
+    w(n.ident);
   }
 
   void visit(TypeofType n)
   {
+    w([T.Typeof, T.LParen]);
+    if (n.isTypeofReturn)
+      w(T.Return);
+    else
+      v(n.expr);
+    w(T.RParen);
   }
 
   void visit(TemplateInstanceType n)
   {
+    if (n.next) {
+      v(n.next);
+      w(T.Dot);
+    }
+    w([n.ident, T.Exclaim, T.LParen]);
+    v(n.targs);
+    w(T.RParen);
   }
 
   void visit(PointerType n)
   {
+    v(n.next);
+    w(T.Star);
   }
 
   void visit(ArrayType n)
   {
+    v(n.next);
+    w(T.LBracket);
+    if (n.assocType)
+      v(n.assocType);
+    else if (n.index1)
+    {
+      v(n.index1);
+      if (n.index2) {
+        w(T.Dot2);
+        v(n.index2);
+      }
+    }
+    w(T.RBracket);
   }
 
   void visit(FunctionType n)
   {
+    v(n.next);
+    w([ws, T.Function]);
+    v(n.params);
   }
 
   void visit(DelegateType n)
   {
+    v(n.next);
+    w([ws, T.Delegate]);
+    v(n.params);
   }
 
   void visit(CFuncType n)
   {
+    v(n.next);
+    w([ws, T.Function]);
+    v(n.params);
   }
 
   void visit(BaseClassType n)
   {
+    if (auto tok = protToTOK(n.prot))
+      w([tok.toToken(), ws]);
+    v(n.next);
+  }
+
+  /// Writes "(" Type ")" if n is not null.
+  void writeWithParen(TypeNode n)
+  {
+    if (n.next)
+    {
+      w(T.LParen);
+      v(n.next);
+      w(T.RParen);
+    }
   }
 
   void visit(ConstType n)
   {
+    w(T.Const);
+    writeWithParen(n.next);
   }
- // D2.0
+
   void visit(ImmutableType n)
   {
+    w(T.Immutable);
+    writeWithParen(n.next);
   }
- // D2.0
+
   void visit(InoutType n)
   {
+    w(T.Inout);
+    writeWithParen(n.next);
   }
- // D2.0
+
   void visit(SharedType n)
   {
+    w(T.Shared);
+    writeWithParen(n.next);
   }
- // D2.0
 
   // Parameters:
   void visit(Parameter n)
@@ -1223,7 +1306,7 @@ class ASTPrinter : Visitor2
   void visit(TemplateThisParam n)
   {
   }
- // D2.0
+
   void visit(TemplateValueParam n)
   {
   }
