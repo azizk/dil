@@ -250,7 +250,7 @@ class ASTPrinter : Visitor2
 
   void visit(EmptyDecl n)
   {
-    w([T.Semicolon, Newline]);
+    w([ind, T.Semicolon, Newline]);
   }
 
   void visit(ModuleDecl n)
@@ -266,6 +266,7 @@ class ASTPrinter : Visitor2
 
   void visit(ImportDecl n)
   {
+    w(ind);
     if (n.isStatic)
       w([T.Static, ws]);
     w([T.Import, ws]);
@@ -297,26 +298,24 @@ class ASTPrinter : Visitor2
 
   void visit(AliasDecl n)
   {
-    w(T.Alias);
+    w([ind, T.Alias]);
     v(n.decl);
-    w([T.Semicolon, Newline]);
   }
 
   void visit(AliasThisDecl n)
   {
-    w([T.Alias, T.This, n.ident, T.Semicolon, Newline]);
+    w([ind, T.Alias, ws, T.This, ws, n.ident, T.Semicolon, Newline]);
   }
 
   void visit(TypedefDecl n)
   {
-    w(T.Typedef);
+    w([ind, T.Typedef]);
     v(n.decl);
-    w([T.Semicolon, Newline]);
   }
 
   void visit(EnumDecl n)
   {
-    w(T.Enum);
+    w([ind, T.Enum]);
     if (n.name)
       w([ws, n.name]);
     if (n.baseType) {
@@ -360,10 +359,9 @@ class ASTPrinter : Visitor2
 
   void visit(TemplateDecl n)
   {
+    w(ind);
     if (n.isMixin)
-      w([ind, T.Mixin, ws]);
-    else
-      w(ind);
+      w([T.Mixin, ws]);
     w([T.Template, ws, n.name]);
     v(n.tparams);
     if (n.constraint)
@@ -631,10 +629,13 @@ class ASTPrinter : Visitor2
     else
     {
       if (n.inBody) {
+        w(Newline);
         w([ind, T.In]);
         writeBlock(n.inBody);
       }
       if (n.outBody) {
+        if (!n.inBody)
+          w(Newline);
         w([ind, T.Out]);
         if (n.outIdent)
           w([T.LParen, n.outIdent, T.RParen]);
