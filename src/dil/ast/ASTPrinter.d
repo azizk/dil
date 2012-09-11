@@ -1283,6 +1283,43 @@ class ASTPrinter : Visitor2
   // Parameters:
   void visit(Parameter n)
   {
+    if (n.isCVariadic)
+      return w(T.Dot3);
+    if (n.stcs)
+    {
+      for (auto i = STC.max; i; i >>= 1)
+        if (n.stcs & i)
+        {
+          TOK t;
+          switch (i)
+          {
+          case STC.Const:     t = TOK.Const;     break;
+          case STC.Immutable: t = TOK.Immutable; break;
+          case STC.Inout:     t = TOK.Inout;     break;
+          case STC.Shared:    t = TOK.Shared;    break;
+          case STC.Final:     t = TOK.Final;     break;
+          case STC.Scope:     t = TOK.Scope;     break;
+          case STC.Static:    t = TOK.Static;    break;
+          case STC.Auto:      t = TOK.Auto;      break;
+          case STC.In:        t = TOK.In;        break;
+          case STC.Out:       t = TOK.Out;       break;
+          case STC.Ref:       t = TOK.Ref;       break;
+          default:
+            assert(0);
+          }
+          w([t.toToken(), ws]);
+        }
+    }
+    if (n.type)
+      v(n.type);
+    if (n.hasName)
+      w([ws, n.name]);
+    if (n.isDVariadic)
+      w(T.Dot3);
+    if (n.defValue) {
+      w([ws, T.Equal, ws]);
+      v(n.defValue);
+    }
   }
 
   void visit(Parameters n)
