@@ -802,7 +802,7 @@ abstract class DDocEmitter : DefaultVisitor2
     if (auto vd = d.vardecl.Is!(VariablesDecl))
       foreach (name; vd.names)
         DECL({
-          write("\1DIL_KW ", kind, "\2 "); write(vd.typeNode); write(" ");
+          write("\1DIL_KW ", kind, "\2 "); write(vd.type); write(" ");
           auto saved_begin = vd.begin;
           // 'vd' instead of 'd' is passed to SYMBOL, because it
           // has a linkageType member, which has to appear in the docs.
@@ -1034,7 +1034,7 @@ override:
       return;
     foreach (name; d.names)
       DECL({
-        if (d.typeNode) write(d.typeNode);
+        if (d.type) write(d.type);
         else write("\1DIL_KW auto\2");
         write(" ");
         SYMBOL(name.text, K.Variable, d);

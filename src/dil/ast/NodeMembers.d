@@ -25,7 +25,7 @@ char[] genMembersTable()
   t[N.StaticDtorDecl] = t[N.InvariantDecl] =
   t[N.UnittestDecl] = ["funcBody"];
   t[N.FunctionDecl] = ["returnType?", "params", "funcBody"];
-  t[N.VariablesDecl] = ["typeNode?", "inits[?]"];
+  t[N.VariablesDecl] = ["type?", "inits[?]"];
   t[N.DebugDecl] = t[N.VersionDecl] = ["decls?", "elseDecls?"];
   t[N.StaticIfDecl] = ["condition", "ifDecls", "elseDecls?"];
   t[N.StaticAssertDecl] = ["condition", "message?"];

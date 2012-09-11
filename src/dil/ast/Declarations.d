@@ -523,25 +523,25 @@ class FunctionDecl : Declaration
 ///  Type? Identifier ("=" Init)? ("," Identifier ("=" Init)?)* ";")
 class VariablesDecl : Declaration
 {
-  TypeNode typeNode; /// The type of the variables.
+  TypeNode type; /// The type of the variables.
   Token*[] names; /// Variable names.
   Expression[] inits; /// Respective initial values.
   LinkageType lnkg; /// They linkage type.
-  mixin(memberInfo("typeNode", "names", "inits", "lnkg"));
+  mixin(memberInfo("type", "names", "inits", "lnkg"));
 
-  this(TypeNode typeNode, Token*[] names, Expression[] inits,
+  this(TypeNode type, Token*[] names, Expression[] inits,
        LinkageType lnkg = LinkageType.None)
   {
     // No empty arrays allowed. Both arrays must be of same size.
     assert(names.length != 0 && names.length == inits.length);
     // If no type (in case of AutoDecl), first value mustn't be null.
-    assert(typeNode || inits[0] !is null);
+    assert(type || inits[0] !is null);
     mixin(set_kind);
-    addOptChild(typeNode);
+    addOptChild(type);
     foreach (init; inits)
       addOptChild(init);
 
-    this.typeNode = typeNode;
+    this.type = type;
     this.names = names;
     this.inits = inits;
     this.lnkg = lnkg;

@@ -469,8 +469,8 @@ class ASTPrinter : Visitor2
   void visit(VariablesDecl n)
   {
     w(ind);
-    if (n.typeNode)
-      v(n.typeNode);
+    if (n.type)
+      v(n.type);
     else
       w(T.Auto);
     w(ws);

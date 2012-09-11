@@ -498,8 +498,8 @@ override
   {
     begin(d);
     // Type
-    if (d.typeNode !is null)
-      visitT(d.typeNode);
+    if (d.type !is null)
+      visitT(d.type);
     else
       write("-1");
     // Variable names.

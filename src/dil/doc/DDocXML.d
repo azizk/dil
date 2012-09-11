@@ -50,7 +50,7 @@ override:
     foreach (name; d.names)
       DECL({
         write("variable, ", "\1TYPE ");
-        if (d.typeNode) write(d.typeNode);
+        if (d.type) write(d.type);
         else write("auto");
         write("\2 ");
         SYMBOL(name.text, K.Variable, d);
