@@ -11,11 +11,11 @@ for the D programming language supporting versions 1.0 and 2.0.
 
 Status
 ======
- * Lexing: `[///99%////]`
- * Parsing: `[///99%#////]`
- * Doc gen: `[///80%///_]`
- * Semantics: `[//__20%___]`
- * Code gen: `[____0%____]`
+ * Lexing: `[░░░99%░░░░]`
+ * Parsing: `[░░░99%░░░░]`
+ * Doc gen: `[░░░80%░░░ ]`
+ * Semantics: `[░░  20%   ]`
+ * Code gen: `[    0%    ]`
 
 How To Compile DIL
 ==================
