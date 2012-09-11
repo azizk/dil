@@ -492,10 +492,26 @@ class ASTPrinter : Visitor2
 
   void visit(StaticIfDecl n)
   {
+    w([ind, T.Static, T.If, T.LParen]);
+    v(n.condition);
+    w([T.RParen, Newline]);
+    v(n.ifDecls);
+    if (n.elseDecls) {
+      w([T.Else, Newline]);
+      v(n.elseDecls);
+    }
+    w([Newline, Newline]);
   }
 
   void visit(StaticAssertDecl n)
   {
+    w([ind, T.Static, ws, T.Assert, T.LParen]);
+    v(n.condition);
+    if (n.message) {
+      w([T.Comma, ws]);
+      v(n.message);
+    }
+    w([T.RParen, Newline, Newline]);
   }
 
   void visit(NewDecl n)
