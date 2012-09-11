@@ -1195,7 +1195,8 @@ class ASTPrinter : Visitor2
   void visit(PointerType n)
   {
     v(n.next);
-    w(T.Star);
+    if (!n.next.Is!(CFuncType))
+      w(T.Star); // The pointer must be omitted if it's a CFuncType.
   }
 
   void visit(ArrayType n)
@@ -1246,10 +1247,10 @@ class ASTPrinter : Visitor2
   /// Writes "(" Type ")" if n is not null.
   void writeWithParen(TypeNode n)
   {
-    if (n.next)
+    if (n)
     {
       w(T.LParen);
-      v(n.next);
+      v(n);
       w(T.RParen);
     }
   }
