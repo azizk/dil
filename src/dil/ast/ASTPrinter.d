@@ -484,10 +484,37 @@ class ASTPrinter : Visitor2
 
   void visit(DebugDecl n)
   {
+    w([ind, T.Debug]);
+    if (n.isSpecification())
+      w([ws, T.Equal, ws, n.spec, T.Semicolon, Newline]);
+    else
+    {
+      if (n.cond)
+        w([T.LParen, n.cond, T.RParen]);
+      writeBlock(n.decls);
+      if (n.elseDecls) {
+        w(T.Else);
+        writeBlock(n.elseDecls);
+      }
+    }
+    w(Newline);
   }
 
   void visit(VersionDecl n)
   {
+    w([ind, T.Version]);
+    if (n.isSpecification())
+      w([ws, T.Equal, ws, n.spec, T.Semicolon, Newline]);
+    else
+    {
+      w([T.LParen, n.cond, T.RParen]);
+      writeBlock(n.decls);
+      if (n.elseDecls) {
+        w(T.Else);
+        writeBlock(n.elseDecls);
+      }
+    }
+    w(Newline);
   }
 
   void visit(StaticIfDecl n)
