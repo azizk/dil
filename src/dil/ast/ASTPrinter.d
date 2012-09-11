@@ -395,7 +395,7 @@ class ASTPrinter : Visitor2
 
   void visit(StructDecl n)
   {
-    w(ind, T.Struct);
+    w([ind, T.Struct]);
     if (n.name)
       w([ws, n.name]);
     writeAggregateBody(n.decls);
@@ -404,7 +404,7 @@ class ASTPrinter : Visitor2
 
   void visit(UnionDecl n)
   {
-    w(ind, T.Union);
+    w([ind, T.Union]);
     if (n.name)
       w([ws, n.name]);
     writeAggregateBody(n.decls);
@@ -438,10 +438,36 @@ class ASTPrinter : Visitor2
 
   void visit(FunctionDecl n)
   {
+    w(ind);
+    if (n.returnType)
+      v(n.returnType);
+    else
+      w(T.Auto);
+    w(ws);
+    w(n.name);
+    v(n.params);
+    v(n.funcBody);
   }
 
   void visit(VariablesDecl n)
   {
+    w(ind);
+    if (n.typeNode)
+      v(n.typeNode);
+    else
+      w(T.Auto);
+    w(ws);
+    foreach (i, name; n.names)
+    {
+      if (i)
+        w([T.Comma, ws]);
+      w(name);
+      if (auto init = n.inits[i]) {
+        w([ws, T.Equal, ws]);
+        v(init);
+      }
+    }
+    w([T.Semicolon, Newline, Newline]);
   }
 
   void visit(InvariantDecl n)
