@@ -25,7 +25,7 @@ class IllegalType : TypeNode
   mixin methods;
 }
 
-/// char, int, float etc.
+/// $(BNF IntegralType := char | int | float | ...)
 class IntegralType : TypeNode
 {
   TOK tok;
@@ -49,7 +49,7 @@ class ModuleScopeType : TypeNode
   mixin methods;
 }
 
-/// Identifier
+/// $(BNF IdentifierType := Type? Identifier)
 class IdentifierType : TypeNode
 {
   Token* ident;
@@ -91,7 +91,8 @@ class TypeofType : TypeNode
   mixin methods;
 }
 
-/// Identifier "!" "(" TemplateParameters? ")"
+/// $(BNF TemplateInstanceType :=
+////  Identifier "!" (TemplateArgumentList | TemplateArgumentSingle))
 class TemplateInstanceType : TypeNode
 {
   Token* ident;
@@ -198,7 +199,7 @@ class ArrayType : TypeNode
   mixin methods;
 }
 
-/// $(BNF FunctionType := ReturnType function ParameterList?)
+/// $(BNF FunctionType := ReturnType function ParameterList)
 class FunctionType : TypeNode
 {
   alias next returnType;
@@ -214,7 +215,7 @@ class FunctionType : TypeNode
   mixin methods;
 }
 
-/// $(BNF DelegateType := ReturnType delegate ParameterList?)
+/// $(BNF DelegateType := ReturnType delegate ParameterList)
 class DelegateType : TypeNode
 {
   alias next returnType;
@@ -262,47 +263,48 @@ class BaseClassType : TypeNode
 
 // version(D2)
 // {
-/// $(BNF ConstType := const "(" Type ")")
+/// $(BNF ConstType := const ("(" Type ")")?)
 class ConstType : TypeNode
 {
   mixin(memberInfo("next"));
   this(TypeNode next)
-  { // If t is null: cast(const)
+  { // If next is null: cast(const)
     super(next);
     mixin(set_kind);
   }
   mixin methods;
 }
 
-/// $(BNF ImmutableType := immutable "(" Type ")")
+/// $(BNF ImmutableType := immutable ("(" Type ")")?)
 class ImmutableType : TypeNode
 {
   mixin(memberInfo("next"));
   this(TypeNode next)
-  { // If t is null: cast(immutable)
+  { // If next is null: cast(immutable)
     super(next);
     mixin(set_kind);
   }
   mixin methods;
 }
 
+/// $(BNF InoutType := inout ("(" Type ")")?)
 class InoutType : TypeNode
 {
   mixin(memberInfo("next"));
   this(TypeNode next)
-  { // If t is null: cast(inout)
+  { // If next is null: cast(inout)
     super(next);
     mixin(set_kind);
   }
   mixin methods;
 }
 
-/// $(BNF SharedType := shared "(" Type ")")
+/// $(BNF SharedType := shared ("(" Type ")")?)
 class SharedType : TypeNode
 {
   mixin(memberInfo("next"));
   this(TypeNode next)
-  { // If t is null: cast(shared)
+  { // If next is null: cast(shared)
     super(next);
     mixin(set_kind);
   }
