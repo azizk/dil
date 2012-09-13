@@ -12,6 +12,7 @@ import dil.ast.Declarations,
        dil.ast.Expressions,
        dil.ast.Node,
        dil.ast.Visitor,
+       dil.ast.ASTPrinter,
        dil.ast.ASTSerializer;
 import dil.semantic.Module,
        dil.semantic.Symbols,
@@ -140,6 +141,22 @@ void main(cstring[] args)
 
     cmd_.run();
 
+    diag.hasInfo() && printErrors(diag);
+    break;
+  case "print":
+    if (!op.hasArgs)
+      return printHelp(command, diag);
+    cstring path;
+    op.addDefault({ path = op.popArg(); });
+    op.parseArgs();
+    auto m = new Module(path, globalCC);
+    m.parse();
+    if (!m.hasErrors())
+    {
+      auto ap = new ASTPrinter(true, globalCC);
+      auto text = ap.print(m.root);
+      Printfln("{}", text);
+    }
     diag.hasInfo() && printErrors(diag);
     break;
   case "pytree", "py":
