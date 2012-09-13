@@ -1334,24 +1334,47 @@ class ASTPrinter : Visitor2
     w(T.RParen);
   }
 
+  /// Writes specification and/or default values.
+  void writeSpecDef(Node s, Node d)
+  {
+    if (s) {
+      w([ws, T.Colon, ws]);
+      v(s);
+    }
+    if (d) {
+      w([ws, T.Equal, ws]);
+      v(d);
+    }
+  }
+
   void visit(TemplateAliasParam n)
   {
+    w([T.Alias, n.name]);
+    writeSpecDef(n.spec, n.def);
   }
 
   void visit(TemplateTypeParam n)
   {
+    w(n.name);
+    writeSpecDef(n.specType, n.defType);
   }
 
   void visit(TemplateThisParam n)
   {
+    w([T.This, n.name]);
+    writeSpecDef(n.specType, n.defType);
   }
 
   void visit(TemplateValueParam n)
   {
+    v(n.valueType);
+    w([ws, n.name]);
+    writeSpecDef(n.specValue, n.defValue);
   }
 
   void visit(TemplateTupleParam n)
   {
+    w([n.name, T.Dot3]);
   }
 
   void visit(TemplateParameters n)
@@ -1368,5 +1391,11 @@ class ASTPrinter : Visitor2
 
   void visit(TemplateArguments n)
   {
+    foreach (i, x; n.items)
+    {
+      if (i)
+        w([T.Comma, ws]);
+      v(x);
+    }
   }
 }
