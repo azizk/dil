@@ -32,7 +32,7 @@ char[] genMembersTable()
   t[N.TemplateDecl] = ["tparams", "constraint?", "decls"];
   t[N.NewDecl] = t[N.DeleteDecl] = ["params", "funcBody"];
   t[N.ProtectionDecl] = t[N.StorageClassDecl] =
-  t[N.LinkageDecl] = t[N.AlignDecl] = ["decls"];
+  t[N.LinkageDecl] = t[N.AlignDecl] = t[N.ColonBlockDecl] = ["decls"];
   t[N.PragmaDecl] = ["args[]", "decls"];
   t[N.MixinDecl] = ["templateExpr?", "argument?"];
   // Expressions:

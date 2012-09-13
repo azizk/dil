@@ -248,6 +248,12 @@ class ASTPrinter : Visitor2
       v(x);
   }
 
+  void visit(ColonBlockDecl n)
+  {
+    w([T.Colon, Newline]);
+    v(n.decls);
+  }
+
   void visit(EmptyDecl n)
   {
     w([ind, T.Semicolon, Newline]);

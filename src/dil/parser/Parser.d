@@ -76,7 +76,7 @@ class Parser
     } while (token.isWhitespace); // Skip whitespace
   }
 
-  /// Start the parser and return the parsed Declarations.
+  /// Starts the parser and returns the parsed Declarations.
   CompoundDecl start()
   {
     init();
@@ -89,7 +89,7 @@ class Parser
     return decls;
   }
 
-  /// Start the parser and return the parsed Expression.
+  /// Starts the parser and returns the parsed Expression.
   Expression start2()
   {
     init();
@@ -505,12 +505,14 @@ class Parser
     case T.Colon:
       // if (noColon == true)
       //   goto default;
-      nT();
       auto begin = token;
+      nT();
+      auto begin2 = token;
       auto decls = new CompoundDecl;
       while (!tokenIs(T.RBrace) && !tokenIs(T.EOF))
         decls ~= parseDeclarationDefinition();
-      d = set(decls, begin);
+      d = set(decls, begin2);
+      d = set(new ColonBlockDecl(d), begin);
       break;
     case T.Semicolon:
       error(MID.ExpectedNonEmptyDeclaration, token);

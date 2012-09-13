@@ -54,6 +54,20 @@ class CompoundDecl : Declaration
   mixin methods;
 }
 
+/// $(BNF ColonBlockDecl := ":" Declaration)
+class ColonBlockDecl : Declaration
+{
+  Declaration decls;
+  mixin(memberInfo("decls"));
+  this(Declaration decls)
+  {
+    mixin(set_kind);
+    addChild(decls);
+    this.decls = decls;
+  }
+  mixin methods;
+}
+
 /// Single semicolon.
 class EmptyDecl : Declaration
 {

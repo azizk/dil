@@ -19,6 +19,7 @@ enum string[] NodeClassNames = [
   // Declarations:
   "IllegalDecl",
   "CompoundDecl",
+  "ColonBlockDecl",
   "EmptyDecl",
   "ModuleDecl",
   "ImportDecl",
