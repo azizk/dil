@@ -119,6 +119,13 @@ struct Token
     return start[0 .. end - start];
   }
 
+  /// Sets the text of the token.
+  @property void text(cstring s)
+  {
+    start = s.ptr;
+    end = s.ptr + s.length;
+  }
+
   /// Returns the preceding whitespace of the token.
   cstring wsChars()
   {
@@ -485,7 +492,7 @@ bool isAsmStatementStartToken(TOK tok)
 }
 
 /// A list of tokens that point to tokToString[kind] as their text.
-Token[TOK.MAX] staticTokens;
+static Token[TOK.MAX] staticTokens;
 
 /// Returns the token corresponding to a token kind.
 Token* toToken(TOK kind)
