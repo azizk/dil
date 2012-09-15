@@ -211,10 +211,23 @@ class ASTPrinter : Visitor2
     {
       indent ~= indentStep;
     }
-
     ~this()
     {
       indent = indent[0 .. $-indentStep.length];
+    }
+  }
+
+  /// Decreases/increases indentation on construction/destruction.
+  scope class UnindentLevel
+  {
+    this()
+    {
+      assert(indent.length >= indentStep.length);
+      indent = indent[0 .. $-indentStep.length];
+    }
+    ~this()
+    {
+      indent ~= indentStep;
     }
   }
 
@@ -664,7 +677,10 @@ class ASTPrinter : Visitor2
 
   void visit(LabeledStmt n)
   {
-    w([ind, n.label, T.Colon, Newline]);
+    {
+      scope ul = new UnindentLevel;
+      w([ind, n.label, T.Colon, Newline]);
+    }
     v(n.stmnt);
   }
 
@@ -788,6 +804,7 @@ class ASTPrinter : Visitor2
 
   void visit(CaseStmt n)
   {
+    scope ul = new UnindentLevel;
     w([ind, T.Case, ws]);
     foreach (i, value; n.values)
     {
@@ -802,6 +819,7 @@ class ASTPrinter : Visitor2
 
   void visit(CaseRangeStmt n)
   {
+    scope ul = new UnindentLevel;
     w([ind, T.Case, ws]);
     v(n.left);
     w(T.Dot2);
@@ -813,6 +831,7 @@ class ASTPrinter : Visitor2
 
   void visit(DefaultStmt n)
   {
+    scope ul = new UnindentLevel;
     w([ind, T.Default, ws]);
     w([T.Colon, Newline]);
     scope il = new IndentLevel;
