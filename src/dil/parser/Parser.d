@@ -2174,47 +2174,36 @@ class Parser
   {
     skip(T.If);
 
-    Statement variable;
+    Declaration variable;
     Expression condition;
     Statement ifBody, elseBody;
 
     auto leftParen = token;
     require2(T.LParen);
 
-    Token* ident;
+    Type type;
+    Token* name;
     auto begin = token; // For start of AutoDecl or normal Declaration.
-    // auto Identifier = Expression
-    if (consumed(T.Auto))
-    {
-      ident = requireIdentifier(MID.ExpectedVariableName);
+    bool success;
+
+    tryToParse({
+      if (consumed(T.Auto)) // auto Identifier = Expression
+        name = requireIdentifier(MID.ExpectedVariableName);
+      else // Declarator "=" Expression
+        type = parseDeclarator(name);
       require(T.Equal);
+      return type;
+    }, success);
+
+    if (success)
+    {
       auto init = parseExpression();
-      auto v = new VariablesDecl(null, [ident], [init]);
-      set(v, begin.nextNWS);
-      auto d = new StorageClassDecl(StorageClass.Auto, v);
-      set(d, begin);
-      variable = new DeclarationStmt(d);
+      variable = new VariablesDecl(type, [name], [init]);
       set(variable, begin);
     }
-    else
-    { // Declarator "=" Expression
-      bool success;
-      auto type = tryToParse({
-        auto type = parseDeclarator(ident);
-        require(T.Equal);
-        return type;
-      }, success);
-      if (success)
-      {
-        auto init = parseExpression();
-        auto v = new VariablesDecl(type, [ident], [init]);
-        set(v, begin);
-        variable = new DeclarationStmt(v);
-        set(variable, begin);
-      }
-      else // Normal expression.
-        condition = parseExpression();
-    }
+    else // Normal Expression.
+      condition = parseExpression();
+
     requireClosing(T.RParen, leftParen);
     ifBody = parseScopeStmt();
     if (consumed(T.Else))
@@ -2513,8 +2502,7 @@ class Parser
         set(param, paramBegin);
         requireClosing(T.RParen, leftParen);
       }
-      catchBodies ~= set(new CatchStmt(param, parseNoScopeStmt()),
-                         catchBegin);
+      catchBodies ~= set(new CatchStmt(param, parseNoScopeStmt()), catchBegin);
       if (param is null)
         break; // This is a LastCatch
     }
@@ -2557,18 +2545,16 @@ class Parser
     return new ScopeGuardStmt(condition, scopeBody);
   }
 
-  /// $(BNF VolatileStmt := volatile VolatileBody? ";"
+  /// $(BNF VolatileStmt := volatile VolatileBody
   ////VolatileBody := ScopeStmt | NoScopeStmt)
   Statement parseVolatileStmt()
   {
     skip(T.Volatile);
     Statement volatileBody;
-    if (tokenIs(T.Semicolon))
-      nT();
-    else if (tokenIs(T.LBrace))
+    if (tokenIs(T.LBrace))
       volatileBody = parseScopeStmt();
     else
-      volatileBody = parseStatement();
+      volatileBody = parseNoScopeStmt();
     return new VolatileStmt(volatileBody);
   }
 

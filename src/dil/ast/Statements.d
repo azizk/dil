@@ -149,17 +149,19 @@ class DeclarationStmt : Statement
 
 class IfStmt : Statement
 {
-  Statement variable; // AutoDecl or VariableDecl
+  Declaration variable; // VariablesDecl
   Expression condition;
   Statement ifBody;
   Statement elseBody;
   mixin(memberInfo("variable", "condition", "ifBody", "elseBody"));
-  this(Statement variable, Expression condition, Statement ifBody,
+  this(Declaration variable, Expression condition, Statement ifBody,
        Statement elseBody)
   {
     mixin(set_kind);
-    if (variable)
+    if (variable) {
       addChild(variable);
+      assert(variable.kind == NodeKind.VariablesDecl);
+    }
     else
       addChild(condition);
     addChild(ifBody);
