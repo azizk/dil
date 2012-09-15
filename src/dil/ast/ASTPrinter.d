@@ -231,6 +231,21 @@ class ASTPrinter : Visitor2
     }
   }
 
+  /// Sets/restores indentation on construction/destruction.
+  scope class SetIndentLevel
+  {
+    cstring old;
+    this(cstring i)
+    {
+      old = indent;
+      indent = i;
+    }
+    ~this()
+    {
+      indent = old;
+    }
+  }
+
   void writeBlock(Node n)
   {
     w([Newline, ind, T.LBrace, Newline]);
@@ -318,6 +333,7 @@ class ASTPrinter : Visitor2
   void visit(AliasDecl n)
   {
     w([ind, T.Alias]);
+    scope il = new SetIndentLevel(" ");
     v(n.decl);
   }
 
@@ -329,6 +345,7 @@ class ASTPrinter : Visitor2
   void visit(TypedefDecl n)
   {
     w([ind, T.Typedef]);
+    scope il = new SetIndentLevel(" ");
     v(n.decl);
   }
 
