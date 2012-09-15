@@ -135,7 +135,7 @@ class ASTPrinter : Visitor2
   }
 
   /// Writes a list of tokens.
-  void write(Token*[] ts)
+  void write(Token*[] ts...)
   {
     foreach (t; ts)
       writeToken(t);
@@ -161,8 +161,6 @@ class ASTPrinter : Visitor2
     spaces = null; // Clear whitespace.
   }
 
-  alias writeToken write;
-
   /// Writes the tokens between b and e (inclusive.)
   void writeSpan(Token* b, Token* e)
   {
@@ -171,8 +169,9 @@ class ASTPrinter : Visitor2
         writeToken(t);
   }
 
-  /// Shortcut.
+  /// Shortcuts.
   alias write w;
+  /// ditto
   alias visitN v;
 
   /// Returns a new token containing 'n' number of whitespace characters.
@@ -248,18 +247,18 @@ class ASTPrinter : Visitor2
 
   void writeBlock(Node n)
   {
-    w([Newline, ind, T.LBrace, Newline]);
+    w(Newline, ind, T.LBrace, Newline);
     {
       scope il = new IndentLevel();
       v(n);
     }
-    w([Newline, ind, T.RBrace, Newline]);
+    w(Newline, ind, T.RBrace, Newline);
   }
 
   void writeAggregateBody(Node n)
   {
     if (n is null)
-      w([T.Semicolon, Newline]);
+      w(T.Semicolon, Newline);
     else
       writeBlock(n);
   }
@@ -278,38 +277,38 @@ class ASTPrinter : Visitor2
 
   void visit(ColonBlockDecl n)
   {
-    w([T.Colon, Newline]);
+    w(T.Colon, Newline);
     v(n.decls);
   }
 
   void visit(EmptyDecl n)
   {
-    w([ind, T.Semicolon, Newline]);
+    w(ind, T.Semicolon, Newline);
   }
 
   void visit(ModuleDecl n)
   {
     w(T.Module);
     if (n.type)
-      w([ws, T.LParen, n.type, T.RParen]);
-    w([ws, n.fqn[0]]);
+      w(ws, T.LParen, n.type, T.RParen);
+    w(ws, n.fqn[0]);
     foreach (id; n.fqn[1..$])
-      w([T.Dot, id]);
-    w([T.Semicolon, Newline, Newline]);
+      w(T.Dot, id);
+    w(T.Semicolon, Newline, Newline);
   }
 
   void visit(ImportDecl n)
   {
     w(ind);
     if (n.isStatic)
-      w([T.Static, ws]);
-    w([T.Import, ws]);
+      w(T.Static, ws);
+    w(T.Import, ws);
     foreach (i, fqn; n.moduleFQNs)
     {
       if (i)
-        w([T.Comma, ws]);
+        w(T.Comma, ws);
       if (auto aliasId = n.moduleAliases[i])
-        w([aliasId, ws, T.Equal, ws]);
+        w(aliasId, ws, T.Equal, ws);
       foreach (j, id; fqn)
       {
         if (j)
@@ -320,59 +319,59 @@ class ASTPrinter : Visitor2
     foreach (i, bindName; n.bindNames)
     {
       if (i == 0)
-        w([ws, T.Colon, ws]);
+        w(ws, T.Colon, ws);
       else
-        w([T.Comma, ws]);
+        w(T.Comma, ws);
       if (auto bindAlias = n.bindAliases[i])
-        w([bindAlias, ws, T.Equal, ws]);
+        w(bindAlias, ws, T.Equal, ws);
       w(bindName);
     }
-    w([T.Semicolon, Newline]);
+    w(T.Semicolon, Newline);
   }
 
   void visit(AliasDecl n)
   {
-    w([ind, T.Alias]);
+    w(ind, T.Alias);
     scope il = new SetIndentLevel(" ");
     v(n.decl);
   }
 
   void visit(AliasThisDecl n)
   {
-    w([ind, T.Alias, ws, T.This, ws, n.ident, T.Semicolon, Newline]);
+    w(ind, T.Alias, ws, T.This, ws, n.ident, T.Semicolon, Newline);
   }
 
   void visit(TypedefDecl n)
   {
-    w([ind, T.Typedef]);
+    w(ind, T.Typedef);
     scope il = new SetIndentLevel(" ");
     v(n.decl);
   }
 
   void visit(EnumDecl n)
   {
-    w([ind, T.Enum]);
+    w(ind, T.Enum);
     if (n.name)
-      w([ws, n.name]);
+      w(ws, n.name);
     if (n.baseType) {
-      w([ws, T.Colon, ws]);
+      w(ws, T.Colon, ws);
       v(n.baseType);
     }
     if (!n.members)
-      w([T.Semicolon, Newline]);
+      w(T.Semicolon, Newline);
     else
     {
-      w([Newline, ind, T.LBrace, Newline]);
+      w(Newline, ind, T.LBrace, Newline);
       {
         scope il = new IndentLevel();
         foreach (i, m; n.members)
         {
           if (i)
-            w([T.Comma, Newline]);
+            w(T.Comma, Newline);
           v(m);
         }
       }
-      w([Newline, ind, T.RBrace, Newline]);
+      w(Newline, ind, T.RBrace, Newline);
     }
     w(Newline);
   }
@@ -382,12 +381,12 @@ class ASTPrinter : Visitor2
     if (n.type) {
       w(ind);
       v(n.type);
-      w([ws, n.name]);
+      w(ws, n.name);
     }
     else
-      w([ind, n.name]);
+      w(ind, n.name);
     if (n.value) {
-      w([ws, T.Equal, ws]);
+      w(ws, T.Equal, ws);
       v(n.value);
     }
   }
@@ -397,14 +396,14 @@ class ASTPrinter : Visitor2
   {
     w(ind);
     if (n.isMixin)
-      w([T.Mixin, ws]);
-    w([T.Template, ws, n.name]);
+      w(T.Mixin, ws);
+    w(T.Template, ws, n.name);
     v(n.tparams);
     if (n.constraint)
     {
-      w([ws, T.If, T.LParen]);
+      w(ws, T.If, T.LParen);
       v(n.constraint);
-      w([T.RParen]);
+      w(T.RParen);
     }
     writeBlock(n.decls);
     w(Newline);
@@ -412,14 +411,14 @@ class ASTPrinter : Visitor2
 
   void visit(ClassDecl n)
   {
-    w([ind, T.Class, ws, n.name]);
+    w(ind, T.Class, ws, n.name);
     if (n.bases)
     {
-      w([ws, T.Colon, ws]);
+      w(ws, T.Colon, ws);
       foreach (i, b; n.bases)
       {
         if (i)
-          w([T.Comma, ws]);
+          w(T.Comma, ws);
         v(b);
       }
     }
@@ -429,14 +428,14 @@ class ASTPrinter : Visitor2
 
   void visit(InterfaceDecl n)
   {
-    w([ind, T.Interface, ws, n.name]);
+    w(ind, T.Interface, ws, n.name);
     if (n.bases)
     {
-      w([ws, T.Colon, ws]);
+      w(ws, T.Colon, ws);
       foreach (i, b; n.bases)
       {
         if (i)
-          w([T.Comma, ws]);
+          w(T.Comma, ws);
         v(b);
       }
     }
@@ -446,44 +445,44 @@ class ASTPrinter : Visitor2
 
   void visit(StructDecl n)
   {
-    w([ind, T.Struct]);
+    w(ind, T.Struct);
     if (n.name)
-      w([ws, n.name]);
+      w(ws, n.name);
     writeAggregateBody(n.decls);
     w(Newline);
   }
 
   void visit(UnionDecl n)
   {
-    w([ind, T.Union]);
+    w(ind, T.Union);
     if (n.name)
-      w([ws, n.name]);
+      w(ws, n.name);
     writeAggregateBody(n.decls);
     w(Newline);
   }
 
   void visit(ConstructorDecl n)
   {
-    w([ind, T.This]);
+    w(ind, T.This);
     v(n.params);
     v(n.funcBody);
   }
 
   void visit(StaticCtorDecl n)
   {
-    w([ind, T.Static, ws, T.This, T.LParen, T.RParen]);
+    w(ind, T.Static, ws, T.This, T.LParen, T.RParen);
     v(n.funcBody);
   }
 
   void visit(DestructorDecl n)
   {
-    w([ind, T.Tilde, T.This, T.LParen, T.RParen]);
+    w(ind, T.Tilde, T.This, T.LParen, T.RParen);
     v(n.funcBody);
   }
 
   void visit(StaticDtorDecl n)
   {
-    w([ind, T.Static, ws, T.Tilde, T.This, T.LParen, T.RParen]);
+    w(ind, T.Static, ws, T.Tilde, T.This, T.LParen, T.RParen);
     v(n.funcBody);
   }
 
@@ -511,37 +510,37 @@ class ASTPrinter : Visitor2
     foreach (i, name; n.names)
     {
       if (i)
-        w([T.Comma, ws]);
+        w(T.Comma, ws);
       w(name);
       if (auto init = n.inits[i]) {
-        w([ws, T.Equal, ws]);
+        w(ws, T.Equal, ws);
         v(init);
       }
     }
-    w([T.Semicolon, Newline, Newline]);
+    w(T.Semicolon, Newline, Newline);
   }
 
   void visit(InvariantDecl n)
   {
-    w([ind, T.Invariant, T.LParen, T.RParen]);
+    w(ind, T.Invariant, T.LParen, T.RParen);
     v(n.funcBody);
   }
 
   void visit(UnittestDecl n)
   {
-    w([ind, T.Unittest]);
+    w(ind, T.Unittest);
     v(n.funcBody);
   }
 
   void visit(DebugDecl n)
   {
-    w([ind, T.Debug]);
+    w(ind, T.Debug);
     if (n.isSpecification())
-      w([ws, T.Equal, ws, n.spec, T.Semicolon, Newline]);
+      w(ws, T.Equal, ws, n.spec, T.Semicolon, Newline);
     else
     {
       if (n.cond)
-        w([T.LParen, n.cond, T.RParen]);
+        w(T.LParen, n.cond, T.RParen);
       writeBlock(n.decls);
       if (n.elseDecls) {
         w(T.Else);
@@ -553,12 +552,12 @@ class ASTPrinter : Visitor2
 
   void visit(VersionDecl n)
   {
-    w([ind, T.Version]);
+    w(ind, T.Version);
     if (n.isSpecification())
-      w([ws, T.Equal, ws, n.spec, T.Semicolon, Newline]);
+      w(ws, T.Equal, ws, n.spec, T.Semicolon, Newline);
     else
     {
-      w([T.LParen, n.cond, T.RParen]);
+      w(T.LParen, n.cond, T.RParen);
       writeBlock(n.decls);
       if (n.elseDecls) {
         w(T.Else);
@@ -570,38 +569,38 @@ class ASTPrinter : Visitor2
 
   void visit(StaticIfDecl n)
   {
-    w([ind, T.Static, T.If, T.LParen]);
+    w(ind, T.Static, T.If, T.LParen);
     v(n.condition);
-    w([T.RParen, Newline]);
+    w(T.RParen, Newline);
     v(n.ifDecls);
     if (n.elseDecls) {
-      w([T.Else, Newline]);
+      w(T.Else, Newline);
       v(n.elseDecls);
     }
-    w([Newline, Newline]);
+    w(Newline, Newline);
   }
 
   void visit(StaticAssertDecl n)
   {
-    w([ind, T.Static, ws, T.Assert, T.LParen]);
+    w(ind, T.Static, ws, T.Assert, T.LParen);
     v(n.condition);
     if (n.message) {
-      w([T.Comma, ws]);
+      w(T.Comma, ws);
       v(n.message);
     }
-    w([T.RParen, Newline, Newline]);
+    w(T.RParen, Newline, Newline);
   }
 
   void visit(NewDecl n)
   {
-    w([ind, T.New]);
+    w(ind, T.New);
     v(n.params);
     v(n.funcBody);
   }
 
   void visit(DeleteDecl n)
   {
-    w([ind, T.Delete]);
+    w(ind, T.Delete);
     v(n.params);
     v(n.funcBody);
   }
@@ -628,7 +627,7 @@ class ASTPrinter : Visitor2
 
   void visit(MixinDecl n)
   {
-    w([ind, T.Mixin]);
+    w(ind, T.Mixin);
     if (n.isMixinExpr)
     {
       w(T.LParen);
@@ -640,7 +639,7 @@ class ASTPrinter : Visitor2
       w(ws);
       v(n.templateExpr);
       if (n.mixinIdent)
-        w([ws, n.mixinIdent]);
+        w(ws, n.mixinIdent);
     }
   }
 
@@ -658,30 +657,30 @@ class ASTPrinter : Visitor2
 
   void visit(EmptyStmt n)
   {
-    w([ind, T.Semicolon, Newline]);
+    w(ind, T.Semicolon, Newline);
   }
 
   void visit(FuncBodyStmt n)
   {
     if (n.isEmpty())
-      w([T.Semicolon, Newline]);
+      w(T.Semicolon, Newline);
     else
     {
       if (n.inBody) {
         w(Newline);
-        w([ind, T.In]);
+        w(ind, T.In);
         writeBlock(n.inBody);
       }
       if (n.outBody) {
         if (!n.inBody)
           w(Newline);
-        w([ind, T.Out]);
+        w(ind, T.Out);
         if (n.outIdent)
-          w([T.LParen, n.outIdent, T.RParen]);
+          w(T.LParen, n.outIdent, T.RParen);
         writeBlock(n.outBody);
       }
       if (n.inBody || n.outBody)
-        w([ind, T.Body]);
+        w(ind, T.Body);
       writeBlock(n.funcBody);
     }
     w(Newline);
@@ -696,7 +695,7 @@ class ASTPrinter : Visitor2
   {
     {
       scope ul = new UnindentLevel;
-      w([ind, n.label, T.Colon, Newline]);
+      w(ind, n.label, T.Colon, Newline);
     }
     v(n.stmnt);
   }
@@ -705,7 +704,7 @@ class ASTPrinter : Visitor2
   {
     w(ind);
     v(n.expr);
-    w([T.Semicolon, Newline]);
+    w(T.Semicolon, Newline);
   }
 
   void visit(DeclarationStmt n)
@@ -715,14 +714,14 @@ class ASTPrinter : Visitor2
 
   void visit(IfStmt n)
   {
-    w([ind, T.If, T.LParen]);
+    w(ind, T.If, T.LParen);
     if (auto var = n.variable.to!VariablesDecl)
     {
       if (var.type)
         v(var.type);
       else
         w(T.Auto);
-      w([ws, var.names[0], ws, T.Equal, ws]);
+      w(ws, var.names[0], ws, T.Equal, ws);
       v(var.inits[0]);
     }
     else
@@ -731,14 +730,14 @@ class ASTPrinter : Visitor2
     writeBlock(n.ifBody);
     if (n.elseBody)
     {
-      w([ind, T.Else]);
+      w(ind, T.Else);
       writeBlock(n.elseBody);
     }
   }
 
   void visit(WhileStmt n)
   {
-    w([ind, T.While, T.LParen]);
+    w(ind, T.While, T.LParen);
     v(n.condition);
     w(T.RParen);
     writeBlock(n.whileBody);
@@ -746,19 +745,19 @@ class ASTPrinter : Visitor2
 
   void visit(DoWhileStmt n)
   {
-    w([ind, T.Do]);
+    w(ind, T.Do);
     writeBlock(n.doBody);
-    w([ind, T.While, T.LParen]);
+    w(ind, T.While, T.LParen);
     v(n.condition);
   version(D1)
-    w([T.RParen, Newline]);
+    w(T.RParen, Newline);
   else
-    w([T.RParen, T.Semicolon, Newline]);
+    w(T.RParen, T.Semicolon, Newline);
   }
 
   void visit(ForStmt n)
   {
-    w([ind, T.For, T.LParen]);
+    w(ind, T.For, T.LParen);
     if (n.init)
       v(n.init);
     else
@@ -767,7 +766,7 @@ class ASTPrinter : Visitor2
       w(ws);
       v(n.condition);
     }
-    w([T.Semicolon]);
+    w(T.Semicolon);
     if (n.increment) {
       w(ws);
       v(n.increment);
@@ -778,14 +777,14 @@ class ASTPrinter : Visitor2
 
   void visit(ForeachStmt n)
   {
-    w([ind, n.tok.toToken(), T.LParen]);
+    w(ind, n.tok.toToken(), T.LParen);
     foreach (i, param; n.params.items())
     {
       if (i)
-        w([T.Comma, ws]);
+        w(T.Comma, ws);
       v(param);
     }
-    w([T.Semicolon, ws]);
+    w(T.Semicolon, ws);
     v(n.aggregate);
     w(T.RParen);
     writeBlock(n.forBody);
@@ -793,14 +792,14 @@ class ASTPrinter : Visitor2
 
   void visit(ForeachRangeStmt n)
   {
-    w([ind, n.tok.toToken(), T.LParen]);
+    w(ind, n.tok.toToken(), T.LParen);
     foreach (i, param; n.params.items())
     {
       if (i)
-        w([T.Comma, ws]);
+        w(T.Comma, ws);
       v(param);
     }
-    w([T.Semicolon, ws]);
+    w(T.Semicolon, ws);
     v(n.lower);
     w(T.Dot2);
     v(n.upper);
@@ -812,8 +811,8 @@ class ASTPrinter : Visitor2
   {
     w(ind);
     if (n.isFinal)
-      w([T.Final, ws]);
-    w([T.Switch, T.LParen]);
+      w(T.Final, ws);
+    w(T.Switch, T.LParen);
     v(n.condition);
     w(T.RParen,);
     writeBlock(n.switchBody);
@@ -822,14 +821,14 @@ class ASTPrinter : Visitor2
   void visit(CaseStmt n)
   {
     scope ul = new UnindentLevel;
-    w([ind, T.Case, ws]);
+    w(ind, T.Case, ws);
     foreach (i, value; n.values)
     {
       if (i)
-        w([T.Comma, ws]);
+        w(T.Comma, ws);
       v(value);
     }
-    w([T.Colon, Newline]);
+    w(T.Colon, Newline);
     scope il = new IndentLevel;
     v(n.caseBody);
   }
@@ -837,11 +836,11 @@ class ASTPrinter : Visitor2
   void visit(CaseRangeStmt n)
   {
     scope ul = new UnindentLevel;
-    w([ind, T.Case, ws]);
+    w(ind, T.Case, ws);
     v(n.left);
     w(T.Dot2);
     v(n.right);
-    w([T.Colon, Newline]);
+    w(T.Colon, Newline);
     scope il = new IndentLevel;
     v(n.caseBody);
   }
@@ -849,53 +848,53 @@ class ASTPrinter : Visitor2
   void visit(DefaultStmt n)
   {
     scope ul = new UnindentLevel;
-    w([ind, T.Default, ws]);
-    w([T.Colon, Newline]);
+    w(ind, T.Default, ws);
+    w(T.Colon, Newline);
     scope il = new IndentLevel;
     v(n.defaultBody);
   }
 
   void visit(ContinueStmt n)
   {
-    w([ind, T.Continue]);
+    w(ind, T.Continue);
     if (n.ident)
-      w([ws, n.ident]);
-    w([T.Semicolon, Newline]);
+      w(ws, n.ident);
+    w(T.Semicolon, Newline);
   }
 
   void visit(BreakStmt n)
   {
-    w([ind, T.Break]);
+    w(ind, T.Break);
     if (n.ident)
-      w([ws, n.ident]);
-    w([T.Semicolon, Newline]);
+      w(ws, n.ident);
+    w(T.Semicolon, Newline);
   }
 
   void visit(ReturnStmt n)
   {
-    w([ind, T.Return]);
+    w(ind, T.Return);
     if (n.expr) {
       w(ws);
       v(n.expr);
     }
-    w([T.Semicolon, Newline]);
+    w(T.Semicolon, Newline);
   }
 
   void visit(GotoStmt n)
   {
-    w([ind, T.Goto, ws]);
+    w(ind, T.Goto, ws);
     if (n.isGotoLabel)
       w(n.ident);
     else if (n.isGotoCase)
       v(n.expr);
     else
       w(T.Default);
-    w([T.Semicolon, Newline]);
+    w(T.Semicolon, Newline);
   }
 
   void visit(WithStmt n)
   {
-    w([ind, T.With, T.LParen]);
+    w(ind, T.With, T.LParen);
     v(n.expr);
     w(T.RParen);
     writeBlock(n.withBody);
@@ -903,7 +902,7 @@ class ASTPrinter : Visitor2
 
   void visit(SynchronizedStmt n)
   {
-    w([ind, T.Synchronized]);
+    w(ind, T.Synchronized);
     if (n.expr)
     {
       w(T.LParen);
@@ -915,7 +914,7 @@ class ASTPrinter : Visitor2
 
   void visit(TryStmt n)
   {
-    w([ind, T.Try]);
+    w(ind, T.Try);
     writeBlock(n.tryBody);
     foreach (b; n.catchBodies)
       v(b);
@@ -925,7 +924,7 @@ class ASTPrinter : Visitor2
 
   void visit(CatchStmt n)
   {
-    w([ind, T.Catch]);
+    w(ind, T.Catch);
     if (n.param)
     {
       w(T.LParen);
@@ -937,32 +936,32 @@ class ASTPrinter : Visitor2
 
   void visit(FinallyStmt n)
   {
-    w([ind, T.Finally]);
+    w(ind, T.Finally);
     writeBlock(n.finallyBody);
   }
 
   void visit(ScopeGuardStmt n)
   {
-    w([ind, T.Scope, T.LParen, n.condition, T.RParen]);
+    w(ind, T.Scope, T.LParen, n.condition, T.RParen);
     writeBlock(n.scopeBody);
   }
 
   void visit(ThrowStmt n)
   {
-    w([ind, T.Throw, ws]);
+    w(ind, T.Throw, ws);
     v(n.expr);
-    w([T.Semicolon, Newline]);
+    w(T.Semicolon, Newline);
   }
 
   void visit(VolatileStmt n)
   {
-    w([ind, T.Volatile]);
+    w(ind, T.Volatile);
     writeBlock(n.volatileBody);
   }
 
   void visit(AsmBlockStmt n)
   {
-    w([ind, T.LBrace]);
+    w(ind, T.LBrace);
     scope il = new IndentLevel;
     v(n.statements);
     w(T.RBrace);
@@ -970,19 +969,19 @@ class ASTPrinter : Visitor2
 
   void visit(AsmStmt n)
   {
-    w([ind, n.ident]);
+    w(ind, n.ident);
     foreach (i, o; n.operands)
     {
       if (i)
-        w([T.Comma, ws]);
+        w(T.Comma, ws);
       v(o);
     }
-    w([T.Semicolon, Newline]);
+    w(T.Semicolon, Newline);
   }
 
   void visit(AsmAlignStmt n)
   {
-    w([ind, T.Align, n.numtok, T.Semicolon, Newline]);
+    w(ind, T.Align, n.numtok, T.Semicolon, Newline);
   }
 
   void visit(IllegalAsmStmt n)
@@ -992,9 +991,9 @@ class ASTPrinter : Visitor2
 
   void visit(PragmaStmt n)
   {
-    w([ind, T.Pragma, T.LParen, n.ident]);
+    w(ind, T.Pragma, T.LParen, n.ident);
     foreach (arg; n.args) {
-      w([T.Comma, ws]);
+      w(T.Comma, ws);
       v(arg);
     }
     w(T.RParen);
@@ -1003,56 +1002,56 @@ class ASTPrinter : Visitor2
 
   void visit(MixinStmt n)
   {
-    w([ind, T.Mixin, ws]);
+    w(ind, T.Mixin, ws);
     v(n.templateExpr);
     if (n.mixinIdent)
-      w([ws, n.mixinIdent]);
-    w([T.Semicolon, Newline]);
+      w(ws, n.mixinIdent);
+    w(T.Semicolon, Newline);
   }
 
   void visit(StaticIfStmt n)
   {
-    w([ind, T.Static, ws, T.If, T.LParen]);
+    w(ind, T.Static, ws, T.If, T.LParen);
     v(n.condition);
     w(T.RParen);
     writeBlock(n.ifBody);
     if (n.elseBody) {
-      w([ind, T.Else]);
+      w(ind, T.Else);
       writeBlock(n.elseBody);
     }
   }
 
   void visit(StaticAssertStmt n)
   {
-    w([ind, T.Static, ws, T.Assert, T.LParen]);
+    w(ind, T.Static, ws, T.Assert, T.LParen);
     v(n.condition);
     if (n.message) {
-      w([T.Comma, ws]);
+      w(T.Comma, ws);
       v(n.message);
     }
-    w([T.RParen, Newline]);
+    w(T.RParen, Newline);
   }
 
   void visit(DebugStmt n)
   {
-    w([ind, T.Debug]);
+    w(ind, T.Debug);
     if (n.cond)
-      w([T.LParen, n.cond, T.RParen]);
+      w(T.LParen, n.cond, T.RParen);
     writeBlock(n.mainBody);
     if (n.elseBody)
     {
-      w([ind, T.Else]);
+      w(ind, T.Else);
       writeBlock(n.elseBody);
     }
   }
 
   void visit(VersionStmt n)
   {
-    w([ind, T.Version, T.LParen, n.cond, T.RParen]);
+    w(ind, T.Version, T.LParen, n.cond, T.RParen);
     writeBlock(n.mainBody);
     if (n.elseBody)
     {
-      w([ind, T.Else]);
+      w(ind, T.Else);
       writeBlock(n.elseBody);
     }
   }
@@ -1439,7 +1438,7 @@ class ASTPrinter : Visitor2
 
   void visit(TypeofType n)
   {
-    w([T.Typeof, T.LParen]);
+    w(T.Typeof, T.LParen);
     if (n.isTypeofReturn)
       w(T.Return);
     else
@@ -1453,7 +1452,7 @@ class ASTPrinter : Visitor2
       v(n.next);
       w(T.Dot);
     }
-    w([n.ident, T.Exclaim, T.LParen]);
+    w(n.ident, T.Exclaim, T.LParen);
     v(n.targs);
     w(T.RParen);
   }
@@ -1485,28 +1484,28 @@ class ASTPrinter : Visitor2
   void visit(FunctionType n)
   {
     v(n.next);
-    w([ws, T.Function]);
+    w(ws, T.Function);
     v(n.params);
   }
 
   void visit(DelegateType n)
   {
     v(n.next);
-    w([ws, T.Delegate]);
+    w(ws, T.Delegate);
     v(n.params);
   }
 
   void visit(CFuncType n)
   {
     v(n.next);
-    w([ws, T.Function]);
+    w(ws, T.Function);
     v(n.params);
   }
 
   void visit(BaseClassType n)
   {
     if (auto tok = protToTOK(n.prot))
-      w([tok.toToken(), ws]);
+      w(tok.toToken(), ws);
     v(n.next);
   }
 
@@ -1572,17 +1571,17 @@ class ASTPrinter : Visitor2
           default:
             assert(0);
           }
-          w([t.toToken(), ws]);
+          w(t.toToken(), ws);
         }
     }
     if (n.type)
       v(n.type);
     if (n.hasName)
-      w([ws, n.name]);
+      w(ws, n.name);
     if (n.isDVariadic)
       w(T.Dot3);
     if (n.defValue) {
-      w([ws, T.Equal, ws]);
+      w(ws, T.Equal, ws);
       v(n.defValue);
     }
   }
@@ -1593,7 +1592,7 @@ class ASTPrinter : Visitor2
     foreach (i, param; n.items())
     {
       if (i)
-        w([T.Comma, ws]);
+        w(T.Comma, ws);
       v(param);
     }
     w(T.RParen);
@@ -1603,18 +1602,18 @@ class ASTPrinter : Visitor2
   void writeSpecDef(Node s, Node d)
   {
     if (s) {
-      w([ws, T.Colon, ws]);
+      w(ws, T.Colon, ws);
       v(s);
     }
     if (d) {
-      w([ws, T.Equal, ws]);
+      w(ws, T.Equal, ws);
       v(d);
     }
   }
 
   void visit(TemplateAliasParam n)
   {
-    w([T.Alias, n.name]);
+    w(T.Alias, n.name);
     writeSpecDef(n.spec, n.def);
   }
 
@@ -1626,20 +1625,20 @@ class ASTPrinter : Visitor2
 
   void visit(TemplateThisParam n)
   {
-    w([T.This, n.name]);
+    w(T.This, n.name);
     writeSpecDef(n.specType, n.defType);
   }
 
   void visit(TemplateValueParam n)
   {
     v(n.valueType);
-    w([ws, n.name]);
+    w(ws, n.name);
     writeSpecDef(n.specValue, n.defValue);
   }
 
   void visit(TemplateTupleParam n)
   {
-    w([n.name, T.Dot3]);
+    w(n.name, T.Dot3);
   }
 
   void visit(TemplateParameters n)
@@ -1648,7 +1647,7 @@ class ASTPrinter : Visitor2
     foreach (i, param; n.items())
     {
       if (i)
-        w([T.Comma, ws]);
+        w(T.Comma, ws);
       v(param);
     }
     w(T.RParen);
@@ -1659,7 +1658,7 @@ class ASTPrinter : Visitor2
     foreach (i, x; n.items)
     {
       if (i)
-        w([T.Comma, ws]);
+        w(T.Comma, ws);
       v(x);
     }
   }
