@@ -407,6 +407,22 @@ class GotoStmt : Statement
     this.ident = ident;
     this.expr = expr;
   }
+
+  bool isGotoLabel() @property
+  {
+    return ident !is null;
+  }
+
+  bool isGotoCase() @property
+  {
+    return expr !is null;
+  }
+
+  bool isGotoDefault() @property
+  {
+    return !(isGotoLabel || isGotoCase);
+  }
+
   mixin methods;
 }
 

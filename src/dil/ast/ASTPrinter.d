@@ -622,10 +622,13 @@ class ASTPrinter : Visitor2
 
   void visit(CompoundStmt n)
   {
+    foreach (x; n.stmnts)
+      v(x);
   }
 
   void visit(EmptyStmt n)
   {
+    w([ind, T.Semicolon, Newline]);
   }
 
   void visit(FuncBodyStmt n)
@@ -656,146 +659,366 @@ class ASTPrinter : Visitor2
 
   void visit(ScopeStmt n)
   {
+    v(n.stmnt);
   }
 
   void visit(LabeledStmt n)
   {
+    w([ind, n.label, T.Colon, Newline]);
+    v(n.stmnt);
   }
 
   void visit(ExpressionStmt n)
   {
+    w(ind);
+    v(n.expr);
+    w([T.Semicolon, Newline]);
   }
 
   void visit(DeclarationStmt n)
   {
+    v(n.decl);
   }
 
   void visit(IfStmt n)
   {
+    w([ind, T.If, T.LParen]);
+    if (auto var = n.variable.to!VariablesDecl)
+    {
+      if (var.type)
+        v(var.type);
+      else
+        w(T.Auto);
+      w([ws, var.names[0], ws, T.Equal, ws]);
+      v(var.inits[0]);
+    }
+    else
+      v(n.condition);
+    w(T.RParen);
+    writeBlock(n.ifBody);
+    if (n.elseBody)
+    {
+      w([ind, T.Else]);
+      writeBlock(n.elseBody);
+    }
   }
 
   void visit(WhileStmt n)
   {
+    w([ind, T.While, T.LParen]);
+    v(n.condition);
+    w(T.RParen);
+    writeBlock(n.whileBody);
   }
 
   void visit(DoWhileStmt n)
   {
+    w([ind, T.Do]);
+    writeBlock(n.doBody);
+    w([ind, T.While, T.LParen]);
+    v(n.condition);
+  version(D1)
+    w([T.RParen, Newline]);
+  else
+    w([T.RParen, T.Semicolon, Newline]);
   }
 
   void visit(ForStmt n)
   {
+    w([ind, T.For, T.LParen]);
+    if (n.init)
+      v(n.init);
+    else
+      w(T.Semicolon);
+    if (n.condition) {
+      w(ws);
+      v(n.condition);
+    }
+    w([T.Semicolon]);
+    if (n.increment) {
+      w(ws);
+      v(n.increment);
+    }
+    w(T.RParen);
+    writeBlock(n.forBody);
   }
 
   void visit(ForeachStmt n)
   {
+    w([ind, n.tok.toToken(), T.LParen]);
+    foreach (i, param; n.params.items())
+    {
+      if (i)
+        w([T.Comma, ws]);
+      v(param);
+    }
+    w([T.Semicolon, ws]);
+    v(n.aggregate);
+    w(T.RParen);
+    writeBlock(n.forBody);
   }
 
   void visit(ForeachRangeStmt n)
   {
+    w([ind, n.tok.toToken(), T.LParen]);
+    foreach (i, param; n.params.items())
+    {
+      if (i)
+        w([T.Comma, ws]);
+      v(param);
+    }
+    w([T.Semicolon, ws]);
+    v(n.lower);
+    w(T.Dot2);
+    v(n.upper);
+    w(T.RParen);
+    writeBlock(n.forBody);
   }
 
   void visit(SwitchStmt n)
   {
+    w(ind);
+    if (n.isFinal)
+      w([T.Final, ws]);
+    w([T.Switch, T.LParen]);
+    v(n.condition);
+    w(T.RParen,);
+    writeBlock(n.switchBody);
   }
 
   void visit(CaseStmt n)
   {
+    w([ind, T.Case, ws]);
+    foreach (i, value; n.values)
+    {
+      if (i)
+        w([T.Comma, ws]);
+      v(value);
+    }
+    w([T.Colon, Newline]);
+    scope il = new IndentLevel;
+    v(n.caseBody);
   }
 
   void visit(CaseRangeStmt n)
   {
+    w([ind, T.Case, ws]);
+    v(n.left);
+    w(T.Dot2);
+    v(n.right);
+    w([T.Colon, Newline]);
+    scope il = new IndentLevel;
+    v(n.caseBody);
   }
 
   void visit(DefaultStmt n)
   {
+    w([ind, T.Default, ws]);
+    w([T.Colon, Newline]);
+    scope il = new IndentLevel;
+    v(n.defaultBody);
   }
 
   void visit(ContinueStmt n)
   {
+    w([ind, T.Continue]);
+    if (n.ident)
+      w([ws, n.ident]);
+    w([T.Semicolon, Newline]);
   }
 
   void visit(BreakStmt n)
   {
+    w([ind, T.Break]);
+    if (n.ident)
+      w([ws, n.ident]);
+    w([T.Semicolon, Newline]);
   }
 
   void visit(ReturnStmt n)
   {
+    w([ind, T.Return]);
+    if (n.expr) {
+      w(ws);
+      v(n.expr);
+    }
+    w([T.Semicolon, Newline]);
   }
 
   void visit(GotoStmt n)
   {
+    w([ind, T.Goto, ws]);
+    if (n.isGotoLabel)
+      w(n.ident);
+    else if (n.isGotoCase)
+      v(n.expr);
+    else
+      w(T.Default);
+    w([T.Semicolon, Newline]);
   }
 
   void visit(WithStmt n)
   {
+    w([ind, T.With, T.LParen]);
+    v(n.expr);
+    w(T.RParen);
+    writeBlock(n.withBody);
   }
 
   void visit(SynchronizedStmt n)
   {
+    w([ind, T.Synchronized]);
+    if (n.expr)
+    {
+      w(T.LParen);
+      v(n.expr);
+      w(T.RParen);
+    }
+    writeBlock(n.syncBody);
   }
 
   void visit(TryStmt n)
   {
+    w([ind, T.Try]);
+    writeBlock(n.tryBody);
+    foreach (b; n.catchBodies)
+      v(b);
+    if (n.finallyBody)
+      v(n.finallyBody);
   }
 
   void visit(CatchStmt n)
   {
+    w([ind, T.Catch]);
+    if (n.param)
+    {
+      w(T.LParen);
+      v(n.param);
+      w(T.RParen);
+    }
+    writeBlock(n.catchBody);
   }
 
   void visit(FinallyStmt n)
   {
+    w([ind, T.Finally]);
+    writeBlock(n.finallyBody);
   }
 
   void visit(ScopeGuardStmt n)
   {
+    w([ind, T.Scope, T.LParen, n.condition, T.RParen]);
+    writeBlock(n.scopeBody);
   }
 
   void visit(ThrowStmt n)
   {
+    w([ind, T.Throw, ws]);
+    v(n.expr);
+    w([T.Semicolon, Newline]);
   }
 
   void visit(VolatileStmt n)
   {
+    w([ind, T.Volatile]);
+    writeBlock(n.volatileBody);
   }
 
   void visit(AsmBlockStmt n)
   {
+    w([ind, T.LBrace]);
+    scope il = new IndentLevel;
+    v(n.statements);
+    w(T.RBrace);
   }
 
   void visit(AsmStmt n)
   {
+    w([ind, n.ident]);
+    foreach (i, o; n.operands)
+    {
+      if (i)
+        w([T.Comma, ws]);
+      v(o);
+    }
+    w([T.Semicolon, Newline]);
   }
 
   void visit(AsmAlignStmt n)
   {
+    w([ind, T.Align, n.numtok, T.Semicolon, Newline]);
   }
 
   void visit(IllegalAsmStmt n)
   {
+    assert(0);
   }
 
   void visit(PragmaStmt n)
   {
+    w([ind, T.Pragma, T.LParen, n.ident]);
+    foreach (arg; n.args) {
+      w([T.Comma, ws]);
+      v(arg);
+    }
+    w(T.RParen);
+    writeBlock(n.pragmaBody);
   }
 
   void visit(MixinStmt n)
   {
+    w([ind, T.Mixin, ws]);
+    v(n.templateExpr);
+    if (n.mixinIdent)
+      w([ws, n.mixinIdent]);
+    w([T.Semicolon, Newline]);
   }
 
   void visit(StaticIfStmt n)
   {
+    w([ind, T.Static, ws, T.If, T.LParen]);
+    v(n.condition);
+    w(T.RParen);
+    writeBlock(n.ifBody);
+    if (n.elseBody) {
+      w([ind, T.Else]);
+      writeBlock(n.elseBody);
+    }
   }
 
   void visit(StaticAssertStmt n)
   {
+    w([ind, T.Static, ws, T.Assert, T.LParen]);
+    v(n.condition);
+    if (n.message) {
+      w([T.Comma, ws]);
+      v(n.message);
+    }
+    w([T.RParen, Newline]);
   }
 
   void visit(DebugStmt n)
   {
+    w([ind, T.Debug]);
+    if (n.cond)
+      w([T.LParen, n.cond, T.RParen]);
+    writeBlock(n.mainBody);
+    if (n.elseBody)
+    {
+      w([ind, T.Else]);
+      writeBlock(n.elseBody);
+    }
   }
 
   void visit(VersionStmt n)
   {
+    w([ind, T.Version, T.LParen, n.cond, T.RParen]);
+    writeBlock(n.mainBody);
+    if (n.elseBody)
+    {
+      w([ind, T.Else]);
+      writeBlock(n.elseBody);
+    }
   }
 
 
