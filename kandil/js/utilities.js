@@ -6,28 +6,25 @@ RegExp.escape = function(str) {
   return str.replace(/([\\.*+?^${}()|[\]/])/g, '\\$1');
 };
 
+// NB: Return string literals instead of "new String()", because e.g.:
+// (new String("a") == new String("a")) === false
+
 /// Splits a string by 'sep' returning a tuple (head, tail).
 /// Returns (this, "") if sep is not found.
-String.prototype.partition = function(sep, part) {
+String.prototype.partition = function(sep) {
   var sep_pos = this.indexOf(sep);
   if (sep_pos < 0) sep_pos = this.length;
-  if (part != undefined)
-    return new String(part == 0 ? this.slice(0, sep_pos) :
-                      this.slice(sep_pos+sep.length));
-  return [new String(this.slice(0, sep_pos)),
-          new String(this.slice(sep_pos+sep.length))];
+  return [String(this.slice(0, sep_pos)),
+          String(this.slice(sep_pos+sep.length))];
 };
 
 /// Splits a string by 'sep' returning a tuple (head, tail).
 /// Returns ("", this) if sep is not found.
-String.prototype.rpartition = function(sep, part) {
+String.prototype.rpartition = function(sep) {
   var sep_pos = this.lastIndexOf(sep);
   if (sep_pos < 0) sep_pos = -this.length-sep.length;
-  if (part != undefined)
-    return new String(part == 0 ? this.slice(0, sep_pos) :
-                      this.slice(sep_pos+sep.length));
-  return [new String(this.slice(0, sep_pos)),
-          new String(this.slice(sep_pos+sep.length))];
+  return [String(this.slice(0, sep_pos)),
+          String(this.slice(sep_pos+sep.length))];
 };
 
 /// Strips chars (defaults to whitespace) from the start and end of a string.

@@ -234,7 +234,7 @@ var app = {
       this.panel.find(".tview a").click(function(event) {
         event.preventDefault();
         var modFQN = this.parentNode.title; // Fqn is in title attribute.
-        if (kandil.moduleFQN != modFQN.slice())
+        if (kandil.moduleFQN != modFQN)
           app.loadNewModule(modFQN, true);
       });
     kandil.packageTree.initList(); // Init the list property.
@@ -476,6 +476,7 @@ var app = {
 
   function extractParts(text)
   { // NB: Profiled code.
+    text = new String(text);
     var parts = {};
     var start = text.indexOf('<title>'), end = text.indexOf('</title>');
     parts.title = text.slice(start+7, end) // '<title>'.length = 7
@@ -493,7 +494,7 @@ var app = {
         if (text == "")
           return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
 
-        var parts = extractParts(new String(text));
+        var parts = extractParts(text);
         // Reset some global variables.
         kandil.moduleFQN = moduleFQN;
         kandil.sourceCode = null;
@@ -611,6 +612,7 @@ var app = {
   /// Extracts the code from the HTML file. Cached in kandil.sourceCode.
   setSourceCode : function(html_code) {
   // NB: Profiled code.
+  html_code = new String(html_code);
   var start = html_code.indexOf('<pre class="sourcecode">'),
       end = html_code.lastIndexOf('</pre>');
   if (start < 0 || end < 0)
@@ -698,7 +700,6 @@ var app = {
     var text = xhr.responseText;
     if (text == "")
       return errorHandler(0, 0, Error(kandil.msg.got_empty_file));
-    text = new String(text);
     app.setSourceCode(text);
     app.hideLoadingGif();
   }
