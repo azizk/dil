@@ -156,8 +156,10 @@ title="Go to the HTML source file">#</a>',
 
   Object.getter(kandil, "symbolTree", kandil.symbolTree_getter);
 
-
   window.onpopstate = function(event) {
+    var newFQN = location.href.rpartition("/")[1].partition(".html")[0];
+    if (kandil.moduleFQN == newFQN) // Same page?
+      return; // Ignore hash changes in the URL.
     var fqn = (event.state && event.state.fqn) || kandil.originalModuleFQN;
     app.loadNewModule(fqn, false);
   }

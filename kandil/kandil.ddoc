@@ -41,7 +41,7 @@ MODLINK = <a href="$0.html">$0</a>
 MODLINK2 = <a href="$1.html">$+</a>
 
 SRCFILE = htmlsrc/$(DIL_MODFQN).html
-PLINK = <a href="$(DIL_MODFQN).html#$0" class="plink">¶</a>
+PLINK = <a href="#$0" class="plink">¶</a>
 SRCLINK = <a title="Go to the HTML source file" class="srclink" href="$(SRCFILE)#L$0">#</a>
 DIL_SYMBOL = <a class="symbol _$3" name="$2" href="$(SRCFILE)#L$4">$1</a>
 DIL_SYMEND = $(PLINK $2)
