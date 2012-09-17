@@ -2877,7 +2877,7 @@ class Parser
           skip(T.Identifier);
         else
           error2(MID.ExpectedButFound, "ptr", token);
-        e = new AsmTypeExpr(parseAsmExpr());
+        e = new AsmTypeExpr(begin, parseAsmExpr());
         break;
       case IDK.offsetof:
         nT();

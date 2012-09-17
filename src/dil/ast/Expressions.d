@@ -1281,8 +1281,9 @@ class StructInitExpr : Expression
 
 class AsmTypeExpr : UnaryExpr
 {
-  mixin(memberInfo("una"));
-  this(Expression e)
+  Token* prefix;
+  mixin(memberInfo("prefix", "una"));
+  this(Token* prefix, Expression e)
   {
     super(e);
     mixin(set_kind);
