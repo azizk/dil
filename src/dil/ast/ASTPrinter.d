@@ -12,6 +12,7 @@ import dil.ast.Visitor,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
+import dil.lexer.IdTable;
 import dil.Compilation;
 import dil.String;
 import dil.Enums;
@@ -24,6 +25,26 @@ static struct TokenList
   {
     return mixin("toToken(TOK."~kind~")");
   }
+}
+
+enum PREC
+{
+  None,
+  Expression,
+  Assignment,
+  Conditional,
+  LogicalOr,
+  LogicalAnd,
+  BinaryOr,
+  BinaryXor,
+  BinaryAnd,
+  Relational,
+  Shifting,
+  Addition,
+  Multiplication,
+  Exponentiation,
+  Unary,
+  Primary,
 }
 
 /// Traverses a Node tree and constructs a string representation.
@@ -203,6 +224,15 @@ class ASTPrinter : Visitor2
     return t;
   }
 
+  /// Returns a Token for an Identifier.
+  Token* id(Identifier* id)
+  {
+    auto t = new Token;
+    t.text = id.str;
+    t.ident = id;
+    return t;
+  }
+
   /// Increases/decreases indentation on construction/destruction.
   scope class IndentLevel
   {
@@ -243,6 +273,46 @@ class ASTPrinter : Visitor2
     {
       indent = old;
     }
+  }
+
+  void write(Expression n, PREC prec)
+  {
+    // TODO:
+    PREC nextP; // = n.kind.getPrecedence();
+    if (prec < nextP)
+    {
+      w(T.LParen);
+      v(n);
+      w(T.RParen);
+    }
+    else
+      v(n);
+  }
+
+  /// Writes a comma-separated list of Expressions.
+  void write(Expression[] es)
+  {
+    foreach (i, e; es)
+    {
+      if (i)
+        w(T.Comma, ws);
+      w(e, PREC.Assignment);
+    }
+  }
+
+  /// Writes a binary expression.
+  void write(BinaryExpr n)
+  {
+    // TODO:
+    w(n.lhs, PREC.None);
+    w(ws, n.optok, ws);
+    w(n.rhs, PREC.None);
+  }
+
+  /// Writes a unary expression.
+  void write(UnaryExpr n)
+  {
+    w(n.una, PREC.Unary);
   }
 
   void writeBlock(Node n)
@@ -1060,354 +1130,640 @@ class ASTPrinter : Visitor2
   // Expressions:
   void visit(IllegalExpr n)
   {
+    assert(0);
   }
 
   void visit(CondExpr n)
   {
+    w(n.condition, PREC.LogicalOr);
+    w(ws, T.Question, ws);
+    w(n.lhs, PREC.Expression);
+    w(ws, T.Colon, ws);
+    w(n.rhs, PREC.Conditional);
   }
 
   void visit(CommaExpr n)
   {
+    w(n);
   }
 
   void visit(OrOrExpr n)
   {
+    w(n);
   }
 
   void visit(AndAndExpr n)
   {
+    w(n);
   }
 
   void visit(OrExpr n)
   {
+    w(n);
   }
 
   void visit(XorExpr n)
   {
+    w(n);
   }
 
   void visit(AndExpr n)
   {
+    w(n);
   }
 
   void visit(EqualExpr n)
   {
+    w(n);
   }
 
   void visit(IdentityExpr n)
   {
+    w(n.lhs, PREC.Relational);
+    if (n.optok.kind == TOK.Exclaim)
+      w(ws, T.Exclaim, T.Is, ws);
+    else
+      w(ws, T.Is, ws);
+    w(n.rhs, PREC.Relational);
   }
 
   void visit(RelExpr n)
   {
+    w(n);
   }
 
   void visit(InExpr n)
   {
+    w(n.lhs, PREC.Relational);
+    if (n.optok.kind == TOK.Exclaim)
+      w(ws, T.Exclaim, T.In, ws);
+    else
+      w(ws, T.In, ws);
+    w(n.rhs, PREC.Relational);
   }
 
   void visit(LShiftExpr n)
   {
+    w(n);
   }
 
   void visit(RShiftExpr n)
   {
+    w(n);
   }
 
   void visit(URShiftExpr n)
   {
+    w(n);
   }
 
   void visit(PlusExpr n)
   {
+    w(n);
   }
 
   void visit(MinusExpr n)
   {
+    w(n);
   }
 
   void visit(CatExpr n)
   {
+    w(n);
   }
 
   void visit(MulExpr n)
   {
+    w(n);
   }
 
   void visit(DivExpr n)
   {
+    w(n);
   }
 
   void visit(ModExpr n)
   {
+    w(n);
   }
 
   void visit(PowExpr n)
   {
+    w(n);
   }
 
   void visit(AssignExpr n)
   {
+    w(n);
   }
 
   void visit(LShiftAssignExpr n)
   {
+    w(n);
   }
 
   void visit(RShiftAssignExpr n)
   {
+    w(n);
   }
 
   void visit(URShiftAssignExpr n)
   {
+    w(n);
   }
 
   void visit(OrAssignExpr n)
   {
+    w(n);
   }
 
   void visit(AndAssignExpr n)
   {
+    w(n);
   }
 
   void visit(PlusAssignExpr n)
   {
+    w(n);
   }
 
   void visit(MinusAssignExpr n)
   {
+    w(n);
   }
 
   void visit(DivAssignExpr n)
   {
+    w(n);
   }
 
   void visit(MulAssignExpr n)
   {
+    w(n);
   }
 
   void visit(ModAssignExpr n)
   {
+    w(n);
   }
 
   void visit(XorAssignExpr n)
   {
+    w(n);
   }
 
   void visit(CatAssignExpr n)
   {
+    w(n);
   }
 
   void visit(PowAssignExpr n)
   {
+    w(n);
   }
 
   void visit(AddressExpr n)
   {
+    w(T.Amp);
+    w(n);
   }
 
   void visit(PreIncrExpr n)
   {
+    w(T.Plus2);
+    w(n);
   }
 
   void visit(PreDecrExpr n)
   {
+    w(T.Minus2);
+    w(n);
   }
 
   void visit(PostIncrExpr n)
   {
+    w(n);
+    w(T.Plus2);
   }
 
   void visit(PostDecrExpr n)
   {
+    w(n);
+    w(T.Minus2);
   }
 
   void visit(DerefExpr n)
   {
+    w(T.Star);
+    w(n);
   }
 
   void visit(SignExpr n)
   {
+    if (n.isPos)
+      w(T.Plus);
+    else
+      w(T.Minus);
+    w(n);
   }
 
   void visit(NotExpr n)
   {
+    w(T.Exclaim);
+    w(n);
   }
 
   void visit(CompExpr n)
   {
+    w(T.Tilde);
+    w(n);
   }
 
   void visit(CallExpr n)
   {
+    w(n);
+    w(T.LParen);
+    w(n.args);
+    w(T.RParen);
   }
 
   void visit(NewExpr n)
   {
+    if (n.frame) {
+      v(n.frame);
+      w(T.Dot);
+    }
+    w(T.New);
+    if (n.newArgs)
+    {
+      w(T.LParen);
+      w(n.newArgs);
+      w(T.RParen);
+    }
+    w(ws);
+    v(n.type);
+    if (n.ctorArgs)
+    {
+      w(T.LParen);
+      w(n.ctorArgs);
+      w(T.RParen);
+    }
   }
 
   void visit(NewClassExpr n)
   {
+    if (n.frame) {
+      v(n.frame);
+      w(T.Dot);
+    }
+    w(T.New);
+    if (n.newArgs)
+    {
+      w(T.LParen);
+      w(n.newArgs);
+      w(T.RParen);
+    }
+    w(ws);
+    w(T.Class);
+    if (n.ctorArgs)
+    {
+      w(T.LParen);
+      w(n.ctorArgs);
+      w(T.RParen);
+    }
+    if (n.bases)
+    {
+      w(ws);
+      foreach (i, b; n.bases)
+      {
+        if (i)
+          w(T.Comma, ws);
+        v(b);
+      }
+    }
+    writeAggregateBody(n.decls);
   }
 
   void visit(DeleteExpr n)
   {
+    w(T.Delete);
+    v(n.una);
   }
 
   void visit(CastExpr n)
   {
+    w(T.Cast, T.LParen);
+    if (n.type)
+      v(n.type);
+    w(T.RParen);
+    w(n);
   }
 
   void visit(IndexExpr n)
   {
+    w(n);
+    w(n.args);
   }
 
   void visit(SliceExpr n)
   {
+    w(n);
+    w(T.LBracket);
+    if (n.left)
+    {
+      w(n.left, PREC.Assignment);
+      w(T.Dot2);
+      w(n.right, PREC.Assignment);
+    }
+    w(T.RBracket);
   }
 
   void visit(ModuleScopeExpr n)
   {
+    w(T.Dot);
   }
 
   void visit(IdentifierExpr n)
   {
+    if (n.next) {
+      w(n.next, PREC.Primary);
+      w(T.Dot);
+    }
+    w(n.ident);
   }
 
   void visit(SpecialTokenExpr n)
   {
+    w(n.specialToken);
   }
 
   void visit(TmplInstanceExpr n)
   {
+    if (n.next) {
+      w(n.next, PREC.Primary);
+      w(T.Dot);
+    }
+    w(n.ident, T.Exclaim, T.LParen);
+    v(n.targs);
+    w(T.RParen);
   }
 
   void visit(ThisExpr n)
   {
+    w(T.This);
   }
 
   void visit(SuperExpr n)
   {
+    w(T.Super);
   }
 
   void visit(NullExpr n)
   {
+    w(T.Null);
   }
 
   void visit(DollarExpr n)
   {
+    w(T.Dollar);
   }
 
   void visit(BoolExpr n)
   {
+    w(n.toBool ? T.True : T.False);
   }
 
   void visit(IntExpr n)
   {
+    // TODO:
   }
 
   void visit(FloatExpr n)
   {
+    // TODO:
   }
 
   void visit(ComplexExpr n)
   {
+    // TODO:
   }
 
   void visit(CharExpr n)
   {
+    // TODO:
   }
 
   void visit(StringExpr n)
   {
+    // TODO:
   }
 
   void visit(ArrayLiteralExpr n)
   {
+    w(T.LBracket);
+    w(n.values);
+    w(T.RBracket);
   }
 
   void visit(AArrayLiteralExpr n)
   {
+    w(T.LBracket);
+    foreach (i, value; n.values)
+    {
+      if (i)
+        w(T.Comma, ws);
+      w(n.keys[i], PREC.Assignment);
+      w(T.Colon, ws);
+      w(value, PREC.Assignment);
+    }
+    w(T.RBracket);
   }
 
   void visit(AssertExpr n)
   {
+    w(T.Assert, T.LParen);
+    w(n.expr, PREC.Assignment);
+    if (n.msg) {
+      w(T.Comma, ws);
+      w(n.expr, PREC.Assignment);
+    }
+    w(T.RParen);
   }
 
   void visit(MixinExpr n)
   {
+    w(T.Mixin, T.LParen);
+    v(n.expr);
+    w(T.RParen);
   }
 
   void visit(ImportExpr n)
   {
+    w(T.Import, T.LParen);
+    v(n.expr);
+    w(T.RParen);
   }
 
   void visit(TypeofExpr n)
   {
+    w(T.Typeof, T.LParen);
+    v(n.type);
+    w(T.RParen);
   }
 
   void visit(TypeDotIdExpr n)
   {
+    w(T.LParen);
+    v(n.type);
+    w(T.RParen, T.Dot, n.ident);
   }
 
   void visit(TypeidExpr n)
   {
+    w(T.Typeid, T.LParen);
+    v(n.type);
+    w(T.RParen);
   }
 
   void visit(IsExpr n)
   {
+    w(T.Is, T.LParen);
+    v(n.type);
+    if (n.ident)
+      w(ws, n.ident);
+    if (n.opTok)
+    {
+      w(ws, n.opTok, ws);
+      if (n.specTok)
+        w(n.specTok);
+      else
+        v(n.specType);
+    }
+    if (n.ident && n.specType && n.tparams)
+    {
+      w(T.Comma, ws);
+      foreach (i, param; n.tparams.items())
+      {
+        if (i)
+          w(T.Comma, ws);
+        v(param);
+      }
+    }
+    w(T.RParen);
   }
 
   void visit(ParenExpr n)
   {
+    w(T.LParen);
+    v(n.next);
+    w(T.RParen);
   }
 
   void visit(FuncLiteralExpr n)
   {
+    // TODO:
   }
 
   void visit(TraitsExpr n)
   {
+    w(T.Traits, T.LParen, n.ident);
+    if (n.targs) {
+      w(T.Comma);
+      v(n.targs);
+    }
+    w(T.RParen);
   }
 
   void visit(VoidInitExpr n)
   {
+    w(T.Void);
   }
 
   void visit(ArrayInitExpr n)
   {
+    w(T.LBracket);
+    foreach (i, value; n.values)
+    {
+      if (i)
+        w(T.Comma, ws);
+      if (auto key = n.keys[i]) {
+        w(key, PREC.Assignment);
+        w(T.Colon, ws);
+      }
+      w(value, PREC.Assignment);
+    }
+    w(T.RBracket);
   }
 
   void visit(StructInitExpr n)
   {
+    w(T.LBrace);
+    foreach (i, value; n.values)
+    {
+      if (i)
+        w(T.Comma, ws);
+      if (auto ident = n.idents[i])
+        w(ident, T.Colon, ws);
+      w(value, PREC.Assignment);
+    }
+    w(T.RBrace);
   }
 
   void visit(AsmTypeExpr n)
   {
+    w(n.prefix, ws, id(Ident.ptr), ws);
+    w(n.una, PREC.Unary);
   }
 
   void visit(AsmOffsetExpr n)
   {
+    w(id(Ident.offsetof));
+    w(n.una, PREC.Unary);
   }
 
   void visit(AsmSegExpr n)
   {
+    w(id(Ident.seg));
+    w(n.una, PREC.Unary);
   }
 
   void visit(AsmPostBracketExpr n)
   {
+    w(n.una, PREC.Unary);
+    w(T.LBracket);
+    w(n.index, PREC.Expression);
+    w(T.RBracket);
   }
 
   void visit(AsmBracketExpr n)
   {
+    w(T.LBracket);
+    w(n.expr, PREC.Expression);
+    w(T.RBracket);
   }
 
   void visit(AsmLocalSizeExpr n)
   {
+    w(id(Ident.__LOCAL_SIZE));
   }
 
   void visit(AsmRegisterExpr n)
   {
+    w(n.register);
+    if (n.number)
+    {
+      if (n.register.ident is Ident.ST && n.number)
+      {
+        w(T.LBracket);
+        v(n.number);
+        w(T.RBracket);
+      }
+      else
+      {
+        w(T.Colon);
+        w(n.number, PREC.Expression);
+      }
+    }
   }
 
 
