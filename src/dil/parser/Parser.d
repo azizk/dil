@@ -3755,6 +3755,7 @@ class Parser
     auto begin = token;
     skip(T.New);
 
+    Expression e;
     Expression[] newArguments, ctorArguments;
 
     if (tokenIs(T.LParen)) // NewArguments
@@ -3770,32 +3771,31 @@ class Parser
         bases = parseBaseClasses();
 
       auto decls = parseDeclarationDefinitionsBody();
-      return set(new NewClassExpr(frame, newArguments, bases,
-        ctorArguments, decls), begin);
+      e = new NewClassExpr(frame, newArguments, ctorArguments, bases, decls);
     }
+    else
+    { // NewObjectExpr
+      auto type = parseBasicTypes();
 
-    // NewObjectExpr
-    auto type = parseBasicTypes();
+      // Don't parse arguments if an array type was parsed previously.
+      auto arrayType = type.Is!(ArrayType);
+      if (arrayType && arrayType.isStatic())
+      {}
+      else if (arrayType && arrayType.isAssociative())
+      { // Backtrack to parse as a StaticArray.
+        auto lBracket = type.begin;
+        backtrackTo(lBracket);
 
-    // Don't parse arguments if an array type was parsed previously.
-    auto arrayType = type.Is!(ArrayType);
-    if (arrayType && arrayType.isStatic())
-    {}
-    else if (arrayType && arrayType.isAssociative())
-    { // Backtrack to parse as a StaticArray.
-      auto lBracket = type.begin;
-      backtrackTo(lBracket);
-
-      skip(T.LBracket); // "["
-      type = set(new ArrayType(type.next, parseExpression()), lBracket);
-      requireClosing(T.RBracket, lBracket); // "]"
-      delete arrayType; // Delete the old type.
+        skip(T.LBracket); // "["
+        type = set(new ArrayType(type.next, parseExpression()), lBracket);
+        requireClosing(T.RBracket, lBracket); // "]"
+        delete arrayType; // Delete the old type.
+      }
+      else if (tokenIs(T.LParen)) // NewArguments
+        ctorArguments = parseArguments();
+      e = new NewExpr(frame, newArguments, type, ctorArguments);
     }
-    else if (tokenIs(T.LParen)) // NewArguments
-      ctorArguments = parseArguments();
-
-    return set(new NewExpr(frame, newArguments, type, ctorArguments),
-      begin);
+    return set(e, begin);
   }
 
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -572,25 +572,25 @@ class NewClassExpr : Expression
 {
   Expression frame; /// The frame or 'this' pointer.
   Expression[] newArgs;
-  BaseClassType[] bases;
   Expression[] ctorArgs;
+  BaseClassType[] bases;
   CompoundDecl decls;
 
-  mixin(memberInfo("frame", "newArgs", "bases", "ctorArgs", "decls"));
+  mixin(memberInfo("frame", "newArgs", "ctorArgs", "bases", "decls"));
 
-  this(Expression frame, Expression[] newArgs, BaseClassType[] bases,
-       Expression[] ctorArgs, CompoundDecl decls)
+  this(Expression frame, Expression[] newArgs, Expression[] ctorArgs,
+       BaseClassType[] bases, CompoundDecl decls)
   {
     mixin(set_kind);
     addOptChild(frame);
     addOptChildren(newArgs);
-    addOptChildren(bases);
     addOptChildren(ctorArgs);
+    addOptChildren(bases);
     addChild(decls);
 
     this.newArgs = newArgs;
-    this.bases = bases;
     this.ctorArgs = ctorArgs;
+    this.bases = bases;
     this.decls = decls;
   }
   mixin methods;
