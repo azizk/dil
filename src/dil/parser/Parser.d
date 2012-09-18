@@ -601,47 +601,7 @@ class Parser
     // VariableType or ReturnType
     type = parseBasicTypes();
 
-    if (tokenIs(T.LParen))
-    {
-      type = parseCStyleType(type, &name);
-      if (name.kind != T.Identifier)
-        error2(MID.ExpectedVariableName, name);
-    }
-    else if (0/+auto leftParen = consumedToken(T.LParen)+/)
-    { // FIXME: doesn't work in all cases. :(
-      // BasicTypes "(" CStyleType ")" DeclaratorSuffix?
-      auto leftParen = token;
-      auto innerType = parseCStyleType(type, &name);
-      requireClosing(T.RParen, leftParen); // ")"
-
-      bool noInnerType = innerType is type; // type.parent
-      // Parse CFuncType?
-      bool funcSuffix = noInnerType || !tokenIs(T.LParen);
-
-      // Parse the suffix.
-      auto innerTypeEnd = type.parent; // Save before parsing suffix.
-      type.parent = null;
-      type = parseDeclaratorSuffix(type, funcSuffix);
-      if (innerTypeEnd !is null)
-        innerTypeEnd.setNext(type), // Fix the type chain.
-        type = innerType;
-
-      if (!noInnerType) // Is the inner type a C-like function?
-        if (auto cfunc = innerType.Is!(CFuncType))
-          params = cfunc.params; // Retrieve the parameters.
-
-      bool isFunc = params || !funcSuffix;
-      if (name.kind != T.Identifier)
-        error2(isFunc ? MID.ExpectedFunctionName :
-                        MID.ExpectedVariableName, name);
-
-      // Parse as a function instead of a variable?
-      if (params)
-        goto LparseAfterParams;
-      if (!funcSuffix) // "(" ParameterList ")"
-        goto LparseBeforeTParams;
-    }
-    else if (peekNext() == T.LParen)
+    if (peekNext() == T.LParen)
     { // ReturnType FunctionName "(" ParameterList ")" FunctionBody
       name = requireIdentifier(MID.ExpectedFunctionName);
       if (!tokenIs(T.LParen))
@@ -3881,7 +3841,7 @@ class Parser
 
     auto innerTypeEnd = currentType.parent; // Save before parsing the suffix.
 
-    currentType = parseDeclaratorSuffix(currentType, true);
+    currentType = parseDeclaratorSuffix(currentType);
 
     if (innerTypeEnd is null) // No inner Type. End of recursion.
       return currentType; // Return the root of the type chain.
@@ -3904,15 +3864,6 @@ class Parser
       (identOptional || error2(MID.ExpectedDeclaratorIdentifier, ident)),
       (ident = null);
     return type;
-  }
-
-  /// Parses the parameters of a function in a C-like type declaration.
-  Type parseCFuncType(Type returnType)
-  {
-    assert(returnType !is null);
-    auto begin = token;
-    auto params = parseParameterList();
-    return set(new CFuncType(returnType, params), begin);
   }
 
   /// $(BNF IdentifierType := Identifier | TemplateInstance)
@@ -4081,8 +4032,7 @@ class Parser
   /// Returns: lhsType or a suffix type.
   /// Params:
   ///   lhsType = The type on the left-hand side.
-  ///   cfunc   = Parse a function parameter list, too?
-  Type parseDeclaratorSuffix(Type lhsType, bool cfunc = false)
+  Type parseDeclaratorSuffix(Type lhsType)
   { // The Type chain should be as follows:
     // int[3]* Identifier [][1][2]
     //   <– <–.      ·start·–> -.
@@ -4100,14 +4050,6 @@ class Parser
         prevType.setNext(arrayType); // Make prevType point to this type.
         prevType = arrayType; // Current type becomes previous type.
       }
-    }
-    if (cfunc && tokenIs(T.LParen)) // "("
-    { // Parse: "(" Parameters? ")"
-      auto cfuncType = parseCFuncType(lhsType);
-      if (prevType) // Have arrays been parsed?
-        prevType.setNext(cfuncType);
-      else
-        result = cfuncType;
     }
     return result;
   }

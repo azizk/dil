@@ -1816,8 +1816,6 @@ class ASTPrinter : Visitor2
   void visit(PointerType n)
   {
     v(n.next);
-    if (!n.next.Is!(CFuncType))
-      w(T.Star); // The pointer must be omitted if it's a CFuncType.
   }
 
   void visit(ArrayType n)
@@ -1848,13 +1846,6 @@ class ASTPrinter : Visitor2
   {
     v(n.next);
     w(ws, T.Delegate);
-    v(n.params);
-  }
-
-  void visit(CFuncType n)
-  {
-    v(n.next);
-    w(ws, T.Function);
     v(n.params);
   }
 

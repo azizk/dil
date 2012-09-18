@@ -1662,15 +1662,6 @@ override
     end(t);
   }
 
-  void visit(CFuncType t)
-  {
-    begin(t);
-    visitT(t.next);
-    write(",");
-    visitN(t.params);
-    end(t);
-  }
-
   void visit(BaseClassType t)
   {
     begin(t);

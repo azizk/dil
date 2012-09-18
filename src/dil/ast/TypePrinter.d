@@ -99,15 +99,8 @@ override:
 
   void visit(PointerType t)
   {
-    if (auto cfunc = t.next.Is!(CFuncType))
-    { // Skip the CFuncType. Write a D-style function pointer.
-      visitT(t.next.next);
-      write(" function");
-      writeParams(cfunc.params);
-    }
-    else
-      visitT(t.next),
-      write("*");
+    visitT(t.next),
+    write("*");
   }
 
   void visit(ArrayType t)
@@ -138,12 +131,6 @@ override:
   {
     visitT(t.next);
     write(" delegate");
-    writeParams(t.params);
-  }
-
-  void visit(CFuncType t)
-  {
-    visitT(t.next);
     writeParams(t.params);
   }
 

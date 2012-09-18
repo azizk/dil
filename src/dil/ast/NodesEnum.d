@@ -197,7 +197,6 @@ enum string[] NodeClassNames = [
   "ArrayType",
   "FunctionType",
   "DelegateType",
-  "CFuncType",
   "BaseClassType",
   "ConstType", // D2.0
   "ImmutableType", // D2.0

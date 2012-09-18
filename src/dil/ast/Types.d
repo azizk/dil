@@ -231,22 +231,6 @@ class DelegateType : TypeNode
   mixin methods;
 }
 
-/// Function parameters in a C-style type.
-/// E.g.: int (*pFunc)(int a, int b);
-class CFuncType : TypeNode
-{
-  Parameters params;
-  mixin(memberInfo("next", "params"));
-  this(TypeNode returnType, Parameters params)
-  {
-    super(returnType);
-    mixin(set_kind);
-    addChild(params);
-    this.params = params;
-  }
-  mixin methods;
-}
-
 /// $(BNF BaseClassType := Protection? BasicType)
 class BaseClassType : TypeNode
 {
