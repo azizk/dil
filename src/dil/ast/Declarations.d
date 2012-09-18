@@ -759,14 +759,14 @@ class ProtectionDecl : AttributeDecl
 
 class StorageClassDecl : AttributeDecl
 {
-  StorageClass stcs;
-  mixin(memberInfo("stcs", "decls"));
-  this(StorageClass stcs, Declaration decls)
+  StorageClass stc;
+  mixin(memberInfo("stc", "decls"));
+  this(StorageClass stc, Declaration decls)
   {
     super(decls);
     mixin(set_kind);
 
-    this.stcs = stcs;
+    this.stc = stc;
   }
   mixin methods;
 }

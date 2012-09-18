@@ -659,7 +659,7 @@ override
   D visit(StorageClassDecl d)
   {
     auto saved = storageClass; // Save.
-    storageClass = d.stcs; // Set.
+    storageClass = d.stc; // Set.
     visitD(d.decls);
     storageClass = saved; // Restore.
     return d;
