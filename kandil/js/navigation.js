@@ -414,9 +414,7 @@ var app = {
     var kandil = window.kandil;
     var symbol = decl.find(">.symbol");
     // Append the '#'-link.
-    var src_link = symbol[0].attributes.getNamedItem("href").value;
-    src_link = kandil.msg.srclink.format(src_link);
-    decl.append(src_link);
+    decl.append(kandil.msg.srclink.format(symbol.attr("href")));
 
     // Add code display functionality to symbol links.
     symbol.click(function(e) {
@@ -429,10 +427,8 @@ var app = {
         app.showCode($(">.symbol", this));
     }).attr("title", kandil.msg.dt_tagtitle);
 
-    // Prepare permalinks.
-    var plink = decl.find('>.plink');
-    // Set the title of the permalinks.
-    plink.attr("title", kandil.msg.permalink);
+    // Set the title of the permalink.
+    decl.find('>.plink').attr("title", kandil.msg.permalink);
   }
 
   // Prepare 'dt.decl' tags.
