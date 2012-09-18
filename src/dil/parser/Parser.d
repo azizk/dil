@@ -3922,7 +3922,7 @@ class Parser
     auto ident = requireIdentifier(MID.ExpectedAnIdentifier);
     Type t;
     if (consumed(T.Exclaim)) // TemplateInstance
-      t = new TemplateInstanceType(next, ident,
+      t = new TmplInstanceType(next, ident,
         parseOneOrMoreTemplateArguments());
     else // Identifier
       t = new IdentifierType(next, ident);

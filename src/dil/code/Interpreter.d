@@ -1160,7 +1160,7 @@ override
     return t;
   }
 
-  T visit(TemplateInstanceType t)
+  T visit(TmplInstanceType t)
   {
     return t;
   }

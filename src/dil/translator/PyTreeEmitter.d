@@ -1613,7 +1613,7 @@ override
     end(t);
   }
 
-  void visit(TemplateInstanceType t)
+  void visit(TmplInstanceType t)
   {
     begin(t);
     t.next ? visitT(t.next) : write("n");

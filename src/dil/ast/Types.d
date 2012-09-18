@@ -93,7 +93,7 @@ class TypeofType : TypeNode
 
 /// $(BNF TemplateInstanceType :=
 ////  Identifier "!" (TemplateArgumentList | TemplateArgumentSingle))
-class TemplateInstanceType : TypeNode
+class TmplInstanceType : TypeNode
 {
   Token* ident;
   TemplateArguments targs;

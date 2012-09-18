@@ -1937,7 +1937,7 @@ override
     return t;
   }
 
-  T visit(TemplateInstanceType t)
+  T visit(TmplInstanceType t)
   {
     auto idToken = t.begin;
     auto symbol = search(idToken);

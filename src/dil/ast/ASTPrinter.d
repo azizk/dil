@@ -1802,7 +1802,7 @@ class ASTPrinter : Visitor2
     w(T.RParen);
   }
 
-  void visit(TemplateInstanceType n)
+  void visit(TmplInstanceType n)
   {
     if (n.next) {
       v(n.next);

@@ -192,7 +192,7 @@ enum string[] NodeClassNames = [
   "ModuleScopeType",
   "IdentifierType",
   "TypeofType",
-  "TemplateInstanceType",
+  "TmplInstanceType",
   "PointerType",
   "ArrayType",
   "FunctionType",

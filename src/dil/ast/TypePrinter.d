@@ -84,7 +84,7 @@ override:
     write(t.id.str);
   }
 
-  void visit(TemplateInstanceType t)
+  void visit(TmplInstanceType t)
   {
     t.next && (visitT(t.next), write("."));
     write(t.id.str), write("!");
