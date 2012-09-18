@@ -1069,8 +1069,12 @@ class Parser
       decl = // This could be a normal Declaration or an AutoDeclaration
         parseVariableOrFunction(stcs, protection, linkageType, true);
     else
-      // Parse a block.
-      decl = parseDeclarationsBlock();
+    {
+      if (prevAttr.Is!PragmaDecl && tokenIs(T.Semicolon))
+        decl = parseDeclarationDefinition(); // Allow semicolon after pragma().
+      else // Parse a block.
+        decl = parseDeclarationsBlock();
+    }
     // Restore outer values.
     this.storageClass = outer_storageClass;
     this.linkageType = outer_linkageType;
