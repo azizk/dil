@@ -322,7 +322,7 @@ class ASTPrinter : Visitor2
       scope il = new IndentLevel();
       v(n);
     }
-    w(Newline, ind, T.RBrace, Newline);
+    w(ind, T.RBrace, Newline);
   }
 
   void writeAggregateBody(Node n)
@@ -335,8 +335,7 @@ class ASTPrinter : Visitor2
 
   void visit(IllegalDecl n)
   {
-    if (n.begin && n.end)
-      writeSpan(n.begin, n.end);
+    assert(0);
   }
 
   void visit(CompoundDecl n)
@@ -574,14 +573,13 @@ class ASTPrinter : Visitor2
     w(ind);
     if (n.type)
       v(n.type);
-    else
-      w(T.Auto);
-    w(ws);
+    //else // Emitted by visit(StorageClassDecl).
+    //  w(T.Auto);
     foreach (i, name; n.names)
     {
       if (i)
-        w(T.Comma, ws);
-      w(name);
+        w(T.Comma);
+      w(ws, name);
       if (auto init = n.inits[i]) {
         w(ws, T.Equal, ws);
         v(init);
@@ -675,24 +673,119 @@ class ASTPrinter : Visitor2
     v(n.funcBody);
   }
 
+  void writeAttrDecl(Declaration n)
+  {
+    switch (n.kind)
+    {
+    case NodeKind.ProtectionDecl,
+         NodeKind.StorageClassDecl,
+         NodeKind.LinkageDecl,
+         NodeKind.AlignDecl,
+         NodeKind.PragmaDecl:
+      {
+        scope il = new SetIndentLevel(" ");
+        v(n);
+      }
+      break;
+    case NodeKind.ColonBlockDecl:
+      v(n);
+      break;
+    case NodeKind.CompoundDecl:
+      writeBlock(n);
+      break;
+    case NodeKind.EmptyDecl:
+      w(T.Semicolon, Newline);
+      break;
+    default:
+      w(Newline);
+      v(n);
+    }
+  }
+
   void visit(ProtectionDecl n)
   {
+    w(ind, protToTOK(n.prot).toToken());
+    writeAttrDecl(n.decls);
   }
 
   void visit(StorageClassDecl n)
   {
+    w(ind);
+    TOK t;
+    Identifier* i;
+    final switch (n.stc)
+    {
+    case STC.Abstract:     t = TOK.Abstract;     break;
+    case STC.Auto:         t = TOK.Auto;         break;
+    case STC.Const:        t = TOK.Const;        break;
+    case STC.Deprecated:   t = TOK.Deprecated;   break;
+    case STC.Extern:       t = TOK.Extern;       break;
+    case STC.Final:        t = TOK.Final;        break;
+    case STC.Override:     t = TOK.Override;     break;
+    case STC.Scope:        t = TOK.Scope;        break;
+    case STC.Static:       t = TOK.Static;       break;
+    case STC.Synchronized: t = TOK.Synchronized; break;
+    case STC.In:           t = TOK.In;           break;
+    case STC.Out:          t = TOK.Out;          break;
+    case STC.Ref:          t = TOK.Ref;          break;
+    case STC.Lazy:         t = TOK.Lazy;         break;
+    case STC.Variadic:     assert(0);            break;
+    case STC.Immutable:    t = TOK.Immutable;    break;
+    case STC.Manifest:     t = TOK.Enum;         break;
+    case STC.Nothrow:      t = TOK.Nothrow;      break;
+    case STC.Pure:         t = TOK.Pure;         break;
+    case STC.Shared:       t = TOK.Shared;       break;
+    case STC.Gshared:      t = TOK.Gshared;      break;
+    case STC.Thread:       t = TOK.Thread;       break;
+    case STC.Inout:        t = TOK.Inout;        break;
+    case STC.Disable:      i = Ident.disable;    break;
+    case STC.Property:     i = Ident.property;   break;
+    case STC.Safe:         i = Ident.safe;       break;
+    case STC.System:       i = Ident.system;     break;
+    case STC.Trusted:      i = Ident.trusted;    break;
+    case STC.None: assert(0);
+    }
+    if (i)
+      w(T.At, id(i));
+    else
+      w(t.toToken());
+    writeAttrDecl(n.decls);
   }
 
   void visit(LinkageDecl n)
   {
+    w(ind, T.Extern, T.LParen);
+    final switch (n.linkageType)
+    {
+    case LINK.C:       w(id(Ident.C)); break;
+    case LINK.Cpp:     w(id(Ident.C), T.Plus2); break;
+    case LINK.D:       w(id(Ident.D)); break;
+    case LINK.Windows: w(id(Ident.Windows)); break;
+    case LINK.Pascal:  w(id(Ident.Pascal)); break;
+    case LINK.System:  w(id(Ident.System)); break;
+    case LINK.None:    assert(0);
+    }
+    w(T.RParen);
+    writeAttrDecl(n.decls);
   }
 
   void visit(AlignDecl n)
   {
+    w(ind, T.Align);
+    if (n.sizetok)
+      w(T.LParen, n.sizetok, T.RParen);
+    writeAttrDecl(n.decls);
   }
 
   void visit(PragmaDecl n)
   {
+    w(ind, T.Pragma, T.LParen, n.ident);
+    if (n.args) {
+      w(T.Comma);
+      w(n.args);
+    }
+    w(T.RParen);
+    writeAttrDecl(n.decls);
   }
 
   void visit(MixinDecl n)
@@ -717,6 +810,7 @@ class ASTPrinter : Visitor2
   // Statements:
   void visit(IllegalStmt n)
   {
+    assert(0);
   }
 
   void visit(CompoundStmt n)
@@ -918,8 +1012,7 @@ class ASTPrinter : Visitor2
   void visit(DefaultStmt n)
   {
     scope ul = new UnindentLevel;
-    w(ind, T.Default, ws);
-    w(T.Colon, Newline);
+    w(ind, T.Default, T.Colon, Newline);
     scope il = new IndentLevel;
     v(n.defaultBody);
   }
@@ -1062,9 +1155,9 @@ class ASTPrinter : Visitor2
   void visit(PragmaStmt n)
   {
     w(ind, T.Pragma, T.LParen, n.ident);
-    foreach (arg; n.args) {
-      w(T.Comma, ws);
-      v(arg);
+    if (n.args) {
+      w(T.Comma);
+      w(n.args);
     }
     w(T.RParen);
     writeBlock(n.pragmaBody);
@@ -1462,7 +1555,9 @@ class ASTPrinter : Visitor2
   void visit(IndexExpr n)
   {
     w(n);
+    w(T.LBracket);
     w(n.args);
+    w(T.RBracket);
   }
 
   void visit(SliceExpr n)
