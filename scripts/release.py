@@ -29,6 +29,9 @@ def writeMakefile():
   # TODO: implement.
   pass
 
+def write_modified_dilconf(SRC, DEST, DATADIR):
+  DEST.write(re.sub('DATADIR = ".+?"', 'DATADIR = "%s"' % DATADIR, SRC.read()))
+
 def get_totalsize_and_md5sums(FILES, root_index):
   from md5 import new as md5
   totalsize = 0
@@ -54,9 +57,8 @@ def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, MAINTAINER, PACKAGENUM=1):
   # 2. Copy DIL's files.
   for binary in SRC.BINS:
     binary.copy(BIN)
-  dilconf = re.sub('DATADIR = ".+?"', 'DATADIR = "%s/data"' % SHR[len(TMP):],
-    (SRC.DATA/"dilconf.d").read())
-  (ETC/"dilconf.d").write(dilconf)
+  write_modified_dilconf(SRC.DATA/"dilconf.d", ETC/"dilconf.d",
+    SHR[len(TMP):] + "/data")
   copyright = "License: GPL3\nAuthors: See AUTHORS file.\n"
   (DOC/"copyright").write(copyright)
   CLOG = DOC/"changelog"
