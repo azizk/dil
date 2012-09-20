@@ -158,11 +158,12 @@ def create_archives(opts, src, dest, cwd):
   """ Calls archiving programs to archive the src folder. """
   cwd = cwd or None # Causes exception in call() if empty string.
   for which, cmd in zip(
-    ('tar_gz', 'tar_bz2', 'zip', '_7z'),
-    ("tar --owner root --group root -czf %(name)s.tar.gz",
-     "tar --owner root --group root --bzip2 -cf %(name)s.tar.bz2",
+    ('tar_gz', 'tar_bz2', 'tar_xz', 'zip', '_7z'),
+    ("tar --owner root --group root -acf %(name)s.tar.gz",
+     "tar --owner root --group root -acf %(name)s.tar.bz2",
+     "tar --owner root --group root -acf %(name)s.tar.xz",
      "zip -q -9 -r %(name)s.zip",
-     "7zr a %(name)s.7z")):
+     "7za a %(name)s.7z")):
     if not getattr(opts, which, False): continue
     cmd = cmd.split(' ') # Split into array as call() requires it.
     if not locate_command(cmd[0]):
@@ -172,6 +173,15 @@ def create_archives(opts, src, dest, cwd):
     cmd += [src] # Append the src parameter.
     print("\n", " ".join(cmd))
     call_proc(cmd, cwd=cwd) # Call the program.
+
+def make_archive(src, dest):
+  """ Calls a compression program depending on the file extension. """
+  src, dest = Path(src), Path(dest.abspath)
+  tar = "tar --owner root --group root -acf"
+  cmds = {"xz": tar, "bz2": tar, "gz": tar,
+    "7z": "7za a", "zip": "zip -q -9 -r"}
+  cmd = cmds[dest.ext[1:]].split(" ") + [dest, src.name]
+  call_proc(cmd, cwd=src.folder)
 
 def load_pymodules(folder):
   """ Loads all python modules (names matching 'd_*.py') from a folder. """
