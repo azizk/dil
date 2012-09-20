@@ -1201,6 +1201,24 @@ class FuncLiteralExpr : Expression
   mixin methods;
 }
 
+class LambdaExpr : Expression
+{
+  Parameters params;
+  Expression expr;
+  mixin(memberInfo("params", "expr"));
+
+  this(Parameters params, Expression expr)
+  {
+    mixin(set_kind);
+    addChild(params);
+    addChild(expr);
+    this.params = params;
+    this.expr = expr;
+  }
+
+  mixin methods;
+}
+
 /// ParenthesisExpr := "(" Expression ")"
 class ParenExpr : Expression
 {

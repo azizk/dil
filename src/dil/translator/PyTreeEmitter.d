@@ -1494,6 +1494,15 @@ override
     end(e);
   }
 
+  void visit(LambdaExpr e)
+  {
+    begin(e);
+    visitN(e.params);
+    write(",");
+    visitE(e.expr);
+    end(e);
+  }
+
   void visit(TraitsExpr e) // D2.0
   {
     begin(e);

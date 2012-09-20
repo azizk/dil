@@ -89,6 +89,7 @@ char[] genMembersTable()
   t[N.TypeidExpr] = ["type"];
   t[N.IsExpr] = ["type", "specType?", "tparams?"];
   t[N.FuncLiteralExpr] = ["returnType?", "params?", "funcBody"];
+  t[N.LambdaExpr] = ["params", "expr"];
   t[N.ParenExpr] = ["next"];
   t[N.TraitsExpr] = ["targs"];
   t[N.ArrayInitExpr] = ["keys[?]", "values[]"];

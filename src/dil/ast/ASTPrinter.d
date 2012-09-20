@@ -1759,6 +1759,16 @@ class ASTPrinter : Visitor2
     // TODO:
   }
 
+  void visit(LambdaExpr n)
+  {
+    if (n.params.length == 1)
+      w(n.params.items[0].name);
+    else
+      v(n.params);
+    w(ws, T.EqlGreater, ws);
+    w(n.expr, PREC.Assignment);
+  }
+
   void visit(TraitsExpr n)
   {
     w(T.Traits, T.LParen, n.ident);

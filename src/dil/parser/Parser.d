@@ -3397,27 +3397,24 @@ class Parser
     return set(e, begin);
   }
 
-  /// $(BNF LambdaExpr := ParameterList ParamsPostfix "=>" LambdaBody
-  ////LambdaBody := AssignExpr)
-  FuncBodyStmt parseLambdaExprBody(Parameters params)
+  /// $(BNF LambdaBody := AssignExpr)
+  Expression parseLambdaExprBody()
   {
     skip(T.EqlGreater);
-    auto begin = token;
-    auto ae = parseAssignExpr();
-    auto estmt = set(new ExpressionStmt(ae), begin);
-    return set(new FuncBodyStmt(estmt, null, null, null), begin);
+    return parseAssignExpr();
   }
 
-  /// $(BNF LambdaExpr := Identifier "=>" AssignExpr)
+  /// $(BNF LambdaExpr := LambdaParams "=>" LambdaBody
+  ////LambdaParams := Identifier | ParameterList ParamsPostfix)
   Expression parseSingleParamLambdaExpr()
   {
     auto begin = token;
     skip(T.Identifier);
     auto params = set(new Parameters(), begin);
-    auto param = new Parameter(StorageClass.None, null, null, token, null);
+    auto param = new Parameter(StorageClass.None, null, null, begin, null);
     params ~= set(param, begin);
-    auto fstmt = parseLambdaExprBody(params);
-    return set(new FuncLiteralExpr(null, params, fstmt), begin);
+    auto fstmt = parseLambdaExprBody();
+    return set(new LambdaExpr(params, fstmt), begin);
   }
 
   /// $(BNF PrimaryExpr := ... | ModuleScopeExpr
@@ -3649,7 +3646,10 @@ class Parser
         if (token.kind == T.LBrace) // "(" ... ")" "{" ...
           fstmt = parseFunctionBody();
         else if (token.kind == T.EqlGreater) // "(" ... ")" "=>" ...
-          fstmt = parseLambdaExprBody(parameters);
+        {
+          e = new LambdaExpr(parameters, parseLambdaExprBody());
+          break;
+        }
         else
           error(token, MID.ExpectedFunctionBody, token.text);
         e = new FuncLiteralExpr(null, parameters, fstmt);

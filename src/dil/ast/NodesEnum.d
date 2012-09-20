@@ -174,6 +174,7 @@ enum string[] NodeClassNames = [
   "IsExpr",
   "ParenExpr",
   "FuncLiteralExpr",
+  "LambdaExpr", // D2.0
   "TraitsExpr", // D2.0
   "VoidInitExpr",
   "ArrayInitExpr",

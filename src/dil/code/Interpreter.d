@@ -1068,6 +1068,11 @@ override
     return e;
   }
 
+  E visit(LambdaExpr e)
+  {
+    return e;
+  }
+
   E visit(TraitsExpr e) // D2.0
   {
     return e;
