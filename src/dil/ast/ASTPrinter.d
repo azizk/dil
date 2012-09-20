@@ -1756,7 +1756,20 @@ class ASTPrinter : Visitor2
 
   void visit(FuncLiteralExpr n)
   {
-    // TODO:
+    if (n.tok)
+      w(n.tok, ws);
+    if (n.returnType) {
+      v(n.returnType);
+      w(ws);
+    }
+    if (n.params)
+      v(n.params);
+    w(T.LBrace, Newline);
+    {
+      scope il = new IndentLevel();
+      v(n.funcBody.funcBody);
+    }
+    w(ind, T.RBrace);
   }
 
   void visit(LambdaExpr n)

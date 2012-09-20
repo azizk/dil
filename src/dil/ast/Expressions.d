@@ -1171,10 +1171,11 @@ class IsExpr : Expression
 
 class FuncLiteralExpr : Expression
 {
+  Token* tok;
   TypeNode returnType;
   Parameters params;
   FuncBodyStmt funcBody;
-  mixin(memberInfo("returnType", "params", "funcBody"));
+  mixin(memberInfo("tok", "returnType", "params", "funcBody"));
 
   this()
   {
@@ -1184,9 +1185,18 @@ class FuncLiteralExpr : Expression
     addChild(funcBody);
   }
 
-  this(TypeNode returnType, Parameters params, FuncBodyStmt funcBody)
+  this(Token* tok, TypeNode returnType, Parameters params,
+       FuncBodyStmt funcBody)
   {
+    this.tok = tok;
     this.returnType = returnType;
+    this.params = params;
+    this.funcBody = funcBody;
+    this();
+  }
+
+  this(Parameters params, FuncBodyStmt funcBody)
+  {
     this.params = params;
     this.funcBody = funcBody;
     this();

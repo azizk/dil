@@ -3560,7 +3560,7 @@ class Parser
         parameters.postSTCs = parseFunctionPostfix();
       }
       auto funcBody = parseFunctionBody();
-      e = new FuncLiteralExpr(returnType, parameters, funcBody);
+      e = new FuncLiteralExpr(begin, returnType, parameters, funcBody);
       break;
     case T.Assert:
       requireNext(T.LParen);
@@ -3652,7 +3652,7 @@ class Parser
         }
         else
           error(token, MID.ExpectedFunctionBody, token.text);
-        e = new FuncLiteralExpr(null, parameters, fstmt);
+        e = new FuncLiteralExpr(parameters, fstmt);
       }
       else
       { // ( Expression )
@@ -4130,6 +4130,10 @@ class Parser
   }
 
   /// Parses a ParameterList.
+  /// $(BNF ParameterList := "(" Parameters? ")"
+  ////Parameters := Parameter ("," Parameter)* ","?
+  ////Parameter  := StorageClasses? (Type Name? | Type? Name )
+  ////              ("=" AssignExpr)?)
   Parameters parseParameterList()
   {
     auto begin = token;
