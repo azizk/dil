@@ -304,22 +304,25 @@ def main():
   DIL       = dil_path()
 
   # Build folder.
-  BUILD_DIR = Path(options.builddir or "build")
+  BUILDROOT = Path(options.builddir or "build")/("dil_"+VERSION)
   # Destination of distributable files.
-  DEST      = dil_path(BUILD_DIR/("dil."+VERSION), dilconf=False)
+  DEST      = dil_path(BUILDROOT/"dil", dilconf=False)
   DEST.DOC  = doc_path(DEST.DOC)
 
   # Temporary directory, deleted in the end.
-  TMP       = DEST/"tmp"
+  TMP       = BUILDROOT/"tmp"
   # The list of module files (with info) that have been processed.
   MODLIST   = TMP/"modules.txt"
   # The source files that need to be compiled and documentation generated for.
   FILES     = []
+  # The folders and files which were produced by a build.
+  PRODUCED  = []
 
   # Create the build directory.
-  BUILD_DIR.mkdir()
+  # BUILD_DIR.mkdir()
+
   # Check out a new working copy.
-  DEST.rmtree() # First remove the tree.
+  BUILDROOT.rmtree().mkdir() # First remove the whole folder and recreate it.
   if options.src != None:
     # Use the source folder specified by the user.
     src = Path(options.src)
@@ -344,9 +347,10 @@ def main():
       if modified_files != "":
         for f in modified_files.split("\n"):
           Path(f).copy(DEST/f)
+  PRODUCED += [DEST.abspath]
   # Create other directories not available in a clean checkout.
   DOC = DEST.DOC
-  map(Path.mkdir, (DOC, DOC.HTMLSRC, DOC.CSS, DOC.IMG, DOC.JS, TMP))
+  map(Path.mkdir, (DOC.HTMLSRC, DOC.CSS, DOC.IMG, DOC.JS, TMP))
 
   # Rebuild the path object for kandil. (Images are globbed.)
   DEST.KANDIL = kandil_path(DEST/"kandil")
@@ -382,13 +386,13 @@ def main():
     for bin in BINS:
       (DIL.DATA/"dilconf.d").copy(bin.folder)
 
-  # Removed unneeded directories.
+  # Remove unneeded directories.
   options.docs or DEST.DOC.rmtree()
-  TMP.rmtree()
 
   # Build archives.
   assert DEST[-1] != Path.sep
   create_archives(options, DEST.name, DEST.name, DEST.folder)
+
   if options.deb and not options.no_binaries:
     MTR = get_MAINTAINER(options.deb_mntnr)
     NUM = int(options.deb_num)
@@ -401,6 +405,56 @@ def main():
       # Gather the binaries that belong to arch.
       SRC.BINS  = [bin for bin in LINUX_BINS if bin.target.arch == arch]
       make_deb_package(SRC, DEST.folder, VERSION, arch, DEST, MTR, NUM)
+
+  if not options.no_binaries:
+    # Make an arch-independent folder.
+    NOARCH = TMP/"dil_noarch"
+    DEST.copytree(NOARCH)
+    map(Path.rmtree, NOARCH//("linux", "windows"))
+
+    # Linux:
+    for bits in (32, 64):
+      SRC = (TMP/"dil_"+VERSION).rmtree() # Clear if necessary.
+      NOARCH.copytree(SRC)
+      (DEST/"linux"/"bin%d"%bits).copytree(SRC/"bin")
+      write_modified_dilconf(SRC/"data"/"dilconf.d", SRC/"bin"/"dilconf.d",
+        Path("${BINDIR}")/".."/"data")
+      NAME = BUILDROOT.abspath/"dil_%s_linux%s" % (VERSION, bits)
+      for ext in (".7z", ".tar.xz"):
+        make_archive(SRC, NAME+ext)
+        PRODUCED += [NAME+ext]
+      SRC.rmtree()
+
+    # Windows:
+    for bits in (32, 64):
+      if bits != 32: continue # Only 32bit supported atm.
+      SRC = (TMP/"dil_"+VERSION).rmtree() # Clear if necessary.
+      NOARCH.copytree(SRC)
+      (DEST/"windows"/"bin%d"%bits).copytree(SRC/"bin")
+      write_modified_dilconf(SRC/"data"/"dilconf.d", SRC/"bin"/"dilconf.d",
+        Path("${BINDIR}")/".."/"data")
+      NAME = BUILDROOT.abspath/"dil_%s_win%s" % (VERSION, bits)
+      for ext in (".7z", ".zip"):
+        make_archive(SRC, NAME+ext)
+        PRODUCED += [NAME+ext]
+      SRC.rmtree()
+    NOARCH.rmtree()
+
+    # All platforms:
+    NAME = BUILDROOT.abspath/"dil_%s_all" % VERSION
+    for ext in (".7z", ".zip", ".tar.xz"):
+      make_archive(DEST, NAME+ext)
+      PRODUCED += [NAME+ext]
+
+  TMP.rmtree()
+
+  if PRODUCED:
+    print("\nProduced files/folders:")
+    for x in PRODUCED:
+      if Path(x).exists:
+        print(x)
+    print()
+
 
   print("Done!")
 
