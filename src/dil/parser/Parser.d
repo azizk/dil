@@ -1701,28 +1701,6 @@ class Parser
     return new DeleteDecl(parameters, funcBody);
   }
 
-  /// $(BNF TypeofType   := typeof "(" Expression ")" | TypeofReturn
-  ////TypeofReturn := typeof "(" return ")")
-  Type parseTypeofType()
-  {
-    auto begin = token;
-    skip(T.Typeof);
-    auto leftParen = token;
-    require2(T.LParen);
-    Expression e;
-    if (tokenIs(T.Return))
-    {
-    version(D2)
-      nT();
-    }
-    else
-      e = parseExpression();
-    auto type = new TypeofType(e);
-    requireClosing(T.RParen, leftParen);
-    set(type, begin);
-    return type;
-  }
-
   /// Parses a MixinDecl or MixinStmt.
   /// $(BNF
   ////MixinDecl       := (MixinExpr | MixinTemplate | MixinTemplateId) ";"
@@ -2880,16 +2858,13 @@ class Parser
   /// $(BNF AsmPrimaryExpr :=
   ////  IntExpr | FloatExpr | DollarExpr |
   ////  AsmLocalSizeExpr | AsmRegisterExpr | AsmBracketExpr |
-  ////  QualifiedExpr
+  ////  IdentifiersExpr
   ////IntExpr          := Integer
   ////FloatExpr        := FloatLiteral | IFloatLiteral
   ////DollarExpr       := "$"
   ////AsmBracketExpr   := "[" AsmExpr "]"
   ////AsmLocalSizeExpr := "__LOCAL_SIZE"
-  ////AsmRegisterExpr  := ...
-  ////QualifiedExpr    := (ModuleScopeExpr | IdentifierExpr)
-  ////                    ("." IdentifierExpr)+
-  ////ModuleScopeExpr  := ".")
+  ////AsmRegisterExpr  := ...)
   Expression parseAsmPrimaryExpr()
   {
     auto begin = token;
@@ -3181,13 +3156,13 @@ class Parser
     return e;
   }
 
-  /// $(BNF PostExpr := UnaryExpr
-  ////  (QualifiedExpr | IncOrDecExpr | CallExpr | SliceExpr | IndexExpr)*
-  ////QualifiedExpr := "." (NewExpr | IdentifierExpr)
-  ////IncOrDecExpr  := "++" | "--"
-  ////CallExpr      := "(" Arguments? ")"
-  ////SliceExpr     := "[" (AssignExpr ".." AssignExpr)? "]"
-  ////IndexExpr     := "[" ExpressionList "]")
+  /// $(BNF PostExpr := UnaryExpr |
+  ////  PostIdExpr | IncOrDecExpr | CallExpr | SliceExpr | IndexExpr
+  ////PostIdExpr   := UnaryExpr "." (NewExpr | IdentifierExpr)
+  ////IncOrDecExpr := UnaryExpr ("++" | "--")
+  ////CallExpr     := UnaryExpr "(" Arguments? ")"
+  ////SliceExpr    := UnaryExpr "[" (AssignExpr ".." AssignExpr)? "]"
+  ////IndexExpr    := UnaryExpr "[" ExpressionList "]")
   Expression parsePostExpr()
   {
     auto begin = token;
@@ -3362,7 +3337,8 @@ class Parser
   }
 
   /// $(BNF IdentifiersExpr :=
-  ////  ModuleScopeExpr? IdentifierExpr ("." IdentifierExpr)*)
+  ////  ModuleScopeExpr? IdentifierExpr ("." IdentifierExpr)*
+  ////ModuleScopeExpr := ".")
   Expression parseIdentifiersExpr()
   {
     Expression e;
@@ -3417,8 +3393,44 @@ class Parser
     return set(new LambdaExpr(params, fstmt), begin);
   }
 
-  /// $(BNF PrimaryExpr := ... | ModuleScopeExpr
-  ////ModuleScopeExpr := ".")
+  /// $(BNF PrimaryExpr := IdentifierExpr | ModuleScopeExpr |
+  ////  LambdaExpr | TypeofExpr | ThisExpr | SuperExpr |
+  ////  NullExpr | BoolExpr | DollarExpr | IntExpr | FloatExpr |
+  ////  CharExpr | StringExpr | ArrayLiteralExpr | AArrayLiteralExpr |
+  ////  FuncLiteralExpr | AssertExpr | MixinExpr | ImportExpr |
+  ////  TypeidExpr | IsExpr | ParenExpr | TraitsExpr | TypeDotIdExpr |
+  ////  SpecialTokenExpr
+  ////TypeofExpr    := TypeofType
+  ////ThisExpr      := this
+  ////SuperExpr     := super
+  ////NullExpr      := null
+  ////BoolExpr      := true | false
+  ////DollarExpr    := "$"
+  ////IntExpr       := IntegerLiteral
+  ////FloatExpr     := FloatLiteral
+  ////CharExpr      := CharacterLiteral
+  ////StringExpr    := StringLiteral+
+  ////StringLiteral := NormalStringLiteral | EscapeStringLiteral |
+  ////  RawStringLiteral | HexStringLiteral | DelimitedStringLiteral |
+  ////  TokenStringLiteral
+  ////ArrayLiteralExpr := "[" ExpressionList2? "]"
+  ////AArrayLiteralExpr := "[" KeyValue ("," KeyValue)* ","? "]"
+  ////KeyValue := (AssignExpr ":" AssignExpr)
+  ////FuncLiteralExpr := (function | delegate)?
+  ////  (ReturnType? ParameterList FunctionPostfix?)? "{" Statements "}"
+  ////AssertExpr := assert "(" AssignExpr ("," AssignExpr)? ")"
+  ////MixinExpr  := mixin "(" AssignExpr ")"
+  ////ImportExpr := import "(" AssignExpr ")"
+  ////TypeidExpr := typeid "(" Type ")"
+  ////IsExpr := is "(" Declarator (Specialization TemplateParameterList2)? ")"
+  ////Specialization := ((":" | "==") (SpecToken | Type))
+  ////SpecToken := typedef | struct | union | class | interface | enum |
+  ////  function | delegate | super | return |
+  ////  const | immutable | inout | shared
+  ////ParenExpr := "(" Expression ")"
+  ////TraitsExpr := __traits "(" Identifier ("," TemplateArguments)? ")"
+  ////TypeDotIdExpr := "(" Type ")" "." Identifier
+  ////SpecialTokenExpr := SpecialToken)
   Expression parsePrimaryExpr()
   {
     auto begin = token;
@@ -3884,8 +3896,28 @@ class Parser
     return set(t, begin);
   }
 
+  /// $(BNF TypeofType   := typeof "(" Expression ")" | TypeofReturn
+  ////TypeofReturn := typeof "(" return ")")
+  Type parseTypeofType()
+  {
+    auto begin = token;
+    skip(T.Typeof);
+    auto leftParen = token;
+    require2(T.LParen);
+    Expression e;
+    if (tokenIs(T.Return))
+    {
+    version(D2)
+      nT();
+    }
+    else
+      e = parseExpression();
+    requireClosing(T.RParen, leftParen);
+    return set(new TypeofType(e), begin);
+  }
+
   /// $(BNF QualifiedType :=
-  //// (this | super | ModuleScopeType | TypeofType | IdentifierType)
+  //// (this | super | TypeofType | ModuleScopeType? IdentifierType)
   //// ("." IdentifierType)*)
   Type parseQualifiedType()
   {
