@@ -125,6 +125,7 @@ Description: D compiler
   NAME = "dil%s_%s-%s_%s.deb" % (V_MAJOR, VERSION, PACKAGENUM, ARCH)
   call_proc("fakeroot", "dpkg-deb", "--build", TMP, DEST/NAME)
   TMP.rmtree()
+  return DEST/NAME
 
 def get_MAINTAINER(M):
   if M == None:
@@ -404,7 +405,8 @@ def main():
     for arch in ("i386", "amd64"):
       # Gather the binaries that belong to arch.
       SRC.BINS  = [bin for bin in LINUX_BINS if bin.target.arch == arch]
-      make_deb_package(SRC, DEST.folder, VERSION, arch, DEST, MTR, NUM)
+      DEB = make_deb_package(SRC, DEST.folder, VERSION, arch, DEST, MTR, NUM)
+      PRODUCED += [DEB.abspath]
 
   if not options.no_binaries:
     # Make an arch-independent folder.
