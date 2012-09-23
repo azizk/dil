@@ -364,7 +364,10 @@ def generate_pdf(module_files, dest, tmp, params, jsons):
   call_prince(html_src, dest)
 
 def call_prince(src, dest):
-  call_proc("prince", src, "-o", dest, "-v")
+  if locate_command("prince"):
+    call_proc("prince", src, "-o", dest, "-v")
+  else:
+    print("Error: 'prince' is not installed")
 
 class PDFGenerator:
   def fetch_files(self, SRC, TMP):
