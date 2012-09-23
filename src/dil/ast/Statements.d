@@ -397,7 +397,7 @@ class ReturnStmt : Statement
 
 class GotoStmt : Statement
 {
-  Token* ident;
+  Token* ident; /// The label id, case or default.
   Expression expr;
   mixin(memberInfo("ident", "expr"));
   this(Token* ident, Expression expr)
@@ -410,17 +410,17 @@ class GotoStmt : Statement
 
   bool isGotoLabel() @property
   {
-    return ident !is null;
+    return ident.kind == TOK.Identifier;
   }
 
   bool isGotoCase() @property
   {
-    return expr !is null;
+    return ident.kind == TOK.Goto;
   }
 
   bool isGotoDefault() @property
   {
-    return !(isGotoLabel || isGotoCase);
+    return ident.kind == TOK.Default;
   }
 
   mixin methods;

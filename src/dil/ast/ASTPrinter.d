@@ -1049,7 +1049,10 @@ class ASTPrinter : Visitor2
     if (n.isGotoLabel)
       w(n.ident);
     else if (n.isGotoCase)
-      v(n.expr);
+    {
+      if (n.expr)
+        v(n.expr);
+    }
     else
       w(T.Default);
     w(T.Semicolon, Newline);
@@ -1701,9 +1704,7 @@ class ASTPrinter : Visitor2
 
   void visit(TypeofExpr n)
   {
-    w(T.Typeof, T.LParen);
     v(n.type);
-    w(T.RParen);
   }
 
   void visit(TypeDotIdExpr n)
