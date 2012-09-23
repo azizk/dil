@@ -17,6 +17,20 @@ Status
  * Semantics: `[░░  20%   ]`
  * Code gen: `[    0%    ]`
 
+Installation
+============
+Download and install from:
+
+  * *.deb files for Debian-based Linux distributions.
+  * Compressed archives.<br/>
+    After extracting an archive, you can simply run DIL.
+    No extra configuration needed (except, you might want to add the binary dir
+    to your PATH variable.)
+
+Not available yet:
+
+  * Windows installer.
+
 How To Compile DIL
 ==================
 In order to compile DIL you must have:
