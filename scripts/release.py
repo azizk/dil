@@ -115,11 +115,11 @@ Description: D compiler
   ALLDIRS = []
   TMP.rxglob(".", prunedir=lambda p: ALLDIRS.append(p))
 
-  for d in ALLDIRS + BIN.rxglob(".") + SCRIPTS:
-    call_proc("chmod", "755", d)
-
   for f in FILES + DEBIAN//("control", "conffiles", "md5sums"):
     call_proc("chmod", "644", f)
+
+  for d in ALLDIRS + BIN.rxglob(".") + SCRIPTS:
+    call_proc("chmod", "755", d)
 
   # 7. Create the package.
   NAME = "dil%s_%s-%s_%s.deb" % (V_MAJOR, VERSION, PACKAGENUM, ARCH)
