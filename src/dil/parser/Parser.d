@@ -2278,7 +2278,7 @@ class Parser
     return new ForeachStmt(tok, params, e, forBody);
   }
 
-  /// $(BNF SwitchStmt := switch "(" Expression ")" ScopeStmt)
+  /// $(BNF SwitchStmt := final? switch "(" Expression ")" ScopeStmt)
   Statement parseSwitchStmt()
   {
     bool isFinal = consumed(T.Final);
@@ -2292,7 +2292,7 @@ class Parser
   }
 
   /// Helper function for parsing the body of a default or case statement.
-  /// $(BNF CaseOrDefaultBody := ScopeStmt)
+  /// $(BNF CaseOrDefaultBody := ScopeStmt*)
   Statement parseCaseOrDefaultBody()
   {
     // This function is similar to parseNoScopeStmt()
@@ -2307,7 +2307,8 @@ class Parser
     return set(new ScopeStmt(s), begin);
   }
 
-  /// $(BNF CaseStmt := case ExpressionList ":" CaseOrDefaultBody)
+  /// $(BNF CaseStmt := case ExpressionList ":" CaseOrDefaultBody |
+  ////            case AssignExpr ":" ".." case AssignExpr ":" CaseOrDefaultBody)
   Statement parseCaseStmt()
   {
     skip(T.Case);
@@ -2415,10 +2416,7 @@ class Parser
     return new SynchronizedStmt(expr, parseScopeStmt());
   }
 
-  /// $(BNF TryStmt :=
-  ////  try ScopeStmt
-  ////  (CatchStmt* LastCatchStmt? FinallyStmt? |
-  ////   CatchStmt)
+  /// $(BNF TryStmt := try ScopeStmt CatchStmt* LastCatchStmt? FinallyStmt?
   ////CatchStmt     := catch "(" BasicType Identifier ")" NoScopeStmt
   ////LastCatchStmt := catch NoScopeStmt
   ////FinallyStmt   := finally NoScopeStmt)
@@ -2487,8 +2485,7 @@ class Parser
     return new ScopeGuardStmt(condition, scopeBody);
   }
 
-  /// $(BNF VolatileStmt := volatile VolatileBody
-  ////VolatileBody := ScopeStmt | NoScopeStmt)
+  /// $(BNF VolatileStmt := volatile (ScopeStmt | NoScopeStmt))
   Statement parseVolatileStmt()
   {
     skip(T.Volatile);
@@ -2501,7 +2498,7 @@ class Parser
   }
 
   /// $(BNF PragmaStmt :=
-  ////  pragma "(" PragmaName ("," ExpressionList)? ")" NoScopeStmt)
+  ////  pragma "(" Identifier ("," ExpressionList)? ")" NoScopeStmt)
   Statement parsePragmaStmt()
   {
     skip(T.Pragma);
@@ -2543,7 +2540,7 @@ class Parser
   }
 
   /// $(BNF StaticAssertStmt :=
-  ////  static assert "(" AssignExpr ("," Message) ")"
+  ////  static assert "(" AssignExpr ("," Message)? ")" ";"
   ////Message := AssignExpr)
   Statement parseStaticAssertStmt()
   {
@@ -2857,10 +2854,10 @@ class Parser
 
   /// $(BNF AsmPrimaryExpr :=
   ////  IntExpr | FloatExpr | DollarExpr |
-  ////  AsmLocalSizeExpr | AsmRegisterExpr | AsmBracketExpr |
+  ////  AsmBracketExpr |AsmLocalSizeExpr | AsmRegisterExpr |
   ////  IdentifiersExpr
-  ////IntExpr          := Integer
-  ////FloatExpr        := FloatLiteral | IFloatLiteral
+  ////IntExpr          := IntegerLiteral
+  ////FloatExpr        := FloatLiteral
   ////DollarExpr       := "$"
   ////AsmBracketExpr   := "[" AsmExpr "]"
   ////AsmLocalSizeExpr := "__LOCAL_SIZE"
@@ -2967,7 +2964,8 @@ class Parser
   alias Expression function(Expression, Expression, Token*) NewBinaryExpr;
 
   /// The root method for parsing an Expression.
-  /// $(BNF Expression := AssignExpr ("," AssignExpr)*)
+  /// $(BNF Expression := CommaExpr
+  ////CommaExpr := AssignExpr ("," AssignExpr)*)
   Expression parseExpression()
   {
     Token* begin = token, comma = void;
@@ -2979,8 +2977,7 @@ class Parser
 
   /// $(BNF AssignExpr := CondExpr (AssignOp AssignExpr)*
   ////AssignOp   := "=" | "<<=" | ">>=" | ">>>=" | "|=" | "&=" |
-  ////              "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~=" | "^^="
-  ////)
+  ////              "+=" | "-=" | "/=" | "*=" | "%=" | "^=" | "~=" | "^^=")
   Expression parseAssignExpr()
   {
     auto begin = token;
@@ -3129,7 +3126,7 @@ class Parser
   ////AddExpr    := MulExpr (AddOp MulExpr)*
   ////AddOp      := "+" | "-" | "~"
   ////MulExpr    := PostExpr (MulOp PostExpr)*
-  ////MulExpr    := PowExpr  (MulOp PowExpr)* # D2
+  ////MulExpr2   := PowExpr  (MulOp PowExpr)* # D2
   ////MulOp      := "*" | "/" | "%"
   ////PowExpr    := PostExpr ("^^" PostExpr)* # D2
   ////)
@@ -3227,7 +3224,7 @@ class Parser
 
   /// $(BNF UnaryExpr := PrimaryExpr |
   ////  NewExpr | AddressExpr | PreIncrExpr |
-  ////  PreIncrExpr | DerefExpr | SignExpr |
+  ////  PreDecrExpr | DerefExpr | SignExpr |
   ////  NotExpr | CompExpr | DeleteExpr |
   ////  CastExpr | TypeDotIdExpr
   ////AddressExpr   := "&" UnaryExpr
@@ -3238,7 +3235,7 @@ class Parser
   ////NotExpr       := "!" UnaryExpr
   ////CompExpr      := "~" UnaryExpr
   ////DeleteExpr    := delete UnaryExpr
-  ////CastExpr      := cast "(" Type ")" UnaryExpr
+  ////CastExpr      := cast "(" Type? ")" UnaryExpr
   ////TypeDotIdExpr := "(" Type ")" "." Identifier)
   Expression parseUnaryExpr()
   {
@@ -3780,7 +3777,7 @@ class Parser
 
   /// Parses the basic types.
   ///
-  /// $(BNF Type := BasicType BasicType2)
+  /// $(BNF BasicTypes := BasicType BasicType2)
   Type parseBasicTypes()
   {
     return parseBasicType2(parseBasicType());
@@ -3788,7 +3785,7 @@ class Parser
 
   /// Parses a full Type.
   ///
-  /// $(BNF Type     := Modifier BasicType BasicType2 CStyleType?
+  /// $(BNF Type     := Modifier BasicTypes CStyleType?
   ////Modifier := inout | const | immutable | shared)
   Type parseType(Token** pIdent = null)
   {
@@ -3868,7 +3865,7 @@ class Parser
 
   /// Parses a Declarator.
   ///
-  /// $(BNF Declarator := BasicType CStyleType)
+  /// $(BNF Declarator := Type)
   /// Params:
   ///   ident = Receives the identifier of the declarator.
   ///   identOptional = Whether to report an error for a missing identifier.
@@ -4065,6 +4062,7 @@ class Parser
   }
 
   /// Parse the array types after the declarator (C-style.) E.g.: int a[]
+  /// $(BNF DeclaratorSuffix := ArrayType*)
   /// Returns: lhsType or a suffix type.
   /// Params:
   ///   lhsType = The type on the left-hand side.
