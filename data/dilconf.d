@@ -6,6 +6,7 @@
 ///   $(LI The current working directory.)
 ///   $(LI The directory set in the environment variable HOME.)
 ///   $(LI The executable's directory.)
+///   $(LI The /etc directory on Linux.)
 /// )
 /// The program will fail with an error msg if this file couldn't be found.$(BR)
 ///

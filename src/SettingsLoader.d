@@ -285,6 +285,13 @@ class ConfigLoader : SettingsLoader
     filePath.append(this.configFileName);
     if (filePath.exists())
       return filePath.toString();
+    // 5. Look in /etc/.
+    version(linux)
+    {
+    filePath.set("/etc/dilconf.d");
+    if (filePath.exists())
+      return filePath.toString();
+    }
     return null;
   }
 }
