@@ -54,6 +54,20 @@ class Path : FilePath
     return this;
   }
 
+  alias super.set set;
+
+  Path set(cstring s)
+  {
+    super.set(s);
+    return this;
+  }
+
+  Path set(Path p)
+  {
+    super.set(p);
+    return this;
+  }
+
   Path dup()
   {
     return Path(toString());
