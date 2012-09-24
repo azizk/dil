@@ -154,7 +154,7 @@ class ConfigLoader : SettingsLoader
     if (filePath is null)
     {
       diag ~= new GeneralError(new Location("",0),
-        "the configuration file "~configFileName~" could not be found.");
+        "the configuration file ‘"~configFileName~"’ could not be found.");
       return;
     }
     // Load the file as a D module.
@@ -220,12 +220,19 @@ class ConfigLoader : SettingsLoader
   /// Loads a language file and returns a ResouceBundle object.
   ResourceBundle loadResource(cstring langFile)
   {
+    if (!Path(langFile).exists)
+    {
+      diag ~= new GeneralError(new Location("", 0),
+        "the language file ‘"~langFile~"’ does not exist.");
+      goto Lerr;
+    }
+
     // 1. Load language file.
     mod = new Module(langFile, cc);
     mod.parse();
 
     if (mod.hasErrors)
-      return new ResourceBundle();
+      goto Lerr;
 
     auto pass1 = new SemanticPass1(mod, cc);
     pass1.run();
@@ -261,38 +268,37 @@ class ConfigLoader : SettingsLoader
     rb.langCode = langCode;
 
     return rb;
+  Lerr:
+    return new ResourceBundle();
   }
 
   /// Searches for the configuration file of DIL.
   /// Returns: the filePath or null if the file couldn't be found.
   cstring findConfigurationFilePath()
   {
-    // 1. Look in environment variable DILCONF.
-    auto filePath = Path(Environment.get("DILCONF"));
-    if (filePath.exists())
-      return filePath.toString();
-    // 2. Look in the current working directory.
-    filePath.set(this.configFileName);
-    if (filePath.exists())
-      return filePath.toString();
-    // 3. Look in the directory set by HOME.
-    filePath.set(this.homePath);
-    filePath.append(this.configFileName);
-    if (filePath.exists())
-      return filePath.toString();
-    // 4. Look in the binary's directory.
-    filePath.set(this.executableDir);
-    filePath.append(this.configFileName);
-    if (filePath.exists())
-      return filePath.toString();
-    // 5. Look in /etc/.
-    version(linux)
+    auto path = Path();
+    bool exists(cstring s)
     {
-    filePath.set("/etc/dilconf.d");
-    if (filePath.exists())
-      return filePath.toString();
+      return path.set(s).exists;
     }
-    return null;
+    // 1. Look in environment variable DILCONF.
+    if (exists(Environment.get("DILCONF")))
+    {}
+    // 2. Look in the current working directory.
+    else if (exists(configFileName))
+    {}
+    // 3. Look in the directory set by HOME.
+    else if (exists(homePath~"/"~configFileName))
+    {}
+    // 4. Look in the binary's directory.
+    else if (exists(executableDir~"/"~configFileName))
+    {}
+    // 5. Look in /etc/.
+    else if (exists("/etc/"~configFileName))
+    {}
+    else
+      return null;
+    return path.toString();
   }
 }
 
