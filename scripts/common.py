@@ -278,5 +278,9 @@ class StopWatch:
     self.time = self.timer()
   def start(self):
     self.time = self.timer()
-  def stop(self):
+  @property
+  def elapsed(self):
     return self.timer() - self.time
+  def stop(self):
+    self.time = self.elapsed
+    return self.time
