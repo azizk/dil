@@ -183,9 +183,11 @@ def main():
   if options.unittest: other_args += ["-unittest"]
 
   build_func = (build_dil_release, build_dil_debug)[options.debug]
+  sw = StopWatch()
   # Call the compiler with the provided options.
   retcode = build_func(cmdclass=command, wine=options.wine, versions=versions,
     lnk_args=lnk_args, other=other_args)
+  print("Finished in %.2fs" % sw.stop())
 
   sys.exit(retcode)
 

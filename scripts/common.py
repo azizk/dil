@@ -270,3 +270,13 @@ def firstof(typ, *args):
 def getitem(array, index, d=None):
   """ Returns array[index] if the index exists, else d. """
   return array[index] if index < len(array) else d
+
+class StopWatch:
+  import time
+  timer = time.clock if is_win32 else time.time
+  def __init__(self):
+    self.time = self.timer()
+  def start(self):
+    self.time = self.timer()
+  def stop(self):
+    return self.timer() - self.time
