@@ -208,10 +208,8 @@ class ASTPrinter : Visitor2
   /// Returns a new token containing a single whitespace character.
   Token* ws() @property
   {
-    auto s = String(" ");
     auto t = new Token;
-    t.start = s.ptr;
-    t.end = s.end;
+    t.text = " ";
     return t;
   }
 
@@ -219,8 +217,7 @@ class ASTPrinter : Visitor2
   Token* ind() @property
   {
     auto t = new Token;
-    t.start = indent.ptr;
-    t.end = indent.ptr + indent.length;
+    t.text = indent;
     return t;
   }
 
@@ -228,6 +225,7 @@ class ASTPrinter : Visitor2
   Token* id(Identifier* id)
   {
     auto t = new Token;
+    t.kind = TOK.Identifier;
     t.text = id.str;
     t.ident = id;
     return t;
@@ -361,8 +359,8 @@ class ASTPrinter : Visitor2
     if (n.type)
       w(ws, T.LParen, n.type, T.RParen);
     w(ws, n.fqn[0]);
-    foreach (id; n.fqn[1..$])
-      w(T.Dot, id);
+    foreach (ident; n.fqn[1..$])
+      w(T.Dot, ident);
     w(T.Semicolon, Newline, Newline);
   }
 
@@ -378,11 +376,11 @@ class ASTPrinter : Visitor2
         w(T.Comma, ws);
       if (auto aliasId = n.moduleAliases[i])
         w(aliasId, ws, T.Equal, ws);
-      foreach (j, id; fqn)
+      foreach (j, ident; fqn)
       {
         if (j)
           w(T.Dot);
-        w(id);
+        w(ident);
       }
     }
     foreach (i, bindName; n.bindNames)
@@ -879,7 +877,7 @@ class ASTPrinter : Visitor2
   void visit(IfStmt n)
   {
     w(ind, T.If, T.LParen);
-    if (auto var = n.variable.to!VariablesDecl)
+    if (auto var = n.variable ? n.variable.to!VariablesDecl : null)
     {
       if (var.type)
         v(var.type);
@@ -2018,10 +2016,10 @@ class ASTPrinter : Visitor2
     if (n.stcs)
     {
       for (auto i = STC.max; i; i >>= 1)
-        if (n.stcs & i)
+        if (auto stc = n.stcs & i)
         {
           TOK t;
-          switch (i)
+          switch (stc)
           {
           case STC.Const:     t = TOK.Const;     break;
           case STC.Immutable: t = TOK.Immutable; break;
@@ -2034,8 +2032,9 @@ class ASTPrinter : Visitor2
           case STC.In:        t = TOK.In;        break;
           case STC.Out:       t = TOK.Out;       break;
           case STC.Ref:       t = TOK.Ref;       break;
+          case STC.Variadic:  continue;
           default:
-            assert(0);
+            assert(0, EnumString(stc));
           }
           w(t.toToken(), ws);
         }
