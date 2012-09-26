@@ -281,24 +281,19 @@ class ConfigLoader : SettingsLoader
     {
       return path.set(s).exists;
     }
-    // 1. Look in environment variable DILCONF.
-    if (exists(Environment.get("DILCONF")))
-    {}
-    // 2. Look in the current working directory.
-    else if (exists(configFileName))
-    {}
-    // 3. Look in the directory set by HOME.
-    else if (exists(homePath~"/"~configFileName))
-    {}
-    // 4. Look in the binary's directory.
-    else if (exists(executableDir~"/"~configFileName))
-    {}
-    // 5. Look in /etc/.
-    else if (exists("/etc/"~configFileName))
-    {}
+        // 1. Look in environment variable DILCONF.
+    if (exists(Environment.get("DILCONF")) ||
+        // 2. Look in the current working directory.
+        exists(configFileName) ||
+        // 3. Look in the directory set by HOME.
+        exists(homePath~"/"~configFileName) ||
+        // 4. Look in the binary's directory.
+        exists(executableDir~"/"~configFileName) ||
+        // 5. Look in /etc/.
+        exists("/etc/"~configFileName))
+      return path.toString();
     else
       return null;
-    return path.toString();
   }
 }
 
