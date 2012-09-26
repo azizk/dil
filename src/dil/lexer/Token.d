@@ -115,7 +115,7 @@ struct Token
   /// Returns the text of the token.
   @property cstring text()
   {
-    assert(end && start <= end);
+    assert(start <= end);
     return start[0 .. end - start];
   }
 

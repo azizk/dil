@@ -154,6 +154,7 @@ class Module : ModuleSymbol
   /// Returns true if there are errors in the source file.
   bool hasErrors()
   {
+    assert(parser && parser.lexer);
     return parser.errors.length || parser.lexer.errors.length || failedLoading;
   }
 

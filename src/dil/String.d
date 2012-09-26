@@ -54,6 +54,7 @@ struct StringT(C)
   /// Constructs from start and end pointers.
   this(inout C* p, inout C* e) inout
   {
+    assert(p <= e);
     ptr = p;
     end = e;
   }
