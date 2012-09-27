@@ -798,10 +798,10 @@ class BoolExpr : Expression
     this(t.kind == TOK.True ? true : false);
   }
 
-  bool toBool()
+  bool toBool() @property
   {
-    assert(begin !is null);
-    return begin.kind == TOK.True ? true : false;
+    assert(value !is null);
+    return !!value.number;
   }
 
   mixin methods;
