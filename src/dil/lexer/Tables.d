@@ -36,4 +36,20 @@ class LexerTables
   {
     return idents.lookup(str);
   }
+
+  /// Looks up a ulong in the table.
+  /// Params:
+  ///   num = The number value.
+  IntegerValue* lookupUlong(ulong num)
+  {
+    auto pintval = num in ulongs;
+    if (!pintval)
+    { // Insert a new IntegerValue into the table.
+      auto iv = new IntegerValue;
+      iv.ulong_ = num;
+      ulongs[num] = iv;
+      return iv;
+    }
+    return *pintval;
+  }
 }

@@ -342,22 +342,6 @@ class Lexer
     return lookupString(hashOf(str), str);
   }
 
-  /// Looks up a ulong in the table.
-  /// Params:
-  ///   num = The number value.
-  IntegerValue* lookupUlong(ulong num)
-  {
-    auto pintval = num in tables.ulongs;
-    if (!pintval)
-    { // Insert a new IntegerValue into the table.
-      auto iv = new IntegerValue;
-      iv.ulong_ = num;
-      tables.ulongs[num] = iv;
-      return iv;
-    }
-    return *pintval;
-  }
-
   /// Looks up a Float in the table.
   /// Params:
   ///   str = The zero-terminated string of the float number.
@@ -2305,7 +2289,7 @@ class Lexer
       version(X86_64)
       t.intval.ulong_ = ulong_;
       else
-      t.intval = lookupUlong(ulong_);
+      t.intval = tables.lookupUlong(ulong_);
     }
     else
       t.uint_ = cast(uint)ulong_;
