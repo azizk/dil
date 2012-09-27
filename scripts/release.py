@@ -319,6 +319,8 @@ def main():
   # The folders and files which were produced by a build.
   PRODUCED  = []
 
+  sw, sw_all = StopWatch(), StopWatch()
+
   # Create the build directory.
   # BUILD_DIR.mkdir()
 
@@ -348,7 +350,6 @@ def main():
       if modified_files != "":
         for f in modified_files.split("\n"):
           Path(f).copy(DEST/f)
-  PRODUCED += [DEST.abspath]
   # Create other directories not available in a clean checkout.
   DOC = DEST.DOC
   map(Path.mkdir, (DOC.HTMLSRC, DOC.CSS, DOC.IMG, DOC.JS, TMP))
@@ -387,6 +388,8 @@ def main():
     for bin in BINS:
       (DIL.DATA/"dilconf.d").copy(bin.folder)
 
+  PRODUCED += (DEST.abspath, sw.stop())
+
   # Remove unneeded directories.
   options.docs or DEST.DOC.rmtree()
 
@@ -405,8 +408,9 @@ def main():
     for arch in ("i386", "amd64"):
       # Gather the binaries that belong to arch.
       SRC.BINS  = [bin for bin in LINUX_BINS if bin.target.arch == arch]
+      sw.start()
       DEB = make_deb_package(SRC, DEST.folder, VERSION, arch, DEST, MTR, NUM)
-      PRODUCED += [DEB.abspath]
+      PRODUCED += [(DEB.abspath, sw.stop())]
 
   if not options.no_binaries:
     # Make an arch-independent folder.
@@ -423,8 +427,9 @@ def main():
         Path("${BINDIR}")/".."/"data")
       NAME = BUILDROOT.abspath/"dil_%s_linux%s" % (VERSION, bits)
       for ext in (".7z", ".tar.xz"):
+        sw.start()
         make_archive(SRC, NAME+ext)
-        PRODUCED += [NAME+ext]
+        PRODUCED += [(NAME+ext, sw.stop())]
       SRC.rmtree()
 
     # Windows:
@@ -437,28 +442,30 @@ def main():
         Path("${BINDIR}")/".."/"data")
       NAME = BUILDROOT.abspath/"dil_%s_win%s" % (VERSION, bits)
       for ext in (".7z", ".zip"):
+        sw.start()
         make_archive(SRC, NAME+ext)
-        PRODUCED += [NAME+ext]
+        PRODUCED += [(NAME+ext, sw.stop())]
       SRC.rmtree()
     NOARCH.rmtree()
 
     # All platforms:
     NAME = BUILDROOT.abspath/"dil_%s_all" % VERSION
     for ext in (".7z", ".zip", ".tar.xz"):
+      sw.start()
       make_archive(DEST, NAME+ext)
-      PRODUCED += [NAME+ext]
+      PRODUCED += [(NAME+ext, sw.stop())]
 
   TMP.rmtree()
 
   if PRODUCED:
     print("\nProduced files/folders:")
-    for x in PRODUCED:
+    for x, sec in PRODUCED:
       if Path(x).exists:
-        print(x)
+        print(x+" (%.2fs)"%sec)
     print()
 
 
-  print("Done!")
+  print("Finished in %.2fs!" % sw_all.stop())
 
 if __name__ == '__main__':
   main()
