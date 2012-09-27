@@ -13,6 +13,7 @@ import dil.ast.Visitor,
        dil.ast.Types,
        dil.ast.Parameters;
 import dil.lexer.IdTable;
+import dil.semantic.TypesEnum;
 import dil.Compilation;
 import dil.String;
 import dil.Enums;
@@ -1631,7 +1632,65 @@ class ASTPrinter : Visitor2
 
   void visit(IntExpr n)
   {
-    // TODO:
+    void writeCast(TOK k)
+    {
+      w(T.Cast, T.LParen, k.toToken(), T.RParen);
+    }
+
+    cstring txt;
+    TOK k;
+    auto num = n.number;
+
+    if (n.type)
+      switch (n.type.tid)
+      {
+      case TYP.Int8:   writeCast(TOK.Byte);  goto case TYP.Int32;
+      case TYP.Int16:  writeCast(TOK.Short); goto case TYP.Int32;
+      case TYP.Int32:  txt = "{}";  k = TOK.Int32; break;
+      case TYP.Int64:  txt = "{}L"; k = TOK.Int64; break;
+      case TYP.UInt8:  writeCast(TOK.Ubyte);  goto case TYP.UInt32;
+      case TYP.UInt16: writeCast(TOK.Ushort); goto case TYP.UInt32;
+      case TYP.UInt32: txt = "{}U";  k = TOK.UInt32; break;
+      case TYP.UInt64: txt = "{}LU"; k = TOK.UInt32; break;
+      default:
+        assert(0, "unhandled type");
+      }
+    else
+    {
+      txt = "{}";
+      if (num & 0x8000_0000_0000_0000) {
+        txt = "0x{:X}";
+        k = TOK.UInt64;
+      }
+      else if (num & 0xFFFF_FFFF_0000_0000)
+        k = TOK.Int64;
+      else if (num & 0x8000_0000) {
+        txt = "0x{:X}";
+        k = TOK.UInt32;
+      }
+      else
+        k = TOK.Int32;
+    }
+    assert(k);
+
+    txt = Format(txt, num); // Convert to text.
+
+    // Finally construct the integer Token.
+    auto t = new Token;
+    t.kind = k;
+    t.text = txt;
+
+    if (k == TOK.Int64 || k == TOK.UInt64)
+    {
+      version(X86_64)
+      t.intval.ulong_ = num;
+      else
+      t.intval = cc.tables.lxtables.lookupUlong(num);
+    }
+    else
+      t.uint_ = cast(uint)num;
+
+    w(t);
   }
 
   void visit(FloatExpr n)
