@@ -84,14 +84,18 @@ class ASTPrinter : Visitor2
     const nl = "\r";
     else
     const nl = "\n";
-    t.start = nl.ptr;
-    t.end   = nl.ptr + nl.length;
+    t.text = nl;
     return t;
   }
 
   /// Starts the printer.
   char[] print(Node n)
   {
+    text    = null;
+    tokens  = null;
+    wsToken = null;
+    spaces  = null;
+    indent  = null;
     visitN(n);
     fixTokens();
     return text;
@@ -575,15 +579,17 @@ class ASTPrinter : Visitor2
   void visit(VariablesDecl n)
   {
     w(ind);
-    if (n.type)
+    if (n.type) {
       v(n.type);
+      w(ws);
+    }
     //else // Emitted by visit(StorageClassDecl).
-    //  w(T.Auto);
+    //  w(T.Auto, ws);
     foreach (i, name; n.names)
     {
       if (i)
-        w(T.Comma);
-      w(ws, name);
+        w(T.Comma, ws);
+      w(name);
       if (auto init = n.inits[i]) {
         w(ws, T.Equal, ws);
         v(init);
@@ -685,7 +691,8 @@ class ASTPrinter : Visitor2
          NodeKind.StorageClassDecl,
          NodeKind.LinkageDecl,
          NodeKind.AlignDecl,
-         NodeKind.PragmaDecl:
+         NodeKind.PragmaDecl,
+         NodeKind.VariablesDecl:
       {
         scope il = new SetIndentLevel(" ");
         v(n);
@@ -927,7 +934,11 @@ class ASTPrinter : Visitor2
   {
     w(ind, T.For, T.LParen);
     if (n.init)
+    {
+      scope il = new SetIndentLevel("");
       v(n.init);
+      // FIXME: remove trailing newlines.
+    }
     else
       w(T.Semicolon);
     if (n.condition) {
@@ -1244,7 +1255,9 @@ class ASTPrinter : Visitor2
 
   void visit(CommaExpr n)
   {
-    w(n);
+    w(n.lhs, PREC.Assignment);
+    w(n.optok, ws);
+    w(n.rhs, PREC.Assignment);
   }
 
   void visit(OrOrExpr n)
@@ -1637,6 +1650,15 @@ class ASTPrinter : Visitor2
 
   void visit(IntExpr n)
   {
+    if (auto t = n.begin)
+      switch (t.kind)
+      { // Write the original Token if available.
+      case TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64:
+        w(t);
+        return;
+      default:
+      }
+
     void writeCast(TOK k)
     {
       w(T.Cast, T.LParen, k.toToken(), T.RParen);
@@ -1658,7 +1680,7 @@ class ASTPrinter : Visitor2
       case TYP.UInt32: txt = "{}U";  k = TOK.UInt32; break;
       case TYP.UInt64: txt = "{}LU"; k = TOK.UInt32; break;
       default:
-        assert(0, "unhandled type");
+        assert(0, "unhandled int type");
       }
     else
     {
