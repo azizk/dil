@@ -873,6 +873,7 @@ class FloatExpr : Expression
 /// It is only created in the semantic phase.
 class ComplexExpr : Expression
 {
+  import dil.semantic.TypesEnum;
   Complex number;
 
   mixin(memberInfo("begin"));
@@ -893,9 +894,34 @@ class ComplexExpr : Expression
   {
     return number.re;
   }
+
   Float im()
   {
     return number.im;
+  }
+
+  Type reType()
+  {
+    switch (type.tid)
+    {
+    case TYP.CFloat32: return Types.Float32;
+    case TYP.CFloat64: return Types.Float64;
+    case TYP.CFloat80: return Types.Float80;
+    default:
+      assert(0);
+    }
+  }
+
+  Type imType()
+  {
+    switch (type.tid)
+    {
+    case TYP.CFloat32: return Types.IFloat32;
+    case TYP.CFloat64: return Types.IFloat64;
+    case TYP.CFloat80: return Types.IFloat80;
+    default:
+      assert(0);
+    }
   }
 
   mixin methods;

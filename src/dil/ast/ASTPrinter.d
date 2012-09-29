@@ -1695,12 +1695,46 @@ class ASTPrinter : Visitor2
 
   void visit(FloatExpr n)
   {
-    // TODO:
+    cstring txt;
+    TOK k = TOK.Float64;
+
+    // FIXME: inaccurate conversion
+    txt = Format("{}", n.number);
+
+    if (auto type = n.type)
+    {
+      type = type.baseType();
+      switch (n.type.tid)
+      {
+      case TYP.Float32, TYP.IFloat32, TYP.CFloat32:
+        txt ~= 'F'; k = TOK.Float32; break;
+      case TYP.Float80, TYP.IFloat80, TYP.CFloat80:
+        txt ~= 'L'; k = TOK.Float80; break;
+      default:
+        assert(0, "unhandled float type");
+      }
+      if (type.isImaginary)
+        txt ~= 'i';
+    }
+
+    auto t = new Token;
+    t.kind = k;
+    t.text = txt;
+    t.mpfloat = n.number;
+
+    w(t);
   }
 
   void visit(ComplexExpr n)
   {
-    // TODO:
+    w(T.LParen);
+    auto c = n.number;
+    auto re = new FloatExpr(c.re, n.reType);
+    auto im = new FloatExpr(c.im, n.imType);
+    v(re);
+    w(ws, c.im.isNeg ? T.Minus : T.Plus, ws);
+    v(im);
+    w(T.RParen);
   }
 
   void visit(CharExpr n)
