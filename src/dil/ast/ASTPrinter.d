@@ -12,7 +12,8 @@ import dil.ast.Visitor,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
-import dil.lexer.IdTable;
+import dil.lexer.IdTable,
+       dil.lexer.Funcs;
 import dil.semantic.TypesEnum;
 import dil.Compilation;
 import dil.String;
@@ -186,9 +187,13 @@ class ASTPrinter : Visitor2
   /// Writes the tokens between b and e (inclusive.)
   void writeSpan(Token* b, Token* e)
   {
-    for (auto t = b; b !is e; t = t.next)
+    for (auto t = b; t; t = t.next)
+    {
       if (!t.isWhitespace())
         writeToken(t);
+      if (t is e)
+        break;
+    }
   }
 
   /// Shortcuts.
@@ -1739,12 +1744,45 @@ class ASTPrinter : Visitor2
 
   void visit(CharExpr n)
   {
-    // TODO:
+    auto c = n.charValue;
+    cstring txt = `'`;
+    txt ~= (c == '\'') ? `\'` : (c == '\\') ? `\\` : escapeNonPrintable(c);
+    txt ~= `'`;
+
+    auto t = new Token;
+    t.kind = TOK.Character;
+    t.text = txt;
+    t.dchar_ = c;
+
+    w(t);
   }
 
   void visit(StringExpr n)
   {
-    // TODO:
+    if (n.begin && n.end)
+    { // Write original tokens if available.
+      writeSpan(n.begin, n.end);
+      return;
+    }
+
+    // NB: could be optimized to copying the string if no escaping is needed.
+    auto s = n.getString();
+    cstring txt = `"`;
+
+    foreach (c; s)
+      txt ~= (c == '\"') ? `\"` : (c == '\\') ? `\\` : escapeNonPrintable(c);
+
+    txt ~= `"`;
+
+    auto t = new Token;
+    t.kind = TOK.String;
+    t.text = txt;
+    // FIXME: look up in lxtables.
+    auto sv = new Token.StringValue;
+    sv.str = txt[1..$-1] ~ '\0';
+    t.strval = sv;
+
+    w(t);
   }
 
   void visit(ArrayLiteralExpr n)

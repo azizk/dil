@@ -947,6 +947,12 @@ class CharExpr : Expression
 
     this.value = new IntExpr(character, this.type);
   }
+
+  dchar charValue() @property
+  {
+    return cast(dchar)value.number;
+  }
+
   mixin methods;
 }
 

@@ -3,7 +3,7 @@
 /// $(Maturity very high)
 module dil.lexer.Funcs;
 
-import dil.Unicode : scanUnicodeAlpha, isUnicodeAlpha;
+import dil.Unicode : scanUnicodeAlpha, isUnicodeAlpha, encode;
 import dil.String : slice;
 import common;
 
@@ -170,6 +170,47 @@ bool isIdentifierStart(cchar* p, cchar* end)
 {
   return isidbeg(*p) || isUnicodeAlpha(p, end);
 }
+
+/// Returns an escape sequence if c is not printable.
+cstring escapeNonPrintable(dchar c)
+{
+  const H = "0123456789ABCDEF"; // Hex numerals.
+  char[] s;
+  if (c < 128)
+  { // ASCII
+    switch (c)
+    {
+    case '\a': c = 'a'; goto Lcommon;
+    case '\b': c = 'b'; goto Lcommon;
+    case '\f': c = 'f'; goto Lcommon;
+    case '\n': c = 'n'; goto Lcommon;
+    case '\r': c = 'r'; goto Lcommon;
+    case '\t': c = 't'; goto Lcommon;
+    case '\v': c = 'v'; goto Lcommon;
+    Lcommon:
+      s = `\ `.dup;
+      s[1] = cast(char)c;
+      break;
+    default:
+      if (c < 0x20 || c == 0x7F)
+      { // Special non-printable characters.
+        s = `\x  `.dup;
+        s[2] = H[c>>4];
+        s[3] = H[c&0x0F];
+      }
+      else // The rest is printable.
+        s ~= c;
+    }
+  }
+  else
+  { // UNICODE
+    // TODO: write function isUniPrintable() similar to isUniAlpha().
+    // Just return as is for now.
+    encode(s, c);
+  }
+  return s;
+}
+
 
 /// ASCII character properties table.
 static const int ptable[256] = [
