@@ -181,6 +181,7 @@ Copyright (c) 2007-2012, Aziz Köksal. Lisans GPL3.
 
 Komutlar:
 {1}
+
 Belirli komuta yardım edinmek için 'dil help <komut>' yazınız.
 
 Bu yazılım {2} v{3} ile {4} tarihinde derletilmiş.`,

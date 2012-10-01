@@ -181,6 +181,7 @@ Copyright (c) 2007-2012, Aziz Köksal. GPL3-lisensöity.
 
 Alikomennot:
 {1}
+
 Lisäohjeita tietystä alitoiminnosta saa kirjoittamalla 'dil help <toiminto>'.
 
 Käännetty {2}:n versiolla {3} {4}.`,

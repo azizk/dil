@@ -179,6 +179,7 @@ Copyright (c) 2007-2012, Aziz Köksal. Lizenziert unter der GPL3.
 
 Befehle:
 {1}
+
 Gib 'dil help <Befehl>' ein, um mehr Hilfe zu einem bestimmten Befehl
 zu erhalten.
 

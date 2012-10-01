@@ -178,6 +178,7 @@ Copyright (c) 2007-2012 by Aziz Köksal. Licensed under the GPL3.
 
 Subcommands:
 {1}
+
 Type 'dil help <subcommand>' for more help on a particular subcommand.
 
 Compiled with {2} v{3} on {4}.`,
