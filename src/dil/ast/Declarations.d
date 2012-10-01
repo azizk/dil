@@ -290,9 +290,10 @@ class TemplateDecl : Declaration
 {
   Token* name;
   TemplateParameters tparams;
-  Expression constraint; // D 2.0
+  Expression constraint; /// If-constraint in D2.
   CompoundDecl decls;
   bool isMixin; /// Is this a mixin template? (D2 feature.)
+  bool isWrapper; /// Is this wrapping a func/class/struct/etc. declaration?
   mixin(memberInfo("name", "tparams", "constraint", "decls"));
 
   this(Token* name, TemplateParameters tparams, Expression constraint,
@@ -308,6 +309,17 @@ class TemplateDecl : Declaration
     this.tparams = tparams;
     this.constraint = constraint;
     this.decls = decls;
+
+    auto list = decls.decls;
+    if (list.length == 1)
+      switch (list[0].kind)
+      {
+      alias NodeKind NK;
+      case NK.FunctionDecl, NK.ClassDecl, NK.InterfaceDecl,
+           NK.StructDecl, NK.UnionDecl, NK.ConstructorDecl:
+        this.isWrapper = true;
+      default:
+      }
   }
 
   /// Returns the Identifier of this template.
@@ -316,29 +328,18 @@ class TemplateDecl : Declaration
     return name.ident;
   }
 
-  /// Returns true if this is a template that wraps a class, struct etc.
-  bool isWrapper()
-  { // "mixin template" is D2.
-    return begin.kind != TOK.Template && begin.kind != TOK.Mixin;
-  }
-
   TemplateSymbol symbol; /// The template symbol for this declaration.
 
   mixin methods;
 }
 
-// Note: tparams is commented out because the Parser wraps declarations
-//       with template parameters inside a TemplateDecl.
-
 abstract class AggregateDecl : Declaration
 {
   Token* name;
-//   TemplateParameters tparams;
   CompoundDecl decls;
-  this(Token* name, /+TemplateParameters tparams, +/CompoundDecl decls)
+  this(Token* name, CompoundDecl decls)
   {
     this.name = name;
-//     this.tparams = tparams;
     this.decls = decls;
   }
 
@@ -353,11 +354,10 @@ class ClassDecl : AggregateDecl
 {
   BaseClassType[] bases;
   mixin(memberInfo("name", "bases", "decls"));
-  this(Token* name, /+TemplateParameters tparams, +/BaseClassType[] bases, CompoundDecl decls)
+  this(Token* name, BaseClassType[] bases, CompoundDecl decls)
   {
-    super(name, /+tparams, +/decls);
+    super(name, decls);
     mixin(set_kind);
-//     addChild(tparams);
     addOptChildren(bases);
     addOptChild(decls);
 
@@ -373,11 +373,10 @@ class InterfaceDecl : AggregateDecl
 {
   BaseClassType[] bases;
   mixin(memberInfo("name", "bases", "decls"));
-  this(Token* name, /+TemplateParameters tparams, +/BaseClassType[] bases, CompoundDecl decls)
+  this(Token* name, BaseClassType[] bases, CompoundDecl decls)
   {
-    super(name, /+tparams, +/decls);
+    super(name, decls);
     mixin(set_kind);
-//     addChild(tparams);
     addOptChildren(bases);
     addOptChild(decls);
 
@@ -395,11 +394,10 @@ class StructDecl : AggregateDecl
 {
   uint alignSize;
   mixin(memberInfo("name", "decls", "alignSize"));
-  this(Token* name, /+TemplateParameters tparams, +/CompoundDecl decls)
+  this(Token* name, CompoundDecl decls)
   {
-    super(name, /+tparams, +/decls);
+    super(name, decls);
     mixin(set_kind);
-//     addChild(tparams);
     addOptChild(decls);
   }
 
@@ -423,11 +421,10 @@ class StructDecl : AggregateDecl
 class UnionDecl : AggregateDecl
 {
   mixin(memberInfo("name", "decls"));
-  this(Token* name, /+TemplateParameters tparams, +/CompoundDecl decls)
+  this(Token* name, CompoundDecl decls)
   {
-    super(name, /+tparams, +/decls);
+    super(name, decls);
     mixin(set_kind);
-//     addChild(tparams);
     addOptChild(decls);
   }
 
@@ -499,26 +496,23 @@ class FunctionDecl : Declaration
 {
   TypeNode returnType;
   Token* name;
-//   TemplateParameters tparams;
   Parameters params;
   FuncBodyStmt funcBody;
   LinkageType lnkg;
   bool cantInterpret = false;
 
   mixin(memberInfo("returnType", "name", "params", "funcBody", "lnkg"));
-  this(TypeNode returnType, Token* name,/+ TemplateParameters tparams,+/
+  this(TypeNode returnType, Token* name,
        Parameters params, FuncBodyStmt funcBody,
        LinkageType lnkg = LinkageType.None)
   {
     mixin(set_kind);
     addOptChild(returnType);
-//     addChild(tparams);
     addChild(params);
     addChild(funcBody);
 
     this.returnType = returnType;
     this.name = name;
-//     this.tparams = tparams;
     this.params = params;
     this.funcBody = funcBody;
     this.lnkg = lnkg;

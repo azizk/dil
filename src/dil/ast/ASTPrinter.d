@@ -60,6 +60,7 @@ class ASTPrinter : Visitor2
   cstring spaces;   /// The current whitespace string.
   cstring indent;   /// The current indendation string.
   cstring indentStep; /// The string used to increase the indentation level.
+  TemplateDecl currentTplDecl; /// Set by a wrapping TemplateDecl.
 
   CompilationContext cc;
   alias TokenList T;
@@ -283,6 +284,41 @@ class ASTPrinter : Visitor2
     }
   }
 
+  /// Returns the currentTplDecl member and nulls it.
+  TemplateDecl getTplDecl()
+  {
+    auto n = currentTplDecl;
+    currentTplDecl = null;
+    return n;
+  }
+
+  /// Writes the template parameters and if-constraint of a TemplateDecl.
+  void writeTParams(TemplateDecl n)
+  {
+    v(n.tparams);
+    if (n.constraint)
+    {
+      w(ws, T.If, T.LParen);
+      v(n.constraint);
+      w(T.RParen);
+    }
+  }
+
+  void writeTParamsOnly(TemplateDecl n)
+  {
+    v(n.tparams);
+  }
+
+  void writeTConstraint(TemplateDecl n)
+  {
+    if (n.constraint)
+    {
+      w(ws, T.If, T.LParen);
+      v(n.constraint);
+      w(T.RParen);
+    }
+  }
+
   void write(Expression n, PREC prec)
   {
     // TODO:
@@ -471,6 +507,12 @@ class ASTPrinter : Visitor2
 
   void visit(TemplateDecl n)
   {
+    if (n.isWrapper)
+    {
+      currentTplDecl = n;
+      v(n.decls);
+      return;
+    }
     w(ind);
     if (n.isMixin)
       w(T.Mixin, ws);
@@ -488,7 +530,10 @@ class ASTPrinter : Visitor2
 
   void visit(ClassDecl n)
   {
+    auto tplDecl = getTplDecl();
     w(ind, T.Class, ws, n.name);
+    if (tplDecl)
+      writeTParams(tplDecl);
     if (n.bases)
     {
       w(ws, T.Colon, ws);
@@ -505,7 +550,10 @@ class ASTPrinter : Visitor2
 
   void visit(InterfaceDecl n)
   {
+    auto tplDecl = getTplDecl();
     w(ind, T.Interface, ws, n.name);
+    if (tplDecl)
+      writeTParams(tplDecl);
     if (n.bases)
     {
       w(ws, T.Colon, ws);
@@ -522,26 +570,37 @@ class ASTPrinter : Visitor2
 
   void visit(StructDecl n)
   {
+    auto tplDecl = getTplDecl();
     w(ind, T.Struct);
     if (n.name)
       w(ws, n.name);
+    if (tplDecl)
+      writeTParams(tplDecl);
     writeAggregateBody(n.decls);
     w(Newline);
   }
 
   void visit(UnionDecl n)
   {
+    auto tplDecl = getTplDecl();
     w(ind, T.Union);
     if (n.name)
       w(ws, n.name);
+    if (tplDecl)
+      writeTParams(tplDecl);
     writeAggregateBody(n.decls);
     w(Newline);
   }
 
   void visit(ConstructorDecl n)
   {
+    auto tplDecl = getTplDecl();
     w(ind, T.This);
+    if (tplDecl)
+      writeTParamsOnly(tplDecl);
     v(n.params);
+    if (tplDecl)
+      writeTConstraint(tplDecl);
     v(n.funcBody);
   }
 
@@ -565,6 +624,7 @@ class ASTPrinter : Visitor2
 
   void visit(FunctionDecl n)
   {
+    auto tplDecl = getTplDecl();
     w(ind);
     if (n.returnType)
       v(n.returnType);
@@ -572,7 +632,11 @@ class ASTPrinter : Visitor2
       w(T.Auto);
     w(ws);
     w(n.name);
+    if (tplDecl)
+      writeTParamsOnly(tplDecl);
     v(n.params);
+    if (tplDecl)
+      writeTConstraint(tplDecl);
     v(n.funcBody);
   }
 
