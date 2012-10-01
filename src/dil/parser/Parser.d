@@ -550,8 +550,8 @@ class Parser
       auto decls = new CompoundDecl;
       while (!tokenIs(T.RBrace) && !tokenIs(T.EOF))
         decls ~= parseDeclarationDefinition();
-      d = set(decls, begin2);
-      d = set(new ColonBlockDecl(d), begin);
+      set(decls, begin2);
+      d = set(new ColonBlockDecl(decls), begin);
       break;
     case T.Semicolon:
       error(MID.ExpectedNonEmptyDeclaration, token);
@@ -1500,11 +1500,21 @@ class Parser
     skip(T.This);
     if (tokenIs(T.LParen) && tokenAfterParenIs(T.LParen))
       tparams = parseTemplateParameterList(); // "(" TemplateParameterList ")"
-    Parameters parameters = new Parameters();
+    Parameters parameters;
     if (peekNext() != T.This)
       parameters = parseParameterList(); // "(" ParameterList ")"
     else // TODO: Create own class PostBlit?: this "(" this ")"
-      require2(T.LParen), skip(T.This), require2(T.RParen);
+    {
+      auto begin2 = token;
+      parameters = new Parameters();
+      require2(T.LParen);
+      auto this_ = token;
+      auto thisParam = new Parameter(STC.None, null, null, this_, null);
+      skip(T.This);
+      parameters ~= set(thisParam, this_);
+      require2(T.RParen);
+      set(parameters, begin2);
+    }
     parameters.postSTCs = parseFunctionPostfix();
     // FIXME: |= to storageClass?? Won't this affect other decls?
     this.storageClass |= parameters.postSTCs; // Combine with current stcs.
@@ -3498,7 +3508,7 @@ class Parser
       e = new NullExpr();
       goto LnT_and_return;
     case T.True, T.False:
-      e = new BoolExpr(tokenIs(T.True));
+      e = new BoolExpr(token);
       goto LnT_and_return;
     case T.Dollar:
       e = new DollarExpr();

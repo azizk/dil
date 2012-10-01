@@ -54,12 +54,12 @@ class CompoundDecl : Declaration
   mixin methods;
 }
 
-/// $(BNF ColonBlockDecl := ":" Declaration)
+/// $(BNF ColonBlockDecl := ":" CompoundDecl)
 class ColonBlockDecl : Declaration
 {
-  Declaration decls;
+  CompoundDecl decls;
   mixin(memberInfo("decls"));
-  this(Declaration decls)
+  this(CompoundDecl decls)
   {
     mixin(set_kind);
     addChild(decls);

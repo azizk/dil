@@ -583,18 +583,18 @@ abstract class DDocEmitter : DefaultVisitor2
         write("...");
       else
       {
-        assert(param.type);
         // Write storage class(es).
         auto lastSTC = param.tokenOfLastSTC();
         if (lastSTC) // Write storage classes.
           write(tokenHL.highlightTokens(param.begin, lastSTC, true), " ");
-        write(param.type); // Write the type.
+        if (param.type)
+          write(param.type); // Write the type.
         if (param.hasName)
-          write(" \1DDOC_PARAM ", param.nameStr, "\2");
-        if (param.isDVariadic)
-          write("...");
+          write((param.type?" ":""), "\1DDOC_PARAM ", param.nameStr, "\2");
         if (param.defValue)
           write(" = \1DIL_DEFVAL "), writeE(param.defValue), write("\2");
+        if (param.isDVariadic)
+          write("...");
       }
       --item_count && (text ~= ", "); // Skip for last item.
     }
@@ -921,7 +921,7 @@ override:
   void visit(TemplateDecl d)
   {
     this.currentTParams = d.tparams;
-    if (d.isWrapper())
+    if (d.isWrapper)
     { // This is a templatized class/interface/struct/union/function.
       super.visit(d.decls);
       this.currentTParams = null;
