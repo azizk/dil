@@ -7,7 +7,7 @@ import dil.doc.Parser,
        dil.doc.Macro,
        dil.doc.Doc;
 import dil.ast.DefaultVisitor,
-       dil.ast.TypePrinter,
+       dil.ast.ASTPrinter,
        dil.ast.Node,
        dil.ast.Declarations,
        dil.ast.Statements,
@@ -35,7 +35,7 @@ abstract class DDocEmitter : DefaultVisitor2
   Module modul; /// The module.
   Highlighter tokenHL; /// The token highlighter.
   Diagnostics reportDiag; /// Collects problem messages.
-  TypePrinter typePrinter; /// Used to print type chains.
+  ASTPrinter astPrinter; /// Used to print Types/Expressions/etc.
   /// Counts code examples in comments.
   /// This is used to make the code lines targetable in HTML.
   uint codeExamplesCounter;
@@ -57,7 +57,7 @@ abstract class DDocEmitter : DefaultVisitor2
     this.modul = modul;
     this.tokenHL = tokenHL;
     this.reportDiag = reportDiag;
-    this.typePrinter = new TypePrinter();
+    this.astPrinter = new ASTPrinter(true, modul.cc);
   }
 
   /// Entry method.
@@ -559,16 +559,12 @@ abstract class DDocEmitter : DefaultVisitor2
       text ~= s;
   }
 
-  /// Writes a type chain to the buffer.
-  void write(TypeNode type)
+  /// Writes a Node tree to the buffer.
+  void write(Node n)
   {
-    text ~= xml_escape(typePrinter.print(type));
-  }
-
-  /// Writes an expression to the buffer.
-  void writeE(Expression e)
-  {
-    text ~= tokenHL.highlightTokens(e.begin, e.end, true);
+    astPrinter.print(n);
+    auto ts = astPrinter.tokens;
+    text ~= tokenHL.highlightTokens(ts[0], ts[$-1], true);
   }
 
   /// Writes params to the text buffer.
@@ -592,7 +588,7 @@ abstract class DDocEmitter : DefaultVisitor2
         if (param.hasName)
           write((param.type?" ":""), "\1DDOC_PARAM ", param.nameStr, "\2");
         if (param.defValue)
-          write(" = \1DIL_DEFVAL "), writeE(param.defValue), write("\2");
+          write(" = \1DIL_DEFVAL "), write(param.defValue), write("\2");
         if (param.isDVariadic)
           write("...");
       }
@@ -607,14 +603,10 @@ abstract class DDocEmitter : DefaultVisitor2
     if (!currentTParams)
       return;
 
-    void writeTorE(Node n)
-    {
-      n.isType() ? write(n.to!(TypeNode)) : writeE(n.to!(Expression));
-    }
     void writeSpecDef(Node spec, Node def)
     {
-      if (spec) write(" : \1DIL_SPEC "), writeTorE(spec), write("\2");
-      if (def)  write(" = \1DIL_DEFVAL "), writeTorE(def), write("\2");
+      if (spec) write(" : \1DIL_SPEC "), write(spec), write("\2");
+      if (def)  write(" = \1DIL_DEFVAL "), write(def), write("\2");
     }
 
     reportParameters(currentTParams);
