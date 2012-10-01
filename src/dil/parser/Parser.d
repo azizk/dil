@@ -209,6 +209,45 @@ class Parser
     nT();
   }
 
+  /// Returns true if the token after the closing parenthesis
+  /// matches the searched kind.
+  /// Params:
+  ///   kind = The token kind to test for.
+  bool tokenAfterParenIs(TOK kind)
+  {
+    assert(tokenIs(T.LParen));
+    return skipParens(token, T.RParen).kind == kind;
+  }
+
+  /// Returns the token kind behind the closing bracket.
+  TOK tokenAfterBracket(TOK closing)
+  {
+    assert(tokenIs(T.LBracket) || tokenIs(T.LBrace));
+    return skipParens(token, closing).kind;
+  }
+
+  /// Skips to the token behind the closing parenthesis token.
+  /// Takes nesting into account.
+  /// Params:
+  ///   peek_token = Opening token to start from.
+  ///   closing = Matching closing token kind.
+  /// Returns: The token searched for, or the EOF token.
+  Token* skipParens(Token* peek_token, TOK closing)
+  {
+    assert(peek_token !is null);
+    size_t level = 1;
+    TOK opening = peek_token.kind;
+    while ((peek_token = peekAfter(peek_token)).kind != T.EOF)
+      if (peek_token.kind == opening)
+        ++level;
+      else
+      if (peek_token.kind == closing && --level == 0) {
+        peek_token = peekAfter(peek_token); // Closing token found.
+        break;
+      }
+    return peek_token;
+  }
+
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   |                       Declaration parsing methods                       |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
@@ -2437,7 +2476,7 @@ class Parser
       {
         auto paramBegin = token;
         Token* name;
-        auto type = parseDeclarator(name, true);
+        auto type = parseDeclaratorOptId(name);
         param = new Parameter(StorageClass.None, null, type, name, null);
         set(param, paramBegin);
         requireClosing(T.RParen, leftParen);
@@ -3605,7 +3644,7 @@ class Parser
       Token* ident; // optional Identifier
       Token* opTok, specTok;
 
-      type = parseDeclarator(ident, true);
+      type = parseDeclaratorOptId(ident);
 
       switch (token.kind)
       {
@@ -3775,19 +3814,38 @@ class Parser
   |                          Type parsing methods                           |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
-  /// Parses the basic types.
+  /// Parses a Declarator with an optional Identifier.
   ///
-  /// $(BNF BasicTypes := BasicType BasicType2)
-  Type parseBasicTypes()
+  /// $(BNF DeclaratorOptId := Type (Identifier DeclaratorSuffix)?)
+  /// Params:
+  ///   ident = Receives the optional identifier of the declarator.
+  Type parseDeclaratorOptId(ref Token* ident)
   {
-    return parseBasicType2(parseBasicType());
+    auto type = parseType();
+    ident = optionalIdentifier();
+    if (ident)
+      type = parseDeclaratorSuffix(type);
+    return type;
+  }
+
+  /// Parses a Declarator with an Identifier.
+  ///
+  /// $(BNF Declarator := Type Identifier DeclaratorSuffix)
+  /// Params:
+  ///   ident = Receives the identifier of the declarator.
+  Type parseDeclarator(ref Token* ident)
+  {
+    auto type = parseDeclaratorOptId(ident);
+    if (!ident)
+      error2(MID.ExpectedDeclaratorIdentifier, token);
+    return type;
   }
 
   /// Parses a full Type.
   ///
-  /// $(BNF Type     := Modifier BasicTypes CStyleType?
+  /// $(BNF Type     := Modifier* BasicTypes
   ////Modifier := inout | const | immutable | shared)
-  Type parseType(Token** pIdent = null)
+  Type parseType()
   {
     version(D2)
     {
@@ -3799,7 +3857,7 @@ class Parser
       {
       case T.Const, T.Immutable, T.Inout, T.Shared:
         nT();
-        auto t = parseType(pIdent);
+        auto t = parseType();
         t = (kind == T.Const) ?   new ConstType(t) :
           (kind == T.Immutable) ? new ImmutableType(t) :
             (kind == T.Inout) ?   new InoutType(t) :
@@ -3809,74 +3867,15 @@ class Parser
       }
     }
     } // version(D2)
-    auto type = parseBasicTypes();
-    return (tokenIs(T.LParen) || pIdent) ?
-      parseCStyleType(type, pIdent) : type;
+    return parseBasicTypes();
   }
 
-  /// Parses a C-style type.
+  /// Parses the basic types.
   ///
-  /// $(BNF CStyleType := BasicType? InnerCType DeclaratorSuffix?
-  ////InnerCType := "(" CStyleType ")" | Ident?
-  ////)
-  /// Example:
-  /// $(PRE
-  ////      6~~~~~~~~ 5~  3 1 2~~~~~~~ 4~~~~~
-  ////type( outerType [] (*(*)(double))(char) )
-  ////Resulting type chain:
-  ////* > (double) > * > (char) > [] > outerType
-  ////1   2~~~~~~~   3   4~~~~~   5~   6~~~~~~~~)
-  /// Read as: a pointer to a function that takes a double,
-  /// which returns a pointer to a function that takes a char,
-  /// which returns an array of outerType.
-  /// Params:
-  ///   outerType = The bottommost type in the type chain.
-  ///   pIdent    = If null, no identifier is expected.
-  ///     If non-null, pIdent receives the parsed identifier.
-  Type parseCStyleType(Type outerType, Token** pIdent = null)
-  in { assert(outerType !is null); }
-  out(res) { assert(res !is null && res.parent is null); }
-  body
+  /// $(BNF BasicTypes := BasicType BasicType2)
+  Type parseBasicTypes()
   {
-    auto currentType = parseBasicType2(outerType);
-
-    Type innerType;
-    if (auto leftParen = consumedToken(T.LParen)) // Recurse.
-      (innerType = parseCStyleType(currentType, pIdent)),
-      requireClosing(T.RParen, leftParen);
-    else if (auto ident = consumedToken(T.Identifier))
-      if (pIdent !is null)
-        *pIdent = ident; // Found valid Id.
-      else
-        error2(MID.UnexpectedIdentInType, ident);
-    else if (pIdent !is null)
-      *pIdent = token; // Useful for error msg, if an Id was expected.
-
-    auto innerTypeEnd = currentType.parent; // Save before parsing the suffix.
-
-    currentType = parseDeclaratorSuffix(currentType);
-
-    if (innerTypeEnd is null) // No inner Type. End of recursion.
-      return currentType; // Return the root of the type chain.
-    // Fix the type chain. Let the inner type point to the current type.
-    innerTypeEnd.setNext(currentType);
-    return innerType;
-  }
-
-  /// Parses a Declarator.
-  ///
-  /// $(BNF Declarator := Type)
-  /// Params:
-  ///   ident = Receives the identifier of the declarator.
-  ///   identOptional = Whether to report an error for a missing identifier.
-  Type parseDeclarator(ref Token* ident, bool identOptional = false)
-  {
-    auto type = parseType(&ident);
-    assert(ident !is null);
-    if (ident.kind != T.Identifier)
-      (identOptional || error2(MID.ExpectedDeclaratorIdentifier, ident)),
-      (ident = null);
-    return type;
+    return parseBasicType2(parseBasicType());
   }
 
   /// $(BNF IdentifierType := Identifier | TemplateInstance)
@@ -3984,7 +3983,7 @@ class Parser
   }
 
   /// $(BNF BasicType2   :=
-  ////  Type (PointerType | ArrayType | FunctionType | DelegateType)*
+  ////  (PointerType | ArrayType | FunctionType | DelegateType)*
   ////PointerType  := "*"
   ////FunctionType := function ParameterList
   ////DelegateType := delegate ParameterList)
@@ -4022,46 +4021,8 @@ class Parser
     assert(0);
   }
 
-  /// Returns true if the token after the closing parenthesis
-  /// matches the searched kind.
-  /// Params:
-  ///   kind = The token kind to test for.
-  bool tokenAfterParenIs(TOK kind)
-  {
-    assert(tokenIs(T.LParen));
-    return skipParens(token, T.RParen).kind == kind;
-  }
-
-  /// Returns the token kind behind the closing bracket.
-  TOK tokenAfterBracket(TOK closing)
-  {
-    assert(tokenIs(T.LBracket) || tokenIs(T.LBrace));
-    return skipParens(token, closing).kind;
-  }
-
-  /// Skips to the token behind the closing parenthesis token.
-  /// Takes nesting into account.
-  /// Params:
-  ///   peek_token = Opening token to start from.
-  ///   closing = Matching closing token kind.
-  /// Returns: The token searched for, or the EOF token.
-  Token* skipParens(Token* peek_token, TOK closing)
-  {
-    assert(peek_token !is null);
-    size_t level = 1;
-    TOK opening = peek_token.kind;
-    while ((peek_token = peekAfter(peek_token)).kind != T.EOF)
-      if (peek_token.kind == opening)
-        ++level;
-      else
-      if (peek_token.kind == closing && --level == 0) {
-        peek_token = peekAfter(peek_token); // Closing token found.
-        break;
-      }
-    return peek_token;
-  }
-
-  /// Parse the array types after the declarator (C-style.) E.g.: int a[]
+  /// Parses the array types after the declarator (C-style.) E.g.: int a[]
+  ///
   /// $(BNF DeclaratorSuffix := ArrayType*)
   /// Returns: lhsType or a suffix type.
   /// Params:
@@ -4073,10 +4034,9 @@ class Parser
     //         `---------------´
     // Resulting chain: [][1][2]*[3]int
     auto result = lhsType; // Return lhsType if nothing else is parsed.
-    Type prevType; // The previously parsed type.
     if (tokenIs(T.LBracket)) // "["
-    {
-      result = prevType = parseArrayType(lhsType);
+    { // The previously parsed ArrayType.
+      auto prevType = result = parseArrayType(lhsType);
       // Continue parsing ArrayTypes.
       while (tokenIs(T.LBracket)) // "["
       {
@@ -4088,8 +4048,8 @@ class Parser
     return result;
   }
 
-  /// $(BNF ArrayType := "[" (Type | Expression | SliceExpr) "]"
-  ////SliceExpr := Expression ".." Expression)
+  /// $(BNF ArrayType := "[" (Type | ArrayTypeIndex) "]"
+  ////ArrayTypeIndex := AssignExpr (".." AssignExpr)?)
   Type parseArrayType(Type t)
   {
     auto begin = token;
@@ -4110,15 +4070,19 @@ class Parser
         t = new ArrayType(t, assocType);
       else
       {
-        Expression e = parseExpression(), e2;
+        Expression e = parseAssignExpr(), e2;
         if (consumed(T.Dot2))
-          e2 = parseExpression();
+          e2 = parseAssignExpr();
         requireClosing(T.RBracket, begin);
         t = new ArrayType(t, e, e2);
       }
     }
     return set(t, begin);
   }
+
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                        Parameter parsing methods                        |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   /// Parses a list of AssignExpressions.
   /// $(BNF ExpressionList := AssignExpr ("," AssignExpr)*)
@@ -4234,7 +4198,7 @@ class Parser
         }
         break; // Break out of inner loop.
       }
-      type = parseDeclarator(name, true);
+      type = parseDeclaratorOptId(name);
 
       if (consumed(T.Equal))
         defValue = parseAssignExpr();
@@ -4318,6 +4282,7 @@ class Parser
   /// $(BNF TypeArgument := Type (?= "," | "$(RP)"))
   Type parseTypeArgument()
   {
+    assert(trying);
     auto type = parseType();
     if (tokenIs(T.Comma) || tokenIs(T.RParen))
       return type;
@@ -4498,6 +4463,10 @@ class Parser
         break;
     }
   }
+
+  /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  |                          Error handling methods                         |
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
   /// Returns the string of a token printable to the client.
   cstring getPrintable(Token* token)
