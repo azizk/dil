@@ -327,7 +327,7 @@ class ASTPrinter : Visitor2
   {
     w(Newline, ind, T.LBrace, Newline);
     {
-      scope il = new IndentLevel();
+      scope il = new IndentLevel;
       v(n);
     }
     w(ind, T.RBrace, Newline);
@@ -440,7 +440,7 @@ class ASTPrinter : Visitor2
     {
       w(Newline, ind, T.LBrace, Newline);
       {
-        scope il = new IndentLevel();
+        scope il = new IndentLevel;
         foreach (i, m; n.members)
         {
           if (i)
@@ -1703,7 +1703,7 @@ class ASTPrinter : Visitor2
     txt = Format(txt, num); // Convert to text.
 
     // Finally construct the integer Token.
-    auto t = new Token;
+    Token t;
     t.kind = k;
     t.text = txt;
 
@@ -1717,7 +1717,7 @@ class ASTPrinter : Visitor2
     else
       t.uint_ = cast(uint)num;
 
-    w(t);
+    w(&t);
   }
 
   void visit(FloatExpr n)
@@ -1744,12 +1744,12 @@ class ASTPrinter : Visitor2
         txt ~= 'i';
     }
 
-    auto t = new Token;
+    Token t;
     t.kind = k;
     t.text = txt;
     t.mpfloat = n.number;
 
-    w(t);
+    w(&t);
   }
 
   void visit(ComplexExpr n)
@@ -1771,12 +1771,12 @@ class ASTPrinter : Visitor2
     txt ~= (c == '\'') ? `\'` : (c == '\\') ? `\\` : escapeNonPrintable(c);
     txt ~= `'`;
 
-    auto t = new Token;
+    Token t;
     t.kind = TOK.Character;
     t.text = txt;
     t.dchar_ = c;
 
-    w(t);
+    w(&t);
   }
 
   void visit(StringExpr n)
@@ -1796,7 +1796,7 @@ class ASTPrinter : Visitor2
 
     txt ~= `"`;
 
-    auto t = new Token;
+    Token t;
     t.kind = TOK.String;
     t.text = txt;
     // FIXME: look up in lxtables.
@@ -1804,7 +1804,7 @@ class ASTPrinter : Visitor2
     sv.str = txt[1..$-1] ~ '\0';
     t.strval = sv;
 
-    w(t);
+    w(&t);
   }
 
   void visit(ArrayLiteralExpr n)
@@ -1918,7 +1918,7 @@ class ASTPrinter : Visitor2
       v(n.params);
     w(T.LBrace, Newline);
     {
-      scope il = new IndentLevel();
+      scope il = new IndentLevel;
       v(n.funcBody.funcBody);
     }
     w(ind, T.RBrace);
@@ -2086,6 +2086,7 @@ class ASTPrinter : Visitor2
   void visit(PointerType n)
   {
     v(n.next);
+    w(T.Star);
   }
 
   void visit(ArrayType n)
