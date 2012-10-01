@@ -1786,6 +1786,16 @@ class ASTPrinter : Visitor2
 
   void visit(FloatExpr n)
   {
+    if (auto t = n.begin)
+      switch (t.kind)
+      { // Write the original Token if available.
+      case TOK.Float32, TOK.Float64, TOK.Float80,
+           TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
+        w(t);
+        return;
+      default:
+      }
+
     cstring txt;
     TOK k = TOK.Float64;
 
@@ -2260,13 +2270,17 @@ class ASTPrinter : Visitor2
     if (n.type)
       v(n.type);
     if (n.hasName)
-      w(ws, n.name);
-    if (n.isDVariadic)
-      w(T.Dot3);
+    {
+      if (n.type)
+        w(ws);
+      w(n.name);
+    }
     if (n.defValue) {
       w(ws, T.Equal, ws);
       v(n.defValue);
     }
+    if (n.isDVariadic)
+      w(T.Dot3);
   }
 
   void visit(Parameters n)
@@ -2296,7 +2310,7 @@ class ASTPrinter : Visitor2
 
   void visit(TemplateAliasParam n)
   {
-    w(T.Alias, n.name);
+    w(T.Alias, ws, n.name);
     writeSpecDef(n.spec, n.def);
   }
 
@@ -2308,7 +2322,7 @@ class ASTPrinter : Visitor2
 
   void visit(TemplateThisParam n)
   {
-    w(T.This, n.name);
+    w(T.This, ws, n.name);
     writeSpecDef(n.specType, n.defType);
   }
 
