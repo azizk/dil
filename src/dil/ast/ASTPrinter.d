@@ -11,7 +11,8 @@ import dil.ast.Visitor,
        dil.ast.Expressions,
        dil.ast.Statements,
        dil.ast.Types,
-       dil.ast.Parameters;
+       dil.ast.Parameters,
+       dil.ast.Precedence;
 import dil.lexer.IdTable,
        dil.lexer.Funcs;
 import dil.semantic.TypesEnum;
@@ -27,26 +28,6 @@ static struct TokenList
   {
     return mixin("toToken(TOK."~kind~")");
   }
-}
-
-enum PREC
-{
-  None,
-  Expression,
-  Assignment,
-  Conditional,
-  LogicalOr,
-  LogicalAnd,
-  BinaryOr,
-  BinaryXor,
-  BinaryAnd,
-  Relational,
-  Shifting,
-  Addition,
-  Multiplication,
-  Exponentiation,
-  Unary,
-  Primary,
 }
 
 /// Traverses a Node tree and constructs a string representation.
@@ -319,11 +300,11 @@ class ASTPrinter : Visitor2
     }
   }
 
+  /// Writes an expression, wrapped in parentheses if necessary.
   void write(Expression n, PREC prec)
   {
-    // TODO:
-    PREC nextP; // = n.kind.getPrecedence();
-    if (prec < nextP)
+    auto nextP = n.kind.precOf();
+    if (prec > nextP)
     {
       w(T.LParen);
       v(n);
@@ -347,16 +328,16 @@ class ASTPrinter : Visitor2
   /// Writes a binary expression.
   void write(BinaryExpr n)
   {
-    // TODO:
-    w(n.lhs, PREC.None);
+    auto prec = n.kind.precOf();
+    w(n.lhs, prec);
     w(ws, n.optok, ws);
-    w(n.rhs, PREC.None);
+    w(n.rhs, prec);
   }
 
   /// Writes a unary expression.
   void write(UnaryExpr n)
   {
-    w(n.una, PREC.Unary);
+    w(n.una, n.kind.precOf());
   }
 
   void writeBlock(Node n)
