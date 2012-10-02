@@ -3,7 +3,7 @@
 /// $(Maturity very high)
 module dil.lexer.Funcs;
 
-import dil.Unicode : scanUnicodeAlpha, isUnicodeAlpha, encode;
+import dil.Unicode : scanUnicodeAlpha, isUnicodeAlpha, encode, isValidChar;
 import dil.String : slice;
 import common;
 
@@ -180,6 +180,7 @@ cstring escapeNonPrintable(dchar c)
   { // ASCII
     switch (c)
     {
+    case '\0': c = '0'; goto Lcommon;
     case '\a': c = 'a'; goto Lcommon;
     case '\b': c = 'b'; goto Lcommon;
     case '\f': c = 'f'; goto Lcommon;
@@ -188,16 +189,12 @@ cstring escapeNonPrintable(dchar c)
     case '\t': c = 't'; goto Lcommon;
     case '\v': c = 'v'; goto Lcommon;
     Lcommon:
-      s = `\ `.dup;
-      s[1] = cast(char)c;
+      s = ['\\', cast(char)c];
       break;
     default:
       if (c < 0x20 || c == 0x7F)
-      { // Special non-printable characters.
-        s = `\x  `.dup;
-        s[2] = H[c>>4];
-        s[3] = H[c&0x0F];
-      }
+        // Special non-printable characters.
+        s = ['\\', 'x', H[c>>4], H[c&0x0F]];
       else // The rest is printable.
         s ~= c;
     }
@@ -205,8 +202,23 @@ cstring escapeNonPrintable(dchar c)
   else
   { // UNICODE
     // TODO: write function isUniPrintable() similar to isUniAlpha().
-    // Just return as is for now.
-    encode(s, c);
+    if (0x80 >= c && c <= 0x9F) // C1 control character set.
+      s = ['\\', 'u', '0', '0', H[c>>4], H[c&0x0F]];
+    else if (!isValidChar(c))
+    {
+      if (c <= 0xFF)
+        s = ['\\', 'x', H[c>>4], H[c&0x0F]];
+      else if (c <= 0xFFFF)
+        s = ['\\', 'x', H[c>>12], H[c>>8&0x0F],
+             '\\', 'x', H[c>>4&0x0F], H[c&0x0F]];
+      else
+        s = ['\\', 'x', H[c>>28], H[c>>24&0x0F],
+             '\\', 'x', H[c>>20&0x0F], H[c>>16&0x0F],
+             '\\', 'x', H[c>>12&0x0F], H[c>>8&0x0F],
+             '\\', 'x', H[c>>4&0x0F], H[c&0x0F]];
+    }
+    else // Treat the rest as printable.
+      encode(s, c);
   }
   return s;
 }
