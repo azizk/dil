@@ -300,9 +300,10 @@ struct StringT(C)
   }
 
   /// Appends another String.
-  ref S opOpAssign(string op : "~=")(const S rhs)
+  ref S opOpAssign(string op : "~")(const S rhs)
   {
-    return this = this ~ rhs;
+    this = this ~ rhs;
+    return this;
   }
 
   /// Returns a pointer to the first character, if this String is in rhs.
@@ -1082,6 +1083,14 @@ unittest
   assert(S() == false && !S());
   assert(S("") == false && !S(""));
   assert(S("verdad") == true);
+
+  // Concatenation.
+  {
+  auto s = S("xy".dup);
+  s ~= S("z");
+  assert(s == S("x") ~ S("yz"));
+  assert(S() ~ S() == S());
+  }
 
   // Substitution.
   assert(S("abce").sub('e', 'd') == S("abcd"));
