@@ -200,7 +200,7 @@ class IdTable
   }
 }
 
-unittest
+void testIdTable()
 {
   // TODO: write benchmark.
   // Single table

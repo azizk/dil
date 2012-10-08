@@ -529,7 +529,7 @@ class Complex
   }
 }
 
-unittest
+void testComplex()
 {
   return; // Remove when Complex/Float is fixed.
   scope msg = new UnittestMsg("Testing class Complex.");

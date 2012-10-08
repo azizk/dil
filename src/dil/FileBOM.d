@@ -47,7 +47,7 @@ BOM tellBOM(const(ubyte)[] data)
   return bom;
 }
 
-unittest
+void testTellBOM()
 {
   scope msg = new UnittestMsg("Testing function tellBOM().");
 

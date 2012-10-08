@@ -128,30 +128,33 @@ class Graph
   }
 }
 
-unittest
+void testGraph()
 {
   scope msg = new UnittestMsg("Testing class Graph.");
+
   auto g = new Graph();
+  auto vs = new Vertex[7];
 
-  auto V = [new Vertex(), new Vertex(), new Vertex(),
-    new Vertex(), new Vertex(), new Vertex(), new Vertex()];
+  void connect(size_t x, size_t y)
+  {
+    g.addEdge(vs[x], vs[y]);
+  }
 
-  foreach (v; V)
-    g.addVertex(v);
+  foreach (ref v; vs)
+    g.addVertex(v = new Vertex());
 
-  g.addEdge(V[0], V[1]); // 0 -> 1
-  g.addEdge(V[1], V[3]); // 1 -> 3
-  g.addEdge(V[3], V[2]); // 3 -> 2
-  g.addEdge(V[2], V[0]); // 2 -> 0
-
-  g.addEdge(V[6], V[5]); // 6 -> 5
-  g.addEdge(V[5], V[3]); // 5 -> 3
-  g.addEdge(V[3], V[4]); // 3 -> 4
-  g.addEdge(V[4], V[6]); // 4 -> 6
+  connect(0, 1);
+  connect(1, 3);
+  connect(3, 2);
+  connect(2, 0);
+  connect(6, 5);
+  connect(5, 3);
+  connect(3, 4);
+  connect(4, 6);
 
   g.detectCycles();
 
-  foreach (v; V)
+  foreach (v; vs)
     assert(v.isCyclic);
   foreach (e; g.edges)
     assert(e.isCyclic);

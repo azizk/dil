@@ -290,7 +290,7 @@ char[] sanitizeText(char[] text)
   return text;
 }
 
-unittest
+void testConverter()
 {
   scope msg = new UnittestMsg("Testing struct Converter.");
 

@@ -562,7 +562,7 @@ Float hypot(Float x, Float y)
 }
 
 
-unittest
+void testFloat()
 {
   return; // Remove when Float is fixed.
   scope msg = new UnittestMsg("Testing class Float.");

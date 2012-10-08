@@ -32,8 +32,6 @@ static this()
   Printfln = &Stdout.formatln;
 }
 
-version(unittest)
-{
 /// Writes a message to stdout.
 scope class UnittestMsg
 {
@@ -51,7 +49,6 @@ scope class UnittestMsg
     auto num = (80 - msg.length - passed.length) / 8;
     Stdout(tabs[0..num] ~ passed);
   }
-}
 }
 
 // Check version IDs.

@@ -90,7 +90,7 @@ class Macro
   }
 }
 
-unittest
+void testMacroConvert()
 {
   scope msg = new UnittestMsg("Testing function Macro.convert().");
   alias Macro.convert fn;

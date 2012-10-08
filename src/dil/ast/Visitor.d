@@ -167,7 +167,7 @@ static this()
   indexOfFirstVisitMethod = i;
 }
 
-unittest
+void testVisitor()
 {
   scope msg = new UnittestMsg("Testing class Visitor.");
 

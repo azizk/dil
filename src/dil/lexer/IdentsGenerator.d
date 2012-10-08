@@ -133,14 +133,11 @@ string[] getPair(string idText)
   return [idText, idText];
 }
 
-unittest
-{
-  static assert(
-    getPair("test") == ["test", "test"] &&
-    getPair("test:tset") == ["test", "tset"] &&
-    getPair("empty:") == ["empty", ""]
-  );
-}
+static assert(
+  getPair("test") == ["test", "test"] &&
+  getPair("test:tset") == ["test", "tset"] &&
+  getPair("empty:") == ["empty", ""]
+);
 
 
 /// CTF for generating the members of the struct Ident and struct Keyword.

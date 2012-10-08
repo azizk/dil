@@ -124,7 +124,7 @@ struct IdentValueParser
   }
 }
 
-unittest
+void testDocParser()
 {
   scope msg = new UnittestMsg("Testing struct dil.doc.Parser.");
   auto text = "A =

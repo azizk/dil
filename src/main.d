@@ -54,8 +54,9 @@ import tango.core.tools.TraceExceptions;
 /// Entry function of DIL.
 void main(cstring[] args)
 {
-  version(unittest)
-    return; // Don't run anything when unittests are executed.
+  debug if (args.length >= 2 && args[1] == "unittests")
+    return runUnittests();
+
   if (args.length == 0)
     throw new Exception("main() received 0 arguments");
 
@@ -673,4 +674,30 @@ void printHelp(cstring command, Diagnostics diag)
     msg = diag.formatMsg(MID.UnknownCommand, command);
   }
   Stdout(msg).newline;
+}
+
+void runUnittests()
+{
+  import cmd.ImportGraph,
+         dil.ast.Visitor,
+         dil.doc.Macro,
+         dil.doc.Parser,
+         dil.lexer.Lexer,
+         dil.Float,
+         dil.Complex,
+         dil.Converter,
+         dil.FileBOM,
+         dil.HtmlEntities,
+         dil.String,
+         util.uni;
+
+  auto testFuncs = [
+    &testGraph, &testFloat, &testComplex, &testConverter,
+    &testTellBOM, &testEntity2Unicode, &testString,
+    &testVisitor, &testMacroConvert, &testDocParser,
+    &testLexer, &testLexerPeek, &testIsUniAlpha,
+  ];
+
+  foreach (testFunc; testFuncs)
+    testFunc();
 }

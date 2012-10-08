@@ -2872,7 +2872,7 @@ class Lexer
 }
 
 /// Tests the lexer with a list of tokens.
-unittest
+void testLexer()
 {
   scope msg = new UnittestMsg("Testing class Lexer.");
   struct Pair
@@ -2980,7 +2980,7 @@ unittest
 }
 
 /// Tests the Lexer's peek() method.
-unittest
+void testLexerPeek()
 {
   scope msg = new UnittestMsg("Testing method Lexer.peek()");
   auto tables = new LexerTables();
@@ -3007,7 +3007,7 @@ unittest
   assert(next.kind == TOK.EOF);
 }
 
-unittest
+void testLexerNumbers()
 {
   // Numbers unittest
   // 0L 0ULi 0_L 0_UL 0x0U 0x0p2 0_Fi 0_e2 0_F 0_i

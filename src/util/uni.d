@@ -535,7 +535,7 @@ Lis:
   return 1;
 }
 
-unittest
+void testIsUniAlpha()
 {
   import common;
   scope msg = new UnittestMsg("Testing function isUniAlpha().");
@@ -548,16 +548,15 @@ unittest
       assert(range[1] < uniAlphaTable[i + 1][0]);
   }
 
-  // Check some characters.
+  // Check ASCII alphabet.
   for (uint i; i < 0x80; i++)
   {
-    if (i >= 'A' && i <= 'Z')
-      assert(isUniAlpha(i));
-    else if (i >= 'a' && i <= 'z')
-      assert(isUniAlpha(i));
-    else
-      assert(!isUniAlpha(i));
+    auto isUA = isUniAlpha(i);
+    assert(('A' <= i && i <= 'Z' ||
+            'a' <= i && i <= 'z') ?
+           isUA : !isUA);
   }
+  // Check some Unicode characters.
   dchar[] unichars = [0x0C8C, 0x0E81, 0x0EBD, 0x0F88,
     0x10FC, 0x17B3, 0xFB1F, 0xFE74, 0xFFDA, 0x10000, 0x103C3, 0x10837,
     0x1D454, 0x1D4BB, 0x1D53E, 0x1D6A8, 0x1D74E, 0x1D78A, 0x1D7CB, 0x2F800];

@@ -1066,7 +1066,7 @@ hash_t hashOfCTF(string str)
   return hash;
 }
 
-unittest
+void testString()
 {
   scope msg = new UnittestMsg("Testing struct String.");
   alias String S;

@@ -2246,7 +2246,7 @@ dchar entity2Unicode(hash_t hash)
   return 0; // Return error value.
 }
 
-unittest
+void testEntity2Unicode()
 {
   scope msg = new UnittestMsg("Testing function entity2Unicode().");
   alias entity2Unicode f;
