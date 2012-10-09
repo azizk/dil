@@ -44,19 +44,21 @@ def get_totalsize_and_md5sums(FILES, root_index):
   return (totalsize/1024, md5sums)
 
 def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, MAINTAINER, PACKAGENUM=1):
-  V_MAJOR = VERSION.MAJ
+  BINSFX = '-'+VERSION.BINSFX if VERSION.BINSFX else ''
+  dil = "dil"+BINSFX # Package name, binaries prefix, dir name, etc.
+
   # 1. Create folders.
   TMP = (TMP/"debian").mkdir() # The root folder.
   BIN = (TMP/"usr"/"bin").mkdir()
-  DOC = (TMP/"usr"/"share"/"doc"/"dil"+V_MAJOR).mkdir()
+  DOC = (TMP/"usr"/"share"/"doc"/dil).mkdir()
   MAN = (TMP/"usr"/"share"/"man"/"man1").mkdir()
-  SHR = (TMP/"usr"/"share"/"dil"+V_MAJOR).mkdir()
+  SHR = (TMP/"usr"/"share"/dil).mkdir()
   ETC = (TMP/"etc").mkdir()
   DEBIAN = (TMP/"DEBIAN").mkdir()
 
   # 2. Copy DIL's files.
   for binary in SRC.BINS:
-    binary.copy(BIN)
+    binary.copy(BIN/(dil+binary.name[3:])) # Copy and rename binaries.
   write_modified_dilconf(SRC.DATA/"dilconf.d", ETC/"dilconf.d",
     SHR[len(TMP):] + "/data")
   copyright = "License: GPL3\nAuthors: See AUTHORS file.\n"
@@ -69,11 +71,11 @@ def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, MAINTAINER, PACKAGENUM=1):
   SRC.DATA.copytree(SHR/"data")
   if SRC.DOC.exists:
     SRC.DOC.copytree(DOC/"api")
-  MANPAGE = MAN/"dil%s.1" % V_MAJOR
+  MANPAGE = MAN/"%s.1" % dil
   MANPAGE.write("\n")
   for f in (MANPAGE, CLOG, CLOGDEB):
     call_proc("gzip", "--best", f)
-  (MANPAGE+".gz").copy(MAN/"dil%s_dbg.1.gz" % V_MAJOR)
+  (MANPAGE+".gz").copy(MAN/"%s_dbg.1.gz" % dil)
 
   # 3. Get all package files excluding the special DEBIAN folder.
   FILES = TMP.rxglob(".", prunedir=lambda p: p.name == "DEBIAN")
@@ -84,7 +86,7 @@ def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, MAINTAINER, PACKAGENUM=1):
   # Replace the dash with a dot, because there may be a suffix.
   VERSION = VERSION.replace("-", ".")
 
-  control = """Package: dil{V_MAJOR}
+  control = """Package: {dil}
 Version: {VERSION}-{PACKAGENUM}
 Section: devel
 Priority: optional
@@ -122,7 +124,7 @@ Description: D compiler
     call_proc("chmod", "755", d)
 
   # 7. Create the package.
-  NAME = "dil%s_%s-%s_%s.deb" % (V_MAJOR, VERSION, PACKAGENUM, ARCH)
+  NAME = "{dil}_{VERSION}-{PACKAGENUM}_{ARCH}.deb".format(**locals())
   call_proc("fakeroot", "dpkg-deb", "--build", TMP, DEST/NAME)
   TMP.rmtree()
   return DEST/NAME
@@ -218,7 +220,8 @@ def build_binaries(TARGETS, COMPILER, V_MAJOR, FILES, DEST):
       dbgargs = dict(rlsargs, lnk_args=["-ltango-dmd", "-lphobos2", "-ldl"])
     # Destination dir for the binary.
     B = (DEST/target.dir/"bin%d"%target.bits).mkdir()
-    DBGEXE, RLSEXE = (B/target[exe] % V_MAJOR for exe in ("dbgexe", "rlsexe"))
+    SFX = "" # An optional suffix. Empty for now.
+    DBGEXE, RLSEXE = (B/target[exe] % SFX for exe in ("dbgexe", "rlsexe"))
     dbgargs.update(debug_info=True)
     build_binary(fix_dirsep(DBGEXE, target), **dbgargs)
     # NB: the -inline switch makes the binaries significantly larger on Linux.
@@ -282,15 +285,16 @@ def main():
   change_cwd(__file__)
 
   # Validate the version argument.
-  m = re.match(r"^((\d)\.(\d{3})(?:-(\w+))?)$", args[0])
+  m = re.match(r"^((\d)\.(\d{3})(?:-(\w+))?)(?:\+(\w+))?$", args[0])
   if not m:
-    parser.error("invalid VERSION; format: /\d.\d\d\d(-\w+)?/ E.g.: 1.123")
+    parser.error("invalid VERSION format: /\d.\d\d\d(-\w+)?/ E.g.: 1.123")
   # The version of DIL to be built.
   class Version(unicode):
     def __new__(cls, parts):
       v = unicode.__new__(cls, parts[0])
-      v.MAJ, v.MIN, SFX = parts[1:]
+      v.MAJ, v.MIN, SFX, BSFX = parts[1:]
       v.SFX = SFX or ''
+      v.BINSFX = BSFX or ''
       return v
   VERSION = Version(m.groups())
 
@@ -320,9 +324,6 @@ def main():
   PRODUCED  = []
 
   sw, sw_all = StopWatch(), StopWatch()
-
-  # Create the build directory.
-  # BUILD_DIR.mkdir()
 
   # Check out a new working copy.
   BUILDROOT.rmtree().mkdir() # First remove the whole folder and recreate it.
@@ -388,7 +389,7 @@ def main():
     for bin in BINS:
       (DIL.DATA/"dilconf.d").copy(bin.folder)
 
-  PRODUCED += (DEST.abspath, sw.stop())
+  PRODUCED += [(DEST.abspath, sw.stop())]
 
   # Remove unneeded directories.
   options.docs or DEST.DOC.rmtree()
