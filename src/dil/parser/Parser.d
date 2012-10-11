@@ -3529,41 +3529,42 @@ class Parser
       set(e, begin, begin);
       return e;
     case T.String:
-      cstring str = token.strval.str;
+      cbinstr str = token.strval.str;
       char postfix = token.strval.pf;
       nT();
       // Concatenate adjacent string literals.
       while (tokenIs(T.String))
       {
-        auto pf = token.strval.pf;
-        /+if (postfix == 0)
-            postfix = pf;
-        else+/
-        if (pf && pf != postfix)
-          error(token, MID.StringPostfixMismatch);
-        str.length = str.length - 1; // Exclude '\0'.
-        str ~= token.strval.str;
+        auto strval = token.strval;
+        if (auto pf = strval.pf) // If the string has a postfix char.
+        {
+          if (pf != postfix)
+            error(token, MID.StringPostfixMismatch);
+          postfix = pf;
+        }
+        str ~= strval.str;
         nT();
       }
-      assert(str[$-1] == 0);
 
-      auto bin_str = cast(const(ubyte)[])str;
-      if (postfix == 'w')
-      { // Convert to UTF16.
+      void check(cbinstr function(cstring) convert)
+      { // Check for invalid UTF-8 sequences and then convert.
         if (!hasInvalidUTF8(str, begin))
-          bin_str = cast(typeof(bin_str))dil.Unicode.toUTF16(str);
+          str = convert(cast(cstring)str);
       }
-      else if (postfix == 'd')
-      { // Convert to UTF32.
-        if (!hasInvalidUTF8(str, begin))
-          bin_str = cast(typeof(bin_str))dil.Unicode.toUTF32(str);
-      }
-      else
+
+      switch (postfix)
       {
-        if (begin !is prevToken) // Multiple string literals?
-          bin_str = cast(typeof(bin_str))lexer.lookupString(str[0..$-1]);
+      case 'c': check(x => cast(cbinstr)x); break;
+      case 'w': check(x => cast(cbinstr)dil.Unicode.toUTF16(x)); break;
+      case 'd': check(x => cast(cbinstr)dil.Unicode.toUTF32(x)); break;
+      default:
       }
-      e = new StringExpr(bin_str, postfix);
+
+      // Did the value change due to conversion or multiple string literals?
+      if (begin.strval.str !is str)
+        str = lexer.lookupString(str); // Insert into table if so.
+
+      e = new StringExpr(str, postfix);
       break;
     case T.LBracket:
       Expression[] values;
@@ -4553,7 +4554,7 @@ class Parser
   }
 
   /// Returns true if the string str has an invalid UTF-8 sequence.
-  bool hasInvalidUTF8(cstring str, Token* begin)
+  bool hasInvalidUTF8(cbinstr str, Token* begin)
   {
     auto invalidUTF8Seq = Lexer.findInvalidUTF8Sequence(str);
     if (invalidUTF8Seq.length)

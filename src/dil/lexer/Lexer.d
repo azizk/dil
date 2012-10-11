@@ -269,7 +269,7 @@ class Lexer
     default:
       assert(0);
     }
-    if (str.length)
+    if (str.ptr)
       t.strval = lookupString(str, 0);
   }
 
@@ -302,14 +302,15 @@ class Lexer
 
   /// Looks up a string value in the table.
   /// Params:
-  ///   str = The string to be looked up, which is not zero-terminated.
+  ///   str = The string to be looked up.
   ///   pf = The postfix character.
+  /// Returns: A stored or new StringValue.
   StringValue* lookupString(cstring str, char postfix)
   {
     auto hash = hashOf(str);
     auto psv = (hash + postfix) in tables.strvals;
     if (!psv)
-    { // Insert a new string value into the table.
+    { // Insert a new StringValue into the table.
       auto sv = new StringValue;
       sv.str = lookupString(hash, str);
       sv.pf = postfix;
@@ -322,23 +323,28 @@ class Lexer
   /// Looks up a string in the table.
   /// Params:
   ///   hash = The hash of str.
-  ///   str = The string to be looked up, which is not zero-terminated.
-  cstring lookupString(hash_t hash, cstring str)
+  ///   str = The string to be looked up.
+  /// Returns: A stored or new string.
+  cbinstr lookupString(hash_t hash, cstring str)
   {
     assert(hash == hashOf(str));
-    auto pstr = hash in tables.strings;
-    if (!pstr)
-    { // Insert a new string into the table.
-      auto new_str = str ~ '\0'; // Copy and terminate with a zero.
-      tables.strings[hash] = new_str;
-      return new_str;
-    }
-    return *pstr;
+    auto bstr = cast(cbinstr)str;
+    if (auto pstr = hash in tables.strings)
+      bstr = *pstr;
+    else // Insert a new string into the table.
+      tables.strings[hash] = bstr;
+    return bstr;
   }
 
   /// Calls lookupString(hash_t, string).
-  cstring lookupString(cstring str)
+  cbinstr lookupString(cstring str)
   {
+    return lookupString(hashOf(str), str);
+  }
+  /// ditto
+  cbinstr lookupString(cbinstr bstr)
+  {
+    auto str = cast(cstring)bstr;
     return lookupString(hashOf(str), str);
   }
 
@@ -2515,10 +2521,8 @@ class Lexer
           tokenEnd = p;
           goto Lerr;
         }
-        auto start = fs.start +1; // +1 skips '"'
-        auto strval = new StringValue;
-        strval.str = slice(start, p); // No need to zero-terminate.
-        fs.strval = strval;
+        auto str = slice(fs.start + 1, p); // Get string excluding "".
+        fs.strval = lookupString(str, 0);
         fs.end = tokenEnd = ++p;
         state = State.End;
         continue;
@@ -2550,7 +2554,7 @@ class Lexer
       }
       hlinfo.setLineNum(this.lineNum, hlval.lineNum.uint_);
       if (hlval.filespec)
-        hlinfo.path = hlval.filespec.strval.str;
+        hlinfo.path = cast(cstring)hlval.filespec.strval.str;
     }
 
     if (0) // Only issue an error if jumped here.
@@ -2854,8 +2858,9 @@ class Lexer
 
   /// Searches for an invalid UTF-8 sequence in str.
   /// Returns: a formatted string of the invalid sequence (e.g. "\xC0\x80").
-  static cstring findInvalidUTF8Sequence(cstring str)
+  static cstring findInvalidUTF8Sequence(cbinstr bstr)
   {
+    auto str = cast(cstring)bstr;
     auto p = str.ptr, end = p + str.length;
     while (p < end)
       if (decode(p, end) == ERROR_CHAR)

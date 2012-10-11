@@ -44,10 +44,11 @@ struct Token
   cchar* start; /// Points to the first character of the token.
   cchar* end;   /// Points one character past the end of the token.
 
-  /// Represents the string value of a string literal.
+  /// Represents the string value of a single string literal,
+  /// where possible escape sequences have been converted to their values.
   struct StringValue
   {
-    cstring str; /// Zero-terminated string. The length includes '\0'.
+    cbinstr str;    /// The typeless string value.
     char pf = 0;    /// Postfix: 'c', 'w', 'd'. '\0' for none.
     version(D2)
     Token* tok_str; /// Points to the contents of a token string stored as a

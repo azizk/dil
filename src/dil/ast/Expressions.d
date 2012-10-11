@@ -958,23 +958,25 @@ class CharExpr : Expression
 
 class StringExpr : Expression
 {
-  const(ubyte)[] data; /// The string data (includes terminating zero(s).)
+  cbinstr data; /// The string data.
   Type charType; /// The character type of the string.
+  bool coerced; /// True if the type has been coerced with a postfix char.
 
-  this(const(ubyte)[] data, Type charType)
+  this(cbinstr data, Type charType, bool coerced = false)
   {
     mixin(set_kind);
     this.data = data;
     this.charType = charType;
     this.type = charType.arrayOf(data.length/charType.sizeOf());
+    this.coerced = coerced;
   }
 
-  this(const(ubyte)[] data, char kind)
+  this(cbinstr data, char kind = 0)
   {
     Type t = Types.Char;
     if (kind == 'w') t = Types.WChar;
     else if (kind == 'd') t = Types.DChar;
-    this(data, t);
+    this(data, t, kind != 0);
   }
 
   this(cstring str)
@@ -995,29 +997,29 @@ class StringExpr : Expression
   /// For ASTSerializer.
   this(Token*[] tokens)
   {
+    import dil.lexer.Lexer;
     assert(tokens.length >= 1);
-    cstring str = tokens[0].strval.str;
+    cbinstr str = tokens[0].strval.str;
     char postfix = tokens[0].strval.pf;
     // Concatenate adjacent string literals.
     foreach (token; tokens[1..$])
     {
-      auto pf = token.strval.pf;
-      assert(!(pf && pf != postfix), "StringPostfixMismatch");
-      str.length = str.length - 1; // Exclude '\0'.
+      if (auto pf = token.strval.pf) {
+        assert(pf == postfix, "string literals' postfix mismatch");
+        postfix = pf;
+      }
       str ~= token.strval.str;
     }
-    assert(str[$-1] == 0);
 
-    auto bin_str = cast(const(ubyte)[])str;
-    if (postfix == 'w')      // Convert to UTF16.
-      bin_str = cast(typeof(bin_str))dil.Unicode.toUTF16(str);
+    if (postfix != 0)
+      assert(!Lexer.findInvalidUTF8Sequence(str));
+
+    if (postfix == 'w') // Convert to UTF16.
+      str = cast(cbinstr)dil.Unicode.toUTF16(cast(cstring)str);
     else if (postfix == 'd') // Convert to UTF32.
-      bin_str = cast(typeof(bin_str))dil.Unicode.toUTF32(str);
-    //else // FIXME: insert into table if multiple literals.
-    //  if (tokens.length > 1) // Multiple string literals?
-    //    bin_str = cast(typeof(bin_str))lexer.lookupString(str[0..$-1]);
+      str = cast(cbinstr)dil.Unicode.toUTF32(cast(cstring)str);
 
-    this(bin_str, postfix);
+    this(str, postfix);
   }
 
   /// Returns the tokens this literal comprises.
@@ -1039,25 +1041,25 @@ class StringExpr : Expression
     return type.to!(TypeSArray).dimension;
   }
 
-  /// Returns the string excluding the terminating 0.
+  /// Returns the UTF-8 string.
   cstring getString()
   {
     // TODO: convert to char[] if charType !is Types.Char.
-    return (cast(cstring)data)[0..$-1];
+    return cast(cstring)data;
   }
 
-  /// Returns the string excluding the terminating 0.
+  /// Returns the UTF-16 string.
   cwstring getWString()
   {
     assert(charType is Types.WChar);
-    return (cast(cwstring)data)[0..$-1];
+    return cast(cwstring)data;
   }
 
-  /// Returns the string excluding the terminating 0.
+  /// Returns the UTF-32 string.
   cdstring getDString()
   {
     assert(charType is Types.DChar);
-    return (cast(cdstring)data)[0..$-1];
+    return cast(cdstring)data;
   }
 
   mixin methods;

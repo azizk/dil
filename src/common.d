@@ -20,6 +20,10 @@ alias const(char)[] cstring;
 alias const(wchar)[] cwstring; /// ditto
 alias const(dchar)[] cdstring; /// ditto
 
+/// Binary, typeless string.
+alias ubyte[] binstr;
+alias const(ubyte)[] cbinstr; /// ditto
+
 alias FormatOutput!(char) FormatOut;
 /// Global formatter instance.
 static Layout!(char) Format;

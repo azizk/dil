@@ -1856,7 +1856,7 @@ class ASTPrinter : Visitor2
     t.text = txt;
     // FIXME: look up in lxtables.
     auto sv = new Token.StringValue;
-    sv.str = txt[1..$-1] ~ '\0';
+    sv.str = cast(cbinstr)s;
     t.strval = sv;
 
     w(&t);

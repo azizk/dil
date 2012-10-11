@@ -293,7 +293,7 @@ override
       e.value = new IntExpr(e.specialToken.uint_, Types.UInt32);
       break;
     case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
-      e.value = new StringExpr(e.specialToken.strval.str.dup);
+      e.value = new StringExpr(e.specialToken.strval.str);
       break;
     default:
       assert(0);
