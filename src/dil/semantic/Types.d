@@ -37,9 +37,11 @@ abstract class Type/* : Symbol*/
 
   /// Casts the type to Class.
   Class to(Class)()
-  { // [4..$] is there for slicing off "Type" from the class name.
-    assert(this.tid == mixin("TYP." ~ Class.stringof[4..$]) ||
-           Class.stringof == "TypeBasic" && this.isBasic());
+  {
+    static if (Class.stringof == "TypeBasic")
+      assert(this.isBasic());
+    else // [4..$] is there for slicing off "Type" from the class name.
+      assert(this.tid == mixin("TYP." ~ Class.stringof[4..$]));
     return cast(Class)cast(void*)this;
   }
 
@@ -1437,7 +1439,7 @@ struct Types
 {
 static:
   /// Predefined basic types.
-  TypeBasic Char,     WChar,    DChar, Bool,
+  TypeBasic XChar,    Char,     WChar, DChar,  Bool,
             Int8,     UInt8,    Int16, UInt16,
             Int32,    UInt32,   Int64, UInt64,
             Int128,   UInt128,
@@ -1475,14 +1477,13 @@ static:
     return result;
   }
 
-  /// Initializes predefined types.
+  /// Initializes global, predefined types.
   /// NB: Not thread-safe.
-  void init()
+  auto init = &init_;
+  /// ditto
+  void init_()
   {
-    static bool initialized;
-    if (initialized)
-      return;
-    initialized = true;
+    init = {}; // Disable with empty function after first call.
 
     mixin(createTypes([ // Pass tuples: (TypeName, KeywordName)
       ["Char", "Char"], ["WChar", "Wchar"], ["DChar", "Dchar"],
@@ -1497,6 +1498,9 @@ static:
       ["CFloat32", "Cfloat"], ["CFloat64", "Cdouble"],
       ["CFloat80", "Creal"], ["Void", "Void"]
     ]));
+
+    /// Polysemous character type.
+    XChar = new TypeBasic(Char.ident, Char.tid);
 
     TOK2Type = [
       // Number literal TOKs:

@@ -958,46 +958,58 @@ class CharExpr : Expression
 
 class StringExpr : Expression
 {
-  cbinstr data; /// The string data.
-  Type charType; /// The character type of the string.
-  bool coerced; /// True if the type has been coerced with a postfix char.
+  const(void)[] data; /// Contains char, wchar or dchar characters.
 
-  this(cbinstr data, Type charType, bool coerced = false)
+  /// Primary constructor.
+  /// Params:
+  ///   data = Never pass a string to this parameter.
+  ///          Implicit array type conversion can change the length property!
+  ///   charType = The semantic type of the characters.
+  this(const(void)[] data, Type charType)
   {
     mixin(set_kind);
     this.data = data;
-    this.charType = charType;
-    this.type = charType.arrayOf(data.length/charType.sizeOf());
-    this.coerced = coerced;
+    version(D1)
+    this.type = charType.arrayOf(data.length);
+    version(D2)
+    this.type = charType/+.immutableOf()+/.arrayOf();
   }
 
-  this(cbinstr data, char kind = 0)
+  this(const void* ptr, const size_t len, Type charType)
   {
-    Type t = Types.Char;
-    if (kind == 'w') t = Types.WChar;
-    else if (kind == 'd') t = Types.DChar;
-    this(data, t, kind != 0);
+    this(ptr[0..len], charType);
+  }
+
+  this(cbinstr str, char kind = 0)
+  {
+    auto t = (kind == 'c') ? Types.Char  :
+             (kind == 'w') ? Types.WChar :
+             (kind == 'd') ? Types.DChar :
+                             Types.XChar;
+    // Adjust the length. Length / CharSize == Length >> (CharSize >> 1).
+    auto x = (kind == 'd') ? 2 : (kind == 'w') ? 1 : 0;
+    this(str.ptr, str.length >> x, t);
   }
 
   this(cstring str)
   {
-    this(cast(typeof(data))str, Types.Char);
+    this(str.ptr, str.length, Types.Char);
   }
 
   this(cwstring str)
   {
-    this(cast(typeof(data))str, Types.WChar);
+    this(str.ptr, str.length, Types.WChar);
   }
 
   this(cdstring str)
   {
-    this(cast(typeof(data))str, Types.DChar);
+    this(str.ptr, str.length, Types.DChar);
   }
 
   /// For ASTSerializer.
   this(Token*[] tokens)
   {
-    import dil.lexer.Lexer;
+    import dil.lexer.Lexer, dil.Unicode;
     assert(tokens.length >= 1);
     cbinstr str = tokens[0].strval.str;
     char postfix = tokens[0].strval.pf;
@@ -1015,11 +1027,33 @@ class StringExpr : Expression
       assert(!Lexer.findInvalidUTF8Sequence(str));
 
     if (postfix == 'w') // Convert to UTF16.
-      str = cast(cbinstr)dil.Unicode.toUTF16(cast(cstring)str);
+      str = cast(cbinstr)toUTF16(cast(cstring)str);
     else if (postfix == 'd') // Convert to UTF32.
-      str = cast(cbinstr)dil.Unicode.toUTF32(cast(cstring)str);
+      str = cast(cbinstr)toUTF32(cast(cstring)str);
 
     this(str, postfix);
+  }
+
+  /// Returns true if coerced, false if polysemous.
+  bool coerced() @property
+  {
+    return charType is Types.XChar;
+  }
+
+  /// Returns the underlying character type.
+  TypeBasic charType() @property
+  {
+    return type.next.to!(TypeBasic);
+  }
+
+  /// Returns 0, 'c', 'w', or 'd'.
+  char postfix() @property
+  {
+    auto t = charType;
+    return t is Types.XChar ? '\0' :
+           t is Types.Char  ? 'c'  :
+           t is Types.WChar ? 'w'  :
+                              'd';
   }
 
   /// Returns the tokens this literal comprises.
@@ -1035,31 +1069,31 @@ class StringExpr : Expression
 
   mixin(memberInfo("tokens"));
 
-  /// Returns the number of chars/wchar/dchars in this string.
-  size_t length()
+  /// Returns the number of characters in this string.
+  size_t length() @property
   {
-    return type.to!(TypeSArray).dimension;
+    return data.length;
   }
 
   /// Returns the UTF-8 string.
   cstring getString()
   {
     // TODO: convert to char[] if charType !is Types.Char.
-    return cast(cstring)data;
+    return *cast(cstring*)&data;
   }
 
   /// Returns the UTF-16 string.
   cwstring getWString()
   {
     assert(charType is Types.WChar);
-    return cast(cwstring)data;
+    return *cast(cwstring*)&data;
   }
 
   /// Returns the UTF-32 string.
   cdstring getDString()
   {
     assert(charType is Types.DChar);
-    return cast(cdstring)data;
+    return *cast(cdstring*)&data;
   }
 
   mixin methods;
