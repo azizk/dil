@@ -3,7 +3,6 @@
 /// $(Maturity low)
 module dil.ast.ASTPrinter;
 
-
 import dil.ast.Visitor,
        dil.ast.NodeMembers,
        dil.ast.Node,
@@ -432,7 +431,7 @@ class ASTPrinter : Visitor2
 
   void visit(AliasThisDecl n)
   {
-    w(ind, T.Alias, ws, T.This, ws, n.ident, T.Semicolon, Newline);
+    w(ind, T.Alias, ws, n.ident, ws, T.This, T.Semicolon, Newline);
   }
 
   void visit(TypedefDecl n)
@@ -1843,13 +1842,17 @@ class ASTPrinter : Visitor2
     }
 
     // NB: could be optimized to copying the string if no escaping is needed.
+    // FIXME: the string might not be in UTF-8.
     auto s = n.getString();
-    cstring txt = `"`;
+    char[] txt = `"`.dup;
 
     foreach (c; s)
       txt ~= (c == '\"') ? `\"` : (c == '\\') ? `\\` : escapeNonPrintable(c);
 
     txt ~= `"`;
+
+    if (auto pf = n.postfix)
+      txt ~= pf;
 
     Token t;
     t.kind = TOK.String;
