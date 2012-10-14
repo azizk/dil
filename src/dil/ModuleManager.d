@@ -15,7 +15,7 @@ import util.Path;
 import common;
 
 import tango.io.model.IFile;
-import tango.io.Path : pathNormalize = normalize;
+import tango.io.Path : pathNormalize = normalize, isFolder;
 import tango.core.Array : lbound, sort;
 import tango.sys.Environment;
 
@@ -74,6 +74,13 @@ class ModuleManager
     if (auto existingModule = moduleByPath(moduleFilePath))
       return existingModule;
 
+    if (isFolder(moduleFilePath))
+    {
+      auto msg = cc.diag.formatMsg(MID.ModulePathIsFolder, moduleFilePath);
+      cc.diag ~= new LexerError(new Location(moduleFilePath, 0), msg);
+      return null;
+    }
+
     // Create a new module.
     auto newModule = new Module(moduleFilePath, cc);
     newModule.parse();
@@ -97,6 +104,8 @@ class ModuleManager
 
     // Load the module file.
     auto modul = loadModuleFile(moduleFilePath);
+    if (!modul)
+      return null;
 
     auto packageFQN = getPackageFQN(moduleFQNPath);
     if (getPackageFQN(modul.getFQNPath()) != packageFQN)
@@ -221,17 +230,10 @@ class ModuleManager
   {
     auto filePath = Path();
     foreach (importPath; importPaths)
-    {
-      filePath.set(importPath); // E.g.: src/
-      filePath /= moduleFQNPath; // E.g.: dil/ast/Node
-      filePath.suffix(".d"); // E.g.: src/dil/ast/Node.d
-      if (!filePath.exists())
-      {
-        filePath.suffix(".di"); // E.g.: src/dil/ast/Node.di
-        if (!filePath.exists())
-          continue;
-      }
-      return filePath.toString();
+    { // E.g.: "path/to/src" ~ "/" ~ "dil/ast/Node" ~ ".d"
+      (filePath.set(importPath) /= moduleFQNPath) ~= ".d";
+      if (filePath.exists() || (filePath~="i").exists()) // E.g.: src/dil/ast/Node.di
+        return filePath.toString();
     }
     return null;
   }

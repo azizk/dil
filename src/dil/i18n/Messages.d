@@ -138,6 +138,7 @@ enum MID
 
   // Semantic analysis:
   CouldntLoadModule,
+  ModulePathIsFolder,
   ConflictingModuleFiles,
   ConflictingModuleAndPackage,
   ConflictingPackageAndModule,

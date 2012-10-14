@@ -74,7 +74,6 @@ string[] messages = [
   "unbekannter Anbindungstyp ‚{0}‘ (gültig sind: ‚C‘, ‚C++‘, ‚D‘, ‚Windows‘, ‚Pascal‘, ‚System‘)",
   "erwartete eine oder mehrere Basisklassen, nicht ‚{0}‘",
   "Basisklassen sind in Vorwärtsdeklarationen nicht erlaubt",
-
   "ungültige UTF-8-Sequenz in Zeichenkette: ‚{}‘",
   "eine Moduldeklaration ist nur als allererste Deklaration in einer Datei erlaubt",
   "die Postfix-Zeichen in den Zeichenketten passen nicht zusammen",
@@ -104,7 +103,7 @@ string[] messages = [
   "erwartete einen Templatenamen, nicht ‚{}‘",
   "erwartete einen Bezeichner, nicht ‚{}‘",
   "ungültige Anweisung gefunden: „{}“",
-  "erwartete nicht ‚;‘, verwende ‚{{ }‘ stattdessen"
+  "erwartete nicht ‚;‘, verwende ‚{{ }‘ stattdessen",
   "erwartete nicht ‚;‘, verwende ‚{{ }‘ stattdessen",
   "erwartete ‚exit‘, ‚success‘ oder ‚failure‘, nicht ‚{}‘",
   "‚{}‘ ist kein gültiger Scopebezeichner (gültig sind: ‚exit‘, ‚success‘, ‚failure‘)",
@@ -133,6 +132,7 @@ string[] messages = [
 
   // Semantic analysis:
   "das Modul ‚{}‘ konnte nicht gefunden werden",
+  "der Pfad ‚{}‘ ist keine Quelldatei, sondern ein Verzeichnis",
   "das Modul steht im Konflikt mit dem Modul ‚{}‘",
   "das Modul steht im Konflikt mit dem Paket ‚{}‘",
   "das Paket ‚{0}‘ steht im Konflikt mit dem Modul ‚{0}‘",

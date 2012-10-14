@@ -132,6 +132,7 @@ string[] messages = [
 
   // Semantic analysis:
   "couldn’t find module file ‘{}’",
+  "the path ‘{}’ is not a module file, but a folder",
   "module is in conflict with module ‘{}’",
   "module is in conflict with package ‘{}’",
   "package ‘{0}’ is in conflict with module ‘{0}’",
