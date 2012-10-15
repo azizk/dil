@@ -252,7 +252,8 @@ class Parser
   |                       Declaration parsing methods                       |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
-  /// $(BNF ModuleDecl := module Identifier ("." Identifier)* ";")
+  /// $(BNF ModuleDecl := module ModuleType? Identifier ("." Identifier)* ";"
+  ////ModuleType := "(" safe | system ")")
   Declaration parseModuleDecl()
   {
     auto begin = token;
@@ -319,7 +320,15 @@ class Parser
 
   /// Parses a DeclarationDefinition.
   ///
-  /// $(BNF DeclDef := Attributes | ...)
+  /// $(BNF DeclDef := Attributes | AliasThisDecl | AliasDecl | TypedefDecl |
+  ////  StaticCtorDecl | StaticDtorDecl | StaticIfDecl | StaticAssertDecl |
+  ////  ImportDecl | EnumDecl | ClassDecl | InterfaceDecl | StructDecl |
+  ////  UnionDecl | ConstructorDecl | DestructorDecl | InvariantDecl |
+  ////  UnittestDecl | DebugDecl | VersionDecl | TemplateDecl | NewDecl |
+  ////  DeleteDecl | MixinDecl | EmptyDecl | VariablesOrFunction
+  ////AliasDecl := alias BasicTypes Identifier ";"
+  ////AliasThisDecl := alias Identifier this ";"
+  ////TypedefDecl := typedef VariablesDecl)
   Declaration parseDeclarationDefinition()
   out(decl)
   { assert(isNodeSet(decl)); }
@@ -496,8 +505,8 @@ class Parser
     }
     case T.Identifier, T.Dot, T.Typeof:
     case_Declaration:
-      return parseVariableOrFunction(this.storageClass, this.protection,
-                                     this.linkageType);
+      return parseVariablesOrFunction(this.storageClass, this.protection,
+                                      this.linkageType);
     default:
       if (token.isIntegralType)
         goto case_Declaration;
@@ -568,26 +577,26 @@ class Parser
   //   return parseDeclarationsBlock(true);
   // }
 
-  /// Parses either a VariableDeclaration or a FunctionDeclaration.
+  /// Parses either a VariablesDecl or a FunctionDecl.
+  ///
   /// $(BNF
-  ////VariableOrFunctionDeclaration :=
-  ////  AutoDecl | VariableDecl | FunctionDecl
-  ////AutoDecl      := AutoVariable | AutoTemplate
-  ////AutoVariable  := Name "=" Initializer MoreVariables? ";"
-  ////VariableDec   :=
-  ////  Type Name TypeSuffix? ("=" Initializer)? MoreVariables? ";"
-  ////MoreVariables := ("," Name ("=" Initializer)?)+
-  ////FunctionDec   :=
+  ////VariablesOrFunctionDecl :=
+  ////  AutoDecl | VariablesDecl | FunctionDecl
+  ////AutoDecl      := AutoVariables | AutoFunction
+  ////AutoVariables := Name "=" Initializer MoreVariables* ";"
+  ////AutoFunction  := Name TemplateParameterList? ParameterList FunctionBody
+  ////VariablesDecl :=
+  ////  Type Name DeclaratorSuffix? ("=" Initializer)? MoreVariables* ";"
+  ////MoreVariables := "," Name ("=" Initializer)?
+  ////FunctionDecl  :=
   ////  Type Name TemplateParameterList? ParameterList FunctionBody
-  ////AutoTemplate  := Name TemplateParameterList ParameterList FunctionBody
-  ////Name          := Identifier
-  ////)
+  ////Name          := Identifier)
   /// Params:
   ///   stcs = Previously parsed storage classes.
   ///   protection = Previously parsed protection attribute.
   ///   linkType = Previously parsed linkage type.
-  ///   testAutoDeclaration = Whether to check for an AutoDeclaration.
-  Declaration parseVariableOrFunction(
+  ///   testAutoDeclaration = Whether to check for an AutoDecl.
+  Declaration parseVariablesOrFunction(
     StorageClass stcs = StorageClass.None,
     Protection protection = Protection.None,
     LinkageType linkType = LinkageType.None,
@@ -601,38 +610,36 @@ class Parser
     TemplateParameters tparams; // Function template parameters.
     Expression constraint; // Function template constraint.
 
-    // Check for AutoDeclaration: StorageClasses Identifier =
+    // Check for AutoDecl.
     if (testAutoDeclaration && tokenIs(T.Identifier))
     {
       auto next_kind = peekNext();
-      if (next_kind == T.Equal) // "auto" Identifier "="
-      { // Auto variable declaration.
+      if (next_kind == T.Equal)
+      { // AutoVariables
         name = token;
         skip(T.Identifier);
         goto LparseVariables;
       }
       else version(D2) if (next_kind == T.LParen)
-      { // Check for auto return type (template) function.
-        // StorageClasses Name
-        //  ("(" TemplateParameterList ")")? "(" ParameterList ")"
+      { // Check for AutoFunction.
         auto peek_token = peekAfter(token); // Skip the Identifier.
         peek_token = skipParens(peek_token, T.RParen);
         next_kind = peek_token.kind; // Token after "(" ... ")"
         if (next_kind == T.LParen)
-        { // "(" TemplateParameterList ")" "(" ParameterList ")"
+        { // TemplateParameterList ParameterList
           name = token;
           skip(T.Identifier);
           assert(tokenIs(T.LParen));
-          goto LparseTPList; // Continue with parsing a template function.
+          goto LparseTPList; // Continue parsing templatized AutoFunction.
         }
         else
         if (next_kind == T.LBrace || isFunctionPostfix(peek_token) ||
             next_kind == T.In || next_kind == T.Out || next_kind == T.Body)
-        { // "(" ParameterList ")" ("{" | FunctionPostfix | in | out | body)
+        { // ParameterList ("{" | FunctionPostfix | in | out | body)
           name = token;
           skip(T.Identifier);
           assert(tokenIs(T.LParen));
-          goto LparseBeforeParams;
+          goto LparseBeforeParams; // Continue parsing AutoFunction.
         }
       } // version(D2)
     }
@@ -1106,7 +1113,7 @@ class Parser
     this.alignSize = alignSize;
     if (testAutoDecl && tokenIs(T.Identifier)) // "auto" Identifier "="
       decl = // This could be a normal Declaration or an AutoDeclaration
-        parseVariableOrFunction(stcs, protection, linkageType, true);
+        parseVariablesOrFunction(stcs, protection, linkageType, true);
     else
     {
       if (prevAttr.Is!PragmaDecl && tokenIs(T.Semicolon))
@@ -1812,7 +1819,7 @@ class Parser
 
     if (token.isIntegralType)
     {
-      d = parseVariableOrFunction();
+      d = parseVariablesOrFunction();
       goto LreturnDeclarationStmt;
     }
 
@@ -1860,7 +1867,7 @@ class Parser
     }
     case T.Dot, T.Typeof:
       bool success;
-      d = tryToParse({ return parseVariableOrFunction(); }, success);
+      d = tryToParse({ return parseVariablesOrFunction(); }, success);
       if (success)
         goto LreturnDeclarationStmt; // Declaration
       else
@@ -2150,7 +2157,7 @@ class Parser
       //break;
     default:
       decl =
-        parseVariableOrFunction(stcs, protection, linkageType, testAutoDecl);
+        parseVariablesOrFunction(stcs, protection, linkageType, testAutoDecl);
     }
     assert(decl !is null && isNodeSet(decl));
     // Attach the declaration to the previously parsed attribute.
@@ -3202,13 +3209,13 @@ class Parser
     return e;
   }
 
-  /// $(BNF PostExpr := UnaryExpr |
-  ////  PostIdExpr | IncOrDecExpr | CallExpr | SliceExpr | IndexExpr
-  ////PostIdExpr   := UnaryExpr "." (NewExpr | IdentifierExpr)
-  ////IncOrDecExpr := UnaryExpr ("++" | "--")
-  ////CallExpr     := UnaryExpr "(" Arguments? ")"
-  ////SliceExpr    := UnaryExpr "[" (AssignExpr ".." AssignExpr)? "]"
-  ////IndexExpr    := UnaryExpr "[" ExpressionList "]")
+  /// $(BNF PostExpr := UnaryExpr
+  ////  (PostIdExpr | IncOrDecExpr | CallExpr | SliceExpr | IndexExpr)*
+  ////PostIdExpr   := "." (NewExpr | IdentifierExpr)
+  ////IncOrDecExpr := ("++" | "--")
+  ////CallExpr     := "(" Arguments? ")"
+  ////SliceExpr    := "[" (AssignExpr ".." AssignExpr)? "]"
+  ////IndexExpr    := "[" ExpressionList "]")
   Expression parsePostExpr()
   {
     auto begin = token;
