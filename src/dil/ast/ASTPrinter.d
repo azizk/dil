@@ -1911,6 +1911,11 @@ class ASTPrinter : Visitor2
     w(T.RParen);
   }
 
+  void visit(TypeExpr n)
+  {
+    v(n.typeNode);
+  }
+
   void visit(TypeofExpr n)
   {
     v(n.type);

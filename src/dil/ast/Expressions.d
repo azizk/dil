@@ -1169,6 +1169,18 @@ class ImportExpr : Expression
   mixin methods;
 }
 
+class TypeExpr : Expression
+{
+  TypeNode typeNode;
+  mixin(memberInfo("typeNode"));
+  this(TypeNode t)
+  {
+    mixin(set_kind);
+    this.typeNode = t;
+  }
+  mixin methods;
+}
+
 class TypeofExpr : Expression
 {
   TypeNode type;

@@ -168,6 +168,7 @@ enum string[] NodeClassNames = [
   "AssertExpr",
   "MixinExpr",
   "ImportExpr",
+  "TypeExpr",
   "TypeofExpr",
   "TypeDotIdExpr",
   "TypeidExpr",

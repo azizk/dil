@@ -1371,7 +1371,7 @@ class Parser
     return d;
   }
 
-  /// $(BNF BaseClasses := BaseClass ("," BaseClass)
+  /// $(BNF BaseClasses := BaseClass ("," BaseClass)*
   ////BaseClass   := Protection? BasicType
   ////Protection  := private | public | protected | package)
   BaseClassType[] parseBaseClasses()
@@ -3285,7 +3285,8 @@ class Parser
   ////CompExpr      := "~" UnaryExpr
   ////DeleteExpr    := delete UnaryExpr
   ////CastExpr      := cast "(" Type? ")" UnaryExpr
-  ////TypeDotIdExpr := "(" Type ")" "." Identifier)
+  ////TypeDotIdExpr := "(" Type ")" "." Identifier
+  ////TypeExpr      := Modifier Type)
   Expression parseUnaryExpr()
   {
     auto begin = token;
@@ -3373,6 +3374,12 @@ class Parser
       auto ident = requireIdentifier(MID.ExpectedIdAfterTypeDot);
       e = new TypeDotIdExpr(type, ident);
       break;
+    version(D2)
+    {
+    case T.Immutable, T.Const, T.Shared, T.Inout:
+      e = new TypeExpr(parseType());
+      break;
+    }
     default:
       e = parsePrimaryExpr();
       return e;
@@ -3798,7 +3805,8 @@ class Parser
     }
     else
     { // NewObjectExpr
-      auto type = parseBasicTypes();
+      // FIXME: call parseType() but it may have modifiers (const/...).
+      auto type = parseBasicType();
 
       // Don't parse arguments if an array type was parsed previously.
       auto arrayType = type.Is!(ArrayType);
