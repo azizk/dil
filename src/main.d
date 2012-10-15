@@ -487,6 +487,8 @@ void main(cstring[] args)
       ddocPaths = String(";").join(GS.ddocFilePaths).array;
 
     cstring[string] settings = [
+      "DIL":config.executablePath,
+      "DILCONF":config.dilconfPath,
       "DATADIR":GS.dataDir, "VERSION_IDS":versionIds,
       "KANDILDIR":GS.kandilDir,
       "IMPORT_PATHS":importPaths, "DDOC_FILES":ddocPaths,

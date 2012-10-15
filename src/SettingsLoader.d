@@ -99,6 +99,7 @@ class ConfigLoader : SettingsLoader
   cstring executableDir; /// Absolute path to the directory of DIL's executable.
   cstring dataDir; /// Absolute path to DIL's data directory.
   cstring homePath; /// Path to the home directory.
+  cstring dilconfPath; /// Path to dilconf.d to be used.
 
   ResourceBundle resourceBundle; /// A bundle for compiler messages.
 
@@ -150,15 +151,15 @@ class ConfigLoader : SettingsLoader
   void load()
   {
     // Search for the configuration file.
-    auto filePath = findConfigurationFilePath();
-    if (filePath is null)
+    dilconfPath = findConfigurationFilePath();
+    if (dilconfPath is null)
     {
       diag ~= new GeneralError(new Location("",0),
         "the configuration file ‘"~configFileName~"’ could not be found.");
       return;
     }
     // Load the file as a D module.
-    mod = new Module(filePath, cc);
+    mod = new Module(dilconfPath, cc);
     mod.parse();
 
     if (mod.hasErrors)
@@ -291,7 +292,7 @@ class ConfigLoader : SettingsLoader
         exists(executableDir~"/"~configFileName) ||
         // 5. Look in /etc/.
         exists("/etc/"~configFileName))
-      return path.toString();
+      return normalize(path.toString());
     else
       return null;
   }
