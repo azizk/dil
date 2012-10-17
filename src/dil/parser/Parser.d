@@ -616,10 +616,10 @@ class Parser
   ////AutoVariables := Name "=" Initializer MoreVariables* ";"
   ////AutoFunction  := Name TemplateParameterList? ParameterList FunctionBody
   ////VariablesDecl :=
-  ////  Type Name DeclaratorSuffix? ("=" Initializer)? MoreVariables* ";"
+  ////  BasicTypes Name DeclaratorSuffix? ("=" Initializer)? MoreVariables* ";"
   ////MoreVariables := "," Name ("=" Initializer)?
   ////FunctionDecl  :=
-  ////  Type Name TemplateParameterList? ParameterList FunctionBody
+  ////  BasicTypes Name TemplateParameterList? ParameterList FunctionBody
   ////Name          := Identifier)
   /// Params:
   ///   stcs = Previously parsed storage classes.
@@ -3842,8 +3842,22 @@ class Parser
     }
     else
     { // NewObjectExpr
-      // FIXME: call parseType() but it may have modifiers (const/...).
-      auto type = parseBasicType();
+      auto type = parseType();
+      auto tk = type.begin.kind;
+
+      if (tk == T.Const || tk == T.Immutable || tk == T.Inout || tk == T.Shared)
+      { // Skip modifier types in the chain and search for an ArrayType.
+        auto t = type;
+        while ((t = t.next) !is null)
+          if (auto at = t.Is!(ArrayType))
+            if (at.isStatic() || at.isAssociative())
+            {
+              at.parent.setNext(at.next); // Link it out.
+              at.setNext(type); // Make it the head type.
+              type = at;
+              break;
+            }
+      }
 
       // Don't parse arguments if an array type was parsed previously.
       auto arrayType = type.Is!(ArrayType);
@@ -3855,9 +3869,9 @@ class Parser
         backtrackTo(lBracket);
 
         skip(T.LBracket); // "["
-        type = set(new ArrayType(type.next, parseExpression()), lBracket);
+        auto index = parseExpression();
         requireClosing(T.RBracket, lBracket); // "]"
-        delete arrayType; // Delete the old type.
+        type = set(new ArrayType(type.next, index), lBracket);
       }
       else if (tokenIs(T.LParen)) // NewArguments
         ctorArguments = parseArguments();
