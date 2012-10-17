@@ -201,6 +201,21 @@ class AliasDecl : Declaration
   mixin methods;
 }
 
+class AliasesDecl : Declaration
+{
+  Token*[] idents;
+  TypeNode[] types;
+  mixin(memberInfo("idents", "types"));
+  this(Token*[] idents, TypeNode[] types)
+  {
+    mixin(set_kind);
+    addChildren(types);
+    this.idents = idents;
+    this.types = types;
+  }
+  mixin methods;
+}
+
 class AliasThisDecl : Declaration
 {
   Token* ident;

@@ -49,6 +49,7 @@ class ASTSerializer : Visitor2
     Declarations,
     Statements,
     Expressions,
+    Types,
     Parameters,
     TemplateParams,
     EnumMemberDecls,
@@ -82,6 +83,7 @@ class ASTSerializer : Visitor2
     typeid(Declaration[]),
     typeid(Statement[]),
     typeid(Expression[]),
+    typeid(TypeNode[]),
     typeid(Parameter[]),
     typeid(TemplateParam[]),
     typeid(EnumMemberDecl[]),
@@ -257,6 +259,11 @@ class ASTSerializer : Visitor2
   void write(Expression[] nodes)
   {
     write(cast(Node[])nodes, TID.Expressions);
+  }
+
+  void write(TypeNode[] nodes)
+  {
+    write(cast(Node[])nodes, TID.Types);
   }
 
   void write(Parameter[] nodes)
@@ -499,6 +506,11 @@ class ASTDeserializer : Visitor
   bool read(out Expression[] nodes)
   {
     return read(*cast(Node[]*)&nodes, TID.Expressions);
+  }
+
+  bool read(out TypeNode[] nodes)
+  {
+    return read(*cast(Node[]*)&nodes, TID.Types);
   }
 
   bool read(out Parameter[] nodes)

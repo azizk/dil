@@ -326,8 +326,6 @@ class Parser
   ////  UnionDecl | ConstructorDecl | DestructorDecl | InvariantDecl |
   ////  UnittestDecl | DebugDecl | VersionDecl | TemplateDecl | NewDecl |
   ////  DeleteDecl | MixinDecl | EmptyDecl | VariablesOrFunction
-  ////AliasDecl := alias BasicTypes Identifier ";"
-  ////AliasThisDecl := alias Identifier this ";"
   ////TypedefDecl := typedef VariablesDecl)
   Declaration parseDeclarationDefinition()
   out(decl)
@@ -372,30 +370,7 @@ class Parser
     case_parseAttributes:
       return parseAttributes();
     case T.Alias:
-      nT();
-      version (D2)
-      {
-      if (tokenIs(T.Identifier) && peekNext() == T.This)
-      {
-        auto ident = token;
-        skip(T.Identifier);
-        skip(T.This);
-        require2(T.Semicolon);
-        decl = new AliasThisDecl(ident);
-        break;
-      }
-      } // version(D2)
-
-      auto ad = new AliasDecl(parseAttributes(&decl));
-      ad.vardecl = decl;
-      if (auto var = decl.Is!(VariablesDecl))
-      {
-        if (auto init = var.firstInit())
-          error(init.begin.prevNWS(), MID.AliasHasInitializer);
-      }
-      else
-        error(decl.begin, MID.AliasExpectsVariable, decl.toText());
-      decl = ad;
+      decl = parseAliasDecl();
       break;
     case T.Typedef:
       nT();
@@ -576,6 +551,61 @@ class Parser
   // {
   //   return parseDeclarationsBlock(true);
   // }
+
+  /// $(BNF
+  ////AliasDecl := alias Attributes
+  ////AliasThisDecl := alias Identifier this ";"
+  ////AliasesDecl := alias AliasName "=" Type ("," AliasName "=" Type)* ";"
+  ////AliasName := this | Identifier)
+  Declaration parseAliasDecl()
+  {
+    skip(T.Alias);
+    version (D2)
+    {
+    if (tokenIs(T.Identifier) && peekNext() == T.This)
+    {
+      auto ident = token;
+      skip(T.Identifier);
+      skip(T.This);
+      require2(T.Semicolon);
+      return new AliasThisDecl(ident);
+    }
+    else
+    if ((tokenIs(T.This) || tokenIs(T.Identifier)) && peekNext() == T.Equal)
+    {
+      Token*[] idents;
+      TypeNode[] types;
+      goto LenterLoop;
+
+      while (consumed(T.Comma))
+      {
+        if (!(tokenIs(T.This) || tokenIs(T.Identifier)))
+          error(token, MID.ExpectedAliasName, token.text);
+      LenterLoop:
+        idents ~= token;
+        nT();
+        require2(T.Equal);
+        types ~= parseType();
+      }
+
+      require2(T.Semicolon);
+      return new AliasesDecl(idents, types);
+    }
+    } // version(D2)
+
+    Declaration decl;
+    auto ad = new AliasDecl(parseAttributes(&decl));
+    ad.vardecl = decl;
+    if (auto var = decl.Is!(VariablesDecl))
+    {
+      foreach (init; var.inits)
+        if (init)
+         error(init.begin.prevNWS(), MID.AliasHasInitializer);
+    }
+    else
+      error(decl.begin, MID.AliasExpectsVariable, decl.toText());
+    return ad;
+  }
 
   /// Parses either a VariablesDecl or a FunctionDecl.
   ///

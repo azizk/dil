@@ -24,6 +24,7 @@ enum string[] NodeClassNames = [
   "ModuleDecl",
   "ImportDecl",
   "AliasDecl",
+  "AliasesDecl",
   "AliasThisDecl",
   "TypedefDecl",
   "EnumDecl",

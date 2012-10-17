@@ -15,6 +15,7 @@ char[] genMembersTable()
   t[N.EmptyDecl] = t[N.IllegalDecl] =
   t[N.ModuleDecl] = t[N.ImportDecl] =
   t[N.AliasThisDecl] = [];
+  t[N.AliasesDecl] = ["types[]"];
   t[N.AliasDecl] = t[N.TypedefDecl] = ["decl"];
   t[N.EnumDecl] = ["baseType?", "members[]"];
   t[N.EnumMemberDecl] = ["type?", "value?"];

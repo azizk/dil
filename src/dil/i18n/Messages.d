@@ -90,6 +90,7 @@ enum MID
   ExpectedModuleType,
   ExpectedFunctionName,
   ExpectedVariableName,
+  ExpectedAliasName,
   ExpectedFunctionBody,
   RedundantLinkageType,
   RedundantProtection,

@@ -84,6 +84,7 @@ string[] messages = [
   "expected ‘system’ or ‘safe’, not ‘{}’",
   "expected function name, not ‘{}’",
   "expected variable name, not ‘{}’",
+  "expected alias name, not ‘{}’",
   "expected function body, not ‘{}’",
   "redundant linkage type: ‘{}’",
   "redundant protection attribute: ‘{}’",

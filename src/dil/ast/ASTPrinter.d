@@ -429,6 +429,19 @@ class ASTPrinter : Visitor2
     v(n.decl);
   }
 
+  void visit(AliasesDecl n)
+  {
+    w(ind, T.Alias);
+    foreach (i, name; n.idents)
+    {
+      if (i)
+        w(T.Comma);
+      w(ws, name, ws, T.Equal, ws);
+      v(n.types[i]);
+    }
+    w(T.Semicolon, Newline);
+  }
+
   void visit(AliasThisDecl n)
   {
     w(ind, T.Alias, ws, n.ident, ws, T.This, T.Semicolon, Newline);

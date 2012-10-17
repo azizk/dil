@@ -84,6 +84,7 @@ string[] messages = [
   "erwartete ‚system‘ oder ‚safe‘, nicht ‚{}‘",
   "erwartete Funktionsnamen, nicht ‚{}‘",
   "erwartete Variablenname, nicht ‚{}‘",
+  "erwartete Aliasname, nicht ‚{}‘",
   "erwartete Funktionskörper, nicht ‚{}‘",
   "redundanter Anbindungstyp: ‚{}‘",
   "redundantes Zugriffsattribut: ‚{}‘",
