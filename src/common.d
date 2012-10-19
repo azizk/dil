@@ -49,8 +49,7 @@ scope class UnittestMsg
   ~this()
   {
     auto tabs = "\t\t\t\t\t\t\t\t\t\t";
-    // FIXME: the calculation could be more accurate.
-    auto num = (80 - msg.length - passed.length) / 8;
+    auto num = 10 - msg.length/8 - 1;
     Stdout(tabs[0..num] ~ passed);
   }
 }
@@ -81,4 +80,39 @@ template Array2Tuple(alias T)
     alias Tuple!(T[0]) Array2Tuple;
   else
     alias Tuple!(T[0], Array2Tuple!(T[1..$])) Array2Tuple;
+}
+
+/// Supports expressions like: 13 in Set(8,13,0)
+auto Set(Xs...)(Xs xs)
+{
+  struct Set
+  {
+    Xs xs;
+    bool opBinaryRight(string op : "in", X)(X x)
+    {
+      static if (is(X == class) || is(X dummy : P*, P)) // Class or pointer?
+      {
+        foreach (x_; xs)
+          if (x is x_)
+            return true;
+      }
+      else
+        foreach (x_; xs)
+          if (x == x_)
+            return true;
+      return false;
+    }
+  }
+  return Set(xs);
+}
+
+void testSet()
+{
+  scope msg = new UnittestMsg("Testing function Set().");
+  auto x = new Object();
+  assert(x in Set(x));
+  assert(&x in Set(&x));
+  assert(null in Set(null));
+  assert(1 in Set(1,2,3));
+  assert("unittest" in Set("xyz", "", cast(cstring)null, "unittest"));
 }

@@ -698,6 +698,7 @@ void runUnittests()
     &testTellBOM, &testEntity2Unicode, &testString,
     &testVisitor, &testMacroConvert, &testDocParser,
     &testLexer, &testLexerPeek, &testIsUniAlpha,
+    &testSet,
   ];
 
   foreach (testFunc; testFuncs)
