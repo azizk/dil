@@ -2203,39 +2203,20 @@ class ASTPrinter : Visitor2
     v(n.next);
   }
 
-  /// Writes "(" Type ")" if n is not null.
-  void writeWithParen(TypeNode n)
+  void visit(ModifierType n)
   {
-    if (n)
+    w(n.mod);
+    if (n.hasParen)
     {
       w(T.LParen);
-      v(n);
+      v(n.next);
       w(T.RParen);
     }
-  }
-
-  void visit(ConstType n)
-  {
-    w(T.Const);
-    writeWithParen(n.next);
-  }
-
-  void visit(ImmutableType n)
-  {
-    w(T.Immutable);
-    writeWithParen(n.next);
-  }
-
-  void visit(InoutType n)
-  {
-    w(T.Inout);
-    writeWithParen(n.next);
-  }
-
-  void visit(SharedType n)
-  {
-    w(T.Shared);
-    writeWithParen(n.next);
+    else if (n.next)
+    {
+      w(ws);
+      v(n.next);
+    }
   }
 
   // Parameters:

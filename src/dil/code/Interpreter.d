@@ -1194,16 +1194,6 @@ override
   {
     return t;
   }
-
-  T visit(ConstType t) // D2.0
-  {
-    return t;
-  }
-
-  T visit(ImmutableType t) // D2.0
-  {
-    return t;
-  }
 } // override
 
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

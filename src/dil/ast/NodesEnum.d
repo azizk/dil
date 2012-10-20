@@ -201,10 +201,7 @@ enum string[] NodeClassNames = [
   "FunctionType",
   "DelegateType",
   "BaseClassType",
-  "ConstType", // D2.0
-  "ImmutableType", // D2.0
-  "InoutType", // D2.0
-  "SharedType", // D2.0
+  "ModifierType", // D2.0
 
   // Parameters:
   "Parameter",
@@ -256,7 +253,7 @@ bool isExpression(NodeKind k)
 
 bool isType(NodeKind k)
 {
-  return NodeKind.IllegalType <= k && k <= NodeKind.SharedType;
+  return NodeKind.IllegalType <= k && k <= NodeKind.ModifierType;
 }
 
 bool isParameter(NodeKind k)

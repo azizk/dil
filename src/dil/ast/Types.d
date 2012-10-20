@@ -245,53 +245,48 @@ class BaseClassType : TypeNode
   mixin methods;
 }
 
-// version(D2)
-// {
-/// $(BNF ConstType := const ("(" Type ")")?)
-class ConstType : TypeNode
+/// $(BNF ModifierType := ModAttrType | ModParenType
+////ModAttrType := Modifier Type
+////ModParenType := Modifier "(" Type ")"
+////Modifier := const | immutable | shared | inout)
+class ModifierType : TypeNode
 {
-  mixin(memberInfo("next"));
-  this(TypeNode next)
-  { // If next is null: cast(const)
-    super(next);
-    mixin(set_kind);
-  }
-  mixin methods;
-}
+  Token* mod;
+  bool hasParen; // True if, e.g.: const "(" Type ")"
+  mixin(memberInfo("next", "mod", "hasParen"));
 
-/// $(BNF ImmutableType := immutable ("(" Type ")")?)
-class ImmutableType : TypeNode
-{
-  mixin(memberInfo("next"));
-  this(TypeNode next)
-  { // If next is null: cast(immutable)
+  this(TypeNode next, Token* mod, bool hasParen)
+  {
     super(next);
     mixin(set_kind);
+    this.mod = mod;
+    this.hasParen = hasParen;
   }
-  mixin methods;
-}
 
-/// $(BNF InoutType := inout ("(" Type ")")?)
-class InoutType : TypeNode
-{
-  mixin(memberInfo("next"));
-  this(TypeNode next)
-  { // If next is null: cast(inout)
-    super(next);
-    mixin(set_kind);
+  this(Token* mod)
+  {
+    this(null, mod, false);
   }
-  mixin methods;
-}
 
-/// $(BNF SharedType := shared ("(" Type ")")?)
-class SharedType : TypeNode
-{
-  mixin(memberInfo("next"));
-  this(TypeNode next)
-  { // If next is null: cast(shared)
-    super(next);
-    mixin(set_kind);
+  bool isImmutable() @property
+  {
+    return mod.kind == TOK.Immutable;
   }
+
+  bool isConst() @property
+  {
+    return mod.kind == TOK.Const;
+  }
+
+  bool isShared() @property
+  {
+    return mod.kind == TOK.Shared;
+  }
+
+  bool isInout() @property
+  {
+    return mod.kind == TOK.Inout;
+  }
+
   mixin methods;
 }
-// } // version(D2)

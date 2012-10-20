@@ -3379,11 +3379,8 @@ class Parser
       case T.Const, T.Immutable, T.Inout, T.Shared:
         auto begin2 = token;
         if (peekNext() != T.RParen)
-          goto default; // (const|immutable|inout|shared) "(" Type ")"
-        type = tokenIs(T.Const) ? new ConstType(null) :
-           tokenIs(T.Immutable) ? new ImmutableType(null) :
-               tokenIs(T.Inout) ? new InoutType(null) :
-                                  new SharedType(null);
+          goto default; // ModParenType
+        type = new ModifierType(token);
         nT();
         set(type, begin2);
         break;
@@ -3843,20 +3840,19 @@ class Parser
     else
     { // NewObjectExpr
       auto type = parseType();
-      auto tk = type.begin.kind;
 
-      if (tk == T.Const || tk == T.Immutable || tk == T.Inout || tk == T.Shared)
+      if (type.Is!(ModifierType))
       { // Skip modifier types in the chain and search for an ArrayType.
         auto t = type;
-        while ((t = t.next) !is null)
-          if (auto at = t.Is!(ArrayType))
-            if (at.isStatic() || at.isAssociative())
-            {
-              at.parent.setNext(at.next); // Link it out.
-              at.setNext(type); // Make it the head type.
-              type = at;
-              break;
-            }
+        while ((t = t.next).Is!(ModifierType))
+        {}
+        if (auto at = t.Is!(ArrayType))
+          if (at.isStatic() || at.isAssociative())
+          {
+            at.parent.setNext(at.next); // Link it out.
+            at.setNext(type); // Make it the head type.
+            type = at;
+          }
       }
 
       // Don't parse arguments if an array type was parsed previously.
@@ -3913,26 +3909,22 @@ class Parser
 
   /// Parses a full Type.
   ///
-  /// $(BNF Type     := Modifier* BasicTypes
-  ////Modifier := inout | const | immutable | shared)
+  /// $(BNF Type := ModAttrType | BasicTypes
+  ////ModAttrType := Modifier Type
+  ////Modifier := const | immutable | shared | inout)
   Type parseType()
   {
     version(D2)
     {
-    auto begin= token;
     if (peekNext() != T.LParen)
     {
-      auto kind = token.kind;
-      switch (kind)
+      auto mod = token;
+      switch (mod.kind)
       {
       case T.Const, T.Immutable, T.Inout, T.Shared:
         nT();
-        auto t = parseType();
-        t = (kind == T.Const) ?   new ConstType(t) :
-          (kind == T.Immutable) ? new ImmutableType(t) :
-            (kind == T.Inout) ?   new InoutType(t) :
-                                  new SharedType(t);
-        return set(t, begin);
+        auto t = new ModifierType(parseType(), mod, false);
+        return set(t, mod);
       default:
       }
     }
@@ -4007,8 +3999,8 @@ class Parser
     return type;
   }
 
-  /// $(BNF BasicType := IntegralType | QualifiedType |
-  ////             ConstType | ImmutableType | InoutType | SharedType # D2.0)
+  /// $(BNF BasicType := IntegralType | QualifiedType | ModParenType
+  ////ModParenType := Modifier "(" Type ")")
   Type parseBasicType()
   {
     auto begin = token;
@@ -4030,18 +4022,15 @@ class Parser
       t = parseQualifiedType();
       return t;
     version(D2)
-    { // (const|immutable|inout|shared) "(" Type ")"
+    { // Modifier "(" Type ")"
     case T.Const, T.Immutable, T.Inout, T.Shared:
-      auto kind = token.kind;
+      auto kind = token;
       nT();
       require2(T.LParen); // "("
       auto lParen = prevToken;
       t = parseType(); // Type
       requireClosing(T.RParen, lParen); // ")"
-      t = (kind == T.Const) ?   new ConstType(t) :
-        (kind == T.Immutable) ? new ImmutableType(t) :
-          (kind == T.Inout) ?   new InoutType(t) :
-                                new SharedType(t);
+      t = new ModifierType(t, kind, true);
       break;
     } // version(D2)
     default:

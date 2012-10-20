@@ -1679,30 +1679,10 @@ override
     end(t);
   }
 
-  void visit(ConstType t) // D2.0
+  void visit(ModifierType t) // D2.0
   {
     begin(t);
-    t.next && visitT(t.next);
-    end(t);
-  }
-
-  void visit(ImmutableType t) // D2.0
-  {
-    begin(t);
-    t.next && visitT(t.next);
-    end(t);
-  }
-
-  void visit(InoutType t) // D2.0
-  {
-    begin(t);
-    t.next && visitT(t.next);
-    end(t);
-  }
-
-  void visit(SharedType t) // D2.0
-  {
-    begin(t);
+    write(indexOf(t.mod));
     t.next && visitT(t.next);
     end(t);
   }

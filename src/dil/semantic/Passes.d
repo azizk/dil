@@ -1985,22 +1985,7 @@ override
     return t;
   }
 
-  T visit(ConstType t) // D2.0
-  {
-    return t;
-  }
-
-  T visit(ImmutableType t) // D2.0
-  {
-    return t;
-  }
-
-  T visit(InoutType t) // D2.0
-  {
-    return t;
-  }
-
-  T visit(SharedType t) // D2.0
+  T visit(ModifierType t) // D2.0
   {
     return t;
   }
