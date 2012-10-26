@@ -22,7 +22,7 @@ class Parameter : Node
   Token* name; /// The name of the parameter.
   Expression defValue; /// The default initialization value.
 
-  mixin(memberInfo("stcs", "stok", "type", "name", "defValue"));
+  mixin(memberInfo("stcs", "stok?", "type?", "name?", "defValue?"));
 
   this(StorageClass stcs, Token* stok, TypeNode type,
     Token* name, Expression defValue)
@@ -126,6 +126,9 @@ class Parameters : Node
   Parameter[] items() @property
   { return cast(Parameter[])children; }
 
+  void items(Parameter[] items) @property
+  { children = cast(Node[])items; }
+
   size_t length()
   { return children.length; }
 
@@ -151,6 +154,8 @@ abstract class TemplateParam : Node
   {
     return name.ident.str;
   }
+
+  override TemplateParam copy();
 }
 
 /// $(BNF TemplateAliasParam := "alias" Identifier SpecOrDefaultType)
@@ -158,7 +163,7 @@ class TemplateAliasParam : TemplateParam
 {
   Node spec; /// Specialization. Can be a Type or an Expression (in D2).
   Node def; /// Default. Can be a Type or an Expression (in D2).
-  mixin(memberInfo("name", "spec", "def"));
+  mixin(memberInfo("name", "spec?", "def?"));
   this(Token* name, Node spec, Node def)
   {
     assert(!spec || spec.isType() || spec.isExpression());
@@ -177,7 +182,7 @@ class TemplateAliasParam : TemplateParam
 class TemplateTypeParam : TemplateParam
 {
   TypeNode specType, defType;
-  mixin(memberInfo("name", "specType", "defType"));
+  mixin(memberInfo("name", "specType?", "defType?"));
   this(Token* name, TypeNode specType, TypeNode defType)
   {
     super(name);
@@ -196,7 +201,7 @@ class TemplateTypeParam : TemplateParam
 class TemplateThisParam : TemplateParam
 {
   TypeNode specType, defType;
-  mixin(memberInfo("name", "specType", "defType"));
+  mixin(memberInfo("name", "specType?", "defType?"));
   this(Token* name, TypeNode specType, TypeNode defType)
   {
     super(name);
@@ -215,7 +220,7 @@ class TemplateValueParam : TemplateParam
 {
   TypeNode valueType;
   Expression specValue, defValue;
-  mixin(memberInfo("valueType", "name", "specValue", "defValue"));
+  mixin(memberInfo("valueType", "name", "specValue?", "defValue?"));
   this(TypeNode valueType, Token* name, Expression specValue,
     Expression defValue)
   {
@@ -268,6 +273,11 @@ class TemplateParameters : Node
     return cast(TemplateParam[])children;
   }
 
+  void items(TemplateParam[] items) @property
+  {
+    children = cast(Node[])items;
+  }
+
   mixin(memberInfo("items"));
   mixin methods;
 }
@@ -295,6 +305,11 @@ class TemplateArguments : Node
   Node[] items() @property
   {
     return children;
+  }
+
+  void items(Node[] items) @property
+  {
+    children = items;
   }
 
   mixin(memberInfo("items"));

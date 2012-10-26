@@ -4,7 +4,6 @@
 module dil.ast.ASTSerializer;
 
 import dil.ast.Visitor,
-       dil.ast.NodeMembers,
        dil.ast.Node,
        dil.ast.Declarations,
        dil.ast.Expressions,

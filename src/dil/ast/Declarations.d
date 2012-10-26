@@ -247,7 +247,7 @@ class EnumDecl : Declaration
   Token* name;
   TypeNode baseType;
   EnumMemberDecl[] members;
-  mixin(memberInfo("name", "baseType", "members"));
+  mixin(memberInfo("name", "baseType?", "members"));
 
   this(Token* name, TypeNode baseType, EnumMemberDecl[] members)
   {
@@ -276,7 +276,7 @@ class EnumMemberDecl : Declaration
   TypeNode type; // D 2.0
   Token* name;
   Expression value;
-  mixin(memberInfo("type", "name", "value"));
+  mixin(memberInfo("type?", "name", "value?"));
 
   private this(Token* name, Expression value)
   {
@@ -309,7 +309,7 @@ class TemplateDecl : Declaration
   CompoundDecl decls;
   bool isMixin; /// Is this a mixin template? (D2 feature.)
   bool isWrapper; /// Is this wrapping a func/class/struct/etc. declaration?
-  mixin(memberInfo("name", "tparams", "constraint", "decls"));
+  mixin(memberInfo("name", "tparams", "constraint?", "decls"));
 
   this(Token* name, TemplateParameters tparams, Expression constraint,
        CompoundDecl decls)
@@ -368,7 +368,7 @@ abstract class AggregateDecl : Declaration
 class ClassDecl : AggregateDecl
 {
   BaseClassType[] bases;
-  mixin(memberInfo("name", "bases", "decls"));
+  mixin(memberInfo("name", "bases", "decls?"));
   this(Token* name, BaseClassType[] bases, CompoundDecl decls)
   {
     super(name, decls);
@@ -387,7 +387,7 @@ class ClassDecl : AggregateDecl
 class InterfaceDecl : AggregateDecl
 {
   BaseClassType[] bases;
-  mixin(memberInfo("name", "bases", "decls"));
+  mixin(memberInfo("name", "bases", "decls?"));
   this(Token* name, BaseClassType[] bases, CompoundDecl decls)
   {
     super(name, decls);
@@ -408,7 +408,7 @@ class InterfaceDecl : AggregateDecl
 class StructDecl : AggregateDecl
 {
   uint alignSize;
-  mixin(memberInfo("name", "decls", "alignSize"));
+  mixin(memberInfo("name?", "decls?", "alignSize"));
   this(Token* name, CompoundDecl decls)
   {
     super(name, decls);
@@ -435,7 +435,7 @@ class StructDecl : AggregateDecl
 
 class UnionDecl : AggregateDecl
 {
-  mixin(memberInfo("name", "decls"));
+  mixin(memberInfo("name?", "decls?"));
   this(Token* name, CompoundDecl decls)
   {
     super(name, decls);
@@ -516,7 +516,7 @@ class FunctionDecl : Declaration
   LinkageType lnkg;
   bool cantInterpret = false;
 
-  mixin(memberInfo("returnType", "name", "params", "funcBody", "lnkg"));
+  mixin(memberInfo("returnType?", "name", "params", "funcBody", "lnkg"));
   this(TypeNode returnType, Token* name,
        Parameters params, FuncBodyStmt funcBody,
        LinkageType lnkg = LinkageType.None)
@@ -550,7 +550,7 @@ class VariablesDecl : Declaration
   Token*[] names; /// Variable names.
   Expression[] inits; /// Respective initial values.
   LinkageType lnkg; /// They linkage type.
-  mixin(memberInfo("type", "names", "inits", "lnkg"));
+  mixin(memberInfo("type?", "names", "inits?", "lnkg"));
 
   this(TypeNode type, Token*[] names, Expression[] inits,
        LinkageType lnkg = LinkageType.None)
@@ -645,7 +645,7 @@ abstract class ConditionalCompilationDecl : Declaration
 
 class DebugDecl : ConditionalCompilationDecl
 {
-  mixin(memberInfo("spec", "cond", "decls", "elseDecls"));
+  mixin(memberInfo("spec?", "cond?", "decls?", "elseDecls?"));
   this(Token* spec, Token* cond, Declaration decls, Declaration elseDecls)
   {
     super(spec, cond, decls, elseDecls);
@@ -656,7 +656,7 @@ class DebugDecl : ConditionalCompilationDecl
 
 class VersionDecl : ConditionalCompilationDecl
 {
-  mixin(memberInfo("spec", "cond", "decls", "elseDecls"));
+  mixin(memberInfo("spec?", "cond?", "decls?", "elseDecls?"));
   this(Token* spec, Token* cond, Declaration decls, Declaration elseDecls)
   {
     super(spec, cond, decls, elseDecls);
@@ -669,7 +669,7 @@ class StaticIfDecl : Declaration
 {
   Expression condition;
   Declaration ifDecls, elseDecls;
-  mixin(memberInfo("condition", "ifDecls", "elseDecls"));
+  mixin(memberInfo("condition", "ifDecls", "elseDecls?"));
   this(Expression condition, Declaration ifDecls, Declaration elseDecls)
   {
     mixin(set_kind);
@@ -687,7 +687,7 @@ class StaticIfDecl : Declaration
 class StaticAssertDecl : Declaration
 {
   Expression condition, message;
-  mixin(memberInfo("condition", "message"));
+  mixin(memberInfo("condition", "message?"));
   this(Expression condition, Expression message)
   {
     mixin(set_kind);
@@ -835,7 +835,7 @@ class MixinDecl : Declaration
   Token* mixinIdent; /// Optional mixin identifier.
   Expression argument; /// "mixin" "(" AssignExpr ")"
 
-  mixin(memberInfo("templateExpr", "mixinIdent", "argument"));
+  mixin(memberInfo("templateExpr?", "mixinIdent?", "argument?"));
   this(Expression templateExpr, Token* mixinIdent)
   {
     mixin(set_kind);

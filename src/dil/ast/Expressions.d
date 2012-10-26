@@ -49,7 +49,7 @@ abstract class BinaryExpr : Expression
     this.rhs = rhs;
     this.optok = optok;
   }
-  mixin copyBinaryExprMethod;
+  mixin copyMethod;
 }
 
 class CondExpr : BinaryExpr
@@ -425,7 +425,7 @@ abstract class UnaryExpr : Expression
     addChild(e);
     this.una = e;
   }
-  mixin copyUnaryExprMethod;
+  mixin copyMethod;
 }
 
 class AddressExpr : UnaryExpr
@@ -551,7 +551,7 @@ class NewExpr : Expression
   TypeNode type;
   Expression[] ctorArgs;
 
-  mixin(memberInfo("frame", "newArgs", "type", "ctorArgs"));
+  mixin(memberInfo("frame?", "newArgs", "type", "ctorArgs"));
 
   this(Expression frame, Expression[] newArgs, TypeNode type,
        Expression[] ctorArgs)
@@ -576,7 +576,7 @@ class NewClassExpr : Expression
   BaseClassType[] bases;
   CompoundDecl decls;
 
-  mixin(memberInfo("frame", "newArgs", "ctorArgs", "bases", "decls"));
+  mixin(memberInfo("frame?", "newArgs", "ctorArgs", "bases", "decls"));
 
   this(Expression frame, Expression[] newArgs, Expression[] ctorArgs,
        BaseClassType[] bases, CompoundDecl decls)
@@ -609,7 +609,7 @@ class DeleteExpr : UnaryExpr
 class CastExpr : UnaryExpr
 {
   TypeNode type;
-  mixin(memberInfo("una", "type"));
+  mixin(memberInfo("una", "type?"));
   this(Expression e, TypeNode type)
   {
     version(D2)
@@ -640,7 +640,7 @@ class IndexExpr : UnaryExpr
 class SliceExpr : UnaryExpr
 {
   Expression left, right;
-  mixin(memberInfo("una", "left", "right"));
+  mixin(memberInfo("una", "left?", "right?"));
   this(Expression e, Expression left, Expression right)
   {
     super(e);
@@ -663,7 +663,7 @@ class IdentifierExpr : Expression
 {
   Expression next;
   Token* ident;
-  mixin(memberInfo("ident", "next"));
+  mixin(memberInfo("ident", "next?"));
   this(Token* ident, Expression next = null)
   {
     mixin(set_kind);
@@ -697,11 +697,11 @@ class TmplInstanceExpr : Expression
   Expression next;
   Token* ident;
   TemplateArguments targs;
-  mixin(memberInfo("ident", "targs", "next"));
+  mixin(memberInfo("ident", "targs", "next?"));
   this(Token* ident, TemplateArguments targs, Expression next = null)
   {
     mixin(set_kind);
-    addOptChild(targs);
+    addChild(targs);
     addOptChild(next);
     this.next = next;
     this.ident = ident;
@@ -1131,7 +1131,7 @@ class AArrayLiteralExpr : Expression
 class AssertExpr : Expression
 {
   Expression expr, msg;
-  mixin(memberInfo("expr", "msg"));
+  mixin(memberInfo("expr", "msg?"));
   this(Expression expr, Expression msg)
   {
     mixin(set_kind);
@@ -1229,7 +1229,8 @@ class IsExpr : Expression
   Token* opTok, specTok;
   TypeNode specType;
   TemplateParameters tparams; // D 2.0
-  mixin(memberInfo("type", "ident", "opTok", "specTok", "specType", "tparams"));
+  mixin(memberInfo("type", "ident?", "opTok", "specTok?", "specType?",
+    "tparams?"));
 
   this(TypeNode type, Token* ident, Token* opTok, Token* specTok,
        TypeNode specType, typeof(tparams) tparams)
@@ -1255,7 +1256,7 @@ class FuncLiteralExpr : Expression
   TypeNode returnType;
   Parameters params;
   FuncBodyStmt funcBody;
-  mixin(memberInfo("tok", "returnType", "params", "funcBody"));
+  mixin(memberInfo("tok", "returnType?", "params?", "funcBody"));
 
   this()
   {
@@ -1355,7 +1356,7 @@ class ArrayInitExpr : Expression
 {
   Expression[] keys;
   Expression[] values;
-  mixin(memberInfo("keys", "values"));
+  mixin(memberInfo("keys?", "values"));
   this(Expression[] keys, Expression[] values)
   {
     assert(keys.length == values.length);
@@ -1462,7 +1463,7 @@ class AsmRegisterExpr : Expression
 {
   Token* register; /// Name of the register.
   Expression number; /// ST(0) - ST(7) or FS:0, FS:4, FS:8
-  mixin(memberInfo("register", "number"));
+  mixin(memberInfo("register", "number?"));
   this(Token* register, Expression number = null)
   {
     mixin(set_kind);

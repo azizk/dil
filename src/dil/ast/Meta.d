@@ -95,7 +95,7 @@ char[] typeTupleOf(string[] members)
   return result;
 }
 
-/// Returns a TypeTuple with string elements.
+/// Returns the members' types as an array of strings.
 char[] strTypeTupleOf(string[] members)
 {
   char[] result = "[ ".dup;
@@ -107,22 +107,33 @@ char[] strTypeTupleOf(string[] members)
 
 //pragma(msg, typeTupleOf("CommaExpr", ["lhs", "rhs", "optok"]));
 
+/// Generates information on Node members, which is used to generate code
+/// for copying or visiting methods.
+///
 /// E.g.:
 /// ---
 /// static enum _members = ["una","args",];
+/// static enum _mayBeNull = [false,true,];
 /// static alias Tuple!( typeof(una),typeof(args)) _mtypes;
 /// static enum _mtypesArray = [ typeof(una).stringof,typeof(args).stringof];
 /// ---
 char[] memberInfo(string[] members...)
 {
   //members = members && members[0].length == 0 ? null : members;
-  char[] s;
-  foreach (m; members)
-    s ~= '"' ~ m ~ `",`;
-  s = "static enum _members = [" ~ s ~ "];\n" ~
-      "static alias " ~ typeTupleOf(members) ~ " _mtypes;\n" ~
-      "static enum _mtypesArray = " ~ strTypeTupleOf(members) ~ ";";
-  return s;
+  string[] namesArray;
+  char[] namesList;
+  char[] mayBeNull;
+  foreach (m; members) {
+    auto isOpt = m[$-1] == '?';
+    mayBeNull ~= (isOpt ? "true" : "false") ~ ",";
+    m = isOpt ? m[0..$-1] : m; // Strip '?'.
+    namesList ~= '"' ~ m ~ `",`;
+    namesArray ~= m;
+  }
+  return "static enum _members = [" ~ namesList ~ "];\n" ~
+         "static enum _mayBeNull = [" ~ mayBeNull ~ "];\n" ~
+         "static alias " ~ typeTupleOf(namesArray) ~ " _mtypes;\n" ~
+         "static enum _mtypesArray = " ~ strTypeTupleOf(namesArray) ~ ";\n";
 }
 
-//pragma(msg, memberInfo("una", "args"));
+//pragma(msg, memberInfo("una", "args?"));

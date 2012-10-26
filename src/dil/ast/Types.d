@@ -53,7 +53,7 @@ class ModuleScopeType : TypeNode
 class IdentifierType : TypeNode
 {
   Token* ident;
-  mixin(memberInfo("next", "ident"));
+  mixin(memberInfo("next?", "ident"));
   this(TypeNode next, Token* ident)
   {
     super(next);
@@ -74,7 +74,7 @@ class TypeofType : TypeNode
 {
   Expression expr;
 
-  mixin(memberInfo("expr"));
+  mixin(memberInfo("expr?"));
   this(Expression e)
   {
     mixin(set_kind);
@@ -97,7 +97,7 @@ class TmplInstanceType : TypeNode
 {
   Token* ident;
   TemplateArguments targs;
-  mixin(memberInfo("next", "ident", "targs"));
+  mixin(memberInfo("next?", "ident", "targs"));
   this(TypeNode next, Token* ident, TemplateArguments targs)
   {
     super(next);
@@ -139,7 +139,7 @@ class ArrayType : TypeNode
   Expression index1, index2;
   TypeNode assocType;
 
-  mixin(memberInfo("next", "index1", "index2", "assocType"));
+  mixin(memberInfo("next", "index1?", "index2?", "assocType?"));
   /// DynamicArray.
   this(TypeNode next)
   {
@@ -253,7 +253,7 @@ class ModifierType : TypeNode
 {
   Token* mod;
   bool hasParen; // True if, e.g.: const "(" Type ")"
-  mixin(memberInfo("next", "mod", "hasParen"));
+  mixin(memberInfo("next?", "mod", "hasParen"));
 
   this(TypeNode next, Token* mod, bool hasParen)
   {

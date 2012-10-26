@@ -70,8 +70,8 @@ class EmptyStmt : Statement
 class FuncBodyStmt : Statement
 {
   Statement funcBody, inBody, outBody;
-  Token* outIdent; /// $(BNF "out" "(" Identifier ")")
-  mixin(memberInfo("funcBody", "inBody", "outBody", "outIdent"));
+  Token* outIdent; /// $(BNF "out" ("(" Identifier ")")?)
+  mixin(memberInfo("funcBody?", "inBody?", "outBody?", "outIdent?"));
   this(Statement funcBody, Statement inBody, Statement outBody,
        Token* outIdent)
   {
@@ -153,7 +153,7 @@ class IfStmt : Statement
   Expression condition;
   Statement ifBody;
   Statement elseBody;
-  mixin(memberInfo("variable", "condition", "ifBody", "elseBody"));
+  mixin(memberInfo("variable?", "condition?", "ifBody", "elseBody?"));
   this(Declaration variable, Expression condition, Statement ifBody,
        Statement elseBody)
   {
@@ -215,7 +215,7 @@ class ForStmt : Statement
   Expression condition, increment;
   Statement forBody;
 
-  mixin(memberInfo("init", "condition", "increment", "forBody"));
+  mixin(memberInfo("init?", "condition?", "increment?", "forBody"));
   this(Statement init, Expression condition, Expression increment, Statement forBody)
   {
     mixin(set_kind);
@@ -385,7 +385,7 @@ class BreakStmt : Statement
 class ReturnStmt : Statement
 {
   Expression expr;
-  mixin(memberInfo("expr"));
+  mixin(memberInfo("expr?"));
   this(Expression e)
   {
     mixin(set_kind);
@@ -399,7 +399,7 @@ class GotoStmt : Statement
 {
   Token* ident; /// The label id, case or default.
   Expression expr;
-  mixin(memberInfo("ident", "expr"));
+  mixin(memberInfo("ident", "expr?"));
   this(Token* ident, Expression expr)
   {
     mixin(set_kind);
@@ -447,7 +447,7 @@ class SynchronizedStmt : Statement
 {
   Expression expr;
   Statement syncBody;
-  mixin(memberInfo("expr", "syncBody"));
+  mixin(memberInfo("expr?", "syncBody"));
   this(Expression e, Statement syncBody)
   {
     mixin(set_kind);
@@ -465,7 +465,7 @@ class TryStmt : Statement
   Statement tryBody;
   CatchStmt[] catchBodies;
   FinallyStmt finallyBody;
-  mixin(memberInfo("tryBody", "catchBodies", "finallyBody"));
+  mixin(memberInfo("tryBody", "catchBodies", "finallyBody?"));
   this(Statement tryBody, CatchStmt[] catchBodies, FinallyStmt finallyBody)
   {
     mixin(set_kind);
@@ -484,7 +484,7 @@ class CatchStmt : Statement
 {
   Parameter param;
   Statement catchBody;
-  mixin(memberInfo("param", "catchBody"));
+  mixin(memberInfo("param?", "catchBody"));
   this(Parameter param, Statement catchBody)
   {
     mixin(set_kind);
@@ -540,7 +540,7 @@ class ThrowStmt : Statement
 class VolatileStmt : Statement
 {
   Statement volatileBody;
-  mixin(memberInfo("volatileBody"));
+  mixin(memberInfo("volatileBody?"));
   this(Statement volatileBody)
   {
     mixin(set_kind);
@@ -640,7 +640,7 @@ class StaticIfStmt : Statement
 {
   Expression condition;
   Statement ifBody, elseBody;
-  mixin(memberInfo("condition", "ifBody", "elseBody"));
+  mixin(memberInfo("condition", "ifBody", "elseBody?"));
   this(Expression condition, Statement ifBody, Statement elseBody)
   {
     mixin(set_kind);
@@ -657,7 +657,7 @@ class StaticIfStmt : Statement
 class StaticAssertStmt : Statement
 {
   Expression condition, message;
-  mixin(memberInfo("condition", "message"));
+  mixin(memberInfo("condition", "message?"));
   this(Expression condition, Expression message)
   {
     mixin(set_kind);
@@ -685,7 +685,7 @@ abstract class ConditionalCompilationStmt : Statement
 
 class DebugStmt : ConditionalCompilationStmt
 {
-  mixin(memberInfo("cond", "mainBody", "elseBody"));
+  mixin(memberInfo("cond?", "mainBody", "elseBody?"));
   this(Token* cond, Statement debugBody, Statement elseBody)
   {
     super(cond, debugBody, elseBody);
@@ -696,7 +696,7 @@ class DebugStmt : ConditionalCompilationStmt
 
 class VersionStmt : ConditionalCompilationStmt
 {
-  mixin(memberInfo("cond", "mainBody", "elseBody"));
+  mixin(memberInfo("cond", "mainBody", "elseBody?"));
   this(Token* cond, Statement versionBody, Statement elseBody)
   {
     super(cond, versionBody, elseBody);

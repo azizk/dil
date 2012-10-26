@@ -350,7 +350,7 @@ class FirstSemanticPass : SemanticPass
 
 override
 {
-  alias super.visit visit;
+  //alias super.visit visit;
 
   D visit(CompoundDecl d)
   {

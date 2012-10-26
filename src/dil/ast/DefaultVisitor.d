@@ -4,7 +4,6 @@
 module dil.ast.DefaultVisitor;
 
 import dil.ast.Visitor,
-       dil.ast.NodeMembers,
        dil.ast.Node,
        dil.ast.Declarations,
        dil.ast.Expressions,
@@ -13,76 +12,56 @@ import dil.ast.Visitor,
        dil.ast.Parameters;
 import common;
 
-/// Generates the actual code for visiting a node's members.
-private char[] createCode(NodeKind nodeKind)
+/// Provides a visit() method which calls Visitor.visitN() on subnodes.
+mixin template visitDefault(N, Ret = returnType!(N))
 {
-  // Look up members for this kind of node in the table.
-  auto members = NodeMembersTable[nodeKind];
-  // members = e.g.: ["condition", "ifDecls", "elseDecls?"]
-  if (members.length == 0)
-    return null;
-
-  string[2][] list = parseMembers(members);
-  char[] code;
-  foreach (m; list)
+  override Ret visit(N n)
   {
-    auto name = m[0], type = m[1];
-    switch (type)
+    foreach (i, T; N._mtypes)
     {
-    case "": // Visit node.
-      code ~= "visitN(n."~name~");\n"; // visitN(n.member);
-      break;
-    case "?": // Visit node, may be null.
-      // n.member && visitN(n.member);
-      code ~= "n."~name~" && visitN(n."~name~");\n";
-      break;
-    case "[]": // Visit nodes in the array.
-      code ~= "foreach (x; n."~name~")\n" // foreach (x; n.member)
-              "  visitN(x);\n";           //   visitN(x);
-      break;
-    case "[?]": // Visit nodes in the array, items may be null.
-      code ~= "foreach (x; n."~name~")\n" // foreach (x; n.member)
-              "  x && visitN(x);\n";      //   x && visitN(x);
-      break;
-    case "%": // Copy code verbatim.
-      code ~= name ~ "\n";
-      break;
-    default:
-      assert(0, "unknown member type.");
+      enum m = N._members[i];
+      static if (is(T : Node)) // A Node?
+      {
+        static if (N._mayBeNull[i])
+          mixin("if(n."~m~") visitN(n."~m~");");
+        else
+          mixin("visitN(n."~m~");");
+      }
+      else static if (is(T t : E[], E) && is(E : Node)) // A Node array?
+      {
+        static if (N._mayBeNull[i])
+          mixin("foreach (x; n."~m~") if (x) visitN(x);");
+        else
+          mixin("foreach (x; n."~m~") visitN(x);");
+      }
     }
+    static if (!is(Ret : void))
+      return n;
   }
-  return code;
 }
 
 /// Generates the default visit methods.
 ///
 /// E.g.:
 /// ---
-/// override returnType!(ClassDecl) visit(ClassDecl n)
-/// { /* Code that visits the subnodes... */ return n; }
+/// mixin visitDefault!(ClassDecl);
+/// mixin visitDefault!(InterfaceDecl);
 /// ---
 char[] generateDefaultVisitMethods()
 {
   char[] code;
-  foreach (i, className; NodeClassNames)
-    code ~= "override returnType!("~className~") visit("~className~" n)"
-            "{"
-            "  "~createCode(cast(NodeKind)i)~
-            "  return n;"
-            "}\n";
+  foreach (className; NodeClassNames)
+    code ~= "mixin visitDefault!(" ~ className ~ ");\n";
   return code;
 }
-// pragma(msg, generateDefaultVisitMethods());
+//pragma(msg, generateDefaultVisitMethods());
 
 /// Same as above but returns void.
 char[] generateDefaultVisitMethods2()
 {
   char[] code;
-  foreach (i, className; NodeClassNames)
-    code ~= "override void visit("~className~" n)"
-            "{"
-            "  "~createCode(cast(NodeKind)i)~
-            "}\n";
+  foreach (className; NodeClassNames)
+    code ~= "mixin visitDefault!(" ~ className ~ ", void);\n";
   return code;
 }
 
