@@ -1310,8 +1310,8 @@ class ASTPrinter : Visitor2
   }
 
   void visit(CommaExpr n)
-  {
-    w(n.lhs, PREC.Assignment);
+  { // lhs may be another CommaExpr.
+    w(n.lhs, PREC.Expression);
     w(n.optok, ws);
     w(n.rhs, PREC.Assignment);
   }
@@ -1658,7 +1658,8 @@ class ASTPrinter : Visitor2
   {
     if (n.next) {
       w(n.next, PREC.Primary);
-      w(T.Dot);
+      if (!n.next.Is!(ModuleScopeExpr))
+        w(T.Dot);
     }
     w(n.ident);
   }
@@ -1672,7 +1673,8 @@ class ASTPrinter : Visitor2
   {
     if (n.next) {
       w(n.next, PREC.Primary);
-      w(T.Dot);
+      if (!n.next.Is!(ModuleScopeExpr))
+        w(T.Dot);
     }
     w(n.ident, T.Exclaim, T.LParen);
     v(n.targs);
@@ -2132,7 +2134,8 @@ class ASTPrinter : Visitor2
   {
     if (n.next) {
       v(n.next);
-      w(T.Dot);
+      if (!n.next.Is!(ModuleScopeType))
+        w(T.Dot);
     }
     w(n.ident);
   }
@@ -2151,7 +2154,8 @@ class ASTPrinter : Visitor2
   {
     if (n.next) {
       v(n.next);
-      w(T.Dot);
+      if (!n.next.Is!(ModuleScopeType))
+        w(T.Dot);
     }
     w(n.ident, T.Exclaim, T.LParen);
     v(n.targs);
