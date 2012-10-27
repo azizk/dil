@@ -558,6 +558,18 @@ struct StringT(C)
     return false;
   }
 
+  /// Returns true if this string is a slice of s.
+  bool slices(const S s) const
+  {
+    return s.ptr <= ptr && end <= s.end;
+  }
+
+  /// ditto
+  bool slices(const C[] s) const
+  {
+    return slices(S(s));
+  }
+
   /// Searches for character c.
   RT findChar(RT, string pred = q{*p == c})(const C c) inout
   {
@@ -1125,10 +1137,20 @@ void testString()
   assert(1 * S("mundo") == S("mundo"));
 
   // Slicing.
+  assert(S("rapido")[0..0] == S(""));
   assert(S("rapido")[1..4] == S("api"));
   assert(S("rapido")[2..-3] == S("p"));
   assert(S("rapido")[-3..3] == S(""));
   assert(S("rapido")[-4..-1] == S("pid"));
+  //assert(S("rapido")[6..6] == S("")); // FIXME: Should this be allowed?
+
+  {
+    auto s = S("rebanada");
+    assert(s.slices(s));
+    assert(s[0..0].slices(s));
+    assert(s[1..-1].slices(s));
+    assert(S(s.end, s.end).slices(s));
+  }
 
   // Indexing.
   assert(S("abcd")[0] == 'a');
