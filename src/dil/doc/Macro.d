@@ -269,7 +269,7 @@ struct MacroExpander
             // Insert into the table to avoid more warnings.
             mtable.insert(macro_ = new Macro(macroName, "$0"));
           // Ignore recursive macro if:
-          auto macroArg0 = macroArgs.length ? macroArgs[0] : null;
+          //auto macroArg0 = macroArgs.length ? macroArgs[0] : null;
           if (macro_.callLevel != 0 &&
               (macroArgs.length == 0/+ || // Macro has no arguments.
                 prevArg0 == macroArg0+/)) // macroArg0 equals previous arg0.
@@ -304,9 +304,11 @@ struct MacroExpander
     cstring[] args = [null]; // First element will be arg0.
     auto p = ref_p; // Use a non-ref variable to scan the text.
 
-    // Skip leading spaces.
-    while (p < textEnd && isspace(*p))
+    if (p < textEnd && isspace(*p)) // Skip first space.
       p++;
+    // Skip leading spaces.
+    //while (p < textEnd && isspace(*p))
+    //  p++;
 
     // Skip special arguments marker. (DIL extension!)
     // This is needed to preserve the whitespace that comes after the marker.
@@ -334,8 +336,10 @@ struct MacroExpander
           break;
         // Add a new argument.
         args ~= slice(argBegin, p);
-        while (++p < textEnd && isspace(*p)) // Skip spaces.
-        {}
+        if (++p < textEnd && isspace(*p)) // Skip first space.
+          p++;
+        //while (++p < textEnd && isspace(*p)) // Skip spaces.
+        //{}
         argBegin = p;
         continue;
       // Commented out: causes too many problems in the expansion pass.
@@ -415,10 +419,10 @@ struct MacroExpander
         { // $+ = $2 to $n
           if (args.length > 2)
           {
-            assert(args[0].ptr < args[2].ptr &&
-                   args[2].ptr < args[0].ptr + args[0].length,
-                   "arg[2] is not a slice of arg[0]");
-            result ~= slice(args[2].ptr, args[0].ptr + args[0].length);
+            assert(String(args[2]).slices(args[0]),
+              Format("arg[2] ({}) is not a slice of arg[0] ({}) in ‘{}’",
+                args[2], args[0], filePath));
+            result ~= slice(args[2].ptr, String(args[0]).end);
           }
         }
         else
@@ -426,6 +430,8 @@ struct MacroExpander
           uint nthArg = *p - '0';
           if (nthArg < args.length)
             result ~= args[nthArg];
+          else // DMD uses args0 if nthArg is not available.
+            result ~= args[0];
         }
       }
       p++;
