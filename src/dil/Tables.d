@@ -37,23 +37,27 @@ class ClassTable
   ClassSymbol object; /// Class Object.
   ClassSymbol classInfo; /// Class ClassInfo.
   ClassSymbol moduleInfo; /// Class ModuleInfo.
+  ClassSymbol throwable; /// Class Throwable.
   ClassSymbol exeption; /// Class Exeption.
+  ClassSymbol error; /// Class Error.
   // Classes from runtime library files:
   ClassSymbol tinfo; /// Class TypeInfo.
+  ClassSymbol tinfoPointer; /// Class TypeInfo_Pointer.
   ClassSymbol tinfoArray; /// Class TypeInfo_Array.
+  ClassSymbol tinfoSArray; /// Class TypeInfo_StaticArray.
   ClassSymbol tinfoAArray; /// Class TypeInfo_AssociativeArray.
-  ClassSymbol tinfoClass; /// Class TypeInfo_Class.
+  ClassSymbol tinfoFunction; /// Class TypeInfo_Function.
   ClassSymbol tinfoDelegate; /// Class TypeInfo_Delegate.
   ClassSymbol tinfoEnum; /// Class TypeInfo_Enum.
-  ClassSymbol tinfoFunction; /// Class TypeInfo_Function.
+  ClassSymbol tinfoClass; /// Class TypeInfo_Class.
   ClassSymbol tinfoInterface; /// Class TypeInfo_Interface.
-  ClassSymbol tinfoPointer; /// Class TypeInfo_Pointer.
-  ClassSymbol tinfoSArray; /// Class TypeInfo_StaticArray.
   ClassSymbol tinfoStruct; /// Class TypeInfo_Struct.
   ClassSymbol tinfoTuple; /// Class TypeInfo_Tuple.
   ClassSymbol tinfoTypedef; /// Class TypeInfo_Typedef.
   // D2:
+  ClassSymbol tinfoVector; /// Class TypeInfo_Vector.
   ClassSymbol tinfoConst; /// Class TypeInfo_Const.
-  ClassSymbol tinfoInvariant; /// Class TypeInfo_Invariant.
+  ClassSymbol tinfoImmutable; /// Class TypeInfo_Invariant.
   ClassSymbol tinfoShared; /// Class TypeInfo_Shared.
+  ClassSymbol tinfoInout; /// Class TypeInfo_Inout.
 }

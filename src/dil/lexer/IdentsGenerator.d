@@ -74,26 +74,28 @@ enum string[] predefIdents = [
   "system", "safe",
   // From object.d
   "object", "Object", "Interface",
-  "Exception", "Error",
+  "Throwable", "Exception", "Error",
   "ClassInfo", "TypeInfo", "OffsetTypeInfo",
   "ModuleInfo", "FrameInfo", "TraceInfo",
-  "ptrdiff_t", "size_t", "hash_t", "equals_t",
+  "ptrdiff_t", "size_t", "ssize_t", "hash_t", "equals_t",
   // TypeInfo classes
+  "TypeInfo_Pointer",
   "TypeInfo_Array",
+  "TypeInfo_StaticArray",
   "TypeInfo_AssociativeArray",
-  "TypeInfo_Class",
-  "TypeInfo_Const", // D2
+  "TypeInfo_Function",
   "TypeInfo_Delegate",
   "TypeInfo_Enum",
-  "TypeInfo_Function",
+  "TypeInfo_Class",
   "TypeInfo_Interface",
-  "TypeInfo_Invariant", // D2
-  "TypeInfo_Pointer",
-  "TypeInfo_Shared", // D2
-  "TypeInfo_StaticArray",
   "TypeInfo_Struct",
   "TypeInfo_Tuple",
   "TypeInfo_Typedef",
+  "TypeInfo_Vector", // D2
+  "TypeInfo_Const", // D2
+  "TypeInfo_Invariant", // D2
+  "TypeInfo_Shared", // D2
+  "TypeInfo_Inout", // D2
   // Special properties
   "Sizeof:sizeof", "Alignof:alignof", "Mangleof:mangleof",
   // ASM identifiers:
