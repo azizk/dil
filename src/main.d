@@ -662,7 +662,7 @@ void printHelp(cstring command, Diagnostics diag)
   case "settings", "set":       mid = MID.HelpSettings;    goto Lcommon;
   case "?", "h", "help":        mid = MID.HelpHelp;        goto Lcommon;
   Lcommon:
-    msg = diag.formatMsg(mid);
+    msg = diag.msg(mid);
     break;
   case "main", "":
     auto COMPILED_WITH = __VENDOR__;

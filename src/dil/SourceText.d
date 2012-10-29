@@ -63,7 +63,7 @@ final class SourceText
       auto loc = new Location(filePath, 0);
       auto mid = Path(this.filePath).exists() ?
         MID.CantReadFile : MID.InexistantFile;
-      diag ~= new LexerError(loc, diag.formatMsg(mid));
+      diag ~= new LexerError(loc, diag.msg(mid));
       data = sentinelString.dup;
       return false;
     }

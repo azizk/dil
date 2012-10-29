@@ -42,6 +42,12 @@ class Diagnostics
     this.info ~= info;
   }
 
+  /// Returns a msg from the resource bundle.
+  cstring msg(MID mid)
+  {
+    return bundle.msg(mid);
+  }
+
   /// Returns a formatted msg.
   char[] formatMsg(MID mid, ...)
   {
@@ -51,6 +57,7 @@ class Diagnostics
   /// ditto
   char[] formatMsg(MID mid, TypeInfo[] _arguments, va_list _argptr)
   {
-    return format(_arguments, _argptr, bundle.msg(mid));
+    auto m = msg(mid);
+    return _arguments.length ? format(_arguments, _argptr, m) : m.dup;
   }
 }

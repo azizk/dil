@@ -227,13 +227,13 @@ abstract class SemanticPass : DefaultVisitor
   /// ditto
   void error(Token* token, MID mid, ...)
   {
-    error(_arguments, _argptr, modul.cc.diag.formatMsg(mid), token);
+    error(_arguments, _argptr, modul.cc.diag.msg(mid), token);
   }
 
   /// ditto
   void error(Node n, MID mid, ...)
   {
-    error(_arguments, _argptr, modul.cc.diag.bundle.msg(mid), n.begin);
+    error(_arguments, _argptr, modul.cc.diag.msg(mid), n.begin);
   }
 
   /// ditto
