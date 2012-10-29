@@ -665,12 +665,11 @@ void printHelp(cstring command, Diagnostics diag)
     msg = diag.msg(mid);
     break;
   case "main", "":
-    auto COMPILED_WITH = __VENDOR__;
-    auto COMPILED_VERSION = diag.format("{}.{,:d3}",
-      __VERSION__/1000, __VERSION__%1000);
-    auto COMPILED_DATE = __TIMESTAMP__;
-    msg = diag.formatMsg(MID.HelpMain, VERSION, COMMANDS,
-      COMPILED_WITH, COMPILED_VERSION, COMPILED_DATE);
+    const COMPILED_WITH = __VENDOR__;
+    const COMPILED_VERSION = (V => V[0] ~ "." ~ V[1..4])(itoactf(__VERSION__));
+    const COMPILED_DATE = __TIMESTAMP__;
+    msg = diag.formatMsg(MID.HelpMain, VERSION, COMMANDS, COMPILED_WITH,
+      COMPILED_VERSION, COMPILED_DATE);
     break;
   default:
     msg = diag.formatMsg(MID.UnknownCommand, command);
