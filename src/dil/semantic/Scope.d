@@ -8,20 +8,21 @@ import dil.semantic.Symbol,
 import dil.lexer.Identifier;
 import common;
 
-/// Builds a hierarchy of environments.
+/// Models a hierarchy of environments.
 class Scope
 {
   Scope parent; /// The surrounding scope, or null if this is the root scope.
 
   ScopeSymbol symbol; /// The current symbol with the symbol table.
 
+  /// Constructs a Scope.
   this(Scope parent, ScopeSymbol symbol)
   {
     this.parent = parent;
     this.symbol = symbol;
   }
 
-  /// Find a symbol in this scope.
+  /// Finds a symbol in this scope.
   /// Params:
   ///   name = The name of the symbol.
   Symbol lookup(Identifier* name)
@@ -60,43 +61,41 @@ class Scope
     return symbol;
   }
 
-  /// Create a new inner scope and return that.
+  /// Creates a new inner scope and returns that.
   Scope enter(ScopeSymbol symbol)
   {
     return new Scope(this, symbol);
   }
 
-  /// Destroy this scope and return the outer scope.
+  /// Destroys this scope and returns the outer scope.
   Scope exit()
   {
     auto sc = parent;
-    // delete this;
+    parent = null;
+    symbol = null;
     return sc;
   }
 
-  /// Search for the enclosing Class scope.
-  Scope classScope()
+  /// Searches for a scope matching type sid.
+  Scope findScope(SYM sid)
   {
-    auto scop = this;
+    auto s = this;
     do
-    {
-      if (scop.symbol.isClass)
-        return scop;
-      scop = scop.parent;
-    } while (scop);
-    return null;
+      if (s.symbol.sid == sid)
+        break;
+    while ((s = s.parent) !is null);
+    return s;
   }
 
-  /// Search for the enclosing Module scope.
+  /// Searches for the enclosing Class scope.
+  Scope classScope()
+  {
+    return findScope(SYM.Class);
+  }
+
+  /// Searches for the enclosing Module scope.
   Scope moduleScope()
   {
-    auto scop = this;
-    do
-    {
-      if (scop.symbol.isModule)
-        return scop;
-      scop = scop.parent;
-    } while (scop);
-    return null;
+    return findScope(SYM.Module);
   }
 }
