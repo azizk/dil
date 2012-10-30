@@ -283,70 +283,8 @@ class FirstSemanticPass : SemanticPass
   {
     if (!isModuleScope())
       return; // Only consider top-level classes.
-
-    ClassSymbol s = d.symbol;
-    ClassSymbol* ps; /// Assigned to, if special class.
-    auto name = s.name;
-    auto table = cc.tables.classes;
-
-    if (name is Ident.Sizeof  ||
-        name is Ident.Alignof ||
-        name is Ident.Mangleof)
-      error(d.name, "the class name ‘{}’ is reserved", name.str);
-    else if (name.startsWith("TypeInfo"))
-    {
-      switch (name.idKind)
-      {
-      case IDK.TypeInfo:                  ps = &table.tinfo;          break;
-      case IDK.TypeInfo_Pointer:          ps = &table.tinfoPointer;   break;
-      case IDK.TypeInfo_Array:            ps = &table.tinfoArray;     break;
-      case IDK.TypeInfo_StaticArray:      ps = &table.tinfoSArray;    break;
-      case IDK.TypeInfo_AssociativeArray: ps = &table.tinfoAArray;    break;
-      case IDK.TypeInfo_Function:         ps = &table.tinfoFunction;  break;
-      case IDK.TypeInfo_Delegate:         ps = &table.tinfoDelegate;  break;
-      case IDK.TypeInfo_Enum:             ps = &table.tinfoEnum;      break;
-      case IDK.TypeInfo_Class:            ps = &table.tinfoClass;     break;
-      case IDK.TypeInfo_Interface:        ps = &table.tinfoInterface; break;
-      case IDK.TypeInfo_Struct:           ps = &table.tinfoStruct;    break;
-      case IDK.TypeInfo_Tuple:            ps = &table.tinfoTuple;     break;
-      case IDK.TypeInfo_Typedef:          ps = &table.tinfoTypedef;   break;
-      version(D2)
-      {
-      case IDK.TypeInfo_Vector:           ps = &table.tinfoVector;    break;
-      case IDK.TypeInfo_Const:            ps = &table.tinfoConst;     break;
-      case IDK.TypeInfo_Invariant:        ps = &table.tinfoImmutable; break;
-      case IDK.TypeInfo_Shared:           ps = &table.tinfoShared;    break;
-      case IDK.TypeInfo_Inout:            ps = &table.tinfoInout;     break;
-      } //version(D2)
-      default:
-      }
-    } // If object.d module and if in root package.
-    else if (modul.name is Ident.object &&
-      modul.parent.parent is null) // root package = modul.parent
-    {
-      if (name is Ident.Object)
-        ps = &table.object;
-      else if (name is Ident.ClassInfo)
-        ps = &table.classInfo;
-      else if (name is Ident.ModuleInfo)
-        ps = &table.moduleInfo;
-      else if (name is Ident.Throwable)
-        ps = &table.throwable;
-      else if (name is Ident.Exception)
-        ps = &table.exeption;
-      else if (name is Ident.Error)
-        ps = &table.error;
-    }
-
-    if (ps)
-    { // Convert to SpecialClassSymbol, as it handles mangling differently.
-      if (*ps !is null)
-        error(d.name,
-          "special class ‘{}’ already defined at ‘{}’",
-          name.str, (*ps).node.begin.getErrorLocation(modul.filePath()).repr());
-      else
-        d.symbol = *ps = new SpecialClassSymbol(s.name, s.node);
-    }
+    cc.tables.classes.lookForSpecialClasses(modul, d,
+      (name, format, ...) => error(_arguments, _argptr, format, name));
   }
 
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

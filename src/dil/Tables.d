@@ -6,8 +6,10 @@ module dil.Tables;
 import dil.lexer.Token,
        dil.lexer.IdTable,
        dil.lexer.Tables;
+import dil.ast.Declarations;
 import dil.semantic.Types,
-       dil.semantic.Symbols;
+       dil.semantic.Symbols,
+       dil.semantic.Module;
 import common;
 
 /// A collection of tables used by the Lexer and other classes.
@@ -60,4 +62,73 @@ class ClassTable
   ClassSymbol tinfoImmutable; /// Class TypeInfo_Invariant.
   ClassSymbol tinfoShared; /// Class TypeInfo_Shared.
   ClassSymbol tinfoInout; /// Class TypeInfo_Inout.
+
+  /// If d.symbol is a special class, it is stored in this table
+  /// and a SpecialClassSymbol is assigned to it.
+  void lookForSpecialClasses(Module modul, ClassDecl d,
+    void delegate(Token* name, cstring format, ...) error)
+  {
+    ClassSymbol s = d.symbol;
+    ClassSymbol* ps; /// Assigned to, if special class.
+    auto name = s.name;
+
+    if (name is Ident.Sizeof  ||
+        name is Ident.Alignof ||
+        name is Ident.Mangleof)
+      error(d.name, "the class name ‘{}’ is not allowed", name.str);
+    else if (name.startsWith("TypeInfo"))
+    {
+      switch (name.idKind)
+      {
+      case IDK.TypeInfo:                  ps = &tinfo;          break;
+      case IDK.TypeInfo_Pointer:          ps = &tinfoPointer;   break;
+      case IDK.TypeInfo_Array:            ps = &tinfoArray;     break;
+      case IDK.TypeInfo_StaticArray:      ps = &tinfoSArray;    break;
+      case IDK.TypeInfo_AssociativeArray: ps = &tinfoAArray;    break;
+      case IDK.TypeInfo_Function:         ps = &tinfoFunction;  break;
+      case IDK.TypeInfo_Delegate:         ps = &tinfoDelegate;  break;
+      case IDK.TypeInfo_Enum:             ps = &tinfoEnum;      break;
+      case IDK.TypeInfo_Class:            ps = &tinfoClass;     break;
+      case IDK.TypeInfo_Interface:        ps = &tinfoInterface; break;
+      case IDK.TypeInfo_Struct:           ps = &tinfoStruct;    break;
+      case IDK.TypeInfo_Tuple:            ps = &tinfoTuple;     break;
+      case IDK.TypeInfo_Typedef:          ps = &tinfoTypedef;   break;
+      version(D2)
+      {
+      case IDK.TypeInfo_Vector:           ps = &tinfoVector;    break;
+      case IDK.TypeInfo_Const:            ps = &tinfoConst;     break;
+      case IDK.TypeInfo_Invariant:        ps = &tinfoImmutable; break;
+      case IDK.TypeInfo_Shared:           ps = &tinfoShared;    break;
+      case IDK.TypeInfo_Inout:            ps = &tinfoInout;     break;
+      } //version(D2)
+      default:
+      }
+    }
+    else
+    if (modul.name is Ident.object && modul.parent.parent is null)
+    { // If object.d module and if in root package.
+      if (name is Ident.Object)
+        ps = &object;
+      else if (name is Ident.ClassInfo)
+        ps = &classInfo;
+      else if (name is Ident.ModuleInfo)
+        ps = &moduleInfo;
+      else if (name is Ident.Throwable)
+        ps = &throwable;
+      else if (name is Ident.Exception)
+        ps = &exeption;
+      else if (name is Ident.Error)
+        ps = &this.error;
+    }
+
+    if (ps)
+    {
+      if (*ps !is null)
+        error(d.name,
+          "special class ‘{}’ already defined at ‘{}’",
+          name.str, (*ps).node.begin.getErrorLocation(modul.filePath()).repr());
+      else // Convert to SpecialClassSymbol, as it handles mangling differently.
+        d.symbol = *ps = new SpecialClassSymbol(s.name, s.node);
+    }
+  }
 }
