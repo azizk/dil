@@ -421,9 +421,11 @@ def main():
 
     # Linux:
     for bits in (32, 64):
+      BIN = DEST/"linux"/"bin%d"%bits
+      if not BIN.exists: continue
       SRC = (TMP/"dil_"+VERSION).rmtree() # Clear if necessary.
       NOARCH.copytree(SRC)
-      (DEST/"linux"/"bin%d"%bits).copytree(SRC/"bin")
+      BIN.copytree(SRC/"bin")
       write_modified_dilconf(SRC/"data"/"dilconf.d", SRC/"bin"/"dilconf.d",
         Path("${BINDIR}")/".."/"data")
       NAME = BUILDROOT.abspath/"dil_%s_linux%s" % (VERSION, bits)
@@ -436,9 +438,11 @@ def main():
     # Windows:
     for bits in (32, 64):
       if bits != 32: continue # Only 32bit supported atm.
+      BIN = DEST/"windows"/"bin%d"%bits
+      if not BIN.exists: continue
       SRC = (TMP/"dil_"+VERSION).rmtree() # Clear if necessary.
       NOARCH.copytree(SRC)
-      (DEST/"windows"/"bin%d"%bits).copytree(SRC/"bin")
+      BIN.copytree(SRC/"bin")
       write_modified_dilconf(SRC/"data"/"dilconf.d", SRC/"bin"/"dilconf.d",
         Path("${BINDIR}")/".."/"data")
       NAME = BUILDROOT.abspath/"dil_%s_win%s" % (VERSION, bits)
