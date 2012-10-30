@@ -22,6 +22,8 @@ final class SourceText
   /// The data member must be terminated with this string.
   /// Four zeros are used to make certain optimizations possible in the Lexer.
   static immutable  sentinelString = "\0\0\0\0";
+  /// True when the text has no invalid UTF8 sequences.
+  //bool isValidUTF8; // TODO: could this be useful?
 
   /// Constructs a SourceText object.
   /// Params:
