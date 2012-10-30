@@ -317,14 +317,33 @@ override
     return d;
   }
 
-  D visit(AliasDecl ad)
+  D visit(AliasDecl d)
   {
-    return ad;
+    auto vd = d.vardecl.to!(VariablesDecl);
+    d.symbols = new AliasSymbol[vd.names.length];
+    // Insert alias symbols in this declaration into the symbol table.
+    foreach (i, name; vd.names)
+      insert(d.symbols[i] = new AliasSymbol(name.ident, d));
+    return d;
   }
 
-  D visit(TypedefDecl td)
+  D visit(AliasesDecl d)
   {
-    return td;
+    d.symbols = new AliasSymbol[d.idents.length];
+    // Insert alias symbols in this declaration into the symbol table.
+    foreach (i, name; d.idents)
+      insert(d.symbols[i] = new AliasSymbol(name.ident, d));
+    return d;
+  }
+
+  D visit(TypedefDecl d)
+  {
+    auto vd = d.vardecl.to!(VariablesDecl);
+    d.symbols = new TypedefSymbol[vd.names.length];
+    // Insert typedef symbols in this declaration into the symbol table.
+    foreach (i, name; vd.names)
+      insert(d.symbols[i] = new TypedefSymbol(name.ident, d));
+    return d;
   }
 
   D visit(EnumDecl d)

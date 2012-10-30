@@ -198,6 +198,7 @@ class AliasDecl : Declaration
     addChild(decl);
     this.decl = decl;
   }
+  AliasSymbol[] symbols;
   mixin methods;
 }
 
@@ -213,6 +214,7 @@ class AliasesDecl : Declaration
     this.idents = idents;
     this.types = types;
   }
+  AliasSymbol[] symbols;
   mixin methods;
 }
 
@@ -239,6 +241,7 @@ class TypedefDecl : Declaration
     addChild(decl);
     this.decl = decl;
   }
+  TypedefSymbol[] symbols;
   mixin methods;
 }
 
