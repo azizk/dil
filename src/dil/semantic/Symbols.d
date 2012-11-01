@@ -3,8 +3,7 @@
 /// $(Maturity average)
 module dil.semantic.Symbols;
 
-import dil.ast.Node,
-       dil.ast.Expression;
+import dil.ast.Expression;
 import dil.semantic.Symbol,
        dil.semantic.SymbolTable,
        dil.semantic.Types;
@@ -21,9 +20,9 @@ abstract class DeclarationSymbol : Symbol
   StorageClass stcs; /// The storage classes.
   LinkageType linkage; /// The linkage type.
 
-  this(SYM sid, Identifier* name, Node node)
+  this(SYM sid, Identifier* name, SLoc loc)
   {
-    super(sid, name, node);
+    super(sid, name, loc);
   }
 
   cstring toMangle()
@@ -99,15 +98,15 @@ class ScopeSymbol : Symbol
   Symbol[] members; /// The member symbols (in lexical order.)
 
   /// Constructs a ScopeSymbol object.
-  this(SYM sid, Identifier* name, Node node)
+  this(SYM sid, Identifier* name, SLoc loc)
   {
-    super(sid, name, node);
+    super(sid, name, loc);
   }
 
   /// Constructs a ScopeSymbol object with the SYM.Scope ID.
-  this(Identifier* name = Ident.Empty, Node node = null)
+  this(Identifier* name = Ident.Empty, SLoc loc = SLoc.init)
   {
-    super(SYM.Scope, name, node);
+    super(SYM.Scope, name, loc);
   }
 
   /// Looks up name in the table.
@@ -135,18 +134,18 @@ class ModuleSymbol : ScopeSymbol
 {
   ModuleInfoSymbol varminfo; /// The ModuleInfo for this module.
 
-  this(Identifier* name=null, Node node=null)
+  this(Identifier* name = null, SLoc loc = SLoc.init)
   {
-    super(SYM.Module, name, node);
+    super(SYM.Module, name, loc);
   }
 }
 
 /// A package symbol.
 class PackageSymbol : ScopeSymbol
 {
-  this(Identifier* name=null, Node node=null)
+  this(Identifier* name = null, SLoc loc = SLoc.init)
   {
-    super(SYM.Package, name, node);
+    super(SYM.Package, name, loc);
   }
 }
 
@@ -158,9 +157,9 @@ abstract class AggregateSymbol : ScopeSymbol
   VariableSymbol[] fields;
   AliasSymbol[] aliases; /// AliasThis symbols.
 
-  this(SYM sid, Identifier* name, Node node)
+  this(SYM sid, Identifier* name, SLoc loc)
   {
-    super(sid, name, node);
+    super(sid, name, loc);
   }
 
   override void insert(Symbol s, Identifier* ident)
@@ -193,9 +192,9 @@ class ClassSymbol : AggregateSymbol
 
   TypeInfoSymbol vartinfo; /// The TypeInfo of this class.
 
-  this(Identifier* name, Node classNode)
+  this(Identifier* name, SLoc loc)
   {
-    super(SYM.Class, name, classNode);
+    super(SYM.Class, name, loc);
     this.type = new TypeClass(this);
   }
 }
@@ -203,9 +202,9 @@ class ClassSymbol : AggregateSymbol
 /// Special classes, e.g.: Object, ClassInfo, ModuleInfo etc.
 class SpecialClassSymbol : ClassSymbol
 {
-  this(Identifier* name, Node classNode)
+  this(Identifier* name, SLoc loc)
   {
-    super(name, classNode);
+    super(name, loc);
   }
 
   /// Handle mangling differently for special classes.
@@ -222,9 +221,9 @@ class SpecialClassSymbol : ClassSymbol
 /// An interface symbol.
 class InterfaceSymbol : ClassSymbol
 {
-  this(Identifier* name, Node interfaceNode)
+  this(Identifier* name, SLoc loc)
   {
-    super(name, interfaceNode);
+    super(name, loc);
     this.sid = SYM.Interface;
     this.type = new TypeClass(this);
   }
@@ -234,9 +233,9 @@ class InterfaceSymbol : ClassSymbol
 class StructSymbol : AggregateSymbol
 {
   bool isAnonymous;
-  this(Identifier* name, Node structNode)
+  this(Identifier* name, SLoc loc)
   {
-    super(SYM.Struct, name, structNode);
+    super(SYM.Struct, name, loc);
     this.type = new TypeStruct(this);
     this.isAnonymous = name is null;
   }
@@ -246,9 +245,9 @@ class StructSymbol : AggregateSymbol
 class UnionSymbol : StructSymbol
 {
   bool isAnonymous;
-  this(Identifier* name, Node unionNode)
+  this(Identifier* name, SLoc loc)
   {
-    super(name, unionNode);
+    super(name, loc);
     this.sid = SYM.Union;
     this.type = new TypeStruct(this);
     this.isAnonymous = name is null;
@@ -260,9 +259,9 @@ class EnumSymbol : ScopeSymbol
 {
   TypeEnum type;
   bool isAnonymous;
-  this(Identifier* name, Node enumNode)
+  this(Identifier* name, SLoc loc)
   {
-    super(SYM.Enum, name, enumNode);
+    super(SYM.Enum, name, loc);
     this.type = new TypeEnum(this);
     this.isAnonymous = name is null;
   }
@@ -287,9 +286,9 @@ class FunctionSymbol : ScopeSymbol
   TypeFunction type; /// The type of this function.
   ParametersSymbol params; /// The parameters of this function.
 
-  this(Identifier* name, Node functionNode)
+  this(Identifier* name, SLoc loc)
   {
-    super(SYM.Function, name, functionNode);
+    super(SYM.Function, name, loc);
   }
 
   Type getType()
@@ -343,9 +342,9 @@ class ParameterSymbol : Symbol
   TypeParameter type; /// Type of this symbol.
 
   this(Type ptype, Identifier* name,
-    StorageClass stcs, VariadicStyle variadic, Node node)
+    StorageClass stcs, VariadicStyle variadic, SLoc loc)
   {
-    super(SYM.Parameter, name, node);
+    super(SYM.Parameter, name, loc);
     this.stcs = stcs;
     this.variadic = variadic;
     this.ptype = ptype;
@@ -381,9 +380,9 @@ class ParametersSymbol : Symbol
   ParameterSymbol[] params; /// The parameters.
   TypeParameters type; /// Type of this symbol.
 
-  this(ParameterSymbol[] params, Node node=null)
+  this(ParameterSymbol[] params, SLoc loc = SLoc.init)
   {
-    super(SYM.Parameters, Ident.Empty, node);
+    super(SYM.Parameters, Ident.Empty, loc);
     this.params = params;
     auto ptypes = new TypeParameter[params.length];
     foreach (i, p; params)
@@ -427,18 +426,18 @@ class VariableSymbol : Symbol
 
   this(Identifier* name,
        Protection prot, StorageClass stcs, LinkageType linkage,
-       Node variableNode)
+       SLoc loc)
   {
-    super(SYM.Variable, name, variableNode);
+    super(SYM.Variable, name, loc);
 
     this.prot = prot;
     this.stcs = stcs;
     this.linkage = linkage;
   }
 
-  this(Identifier* name, Node variableNode)
+  this(Identifier* name, SLoc loc)
   {
-    this(name, Protection.None, StorageClass.None, LinkageType.None, node);
+    this(name, Protection.None, StorageClass.None, LinkageType.None, loc);
   }
 
   cstring toMangle()
@@ -452,9 +451,9 @@ class EnumMember : VariableSymbol
 {
   this(Identifier* name,
        Protection prot, StorageClass stcs, LinkageType linkage,
-       Node enumMemberNode)
+       SLoc loc)
   {
-    super(name, prot, stcs, linkage, enumMemberNode);
+    super(name, prot, stcs, linkage, loc);
     this.sid = SYM.EnumMember;
   }
 }
@@ -462,9 +461,9 @@ class EnumMember : VariableSymbol
 /// A this-pointer symbol for member functions (or frame pointers.)
 class ThisSymbol : VariableSymbol
 {
-  this(Type type, Node node)
+  this(Type type, SLoc loc)
   {
-    super(Keyword.This, node);
+    super(Keyword.This, loc);
     this.type = type;
   }
 }
@@ -480,7 +479,7 @@ class ClassInfoSymbol : VariableSymbol
   ///   classClassInfo = The global ClassInfo class from object.d.
   this(ClassSymbol clas, ClassSymbol classClassInfo)
   {
-    super(clas.name, clas.node);
+    super(clas.name, clas.loc);
     this.type = classClassInfo.type;
     this.clas = clas;
     this.stcs = StorageClass.Static;
@@ -501,7 +500,7 @@ class ModuleInfoSymbol : VariableSymbol
   ///   classModuleInfo = The global ModuleInfo class from object.d.
   this(ModuleSymbol modul, ClassSymbol classModuleInfo)
   {
-    super(modul.name, modul.node);
+    super(modul.name, modul.loc);
     this.type = classModuleInfo.type;
     this.modul = modul;
     this.stcs = StorageClass.Static;
@@ -529,7 +528,7 @@ class TypeInfoSymbol : VariableSymbol
   this(Type titype, Identifier* name, ClassSymbol classTypeInfo)
   { // FIXME: provide the node of TypeInfo for now.
     // titype has no node; should every Type get one?
-    super(name, classTypeInfo.node);
+    super(name, classTypeInfo.loc);
     this.type = classTypeInfo.type;
     this.titype = titype;
     this.stcs = StorageClass.Static;
@@ -558,7 +557,7 @@ class TypeSymbol : Symbol
 
   this(Type type)
   {
-    super(SYM.Type, null, null);
+    super(SYM.Type, null, SLoc.init);
     this.type = type;
   }
 }
@@ -569,9 +568,9 @@ class TupleSymbol : Symbol
   TypeTuple type; /// The type of this tuple.
   Symbol[] items; /// The items in this tuple.
 
-  this(Symbol[] items, Identifier* name, Node node)
+  this(Symbol[] items, Identifier* name, SLoc loc)
   {
-    super(SYM.Tuple, name, node);
+    super(SYM.Tuple, name, loc);
   }
 
   /// Returns the type only when all elements are types, otherwise null.
@@ -619,9 +618,9 @@ class AliasSymbol : Symbol
   Type aliasType;
   Symbol aliasSym;
 
-  this(Identifier* name, Node aliasNode)
+  this(Identifier* name, SLoc loc)
   {
-    super(SYM.Alias, name, aliasNode);
+    super(SYM.Alias, name, loc);
   }
 
   cstring toMangle()
@@ -633,9 +632,9 @@ class AliasSymbol : Symbol
 /// A typedef symbol.
 class TypedefSymbol : Symbol
 {
-  this(Identifier* name, Node aliasNode)
+  this(Identifier* name, SLoc loc)
   {
-    super(SYM.Typedef, name, aliasNode);
+    super(SYM.Typedef, name, loc);
   }
 
   cstring toMangle()
@@ -648,9 +647,9 @@ class TypedefSymbol : Symbol
 class TemplateSymbol : ScopeSymbol
 {
   AliasSymbol[] aliases; /// AliasThis symbols.
-  this(Identifier* name, Node node)
+  this(Identifier* name, SLoc loc)
   {
-    super(SYM.Template, name, node);
+    super(SYM.Template, name, loc);
   }
 }
 
@@ -659,9 +658,9 @@ class TemplInstanceSymbol : ScopeSymbol
 {
   // TemplArgSymbol[] tiArgs;
   TemplateSymbol tplSymbol;
-  this(Identifier* name, Node node)
+  this(Identifier* name, SLoc loc)
   {
-    super(SYM.TemplateInstance, name, node);
+    super(SYM.TemplateInstance, name, loc);
   }
 
   cstring toMangle()
@@ -685,9 +684,9 @@ class TemplInstanceSymbol : ScopeSymbol
 /// A template mixin symbol.
 class TemplMixinSymbol : TemplInstanceSymbol
 {
-  this(Identifier* name, Node node)
+  this(Identifier* name, SLoc loc)
   {
-    super(name, node);
+    super(name, loc);
     this.sid = SYM.TemplateMixin;
   }
 
@@ -704,9 +703,9 @@ class OverloadSet : Symbol
 {
   Symbol[] symbols;
 
-  this(Identifier* name, Node node)
+  this(Identifier* name, SLoc loc)
   {
-    super(SYM.OverloadSet, name, node);
+    super(SYM.OverloadSet, name, loc);
   }
 
   void add(Symbol s)

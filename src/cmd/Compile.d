@@ -114,7 +114,7 @@ class CompileCommand : Command
   {
     foreach (member; scopeSym.members)
     {
-      auto tokens = DDocUtils.getDocTokens(member.node);
+      auto tokens = DDocUtils.getDocTokens(member.loc.n);
       char[] docText;
       foreach (token; tokens)
         docText ~= token.text;

@@ -273,20 +273,12 @@ class ModuleManager
     return pathNormalize(p); // Remove './' and '../' parts.
   }
 
-  /// Returns the error location of the module's name
-  /// or the first token in the source text.
-  Location getErrorLocation(Module m)
-  {
-    auto name = m.moduleDecl ? m.moduleDecl.name : m.firstToken();
-    return name.getErrorLocation(m.filePath);
-  }
-
   /// Reports an error.
   void error(Module modul, MID mid, ...)
   {
-    auto location = getErrorLocation(modul);
     auto msg = cc.diag.formatMsg(mid, _arguments, _argptr);
-    cc.diag ~= new SemanticError(location, msg);
+    auto loc = modul.loc.t.getErrorLocation(modul.filePath);
+    cc.diag ~= new SemanticError(loc, msg);
   }
 
   /// Reports an error.

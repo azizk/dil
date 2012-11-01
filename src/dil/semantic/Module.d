@@ -122,7 +122,6 @@ class Module : ModuleSymbol
         this.setFQN(moduleDecl.getFQN()); // E.g.: dil.ast.Node
     }
 
-
     auto idtable = cc.tables.idents;
 
     if (!this.moduleFQN.length)
@@ -142,7 +141,8 @@ class Module : ModuleSymbol
     // Set the symbol name.
     this.name = idtable.lookup(this.moduleName);
     // Set the symbol node.
-    this.node = this.root;
+    this.loc.n = this.root;
+    this.loc.t = this.moduleDecl ? this.moduleDecl.begin : this.firstToken();
   }
 
   /// Returns the first token of the module's source text.

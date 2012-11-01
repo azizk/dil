@@ -35,6 +35,13 @@ enum SYM
   Type,
 }
 
+/// Info on a symbol's source code location.
+struct SLoc
+{
+  Token* t; /// Gives a precise location. Usually the name of a symbol.
+  Node n; /// For Ddoc comments other possibly other info.
+}
+
 /// A symbol represents an object with semantic code information.
 class Symbol
 { /// Enumeration of symbol statuses.
@@ -51,20 +58,18 @@ class Symbol
   /// The name of this symbol.
   /// If the symbol is nameless Ident.Empty is assigned to it.
   Identifier* name;
-  /// The syntax tree node that produced this symbol.
-  /// Useful for source code location info and retrieval of doc comments.
-  Node node;
+  SLoc loc; /// For locating a symbol.
 
   /// Constructs a Symbol object.
   /// Params:
   ///   sid = The symbol's ID.
   ///   name = The symbol's name.
   ///   node = The symbol's node.
-  this(SYM sid, Identifier* name, Node node)
+  this(SYM sid, Identifier* name, SLoc loc)
   {
     this.sid = sid;
     this.name = name ? name : Ident.Empty;
-    this.node = node;
+    this.loc = loc;
   }
 
   /// Change the status to Status.Completing.

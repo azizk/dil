@@ -126,9 +126,9 @@ class ClassTable
       if (*ps !is null)
         error(d.name,
           "special class ‘{}’ already defined at ‘{}’",
-          name.str, (*ps).node.begin.getErrorLocation(modul.filePath()).repr());
+          name.str, (*ps).loc.t.getErrorLocation(modul.filePath()).repr());
       else // Convert to SpecialClassSymbol, as it handles mangling differently.
-        d.symbol = *ps = new SpecialClassSymbol(s.name, s.node);
+        d.symbol = *ps = new SpecialClassSymbol(s.name, s.loc);
     }
   }
 }

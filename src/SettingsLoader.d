@@ -57,9 +57,9 @@ abstract class SettingsLoader
     if (!var && isOptional)
     {}
     else if (!var)
-      error(mod.firstToken, "variable ‘{}’ is not defined", name);
+      error(mod.loc.t, "variable ‘{}’ is not defined", name);
     else if (!var.isVariable)
-      error(var.node.begin, "‘{}’ is not a variable declaration", name);
+      error(var.loc.t, "‘{}’ is not a variable declaration", name);
     else if (auto e = var.to!(VariableSymbol).value)
     {
       if ((value = e.Is!(T)) is null) // Try casting to T.
@@ -67,7 +67,7 @@ abstract class SettingsLoader
           "the value of ‘{}’ must be of type ‘{}’", name, T.stringof);
     }
     else
-      error(var.node.begin, "‘{}’ variable has no value set", name);
+      error(var.loc.t, "‘{}’ variable has no value set", name);
     return value;
   }
 
@@ -250,7 +250,7 @@ class ConfigLoader : SettingsLoader
         else if (auto val = castTo!(StringExpr)(value))
           messages[i] = val.getString();
       //if (messages.length != MID.max+1)
-        //error(mod.firstToken,
+        //error(mod.loc.t,
           //"messages table in {} must exactly have {} entries, but not {}.",
           //langFile, MID.max+1, messages.length);
     }

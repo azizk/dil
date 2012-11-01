@@ -127,7 +127,7 @@ class SemanticPass1 : Visitor
     }
     else
       // Create a new overload set.
-      scop.symbol.insert(new OverloadSet(name, sym.node), name);
+      scop.symbol.insert(new OverloadSet(name, sym.loc), name);
     // Set the current scope symbol as the parent.
     sym.parent = scop.symbol;
   }
@@ -135,10 +135,10 @@ class SemanticPass1 : Visitor
   /// Reports an error: new symbol s1 conflicts with existing symbol s2.
   void reportSymbolConflict(Symbol s1, Symbol s2, Identifier* name)
   {
-    auto loc = s2.node.begin.getErrorLocation(modul.filePath());
+    auto loc = s2.loc.t.getErrorLocation(modul.filePath());
     auto locString = modul.cc.diag.format("{}({},{})",
       loc.filePath, loc.lineNum, loc.colNum);
-    error(s1.node.begin, MID.DeclConflictsWithDecl, name.str, locString);
+    error(s1.loc.t, MID.DeclConflictsWithDecl, name.str, locString);
   }
 
   /// Creates an error report.
@@ -232,7 +232,7 @@ override
       return d;
 
     // Create the symbol.
-    d.symbol = new EnumSymbol(d.nameId, d);
+    d.symbol = new EnumSymbol(d.nameId, SLoc(d.name ? d.name : d.begin, d));
 
     bool isAnonymous = d.symbol.isAnonymous;
     if (isAnonymous)
@@ -260,7 +260,7 @@ override
   D visit(EnumMemberDecl d)
   {
     d.symbol = new EnumMember(
-      d.name.ident, protection, storageClass, linkageType, d);
+      d.name.ident, protection, storageClass, linkageType, SLoc(d.name, d));
     insert(d.symbol);
     return d;
   }
@@ -270,7 +270,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new ClassSymbol(d.nameId, d);
+    d.symbol = new ClassSymbol(d.nameId, SLoc(d.name, d));
     // Insert into current scope.
     insert(d.symbol);
     enterScope(d.symbol);
@@ -285,7 +285,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new InterfaceSymbol(d.nameId, d);
+    d.symbol = new InterfaceSymbol(d.nameId, SLoc(d.name, d));
     // Insert into current scope.
     insert(d.symbol);
     enterScope(d.symbol);
@@ -300,7 +300,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new StructSymbol(d.nameId, d);
+    d.symbol = new StructSymbol(d.nameId, SLoc(d.name ? d.name : d.begin, d));
 
     if (d.symbol.isAnonymous)
       d.symbol.name = context.tables.idents.genAnonStructID();
@@ -324,7 +324,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new UnionSymbol(d.nameId, d);
+    d.symbol = new UnionSymbol(d.nameId, SLoc(d.name ? d.name : d.begin, d));
 
     if (d.symbol.isAnonymous)
       d.symbol.name = context.tables.idents.genAnonUnionID();
@@ -346,35 +346,35 @@ override
 
   D visit(ConstructorDecl d)
   {
-    auto func = new FunctionSymbol(Ident.Ctor, d);
+    auto func = new FunctionSymbol(Ident.Ctor, SLoc(d.begin, d));
     insertOverload(func);
     return d;
   }
 
   D visit(StaticCtorDecl d)
   {
-    auto func = new FunctionSymbol(Ident.Ctor, d);
+    auto func = new FunctionSymbol(Ident.Ctor, SLoc(d.begin, d));
     insertOverload(func);
     return d;
   }
 
   D visit(DestructorDecl d)
   {
-    auto func = new FunctionSymbol(Ident.Dtor, d);
+    auto func = new FunctionSymbol(Ident.Dtor, SLoc(d.begin, d));
     insertOverload(func);
     return d;
   }
 
   D visit(StaticDtorDecl d)
   {
-    auto func = new FunctionSymbol(Ident.Dtor, d);
+    auto func = new FunctionSymbol(Ident.Dtor, SLoc(d.begin, d));
     insertOverload(func);
     return d;
   }
 
   D visit(FunctionDecl d)
   {
-    auto func = new FunctionSymbol(d.name.ident, d);
+    auto func = new FunctionSymbol(d.name.ident, SLoc(d.name, d));
     insertOverload(func);
     return d;
   }
@@ -391,7 +391,7 @@ override
     foreach (i, name; vd.names)
     {
       auto variable = new VariableSymbol(name.ident, protection, storageClass,
-        linkageType, vd);
+        linkageType, SLoc(name, vd));
       variable.value = vd.inits[i];
       vd.variables[i] = variable;
       insert(variable);
@@ -401,14 +401,14 @@ override
 
   D visit(InvariantDecl d)
   {
-    auto func = new FunctionSymbol(Ident.Invariant, d);
+    auto func = new FunctionSymbol(Ident.Invariant, SLoc(d.begin, d));
     insert(func);
     return d;
   }
 
   D visit(UnittestDecl d)
   {
-    auto func = new FunctionSymbol(Ident.Unittest, d);
+    auto func = new FunctionSymbol(Ident.Unittest, SLoc(d.begin, d));
     insertOverload(func);
     return d;
   }
@@ -462,7 +462,7 @@ override
     if (d.symbol)
       return d;
     // Create the symbol.
-    d.symbol = new TemplateSymbol(d.nameId, d);
+    d.symbol = new TemplateSymbol(d.nameId, SLoc(d.name, d));
     // Insert into current scope.
     insertOverload(d.symbol);
     return d;
@@ -470,14 +470,14 @@ override
 
   D visit(NewDecl d)
   {
-    auto func = new FunctionSymbol(Ident.New, d);
+    auto func = new FunctionSymbol(Ident.New, SLoc(d.begin, d));
     insert(func);
     return d;
   }
 
   D visit(DeleteDecl d)
   {
-    auto func = new FunctionSymbol(Ident.Delete, d);
+    auto func = new FunctionSymbol(Ident.Delete, SLoc(d.begin, d));
     insert(func);
     return d;
   }
