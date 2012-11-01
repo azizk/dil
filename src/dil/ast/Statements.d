@@ -360,24 +360,24 @@ class DefaultStmt : Statement
 
 class ContinueStmt : Statement
 {
-  Token* ident;
-  mixin(memberInfo("ident"));
-  this(Token* ident)
+  Token* label;
+  mixin(memberInfo("label?"));
+  this(Token* label)
   {
     mixin(set_kind);
-    this.ident = ident;
+    this.label = label;
   }
   mixin methods;
 }
 
 class BreakStmt : Statement
 {
-  Token* ident;
-  mixin(memberInfo("ident"));
-  this(Token* ident)
+  Token* label;
+  mixin(memberInfo("label?"));
+  this(Token* label)
   {
     mixin(set_kind);
-    this.ident = ident;
+    this.label = label;
   }
   mixin methods;
 }
@@ -565,14 +565,14 @@ class AsmBlockStmt : Statement
 
 class AsmStmt : Statement
 {
-  Token* ident;
+  Token* opcode;
   Expression[] operands;
-  mixin(memberInfo("ident", "operands"));
-  this(Token* ident, Expression[] operands)
+  mixin(memberInfo("opcode", "operands"));
+  this(Token* opcode, Expression[] operands)
   {
     mixin(set_kind);
     addOptChildren(operands);
-    this.ident = ident;
+    this.opcode = opcode;
     this.operands = operands;
   }
   mixin methods;
@@ -604,17 +604,17 @@ class IllegalAsmStmt : Statement
 
 class PragmaStmt : Statement
 {
-  Token* ident;
+  Token* name;
   Expression[] args;
   Statement pragmaBody;
-  mixin(memberInfo("ident", "args", "pragmaBody"));
-  this(Token* ident, Expression[] args, Statement pragmaBody)
+  mixin(memberInfo("name", "args", "pragmaBody"));
+  this(Token* name, Expression[] args, Statement pragmaBody)
   {
     mixin(set_kind);
     addOptChildren(args);
     addChild(pragmaBody);
 
-    this.ident = ident;
+    this.name = name;
     this.args = args;
     this.pragmaBody = pragmaBody;
   }

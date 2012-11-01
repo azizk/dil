@@ -52,18 +52,18 @@ class ModuleScopeType : TypeNode
 /// $(BNF IdentifierType := Type? Identifier)
 class IdentifierType : TypeNode
 {
-  Token* ident;
-  mixin(memberInfo("next?", "ident"));
-  this(TypeNode next, Token* ident)
+  Token* name;
+  mixin(memberInfo("next?", "name"));
+  this(TypeNode next, Token* name)
   {
     super(next);
     mixin(set_kind);
-    this.ident = ident;
+    this.name = name;
   }
 
   @property Identifier* id()
   {
-    return ident.ident;
+    return name.ident;
   }
 
   mixin methods;
@@ -95,21 +95,21 @@ class TypeofType : TypeNode
 ////  Identifier "!" (TemplateArgumentList | TemplateArgumentSingle))
 class TmplInstanceType : TypeNode
 {
-  Token* ident;
+  Token* name;
   TemplateArguments targs;
-  mixin(memberInfo("next?", "ident", "targs"));
-  this(TypeNode next, Token* ident, TemplateArguments targs)
+  mixin(memberInfo("next?", "name", "targs"));
+  this(TypeNode next, Token* name, TemplateArguments targs)
   {
     super(next);
     mixin(set_kind);
     addOptChild(targs);
-    this.ident = ident;
+    this.name = name;
     this.targs = targs;
   }
 
   @property Identifier* id()
   {
-    return ident.ident;
+    return name.ident;
   }
 
   mixin methods;

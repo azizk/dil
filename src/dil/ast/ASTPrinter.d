@@ -443,7 +443,7 @@ class ASTPrinter : Visitor2
 
   void visit(AliasThisDecl n)
   {
-    w(ind, T.Alias, ws, n.ident, ws, T.This, T.Semicolon, Newline);
+    w(ind, T.Alias, ws, n.name, ws, T.This, T.Semicolon, Newline);
   }
 
   void visit(TypedefDecl n)
@@ -495,7 +495,6 @@ class ASTPrinter : Visitor2
       v(n.value);
     }
   }
-
 
   void visit(TemplateDecl n)
   {
@@ -846,7 +845,7 @@ class ASTPrinter : Visitor2
 
   void visit(PragmaDecl n)
   {
-    w(ind, T.Pragma, T.LParen, n.ident);
+    w(ind, T.Pragma, T.LParen, n.name);
     if (n.args) {
       w(T.Comma);
       w(n.args);
@@ -1091,16 +1090,16 @@ class ASTPrinter : Visitor2
   void visit(ContinueStmt n)
   {
     w(ind, T.Continue);
-    if (n.ident)
-      w(ws, n.ident);
+    if (n.label)
+      w(ws, n.label);
     w(T.Semicolon, Newline);
   }
 
   void visit(BreakStmt n)
   {
     w(ind, T.Break);
-    if (n.ident)
-      w(ws, n.ident);
+    if (n.label)
+      w(ws, n.label);
     w(T.Semicolon, Newline);
   }
 
@@ -1206,7 +1205,7 @@ class ASTPrinter : Visitor2
 
   void visit(AsmStmt n)
   {
-    w(ind, n.ident);
+    w(ind, n.opcode);
     foreach (i, o; n.operands)
     {
       if (i)
@@ -1228,7 +1227,7 @@ class ASTPrinter : Visitor2
 
   void visit(PragmaStmt n)
   {
-    w(ind, T.Pragma, T.LParen, n.ident);
+    w(ind, T.Pragma, T.LParen, n.name);
     if (n.args) {
       w(T.Comma);
       w(n.args);
@@ -1661,7 +1660,7 @@ class ASTPrinter : Visitor2
       if (!n.next.Is!(ModuleScopeExpr))
         w(T.Dot);
     }
-    w(n.ident);
+    w(n.name);
   }
 
   void visit(SpecialTokenExpr n)
@@ -1676,7 +1675,7 @@ class ASTPrinter : Visitor2
       if (!n.next.Is!(ModuleScopeExpr))
         w(T.Dot);
     }
-    w(n.ident, T.Exclaim, T.LParen);
+    w(n.name, T.Exclaim, T.LParen);
     v(n.targs);
     w(T.RParen);
   }
@@ -1953,8 +1952,8 @@ class ASTPrinter : Visitor2
   {
     w(T.Is, T.LParen);
     v(n.type);
-    if (n.ident)
-      w(ws, n.ident);
+    if (n.name)
+      w(ws, n.name);
     if (n.opTok)
     {
       w(ws, n.opTok, ws);
@@ -1963,7 +1962,7 @@ class ASTPrinter : Visitor2
       else
         v(n.specType);
     }
-    if (n.ident && n.specType && n.tparams)
+    if (n.name && n.specType && n.tparams)
     {
       w(T.Comma, ws);
       foreach (i, param; n.tparams.items())
@@ -2013,7 +2012,7 @@ class ASTPrinter : Visitor2
 
   void visit(TraitsExpr n)
   {
-    w(T.Traits, T.LParen, n.ident);
+    w(T.Traits, T.LParen, n.name);
     if (n.targs) {
       w(T.Comma);
       v(n.targs);
@@ -2137,7 +2136,7 @@ class ASTPrinter : Visitor2
       if (!n.next.Is!(ModuleScopeType))
         w(T.Dot);
     }
-    w(n.ident);
+    w(n.name);
   }
 
   void visit(TypeofType n)
@@ -2157,7 +2156,7 @@ class ASTPrinter : Visitor2
       if (!n.next.Is!(ModuleScopeType))
         w(T.Dot);
     }
-    w(n.ident, T.Exclaim, T.LParen);
+    w(n.name, T.Exclaim, T.LParen);
     v(n.targs);
     w(T.RParen);
   }

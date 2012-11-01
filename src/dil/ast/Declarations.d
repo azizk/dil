@@ -220,12 +220,12 @@ class AliasesDecl : Declaration
 
 class AliasThisDecl : Declaration
 {
-  Token* ident;
-  mixin(memberInfo("ident"));
-  this(Token* ident)
+  Token* name;
+  mixin(memberInfo("name"));
+  this(Token* name)
   {
     mixin(set_kind);
-    this.ident = ident;
+    this.name = name;
   }
   AliasSymbol symbol;
   mixin methods;
@@ -815,16 +815,16 @@ class AlignDecl : AttributeDecl
 
 class PragmaDecl : AttributeDecl
 {
-  Token* ident;
+  Token* name;
   Expression[] args;
-  mixin(memberInfo("ident", "args", "decls"));
-  this(Token* ident, Expression[] args, Declaration decls)
+  mixin(memberInfo("name", "args", "decls"));
+  this(Token* name, Expression[] args, Declaration decls)
   {
     addOptChildren(args); // Add args before calling super().
     super(decls);
     mixin(set_kind);
 
-    this.ident = ident;
+    this.name = name;
     this.args = args;
   }
 

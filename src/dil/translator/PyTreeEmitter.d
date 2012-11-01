@@ -371,7 +371,7 @@ override
   void visit(AliasThisDecl d)
   {
     begin(d);
-    write(indexOf(d.ident));
+    write(indexOf(d.name));
     end(d);
   }
 
@@ -653,7 +653,7 @@ override
   void visit(PragmaDecl d)
   {
     begin(d);
-    write(indexOf(d.ident));
+    write(indexOf(d.name));
     write(",");
     writeNodes(d.args);
     write(",");
@@ -826,14 +826,14 @@ override
   void visit(ContinueStmt s)
   {
     begin(s);
-    s.ident ? write(indexOf(s.ident)) : write("n");
+    s.label ? write(indexOf(s.label)) : write("n");
     end(s);
   }
 
   void visit(BreakStmt s)
   {
     begin(s);
-    s.ident ? write(indexOf(s.ident)) : write("n");
+    s.label ? write(indexOf(s.label)) : write("n");
     end(s);
   }
 
@@ -931,7 +931,7 @@ override
   void visit(AsmStmt s)
   {
     begin(s);
-    s.ident ? write(indexOf(s.begin)) : write("n");
+    s.opcode ? write(indexOf(s.opcode)) : write("n");
     write(",");
     writeNodes(s.operands);
     end(s);
@@ -950,7 +950,7 @@ override
   void visit(PragmaStmt s)
   {
     begin(s);
-    s.ident ? write(indexOf(s.ident)) : write("n");
+    s.name ? write(indexOf(s.name)) : write("n");
     write(",");
     writeNodes(s.args);
     write(",");
@@ -1325,14 +1325,14 @@ override
   void visit(IdentifierExpr e)
   {
     begin(e);
-    write(indexOf(e.ident));
+    write(indexOf(e.name));
     end(e);
   }
 
   void visit(TmplInstanceExpr e)
   {
     begin(e);
-    write(indexOf(e.ident));
+    write(indexOf(e.name));
     write(",");
     e.targs ? visitN(e.targs) : write("n");
     end(e);
@@ -1506,7 +1506,7 @@ override
   void visit(TraitsExpr e) // D2.0
   {
     begin(e);
-    write(indexOf(e.ident)~",");
+    write(indexOf(e.name)~",");
     visitN(e.targs);
     end(e);
   }

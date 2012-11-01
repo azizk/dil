@@ -662,19 +662,19 @@ class SliceExpr : UnaryExpr
 class IdentifierExpr : Expression
 {
   Expression next;
-  Token* ident;
-  mixin(memberInfo("ident", "next?"));
-  this(Token* ident, Expression next = null)
+  Token* name;
+  mixin(memberInfo("name", "next?"));
+  this(Token* name, Expression next = null)
   {
     mixin(set_kind);
     addOptChild(next);
     this.next = next;
-    this.ident = ident;
+    this.name = name;
   }
 
   @property Identifier* id()
   {
-    return ident.ident;
+    return name.ident;
   }
 
   mixin methods;
@@ -695,22 +695,22 @@ class ModuleScopeExpr : Expression
 class TmplInstanceExpr : Expression
 {
   Expression next;
-  Token* ident;
+  Token* name;
   TemplateArguments targs;
-  mixin(memberInfo("ident", "targs", "next?"));
-  this(Token* ident, TemplateArguments targs, Expression next = null)
+  mixin(memberInfo("name", "targs", "next?"));
+  this(Token* name, TemplateArguments targs, Expression next = null)
   {
     mixin(set_kind);
     addChild(targs);
     addOptChild(next);
     this.next = next;
-    this.ident = ident;
+    this.name = name;
     this.targs = targs;
   }
 
   @property Identifier* id()
   {
-    return ident.ident;
+    return name.ident;
   }
 
   mixin methods;
@@ -1225,14 +1225,14 @@ class TypeidExpr : Expression
 class IsExpr : Expression
 {
   TypeNode type;
-  Token* ident;
+  Token* name; /// Optional variable name.
   Token* opTok, specTok;
   TypeNode specType;
   TemplateParameters tparams; // D 2.0
-  mixin(memberInfo("type", "ident?", "opTok", "specTok?", "specType?",
+  mixin(memberInfo("type", "name?", "opTok", "specTok?", "specType?",
     "tparams?"));
 
-  this(TypeNode type, Token* ident, Token* opTok, Token* specTok,
+  this(TypeNode type, Token* name, Token* opTok, Token* specTok,
        TypeNode specType, typeof(tparams) tparams)
   {
     mixin(set_kind);
@@ -1241,7 +1241,7 @@ class IsExpr : Expression
   version(D2)
     addOptChild(tparams);
     this.type = type;
-    this.ident = ident;
+    this.name = name;
     this.opTok = opTok;
     this.specTok = specTok;
     this.specType = specType;
@@ -1328,14 +1328,14 @@ class ParenExpr : Expression
 // {
 class TraitsExpr : Expression
 {
-  Token* ident;
+  Token* name;
   TemplateArguments targs;
-  mixin(memberInfo("ident", "targs"));
-  this(typeof(ident) ident, typeof(targs) targs)
+  mixin(memberInfo("name", "targs"));
+  this(typeof(name) name, typeof(targs) targs)
   {
     mixin(set_kind);
     addOptChild(targs);
-    this.ident = ident;
+    this.name = name;
     this.targs = targs;
   }
   mixin methods;

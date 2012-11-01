@@ -357,8 +357,7 @@ override
 
   D visit(AliasThisDecl d)
   {
-    insertAliasThis(d.symbol = new AliasSymbol(d.ident.ident,
-      SLoc(d.ident, d)));
+    insertAliasThis(d.symbol = new AliasSymbol(d.name.ident, SLoc(d.name, d)));
     return d;
   }
 
@@ -858,7 +857,7 @@ override
 
   D visit(PragmaDecl d)
   {
-    if (d.ident.ident is Ident.msg)
+    if (d.name.ident is Ident.msg)
     { // Write arguments to standard output.
       foreach (arg; d.args)
       {
@@ -874,7 +873,7 @@ override
     }
     else
     {
-      pragmaSemantic(scop, d.begin, d.ident.ident, d.args);
+      pragmaSemantic(scop, d.begin, d.name.ident, d.args);
       visitD(d.decls);
     }
     return d;
@@ -1666,7 +1665,7 @@ override
     if (e.isChecked)
       return e;
     debug(sema) Stdout.formatln("", e);
-    e.symbol = search(e.ident);
+    e.symbol = search(e.name);
     return e;
   }
 
@@ -1675,7 +1674,7 @@ override
     if (e.isChecked)
       return e;
     debug(sema) Stdout.formatln("", e);
-    e.symbol = search(e.ident);
+    e.symbol = search(e.name);
     return e;
   }
 
