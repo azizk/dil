@@ -151,11 +151,12 @@ class PackageSymbol : ScopeSymbol
 }
 
 /// Aggregates have function and field members.
-abstract class Aggregate : ScopeSymbol
+abstract class AggregateSymbol : ScopeSymbol
 {
   Type type;
   FunctionSymbol[] funcs;
   VariableSymbol[] fields;
+  AliasSymbol[] aliases; /// AliasThis symbols.
 
   this(SYM sid, Identifier* name, Node node)
   {
@@ -185,7 +186,7 @@ abstract class Aggregate : ScopeSymbol
 }
 
 /// A class symbol.
-class ClassSymbol : Aggregate
+class ClassSymbol : AggregateSymbol
 {
   ClassSymbol base; /// The inherited base class.
   InterfaceSymbol[] ifaces; /// The inherited interfaces.
@@ -230,7 +231,7 @@ class InterfaceSymbol : ClassSymbol
 }
 
 /// A struct symbol.
-class StructSymbol : Aggregate
+class StructSymbol : AggregateSymbol
 {
   bool isAnonymous;
   this(Identifier* name, Node structNode)
@@ -646,6 +647,7 @@ class TypedefSymbol : Symbol
 /// A template symbol.
 class TemplateSymbol : ScopeSymbol
 {
+  AliasSymbol[] aliases; /// AliasThis symbols.
   this(Identifier* name, Node node)
   {
     super(SYM.Template, name, node);

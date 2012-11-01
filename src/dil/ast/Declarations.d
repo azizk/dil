@@ -227,6 +227,7 @@ class AliasThisDecl : Declaration
     mixin(set_kind);
     this.ident = ident;
   }
+  AliasSymbol symbol;
   mixin methods;
 }
 

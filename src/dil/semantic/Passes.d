@@ -13,7 +13,8 @@ import dil.ast.DefaultVisitor,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
-import dil.lexer.IdTable;
+import dil.lexer.IdTable,
+       dil.lexer.Keywords;
 import dil.parser.Parser;
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
@@ -287,6 +288,18 @@ class FirstSemanticPass : SemanticPass
       (name, format, ...) => error(_arguments, _argptr, format, name));
   }
 
+  /// Appends the AliasSymbol to a list of the current ScopeSymbol.
+  /// Reports an error if it doesn't support "alias this".
+  void insertAliasThis(AliasSymbol s)
+  {
+    if (auto as = cast(AggregateSymbol)scop.symbol)
+      as.aliases ~= s;
+    else if (auto ts = cast(TemplateSymbol)scop.symbol)
+      ts.aliases ~= s;
+    else
+      error(s.node, "‘alias this’ works only in classes/structs");
+  }
+
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   |                                Declarations                               |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
@@ -332,7 +345,19 @@ override
     d.symbols = new AliasSymbol[d.idents.length];
     // Insert alias symbols in this declaration into the symbol table.
     foreach (i, name; d.idents)
-      insert(d.symbols[i] = new AliasSymbol(name.ident, d));
+    {
+      auto s = d.symbols[i] = new AliasSymbol(name.ident, d);
+      if (name.ident is Keyword.This)
+        insertAliasThis(s);
+      else
+        insert(s);
+    }
+    return d;
+  }
+
+  D visit(AliasThisDecl d)
+  {
+    insertAliasThis(d.symbol = new AliasSymbol(d.ident.ident, d));
     return d;
   }
 
