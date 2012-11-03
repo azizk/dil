@@ -13,7 +13,7 @@ abstract class TypeNode : Node
   TypeNode next; /// The next type in the type chain.
   TypeNode parent; /// The parent TypeNode of this symbol.
   Type type; /// The semantic type of this type node.
-  Symbol symbol;
+  Symbol symbol; /// Semantic symbol.
 
   this()
   {

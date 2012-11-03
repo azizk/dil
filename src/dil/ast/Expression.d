@@ -12,7 +12,7 @@ import common;
 abstract class Expression : Node
 {
   Type type; /// The semantic type of this expression.
-  Symbol symbol;
+  Symbol symbol; /// Semantic symbol.
 
   /// Returns true if the member 'type' is not null.
   bool hasType()

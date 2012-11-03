@@ -393,7 +393,7 @@ override
 
   void visit(EnumMemberDecl d)
   {
-    d.symbol = new EnumMember(
+    d.symbol = new EnumMemberSymbol(
       d.name.ident, protection, storageClass, linkageType, SLoc(d.name, d));
     insert(d.symbol);
   }

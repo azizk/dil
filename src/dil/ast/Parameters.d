@@ -9,6 +9,7 @@ import dil.ast.Node,
        dil.ast.NodeCopier,
        dil.ast.Meta;
 import dil.lexer.Identifier;
+import dil.semantic.Symbols;
 import dil.Enums;
 
 import common;
@@ -21,7 +22,7 @@ class Parameter : Node
   TypeNode type; /// The parameter's type.
   Token* name; /// The name of the parameter.
   Expression defValue; /// The default initialization value.
-
+  ParameterSymbol symbol; /// Semantic symbol.
   mixin(memberInfo("stcs", "stok?", "type?", "name?", "defValue?"));
 
   this(StorageClass stcs, Token* stok, TypeNode type,
@@ -92,6 +93,7 @@ class Parameter : Node
 class Parameters : Node
 {
   StorageClass postSTCs;
+  ParametersSymbol symbol; /// Semantic symbol.
 
   this()
   {

@@ -447,7 +447,7 @@ class VariableSymbol : Symbol
 }
 
 /// An enum member symbol.
-class EnumMember : VariableSymbol
+class EnumMemberSymbol : VariableSymbol
 {
   this(Identifier* name,
        Protection prot, StorageClass stcs, LinkageType linkage,

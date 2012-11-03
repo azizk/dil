@@ -221,13 +221,13 @@ class AliasesDecl : Declaration
 class AliasThisDecl : Declaration
 {
   Token* name;
+  AliasSymbol symbol; /// Semantic symbol.
   mixin(memberInfo("name"));
   this(Token* name)
   {
     mixin(set_kind);
     this.name = name;
   }
-  AliasSymbol symbol;
   mixin methods;
 }
 
@@ -235,6 +235,7 @@ class TypedefDecl : Declaration
 {
   Declaration decl;
   Declaration vardecl;
+  TypedefSymbol[] symbols; /// Semantic symbols.
   mixin(memberInfo("decl"));
   this(Declaration decl)
   {
@@ -242,7 +243,6 @@ class TypedefDecl : Declaration
     addChild(decl);
     this.decl = decl;
   }
-  TypedefSymbol[] symbols;
   mixin methods;
 }
 
@@ -251,6 +251,7 @@ class EnumDecl : Declaration
   Token* name;
   TypeNode baseType;
   EnumMemberDecl[] members;
+  EnumSymbol symbol; /// Semantic symbol.
   mixin(memberInfo("name", "baseType?", "members"));
 
   this(Token* name, TypeNode baseType, EnumMemberDecl[] members)
@@ -270,8 +271,6 @@ class EnumDecl : Declaration
     return name ? name.ident : null;
   }
 
-  EnumSymbol symbol;
-
   mixin methods;
 }
 
@@ -280,6 +279,7 @@ class EnumMemberDecl : Declaration
   TypeNode type; // D 2.0
   Token* name;
   Expression value;
+  EnumMemberSymbol symbol; /// Semantic symbol.
   mixin(memberInfo("type?", "name", "value?"));
 
   private this(Token* name, Expression value)
@@ -300,8 +300,6 @@ class EnumMemberDecl : Declaration
     this(name, value);
   }
 
-  EnumMember symbol;
-
   mixin methods;
 }
 
@@ -313,6 +311,7 @@ class TemplateDecl : Declaration
   CompoundDecl decls;
   bool isMixin; /// Is this a mixin template? (D2 feature.)
   bool isWrapper; /// Is this wrapping a func/class/struct/etc. declaration?
+  TemplateSymbol symbol; /// Semantic symbol.
   mixin(memberInfo("name", "tparams", "constraint?", "decls"));
 
   this(Token* name, TemplateParameters tparams, Expression constraint,
@@ -323,7 +322,6 @@ class TemplateDecl : Declaration
     addOptChild(constraint);
     addChild(decls);
 
-    assert(name !is null);
     this.name = name;
     this.tparams = tparams;
     this.constraint = constraint;
@@ -331,11 +329,10 @@ class TemplateDecl : Declaration
 
     auto list = decls.decls;
     if (list.length == 1)
-      switch (list[0].kind)
+      switch (list[0].kind) with (NodeKind)
       {
-      alias NodeKind NK;
-      case NK.FunctionDecl, NK.ClassDecl, NK.InterfaceDecl,
-           NK.StructDecl, NK.UnionDecl, NK.ConstructorDecl:
+      case FunctionDecl, ClassDecl, InterfaceDecl,
+           StructDecl, UnionDecl, ConstructorDecl:
         this.isWrapper = true;
       default:
       }
@@ -346,8 +343,6 @@ class TemplateDecl : Declaration
   {
     return name.ident;
   }
-
-  TemplateSymbol symbol; /// The template symbol for this declaration.
 
   mixin methods;
 }
@@ -372,6 +367,7 @@ abstract class AggregateDecl : Declaration
 class ClassDecl : AggregateDecl
 {
   BaseClassType[] bases;
+  ClassSymbol symbol; /// Semantic symbol.
   mixin(memberInfo("name", "bases", "decls?"));
   this(Token* name, BaseClassType[] bases, CompoundDecl decls)
   {
@@ -382,15 +378,13 @@ class ClassDecl : AggregateDecl
 
     this.bases = bases;
   }
-
-  ClassSymbol symbol; /// The class symbol for this declaration.
-
   mixin methods;
 }
 
 class InterfaceDecl : AggregateDecl
 {
   BaseClassType[] bases;
+  InterfaceSymbol symbol; /// Semantic symbol.
   mixin(memberInfo("name", "bases", "decls?"));
   this(Token* name, BaseClassType[] bases, CompoundDecl decls)
   {
@@ -401,17 +395,13 @@ class InterfaceDecl : AggregateDecl
 
     this.bases = bases;
   }
-
-  alias dil.semantic.Symbols.Interface Interface;
-
-  InterfaceSymbol symbol; /// The interface symbol for this declaration.
-
   mixin methods;
 }
 
 class StructDecl : AggregateDecl
 {
   uint alignSize;
+  StructSymbol symbol; /// Semantic type.
   mixin(memberInfo("name?", "decls?", "alignSize"));
   this(Token* name, CompoundDecl decls)
   {
@@ -432,13 +422,12 @@ class StructDecl : AggregateDecl
     this.alignSize = alignSize;
   }
 
-  StructSymbol symbol; /// The struct symbol for this declaration.
-
   mixin methods;
 }
 
 class UnionDecl : AggregateDecl
 {
+  UnionSymbol symbol; /// Semantic symbol.
   mixin(memberInfo("name?", "decls?"));
   this(Token* name, CompoundDecl decls)
   {
@@ -446,9 +435,6 @@ class UnionDecl : AggregateDecl
     mixin(set_kind);
     addOptChild(decls);
   }
-
-  UnionSymbol symbol; /// The union symbol for this declaration.
-
   mixin methods;
 }
 
