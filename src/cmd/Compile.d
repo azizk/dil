@@ -159,7 +159,7 @@ class CompileCommand2 : Command
 
     lzy(log(LogPass1, modul.getFQN()));
 
-    auto pass1 = new FirstSemanticPass(modul, cc);
+    auto pass1 = new FirstSemanticPass(modul);
     pass1.run();
 
     lzy({if (pass1.imports.length) log(LogDeps, modul.getFQN());}());
@@ -178,7 +178,7 @@ class CompileCommand2 : Command
 
     lzy(log(LogPass2, modul.getFQN()));
 
-    auto pass2 = new SecondSemanticPass(modul, cc);
+    auto pass2 = new SecondSemanticPass(modul);
     pass2.run();
   }
 

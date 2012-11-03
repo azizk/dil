@@ -40,47 +40,42 @@ private alias TypeNode T; /// ditto
 private alias Parameter P; /// ditto
 private alias Node N; /// ditto
 
-/// Base class of all other semantic pass classes.
-abstract class SemanticPass : DefaultVisitor
+/// A Scope class with added semantic information.
+/// (May be merged together with class Scope in the future.)
+class SemanticScope
 {
-  Scope scop; /// The current scope.
+  Scope scop; /// The current basic scope.
   Module modul; /// The module to be semantically checked.
-  CompilationContext context; /// The compilation context.
-  Interpreter interp; /// Used to interpret ASTs.
-  alias context cc;
 
-  /// Constructs a SemanticPass object.
+  /// Constructs a SemanticScope object.
   /// Params:
   ///   modul = The module to be processed.
-  ///   context = The compilation context.
-  this(Module modul, CompilationContext context)
+  this(Module modul)
   {
     this.modul = modul;
-    this.context = context;
-    this.interp = new Interpreter(modul.cc.diag);
+    this.scop = new Scope(null, modul);
   }
 
-  void run()
+  /// Returns the ScopeSymbol of this scope (class/function/etc.)
+  ScopeSymbol symbol() @property
   {
-
+    return scop.symbol;
   }
 
-  /// Enters a new scope.
-  void enterScope(ScopeSymbol s)
+  /// Returns true if this is the module scope.
+  bool isModuleScope() @property
+  {
+    return scop.symbol.isModule();
+  }
+
+  void enter(ScopeSymbol s)
   {
     scop = scop.enter(s);
   }
 
-  /// Exits the current scope.
-  void exitScope()
+  void exit()
   {
     scop = scop.exit();
-  }
-
-  /// Returns true if this is the module scope.
-  bool isModuleScope()
-  {
-    return scop.symbol.isModule();
   }
 
   /// Inserts a symbol into the current scope.
@@ -121,7 +116,7 @@ abstract class SemanticPass : DefaultVisitor
     if (sym2)
     {
       if (sym2.isOverloadSet)
-        (cast(OverloadSet)cast(void*)sym2).add(sym);
+        sym2.to!(OverloadSet).add(sym);
       else
         reportSymbolConflict(sym, sym2, name);
     }
@@ -136,18 +131,15 @@ abstract class SemanticPass : DefaultVisitor
   void reportSymbolConflict(Symbol s1, Symbol s2, Identifier* name)
   {
     auto loc = s2.loc.t.getErrorLocation(modul.filePath());
-    error(s1.loc.t, MID.DeclConflictsWithDecl, name.str, loc.repr());
+    error(modul, s1.loc.t, MID.DeclConflictsWithDecl, name.str, loc.repr());
   }
 
   /// Error messages are reported for undefined identifiers if true.
   bool reportUndefinedIds;
-
   /// Incremented when an undefined identifier was found.
   uint undefinedIdsCount;
-
   /// The symbol that must be ignored and skipped during a symbol search.
   Symbol ignoreSymbol;
-
   /// The current scope symbol to use for looking up identifiers.
   ///
   /// E.g.:
@@ -206,86 +198,64 @@ abstract class SemanticPass : DefaultVisitor
     if (!symbol)
     {
       if (reportUndefinedIds)
-        error(idTok, MID.UndefinedIdentifier, id.str);
+        error(modul, idTok, MID.UndefinedIdentifier, id.str);
       undefinedIdsCount++;
     }
 
     return symbol;
   }
-
-  /// Creates an error report.
-  void error(Token* token, cstring formatMsg, ...)
-  {
-    error(_arguments, _argptr, formatMsg, token);
-  }
-
-  /// ditto
-  void error(Node n, cstring formatMsg, ...)
-  {
-    error(_arguments, _argptr, formatMsg, n.begin);
-  }
-
-  /// ditto
-  void error(Token* token, MID mid, ...)
-  {
-    error(_arguments, _argptr, modul.cc.diag.msg(mid), token);
-  }
-
-  /// ditto
-  void error(Node n, MID mid, ...)
-  {
-    error(_arguments, _argptr, modul.cc.diag.msg(mid), n.begin);
-  }
-
-  /// ditto
-  void error(TypeInfo[] _arguments, va_list _argptr, cstring msg, Token* token)
-  {
-    auto loc = token.getErrorLocation(modul.filePath());
-    msg = modul.cc.diag.format(_arguments, _argptr, msg);
-    modul.cc.diag ~= new SemanticError(loc, msg);
-  }
 }
 
+/// Common interface for semantic passes.
+interface SemanticPass
+{
+  void run();
+  void run(SemanticScope scop, Node node);
+}
 
 /// The first pass only declares symbols and handles imports.
-class FirstSemanticPass : SemanticPass
+class FirstSemanticPass : DefaultVisitor2, SemanticPass
 {
+  Module modul; /// The module to be analyzed.
+  SemanticScope scop; /// Which scope to use for this pass.
   ImportDecl[] imports; /// Modules to be imported.
-
   // Attributes:
   LinkageType linkageType; /// Current linkage type.
   Protection protection; /// Current protection attribute.
   StorageClass storageClass; /// Current storage classes.
   uint alignSize; /// Current align size.
 
+
   /// Constructs a SemanticPass object.
   /// Params:
   ///   modul = The module to be processed.
-  ///   context = The compilation context.
-  this(Module modul, CompilationContext context)
+  this(Module modul)
   {
-    super(modul, new CompilationContext(context));
-    this.alignSize = context.structAlign;
+    this.alignSize = modul.cc.structAlign;
+    this.modul = modul;
   }
 
   /// Runs the semantic pass on the module.
   override void run()
   {
-    assert(modul.root !is null);
-    // Create module scope.
-    scop = new Scope(null, modul);
     modul.semanticPass = 1;
-    visitN(modul.root);
+    run(new SemanticScope(modul), modul.root);
+  }
+
+  override void run(SemanticScope scop, Node node)
+  {
+    this.scop = scop;
+    visitN(node);
   }
 
   /// Looks for special classes and stores them in a table.
   /// May modify d.symbol and assign a SpecialClassSymbol to it.
   void lookForSpecialClasses(ClassDecl d)
   {
-    if (!isModuleScope())
+    if (!scop.isModuleScope)
       return; // Only consider top-level classes.
-    cc.tables.classes.lookForSpecialClasses(modul, d,
-      (name, format, ...) => error(_arguments, _argptr, format, name));
+    modul.cc.tables.classes.lookForSpecialClasses(modul, d,
+      (name, format, ...) => error(modul, _arguments, _argptr, format, name));
   }
 
   /// Appends the AliasSymbol to a list of the current ScopeSymbol.
@@ -297,7 +267,38 @@ class FirstSemanticPass : SemanticPass
     else if (auto ts = cast(TemplateSymbol)scop.symbol)
       ts.aliases ~= s;
     else
-      error(s.loc.t, "‘alias this’ works only in classes/structs");
+      error(modul, s.loc.t, "‘alias this’ works only in classes/structs");
+  }
+
+  /// Forwards to SemanticScope.
+  void enterScope(ScopeSymbol s)
+  {
+    scop.enter(s);
+  }
+  /// ditto
+  void exitScope()
+  {
+    scop.exit();
+  }
+  /// ditto
+  void insert(Symbol s)
+  {
+    scop.insert(s);
+  }
+  /// ditto
+  void insert(Symbol s, Identifier* name)
+  {
+    scop.insert(s, name);
+  }
+  /// ditto
+  void insert(Symbol s, ScopeSymbol ss)
+  {
+    scop.insert(s, ss);
+  }
+  /// ditto
+  void insertOverload(Symbol s)
+  {
+    scop.insertOverload(s);
   }
 
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -308,39 +309,36 @@ override
 {
   //alias super.visit visit;
 
-  D visit(CompoundDecl d)
+  void visit(CompoundDecl d)
   {
     foreach (decl; d.decls)
       visitD(decl);
-    return d;
   }
 
-  D visit(IllegalDecl)
-  { assert(0, "semantic pass on invalid AST"); return null; }
+  void visit(IllegalDecl)
+  { assert(0, "semantic pass on invalid AST"); }
 
-  // D visit(EmptyDecl ed)
-  // { return ed; }
+  // void visit(EmptyDecl ed)
+  // {}
 
-  // D visit(ModuleDecl)
-  // { return null; }
+  // void visit(ModuleDecl)
+  // {}
 
-  D visit(ImportDecl d)
+  void visit(ImportDecl d)
   {
     imports ~= d;
-    return d;
   }
 
-  D visit(AliasDecl d)
+  void visit(AliasDecl d)
   {
     auto vd = d.vardecl.to!(VariablesDecl);
     d.symbols = new AliasSymbol[vd.names.length];
     // Insert alias symbols in this declaration into the symbol table.
     foreach (i, name; vd.names)
       insert(d.symbols[i] = new AliasSymbol(name.ident, SLoc(name, d)));
-    return d;
   }
 
-  D visit(AliasesDecl d)
+  void visit(AliasesDecl d)
   {
     d.symbols = new AliasSymbol[d.idents.length];
     // Insert alias symbols in this declaration into the symbol table.
@@ -352,36 +350,33 @@ override
       else
         insert(s);
     }
-    return d;
   }
 
-  D visit(AliasThisDecl d)
+  void visit(AliasThisDecl d)
   {
     insertAliasThis(d.symbol = new AliasSymbol(d.name.ident, SLoc(d.name, d)));
-    return d;
   }
 
-  D visit(TypedefDecl d)
+  void visit(TypedefDecl d)
   {
     auto vd = d.vardecl.to!(VariablesDecl);
     d.symbols = new TypedefSymbol[vd.names.length];
     // Insert typedef symbols in this declaration into the symbol table.
     foreach (i, name; vd.names)
       insert(d.symbols[i] = new TypedefSymbol(name.ident, SLoc(name, d)));
-    return d;
   }
 
-  D visit(EnumDecl d)
+  void visit(EnumDecl d)
   {
     if (d.symbol)
-      return d;
+      return;
 
     // Create the symbol.
     d.symbol = new EnumSymbol(d.nameId, SLoc(d.name ? d.name : d.begin, d));
 
     bool isAnonymous = d.symbol.isAnonymous;
     if (isAnonymous)
-      d.symbol.name = context.tables.idents.genAnonEnumID();
+      d.symbol.name = modul.cc.tables.idents.genAnonEnumID();
 
     insert(d.symbol);
 
@@ -399,21 +394,19 @@ override
       member.symbol.type = enumSymbol.type; // Assign TypeEnum.
     }
     exitScope();
-    return d;
   }
 
-  D visit(EnumMemberDecl d)
+  void visit(EnumMemberDecl d)
   {
     d.symbol = new EnumMember(
       d.name.ident, protection, storageClass, linkageType, SLoc(d.name, d));
     insert(d.symbol);
-    return d;
   }
 
-  D visit(ClassDecl d)
+  void visit(ClassDecl d)
   {
     if (d.symbol)
-      return d;
+      return;
     // Create the symbol.
     d.symbol = new ClassSymbol(d.nameId, SLoc(d.name, d));
     lookForSpecialClasses(d);
@@ -423,13 +416,12 @@ override
     // Continue semantic analysis.
     d.decls && visitD(d.decls);
     exitScope();
-    return d;
   }
 
-  D visit(InterfaceDecl d)
+  void visit(InterfaceDecl d)
   {
     if (d.symbol)
-      return d;
+      return;
     // Create the symbol.
     d.symbol = new InterfaceSymbol(d.nameId, SLoc(d.name, d));
     // Insert into current scope.
@@ -438,18 +430,17 @@ override
       // Continue semantic analysis.
       d.decls && visitD(d.decls);
     exitScope();
-    return d;
   }
 
-  D visit(StructDecl d)
+  void visit(StructDecl d)
   {
     if (d.symbol)
-      return d;
+      return;
     // Create the symbol.
     d.symbol = new StructSymbol(d.nameId, SLoc(d.name ? d.name : d.begin, d));
 
     if (d.symbol.isAnonymous)
-      d.symbol.name = context.tables.idents.genAnonStructID();
+      d.symbol.name = modul.cc.tables.idents.genAnonStructID();
     // Insert into current scope.
     insert(d.symbol);
 
@@ -462,18 +453,17 @@ override
       // Insert members into parent scope as well.
       foreach (member; d.symbol.members)
         insert(member);
-    return d;
   }
 
-  D visit(UnionDecl d)
+  void visit(UnionDecl d)
   {
     if (d.symbol)
-      return d;
+      return;
     // Create the symbol.
     d.symbol = new UnionSymbol(d.nameId, SLoc(d.name ? d.name : d.begin, d));
 
     if (d.symbol.isAnonymous)
-      d.symbol.name = context.tables.idents.genAnonUnionID();
+      d.symbol.name = modul.cc.tables.idents.genAnonUnionID();
 
     // Insert into current scope.
     insert(d.symbol);
@@ -487,54 +477,48 @@ override
       // Insert members into parent scope as well.
       foreach (member; d.symbol.members)
         insert(member);
-    return d;
   }
 
-  D visit(ConstructorDecl d)
+  void visit(ConstructorDecl d)
   {
     auto func = new FunctionSymbol(Ident.Ctor, SLoc(d.begin, d));
     //func.type = null;
     insertOverload(func);
-    return d;
   }
 
-  D visit(StaticCtorDecl d)
+  void visit(StaticCtorDecl d)
   {
     auto func = new FunctionSymbol(Ident.Ctor, SLoc(d.begin, d));
     //func.type = cc.tables.types.Void_0Args_DFunc;
     insertOverload(func);
-    return d;
   }
 
-  D visit(DestructorDecl d)
+  void visit(DestructorDecl d)
   {
     auto func = new FunctionSymbol(Ident.Dtor, SLoc(d.begin, d));
     //func.type = cc.tables.types.Void_0Args_DFunc;
     insertOverload(func);
-    return d;
   }
 
-  D visit(StaticDtorDecl d)
+  void visit(StaticDtorDecl d)
   {
     auto func = new FunctionSymbol(Ident.Dtor, SLoc(d.begin, d));
     //func.type = cc.tables.types.Void_0Args_DFunc;
     insertOverload(func);
-    return d;
   }
 
-  D visit(FunctionDecl d)
+  void visit(FunctionDecl d)
   {
     auto func = new FunctionSymbol(d.name.ident, SLoc(d.name, d));
     insertOverload(func);
-    return d;
   }
 
-  D visit(VariablesDecl vd)
+  void visit(VariablesDecl vd)
   {
     // Error if we are in an interface.
     if (scop.symbol.isInterface &&
         !(vd.isStatic || vd.isConst || vd.isManifest))
-      return error(vd, MID.InterfaceCantHaveVariables), vd;
+      return error(modul, vd, MID.InterfaceCantHaveVariables);
 
     // Insert variable symbols in this declaration into the symbol table.
     vd.variables = new VariableSymbol[vd.names.length];
@@ -546,174 +530,151 @@ override
       vd.variables[i] = variable;
       insert(variable);
     }
-    return vd;
   }
 
-  D visit(InvariantDecl d)
+  void visit(InvariantDecl d)
   {
     auto func = new FunctionSymbol(Ident.Invariant, SLoc(d.begin, d));
     insert(func);
-    return d;
   }
 
-  D visit(UnittestDecl d)
+  void visit(UnittestDecl d)
   {
     auto func = new FunctionSymbol(Ident.Unittest, SLoc(d.begin, d));
     insertOverload(func);
-    return d;
   }
 
-  D visit(DebugDecl d)
+  void visit(DebugDecl d)
   {
     if (d.isSpecification)
     { // debug = Id | Int
-      if (!isModuleScope())
-        error(d, MID.DebugSpecModuleLevel, d.spec.text);
+      if (!scop.isModuleScope)
+        error(modul, d, MID.DebugSpecModuleLevel, d.spec.text);
       else if (d.spec.kind == TOK.Identifier)
-        context.addDebugId(d.spec.ident.str);
+        modul.cc.addDebugId(d.spec.ident.str);
       else
-        context.debugLevel = d.spec.uint_;
+        modul.cc.debugLevel = d.spec.uint_;
     }
     else
     { // debug ( Condition )
-      if (debugBranchChoice(d.cond, context))
+      if (debugBranchChoice(d.cond, modul.cc))
         d.compiledDecls = d.decls;
       else
         d.compiledDecls = d.elseDecls;
       d.compiledDecls && visitD(d.compiledDecls);
     }
-    return d;
   }
 
-  D visit(VersionDecl d)
+  void visit(VersionDecl d)
   {
     if (d.isSpecification)
     { // version = Id | Int
-      if (!isModuleScope())
-        error(d, MID.VersionSpecModuleLevel, d.spec.text);
+      if (!scop.isModuleScope)
+        error(modul, d, MID.VersionSpecModuleLevel, d.spec.text);
       else if (d.spec.kind == TOK.Identifier)
-        context.addVersionId(d.spec.ident.str);
+        modul.cc.addVersionId(d.spec.ident.str);
       else
-        context.versionLevel = d.spec.uint_;
+        modul.cc.versionLevel = d.spec.uint_;
     }
     else
     { // version ( Condition )
-      if (versionBranchChoice(d.cond, context))
+      if (versionBranchChoice(d.cond, modul.cc))
         d.compiledDecls = d.decls;
       else
         d.compiledDecls = d.elseDecls;
       d.compiledDecls && visitD(d.compiledDecls);
     }
-    return d;
   }
 
-  D visit(TemplateDecl d)
+  void visit(TemplateDecl d)
   {
     if (d.symbol)
-      return d;
+      return;
     // Create the symbol.
     d.symbol = new TemplateSymbol(d.nameId, SLoc(d.name, d));
     // Insert into current scope.
     insertOverload(d.symbol);
-    return d;
   }
 
-  D visit(NewDecl d)
+  void visit(NewDecl d)
   {
     auto func = new FunctionSymbol(Ident.New, SLoc(d.begin, d));
     insert(func);
-    return d;
   }
 
-  D visit(DeleteDecl d)
+  void visit(DeleteDecl d)
   {
     auto func = new FunctionSymbol(Ident.Delete, SLoc(d.begin, d));
     insert(func);
-    return d;
   }
 
   // Attributes:
 
-  D visit(ProtectionDecl d)
+  void visit(ProtectionDecl d)
   {
     auto saved = protection; // Save.
     protection = d.prot; // Set.
     visitD(d.decls);
     protection = saved; // Restore.
-    return d;
   }
 
-  D visit(StorageClassDecl d)
+  void visit(StorageClassDecl d)
   {
     auto saved = storageClass; // Save.
     storageClass = d.stc; // Set.
     visitD(d.decls);
     storageClass = saved; // Restore.
-    return d;
   }
 
-  D visit(LinkageDecl d)
+  void visit(LinkageDecl d)
   {
     auto saved = linkageType; // Save.
     linkageType = d.linkageType; // Set.
     visitD(d.decls);
     linkageType = saved; // Restore.
-    return d;
   }
 
-  D visit(AlignDecl d)
+  void visit(AlignDecl d)
   {
     auto saved = alignSize; // Save.
     alignSize = d.size; // Set.
     visitD(d.decls);
     alignSize = saved; // Restore.
-    return d;
-  }
-
-  D visit(StaticAssertDecl d)
-  {
-    return d;
-  }
-
-  D visit(StaticIfDecl d)
-  {
-    return d;
-  }
-
-  D visit(MixinDecl d)
-  {
-    return d;
-  }
-
-  D visit(PragmaDecl d)
-  {
-    visitD(d.decls);
-    return d;
   }
 } // override
 }
 
 
 /// The second pass resolves variable types, base classes,
-/// static ifs/asserts etc.
-class SecondSemanticPass : SemanticPass
+/// evaluates static ifs/asserts etc.
+class SecondSemanticPass : DefaultVisitor, SemanticPass
 {
+  Module modul;
+  SemanticScope scop;
   Interpreter ip; /// Used to evaluate expressions.
 
-  this(Module modul, CompilationContext cc)
+  this(Module modul)
   {
-    super(modul, cc);
+    this.modul = modul;
     this.ip = new Interpreter(modul.cc.diag);
   }
 
   /// Runs the semantic pass on the module.
   override void run()
   {
-    assert(modul.root !is null);
-    // Create module scope.
-    scop = new Scope(null, modul);
     modul.semanticPass = 2;
-    visitN(modul.root);
+    run(new SemanticScope(modul), modul.root);
+  }
+
+  override void run(SemanticScope scop, Node node)
+  {
+    this.scop = scop;
+    visitN(node);
+  }
+
+  Symbol search(Token* idTok)
+  {
+    return scop.search(idTok);
   }
 
 override
@@ -837,7 +798,7 @@ override
           if (se) // TODO: allow non-string expressions?
             errorMsg = se.getString();
         }
-        error(d, errorMsg);
+        error(modul, d, errorMsg);
       }
     }
     return d;
@@ -873,7 +834,7 @@ override
     }
     else
     {
-      pragmaSemantic(scop, d.begin, d.name.ident, d.args);
+      pragmaSemantic(scop.scop, d.begin, d.name.ident, d.args);
       visitD(d.decls);
     }
     return d;
@@ -1139,7 +1100,7 @@ override
   {
     assert(e.type !is null);
     if (e.type.isBaseBool())
-      error(e, "the operation is undefined for type bool");
+      error(modul, e, "the operation is undefined for type bool");
   }
 
   /// Reports an error if e has no boolean result.
@@ -1149,10 +1110,10 @@ override
     switch (e.kind)
     {
     case NodeKind.DeleteExpr:
-      error(e, "the delete operator has no boolean result");
+      error(modul, e, "the delete operator has no boolean result");
       break;
     case NodeKind.AssignExpr:
-      error(e, "the assignment operator '=' has no boolean result");
+      error(modul, e, "the assignment operator '=' has no boolean result");
       break;
     case NodeKind.CondExpr:
       auto cond = e.to!(CondExpr);
@@ -1161,7 +1122,7 @@ override
       break;
     default:
       if (!e.type.isBaseScalar()) // Only scalar types can be bool.
-        error(e, "expression has no boolean result");
+        error(modul, e, "expression has no boolean result");
     }
   }
 
@@ -1296,8 +1257,8 @@ override
     if (e.lhs.type.isBaseComplex() || e.rhs.type.isBaseComplex())
     {
       auto whichOp = e.lhs.type.isBaseComplex() ? e.lhs.begin : e.rhs.begin;
-      error(whichOp, "the operator '{}' is undefined for complex numbers",
-            e.optok.text);
+      error(modul, whichOp,
+        "the operator '{}' is undefined for complex numbers", e.optok.text);
     }
     e.type = Types.Bool;
     return e;
@@ -1310,8 +1271,10 @@ override
       return o;
     if (!e.rhs.type.baseType().isAArray())
     {
-      error(e.rhs, "right operand of 'in' operator must be an associative array");
-      e.type = e.rhs.type; // Don't use Types.Error. Cascading error msgs are irritating.
+      error(modul, e.rhs,
+        "right operand of 'in' operator must be an associative array");
+      // Don't use Types.Error. Cascading error msgs are irritating.
+      e.type = e.rhs.type;
     }
     else
       // Result type is pointer to element type of AA.
@@ -1371,8 +1334,8 @@ override
     }
     else
     {
-      error(e.optok, "concatenation operator '~' is undefined for: {} ~ {}",
-            e.lhs, e.rhs);
+      error(modul, e.optok,
+        "concatenation operator '~' is undefined for: {} ~ {}", e.lhs, e.rhs);
       e.type = e.lhs.type; // Use Types.Error if e.lhs.type is not a good idea.
     }
     return e;
@@ -1562,7 +1525,7 @@ override
     e.type = e.una.type.next;
     if (!e.una.type.isPointer)
     {
-      error(e.una,
+      error(modul, e.una,
         "dereference operator '*x' not defined for expression of type '{}'",
         e.una.type.toString());
       e.type = Types.Error;
@@ -1605,7 +1568,7 @@ override
     e.type = e.una.type;
     if (e.type.isBaseFloating() || e.type.isBaseBool())
     {
-      error(e, "the operator '~x' is undefined for the type '{}'",
+      error(modul, e, "the operator '~x' is undefined for the type '{}'",
             e.type.toString());
       e.type = Types.Error;
     }
@@ -1718,7 +1681,7 @@ override
   {
     if (e.isChecked)
       return e;
-    e.type = cc.tables.types.Size_t;
+    e.type = modul.cc.tables.types.Size_t;
     // if (!inArraySubscript)
     //   error("$ can only be in an array subscript.");
     return e;
@@ -1910,14 +1873,13 @@ override
 
   T visit(ModuleScopeType t)
   {
-    idScope = modul;
     return t;
   }
 
   T visit(IdentifierType t)
   {
-    auto idToken = t.begin;
-    auto symbol = search(idToken);
+    //auto idToken = t.begin;
+    //auto symbol = search(idToken);
     // TODO: save symbol or its type in t.
     return t;
   }
@@ -2029,4 +1991,37 @@ override
     return p;
   }
 } // override
+}
+
+/// Creates an error report.
+void error(Module m, Token* token, cstring formatMsg, ...)
+{
+  error(m, _arguments, _argptr, formatMsg, token);
+}
+
+/// ditto
+void error(Module m, Node n, cstring formatMsg, ...)
+{
+  error(m, _arguments, _argptr, formatMsg, n.begin);
+}
+
+/// ditto
+void error(Module m, Token* token, MID mid, ...)
+{
+  error(m, _arguments, _argptr, m.cc.diag.msg(mid), token);
+}
+
+/// ditto
+void error(Module m, Node n, MID mid, ...)
+{
+  error(m, _arguments, _argptr, m.cc.diag.msg(mid), n.begin);
+}
+
+/// ditto
+void error(Module m, TypeInfo[] _arguments, va_list _argptr,
+  cstring msg, Token* token)
+{
+  auto loc = token.getErrorLocation(m.filePath());
+  msg = m.cc.diag.format(_arguments, _argptr, msg);
+  m.cc.diag ~= new SemanticError(loc, msg);
 }
