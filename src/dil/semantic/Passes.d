@@ -370,16 +370,13 @@ override
   {
     if (d.symbol)
       return;
-
     // Create the symbol.
     d.symbol = new EnumSymbol(d.nameId, SLoc(d.name ? d.name : d.begin, d));
-
     bool isAnonymous = d.symbol.isAnonymous;
     if (isAnonymous)
       d.symbol.name = modul.cc.tables.idents.genAnonEnumID();
-
     insert(d.symbol);
-
+    // Visit members.
     auto parentScopeSymbol = scop.symbol;
     auto enumSymbol = d.symbol;
     enterScope(d.symbol);
@@ -387,10 +384,8 @@ override
     foreach (member; d.members)
     {
       visitD(member);
-
       if (isAnonymous) // Also insert into parent scope if enum is anonymous.
         insert(member.symbol, parentScopeSymbol);
-
       member.symbol.type = enumSymbol.type; // Assign TypeEnum.
     }
     exitScope();
@@ -434,92 +429,101 @@ override
 
   void visit(StructDecl d)
   {
-    if (d.symbol)
+    auto s = d.symbol;
+    if (s)
       return;
     // Create the symbol.
-    d.symbol = new StructSymbol(d.nameId, SLoc(d.name ? d.name : d.begin, d));
-
-    if (d.symbol.isAnonymous)
-      d.symbol.name = modul.cc.tables.idents.genAnonStructID();
+    auto loc = SLoc(d.name ? d.name : d.begin, d);
+    s = d.symbol = new StructSymbol(d.nameId, loc);
+    if (s.isAnonymous)
+      s.name = modul.cc.tables.idents.genAnonStructID();
     // Insert into current scope.
-    insert(d.symbol);
-
-    enterScope(d.symbol);
+    insert(s);
+    enterScope(s);
       // Continue semantic analysis.
       d.decls && visitD(d.decls);
     exitScope();
-
-    if (d.symbol.isAnonymous)
+    if (s.isAnonymous)
       // Insert members into parent scope as well.
-      foreach (member; d.symbol.members)
+      foreach (member; s.members)
         insert(member);
   }
 
   void visit(UnionDecl d)
   {
-    if (d.symbol)
+    auto s = d.symbol;
+    if (s)
       return;
     // Create the symbol.
-    d.symbol = new UnionSymbol(d.nameId, SLoc(d.name ? d.name : d.begin, d));
-
-    if (d.symbol.isAnonymous)
-      d.symbol.name = modul.cc.tables.idents.genAnonUnionID();
-
+    auto loc = SLoc(d.name ? d.name : d.begin, d);
+    s = d.symbol = new UnionSymbol(d.nameId, loc);
+    if (s.isAnonymous)
+      s.name = modul.cc.tables.idents.genAnonUnionID();
     // Insert into current scope.
-    insert(d.symbol);
-
-    enterScope(d.symbol);
+    insert(s);
+    enterScope(s);
       // Continue semantic analysis.
       d.decls && visitD(d.decls);
     exitScope();
-
-    if (d.symbol.isAnonymous)
+    if (s.isAnonymous)
       // Insert members into parent scope as well.
-      foreach (member; d.symbol.members)
+      foreach (member; s.members)
         insert(member);
   }
 
   void visit(ConstructorDecl d)
   {
     auto func = new FunctionSymbol(Ident.Ctor, SLoc(d.begin, d));
-    //func.type = null;
     insertOverload(func);
+    enterScope(func);
+    visitN(d.funcBody);
+    exitScope();
   }
 
   void visit(StaticCtorDecl d)
   {
     auto func = new FunctionSymbol(Ident.Ctor, SLoc(d.begin, d));
-    //func.type = cc.tables.types.Void_0Args_DFunc;
+    func.type = Types.Void_0Args_DFunc;
     insertOverload(func);
+    enterScope(func);
+    visitN(d.funcBody);
+    exitScope();
   }
 
   void visit(DestructorDecl d)
   {
     auto func = new FunctionSymbol(Ident.Dtor, SLoc(d.begin, d));
-    //func.type = cc.tables.types.Void_0Args_DFunc;
+    func.type = Types.Void_0Args_DFunc;
     insertOverload(func);
+    enterScope(func);
+    visitN(d.funcBody);
+    exitScope();
   }
 
   void visit(StaticDtorDecl d)
   {
     auto func = new FunctionSymbol(Ident.Dtor, SLoc(d.begin, d));
-    //func.type = cc.tables.types.Void_0Args_DFunc;
+    func.type = Types.Void_0Args_DFunc;
     insertOverload(func);
+    enterScope(func);
+    visitN(d.funcBody);
+    exitScope();
   }
 
   void visit(FunctionDecl d)
   {
     auto func = new FunctionSymbol(d.name.ident, SLoc(d.name, d));
     insertOverload(func);
+    enterScope(func);
+    visitN(d.funcBody);
+    exitScope();
   }
 
   void visit(VariablesDecl vd)
-  {
-    // Error if we are in an interface.
+  { // Error if we are in an interface.
     if (scop.symbol.isInterface &&
         !(vd.isStatic || vd.isConst || vd.isManifest))
       return error(modul, vd, MID.InterfaceCantHaveVariables);
-
     // Insert variable symbols in this declaration into the symbol table.
     vd.variables = new VariableSymbol[vd.names.length];
     foreach (i, name; vd.names)
@@ -536,12 +540,22 @@ override
   {
     auto func = new FunctionSymbol(Ident.Invariant, SLoc(d.begin, d));
     insert(func);
+    enterScope(func);
+    visitN(d.funcBody);
+    exitScope();
   }
 
   void visit(UnittestDecl d)
   {
+    if (!modul.cc.unittestBuild)
+      return;
+    // TODO: generate anonymous unittest id?
     auto func = new FunctionSymbol(Ident.Unittest, SLoc(d.begin, d));
+    func.type = Types.Void_0Args_DFunc;
     insertOverload(func);
+    enterScope(func);
+    visitN(d.funcBody);
+    exitScope();
   }
 
   void visit(DebugDecl d)
@@ -594,18 +608,30 @@ override
     d.symbol = new TemplateSymbol(d.nameId, SLoc(d.name, d));
     // Insert into current scope.
     insertOverload(d.symbol);
+    enterScope(d.symbol);
+    // Declare template parameters.
+    visitN(d.tparams);
+    // Continue with the declarations inside.
+    d.decls && visitD(d.decls);
+    exitScope();
   }
 
   void visit(NewDecl d)
   {
     auto func = new FunctionSymbol(Ident.New, SLoc(d.begin, d));
     insert(func);
+    enterScope(func);
+    visitN(d.funcBody);
+    exitScope();
   }
 
   void visit(DeleteDecl d)
   {
     auto func = new FunctionSymbol(Ident.Delete, SLoc(d.begin, d));
     insert(func);
+    enterScope(func);
+    visitN(d.funcBody);
+    exitScope();
   }
 
   // Attributes:
