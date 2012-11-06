@@ -25,7 +25,7 @@ static this()
 /// Fast, mutable, resizable array implementation.
 struct Array
 {
-  alias void E;
+  alias ubyte E; /// Alias to ubyte. Dereferencing void* gives no value.
   E* ptr; /// Points to the start of the buffer.
   E* cur; /// Points to the end of the contents.
   E* end; /// Points to the end of the reserved space.
@@ -33,11 +33,19 @@ struct Array
   /// Constructs an Array, optionally reserving space.
   this(size_t nbytes = 0)
   {
-    resizeto(nbytes);
+    growto(nbytes);
+  }
+
+  invariant()
+  {
+    if (!ptr)
+      assert(cur is null && end is null, "!(ptr == cur == end == 0)");
+    else
+      assert(ptr <= cur && cur <= end, "!(ptr <= cur <= end)");
   }
 
   /// Returns the size of the Array in bytes.
-  size_t len() @property
+  size_t len() @property const
   {
     return cur - ptr;
   }
@@ -47,43 +55,75 @@ struct Array
   {
     cur = ptr + n;
     if (cur >= end)
-      resizeto(n);
+      growto(n);
   }
 
   /// Returns the remaining space in bytes before a reallocation is needed.
-  size_t rem() @property
+  size_t rem() @property const
   {
     return end - cur;
   }
 
-  /// Allocates space for the Array using malloc/realloc.
-  /// Throws: OutOfMemoryError.
-  void resizeto(size_t nbytes)
+  /// Return the total capacity of the Array.
+  size_t cap() @property const
   {
-    if (nbytes == 0)
+    return end - ptr;
+  }
+
+  /// Allocates exactly n bytes.
+  /// Destroys if n is zero.
+  /// Throws: OutOfMemoryError.
+  void resizex(size_t n)
+  {
+    if (n == 0)
       return destroy();
-
-    size_t newsize() // At least PAGESIZE or nbytes * 1.5
-    { return nbytes <= PAGESIZE ? PAGESIZE : (nbytes << 1) - (nbytes >> 1); }
-
     auto new_ptr = ptr;
-    new_ptr = new_ptr ? cast(E*)realloc(new_ptr, newsize()) :
-                        cast(E*)malloc(nbytes);
+    new_ptr = new_ptr ? cast(E*)realloc(new_ptr, n) : cast(E*)malloc(n);
     if (!new_ptr) {
-      free(ptr);
+      destroy();
       throw new OutOfMemoryError();
     }
     cur = new_ptr + (cur - ptr);
     ptr = new_ptr;
-    end = new_ptr + nbytes;
+    end = new_ptr + n;
     if (cur > end) /// Was the buffer shrunk?
       cur = end;
   }
 
-  /// Enlarges or shrinks the Array by n bytes.
-  void resizeby(ssize_t n)
+  /// Allocates memory the size of max(PAGESIZE, len * 1.5, n, cap).
+  void growto(size_t n)
   {
-    resizeto(len + n);
+    auto len = this.len;
+    len = (len << 1) - (len >> 1); // len *= 0.5
+    if (len > n)
+      n = len;
+    if (n > cap)
+      resizex(n <= PAGESIZE ? PAGESIZE : n);
+  }
+
+  /// Grows the Array by n bytes.
+  void growby(size_t n)
+  {
+    growto(len + n);
+  }
+
+  /// Shrinks the Array to n bytes.
+  void shrinkto(size_t n)
+  {
+    resizex(n <= PAGESIZE ? PAGESIZE : n);
+  }
+
+  /// Shrinks the Array by n bytes
+  void shrinkby(size_t n)
+  {
+    shrinkto(n < cap ? cap - n : 0);
+  }
+
+  /// Compacts the capacity to the actual length of the Array.
+  /// Destroys if the length is zero.
+  void compact()
+  {
+    resizex(len);
   }
 
   /// Frees the allocated memory.
@@ -101,7 +141,7 @@ struct Array
     {
       auto n = x.length * Elem.sizeof;
       if (cur + n >= end)
-        resizeby(n);
+        growby(n);
       memcpy(cur, x.ptr, n);
       cur += n;
     }
@@ -109,7 +149,7 @@ struct Array
     {
       enum n = X.sizeof;
       if (cur + n >= end)
-        resizeby(n);
+        growby(n);
       static if (n <= size_t.sizeof)
       {
         char[] unroll(char[] s, size_t times)
