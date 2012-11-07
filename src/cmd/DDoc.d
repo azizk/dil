@@ -163,10 +163,8 @@ class DDocCommand : Command
     filePath ~= outFileExtension;
     lzy(log("hl > {}", filePath.toString()));
     auto file = new File(filePath.toString(), File.WriteCreate);
-    auto print = hl.print; // Save.
-    hl.print = new FormatOut(Format, file); // New print object.
     hl.highlightSyntax(mod, !writeXML, true);
-    hl.print = print; // Restore.
+    file.write(hl.getText());
     file.close();
   }
 

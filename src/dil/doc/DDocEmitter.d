@@ -22,13 +22,14 @@ import dil.Highlighter,
        dil.Diagnostics,
        dil.SourceText,
        dil.Enums,
-       dil.String;
+       dil.String,
+       dil.Array;
 import common;
 
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
 abstract class DDocEmitter : DefaultVisitor2
 {
-  char[] text; /// The buffer that is written to.
+  Array text; /// The buffer that is written to.
   bool includeUndocumented; /// Include undocumented symbols?
   bool includePrivate; /// Include symbols with private protection?
   MacroTable mtable; /// The macro table.
@@ -74,7 +75,7 @@ abstract class DDocEmitter : DefaultVisitor2
         }
         else
           write(s.wholeText);
-      return text;
+      return text.get!(char[]);
     }
 
     // Handle as a normal D module with declarations:
@@ -96,7 +97,7 @@ abstract class DDocEmitter : DefaultVisitor2
       }
     // Start traversing the tree and emitting macro text.
     MEMBERS("MODULE", "", modul.root);
-    return text;
+    return text.get!(char[]);
   }
 
   /// Returns the location of t.
@@ -365,12 +366,10 @@ abstract class DDocEmitter : DefaultVisitor2
           auto ps = new ParamsSection(s.name, s.text);
           write("\n\1DDOC_PARAMS ");
           foreach (i, paramName; ps.paramNames)
-            write("\n\1DDOC_PARAM_ROW "
-                    "\1DDOC_PARAM_ID \1DDOC_PARAM ", paramName, "\2\2",
-                    "\1DDOC_PARAM_DESC ",
-                      scanCommentText(ps.paramDescs[i]),
-                    "\2"
-                  "\2");
+            write("\n\1DDOC_PARAM_ROW \1DDOC_PARAM_ID \1DDOC_PARAM ",
+              paramName, "\2\2\1DDOC_PARAM_DESC "),
+            writeCommentText(ps.paramDescs[i]),
+            write("\2\2");
           write("\2");
           continue;
         }
@@ -383,7 +382,9 @@ abstract class DDocEmitter : DefaultVisitor2
         else
           write("\n\1DDOC_SECTION "
             "\1DDOC_SECTION_H ", s.name.replace('_', ' '), ":\2");
-        write("\1DIL_CMT ", scanCommentText(s.text), "\2\2");
+        write("\1DIL_CMT ");
+        writeCommentText(s.text);
+        write("\2\2");
       }
     write("\2");
   }
@@ -395,16 +396,15 @@ abstract class DDocEmitter : DefaultVisitor2
   /// $(LI inserts $&#40;DDOC_BLANKLINE&#41; in place of '\n\n')
   /// $(LI highlights the tokens in code sections)
   /// )
-  cstring scanCommentText(cstring text)
-  {
-    auto p = text.ptr;
+  void writeCommentText(cstring comment)
+  { // Init pointers for parsing.
+    auto p = comment.ptr;
     auto lastLineEnd = p; // The position of the last \n seen.
-    auto end = p + text.length;
-    char[] result = new char[text.length]; // Reserve space.
-    result.length = 0;
-    uint level = 0; // Nesting level of macro invocations and
-                    // the parentheses inside of them.
+    auto end = p + comment.length;
+    // Nesting level of macro invocations and the parentheses inside of them.
+    uint level = 0;
     char[] parens; // Stack of parentheses and markers.
+
     while (p < end)
     {
       switch (*p)
@@ -414,17 +414,17 @@ abstract class DDocEmitter : DefaultVisitor2
         if (p2 < end && p[1] == '(' && isIdentifierStart(p2, end)) // IdStart
         {
           parens ~= Macro.Marker.Closing;
-          result ~= Macro.Marker.Opening; // Relace "$(".
+          write(Macro.Marker.Opening); // Relace "$(".
           p = p2; // Skip "$(".
         }
         goto default;
       case '(':
-        if (parens.length) parens ~= ')'; goto default;
+        if (parens.length) parens ~= ')';
+        goto default;
       case ')':
         if (!parens.length) goto default;
-        auto closing_char = parens[$-1];
-        result ~= closing_char; // Replace ')'.
-        parens = parens[0..$-1]; // Pop one char.
+        write(parens[$-1]); // Append Macro.Marker.Closing or ")".
+        parens.length--; // Pop one char.
         break;
       case '<':
         auto begin = p;
@@ -439,7 +439,7 @@ abstract class DDocEmitter : DefaultVisitor2
               p += 3; // Point one past '>'.
               break;
             }
-          result ~= slice(begin, p);
+          write(slice(begin, p));
         } // <tag ...> or </tag>
         else if (p < end && (isalpha(*p) || *p == '/'))
         {
@@ -448,18 +448,18 @@ abstract class DDocEmitter : DefaultVisitor2
           if (p == end)
           { // No closing '>' found.
             p = begin + 1;
-            result ~= "&lt;";
+            write("&lt;");
             continue;
           }
           p++; // Skip '>'.
-          result ~= slice(begin, p);
+          write(slice(begin, p));
         }
         else
-          result ~= "&lt;";
+          write("&lt;");
         continue;
-      // case '\'': result ~= "&apos;"; break; // &#39;
-      // case '"': result ~= "&quot;"; break;
-      case '>': result ~= "&gt;"; break;
+      // case '\'': write("&apos;"); break; // &#39;
+      // case '"': write("&quot;"); break;
+      case '>': write("&gt;"); break;
       case '&':
         auto entityBegin = p;
         if (++p < end && (isalpha(*p) || *p == '#'))
@@ -469,12 +469,12 @@ abstract class DDocEmitter : DefaultVisitor2
           else
             while (++p < end && isalpha(*p)){} // Named entity.
           if (p < end && *p == ';') {
-            result ~= slice(entityBegin, ++p); // Copy valid entity.
+            write(slice(entityBegin, ++p)); // Copy valid entity.
             continue;
           }
           p = entityBegin + 1; // Reset. It's not a valid entity.
         }
-        result ~= "&amp;";
+        write("&amp;");
         continue;
       case '\n':
         if (!(p+1 < end && p[1] == '\n'))
@@ -483,7 +483,7 @@ abstract class DDocEmitter : DefaultVisitor2
           goto default;
         }
         ++p;
-        result ~= "\n\1DDOC_BLANKLINE\2\n";
+        write("\n\1DDOC_BLANKLINE\2\n");
         lastLineEnd = p;
         break;
       case '-':
@@ -520,20 +520,17 @@ abstract class DDocEmitter : DefaultVisitor2
 
             codeExamplesCounter++; // Found a code section. Increment counter.
 
+            // TODO: use a scratch buffer to unindent and to highlight.
             codeText = DDocUtils.unindentText(codeText);
             codeText = tokenHL.highlightTokens(codeText, modul.getFQN(), lines);
-            result ~= "\1D_CODE\n"
-              "\1DIL_CODELINES ";
-              for (uint num = 1; num <= lines; num++)
-              {
-                auto numtxt = itoa(num);
-                auto id = "L"~numtxt~"_ex"~itoa(codeExamplesCounter);
-                result ~= `<a href="#`~id~`" name="`~id~`">`;
-                result ~= numtxt;
-                result ~= `</a>`"\n";
-              }
-              result ~= "\2,\1DIL_CODETEXT \4" ~ codeText ~ "\2"
-            "\n\2";
+            write("\1D_CODE\n\1DIL_CODELINES ");
+            for (uint num = 1; num <= lines; num++)
+            {
+              auto numtxt = itoa(num);
+              auto id = "L"~numtxt~"_ex"~itoa(codeExamplesCounter);
+              write(`<a href="#`, id, `" name="`, id, `">`, numtxt, "</a>\n");
+            }
+            write("\2,\1DIL_CODETEXT \4", codeText, "\2\n\2");
           }
           while (p < end && *p == '-') // Skip remaining dashes.
             p++;
@@ -541,15 +538,20 @@ abstract class DDocEmitter : DefaultVisitor2
         }
         //goto default;
       default:
-        result ~= *p;
+        write(*p);
       }
       p++;
     }
     assert(p is end);
     foreach (c; parens)
       if (c == Macro.Marker.Closing) // Unclosed macros?
-        result ~= Macro.Marker.Unclosed; // Add marker for errors.
-    return result;
+        write(Macro.Marker.Unclosed); // Add marker for errors.
+  }
+
+  /// Writes a character to the buffer.
+  void write(char c)
+  {
+    text ~= c;
   }
 
   /// Writes an array of strings to the text buffer.
@@ -564,7 +566,13 @@ abstract class DDocEmitter : DefaultVisitor2
   {
     astPrinter.print(n);
     auto ts = astPrinter.tokens;
-    text ~= tokenHL.highlightTokens(ts[0], ts[$-1], true);
+    writeHL(ts[0], ts[$-1]);
+  }
+
+  /// Write highlighted tokens to the buffer.
+  void writeHL(Token* begin, Token* end)
+  {
+    tokenHL.highlightTokens(text, begin, end, true);
   }
 
   /// Writes params to the text buffer.
@@ -582,7 +590,7 @@ abstract class DDocEmitter : DefaultVisitor2
         // Write storage class(es).
         auto lastSTC = param.tokenOfLastSTC();
         if (lastSTC) // Write storage classes.
-          write(tokenHL.highlightTokens(param.begin, lastSTC, true), " ");
+          writeHL(param.begin, lastSTC), write(" ");
         if (param.type)
           write(param.type); // Write the type.
         if (param.hasName)
@@ -676,20 +684,17 @@ abstract class DDocEmitter : DefaultVisitor2
     { // The declaration has a ditto comment.
       alias prevDeclOffset offs;
       assert(offs != 0);
-      auto savedText = text;
-      text = null;
+      auto savedEnd = text.ptr[offs..text.len].dup; // Copy text past offset.
+      text.len = offs;
       writeDECL();
-      // Insert text at offset.
-      auto len = text.length;
-      text = savedText[0..offs] ~ text ~ savedText[offs..$];
-      offs += len; // Add length of the inserted text to the offset.
+      text ~= savedEnd; // Append the snippet.
     }
     else
     {
       writeDECL();
       // Set the offset. At this offset other declarations with a ditto
       // comment will be inserted, if present.
-      prevDeclOffset = text.length;
+      prevDeclOffset = text.len;
     }
   }
 

@@ -15,26 +15,47 @@ import dil.parser.Parser;
 import dil.semantic.Module;
 import dil.Compilation;
 import dil.SourceText;
-import dil.String;
+import dil.String,
+       dil.Array;
 import util.Path;
 import common;
-
-import tango.io.device.Array;
 
 /// A token and syntax highlighter.
 class Highlighter
 {
   TagMap tags; /// Which tag map to use.
-  /// Used to print formatted strings. Can be a file, stdout or a buffer.
-  FormatOut print;
+  Array buffer; /// Buffer that receives the text.
   CompilationContext cc; /// The compilation context.
 
   /// Constructs a TokenHighlighter object.
   this(TagMap tags, FormatOut print, CompilationContext cc)
   {
     this.tags = tags;
-    this.print = print;
     this.cc = cc;
+  }
+
+  /// Empties the buffer and returns its contents.
+  char[] getText()
+  {
+    return buffer.get!(char[]);
+  }
+
+  /// Writes arguments formatted to the buffer.
+  void printf(cstring format, ...)
+  {
+    buffer ~= Format(_arguments, _argptr, format);
+  }
+
+  /// Writes s to the buffer.
+  void print(cstring s)
+  {
+    buffer ~= s;
+  }
+
+  /// Writes c to the buffer.
+  void print(char c)
+  {
+    buffer ~= c;
   }
 
   /// Highlights tokens in a string.
@@ -45,19 +66,16 @@ class Highlighter
     auto lx = new Lexer(src, cc.tables.lxtables, cc.diag);
     lx.scanAll();
     lines = lx.lineNum;
-    return highlightTokens(lx.firstToken(), lx.tail);
+    highlightTokens(lx.firstToken(), lx.tail);
+    return getText();
   }
 
   /// Highlights the tokens from begin to end (both included).
   /// Returns: A string with the highlighted tokens.
   /// Params:
   ///   skipWS = Skips whitespace tokens (e.g. comments) if true.
-  char[] highlightTokens(Token* begin, Token* end, bool skipWS = false)
+  void highlightTokens(Token* begin, Token* end, bool skipWS = false)
   {
-    scope buffer = new Array(512, 512); // Allocate 512B, grow by 512B.
-    auto print_saved = this.print; // Save;
-    auto print = this.print = new FormatOut(Format, buffer);
-
     // Traverse linked list and print tokens.
     for (auto token = begin; token; token = token.next)
     {
@@ -68,9 +86,17 @@ class Highlighter
       if (token is end)
         break;
     }
+  }
 
-    this.print = print_saved; // Restore.
-    return cast(char[])buffer.slice().dup; // Return a copy.
+  /// ditto
+  void highlightTokens(ref Array buffer, Token* begin, Token* end,
+    bool skipWS = false)
+  {
+    auto buffer_saved = this.buffer;
+    this.buffer = buffer;
+    highlightTokens(begin, end, skipWS);
+    buffer = this.buffer; // Update callers instance.
+    this.buffer = buffer_saved;
   }
 
   /// Highlights all tokens of a source file.
@@ -80,7 +106,7 @@ class Highlighter
     auto lx = new Lexer(src, cc.tables.lxtables, cc.diag);
     lx.scanAll();
 
-    print.format(tags["DocHead"], Path(filePath).name());
+    printf(tags["DocHead"], Path(filePath).name());
     if (lx.errors.length)
     {
       print(tags["CompBegin"]);
@@ -121,7 +147,7 @@ class Highlighter
     auto builder = new TokenExBuilder();
     auto tokenExList = builder.build(modul.root, lx.firstToken());
 
-    print.format(tags["DocHead"], modul.getFQN());
+    printf(tags["DocHead"], modul.getFQN());
     if (lx.errors.length || parser.errors.length)
     { // Output error messages.
       print(tags["CompBegin"]);
@@ -154,7 +180,7 @@ class Highlighter
       }
       // <node>
       foreach (node; tokenEx.beginNodes)
-        print.format(tagNodeBegin, tags.getTag(node.kind),
+        printf(tagNodeBegin, tags.getTag(node.kind),
                      node.getShortClassName());
       // Token text.
       printToken(token);
@@ -164,7 +190,7 @@ class Highlighter
           print(tagNodeEnd);
       else
         foreach_reverse (node; tokenEx.endNodes)
-          print.format(tagNodeEnd, tags.getTag(node.kind));
+          printf(tagNodeEnd, tags.getTag(node.kind));
     }
     print(tags["SourceEnd"]);
     print(tags["DocEnd"]);
@@ -173,14 +199,14 @@ class Highlighter
   void printErrors(Lexer lx)
   {
     foreach (e; lx.errors)
-      print.format(tags["LexerError"], e.filePath,
+      printf(tags["LexerError"], e.filePath,
                    e.loc, e.col, xml_escape(e.getMsg));
   }
 
   void printErrors(Parser parser)
   {
     foreach (e; parser.errors)
-      print.format(tags["ParserError"], e.filePath,
+      printf(tags["ParserError"], e.filePath,
                    e.loc, e.col, xml_escape(e.getMsg));
   }
 
@@ -188,7 +214,7 @@ class Highlighter
   {
     auto lineNumberFormat = tags["LineNumber"];
     for (auto lineNum = 1; lineNum <= lines; lineNum++)
-      print.format(lineNumberFormat, lineNum);
+      printf(lineNumberFormat, lineNum);
   }
 
   /// Prints a token to the stream 'print'.
@@ -197,7 +223,7 @@ class Highlighter
     switch (token.kind)
     {
     case TOK.Identifier:
-      print.format(tags.Identifier, token.text);
+      printf(tags.Identifier, token.text);
       break;
     case TOK.Comment:
       cstring formatStr;
@@ -208,7 +234,7 @@ class Highlighter
       case '+': formatStr = tags.NestedC; break;
       default: assert(0);
       }
-      print.format(formatStr, xml_escape(token.text));
+      printf(formatStr, xml_escape(token.text));
       break;
     case TOK.String:
       cstring text = token.text;
@@ -217,9 +243,8 @@ class Highlighter
       {
       version(D2)
       {
-        scope buffer = new Array(128, 128);
-        auto print_saved = this.print; // Save;
-        auto print = this.print = new FormatOut(Format, buffer);
+        auto buffer_saved = this.buffer; // Save;
+        this.buffer = Array();
         print("q{");
         // Traverse linked list and print tokens.
         for (auto t = token.strval.tok_str; t; t = t.next)
@@ -230,30 +255,30 @@ class Highlighter
         auto postfix = token.strval.pf;
         if (postfix != 0)
           print(postfix); // Postfix character.
-        this.print = print_saved; // Restore.
-        text = cast(char[])buffer.slice().dup; // Take a copy.
+        text = getText();
+        this.buffer = buffer_saved; // Restore
       }
       }
       else
         text = (text[0] == '"') ?
           scanEscapeSequences(text, tags.Escape) :
           xml_escape(text);
-      print.format(tags.String, text);
+      printf(tags.String, text);
       break;
     case TOK.Character:
       cstring text = token.text;
       text = (text.length > 1 && text[1] == '\\') ?
         scanEscapeSequences(text, tags.Escape) :
         xml_escape(text);
-      print.format(tags.Char, text);
+      printf(tags.Char, text);
       break;
     case TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64,
          TOK.Float32, TOK.Float64, TOK.Float80,
          TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
-      print.format(tags.Number, token.text);
+      printf(tags.Number, token.text);
       break;
     case TOK.Shebang:
-      print.format(tags.Shebang, xml_escape(token.text));
+      printf(tags.Shebang, xml_escape(token.text));
       break;
     case TOK.HashLine:
       // The text to be inserted into formatStr.
@@ -280,22 +305,22 @@ class Highlighter
         }
       }
       // Finally print the whole token.
-      print.format(tags.HLine, lineText);
+      printf(tags.HLine, lineText);
       break;
     case TOK.Illegal:
-      print.format(tags.Illegal, token.text);
+      printf(tags.Illegal, token.text);
       break;
     case TOK.Newline:
-      print.format(tags.Newline, token.text);
+      printf(tags.Newline, token.text);
       break;
     case TOK.EOF:
       print(tags.EOF);
       break;
     default:
       if (token.isKeyword())
-        print.format(tags.Keyword, token.text);
+        printf(tags.Keyword, token.text);
       else if (token.isSpecialToken)
-        print.format(tags.SpecialToken, token.text);
+        printf(tags.SpecialToken, token.text);
       else
         print(tags[token.kind]);
     }
