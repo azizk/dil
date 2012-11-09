@@ -8,7 +8,8 @@ import dil.lexer.Funcs;
 import dil.i18n.Messages;
 import dil.Unicode,
        dil.Diagnostics,
-       dil.String;
+       dil.String,
+       dil.Array;
 import common;
 
 /// The DDoc macro class.
@@ -73,7 +74,8 @@ class Macro
         }
         else
           assert(parens[$-1] == '(');
-        parens = parens[0..$-1];
+        parens.length--;
+        //parens = parens[0..$-1];
         break;
       default:
       }
@@ -210,6 +212,7 @@ struct MacroExpander
   MacroTable mtable; /// Used to look up macros.
   Diagnostics diag; /// Collects warning messages.
   cstring filePath; /// Used in warning messages.
+  Array buffer; /// Text buffer.
 
   /// Starts expanding the macros.
   static cstring expand(MacroTable mtable, cstring text, cstring filePath,
@@ -219,7 +222,8 @@ struct MacroExpander
     me.mtable = mtable;
     me.diag = diag;
     me.filePath = filePath;
-    return me.expandMacros(text);
+    me.expandMacros(text);
+    return me.buffer.get!(char[]);
   }
 
   /// Reports a warning message.
@@ -231,14 +235,12 @@ struct MacroExpander
   }
 
   /// Expands the macros from the table in the text.
-  cstring expandMacros(cstring text
+  void expandMacros(cstring text
     /+, cstring prevArg0 = null, uint depth = 1000+/)
   { // prevArg0 and depth are commented out, causes problems with recursion.
     // if (depth == 0)
     //   return  text;
     // depth--;
-
-    char[] result;
     auto p = text.ptr;
     auto textEnd = p + text.length;
     auto macroEnd = p;
@@ -249,7 +251,7 @@ struct MacroExpander
       {
         // Copy string between macros.
         if (macroEnd != p)
-          result ~= slice(macroEnd, p);
+          buffer ~= slice(macroEnd, p);
         p++;
         if (auto macroName = scanIdentifier(p, textEnd))
         { // Scanned "\1MacroName" so far.
@@ -259,7 +261,7 @@ struct MacroExpander
           // Closing parenthesis not found?
           if (p == textEnd || *p == Macro.Marker.Unclosed)
             warning(MID.UnterminatedDDocMacro, macroName),
-            (result ~= "$(" ~ macroName ~ " ");
+            (buffer ~= "$(" ~ macroName ~ " ");
           else // p points to the closing marker.
             macroEnd = p+1; // Point past the closing marker.
 
@@ -277,15 +279,13 @@ struct MacroExpander
           macro_.callLevel++;
           // Expand the arguments in the macro text.
           auto expandedText = expandArguments(macro_.text, macroArgs);
-          result ~= expandMacros(expandedText/+, macroArg0, depth+/);
+          // Expand macros inside that text.
+          expandMacros(expandedText/+, macroArg0, depth+/);
           macro_.callLevel--;
         }
       }
-    if (macroEnd == text.ptr)
-      return text; // No macros found. Return original text.
     if (macroEnd < textEnd)
-      result ~= slice(macroEnd, textEnd);
-    return result;
+      buffer ~= slice(macroEnd, textEnd);
   }
 
   /// Scans until the closing parenthesis is found. Sets p to one char past it.
@@ -398,7 +398,7 @@ struct MacroExpander
   in { assert(args.length != 1, "zero or more than 1 args expected"); }
   body
   {
-    char[] result;
+    Array buffer;
     auto p = text.ptr;
     auto textEnd = p + text.length;
     auto placeholderEnd = p;
@@ -409,7 +409,7 @@ struct MacroExpander
       {
         // Copy string between argument placeholders.
         if (placeholderEnd != p-1)
-          result ~= slice(placeholderEnd, p-1);
+          buffer ~= slice(placeholderEnd, p-1);
         placeholderEnd = p+1; // Set new placeholder end.
 
         if (args.length == 0)
@@ -422,24 +422,24 @@ struct MacroExpander
             assert(String(args[2]).slices(args[0]),
               Format("arg[2] ({}) is not a slice of arg[0] ({}) in ‘{}’",
                 args[2], args[0], filePath));
-            result ~= slice(args[2].ptr, String(args[0]).end);
+            buffer ~= slice(args[2].ptr, String(args[0]).end);
           }
         }
         else
         { // 0 - 9
           uint nthArg = *p - '0';
           if (nthArg < args.length)
-            result ~= args[nthArg];
+            buffer ~= args[nthArg];
           else // DMD uses args0 if nthArg is not available.
-            result ~= args[0];
+            buffer ~= args[0];
         }
       }
       p++;
     }
-    if (placeholderEnd == text.ptr)
-      return text; // No placeholders found. Return original text.
+    if (placeholderEnd is text.ptr)
+      return text;
     if (placeholderEnd < textEnd)
-      result ~= slice(placeholderEnd, textEnd);
-    return result;
+      buffer ~= slice(placeholderEnd, textEnd);
+    return buffer.get!(char[]);
   }
 }
