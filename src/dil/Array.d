@@ -30,10 +30,11 @@ struct Array
   E* cur; /// Points to the end of the contents.
   E* end; /// Points to the end of the reserved space.
 
-  /// Constructs an Array, optionally reserving space.
+  /// Constructs an Array of exactly nbytes size.
   this(size_t nbytes = 0)
   {
-    growto(nbytes);
+    if (nbytes)
+      resizex(nbytes);
   }
 
   invariant()
@@ -90,7 +91,7 @@ struct Array
       cur = end;
   }
 
-  /// Allocates memory the size of max(PAGESIZE, len * 1.5, n, cap).
+  /// Grows the memory needed by the value of max(len * 1.5, n, cap).
   void growto(size_t n)
   {
     auto len = this.len;
@@ -98,7 +99,7 @@ struct Array
     if (len > n)
       n = len;
     if (n > cap)
-      resizex(n <= PAGESIZE ? PAGESIZE : n);
+      resizex(n);
   }
 
   /// Grows the Array by n bytes.
@@ -110,10 +111,10 @@ struct Array
   /// Shrinks the Array to n bytes.
   void shrinkto(size_t n)
   {
-    resizex(n <= PAGESIZE ? PAGESIZE : n);
+    resizex(n);
   }
 
-  /// Shrinks the Array by n bytes
+  /// Shrinks the Array by n bytes.
   void shrinkby(size_t n)
   {
     shrinkto(n < cap ? cap - n : 0);
@@ -167,12 +168,26 @@ struct Array
   }
 
   /// Hands the memory over to the GC and returns it as an array.
-  A get(A = void[])()
+  A get(A = E)()
   {
     auto result = ptr[0..len];
     GC.addRoot(ptr);
     ptr = cur = end = null;
     return *cast(A*)&result;
+  }
+
+  /// Returns a slice into the Array.
+  /// Warning: The memory may leak if not freed, or destroyed prematurely.
+  E[] opSlice(size_t i, size_t j)
+  {
+    assert(i <= j && j < len);
+    return ptr[i..j];
+  }
+
+  /// ditto
+  E[] opSlice()
+  {
+    return ptr[0..len];
   }
 }
 
