@@ -244,7 +244,7 @@ class Highlighter
       version(D2)
       {
         auto buffer_saved = this.buffer; // Save;
-        this.buffer = Array();
+        this.buffer = Array(text.length);
         print("q{");
         // Traverse linked list and print tokens.
         for (auto t = token.strval.tok_str; t; t = t.next)
@@ -333,8 +333,8 @@ class Highlighter
   static cstring scanEscapeSequences(cstring text, cstring fmt)
   {
     auto p = text.ptr, end = p + text.length;
-    auto prev = p;
-    char[] result;
+    auto prev = p; // Remembers the end of the previous escape sequence.
+    Array result;
     cstring escape_str;
 
     while (p < end)
@@ -413,7 +413,8 @@ class Highlighter
       return text; // Nothing escaped. Return original, unchanged text.
     if (prev < end)
       result ~= slice(prev, end);
-    return result;
+    result.compact();
+    return result.get!(char[]);
   }
 }
 
@@ -424,7 +425,7 @@ cstring xml_escape(cstring text)
   auto p = text.ptr, end = p + text.length;
   auto prev = p; // Points to the end of the previous escape char.
   string entity; // Current entity to be appended.
-  char[] result;
+  Array result;
   while (p < end)
     switch (*p)
     {
@@ -432,6 +433,8 @@ cstring xml_escape(cstring text)
     case '>': entity = "&gt;";  goto Lcommon;
     case '&': entity = "&amp;"; goto Lcommon;
     Lcommon:
+      if (!result.ptr)
+        result.cap = text.length;
       prev != p && (result ~= slice(prev, p)); // Append previous string.
       result ~= entity; // Append entity.
       p++; // Skip '<', '>' or '&'.
@@ -444,7 +447,8 @@ cstring xml_escape(cstring text)
     return text; // Nothing escaped. Return original, unchanged text.
   if (prev < end)
     result ~= slice(prev, end);
-  return result;
+  result.compact();
+  return result.get!(char[]);
 }
 
 /// Maps tokens to (format) strings.
