@@ -106,7 +106,7 @@ class DDocCommand : Command
     auto map = TagMapLoader(context, diag).load(mapFilePath);
     auto tags = new TagMap(map);
 
-    hl = new Highlighter(tags, null, context);
+    hl = new Highlighter(tags, context);
 
     outFileExtension = writeXML ? ".xml" : ".html";
 

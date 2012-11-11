@@ -55,11 +55,7 @@ class HighlightCommand : Command
     if (diag.hasInfo)
       return;
 
-    auto print = Stdout; // Default to stdout.
-    if (filePathDest.length)
-      print = new FormatOut(Format, new File(filePathDest, File.WriteCreate));
-
-    auto hl = new Highlighter(tags, print, cc);
+    auto hl = new Highlighter(tags, cc);
 
     bool printLines = (options & Option.PrintLines) != 0;
     bool printHTML = (options & Option.HTML) != 0;
@@ -67,5 +63,16 @@ class HighlightCommand : Command
       hl.highlightSyntax(filePathSrc, printHTML, printLines);
     else
       hl.highlightTokens(filePathSrc, printLines);
+
+    auto text = hl.getText();
+
+    if (filePathDest.length)
+    {
+      auto f = new File(filePathDest, File.WriteCreate);
+      f.write(text);
+      f.close();
+    }
+    else
+      Stdout(text);
   }
 }

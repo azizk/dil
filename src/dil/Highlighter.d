@@ -28,7 +28,7 @@ class Highlighter
   CompilationContext cc; /// The compilation context.
 
   /// Constructs a TokenHighlighter object.
-  this(TagMap tags, FormatOut print, CompilationContext cc)
+  this(TagMap tags, CompilationContext cc)
   {
     this.tags = tags;
     this.cc = cc;
@@ -181,7 +181,7 @@ class Highlighter
       // <node>
       foreach (node; tokenEx.beginNodes)
         printf(tagNodeBegin, tags.getTag(node.kind),
-                     node.getShortClassName());
+          node.getShortClassName());
       // Token text.
       printToken(token);
       // </node>
