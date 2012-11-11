@@ -12,6 +12,8 @@ import dil.lexer.Token,
 import dil.i18n.Messages;
 import dil.Diagnostics,
        dil.HtmlEntities,
+       dil.ChunkAllocator,
+       dil.Array,
        dil.Version,
        dil.Unicode,
        dil.SourceText,
@@ -23,14 +25,14 @@ import common;
 
 import tango.core.Vararg;
 
-
 /// The Lexer analyzes the characters of a source text and
 /// produces a doubly-linked list of tokens.
 class Lexer
 {
+  ChunkAllocator allocator; /// Allocates memory for tokens and other structs.
   SourceText srcText; /// The source text.
-  cchar* p;            /// Points to the current character in the source text.
-  cchar* end;          /// Points one character past the end of the source text.
+  cchar* p; /// Points to the current character in the source text.
+  cchar* end; /// Points one character past the end of the source text.
 
   Token* head;  /// The head of the doubly linked token list.
   Token* tail;  /// The tail of the linked list. Set in scan().
@@ -70,6 +72,10 @@ class Lexer
   {
     if (diag is null)
       diag = new Diagnostics();
+    version(gc_tokens)
+    {}
+    else
+      this.allocator.initialize(PAGESIZE);
     this.srcText = srcText;
     this.tables = tables;
     this.diag = diag;
@@ -81,13 +87,13 @@ class Lexer
     this.lineBegin = this.p;
     this.lineNum = 1;
 
-    this.head = new Token;
+    this.head = new_!(Token);
     this.head.kind = TOK.HEAD;
     this.head.start = this.head.end = this.p;
     this.token = this.head;
 
     // Add a newline as the first token after the head.
-    auto nl_tok = new Token;
+    auto nl_tok = new_!(Token);
     nl_tok.kind = TOK.Newline;
     nl_tok.setWhitespaceFlag();
     nl_tok.start = nl_tok.end = this.p;
@@ -104,8 +110,20 @@ class Lexer
   /// The destructor deletes the doubly-linked token list.
   ~this()
   {
-    head.deleteList();
-    head = tail = token = null;
+    allocator.destroy();
+  }
+
+  /// Alocates a struct.
+  T* new_(T)()
+  {
+    version (gc_tokens) // Use to test GC instead of custom allocator.
+      return new T;
+    else
+    {
+      auto t = cast(T*)allocator.allocate(T.sizeof);
+      *t = T.init;
+      return t;
+    }
   }
 
   /// Callback function to TokenSerializer.deserialize().
@@ -379,9 +397,9 @@ class Lexer
     if (hlinfo)
     { // Don't insert into the table, when '#line' tokens are in the text.
       // This could be optimised with another table.
-      auto nl = new NewlineValue;
+      auto nl = new_!(NewlineValue);
       nl.lineNum = linnum;
-      auto hlinfo = nl.hlinfo = new Token.HashLineInfo;
+      auto hlinfo = nl.hlinfo = new_!(Token.HashLineInfo);
       *hlinfo = *this.hlinfo;
       return nl;
     }
@@ -412,7 +430,7 @@ class Lexer
       t = t.next;
     else if (t !is this.tail)
     { // Create a new token and pass it to the main scan() method.
-      Token* new_t = new Token;
+      Token* new_t = new_!(Token);
       scan(new_t);
       new_t.prev = t; // Link the token in.
       t.next = new_t;
@@ -446,7 +464,7 @@ class Lexer
   {
     auto p = this.p;
     assert(*p == '#' && p[1] == '!');
-    auto t = new Token;
+    auto t = new_!(Token);
     t.kind = TOK.Shebang;
     t.setWhitespaceFlag();
     t.start = p++;
@@ -1748,7 +1766,7 @@ class Lexer
   Loop:
     while (1)
     {
-      new_t = new Token;
+      new_t = new_!(Token);
       scan(new_t);
       // Save the tokens in a doubly linked list.
       // Could be useful for various tools.
@@ -1829,7 +1847,7 @@ class Lexer
       value = tmp;
     }
 
-    auto strval = new StringValue;
+    auto strval = new_!(StringValue);
     strval.str = lookupString(value);
     strval.pf = postfix;
     strval.tok_str = inner_tokens;
@@ -2456,7 +2474,7 @@ class Lexer
     auto p = this.p;
     assert(*p == '#');
 
-    auto hlval = new Token.HashLineValue;
+    auto hlval = new_!(Token.HashLineValue);
 
     MID mid;
     cchar* errorAtColumn = p;
@@ -2490,7 +2508,7 @@ class Lexer
           mid = MID.ExpectedIntegerAfterSTLine;
           goto Lerr;
         }
-        auto newtok = new Token;
+        auto newtok = new_!(Token);
         hlval.lineNum = newtok;
         this.p = p;
         scan(newtok);
@@ -2506,7 +2524,7 @@ class Lexer
       }
       else if (state == State.OptionalFilespec && *p == '"')
       {
-        auto fs = hlval.filespec = new Token;
+        auto fs = hlval.filespec = new_!(Token);
         fs.start = p;
         fs.kind = TOK.Filespec;
         fs.setWhitespaceFlag();
@@ -2549,7 +2567,7 @@ class Lexer
     {
       if (!hlinfo)
       {
-        hlinfo = new Token.HashLineInfo;
+        hlinfo = new_!(Token.HashLineInfo);
         hlinfo.path = srcText.filePath;
       }
       hlinfo.setLineNum(this.lineNum, hlval.lineNum.uint_);
@@ -2579,7 +2597,7 @@ class Lexer
     assert(text.ptr <= t.end && t.end <= end, Token.toString(t.kind));
 
     auto prev_t = t.prev;
-    auto new_t = new Token;
+    auto new_t = new_!(Token);
     new_t.kind = TOK.Empty;
     new_t.start = new_t.end = prev_t.end;
     // Link in new token.
@@ -2874,7 +2892,7 @@ class Lexer
     assert(p == end);
     return null;
   }
-}
+} // End of Lexer
 
 /// Tests the lexer with a list of tokens.
 void testLexer()
