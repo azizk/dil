@@ -51,11 +51,12 @@ struct Array
     return cur - ptr;
   }
 
-  /// Sets the size of the Array in bytes. Resizes space if necessary.
+  /// Sets the size of the Array in bytes.
+  /// Resizes space if necessary, but does not zero out the new space.
   void len(size_t n) @property
   {
     cur = ptr + n;
-    if (cur >= end)
+    if (cur > end)
       growto(n);
   }
 
@@ -65,10 +66,22 @@ struct Array
     return end - cur;
   }
 
-  /// Return the total capacity of the Array.
+  /// Sets the capacity so that n bytes of space remain.
+  void rem(size_t n) @property
+  {
+    cap = len + n;
+  }
+
+  /// Returns the total capacity of the Array.
   size_t cap() @property const
   {
     return end - ptr;
+  }
+
+  /// Sets the capacity to exactly n bytes.
+  void cap(size_t n) @property
+  {
+    resizex(n);
   }
 
   /// Allocates exactly n bytes.
@@ -188,6 +201,12 @@ struct Array
   E[] opSlice()
   {
     return ptr[0..len];
+  }
+
+  /// Returns the Array as a dynamic array.
+  A elems(A = E[])()
+  {
+    return cast(A)this[];
   }
 }
 
