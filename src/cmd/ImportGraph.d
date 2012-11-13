@@ -126,6 +126,53 @@ class Graph
     // Use functioning algorithm.
     findCyclesInGraph(this);
   }
+
+  /// Returns a list of strongly connected components using Tarjan's algorithm.
+  Vertex[][] findTarjansSCCs()
+  {
+    size_t i = 1; // Start with 1, as the default of Vertex.index is 0.
+    Vertex[] stack;
+    Vertex[][] sccs;
+
+    void recurse(Vertex v)
+    {
+      v.index = v.llink = i++;
+      v.instack = true;
+      stack ~= v;
+
+      foreach (z; v.outgoing)
+        if (z.index == 0) {
+          recurse(z); // Depth-first search.
+          if (z.llink < v.llink)
+            v.llink = z.llink;
+        }
+        else if (z.instack && z.index < v.llink)
+          v.llink = z.index;
+
+      if (v.index == v.llink)
+      {
+        assert(stack.length);
+        auto end = stack.ptr + stack.length;
+        auto p = end; // Reverse iterator.
+        Vertex z;
+        do
+        {
+          z = *--p;
+          z.instack = false;
+        } while (z !is v);
+        assert(*p is v && *p is z);
+        sccs ~= p[0 .. end - p].dup;
+        stack.length = p - stack.ptr;
+      }
+    }
+
+    // Walk through the graph.
+    foreach (v; vertices)
+      if (v.index == 0)
+        recurse(v);
+
+    return sccs;
+  }
 }
 
 void testGraph()
@@ -186,6 +233,10 @@ class Vertex
   Vertex[] outgoing; /// Also called successors.
   bool isCyclic;     /// Whether this vertex is in a cyclic relationship
                      /// with other vertices.
+  // Members specific to Tarjan's algorithm.
+  size_t index; /// Greater than 0 means that this vertex has been visited.
+  size_t llink; /// Aka. lowlink.
+  bool instack; /// Is this in the Stack?
 }
 
 /// Builds a module dependency graph.
