@@ -38,7 +38,7 @@ class Macro
   /// Converts a macro text to the internal format.
   static cstring convert(cstring text)
   {
-    char[] result;
+    Array result;
     auto p = text.ptr;
     auto end = p + text.length;
     auto prev = p;
@@ -53,7 +53,7 @@ class Macro
           if (prev != p)
             result ~= slice(prev, p); // Copy previous text.
           parens ~= Macro.Marker.Opening;
-          result ~= Macro.Marker.Opening; // Relace "$(".
+          result ~= cast(char)Macro.Marker.Opening; // Relace "$(".
           prev = p = p2; // Move to IdStart.
         }
         break;
@@ -70,7 +70,7 @@ class Macro
             result ~= slice(prev, p);
             prev = p+1;
           }
-          result ~= Macro.Marker.Closing; // Replace ')'.
+          result ~= cast(char)Macro.Marker.Closing; // Replace ')'.
         }
         else
           assert(parens[$-1] == '(');
@@ -85,10 +85,11 @@ class Macro
       result ~= slice(prev, end);
     foreach_reverse (c; parens)
       if (c == Macro.Marker.Opening) // Unclosed macros?
-        result ~= Macro.Marker.Unclosed; // Add marker for errors.
+        result ~= cast(char)Macro.Marker.Unclosed; // Add marker for errors.
       //else
       //  result ~= ')';
-    return result;
+    result.compact();
+    return result.get!(char[]);
   }
 }
 
@@ -188,22 +189,6 @@ static:
       macros[i] = new Macro(idvalue.ident, idvalue.value);
     return macros;
   }
-
-  /// Scans for a macro invocation. E.g.: &#36;(DDOC)
-  /// Returns: a pointer set to one char past the closing parenthesis,
-  /// or null if this isn't a macro invocation.
-  cchar* scanMacro(cchar* p, cchar* textEnd)
-  {
-    assert(*p == '$');
-    if (p+2 < textEnd && p[1] == '(')
-      if ((p += 2), scanIdentifier(p, textEnd))
-      {
-        MacroExpander.scanArguments(p, textEnd);
-        p != textEnd && p++; // Skip ')'.
-        return p;
-      }
-    return null;
-  }
 }
 
 /// Expands DDoc macros in a text.
@@ -213,6 +198,7 @@ struct MacroExpander
   Diagnostics diag; /// Collects warning messages.
   cstring filePath; /// Used in warning messages.
   Array buffer; /// Text buffer.
+  cstring[10] margs; /// Currently parsed macro arguments.
 
   /// Starts expanding the macros.
   static cstring expand(MacroTable mtable, cstring text, cstring filePath,
@@ -234,7 +220,7 @@ struct MacroExpander
         diag.formatMsg(mid, macroName));
   }
 
-  /// Expands the macros from the table in the text.
+  /// Expands the macros in the text using the definitions from the table.
   void expandMacros(cstring text
     /+, cstring prevArg0 = null, uint depth = 1000+/)
   { // prevArg0 and depth are commented out, causes problems with recursion.
@@ -256,7 +242,7 @@ struct MacroExpander
         if (auto macroName = scanIdentifier(p, textEnd))
         { // Scanned "\1MacroName" so far.
           // Get arguments.
-          auto macroArgs = scanArguments(p, textEnd);
+          auto macroArgs = scanArguments(margs, p, textEnd);
           macroEnd = p;
           // Closing parenthesis not found?
           if (p == textEnd || *p == Macro.Marker.Unclosed)
@@ -291,17 +277,19 @@ struct MacroExpander
   /// Scans until the closing parenthesis is found. Sets p to one char past it.
   /// Returns: [arg0, arg1, arg2 ...].
   /// Params:
+  ///   args = Provides space for at least 10 arguments.
   ///   ref_p = Will point to Macro.Marker.Closing or Marker.Unclosed,
   ///           or to textEnd if it wasn't found.
-  static cstring[] scanArguments(ref cchar* ref_p, cchar* textEnd)
-  out(args) { assert(args.length != 1); }
+  cstring[] scanArguments(cstring[] args, ref cchar* ref_p, cchar* textEnd)
+  in { assert(args.length == 10); }
+  out(outargs) { assert(outargs.length != 1); }
   body
   {
     // D specs: "The argument text can contain nested parentheses,
     //           "" or '' strings, comments, or tags."
     uint mlevel = 1; // Nesting level of macros.
     uint plevel = 0; // Nesting level of parentheses.
-    cstring[] args = [null]; // First element will be arg0.
+    size_t nargs;
     auto p = ref_p; // Use a non-ref variable to scan the text.
 
     if (p < textEnd && isspace(*p)) // Skip first space.
@@ -334,13 +322,17 @@ struct MacroExpander
       case ',':
         if ((plevel+mlevel) != 1) // Ignore comma if inside ( ).
           break;
-        // Add a new argument.
-        args ~= slice(argBegin, p);
-        if (++p < textEnd && isspace(*p)) // Skip first space.
-          p++;
-        //while (++p < textEnd && isspace(*p)) // Skip spaces.
-        //{}
-        argBegin = p;
+        if (nargs < 9)
+        { // Set nth argument.
+          args[++nargs] = slice(argBegin, p);
+          if (++p < textEnd && isspace(*p)) // Skip first space.
+            p++;
+          //while (++p < textEnd && isspace(*p)) // Skip spaces.
+          //{}
+          argBegin = p;
+        }
+        else
+          p++; // Skip ','.
         continue;
       // Commented out: causes too many problems in the expansion pass.
       // case '"', '\'':
@@ -384,8 +376,9 @@ struct MacroExpander
     if (arg0Begin == p)
       return null; // No arguments.
     args[0] = slice(arg0Begin, p); // arg0 spans the whole argument list.
-    args ~= slice(argBegin, p); // Add last argument.
-    return args;
+    if (nargs < 9)
+      args[++nargs] = slice(argBegin, p);
+    return args[0..nargs+1];
   }
 
   /// Expands "&#36;+", "&#36;0" - "&#36;9" with args[n] in text.
@@ -394,7 +387,7 @@ struct MacroExpander
   ///   args = The first element, args[0], is the whole argument string and
   ///          the following elements are slices into it.$(BR)
   ///          The array is empty if there are no arguments.
-  cstring expandArguments(cstring text, cstring[] args)
+  static cstring expandArguments(cstring text, cstring[] args)
   in { assert(args.length != 1, "zero or more than 1 args expected"); }
   body
   {
@@ -420,8 +413,8 @@ struct MacroExpander
           if (args.length > 2)
           {
             assert(String(args[2]).slices(args[0]),
-              Format("arg[2] ({}) is not a slice of arg[0] ({}) in ‘{}’",
-                args[2], args[0], filePath));
+              Format("arg[2] ({}) is not a slice of arg[0] ({})",
+                args[2], args[0]));
             buffer ~= slice(args[2].ptr, String(args[0]).end);
           }
         }
