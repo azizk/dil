@@ -32,5 +32,22 @@
     "translate_tabs_to_spaces": true,
     "rulers": [80],
     "trim_trailing_white_space_on_save": true
-  }
+  },
+  "build_systems":
+  [
+    { // Debug version (Ctrl+B.)
+      "name": "Build DIL Debug",
+      "cmd": ["scripts/build.py", "--debug"],
+      "file_regex": "^(.*?)\\(([0-9]+)\\):()(.+)$",
+      "working_dir": "$project_path/../..",
+      "selector": "source.d",
+      "variants":
+      [
+        { // Release version (Ctrl+Shift+B.)
+          "cmd": ["scripts/build.py", "--release"],
+          "name": "Run"
+        }
+      ]
+    }
+  ]
 }
