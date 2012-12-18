@@ -132,8 +132,6 @@ class Lexer
     switch (t.kind)
     { // Some tokens need special handling:
     case TOK.Newline:
-      assert(isNewlineEnd(t.end-1));
-      ++lineNum;
       setLineBegin(t.end);
       t.setWhitespaceFlag();
       t.nlval = lookupNewline();
@@ -180,7 +178,6 @@ class Lexer
       if (t.isMultiline) // Mutliline tokens may have newlines.
         for (auto p = t.start, end = t.end; p < end;)
           if (scanNewline(p))
-            lineNum++,
             setLineBegin(p);
           else
             ++p;
@@ -291,19 +288,18 @@ class Lexer
       t.strval = lookupString(str, 0);
   }
 
-  /// Sets the member lineBegin (with safety checks.)
+  /// Sets the member lineBegin and increments lineNum.
   private void setLineBegin(cchar* p)
   {
-    // Check that we can look behind one character.
-    assert((p-1) >= text.ptr && p < end);
-    // Check that previous character is a newline.
     assert(isNewlineEnd(p - 1));
-    this.lineBegin = p;
+    lineBegin = p;
+    lineNum++;
   }
 
   /// Returns true if p points to the last character of a Newline.
   bool isNewlineEnd(cchar* p)
   {
+    assert(p >= text.ptr && p < end);
     if (*p == '\n' || *p == '\r')
       return true;
     if (*p == LS[2] || *p == PS[2])
@@ -862,10 +858,7 @@ class Lexer
     return;
 
   Lnewline:
-    assert(isNewlineEnd(p));
-    ++p;
-    ++lineNum;
-    setLineBegin(p);
+    setLineBegin(++p);
     t.kind = TOK.Newline;
     t.setWhitespaceFlag();
     t.nlval = lookupNewline();
@@ -1173,10 +1166,7 @@ class Lexer
     return;
 
   Lnewline:
-    assert(isNewlineEnd(p));
-    ++p;
-    ++lineNum;
-    setLineBegin(p);
+    setLineBegin(++p);
     kind = TOK.Newline;
     t.setWhitespaceFlag();
     t.nlval = lookupNewline();
@@ -1208,8 +1198,6 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
-        assert(isNewlineEnd(p));
-        ++lineNum;
         setLineBegin(p+1);
         break;
       default:
@@ -1262,8 +1250,6 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
-        assert(isNewlineEnd(p));
-        ++lineNum;
         setLineBegin(p+1);
         break;
       default:
@@ -1345,8 +1331,6 @@ class Lexer
         value[$-1] = '\n'; // Convert Newline to '\n'.
         prev = p+1;
       case '\n':
-        assert(isNewlineEnd(p));
-        ++lineNum;
         setLineBegin(++p);
         break;
       case 0, _Z_:
@@ -1449,9 +1433,7 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
-        assert(isNewlineEnd(p));
         c = '\n'; // Convert Newline to '\n'.
-        ++lineNum;
         setLineBegin(p+1);
         break;
       case '`':
@@ -1516,8 +1498,6 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
-        assert(isNewlineEnd(p));
-        ++lineNum;
         setLineBegin(p+1);
         continue;
       default:
@@ -1660,9 +1640,7 @@ class Lexer
         if (p[1] == '\n')
           ++p;
       case '\n':
-        assert(isNewlineEnd(p));
         c = '\n'; // Convert Newline to '\n'.
-        ++lineNum;
         setLineBegin(p+1);
         break;
       case 0, _Z_:
