@@ -531,11 +531,10 @@ void main(cstring[] args)
 /// Reads the standard input and returns its contents.
 char[] readStdin()
 {
-  import tango.stdc.stdio;
+  import std.stdio;
   char[] text;
-  int c;
-  while ((c = getc(stdin)) != EOF)
-    text ~= c;
+  foreach (buffer; stdin.byChunk(4096))
+    text ~= buffer;
   return text;
 }
 
