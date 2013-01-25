@@ -52,6 +52,36 @@ class Lexer
   /// Tokens from a *.dlx file.
   Token[] dlxTokens;
 
+  /// CTF: Casts a string literal to an integer.
+  static size_t toUint(string s)
+  {
+    assert(s.length <= size_t.sizeof);
+    size_t x;
+    for (size_t i; i < s.length;)
+      x = x << 8 | s[i++];
+    return x;
+  }
+  static assert(toUint("\xAA\xBB\xCC\xDD") == 0xAABBCCDD);
+  static assert(toUint("\xAB\xCD\xEF") == 0xABCDEF);
+
+  /// CTF: Like toUint(), but reverses the value for little-endian CPUs.
+  /// Allows for fast string comparison using integers:
+  /// *cast(uint*)"\xAA\xBB\xCC\xDD".ptr == toUintE("\xAA\xBB\xCC\xDD")
+  static size_t toUintE(cstring s)
+  {
+    version(BigEndian)
+    return toUint(s);
+    else
+    {
+    assert(s.length <= size_t.sizeof);
+    size_t x;
+    for (auto i = s.length; i;)
+      x = x << 8 | s[--i];
+    return x;
+    }
+  }
+  version(LittleEndian)
+  static assert(toUintE("\xAA\xBB\xCC\xDD") == 0xDDCCBBAA);
 
   static
   {
@@ -866,40 +896,6 @@ class Lexer
     return;
   }
 
-  /// CTF: Casts a string literal to an integer.
-  static uint toUint(cstring s)
-  {
-    assert(s.length <= 4);
-    uint x;
-    auto i = s.length;
-    if (i) x |= s[--i];
-    if (i) x |= s[--i] << 8;
-    if (i) x |= s[--i] << 16;
-    if (i) x |= s[--i] << 24;
-    return x;
-  }
-  static assert(toUint("\xAA\xBB\xCC\xDD") == 0xAABBCCDD);
-
-  /// CTF: Like toUint(), but considers the endianness of the CPU.
-  static uint toUintE(cstring s)
-  {
-    version(BigEndian)
-    return toUint(s);
-    else
-    {
-    assert(s.length <= 4);
-    uint x;
-    auto i = s.length;
-    if (i) x |= s[--i] << 24;
-    if (i) x |= s[--i] << 16;
-    if (i) x |= s[--i] << 8;
-    if (i) x |= s[--i];
-    x >>>= (4 - s.length) * 8;
-    return x;
-    }
-  }
-  version(LittleEndian)
-  static assert(toUintE("\xAA\xBB\xCC\xDD") == 0xDDCCBBAA);
 
   /// CTF: Constructs case statements. E.g.:
   /// ---
