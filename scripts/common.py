@@ -229,6 +229,13 @@ def call_read(*args, **kwargs):
   kwargs.update(stdout=subprocess.PIPE)
   return subprocess.Popen(args, **kwargs).communicate()[0].decode('u8')
 
+class AttrDict(dict):
+  __getattr__ = dict.__getitem__
+  __setattr__ = dict.__setitem__
+  __delattr__ = dict.__delitem__
+class AttrDefaultDict(AttrDict): # Returns None for inexistent keys.
+  __getattr__ = dict.get
+
 class VersionInfo:
   vi = sys.version_info
   f = float("%d.%d%d" % vi[:3])
