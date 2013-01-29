@@ -157,7 +157,7 @@ class Parser
   }
 
   /// Returns true if set() has been called on a node.
-  static bool isNodeSet(Node node)
+  static bool isNodeSet(const Node node)
   {
     assert(node !is null);
     return node.begin !is null && node.end !is null;
