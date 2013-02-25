@@ -180,9 +180,8 @@ class Path(unicode):
 
   def walk(self, **kwargs):
     """ Returns a generator that walks through a directory tree. """
-    if "followlinks" in kwargs:
-      if vi[0]*10+vi[1] < 26: # Only Python 2.6 or newer supports followlinks.
-        del kwargs["followlinks"]
+    if vi[:2] < (2,6): # Only Python 2.6 or newer supports followlinks.
+      kwargs.pop("followlinks", None)
     return os.walk(self, **kwargs)
 
   def mkdir(self, mode=0777):
