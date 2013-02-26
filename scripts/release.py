@@ -274,7 +274,7 @@ def main():
 
   if options.winpath != None:
     from env_path import append2PATH
-    append2PATH(options.winpath, Path(""))
+    append2PATH(options.winpath)
     return
 
   if len(args) < 1:
