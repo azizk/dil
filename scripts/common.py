@@ -2,17 +2,8 @@
 # Author: Aziz Köksal
 # License: zlib/libpng
 from __future__ import unicode_literals, print_function
-import os, re, sys
-import subprocess
-from path import Path
-
-# Are we on a Windows system?
-is_win32 = sys.platform == "win32"
-def cpu_bitness():
-  """ Determines the address space size, based on the interpreter's bitness. """
-  return len(bin(sys.maxint)[2:]) + 1
-# What bit size is the CPU?
-cpu_bits = cpu_bitness()
+import re, sys
+from utils import *
 
 def find_source_files(src_path, prunefile=None, prunedir=None):
   """ Searches for source files (*.d and *.di)
@@ -193,18 +184,6 @@ def load_pymodules(folder):
   sys.path = sys.path[1:]
   return modules
 
-def locate_command(command):
-  """ Locates a command using the PATH environment variable. """
-  if 'PATH' in os.environ:
-    if is_win32 and Path(command).ext.lower() != ".exe":
-      command += ".exe" # Append extension if we're on Windows.
-    PATH = os.environ['PATH'].split(Path.pathsep)
-    for path in PATH:
-      path = Path(path, command)
-      if path.exists:
-        return path
-  return None
-
 def build_dil_if_inexistant(dil_exe):
   if is_win32: dil_exe += ".exe"
   if not dil_exe.exists and not locate_command('dil'):
@@ -215,79 +194,3 @@ def build_dil_if_inexistant(dil_exe):
       build_dil_release()
     else:
       raise Exception("can't proceed without dil executable")
-
-def call_proc(*args, **kwargs):
-  """ Calls a process and returns its return-code. """
-  if len(args) == 1 and isinstance(args[0], list): # E.g.: call_proc([...])
-    args = args[0] # Replace if the sole argument is a list.
-  return subprocess.call(args, **kwargs)
-
-def call_read(*args, **kwargs):
-  """ Calls a process and returns the contents of stdout in Unicode. """
-  if len(args) == 1 and isinstance(args[0], list): # E.g.: call_read([...])
-    args = args[0] # Replace if the sole argument is a list.
-  kwargs.update(stdout=subprocess.PIPE)
-  return subprocess.Popen(args, **kwargs).communicate()[0].decode('u8')
-
-class AttrDict(dict):
-  __getattr__ = dict.__getitem__
-  __setattr__ = dict.__setitem__
-  __delattr__ = dict.__delitem__
-class AttrDefaultDict(AttrDict): # Returns None for inexistent keys.
-  __getattr__ = dict.get
-
-class VersionInfo:
-  vi = sys.version_info
-  f = float("%d.%d%d" % vi[:3])
-  i = int(f*100)
-  def __lt__(self, other): return self.f < other
-  def __le__(self, other): return self.f <= other
-  def __eq__(self, other): return self.f == other
-  def __ne__(self, other): return self.f != other
-  def __gt__(self, other): return self.f > other
-  def __ge__(self, other): return self.f >= other
-PyVersion = VersionInfo()
-
-def tounicode(o, encoding='u8'):
-  return (o if isinstance(o, unicode)
-          else str(o).decode(encoding))
-
-def tounicodes(objects, encoding='u8'):
-  """ Converts the elements of an array to Unicode strings
-      using the optional 'encoding' kwarg as the encoding (default=UTF-8.) """
-  result = [].append
-  for o in objects:
-    result(o if isinstance(o, unicode)
-           else str(o).decode(encoding))
-  return result.__self__
-
-# Add a copy of args in Unicode to sys.
-sys.uargv = tounicodes(sys.argv)
-
-def chunks(seq, n):
-  """ Returns chunks of a sequence of size n. """
-  return [seq[i:i+n] for i in xrange(0, len(seq), n)]
-
-def firstof(typ, *args):
-  """ Returns the first argument that is of type 'typ'. """
-  for arg in args:
-    if type(arg) == typ:
-      return arg
-
-def getitem(array, index, d=None):
-  """ Returns array[index] if the index exists, else d. """
-  return array[index] if index < len(array) else d
-
-class StopWatch:
-  import time
-  timer = time.clock if is_win32 else time.time
-  def __init__(self):
-    self.time = self.timer()
-  def start(self):
-    self.time = self.timer()
-  @property
-  def elapsed(self):
-    return self.timer() - self.time
-  def stop(self):
-    self.time = self.elapsed
-    return self.time
