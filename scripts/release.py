@@ -382,7 +382,7 @@ def main():
   #if options.chm:
     #write_CHM(DEST, DEST.DOC, VERSION, TMP)
 
-  TARGETS = (tlinux32, tlinux64, twindows32)
+  TARGETS = [Targets[n] for n in ("Lin32", "Lin64", "Win32")]
 
   if not options.no_binaries:
     BINS = build_binaries(TARGETS, COMPILER, VERSION.MAJ, FILES, DEST)

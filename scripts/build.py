@@ -4,6 +4,7 @@
 # License: zlib/libpng
 from __future__ import unicode_literals, print_function
 from common import *
+from targets import *
 __file__ = tounicode(__file__)
 
 class Command:
@@ -26,14 +27,17 @@ class Command:
       raise e
     return retcode
 
-class CmdParameters(dict):
-  def __getattr__(self, name): return self[name]
-  def __setattr__(self, name, value): self[name] = value
-  def __delattr__(self, name): del self[name]
+
+class CmdArgs(dicta):
+  def libd(self, ds, target):
+    self.lnk_args += [target.lnklibd % d for d in ds]
+  def libf(self, fs, target):
+    self.lnk_args += [target.lnklibf % f for f in fs]
+
 
 class DMDCommand(Command):
   exe = "dmd"
-  P = CmdParameters( # Parameter template strings.
+  P = dicta( # Parameter template strings.
     I = "-I%s", # Include-directory.
     L = "-L%s", # Linker option.
     version = "-version=%s", # Version level or identifier.
@@ -87,7 +91,7 @@ class DMDCommand(Command):
 class LDCCommand(DMDCommand):
   """ Overrides members where needed. """
   exe = "ldc"
-  P = CmdParameters(DMDCommand.P,
+  P = dicta(DMDCommand.P,
     I = "-I=%s",
     L = "-L=%s",
     of = "-of=%s",
@@ -145,6 +149,8 @@ def main():
 
     Options after the string '--' are forwarded to the compiler.""" % __file__
   parser = OptionParser(usage=usage)
+  parser.add_option("--tango", dest="tango", metavar="PATH", default=None,
+    help="set the root PATH to Tango for source and lib files")
   parser.add_option(
     "--release", dest="release", action="store_true", default=False,
     help="build a release version (default)")
@@ -162,31 +168,38 @@ def main():
     help="use wine to build a Windows binary on Linux")
 
   args, other_args = sys.uargv[1:], []
-  try:
+  if "--" in args:
     i = args.index("--")
     args, other_args = args[:i], args[i+1:]
-  except Exception: pass
 
   (options, args) = parser.parse_args(args)
 
   change_cwd(__file__)
 
   for_win = is_win32 or options.wine
+  target = (Targets.Lin, Targets.Win)[for_win]
+
+  cargs = CmdArgs(lnk_args=[], includes=[], wine=options.wine, other=other_args)
+
+  if options.tango:
+    TANGO = Path(options.tango)
+    cargs.includes += [TANGO]
+    cargs.libd(TANGO//("lib32", "lib64"), target)
+    cargs.libf(["tango-dmd"], target)
 
   command = (DMDCommand, LDCCommand)[options.ldc]
-  versions = (["D2"], ["D1"])[options.d1]
-  lnk_args = []
-  if options.debug and not for_win:
-    # -ldl needs to come last to avoid linker errors.
-    lnk_args = ["-ltango-dmd", "-lphobos2", "-ldl"]
+  cargs.versions = (["D2"], ["D1"])[options.d1]
 
-  if options.unittest: other_args += ["-unittest"]
+  if options.debug and not for_win:
+    # "dl" needs to come last to avoid linker errors.
+    cargs.libf(["dl"], target)
+
+  if options.unittest: cargs.other_args += ["-unittest"]
 
   build_func = (build_dil_release, build_dil_debug)[options.debug]
   sw = StopWatch()
   # Call the compiler with the provided options.
-  retcode = build_func(cmdclass=command, wine=options.wine, versions=versions,
-    lnk_args=lnk_args, other=other_args)
+  retcode = build_func(cmdclass=command, **cargs)
   print("Finished in %.2fs" % sw.stop())
 
   sys.exit(retcode)
