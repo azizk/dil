@@ -176,7 +176,7 @@ string[] messages = [
 
   // HelpMain
   `DIL v{0}
-Copyright (c) 2007-2012, Aziz Köksal. Lizenziert unter der GPL3.
+Copyright (c) 2007-2013, Aziz Köksal. Lizenziert unter der GPL3.
 
 Befehle:
 {1}
