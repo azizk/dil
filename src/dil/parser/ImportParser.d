@@ -174,11 +174,11 @@ class ImportParser : Parser
       case T.This:
         nT(), nT(); // static this
         skipToTokenAfterClosingParen();
-        parseFunctionBody();
+        skipFunctionBody();
         break;
       case T.Tilde:
         nT(), nT(), nT(), nT(), nT(); // static ~ this ( )
-        parseFunctionBody();
+        skipFunctionBody();
         break;
       case T.If:
         nT(), nT();
@@ -246,7 +246,7 @@ class ImportParser : Parser
       nT(); // ~
     case T.This:
       nT(); nT(); nT(); // this ( )
-      parseFunctionBody();
+      skipFunctionBody();
       break;
     case T.Invariant:
     version(D2)
@@ -262,11 +262,11 @@ class ImportParser : Parser
     }
       nT();
       token.kind == T.LParen && skipToTokenAfterClosingParen();
-      parseFunctionBody();
+      skipFunctionBody();
       break;
     case T.Unittest:
       nT();
-      parseFunctionBody();
+      skipFunctionBody();
       break;
     case T.Debug:
       nT();
@@ -302,12 +302,12 @@ class ImportParser : Parser
     case T.New:
       nT();
       skipToTokenAfterClosingParen();
-      parseFunctionBody();
+      skipFunctionBody();
       break;
     case T.Delete:
       nT();
       skipToTokenAfterClosingParen();
-      parseFunctionBody();
+      skipFunctionBody();
       break;
     case T.Mixin:
       while (token.kind != T.Semicolon && token.kind != T.EOF)
@@ -339,7 +339,7 @@ class ImportParser : Parser
     }
   }
 
-  FuncBodyStmt parseFunctionBody()
+  void skipFunctionBody()
   {
     while (1)
     {
@@ -368,6 +368,5 @@ class ImportParser : Parser
       }
       break; // Exit loop.
     }
-    return null;
   }
 }

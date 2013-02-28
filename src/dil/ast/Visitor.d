@@ -174,7 +174,7 @@ void testVisitor()
   class TestVisitor : Visitor
   {
     alias super.visit visit;
-    Expression visit(NullExpr e)
+    override Expression visit(NullExpr e)
     {
       return e;
     }
@@ -184,7 +184,7 @@ void testVisitor()
   {
     NullExpr ie;
     alias super.visit visit;
-    void visit(NullExpr e)
+    override void visit(NullExpr e)
     {
       ie = e;
     }

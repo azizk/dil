@@ -179,7 +179,7 @@ class Symbol
   }
 
   /// Returns the string representation of this symbol.
-  string toString()
+  override string toString()
   {
     return name.str;
   }

@@ -349,7 +349,7 @@ class ASTSerializer : Visitor2
   /// Generates a visit method for a specific Node.
   mixin template visitX(N)
   {
-    void visit(N n)
+    override void visit(N n)
     {
       alias Array2Tuple!(N._members) Members;
       assert(n);
@@ -691,7 +691,7 @@ class ASTDeserializer : Visitor
 
   mixin template visitX(N)
   {
-    returnType!(N) visit(N n)
+    override returnType!(N) visit(N n)
     {
       mixin(generateReaders(N._mtypesArray));
       static if (is(N : Declaration))

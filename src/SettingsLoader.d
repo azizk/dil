@@ -148,7 +148,7 @@ class ConfigLoader : SettingsLoader
   }
 
   /// Loads the configuration file.
-  void load()
+  override void load()
   {
     // Search for the configuration file.
     dilconfPath = findConfigurationFilePath();

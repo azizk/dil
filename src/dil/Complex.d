@@ -361,7 +361,7 @@ class Complex
 //   }
 
   /// Compares z to x.
-  bool opEquals(Object x)
+  override bool opEquals(Object x)
   {
     if (auto f = cast(Float)x)
       return opEquals(f);
@@ -516,7 +516,7 @@ class Complex
   }
 
   /// Returns this number as a string.
-  string toString()
+  override string toString()
   {
     return toString(30).idup;
   }

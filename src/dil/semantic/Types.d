@@ -419,6 +419,7 @@ class TypeError : Type
     super(null, TYP.Error);
   }
 
+override:
   cstring toText()
   {
     return "{TypeError}";
@@ -441,6 +442,7 @@ class TypeBasic : Type
     this.ident = ident;
   }
 
+override:
   size_t alignSizeOf(TargetTInfo tti)
   { // TODO:
     return 0;
@@ -460,6 +462,7 @@ class TypeDArray : Type
     super(next, TYP.DArray);
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   {
     return tti.ptrSize * 2;
@@ -486,6 +489,7 @@ class TypeAArray : Type
     this.keyType = keyType;
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   {
     return tti.ptrSize * 2;
@@ -514,6 +518,7 @@ class TypeSArray : Type
     this.dimension = dimension;
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   {
     return tti.ptrSize * 2;
@@ -553,6 +558,7 @@ class TypePointer : Type
     super(next, TYP.Pointer);
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   {
     return tti.ptrSize;
@@ -572,6 +578,7 @@ class TypeReference : Type
     super(next, TYP.Reference);
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   {
     return tti.ptrSize;
@@ -600,6 +607,7 @@ class TypeEnum : Type
     next = type;
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   { // TODO:
     return 0;
@@ -640,6 +648,7 @@ class TypeStruct : Type
     this.symbol = symbol;
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   { // TODO:
     return 0;
@@ -672,6 +681,7 @@ class TypeClass : Type
     this.symbol = symbol;
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   {
     return tti.ptrSize;
@@ -698,6 +708,7 @@ class TypeTypedef : Type
     super(next, TYP.Typedef);
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   {
     return next.sizeOf(tti);
@@ -750,6 +761,7 @@ class TypeParameter : Type
   }
 
   /// NB: the parameter's name and the optional default value are not printed.
+override:
   cstring toText()
   { // := StorageClasses? ParamType? "..."?
     char[] s;
@@ -808,6 +820,7 @@ class TypeParameters : Type
     return params.length ? params[$-1].variadic : VariadicStyle.None;
   }
 
+override:
   cstring toText()
   { // := "(" ParameterList ")"
     char[] s;
@@ -849,12 +862,12 @@ class TypeFunction : Type
     this.variadic = params.getVariadic();
   }
 
-  cstring toText()
+  override cstring toText()
   { // := ReturnType ParameterList
     return retType.toText() ~ params.toText();
   }
 
-  cstring toMangle()
+  override cstring toMangle()
   { // := MangleChar LinkageChar ParamsMangle ReturnChar ReturnTypeMangle
     if (mangled.length)
       return mangled;
@@ -935,6 +948,7 @@ class TypeFuncPtr : Type
     return next.to!(TypeFunction);
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   {
     return tti.ptrSize;
@@ -965,6 +979,7 @@ class TypeDelegate : Type
     return next.to!(TypeFunction);
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   {
     return tti.ptrSize * 2;
@@ -996,6 +1011,7 @@ class TypeIdentifier : Type
     super(null, TYP.Identifier);
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   { // TODO:
     return 0;
@@ -1023,6 +1039,7 @@ class TypeTemplInstance : Type
     super(null, TYP.TInstance);
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   { // TODO:
     return 0;
@@ -1045,6 +1062,7 @@ class TypeTuple : Type
     this.types = types;
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   { // TODO:
     return 0;
@@ -1081,6 +1099,7 @@ class TypeConst : Type
     super(next, TYP.Const);
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   {
     return next.sizeOf(tti);
@@ -1100,6 +1119,7 @@ class TypeImmutable : Type
     super(next, TYP.Immutable);
   }
 
+override:
   size_t sizeOf(TargetTInfo tti)
   {
     return next.sizeOf(tti);

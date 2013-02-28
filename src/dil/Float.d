@@ -256,7 +256,7 @@ class Float
   }
 
   /// Compares $(f) to x.
-  bool opEquals(Object x)
+  override bool opEquals(Object x)
   {
     if (auto y = cast(Float)x)
       return opEquals(y);
@@ -367,7 +367,7 @@ class Float
   }
 
   /// Returns this float as a string.
-  string toString()
+  override string toString()
   {
     return toString(30).idup;
   }

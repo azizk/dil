@@ -58,7 +58,7 @@ class IGraphCommand : Command
   }
 
   /// Executes the command.
-  void run()
+  override void run()
   {
     // Init regular expressions.
     RegExp[] regexps;

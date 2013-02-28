@@ -22,7 +22,7 @@ class StatsCommand : Command
   CompilationContext cc; /// The context.
 
   /// Execute the command.
-  void run()
+  override void run()
   {
     Statistics[] stats;
     foreach (filePath; filePaths)

@@ -59,7 +59,7 @@ class DDocCommand : Command
   ModuleManager mm;
 
   /// Executes the doc generation command.
-  void run()
+  override void run()
   {
     context.addVersionId("D_Ddoc"); // Define D_Ddoc version identifier.
 

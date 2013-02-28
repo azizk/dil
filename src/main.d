@@ -171,7 +171,7 @@ void main(cstring[] args)
       cstring format = "d_{0}.py";
       cstring[] filePaths;
 
-      void run()
+      override void run()
       {
         foreach (path; filePaths)
         {
@@ -325,7 +325,7 @@ void main(cstring[] args)
       cstring separator = "\n";
       bool ignoreWSToks, printWS, fromStdin;
 
-      void run()
+      override void run()
       {
         auto sourceText = fromStdin ?
           new SourceText("stdin", readStdin()) :
@@ -374,7 +374,7 @@ void main(cstring[] args)
       cstring srcFilePath, outFilePath;
       bool fromStdin;
 
-      void run()
+      override void run()
       {
         auto sourceText = fromStdin ?
           new SourceText("stdin", readStdin()) :
@@ -421,7 +421,7 @@ void main(cstring[] args)
       cstring srcFilePath, outFilePath;
       bool fromStdin;
 
-      void run()
+      override void run()
       {
         auto sourceText = fromStdin ?
           new SourceText("stdin", readStdin()) :

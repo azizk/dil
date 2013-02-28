@@ -10,7 +10,7 @@ import common;
 /// Provides a copy() method for subclasses of Node.
 mixin template copyMethod()
 {
-  typeof(this) copy()
+  override typeof(this) copy()
   { // First do a shallow copy.
     auto n = cast(typeof(this))cast(void*)this.dup;
     // Then copy each subnode.

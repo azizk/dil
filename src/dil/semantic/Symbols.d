@@ -25,7 +25,7 @@ abstract class DeclarationSymbol : Symbol
     super(sid, name, loc);
   }
 
-  cstring toMangle()
+  override cstring toMangle()
   {
     return toMangle(this, linkage);
   }
@@ -162,7 +162,8 @@ abstract class AggregateSymbol : ScopeSymbol
     super(sid, name, loc);
   }
 
-  override void insert(Symbol s, Identifier* ident)
+override:
+  void insert(Symbol s, Identifier* ident)
   {
     if (s.isVariable())
       // Append variable to fields.
@@ -173,7 +174,7 @@ abstract class AggregateSymbol : ScopeSymbol
     super.insert(s, ident);
   }
 
-  override Type getType()
+  Type getType()
   {
     return type;
   }
@@ -208,7 +209,7 @@ class SpecialClassSymbol : ClassSymbol
   }
 
   /// Handle mangling differently for special classes.
-  cstring toMangle()
+  override cstring toMangle()
   {
     auto parent_save = parent;
     parent = null;
@@ -291,7 +292,7 @@ class FunctionSymbol : ScopeSymbol
     super(SYM.Function, name, loc);
   }
 
-  Type getType()
+  override Type getType()
   {
     return type;
   }
@@ -301,7 +302,7 @@ class FunctionSymbol : ScopeSymbol
     return type.retType.toString() ~ name.str ~ params.toString();
   }
 
-  cstring toMangle()
+  override cstring toMangle()
   {
     if (isDMain())
       return "_Dmain";
@@ -368,7 +369,7 @@ class ParameterSymbol : Symbol
     return s;
   }
 
-  cstring toMangle()
+  override cstring toMangle()
   {
     return type.toMangle();
   }
@@ -408,7 +409,7 @@ class ParametersSymbol : Symbol
     return s;
   }
 
-  cstring toMangle()
+  override cstring toMangle()
   {
     return type.toMangle();
   }
@@ -440,7 +441,7 @@ class VariableSymbol : Symbol
     this(name, Protection.None, StorageClass.None, LinkageType.None, loc);
   }
 
-  cstring toMangle()
+  override cstring toMangle()
   {
     return DeclarationSymbol.toMangle(this, linkage);
   }
@@ -574,7 +575,7 @@ class TupleSymbol : Symbol
   }
 
   /// Returns the type only when all elements are types, otherwise null.
-  Type getType()
+  override Type getType()
   {
     if (!type && hasOnlyTypes())
       type = makeTypeTuple();
@@ -601,7 +602,7 @@ class TupleSymbol : Symbol
     return new TypeTuple(types);
   }
 
-  cstring toMangle()
+  override cstring toMangle()
   {
     return DeclarationSymbol.toMangle(this, LinkageType.D /+FIXME+/);
   }
@@ -623,7 +624,7 @@ class AliasSymbol : Symbol
     super(SYM.Alias, name, loc);
   }
 
-  cstring toMangle()
+  override cstring toMangle()
   {
     return DeclarationSymbol.toMangle(this, LinkageType.D /+FIXME+/);
   }
@@ -637,7 +638,7 @@ class TypedefSymbol : Symbol
     super(SYM.Typedef, name, loc);
   }
 
-  cstring toMangle()
+  override cstring toMangle()
   {
     return Symbol.toMangle(this);
   }
@@ -663,7 +664,7 @@ class TemplInstanceSymbol : ScopeSymbol
     super(SYM.TemplateInstance, name, loc);
   }
 
-  cstring toMangle()
+  override cstring toMangle()
   { // := ParentMangle? NameMangleLength NameMangle
     if (name is Ident.Empty)
     {} // TODO: ?
@@ -690,7 +691,7 @@ class TemplMixinSymbol : TemplInstanceSymbol
     this.sid = SYM.TemplateMixin;
   }
 
-  cstring toMangle()
+  override cstring toMangle()
   {
     return Symbol.toMangle(this);
   }

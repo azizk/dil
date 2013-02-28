@@ -170,7 +170,7 @@ class Module : ModuleSymbol
 
   /// Returns the fully qualified name of this module.
   /// E.g.: dil.ast.Node
-  cstring getFQN()
+  override cstring getFQN()
   {
     return moduleFQN;
   }

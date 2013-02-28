@@ -39,7 +39,7 @@ class CompileCommand : Command
   Diagnostics diag;
 
   /// Executes the compile command.
-  void run()
+  override void run()
   {
     // TODO: import object.d
     moduleMan = new ModuleManager(context);
@@ -225,7 +225,7 @@ class CompileCommand2 : Command
   }
 
   /// Runs the command.
-  void run()
+  override void run()
   {
     mm = new ModuleManager(cc);
 

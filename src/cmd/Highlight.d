@@ -41,7 +41,7 @@ class HighlightCommand : Command
   }
 
   /// Executes the command.
-  void run()
+  override void run()
   {
     add(HighlightCommand.Option.Tokens);
     if (!(options & (Option.XML | Option.HTML)))

@@ -356,6 +356,51 @@ class ASTPrinter : Visitor2
       writeBlock(n);
   }
 
+  /// Writes specification and/or default values.
+  void writeSpecDef(Node s, Node d)
+  {
+    if (s) {
+      w(ws, T.Colon, ws);
+      v(s);
+    }
+    if (d) {
+      w(ws, T.Equal, ws);
+      v(d);
+    }
+  }
+
+  void writeAttrDecl(Declaration n)
+  {
+    switch (n.kind)
+    {
+    case NodeKind.ProtectionDecl,
+         NodeKind.StorageClassDecl,
+         NodeKind.LinkageDecl,
+         NodeKind.AlignDecl,
+         NodeKind.PragmaDecl,
+         NodeKind.VariablesDecl:
+      {
+        scope il = new SetIndentLevel(" ");
+        v(n);
+      }
+      break;
+    case NodeKind.ColonBlockDecl:
+      v(n);
+      break;
+    case NodeKind.CompoundDecl:
+      writeBlock(n);
+      break;
+    case NodeKind.EmptyDecl:
+      w(T.Semicolon, Newline);
+      break;
+    default:
+      w(Newline);
+      v(n);
+    }
+  }
+
+override:
+
   void visit(IllegalDecl n)
   {
     assert(0);
@@ -736,36 +781,6 @@ class ASTPrinter : Visitor2
     w(ind, T.Delete);
     v(n.params);
     v(n.funcBody);
-  }
-
-  void writeAttrDecl(Declaration n)
-  {
-    switch (n.kind)
-    {
-    case NodeKind.ProtectionDecl,
-         NodeKind.StorageClassDecl,
-         NodeKind.LinkageDecl,
-         NodeKind.AlignDecl,
-         NodeKind.PragmaDecl,
-         NodeKind.VariablesDecl:
-      {
-        scope il = new SetIndentLevel(" ");
-        v(n);
-      }
-      break;
-    case NodeKind.ColonBlockDecl:
-      v(n);
-      break;
-    case NodeKind.CompoundDecl:
-      writeBlock(n);
-      break;
-    case NodeKind.EmptyDecl:
-      w(T.Semicolon, Newline);
-      break;
-    default:
-      w(Newline);
-      v(n);
-    }
   }
 
   void visit(ProtectionDecl n)
@@ -2278,19 +2293,6 @@ class ASTPrinter : Visitor2
       v(param);
     }
     w(T.RParen);
-  }
-
-  /// Writes specification and/or default values.
-  void writeSpecDef(Node s, Node d)
-  {
-    if (s) {
-      w(ws, T.Colon, ws);
-      v(s);
-    }
-    if (d) {
-      w(ws, T.Equal, ws);
-      v(d);
-    }
   }
 
   void visit(TemplateAliasParam n)
