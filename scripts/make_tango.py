@@ -7,42 +7,42 @@ from common import *
 from build import DMDCommand, LDCCommand
 __file__ = tounicode(__file__)
 
+def call_bob(bob, bits, TANGO, *args, **kwargs):
+  kwargs["cwd"] = TANGO
+  if not isinstance(bob, list):
+    bob = [bob]
+  args = tuple(bob) + ("-vu", "-m=%d"%bits, ".") + args
+  if 0 != call_proc(*args, **kwargs):
+    raise Exception("bob returned non-zero exit code")
+
 def make_Linux(TANGO):
   bob = Path("build")/"bin"/"linux%d"/"bob" % cpu_bits
   lib = "libtango-dmd.a"
   LIB32, LIB64 = map(Path.mkdir, TANGO//("lib32", "lib64"))
+
   for bits in (32, 64):
     DEST = (TANGO/"lib%d"%bits).mkdir()
     # Release
-    ret = call_proc(bob, "-vu", "-m=%d"%bits, ".", cwd=TANGO)
-    if ret != 0:
-      break
+    call_bob(bob, bits, TANGO)
     map(Path.rm, TANGO.glob("*.o"))
     (TANGO/lib).move(DEST)
     # Debug
-    ret = call_proc(bob, "-vu", "-m=%d"%bits, ".", "-o=-g", cwd=TANGO)
-    if ret != 0:
-      break
+    call_bob(bob, bits, TANGO, "-o=-g")
     map(Path.rm, TANGO.glob("*.o"))
     (TANGO/lib).move(DEST/"libtango-dmd-dbg.a")
 
 def make_Windows(TANGO):
   bob = Path("build")/"bin"/"win32"/"bob.exe"
   lib = "libtango-dmd.lib"
-  build = call_proc
   if not is_win32:
-    build = lambda *a, **k: call_proc("wine", *a, **k)
+    bob = ["wine", bob]
   for bits in (32,): # 64 not supported yet.
     DEST = (TANGO/"lib%d"%bits).mkdir()
     # Release
-    ret = build(bob, "-vu", "-m=%d"%bits, ".", cwd=TANGO)
-    if ret != 0:
-      break
+    call_bob(bob, bits, TANGO)
     (TANGO/lib).move(DEST)
     # Debug
-    ret = build(bob, "-vu", "-m=%d"%bits, "-o=-g", ".", cwd=TANGO)
-    if ret != 0:
-      break
+    call_bob(bob, bits, TANGO, "-o=-g")
     (TANGO/lib).move(DEST/"libtango-dmd-dbg.lib")
 
 def main():
