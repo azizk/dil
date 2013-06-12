@@ -16,44 +16,53 @@ class Path(unicode):
   sep = os.sep # File system path separator: '/' or '\'.
   pathsep = os.pathsep # Separator in the PATH environment variable.
 
-  def __new__(cls, *paths):
-    return unicode.__new__(cls, op.join(*paths) if len(paths) else '')
+  def __new__(cls, *parts):
+    return unicode.__new__(cls, op.join(*parts) if len(parts) else '')
 
   def __div__(self, path):
-    """ Joins this path with another path. """
-    """ path_obj / 'bc.d' """
-    """ path_obj / path_obj2 """
+    """ Joins this path with another path.
+        Path('/home/a') / 'bc.d' == '/home/a/bc.d' """
     return Path(self, path)
 
   def __rdiv__(self, path):
-    """ Joins this path with another path. """
-    """ "/home/a" / path_obj """
+    """ Joins this path with another path.
+        '/home/a' / Path('bc.d') == '/home/a/bc.d' """
     return Path(path, self)
 
-  def __idiv__(self, path):
-    """ Like __div__ but also assigns to the variable. """
-    """ path_obj /= 'bc.d' """
-    return Path(self, path)
+  """ Like __div__ but also assigns to the variable.
+      p = Path('/home/a')
+      p /= 'bc.d'
+      p == '/home/a/bc.d' """
+  __idiv__ = __div__
 
   def __floordiv__(self, paths):
-    """ Returns a list of paths prefixed with 'self'. """
-    """ '/home/a' // [bc.d, ef.g] -> [/home/a/bc.d, /home/a/ef.g] """
-    return [Path(self, path) for path in paths]
+    """ Returns a list of paths prefixed with 'self'.
+        Path('/home/a') // ['bc.d', 'ef.g'] == ['/home/a/bc.d', '/home/a/ef.g'] """
+    return [Path(self, p) for p in paths]
+
+  def __rfloordiv__(self, paths):
+    """ Returns a list of paths postfixed with 'self'.
+        ['/var', '/'] // Path('tmp') == ['/var/tmp', '/tmp'] """
+    return [Path(p, self) for p in paths]
+
+  __ifloordiv__ = __floordiv__
 
   def __add__(self, path):
-    """ Path('/home/a') + 'bc.d' -> '/home/abc.d' """
+    """ Path('/home/a') + 'bc.d' == '/home/abc.d' """
     return Path(unicode(self) + path)
 
   def __radd__(self, path):
-    """ '/home/a' + Path('bc.d') -> '/home/abc.d' """
+    """ '/home/a' + Path('bc.d') == '/home/abc.d' """
     return Path(path + unicode(self))
 
+  __iadd__ = __add__
+
   def __mod__(self, args):
-    """ Path('/bin%d') % 32 -> Path('/bin32') """
+    """ Path('/bin%d') % 32 == '/bin32' """
     return Path(unicode.__mod__(self, args))
 
   def format(self, *args, **kwargs):
-    """ Path('/{x}/lib').format(x='usr') -> Path('/usr/lib') """
+    """ Path('/{x}/lib').format(x='usr') == '/usr/lib' """
     return Path(unicode.format(self, *args, **kwargs))
 
   def __repr__(self):
@@ -66,27 +75,27 @@ class Path(unicode):
 
   @property
   def name(self):
-    """ '/home/a/bc.d' -> 'bc.d' """
+    """ Path('/home/a/bc.d').name == 'bc.d' """
     return Path(op.basename(self))
 
   @property
   def namebase(self):
-    """ '/home/a/bc.d' -> 'bc' """
+    """ Path('/home/a/bc.d').namebase == 'bc' """
     return self.name.noext
 
   @property
   def noext(self):
-    """ '/home/a/bc.d' -> '/home/a/bc' """
+    """ Path('/home/a/bc.d').noext == '/home/a/bc' """
     return Path(op.splitext(self)[0])
 
   @property
   def ext(self):
-    """ '/home/a/bc.d' -> '.d' """
+    """ Path('/home/a/bc.d').ext == '.d' """
     return Path(op.splitext(self)[1])
 
   @property
   def abspath(self):
-    """ './a/bc.d' -> '/home/a/bc.d'  """
+    """ Path('./a/bc.d').abspath == '/home/a/bc.d'  """
     return Path(op.abspath(self))
 
   @property
@@ -96,20 +105,20 @@ class Path(unicode):
 
   @property
   def normpath(self):
-    """ '/home/x/.././a//bc.d' -> '/home/a/bc.d' """
+    """ Path('/home/x/.././a//bc.d').normpath == '/home/a/bc.d' """
     return Path(op.normpath(self))
 
   @property
   def folder(self):
-    """ Returns the folder of this path. """
-    """ '/home/a/bc.d' -> '/home/a' """
-    """ '/home/a/' -> '/home/a' """
-    """ '/home/a' -> '/home' """
+    """ Returns the folder of this path.
+        Path('/home/a/bc.d').folder == '/home/a'
+        Path('/home/a/').folder == '/home/a'
+        Path('/home/a').folder == '/home' """
     return Path(op.dirname(self))
 
   def up(self, n=1):
-    """ Returns a new Path, """
-    """ which goes n levels back in the directory hierarchy. """
+    """ Returns a new Path,
+        which goes n levels back in the directory hierarchy. """
     while n:
       n -= 1
       self = self.folder
@@ -172,9 +181,11 @@ class Path(unicode):
 
   @classmethod
   def cwd(cls):
+    """ Return the current working directory. """
     return Path(os.getcwd())
 
   def chdir(self):
+    """ Changes the current working directory to 'self'. """
     os.chdir(self)
     return self
 
@@ -207,6 +218,7 @@ class Path(unicode):
     return self
 
   def copy(self, to):
+    """ Copies a file to another path. """
     shutil.copy(self, to)
     return self
 
