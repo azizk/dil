@@ -11,12 +11,17 @@ __all__ = ["Path"]
 
 op = os.path
 
+def isiterable(x):
+  """ Returns true for iterable objects, strings not included. """
+  return hasattr(x, '__iter__')
 class Path(unicode):
   """ Models a path in an object oriented way. """
   sep = os.sep # File system path separator: '/' or '\'.
   pathsep = os.pathsep # Separator in the PATH environment variable.
 
   def __new__(cls, *parts):
+    if len(parts) == 1 and isiterable(parts[0]):
+      parts = parts[0]
     return unicode.__new__(cls, op.join(*parts) if len(parts) else '')
 
   def __div__(self, path):
@@ -75,12 +80,21 @@ class Path(unicode):
 
   @property
   def name(self):
-    """ Path('/home/a/bc.d').name == 'bc.d' """
+    """ Path('/home/a/bc.d').name == 'bc.d'
+        Path('/home/a/.').name == '.'
+        Path('/home/a/').name == ''
+        Path('/home/a').name == 'a' """
     return Path(op.basename(self))
 
   @property
   def namebase(self):
-    """ Path('/home/a/bc.d').namebase == 'bc' """
+    """ Path('/home/a/bc.d').namebase == 'bc'
+        Path('/home/a/bc.').namebase == 'bc'
+        Path('/home/a/bc').namebase == 'bc'
+        Path('/home/a/.d').namebase == '.d'
+        Path('/home/a/.').namebase == '.'
+        Path('/home/a/').namebase == ''
+         """
     return self.name.noext
 
   @property
@@ -113,12 +127,12 @@ class Path(unicode):
     """ Returns the folder of this path.
         Path('/home/a/bc.d').folder == '/home/a'
         Path('/home/a/').folder == '/home/a'
-        Path('/home/a').folder == '/home' """
+        Path('/home/a').folder == '/home'
+        Path('/').folder == '/' """
     return Path(op.dirname(self))
 
   def up(self, n=1):
-    """ Returns a new Path,
-        which goes n levels back in the directory hierarchy. """
+    """ Returns a new Path going n levels back in the directory hierarchy. """
     while n:
       n -= 1
       self = self.folder
@@ -126,22 +140,27 @@ class Path(unicode):
 
   @property
   def exists(self):
-    """ Returns True if the path exists. """
+    """ Returns True if the path exists, but False for broken symlinks."""
     return op.exists(self)
 
   @property
+  def lexists(self):
+    """ Returns True if the path exists. Also True for broken symlinks. """
+    return op.lexists(self)
+
+  @property
   def atime(self):
-    """ Returns last accessed time. """
+    """ Returns last accessed timestamp. """
     return op.getatime(self)
 
   @property
   def mtime(self):
-    """ Returns last modified time. """
+    """ Returns last modified timestamp. """
     return op.getmtime(self)
 
   @property
   def ctime(self):
-    """ Returns last changed time. """
+    """ Returns last changed timestamp. """
     return op.getctime(self)
 
   @property
@@ -189,55 +208,46 @@ class Path(unicode):
     os.chdir(self)
     return self
 
-  def walk(self, **kwargs):
-    """ Returns a generator that walks through a directory tree. """
-    if vi[:2] < (2,6): # Only Python 2.6 or newer supports followlinks.
-      kwargs.pop("followlinks", None)
-    return os.walk(self, **kwargs)
-
   def mkdir(self, mode=0777):
-    """ Creates a directory (and its parents), if it doesn't exist already. """
+    """ Creates a directory (and its parents), if it doesn't already exist. """
     if not self.exists:
       os.makedirs(self, mode)
     return self
+  mk = mkdir
 
   def remove(self):
-    """ Removes a file. """
-    os.remove(self)
+    """ Removes a file, symlink or directory tree. """
+    if self.lexists:
+      if self.isfile:
+        os.remove(self)
+      else:
+        shutil.rmtree(self, ignore_errors=True)
     return self
-  rm = remove # Alias.
-
-  def rmdir(self):
-    """ Removes a directory (only if it's empty.) """
-    os.rmdir(self)
-    return self
-
-  def rmtree(self, noerrors=True):
-    """ Removes a directory tree. Ignores errors by default. """
-    shutil.rmtree(self, ignore_errors=noerrors)
-    return self
+  rm = remove
 
   def copy(self, to):
-    """ Copies a file to another path. """
-    shutil.copy(self, to)
+    """ Copies a file or a directory tree to another path. """
+    if self.isfile:
+      shutil.copy(self, to)
+    else:
+      shutil.copytree(self, to)
     return self
-
-  def copytree(self, to):
-    """ Copies a directory tree to another path. """
-    shutil.copytree(self, to)
-    return self
+  cp = copy
 
   def move(self, to):
     """ Moves a file or directory to another path.
         Deletes the destination first, if existent. """
     to = Path(to)
-    if to.exists:
-      if to.isfile: to.remove()
-      else: # Check if the source dir/file is in the destination dir.
-        to = to/self.name
-        if to.exists:
-          if to.isfile: to.remove()
-          else: to.rmtree()
+    if to.lexists:
+      if to.islink:
+        if not to.exists:
+          to.remove() # Broken symlink.
+        else:
+          return self.move(to.realpath)
+      elif to.isfile:
+        to.remove()
+      else: # Delete file or dir with the same name in the destination folder.
+        to = (to/self.normpath.name).remove()
     shutil.move(self, to)
     return self
   mv = move
@@ -251,6 +261,12 @@ class Path(unicode):
     """ Renames another file or directory. """
     os.renames(self, other)
     return self
+
+  def walk(self, **kwargs):
+    """ Returns a generator that walks through a directory tree. """
+    if vi[:2] < (2,6): # Only Python 2.6 or newer supports followlinks.
+      kwargs.pop("followlinks", None)
+    return os.walk(self, **kwargs)
 
   def glob(self, pattern):
     """ Returns a list of paths matching the glob pattern. """
