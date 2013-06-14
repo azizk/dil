@@ -25,41 +25,54 @@ class Path(unicode):
       parts = parts[0]
     return unicode.__new__(cls, op.join(*parts) if len(parts) else '')
 
-  def __div__(self, path):
+  def __div__(self, path_s):
     """ Joins this path with another path.
-        Path('/home/a') / 'bc.d' == '/home/a/bc.d' """
-    return Path(self, path)
+        Path('/home/a') / 'bc.d' == '/home/a/bc.d'
+        or:
+        Returns a list of paths prefixed with 'self'.
+        Path('/home/a') / ['bc.d', 'ef.g'] == \
+          ['/home/a/bc.d', '/home/a/ef.g'] """
+    if isiterable(path_s):
+      return Paths(Path(self, p) for p in path_s)
+    else:
+      return Path(self, path_s)
 
-  def __rdiv__(self, path):
+  def __rdiv__(self, path_s):
     """ Joins this path with another path.
-        '/home/a' / Path('bc.d') == '/home/a/bc.d' """
-    return Path(path, self)
+        '/home/a' / Path('bc.d') == '/home/a/bc.d'
+        or:
+        Returns a list of paths postfixed with 'self'.
+        ['/var', '/'] / Path('tmp') == ['/var/tmp', '/tmp'] """
+    if isiterable(path_s):
+      return Paths(Path(p, self) for p in path_s)
+    else:
+      return Path(path_s, self)
 
-  """ Like __div__ but also assigns to the variable.
+  """ Like __div__ but also assigns (a new instance) to the variable.
       p = Path('/home/a')
       p /= 'bc.d'
       p == '/home/a/bc.d' """
   __idiv__ = __div__
 
-  def __floordiv__(self, paths):
-    """ Returns a list of paths prefixed with 'self'.
-        Path('/home/a') // ['bc.d', 'ef.g'] == ['/home/a/bc.d', '/home/a/ef.g'] """
-    return Paths(Path(self, p) for p in paths)
-
-  def __rfloordiv__(self, paths):
-    """ Returns a list of paths postfixed with 'self'.
-        ['/var', '/'] // Path('tmp') == ['/var/tmp', '/tmp'] """
-    return Paths(Path(p, self) for p in paths)
-
-  __ifloordiv__ = __floordiv__
-
   def __add__(self, path):
-    """ Path('/home/a') + 'bc.d' == '/home/abc.d' """
-    return Path(unicode(self) + path)
+    """ Path('/home/a') + 'bc.d' == '/home/abc.d'
+        or:
+        Path('/home/a') + ['b', 'c'] == \
+          ['/home/ab', '/home/ac'] """
+    if isiterable(path):
+      return Paths(self + p for p in path)
+    else:
+      return Path(unicode.__add__(self, path))
 
   def __radd__(self, path):
-    """ '/home/a' + Path('bc.d') == '/home/abc.d' """
-    return Path(path + unicode(self))
+    """ '/home/a' + Path('bc.d') == '/home/abc.d'
+        or:
+        ['/home/a', '/home/b'] + Path('c') == \
+          ['/home/ac', '/home/bc'] """
+    if isiterable(path):
+      return Paths(p + self for p in path)
+    else:
+      return Path(unicode.__add__(unicode(path), self))
 
   __iadd__ = __add__
 
@@ -319,41 +332,45 @@ class Paths(list):
       paths = paths[0]
     list.__init__(self, (p if isinstance(p, Path) else Path(p) for p in paths))
 
-  def __div__(self, path):
-    """ Paths('/a', 'b') / 'c.d' == Paths('/a/c.d', '/b/c.d') """
-    return Paths(Path(p, path) for p in self)
-
-  def __rdiv__(self, path):
-    """ '/home' / Paths('a', 'b') == Paths('/home/a', '/home/b') """
-    return Paths(Path(path, p) for p in self)
-
-  __idiv__ = __div__
-
-  def __floordiv__(self, paths):
-    """ Paths('a/b', 'c/d') // ['w.x', 'y.z'] == \
+  def __div__(self, path_s):
+    """ Paths('/a', 'b') / 'c.d' == Paths('/a/c.d', '/b/c.d')
+        or:
+        Paths('a/b', 'c/d') / ['w.x', 'y.z'] == \
         Paths('a/b/w.x', 'a/b/y.z', 'c/d/w.x', 'c/d/y.z') """
-    return Paths(Path(p1, p2) for p1 in self for p2 in paths)
-
-  def __rfloordiv__(self, paths):
-    """ ['w.x', 'y.z'] // Paths('a/b', 'c/d') == \
-        Paths('w.x/a/b', 'w.x/c/d', 'y.z/a/b', 'y.z/c/d') """
-    return Paths(Path(p1, p2) for p1 in paths for p2 in self)
-
-  __ifloordiv__ = __floordiv__
-
-  def __add__(self, path):
-    if isiterable(path):
-      return list.__add__(self, path)
+    if isiterable(path_s):
+      return Paths(Path(p1, p2) for p1 in self for p2 in path_s)
     else:
-      return Paths(p + unicode(path) for p in self)
+      return Paths(Path(p, path_s) for p in self)
 
-  def __radd__(self, path):
-    if isiterable(path):
-      return list.__add__(self, path)
+  def __rdiv__(self, path_s):
+    """ '/home' / Paths('a', 'b') == Paths('/home/a', '/home/b')
+        or:
+        ['w.x', 'y.z'] / Paths('a/b', 'c/d') == \
+        Paths('w.x/a/b', 'w.x/c/d', 'y.z/a/b', 'y.z/c/d')"""
+    if isiterable(path_s):
+      return Paths(Path(p1, p2) for p1 in path_s for p2 in self)
     else:
-      return Paths(unicode(path) + p for p in self)
+      return Paths(Path(path_s, p) for p in self)
 
-  __iadd__ = __add__
+  def __idiv__(self, path_s):
+    self[:] = self.__div__(path_s)
+    return self
+
+  def __add__(self, path_s):
+    if isiterable(path_s):
+      return Paths(list.__add__(self, path_s))
+    else:
+      return Paths(p + unicode(path_s) for p in self)
+
+  def __radd__(self, path_s):
+    if isiterable(path_s):
+      return Paths(list.__add__(self, path_s))
+    else:
+      return Paths(unicode(path_s) + p for p in self)
+
+  def __iadd__(self, path_s):
+    self[:] = self.__add__(path_s)
+    return self
 
   def __mod__(self, args):
     return Paths(p.__mod__(args) for p in self)
