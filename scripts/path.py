@@ -7,13 +7,14 @@ from re import compile as re_compile
 from sys import version_info as vi
 from glob import glob
 from codecs import open
-__all__ = ["Path"]
+__all__ = ["Path", "Paths"]
 
 op = os.path
 
 def isiterable(x):
-  """ Returns true for iterable objects, strings not included. """
+  """ Returns True for iterable objects, strings not included. """
   return hasattr(x, '__iter__')
+
 class Path(unicode):
   """ Models a path in an object oriented way. """
   sep = os.sep # File system path separator: '/' or '\'.
@@ -43,12 +44,12 @@ class Path(unicode):
   def __floordiv__(self, paths):
     """ Returns a list of paths prefixed with 'self'.
         Path('/home/a') // ['bc.d', 'ef.g'] == ['/home/a/bc.d', '/home/a/ef.g'] """
-    return [Path(self, p) for p in paths]
+    return Paths(Path(self, p) for p in paths)
 
   def __rfloordiv__(self, paths):
     """ Returns a list of paths postfixed with 'self'.
         ['/var', '/'] // Path('tmp') == ['/var/tmp', '/tmp'] """
-    return [Path(p, self) for p in paths]
+    return Paths(Path(p, self) for p in paths)
 
   __ifloordiv__ = __floordiv__
 
@@ -257,9 +258,9 @@ class Path(unicode):
     os.rename(self, to)
     return self
 
-  def renames(self, other):
-    """ Renames another file or directory. """
-    os.renames(self, other)
+  def renames(self, to):
+    """ Recursively renames a file or directory. """
+    os.renames(self, to)
     return self
 
   def walk(self, **kwargs):
@@ -269,17 +270,19 @@ class Path(unicode):
     return os.walk(self, **kwargs)
 
   def glob(self, pattern):
-    """ Returns a list of paths matching the glob pattern. """
-    return map(Path, glob(unicode(self/pattern)))
+    """ Matches the file name pattern, taking 'self' as the folder.
+        Returns a Paths object containing the matches. """
+    return Paths(glob(unicode(self/pattern)))
 
   def rxglob(self, byname=None, bypath=None, prunedir=None):
     """ Walks through a dir tree using regular expressions.
-        Also accepts callback functions. """
+        Also accepts callback functions.
+        Returns a Paths object containing the matches. """
     def check(rx):
       return rx if callable(rx) else rx.search if hasattr(rx, "search") else \
         re_compile(rx).search if rx else lambda x: False
     byname, bypath, prunedir = map(check, (byname, bypath, prunedir))
-    found = []
+    found = Paths()
     for root, dirs, files in self.walk(followlinks=True):
       dirs[:] = [dir for dir in dirs if not prunedir(Path(root, dir))]
       for filename in files:
@@ -305,3 +308,189 @@ class Path(unicode):
     content = f.read()
     f.close()
     return content
+
+
+
+
+class Paths(list):
+  """ A list of Path objects with convenience functions. """
+  def __init__(self, *paths):
+    if len(paths) == 1 and isiterable(paths[0]):
+      paths = paths[0]
+    list.__init__(self, (p if isinstance(p, Path) else Path(p) for p in paths))
+
+  def __div__(self, path):
+    """ Paths('/a', 'b') / 'c.d' == Paths('/a/c.d', '/b/c.d') """
+    return Paths(Path(p, path) for p in self)
+
+  def __rdiv__(self, path):
+    """ '/home' / Paths('a', 'b') == Paths('/home/a', '/home/b') """
+    return Paths(Path(path, p) for p in self)
+
+  __idiv__ = __div__
+
+  def __floordiv__(self, paths):
+    """ Paths('a/b', 'c/d') // ['w.x', 'y.z'] == \
+        Paths('a/b/w.x', 'a/b/y.z', 'c/d/w.x', 'c/d/y.z') """
+    return Paths(Path(p1, p2) for p1 in self for p2 in paths)
+
+  def __rfloordiv__(self, paths):
+    """ ['w.x', 'y.z'] // Paths('a/b', 'c/d') == \
+        Paths('w.x/a/b', 'w.x/c/d', 'y.z/a/b', 'y.z/c/d') """
+    return Paths(Path(p1, p2) for p1 in paths for p2 in self)
+
+  __ifloordiv__ = __floordiv__
+
+  def __add__(self, path):
+    if isiterable(path):
+      return list.__add__(self, path)
+    else:
+      return Paths(p + unicode(path) for p in self)
+
+  def __radd__(self, path):
+    if isiterable(path):
+      return list.__add__(self, path)
+    else:
+      return Paths(unicode(path) + p for p in self)
+
+  __iadd__ = __add__
+
+  def __mod__(self, args):
+    return Paths(p.__mod__(args) for p in self)
+
+  def format(self, *args, **kwargs):
+    return Paths(p.format(*args, **kwargs) for p in self)
+
+  def __repr__(self):
+    return "Paths(%s)" % list.__repr__(self)[1:-1]
+
+  def common(self):
+    return Path(op.commonprefix(self))
+
+  @property
+  def names(self):
+    return Paths(p.name for p in self)
+
+  @property
+  def bases(self):
+    return Paths(p.namebase for p in self)
+
+  @property
+  def noexts(self):
+    return Paths(p.noext for p in self)
+
+  @property
+  def exts(self):
+    return Paths(p.ext for p in self)
+
+  @property
+  def abspaths(self):
+    return Paths(p.abspath for p in self)
+
+  @property
+  def realpaths(self):
+    return Paths(p.realpath for p in self)
+
+  @property
+  def normpaths(self):
+    return Paths(p.normpath for p in self)
+
+  @property
+  def folders(self):
+    return Paths(p.folder for p in self)
+
+  def up(self, n=1):
+    for p in self:
+      p.up(n)
+    return self
+
+  @property
+  def exist(self):
+    return [p.exists for p in self]
+  @property
+  def lexist(self):
+    return [p.lexists for p in self]
+  @property
+  def atimes(self):
+    return [p.atime for p in self]
+  @property
+  def mtimes(self):
+    return [p.mtime for p in self]
+  @property
+  def ctimes(self):
+    return [p.ctime for p in self]
+  @property
+  def sizes(self):
+    return [p.size for p in self]
+  @property
+  def isabs(self):
+    return [p.isabs for p in self]
+  @property
+  def isfile(self):
+    return [p.isfile for p in self]
+  @property
+  def isdir(self):
+    return [p.isdir for p in self]
+  @property
+  def islink(self):
+    return [p.islink for p in self]
+  @property
+  def ismount(self):
+    return [p.ismount for p in self]
+
+  def mkdir(self, mode=0777):
+    for p in self: p.mkdir(mode)
+    return self
+  mk = mkdirs = mkdir
+
+  def remove(self):
+    for p in self: p.rm()
+    return self
+  rm = remove
+
+  def copy(self, to):
+    if isiterable(to):
+      map(Path.cp, self, to)
+    else:
+      for p in self:
+        p.cp(to)
+    return self
+  cp = copy
+
+  def move(self, to):
+    if isiterable(to):
+      map(Path.mv, self, to)
+    else:
+      for p in self:
+        p.mv(to)
+    return self
+  mv = move
+
+  def rename(self, to):
+    map(Path.rename, self, to)
+    return self
+
+  def renames(self, to):
+    map(Path.renames, self, to)
+    return self
+
+  def walk(self, **kwargs):
+    from itertools import chain
+    return chain(*(p.walk(**kwargs) for p in self))
+
+  def glob(self, pattern):
+    return Paths(q for p in self for q in glob(unicode(p/pattern)))
+
+  def rxglob(self, *args, **kwargs):
+    return Paths(q for p in self for q in p.rxglob(*args, **kwargs))
+
+  def open(self, **kwargs):
+    return [p.open(**kwargs) for p in self]
+
+  def write(self, content, **kwargs):
+    for p in self:
+      p.write(content, **kwargs)
+    return self
+
+  def read(self, **kwargs):
+    return [p.read(**kwargs) for p in self]
