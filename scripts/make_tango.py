@@ -18,17 +18,16 @@ def call_bob(bob, bits, TANGO, *args, **kwargs):
 def make_Linux(TANGO):
   bob = Path("build")/"bin"/"linux%d"/"bob" % cpu_bits
   lib = "libtango-dmd.a"
-  LIB32, LIB64 = map(Path.mkdir, TANGO//("lib32", "lib64"))
 
   for bits in (32, 64):
     DEST = (TANGO/"lib%d"%bits).mkdir()
     # Release
     call_bob(bob, bits, TANGO)
-    map(Path.rm, TANGO.glob("*.o"))
+    TANGO.glob("*.o").rm()
     (TANGO/lib).move(DEST)
     # Debug
     call_bob(bob, bits, TANGO, "-o=-g")
-    map(Path.rm, TANGO.glob("*.o"))
+    TANGO.glob("*.o").rm()
     (TANGO/lib).move(DEST/"libtango-dmd-dbg.a")
 
 def make_Windows(TANGO):

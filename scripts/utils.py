@@ -4,7 +4,7 @@
 # Some classes and functions not readily available in standard Python.
 from __future__ import unicode_literals, print_function
 import sys, subprocess
-from path import Path
+from path import Path, Paths
 
 class dicta(dict):
   """ Sets and gets values using attributes. """

@@ -353,7 +353,7 @@ def main():
           Path(f).copy(DEST/f)
   # Create other directories not available in a clean checkout.
   DOC = DEST.DOC
-  map(Path.mkdir, (DOC.HTMLSRC, DOC.CSS, DOC.IMG, DOC.JS, TMP))
+  Paths(DOC.HTMLSRC, DOC.CSS, DOC.IMG, DOC.JS, TMP).mkdirs()
 
   # Rebuild the path object for kandil. (Images are globbed.)
   DEST.KANDIL = kandil_path(DEST/"kandil")

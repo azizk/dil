@@ -40,10 +40,11 @@ def create_index_file(index_d, prefix_path, FILES):
 
 def copy_files(DIL, PHOBOS, DEST, use_kandil):
   """ Copies required files to the destination folder. """
+  FILES = Paths(PHOBOS.HTML/"phobos.html")
   if use_kandil: return copy_files_kandil(DIL, PHOBOS, DEST)
-  for f in ["erfc.gif", "erf.gif"] + \
-            Path("..")//("style.css", "holy.gif", "dmlogo.gif"):
-    (PHOBOS.HTML/f).copy(DEST)
+  FILES += PHOBOS.HTML/["erfc.gif", "erf.gif"] + \
+    ".."/Paths("style.css", "holy.gif", "dmlogo.gif")
+  FILES.copy(DEST)
   # Syntax highlighted files need html.css.
   (DIL.DATA/"html.css").copy(DEST.HTMLSRC)
 
@@ -186,9 +187,9 @@ def main():
   use_kandil = options.use_kandil
 
   # Create the destination folders.
-  map(Path.mkdir, (DEST, DEST.HTMLSRC, TMP))
+  Paths(DEST, DEST.HTMLSRC, TMP).mkdirs()
   if use_kandil:
-    map(Path.mkdir, (DEST.JS, DEST.CSS, DEST.IMG))
+    Paths(DEST.JS, DEST.CSS, DEST.IMG).mkdirs()
 
   # Begin processing.
 

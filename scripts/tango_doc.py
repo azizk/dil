@@ -10,17 +10,12 @@ __file__ = tounicode(__file__)
 
 def copy_files(DIL, TANGO, DEST):
   """ Copies required files to the destination folder. """
-  for FILE, DIR in (
-      (TANGO.license, DEST/"License.txt"), # Tango's license.
-      (DIL.DATA/"html.css", DEST.HTMLSRC),
-      (DIL.KANDIL.style,    DEST.CSS)):
-    FILE.copy(DIR)
+  Paths(TANGO.license,   DIL.DATA/"html.css", DIL.KANDIL.style).copy(\
+    (DEST/"License.txt", DEST.HTMLSRC,        DEST.CSS))
   if TANGO.favicon.exists:
     TANGO.favicon.copy(DEST.IMG/"favicon.png")
-  for FILE in DIL.KANDIL.jsfiles:
-    FILE.copy(DEST.JS)
-  for img in DIL.KANDIL.images:
-    img.copy(DEST.IMG)
+  Paths(DIL.KANDIL.jsfiles).copy(DEST.JS)
+  Paths(DIL.KANDIL.images).copy(DEST.IMG)
 
 def get_tango_version(path):
   txt = path.open().read()
@@ -162,7 +157,7 @@ def main():
   VERSION = get_tango_version(TANGO.SRC.ROOT/"tango"/"core"/"Version.d")
 
   # 3. Create directories.
-  map(Path.mkdir, (DEST, DEST.HTMLSRC, DEST.JS, DEST.CSS, DEST.IMG, TMP))
+  Paths(DEST, DEST.HTMLSRC, DEST.JS, DEST.CSS, DEST.IMG, TMP).mkdirs()
 
   dil_retcode = 0
   if options.docs:
