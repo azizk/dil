@@ -414,7 +414,7 @@ def main():
   html_files = SRC.glob("*.html")
   pdf_gen.run(html_files, DEST_PDF, TMP, params)
 
-  TMP.rmtree()
+  TMP.rm()
 
 if __name__ == "__main__":
   main()

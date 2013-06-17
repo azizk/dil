@@ -28,10 +28,10 @@ def change_cwd(script_path):
 
 def kandil_path(where="kandil"):
   P = firstof(Path, where, Path(where))
-  P.IMG, P.CSS, P.JS = P//("img", "css", "js")
+  P.IMG, P.CSS, P.JS = P/("img", "css", "js")
   P.ddoc    = P/"kandil.ddoc"
   P.style   = P.CSS/"style.css"
-  P.jsfiles = P.JS//("navigation.js", "jquery.js", "quicksearch.js",
+  P.jsfiles = P.JS/("navigation.js", "jquery.js", "quicksearch.js",
     "utilities.js", "symbols.js", "treeview.js")
   P.navi, P.jquery, P.qsearch, P.utils, P.syms, P.tview = P.jsfiles
   P.images = P.IMG.glob("*.png") + P.IMG.glob("*.gif")
@@ -67,7 +67,7 @@ def doc_path(where):
   P = firstof(Path, where, Path(where))
   P.HTMLSRC = P/"htmlsrc" # Destination of syntax highlighted source files.
   P.SYMBOLS = P/"symbols" # JSON files.
-  P.JS, P.CSS, P.IMG = P//("js", "css", "img")
+  P.JS, P.CSS, P.IMG = P/("js", "css", "img")
   return P
 
 def get_module_fqn(prefix_path, filepath):

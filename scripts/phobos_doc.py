@@ -42,7 +42,7 @@ def copy_files(DIL, PHOBOS, DEST, use_kandil):
   """ Copies required files to the destination folder. """
   FILES = Paths(PHOBOS.HTML/"phobos.html")
   if use_kandil: return copy_files_kandil(DIL, PHOBOS, DEST)
-  FILES += PHOBOS.HTML/["erfc.gif", "erf.gif"] + \
+  FILES += PHOBOS.HTML/("erfc.gif", "erf.gif") + \
     ".."/Paths("style.css", "holy.gif", "dmlogo.gif")
   FILES.copy(DEST)
   # Syntax highlighted files need html.css.
@@ -50,20 +50,14 @@ def copy_files(DIL, PHOBOS, DEST, use_kandil):
 
 def copy_files_kandil(DIL, PHOBOS, DEST):
   """ Copies required files to the destination folder. """
-  for f in ("erfc.gif", "erf.gif"):
-    (PHOBOS.HTML/f).copy(DEST)
-  for FILE, DIR in (
-      (DIL.DATA/"html.css", DEST.HTMLSRC),
-      (DIL.KANDIL.style,    DEST.CSS)):
-    FILE.copy(DIR)
-  for FILE in DIL.KANDIL.jsfiles:
-    FILE.copy(DEST.JS)
-  for img in DIL.KANDIL.images:
-    img.copy(DEST.IMG)
+  (PHOBOS.HTML/("erfc.gif", "erf.gif")).copy(DEST)
+  Paths(DIL.DATA/"html.css", DIL.KANDIL.style).copy((DEST.HTMLSRC, DEST.CSS))
+  DIL.KANDIL.jsfiles.copy(DEST.JS)
+  DIL.KANDIL.images.copy(DEST.IMG)
 
 def modify_phobos_html(phobos_html, version):
   """ Modifys DEST/phobos.html. """
-  ddoc = phobos_html.open().read() # Read the whole file.
+  ddoc = phobos_html.read() # Read the whole file.
   # Make relative links to absolute links.
   ddoc = ddoc.replace("../", "http://www.digitalmars.com/d/%s/" % version)
   # Make e.g. "std_string.html" to "std.string.html".
@@ -112,7 +106,7 @@ def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen = PDFGenerator()
   pdf_gen.fetch_files(DIL, TMP)
 
-  for gif in SRC//("erf.gif", "erfc.gif"): gif.copy(TMP)
+  (SRC/("erf.gif", "erfc.gif")).copy(TMP)
   html_files = SRC.glob("*.html")
   ignore_list = ("phobos.html", "std.c.windows.windows.html", "index.html")
   html_files = filter(lambda f: f.name not in ignore_list, html_files)
@@ -208,13 +202,13 @@ def main():
 
   if use_kandil:
     DOC_FILES = [TMP/"phobos.ddoc", DIL.KANDIL.ddoc] + \
-                 TMP//("missing.ddoc", "overrides.ddoc") + \
+                 TMP/("missing.ddoc", "overrides.ddoc") + \
                 [PHOBOS_SRC/"phobos.d"] + FILES
     doc_options = '-v -i -hl --kandil'.split(' ')
   else:
     create_index_file(TMP/"index.d", PHOBOS_SRC, FILES)
     DOC_FILES = FILES + [PHOBOS_SRC/"phobos.d"] + \
-      TMP//("index.d", "phobos.ddoc", "missing.ddoc", "overrides.ddoc")
+      TMP/("index.d", "phobos.ddoc", "missing.ddoc", "overrides.ddoc")
     doc_options = ['-v', '-i', '-hl']
 
   dil_retcode = generate_docs(DIL.EXE, DEST, MODLIST, DOC_FILES,
@@ -227,7 +221,7 @@ def main():
     else:
       print("Warning: can only create a PDF document from kandil HTML files.")
 
-  TMP.rmtree()
+  TMP.rm()
 
   archive = "Phobos.%s_doc" % VERSION
   create_archives(options, DEST.name, archive, DEST.folder.abspath)

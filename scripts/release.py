@@ -15,14 +15,10 @@ __file__ = tounicode(__file__)
 
 def copy_files(DIL):
   """ Copies required files to the destination folder. """
-  for FILE, DIR in (
-      (DIL.DATA/"html.css",  DIL.DOC.HTMLSRC),
-      (DIL.KANDIL.style,     DIL.DOC.CSS)):
-    FILE.copy(DIR)
-  for FILE in DIL.KANDIL.jsfiles:
-    FILE.copy(DIL.DOC.JS)
-  for img in DIL.KANDIL.images:
-    img.copy(DIL.DOC.IMG)
+  Paths(DIL.DATA/"html.css",  DIL.DOC.HTMLSRC).copy(\
+       (DIL.KANDIL.style,     DIL.DOC.CSS))
+  DIL.KANDIL.jsfiles.copy(DIL.DOC.JS)
+  DIL.KANDIL.images.copy(DIL.DOC.IMG)
 
 def writeMakefile():
   """ Writes a Makefile for building DIL. """
@@ -68,9 +64,9 @@ def make_deb_package(SRC, DEST, VERSION, ARCH, TMP, MAINTAINER, PACKAGENUM=1):
   CLOGDEB = DOC/"changelog.Debian"
   CLOGDEB.write("\n")
   (SRC/"AUTHORS").copy(DOC)
-  SRC.DATA.copytree(SHR/"data")
+  SRC.DATA.copy(SHR/"data")
   if SRC.DOC.exists:
-    SRC.DOC.copytree(DOC/"api")
+    SRC.DOC.copy(DOC/"api")
   MANPAGE = MAN/"%s.1" % dil
   MANPAGE.write("\n")
   for f in (MANPAGE, CLOG, CLOGDEB):
@@ -109,15 +105,14 @@ Description: D compiler
   (DEBIAN/"control").write(control)
   (DEBIAN/"conffiles").write(conffiles)
   (DEBIAN/"md5sums").write(md5sums)
-  SCRIPTS = DEBIAN//("postinst", "prerm")
-  for script in SCRIPTS:
-    script.write("#!/bin/sh\nexit 0\n") # Write empty scripts for now.
+  SCRIPTS = DEBIAN/("postinst", "prerm")
+  SCRIPTS.write("#!/bin/sh\nexit 0\n") # Write empty scripts for now.
 
   # 6. Set file/dir permissions.
   ALLDIRS = []
   TMP.rxglob(".", prunedir=lambda p: ALLDIRS.append(p))
 
-  for f in FILES + DEBIAN//("control", "conffiles", "md5sums"):
+  for f in FILES + DEBIAN/("control", "conffiles", "md5sums"):
     call_proc("chmod", "644", f)
 
   for d in ALLDIRS + BIN.rxglob(".") + SCRIPTS:
@@ -126,7 +121,7 @@ Description: D compiler
   # 7. Create the package.
   NAME = "{dil}_{VERSION}-{PACKAGENUM}_{ARCH}.deb".format(**locals())
   call_proc("fakeroot", "dpkg-deb", "--build", TMP, DEST/NAME)
-  TMP.rmtree()
+  TMP.rm()
   return DEST/NAME
 
 def get_MAINTAINER(M):
@@ -326,7 +321,7 @@ def main():
   sw, sw_all = StopWatch(), StopWatch()
 
   # Check out a new working copy.
-  BUILDROOT.rmtree().mkdir() # First remove the whole folder and recreate it.
+  BUILDROOT.rm().mkdir() # First remove the whole folder and recreate it.
   if options.src != None:
     # Use the source folder specified by the user.
     src = Path(options.src)
@@ -334,7 +329,7 @@ def main():
       parser.error("the given SRC path (%s) doesn't exist" % src)
     #if src.ext in ('.zip', '.gz', 'bz2'):
       # TODO:
-    src.copytree(DEST)
+    src.copy(DEST)
   else:
     if not locate_command('git'):
       parser.error("'git' is not in your PATH; specify --src instead")
@@ -372,7 +367,7 @@ def main():
     build_dil_if_inexistant(DIL.EXE)
 
     print("== Generating documentation ==")
-    DOC_FILES = DEST.DATA//("macros_dil.ddoc", "dilconf.d") + FILES
+    DOC_FILES = DEST.DATA/("macros_dil.ddoc", "dilconf.d") + FILES
     versions = ["DDoc"]
     generate_docs(DIL.EXE, DEST.DOC, MODLIST, DOC_FILES,
                   versions, options=['-v', '-i', '-hl', '--kandil'])
@@ -392,7 +387,7 @@ def main():
   PRODUCED += [(DEST.abspath, sw.stop())]
 
   # Remove unneeded directories.
-  options.docs or DEST.DOC.rmtree()
+  options.docs or DEST.DOC.rm()
 
   # Build archives.
   assert DEST[-1] != Path.sep
@@ -416,16 +411,16 @@ def main():
   if not options.no_binaries:
     # Make an arch-independent folder.
     NOARCH = TMP/"dil_noarch"
-    DEST.copytree(NOARCH)
-    map(Path.rmtree, NOARCH//("linux", "windows"))
+    DEST.copy(NOARCH)
+    (NOARCH/("linux", "windows")).rm()
 
     # Linux:
     for bits in (32, 64):
       BIN = DEST/"linux"/"bin%d"%bits
       if not BIN.exists: continue
-      SRC = (TMP/"dil_"+VERSION).rmtree() # Clear if necessary.
-      NOARCH.copytree(SRC)
-      BIN.copytree(SRC/"bin")
+      SRC = (TMP/"dil_"+VERSION).rm() # Clear if necessary.
+      NOARCH.copy(SRC)
+      BIN.copy(SRC/"bin")
       write_modified_dilconf(SRC/"data"/"dilconf.d", SRC/"bin"/"dilconf.d",
         Path("${BINDIR}")/".."/"data")
       NAME = BUILDROOT.abspath/"dil_%s_linux%s" % (VERSION, bits)
@@ -433,16 +428,16 @@ def main():
         sw.start()
         make_archive(SRC, NAME+ext)
         PRODUCED += [(NAME+ext, sw.stop())]
-      SRC.rmtree()
+      SRC.rm()
 
     # Windows:
     for bits in (32, 64):
       if bits != 32: continue # Only 32bit supported atm.
       BIN = DEST/"windows"/"bin%d"%bits
       if not BIN.exists: continue
-      SRC = (TMP/"dil_"+VERSION).rmtree() # Clear if necessary.
-      NOARCH.copytree(SRC)
-      BIN.copytree(SRC/"bin")
+      SRC = (TMP/"dil_"+VERSION).rm() # Clear if necessary.
+      NOARCH.copy(SRC)
+      BIN.copy(SRC/"bin")
       write_modified_dilconf(SRC/"data"/"dilconf.d", SRC/"bin"/"dilconf.d",
         Path("${BINDIR}")/".."/"data")
       NAME = BUILDROOT.abspath/"dil_%s_win%s" % (VERSION, bits)
@@ -450,8 +445,8 @@ def main():
         sw.start()
         make_archive(SRC, NAME+ext)
         PRODUCED += [(NAME+ext, sw.stop())]
-      SRC.rmtree()
-    NOARCH.rmtree()
+      SRC.rm()
+    NOARCH.rm()
 
     # All platforms:
     NAME = BUILDROOT.abspath/"dil_%s_all" % VERSION
@@ -460,7 +455,7 @@ def main():
       make_archive(DEST, NAME+ext)
       PRODUCED += [(NAME+ext, sw.stop())]
 
-  TMP.rmtree()
+  TMP.rm()
 
   if PRODUCED:
     print("\nProduced files/folders:")

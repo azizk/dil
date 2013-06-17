@@ -184,7 +184,7 @@ def main():
   if options.tango:
     TANGO = Path(options.tango)
     cargs.includes += [TANGO]
-    cargs.libd(TANGO//("lib32", "lib64"), target)
+    cargs.libd(TANGO/("lib32", "lib64"), target)
     cargs.libf(["tango-dmd"], target)
 
   command = (DMDCommand, LDCCommand)[options.ldc]

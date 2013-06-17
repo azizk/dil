@@ -14,8 +14,8 @@ def copy_files(DIL, TANGO, DEST):
     (DEST/"License.txt", DEST.HTMLSRC,        DEST.CSS))
   if TANGO.favicon.exists:
     TANGO.favicon.copy(DEST.IMG/"favicon.png")
-  Paths(DIL.KANDIL.jsfiles).copy(DEST.JS)
-  Paths(DIL.KANDIL.images).copy(DEST.IMG)
+  DIL.KANDIL.jsfiles.copy(DEST.JS)
+  DIL.KANDIL.images.copy(DEST.IMG)
 
 def get_tango_version(path):
   txt = path.open().read()
@@ -201,7 +201,7 @@ def main():
   if options.pdf:
     write_PDF(DIL, DEST, VERSION, TMP)
 
-  TMP.rmtree()
+  TMP.rm()
 
   archive = "Tango.%s_doc" % VERSION
   create_archives(options, DEST.name, archive, DEST.folder.abspath)

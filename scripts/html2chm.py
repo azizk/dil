@@ -20,7 +20,7 @@ if is_win32: # No conversion needed if on Windows.
 def generate_chm(module_files, dest, tmp, params, jsons):
   # On Linux the paths in the project file (hhp) must be in Windows style.
   dest = win_path(dest.abspath)
-  hhp, hhc, hhk = tmp//("chm.hhp", "chm.hhc", "chm.hhk")
+  hhp, hhc, hhk = tmp/("chm.hhp", "chm.hhc", "chm.hhk")
   params_default = {
     "compatibility": "1.1",
     "default_window": "main",
@@ -176,7 +176,7 @@ def call_hhc(project_hhp):
 class CHMGenerator:
   def fetch_files(self, SRC, TMP):
     for folder in ("img", "css", "js"):
-      (SRC/folder).copytree(TMP/folder)
+      (SRC/folder).copy(TMP/folder)
 
   def run(self, *args):
     html_files = args[0]
