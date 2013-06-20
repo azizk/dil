@@ -44,38 +44,45 @@ struct StringT(C)
     }
   }
 
-  /// Constructs from an array string.
-  this(inout(C)[] str) inout
-  {
-    ptr = str.ptr;
-    end = str.ptr + str.length;
-  }
+  // FIXME: due to a bug in DMD, inout constructors don't work anymore.
+  // As a workaround, all parameters have been made const and a cast is used
+  // to be able to assign to the members.
 
   /// Constructs from start and end pointers.
-  this(inout C* p, inout C* e) inout
+  //this(inout C* p, inout C* e) inout
+  this(const C* p, const C* e)
   {
     assert(p <= e);
-    ptr = p;
-    end = e;
+    ptr = cast(C*)p;
+    end = cast(C*)e;
+  }
+
+  /// Constructs from an array string.
+  //this(inout C[] str) inout
+  this(const C[] str)
+  {
+    this(str.ptr, str.ptr + str.length);
   }
 
   /// Constructs from a character terminated string.
-  this(inout(C)* p, const C terminator) inout
+  //this(inout C* p, const C terminator) inout
+  this(const C* p, const C terminator)
   {
-    ptr = p;
-    while (*p != terminator)
-      p++;
-    end = p;
+    const(C)* q = p;
+    while (*q != terminator)
+      q++;
+    this(p, q);
   }
 
   /// Constructs from a single character.
-  this(ref inout C c) inout
+  //this(ref inout C c) inout
+  this(ref const C c)
   {
     this(&c, &c + 1);
   }
 
   /// Constructs from an unsigned long.
-  this(ulong x) inout
+  this(ulong x)
   {
     C[20] buffer; // ulong.max -> "18446744073709551615".len == 20
     auto end = buffer.ptr + buffer.length;
@@ -1028,7 +1035,7 @@ hash_t hashOf(cstring str)
 }
 
 /// Returns a list of Strings from a list of char arrays.
-inout(StringT!C)[] toStrings(C)(inout C[][] strs) inout
+inout(StringT!C)[] toStrings(C)(inout C[][] strs)
 {
    auto result = new StringT!C.S2[strs.length];
    auto elem = result.ptr - 1;
