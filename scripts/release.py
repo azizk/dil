@@ -327,7 +327,7 @@ def main():
     src = Path(options.src)
     if not src.exists:
       parser.error("the given SRC path (%s) doesn't exist" % src)
-    #if src.ext in ('.zip', '.gz', 'bz2'):
+    #if src.ext in ('zip', 'gz', 'bz2'):
       # TODO:
     src.copy(DEST)
   else:

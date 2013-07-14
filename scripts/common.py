@@ -171,7 +171,7 @@ def make_archive(src, dest):
   tar = "tar --owner root --group root -acf"
   cmds = {"xz": tar, "bz2": tar, "gz": tar,
     "7z": "7za a", "zip": "zip -q -9 -r"}
-  cmd = cmds[dest.ext[1:]].split(" ") + [dest, src.name]
+  cmd = cmds[dest.ext].split(" ") + [dest, src.name]
   call_proc(cmd, cwd=src.folder)
 
 def load_pymodules(folder):
