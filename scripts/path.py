@@ -112,14 +112,19 @@ class Path(unicode):
     return self.name.noext
 
   @property
+  def ext(self):
+    """ Path('/home/a/bc.d').ext == 'd' """
+    return Path(self.dext[1:])
+
+  @property
+  def dext(self):
+    """ Path('/home/a/bc.d').dext == '.d' """
+    return Path(op.splitext(self)[1])
+
+  @property
   def noext(self):
     """ Path('/home/a/bc.d').noext == '/home/a/bc' """
     return Path(op.splitext(self)[0])
-
-  @property
-  def ext(self):
-    """ Path('/home/a/bc.d').ext == '.d' """
-    return Path(op.splitext(self)[1])
 
   @property
   def abspath(self):
@@ -393,12 +398,16 @@ class Paths(list):
     return Paths(p.namebase for p in self)
 
   @property
-  def noexts(self):
-    return Paths(p.noext for p in self)
-
-  @property
   def exts(self):
     return Paths(p.ext for p in self)
+
+  @property
+  def dexts(self):
+    return Paths(p.dext for p in self)
+
+  @property
+  def noexts(self):
+    return Paths(p.noext for p in self)
 
   @property
   def abspaths(self):
