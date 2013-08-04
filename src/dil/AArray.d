@@ -3,6 +3,8 @@
 /// $(Maturity low)
 module dil.AArray;
 
+import core.bitop : bsr;
+
 alias void* Key;
 alias void* Value;
 
@@ -115,22 +117,26 @@ struct AArray
   /// Allocates a new bucket list and relocates the nodes from the old one.
   void rehash()
   {
-    auto count = this.count;
-    if (!count)
+    auto newlen = this.count;
+    if (!newlen)
       return;
-    // Round up to the next power of 2.
-    size_t pow2 = 1;
-    while (pow2 < count)
-      pow2 *= 2;
+    // Check if not a power of 2.
+    if (newlen & (newlen - 1))
+    { // Round up to the next power of 2.
+      auto msb = bsr(newlen); // bsr() returns the index of the MSB.
+      if (msb == size_t.sizeof * 8 - 1) // Check if highest bit.
+        msb--; // Avoid overflow.
+      newlen = 2 << msb;
+    }
     // Allocate a new list of buckets.
-    AANode*[] newb = new AANode*[pow2];
-    pow2 -= 1; // Subtract now to avoid doing it in the loop.
+    AANode*[] newb = new AANode*[newlen];
+    newlen--; // Subtract now to avoid doing it in the loop.
     // Move the nodes to the new array.
     foreach (n; buckets)
       while (n)
       {
         auto next_node = n.next;
-        size_t i = cast(size_t)n.key & pow2;
+        size_t i = cast(size_t)n.key & newlen;
         n.next = newb[i];
         newb[i] = n; // n becomes the new head at index i.
         n = next_node; // Continue with the next node in the chain.
