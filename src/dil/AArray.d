@@ -94,6 +94,7 @@ struct AArray
       if (n.key == key)
       {
         *pn = n.next;
+        count--;
         return true;
       }
       pn = &n.next;
