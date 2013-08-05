@@ -123,10 +123,9 @@ struct AArray
     // Check if not a power of 2.
     if (newlen & (newlen - 1))
     { // Round up to the next power of 2.
-      auto msb = bsr(newlen); // bsr() returns the index of the MSB.
-      if (msb == size_t.sizeof * 8 - 1) // Check if highest bit.
-        msb--; // Avoid overflow.
-      newlen = 2 << msb;
+      newlen = 2 << bsr(newlen);
+      if (newlen == 0) // Did it overflow?
+        newlen = size_t.max / 2 + 1; // Set the highest bit.
     }
     // Allocate a new list of buckets.
     AANode*[] newb = new AANode*[newlen];
