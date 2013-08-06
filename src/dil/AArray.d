@@ -3,6 +3,8 @@
 /// $(Maturity low)
 module dil.AArray;
 
+import common;
+
 import core.bitop : bsr;
 
 alias size_t Key;
@@ -17,7 +19,10 @@ struct AANode
 }
 
 /// An associative array implementation which grows by powers of two.
-/// Relies on the GC for memory.
+/// Relies on the GC for memory. Does not handle hash collisions.
+/// Note: This code is a reference for understanding how hash maps work.
+///   It's not meant to be used in DIL. A fast version needs to be implemented
+///   which uses dil.Array for custom allocation.
 struct AArray
 {
   AANode*[] buckets = [null]; /// The number of buckets is a power of 2.
@@ -127,6 +132,7 @@ struct AArray
       if (newlen == 0) // Did it overflow?
         newlen = size_t.max / 2 + 1; // Set the highest bit.
     }
+    assert(newlen && !(newlen & (newlen - 1)), "zero or not power of 2");
     // Allocate a new list of buckets.
     AANode*[] newb = new AANode*[newlen];
     newlen--; // Subtract now to avoid doing it in the loop.
@@ -141,5 +147,63 @@ struct AArray
         n = next_node; // Continue with the next node in the chain.
       }
     buckets = newb;
+  }
+
+  /// Formats a number as a string with hexadecimal characters.
+  static char[] toHex(size_t x)
+  {
+    immutable H = "0123456789abcdef"; // Hex numerals.
+    auto s = new char[size_t.sizeof * 2 + 2];
+    s[0] = '0';
+    s[1] = 'x';
+    auto p = s.ptr + s.length;
+    while (*--p != 'x')
+    {
+      *p = H[x & 0xF];
+      p--;
+      x >>= 4;
+      *p = H[x & 0xF];
+      x >>= 4;
+    }
+    return s;
+  }
+
+  /// Prints as hex by default.
+  static cstring keyPrinter(Key k)
+  {
+    return toHex(k);
+  }
+
+  /// Prints as hex by default.
+  static cstring valuePrinter(Value v)
+  {
+    return toHex(cast(size_t)v);
+  }
+
+  /// Prints the contents of this array.
+  /// Supply own functions for customization.
+  char[] print(cstring function(Key) printKey = &keyPrinter,
+               cstring function(Value) printValue = &valuePrinter)
+  {
+    char[] s = "[".dup;
+    foreach (i, n; buckets)
+    {
+      if (i)
+        s ~= "], ";
+      s ~= "[";
+      while (n)
+      {
+        s ~= "(";
+        s ~= printKey(n.key);
+        s ~= ", ";
+        s ~= printValue(n.value);
+        s ~= ")";
+        n = n.next;
+        if (n)
+          s ~= ", ";
+      }
+    }
+    s ~= "]";
+    return s;
   }
 }
