@@ -5,7 +5,7 @@ module dil.AArray;
 
 import core.bitop : bsr;
 
-alias void* Key;
+alias size_t Key;
 alias void* Value;
 
 /// An item in an associative array. Can be chained together with other items.
@@ -40,7 +40,7 @@ struct AArray
   { // This is basically a modulo operation: key % blen()
     // But since the length will always be a power of 2,
     // the and-operator can be used as a faster method.
-    return cast(size_t)key & (blen() - 1);
+    return key & (blen() - 1);
   }
 
   /// Returns the value of a key, or null if it doesn't exist.
@@ -135,7 +135,7 @@ struct AArray
       while (n)
       {
         auto next_node = n.next;
-        size_t i = cast(size_t)n.key & newlen;
+        size_t i = n.key & newlen;
         n.next = newb[i];
         newb[i] = n; // n becomes the new head at index i.
         n = next_node; // Continue with the next node in the chain.
