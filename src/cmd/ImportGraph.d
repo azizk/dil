@@ -103,7 +103,7 @@ class Graph
   Vertex[] vertices; /// The vertices or modules.
   Edge[] edges; /// The edges or import statements.
 
-  /// Adds a vertex to the graph.
+  /// Adds a vertex to the graph and sets its ID.
   void addVertex(Vertex vertex)
   {
     vertex.id = vertices.length;
@@ -123,8 +123,23 @@ class Graph
   /// Walks the graph and marks cyclic vertices and edges.
   void detectCycles()
   {
-    // Use functioning algorithm.
-    findCyclesInGraph(this);
+    bool[Vertex][] vsets; // List of Set(sccs)
+
+    foreach (sccs; findTarjansSCCs())
+    {
+      bool[Vertex] vset;
+      foreach (v; sccs)
+        vset[v] = v.isCyclic = true;
+      vsets ~= vset;
+    }
+
+    foreach (e; edges)
+      foreach (vset; vsets)
+        if (auto v = e.from in vset && e.to in vset)
+        {
+          e.isCyclic = true;
+          break;
+        }
   }
 
   /// Returns a list of strongly connected components using Tarjan's algorithm.
@@ -141,7 +156,8 @@ class Graph
       stack ~= v;
 
       foreach (z; v.outgoing)
-        if (z.index == 0) {
+        if (z.index == 0)
+        {
           recurse(z); // Depth-first search.
           if (z.llink < v.llink)
             v.llink = z.llink;
@@ -156,11 +172,12 @@ class Graph
         auto p = end; // Reverse iterator.
         Vertex z;
         do
-        {
+        { // Search backwards until the root vertex is found.
+          assert(p > stack.ptr);
           z = *--p;
           z.instack = false;
         } while (z !is v);
-        assert(*p is v && *p is z);
+        assert(*p is v && v is z);
         sccs ~= p[0 .. end - p].dup;
         stack.length = p - stack.ptr;
       }
@@ -179,6 +196,18 @@ void testGraph()
 {
   scope msg = new UnittestMsg("Testing class Graph.");
 
+  // 1st test.
+  {
+    auto g = new Graph();
+    auto v = new Vertex();
+    g.addVertex(v);
+    g.addEdge(v, v); // Connect the only vertex to itself.
+    g.detectCycles();
+    assert(g.vertices[0].isCyclic);
+    assert(g.edges[0].isCyclic);
+  }
+
+  // 2nd test.
   auto g = new Graph();
   auto vs = new Vertex[7];
 
@@ -222,6 +251,11 @@ class Edge
     this.from = from;
     this.to = to;
   }
+
+  override string toString()
+  {
+    return cast(string)Format("E({}, {})", from, to);
+  }
 }
 
 /// Represents a module in the graph.
@@ -237,6 +271,11 @@ class Vertex
   size_t index; /// Greater than 0 means that this vertex has been visited.
   size_t llink; /// Aka. lowlink.
   bool instack; /// Is this in the Stack?
+
+  override string toString()
+  {
+    return cast(string)Format("V({})", id);
+  }
 }
 
 /// Builds a module dependency graph.
