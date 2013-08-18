@@ -116,7 +116,6 @@ class Graph
     auto edge = new Edge(from, to);
     edges ~= edge;
     from.outgoing ~= to;
-    to.incoming ~= from;
     return edge;
   }
 
@@ -263,7 +262,6 @@ class Vertex
 {
   Module modul;      /// The module represented by this vertex.
   size_t id;         /// The nth vertex in the graph.
-  Vertex[] incoming; /// Also called predecessors.
   Vertex[] outgoing; /// Also called successors.
   bool isCyclic;     /// Whether this vertex is in a cyclic relationship
                      /// with other vertices.
@@ -489,66 +487,4 @@ void printDotDocument(CompilationContext cc, Graph graph,
   }
 
   Stdout("}\n");
-}
-
-/// Marks cyclic edges and vertices.
-void findCyclesInGraph(Graph g)
-{
-  // TODO: use a BitArray for this algorithm?
-  auto edges = g.edges.dup;
-  auto vertices = g.vertices.dup;
-
-RestartLoop:
-  foreach (idx, vertex; vertices)
-  { // 1. See if this vertex has outgoing and/or incoming edges.
-    size_t outgoing, incoming;
-    alias outgoing i; // Reuse below.
-    alias incoming j;
-    foreach (edge; edges)
-    {
-      if (edge.from is vertex)
-        outgoing = true;
-      if (edge.to is vertex)
-        incoming = true;
-    }
-    // 2. See if the vertex is a "sink" or a "source".
-    if (outgoing == 0)
-    {
-      if (incoming != 0)
-      { // Vertex is a sink.
-        // Remove edges leading to this vertex.
-        for (i=j=0; i < edges.length; i++)
-          if (edges[i].to !is vertex)
-            edges[j++] = edges[i];
-        edges.length = j;
-      }
-      // else
-        // Edges to this vertex were removed previously.
-        // Only remove vertex now.
-    }
-    else if (incoming == 0)
-    { // Vertex is a source.
-      // Remove edges coming from this vertex.
-      for (i=j=0; i < edges.length; i++)
-        if (edges[i].from !is vertex)
-          edges[j++] = edges[i];
-      edges.length = j;
-    }
-    else // Vertex is source and sink. Continue loop.
-      continue;
-
-    // 3. Remove the vertex from the list.
-    auto p = vertices.ptr + idx,
-         end = vertices.ptr + vertices.length -1;
-    for (; p < end; p++)
-      *p = p[1]; // Move all elements one position to the left.
-    vertices.length = vertices.length -1;
-    goto RestartLoop; // Start over.
-  }
-
-  // When reaching this point it means only cyclic edges and vertices are left.
-  foreach (vertex; vertices)
-    vertex.isCyclic = true;
-  foreach (edge; edges)
-    edge.isCyclic = true;
 }
