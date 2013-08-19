@@ -119,6 +119,12 @@ class Graph
     return edge;
   }
 
+  /// ditto
+  Edge addEdge(size_t id1, size_t id2)
+  {
+    return addEdge(vertices[id1], vertices[id2]);
+  }
+
   /// Walks the graph and marks cyclic vertices and edges.
   void detectCycles()
   {
@@ -202,21 +208,16 @@ void testGraph()
     g.addVertex(v);
     g.addEdge(v, v); // Connect the only vertex to itself.
     g.detectCycles();
-    assert(g.vertices[0].isCyclic);
-    assert(g.edges[0].isCyclic);
+    assert(g.vertices[0].isCyclic && g.edges[0].isCyclic);
   }
 
   // 2nd test.
   auto g = new Graph();
-  auto vs = new Vertex[7];
 
-  void connect(size_t x, size_t y)
-  {
-    g.addEdge(vs[x], vs[y]);
-  }
+  auto connect = (size_t x, size_t y) => g.addEdge(x, y);
 
-  foreach (ref v; vs)
-    g.addVertex(v = new Vertex());
+  foreach (i; 0..7)
+    g.addVertex(new Vertex());
 
   connect(0, 1);
   connect(1, 3);
@@ -229,7 +230,7 @@ void testGraph()
 
   g.detectCycles();
 
-  foreach (v; vs)
+  foreach (v; g.vertices)
     assert(v.isCyclic);
   foreach (e; g.edges)
     assert(e.isCyclic);
