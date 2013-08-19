@@ -130,8 +130,19 @@ class Graph
   {
     bool[Vertex][] vsets; // List of Set(sccs)
 
-    foreach (sccs; findTarjansSCCs())
+    bool isReflexive(Vertex v)
     {
+      foreach (w; v.outgoing)
+        if (w is v)
+          return true;
+      return false;
+    }
+
+    foreach (sccs; findTarjansSCCs())
+    { // Ignore a component if it's alone and not connecting to itself.
+      if (sccs.length == 1 && !isReflexive(sccs[0]))
+        continue;
+
       bool[Vertex] vset;
       foreach (v; sccs)
         vset[v] = v.isCyclic = true;
