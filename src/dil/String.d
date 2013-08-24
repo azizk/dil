@@ -1116,6 +1116,9 @@ void testString()
   assert(S("ab_cd").sub("_", "") == S("abcd"));
   assert(S("abcd").sub("abcd", "") == S(""));
   assert(S("aaaa").sub("a", "") == S(""));
+  assert(S("").sub(S(""), "") == S(""));
+  assert(S("").sub("", S("")) == S(""));
+  assert(S("").sub(S(""), S("")) == S(""));
 
   // Duplication.
   assert(S("chica").dup == S("chica"));
@@ -1123,6 +1126,8 @@ void testString()
   // Comparison.
   assert(S("a") < S("b"));
   assert(S("b") > S("a"));
+  assert(S("a") > S("B"));
+  assert(S("B") < S("a"));
   assert(S("a") <= S("a"));
   assert(S("b") >= S("b"));
   assert(S("a") == S("a"));
@@ -1131,6 +1136,12 @@ void testString()
   assert(S("") == S(""));
   assert(S() == S());
   assert(S() == S("") && "" == null);
+  assert(S("ABC").ieql("abc"));
+  assert(S("XYZ").ieql(S("xyz")));
+  assert(S("a").icmp("B") < 0);
+  assert(S("x").icmp(S("Y")) < 0);
+  assert(S("B").icmp("a") > 0);
+  assert(S("Y").icmp(S("x")) > 0);
 
   // Multiplication.
   assert(S("ha") * 6 == S("hahahahahaha"));
