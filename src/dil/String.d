@@ -112,14 +112,13 @@ struct StringT(C)
     if (ptr is null) assert(end is null);
   }
 
-  /// Generates a constructor expression when arg is not of type StringT.
-  static string ConvertToS(T)(string arg)
+  /// Converts t to S in case it's a different type than S.
+  static auto toS(T)(T t)
   {
     static if (is(T : const(S)))
-      auto expr = arg;
+      return t;
     else
-      auto expr = "S("~arg~")";
-    return expr;
+      return S(t);
   }
 
   /// Returns itself.
@@ -209,15 +208,13 @@ struct StringT(C)
   /// ditto
   ssize_t icmp(T)(T s) const
   {
-    auto s_ = mixin(ConvertToS!(T)("s"));
-    return icmp_(s_);
+    return icmp_(toS!T(s));
   }
 
   /// Compares two Strings ignoring case for equality (only ASCII.)
   bool ieql(T)(T s) const
   {
-    auto s_ = mixin(ConvertToS!(T)("s"));
-    return icmp_(s_) == 0;
+    return icmp_(toS!T(s)) == 0;
   }
 
   /// Concatenates x copies of this string.
@@ -873,9 +870,7 @@ struct StringT(C)
   /// ditto
   ref S sub(A, B)(A a, B b)
   {
-    auto aS = mixin(ConvertToS!(A)("a"));
-    auto bS = mixin(ConvertToS!(B)("b"));
-    return sub_(aS, bS);
+    return sub_(toS!A(a), toS!B(b));
   }
 
   /// ditto
