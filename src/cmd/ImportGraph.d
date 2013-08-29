@@ -234,6 +234,7 @@ void testGraph()
   connect(1, 3);
   connect(3, 2);
   connect(2, 0);
+
   connect(6, 5);
   connect(5, 3);
   connect(3, 4);
@@ -245,6 +246,30 @@ void testGraph()
     assert(v.isCyclic);
   foreach (e; g.edges)
     assert(e.isCyclic);
+
+  // 3rd test.
+  g = new Graph();
+
+  foreach (i; 0..6)
+    g.addVertex(new Vertex());
+
+  // First "triangle".
+  connect(0, 1);
+  connect(1, 2);
+  connect(2, 0);
+  // Second "triangle".
+  connect(3, 4);
+  connect(4, 5);
+  connect(5, 3);
+  // Connect the two triangles.
+  connect(3, 0);
+
+  g.detectCycles();
+
+  foreach (e; g.edges[0..$-1])
+    assert(e.isCyclic); // Edges of the triangles must be marked as cyclic.
+  // The last edge, connecting both triangles, is not cyclic.
+  assert(!g.edges[$-1].isCyclic);
 }
 
 /// Represents a directed connection between two vertices.
