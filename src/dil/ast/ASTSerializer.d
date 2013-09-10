@@ -721,7 +721,7 @@ class ASTDeserializer : Visitor
     char[] code;
     foreach (i, t; types)
     {
-      const arg = "_" ~ itoactf(i);
+      const arg = "_" ~ itoa(i);
       code ~= t ~ " " ~ arg ~ ";\n" ~
         "if (!read(" ~ arg ~ ")) goto Lerr;\n";
     }
@@ -733,7 +733,7 @@ class ASTDeserializer : Visitor
   {
     char[] code = "new N( ".dup;
     for (size_t i; i < num; i++)
-      code ~= "_" ~ itoactf(i) ~ ",";
+      code ~= "_" ~ itoa(i) ~ ",";
     code[$-1] = ')';
     return code;
   }

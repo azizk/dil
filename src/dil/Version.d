@@ -3,7 +3,7 @@
 /// $(Maturity high)
 module dil.Version;
 
-import dil.String : itoactf;
+import dil.String : itoa;
 
 version(D2)
   immutable VERSION_MAJOR_DEFAULT = 2;
@@ -18,7 +18,7 @@ immutable VERSION_MINOR = 0;
 immutable VERSION_SUFFIX = "";
 /// The compiler version formatted as a string.
 immutable VERSION = (
-  (V => V[0] ~ "." ~ V[1..4])(itoactf(VERSION_MAJOR*1000+VERSION_MINOR)) ~
+  (V => V[0] ~ "." ~ V[1..4])(itoa(VERSION_MAJOR*1000 + VERSION_MINOR)) ~
   (VERSION_SUFFIX.length ? "-" ~ VERSION_SUFFIX : "")
 ).idup;
 /// The name of the compiler.

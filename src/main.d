@@ -665,7 +665,7 @@ void printHelp(cstring command, Diagnostics diag)
     break;
   case "main", "":
     const COMPILED_WITH = __VENDOR__;
-    const COMPILED_VERSION = (V => V[0] ~ "." ~ V[1..4])(itoactf(__VERSION__));
+    const COMPILED_VERSION = (V => V[0] ~ "." ~ V[1..4])(itoa(__VERSION__));
     const COMPILED_DATE = __TIMESTAMP__;
     msg = diag.formatMsg(MID.HelpMain, VERSION, COMMANDS, COMPILED_WITH,
       COMPILED_VERSION, COMPILED_DATE);

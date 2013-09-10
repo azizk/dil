@@ -22,11 +22,11 @@ import common;
 char[] makeNewClass(cstring[] argtypes)
 {
   char[] args = "assert(argtypes.length == args.length);\n" ~
-    "assert(argtypes.length == " ~ itoactf(argtypes.length) ~ ");\n";
+    "assert(argtypes.length == " ~ itoa(argtypes.length) ~ ");\n";
   char[] ctorArgs;
   foreach (i, t; argtypes)
   {
-    auto istr = itoactf(i);
+    auto istr = itoa(i);
     args ~=
       "assert(argtypes[" ~ istr ~ "] == typeid(" ~ t ~ "));\n" ~
       "auto _" ~ istr ~ " = *cast(" ~ t ~ "*)args[" ~ istr ~ "];\n";

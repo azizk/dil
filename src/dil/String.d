@@ -1008,17 +1008,16 @@ cstring replace(cstring str, char a, char b)
 /// Converts x to a string array.
 char[] itoa(ulong x)
 {
+  if (__ctfe)
+  {
+    auto buffer = new char[20]; // ulong.max -> "18446744073709551615".len == 20
+    auto i = buffer.length;
+    do
+      buffer[--i] = '0' + x % 10;
+    while (x /= 10);
+    return buffer[i .. $];
+  }
   return String(x).array;
-}
-
-/// Converts x to a string array (CTF version.)
-char[] itoactf(ulong x)
-{
-  char[] str;
-  do
-    str = cast(char)('0' + (x % 10)) ~ str;
-  while (x /= 10);
-  return str;
 }
 
 /// Returns a list of Strings from a list of char arrays.

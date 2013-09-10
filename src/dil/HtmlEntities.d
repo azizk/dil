@@ -2201,8 +2201,8 @@ char[] generateHashAndValueArrays()
          valuesText = "private static immutable dchar[] values = [".dup;
   foreach (i, hash; hashes)
   {
-    hashesText ~= itoactf(hash) ~ "UL,";
-    valuesText ~= itoactf(values[i]) ~ ",";
+    hashesText ~= itoa(hash) ~ "UL,";
+    valuesText ~= itoa(values[i]) ~ ",";
   }
   hashesText ~= "];".dup;
   valuesText ~= "];".dup;

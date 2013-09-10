@@ -189,7 +189,7 @@ private struct Ids_ {static const:\n" ~ struct_literals ~ "}\n
 " ~ ident_pointers ~ "
 Identifier*[] allIds()
 {
-  return (&" ~ firstIdent ~ ")[0.." ~ itoactf(len/2) ~ "];
+  return (&" ~ firstIdent ~ ")[0.." ~ itoa(len/2) ~ "];
 }";
   return code;
 }
