@@ -1045,23 +1045,23 @@ hash_t hashOfCTF(cstring str)
 
   // Can't reinterpret cast inside CTFs. See: $(DMDBUG 5497)
   auto count = str.length / hash_t.sizeof;
-  size_t i;
+  size_t i; // Index into str.
   while (count--) // Main loop.
   {
-    hash_t hc; // Convert hash_t.sizeof nr of bytes from str.
-    foreach (c; str[i .. i += hash_t.sizeof])
+    hash_t hc; auto t = hash_t.sizeof; // Convert t nr of bytes from str.
+    while (t--)
       version(BigEndian)
-        hc = hc << 8 | c; // Add c as LSByte.
-      else
-        hc = hc >> 8 | c << (hash_t.sizeof-1)*8; // Add c as MSByte.
+        hc = (hc << 8) | str[i++]; // Add c as LSByte.
+      else // Add c as MSByte.
+        hc = (hc >> 8) | (str[i++] << (hash_t.sizeof-1)*8);
     hash = hash * 11 + hc;
   }
 
-  if (i < str.length)
+  if (auto t = str.length - i)
   { // Add remainder hash.
     hash_t hc;
-    foreach (c; str[i .. $]) // Remainder loop.
-      hc = hc << 8 | c;
+    while (t--) // Remainder loop.
+      hc = (hc << 8) | str[i++];
     hash = hash * 11 + hc;
   }
   return hash;
