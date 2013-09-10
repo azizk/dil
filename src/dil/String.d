@@ -1021,14 +1021,6 @@ char[] itoactf(ulong x)
   return str;
 }
 
-/// Calculates a hash value for str.
-/// Note: The value will differ between 32bit and 64bit systems.
-/// It will also differ between little and big endian systems.
-hash_t hashOf(cstring str)
-{
-  return String(str).hashOf();
-}
-
 /// Returns a list of Strings from a list of char arrays.
 inout(StringT!C)[] toStrings(C)(inout C[][] strs)
 {
@@ -1039,44 +1031,40 @@ inout(StringT!C)[] toStrings(C)(inout C[][] strs)
    return cast(inout(StringT!C)[])result;
 }
 
+/// Calculates a hash value for str.
+/// Note: The value will differ between 32bit and 64bit systems.
+/// It will also differ between little and big endian systems.
+hash_t hashOf(cstring str)
+{
+  return String(str).hashOf();
+}
+
 /// ditto
-hash_t hashOfCTF(string str)
-{ /// Nested func because DMD can't do: cast(hash_t[])str
-  hash_t[] toHashArray(string s)
-  { // See: $(DMDBUG 5497, reinterpret cast inside CTFs)
-    hash_t swapBytesOnLE(hash_t c)
-    { // Reverse bytes on little-endian machines.
+hash_t hashOfCTF(cstring str)
+{
+  hash_t hash;
+
+  // Can't reinterpret cast inside CTFs. See: $(DMDBUG 5497)
+  auto count = str.length / hash_t.sizeof;
+  size_t i;
+  while (count--) // Main loop.
+  {
+    hash_t hc; // Convert hash_t.sizeof nr of bytes from str.
+    foreach (c; str[i .. i += hash_t.sizeof])
       version(BigEndian)
-      return c; // Return as is on big-endian machines.
-      hash_t c_;
-      for (size_t i; i < hash_t.sizeof; i++, c >>= 8)
-        c_ = c_ << 8 | (c & 0xFF); // Pick 1byte from c and append to c_.
-      return c_;
-    }
-    auto ha_len = s.length / hash_t.sizeof;
-    hash_t[] ha;
-    for (size_t i, j; i < ha_len; i++)
-    {
-      hash_t hc; // A hash char.
-      for (size_t k = j + hash_t.sizeof; j < k; j++)
-        hc = hc << 8 | s[j]; // Append as many bytes as possible.
-      ha ~= swapBytesOnLE(hc); // Append to hash array.
-    }
-    return ha;
+        hc = hc << 8 | c; // Add c as LSByte.
+      else
+        hc = hc >> 8 | c << (hash_t.sizeof-1)*8; // Add c as MSByte.
+    hash = hash * 11 + hc;
   }
 
-  hash_t hash;
-  auto rem_len = str.length % hash_t.sizeof; // Remainder.
-  hash_t[] ha = toHashArray(str);
-  if (rem_len)
-  { // Append remainder hash character.
+  if (i < str.length)
+  { // Add remainder hash.
     hash_t hc;
-    foreach (c; str[$-rem_len .. $]) // Remainder loop.
-      hc = (hc << 8) | c;
-    ha ~= hc;
-  }
-  foreach (hc; ha) // Main loop.
+    foreach (c; str[i .. $]) // Remainder loop.
+      hc = hc << 8 | c;
     hash = hash * 11 + hc;
+  }
   return hash;
 }
 
