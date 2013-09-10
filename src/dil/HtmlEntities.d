@@ -2164,6 +2164,8 @@ char[] generateHashAndValueArrays()
 {
   hash_t[] hashes; // HTML entity name hashes.
   dchar[] values; // Unicode codepoints.
+  hashes.length = values.length = namedEntities.length; // Reserve.
+  size_t len; // Current length.
   // Build arrays:
   foreach (entity; namedEntities)
   { // 1. Get the hash and value of the entity.
@@ -2171,7 +2173,7 @@ char[] generateHashAndValueArrays()
     auto value = entity.value;
     assert(hash != 0);
     // 2. Binary search to find insertion place.
-    size_t i = void, lower = 0, upper = hashes.length;
+    size_t i = void, lower = 0, upper = len;
     while (lower < upper)
     {
       i = lower/2 + upper/2;
@@ -2183,17 +2185,14 @@ char[] generateHashAndValueArrays()
     }
     i = lower;
     // 3. Insert hash and value into tables.
-    if (i == hashes.length)
-    {
-      hashes ~= hash;
-      values ~= value;
+    len++;
+    if (i+1 < len)
+    { // Move to the right and make room for a new element.
+      hashes[i+1..len] = hashes[i..len-1]; // Specs say overlapping copies are
+      values[i+1..len] = values[i..len-1]; // invalid, but this still works.
     }
-    else
-    { // Insert before index.
-      hashes = hashes[0..i] ~ hash ~ hashes[i..$];
-      values = values[0..i] ~ value ~ values[i..$];
-    }
-    assert(hashes[i] == hash && values[i] == value);
+    hashes[i] = hash;
+    values[i] = value;
   }
 
   // Build source text:
@@ -2204,9 +2203,9 @@ char[] generateHashAndValueArrays()
     hashesText ~= itoa(hash) ~ "UL,";
     valuesText ~= itoa(values[i]) ~ ",";
   }
-  hashesText ~= "];".dup;
-  valuesText ~= "];".dup;
-  return hashesText ~"\n"~ valuesText;
+  hashesText ~= "];\n";
+  valuesText ~= "];";
+  return hashesText ~ valuesText;
 }
 
 version(DDoc)
