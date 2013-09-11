@@ -40,18 +40,18 @@ char[] generateVisitMethods2()
 template returnType(Class)
 {
   static if (is(Class : Declaration))
-    alias Declaration returnType;
+    alias returnType = Declaration;
   else
   static if (is(Class : Statement))
-    alias Statement returnType;
+    alias returnType = Statement;
   else
   static if (is(Class : Expression))
-    alias Expression returnType;
+    alias returnType = Expression;
   else
   static if (is(Class : TypeNode))
-    alias TypeNode returnType;
+    alias returnType = TypeNode;
   else
-    alias Node returnType;
+    alias returnType = Node;
 }
 
 /// Calls the visitor method that can handle node n.
@@ -141,8 +141,12 @@ abstract class Visitor2
   {}
 
 final:
-  alias dispatch visit;
-  alias dispatch visitN, visitD, visitS, visitE, visitT;
+  alias visit = dispatch,
+       visitN = dispatch,
+       visitD = dispatch,
+       visitS = dispatch,
+       visitE = dispatch,
+       visitT = dispatch;
 }
 
 /// Index into the vtable of the Visitor classes.
@@ -173,7 +177,7 @@ void testVisitor()
 
   class TestVisitor : Visitor
   {
-    alias super.visit visit;
+    alias visit = super.visit;
     override Expression visit(NullExpr e)
     {
       return e;
@@ -183,7 +187,7 @@ void testVisitor()
   class TestVisitor2 : Visitor2
   {
     NullExpr ie;
-    alias super.visit visit;
+    alias visit = super.visit;
     override void visit(NullExpr e)
     {
       ie = e;

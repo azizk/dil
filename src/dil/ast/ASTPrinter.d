@@ -42,7 +42,7 @@ class ASTPrinter : Visitor2
   TemplateDecl currentTplDecl; /// Set by a wrapping TemplateDecl.
 
   CompilationContext cc;
-  alias TokenList T;
+  alias T = TokenList;
 
   /// Constructs an ASTPrinter.
   this(bool buildTokens, CompilationContext cc)
@@ -181,9 +181,9 @@ class ASTPrinter : Visitor2
   }
 
   /// Shortcuts.
-  alias write w;
+  alias w = write;
   /// ditto
-  alias visitN v;
+  alias v = visitN;
 
   /// Returns a new token containing 'n' number of whitespace characters.
   Token* ws(uint n) @property

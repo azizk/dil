@@ -70,7 +70,7 @@ abstract class Type/* : Symbol*/
     return tid == TYP.Enum || tid == TYP.Typedef;
   }
 
-  alias super.opEquals opEquals;
+  alias opEquals = super.opEquals;
 
   /// Returns true if this type equals the other one.
   bool opEquals(Type other)
@@ -743,7 +743,7 @@ override:
 /// Parameter type.
 class TypeParameter : Type
 {
-  alias next type; /// Parameter's type.
+  alias type = next; /// Parameter's type.
   StorageClass stcs; /// Storage classes.
   VariadicStyle variadic; /// Variadic style.
   // TODO: add these?
@@ -847,7 +847,7 @@ override:
 /// A function type.
 class TypeFunction : Type
 {
-  alias next retType;
+  alias retType = next;
   TypeParameters params; /// The parameter list.
   StorageClass stcs; /// The storage classes.
   LinkageType linkage; /// The linkage type.
@@ -1269,7 +1269,7 @@ struct TypeFlags
     Basic     = Integral | Floating, /// Basic type.
     Scalar    = Basic | Pointer, /// Scalar type.
   }
-  alias typeof(None) Flags; /// Alias to enum member.
+  alias Flags = typeof(None); /// Alias to enum member.
 
   Flags flags; /// Holds a set of flags.
 
@@ -1358,10 +1358,10 @@ static:
   const Value VCNAN   = {creal_:creal.nan}; /// Value complex NAN.
   private
   {
-  alias SIZE_NOT_AVAILABLE SNA;
-  alias ALIGN_NOT_AVAILABLE ANA;
+  alias SNA = SIZE_NOT_AVAILABLE;
+  alias ANA = ALIGN_NOT_AVAILABLE;
   const ushort PS = 0/+1?+/; // Used for documentation purposes below.
-  alias TypeFlags TF;    /// Shortcuts.
+  alias TF = TypeFlags;    /// Shortcuts.
   const Z = TF.ZeroInit;
   const U = TF.Unsigned;;   /// ditto
   const S = TF.Signed;;     /// ditto

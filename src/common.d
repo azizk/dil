@@ -9,22 +9,22 @@ public import tango.text.convert.Layout : Layout;
 public import tango.core.Vararg;
 
 /// Signed size type.
-alias sizediff_t ssize_t;
+alias ssize_t = sizediff_t;
 
 /// Const character aliases.
-alias const(char) cchar;
-alias const(wchar) cwchar; /// ditto
-alias const(dchar) cdchar; /// ditto
+alias cchar = const(char);
+alias cwchar = const(wchar); /// ditto
+alias cdchar = const(dchar); /// ditto
 /// Constant string aliases.
-alias const(char)[] cstring;
-alias const(wchar)[] cwstring; /// ditto
-alias const(dchar)[] cdstring; /// ditto
+alias cstring = const(char)[];
+alias cwstring = const(wchar)[]; /// ditto
+alias cdstring = const(dchar)[]; /// ditto
 
 /// Binary, typeless string.
-alias ubyte[] binstr;
-alias const(ubyte)[] cbinstr; /// ditto
+alias binstr = ubyte[];
+alias cbinstr = const(ubyte)[]; /// ditto
 
-alias FormatOutput!(char) FormatOut;
+alias FormatOut = FormatOutput!(char);
 /// Global formatter instance.
 static Layout!(char) Format;
 static typeof(&Stdout.format) Printf;
@@ -68,18 +68,18 @@ else
 /// Constructs a compile-time tuple.
 template Tuple(T...)
 {
-  alias T Tuple;
+  alias Tuple = T;
 }
 
 /// Converts an array to a tuple.
 template Array2Tuple(alias T)
 {
   static if (T.length == 0)
-    alias Tuple!() Array2Tuple;
+    alias Array2Tuple = Tuple!();
   else static if (T.length == 1)
-    alias Tuple!(T[0]) Array2Tuple;
+    alias Array2Tuple = Tuple!(T[0]);
   else
-    alias Tuple!(T[0], Array2Tuple!(T[1..$])) Array2Tuple;
+    alias Array2Tuple = Tuple!(T[0], Array2Tuple!(T[1..$]));
 }
 
 /// Supports expressions like: 13 in Set(8,13,0)

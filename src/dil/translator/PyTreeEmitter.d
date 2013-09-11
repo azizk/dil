@@ -88,7 +88,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
     size_t count;
     cstring str;
     TOK kind;
-    alias count pos;
+    alias pos = count;
     this(uint count, cstring str, TOK kind)
     {
       this.count = count;

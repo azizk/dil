@@ -25,7 +25,7 @@ static this()
 /// Fast, mutable, resizable array implementation.
 struct Array
 {
-  alias ubyte E; /// Alias to ubyte. Dereferencing void* gives no value.
+  alias E = ubyte; /// Alias to ubyte. Dereferencing void* gives no value.
   E* ptr; /// Points to the start of the buffer.
   E* cur; /// Points to the end of the contents.
   E* end; /// Points to the end of the reserved space.

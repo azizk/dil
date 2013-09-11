@@ -16,9 +16,9 @@ import common;
 /// TODO: Inserting and reading needs to be thread-safe.
 class LexerTables
 {
-  alias Token.StringValue StringValue;
-  alias Token.IntegerValue IntegerValue;
-  alias Token.NewlineValue NewlineValue;
+  alias StringValue = Token.StringValue;
+  alias IntegerValue = Token.IntegerValue;
+  alias NewlineValue = Token.NewlineValue;
 
   IdTable idents; /// Maps id strings to unique Identifier objects.
   cbinstr[hash_t] strings; /// Maps hashes to binary string values.

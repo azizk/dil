@@ -21,7 +21,7 @@ import common;
 import tango.text.Regex : RegExp = Regex;
 import tango.io.model.IFile;
 
-alias FileConst.PathSeparatorChar dirSep;
+alias dirSep = FileConst.PathSeparatorChar;
 
 /// The importgraph command.
 class IGraphCommand : Command
@@ -40,7 +40,7 @@ class IGraphCommand : Command
     PrintList                 = 1<<7,
     MarkCyclicModules         = 1<<8,
   }
-  alias Option Options;
+  alias Options = Option;
 
   Options options; /// Command options.
   cstring filePath; /// File path to the root module.

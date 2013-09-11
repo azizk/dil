@@ -12,7 +12,7 @@ import dil.SourceText,
        dil.Enums;
 import common;
 
-private alias TOK T;
+private alias T = TOK;
 
 /// A light-weight parser which looks only for import statements
 /// in the source text.
@@ -61,7 +61,7 @@ class ImportParser : Parser
 
   bool skipToClosing(T opening, T closing)
   {
-    alias token next;
+    alias next = token;
     uint level = 1;
     while (1)
     {

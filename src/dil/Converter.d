@@ -113,8 +113,8 @@ static
     return result;
   }
 
-  alias UTF32toUTF8!(true) UTF32BEtoUTF8; /// Instantiation for UTF-32 BE.
-  alias UTF32toUTF8!(false) UTF32LEtoUTF8; /// Instantiation for UTF-32 LE.
+  alias UTF32BEtoUTF8 = UTF32toUTF8!(true); /// Instantiation for UTF-32 BE.
+  alias UTF32LEtoUTF8 = UTF32toUTF8!(false); /// Instantiation for UTF-32 LE.
 
   /// Converts a UTF-16 text to UTF-8.
   char[] UTF16toUTF8(bool isBigEndian)(const(ubyte)[] data)
@@ -177,8 +177,8 @@ static
     return result;
   }
 
-  alias UTF16toUTF8!(true) UTF16BEtoUTF8; /// Instantiation for UTF-16 BE.
-  alias UTF16toUTF8!(false) UTF16LEtoUTF8; /// Instantiation for UTF-16 LE.
+  alias UTF16BEtoUTF8 = UTF16toUTF8!(true); /// Instantiation for UTF-16 BE.
+  alias UTF16LEtoUTF8 = UTF16toUTF8!(false); /// Instantiation for UTF-16 LE.
 
   /// Converts the text in data to UTF-8.
   /// Leaves data unchanged if it is in UTF-8 already.
@@ -277,7 +277,7 @@ char[] sanitizeText(char[] text)
     { // Skip to next ASCII character or valid UTF-8 sequence.
       while (++p < end && !isValidLead(*p))
       {}
-      alias REPLACEMENT_STR R;
+      alias R = REPLACEMENT_STR;
       if (q+2 < p) // Copy replacement char if there is enough space.
         (*q++ = R[0]), (*q++ = R[1]), (*q++ = R[2]);
     }

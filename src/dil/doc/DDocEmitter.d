@@ -682,7 +682,7 @@ abstract class DDocEmitter : DefaultVisitor2
       writeDECL();
     else if (cmntIsDitto)
     { // The declaration has a ditto comment.
-      alias prevDeclOffset offs;
+      alias offs = prevDeclOffset;
       assert(offs != 0);
       auto savedEnd = text.ptr[offs..text.len].dup; // Copy text past offset.
       text.len = offs;
@@ -837,7 +837,7 @@ abstract class DDocEmitter : DefaultVisitor2
   /// Stores the attributes of the current symbol.
   void storeAttributes(Declaration d)
   {
-    alias currentAttributes attrs;
+    alias attrs = currentAttributes;
     attrs.prot = (d.prot == Protection.None) ? null : EnumString(d.prot);
 
     auto stcs = d.stcs;
@@ -876,10 +876,10 @@ abstract class DDocEmitter : DefaultVisitor2
     write("\2");
   }
 
-  alias DocSymbol.Kind K;
+  alias K = DocSymbol.Kind;
 
 override:
-  //alias super.visit visit;
+  //alias visit = super.visit;
 
   void visit(AliasDecl d)
   {

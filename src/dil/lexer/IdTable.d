@@ -18,7 +18,7 @@ public import dil.lexer.Identifier,
 struct Ident
 {
 static:
-  alias predefIdents list;
+  alias list = predefIdents;
   mixin(generatePredefinedIdentMembers());
 
   /// Returns true for assembler jump opcode identifiers.
@@ -36,7 +36,7 @@ class IdTable
   /// A table that grows with every newly found, unique identifier.
   Identifier*[hash_t] growingTable;
 
-  alias Identifier* delegate(hash_t, cstring) LookupMethod;
+  alias LookupMethod = Identifier* delegate(hash_t, cstring);
   /// Looks up idString in the growing table.
   LookupMethod inGrowing;
 

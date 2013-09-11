@@ -340,9 +340,9 @@ class Lexer
   }
 
 
-  alias Token.StringValue StringValue;
-  alias Token.IntegerValue IntegerValue;
-  alias Token.NewlineValue NewlineValue;
+  alias StringValue = Token.StringValue;
+  alias IntegerValue = Token.IntegerValue;
+  alias NewlineValue = Token.NewlineValue;
 
   /// Looks up a string value in the table.
   /// Params:

@@ -511,7 +511,7 @@ out(found)
 }
 body
 {
-  alias uniAlphaTable table;
+  alias table = uniAlphaTable;
   if (u < 0xAA && ('A' <= u && u <= 'Z' || 'a' <= u && u <= 'z'))
     goto Lis; // Quick path for ASCII letters.
   // Binary search the table:

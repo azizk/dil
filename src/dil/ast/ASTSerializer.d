@@ -143,13 +143,13 @@ class ASTSerializer : Visitor2
   }
 
   /// Writes 2 bytes.
-  alias writeXB!(ushort) write2B;
+  alias write2B = writeXB!(ushort);
 
   /// Writes 4 bytes.
-  alias writeXB!(uint) write4B;
+  alias write4B = writeXB!(uint);
 
   /// Writes size_t.sizeof bytes.
-  alias writeXB!(size_t) writeSB;
+  alias writeSB = writeXB!(size_t);
 
 
   /// Writes the kind of a Node.
@@ -351,7 +351,7 @@ class ASTSerializer : Visitor2
   {
     override void visit(N n)
     {
-      alias Array2Tuple!(N._members) Members;
+      alias Members = Array2Tuple!(N._members);
       assert(n);
       write1B(TID.Node);
       write(n.kind);
@@ -404,7 +404,7 @@ class ASTDeserializer : Visitor
     this.diag = diag;
   }
 
-  alias ASTSerializer.TID TID;
+  alias TID = ASTSerializer.TID;
 
   /// Reads T.sizeof bytes.
   bool readXB(T)(out T x)
@@ -417,16 +417,16 @@ class ASTDeserializer : Visitor
   }
 
   /// Reads 1 byte.
-  alias readXB!(ubyte) read1B;
+  alias read1B = readXB!(ubyte);
 
   /// Reads 2 bytes.
-  alias readXB!(ushort) read2B;
+  alias read2B = readXB!(ushort);
 
   /// Reads 4 bytes.
-  alias readXB!(uint) read4B;
+  alias read4B = readXB!(uint);
 
   /// Reads size_t.sizeof bytes.
-  alias readXB!(size_t) readSB;
+  alias readSB = readXB!(size_t);
 
   /// Creates an error message.
   bool error(cstring msg, ...)

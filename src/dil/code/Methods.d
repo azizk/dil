@@ -18,7 +18,7 @@ class EMethods
 {
   Diagnostics diag; /// For error messages.
 
-  alias NodeKind NK;
+  alias NK = NodeKind;
 
   /// Constructs an EMethods object.
   this(Diagnostics diag = null)
@@ -245,7 +245,6 @@ class EMethods
   {
     switch (e.kind)
     {
-    alias NodeKind NK;
     case NK.IdentifierExpr,
          NK.ThisExpr,
          NK.IndexExpr,

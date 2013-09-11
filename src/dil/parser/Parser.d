@@ -42,8 +42,8 @@ class Parser
   uint alignSize; /// ditto
 
 
-  private alias TOK T; /// Used often in this class.
-  private alias TypeNode Type;
+  private alias T = TOK; /// Used often in this class.
+  private alias Type = TypeNode;
 
   /// Constructs a Parser object.
   /// Params:
@@ -2719,7 +2719,7 @@ class Parser
   {
     auto begin = token;
     Statement s;
-    alias begin ident;
+    alias ident = begin;
     switch (token.kind)
     {
     case T.In, T.Int, T.Out: // Keywords that are valid opcodes.
@@ -3047,7 +3047,7 @@ class Parser
     return new E(l, r, op);
   }
   /// The function signature of newBinaryExpr.
-  alias Expression function(Expression, Expression, Token*) NewBinaryExpr;
+  alias NewBinaryExpr = Expression function(Expression, Expression, Token*);
 
   /// The root method for parsing an Expression.
   /// $(BNF Expression := CommaExpr
@@ -4533,7 +4533,7 @@ class Parser
     return token.kind == T.EOF ? "EOF" : token.text;
   }
 
-  alias require expected;
+  alias expected = require;
 
   /// Requires a token of kind tok.
   void require(TOK tok)

@@ -94,7 +94,7 @@ class IllegalDecl : Declaration
 
 /// FQN means "fully qualified name".
 /// $(BNF ModuleFQN := Identifier ("." Identifier)*)
-alias Token*[] ModuleFQN;
+alias ModuleFQN = Token*[];
 
 class ModuleDecl : Declaration
 {
@@ -147,7 +147,7 @@ class ModuleDecl : Declaration
 
 class ImportDecl : Declaration
 {
-  private alias Token*[] Ids;
+  private alias Ids = Token*[];
   ModuleFQN[] moduleFQNs;
   Ids moduleAliases;
   Ids bindNames;

@@ -77,10 +77,10 @@ class SemanticPass2 : DefaultVisitor
   }
 
   /// Some handy aliases.
-  private alias Declaration D;
-  private alias Expression E; /// ditto
-  private alias Statement S; /// ditto
-  private alias TypeNode T; /// ditto
+  private alias D = Declaration;
+  private alias E = Expression; /// ditto
+  private alias S = Statement; /// ditto
+  private alias T = TypeNode; /// ditto
 
   /// The current scope symbol to use for looking up identifiers.
   ///
@@ -121,7 +121,7 @@ class SemanticPass2 : DefaultVisitor
 
 override
 {
-  //alias super.visit visit;
+  //alias visit = super.visit;
 
   D visit(CompoundDecl d)
   {

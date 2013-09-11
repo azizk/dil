@@ -61,4 +61,4 @@ const:
 // pragma(msg, Identifier.sizeof.stringof);
 
 /// Identifiers are const by default.
-alias const(Identifier_) Identifier;
+alias Identifier = const(Identifier_);

@@ -62,7 +62,7 @@ class TArgMangler : Visitor2
   }
 
 override:
-  alias super.visit visit;
+  alias visit = super.visit;
 
   void unhandled(Node n)
   {

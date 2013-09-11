@@ -249,7 +249,7 @@ void main(cstring[] args)
     cmd.diag = diag;
 
     bool dummy;
-    alias HighlightCommand.Option HO;
+    alias HO = HighlightCommand.Option;
 
     op.add("--syntax", dummy, { cmd.add(HO.Syntax); });
     op.add("--xml", dummy, { cmd.add(HO.XML); });
@@ -275,7 +275,7 @@ void main(cstring[] args)
 
     cstring value;
     bool dummy;
-    alias IGraphCommand.Option IO;
+    alias IO = IGraphCommand.Option;
 
     op.add({ return parseDebugOrVersion(op, cmd.context); });
     op.add("-I", value, { cmd.context.importPaths ~= value; });
@@ -480,7 +480,7 @@ void main(cstring[] args)
     Printfln("Scanned in {:f10}s.", swatch.stop);
     break;
   case "settings", "set":
-    alias GlobalSettings GS;
+    alias GS = GlobalSettings;
     cstring
       versionIds = String(";").join(GS.versionIds).array,
       importPaths = String(";").join(GS.importPaths).array,

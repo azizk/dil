@@ -298,8 +298,8 @@ version(D2)
     return new Location(filePath, lineNum, lineBegin, this.start);
   }
 
-  alias getLocation!(true) getRealLocation;
-  alias getLocation!(false) getErrorLocation;
+  alias getRealLocation = getLocation!(true);
+  alias getErrorLocation = getLocation!(false);
 
   /// Returns the location of the character past the end of this token.
   Location errorLocationOfEnd(cstring filePath)
@@ -347,7 +347,7 @@ bool isDeclDefStartToken(TOK tok)
 {
   switch (tok)
   {
-  alias TOK T;
+  alias T = TOK;
   case  T.Align, T.Pragma, T.Export, T.Private, T.Package, T.Protected,
         T.Public, T.Extern, T.Deprecated, T.Override, T.Abstract,
         T.Synchronized, T.Static, T.Final, T.Const,
@@ -374,7 +374,7 @@ bool isStatementStartToken(TOK tok)
 {
   switch (tok)
   {
-  alias TOK T;
+  alias T = TOK;
   case  T.Align, T.Extern, T.Final, T.Const, T.Auto, T.Identifier, T.Dot,
         T.Typeof, T.If, T.While, T.Do, T.For, T.Foreach, T.ForeachReverse,
         T.Switch, T.Case, T.Default, T.Continue, T.Break, T.Return, T.Goto,
@@ -407,7 +407,7 @@ bool isAsmStatementStartToken(TOK tok)
 {
   switch (tok)
   {
-  alias TOK T;
+  alias T = TOK;
   // TODO: need to add all opcodes.
   case T.In, T.Int, T.Out, T.Identifier, T.Align, T.Semicolon:
     return true;

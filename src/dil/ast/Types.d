@@ -202,7 +202,7 @@ class ArrayType : TypeNode
 /// $(BNF FunctionType := ReturnType function ParameterList)
 class FunctionType : TypeNode
 {
-  alias next returnType;
+  alias returnType = next;
   Parameters params;
   mixin(memberInfo("returnType", "params"));
   this(TypeNode returnType, Parameters params)
@@ -218,7 +218,7 @@ class FunctionType : TypeNode
 /// $(BNF DelegateType := ReturnType delegate ParameterList)
 class DelegateType : TypeNode
 {
-  alias next returnType;
+  alias returnType = next;
   Parameters params;
   mixin(memberInfo("returnType", "params"));
   this(TypeNode returnType, Parameters params)

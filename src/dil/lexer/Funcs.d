@@ -257,7 +257,7 @@ enum CProperty
 
 const uint EVMask = 0xFF00; // Bit mask for escape value.
 
-private alias CProperty CP;
+private alias CP = CProperty;
 /// Returns: true if c is an octal digit.
 int isoctal(char c) { return ptable[c] & CP.Octal; }
 /// Returns: true if c is a decimal digit.
@@ -307,7 +307,7 @@ bool isAllSpace(cchar* start, cchar* end)
 version(gen_ptable)
 static this()
 {
-  alias ptable p;
+  alias p = ptable;
   assert(p.length == 256);
   // Initialize character properties table.
   for (size_t i; i < p.length; ++i)

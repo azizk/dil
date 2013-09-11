@@ -12,7 +12,7 @@ import common;
 /// A group of settings relevant to the compilation process.
 class CompilationContext
 {
-  alias typeof(this) CC;
+  alias CC = typeof(this);
   CC parent;
   cstring[] importPaths; /// Import paths.
   cstring[] includePaths; /// String include paths.

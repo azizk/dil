@@ -96,7 +96,7 @@ class Macro
 void testMacroConvert()
 {
   scope msg = new UnittestMsg("Testing function Macro.convert().");
-  alias Macro.convert fn;
+  alias fn = Macro.convert;
   auto r = fn("$(bla())");
   assert(r == "\1bla()\2");
   r = fn("($(ÖÜTER ( $(NestedMacro ?,ds()))))");

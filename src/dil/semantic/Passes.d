@@ -33,12 +33,12 @@ import common;
 import tango.core.Vararg;
 
 /// Some handy aliases.
-private alias Declaration D;
-private alias Expression E; /// ditto
-private alias Statement S; /// ditto
-private alias TypeNode T; /// ditto
-private alias Parameter P; /// ditto
-private alias Node N; /// ditto
+private alias D = Declaration;
+private alias E = Expression; /// ditto
+private alias S = Statement; /// ditto
+private alias T = TypeNode; /// ditto
+private alias P = Parameter; /// ditto
+private alias N = Node; /// ditto
 
 /// A Scope class with added semantic information.
 /// (May be merged together with class Scope in the future.)
@@ -307,7 +307,7 @@ class FirstSemanticPass : DefaultVisitor2, SemanticPass
 
 override
 {
-  //alias super.visit visit;
+  //alias visit = super.visit;
 
   void visit(CompoundDecl d)
   {

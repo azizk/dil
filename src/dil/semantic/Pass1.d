@@ -24,7 +24,7 @@ import dil.Compilation,
 import common;
 
 import tango.io.model.IFile;
-alias FileConst.PathSeparatorChar dirSep;
+alias dirSep = FileConst.PathSeparatorChar;
 
 /// The first pass is the declaration pass.
 ///
@@ -180,11 +180,11 @@ class SemanticPass1 : Visitor
     deferred ~= d;
   }
 
-  private alias Declaration D; /// A handy alias. Saves typing.
+  private alias D = Declaration; /// A handy alias. Saves typing.
 
 override
 {
-  alias super.visit visit;
+  alias visit = super.visit;
 
   D visit(CompoundDecl d)
   {

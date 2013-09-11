@@ -10,7 +10,7 @@ import dil.Unicode,
        dil.String;
 import common;
 
-alias dil.doc.Parser.IdentValueParser.textBody textBody;
+alias textBody = dil.doc.Parser.IdentValueParser.textBody;
 
 /// Represents a sanitized and parsed DDoc comment.
 class DDocComment

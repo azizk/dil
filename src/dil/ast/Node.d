@@ -92,7 +92,7 @@ abstract class Node
     // Find out the size of this object.
     auto init = typeid(this).init;
     auto size = init.length;
-    alias typeof(init[0]) byte_t; // Get the element type.
+    alias byte_t = typeof(init[0]); // Get the element type.
     auto bytes = (cast(byte_t*)this)[0..size].dup; // Make an array and copy.
     return cast(Node)bytes.ptr; // Cast back to Node.
   }

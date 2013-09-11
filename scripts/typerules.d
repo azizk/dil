@@ -163,7 +163,7 @@ template ExpressionType(alias x, alias y, string expression)
   else
     immutable result = "Error";
 }
-alias ExpressionType EType;
+alias EType = ExpressionType;
 
 char[] genBinaryExpArray(string expression)
 {

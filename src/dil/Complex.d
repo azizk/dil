@@ -6,7 +6,7 @@ module dil.Complex;
 import dil.Float;
 import common;
 
-alias dil.Float.Float Float;
+alias Float = dil.Float.Float;
 
 /// A class for working with imaginary numbers.
 class Complex
@@ -14,9 +14,9 @@ class Complex
   Float re; /// The real part.
   Float im; /// The imaginary part.
   /// The length or magnitude of the vector.
-  alias re mag;
+  alias mag = re;
   /// The angle of the vector.
-  alias im phi;
+  alias phi = im;
 
   /// Constructs an initialized Float.
   this()
@@ -384,7 +384,7 @@ class Complex
   mixin(opEqualsMacro("long"));
   mixin(opEqualsMacro("Float"));
 
-  alias opEquals equals;
+  alias equals = opEquals;
 
   /// Returns a negated copy of this number.
   Complex opNeg()
@@ -534,8 +534,8 @@ void testComplex()
   return; // Remove when Complex/Float is fixed.
   scope msg = new UnittestMsg("Testing class Complex.");
 
-  alias Float F;
-  alias Complex C;
+  alias F = Float;
+  alias C = Complex;
 
   assert(C(F(3)) == F(3));
   assert(F(99) == C(F(99)));

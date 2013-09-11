@@ -19,7 +19,7 @@ import tango.io.Path : pathNormalize = normalize, isFolder;
 import tango.core.Array : lbound, sort;
 import tango.sys.Environment;
 
-alias FileConst.PathSeparatorChar dirSep;
+alias dirSep = FileConst.PathSeparatorChar;
 
 /// Manages loaded modules in various tables.
 class ModuleManager

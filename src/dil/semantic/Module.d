@@ -22,7 +22,7 @@ import common;
 import tango.io.model.IFile,
        tango.io.device.File;
 
-alias FileConst.PathSeparatorChar dirSep;
+alias dirSep = FileConst.PathSeparatorChar;
 
 /// Represents a semantic D module and a source file.
 class Module : ModuleSymbol

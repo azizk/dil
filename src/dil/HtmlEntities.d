@@ -2248,7 +2248,7 @@ dchar entity2Unicode(hash_t hash)
 void testEntity2Unicode()
 {
   scope msg = new UnittestMsg("Testing function entity2Unicode().");
-  alias entity2Unicode f;
+  alias f = entity2Unicode;
 
   // Test extreme values.
   assert(hashes[0] != 0 && f(hashes[0] - 1) == 0);

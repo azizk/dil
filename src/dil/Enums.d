@@ -73,10 +73,10 @@ enum VariadicStyle
 }
 
 /// Short aliases.
-alias StorageClass STC;
-alias Protection PROT; /// ditto
-alias LinkageType LINK; /// ditto
-alias VariadicStyle VARD; /// ditto
+alias STC = StorageClass;
+alias PROT = Protection; /// ditto
+alias LINK = LinkageType; /// ditto
+alias VARD = VariadicStyle; /// ditto
 
 /// Namespace for functions that return the string of an enum.
 struct EnumString

@@ -27,7 +27,7 @@ class Interpreter : Visitor
   Diagnostics diag;
   EMethods EM;
 
-  alias dil.code.NotAResult.NAR NAR;
+  alias NAR = dil.code.NotAResult.NAR;
 
   /// Evaluates the expression e.
   /// Returns: NAR or a value.
@@ -90,13 +90,13 @@ class Interpreter : Visitor
   }
 
   /// Some handy aliases.
-  private alias Declaration D;
-  private alias Expression E; /// ditto
-  private alias Statement S; /// ditto
-  private alias TypeNode T; /// ditto
-  private alias Parameter P; /// ditto
-  private alias Node N; /// ditto
-  private alias NodeKind NK; /// ditto
+  private alias D = Declaration;
+  private alias E = Expression; /// ditto
+  private alias S = Statement; /// ditto
+  private alias T = TypeNode; /// ditto
+  private alias P = Parameter; /// ditto
+  private alias N = Node; /// ditto
+  private alias NK = NodeKind; /// ditto
 
   /+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   |                                Declarations                               |

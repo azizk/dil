@@ -90,7 +90,7 @@ final class Location
     }
     return col;
   }
-  alias calculateColumn colNum;
+  alias colNum = calculateColumn;
 
   char[] str(cstring format = "({},{})")
   {

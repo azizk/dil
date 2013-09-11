@@ -56,7 +56,7 @@ void testTellBOM()
     ubyte[] data;
     BOM bom;
   }
-  alias ubyte[] ub;
+  alias ub = ubyte[];
   const Data2BOM[] map = [
     {cast(ub)x"12",          BOM.None},
     {cast(ub)x"12 34",       BOM.None},

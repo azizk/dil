@@ -291,9 +291,9 @@ class Float
     return false;
   }
 
-  alias opEquals equals;
+  alias equals = opEquals;
 
-  alias super.opCmp opCmp;
+  alias opCmp = super.opCmp;
 
   /// Compares $(f) to x.
   int opCmp(Float x)
@@ -567,7 +567,7 @@ void testFloat()
   return; // Remove when Float is fixed.
   scope msg = new UnittestMsg("Testing class Float.");
 
-  alias Float F;
+  alias F = Float;
 
   assert(F() == 0);
   assert(F("").toString() == "0");

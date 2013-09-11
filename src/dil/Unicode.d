@@ -474,8 +474,8 @@ B[] convertString(A, B)(const(A)[] str)
 }
 
 /// Converts a UTF-8 string to a UTF-16 string.
-alias convertString!(char, wchar) toUTF16;
+alias toUTF16 = convertString!(char, wchar);
 /// Converts a UTF-8 string to a UTF-32 string.
-alias convertString!(char, dchar) toUTF32;
+alias toUTF32 = convertString!(char, dchar);
 /// Converts a UTF-16 string to a UTF-8 string.
-alias convertString!(wchar, char) toUTF8;
+alias toUTF8 = convertString!(wchar, char);

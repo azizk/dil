@@ -147,7 +147,7 @@ static assert(
 /// The resulting string looks similar to this:
 /++
   ---
-  alias Identifier I;
+  alias I = Identifier;
   enum TI = TOK.Identifier;
   private struct Ids_ {static const:
   I Empty = I("", TI, IDK.Empty),
@@ -183,7 +183,7 @@ char[] generateIdentMembers(string[] identList, bool isKeywordList)
   auto firstIdent = identList[0];
 
   auto code = "
-alias Identifier I;
+alias I = Identifier;
 enum TI = TOK.Identifier;\n
 private struct Ids_ {static const:\n" ~ struct_literals ~ "}\n
 " ~ ident_pointers ~ "

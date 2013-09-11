@@ -26,7 +26,7 @@ class HighlightCommand : Command
     XML         = 1<<3,
     PrintLines  = 1<<4
   }
-  alias Option Options;
+  alias Options = Option;
 
   Options options; /// Command options.
   cstring filePathSrc; /// File path to the module to be highlighted.

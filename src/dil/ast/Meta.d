@@ -40,7 +40,7 @@ char[] makeNewClass(cstring[] argtypes)
 /// Provides functions for constructing a class from run-time arguments.
 mixin template createMethod()
 {
-  alias typeof(this) Class;
+  alias Class = typeof(this);
 
   static Class ctor(Class._mtypes args)
   {
@@ -67,21 +67,21 @@ mixin template methods()
 //  template TypeTupleOf_(alias C, alias MS)
 //  {
 //    static if (MS.length == 0)
-//      alias Tuple!() Result;
+//      alias Result = Tuple!();
 //    else
 //    { // E.g.:     typeof(mixin("CommaExpr"~ "." ~ "lhs"))
-//      alias Tuple!(typeof(mixin(C.stringof ~ "." ~ MS[0]))) First;
+//      alias First = Tuple!(typeof(mixin(C.stringof ~ "." ~ MS[0])));
 //      static if (MS.length == 1)
-//        alias First Result;
+//        alias Result = First;
 //      else
-//        alias Tuple!(First, TypeTupleOf_!(C, MS[1..$]).Result) Result;
+//        alias Result = Tuple!(First, TypeTupleOf_!(C, MS[1..$]).Result);
 //    }
 //  }
 
 //  /// Returns the types of C's members as a Tuple.
 //  template TypeTupleOf(alias C)
 //  {
-//    alias TypeTupleOf_!(C, C._members).Result TypeTupleOf;
+//    alias TypeTupleOf = TypeTupleOf_!(C, C._members).Result;
 //  }
 //}
 
@@ -114,7 +114,7 @@ char[] strTypeTupleOf(string[] members)
 /// ---
 /// static enum _members = ["una","args",];
 /// static enum _mayBeNull = [false,true,];
-/// static alias Tuple!( typeof(una),typeof(args)) _mtypes;
+/// static alias _mtypes = Tuple!( typeof(una),typeof(args));
 /// static enum _mtypesArray = [ typeof(una).stringof,typeof(args).stringof];
 /// ---
 char[] memberInfo(string[] members...)
@@ -132,7 +132,7 @@ char[] memberInfo(string[] members...)
   }
   return "static enum _members = [" ~ namesList ~ "];\n" ~
          "static enum _mayBeNull = [" ~ mayBeNull ~ "];\n" ~
-         "static alias " ~ typeTupleOf(namesArray) ~ " _mtypes;\n" ~
+         "static alias _mtypes = " ~ typeTupleOf(namesArray) ~ ";\n" ~
          "static enum _mtypesArray = " ~ strTypeTupleOf(namesArray) ~ ";\n";
 }
 

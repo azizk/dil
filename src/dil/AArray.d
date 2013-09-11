@@ -7,8 +7,8 @@ import common;
 
 import core.bitop : bsr;
 
-alias size_t Key;
-alias void* Value;
+alias Key = size_t;
+alias Value = void*;
 
 /// An item in an associative array. Can be chained together with other items.
 struct AANode

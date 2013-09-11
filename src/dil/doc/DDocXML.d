@@ -24,7 +24,7 @@ class DDocXMLEmitter : DDocEmitter
   }
 
 override:
-  //alias super.visit visit;
+  //alias visit = super.visit;
 
   void visit(FunctionDecl d)
   {

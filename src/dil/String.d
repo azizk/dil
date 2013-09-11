@@ -9,8 +9,8 @@ import common;
 /// as opposed to one pointer and a size variable.
 struct StringT(C)
 {
-  alias StringT S; /// Shortcut to own type.
-  alias inout(S) inoutS; /// Useful for explicit construction of inout Strings.
+  alias S = StringT; /// Shortcut to own type.
+  alias inoutS = inout(S); /// Useful for explicit construction of inout Strings.
   C* ptr; /// Points to the beginning of the string.
   C* end; /// Points one past the end of the string.
 
@@ -465,8 +465,8 @@ struct StringT(C)
     return result;
   }
 
-  alias toHex!(true) tohex;
-  alias toHex!(false) toHEX;
+  alias tohex = toHex!(true);
+  alias toHEX = toHex!(false);
 
   /// Calculates a hash value.
   /// Note: The value will differ between 32bit and 64bit systems,
@@ -705,24 +705,24 @@ struct StringT(C)
   }
 
   /// Searches for character c.
-  alias findChar!(ssize_t) find;
+  alias find = findChar!(ssize_t);
   /// Searches for character c.
   /// Returns: A pointer to c, or null if not found.
-  alias findChar!(inout(C)*) findp;
+  alias findp = findChar!(inout(C)*);
   /// Searches for character c starting from the end.
-  alias findrChar!(ssize_t) findr;
+  alias findr = findrChar!(ssize_t);
   /// Searches for character c, returning a pointer.
-  alias findrChar!(inout(C)*) findrp;
+  alias findrp = findrChar!(inout(C)*);
   /// Searches for s.
   /// Returns: The position index, or -1 if not found.
-  alias findS!(ssize_t) find;
+  alias find = findS!(ssize_t);
   /// Searches for s.
   /// Returns: A pointer to the beginning of s, or null if not found.
-  alias findS!(inout(C)*) findp;
+  alias findp = findS!(inout(C)*);
   /// Searches for s starting from the end, returning the index.
-  alias findrS!(ssize_t) findr;
+  alias findr = findrS!(ssize_t);
   /// Searches for s starting from the end, returning a pointer.
-  alias findrS!(inout(C)*) findrp;
+  alias findrp = findrS!(inout(C)*);
 
   /// Splits by String s and returns a list of slices.
   inout(S)[] split(const S s) inout
@@ -988,9 +988,9 @@ struct StringT(C)
   }
 }
 
-alias StringT!(char)  String;  /// Instantiation for char.
-alias StringT!(wchar) WString; /// Instantiation for wchar.
-alias StringT!(dchar) DString; /// Instantiation for dchar.
+alias String = StringT!(char) ;  /// Instantiation for char.
+alias WString = StringT!(wchar); /// Instantiation for wchar.
+alias DString = StringT!(dchar); /// Instantiation for dchar.
 
 
 /// Returns a string array slice ranging from begin to end.
@@ -1070,7 +1070,7 @@ hash_t hashOfCTF(cstring str)
 void testString()
 {
   scope msg = new UnittestMsg("Testing struct String.");
-  alias String S;
+  alias S = String;
 
   // Constructing.
   assert(S("", 0) == S("")); // String literals are always zero terminated.

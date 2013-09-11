@@ -436,7 +436,7 @@ version(unused)
       auto p = cast(DDocProblem)info;
       auto mod = ModuleData.get(p.filePath);
       final switch (p.kind)
-      { alias DDocProblem P;
+      { alias P = DDocProblem;
       case P.Kind.UndocumentedSymbol:
         kind1Total++; mod.kind1 ~= p; break;
       case P.Kind.EmptyComment:

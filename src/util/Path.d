@@ -54,7 +54,7 @@ class Path : FilePath
     return this;
   }
 
-  alias super.set set;
+  alias set = super.set;
 
   Path set(cstring s)
   {

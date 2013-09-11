@@ -118,12 +118,12 @@ enum TOK : ushort
   MAX
 }
 
-alias TOK.Abstract KeywordsBegin;
-alias TOK.Void KeywordsEnd;
-alias TOK.Char IntegralTypeBegin;
-alias TOK.Void IntegralTypeEnd;
-alias TOK.FILE SpecialTokensBegin;
-alias TOK.VERSION SpecialTokensEnd;
+alias KeywordsBegin = TOK.Abstract;
+alias KeywordsEnd = TOK.Void;
+alias IntegralTypeBegin = TOK.Char;
+alias IntegralTypeEnd = TOK.Void;
+alias SpecialTokensBegin = TOK.FILE;
+alias SpecialTokensEnd = TOK.VERSION;
 
 /// A table that maps each token kind to a string.
 const string[TOK.MAX] tokToString = [
