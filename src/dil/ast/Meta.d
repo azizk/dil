@@ -61,52 +61,6 @@ mixin template methods()
   mixin createMethod;
 }
 
-/// Must be mixed into the module scope to avoid circular imports.
-//mixin template TypeTupleOfTemplate()
-//{
-//  template TypeTupleOf_(alias C, alias MS)
-//  {
-//    static if (MS.length == 0)
-//      alias Result = Tuple!();
-//    else
-//    { // E.g.:     typeof(mixin("CommaExpr"~ "." ~ "lhs"))
-//      alias First = Tuple!(typeof(mixin(C.stringof ~ "." ~ MS[0])));
-//      static if (MS.length == 1)
-//        alias Result = First;
-//      else
-//        alias Result = Tuple!(First, TypeTupleOf_!(C, MS[1..$]).Result);
-//    }
-//  }
-
-//  /// Returns the types of C's members as a Tuple.
-//  template TypeTupleOf(alias C)
-//  {
-//    alias TypeTupleOf = TypeTupleOf_!(C, C._members).Result;
-//  }
-//}
-
-/// Returns a TypeTuple of members.
-char[] typeTupleOf(string[] members)
-{
-  char[] result = "Tuple!( ".dup;
-  foreach (m; members)
-    result ~= "typeof(" ~ m ~ "),";
-  result[$-1] = ')'; // Replace last comma or space.
-  return result;
-}
-
-/// Returns the members' types as an array of strings.
-char[] strTypeTupleOf(string[] members)
-{
-  char[] result = "[ ".dup;
-  foreach (m; members)
-    result ~= "typeof(" ~ m ~ ").stringof,";
-  result[$-1] = ']'; // Replace last comma or space.
-  return result;
-}
-
-//pragma(msg, typeTupleOf("CommaExpr", ["lhs", "rhs", "optok"]));
-
 /// Generates information on Node members, which is used to generate code
 /// for copying or visiting methods.
 ///
@@ -114,26 +68,26 @@ char[] strTypeTupleOf(string[] members)
 /// ---
 /// static enum _members = ["una","args",];
 /// static enum _mayBeNull = [false,true,];
-/// static alias _mtypes = Tuple!( typeof(una),typeof(args));
-/// static enum _mtypesArray = [ typeof(una).stringof,typeof(args).stringof];
+/// static alias _mtypes = Tuple!(typeof(una),typeof(args),);
+/// static enum _mtypesArray = [typeof(una).stringof,typeof(args).stringof,];
 /// ---
 char[] memberInfo(string[] members...)
 {
-  //members = members && members[0].length == 0 ? null : members;
-  string[] namesArray;
-  char[] namesList;
-  char[] mayBeNull;
-  foreach (m; members) {
+  char[] namesList, mayBeNull, mtypes, mtypesA, names;
+  foreach (m; members)
+  {
     auto isOpt = m[$-1] == '?';
     mayBeNull ~= (isOpt ? "true" : "false") ~ ",";
     m = isOpt ? m[0..$-1] : m; // Strip '?'.
     namesList ~= '"' ~ m ~ `",`;
-    namesArray ~= m;
+    names ~= m ~ `,`;
+    mtypes ~= "typeof(" ~ m ~ "),";
+    mtypesA ~= "typeof(" ~ m ~ ").stringof,";
   }
   return "static enum _members = [" ~ namesList ~ "];\n" ~
          "static enum _mayBeNull = [" ~ mayBeNull ~ "];\n" ~
-         "static alias _mtypes = " ~ typeTupleOf(namesArray) ~ ";\n" ~
-         "static enum _mtypesArray = " ~ strTypeTupleOf(namesArray) ~ ";\n";
+         "static alias _mtypes = Tuple!(" ~ mtypes ~ ");\n" ~
+         "static enum _mtypesArray = [" ~ mtypesA ~ "];\n";
 }
 
 //pragma(msg, memberInfo("una", "args?"));
