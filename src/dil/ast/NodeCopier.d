@@ -24,7 +24,7 @@ mixin template copyMethod()
           member = member.copy();
       }
       else
-      static if (is(T t : E[], E) && is(E : Node)) // A Node array?
+      static if (is(T : E[], E : Node)) // A Node array?
       {
         foreach (ref x; member)
         {

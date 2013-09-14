@@ -27,7 +27,8 @@ mixin template visitDefault(N, Ret = returnType!(N))
         else
           mixin("visitN(n."~m~");");
       }
-      else static if (is(T t : E[], E) && is(E : Node)) // A Node array?
+      else
+      static if (is(T : E[], E : Node)) // A Node array?
       {
         static if (N._mayBeNull[i])
           mixin("foreach (x; n."~m~") if (x) visitN(x);");
