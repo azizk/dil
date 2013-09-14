@@ -15,24 +15,15 @@ mixin template copyMethod()
       mixin("alias member = "~_members[i]~";");
       static if (is(T : Node)) // A Node?
       {
-        static if (_mayBeNull[i])
-        {
-          if(member)
-            member = member.copy();
-        }
-        else
+        if (!_mayBeNull[i] || member is null)
           member = member.copy();
       }
       else
       static if (is(T : E[], E : Node)) // A Node array?
       {
         foreach (ref x; member)
-        {
-          static if (_mayBeNull[i])
-            if (x is null)
-              continue;
-          x = x.copy();
-        }
+          if (!_mayBeNull[i] || x is null)
+            x = x.copy();
       }
     }
     return n;

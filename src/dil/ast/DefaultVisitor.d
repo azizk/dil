@@ -19,21 +19,18 @@ mixin template visitDefault(N, Ret = returnType!(N))
   {
     foreach (i, T; N._mtypes)
     {
-      enum m = N._members[i];
+      auto member = __traits(getMember, n, N._members[i]);
       static if (is(T : Node)) // A Node?
       {
-        static if (N._mayBeNull[i])
-          mixin("if(n."~m~") visitN(n."~m~");");
-        else
-          mixin("visitN(n."~m~");");
+        if (!N._mayBeNull[i] || member is null)
+          visitN(member);
       }
       else
       static if (is(T : E[], E : Node)) // A Node array?
       {
-        static if (N._mayBeNull[i])
-          mixin("foreach (x; n."~m~") if (x) visitN(x);");
-        else
-          mixin("foreach (x; n."~m~") visitN(x);");
+        foreach (x; member)
+          if (!N._mayBeNull[i] || x is null)
+            visitN(x);
       }
     }
     static if (!is(Ret : void))
