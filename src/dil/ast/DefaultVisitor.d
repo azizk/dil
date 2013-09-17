@@ -22,14 +22,14 @@ mixin template visitDefault(N, Ret = returnType!(N))
       auto member = __traits(getMember, n, N.CTTI_Members[i]);
       static if (is(T : Node)) // A Node?
       {
-        if (!N.CTTI_MayBeNull[i] || member is null)
+        if (!N.CTTI_MayBeNull[i] || member !is null)
           visitN(member);
       }
       else
       static if (is(T : E[], E : Node)) // A Node array?
       {
         foreach (x; member)
-          if (!N.CTTI_MayBeNull[i] || x is null)
+          if (!N.CTTI_MayBeNull[i] || x !is null)
             visitN(x);
       }
     }

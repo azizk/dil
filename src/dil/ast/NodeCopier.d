@@ -15,14 +15,14 @@ mixin template copyMethod()
       mixin("alias member = "~CTTI_Members[i]~";");
       static if (is(T : Node)) // A Node?
       {
-        if (!CTTI_MayBeNull[i] || member is null)
+        if (!CTTI_MayBeNull[i] || member !is null)
           member = member.copy();
       }
       else
       static if (is(T : E[], E : Node)) // A Node array?
       {
         foreach (ref x; member)
-          if (!CTTI_MayBeNull[i] || x is null)
+          if (!CTTI_MayBeNull[i] || x !is null)
             x = x.copy();
       }
     }
