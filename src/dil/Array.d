@@ -108,7 +108,7 @@ struct Array
   void growto(size_t n)
   {
     auto len = this.len;
-    len = (len << 1) - (len >> 1); // len *= 0.5
+    len = (len << 1) - (len >> 1); // len *= 1.5
     if (len > n)
       n = len;
     if (n > cap)
