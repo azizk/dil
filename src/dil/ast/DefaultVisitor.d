@@ -17,19 +17,19 @@ mixin template visitDefault(N, Ret = returnType!(N))
 {
   override Ret visit(N n)
   {
-    foreach (i, T; N._mtypes)
+    foreach (i, T; N.CTTI_Types)
     {
-      auto member = __traits(getMember, n, N._members[i]);
+      auto member = __traits(getMember, n, N.CTTI_Members[i]);
       static if (is(T : Node)) // A Node?
       {
-        if (!N._mayBeNull[i] || member is null)
+        if (!N.CTTI_MayBeNull[i] || member is null)
           visitN(member);
       }
       else
       static if (is(T : E[], E : Node)) // A Node array?
       {
         foreach (x; member)
-          if (!N._mayBeNull[i] || x is null)
+          if (!N.CTTI_MayBeNull[i] || x is null)
             visitN(x);
       }
     }

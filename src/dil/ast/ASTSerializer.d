@@ -351,7 +351,7 @@ class ASTSerializer : Visitor2
   {
     override void visit(N n)
     {
-      alias Members = Array2Tuple!(N._members);
+      alias Members = Array2Tuple!(N.CTTI_Members);
       assert(n);
       write1B(TID.Node);
       write(n.kind);
@@ -693,7 +693,7 @@ class ASTDeserializer : Visitor
   {
     override returnType!(N) visit(N n)
     {
-      mixin(generateReaders(N._mtypesArray));
+      mixin(generateReaders(N.CTTI_TypeStrs));
       static if (is(N : Declaration))
       {
         StorageClass stcs;
@@ -703,7 +703,7 @@ class ASTDeserializer : Visitor
         n.setStorageClass(stcs);
         n.setProtection(prot);
       }
-      return mixin(generateCtorCall(N._members.length));
+      return mixin(generateCtorCall(N.CTTI_Members.length));
     Lerr:
       return null;
     }

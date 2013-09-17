@@ -42,14 +42,14 @@ mixin template createMethod()
 {
   alias Class = typeof(this);
 
-  static Class ctor(Class._mtypes args)
+  static Class ctor(Class.CTTI_Types args)
   {
     return new Class(args);
   }
 
   static Class create(TypeInfo[] argtypes, void*[] args)
   {
-    mixin(makeNewClass(Class._mtypesArray));
+    mixin(makeNewClass(Class.CTTI_TypeStrs));
     return node;
   }
 }
@@ -66,28 +66,27 @@ mixin template methods()
 ///
 /// E.g.:
 /// ---
-/// static enum _members = ["una","args",];
-/// static enum _mayBeNull = [false,true,];
-/// static alias _mtypes = Tuple!(typeof(una),typeof(args),);
-/// static enum _mtypesArray = [typeof(una).stringof,typeof(args).stringof,];
+/// static enum CTTI_Members = ["una","args",];
+/// static enum CTTI_MayBeNull = [false,true,];
+/// static alias CTTI_Types = Tuple!(typeof(una),typeof(args),);
+/// static enum CTTI_TypeStrs = [typeof(una).stringof,typeof(args).stringof,];
 /// ---
 char[] memberInfo(string[] members...)
 {
-  char[] namesList, mayBeNull, mtypes, mtypesA, names;
+  char[] names, mayBeNull, types, typeStrs;
   foreach (m; members)
   {
     auto isOpt = m[$-1] == '?';
-    mayBeNull ~= (isOpt ? "true" : "false") ~ ",";
     m = isOpt ? m[0..$-1] : m; // Strip '?'.
-    namesList ~= '"' ~ m ~ `",`;
-    names ~= m ~ `,`;
-    mtypes ~= "typeof(" ~ m ~ "),";
-    mtypesA ~= "typeof(" ~ m ~ ").stringof,";
+    names ~= '"' ~ m ~ `",`;
+    mayBeNull ~= (isOpt ? "true" : "false") ~ ",";
+    types ~= "typeof(" ~ m ~ "),";
+    typeStrs ~= "typeof(" ~ m ~ ").stringof,";
   }
-  return "static enum _members = [" ~ namesList ~ "];\n" ~
-         "static enum _mayBeNull = [" ~ mayBeNull ~ "];\n" ~
-         "static alias _mtypes = Tuple!(" ~ mtypes ~ ");\n" ~
-         "static enum _mtypesArray = [" ~ mtypesA ~ "];\n";
+  return "static enum CTTI_Members = [" ~ names ~ "];\n" ~
+         "static enum CTTI_MayBeNull = [" ~ mayBeNull ~ "];\n" ~
+         "static alias CTTI_Types = Tuple!(" ~ types ~ ");\n" ~
+         "static enum CTTI_TypeStrs = [" ~ typeStrs ~ "];\n";
 }
 
 //pragma(msg, memberInfo("una", "args?"));

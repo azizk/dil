@@ -10,19 +10,19 @@ mixin template copyMethod()
   { // First do a shallow copy.
     auto n = cast(typeof(this))cast(void*)this.dup;
     // Then copy each subnode.
-    with (n) foreach (i, T; _mtypes)
+    with (n) foreach (i, T; CTTI_Types)
     {
-      mixin("alias member = "~_members[i]~";");
+      mixin("alias member = "~CTTI_Members[i]~";");
       static if (is(T : Node)) // A Node?
       {
-        if (!_mayBeNull[i] || member is null)
+        if (!CTTI_MayBeNull[i] || member is null)
           member = member.copy();
       }
       else
       static if (is(T : E[], E : Node)) // A Node array?
       {
         foreach (ref x; member)
-          if (!_mayBeNull[i] || x is null)
+          if (!CTTI_MayBeNull[i] || x is null)
             x = x.copy();
       }
     }
