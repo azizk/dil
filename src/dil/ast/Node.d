@@ -11,9 +11,19 @@ public import dil.ast.NodesEnum;
 /// The root class of all D syntax tree elements.
 abstract class Node
 {
+  /// The possible semantic states of a Node.
+  enum State
+  {
+    Wait,   /// Wait for dependencies.
+    Error,  /// There is an error.
+    Finish, /// Dependencies are done.
+    Done    /// The symbol is done.
+  }
+
   NodeKind kind; /// The kind of this node.
   Node[] children; /// List of subnodes. (May be removed to save space.)
   Token* begin, end; /// The begin and end tokens of this node.
+  State state; /// The semantic state of this node.
 
   /// Sets the begin and end tokens.
   void setTokens(Token* begin, Token* end)
@@ -130,5 +140,45 @@ abstract class Node
   final bool isParameter()
   {
     return kind.isParameter;
+  }
+
+  bool wait()
+  {
+    return state == State.Wait;
+  }
+
+  bool error()
+  {
+    return state == State.Error;
+  }
+
+  bool finish()
+  {
+    return state == State.Finish;
+  }
+
+  bool done()
+  {
+    return state == State.Done;
+  }
+
+  void setwait()
+  {
+    state = State.Wait;
+  }
+
+  void seterror()
+  {
+    state = State.Error;
+  }
+
+  void setfinish()
+  {
+    state = State.Finish;
+  }
+
+  void setdone()
+  {
+    state = State.Done;
   }
 }
