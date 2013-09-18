@@ -3500,7 +3500,7 @@ class Parser
   ////StringLiteral := NormalStringLiteral | EscapeStringLiteral |
   ////  RawStringLiteral | HexStringLiteral | DelimitedStringLiteral |
   ////  TokenStringLiteral
-  ////ArrayLiteralExpr := "[" ExpressionList2? "]"
+  ////ArrayLiteralExpr := "[" ExpressionList2 "]"
   ////AArrayLiteralExpr := "[" KeyValue ("," KeyValue)* ","? "]"
   ////KeyValue := (AssignExpr ":" AssignExpr)
   ////FuncLiteralExpr := (function | delegate)?
@@ -3608,37 +3608,30 @@ class Parser
       e = new StringExpr(str, postfix);
       break;
     case T.LBracket:
-      Expression[] values;
-
       nT();
-      if (!consumed(T.RBracket))
-      {
-        e = parseAssignExpr();
-        if (consumed(T.Colon))
-          goto LparseAssocArray;
-        if (consumed(T.Comma))
-          values = [e] ~ parseExpressionList2(T.RBracket);
-        requireClosing(T.RBracket, begin);
+      Expression[] exprs;
+      if (!tokenIs(T.RBracket))
+        exprs = [parseAssignExpr()];
+      if (consumed(T.Colon))
+      { // "[" AssignExpr ":"
+        Expression[] values;
+        while (1)
+        {
+          values ~= parseAssignExpr();
+          if (!consumed(T.Comma) || tokenIs(T.RBracket))
+            break;
+          exprs ~= parseAssignExpr(); // Keys
+          require(T.Colon);
+        }
+        e = new AArrayLiteralExpr(exprs, values);
       }
-
-      e = new ArrayLiteralExpr(values);
-      break;
-
-    LparseAssocArray:
-      Expression[] keys = [e];
-
-      goto LenterLoop;
-      while (!tokenIs(T.RBracket))
-      {
-        keys ~= parseAssignExpr();
-        require(T.Colon);
-      LenterLoop:
-        values ~= parseAssignExpr();
-        if (!consumed(T.Comma))
-          break;
+      else
+      { // "[" "]" | "[" AssignExpr
+        if (consumed(T.Comma)) // "," ExpressionList2
+            exprs ~= parseExpressionList2(T.RBracket);
+        e = new ArrayLiteralExpr(exprs);
       }
       requireClosing(T.RBracket, begin);
-      e = new AArrayLiteralExpr(keys, values);
       break;
     case T.LBrace:
       // DelegateLiteral := { Statements }
