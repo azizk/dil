@@ -340,12 +340,6 @@ override
     return s;
   }
 
-  // D2.0
-  S visit(ForeachRangeStmt s)
-  {
-    return s;
-  }
-
   S visit(SwitchStmt s)
   {
     return s;

@@ -257,33 +257,14 @@ class ForeachStmt : Statement
     return tok == TOK.ForeachReverse;
   }
 
-  mixin methods;
-}
-
-// version(D2)
-// {
-class ForeachRangeStmt : Statement
-{
-  TOK tok;
-  Parameters params;
-  Expression lower, upper;
-  Statement forBody;
-
-  mixin(memberInfo("tok", "params", "lower", "upper", "forBody"));
-  this(TOK tok, Parameters params, Expression lower, Expression upper, Statement forBody)
+  /// Returns true if the aggregate is a RangeExpr.
+  bool hasRange()
   {
-    mixin(set_kind);
-    addChildren([cast(Node)params, lower, upper, forBody]);
-
-    this.tok = tok;
-    this.params = params;
-    this.lower = lower;
-    this.upper = upper;
-    this.forBody = forBody;
+    return aggregate.kind == NodeKind.RangeExpr;
   }
+
   mixin methods;
 }
-// }
 
 class SwitchStmt : Statement
 {

@@ -1039,23 +1039,6 @@ override:
     writeBlock(n.forBody);
   }
 
-  void visit(ForeachRangeStmt n)
-  {
-    w(ind, n.tok.toToken(), T.LParen);
-    foreach (i, param; n.params.items())
-    {
-      if (i)
-        w(T.Comma, ws);
-      v(param);
-    }
-    w(T.Semicolon, ws);
-    v(n.lower);
-    w(T.Dot2);
-    v(n.upper);
-    w(T.RParen);
-    writeBlock(n.forBody);
-  }
-
   void visit(SwitchStmt n)
   {
     w(ind);
@@ -1505,6 +1488,11 @@ override:
     w(n);
   }
 
+  void visit(RangeExpr n)
+  {
+    w(n);
+  }
+
   void visit(AddressExpr n)
   {
     w(T.Amp);
@@ -1654,12 +1642,8 @@ override:
   {
     w(n);
     w(T.LBracket);
-    if (n.left)
-    {
-      w(n.left, PREC.Assignment);
-      w(T.Dot2);
-      w(n.right, PREC.Assignment);
-    }
+    if (n.range)
+      w(n.range.to!RangeExpr);
     w(T.RBracket);
   }
 

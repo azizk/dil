@@ -2295,8 +2295,8 @@ class Parser
   ////Foreach        := foreach | foreach_reverse
   ////ForeachVarList := ForeachVar ("," ForeachVar)*
   ////ForeachVar     := ref? (Identifier | Declarator)
-  ////Aggregate      := Expression | ForeachRange
-  ////ForeachRange   := Expression ".." Expression # D2.0)
+  ////RangeExpr2     := Expression ".." Expression # D2
+  ////Aggregate      := RangeExpr2 | Expression)
   Statement parseForeachStmt()
   {
     assert(tokenIs(T.Foreach) || tokenIs(T.ForeachReverse));
@@ -2304,7 +2304,7 @@ class Parser
     nT();
 
     auto params = new Parameters;
-    Expression e; // Aggregate or LwrExpr
+    Expression e; // Expression or RangeExpr
 
     auto leftParen = token;
     require2(T.LParen);
@@ -2347,18 +2347,9 @@ class Parser
     e = parseExpression();
 
     version(D2)
-    { //Foreach (ForeachType; LwrExpr .. UprExpr ) ScopeStmt
-    if (consumed(T.Dot2))
-    {
-      // if (params.length != 1)
-        // error(MID.XYZ); // TODO: issue error msg
-      auto upper = parseExpression();
-      requireClosing(T.RParen, leftParen);
-      auto forBody = parseScopeStmt();
-      return new ForeachRangeStmt(tok, params, e, upper, forBody);
-    }
-    } // version(D2)
-    // Foreach (ForeachTypeList; Aggregate) ScopeStmt
+    if (auto op = consumedToken(T.Dot2)) // Expression ".." Expression
+      e = set(new RangeExpr(e, parseExpression(), op), e.begin);
+
     requireClosing(T.RParen, leftParen);
     auto forBody = parseScopeStmt();
     return new ForeachStmt(tok, params, e, forBody);
@@ -3244,7 +3235,8 @@ class Parser
   ////PostIdExpr   := "." (NewExpr | IdentifierExpr)
   ////IncOrDecExpr := ("++" | "--")
   ////CallExpr     := "(" Arguments? ")"
-  ////SliceExpr    := "[" (AssignExpr ".." AssignExpr)? "]"
+  ////RangeExpr    := AssignExpr ".." AssignExpr
+  ////SliceExpr    := "[" RangeExpr? "]")
   ////IndexExpr    := "[" ExpressionList "]")
   Expression parsePostExpr()
   {
@@ -3271,32 +3263,29 @@ class Parser
         e = new CallExpr(e, parseArguments());
         goto Lset;
       case T.LBracket:
-        // parse Slice- and IndexExpr
         auto leftBracket = token;
         nT();
-        // [] is a SliceExpr
+        // "[" "]" is the empty SliceExpr
         if (tokenIs(T.RBracket))
         {
-          e = new SliceExpr(e, null, null);
+          e = new SliceExpr(e, null);
           break;
         }
-
-        Expression[] es = [parseAssignExpr()];
-
-        // [ AssignExpr .. AssignExpr ]
-        if (consumed(T.Dot2))
+        auto e2 = parseAssignExpr();
+        // "[" AssignExpr ".." AssignExpr "]"
+        if (auto op = consumedToken(T.Dot2))
         {
-          e = new SliceExpr(e, es[0], parseAssignExpr());
-          requireClosing(T.RBracket, leftBracket);
-          goto Lset;
+          auto r = set(new RangeExpr(e2, parseAssignExpr(), op), e2.begin);
+          e = new SliceExpr(e, r);
         }
-
-        // [ ExpressionList ]
-        if (consumed(T.Comma))
-           es ~= parseExpressionList2(T.RBracket);
+        else
+        { // "[" ExpressionList "]"
+          auto index = [e2];
+          if (consumed(T.Comma))
+             index ~= parseExpressionList2(T.RBracket);
+          e = new IndexExpr(e, index);
+        }
         requireClosing(T.RBracket, leftBracket);
-
-        e = new IndexExpr(e, es);
         goto Lset;
       default:
         return e;

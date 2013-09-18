@@ -69,7 +69,6 @@ enum string[] NodeClassNames = [
   "DoWhileStmt",
   "ForStmt",
   "ForeachStmt",
-  "ForeachRangeStmt", // D2.0
   "SwitchStmt",
   "CaseStmt",
   "CaseRangeStmt",
@@ -120,6 +119,7 @@ enum string[] NodeClassNames = [
   "DivExpr",
   "ModExpr",
   "PowExpr", // D2
+  "RangeExpr",
   "AssignExpr",
   "LShiftAssignExpr",
   "RShiftAssignExpr",

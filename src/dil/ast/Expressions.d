@@ -282,6 +282,16 @@ class PowExpr : BinaryExpr
   mixin methods;
 }
 
+class RangeExpr : BinaryExpr
+{
+  this(Expression left, Expression right, Token* optok)
+  {
+    super(left, right, optok);
+    mixin(set_kind);
+  }
+  mixin methods;
+}
+
 class AssignExpr : BinaryExpr
 {
   this(Expression left, Expression right, Token* optok)
@@ -409,6 +419,8 @@ class PowAssignExpr : BinaryExpr
   }
   mixin methods;
 }
+
+
 
 /*++++++++++++++++++++
 + Unary Expressions: +
@@ -639,18 +651,14 @@ class IndexExpr : UnaryExpr
 
 class SliceExpr : UnaryExpr
 {
-  Expression left, right;
-  mixin(memberInfo("una", "left?", "right?"));
-  this(Expression e, Expression left, Expression right)
+  Expression range;
+  mixin(memberInfo("una", "range?"));
+  this(Expression e, Expression range)
   {
     super(e);
     mixin(set_kind);
-    assert(left ? (right !is null) : right is null);
-    if (left)
-      addChildren([left, right]);
-
-    this.left = left;
-    this.right = right;
+    addOptChild(range);
+    this.range = range;
   }
   mixin methods;
 }

@@ -969,15 +969,6 @@ override
     return s;
   }
 
-  // D2.0
-  S visit(ForeachRangeStmt s)
-  {
-    auto saved = setBS(s);
-    // TODO:
-    restoreBS(saved);
-    return s;
-  }
-
   S visit(SwitchStmt s)
   {
     auto saved = setBS(s);

@@ -784,20 +784,6 @@ override
     end(s);
   }
 
-  // D2.0
-  void visit(ForeachRangeStmt s)
-  {
-    begin(s);
-    visitN(s.params);
-    write(",");
-    visitE(s.lower);
-    write(",");
-    visitE(s.upper);
-    write(",");
-    visitS(s.forBody);
-    end(s);
-  }
-
   void visit(SwitchStmt s)
   {
     begin(s);
@@ -1140,6 +1126,11 @@ override
     mixin(binaryExpr);
   }
 
+  void visit(RangeExpr e)
+  {
+    mixin(binaryExpr);
+  }
+
   void visit(AssignExpr e)
   {
     mixin(binaryExpr);
@@ -1310,9 +1301,7 @@ override
     begin(e);
     visitE(e.una);
     write(",");
-    e.left ? visitE(e.left) : write("n");
-    write(",");
-    e.right ? visitE(e.right) : write("n");
+    e.range ? visitE(e.range) : write("n");
     end(e);
   }
 

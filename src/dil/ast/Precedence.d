@@ -49,6 +49,7 @@ static immutable PREC[NodeKind.max+1] precTable = [
   NodeKind.DivExpr: PREC.Multiplication,
   NodeKind.ModExpr: PREC.Multiplication,
   NodeKind.PowExpr: PREC.Exponentiation,
+  NodeKind.RangeExpr:         PREC.Assignment,
   NodeKind.AssignExpr:        PREC.Assignment,
   NodeKind.LShiftAssignExpr:  PREC.Assignment,
   NodeKind.RShiftAssignExpr:  PREC.Assignment,
