@@ -2164,10 +2164,10 @@ private enum hvArrays = (){
     auto value = entity.value;
     assert(hash != 0);
     // 2. Binary search to find insertion place.
-    size_t i = void, lower = 0, upper = len;
+    size_t i, lower, upper = len;
     while (lower < upper)
     {
-      i = lower/2 + upper/2;
+      i = (lower + upper)/2;
       assert(hash != hashes[i], "bad hash function: conflicting hashes");
       if (hash > hashes[i])
         lower = i + 1;
@@ -2214,9 +2214,10 @@ dchar entity2Unicode(hash_t hash)
   size_t index = void,
          lower = 0,
          upper = hashes.length;
+  static assert(hashes.length < size_t.max / 2, "'index' may overflow!");
   while (lower < upper)
-  { // Don't do (lower+upper)/2. Might overflow.
-    index = lower/2 + upper/2;
+  {
+    index = (lower + upper)/2;
     if (hash > hashes[index])
       lower = index + 1;
     else if (hash < hashes[index])

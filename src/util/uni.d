@@ -518,9 +518,10 @@ body
   size_t mid = void,
          low = 0,
          high = table.length;
+  static assert(table.length < size_t.max / 2, "'mid' may overflow!");
   while (low < high)
   {
-    mid = low / 2 + high / 2;
+    mid = (low + high) / 2;
     auto range = table[mid];
     if (u < range[0]) // The char is below the range.
       high = mid;
