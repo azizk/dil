@@ -126,7 +126,7 @@ alias SpecialTokensBegin = TOK.FILE;
 alias SpecialTokensEnd = TOK.VERSION;
 
 /// A table that maps each token kind to a string.
-const string[TOK.MAX] tokToString = [
+immutable string[TOK.MAX] tokToString = [
   "Invalid",
 
   "Illegal",
@@ -229,4 +229,19 @@ static assert(tokToString.length == TOK.EOF+1);
 cstring toString(TOK k)
 {
   return tokToString[k];
+}
+
+/// A compile time associative array which maps Token strings to TOK values.
+enum str2TOK = (){
+  TOK[string] aa;
+  TOK t;
+  foreach (s; tokToString)
+    aa[s] = t++;
+  return aa;
+}();
+
+/// Converts a Token string to its respective TOK value at compile time.
+template S2T(string s)
+{
+  enum TOK S2T = str2TOK[s];
 }
