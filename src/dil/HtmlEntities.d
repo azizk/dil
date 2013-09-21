@@ -2151,17 +2151,8 @@ static const Entity[] namedEntities = [
   {"zwnj", 0x0200C},
 ];
 
-/// Generates the hashes and values array.
-/// ---
-/// private static immutable hash_t[] hashes = [
-///   19829,20085,20585, // ...
-/// ];
-/// private static immutable dchar[] values = [
-///   924,925,928, // ...
-/// ];
-/// ---
-char[] generateHashAndValueArrays()
-{
+/// Generates the hash/value arrays for the binary search function.
+private enum hvArrays = (){
   hash_t[] hashes; // HTML entity name hashes.
   dchar[] values; // Unicode codepoints.
   hashes.length = values.length = namedEntities.length; // Reserve.
@@ -2195,29 +2186,19 @@ char[] generateHashAndValueArrays()
     values[i] = value;
   }
 
-  // Build source text:
-  char[] hashesText = "private static immutable hash_t[] hashes = [".dup,
-         valuesText = "private static immutable dchar[] values = [".dup;
-  foreach (i, hash; hashes)
+  struct HashesValues
   {
-    hashesText ~= itoa(hash) ~ "UL,";
-    valuesText ~= itoa(values[i]) ~ ",";
+    hash_t[] hashes;
+    dchar[] values;
   }
-  hashesText ~= "];\n";
-  valuesText ~= "];";
-  return hashesText ~ valuesText;
-}
 
-version(DDoc)
-{
-  /// Table of hash values of the entities' names.
-  private static const hash_t[] hashes;
-  /// Table of Unicode codepoints.
-  private static const dchar[] values;
-}
-else
-  mixin(generateHashAndValueArrays);
-// pragma(msg, generateHashAndValueArrays());
+  return HashesValues(hashes, values);
+}();
+
+/// Table of hash values of the entities' names.
+private static immutable hashes = hvArrays.hashes;
+/// Table of Unicode codepoints.
+private static immutable values = hvArrays.values;
 
 /// Converts a named HTML entity to its equivalent Unicode codepoint.
 /// Returns: The entity's value or 0 if it does not exist.
@@ -2225,6 +2206,7 @@ dchar entity2Unicode(cstring entity)
 {
   return entity2Unicode(hashOf(entity));
 }
+
 /// ditto
 dchar entity2Unicode(hash_t hash)
 {
