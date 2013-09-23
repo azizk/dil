@@ -169,6 +169,12 @@ class Parser
     return token.kind == T!str;
   }
 
+  /// Returns true if the next token is of kind T!str.
+  bool nextIs(string str)()
+  {
+    return peekNext() == T!str;
+  }
+
   /// Returns the token kind of the next token.
   TOK peekNext()
   {
@@ -423,7 +429,7 @@ class Parser
       decl = parseStructOrUnionDecl();
       break;
     case T!"this":
-      if (peekNext() == T!"(")
+      if (nextIs!"(")
         decl = parseConstructorDecl();
       else
         goto case_Declaration;
@@ -434,7 +440,7 @@ class Parser
     version(D2)
     {
     case T!"const", T!"immutable", T!"inout", T!"shared":
-      if (peekNext() == T!"(")
+      if (nextIs!"(")
         goto case_Declaration;
       goto case_parseAttributes;
     } // version(D2)
@@ -561,7 +567,7 @@ class Parser
     skip!"alias";
     version (D2)
     {
-    if (tokenIs!"Identifier" && peekNext() == T!"this")
+    if (tokenIs!"Identifier" && nextIs!"this")
     {
       auto ident = token;
       skip!"Identifier";
@@ -570,7 +576,7 @@ class Parser
       return new AliasThisDecl(ident);
     }
     else
-    if ((tokenIs!"this" || tokenIs!"Identifier") && peekNext() == T!"=")
+    if ((tokenIs!"this" || tokenIs!"Identifier") && nextIs!"=")
     {
       Token*[] idents;
       TypeNode[] types;
@@ -676,7 +682,7 @@ class Parser
     // VariableType or ReturnType
     type = parseBasicTypes();
 
-    if (peekNext() == T!"(")
+    if (nextIs!"(")
     { // ReturnType FunctionName "(" ParameterList ")" FunctionBody
       name = requireIdentifier(MID.ExpectedFunctionName);
       if (!tokenIs!"(")
@@ -809,7 +815,7 @@ class Parser
       while (!tokenIs!"}")
       { // Peek for colon to see if this is a member identifier.
         Token* ident;
-        if (tokenIs!"Identifier" && peekNext() == T!":")
+        if (tokenIs!"Identifier" && nextIs!":")
           (ident = token),
           skip!"Identifier", skip!":";
         idents ~= ident;
@@ -1018,7 +1024,7 @@ class Parser
       switch (token.kind)
       {
       case T!"extern":
-        if (peekNext() == T!"(")
+        if (nextIs!"(")
         {
           checkLinkageType(linkageType, parseExternLinkageType(), begin);
           currentAttr = new LinkageDecl(linkageType, emptyDecl);
@@ -1042,7 +1048,7 @@ class Parser
       version(D2)
       {
       case T!"const", T!"immutable", T!"inout", T!"shared":
-        if (peekNext() == T!"(")
+        if (nextIs!"(")
           break Loop;
                              stc = tokenIs!"const" ? StorageClass.Const :
                                tokenIs!"immutable" ? StorageClass.Immutable :
@@ -1227,7 +1233,7 @@ class Parser
       ModuleFQN moduleFQN;
       Token* moduleAlias;
       // AliasName = ModuleName
-      if (peekNext() == T!"=")
+      if (nextIs!"=")
       {
         moduleAlias = requireIdentifier(MID.ExpectedAliasModuleName);
         skip!"=";
@@ -1248,7 +1254,7 @@ class Parser
       {
         Token* bindAlias;
         // BindAlias = BindName
-        if (peekNext() == T!"=")
+        if (nextIs!"=")
         {
           bindAlias = requireIdentifier(MID.ExpectedAliasImportName);
           skip!"=";
@@ -1882,7 +1888,7 @@ class Parser
       goto case_parseAttribute;
 
     case T!"Identifier":
-      if (peekNext() == T!":")
+      if (nextIs!":")
       {
         skip!"Identifier"; skip!":";
         s = new LabeledStmt(begin, parseNoScopeOrEmptyStmt());
@@ -1933,13 +1939,13 @@ class Parser
         goto case_parseAttribute;
       goto case_T_Scope;
     case T!"mixin":
-      if (peekNext() == T!"(")
+      if (nextIs!"(")
         goto case_parseExpressionStmt; // Parse as expression.
       goto case_T_Mixin;
     case T!"final":
       version(D2)
       {
-      if (peekNext() == T!"switch")
+      if (nextIs!"switch")
         goto case T!"switch";
       }
       goto case_parseAttribute;
@@ -2108,7 +2114,7 @@ class Parser
       switch (token.kind)
       {
       case T!"extern":
-        if (peekNext() == T!"(")
+        if (nextIs!"(")
         {
           checkLinkageType(linkageType, parseExternLinkageType(), begin);
           currentAttr = new LinkageDecl(linkageType, emptyDecl);
@@ -2121,7 +2127,7 @@ class Parser
       version(D2)
       {
       case T!"const", T!"immutable", T!"inout", T!"shared":
-        if (peekNext() == T!"(")
+        if (nextIs!"(")
           break Loop;
                           stc = tokenIs!"const" ? StorageClass.Const :
                             tokenIs!"immutable" ? StorageClass.Immutable :
@@ -2320,7 +2326,7 @@ class Parser
       version(D2)
       {
       case T!"const", T!"immutable", T!"inout", T!"shared":
-        if (peekNext() == T!"(")
+        if (nextIs!"(")
           goto default;
         stc = tokenIs!"const" ? StorageClass.Const :
           tokenIs!"immutable" ? StorageClass.Immutable :
@@ -3531,7 +3537,7 @@ class Parser
     switch (token.kind)
     {
     case T!"Identifier":
-      if (peekNext() == T!"=>")
+      if (nextIs!"=>")
         e = parseSingleParamLambdaExpr();
       else
         e = parseIdentifierExpr();
@@ -4220,7 +4226,7 @@ class Parser
         version(D2)
         {
         case T!"const", T!"immutable", T!"inout", T!"shared":
-          if (peekNext() == T!"(")
+          if (nextIs!"(")
             break;
                          stc = tokenIs!"const" ? StorageClass.Const :
                            tokenIs!"immutable" ? StorageClass.Immutable :
