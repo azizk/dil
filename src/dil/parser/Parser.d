@@ -986,6 +986,18 @@ class Parser
       error(begin, MID.RedundantLinkageType, begin.textSpan(prevToken));
   }
 
+  /// Returns a StorageClass when the next token is not a "(".
+  StorageClass getSTC()
+  {
+    if (nextIs!"(")
+      return StorageClass.None;
+    auto k = token.kind;
+    return k == T!"const" ? StorageClass.Const :
+      k == T!"immutable"  ? StorageClass.Immutable :
+          k == T!"inout"  ? StorageClass.Inout :
+                            StorageClass.Shared;
+  }
+
   /// Parses one or more attributes and a Declaration at the end.
   ///
   /// $(BNF
@@ -1048,12 +1060,8 @@ class Parser
       version(D2)
       {
       case T!"const", T!"immutable", T!"inout", T!"shared":
-        if (nextIs!"(")
+        if ((stc = getSTC()) == 0)
           break Loop;
-                             stc = tokenIs!"const" ? StorageClass.Const :
-                               tokenIs!"immutable" ? StorageClass.Immutable :
-                                   tokenIs!"inout" ? StorageClass.Inout :
-                                                     StorageClass.Shared;
         goto Lcommon;
       case T!"enum":
         if (!isEnumManifest())
@@ -2127,12 +2135,8 @@ class Parser
       version(D2)
       {
       case T!"const", T!"immutable", T!"inout", T!"shared":
-        if (nextIs!"(")
+        if ((stc = getSTC()) == 0)
           break Loop;
-                          stc = tokenIs!"const" ? StorageClass.Const :
-                            tokenIs!"immutable" ? StorageClass.Immutable :
-                                tokenIs!"inout" ? StorageClass.Inout :
-                                                  StorageClass.Shared;
         goto Lcommon;
       case T!"enum":
         if (!isEnumManifest())
@@ -2326,12 +2330,8 @@ class Parser
       version(D2)
       {
       case T!"const", T!"immutable", T!"inout", T!"shared":
-        if (nextIs!"(")
+        if ((stc = getSTC()) == 0)
           goto default;
-        stc = tokenIs!"const" ? StorageClass.Const :
-          tokenIs!"immutable" ? StorageClass.Immutable :
-              tokenIs!"inout" ? StorageClass.Inout :
-                                StorageClass.Shared;
         goto Lcommon;
       case T!"ref":
         stc = StorageClass.Ref;
@@ -4226,12 +4226,8 @@ class Parser
         version(D2)
         {
         case T!"const", T!"immutable", T!"inout", T!"shared":
-          if (nextIs!"(")
+          if ((stc = getSTC) == 0)
             break;
-                         stc = tokenIs!"const" ? StorageClass.Const :
-                           tokenIs!"immutable" ? StorageClass.Immutable :
-                               tokenIs!"inout" ? StorageClass.Inout :
-                                                 StorageClass.Shared;
           goto Lcommon;
         case T!"final":  stc = StorageClass.Final;  goto Lcommon;
         case T!"scope":  stc = StorageClass.Scope;  goto Lcommon;
