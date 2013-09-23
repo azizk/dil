@@ -12,8 +12,6 @@ import dil.SourceText,
        dil.Enums;
 import common;
 
-private alias T = TOK;
-
 /// A light-weight parser which looks only for import statements
 /// in the source text.
 class ImportParser : Parser
@@ -27,31 +25,31 @@ class ImportParser : Parser
   {
     auto decls = new CompoundDecl;
     super.init();
-    if (token.kind == T.Module)
+    if (token.kind == T!"module")
       decls ~= parseModuleDecl();
-    while (token.kind != T.EOF)
+    while (token.kind != T!"EOF")
       parseDeclarationDefinition(Protection.None);
     return decls;
   }
 
   void parseDeclarationDefinitionsBlock(Protection prot)
   {
-    skip(T.LBrace);
-    while (token.kind != T.RBrace && token.kind != T.EOF)
+    skip(T!"{");
+    while (token.kind != T!"}" && token.kind != T!"EOF")
       parseDeclarationDefinition(prot);
-    skip(T.RBrace);
+    skip(T!"}");
   }
 
   void parseDeclarationsBlock(Protection prot)
   {
     switch (token.kind)
     {
-    case T.LBrace:
+    case T!"{":
       parseDeclarationDefinitionsBlock(prot);
       break;
-    case T.Colon:
+    case T!":":
       nT();
-      while (token.kind != T.RBrace && token.kind != T.EOF)
+      while (token.kind != T!"}" && token.kind != T!"EOF")
         parseDeclarationDefinition(prot);
       break;
     default:
@@ -59,7 +57,7 @@ class ImportParser : Parser
     }
   }
 
-  bool skipToClosing(T opening, T closing)
+  bool skipToClosing(TOK opening, TOK closing)
   {
     alias next = token;
     uint level = 1;
@@ -70,7 +68,7 @@ class ImportParser : Parser
         ++level;
       else if (next.kind == closing && --level == 0)
         return true;
-      else if (next.kind == T.EOF)
+      else if (next.kind == T!"EOF")
         break;
     }
     return false;
@@ -78,13 +76,13 @@ class ImportParser : Parser
 
   void skipToTokenAfterClosingParen()
   {
-    skipToClosing(T.LParen, T.RParen);
+    skipToClosing(T!"(", T!")");
     nT();
   }
 
   void skipToTokenAfterClosingBrace()
   {
-    skipToClosing(T.LBrace, T.RBrace);
+    skipToClosing(T!"{", T!"}");
     nT();
   }
 
@@ -98,15 +96,15 @@ class ImportParser : Parser
     Protection prot;
     switch (token.kind)
     {
-    case T.Private:
+    case T!"private":
       prot = Protection.Private; break;
-    case T.Package:
+    case T!"package":
       prot = Protection.Package; break;
-    case T.Protected:
+    case T!"protected":
       prot = Protection.Protected; break;
-    case T.Public:
+    case T!"public":
       prot = Protection.Public; break;
-    case T.Export:
+    case T!"export":
       prot = Protection.Export; break;
     default:
       assert(0);
@@ -119,218 +117,218 @@ class ImportParser : Parser
   {
     switch (token.kind)
     {
-    case T.Align:
+    case T!"align":
       nT();
-      if (token.kind == T.LParen)
+      if (token.kind == T!"(")
         nT(), nT(), nT(); // ( Integer )
       parseDeclarationsBlock(prot);
       break;
-    case T.Pragma:
+    case T!"pragma":
       nT();
       skipToTokenAfterClosingParen();
       parseDeclarationsBlock(prot);
       break;
-    case T.Export,
-         T.Private,
-         T.Package,
-         T.Protected,
-         T.Public:
+    case T!"export",
+         T!"private",
+         T!"package",
+         T!"protected",
+         T!"public":
       parseProtectionAttribute();
       break;
     // Storage classes
-    case T.Extern:
+    case T!"extern":
       nT();
-      token.kind == T.LParen && skipToTokenAfterClosingParen();
+      token.kind == T!"(" && skipToTokenAfterClosingParen();
       parseDeclarationsBlock(prot);
       break;
-    case T.Const:
+    case T!"const":
     version(D2)
     {
-      if (peekNext() == T.LParen)
+      if (peekNext() == T!"(")
         goto case_Declaration;
     }
-    case T.Override,
-         T.Deprecated,
-         T.Abstract,
-         T.Synchronized,
-         // T.Static,
-         T.Final,
-         T.Auto,
-         T.Scope:
+    case T!"override",
+         T!"deprecated",
+         T!"abstract",
+         T!"synchronized",
+         // T!"static",
+         T!"final",
+         T!"auto",
+         T!"scope":
     case_StaticAttribute:
     case_InvariantAttribute:
       nT();
       parseDeclarationsBlock(prot);
       break;
     // End of storage classes.
-    case T.Alias, T.Typedef:
+    case T!"alias", T!"typedef":
       nT();
       goto case_Declaration;
-    case T.Static:
+    case T!"static":
       switch (peekNext())
       {
-      case T.Import:
+      case T!"import":
         goto case_Import;
-      case T.This:
+      case T!"this":
         nT(), nT(); // static this
         skipToTokenAfterClosingParen();
         skipFunctionBody();
         break;
-      case T.Tilde:
+      case T!"~":
         nT(), nT(), nT(), nT(), nT(); // static ~ this ( )
         skipFunctionBody();
         break;
-      case T.If:
+      case T!"if":
         nT(), nT();
         skipToTokenAfterClosingParen();
         parseDeclarationsBlock(prot);
-        if (token.kind == T.Else)
+        if (token.kind == T!"else")
           nT(), parseDeclarationsBlock(prot);
         break;
-      case T.Assert:
+      case T!"assert":
         nT(), nT(); // static assert
         skipToTokenAfterClosingParen();
-        skip(T.Semicolon);
+        skip(T!";");
         break;
       default:
         goto case_StaticAttribute;
       }
       break;
-    case T.Import:
+    case T!"import":
     case_Import:
       auto decl = parseImportDecl();
       decl.setProtection(prot); // Set the protection attribute.
       imports ~= decl.to!(ImportDecl);
       break;
-    case T.Enum:
+    case T!"enum":
       nT();
-      token.kind == T.Identifier && nT();
-      if (token.kind == T.Colon)
+      token.kind == T!"Identifier" && nT();
+      if (token.kind == T!":")
       {
         nT();
-        while (token.kind != T.LBrace && token.kind != T.EOF)
+        while (token.kind != T!"{" && token.kind != T!"EOF")
           nT();
       }
-      if (token.kind == T.Semicolon)
+      if (token.kind == T!";")
         nT();
       else
         skipToTokenAfterClosingBrace();
       break;
-    case T.Class:
-    case T.Interface:
-      nT(), skip(T.Identifier); // class Identifier
-      token.kind == T.LParen && skipToTokenAfterClosingParen(); // Skip template params.
-      if (token.kind == T.Colon)
+    case T!"class":
+    case T!"interface":
+      nT(), skip(T!"Identifier"); // class Identifier
+      token.kind == T!"(" && skipToTokenAfterClosingParen(); // Skip template params.
+      if (token.kind == T!":")
       { // BaseClasses
         nT();
-        while (token.kind != T.LBrace && token.kind != T.EOF)
-          if (token.kind == T.LParen) // Skip ( tokens... )
+        while (token.kind != T!"{" && token.kind != T!"EOF")
+          if (token.kind == T!"(") // Skip ( tokens... )
             skipToTokenAfterClosingParen();
           else
             nT();
       }
-      if (token.kind == T.Semicolon)
+      if (token.kind == T!";")
         nT();
       else
         parseDeclarationDefinitionsBlock(Protection.None);
       break;
-    case T.Struct, T.Union:
-      nT(); skip(T.Identifier);
-      token.kind == T.LParen && skipToTokenAfterClosingParen();
-      if (token.kind == T.Semicolon)
+    case T!"struct", T!"union":
+      nT(); skip(T!"Identifier");
+      token.kind == T!"(" && skipToTokenAfterClosingParen();
+      if (token.kind == T!";")
         nT();
       else
         parseDeclarationDefinitionsBlock(Protection.None);
       break;
-    case T.Tilde:
-      nT(); // ~
-    case T.This:
+    case T!"~":
+      nT();
+    case T!"this":
       nT(); nT(); nT(); // this ( )
       skipFunctionBody();
       break;
-    case T.Invariant:
+    case T!"invariant":
     version(D2)
     {
       auto next = peekAfter(token);
-      if (next.kind == T.LParen)
+      if (next.kind == T!"(")
       {
-        if (peekAfter(next).kind != T.RParen)
+        if (peekAfter(next).kind != T!")")
           goto case_Declaration;
       }
       else
         goto case_InvariantAttribute;
     }
       nT();
-      token.kind == T.LParen && skipToTokenAfterClosingParen();
+      token.kind == T!"(" && skipToTokenAfterClosingParen();
       skipFunctionBody();
       break;
-    case T.Unittest:
+    case T!"unittest":
       nT();
       skipFunctionBody();
       break;
-    case T.Debug:
+    case T!"debug":
       nT();
-      if (token.kind == T.Equal)
+      if (token.kind == T!"=")
       {
         nT(), nT(), nT(); // = Condition ;
         break;
       }
-      if (token.kind == T.LParen)
+      if (token.kind == T!"(")
         nT(), nT(), nT(); // ( Condition )
       parseDeclarationsBlock(prot);
-      if (token.kind == T.Else)
+      if (token.kind == T!"else")
         nT(), parseDeclarationsBlock(prot);
       break;
-    case T.Version:
+    case T!"version":
       nT();
-      if (token.kind == T.Equal)
+      if (token.kind == T!"=")
       {
         nT(), nT(), nT(); // = Condition ;
         break;
       }
       nT(), nT(), nT(); // ( Condition )
       parseDeclarationsBlock(prot);
-      if (token.kind == T.Else)
+      if (token.kind == T!"else")
         nT(), parseDeclarationsBlock(prot);
       break;
-    case T.Template:
+    case T!"template":
       nT();
-      skip(T.Identifier);
+      skip(T!"Identifier");
       skipToTokenAfterClosingParen();
       parseDeclarationDefinitionsBlock(Protection.None);
       break;
-    case T.New:
+    case T!"new":
       nT();
       skipToTokenAfterClosingParen();
       skipFunctionBody();
       break;
-    case T.Delete:
+    case T!"delete":
       nT();
       skipToTokenAfterClosingParen();
       skipFunctionBody();
       break;
-    case T.Mixin:
-      while (token.kind != T.Semicolon && token.kind != T.EOF)
-        if (token.kind == T.LParen)
+    case T!"mixin":
+      while (token.kind != T!";" && token.kind != T!"EOF")
+        if (token.kind == T!"(")
           skipToTokenAfterClosingParen();
         else
           nT();
-      skip(T.Semicolon);
+      skip(T!";");
       break;
-    case T.Semicolon:
+    case T!";":
       nT();
       break;
     // Declaration
-    case T.Identifier, T.Dot, T.Typeof:
+    case T!"Identifier", T!".", T!"typeof":
     case_Declaration:
-      while (token.kind != T.Semicolon && token.kind != T.EOF)
-        if (token.kind == T.LParen)
+      while (token.kind != T!";" && token.kind != T!"EOF")
+        if (token.kind == T!"(")
           skipToTokenAfterClosingParen();
-        else if (token.kind == T.LBrace)
+        else if (token.kind == T!"{")
           skipToTokenAfterClosingBrace();
         else
           nT();
-      skip(T.Semicolon);
+      skip(T!";");
       break;
     default:
       if (token.isIntegralType)
@@ -345,25 +343,25 @@ class ImportParser : Parser
     {
       switch (token.kind)
       {
-      case T.LBrace:
+      case T!"{":
         skipToTokenAfterClosingBrace();
         break;
-      case T.Semicolon:
+      case T!";":
         nT();
         break;
-      case T.In:
+      case T!"in":
         nT();
         skipToTokenAfterClosingBrace();
         continue;
-      case T.Out:
+      case T!"out":
         nT();
-        if (token.kind == T.LParen)
+        if (token.kind == T!"(")
           nT(), nT(), nT(); // ( Identifier )
         skipToTokenAfterClosingBrace();
         continue;
-      case T.Body:
+      case T!"body":
         nT();
-        goto case T.LBrace;
+        goto case T!"{";
       default:
       }
       break; // Exit loop.
