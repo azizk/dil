@@ -2310,34 +2310,54 @@ class Parser
     do
     {
       auto paramBegin = token;
-      StorageClass stc;
+      StorageClass stcs, stc;
       Type type;
       Token* name, stctok;
 
+    Lswitch:
       switch (token.kind)
       {
-      version(D1)
+      version(D2)
       {
-      case T!"inout":
-      }
+      case T!"const", T!"immutable", T!"inout", T!"shared":
+        if (peekNext() == T!"(")
+          goto default;
+        stc = tokenIs!"const" ? StorageClass.Const :
+          tokenIs!"immutable" ? StorageClass.Immutable :
+              tokenIs!"inout" ? StorageClass.Inout :
+                                StorageClass.Shared;
+        goto Lcommon;
       case T!"ref":
         stc = StorageClass.Ref;
+      Lcommon:
+        if (stcs & stc)
+          error2(MID.RedundantStorageClass, token);
+        stcs |= stc;
+        stctok = token;
+        nT();
+        goto Lswitch;
+      }
+      version(D1)
+      {
+      case T!"inout", T!"ref":
+        stcs = StorageClass.Ref;
         stctok = token;
         nT();
         // fall through
+      }
       case T!"Identifier":
         auto next = peekNext();
         if (next == T!"," || next == T!";" || next == T!")")
-        { // (ref|inout)? Identifier
+        { // (ref|const|...)? Identifier
           name = requireIdentifier(MID.ExpectedVariableName);
           break;
         }
         // fall through
-      default: // (ref|inout)? Declarator
+      default: // (ref|const|...)? Declarator
         type = parseDeclarator(name);
       }
 
-      params ~= set(new Parameter(stc, stctok, type, name, null), paramBegin);
+      params ~= set(new Parameter(stcs, stctok, type, name, null), paramBegin);
     } while (consumed!",");
     set(params, paramsBegin);
 
