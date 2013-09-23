@@ -82,7 +82,7 @@ class Parser
     init();
     auto begin = token;
     auto decls = new CompoundDecl;
-    if (tokenIs(T!"module"))
+    if (tokenIs!"module")
       decls ~= parseModuleDecl();
     decls.addOptChildren(parseDeclarationDefinitions());
     set(decls, begin);
@@ -163,10 +163,10 @@ class Parser
     return node.begin !is null && node.end !is null;
   }
 
-  /// Returns true if the current token is of a certain kind.
-  bool tokenIs()(TOK kind)
+  /// Returns true if the current token is of kind T!str.
+  bool tokenIs(string str)()
   {
-    return token.kind == kind;
+    return token.kind == T!str;
   }
 
   /// Returns the token kind of the next token.
@@ -189,24 +189,23 @@ class Parser
     return t;
   }
 
-  /// Consumes the current token if its kind matches k and returns true.
-  bool consumed()(TOK k) // Templatized, so it's inlined.
+  /// Consumes the current token if its kind matches T!str and returns true.
+  bool consumed(string str)()
   {
-    return tokenIs(k) ? (nT(), true) : false;
+    return tokenIs!str ? (nT(), true) : false;
   }
 
-  /// Consumes the current token if its kind matches k and returns it.
-  Token* consumedToken()(TOK k) // Templatized, so it's inlined.
+  /// Consumes the current token if its kind matches T!str and returns it.
+  Token* consumedToken(string str)() // Templatized, so it's inlined.
   {
-    return tokenIs(k) ? (nT(), prevToken) : null;
+    return tokenIs!str ? (nT(), prevToken) : null;
   }
 
-  /// Asserts that the current token is of kind expectedKind,
+  /// Asserts that the current token is of kind T!str,
   /// and then moves to the next token.
-  void skip()(TOK expectedKind)
+  void skip(string str)()
   {
-    assert(tokenIs(expectedKind) /+|| *(int*).init+/, token.text);
-    nT();
+    assert(consumed!str, token.text);
   }
 
   /// Returns true if the token after the closing parenthesis
@@ -215,14 +214,14 @@ class Parser
   ///   kind = The token kind to test for.
   bool tokenAfterParenIs(TOK kind)
   {
-    assert(tokenIs(T!"("));
+    assert(tokenIs!"(");
     return skipParens(token, T!")").kind == kind;
   }
 
   /// Returns the token kind behind the closing bracket.
   TOK tokenAfterBracket(TOK closing)
   {
-    assert(tokenIs(T!"[") || tokenIs(T!"{"));
+    assert(tokenIs!"[" || tokenIs!"{");
     return skipParens(token, closing).kind;
   }
 
@@ -257,24 +256,24 @@ class Parser
   Declaration parseModuleDecl()
   {
     auto begin = token;
-    skip(T!"module");
+    skip!"module";
     ModuleFQN moduleFQN;
     Token* typeId;
     version(D2)
     {
-    if (consumed(T!"("))
+    if (consumed!"(")
     {
       typeId = requireIdentifier(MID.ExpectedModuleType);
       auto ident = typeId ? typeId.ident : null;
       if (ident && ident !is Ident.safe && ident !is Ident.system)
         error(typeId, MID.ExpectedModuleType);
-      require2(T!")");
+      require2!")";
     }
     } // version(D2)
     do
       moduleFQN ~= requireIdentifier(MID.ExpectedModuleIdentifier);
-    while (consumed(T!"."));
-    require2(T!";");
+    while (consumed!".");
+    require2!";";
     return set(new ModuleDecl(typeId, moduleFQN), begin);
   }
 
@@ -283,7 +282,7 @@ class Parser
   Declaration[] parseDeclarationDefinitions()
   {
     Declaration[] decls;
-    while (!tokenIs(T!"EOF"))
+    while (!tokenIs!"EOF")
       decls ~= parseDeclarationDefinition();
     return decls;
   }
@@ -304,10 +303,10 @@ class Parser
     // Parse body.
     auto begin = token;
     auto decls = new CompoundDecl;
-    require(T!"{");
-    while (!tokenIs(T!"}") && !tokenIs(T!"EOF"))
+    require!"{";
+    while (!tokenIs!"}" && !tokenIs!"EOF")
       decls ~= parseDeclarationDefinition();
-    requireClosing(T!"}", begin);
+    requireClosing!"}"(begin);
     set(decls, begin);
 
     // Restore original values.
@@ -485,7 +484,7 @@ class Parser
     default:
       if (token.isIntegralType)
         goto case_Declaration;
-      else if (tokenIs(T!"module"))
+      else if (tokenIs!"module")
       {
         decl = parseModuleDecl();
         error(begin, MID.ModuleDeclarationNotFirst);
@@ -497,8 +496,8 @@ class Parser
       do
         nT();
       while (!token.isDeclDefStart() &&
-             !tokenIs(T!"}") &&
-             !tokenIs(T!"EOF"));
+             !tokenIs!"}" &&
+             !tokenIs!"EOF");
       auto text = begin.textSpan(this.prevToken);
       error(begin, MID.IllegalDeclaration, text);
     }
@@ -520,9 +519,9 @@ class Parser
       auto begin = token;
       nT();
       auto decls = new CompoundDecl;
-      while (!tokenIs(T!"}") && !tokenIs(T!"EOF"))
+      while (!tokenIs!"}" && !tokenIs!"EOF")
         decls ~= parseDeclarationDefinition();
-      requireClosing(T!"}", begin);
+      requireClosing!"}"(begin);
       d = set(decls, begin);
       break;
     case T!":":
@@ -532,7 +531,7 @@ class Parser
       nT();
       auto begin2 = token;
       auto decls = new CompoundDecl;
-      while (!tokenIs(T!"}") && !tokenIs(T!"EOF"))
+      while (!tokenIs!"}" && !tokenIs!"EOF")
         decls ~= parseDeclarationDefinition();
       set(decls, begin2);
       d = set(new ColonBlockDecl(decls), begin);
@@ -559,36 +558,36 @@ class Parser
   ////AliasName := this | Identifier)
   Declaration parseAliasDecl()
   {
-    skip(T!"alias");
+    skip!"alias";
     version (D2)
     {
-    if (tokenIs(T!"Identifier") && peekNext() == T!"this")
+    if (tokenIs!"Identifier" && peekNext() == T!"this")
     {
       auto ident = token;
-      skip(T!"Identifier");
-      skip(T!"this");
-      require2(T!";");
+      skip!"Identifier";
+      skip!"this";
+      require2!";";
       return new AliasThisDecl(ident);
     }
     else
-    if ((tokenIs(T!"this") || tokenIs(T!"Identifier")) && peekNext() == T!"=")
+    if ((tokenIs!"this" || tokenIs!"Identifier") && peekNext() == T!"=")
     {
       Token*[] idents;
       TypeNode[] types;
       goto LenterLoop;
 
-      while (consumed(T!","))
+      while (consumed!",")
       {
-        if (!(tokenIs(T!"this") || tokenIs(T!"Identifier")))
+        if (!(tokenIs!"this" || tokenIs!"Identifier"))
           error(token, MID.ExpectedAliasName, token.text);
       LenterLoop:
         idents ~= token;
         nT();
-        require2(T!"=");
+        require2!"=";
         types ~= parseType();
       }
 
-      require2(T!";");
+      require2!";";
       return new AliasesDecl(idents, types);
     }
     } // version(D2)
@@ -641,13 +640,13 @@ class Parser
     Expression constraint; // Function template constraint.
 
     // Check for AutoDecl.
-    if (testAutoDeclaration && tokenIs(T!"Identifier"))
+    if (testAutoDeclaration && tokenIs!"Identifier")
     {
       auto next_kind = peekNext();
       if (next_kind == T!"=")
       { // AutoVariables
         name = token;
-        skip(T!"Identifier");
+        skip!"Identifier";
         goto LparseVariables;
       }
       else version(D2) if (next_kind == T!"(")
@@ -658,8 +657,8 @@ class Parser
         if (next_kind == T!"(")
         { // TemplateParameterList ParameterList
           name = token;
-          skip(T!"Identifier");
-          assert(tokenIs(T!"("));
+          skip!"Identifier";
+          assert(tokenIs!"(");
           goto LparseTPList; // Continue parsing templatized AutoFunction.
         }
         else
@@ -667,8 +666,8 @@ class Parser
             next_kind == T!"in" || next_kind == T!"out" || next_kind == T!"body")
         { // ParameterList ("{" | FunctionPostfix | in | out | body)
           name = token;
-          skip(T!"Identifier");
-          assert(tokenIs(T!"("));
+          skip!"Identifier";
+          assert(tokenIs!"(");
           goto LparseBeforeParams; // Continue parsing AutoFunction.
         }
       } // version(D2)
@@ -680,11 +679,11 @@ class Parser
     if (peekNext() == T!"(")
     { // ReturnType FunctionName "(" ParameterList ")" FunctionBody
       name = requireIdentifier(MID.ExpectedFunctionName);
-      if (!tokenIs(T!"("))
+      if (!tokenIs!"(")
         nT(); // Skip non-identifier token.
 
     LparseBeforeTParams:
-      assert(tokenIs(T!"("));
+      assert(tokenIs!"(");
       if (tokenAfterParenIs(T!"("))
       LparseTPList: // "(" TemplateParameterList ")"
         tparams = parseTemplateParameterList();
@@ -727,13 +726,13 @@ class Parser
     Token*[] names = [name]; // One identifier has been parsed already.
     Expression[] values;
     goto LenterLoop; // Enter the loop and check for an initializer.
-    while (consumed(T!","))
+    while (consumed!",")
     {
       names ~= requireIdentifier(MID.ExpectedVariableName);
     LenterLoop:
-      values ~= consumed(T!"=") ? parseInitializer() : null;
+      values ~= consumed!"=" ? parseInitializer() : null;
     }
-    require2(T!";");
+    require2!";";
     auto d = new VariablesDecl(type, names, values, linkType);
     d.setStorageClass(stcs);
     d.setProtection(protection);
@@ -754,11 +753,11 @@ class Parser
   ////MemberName         := Identifier)
   Expression parseInitializer()
   {
-    if (tokenIs(T!"void"))
+    if (tokenIs!"void")
     {
       auto next = peekNext();
       if (next == T!"," || next == T!";")
-        return skip(T!"void"), set(new VoidInitExpr(), prevToken);
+        return skip!"void", set(new VoidInitExpr(), prevToken);
     }
     return parseNonVoidInitializer();
   }
@@ -780,21 +779,21 @@ class Parser
       // ArrayInitializer := "[" ArrayInitElements? "]"
       Expression[] keys, values;
 
-      skip(T!"[");
-      while (!tokenIs(T!"]"))
+      skip!"[";
+      while (!tokenIs!"]")
       {
         Expression key;
         auto value = parseNonVoidInitializer();
-        if (consumed(T!":"))
+        if (consumed!":")
           (key = value), // Switch roles.
           assert(!(key.Is!(ArrayInitExpr) || key.Is!(StructInitExpr))),
           value = parseNonVoidInitializer(); // Parse actual value.
         keys ~= key;
         values ~= value;
-        if (!consumed(T!","))
+        if (!consumed!",")
           break;
       }
-      requireClosing(T!"]", begin);
+      requireClosing!"]"(begin);
       init = new ArrayInitExpr(keys, values);
       break;
     case T!"{":
@@ -806,19 +805,19 @@ class Parser
       Token*[] idents;
       Expression[] values;
 
-      skip(T!"{");
-      while (!tokenIs(T!"}"))
+      skip!"{";
+      while (!tokenIs!"}")
       { // Peek for colon to see if this is a member identifier.
         Token* ident;
-        if (tokenIs(T!"Identifier") && peekNext() == T!":")
+        if (tokenIs!"Identifier" && peekNext() == T!":")
           (ident = token),
-          skip(T!"Identifier"), skip(T!":"); // Identifier ":"
+          skip!"Identifier", skip!":";
         idents ~= ident;
         values ~= parseNonVoidInitializer();
-        if (!consumed(T!","))
+        if (!consumed!",")
           break;
       }
-      requireClosing(T!"}", begin);
+      requireClosing!"}"(begin);
       init = new StructInitExpr(idents, values);
       break;
     default:
@@ -864,9 +863,9 @@ class Parser
         if (outBody)
           error(MID.OutContract);
         nT();
-        if (consumed(T!"("))
+        if (consumed!"(")
           (outIdent = requireIdentifier(MID.ExpectedAnIdentifier)),
-          require2(T!")");
+          require2!")";
         outBody = parseStatements();
         break;
       case T!"body":
@@ -944,9 +943,9 @@ class Parser
   {
     LinkageType linkageType;
 
-    skip(T!"extern"), skip(T!"("); // extern "("
+    skip!"extern", skip!"(";
 
-    if (consumed(T!")"))
+    if (consumed!")")
     { // extern "(" ")"
       error(MID.MissingLinkageType);
       return linkageType;
@@ -956,7 +955,7 @@ class Parser
 
     switch (idtok.ident.idKind)
     {
-    case IDK.C:       linkageType = consumed(T!"++") ?
+    case IDK.C:       linkageType = consumed!"++" ?
                                     LinkageType.Cpp :
                                     LinkageType.C;       break;
     case IDK.D:       linkageType = LinkageType.D;       break;
@@ -968,7 +967,7 @@ class Parser
       assert(idtok);
       error2(MID.UnrecognizedLinkageType, idtok);
     }
-    require2(T!")");
+    require2!")";
     return linkageType;
   }
 
@@ -1045,10 +1044,10 @@ class Parser
       case T!"const", T!"immutable", T!"inout", T!"shared":
         if (peekNext() == T!"(")
           break Loop;
-                             stc = tokenIs(T!"const") ? StorageClass.Const :
-                               tokenIs(T!"immutable") ? StorageClass.Immutable :
-                                   tokenIs(T!"inout") ? StorageClass.Inout :
-                                                        StorageClass.Shared;
+                             stc = tokenIs!"const" ? StorageClass.Const :
+                               tokenIs!"immutable" ? StorageClass.Immutable :
+                                   tokenIs!"inout" ? StorageClass.Inout :
+                                                     StorageClass.Shared;
         goto Lcommon;
       case T!"enum":
         if (!isEnumManifest())
@@ -1102,13 +1101,12 @@ class Parser
       case T!"pragma":
         // Pragma := pragma "(" Identifier ("," ExpressionList)? ")"
         nT();
-        Token* ident;
 
         auto leftParen = token;
-        require2(T!"(");
-        ident = requireIdentifier(MID.ExpectedPragmaIdentifier);
-        auto args = consumed(T!",") ? parseExpressionList() : null;
-        requireClosing(T!")", leftParen);
+        require2!"(";
+        auto ident = requireIdentifier(MID.ExpectedPragmaIdentifier);
+        auto args = consumed!"," ? parseExpressionList() : null;
+        requireClosing!")"(leftParen);
 
         currentAttr = new PragmaDecl(ident, args, emptyDecl);
         testAutoDecl = false;
@@ -1141,12 +1139,12 @@ class Parser
     this.linkageType = linkageType;
     this.protection = protection;
     this.alignSize = alignSize;
-    if (testAutoDecl && tokenIs(T!"Identifier")) // "auto" Identifier "="
+    if (testAutoDecl && tokenIs!"Identifier") // "auto" Identifier "="
       decl = // This could be a normal Declaration or an AutoDeclaration
         parseVariablesOrFunction(stcs, protection, linkageType, true);
     else
     {
-      if (prevAttr.Is!PragmaDecl && tokenIs(T!";"))
+      if (prevAttr.Is!PragmaDecl && tokenIs!";")
         decl = parseDeclarationDefinition(); // Allow semicolon after pragma().
       else // Parse a block.
         decl = parseDeclarationsBlock();
@@ -1169,15 +1167,15 @@ class Parser
   /// $(BNF AlignAttribute := align ("(" Integer ")")?)
   uint parseAlignAttribute(out Token* sizetok)
   {
-    skip(T!"align");
+    skip!"align";
     uint size;
-    if (consumed(T!"("))
+    if (consumed!"(")
     {
-      if (tokenIs(T!"Int32"))
-        (sizetok = token), (size = token.int_), skip(T!"Int32");
+      if (tokenIs!"Int32")
+        (sizetok = token), (size = token.int_), skip!"Int32";
       else
-        expected(T!"Int32");
-      require2(T!")");
+        expected!"Int32";
+      require2!")";
     }
     return size;
   }
@@ -1185,8 +1183,8 @@ class Parser
   /// $(BNF AtAttribute := "@" Identifier)
   StorageClass parseAtAttribute()
   {
-    skip(T!"@");
-    auto idtok = tokenIs(T!"Identifier") ?
+    skip!"@";
+    auto idtok = tokenIs!"Identifier" ?
       token : requireIdentifier(MID.ExpectedAttributeId);
     StorageClass stc;
     switch (idtok.ident.idKind)
@@ -1216,8 +1214,8 @@ class Parser
   ////BindName     := Identifier)
   ImportDecl parseImportDecl()
   {
-    bool isStatic = consumed(T!"static");
-    skip(T!"import");
+    bool isStatic = consumed!"static";
+    skip!"import";
 
     ModuleFQN[] moduleFQNs;
     Token*[] moduleAliases;
@@ -1232,18 +1230,18 @@ class Parser
       if (peekNext() == T!"=")
       {
         moduleAlias = requireIdentifier(MID.ExpectedAliasModuleName);
-        skip(T!"=");
+        skip!"=";
       }
       // Identifier ("." Identifier)*
       do
         moduleFQN ~= requireIdentifier(MID.ExpectedModuleIdentifier);
-      while (consumed(T!"."));
+      while (consumed!".");
       // Push identifiers.
       moduleFQNs ~= moduleFQN;
       moduleAliases ~= moduleAlias;
-    } while (consumed(T!","));
+    } while (consumed!",");
 
-    if (consumed(T!":"))
+    if (consumed!":")
     { // ImportBind := (BindAlias "=")? BindName
       // ":" ImportBind ("," ImportBind)*
       do
@@ -1253,14 +1251,14 @@ class Parser
         if (peekNext() == T!"=")
         {
           bindAlias = requireIdentifier(MID.ExpectedAliasImportName);
-          skip(T!"=");
+          skip!"=";
         }
         // Push identifiers.
         bindNames ~= requireIdentifier(MID.ExpectedImportName);
         bindAliases ~= bindAlias;
-      } while (consumed(T!","));
+      } while (consumed!",");
     }
-    require2(T!";");
+    require2!";";
 
     return new ImportDecl(moduleFQNs, moduleAliases, bindNames,
                                  bindAliases, isStatic);
@@ -1272,7 +1270,7 @@ class Parser
   {
     version(D2)
     {
-    assert(tokenIs(T!"enum"));
+    assert(tokenIs!"enum");
     auto next = peekAfter(token);
     auto kind = next.kind;
     if (kind == T!":" || kind == T!"{")
@@ -1298,7 +1296,7 @@ class Parser
   ////EnumMember   := Name ("=" AssignExpr)?)
   Declaration parseEnumDecl()
   {
-    skip(T!"enum");
+    skip!"enum";
 
     Token* enumName;
     Type baseType;
@@ -1306,14 +1304,14 @@ class Parser
 
     enumName = optionalIdentifier();
 
-    if (consumed(T!":"))
+    if (consumed!":")
       baseType = parseBasicType();
 
-    if (enumName && consumed(T!";"))
+    if (enumName && consumed!";")
     {}
-    else if (auto leftBrace = consumedToken(T!"{"))
+    else if (auto leftBrace = consumedToken!"{")
     {
-      while (!tokenIs(T!"}"))
+      while (!tokenIs!"}")
       {
         Token* begin = token,
                name; // Name of the enum member.
@@ -1329,16 +1327,16 @@ class Parser
 
         name = requireIdentifier(MID.ExpectedEnumMember);
 
-        if (consumed(T!"=")) // "=" AssignExpr
+        if (consumed!"=") // "=" AssignExpr
           value = parseAssignExpr();
 
         auto member = new EnumMemberDecl(type, name, value);
         members ~= set(member, begin);
 
-        if (!consumed(T!","))
+        if (!consumed!",")
           break;
       }
-      requireClosing(T!"}", leftBrace);
+      requireClosing!"}"(leftBrace);
     }
     else
       error2(MID.ExpectedEnumBody, token);
@@ -1376,7 +1374,7 @@ class Parser
   Declaration parseClassDecl()
   {
     auto begin = token;
-    skip(T!"class");
+    skip!"class";
 
     Token* name;
     TemplateParameters tparams;
@@ -1386,18 +1384,18 @@ class Parser
 
     name = requireIdentifier(MID.ExpectedClassName);
 
-    if (tokenIs(T!"("))
+    if (tokenIs!"(")
     {
       tparams = parseTemplateParameterList();
       version(D2) constraint = parseOptionalConstraint();
     }
 
-    if (consumed(T!":"))
+    if (consumed!":")
       bases = parseBaseClasses();
 
-    if (bases.length == 0 && consumed(T!";"))
+    if (bases.length == 0 && consumed!";")
     {}
-    else if (tokenIs(T!"{"))
+    else if (tokenIs!"{")
       decls = parseDeclarationDefinitionsBody();
     else
       error2(MID.ExpectedClassBody, token);
@@ -1433,7 +1431,7 @@ class Parser
       auto begin = token;
       auto type = parseBasicType();
       bases ~= set(new BaseClassType(prot, type), begin);
-    } while (consumed(T!","));
+    } while (consumed!",");
     return bases;
   }
 
@@ -1444,7 +1442,7 @@ class Parser
   Declaration parseInterfaceDecl()
   {
     auto begin = token;
-    skip(T!"interface");
+    skip!"interface";
 
     Token* name;
     TemplateParameters tparams;
@@ -1454,18 +1452,18 @@ class Parser
 
     name = requireIdentifier(MID.ExpectedInterfaceName);
 
-    if (tokenIs(T!"("))
+    if (tokenIs!"(")
     {
       tparams = parseTemplateParameterList();
       version(D2) constraint = parseOptionalConstraint();
     }
 
-    if (consumed(T!":"))
+    if (consumed!":")
       bases = parseBaseClasses();
 
-    if (bases.length == 0 && consumed(T!";"))
+    if (bases.length == 0 && consumed!";")
     {}
-    else if (tokenIs(T!"{"))
+    else if (tokenIs!"{")
       decls = parseDeclarationDefinitionsBody();
     else
       error2(MID.ExpectedInterfaceBody, token);
@@ -1486,7 +1484,7 @@ class Parser
   ////UnionBody  := DeclDefsBlock)
   Declaration parseStructOrUnionDecl()
   {
-    assert(tokenIs(T!"struct") || tokenIs(T!"union"));
+    assert(tokenIs!"struct" || tokenIs!"union");
     auto begin = token;
     nT();
 
@@ -1497,15 +1495,15 @@ class Parser
 
     name = optionalIdentifier();
 
-    if (name && tokenIs(T!"("))
+    if (name && tokenIs!"(")
     {
       tparams = parseTemplateParameterList();
       version(D2) constraint = parseOptionalConstraint();
     }
 
-    if (name && consumed(T!";"))
+    if (name && consumed!";")
     {}
-    else if (tokenIs(T!"{"))
+    else if (tokenIs!"{")
       decls = parseDeclarationDefinitionsBody();
     else
       error2(begin.kind == T!"struct" ?
@@ -1534,8 +1532,8 @@ class Parser
     auto begin = token;
     TemplateParameters tparams;
     Expression constraint;
-    skip(T!"this");
-    if (tokenIs(T!"(") && tokenAfterParenIs(T!"("))
+    skip!"this";
+    if (tokenIs!"(" && tokenAfterParenIs(T!"("))
       tparams = parseTemplateParameterList(); // "(" TemplateParameterList ")"
     Parameters parameters;
     if (peekNext() != T!"this")
@@ -1544,12 +1542,12 @@ class Parser
     {
       auto begin2 = token;
       parameters = new Parameters();
-      require2(T!"(");
+      require2!"(";
       auto this_ = token;
       auto thisParam = new Parameter(STC.None, null, null, this_, null);
-      skip(T!"this");
+      skip!"this";
       parameters ~= set(thisParam, this_);
-      require2(T!")");
+      require2!")";
       set(parameters, begin2);
     }
     parameters.postSTCs = parseFunctionPostfix();
@@ -1565,7 +1563,7 @@ class Parser
     } // version(D2)
     else
     { // D1
-    skip(T!"this");
+    skip!"this";
     auto parameters = parseParameterList();
     auto funcBody = parseFunctionBody();
     return new ConstructorDecl(parameters, funcBody);
@@ -1575,10 +1573,10 @@ class Parser
   /// $(BNF DestructorDecl := "~" this "(" ")" FunctionBody)
   Declaration parseDestructorDecl()
   {
-    skip(T!"~");
-    require2(T!"this");
-    require2(T!"(");
-    require2(T!")");
+    skip!"~";
+    require2!"this";
+    require2!"(";
+    require2!")";
     auto funcBody = parseFunctionBody();
     return new DestructorDecl(funcBody);
   }
@@ -1586,10 +1584,10 @@ class Parser
   /// $(BNF StaticCtorDecl := static this "(" ")" FunctionBody)
   Declaration parseStaticCtorDecl()
   {
-    skip(T!"static");
-    skip(T!"this");
-    require2(T!"(");
-    require2(T!")");
+    skip!"static";
+    skip!"this";
+    require2!"(";
+    require2!")";
     auto funcBody = parseFunctionBody();
     return new StaticCtorDecl(funcBody);
   }
@@ -1598,11 +1596,11 @@ class Parser
   ////StaticDtorDecl := static "~" this "(" ")" FunctionBody)
   Declaration parseStaticDtorDecl()
   {
-    skip(T!"static");
-    skip(T!"~");
-    require2(T!"this");
-    require2(T!"(");
-    require2(T!")");
+    skip!"static";
+    skip!"~";
+    require2!"this";
+    require2!"(";
+    require2!")";
     auto funcBody = parseFunctionBody();
     return new StaticDtorDecl(funcBody);
   }
@@ -1610,10 +1608,10 @@ class Parser
   /// $(BNF InvariantDecl := invariant ("(" ")")? FunctionBody)
   Declaration parseInvariantDecl()
   {
-    skip(T!"invariant");
+    skip!"invariant";
     // Optional () for getting ready porting to D 2.0
-    if (consumed(T!"("))
-      require2(T!")");
+    if (consumed!"(")
+      require2!")";
     auto funcBody = parseFunctionBody();
     return new InvariantDecl(funcBody);
   }
@@ -1621,8 +1619,8 @@ class Parser
   /// $(BNF UnittestDecl := unittest FunctionBody)
   Declaration parseUnittestDecl()
   {
-    skip(T!"unittest");
-    if (!tokenIs(T!"{"))
+    skip!"unittest";
+    if (!tokenIs!"{")
       error2(MID.ExpectedUnittestBody, token);
     auto funcBody = parseFunctionBody();
     return new UnittestDecl(funcBody);
@@ -1632,7 +1630,7 @@ class Parser
   /// $(BNF IdentOrInt := Identifier | Integer)
   Token* parseIdentOrInt()
   {
-    if (consumed(T!"Identifier") || consumed(T!"Int32"))
+    if (consumed!"Identifier" || consumed!"Int32")
       return this.prevToken;
     error2(MID.ExpectedIdentOrInt, token);
     return null;
@@ -1642,7 +1640,7 @@ class Parser
   Token* parseVersionCondition()
   {
     version(D2)
-    if (auto t = consumedToken(T!"unittest"))
+    if (auto t = consumedToken!"unittest")
       return t;
     return parseIdentOrInt();
   }
@@ -1653,30 +1651,30 @@ class Parser
   ////DebugCondition := "(" IdentOrInt ")")
   Declaration parseDebugDecl()
   {
-    skip(T!"debug");
+    skip!"debug";
 
     Token* spec;
     Token* cond;
     Declaration decls, elseDecls;
 
-    if (consumed(T!"="))
+    if (consumed!"=")
     { // debug = Integer ;
       // debug = Identifier ;
       spec = parseIdentOrInt();
-      require2(T!";");
+      require2!";";
     }
     else
     { // "(" Condition ")"
-      if (consumed(T!"("))
+      if (consumed!"(")
       {
         cond = parseIdentOrInt();
-        require2(T!")");
+        require2!")";
       }
       // debug DeclsBlock
       // debug ( Condition ) DeclsBlock
       decls = parseDeclarationsBlock();
       // else DeclsBlock
-      if (consumed(T!"else"))
+      if (consumed!"else")
         elseDecls = parseDeclarationsBlock();
     }
 
@@ -1689,27 +1687,27 @@ class Parser
   ////VCondition  := "(" VersionCondition ")")
   Declaration parseVersionDecl()
   {
-    skip(T!"version");
+    skip!"version";
 
     Token* spec;
     Token* cond;
     Declaration decls, elseDecls;
 
-    if (consumed(T!"="))
+    if (consumed!"=")
     { // version = Integer ;
       // version = Identifier ;
       spec = parseIdentOrInt();
-      require2(T!";");
+      require2!";";
     }
     else
     { // ( Condition )
-      require2(T!"(");
+      require2!"(";
       cond = parseVersionCondition();
-      require2(T!")");
+      require2!")";
       // version ( Condition ) DeclsBlock
       decls = parseDeclarationsBlock();
       // else DeclsBlock
-      if (consumed(T!"else"))
+      if (consumed!"else")
         elseDecls = parseDeclarationsBlock();
     }
 
@@ -1720,20 +1718,20 @@ class Parser
   ////  static if "(" AssignExpr ")" DeclsBlock (else DeclsBlock)?)
   Declaration parseStaticIfDecl()
   {
-    skip(T!"static");
-    skip(T!"if");
+    skip!"static";
+    skip!"if";
 
     Expression condition;
     Declaration ifDecls, elseDecls;
 
     auto leftParen = token;
-    require2(T!"(");
+    require2!"(";
     condition = parseAssignExpr();
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
 
     ifDecls = parseDeclarationsBlock();
 
-    if (consumed(T!"else"))
+    if (consumed!"else")
       elseDecls = parseDeclarationsBlock();
 
     return new StaticIfDecl(condition, ifDecls, elseDecls);
@@ -1744,16 +1742,16 @@ class Parser
   ////Message          := AssignExpr)
   Declaration parseStaticAssertDecl()
   {
-    skip(T!"static");
-    skip(T!"assert");
+    skip!"static";
+    skip!"assert";
     Expression condition, message;
     auto leftParen = token;
-    require2(T!"(");
+    require2!"(";
     condition = parseAssignExpr();
-    if (consumed(T!","))
+    if (consumed!",")
       message = parseAssignExpr();
-    requireClosing(T!")", leftParen);
-    require2(T!";");
+    requireClosing!")"(leftParen);
+    require2!";";
     return new StaticAssertDecl(condition, message);
   }
 
@@ -1761,7 +1759,7 @@ class Parser
   ////  template Name TemplateParameterList Constraint? DeclDefsBlock)
   TemplateDecl parseTemplateDecl()
   {
-    skip(T!"template");
+    skip!"template";
     auto name = requireIdentifier(MID.ExpectedTemplateName);
     auto tparams = parseTemplateParameterList();
     auto constraint = parseOptionalConstraint();
@@ -1772,7 +1770,7 @@ class Parser
   /// $(BNF NewDecl := new ParameterList FunctionBody)
   Declaration parseNewDecl()
   {
-    skip(T!"new");
+    skip!"new";
     auto parameters = parseParameterList();
     auto funcBody = parseFunctionBody();
     return new NewDecl(parameters, funcBody);
@@ -1781,7 +1779,7 @@ class Parser
   /// $(BNF DeleteDecl := delete ParameterList FunctionBody)
   Declaration parseDeleteDecl()
   {
-    skip(T!"delete");
+    skip!"delete";
     auto parameters = parseParameterList();
     auto funcBody = parseFunctionBody();
     return new DeleteDecl(parameters, funcBody);
@@ -1797,19 +1795,19 @@ class Parser
   RetT parseMixin(Class, RetT = Class)()
   {
     static assert(is(Class == MixinDecl) || is(Class == MixinStmt));
-    skip(T!"mixin");
+    skip!"mixin";
 
     static if (is(Class == MixinDecl))
     {
-    if (consumed(T!"("))
+    if (consumed!"(")
     {
       auto leftParen = token;
       auto e = parseAssignExpr();
-      requireClosing(T!")", leftParen);
-      require2(T!";");
+      requireClosing!")"(leftParen);
+      require2!";";
       return new MixinDecl(e);
     }
-    else version(D2) if (tokenIs(T!"template"))
+    else version(D2) if (tokenIs!"template")
     {
       auto d = parseTemplateDecl();
       d.isMixin = true;
@@ -1819,7 +1817,7 @@ class Parser
 
     auto e = parseIdentifiersExpr();
     auto mixinIdent = optionalIdentifier();
-    require2(T!";");
+    require2!";";
 
     return new Class(e, mixinIdent);
   }
@@ -1832,11 +1830,11 @@ class Parser
   CompoundStmt parseStatements()
   {
     auto begin = token;
-    require(T!"{");
+    require!"{";
     auto statements = new CompoundStmt();
-    while (!tokenIs(T!"}") && !tokenIs(T!"EOF"))
+    while (!tokenIs!"}" && !tokenIs!"EOF")
       statements ~= parseStatement();
-    requireClosing(T!"}", begin);
+    requireClosing!"}"(begin);
     return set(statements, begin);
   }
 
@@ -1860,7 +1858,7 @@ class Parser
       uint size = parseAlignAttribute(sizetok);
       // Restrict align attribute to structs in parsing phase.
       StructDecl structDecl;
-      if (tokenIs(T!"struct"))
+      if (tokenIs!"struct")
       {
         auto begin2 = token;
         structDecl = parseStructOrUnionDecl().to!(StructDecl);
@@ -1868,7 +1866,7 @@ class Parser
         set(structDecl, begin2);
       }
       else
-        expected(T!"struct");
+        expected!"struct";
 
       d = structDecl ? cast(Declaration)structDecl : new CompoundDecl;
       d = new AlignDecl(sizetok, d);
@@ -1886,7 +1884,7 @@ class Parser
     case T!"Identifier":
       if (peekNext() == T!":")
       {
-        skip(T!"Identifier"); skip(T!":");
+        skip!"Identifier"; skip!":";
         s = new LabeledStmt(begin, parseNoScopeOrEmptyStmt());
         break;
       }
@@ -2019,13 +2017,13 @@ class Parser
          T!"+", T!"!", T!"~", T!"new", T!"delete", T!"cast":
     case_parseExpressionStmt:
       s = new ExpressionStmt(parseExpression());
-      require2(T!";");
+      require2!";";
       break;
     default:
       if (token.isSpecialToken)
         goto case_parseExpressionStmt;
 
-      if (!tokenIs(T!"$"))
+      if (!tokenIs!"$")
         // Assert that this isn't a valid expression.
         assert(delegate bool(){
             bool success;
@@ -2040,8 +2038,8 @@ class Parser
       do
         nT();
       while (!token.isStatementStart() &&
-             !tokenIs(T!"}") &&
-             !tokenIs(T!"EOF"));
+             !tokenIs!"}" &&
+             !tokenIs!"EOF");
       auto text = begin.textSpan(this.prevToken);
       error(begin, MID.IllegalStatement, text);
     }
@@ -2064,11 +2062,11 @@ class Parser
   Statement parseNoScopeStmt()
   {
     Statement s;
-    if (tokenIs(T!"{"))
+    if (tokenIs!"{")
       s = parseStatements();
     else
     {
-      if (tokenIs(T!";"))
+      if (tokenIs!";")
         error(MID.ExpectedNonEmptyStatement, token);
       s = parseStatement();
     }
@@ -2078,7 +2076,7 @@ class Parser
   /// $(BNF NoScopeOrEmptyStmt := ";" | NoScopeStmt)
   Statement parseNoScopeOrEmptyStmt()
   {
-    if (auto semicolon = consumedToken(T!";"))
+    if (auto semicolon = consumedToken!";")
       return set(new EmptyStmt(), semicolon);
     else
       return parseNoScopeStmt();
@@ -2125,10 +2123,10 @@ class Parser
       case T!"const", T!"immutable", T!"inout", T!"shared":
         if (peekNext() == T!"(")
           break Loop;
-                          stc = tokenIs(T!"const") ? StorageClass.Const :
-                            tokenIs(T!"immutable") ? StorageClass.Immutable :
-                                tokenIs(T!"inout") ? StorageClass.Inout :
-                                                     StorageClass.Shared;
+                          stc = tokenIs!"const" ? StorageClass.Const :
+                            tokenIs!"immutable" ? StorageClass.Immutable :
+                                tokenIs!"inout" ? StorageClass.Inout :
+                                                  StorageClass.Shared;
         goto Lcommon;
       case T!"enum":
         if (!isEnumManifest())
@@ -2200,14 +2198,14 @@ class Parser
   ////Condition := AutoDecl | VariableDecl | Expression)
   Statement parseIfStmt()
   {
-    skip(T!"if");
+    skip!"if";
 
     Declaration variable;
     Expression condition;
     Statement ifBody, elseBody;
 
     auto leftParen = token;
-    require2(T!"(");
+    require2!"(";
 
     Type type;
     Token* name;
@@ -2215,11 +2213,11 @@ class Parser
     bool success;
 
     tryToParse({
-      if (consumed(T!"auto")) // auto Identifier = Expression
+      if (consumed!"auto") // auto Identifier = Expression
         name = requireIdentifier(MID.ExpectedVariableName);
       else // Declarator "=" Expression
         type = parseDeclarator(name);
-      require(T!"=");
+      require!"=";
       return type;
     }, success);
 
@@ -2232,9 +2230,9 @@ class Parser
     else // Normal Expression.
       condition = parseExpression();
 
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
     ifBody = parseScopeStmt();
-    if (consumed(T!"else"))
+    if (consumed!"else")
       elseBody = parseScopeStmt();
     return new IfStmt(variable, condition, ifBody, elseBody);
   }
@@ -2242,26 +2240,26 @@ class Parser
   /// $(BNF WhileStmt := while "(" Expression ")" ScopeStmt)
   Statement parseWhileStmt()
   {
-    skip(T!"while");
+    skip!"while";
     auto leftParen = token;
-    require2(T!"(");
+    require2!"(";
     auto condition = parseExpression();
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
     return new WhileStmt(condition, parseScopeStmt());
   }
 
   /// $(BNF DoWhileStmt := do ScopeStmt while "(" Expression ")")
   Statement parseDoWhileStmt()
   {
-    skip(T!"do");
+    skip!"do";
     auto doBody = parseScopeStmt();
-    require(T!"while");
+    require!"while";
     auto leftParen = token;
-    require2(T!"(");
+    require2!"(";
     auto condition = parseExpression();
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
     version(D2)
-    require2(T!";");
+    require2!";";
     return new DoWhileStmt(condition, doBody);
   }
 
@@ -2270,21 +2268,21 @@ class Parser
   ////    ScopeStmt)
   Statement parseForStmt()
   {
-    skip(T!"for");
+    skip!"for";
 
     Statement init, forBody;
     Expression condition, increment;
 
     auto leftParen = token;
-    require2(T!"(");
-    if (!consumed(T!";"))
+    require2!"(";
+    if (!consumed!";")
       init = parseNoScopeStmt();
-    if (!tokenIs(T!";"))
+    if (!tokenIs!";")
       condition = parseExpression();
-    require2(T!";");
-    if (!tokenIs(T!")"))
+    require2!";";
+    if (!tokenIs!")")
       increment = parseExpression();
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
     forBody = parseScopeStmt();
     return new ForStmt(init, condition, increment, forBody);
   }
@@ -2299,7 +2297,7 @@ class Parser
   ////Aggregate      := RangeExpr2 | Expression)
   Statement parseForeachStmt()
   {
-    assert(tokenIs(T!"foreach") || tokenIs(T!"foreach_reverse"));
+    assert(tokenIs!"foreach" || tokenIs!"foreach_reverse");
     TOK tok = token.kind;
     nT();
 
@@ -2307,7 +2305,7 @@ class Parser
     Expression e; // Expression or RangeExpr
 
     auto leftParen = token;
-    require2(T!"(");
+    require2!"(";
     auto paramsBegin = token;
     do
     {
@@ -2340,17 +2338,17 @@ class Parser
       }
 
       params ~= set(new Parameter(stc, stctok, type, name, null), paramBegin);
-    } while (consumed(T!","));
+    } while (consumed!",");
     set(params, paramsBegin);
 
-    require2(T!";");
+    require2!";";
     e = parseExpression();
 
     version(D2)
-    if (auto op = consumedToken(T!"..")) // Expression ".." Expression
+    if (auto op = consumedToken!"..") // Expression ".." Expression
       e = set(new RangeExpr(e, parseExpression(), op), e.begin);
 
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
     auto forBody = parseScopeStmt();
     return new ForeachStmt(tok, params, e, forBody);
   }
@@ -2358,12 +2356,12 @@ class Parser
   /// $(BNF SwitchStmt := final? switch "(" Expression ")" ScopeStmt)
   Statement parseSwitchStmt()
   {
-    bool isFinal = consumed(T!"final");
-    skip(T!"switch");
+    bool isFinal = consumed!"final";
+    skip!"switch";
     auto leftParen = token;
-    require2(T!"(");
+    require2!"(";
     auto condition = parseExpression();
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
     auto switchBody = parseScopeStmt();
     return new SwitchStmt(condition, switchBody, isFinal);
   }
@@ -2375,8 +2373,8 @@ class Parser
     // This function is similar to parseNoScopeStmt()
     auto begin = token;
     auto s = new CompoundStmt();
-    while (!tokenIs(T!"case")   && !tokenIs(T!"default") &&
-           !tokenIs(T!"}") && !tokenIs(T!"EOF"))
+    while (!tokenIs!"case" && !tokenIs!"default" &&
+           !tokenIs!"}" && !tokenIs!"EOF")
       s ~= parseStatement();
     if (begin is token) // Nothing consumed.
       begin = this.prevToken;
@@ -2388,17 +2386,17 @@ class Parser
   ////            case AssignExpr ":" ".." case AssignExpr ":" CaseOrDefaultBody)
   Statement parseCaseStmt()
   {
-    skip(T!"case");
+    skip!"case";
     auto values = parseExpressionList();
-    require2(T!":");
+    require2!":";
     version(D2)
-    if (consumed(T!"..")) // ".."
+    if (consumed!"..")
     {
       if (values.length > 1)
         error(values[1].begin, MID.CaseRangeStartExpression);
-      require(T!"case");
+      require!"case";
       Expression left = values[0], right = parseAssignExpr();
-      require2(T!":");
+      require2!":";
       auto caseBody = parseCaseOrDefaultBody();
       return new CaseRangeStmt(left, right, caseBody);
     } // version(D2)
@@ -2409,8 +2407,8 @@ class Parser
   /// $(BNF DefaultStmt := default ":" CaseOrDefaultBody)
   Statement parseDefaultStmt()
   {
-    skip(T!"default");
-    require2(T!":");
+    skip!"default";
+    require2!":";
     auto defaultBody = parseCaseOrDefaultBody();
     return new DefaultStmt(defaultBody);
   }
@@ -2418,29 +2416,29 @@ class Parser
   /// $(BNF ContinueStmt := continue Identifier? ";")
   Statement parseContinueStmt()
   {
-    skip(T!"continue");
+    skip!"continue";
     auto ident = optionalIdentifier();
-    require2(T!";");
+    require2!";";
     return new ContinueStmt(ident);
   }
 
   /// $(BNF BreakStmt := break Identifier? ";")
   Statement parseBreakStmt()
   {
-    skip(T!"break");
+    skip!"break";
     auto ident = optionalIdentifier();
-    require2(T!";");
+    require2!";";
     return new BreakStmt(ident);
   }
 
   /// $(BNF ReturnStmt := return Expression? ";")
   Statement parseReturnStmt()
   {
-    skip(T!"return");
+    skip!"return";
     Expression expr;
-    if (!tokenIs(T!";"))
+    if (!tokenIs!";")
       expr = parseExpression();
-    require2(T!";");
+    require2!";";
     return new ReturnStmt(expr);
   }
 
@@ -2448,14 +2446,14 @@ class Parser
   ////GotoStmt := goto (case Expression? | default | Identifier) ";")
   Statement parseGotoStmt()
   {
-    skip(T!"goto");
+    skip!"goto";
     auto ident = token;
     Expression caseExpr;
     switch (token.kind)
     {
     case T!"case":
       nT();
-      if (tokenIs(T!";"))
+      if (tokenIs!";")
         break;
       caseExpr = parseExpression();
       break;
@@ -2465,30 +2463,30 @@ class Parser
     default:
       ident = requireIdentifier(MID.ExpectedAnIdentifier);
     }
-    require2(T!";");
+    require2!";";
     return new GotoStmt(ident, caseExpr);
   }
 
   /// $(BNF WithStmt := with "(" Expression ")" ScopeStmt)
   Statement parseWithStmt()
   {
-    skip(T!"with");
+    skip!"with";
     auto leftParen = token;
-    require2(T!"(");
+    require2!"(";
     auto expr = parseExpression();
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
     return new WithStmt(expr, parseScopeStmt());
   }
 
   /// $(BNF SynchronizedStmt := synchronized ("(" Expression ")")? ScopeStmt)
   Statement parseSynchronizedStmt()
   {
-    skip(T!"synchronized");
+    skip!"synchronized";
     Expression expr;
-    if (auto leftParen = consumedToken(T!"("))
+    if (auto leftParen = consumedToken!"(")
     {
       expr = parseExpression();
-      requireClosing(T!")", leftParen);
+      requireClosing!")"(leftParen);
     }
     return new SynchronizedStmt(expr, parseScopeStmt());
   }
@@ -2500,31 +2498,31 @@ class Parser
   Statement parseTryStmt()
   {
     auto begin = token;
-    skip(T!"try");
+    skip!"try";
 
     auto tryBody = parseScopeStmt();
     CatchStmt[] catchBodies;
     FinallyStmt finBody;
 
-    while (consumed(T!"catch"))
+    while (consumed!"catch")
     {
       auto catchBegin = prevToken;
       Parameter param;
-      if (auto leftParen = consumedToken(T!"("))
+      if (auto leftParen = consumedToken!"(")
       {
         auto paramBegin = token;
         Token* name;
         auto type = parseDeclaratorOptId(name);
         param = new Parameter(StorageClass.None, null, type, name, null);
         set(param, paramBegin);
-        requireClosing(T!")", leftParen);
+        requireClosing!")"(leftParen);
       }
       catchBodies ~= set(new CatchStmt(param, parseNoScopeStmt()), catchBegin);
       if (param is null)
         break; // This is a LastCatch
     }
 
-    if (auto t = consumedToken(T!"finally"))
+    if (auto t = consumedToken!"finally")
       finBody = set(new FinallyStmt(parseNoScopeStmt()), t);
 
     if (catchBodies is null && finBody is null)
@@ -2536,9 +2534,9 @@ class Parser
   /// $(BNF ThrowStmt := throw Expression ";")
   Statement parseThrowStmt()
   {
-    skip(T!"throw");
+    skip!"throw";
     auto expr = parseExpression();
-    require2(T!";");
+    require2!";";
     return new ThrowStmt(expr);
   }
 
@@ -2547,8 +2545,8 @@ class Parser
   ////ScopeGuardBody := ScopeStmt | NoScopeStmt)
   Statement parseScopeGuardStmt()
   {
-    skip(T!"scope");
-    skip(T!"(");
+    skip!"scope";
+    skip!"(";
     auto condition = requireIdentifier(MID.ExpectedScopeIdentifier);
     switch (condition ? condition.ident.idKind : IDK.Empty)
     {
@@ -2557,17 +2555,17 @@ class Parser
     default:
       error2(MID.InvalidScopeIdentifier, condition);
     }
-    require2(T!")");
-    auto scopeBody = tokenIs(T!"{") ? parseScopeStmt() : parseNoScopeStmt();
+    require2!")";
+    auto scopeBody = tokenIs!"{" ? parseScopeStmt() : parseNoScopeStmt();
     return new ScopeGuardStmt(condition, scopeBody);
   }
 
   /// $(BNF VolatileStmt := volatile (ScopeStmt | NoScopeStmt))
   Statement parseVolatileStmt()
   {
-    skip(T!"volatile");
+    skip!"volatile";
     Statement volatileBody;
-    if (tokenIs(T!"{"))
+    if (tokenIs!"{")
       volatileBody = parseScopeStmt();
     else
       volatileBody = parseNoScopeStmt();
@@ -2578,19 +2576,19 @@ class Parser
   ////  pragma "(" Identifier ("," ExpressionList)? ")" NoScopeStmt)
   Statement parsePragmaStmt()
   {
-    skip(T!"pragma");
+    skip!"pragma";
 
     Token* name;
     Expression[] args;
     Statement pragmaBody;
 
     auto leftParen = token;
-    require2(T!"(");
+    require2!"(";
     name = requireIdentifier(MID.ExpectedPragmaIdentifier);
 
-    if (consumed(T!","))
+    if (consumed!",")
       args = parseExpressionList();
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
 
     pragmaBody = parseNoScopeOrEmptyStmt();
 
@@ -2601,17 +2599,17 @@ class Parser
   ////  static if "(" Expression ")" NoScopeStmt (else NoScopeStmt)?)
   Statement parseStaticIfStmt()
   {
-    skip(T!"static");
-    skip(T!"if");
+    skip!"static";
+    skip!"if";
     Expression condition;
     Statement ifBody, elseBody;
 
     auto leftParen = token;
-    require2(T!"(");
+    require2!"(";
     condition = parseExpression();
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
     ifBody = parseNoScopeStmt();
-    if (consumed(T!"else"))
+    if (consumed!"else")
       elseBody = parseNoScopeStmt();
     return new StaticIfStmt(condition, ifBody, elseBody);
   }
@@ -2621,16 +2619,16 @@ class Parser
   ////Message := AssignExpr)
   Statement parseStaticAssertStmt()
   {
-    skip(T!"static");
-    skip(T!"assert");
+    skip!"static";
+    skip!"assert";
     Expression condition, message;
 
-    require2(T!"(");
+    require2!"(";
     condition = parseAssignExpr(); // Condition.
-    if (consumed(T!","))
+    if (consumed!",")
       message = parseAssignExpr(); // Error message.
-    require2(T!")");
-    require2(T!";");
+    require2!")";
+    require2!";";
     return new StaticAssertStmt(condition, message);
   }
 
@@ -2638,21 +2636,21 @@ class Parser
   ////  debug DebugCondition? NoScopeStmt (else NoScopeStmt)?)
   Statement parseDebugStmt()
   {
-    skip(T!"debug");
+    skip!"debug";
     Token* cond;
     Statement debugBody, elseBody;
 
     // ( Condition )
-    if (consumed(T!"("))
+    if (consumed!"(")
     {
       cond = parseIdentOrInt();
-      require2(T!")");
+      require2!")";
     }
     // debug Statement
     // debug ( Condition ) Statement
     debugBody = parseNoScopeStmt();
     // else Statement
-    if (consumed(T!"else"))
+    if (consumed!"else")
       elseBody = parseNoScopeStmt();
 
     return new DebugStmt(cond, debugBody, elseBody);
@@ -2662,18 +2660,18 @@ class Parser
   ////  version VCondition NoScopeStmt (else NoScopeStmt)?)
   Statement parseVersionStmt()
   {
-    skip(T!"version");
+    skip!"version";
     Token* cond;
     Statement versionBody, elseBody;
 
     // ( Condition )
-    require2(T!"(");
+    require2!"(";
     cond = parseVersionCondition();
-    require2(T!")");
+    require2!")";
     // version ( Condition ) Statement
     versionBody = parseNoScopeStmt();
     // else Statement
-    if (consumed(T!"else"))
+    if (consumed!"else")
       elseBody = parseNoScopeStmt();
 
     return new VersionStmt(cond, versionBody, elseBody);
@@ -2687,13 +2685,13 @@ class Parser
   /// $(BNF AsmBlockStmt := asm "{" AsmStmt* "}")
   Statement parseAsmBlockStmt()
   {
-    skip(T!"asm");
+    skip!"asm";
     auto leftBrace = token;
-    require(T!"{");
+    require!"{";
     auto ss = new CompoundStmt;
-    while (!tokenIs(T!"}") && !tokenIs(T!"EOF"))
+    while (!tokenIs!"}" && !tokenIs!"EOF")
       ss ~= parseAsmStmt();
-    requireClosing(T!"}", leftBrace);
+    requireClosing!"}"(leftBrace);
     return new AsmBlockStmt(set(ss, leftBrace));
   }
 
@@ -2718,7 +2716,7 @@ class Parser
       goto LparseOperands;
     case T!"Identifier":
       nT();
-      if (consumed(T!":"))
+      if (consumed!":")
       { // Identifier ":" AsmStmt
         s = new LabeledStmt(ident, parseAsmStmt());
         break;
@@ -2728,14 +2726,14 @@ class Parser
       if (Ident.isJumpOpcode(ident.ident.idKind))
       {
         auto jmptype = token.ident;
-        if (tokenIs(T!"short"))
+        if (tokenIs!"short")
           nT();
-        else if (tokenIs(T!"Identifier") &&
+        else if (tokenIs!"Identifier" &&
                  (jmptype is Ident.near || jmptype is Ident.far))
         {
           nT();
-          if (tokenIs(T!"Identifier") && token.ident is Ident.ptr)
-            skip(T!"Identifier");
+          if (tokenIs!"Identifier" && token.ident is Ident.ptr)
+            skip!"Identifier";
           else
             error2(MID.ExpectedButFound, "ptr", token);
         }
@@ -2747,20 +2745,20 @@ class Parser
     LparseOperands:
       // Opcode Operands? ";"
       Expression[] es;
-      if (!tokenIs(T!";"))
+      if (!tokenIs!";")
         do
           es ~= parseAsmExpr();
-        while (consumed(T!","));
-      require2(T!";");
+        while (consumed!",");
+      require2!";";
       s = new AsmStmt(ident, es);
       break;
     case T!"align":
       // align Integer ";"
       nT();
       auto number = token;
-      if (!consumed(T!"Int32"))
+      if (!consumed!"Int32")
         error2(MID.ExpectedIntegerAfterAlign, token);
-      require2(T!";");
+      require2!";";
       s = new AsmAlignStmt(number);
       break;
     case T!";":
@@ -2773,8 +2771,8 @@ class Parser
       do
         nT();
       while (!token.isAsmStatementStart() &&
-             !tokenIs(T!"}") &&
-             !tokenIs(T!"EOF"));
+             !tokenIs!"}" &&
+             !tokenIs!"EOF");
       auto text = begin.textSpan(this.prevToken);
       error(begin, MID.IllegalAsmStatement, text);
     }
@@ -2788,11 +2786,11 @@ class Parser
   {
     auto begin = token;
     auto e = parseAsmBinaryExpr();
-    if (auto qtok = consumedToken(T!"?"))
+    if (auto qtok = consumedToken!"?")
     {
       auto iftrue = parseAsmExpr();
       auto ctok = token; // ":"
-      require(T!":");
+      require!":";
       auto iffalse = parseAsmExpr();
       e = new CondExpr(e, iftrue, iffalse, qtok, ctok);
       set(e, begin);
@@ -2851,10 +2849,10 @@ class Parser
   {
     Token* begin = token, leftBracket = void;
     auto e = parseAsmUnaryExpr();
-    while ((leftBracket = consumedToken(T!"[")) !is null)
+    while ((leftBracket = consumedToken!"[") !is null)
     {
       e = new AsmPostBracketExpr(e, parseAsmExpr());
-      requireClosing(T!"]", leftBracket);
+      requireClosing!"]"(leftBracket);
       set(e, begin);
     }
     return e;
@@ -2889,8 +2887,8 @@ class Parser
            IDK.word, IDK.dword, IDK.qword/*, "float", "double", "real"*/:
       LAsmTypePrefix:
         nT();
-        if (tokenIs(T!"Identifier") && token.ident is Ident.ptr)
-          skip(T!"Identifier");
+        if (tokenIs!"Identifier" && token.ident is Ident.ptr)
+          skip!"Identifier";
         else
           error2(MID.ExpectedButFound, "ptr", token);
         e = new AsmTypeExpr(begin, parseAsmExpr());
@@ -2963,7 +2961,7 @@ class Parser
       auto leftBracket = token;
       nT();
       e = parseAsmExpr();
-      requireClosing(T!"]", leftBracket);
+      requireClosing!"]"(leftBracket);
       e = new AsmBracketExpr(e);
       break;
     case T!"Identifier":
@@ -2979,15 +2977,15 @@ class Parser
       case IDK.ST:
         nT();
         Expression number; // (1) - (7)
-        if (consumed(T!"("))
+        if (consumed!"(")
           (number = parseAsmExpr()),
-          require2(T!")");
+          require2!")";
         e = new AsmRegisterExpr(register, number);
         break;
       case IDK.ES, IDK.CS, IDK.SS, IDK.DS, IDK.GS, IDK.FS:
         nT();
         Expression number;
-        if (consumed(T!":")) // Segment := XX ":" AsmExpr
+        if (consumed!":") // Segment := XX ":" AsmExpr
           number = parseAsmExpr();
         e = new AsmRegisterExpr(register, number);
         break;
@@ -3047,7 +3045,7 @@ class Parser
   {
     Token* begin = token, comma = void;
     auto e = parseAssignExpr();
-    while ((comma = consumedToken(T!",")) !is null)
+    while ((comma = consumedToken!",") !is null)
       e = set(new CommaExpr(e, parseAssignExpr(), comma), begin);
     return e;
   }
@@ -3081,7 +3079,7 @@ class Parser
     case T!"^^=":  f = &newBinaryExpr!(PowAssignExpr); goto Lcommon;
     }
     Lcommon:
-      skip(optok.kind);
+      nT();
       // Parse the right-hand side and create the expression.
       e = f(e, parseAssignExpr(), optok);
       set(e, begin);
@@ -3096,11 +3094,11 @@ class Parser
   {
     auto begin = token;
     auto e = parseBinaryExpr();
-    if (auto qtok = consumedToken(T!"?"))
+    if (auto qtok = consumedToken!"?")
     {
       auto iftrue = parseExpression();
       auto ctok = token; // ":"
-      require(T!":");
+      require!":";
       auto iffalse = parseCondExpr();
       e = new CondExpr(e, iftrue, iffalse, qtok, ctok);
       set(e, begin);
@@ -3178,7 +3176,7 @@ class Parser
     {
       assert(f !is null && p != PREC.None);
       fn = f;
-      if (tokenIs(T!"!"))
+      if (tokenIs!"!")
         nT(); // Consume "!" part.
       nT(); // Consume the binary operator.
     }
@@ -3247,7 +3245,7 @@ class Parser
       {
       case T!".":
         nT();
-        if (tokenIs(T!"new"))
+        if (tokenIs!"new")
           e = parseNewExpr(e);
         else
           e = parseIdentifierExpr(e);
@@ -3265,14 +3263,14 @@ class Parser
         auto leftBracket = token;
         nT();
         // "[" "]" is the empty SliceExpr
-        if (tokenIs(T!"]"))
+        if (tokenIs!"]")
         {
           e = new SliceExpr(e, null);
           break;
         }
         auto e2 = parseAssignExpr();
         // "[" AssignExpr ".." AssignExpr "]"
-        if (auto op = consumedToken(T!".."))
+        if (auto op = consumedToken!"..")
         {
           auto r = set(new RangeExpr(e2, parseAssignExpr(), op), e2.begin);
           e = new SliceExpr(e, r);
@@ -3280,11 +3278,11 @@ class Parser
         else
         { // "[" ExpressionList "]"
           auto index = [e2];
-          if (consumed(T!","))
+          if (consumed!",")
              index ~= parseExpressionList2(T!"]");
           e = new IndexExpr(e, index);
         }
-        requireClosing(T!"]", leftBracket);
+        requireClosing!"]"(leftBracket);
         goto Lset;
       default:
         return e;
@@ -3356,7 +3354,7 @@ class Parser
       break;
     case T!"cast":
       nT();
-      require2(T!"(");
+      require2!"(";
       Type type;
       switch (token.kind)
       {
@@ -3376,7 +3374,7 @@ class Parser
       default:
        type = parseType();
       }
-      require2(T!")");
+      require2!")";
       e = new CastExpr(parseUnaryExpr(), type);
       break;
     case T!"(":
@@ -3385,10 +3383,10 @@ class Parser
       // "(" Type ")" "." Identifier
       bool success;
       auto type = tryToParse({
-        skip(T!"("); // "("
+        skip!"(";
         auto type = parseType(); // Type
-        require(T!")"); // ")"
-        require(T!"."); // "."
+        require!")";
+        require!".";
         return type;
       }, success);
       if (!success)
@@ -3417,11 +3415,11 @@ class Parser
   Expression parseIdentifiersExpr()
   {
     Expression e;
-    if (tokenIs(T!"."))
+    if (tokenIs!".")
       e = set(new ModuleScopeExpr(), token, token);
     else
       e = parseIdentifierExpr();
-    while (consumed(T!"."))
+    while (consumed!".")
       e = parseIdentifierExpr(e);
     return e;
   }
@@ -3435,9 +3433,9 @@ class Parser
     Expression e;
     // Peek to avoid parsing: "id !is Exp" or "id !in Exp"
     auto nextTok = peekNext();
-    if (tokenIs(T!"!") && nextTok != T!"is" && nextTok != T!"in")
+    if (tokenIs!"!" && nextTok != T!"is" && nextTok != T!"in")
     {
-      skip(T!"!");
+      skip!"!";
       // Identifier "!" "(" TemplateArguments? ")"
       // Identifier "!" TemplateArgumentSingle
       auto tparams = parseOneOrMoreTemplateArguments();
@@ -3451,7 +3449,7 @@ class Parser
   /// $(BNF LambdaBody := AssignExpr)
   Expression parseLambdaExprBody()
   {
-    skip(T!"=>");
+    skip!"=>";
     return parseAssignExpr();
   }
 
@@ -3460,7 +3458,7 @@ class Parser
   Expression parseSingleParamLambdaExpr()
   {
     auto begin = token;
-    skip(T!"Identifier");
+    skip!"Identifier";
     auto params = set(new Parameters(), begin);
     auto param = new Parameter(StorageClass.None, null, null, begin, null);
     params ~= set(param, begin);
@@ -3562,7 +3560,7 @@ class Parser
       char postfix = token.strval.pf;
       nT();
       // Concatenate adjacent string literals.
-      while (tokenIs(T!"String"))
+      while (tokenIs!"String")
       {
         auto strval = token.strval;
         if (auto pf = strval.pf) // If the string has a postfix char.
@@ -3598,28 +3596,28 @@ class Parser
     case T!"[":
       nT();
       Expression[] exprs;
-      if (!tokenIs(T!"]"))
+      if (!tokenIs!"]")
         exprs = [parseAssignExpr()];
-      if (consumed(T!":"))
+      if (consumed!":")
       { // "[" AssignExpr ":"
         Expression[] values;
         while (1)
         {
           values ~= parseAssignExpr();
-          if (!consumed(T!",") || tokenIs(T!"]"))
+          if (!consumed!"," || tokenIs!"]")
             break;
           exprs ~= parseAssignExpr(); // Keys
-          require(T!":");
+          require!":";
         }
         e = new AArrayLiteralExpr(exprs, values);
       }
       else
       { // "[" "]" | "[" AssignExpr
-        if (consumed(T!",")) // "," ExpressionList2
+        if (consumed!",") // "," ExpressionList2
             exprs ~= parseExpressionList2(T!"]");
         e = new ArrayLiteralExpr(exprs);
       }
-      requireClosing(T!"]", begin);
+      requireClosing!"]"(begin);
       break;
     case T!"{":
       // DelegateLiteral := { Statements }
@@ -3632,9 +3630,9 @@ class Parser
       nT(); // Skip function or delegate keyword.
       Type returnType;
       Parameters parameters;
-      if (!tokenIs(T!"{"))
+      if (!tokenIs!"{")
       {
-        if (!tokenIs(T!"(")) // Optional return type
+        if (!tokenIs!"(") // Optional return type
           returnType = parseBasicTypes();
         parameters = parseParameterList();
         version(D2)
@@ -3644,34 +3642,35 @@ class Parser
       e = new FuncLiteralExpr(begin, returnType, parameters, funcBody);
       break;
     case T!"assert":
-      requireNext(T!"(");
+      nT();
+      require2!"(";
       e = parseAssignExpr();
-      auto msg = consumed(T!",") ? parseAssignExpr() : null;
-      require2(T!")");
+      auto msg = consumed!"," ? parseAssignExpr() : null;
+      require2!")";
       e = new AssertExpr(e, msg);
       break;
     case T!"mixin":
       nT();
-      require2(T!"(");
+      require2!"(";
       e = new MixinExpr(parseAssignExpr());
-      require2(T!")");
+      require2!")";
       break;
     case T!"import":
       nT();
-      require2(T!"(");
+      require2!"(";
       e = new ImportExpr(parseAssignExpr());
-      require2(T!")");
+      require2!")";
       break;
     case T!"typeid":
       nT();
-      require2(T!"(");
+      require2!"(";
       e = new TypeidExpr(parseType());
-      require2(T!")");
+      require2!")";
       break;
     case T!"is":
       nT();
       auto leftParen = token;
-      require2(T!"(");
+      require2!"(";
 
       Type type, specType;
       Token* ident; // optional Identifier
@@ -3710,10 +3709,10 @@ class Parser
       version(D2)
       { // "is" "(" Type Identifier (":" | "==") TypeSpecialization ","
       //          TemplateParameterList ")"
-      if (ident && specType && tokenIs(T!","))
+      if (ident && specType && tokenIs!",")
         tparams = parseTemplateParameterList2();
       } // version(D2)
-      requireClosing(T!")", leftParen);
+      requireClosing!")"(leftParen);
       e = new IsExpr(type, ident, opTok, specTok, specType, tparams);
       break;
     case T!"(":
@@ -3738,9 +3737,9 @@ class Parser
       else
       { // ( Expression )
         auto leftParen = token;
-        skip(T!"(");
+        skip!"(";
         e = parseExpression();
-        requireClosing(T!")", leftParen);
+        requireClosing!")"(leftParen);
         e = new ParenExpr(e);
       }
       break;
@@ -3749,10 +3748,10 @@ class Parser
     case T!"__traits":
       nT();
       auto leftParen = token;
-      require2(T!"("); // "("
+      require2!"(";
       auto ident = requireIdentifier(MID.ExpectedAnIdentifier);
-      auto args = consumed(T!",") ? parseTemplateArguments2() : null;
-      requireClosing(T!")", leftParen); // ")"
+      auto args = consumed!"," ? parseTemplateArguments2() : null;
+      requireClosing!")"(leftParen);
       e = new TraitsExpr(ident, args);
       break;
     } // version(D2)
@@ -3762,7 +3761,7 @@ class Parser
         auto type = new IntegralType(token.kind);
         nT();
         set(type, begin);
-        require2(T!".");
+        require2!".";
         auto ident = requireIdentifier(MID.ExpectedIdAfterTypeDot);
         e = new TypeDotIdExpr(type, ident);
       }
@@ -3798,21 +3797,21 @@ class Parser
   Expression parseNewExpr(Expression frame = null)
   {
     auto begin = token;
-    skip(T!"new");
+    skip!"new";
 
     Expression e;
     Expression[] newArguments, ctorArguments;
 
-    if (tokenIs(T!"(")) // NewArguments
+    if (tokenIs!"(") // NewArguments
       newArguments = parseArguments();
 
-    if (consumed(T!"class"))
+    if (consumed!"class")
     { // NewAnonymousClassExpr
-      if (tokenIs(T!"("))
+      if (tokenIs!"(")
         ctorArguments = parseArguments();
 
       BaseClassType[] bases;
-      if (!tokenIs(T!"{"))
+      if (!tokenIs!"{")
         bases = parseBaseClasses();
 
       auto decls = parseDeclarationDefinitionsBody();
@@ -3845,12 +3844,12 @@ class Parser
         auto lBracket = type.begin;
         backtrackTo(lBracket);
 
-        skip(T!"["); // "["
+        skip!"[";
         auto index = parseExpression();
-        requireClosing(T!"]", lBracket); // "]"
+        requireClosing!"]"(lBracket);
         type = set(new ArrayType(type.next, index), lBracket);
       }
-      else if (tokenIs(T!"(")) // NewArguments
+      else if (tokenIs!"(") // NewArguments
         ctorArguments = parseArguments();
       e = new NewExpr(frame, newArguments, type, ctorArguments);
     }
@@ -3927,7 +3926,7 @@ class Parser
     auto begin = token;
     auto ident = requireIdentifier(MID.ExpectedAnIdentifier);
     Type t;
-    if (consumed(T!"!")) // TemplateInstance
+    if (consumed!"!") // TemplateInstance
       t = new TmplInstanceType(next, ident,
         parseOneOrMoreTemplateArguments());
     else // Identifier
@@ -3940,18 +3939,18 @@ class Parser
   Type parseTypeofType()
   {
     auto begin = token;
-    skip(T!"typeof");
+    skip!"typeof";
     auto leftParen = token;
-    require2(T!"(");
+    require2!"(";
     Expression e;
-    if (tokenIs(T!"return"))
+    if (tokenIs!"return")
     {
     version(D2)
       nT();
     }
     else
       e = parseExpression();
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
     return set(new TypeofType(e), begin);
   }
 
@@ -3963,18 +3962,18 @@ class Parser
     auto begin = token;
     Type type;
 
-    if (tokenIs(T!"."))
+    if (tokenIs!".")
       type = set(new ModuleScopeType(), begin, begin);
-    else if (tokenIs(T!"typeof"))
+    else if (tokenIs!"typeof")
       type = parseTypeofType();
-    else if (tokenIs(T!"this") || tokenIs(T!"super")) { // D2
+    else if (tokenIs!"this" || tokenIs!"super") { // D2
       type = set(new IdentifierType(null, token), begin, begin);
       nT();
     }
     else
       type = parseIdentifierType();
 
-    while (consumed(T!"."))
+    while (consumed!".")
       type = parseIdentifierType(type);
 
     return type;
@@ -4007,10 +4006,10 @@ class Parser
     case T!"const", T!"immutable", T!"inout", T!"shared":
       auto kind = token;
       nT();
-      require2(T!"("); // "("
+      require2!"(";
       auto lParen = prevToken;
       t = parseType(); // Type
-      requireClosing(T!")", lParen); // ")"
+      requireClosing!")"(lParen);
       t = new ModifierType(t, kind, true);
       break;
     } // version(D2)
@@ -4074,11 +4073,11 @@ class Parser
     //         `---------------´
     // Resulting chain: [][1][2]*[3]int
     auto result = lhsType; // Return lhsType if nothing else is parsed.
-    if (tokenIs(T!"["))
+    if (tokenIs!"[")
     { // The previously parsed ArrayType.
       auto prevType = result = parseArrayType(lhsType);
       // Continue parsing ArrayTypes.
-      while (tokenIs(T!"["))
+      while (tokenIs!"[")
       {
         auto arrayType = parseArrayType(lhsType);
         prevType.setNext(arrayType); // Make prevType point to this type.
@@ -4093,8 +4092,8 @@ class Parser
   Type parseArrayType(Type t)
   {
     auto begin = token;
-    skip(T!"[");
-    if (consumed(T!"]"))
+    skip!"[";
+    if (consumed!"]")
       t = new ArrayType(t);
     else
     {
@@ -4102,7 +4101,7 @@ class Parser
       Type parseAAType()
       {
         auto type = parseType();
-        require(T!"]");
+        require!"]";
         return type;
       }
       auto assocType = tryToParse(&parseAAType, success);
@@ -4111,9 +4110,9 @@ class Parser
       else
       {
         Expression e = parseAssignExpr(), e2;
-        if (consumed(T!".."))
+        if (consumed!"..")
           e2 = parseAssignExpr();
-        requireClosing(T!"]", begin);
+        requireClosing!"]"(begin);
         t = new ArrayType(t, e, e2);
       }
     }
@@ -4131,7 +4130,7 @@ class Parser
     Expression[] expressions;
     do
       expressions ~= parseAssignExpr();
-    while (consumed(T!","));
+    while (consumed!",");
     return expressions;
   }
 
@@ -4141,10 +4140,10 @@ class Parser
   Expression[] parseExpressionList2(TOK closing_tok)
   {
     Expression[] expressions;
-    while (!tokenIs(closing_tok))
+    while (token.kind != closing_tok)
     {
       expressions ~= parseAssignExpr();
-      if (!consumed(T!","))
+      if (!consumed!",")
         break;
     }
     return expressions;
@@ -4155,11 +4154,11 @@ class Parser
   Expression[] parseArguments()
   {
     auto leftParen = token;
-    skip(T!"(");
+    skip!"(";
     Expression[] args;
-    if (!tokenIs(T!")"))
+    if (!tokenIs!")")
       args = parseExpressionList2(T!")");
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
     return args;
   }
 
@@ -4171,13 +4170,13 @@ class Parser
   Parameters parseParameterList()
   {
     auto begin = token;
-    require2(T!"(");
+    require2!"(";
 
     auto params = new Parameters();
 
     Expression defValue; // Default value.
 
-    while (!tokenIs(T!")"))
+    while (!tokenIs!")")
     {
       auto paramBegin = token;
       StorageClass stcs, stc; // Storage classes.
@@ -4191,7 +4190,7 @@ class Parser
         params ~= set(param, paramBegin);
       }
 
-      if (consumed(T!"..."))
+      if (consumed!"...")
         goto LvariadicParam; // Go to common code and leave the loop.
 
       while (1)
@@ -4203,10 +4202,10 @@ class Parser
         case T!"const", T!"immutable", T!"inout", T!"shared":
           if (peekNext() == T!"(")
             break;
-                         stc = tokenIs(T!"const") ? StorageClass.Const :
-                           tokenIs(T!"immutable") ? StorageClass.Immutable :
-                               tokenIs(T!"inout") ? StorageClass.Inout :
-                                                    StorageClass.Shared;
+                         stc = tokenIs!"const" ? StorageClass.Const :
+                           tokenIs!"immutable" ? StorageClass.Immutable :
+                               tokenIs!"inout" ? StorageClass.Inout :
+                                                 StorageClass.Shared;
           goto Lcommon;
         case T!"final":  stc = StorageClass.Final;  goto Lcommon;
         case T!"scope":  stc = StorageClass.Scope;  goto Lcommon;
@@ -4239,14 +4238,14 @@ class Parser
       }
       type = parseDeclaratorOptId(name);
 
-      if (consumed(T!"="))
+      if (consumed!"=")
         defValue = parseAssignExpr();
       else if (defValue !is null) // Parsed a defValue previously?
         error(name ? name : type.begin, // Position.
           MID.ExpectedParamDefValue,
           name ? name.text : ""); // Name.
 
-      if (consumed(T!"..."))
+      if (consumed!"...")
       {
         if (stcs & (StorageClass.Ref | StorageClass.Out))
           error(paramBegin, MID.IllegalVariadicParam);
@@ -4254,17 +4253,17 @@ class Parser
         stcs |= StorageClass.Variadic;
         pushParameter();
         // TODO: allow trailing comma here? DMD doesn't...
-        if (!tokenIs(T!")"))
+        if (!tokenIs!")")
           error(token, MID.ParamsAfterVariadic);
         break;
       }
       // Add a non-variadic parameter to the list.
       pushParameter();
 
-      if (!consumed(T!","))
+      if (!consumed!",")
         break;
     }
-    requireClosing(T!")", begin);
+    requireClosing!")"(begin);
     return set(params, begin);
   }
 
@@ -4273,7 +4272,7 @@ class Parser
   TemplateArguments parseOneOrMoreTemplateArguments()
   {
     version(D2)
-    if (!tokenIs(T!"("))
+    if (!tokenIs!"(")
     { // Parse one TArg, but still put it in TemplateArguments.
       auto targs = new TemplateArguments;
       auto begin = token;
@@ -4294,10 +4293,9 @@ class Parser
   {
     TemplateArguments targs;
     auto leftParen = token;
-    require2(T!"(");
-    targs = !tokenIs(T!")") ?
-      parseTemplateArguments_() : new TemplateArguments;
-    requireClosing(T!")", leftParen);
+    require2!"(";
+    targs = !tokenIs!")" ? parseTemplateArguments_() : new TemplateArguments;
+    requireClosing!")"(leftParen);
     return set(targs, leftParen);
   }
 
@@ -4307,7 +4305,7 @@ class Parser
     version(D2)
     {
     TemplateArguments targs;
-    if (!tokenIs(T!")"))
+    if (!tokenIs!")")
       targs = parseTemplateArguments_();
     else
       error(token, MID.ExpectedTypeOrExpression);
@@ -4323,7 +4321,7 @@ class Parser
   {
     assert(trying);
     auto type = parseType();
-    if (tokenIs(T!",") || tokenIs(T!")"))
+    if (tokenIs!"," || tokenIs!")")
       return type;
     fail_tryToParse();
     return null;
@@ -4335,13 +4333,13 @@ class Parser
   {
     auto begin = token;
     auto targs = new TemplateArguments;
-    while (!tokenIs(T!")"))
+    while (!tokenIs!")")
     {
       bool success;
       auto typeArgument = tryToParse(&parseTypeArgument, success);
       // TemplateArgument := Type | AssignExpr
       targs ~= success ? typeArgument : parseAssignExpr();
-      if (!consumed(T!","))
+      if (!consumed!",")
         break;
     }
     set(targs, begin);
@@ -4351,12 +4349,12 @@ class Parser
   /// $(BNF Constraint := if "(" ConstraintExpr ")")
   Expression parseOptionalConstraint()
   {
-    if (!consumed(T!"if"))
+    if (!consumed!"if")
       return null;
     auto leftParen = token;
-    require2(T!"(");
+    require2!"(";
     auto e = parseExpression();
-    requireClosing(T!")", leftParen);
+    requireClosing!")"(leftParen);
     return e;
   }
 
@@ -4365,10 +4363,10 @@ class Parser
   {
     auto begin = token;
     auto tparams = new TemplateParameters;
-    require2(T!"(");
-    if (!tokenIs(T!")"))
+    require2!"(";
+    if (!tokenIs!")")
       parseTemplateParameterList_(tparams);
-    requireClosing(T!")", begin);
+    requireClosing!")"(begin);
     return set(tparams, begin);
   }
 
@@ -4377,10 +4375,10 @@ class Parser
   {
   version(D2)
   {
-    skip(T!",");
+    skip!",";
     auto begin = token;
     auto tparams = new TemplateParameters;
-    if (!tokenIs(T!")"))
+    if (!tokenIs!")")
       parseTemplateParameterList_(tparams);
     else
       error(token, MID.ExpectedTemplateParameters);
@@ -4405,7 +4403,7 @@ class Parser
   ////)
   void parseTemplateParameterList_(TemplateParameters tparams)
   {
-    while (!tokenIs(T!")"))
+    while (!tokenIs!")")
     {
       auto paramBegin = token;
       TemplateParam tp;
@@ -4414,9 +4412,9 @@ class Parser
 
       void parseSpecAndOrDefaultType()
       {
-        if (consumed(T!":"))  // ":" SpecializationType
+        if (consumed!":")  // ":" SpecializationType
           specType = parseType();
-        if (consumed(T!"=")) // "=" DefaultType
+        if (consumed!"=") // "=" DefaultType
           defType = parseType();
       }
 
@@ -4434,9 +4432,9 @@ class Parser
           auto typeArgument = tryToParse(&parseTypeArgument, success);
           return success ? typeArgument : parseCondExpr();
         }
-        if (consumed(T!":"))  // ":" Specialization
+        if (consumed!":")  // ":" Specialization
           spec = parseExpOrType();
-        if (consumed(T!"=")) // "=" Default
+        if (consumed!"=") // "=" Default
           def = parseExpOrType();
         } // version(D2)
         else
@@ -4452,13 +4450,13 @@ class Parser
         switch (peekNext())
         {
         case T!"...": // TemplateTupleParam := Identifier "..."
-          skip(T!"Identifier"); skip(T!"...");
-          if (tokenIs(T!","))
+          skip!"Identifier"; skip!"...";
+          if (tokenIs!",")
             error(MID.TemplateTupleParameter);
           tp = new TemplateTupleParam(ident);
           break;
         case T!",", T!")", T!":", T!"=": // TemplateTypeParam := Identifier
-          skip(T!"Identifier");
+          skip!"Identifier";
           parseSpecAndOrDefaultType();
           tp = new TemplateTypeParam(ident, specType, defType);
           break;
@@ -4482,10 +4480,10 @@ class Parser
         Expression specValue, defValue;
         auto valueType = parseDeclarator(ident);
         // ":" SpecializationValue
-        if (consumed(T!":"))
+        if (consumed!":")
           specValue = parseCondExpr();
         // "=" DefaultValue
-        if (consumed(T!"="))
+        if (consumed!"=")
           defValue = parseCondExpr();
         tp = new TemplateValueParam(valueType, ident, specValue, defValue);
       }
@@ -4493,7 +4491,7 @@ class Parser
       // Push template parameter.
       tparams ~= set(tp, paramBegin);
 
-      if (!consumed(T!","))
+      if (!consumed!",")
         break;
     }
   }
@@ -4510,25 +4508,18 @@ class Parser
 
   alias expected = require;
 
-  /// Requires a token of kind tok.
-  void require(TOK tok)
+  /// Requires a token of kind T!str.
+  void require(string str)()
   {
-    if (!consumed(tok))
-      error2(MID.ExpectedButFound, Token.toString(tok), token);
+    if (!consumed!str)
+      error2(MID.ExpectedButFound, str, token);
   }
 
   /// Requires a token of kind tok. Uses the token end as the error location.
-  void require2(TOK tok)
+  void require2(string str)()
   {
-    if (!consumed(tok))
-      error2_eL(MID.ExpectedButFound, Token.toString(tok), token);
-  }
-
-  /// Requires the next token to be of kind tok.
-  void requireNext(TOK tok)
-  {
-    nT();
-    require(tok);
+    if (!consumed!str)
+      error2_eL(MID.ExpectedButFound, str, token);
   }
 
   /// Parses an optional identifier.
@@ -4536,7 +4527,7 @@ class Parser
   Token* optionalIdentifier()
   {
     Token* id = token;
-    return consumed(T!"Identifier") ? id : null;
+    return consumed!"Identifier" ? id : null;
   }
 
   /// Reports an error if the current token is not an identifier.
@@ -4546,7 +4537,7 @@ class Parser
   Token* requireIdentifier(MID mid)
   {
     Token* idtok = token;
-    if (!consumed(T!"Identifier"))
+    if (!consumed!"Identifier")
     {
       error(token, mid, token.text);
       if (!trying)
@@ -4563,15 +4554,15 @@ class Parser
   }
 
   /// Reports an error if the closing counterpart of a token is not found.
-  void requireClosing(TOK closing, Token* opening)
+  void requireClosing(string str)(Token* opening)
   {
-    assert(closing == T!"}" || closing == T!")" || closing == T!"]");
+    static assert(str == "}" || str == ")" || str == "]", "invalid bracket");
     assert(opening !is null);
-    if (!consumed(closing))
+    if (!consumed!str)
     {
       auto loc = opening.getErrorLocation(lexer.srcText.filePath);
       error(token, MID.ExpectedClosing,
-        Token.toString(closing), opening.text, loc.lineNum, loc.colNum,
+        str, opening.text, loc.lineNum, loc.colNum,
         getPrintable(token));
     }
   }
