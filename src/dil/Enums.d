@@ -31,14 +31,13 @@ enum StorageClass
   Pure         = 1<<18,
   Shared       = 1<<19,
   Gshared      = 1<<20,
-  Thread       = 1<<21,
-  Inout        = 1<<22,
+  Inout        = 1<<21,
   // Attributes:
-  Disable      = 1<<23,
-  Property     = 1<<24,
-  Safe         = 1<<25,
-  System       = 1<<26,
-  Trusted      = 1<<27,
+  Disable      = 1<<22,
+  Property     = 1<<23,
+  Safe         = 1<<24,
+  System       = 1<<25,
+  Trusted      = 1<<26,
 }
 
 /// Enumeration of protection attributes.
@@ -117,7 +116,6 @@ static:
     "pure",
     "shared",
     "gshared",
-    "thread",
     "inout",
     "@disable",
     "@property",

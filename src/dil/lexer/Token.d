@@ -359,7 +359,7 @@ bool isDeclDefStartToken(TOK tok)
   version(D2)
   {
   case T.Immutable, T.Pure, T.Shared, T.Gshared,
-       T.Ref, T.Nothrow, T.Thread, T.At:
+       T.Ref, T.Nothrow, T.At:
     return true;
   }
   default:
@@ -391,7 +391,7 @@ bool isStatementStartToken(TOK tok)
   version(D2)
   {
   case T.Traits, T.Immutable, T.Pure, T.Shared, T.Gshared,
-       T.Ref, T.Nothrow, T.Thread, T.At:
+       T.Ref, T.Nothrow, T.At:
     return true;
   }
   default:

@@ -817,7 +817,6 @@ override:
     case STC.Pure:         t = TOK.Pure;         break;
     case STC.Shared:       t = TOK.Shared;       break;
     case STC.Gshared:      t = TOK.Gshared;      break;
-    case STC.Thread:       t = TOK.Thread;       break;
     case STC.Inout:        t = TOK.Inout;        break;
     case STC.Disable:      i = Ident.disable;    break;
     case STC.Property:     i = Ident.property;   break;

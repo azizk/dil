@@ -101,7 +101,7 @@ enum TOK : ushort
   Out, OverloadSet/+D2.0+/, Override, Package,
   Pragma, Private, Protected, Public, Pure/+D2.0+/, Ref, Return,
   Shared/+D2.0+/, Scope, Static, Struct, Super, Switch, Synchronized,
-  Template, This, Thread/+D2.0+/, Throw, Traits/+D2.0+/, True, Try, Typedef, Typeid,
+  Template, This, Throw, Traits/+D2.0+/, True, Try, Typedef, Typeid,
   Typeof, Union, Unittest, Vector/*D2.0*/,
   Version, Volatile, While, With,
   // Integral types.
@@ -208,7 +208,7 @@ immutable string[TOK.MAX] tokToString = [
   "out","__overloadset","override","package",
   "pragma","private","protected","public","pure","ref","return",
   "shared","scope","static","struct","super","switch","synchronized",
-  "template","this","__thread","throw","__traits","true","try","typedef",
+  "template","this","throw","__traits","true","try","typedef",
   "typeid","typeof","union","unittest","__vector",
   "version","volatile","while","with",
   // Integral types.
