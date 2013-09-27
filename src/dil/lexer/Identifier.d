@@ -25,6 +25,7 @@ struct Identifier_
   TOK kind;   /// The token kind. Either TOK.Identifier or TOK.{KEYWORD}.
   IDK idKind; /// Only for predefined identifiers.
 
+inout:
   /// Constructs an Identifier.
   this(string str, TOK kind)
   {
@@ -39,7 +40,6 @@ struct Identifier_
     this.idKind = idKind;
   }
 
-const:
   /// Calculates a hash for this id.
   hash_t toHash()
   {
@@ -61,4 +61,4 @@ const:
 // pragma(msg, Identifier.sizeof.stringof);
 
 /// Identifiers are const by default.
-alias Identifier = const(Identifier_);
+alias Identifier = immutable(Identifier_);
