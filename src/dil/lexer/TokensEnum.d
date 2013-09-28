@@ -245,3 +245,12 @@ template S2T(string s)
 {
   enum TOK S2T = str2TOK[s];
 }
+
+/// Converts multiple Token strings and returns a Tuple of TOK values.
+template S2T(Ss...)
+{
+  static if (Ss.length == 1)
+    alias S2T = S2T!(Ss[0]);
+  else
+    alias S2T = Tuple!(S2T!(Ss[0]), S2T!(Ss[1..$]));
+}
