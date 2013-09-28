@@ -355,7 +355,7 @@ class Parser
          //T!"static", T!"const"
     version(D2)
     { // T!"shared", T!"immutable", T!"inout"
-    case T!"__gshared", T!"ref", T!"pure", T!"nothrow", T!"__thread", T!"@":
+    case T!"__gshared", T!"ref", T!"pure", T!"nothrow", T!"@":
     }
     case_parseAttributes:
       return parseAttributes();
@@ -1011,7 +1011,6 @@ class Parser
       case T!"pure":         stc = StorageClass.Pure;         goto Lcommon;
       case T!"nothrow":      stc = StorageClass.Nothrow;      goto Lcommon;
       case T!"__gshared":    stc = StorageClass.Gshared;      goto Lcommon;
-      case T!"__thread":     stc = StorageClass.Thread;       goto Lcommon;
       case T!"@":            stc = parseAtAttribute();        goto Lcommon;
       } // version(D2)
       else
@@ -1773,7 +1772,7 @@ class Parser
     version(D2)
     {
     case T!"immutable", T!"inout", T!"pure", T!"shared", T!"__gshared",
-         T!"ref", T!"nothrow", T!"__thread", T!"@":
+         T!"ref", T!"nothrow", T!"@":
     }
       goto case_parseAttribute;
 
@@ -2023,7 +2022,6 @@ class Parser
       case T!"pure":      stc = StorageClass.Pure;     goto Lcommon;
       case T!"nothrow":   stc = StorageClass.Nothrow;  goto Lcommon;
       case T!"__gshared": stc = StorageClass.Gshared;  goto Lcommon;
-      case T!"__thread":  stc = StorageClass.Thread;   goto Lcommon;
       case T!"@":         stc = parseAtAttribute();    goto Lcommon;
       } // version(D2)
       else
