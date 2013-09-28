@@ -233,7 +233,7 @@ class Parser
   /// Returns the token kind behind the closing bracket.
   TOK tokenAfterBracket(TOK closing)
   {
-    assert(tokenIs!"[" || tokenIs!"{");
+    assert(token.kind.Any!("[", "{"));
     return skipParens(token, closing).kind;
   }
 
@@ -277,7 +277,7 @@ class Parser
     {
       typeId = requireIdentifier(MID.ExpectedModuleType);
       auto ident = typeId ? typeId.ident : null;
-      if (ident && ident !is Ident.safe && ident !is Ident.system)
+      if (!ident.In(Ident.safe, Ident.system, Ident.Empty))
         error(typeId, MID.ExpectedModuleType);
       require2!")";
     }
@@ -315,7 +315,7 @@ class Parser
     // Parse body.
     auto decls = new CompoundDecl;
     auto brace = requireOpening!"{";
-    while (!tokenIs!"}" && !tokenIs!"EOF")
+    while (!token.kind.Any!("}", "EOF"))
       decls ~= parseDeclarationDefinition();
     requireClosing!"}"(brace);
     set(decls, brace);
@@ -475,9 +475,7 @@ class Parser
       // Skip to next valid token.
       do
         nT();
-      while (!token.isDeclDefStart() &&
-             !tokenIs!"}" &&
-             !tokenIs!"EOF");
+      while (!token.isDeclDefStart() && !token.kind.Any!("}", "EOF"));
       auto text = begin.textSpan(this.prevToken);
       error(begin, MID.IllegalDeclaration, text);
     }
@@ -498,7 +496,7 @@ class Parser
     case T!"{":
       auto brace = consume();
       auto decls = new CompoundDecl;
-      while (!tokenIs!"}" && !tokenIs!"EOF")
+      while (!token.kind.Any!("}", "EOF"))
         decls ~= parseDeclarationDefinition();
       requireClosing!"}"(brace);
       d = set(decls, brace);
@@ -507,7 +505,7 @@ class Parser
       auto colon = consume();
       auto begin2 = token;
       auto decls = new CompoundDecl;
-      while (!tokenIs!"}" && !tokenIs!"EOF")
+      while (!token.kind.Any!("}", "EOF"))
         decls ~= parseDeclarationDefinition();
       set(decls, begin2);
       d = set(new ColonBlockDecl(decls), colon);
@@ -540,7 +538,7 @@ class Parser
       return new AliasThisDecl(ident);
     }
     else
-    if ((tokenIs!"this" || tokenIs!"Identifier") && nextIs!"=")
+    if (token.kind.Any!("this", "Identifier") && nextIs!"=")
     {
       Token*[] idents;
       TypeNode[] types;
@@ -548,7 +546,7 @@ class Parser
 
       while (consumed!",")
       {
-        if (!(tokenIs!"this" || tokenIs!"Identifier"))
+        if (!token.kind.Any!("this", "Identifier"))
           error(token, MID.ExpectedAliasName, token.text);
       LenterLoop:
         idents ~= token;
@@ -621,8 +619,7 @@ class Parser
       else version(D2) if (next_kind == T!"(")
       { // Check for AutoFunction.
         auto peek_token = peekAfter(token); // Skip the Identifier.
-        peek_token = skipParens(peek_token, T!")");
-        next_kind = peek_token.kind; // Token after "(" ... ")"
+        next_kind = skipParens(peek_token, T!")").kind; // Token after "("...")"
         if (next_kind == T!"(")
         { // TemplateParameterList ParameterList
           name = consume();
@@ -630,8 +627,7 @@ class Parser
           goto LparseTPList; // Continue parsing templatized AutoFunction.
         }
         else
-        if (next_kind == T!"{" || isFunctionPostfix(peek_token) ||
-            next_kind == T!"in" || next_kind == T!"out" || next_kind == T!"body")
+        if (next_kind.Any!("{", FunctionPostfix, "in", "out", "body"))
         { // ParameterList ("{" | FunctionPostfix | in | out | body)
           name = consume();
           assert(tokenIs!"(");
@@ -720,12 +716,8 @@ class Parser
   ////MemberName         := Identifier)
   Expression parseInitializer()
   {
-    if (tokenIs!"void")
-    {
-      auto next = peekNext();
-      if (next == T!"," || next == T!";")
-        return set(new VoidInitExpr(), consume());
-    }
+    if (tokenIs!"void" && peekNext().Any!(",", ";"))
+      return set(new VoidInitExpr(), consume());
     return parseNonVoidInitializer();
   }
 
@@ -739,9 +731,7 @@ class Parser
     switch (token.kind)
     {
     case T!"[":
-      auto after_bracket = tokenAfterBracket(T!"]");
-      if (after_bracket != T!"," && after_bracket != T!"]" &&
-          after_bracket != T!"}" && after_bracket != T!";")
+      if (!tokenAfterBracket(T!"}").Any!(",", "]", "}", ";"))
         goto default; // Parse as an AssignExpr.
       // ArrayInitializer := "[" ArrayInitElements? "]"
       Expression[] keys, values;
@@ -764,9 +754,7 @@ class Parser
       init = new ArrayInitExpr(keys, values);
       break;
     case T!"{":
-      auto after_bracket = tokenAfterBracket(T!"}");
-      if (after_bracket != T!"," && after_bracket != T!"}" &&
-          after_bracket != T!"]" && after_bracket != T!";")
+      if (!tokenAfterBracket(T!"}").Any!(",", "]", "}", ";"))
         goto default; // Parse as an AssignExpr.
       // StructInitializer := "{" StructInitElements? "}"
       Token*[] idents;
@@ -891,18 +879,9 @@ class Parser
     assert(0);
   }
 
-  /// Returns true if t points to a postfix attribute.
-  bool isFunctionPostfix(Token* t)
-  {
-    switch (t.kind)
-    {
-    case T!"const", T!"immutable", T!"inout", T!"nothrow", T!"shared",
-         T!"pure", T!"@":
-      return true;
-    default:
-    }
-    return false;
-  }
+  /// A tuple of all the possible postfix tokens.
+  alias FunctionPostfix = Tuple!("const", "immutable", "inout", "nothrow",
+    "shared", "pure", "@");
 
   /// $(BNF ExternLinkageType := extern "(" LinkageType ")"
   ///LinkageType := "C" | "C" "++" | "D" | "Windows" | "Pascal" | "System")
@@ -1243,14 +1222,11 @@ class Parser
     assert(tokenIs!"enum");
     auto next = peekAfter(token);
     auto kind = next.kind;
-    if (kind == T!":" || kind == T!"{")
+    if (kind.Any!(":", "{"))
       return false; // Anonymous enum.
-    else if (kind == T!"Identifier")
-    {
-      kind = peekAfter(next).kind;
-      if (kind == T!":" || kind == T!"{" || kind == T!";")
-        return false; // Named enum.
-    }
+    else
+    if (kind == T!"Identifier" && peekAfter(next).kind.Any!(":", "{", ";"))
+      return false; // Named enum.
     return true; // Manifest enum.
     }
     assert(0);
@@ -1283,11 +1259,8 @@ class Parser
         Type type; // Optional member type.
 
         version(D2)
-        {
-        auto kind = peekNext();
-        if (kind != T!"=" && kind != T!"," && kind != T!"}")
+        if (!peekNext().Any!("=", ",", "}"))
           type = parseType();
-        }
 
         auto name = requireIdentifier(MID.ExpectedEnumMember);
         // "=" AssignExpr
@@ -1582,8 +1555,8 @@ class Parser
   /// $(BNF IdentOrInt := Identifier | Integer)
   Token* parseIdentOrInt()
   {
-    if (consumed!"Identifier" || consumed!"Int32")
-      return this.prevToken;
+    if (token.kind.Any!("Identifier", "Int32"))
+      return consume();
     error2(MID.ExpectedIdentOrInt, token);
     return null;
   }
@@ -1592,7 +1565,7 @@ class Parser
   Token* parseVersionCondition()
   {
     version(D2)
-    if (tokenIs!"unittest" || tokenIs!"assert")
+    if (token.kind.Any!("unittest", "assert"))
       return consume();
     return parseIdentOrInt();
   }
@@ -1755,7 +1728,7 @@ class Parser
   {
     auto brace = requireOpening!"{";
     auto statements = new CompoundStmt();
-    while (!tokenIs!"}" && !tokenIs!"EOF")
+    while (!token.kind.Any!("}", "EOF"))
       statements ~= parseStatement();
     requireClosing!"}"(brace);
     return set(statements, brace);
@@ -1959,9 +1932,7 @@ class Parser
       // Skip to next valid token.
       do
         nT();
-      while (!token.isStatementStart() &&
-             !tokenIs!"}" &&
-             !tokenIs!"EOF");
+      while (!token.isStatementStart() && !token.kind.Any!("}", "EOF"));
       auto text = begin.textSpan(this.prevToken);
       error(begin, MID.IllegalStatement, text);
     }
@@ -2083,10 +2054,9 @@ class Parser
     assert(this.storageClass == StorageClass.None);
     assert(this.protection == Protection.None);
     assert(this.linkageType == LinkageType.None);
-    switch (token.kind)
+    if (token.kind.Any!("class", "interface", "struct", "union", "alias",
+        "typedef", "enum"))
     {
-    case T!"class", T!"interface", T!"struct", T!"union",
-         T!"alias", T!"typedef", T!"enum":
       // Set current values.
       this.storageClass = stcs;
       this.linkageType = linkageType;
@@ -2095,14 +2065,10 @@ class Parser
       // Clear values.
       this.storageClass = StorageClass.None;
       this.linkageType = LinkageType.None;
-      break;
-    case T!"template": // TODO:
-      // error2("templates are not allowed in functions", token);
-      //break;
-    default:
+    }
+    else
       decl =
         parseVariablesOrFunction(stcs, protection, linkageType, testAutoDecl);
-    }
     assert(decl !is null && isNodeSet(decl));
     // Attach the declaration to the previously parsed attribute.
     prevAttr.setDecls(decl);
@@ -2284,8 +2250,7 @@ class Parser
     // This function is similar to parseNoScopeStmt()
     auto begin = token;
     auto s = new CompoundStmt();
-    while (!tokenIs!"case" && !tokenIs!"default" &&
-           !tokenIs!"}" && !tokenIs!"EOF")
+    while (!token.kind.Any!("case", "default", "}", "EOF"))
       s ~= parseStatement();
     if (begin is token) // Nothing consumed.
       begin = this.prevToken;
@@ -2457,13 +2422,9 @@ class Parser
     assert(tokenIs!"(");
     auto paren = consume();
     auto condition = requireIdentifier(MID.ExpectedScopeIdentifier);
-    switch (condition ? condition.ident.idKind : IDK.Empty)
-    {
-    case IDK.exit, IDK.success, IDK.failure: break;
-    case IDK.Empty: break; // Don't report error twice.
-    default:
+    auto idk = condition ? condition.ident.idKind : IDK.Empty;
+    if (!idk.In(IDK.exit, IDK.success, IDK.failure, IDK.Empty))
       error2(MID.InvalidScopeIdentifier, condition);
-    }
     requireClosing!")"(paren);
     auto scopeBody = tokenIs!"{" ? parseScopeStmt() : parseNoScopeStmt();
     return new ScopeGuardStmt(condition, scopeBody);
@@ -2559,7 +2520,7 @@ class Parser
     skip!"asm";
     auto brace = requireOpening!"{";
     auto ss = new CompoundStmt;
-    while (!tokenIs!"}" && !tokenIs!"EOF")
+    while (!token.kind.Any!("}", "EOF"))
       ss ~= parseAsmStmt();
     requireClosing!"}"(brace);
     return new AsmBlockStmt(set(ss, brace));
@@ -2640,9 +2601,7 @@ class Parser
       // Skip to next valid token.
       do
         nT();
-      while (!token.isAsmStatementStart() &&
-             !tokenIs!"}" &&
-             !tokenIs!"EOF");
+      while (!token.isAsmStatementStart() && !token.kind.Any!("}", "EOF"));
       auto text = begin.textSpan(this.prevToken);
       error(begin, MID.IllegalAsmStatement, text);
     }
@@ -2698,15 +2657,10 @@ class Parser
       auto opPrec = parseBinaryOp(makeBinaryExpr, prevPrec);
       if (opPrec <= prevPrec) // Continue as long as the operators
         break;                // have higher precedence.
-      switch (prevToken.kind)
-      {
-      case /*T!"!",*/ T!"is", T!"in", T!"!<>=", T!"!<>", T!"!<=", T!"!<",
-           T!"!>=", T!"!>", T!"<>=", T!"<>", T!"~", T!"^^":
+      if (prevToken.kind.Any!(/*"!", */"is", "in", "!<>=", "!<>", "!<=", "!<",
+        "!>=", "!>", "<>=", "<>", "~", "^^"))
         // Use textSpan() for operators like "!is" and "!in".
         error(operator, MID.IllegalAsmBinaryOp, operator.textSpan(prevToken));
-        break;
-      default:
-      }
       auto rhs = parseAsmBinaryExpr(opPrec); // Parse the right-hand side.
       e = makeBinaryExpr(e, rhs, operator);
       set(e, begin);
@@ -3292,8 +3246,7 @@ class Parser
     auto ident = requireIdentifier(MID.ExpectedAnIdentifier);
     Expression e;
     // Peek to avoid parsing: "id !is Exp" or "id !in Exp"
-    auto nextTok = peekNext();
-    if (tokenIs!"!" && nextTok != T!"is" && nextTok != T!"in")
+    if (tokenIs!"!" && !peekNext().Any!("is", "in"))
     {
       skip!"!";
       // Identifier "!" "(" TemplateArguments? ")"
@@ -3549,8 +3502,7 @@ class Parser
         version(D2)
         {
         case T!"const", T!"immutable", T!"inout", T!"shared":
-          auto next = peekNext();
-          if (next == T!")" || next == T!",")
+          if (peekNext().Any!(")", ","))
             goto case_Const_Immutable_Inout_Shared;
           goto default; // It's a type.
         } // version(D2)
@@ -3571,16 +3523,15 @@ class Parser
       e = new IsExpr(type, ident, opTok, specTok, specType, tparams);
       break;
     case T!"(":
-      auto t = skipParens(token, T!")");
-      if (isFunctionPostfix(t) || // E.g.: "(" int "a" ")" pure
-          t.kind == T!"{" || t.kind == T!"=>")
+      auto kind = skipParens(token, T!")").kind;
+      if (kind.Any!(FunctionPostfix, "{", "=>")) // E.g.: "(" int "a" ")" pure
       {
         auto parameters = parseParameterList(); // "(" ParameterList ")"
         parameters.postSTCs = parseFunctionPostfix(); // Optional attributes.
         FuncBodyStmt fstmt;
-        if (token.kind == T!"{") // "(" ... ")" "{" ...
+        if (tokenIs!"{") // "(" ... ")" "{" ...
           fstmt = parseFunctionBody();
-        else if (token.kind == T!"=>") // "(" ... ")" "=>" ...
+        else if (tokenIs!"=>") // "(" ... ")" "=>" ...
         {
           e = new LambdaExpr(parameters, parseLambdaExprBody());
           break;
@@ -3741,20 +3692,11 @@ class Parser
   Type parseType()
   {
     version(D2)
+    if (!nextIs!"(" && token.kind.Any!("const", "immutable", "inout", "shared"))
     {
-    if (!nextIs!"(")
-    {
-      auto mod = token;
-      switch (mod.kind)
-      {
-      case T!"const", T!"immutable", T!"inout", T!"shared":
-        nT();
-        auto t = new ModifierType(parseType(), mod, false);
-        return set(t, mod);
-      default:
-      }
+      auto mod = consume();
+      return set(new ModifierType(parseType(), mod, false), mod);
     }
-    } // version(D2)
     return parseBasicTypes();
   }
 
@@ -4142,7 +4084,7 @@ class Parser
   {
     assert(trying);
     auto type = parseType();
-    if (tokenIs!"," || tokenIs!")")
+    if (token.kind.Any!(",", ")"))
       return type;
     fail_tryToParse();
     return null;
@@ -4372,7 +4314,7 @@ class Parser
   /// Returns the opening bracket or the current token.
   Token* requireOpening(string str)()
   {
-    static assert(str == "{" || str == "(" || str == "[", "invalid bracket");
+    static assert(str.In("{", "(", "["), "invalid bracket");
     if (consumed!str)
       return prevToken;
     require2!str;
@@ -4382,7 +4324,7 @@ class Parser
   /// Reports an error if the closing counterpart of a token is not found.
   void requireClosing(string str)(Token* opening)
   {
-    static assert(str == "}" || str == ")" || str == "]", "invalid bracket");
+    static assert(str.In("}", ")", "]"), "invalid bracket");
     assert(opening !is null);
     if (!consumed!str)
     {
@@ -4462,4 +4404,10 @@ class Parser
   {
     error(_arguments, _argptr, token, endLoc, diag.bundle.msg(mid));
   }
+}
+
+/// Returns true if x is in a list of TOK values.
+bool Any(Xs...)(TOK x)
+{
+  return In(x, S2T!Xs);
 }
