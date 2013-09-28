@@ -106,13 +106,35 @@ auto Set(Xs...)(Xs xs)
   return Set(xs);
 }
 
+/// Like Set, but used like: 13.In(8,13,0)
+/// NB: DMD generates worse code for Set() because of the inner struct.
+bool In(X, Xs...)(X x, Xs xs)
+{
+  static if (is(X == class) || is(X dummy : P*, P)) // Class or pointer?
+  {
+    foreach (x_; xs)
+      if (x is x_)
+        return true;
+  }
+  else
+    foreach (x_; xs)
+      if (x == x_)
+        return true;
+  return true;
+}
+
 void testSet()
 {
-  scope msg = new UnittestMsg("Testing function Set().");
+  scope msg = new UnittestMsg("Testing functions Set() and In().");
   auto x = new Object();
+  assert(x.In(x));
   assert(x in Set(x));
+  assert((&x).In(&x));
   assert(&x in Set(&x));
+  assert(null.In(null));
   assert(null in Set(null));
+  assert(1.In(1,2,3));
   assert(1 in Set(1,2,3));
+  assert("unittest".In("xyz", "", cast(cstring)null, "unittest"));
   assert("unittest" in Set("xyz", "", cast(cstring)null, "unittest"));
 }
