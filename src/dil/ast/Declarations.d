@@ -127,7 +127,7 @@ class ModuleDecl : Declaration
   /// Returns the name of this module. E.ǵ.: "Declarations"
   cstring getName()
   {
-    return name.ident.str;
+    return name ? name.ident.str : "";
   }
 
   /// Returns the packages of this module. E.g.: "dil.ast"
@@ -284,7 +284,6 @@ class EnumMemberDecl : Declaration
 
   private this(Token* name, Expression value)
   {
-    assert(name);
     mixin(set_kind);
     addOptChild(value);
 

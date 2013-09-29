@@ -276,8 +276,7 @@ class Parser
     if (consumed!"(")
     {
       typeId = requireIdentifier(MID.ExpectedModuleType);
-      auto ident = typeId ? typeId.ident : null;
-      if (!ident.In(Ident.safe, Ident.system, Ident.Empty))
+      if (typeId && !typeId.ident.In(Ident.safe, Ident.system))
         error(typeId, MID.ExpectedModuleType);
       require2!")";
     }
@@ -897,22 +896,19 @@ class Parser
       return linkageType;
     }
 
-    auto idtok = requireIdentifier(MID.ExpectedLinkageIdentifier);
-
-    switch (idtok.ident.idKind)
-    {
-    case IDK.C:       linkageType = consumed!"++" ?
-                                    LinkageType.Cpp :
-                                    LinkageType.C;       break;
-    case IDK.D:       linkageType = LinkageType.D;       break;
-    case IDK.Windows: linkageType = LinkageType.Windows; break;
-    case IDK.Pascal:  linkageType = LinkageType.Pascal;  break;
-    case IDK.System:  linkageType = LinkageType.System;  break;
-    case IDK.Empty:   break; // Avoid reporting another error below.
-    default:
-      assert(idtok);
-      error2(MID.UnrecognizedLinkageType, idtok);
-    }
+    if (auto idtok = requireIdentifier(MID.ExpectedLinkageIdentifier))
+      switch (idtok.ident.idKind)
+      {
+      case IDK.C:       linkageType = consumed!"++" ?
+                                      LinkageType.Cpp :
+                                      LinkageType.C;       break;
+      case IDK.D:       linkageType = LinkageType.D;       break;
+      case IDK.Windows: linkageType = LinkageType.Windows; break;
+      case IDK.Pascal:  linkageType = LinkageType.Pascal;  break;
+      case IDK.System:  linkageType = LinkageType.System;  break;
+      default:
+        error2(MID.UnrecognizedLinkageType, idtok);
+      }
     require2!")";
     return linkageType;
   }
@@ -1132,21 +1128,20 @@ class Parser
   StorageClass parseAtAttribute()
   {
     skip!"@";
-    auto idtok = tokenIs!"Identifier" ?
-      token : requireIdentifier(MID.ExpectedAttributeId);
     StorageClass stc;
-    switch (idtok.ident.idKind)
-    {
-    case IDK.disable:  stc = StorageClass.Disable;  break;
-    case IDK.property: stc = StorageClass.Property; break;
-    case IDK.safe:     stc = StorageClass.Safe;     break;
-    case IDK.system:   stc = StorageClass.System;   break;
-    case IDK.trusted:  stc = StorageClass.Trusted;  break;
-    case IDK.Empty: break; // No Id. Avoid another error below.
-    default:
-      assert(idtok);
-      error2(MID.UnrecognizedAttribute, idtok);
-    }
+    if (tokenIs!"Identifier")
+      switch (token.ident.idKind)
+      {
+      case IDK.disable:  stc = StorageClass.Disable;  break;
+      case IDK.property: stc = StorageClass.Property; break;
+      case IDK.safe:     stc = StorageClass.Safe;     break;
+      case IDK.system:   stc = StorageClass.System;   break;
+      case IDK.trusted:  stc = StorageClass.Trusted;  break;
+      default:
+        error2(MID.UnrecognizedAttribute, token);
+      }
+    else
+      error2(MID.ExpectedAttributeId, token);
     // Return without skipping the identifier.
     return stc;
   }
@@ -2419,8 +2414,8 @@ class Parser
     assert(tokenIs!"(");
     auto paren = consume();
     auto condition = requireIdentifier(MID.ExpectedScopeIdentifier);
-    auto idk = condition ? condition.ident.idKind : IDK.Empty;
-    if (!idk.In(IDK.exit, IDK.success, IDK.failure, IDK.Empty))
+    if (condition &&
+        !condition.ident.In(Ident.exit, Ident.success, Ident.failure))
       error2(MID.InvalidScopeIdentifier, condition);
     requireClosing!")"(paren);
     auto scopeBody = tokenIs!"{" ? parseScopeStmt() : parseNoScopeStmt();
@@ -4284,20 +4279,9 @@ class Parser
   /// Returns: The identifier token or null.
   Token* requireIdentifier(MID mid)
   {
-    Token* idtok = token;
-    if (!consumed!"Identifier")
-    {
+    auto idtok = consumedToken!"Identifier";
+    if (!idtok)
       error(token, mid, token.text);
-      if (!trying)
-      {
-        idtok = lexer.insertEmptyTokenBefore(token);
-        idtok.kind = T!"Identifier";
-        idtok.ident = Ident.Empty;
-        this.prevToken = idtok;
-      }
-      else
-        idtok = null;
-    }
     return idtok;
   }
 
