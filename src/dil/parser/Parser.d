@@ -208,7 +208,7 @@ class Parser
   }
 
   /// Consumes the current token if its kind matches T!str and returns it.
-  Token* consumedToken(string str)() // Templatized, so it's inlined.
+  Token* consumedToken(string str)()
   {
     return tokenIs!str ? (nT(), prevToken) : null;
   }
@@ -1412,7 +1412,7 @@ class Parser
   ////UnionBody  := DeclDefsBlock)
   Declaration parseStructOrUnionDecl()
   {
-    assert(tokenIs!"struct" || tokenIs!"union");
+    assert(token.kind.Any!("struct", "union"));
     auto begin = token;
     nT();
 
@@ -2162,7 +2162,7 @@ class Parser
   ////Aggregate      := RangeExpr2 | Expression)
   Statement parseForeachStmt()
   {
-    assert(tokenIs!"foreach" || tokenIs!"foreach_reverse");
+    assert(token.kind.Any!("foreach", "foreach_reverse"));
     auto kind = consume().kind;
     auto params = new Parameters;
     auto paren = requireOpening!"(";
@@ -2202,8 +2202,7 @@ class Parser
         // fall through
       }
       case T!"Identifier":
-        auto next = peekNext();
-        if (next == T!"," || next == T!";" || next == T!")")
+        if (peekNext().Any!(",", ";", ")"))
         { // (ref|const|...)? Identifier
           name = requireIdentifier(MID.ExpectedVariableName);
           break;
@@ -2553,12 +2552,9 @@ class Parser
 
       // JumpOpcode (short | (near | far) ptr)?
       if (Ident.isJumpOpcode(ident.ident.idKind))
-      {
-        auto jmptype = token.ident;
         if (tokenIs!"short")
           nT();
-        else if (tokenIs!"Identifier" &&
-                 (jmptype is Ident.near || jmptype is Ident.far))
+        else if (tokenIs!"Identifier" && token.ident.In(Ident.near, Ident.far))
         {
           nT();
           if (tokenIs!"Identifier" && token.ident is Ident.ptr)
@@ -2566,7 +2562,6 @@ class Parser
           else
             error2(MID.ExpectedButFound, "ptr", token);
         }
-      }
 
       // TODO: Handle opcodes db, ds, di, dl, df, dd, de.
       //       They accept string operands.
@@ -3744,10 +3739,8 @@ class Parser
       type = set(new ModuleScopeType(), begin, begin);
     else if (tokenIs!"typeof")
       type = parseTypeofType();
-    else if (tokenIs!"this" || tokenIs!"super") { // D2
-      type = set(new IdentifierType(null, token), begin, begin);
-      nT();
-    }
+    else if (token.kind.Any!("this", "super")) // D2
+      type = set(new IdentifierType(null, consume()), begin, begin);
     else
       type = parseIdentifierType();
 
@@ -4282,8 +4275,7 @@ class Parser
   /// Returns: null or the identifier.
   Token* optionalIdentifier()
   {
-    Token* id = token;
-    return consumed!"Identifier" ? id : null;
+    return tokenIs!"Identifier" ? consume() : null;
   }
 
   /// Reports an error if the current token is not an identifier.
