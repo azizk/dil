@@ -52,6 +52,8 @@ class Lexer
   /// Tokens from a *.dlx file.
   Token[] dlxTokens;
 
+  alias T = S2T;
+
   /// CTF: Casts a string literal to an integer.
   static size_t toUint(string s)
   {
@@ -118,13 +120,13 @@ class Lexer
     this.lineNum = 1;
 
     this.head = new_!(Token);
-    this.head.kind = TOK.HEAD;
+    this.head.kind = T!"HEAD";
     this.head.start = this.head.end = this.p;
     this.token = this.head;
 
     // Add a newline as the first token after the head.
     auto nl_tok = new_!(Token);
-    nl_tok.kind = TOK.Newline;
+    nl_tok.kind = T!"Newline";
     nl_tok.setWhitespaceFlag();
     nl_tok.start = nl_tok.end = this.p;
     nl_tok.nlval = lookupNewline();
@@ -161,16 +163,16 @@ class Lexer
   {
     switch (t.kind)
     { // Some tokens need special handling:
-    case TOK.Newline:
+    case T!"Newline":
       setLineBegin(t.end);
       t.setWhitespaceFlag();
       t.nlval = lookupNewline();
       break;
-    case TOK.Character: // May have escape sequences.
+    case T!"Character": // May have escape sequences.
       this.p = t.start;
       scanCharacter(t);
       break;
-    case TOK.String: // Escape sequences; token strings; etc.
+    case T!"String": // Escape sequences; token strings; etc.
       this.p = t.start;
       dchar c = *cast(ushort*)p;
       switch (c)
@@ -203,7 +205,7 @@ class Lexer
       default:
       }
       break;
-    case TOK.Comment: // Just rescan for newlines.
+    case T!"Comment": // Just rescan for newlines.
       t.setWhitespaceFlag();
       if (t.isMultiline) // Mutliline tokens may have newlines.
         for (auto p = t.start, end = t.end; p < end;)
@@ -212,20 +214,20 @@ class Lexer
           else
             ++p;
       break;
-    case TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64:
+    case T!"Int32", T!"Int64", T!"UInt32", T!"UInt64":
       this.p = t.start;
       scanNumber(t); // Complicated. Let the method handle this.
       break;
-    case TOK.Float32, TOK.Float64, TOK.Float80,
-         TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
+    case T!"Float32", T!"Float64", T!"Float80",
+         T!"IFloat32", T!"IFloat64", T!"IFloat80":
       // The token is complete. What remains is to get its value.
       t.mpfloat = lookupFloat(copySansUnderscores(t.start, t.end));
       break;
-    case TOK.HashLine:
+    case T!"#line":
       this.p = t.start;
       scanSpecialTokenSequence(t); // Complicated. Let the method handle this.
       break;
-    case TOK.Shebang, TOK.Empty: // Whitespace tokens.
+    case T!"#!Shebang", T!"Empty": // Whitespace tokens.
       t.setWhitespaceFlag();
       break;
     default:
@@ -282,7 +284,7 @@ class Lexer
   /// Sets the value of the special token.
   void finalizeSpecialToken(Token* t)
   {
-    assert(t.kind == TOK.SpecialID && t.text[0..2] == "__");
+    assert(t.kind == T!"SpecialID" && t.text[0..2] == "__");
     cstring str;
     switch (t.ident.idKind)
     {
@@ -314,7 +316,7 @@ class Lexer
     case IDK.EOF:
       assert(t.text == "__EOF__");
       tail = t;
-      t.kind = TOK.EOF; // Convert to EOF token, so that the Parser will stop.
+      t.kind = T!"EOF"; // Convert to EOF token, so that the Parser will stop.
       break;
     default:
       assert(0);
@@ -485,7 +487,7 @@ class Lexer
   /// Scans the whole source text until EOF is encountered.
   void scanAll()
   {
-    while (nextToken() != TOK.EOF)
+    while (nextToken() != T!"EOF")
     {}
   }
 
@@ -496,7 +498,7 @@ class Lexer
     auto p = this.p;
     assert(*p == '#' && p[1] == '!');
     auto t = new_!(Token);
-    t.kind = TOK.Shebang;
+    t.kind = T!"#!Shebang";
     t.setWhitespaceFlag();
     t.start = p++;
     while (!isEndOfLine(++p))
@@ -517,9 +519,9 @@ class Lexer
   }
   out
   {
-    assert(text.ptr <= t.start && t.start < end, t.kindAsString());
-    assert(text.ptr <= t.end && t.end <= end, t.kindAsString());
-    assert(t.kind != TOK.Invalid);
+    assert(text.ptr <= t.start && t.start < end, t.kind.toString);
+    assert(text.ptr <= t.end && t.end <= end, t.kind.toString);
+    assert(t.kind != T!"Invalid", t.text);
   }
   body
   {
@@ -575,9 +577,9 @@ class Lexer
         auto id = tables.lookupIdentifier(t.text);
         t.kind = id.kind;
         t.ident = id;
-        assert(t.isKeyword || id.kind.In(TOK.SpecialID, TOK.Identifier));
+        assert(t.isKeyword || id.kind.In(T!"SpecialID", T!"Identifier"));
 
-        if (kind == TOK.SpecialID)
+        if (kind == T!"SpecialID")
           finalizeSpecialToken(t);
         return;
       }
@@ -589,13 +591,7 @@ class Lexer
       // Check these characters early. They are very common.
       switch (c)
       {
-      mixin(cases(
-        ",", "Comma",
-        ":", "Colon",    ";", "Semicolon",
-        "(", "LParen",   ")", "RParen",
-        "{", "LBrace",   "}", "RBrace",
-        "[", "LBracket", "]", "RBracket"
-      ));
+      mixin(cases(",", ":", ";", "(", ")", "{", "}", "[", "]"));
       default:
       }
 
@@ -604,7 +600,7 @@ class Lexer
         {
         case '=':
           ++p;
-          kind = TOK.SlashEql;
+          kind = T!"/=";
           goto Lreturn;
         case '+':
           return (this.p = p), scanNestedComment(t);
@@ -613,11 +609,11 @@ class Lexer
         case '/': // LineComment.
           while (!isEndOfLine(++p))
             isascii(*p) || decodeUTF8(p);
-          kind = TOK.Comment;
+          kind = T!"Comment";
           t.setWhitespaceFlag();
           goto Lreturn;
         default:
-          kind = TOK.Slash;
+          kind = T!"/";
           goto Lreturn;
         }
 
@@ -627,12 +623,12 @@ class Lexer
       case '=': /* =  ==  => */
         if (p[1] == '=')
           ++p,
-          kind = TOK.Equal2;
+          kind = T!"==";
         else if (p[1] == '>') // D2
           ++p,
-          kind = TOK.EqlGreater;
+          kind = T!"=>";
         else
-          kind = TOK.Equal;
+          kind = T!"=";
         goto Lcommon;
       case '\'':
         return scanCharacter(t);
@@ -651,7 +647,7 @@ class Lexer
         switch (c)
         {
         case '=':
-          kind = TOK.GreaterEql;
+          kind = T!">=";
           goto Lcommon;
         case '>':
           if (p[1] == '>')
@@ -659,18 +655,18 @@ class Lexer
             ++p;
             if (p[1] == '=')
               ++p,
-              kind = TOK.Greater3Eql;
+              kind = T!">>>=";
             else
-              kind = TOK.Greater3;
+              kind = T!">>>";
           }
           else if (p[1] == '=')
             ++p,
-            kind = TOK.Greater2Eql;
+            kind = T!">>=";
           else
-            kind = TOK.Greater2;
+            kind = T!">>";
           goto Lcommon;
         default:
-          kind = TOK.Greater;
+          kind = T!">";
           goto Lreturn;
         }
         assert(0);
@@ -679,24 +675,24 @@ class Lexer
         switch (c)
         {
         case '=':
-          kind = TOK.LessEql;
+          kind = T!"<=";
           goto Lcommon;
         case '<':
           if (p[1] == '=')
             ++p,
-            kind = TOK.Less2Eql;
+            kind = T!"<<=";
           else
-            kind = TOK.Less2;
+            kind = T!"<<";
           goto Lcommon;
         case '>':
           if (p[1] == '=')
             ++p,
-            kind = TOK.LorEorG;
+            kind = T!"<>=";
           else
-            kind = TOK.LorG;
+            kind = T!"<>";
           goto Lcommon;
         default:
-          kind = TOK.Less;
+          kind = T!"<";
           goto Lreturn;
         }
         assert(0);
@@ -709,28 +705,28 @@ class Lexer
           if (c == '>')
             if (p[1] == '=')
               ++p,
-              kind = TOK.Unordered;
+              kind = T!"!<>=";
             else
-              kind = TOK.UorE;
+              kind = T!"!<>";
           else if (c == '=')
-            kind = TOK.UorG;
+            kind = T!"!<=";
           else {
-            kind = TOK.UorGorE;
+            kind = T!"!<";
             goto Lreturn;
           }
           goto Lcommon;
         case '>':
           if (p[1] == '=')
             ++p,
-            kind = TOK.UorL;
+            kind = T!"!>=";
           else
-            kind = TOK.UorLorE;
+            kind = T!"!>";
           goto Lcommon;
         case '=':
-          kind = TOK.ExclaimEql;
+          kind = T!"!=";
           goto Lcommon;
         default:
-          kind = TOK.Exclaim;
+          kind = T!"!";
           goto Lreturn;
         }
         assert(0);
@@ -738,89 +734,89 @@ class Lexer
         if (p[1] == '.')
           if ((++p)[1] == '.')
             ++p,
-            kind = TOK.Dot3;
+            kind = T!"...";
           else
-            kind = TOK.Dot2;
+            kind = T!"..";
         else if (isdigit(p[1]))
           return (this.p = p), scanFloat(t);
         else
-          kind = TOK.Dot;
+          kind = T!".";
         goto Lcommon;
       case '|': /* |  ||  |= */
         c = *++p;
         if (c == '=')
-          kind = TOK.PipeEql;
+          kind = T!"|=";
         else if (c == '|')
-          kind = TOK.Pipe2;
+          kind = T!"||";
         else {
-          kind = TOK.Pipe;
+          kind = T!"|";
           goto Lreturn;
         }
         goto Lcommon;
       case '&': /* &  &&  &= */
         c = *++p;
         if (c == '=')
-          kind = TOK.AmpEql;
+          kind = T!"&=";
         else if (c == '&')
-          kind = TOK.Amp2;
+          kind = T!"&&";
         else {
-          kind = TOK.Amp;
+          kind = T!"&";
           goto Lreturn;
         }
         goto Lcommon;
       case '+': /* +  ++  += */
         c = *++p;
         if (c == '=')
-          kind = TOK.PlusEql;
+          kind = T!"+=";
         else if (c == '+')
-          kind = TOK.Plus2;
+          kind = T!"++";
         else {
-          kind = TOK.Plus;
+          kind = T!"+";
           goto Lreturn;
         }
         goto Lcommon;
       case '-': /* -  --  -= */
         c = *++p;
         if (c == '=')
-          kind = TOK.MinusEql;
+          kind = T!"-=";
         else if (c == '-')
-          kind = TOK.Minus2;
+          kind = T!"--";
         else {
-          kind = TOK.Minus;
+          kind = T!"-";
           goto Lreturn;
         }
         goto Lcommon;
       case '~': /* ~  ~= */
         if (p[1] == '=')
           ++p,
-          kind = TOK.TildeEql;
+          kind = T!"~=";
         else
-          kind = TOK.Tilde;
+          kind = T!"~";
         goto Lcommon;
       case '*': /* *  *= */
         if (p[1] == '=')
           ++p,
-          kind = TOK.StarEql;
+          kind = T!"*=";
         else
-          kind = TOK.Star;
+          kind = T!"*";
         goto Lcommon;
       version(D2)
       {
       case '^': /* ^  ^=  ^^  ^^= */
         if (p[1] == '=')
           ++p,
-          kind = TOK.CaretEql;
+          kind = T!"^=";
         else if (p[1] == '^')
         {
           ++p;
           if (p[1] == '=')
             ++p,
-            kind = TOK.Caret2Eql;
+            kind = T!"^^=";
           else
-            kind = TOK.Caret2;
+            kind = T!"^^";
         }
         else
-          kind = TOK.Caret;
+          kind = T!"^";
         goto Lcommon;
       } // end of version(D2)
       else
@@ -828,24 +824,20 @@ class Lexer
       case '^': /* ^  ^= */
         if (p[1] == '=')
           ++p,
-          kind = TOK.CaretEql;
+          kind = T!"^=";
         else
-          kind = TOK.Caret;
+          kind = T!"^";
         goto Lcommon;
       }
       case '%': /* %  %= */
         if (p[1] == '=')
           ++p,
-          kind = TOK.PercentEql;
+          kind = T!"%=";
         else
-          kind = TOK.Percent;
+          kind = T!"%";
         goto Lcommon;
       // Single character tokens:
-      mixin(cases(
-        "@", "At",
-        "$", "Dollar",
-        "?", "Question"
-      ));
+      mixin(cases("@","$","?"));
       case '#':
         assert(this.p == p);
         return scanSpecialTokenSequence(t);
@@ -856,7 +848,7 @@ class Lexer
       if (isEOF(c))
       {
         assert(isEOF(*p), ""~*p);
-        kind = TOK.EOF;
+        kind = T!"EOF";
         tail = t;
         assert(t.start == p);
         goto Lreturn;
@@ -871,7 +863,7 @@ class Lexer
 
       error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
-      kind = TOK.Illegal;
+      kind = T!"Illegal";
       t.setWhitespaceFlag();
       t.dchar_ = c;
       goto Lcommon;
@@ -886,41 +878,34 @@ class Lexer
 
   Lnewline:
     setLineBegin(++p);
-    t.kind = TOK.Newline;
+    t.kind = T!"Newline";
     t.setWhitespaceFlag();
     t.nlval = lookupNewline();
     t.end = this.p = p;
     return;
   }
 
-
-  /// CTF: Constructs case statements. E.g.:
+  /// Generates case statements for token strings.
   /// ---
-  //// // case_("<", "Less") ->
+  //// // case_("<") ->
   /// case 60u:
-  ///   kind = TOK.Less;
+  ///   kind = T!"<";
   ///   goto Lcommon;
   /// ---
-  static char[] case_(string str, string kind)
+  static char[] cases(string[] strs...)
   {
-    char[] label_str = "Lcommon".dup;
-    if (str.length != 1) // Append length as a suffix.
-      label_str ~= '0' + cast(char)str.length;
-    return "case toUintE(\""~str~"\"): kind = TOK."~kind~";"
-             "goto "~label_str~";\n";
-  }
-  // pragma(msg, case_("<", "Less"));
-
-  /// CTF: Maps a flat list to case_().
-  static char[] cases(string[] cs ...)
-  {
-    assert(cs.length % 2 == 0);
     char[] result;
-    for (size_t i; i < cs.length; i += 2)
-      result ~= case_(cs[i], cs[i+1]);
+    foreach (str; strs)
+    {
+      char[] label_str = "Lcommon".dup;
+      if (str.length != 1) // Append length as a suffix.
+        label_str ~= '0' + cast(char)str.length;
+      result ~= `case toUintE("`~str~`"): kind = T!"`~str~`"; `~
+                "goto "~label_str~";\n";
+    }
     return result;
   }
-  // pragma(msg, cases("<", "Less", ">", "Greater"));
+  //pragma(msg, cases("<", ">"));
 
   /// An alternative scan method.
   /// Profiling shows it's a bit slower.
@@ -931,9 +916,9 @@ class Lexer
   }
   out
   {
-    assert(text.ptr <= t.start && t.start < end, t.kindAsString());
-    assert(text.ptr <= t.end && t.end <= end, t.kindAsString());
-    assert(t.kind != TOK.Invalid, String(t.start, t.end).array);
+    assert(text.ptr <= t.start && t.start < end, t.kind.toString);
+    assert(text.ptr <= t.end && t.end <= end, t.kind.toString);
+    assert(t.kind != T!"Invalid", t.text);
   }
   body
   {
@@ -979,9 +964,9 @@ class Lexer
       auto id = tables.lookupIdentifier(t.text);
       t.kind = id.kind;
       t.ident = id;
-      assert(t.isKeyword || id.kind.In(TOK.SpecialID, TOK.Identifier));
+      assert(t.isKeyword || id.kind.In(T!"SpecialID", T!"Identifier"));
 
-      if (kind == TOK.SpecialID)
+      if (kind == T!"SpecialID")
         finalizeSpecialToken(t);
       return;
     }
@@ -997,7 +982,7 @@ class Lexer
     // 4 character tokens.
     switch (c)
     {
-    mixin(cases(">>>=", "Greater3Eql", "!<>=", "Unordered"));
+    mixin(cases(">>>=", "!<>="));
     default:
     }
 
@@ -1009,13 +994,8 @@ class Lexer
     // 3 character tokens.
     switch (c)
     {
-    mixin(cases(
-      "<<=", "Less2Eql",    ">>=", "Greater2Eql",
-      ">>>", "Greater3Eql", "...", "Dot3",
-      "!<=", "UorG",        "!>=", "UorL",
-      "!<>", "UorE",        "<>=", "LorEorG",
-      "^^=", "Caret2Eql"
-    ));
+    mixin(cases("<<=", ">>=", ">>>", "...",
+      "!<=", "!>=", "!<>", "<>=", "^^="));
     case toUintE(LS), toUintE(PS):
       p += 2;
       goto Lnewline;
@@ -1041,37 +1021,26 @@ class Lexer
       assert(*p == '/');
       while (!isEndOfLine(++p))
         isascii(*p) || decodeUTF8(p);
-      kind = TOK.Comment;
+      kind = T!"Comment";
       t.setWhitespaceFlag();
       goto Lreturn;
-    mixin(cases(
-      "<=", "LessEql",    ">=", "GreaterEql",
-      "<<", "Less2" ,     ">>", "Greater2",
-      "==", "Equal2",     "=>", "EqlGreater", "!=", "ExclaimEql",
-      "!<", "UorGorE",    "!>", "UorLorE",
-      "<>", "LorG",       "..", "Dot2",
-      "&&", "Amp2",       "&=", "AmpEql",
-      "||", "Pipe2",      "|=", "PipeEql",
-      "++", "Plus2",      "+=", "PlusEql",
-      "--", "Minus2",     "-=", "MinusEql",
-      "*=", "SlashEql",   "/=", "SlashEql",
-      "%=", "PercentEql", "^=", "CaretEql",
-      "~=", "TildeEql",   "^^", "Caret2"
-    ));
+    mixin(cases("<=", ">=", "<<", ">>", "==", "=>", "!=", "!<", "!>", "<>",
+      "..", "&&", "&=", "||", "|=", "++", "+=", "--", "-=", "*=", "/=", "%=",
+      "^=", "~=", "^^"));
     case toUintE("\r\n"):
       ++p;
       goto Lnewline;
     default:
     }
 
-    static TOK[127] char2tok = [
-      '<':TOK.Greater,   '>':TOK.Less,     '^':TOK.Caret,  '!':TOK.Exclaim,
-      '&':TOK.Amp,       '|':TOK.Pipe,     '+':TOK.Plus,   '-':TOK.Minus,
-      '=':TOK.Equal,     '~':TOK.Tilde,    '*':TOK.Star,   '/':TOK.Slash,
-      '%':TOK.Percent,   '(':TOK.LParen,   ')':TOK.RParen, '[':TOK.LBracket,
-      ']':TOK.RBracket,  '{':TOK.LBrace,   '}':TOK.RBrace, ':':TOK.Colon,
-      ';':TOK.Semicolon, '?':TOK.Question, ',':TOK.Comma,  '$':TOK.Dollar,
-      '@':TOK.At
+    static TOK[127] char2TOK = [
+      '<': T!"<", '>': T!">", '^': T!"^", '!': T!"!",
+      '&': T!"&", '|': T!"|", '+': T!"+", '-': T!"-",
+      '=': T!"=", '~': T!"~", '*': T!"*", '/': T!"/",
+      '%': T!"%", '(': T!"(", ')': T!")", '[': T!"[",
+      ']': T!"]", '{': T!"{", '}': T!"}", ':': T!":",
+      ';': T!";", '?': T!"?", ',': T!",", '$': T!"$",
+      '@': T!"@"
     ];
 
     version(BigEndian)
@@ -1082,7 +1051,7 @@ class Lexer
     assert(*p == c, Format("p={0},c={1}", *p, cast(dchar)c));
     // 1 character tokens.
     // TODO: consider storing the token type in ptable.
-    if (c < 127 && (kind = char2tok[c]) != 0)
+    if (c < 127 && (kind = char2TOK[c]) != 0)
       goto Lcommon;
 
     assert(this.p == p);
@@ -1105,7 +1074,7 @@ class Lexer
     case '.':
       if (isdigit(p[1]))
         return (this.p = p), scanFloat(t);
-      kind = TOK.Dot;
+      kind = T!".";
       ++p;
       goto Lreturn;
     case '#':
@@ -1121,7 +1090,7 @@ class Lexer
     if (isEOF(c))
     {
       assert(isEOF(*p), *p~"");
-      kind = TOK.EOF;
+      kind = T!"EOF";
       tail = t;
       assert(t.start == p);
       goto Lreturn;
@@ -1132,7 +1101,7 @@ class Lexer
 
     error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
-    kind = TOK.Illegal;
+    kind = T!"Illegal";
     t.setWhitespaceFlag();
     t.dchar_ = c;
     goto Lcommon;
@@ -1152,7 +1121,7 @@ class Lexer
 
   Lnewline:
     setLineBegin(++p);
-    kind = TOK.Newline;
+    kind = T!"Newline";
     t.setWhitespaceFlag();
     t.nlval = lookupNewline();
     t.kind = kind;
@@ -1198,7 +1167,7 @@ class Lexer
         }
       }
     }
-    t.kind = TOK.Comment;
+    t.kind = T!"Comment";
     t.setWhitespaceFlag();
     t.end = this.p = p;
     return;
@@ -1250,7 +1219,7 @@ class Lexer
         }
       }
     }
-    t.kind = TOK.Comment;
+    t.kind = T!"Comment";
     t.setWhitespaceFlag();
     t.end = this.p = p;
     return;
@@ -1285,7 +1254,7 @@ class Lexer
     assert(*p == '"');
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
-    t.kind = TOK.String;
+    t.kind = T!"String";
     char[] value;
     auto prev = ++p; // Skip '"'. prev is used to copy chunks to value.
     uint c;
@@ -1357,7 +1326,7 @@ class Lexer
         encodeUTF8(value, c);
     } while (*p == '\\');
     t.strval = lookupString(value, 0);
-    t.kind = TOK.String;
+    t.kind = T!"String";
     t.end = p;
   }
 
@@ -1368,7 +1337,7 @@ class Lexer
   {
     assert(*p == '\'');
     ++p;
-    t.kind = TOK.Character;
+    t.kind = T!"Character";
     switch (*p)
     {
     case '\\':
@@ -1404,7 +1373,7 @@ class Lexer
     assert(*p == '`' || *p == '"' && p[-1] == 'r');
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
-    t.kind = TOK.String;
+    t.kind = T!"String";
     uint delim = *p;
     char[] value;
     uint c;
@@ -1459,7 +1428,7 @@ class Lexer
   {
     auto p = this.p;
     assert(p[0] == 'x' && p[1] == '"');
-    t.kind = TOK.String;
+    t.kind = T!"String";
 
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
@@ -1543,7 +1512,7 @@ class Lexer
   {
     auto p = this.p;
     assert(p[0] == 'q' && p[1] == '"');
-    t.kind = TOK.String;
+    t.kind = T!"String";
 
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
@@ -1707,7 +1676,7 @@ class Lexer
   version(D2)
   {
     assert(p[0] == 'q' && p[1] == '{');
-    t.kind = TOK.String;
+    t.kind = T!"String";
 
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
@@ -1738,10 +1707,10 @@ class Lexer
       prev_t = new_t;
       switch (new_t.kind)
       {
-      case TOK.LBrace:
+      case T!"{":
         ++level;
         break;
-      case TOK.RBrace:
+      case T!"}":
         if (--level == 0)
         {
           inner_tokens = t.next;
@@ -1749,15 +1718,15 @@ class Lexer
           break Loop;
         }
         break;
-      case TOK.String, TOK.Comment:
+      case T!"String", T!"Comment":
         if (new_t.isMultiline())
           convertNewlines = true;
         break;
-      case TOK.Newline:
+      case T!"Newline":
         if (*new_t.start != '\n')
           convertNewlines = true;
         break;
-      case TOK.EOF:
+      case T!"EOF":
         error(tokenLineNum, tokenLineBegin, t.start,
           MID.UnterminatedTokenString);
         inner_tokens = t.next;
@@ -1766,13 +1735,13 @@ class Lexer
       default:
       }
     }
-    assert(new_t.kind == TOK.RBrace || new_t.kind == TOK.EOF);
-    assert(new_t.kind == TOK.RBrace && t.next is null ||
-           new_t.kind == TOK.EOF && t.next !is null);
+    assert(new_t.kind == T!"}" || new_t.kind == T!"EOF");
+    assert(new_t.kind == T!"}" && t.next is null ||
+           new_t.kind == T!"EOF" && t.next !is null);
 
     char postfix;
     // new_t is "}" or EOF.
-    if (new_t.kind == TOK.EOF)
+    if (new_t.kind == T!"EOF")
       str_end = t.end = new_t.start;
     else
     {
@@ -2238,40 +2207,40 @@ class Lexer
       {
         if (isDecimal)
           error(t.start, MID.OverflowDecimalSign);
-        kind = TOK.UInt64;
+        kind = T!"UInt64";
       }
       else if (ulong_ & 0xFFFF_FFFF_0000_0000)
-        kind = TOK.Int64;
+        kind = T!"Int64";
       else if (ulong_ & 0x8000_0000)
-        kind = isDecimal ? TOK.Int64 : TOK.UInt32;
+        kind = isDecimal ? T!"Int64" : T!"UInt32";
       else
-        kind = TOK.Int32;
+        kind = T!"Int32";
       break;
     case Suffix.Unsigned:
       if (ulong_ & 0xFFFF_FFFF_0000_0000)
-        kind = TOK.UInt64;
+        kind = T!"UInt64";
       else
-        kind = TOK.UInt32;
+        kind = T!"UInt32";
       break;
     case Suffix.Long:
       if (ulong_ & 0x8000_0000_0000_0000)
       {
         if (isDecimal)
           error(t.start, MID.OverflowDecimalSign);
-        kind = TOK.UInt64;
+        kind = T!"UInt64";
       }
       else
-        kind = TOK.Int64;
+        kind = T!"Int64";
       break;
     case Suffix.Unsigned | Suffix.Long:
-      kind = TOK.UInt64;
+      kind = T!"UInt64";
       break;
     default:
       assert(0);
     }
 
     t.kind = kind;
-    if (kind == TOK.Int64 || kind == TOK.UInt64)
+    if (kind == T!"Int64" || kind == T!"UInt64")
     {
       version(X86_64)
       t.intval.ulong_ = ulong_;
@@ -2385,7 +2354,7 @@ class Lexer
     finalizeFloat(t, copySansUnderscores(t.start, p));
     return;
   Lerr:
-    t.kind = TOK.Float32;
+    t.kind = T!"Float32";
     t.end = this.p = p;
     error(p, mid);
   }
@@ -2401,18 +2370,18 @@ class Lexer
     // Finally check suffixes.
     TOK kind = void;
     if (*p == 'f' || *p == 'F')
-      ++p, kind = TOK.Float32;
+      ++p, kind = T!"Float32";
     else if (*p == 'L')
-      ++p, kind = TOK.Float80;
+      ++p, kind = T!"Float80";
     else
-      kind = TOK.Float64;
+      kind = T!"Float64";
 
     if (*p == 'i')
     {
       ++p;
       kind += 3; // Switch to imaginary counterpart.
-      assert(kind == TOK.IFloat32 || kind == TOK.IFloat64 ||
-             kind == TOK.IFloat80);
+      assert(kind == T!"IFloat32" || kind == T!"IFloat64" ||
+             kind == T!"IFloat80");
     }
     // TODO: test for overflow/underflow according to target platform.
     //       CompilationContext must be passed to Lexer for this.
@@ -2476,7 +2445,7 @@ class Lexer
         this.p = p;
         scan(newtok);
         tokenEnd = p = this.p;
-        if (newtok.kind != TOK.Int32 && newtok.kind != TOK.UInt32)
+        if (newtok.kind != T!"Int32" && newtok.kind != T!"UInt32")
         {
           errorAtColumn = newtok.start;
           mid = MID.ExpectedIntegerAfterSTLine;
@@ -2489,7 +2458,7 @@ class Lexer
       {
         auto fs = hlval.filespec = new_!(Token);
         fs.start = p;
-        fs.kind = TOK.Filespec;
+        fs.kind = T!"Filespec";
         fs.setWhitespaceFlag();
         // Skip until closing '"'.
         while (*++p != '"' && !isEndOfLine(p))
@@ -2556,12 +2525,12 @@ class Lexer
   Token* insertEmptyTokenBefore(Token* t)
   {
     assert(t !is null && t.prev !is null);
-    assert(text.ptr <= t.start && t.start < end, Token.toString(t.kind));
-    assert(text.ptr <= t.end && t.end <= end, Token.toString(t.kind));
+    assert(text.ptr <= t.start && t.start < end, t.kind.toString);
+    assert(text.ptr <= t.end && t.end <= end, t.kind.toString);
 
     auto prev_t = t.prev;
     auto new_t = new_!(Token);
-    new_t.kind = TOK.Empty;
+    new_t.kind = T!"Empty";
     new_t.start = new_t.end = prev_t.end;
     // Link in new token.
     prev_t.next = new_t;

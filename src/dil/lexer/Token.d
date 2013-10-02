@@ -174,18 +174,6 @@ struct Token
     return text();
   }
 
-  /// Returns the string for a token kind.
-  static string toString(TOK kind)
-  {
-    return tokToString[kind];
-  }
-
-  /// Returns the kind of this token as a string.
-  string kindAsString()
-  {
-    return tokToString[kind];
-  }
-
   /// Adds Flags.Whitespace to this.flags.
   void setWhitespaceFlag()
   {

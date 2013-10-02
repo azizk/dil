@@ -87,7 +87,7 @@ class StatsCommand : Command
       Stdout.formatln(" {,10} | {}", "Count", "Token kind");
       Stdout("-----------------------------").newline;
       foreach (i, count; total.tokensTable)
-        Stdout.formatln(" {,10} | {}", count, Token.toString(cast(TOK)i));
+        Stdout.formatln(" {,10} | {}", count, (cast(TOK)i).toString);
       Stdout("// End of tokens table.").newline;
     }
 

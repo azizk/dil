@@ -8,15 +8,16 @@ import common;
 /// Enumeration of token kinds.
 enum TOK : ushort
 {
-  Invalid,
+  Invalid, /// Unitialized token.
 
-  Illegal,
-  Comment,
-  Shebang,
-  HashLine,
-  Filespec,
-  Newline,
-  Empty,
+  Illegal,  /// Unrecognized characters.
+  Comment,  /// // /**/ /++/
+  Shebang,  /// #!/bin/something
+  HashLine, /// #line
+  Filespec, /// "new/path"
+  Newline,  /// \n
+  Empty,    /// Special token with empty text.
+  // End of whitespace tokens.
 
   Identifier,
   String,
@@ -78,24 +79,17 @@ enum TOK : ushort
   Dollar,
   At,
 
-  /* Keywords:
-     NB.: Token.isKeyword() depends on this list being contiguous.
-  */
-  Abstract, Alias, Align, Asm, Assert, Auto, Body,
-  Break, Case, Cast, Catch,
-  Class, Const, Continue,
-  Debug, Default, Delegate, Delete, Deprecated, Do,
-  Else, Enum, Export, Extern, False, Final,
-  Finally, For, Foreach, ForeachReverse, Function, Goto, Gshared/+D2.0+/,
-  If, Immutable/+D2.0+/, Import, In, Inout,
-  Interface, Invariant, Is, Lazy, Macro/+D2.0+/,
-  Mixin, Module, New, Nothrow/+D2.0+/, Null,
-  Out, OverloadSet/+D2.0+/, Override, Package, Parameters,
-  Pragma, Private, Protected, Public, Pure/+D2.0+/, Ref, Return,
-  Shared/+D2.0+/, Scope, Static, Struct, Super, Switch, Synchronized,
-  Template, This, Throw, Traits/+D2.0+/, True, Try, Typedef, Typeid,
-  Typeof, Union, Unittest, Vector/*D2.0*/,
-  Version, Volatile, While, With,
+  /// Keywords:
+  /// NB.: Token.isKeyword() depends on this list being contiguous.
+  Abstract, Alias, Align, Asm, Assert, Auto, Body, Break, Case, Cast, Catch,
+  Class, Const, Continue, Debug, Default, Delegate, Delete, Deprecated, Do,
+  Else, Enum, Export, Extern, False, Final, Finally, For, Foreach,
+  ForeachReverse, Function, Goto, Gshared, If, Immutable, Import, In, Inout,
+  Interface, Invariant, Is, Lazy, Macro, Mixin, Module, New, Nothrow, Null,
+  Out, OverloadSet, Override, Package, Parameters, Pragma, Private, Protected,
+  Public, Pure, Ref, Return, Shared, Scope, Static, Struct, Super, Switch,
+  Synchronized, Template, This, Throw, Traits, True, Try, Typedef, Typeid,
+  Typeof, Union, Unittest, Vector, Version, Volatile, While, With,
   // Integral types.
   Char,   Wchar,   Dchar, Bool,
   Byte,   Ubyte,   Short, Ushort,
@@ -125,9 +119,9 @@ immutable string[TOK.MAX] tokToString = [
 
   "Illegal",
   "Comment",
-  "#! /shebang/",
+  "#!Shebang",
   "#line",
-  `"filespec"`,
+  "Filespec",
   "Newline",
   "Empty",
 
