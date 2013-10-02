@@ -401,14 +401,14 @@ override
 
   D visit(InvariantDecl d)
   {
-    auto func = new FunctionSymbol(Ident.Invariant, SLoc(d.begin, d));
+    auto func = new FunctionSymbol(Ident.InvariantFn, SLoc(d.begin, d));
     insert(func);
     return d;
   }
 
   D visit(UnittestDecl d)
   {
-    auto func = new FunctionSymbol(Ident.Unittest, SLoc(d.begin, d));
+    auto func = new FunctionSymbol(Ident.UnittestFn, SLoc(d.begin, d));
     insertOverload(func);
     return d;
   }
@@ -470,14 +470,14 @@ override
 
   D visit(NewDecl d)
   {
-    auto func = new FunctionSymbol(Ident.New, SLoc(d.begin, d));
+    auto func = new FunctionSymbol(Ident.NewFn, SLoc(d.begin, d));
     insert(func);
     return d;
   }
 
   D visit(DeleteDecl d)
   {
-    auto func = new FunctionSymbol(Ident.Delete, SLoc(d.begin, d));
+    auto func = new FunctionSymbol(Ident.DeleteFn, SLoc(d.begin, d));
     insert(func);
     return d;
   }

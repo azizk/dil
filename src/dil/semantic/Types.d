@@ -6,7 +6,6 @@ module dil.semantic.Types;
 import dil.semantic.Symbol,
        dil.semantic.TypesEnum;
 import dil.lexer.Identifier,
-       dil.lexer.Keywords,
        dil.lexer.IdTable,
        dil.lexer.TokensEnum;
 import dil.Enums,

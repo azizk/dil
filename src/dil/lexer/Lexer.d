@@ -5,8 +5,8 @@ module dil.lexer.Lexer;
 
 import dil.lexer.Token,
        dil.lexer.Funcs,
-       dil.lexer.Keywords,
        dil.lexer.Identifier,
+       dil.lexer.IDsEnum,
        dil.lexer.TokenSerializer,
        dil.lexer.Tables;
 import dil.i18n.Messages;
@@ -282,34 +282,39 @@ class Lexer
   /// Sets the value of the special token.
   void finalizeSpecialToken(Token* t)
   {
-    assert(t.text[0..2] == "__");
+    assert(t.kind == TOK.SpecialID && t.text[0..2] == "__");
     cstring str;
-    switch (t.kind)
+    switch (t.ident.idKind)
     {
-    case TOK.FILE:
+    case IDK.FILE:
       str = errorFilePath();
       break;
-    case TOK.LINE:
+    case IDK.LINE:
       t.uint_ = this.errorLineNumber(this.lineNum);
       break;
-    case TOK.DATE, TOK.TIME, TOK.TIMESTAMP:
+    case IDK.DATE, IDK.TIME, IDK.TIMESTAMP:
       str = Time.now();
       switch (t.kind)
       {
-      case TOK.DATE:
+      case IDK.DATE:
         str = Time.month_day(str) ~ ' ' ~ Time.year(str); break;
-      case TOK.TIME:
+      case IDK.TIME:
         str = Time.time(str); break;
-      case TOK.TIMESTAMP:
+      case IDK.TIMESTAMP:
         break; // str is the timestamp.
       default: assert(0);
       }
       break;
-    case TOK.VENDOR:
+    case IDK.VENDOR:
       str = VENDOR;
       break;
-    case TOK.VERSION:
+    case IDK.VERSION:
       t.uint_ = VERSION_MAJOR*1000 + VERSION_MINOR;
+      break;
+    case IDK.EOF:
+      assert(t.text == "__EOF__");
+      tail = t;
+      t.kind = TOK.EOF; // Convert to EOF token, so that the Parser will stop.
       break;
     default:
       assert(0);
@@ -568,20 +573,12 @@ class Lexer
         t.end = this.p = p;
 
         auto id = tables.lookupIdentifier(t.text);
-        t.kind = kind = id.kind;
+        t.kind = id.kind;
         t.ident = id;
+        assert(t.isKeyword || id.kind.In(TOK.SpecialID, TOK.Identifier));
 
-        if (kind == TOK.Identifier || t.isKeyword)
-          return;
-        else if (t.isSpecialToken)
+        if (kind == TOK.SpecialID)
           finalizeSpecialToken(t);
-        else if (kind == TOK.EOF)
-        {
-          tail = t;
-          assert(t.text == "__EOF__");
-        }
-        else
-          assert(0, "unexpected token type: " ~ Token.toString(kind));
         return;
       }
 
@@ -980,20 +977,12 @@ class Lexer
       t.end = this.p = p;
 
       auto id = tables.lookupIdentifier(t.text);
-      t.kind = kind = id.kind;
+      t.kind = id.kind;
       t.ident = id;
+      assert(t.isKeyword || id.kind.In(TOK.SpecialID, TOK.Identifier));
 
-      if (kind == TOK.Identifier || t.isKeyword)
-        return;
-      else if (t.isSpecialToken)
+      if (kind == TOK.SpecialID)
         finalizeSpecialToken(t);
-      else if (kind == TOK.EOF)
-      {
-        tail = t;
-        assert(t.text == "__EOF__");
-      }
-      else
-        assert(0, "unexpected token type: " ~ Token.toString(kind));
       return;
     }
 

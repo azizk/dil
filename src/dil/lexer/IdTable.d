@@ -4,29 +4,17 @@
 module dil.lexer.IdTable;
 
 import dil.lexer.TokensEnum,
-       dil.lexer.IdentsGenerator,
-       dil.lexer.Keywords,
        dil.lexer.Funcs;
 import dil.Unicode,
        dil.String;
 import common;
 
 public import dil.lexer.Identifier,
-              dil.lexer.IdentsEnum;
+              dil.lexer.IDs,
+              dil.lexer.IDsEnum;
 
-/// A namespace for the predefined identifiers.
-struct Ident
-{
-static:
-  alias list = predefIdents;
-  mixin(generatePredefinedIdentMembers());
 
-  /// Returns true for assembler jump opcode identifiers.
-  bool isJumpOpcode(IDK kind)
-  {
-    return IDK.ja <= kind && kind <= IDK.jz;
-  }
-}
+
 
 /// A table for hoarding and retrieving identifiers.
 class IdTable
@@ -49,10 +37,8 @@ class IdTable
 
     if (staticTable is null) // Initialize global static table?
     {
-      foreach (kw; Keyword.allIds())
-        staticTable[hashOf(kw.str)] = kw;
-      foreach (id; Ident.allIds())
-        staticTable[hashOf(id.str)] = id;
+      foreach (ref id; IDs.getAllIDs())
+        staticTable[hashOf(id.str)] = &id;
       staticTable.rehash;
     }
   }

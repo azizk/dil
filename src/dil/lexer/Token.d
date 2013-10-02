@@ -223,7 +223,7 @@ struct Token
   /// Returns true if this is a special token.
   bool isSpecialToken()
   {
-    return SpecialTokensBegin <= kind && kind <= SpecialTokensEnd;
+    return kind == TOK.SpecialID;
   }
 
 version(D2)
@@ -396,7 +396,7 @@ bool isStatementStartToken(TOK tok)
   }
   default:
     if (IntegralTypeBegin <= tok && tok <= IntegralTypeEnd ||
-        SpecialTokensBegin <= tok && tok <= SpecialTokensEnd)
+        tok == T.SpecialID)
       return true;
   }
   return false;
@@ -428,7 +428,7 @@ Token* toToken(TOK kind)
 /// Initializes staticTokens.
 static this()
 {
-  import dil.lexer.Keywords, dil.lexer.IdTable;
+  import dil.lexer.IDs;
 
   foreach (i, ref t; staticTokens)
   {
@@ -440,7 +440,8 @@ static this()
   }
 
   /// Set the ident member of the keyword tokens and the one Identifier token.
-  foreach (i, kw; Keyword.allIds())
-    kw.kind.toToken().ident = kw;
-  TOK.Identifier.toToken().ident = Ident.Identifier_;
+  foreach (ref kw; IDs.getKeywordIDs())
+    kw.kind.toToken().ident = &kw;
+  TOK.Identifier.toToken().ident = &IDs.Identifier_;
+  TOK.SpecialID.toToken().ident = &IDs.SpecialID;
 }

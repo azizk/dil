@@ -13,8 +13,7 @@ import dil.ast.DefaultVisitor,
        dil.ast.Statements,
        dil.ast.Types,
        dil.ast.Parameters;
-import dil.lexer.IdTable,
-       dil.lexer.Keywords;
+import dil.lexer.IdTable;
 import dil.parser.Parser;
 import dil.semantic.Symbol,
        dil.semantic.Symbols,
@@ -538,7 +537,7 @@ override
 
   void visit(InvariantDecl d)
   {
-    auto func = new FunctionSymbol(Ident.Invariant, SLoc(d.begin, d));
+    auto func = new FunctionSymbol(Ident.InvariantFn, SLoc(d.begin, d));
     insert(func);
     enterScope(func);
     visitN(d.funcBody);
@@ -550,7 +549,7 @@ override
     if (!modul.cc.unittestBuild)
       return;
     // TODO: generate anonymous unittest id?
-    auto func = new FunctionSymbol(Ident.Unittest, SLoc(d.begin, d));
+    auto func = new FunctionSymbol(Ident.UnittestFn, SLoc(d.begin, d));
     func.type = Types.Void_0Args_DFunc;
     insertOverload(func);
     enterScope(func);
@@ -618,7 +617,7 @@ override
 
   void visit(NewDecl d)
   {
-    auto func = new FunctionSymbol(Ident.New, SLoc(d.begin, d));
+    auto func = new FunctionSymbol(Ident.NewFn, SLoc(d.begin, d));
     insert(func);
     enterScope(func);
     visitN(d.funcBody);
@@ -627,7 +626,7 @@ override
 
   void visit(DeleteDecl d)
   {
-    auto func = new FunctionSymbol(Ident.Delete, SLoc(d.begin, d));
+    auto func = new FunctionSymbol(Ident.DeleteFn, SLoc(d.begin, d));
     insert(func);
     enterScope(func);
     visitN(d.funcBody);
@@ -1662,12 +1661,12 @@ override
   {
     if (e.isChecked)
       return e.value;
-    switch (e.specialToken.kind)
+    switch (e.specialToken.ident.idKind)
     {
-    case TOK.LINE, TOK.VERSION:
+    case IDK.LINE, IDK.VERSION:
       e.value = new IntExpr(e.specialToken.uint_, Types.UInt32);
       break;
-    case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
+    case IDK.FILE, IDK.DATE, IDK.TIME, IDK.TIMESTAMP, IDK.VENDOR:
       e.value = new StringExpr(e.specialToken.strval.str);
       break;
     default:

@@ -7,8 +7,7 @@ import dil.ast.Expression;
 import dil.semantic.Symbol,
        dil.semantic.SymbolTable,
        dil.semantic.Types;
-import dil.lexer.IdTable,
-       dil.lexer.Keywords;
+import dil.lexer.IdTable;
 import dil.Enums,
        dil.String;
 import common;

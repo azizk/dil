@@ -22,14 +22,7 @@ enum TOK : ushort
   String,
   Character,
 
-  // Special tokens
-  FILE,
-  LINE,
-  DATE,
-  TIME,
-  TIMESTAMP,
-  VENDOR,
-  VERSION,
+  SpecialID, /// __FILE__, __LINE__ etc.
 
   // Number literals
   Int32, Int64, UInt32, UInt64,
@@ -37,7 +30,6 @@ enum TOK : ushort
   // FloatXY + 3 == IFloatXY
   Float32, Float64, Float80,
   IFloat32, IFloat64, IFloat80,
-
 
   // Brackets
   LParen,
@@ -98,7 +90,7 @@ enum TOK : ushort
   If, Immutable/+D2.0+/, Import, In, Inout,
   Interface, Invariant, Is, Lazy, Macro/+D2.0+/,
   Mixin, Module, New, Nothrow/+D2.0+/, Null,
-  Out, OverloadSet/+D2.0+/, Override, Package,
+  Out, OverloadSet/+D2.0+/, Override, Package, Parameters,
   Pragma, Private, Protected, Public, Pure/+D2.0+/, Ref, Return,
   Shared/+D2.0+/, Scope, Static, Struct, Super, Switch, Synchronized,
   Template, This, Throw, Traits/+D2.0+/, True, Try, Typedef, Typeid,
@@ -115,15 +107,17 @@ enum TOK : ushort
 
   HEAD, // start of linked list
   EOF,
-  MAX
+  MAX,
+
+  // Some aliases for automatic code generation.
+  Overloadset = OverloadSet,
+  Foreach_reverse = ForeachReverse,
 }
 
 alias KeywordsBegin = TOK.Abstract;
 alias KeywordsEnd = TOK.Void;
 alias IntegralTypeBegin = TOK.Char;
 alias IntegralTypeEnd = TOK.Void;
-alias SpecialTokensBegin = TOK.FILE;
-alias SpecialTokensEnd = TOK.VERSION;
 
 /// A table that maps each token kind to a string.
 immutable string[TOK.MAX] tokToString = [
@@ -140,14 +134,7 @@ immutable string[TOK.MAX] tokToString = [
   "Identifier",
   "String",
   "Character",
-
-  "__FILE__",
-  "__LINE__",
-  "__DATE__",
-  "__TIME__",
-  "__TIMESTAMP__",
-  "__VENDOR__",
-  "__VERSION__",
+  "SpecialID",
 
   "Int32", "Int64", "UInt32", "UInt64",
   "Float32", "Float64", "Float80",
@@ -205,7 +192,7 @@ immutable string[TOK.MAX] tokToString = [
   "if","immutable","import","in","inout",
   "interface","invariant","is","lazy","macro",
   "mixin","module","new","nothrow","null",
-  "out","__overloadset","override","package",
+  "out","__overloadset","override","package","__parameters",
   "pragma","private","protected","public","pure","ref","return",
   "shared","scope","static","struct","super","switch","synchronized",
   "template","this","throw","__traits","true","try","typedef",

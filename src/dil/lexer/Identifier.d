@@ -4,7 +4,7 @@
 module dil.lexer.Identifier;
 
 import dil.lexer.TokensEnum,
-       dil.lexer.IdentsEnum;
+       dil.lexer.IDsEnum;
 import dil.String;
 import common;
 
@@ -17,23 +17,17 @@ import common;
 ////    Letter := UniAlpha
 ////)
 /// See_Also:
-///  Unicode alphas are defined in Unicode 5.0.0.
+///  Unicode alphas as defined in Unicode 5.0.0.
 align(1)
 struct Identifier_
 {
   string str; /// The UTF-8 string of the identifier.
-  TOK kind;   /// The token kind. Either TOK.Identifier or TOK.{KEYWORD}.
+  TOK kind;   /// The token kind. Can be TOK.{KEYWORD, SpecialID, Identifier}.
   IDK idKind; /// Only for predefined identifiers.
 
-inout:
+immutable:
   /// Constructs an Identifier.
-  this(string str, TOK kind)
-  {
-    this.str = str;
-    this.kind = kind;
-  }
-  /// ditto
-  this(string str, TOK kind, IDK idKind)
+  this(string str, TOK kind, IDK idKind = IDK.init)
   {
     this.str = str;
     this.kind = kind;

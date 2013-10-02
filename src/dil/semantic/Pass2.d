@@ -17,7 +17,8 @@ import dil.semantic.Symbol,
        dil.semantic.Module,
        dil.semantic.Analysis;
 import dil.code.Interpreter;
-import dil.lexer.Identifier;
+import dil.lexer.Identifier,
+       dil.lexer.IDsEnum;
 import dil.parser.Parser;
 import dil.i18n.Messages;
 import dil.SourceText,
@@ -287,12 +288,12 @@ override
   {
     if (e.type)
       return e.value;
-    switch (e.specialToken.kind)
+    switch (e.specialToken.ident.idKind)
     {
-    case TOK.LINE, TOK.VERSION:
+    case IDK.LINE, IDK.VERSION:
       e.value = new IntExpr(e.specialToken.uint_, Types.UInt32);
       break;
-    case TOK.FILE, TOK.DATE, TOK.TIME, TOK.TIMESTAMP, TOK.VENDOR:
+    case IDK.FILE, IDK.DATE, IDK.TIME, IDK.TIMESTAMP, IDK.VENDOR:
       e.value = new StringExpr(e.specialToken.strval.str);
       break;
     default:
