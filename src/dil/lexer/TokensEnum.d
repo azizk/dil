@@ -17,7 +17,7 @@ enum TOK : ushort
   Filespec, /// "new/path"
   Newline,  /// \n
   Empty,    /// Special token with empty text.
-  // End of whitespace tokens.
+  LastWhitespace = Empty, /// End of whitespace tokens.
 
   Identifier,
   String,

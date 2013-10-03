@@ -27,15 +27,8 @@ public import dil.lexer.TokensEnum;
 ///   Token = $(SYMLINK Token.$1, $2)
 ///   Identifier = $(SYMLINK2 dil.lexer.Identifier, Identifier)
 struct Token
-{ /// Flags set by the Lexer.
-  enum Flags : ushort
-  {
-    None, /// No flags set.
-    Whitespace = 1, /// Tokens with this flag are ignored by the Parser.
-  }
-
+{
   TOK kind; /// The token kind.
-  Flags flags; /// The flags of the token.
   /// Pointers to the next and previous tokens (doubly-linked list.)
   Token* next, prev;
 
@@ -177,7 +170,7 @@ struct Token
   /// Adds Flags.Whitespace to this.flags.
   void setWhitespaceFlag()
   {
-    this.flags |= Flags.Whitespace;
+    assert(isWhitespace);
   }
 
   /// Returns true if this is a token that can have newlines in it.
@@ -204,8 +197,8 @@ struct Token
 
   /// Returns true if this is a whitespace token.
   bool isWhitespace()
-  {
-    return !!(flags & Flags.Whitespace);
+  { // Tokens from TOK.init to TOK.LastWhitespace are whitespace.
+    return kind <= TOK.LastWhitespace;
   }
 
   /// Returns true if this is a special token.
