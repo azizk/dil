@@ -120,7 +120,7 @@ bool In(X, Xs...)(X x, Xs xs)
     foreach (x_; xs)
       if (x == x_)
         return true;
-  return true;
+  return false;
 }
 
 void testSet()
