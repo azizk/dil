@@ -730,7 +730,7 @@ class Parser
     switch (token.kind)
     {
     case T!"[":
-      if (!tokenAfterBracket(T!"}").Any!(",", "]", "}", ";"))
+      if (!tokenAfterBracket(T!"]").Any!(",", "]", "}", ";"))
         goto default; // Parse as an AssignExpr.
       // ArrayInitializer := "[" ArrayInitElements? "]"
       Expression[] keys, values;
