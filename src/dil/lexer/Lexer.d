@@ -337,9 +337,9 @@ class Lexer
   bool isNewlineEnd(cchar* p)
   {
     assert(p >= text.ptr && p < end);
-    if (*p == '\n' || *p == '\r')
+    if ((*p).In('\n', '\r'))
       return true;
-    if (*p == LS[2] || *p == PS[2])
+    if ((*p).In(LS[2], PS[2]))
       if ((p-2) >= text.ptr)
         if (p[-1] == LS[1] && p[-2] == LS[0])
           return true;
@@ -1230,15 +1230,10 @@ class Lexer
   /// $(BNF PostfixChar := "c" | "w" | "d")
   static char scanPostfix(ref cchar* p)
   {
-    assert(p[-1] == '"' || p[-1] == '`' ||
-      { version(D2) return p[-1] == '}';
-               else return 0; }()
-    );
+    assert(p[-1].In('"', '`', '}'));
     switch (*p)
     {
-    case 'c':
-    case 'w':
-    case 'd':
+    case 'c', 'w', 'd':
       return *p++;
     default:
     }
@@ -1370,7 +1365,7 @@ class Lexer
   void scanRawString(Token* t)
   {
     auto p = this.p;
-    assert(*p == '`' || *p == '"' && p[-1] == 'r');
+    assert(*p == '`' || (*p == '"' && p[-1] == 'r'));
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
     t.kind = T!"String";
@@ -1412,7 +1407,7 @@ class Lexer
       assert(isascii(c));
       value ~= c;
     }
-    assert(*p == '"' || *p == '`');
+    assert((*p).In('"', '`'));
     ++p;
     t.strval = lookupString(value, scanPostfix(p));
   Lerr:
@@ -1427,7 +1422,7 @@ class Lexer
   void scanHexString(Token* t)
   {
     auto p = this.p;
-    assert(p[0] == 'x' && p[1] == '"');
+    assert(p[0..2] == `x"`);
     t.kind = T!"String";
 
     auto tokenLineNum = lineNum;
@@ -1830,8 +1825,7 @@ class Lexer
       isBinary = true;
       digits = 2;
     case_Unicode:
-      assert(c == 0);
-      assert(digits == 2 || digits == 4 || digits == 8);
+      assert(c == 0 && digits.In(2, 4, 8));
       while (1)
       {
         ++p;
@@ -2042,7 +2036,7 @@ class Lexer
 
   LscanHex:
     assert(digits == 0);
-    assert(*p == 'x' || *p == 'X');
+    assert((*p).In('x', 'X'));
     while (1)
     {
       if (*++p == '_')
@@ -2057,8 +2051,7 @@ class Lexer
         ulong_ += (*p|0x20) - 87; // ('a'-10) = 87
     }
 
-    assert(ishexa_(p[-1]) || p[-1] == 'x' || p[-1] == 'X');
-    assert(!ishexa_(*p));
+    assert((ishexa_(p[-1]) || p[-1].In('x', 'X')) && !ishexa_(*p));
 
     switch (*p)
     {
@@ -2079,7 +2072,7 @@ class Lexer
 
   LscanBinary:
     assert(digits == 0);
-    assert(*p == 'b' || *p == 'B');
+    assert((*p).In('b', 'B'));
     while (1)
     {
       if (*++p == '0')
@@ -2103,9 +2096,8 @@ class Lexer
       error(t.start,
         digits == 0 ? MID.NoDigitsInBinNumber : MID.OverflowBinaryNumber);
 
-    assert(p[-1] == '0' || p[-1] == '1' || p[-1] == '_' ||
-           p[-1] == 'b' || p[-1] == 'B', p[-1] ~ "");
-    assert( !(*p == '0' || *p == '1' || *p == '_') );
+    assert(p[-1].In('0', '1', '_', 'b', 'B'), p[-1] ~ "");
+    assert(!(*p).In('0', '1', '_'));
     goto Lfinalize;
 
   LscanOctal:
@@ -2329,7 +2321,7 @@ class Lexer
   void scanHexFloat(Token* t)
   {
     auto p = this.p;
-    assert(*p == '.' || *p == 'p' || *p == 'P');
+    assert((*p).In('.', 'p', 'P'));
     MID mid = MID.HexFloatExponentRequired;
     if (*p == '.')
       while (ishexa_(*++p))
@@ -2338,7 +2330,7 @@ class Lexer
     if (*p != 'p' && *p != 'P')
       goto Lerr;
     // Scan exponent
-    assert(*p == 'p' || *p == 'P');
+    assert((*p).In('p', 'P'));
     ++p;
     if (*p == '+' || *p == '-')
       ++p;
@@ -2380,8 +2372,7 @@ class Lexer
     {
       ++p;
       kind += 3; // Switch to imaginary counterpart.
-      assert(kind == T!"IFloat32" || kind == T!"IFloat64" ||
-             kind == T!"IFloat80");
+      assert(kind.In(T!"IFloat32", T!"IFloat64", T!"IFloat80"));
     }
     // TODO: test for overflow/underflow according to target platform.
     //       CompilationContext must be passed to Lexer for this.
