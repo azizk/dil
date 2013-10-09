@@ -137,4 +137,6 @@ void testSet()
   assert(1 in Set(1,2,3));
   assert("unittest".In("xyz", "", cast(cstring)null, "unittest"));
   assert("unittest" in Set("xyz", "", cast(cstring)null, "unittest"));
+  assert(!'x'.In('y', 'z'));
+  assert('x' !in Set('y', 'z'));
 }
