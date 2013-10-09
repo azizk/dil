@@ -17,7 +17,8 @@ import dil.i18n.Messages,
 import dil.Diagnostics,
        dil.Compilation,
        dil.Unicode,
-       dil.String;
+       dil.String,
+       dil.Array;
 import util.Path;
 import Settings,
        common;
@@ -350,9 +351,9 @@ cstring resolvePath(cstring execPath, cstring filePath)
 }
 
 extern(Windows) uint GetModuleFileNameW(void*, wchar*, uint);
-extern(C) size_t readlink(char* path, char* buf, size_t bufsize);
-extern(C) char* realpath(char* base, char* dest);
+extern(C) size_t readlink(const char* path, char* buf, size_t bufsize);
 extern(C) int _NSGetExecutablePath(char* buf, uint* bufsize);
+extern(C) char* realpath(char* base, char* dest);
 
 /// Returns the fully qualified path to this executable,
 /// or arg0 on failure or when a platform is unsupported.
@@ -383,20 +384,20 @@ cstring GetExecutableFilePath(cstring arg0)
 
   else version(linux)
   {
-  char[] buffer = new char[256];
+  auto buffer = Array(256);
   size_t count;
 
   while (1)
   { // This won't work on very old Linux systems.
-    count = readlink("/proc/self/exe".dup.ptr, buffer.ptr, buffer.length);
+    count = readlink("/proc/self/exe".ptr, cast(char*)buffer.ptr, buffer.cap);
     if (count == -1)
       return arg0;
-    if (count < buffer.length)
+    if (count < buffer.cap)
       break;
-    buffer.length = buffer.length * 2;
+    buffer.growcap();
   }
-  buffer.length = count;
-  return buffer;
+  buffer.len = count;
+  return buffer.get!(char[]);
   } // version(linux)
 
   else version(darwin)
@@ -411,7 +412,7 @@ cstring GetExecutableFilePath(cstring arg0)
   char[] buffer = new char[1024];  // 1024 = PATH_MAX on Mac OS X 10.5
   if (!realpath(path.ptr, buffer.ptr))
     return arg0;
-  return String(buffer.ptr, 0).array;
+  return String(buffer.ptr, '\0').array;
   } // version(darwin)
 
   else
