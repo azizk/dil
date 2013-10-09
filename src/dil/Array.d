@@ -12,6 +12,7 @@ import common;
 static size_t PAGESIZE = 4096;
 
 extern (C) void* memcpy(void*, const void*, size_t);
+extern (C) void onOutOfMemoryError();
 
 static this()
 {
@@ -27,14 +28,17 @@ struct Array
 {
   alias E = ubyte; /// Alias to ubyte. Dereferencing void* gives no value.
   E* ptr; /// Points to the start of the buffer.
-  E* cur; /// Points to the end of the contents.
+  E* cur; /// Points to the end of the contents. Only dereference if cur < end.
   E* end; /// Points to the end of the reserved space.
 
-  /// Constructs an Array of exactly nbytes size.
-  this(size_t nbytes = 0)
+  /// Constructs an Array and reserves space of n bytes.
+  this(size_t n = 0)
   {
-    if (nbytes)
-      resizex(nbytes);
+    if (n)
+      if (auto p = cast(E*)malloc(n))
+        end = (ptr = cur = p) + n;
+      else
+        onOutOfMemoryError();
   }
 
   invariant()
@@ -42,7 +46,8 @@ struct Array
     if (!ptr)
       assert(cur is null && end is null, "!(ptr == cur == end == 0)");
     else
-      assert(ptr <= cur && cur <= end, "!(ptr <= cur <= end)");
+      assert(ptr <= cur && cur <= end,
+        Format("!({} <= {} <= {})", ptr, cur, end));
   }
 
   /// Returns the size of the Array in bytes.
@@ -52,12 +57,12 @@ struct Array
   }
 
   /// Sets the size of the Array in bytes.
-  /// Resizes space if necessary, but does not zero out the new space.
+  /// Resizes space if necessary. Does not deallocate if n is zero.
   void len(size_t n) @property
   {
+    if ((ptr + n) > end)
+      reserve(n);
     cur = ptr + n;
-    if (cur > end)
-      growto(n);
   }
 
   /// Returns the remaining space in bytes before a reallocation is needed.
@@ -81,63 +86,24 @@ struct Array
   /// Sets the capacity to exactly n bytes.
   void cap(size_t n) @property
   {
-    resizex(n);
+    reserve(n);
   }
 
-  /// Allocates exactly n bytes.
-  /// Destroys if n is zero.
+  /// Allocates exactly n bytes. May shrink or extend in place if possible.
+  /// Does not zero out memory. Destroys if n is zero.
   /// Throws: OutOfMemoryError.
-  void resizex(size_t n)
+  void reserve(size_t n)
   {
     if (n == 0)
       return destroy();
     auto new_ptr = ptr;
-    new_ptr = new_ptr ? cast(E*)realloc(new_ptr, n) : cast(E*)malloc(n);
-    if (!new_ptr) {
-      destroy();
-      throw new OutOfMemoryError();
-    }
-    cur = new_ptr + (cur - ptr);
-    ptr = new_ptr;
-    end = new_ptr + n;
-    if (cur > end) /// Was the buffer shrunk?
-      cur = end;
-  }
-
-  /// Grows the memory needed by the value of max(len * 1.5, n, cap).
-  void growto(size_t n)
-  {
+    new_ptr = cast(E*)(new_ptr ? realloc(new_ptr, n) : malloc(n));
+    if (!new_ptr)
+      onOutOfMemoryError();
     auto len = this.len;
-    len = (len << 1) - (len >> 1); // len *= 1.5
-    if (len > n)
-      n = len;
-    if (n > cap)
-      resizex(n);
-  }
-
-  /// Grows the Array by n bytes.
-  void growby(size_t n)
-  {
-    growto(len + n);
-  }
-
-  /// Shrinks the Array to n bytes.
-  void shrinkto(size_t n)
-  {
-    resizex(n);
-  }
-
-  /// Shrinks the Array by n bytes.
-  void shrinkby(size_t n)
-  {
-    shrinkto(n < cap ? cap - n : 0);
-  }
-
-  /// Compacts the capacity to the actual length of the Array.
-  /// Destroys if the length is zero.
-  void compact()
-  {
-    resizex(len);
+    ptr = new_ptr;
+    cur = new_ptr + (len < n ? len : n); // min(len, n)
+    end = new_ptr + n;
   }
 
   /// Frees the allocated memory.
@@ -147,15 +113,38 @@ struct Array
     ptr = cur = end = null;
   }
 
+  /// Grows the capacity by n or cap * 1.5.
+  void growcap(size_t n = 0)
+  {
+    if (!n)
+      n = (cap << 1) - (cap >> 1); // cap *= 1.5
+    else
+      n += cap;
+    reserve(n);
+  }
+
+  /// Shrinks the Array by n bytes.
+  void shrinkby(size_t n)
+  {
+    reserve(n < cap ? cap - n : 0);
+  }
+
+  /// Compacts the capacity to the actual length of the Array.
+  /// Destroys if the length is zero.
+  void compact()
+  {
+    reserve(len);
+  }
+
   /// Appends x of any type to the Array.
   /// Appends the elements if X is an array.
   void opOpAssign(string op : "~", X)(const X x)
   {
-    static if (is(X t : Elem[], Elem))
+    static if (is(X : Elem[], Elem))
     {
       auto n = x.length * Elem.sizeof;
       if (cur + n >= end)
-        growby(n);
+        rem = n;
       memcpy(cur, x.ptr, n);
       cur += n;
     }
@@ -163,14 +152,16 @@ struct Array
     {
       enum n = X.sizeof;
       if (cur + n >= end)
-        growby(n);
+        rem = n;
       static if (n <= size_t.sizeof)
       {
-        char[] unroll(char[] s, size_t times)
-        { return times == 1 ? s : s ~ unroll(s, times-1); }
+        string unroll(string s, size_t times) {
+          return times == 1 ? s : s ~ unroll(s, times-1);
+        }
 
-        auto p = cast(E*)&x;
-        mixin(unroll("*cur++ = *p++;".dup, n));
+        auto p = cast(E*)&x, c = cur;
+        mixin(unroll("*c++ = *p++;", n));
+        cur = c;
       }
       else
       {
@@ -178,14 +169,14 @@ struct Array
         cur += n;
       }
     }
+    assert(cur <= end);
   }
 
-  /// Hands the memory over to the GC and returns it as an array.
+  /// Returns a copy allocated using the GC and destroys this Array.
   A get(A = E)()
   {
-    auto result = ptr[0..len];
-    GC.addRoot(ptr);
-    ptr = cur = end = null;
+    auto result = this[].dup;
+    destroy();
     return *cast(A*)&result;
   }
 
