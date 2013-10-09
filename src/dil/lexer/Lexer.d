@@ -29,10 +29,10 @@ import tango.core.Vararg;
 /// produces a doubly-linked list of tokens.
 class Lexer
 {
-  ChunkAllocator allocator; /// Allocates memory for tokens and other structs.
-  SourceText srcText; /// The source text.
   cchar* p; /// Points to the current character in the source text.
   cchar* end; /// Points one character past the end of the source text.
+  ChunkAllocator allocator; /// Allocates memory for tokens and other structs.
+  SourceText srcText; /// The source text.
 
   Token* head;  /// The head of the doubly linked token list.
   Token* tail;  /// The tail of the linked list. Set in scan().
@@ -337,15 +337,8 @@ class Lexer
   bool isNewlineEnd(cchar* p)
   {
     assert(p >= text.ptr && p < end);
-    if ((*p).In('\n', '\r'))
-      return true;
-    if ((*p).In(LS[2], PS[2]))
-      if ((p-2) >= text.ptr)
-        if (p[-1] == LS[1] && p[-2] == LS[0])
-          return true;
-    return false;
+    return (*p).In('\n', '\r') || (p-=2) >= text.ptr && p[0..3].In(LS, PS);
   }
-
 
   alias StringValue = Token.StringValue;
   alias IntegerValue = Token.IntegerValue;
@@ -496,7 +489,7 @@ class Lexer
   void scanShebang()
   {
     auto p = this.p;
-    assert(*p == '#' && p[1] == '!');
+    assert(p[0..2] == "#!");
     auto t = new_!(Token);
     t.kind = T!"#!Shebang";
     t.setWhitespaceFlag();
@@ -636,9 +629,8 @@ class Lexer
         return scanRawString(t);
       case '"':
         return scanNormalString(t);
-      version(D2)
-      {}
-      else { // Only in D1.
+      version(D1)
+      { // Only in D1.
       case '\\':
         return scanEscapeString(t);
       }
@@ -703,11 +695,13 @@ class Lexer
         case '<':
           c = *++p;
           if (c == '>')
+          {
             if (p[1] == '=')
               ++p,
               kind = T!"!<>=";
             else
               kind = T!"!<>";
+          }
           else if (c == '=')
             kind = T!"!<=";
           else {
@@ -1135,7 +1129,7 @@ class Lexer
   void scanBlockComment(Token* t)
   {
     auto p = this.p;
-    assert(p[-1] == '/' && *p == '*');
+    assert((p-1)[0..2] == "/*");
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
   Loop:
@@ -1179,7 +1173,7 @@ class Lexer
   void scanNestedComment(Token* t)
   {
     auto p = this.p;
-    assert(p[-1] == '/' && *p == '+');
+    assert((p-1)[0..2] == "/+");
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
     uint level = 1;
@@ -1237,7 +1231,7 @@ class Lexer
       return *p++;
     default:
     }
-    return 0;
+    return '\0';
   }
 
   /// Scans a normal string literal.
@@ -1309,6 +1303,8 @@ class Lexer
   /// $(BNF EscapeStringLiteral := EscapeSequence+ )
   void scanEscapeString(Token* t)
   {
+    version(D1)
+    {
     assert(*p == '\\');
     char[] value;
     do
@@ -1323,6 +1319,7 @@ class Lexer
     t.strval = lookupString(value, 0);
     t.kind = T!"String";
     t.end = p;
+    }
   }
 
   /// Scans a character literal.
@@ -1365,7 +1362,7 @@ class Lexer
   void scanRawString(Token* t)
   {
     auto p = this.p;
-    assert(*p == '`' || (*p == '"' && p[-1] == 'r'));
+    assert(*p == '`' || (p-1)[0..2] == `r"`);
     auto tokenLineNum = lineNum;
     auto tokenLineBegin = lineBegin;
     t.kind = T!"String";
@@ -1506,7 +1503,7 @@ class Lexer
   version(D2)
   {
     auto p = this.p;
-    assert(p[0] == 'q' && p[1] == '"');
+    assert(p[0..2] == `q"`);
     t.kind = T!"String";
 
     auto tokenLineNum = lineNum;
@@ -1646,7 +1643,7 @@ class Lexer
   Lreturn2: // String delimiter.
     char postfix;
     if (*p == '"')
-      postfix = scanPostfix((++p, p));
+      postfix = scanPostfix(++p);
     else
     { // Pass str_delim or encode and pass closing_delim as a string.
       if (!str_delim.length)
@@ -1670,7 +1667,7 @@ class Lexer
   {
   version(D2)
   {
-    assert(p[0] == 'q' && p[1] == '{');
+    assert(p[0..2] == `q{`);
     t.kind = T!"String";
 
     auto tokenLineNum = lineNum;
@@ -1730,7 +1727,6 @@ class Lexer
       default:
       }
     }
-    assert(new_t.kind == T!"}" || new_t.kind == T!"EOF");
     assert(new_t.kind == T!"}" && t.next is null ||
            new_t.kind == T!"EOF" && t.next !is null);
 
@@ -1900,9 +1896,10 @@ class Lexer
         else
           mid = MID.InvalidBeginHTMLEntity;
       }
-      else if (isEndOfLine(p))
-        (mid = MID.UndefinedEscapeSequence),
-        (err_arg = isEOF(*p) ? `\EOF` : `\NewLine`);
+      else if (isEndOfLine(p)) {
+        mid = MID.UndefinedEscapeSequence;
+        err_arg = isEOF(*p) ? `\EOF` : `\NewLine`;
+      }
       else
       {
         auto tmp = `\`.dup;
@@ -2158,7 +2155,7 @@ class Lexer
     if (overflow)
       error(t.start, MID.OverflowOctalNumber);
     }
-//     goto Lfinalize;
+    //goto Lfinalize;
 
   Lfinalize:
     enum Suffix
@@ -2281,19 +2278,7 @@ class Lexer
       {}
     }
     else // This function was called by scanNumber().
-      assert(delegate () {
-          switch (*p)
-          {
-          case 'L':
-            if (p[1] != 'i')
-              return false;
-          case 'i', 'f', 'F', 'e', 'E':
-            return true;
-          default:
-          }
-          return false;
-        }()
-      );
+      assert((*p).In('i', 'f', 'F', 'e', 'E') || p[0..2] == "Li");
 
     // Scan exponent.
     if (*p == 'e' || *p == 'E')
@@ -2355,7 +2340,7 @@ class Lexer
   /// Params:
   ///   t = Receives the value.
   ///   float_string = The well-formed float number string.
-  void finalizeFloat(Token* t, char[] float_string)
+  void finalizeFloat(Token* t, cstring float_string)
   {
     auto p = this.p;
     assert(float_string.length && float_string[$-1] == 0);
