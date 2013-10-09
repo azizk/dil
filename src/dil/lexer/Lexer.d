@@ -528,22 +528,11 @@ class Lexer
       {}
     }
 
-    // Scan a token.
+    // Scan the text of the token.
     uint c = *p;
     {
       t.start = this.p = p;
-      // Newline.
-      switch (*p)
-      {
-      case '\r':
-        if (p[1] == '\n')
-          ++p;
-      case '\n':
-        goto Lnewline;
-      default:
-      }
 
-      assert(this.p == p);
       // Identifier or string literal.
       if (isidbeg(c))
       {
@@ -577,24 +566,52 @@ class Lexer
         return;
       }
 
+      /// Advances p if p[1] equals x.
+      bool next(cchar x)
+      {
+        return p[1] == x ? (++p, 1) : 0;
+      }
+
+      // Newline.
+      if (*p == '\n' || *p == '\r' && (next('\n'), true))
+        goto Lnewline;
+
       assert(this.p == p);
       if (isdigit(c))
         return scanNumber(t);
 
-      // Check these characters early. They are very common.
       switch (c)
       {
-      mixin(cases(",", ":", ";", "(", ")", "{", "}", "[", "]"));
-      default:
+      // Cases are sorted roughly according to times of occurrence.
+      mixin(cases(",", "(", ")", ";", "{", "}", "[", "]", ":"));
+      case '.': /* .  .[0-9]  ..  ... */
+        if (next('.'))
+          kind = next('.') ? T!"..." : T!"..";
+        else if (isdigit(p[1]))
+          return (this.p = p), scanFloat(t);
+        else
+          kind = T!".";
+        goto Lcommon;
+      case '=': /* =  ==  => */
+        kind = next('=') ? T!"==" : (next('>') ? T!"=>" : T!"=");
+        goto Lcommon;
+      case '`':
+        return scanRawString(t);
+      case '"':
+        return scanNormalString(t);
+      version(D1)
+      { // Only in D1.
+      case '\\':
+        return scanEscapeString(t);
       }
-
-      if (c == '/')
-        switch (c = *++p)
+      case '\'':
+        return scanCharacter(t);
+      case '/':
+        switch (*++p)
         {
         case '=':
-          ++p;
           kind = T!"/=";
-          goto Lreturn;
+          goto Lcommon;
         case '+':
           return (this.p = p), scanNestedComment(t);
         case '*':
@@ -609,53 +626,18 @@ class Lexer
           kind = T!"/";
           goto Lreturn;
         }
-
-      assert(this.p == p);
-      switch (c)
-      {
-      case '=': /* =  ==  => */
-        if (p[1] == '=')
-          ++p,
-          kind = T!"==";
-        else if (p[1] == '>') // D2
-          ++p,
-          kind = T!"=>";
-        else
-          kind = T!"=";
-        goto Lcommon;
-      case '\'':
-        return scanCharacter(t);
-      case '`':
-        return scanRawString(t);
-      case '"':
-        return scanNormalString(t);
-      version(D1)
-      { // Only in D1.
-      case '\\':
-        return scanEscapeString(t);
-      }
+        assert(0);
       case '>': /* >  >=  >>  >>=  >>>  >>>= */
-        c = *++p;
-        switch (c)
+        switch (*++p)
         {
         case '=':
           kind = T!">=";
           goto Lcommon;
         case '>':
-          if (p[1] == '>')
-          {
-            ++p;
-            if (p[1] == '=')
-              ++p,
-              kind = T!">>>=";
-            else
-              kind = T!">>>";
-          }
-          else if (p[1] == '=')
-            ++p,
-            kind = T!">>=";
+          if (next('>'))
+            kind = next('=') ? T!">>>=" : T!">>>";
           else
-            kind = T!">>";
+            kind = next('=') ? T!">>=" : T!">>";
           goto Lcommon;
         default:
           kind = T!">";
@@ -663,25 +645,16 @@ class Lexer
         }
         assert(0);
       case '<': /* <  <=  <>  <>=  <<  <<= */
-        c = *++p;
-        switch (c)
+        switch (*++p)
         {
         case '=':
           kind = T!"<=";
           goto Lcommon;
         case '<':
-          if (p[1] == '=')
-            ++p,
-            kind = T!"<<=";
-          else
-            kind = T!"<<";
+          kind = next('=') ? T!"<<=" : T!"<<";
           goto Lcommon;
         case '>':
-          if (p[1] == '=')
-            ++p,
-            kind = T!"<>=";
-          else
-            kind = T!"<>";
+          kind = next('=') ? T!"<>=" : T!"<>";
           goto Lcommon;
         default:
           kind = T!"<";
@@ -689,32 +662,16 @@ class Lexer
         }
         assert(0);
       case '!': /* !  !<  !>  !<=  !>=  !<>  !<>= */
-        c = *++p;
-        switch (c)
+        switch (*++p)
         {
         case '<':
-          c = *++p;
-          if (c == '>')
-          {
-            if (p[1] == '=')
-              ++p,
-              kind = T!"!<>=";
-            else
-              kind = T!"!<>";
-          }
-          else if (c == '=')
-            kind = T!"!<=";
-          else {
-            kind = T!"!<";
-            goto Lreturn;
-          }
+          if (next('>'))
+            kind = next('=') ? T!"!<>=" : T!"!<>";
+          else
+            kind = next('=') ? T!"!<=" : T!"!<";
           goto Lcommon;
         case '>':
-          if (p[1] == '=')
-            ++p,
-            kind = T!"!>=";
-          else
-            kind = T!"!>";
+          kind = next('=') ? T!"!>=" : T!"!>";
           goto Lcommon;
         case '=':
           kind = T!"!=";
@@ -724,91 +681,31 @@ class Lexer
           goto Lreturn;
         }
         assert(0);
-      case '.': /* .  .[0-9]  ..  ... */
-        if (p[1] == '.')
-          if ((++p)[1] == '.')
-            ++p,
-            kind = T!"...";
-          else
-            kind = T!"..";
-        else if (isdigit(p[1]))
-          return (this.p = p), scanFloat(t);
-        else
-          kind = T!".";
-        goto Lcommon;
       case '|': /* |  ||  |= */
-        c = *++p;
-        if (c == '=')
-          kind = T!"|=";
-        else if (c == '|')
-          kind = T!"||";
-        else {
-          kind = T!"|";
-          goto Lreturn;
-        }
+        kind = next('=') ? T!"|=" : (next('|') ? T!"||" : T!"|");
         goto Lcommon;
       case '&': /* &  &&  &= */
-        c = *++p;
-        if (c == '=')
-          kind = T!"&=";
-        else if (c == '&')
-          kind = T!"&&";
-        else {
-          kind = T!"&";
-          goto Lreturn;
-        }
+        kind = next('=') ? T!"&=" : (next('&') ? T!"&&" : T!"&");
         goto Lcommon;
       case '+': /* +  ++  += */
-        c = *++p;
-        if (c == '=')
-          kind = T!"+=";
-        else if (c == '+')
-          kind = T!"++";
-        else {
-          kind = T!"+";
-          goto Lreturn;
-        }
+        kind = next('=') ? T!"+=" : (next('+') ? T!"++" : T!"+");
         goto Lcommon;
       case '-': /* -  --  -= */
-        c = *++p;
-        if (c == '=')
-          kind = T!"-=";
-        else if (c == '-')
-          kind = T!"--";
-        else {
-          kind = T!"-";
-          goto Lreturn;
-        }
+        kind = next('=') ? T!"-=" : (next('-') ? T!"--" : T!"-");
         goto Lcommon;
       case '~': /* ~  ~= */
-        if (p[1] == '=')
-          ++p,
-          kind = T!"~=";
-        else
-          kind = T!"~";
+        kind = next('=') ? T!"~=" : T!"~";
         goto Lcommon;
       case '*': /* *  *= */
-        if (p[1] == '=')
-          ++p,
-          kind = T!"*=";
-        else
-          kind = T!"*";
+        kind = next('=') ? T!"*=" : T!"*";
         goto Lcommon;
       version(D2)
       {
       case '^': /* ^  ^=  ^^  ^^= */
-        if (p[1] == '=')
-          ++p,
+        if (next('='))
           kind = T!"^=";
-        else if (p[1] == '^')
-        {
-          ++p;
-          if (p[1] == '=')
-            ++p,
-            kind = T!"^^=";
-          else
-            kind = T!"^^";
-        }
+        else if (next('^'))
+          kind = next('=') ? T!"^^=" : T!"^^";
         else
           kind = T!"^";
         goto Lcommon;
@@ -816,19 +713,11 @@ class Lexer
       else
       {
       case '^': /* ^  ^= */
-        if (p[1] == '=')
-          ++p,
-          kind = T!"^=";
-        else
-          kind = T!"^";
+        kind = next('=') ? T!"^=" : T!"^";
         goto Lcommon;
       }
       case '%': /* %  %= */
-        if (p[1] == '=')
-          ++p,
-          kind = T!"%=";
-        else
-          kind = T!"%";
+        kind = next('=') ? T!"%=" : T!"%";
         goto Lcommon;
       // Single character tokens:
       mixin(cases("@","$","?"));
