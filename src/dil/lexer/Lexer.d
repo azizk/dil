@@ -1407,7 +1407,7 @@ class Lexer
     uint level = 1; // Counter for nestable delimiters.
 
     ++p; ++p; // Skip q"
-    uint c = *p;
+    dchar c = *p;
     switch (c)
     {
     case '(':
@@ -1420,38 +1420,27 @@ class Lexer
       closing_delim = c + 2; // ']', '>' or '}'
       break;
     default:
-      auto idbegin = p;
-      if (scanNewline(p))
+      if (isNewline(p))
       {
-        error(idbegin, MID.DelimiterIsMissing);
-        p = idbegin; // Reset and don't consume the newline.
+        error(p, MID.DelimiterIsMissing);
         goto Lerr;
       }
 
-      closing_delim = c;
-      // TODO: Check for non-printable characters?
-      if (!isascii(c))
-      {
-        closing_delim = decodeUTF8(p);
-        if (!isUniAlpha(closing_delim))
-          break; // Not an identifier.
-      }
-      else if (!isidbeg(c))
-        break; // Not an identifier.
+      auto idbegin = p;
+      closing_delim = isascii(c) ? c : decodeUTF8(p);
 
-      // Scan: Identifier + EndOfLine
-      do
-      { c = *++p; }
-      while (isident(c) || !isascii(c) && scanUnicodeAlpha(p));
-      // Store the identifier.
-      str_delim = slice(idbegin, p);
-      // Scan a newline.
-      if (scanNewline(p))
-        ++lineNum,
-        setLineBegin(p);
-      else
-        error(p, MID.NoNewlineAfterIdDelimiter, str_delim);
-      --p; // Go back one because of "c = *++p;" in main loop.
+      if (isidbeg(closing_delim) || isUniAlpha(closing_delim))
+      { // Scan: Identifier Newline
+        do
+        { c = *++p; }
+        while (isident(c) || !isascii(c) && scanUnicodeAlpha(p));
+        str_delim = slice(idbegin, p); // Scanned identifier delimiter.
+        if (scanNewline(p))
+          setLineBegin(p);
+        else
+          error(p, MID.NoNewlineAfterIdDelimiter, str_delim);
+        --p; // Go back one because of "c = *++p;" in main loop.
+      }
     }
     assert(closing_delim);
 
