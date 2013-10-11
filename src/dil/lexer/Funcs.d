@@ -107,12 +107,6 @@ body
   return true;
 }
 
-/// ditto
-bool scanNewline(ref char* p, cchar* end)
-{
-  return scanNewline(*cast(cchar**)&p, end);
-}
-
 /// Scans a Newline in reverse direction and sets end
 /// on the first character of the newline.
 /// Returns: true if found or false otherwise.
@@ -158,11 +152,6 @@ body
     return identifier;
   }
   return null;
-}
-
-cstring scanIdentifier(ref char* ref_p, cchar* end)
-{
-   return scanIdentifier(*cast(cchar**)&ref_p, end);
 }
 
 /// Returns true if p points to the start of a D identifier.

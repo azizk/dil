@@ -253,8 +253,8 @@ char[] sanitizeText(char[] text)
   if (!text.length)
     return null;
 
-  auto p = text.ptr; // Reader.
-  auto q = p; // Writer.
+  auto q = text.ptr; // Writer.
+  cchar* p = q; // Reader.
   auto end = p + text.length;
 
   while (p < end)
@@ -277,9 +277,8 @@ char[] sanitizeText(char[] text)
     { // Skip to next ASCII character or valid UTF-8 sequence.
       while (++p < end && !isValidLead(*p))
       {}
-      alias R = REPLACEMENT_STR;
       if (q+2 < p) // Copy replacement char if there is enough space.
-        (*q++ = R[0]), (*q++ = R[1]), (*q++ = R[2]);
+        q[0..3] = REPLACEMENT_STR;
     }
     else // Copy the valid UTF-8 sequence.
       while (p2 < p) // p points to one past the last trail byte.

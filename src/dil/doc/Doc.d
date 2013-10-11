@@ -177,8 +177,8 @@ static:
   cstring sanitize(char[] comment, char padding)
   {
     bool isNewline = true; // True when at the beginning of a new line.
-    auto p = comment.ptr; // Reader.
-    auto q = p; // Writer.
+    auto q = comment.ptr; // Writer.
+    cchar* p = q; // Reader.
     auto end = p + comment.length;
 
     while (p < end)

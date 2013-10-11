@@ -169,15 +169,9 @@ body
 
 /// Returns true when p points to a valid Unicode alpha character
 /// (also advances p.)
-bool scanUnicodeAlpha(ref cchar* ref_p, cchar* end)
+bool scanUnicodeAlpha(ref cchar* p, cchar* end)
 {
-  return !!decodeUnicodeAlpha(ref_p, end);
-}
-
-/// ditto
-bool scanUnicodeAlpha(ref char* ref_p, cchar* end)
-{
-  return !!decodeUnicodeAlpha(*cast(cchar**)&ref_p, end);
+  return !!decodeUnicodeAlpha(p, end);
 }
 
 /// Returns true when p points to a valid Unicode alpha character.
