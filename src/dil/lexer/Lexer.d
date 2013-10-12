@@ -39,20 +39,26 @@ class Lexer
   Token* token; /// Points to the current token in the token list.
   LexerTables tables; /// Used to look up token values.
 
-  // Members used for error messages:
-  Diagnostics diag; /// For diagnostics.
-  LexerError[] errors; /// List of errors.
-  /// Always points to the first character of the current line.
-  cchar* lineBegin;
-  uint lineNum; /// Current, actual source text line number.
+  /// Groups line information.
+  static struct LineLoc
+  {
+    cchar* p; /// Points to the first character of the current line.
+    uint n; /// Actual source text line number.
+  }
+  LineLoc lineLoc; /// Current line.
+
   uint inTokenString; /// > 0 if inside q{ }
   /// Holds the original file path and the modified one (by #line.)
   Token.HashLineInfo* hlinfo; /// Info set by "#line".
 
   /// Tokens from a *.dlx file.
   Token[] dlxTokens;
+  // Members used for error messages:
+  Diagnostics diag; /// For diagnostics.
+  LexerError[] errors; /// List of errors.
+  // End of variable members.
 
-  alias T = S2T;
+  alias T = S2T; /// Converts, e.g., T!"+" to TOK.Plus.
 
   /// CTF: Casts a string literal to an integer.
   static size_t toUint(string s)
@@ -116,8 +122,8 @@ class Lexer
       "source text has no sentinel character");
     this.p = text.ptr;
     this.end = this.p + text.length; // Point past the sentinel string.
-    this.lineBegin = this.p;
-    this.lineNum = 1;
+    this.lineLoc.p = this.p;
+    this.lineLoc.n = 1;
 
     this.head = new_!(Token);
     this.head.kind = T!"HEAD";
@@ -252,8 +258,8 @@ class Lexer
     else
     { /// Function failed. Reset...
       this.p = this.text.ptr;
-      this.lineBegin = this.p;
-      this.lineNum = 1;
+      this.lineLoc.p = this.p;
+      this.lineLoc.n = 1;
       if (*cast(ushort*)p == chars_shebang)
         scanShebang();
     }
@@ -325,12 +331,18 @@ class Lexer
       t.strval = lookupString(str, 0);
   }
 
-  /// Sets the member lineBegin and increments lineNum.
+  /// Returns the current line number.
+  uint lineNum()
+  {
+    return lineLoc.n;
+  }
+
+  /// Sets the line pointer and increments the line number.
   private void setLineBegin(cchar* p)
   {
     assert(isNewlineEnd(p - 1));
-    lineBegin = p;
-    lineNum++;
+    lineLoc.p = p;
+    lineLoc.n++;
   }
 
   /// Returns true if p points to the last character of a Newline.
@@ -1019,8 +1031,7 @@ class Lexer
   {
     auto p = this.p;
     assert((p-1)[0..2] == "/*");
-    auto tokenLineNum = lineNum;
-    auto tokenLineBegin = lineBegin;
+    auto tokenLine = this.lineLoc;
   Loop:
     while (1)
     {
@@ -1044,8 +1055,7 @@ class Lexer
             goto case '\n';
         }
         else if (isEOF(*p)) {
-          error(tokenLineNum, tokenLineBegin, t.start,
-            MID.UnterminatedBlockComment);
+          error(tokenLine, t.start, MID.UnterminatedBlockComment);
           break Loop;
         }
       }
@@ -1063,8 +1073,7 @@ class Lexer
   {
     auto p = this.p;
     assert((p-1)[0..2] == "/+");
-    auto tokenLineNum = lineNum;
-    auto tokenLineBegin = lineBegin;
+    auto tokenLine = this.lineLoc;
     uint level = 1;
   Loop:
     while (1)
@@ -1096,8 +1105,7 @@ class Lexer
             goto case '\n';
         }
         else if (isEOF(*p)) {
-          error(tokenLineNum, tokenLineBegin, t.start,
-            MID.UnterminatedNestedComment);
+          error(tokenLine, t.start, MID.UnterminatedNestedComment);
           break Loop;
         }
       }
@@ -1130,8 +1138,7 @@ class Lexer
   {
     auto p = this.p;
     assert(*p == '"');
-    auto tokenLineNum = lineNum;
-    auto tokenLineBegin = lineBegin;
+    auto tokenLine = this.lineLoc;
     t.kind = T!"String";
     char[] value;
     auto prev = ++p; // Skip '"'. prev is used to copy chunks to value.
@@ -1166,7 +1173,7 @@ class Lexer
         setLineBegin(++p);
         break;
       case 0, _Z_:
-        error(tokenLineNum, tokenLineBegin, t.start, MID.UnterminatedString);
+        error(tokenLine, t.start, MID.UnterminatedString);
         goto Lerr;
       default:
         if (!isascii(c) && isUnicodeNewlineChar(c = decodeUTF8(p)))
@@ -1252,8 +1259,7 @@ class Lexer
   {
     auto p = this.p;
     assert(*p == '`' || (p-1)[0..2] == `r"`);
-    auto tokenLineNum = lineNum;
-    auto tokenLineBegin = lineBegin;
+    auto tokenLine = this.lineLoc;
     t.kind = T!"String";
     uint delim = *p;
     char[] value;
@@ -1277,9 +1283,8 @@ class Lexer
           break Loop;
         break;
       case 0, _Z_:
-        error(tokenLineNum, tokenLineBegin, t.start,
-          delim == '"' ?
-            MID.UnterminatedRawString : MID.UnterminatedBackQuoteString);
+        error(tokenLine, t.start, (delim == '"' ?
+          MID.UnterminatedRawString : MID.UnterminatedBackQuoteString));
         goto Lerr;
       default:
         if (!isascii(c))
@@ -1311,8 +1316,7 @@ class Lexer
     assert(p[0..2] == `x"`);
     t.kind = T!"String";
 
-    auto tokenLineNum = lineNum;
-    auto tokenLineBegin = lineBegin;
+    auto tokenLine = this.lineLoc;
 
     uint c;
     ubyte[] value;
@@ -1357,8 +1361,7 @@ class Lexer
         else if (isspace(c))
           continue; // Skip spaces.
         else if (isEOF(c)) {
-          error(tokenLineNum, tokenLineBegin, t.start,
-            MID.UnterminatedHexString);
+          error(tokenLine, t.start, MID.UnterminatedHexString);
           goto Lerr;
         }
         else
@@ -1371,8 +1374,7 @@ class Lexer
       }
     }
     if (n & 1)
-      error(tokenLineNum, tokenLineBegin, t.start,
-        MID.OddNumberOfDigitsInHexString);
+      error(tokenLine, t.start, MID.OddNumberOfDigitsInHexString);
     ++p;
     t.strval = lookupString(cast(char[])value, scanPostfix(p));
   Lerr:
@@ -1395,8 +1397,7 @@ class Lexer
     assert(p[0..2] == `q"`);
     t.kind = T!"String";
 
-    auto tokenLineNum = lineNum;
-    auto tokenLineBegin = lineBegin;
+    auto tokenLine = this.lineLoc;
 
     char[] value;
     dchar nesting_delim, // '[', '(', '<', '{', or 0 if no nesting delimiter.
@@ -1450,7 +1451,7 @@ class Lexer
     bool checkStringDelim(cchar* p)
     { // Returns true if p points to the closing string delimiter.
       assert(str_delim.length != 0, ""~*p);
-      return lineBegin is p && // Must be at the beginning of a new line.
+      return this.lineLoc.p is p && // Must be at the beginning of a new line.
         this.endX()-p >= str_delim.length && // Check remaining length.
         p[0..str_delim.length] == str_delim; // Compare.
     }
@@ -1468,8 +1469,7 @@ class Lexer
         setLineBegin(p+1);
         break;
       case 0, _Z_:
-        error(tokenLineNum, tokenLineBegin, t.start,
-          MID.UnterminatedDelimitedString);
+        error(tokenLine, t.start, MID.UnterminatedDelimitedString);
         goto Lerr;
       default:
         if (!isascii(c))
@@ -1548,8 +1548,7 @@ class Lexer
     assert(p[0..2] == `q{`);
     t.kind = T!"String";
 
-    auto tokenLineNum = lineNum;
-    auto tokenLineBegin = lineBegin;
+    auto tokenLine = this.lineLoc;
 
     // A guard against changes to 'this.hlinfo'.
     ++inTokenString;
@@ -1597,8 +1596,7 @@ class Lexer
           convertNewlines = true;
         break;
       case T!"EOF":
-        error(tokenLineNum, tokenLineBegin, t.start,
-          MID.UnterminatedTokenString);
+        error(tokenLine, t.start, MID.UnterminatedTokenString);
         inner_tokens = t.next;
         t.next = new_t;
         break Loop;
@@ -2411,29 +2409,26 @@ class Lexer
   /// Forwards error parameters.
   void error(cchar* columnPos, MID mid, ...)
   {
-    error(_arguments, _argptr, this.lineNum, this.lineBegin, columnPos,
-      diag.bundle.msg(mid));
+    error(_arguments, _argptr, this.lineLoc, columnPos, diag.bundle.msg(mid));
   }
 
   /// ditto
-  void error(uint lineNum, cchar* lineBegin, cchar* columnPos, MID mid, ...)
+  void error(LineLoc line, cchar* columnPos, MID mid, ...)
   {
-    error(_arguments, _argptr, lineNum, lineBegin, columnPos,
-      diag.bundle.msg(mid));
+    error(_arguments, _argptr, line, columnPos, diag.bundle.msg(mid));
   }
 
   /// Creates an error report and appends it to a list.
   /// Params:
-  ///   lineNum = The line number.
-  ///   lineBegin = Points to the first character of the current line.
+  ///   line = The line number and pointer to the first character of a line.
   ///   columnPos = Points to the character where the error is located.
   ///   msg = The error message.
   void error(TypeInfo[] _arguments, va_list _argptr,
-    uint lineNum, cchar* lineBegin, cchar* columnPos, cstring msg)
+    LineLoc line, cchar* columnPos, cstring msg)
   {
-    lineNum = this.errorLineNumber(lineNum);
+    line.n = this.errorLineNumber(line.n);
     auto errorPath = errorFilePath();
-    auto location = new Location(errorPath, lineNum, lineBegin, columnPos);
+    auto location = new Location(errorPath, line.n, line.p, columnPos);
     msg = diag.format(_arguments, _argptr, msg);
     auto error = new LexerError(location, msg);
     errors ~= error;
