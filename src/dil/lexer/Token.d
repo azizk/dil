@@ -59,7 +59,7 @@ struct Token
   /// Represents the data of a newline token.
   struct NewlineValue
   {
-    uint lineNum; /// The line number in the source text.
+    size_t lineNum; /// The line number in the source text.
     HashLineInfo* hlinfo; /// Info from a "#line" token.
   }
 
@@ -73,15 +73,15 @@ struct Token
   /// Represents the info of a #line token. Used for error messages.
   struct HashLineInfo
   {
-    uint lineNum; /// Delta line number calculated from #line Number.
-    cstring path;  /// File path set by #line num Filespec.
+    size_t lineNum; /// Delta line number calculated from #line Number.
+    cstring path;   /// File path set by #line num Filespec.
     /// Calculates and returns the line number.
-    uint getLineNum(uint realnum)
+    size_t getLineNum(size_t realnum)
     {
       return realnum - lineNum;
     }
     /// Calculates a delta value and sets 'lineNum'.
-    void setLineNum(uint realnum, uint hlnum)
+    void setLineNum(size_t realnum, size_t hlnum)
     {
       lineNum = realnum - hlnum + 1;
     }
@@ -95,6 +95,7 @@ struct Token
     StringValue* strval; /// The value of a string token.
     Identifier* ident; /// For keywords and identifiers.
     dchar  dchar_; /// Value of a character literal.
+    size_t sizet_; /// An integer that fits into the address space.
     int    int_; /// Value of an Int32 token.
     uint   uint_; /// Value of a UInt32 token.
     version(X86_64)

@@ -298,7 +298,7 @@ class Lexer
       str = errorFilePath();
       break;
     case IDK.LINE:
-      t.uint_ = this.errorLineNumber(this.lineNum);
+      t.sizet_ = this.errorLineNumber(this.lineNum);
       break;
     case IDK.DATE, IDK.TIME, IDK.TIMESTAMP:
       str = Time.now();
@@ -332,7 +332,7 @@ class Lexer
   }
 
   /// Returns the current line number.
-  uint lineNum()
+  size_t lineNum()
   {
     return lineLoc.n;
   }
@@ -431,7 +431,7 @@ class Lexer
   /// Looks up a newline value.
   NewlineValue* lookupNewline()
   {
-    uint linnum = this.lineNum;
+    auto linnum = this.lineNum;
     if (hlinfo)
     { // Don't insert into the table, when '#line' tokens are in the text.
       // This could be optimised with another table.
@@ -1553,7 +1553,7 @@ class Lexer
     // A guard against changes to 'this.hlinfo'.
     ++inTokenString;
 
-    uint lineNum = this.lineNum;
+    auto lineNum = this.lineNum;
     uint level = 1;
 
     ++p; ++p; // Skip q{
@@ -2354,7 +2354,7 @@ class Lexer
         hlinfo = new_!(Token.HashLineInfo);
         hlinfo.path = srcText.filePath;
       }
-      hlinfo.setLineNum(this.lineNum, hlval.lineNum.uint_);
+      hlinfo.setLineNum(this.lineNum, hlval.lineNum.sizet_);
       if (hlval.filespec)
         hlinfo.path = cast(cstring)hlval.filespec.strval.str;
     }
@@ -2393,7 +2393,7 @@ class Lexer
   }
 
   /// Returns the error line number.
-  uint errorLineNumber(uint lineNum)
+  size_t errorLineNumber(size_t lineNum)
   {
     if (hlinfo)
       lineNum -= hlinfo.lineNum;
