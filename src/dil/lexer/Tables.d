@@ -6,6 +6,7 @@ module dil.lexer.Tables;
 import dil.lexer.Token,
        dil.lexer.IdTable;
 import dil.Float;
+import dil.String;
 import common;
 
 /// Tables used by the $(MODLINK2 dil.lexer.Lexer, Lexer).
@@ -35,6 +36,42 @@ class LexerTables
     idents = new IdTable();
   }
 
+  /// Looks up a StringValue in the table.
+  /// Params:
+  ///   str = The string to be looked up.
+  ///   pf = The postfix character.
+  ///   dup = True if str should be copied.
+  /// Returns: A stored or new StringValue.
+  StringValue* lookupString(cstring str, char postfix, bool dup = true)
+  {
+    auto hash = hashOf(str);
+    if (auto psv = (hash + postfix) in strvals)
+      return *psv;
+    // Insert a new StringValue into the table.
+    auto sv = new StringValue;
+    sv.str = lookupString(hash, str, dup);
+    sv.pf = postfix;
+    strvals[hash + postfix] = sv;
+    return sv;
+  }
+
+  /// Looks up a string in the table.
+  /// Params:
+  ///   hash = The hash of str.
+  ///   str = The string to be looked up.
+  ///   dup = True if str should be copied.
+  /// Returns: A stored or new string.
+  cbinstr lookupString(hash_t hash, cstring str, bool dup = true)
+  {
+    assert(hash == hashOf(str));
+    auto bstr = cast(cbinstr)str;
+    if (auto pstr = hash in strings)
+      bstr = *pstr;
+    else // Insert a new string into the table.
+      bstr = strings[hash] = dup ? bstr.dup : bstr;
+    return bstr;
+  }
+
   /// Looks up an identifier.
   Identifier* lookupIdentifier(cstring str)
   {
@@ -46,14 +83,12 @@ class LexerTables
   ///   num = The number value.
   IntegerValue* lookupUlong(ulong num)
   {
-    auto pintval = num in ulongs;
-    if (!pintval)
-    { // Insert a new IntegerValue into the table.
-      auto iv = new IntegerValue;
-      iv.ulong_ = num;
-      ulongs[num] = iv;
-      return iv;
-    }
-    return *pintval;
+    if (auto pintval = num in ulongs)
+      return *pintval;
+    // Insert a new IntegerValue into the table.
+    auto iv = new IntegerValue;
+    iv.ulong_ = num;
+    ulongs[num] = iv;
+    return iv;
   }
 }
