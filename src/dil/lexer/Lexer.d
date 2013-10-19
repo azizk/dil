@@ -328,7 +328,7 @@ class Lexer
       assert(0);
     }
     if (str.ptr)
-      t.strval = lookupString(str, 0);
+      t.strval = lookupString(str, '\0');
   }
 
   /// Returns the current line number.
@@ -352,56 +352,27 @@ class Lexer
     return (*p).In('\n', '\r') || (p-=2) >= text.ptr && p[0..3].In(LS, PS);
   }
 
+  /// Returns true if p points inside the source text.
+  bool isInText(cchar* p)
+  {
+    return text.ptr <= p && p < end;
+  }
+
   alias StringValue = Token.StringValue;
   alias IntegerValue = Token.IntegerValue;
   alias NewlineValue = Token.NewlineValue;
 
-  /// Looks up a string value in the table.
-  /// Params:
-  ///   str = The string to be looked up.
-  ///   pf = The postfix character.
-  /// Returns: A stored or new StringValue.
+  /// Looks up a StringValue. Copies str if it's not a slice from the src text.
   StringValue* lookupString(cstring str, char postfix)
   {
-    auto hash = hashOf(str);
-    auto psv = (hash + postfix) in tables.strvals;
-    if (!psv)
-    { // Insert a new StringValue into the table.
-      auto sv = new StringValue;
-      sv.str = lookupString(hash, str);
-      sv.pf = postfix;
-      tables.strvals[hash + postfix] = sv;
-      return sv;
-    }
-    return *psv;
+    return tables.lookupString(str, postfix, !isInText(str.ptr));
   }
 
-  /// Looks up a string in the table.
-  /// Params:
-  ///   hash = The hash of str.
-  ///   str = The string to be looked up.
-  /// Returns: A stored or new string.
-  cbinstr lookupString(hash_t hash, cstring str)
-  {
-    assert(hash == hashOf(str));
-    auto bstr = cast(cbinstr)str;
-    if (auto pstr = hash in tables.strings)
-      bstr = *pstr;
-    else // Insert a new string into the table.
-      tables.strings[hash] = bstr;
-    return bstr;
-  }
-
-  /// Calls lookupString(hash_t, string).
-  cbinstr lookupString(cstring str)
-  {
-    return lookupString(hashOf(str), str);
-  }
-  /// ditto
+  /// Forwards to tables.lookupString().
   cbinstr lookupString(cbinstr bstr)
   {
     auto str = cast(cstring)bstr;
-    return lookupString(hashOf(str), str);
+    return tables.lookupString(hashOf(str), str);
   }
 
   /// Looks up a Float in the table.
@@ -1212,7 +1183,7 @@ class Lexer
       else
         encodeUTF8(value, c);
     } while (*p == '\\');
-    t.strval = lookupString(value, 0);
+    t.strval = lookupString(value, '\0');
     t.kind = T!"String";
     t.end = p;
     }
@@ -1647,7 +1618,7 @@ class Lexer
     }
 
     auto strval = new_!(StringValue);
-    strval.str = lookupString(value);
+    strval.str = lookupString(cast(cbinstr)value);
     strval.pf = postfix;
     strval.tok_str = inner_tokens;
     t.strval = strval;
@@ -2324,7 +2295,7 @@ class Lexer
           goto Lerr;
         }
         auto str = slice(fs.start + 1, p); // Get string excluding "".
-        fs.strval = lookupString(str, 0);
+        fs.strval = lookupString(str, '\0');
         fs.end = tokenEnd = ++p;
         state = State.End;
         continue;
