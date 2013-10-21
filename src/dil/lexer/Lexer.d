@@ -1131,31 +1131,27 @@ class Lexer
     t.kind = T!"String";
     auto value = getBuffer();
     auto prev = ++p; // Skip '"'. prev is used to copy chunks to value.
-    uint c;
-  Loop:
-    while (1)
-      switch (c = *p)
+    cchar* prev2;
+
+    while (*p != '"')
+      switch (*p)
       {
-      case '"':
-        break Loop;
       case '\\':
         if (prev != p) value ~= slice(prev, p);
         bool isBinary;
-        c = scanEscapeSequence(p, isBinary);
-        prev = p;
+        auto c = scanEscapeSequence(p, isBinary);
         if (isascii(c) || isBinary)
           value ~= c;
         else
           encodeUTF8(value, c);
+        prev = p;
         break;
       case '\r':
-        c = 0;
+        prev2 = p;
         if (p[1] == '\n')
-          ++p, c = 1;
-        // goto LconvertNewline;
+          ++p;
       LconvertNewline:
-        // Need to substract c to get to the start of the newline.
-        value ~= slice(prev, p-c + 1); // +1 is for '\n'.
+        value ~= slice(prev, prev2 + 1); // +1 is for '\n'.
         value[$-1] = '\n'; // Convert Newline to '\n'.
         prev = p+1;
       case '\n':
@@ -1165,14 +1161,15 @@ class Lexer
         error(tokenLine, t.start, MID.UnterminatedString);
         goto Lerr;
       default:
-        if (!isascii(c) && isUnicodeNewlineChar(c = decodeUTF8(p)))
+        if (!isascii(*p) && isUnicodeNewlineChar(decodeUTF8(p)))
         {
-          c = 2;
+          prev2 = p - 2;
           goto LconvertNewline;
         }
         ++p;
       }
     assert(*p == '"');
+
     auto finalString = slice(prev, p);
     if (value.length)
       finalString = (value ~= finalString); // Append previous string.
@@ -1229,10 +1226,7 @@ class Lexer
     default:
       if (isEndOfLine(p))
         break;
-      uint c = *p;
-      if (!isascii(c))
-        c = decodeUTF8(p);
-      t.dchar_ = c;
+      t.dchar_ = isascii(*p) ? *p : decodeUTF8(p);
       ++p;
     }
 
@@ -1254,44 +1248,42 @@ class Lexer
     t.kind = T!"String";
     uint delim = *p;
     auto value = getBuffer();
-    uint c;
-  Loop:
-    while (1)
-    {
-      c = *++p;
-      switch (c)
+    auto prev = ++p;
+    cchar* prev2;
+
+    while (*p != delim)
+      switch (*p)
       {
       case '\r':
+        prev2 = p;
         if (p[1] == '\n')
           ++p;
+      LconvertNewline:
+        value ~= slice(prev, prev2 + 1);
+        value[$-1] = '\n'; // Convert Newline to '\n'.
+        prev = p+1;
       case '\n':
-        c = '\n'; // Convert Newline to '\n'.
-        setLineBegin(p+1);
-        break;
-      case '`':
-      case '"':
-        if (c == delim)
-          break Loop;
+        setLineBegin(++p);
         break;
       case 0, _Z_:
         error(tokenLine, t.start, (delim == '"' ?
           MID.UnterminatedRawString : MID.UnterminatedBackQuoteString));
         goto Lerr;
       default:
-        if (!isascii(c))
+        if (!isascii(*p) && isUnicodeNewlineChar(decodeUTF8(p)))
         {
-          if (isUnicodeNewlineChar(c = decodeUTF8(p)))
-            goto case '\n';
-          encodeUTF8(value, c);
-          continue;
+          prev2 = p - 2;
+          goto LconvertNewline;
         }
+        ++p;
       }
-      assert(isascii(c));
-      value ~= c;
-    }
     assert((*p).In('"', '`'));
-    ++p;
-    t.strval = lookupString(value, scanPostfix(p));
+
+    auto finalString = slice(prev, p);
+    if (value.length)
+      finalString = (value ~= finalString); // Append previous string.
+    ++p; // Skip '"' or '`'.
+    t.strval = lookupString(finalString, scanPostfix(p));
   Lerr:
     t.end = this.p = p;
     setBuffer(value);
@@ -1310,21 +1302,15 @@ class Lexer
 
     auto tokenLine = this.lineLoc;
 
-    uint c;
     auto value = getBuffer();
-    ubyte h; // hex number
-    uint n; // number of hex digits
+    ubyte h; // Current hex number.
+    bool odd; // True if one hex digit has been scanned previously.
 
     ++p;
     assert(*p == '"');
-  Loop:
-    while (1)
-    {
-      c = *++p;
-      switch (c)
+    while (*++p != '"')
+      switch (*p)
       {
-      case '"':
-        break Loop;
       case '\r':
         if (p[1] == '\n')
           ++p;
@@ -1332,6 +1318,7 @@ class Lexer
         setLineBegin(p+1);
         continue;
       default:
+        dchar c = *p;
         if (ishexad(c))
         {
           if (c <= '9')
@@ -1339,16 +1326,11 @@ class Lexer
           else
             c = (c|0x20) - 87; // ('a'-10) = 87
 
-          if (n & 1)
-          {
-            h <<= 4;
-            h |= c;
-            value ~= h;
-          }
+          if (odd)
+            value ~= cast(ubyte)(h << 4 | c);
           else
             h = cast(ubyte)c;
-          ++n;
-          continue;
+          odd = !odd;
         }
         else if (isspace(c))
           continue; // Skip spaces.
@@ -1364,8 +1346,7 @@ class Lexer
           error(errorAt, MID.NonHexCharInHexString, cast(dchar)c);
         }
       }
-    }
-    if (n & 1)
+    if (odd)
       error(tokenLine, t.start, MID.OddNumberOfDigitsInHexString);
     ++p;
     t.strval = lookupString(value, scanPostfix(p));
@@ -1401,7 +1382,10 @@ class Lexer
     uint level = 1; // Counter for nestable delimiters.
 
     ++p; ++p; // Skip q"
+    auto prev = p;
+    cchar* prev2;
     dchar c = *p;
+    // Scan the delimiter.
     switch (c)
     {
     case '(':
@@ -1449,34 +1433,37 @@ class Lexer
         p[0..str_delim.length] == str_delim; // Compare.
     }
 
+    // Scan the contents of the string.
     while (1)
-    {
-      c = *++p;
-      switch (c)
+      switch (c = *++p)
       {
       case '\r':
+        prev2 = p;
         if (p[1] == '\n')
           ++p;
+      LconvertNewline:
+        value ~= slice(prev, prev2 + 1); // +1 is for '\n'.
+        value[$-1] = '\n'; // Convert Newline to '\n'.
+        prev = p+1;
       case '\n':
-        c = '\n'; // Convert Newline to '\n'.
         setLineBegin(p+1);
         break;
       case 0, _Z_:
         error(tokenLine, t.start, MID.UnterminatedDelimitedString);
         goto Lerr;
       default:
+        prev2 = p;
         if (!isascii(c))
-        {
-          auto begin = p;
+        { // Unicode branch.
           c = decodeUTF8(p);
           if (isUnicodeNewlineChar(c))
-            goto case '\n';
+            goto LconvertNewline;
           if (c == closing_delim)
             if (str_delim.length)
             { // Matched first character of the string delimiter.
-              if (checkStringDelim(begin))
+              if (checkStringDelim(prev2))
               {
-                p = begin + str_delim.length;
+                p = prev2 + str_delim.length;
                 goto Lreturn2;
               }
             }
@@ -1486,10 +1473,8 @@ class Lexer
               --level;
               goto Lreturn;
             }
-          encodeUTF8(value, c);
-          continue;
         }
-        else
+        else // ASCII branch.
           if (c == nesting_delim)
             ++level;
           else if (c == closing_delim)
@@ -1504,14 +1489,15 @@ class Lexer
             else if (--level == 0)
               goto Lreturn;
       }
-      assert(isascii(c));
-      value ~= c;
-    }
   Lreturn: // Character delimiter.
     assert(c == closing_delim);
     assert(level == 0);
     ++p; // Skip closing delimiter.
   Lreturn2: // String delimiter.
+    auto finalString = slice(prev, prev2);
+    if (value.length)
+      finalString = (value ~= finalString); // Append previous string.
+
     char postfix;
     if (*p == '"')
       postfix = scanPostfix(++p);
@@ -1525,7 +1511,7 @@ class Lexer
       }
       error(p, MID.ExpectedDblQuoteAfterDelim, str_delim);
     }
-    t.strval = lookupString(value, postfix);
+    t.strval = lookupString(finalString, postfix);
   Lerr:
     t.end = this.p = p;
     setBuffer(value);
