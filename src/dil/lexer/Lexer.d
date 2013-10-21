@@ -38,6 +38,7 @@ class Lexer
   Token* tail;  /// The tail of the linked list. Set in scan().
   Token* token; /// Points to the current token in the token list.
   LexerTables tables; /// Used to look up token values.
+  char[] buffer; /// A buffer for string values.
 
   /// Groups line information.
   static struct LineLoc
@@ -265,6 +266,23 @@ class Lexer
     }
     this.token = this.head.next; // Go to first newline token.
     return !!dlxTokens.length;
+  }
+
+  // FIXME: doesn't work, must be replaced with a custom Array.
+  /// Acquires the current buffer.
+  char[] getBuffer()
+  {
+    auto buffer = this.buffer;
+    this.buffer = null;
+    return buffer;
+  }
+
+  /// Takes over buffer if its capacity is greater than the current one.
+  void setBuffer(char[] buffer)
+  {
+    buffer.length = 0;
+    if (buffer.capacity > this.buffer.capacity)
+      this.buffer = buffer;
   }
 
   /// Returns the source text string.
@@ -1111,7 +1129,7 @@ class Lexer
     assert(*p == '"');
     auto tokenLine = this.lineLoc;
     t.kind = T!"String";
-    char[] value;
+    auto value = getBuffer();
     auto prev = ++p; // Skip '"'. prev is used to copy chunks to value.
     uint c;
   Loop:
@@ -1162,6 +1180,7 @@ class Lexer
     t.strval = lookupString(finalString, scanPostfix(p));
   Lerr:
     t.end = this.p = p;
+    setBuffer(value);
     return;
   }
 
@@ -1173,7 +1192,7 @@ class Lexer
     version(D1)
     {
     assert(*p == '\\');
-    char[] value;
+    auto value = getBuffer();
     do
     {
       bool isBinary;
@@ -1186,6 +1205,7 @@ class Lexer
     t.strval = lookupString(value, '\0');
     t.kind = T!"String";
     t.end = p;
+    setBuffer(value);
     }
   }
 
@@ -1233,7 +1253,7 @@ class Lexer
     auto tokenLine = this.lineLoc;
     t.kind = T!"String";
     uint delim = *p;
-    char[] value;
+    auto value = getBuffer();
     uint c;
   Loop:
     while (1)
@@ -1274,6 +1294,7 @@ class Lexer
     t.strval = lookupString(value, scanPostfix(p));
   Lerr:
     t.end = this.p = p;
+    setBuffer(value);
     return;
   }
 
@@ -1290,7 +1311,7 @@ class Lexer
     auto tokenLine = this.lineLoc;
 
     uint c;
-    ubyte[] value;
+    auto value = getBuffer();
     ubyte h; // hex number
     uint n; // number of hex digits
 
@@ -1347,9 +1368,10 @@ class Lexer
     if (n & 1)
       error(tokenLine, t.start, MID.OddNumberOfDigitsInHexString);
     ++p;
-    t.strval = lookupString(cast(char[])value, scanPostfix(p));
+    t.strval = lookupString(value, scanPostfix(p));
   Lerr:
     t.end = this.p = p;
+    setBuffer(value);
     return;
   }
 
@@ -1370,7 +1392,7 @@ class Lexer
 
     auto tokenLine = this.lineLoc;
 
-    char[] value;
+    auto value = getBuffer();
     dchar nesting_delim, // '[', '(', '<', '{', or 0 if no nesting delimiter.
           closing_delim; // Will be ']', ')', '>', '},
                          // the first character of an identifier or
@@ -1506,6 +1528,7 @@ class Lexer
     t.strval = lookupString(value, postfix);
   Lerr:
     t.end = this.p = p;
+    setBuffer(value);
   } // version(D2)
   }
 
@@ -1592,7 +1615,8 @@ class Lexer
     // Convert newlines to '\n'.
     if (convertNewlines)
     { // Copy the value and convert the newlines.
-      auto tmp = new char[value.length];
+      auto tmp = getBuffer();
+      tmp.length = value.length;
       auto q = str_begin; // Reader.
       auto s = tmp.ptr; // Writer.
       for (; q < str_end; ++q)
@@ -1615,6 +1639,7 @@ class Lexer
         }
       tmp.length = s - tmp.ptr;
       value = tmp;
+      setBuffer(tmp);
     }
 
     auto strval = new_!(StringValue);
