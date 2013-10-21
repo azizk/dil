@@ -2572,52 +2572,29 @@ class Lexer
   static void encodeUTF8(ref char[] str, dchar d)
   {
     assert(!isascii(d), "check for ASCII char before calling encodeUTF8().");
-    assert(isValidChar(d),
-      "check if character is valid before calling encodeUTF8().");
+    assert(isValidChar(d), "cannot encode invalid char in encodeUTF8().");
 
-    char[6] b = void;
+    auto len = str.length;
+    str.length += d < 0x800 ? 2 : (d < 0x10000 ? 3 : 4); // Make room first.
+    auto p = str.ptr + len; // Only then get the pointer.
     if (d < 0x800)
     {
-      b[0] = 0xC0 | cast(char)(d >> 6);
-      b[1] = 0x80 | (d & 0x3F);
-      str ~= b[0..2];
+      p[0] = 0xC0 | cast(char)(d >> 6);
+      p[1] = 0x80 | (d & 0x3F);
     }
     else if (d < 0x10000)
     {
-      b[0] = 0xE0 | cast(char)(d >> 12);
-      b[1] = 0x80 | ((d >> 6) & 0x3F);
-      b[2] = 0x80 | (d & 0x3F);
-      str ~= b[0..3];
+      p[0] = 0xE0 | cast(char)(d >> 12);
+      p[1] = 0x80 | ((d >> 6) & 0x3F);
+      p[2] = 0x80 | (d & 0x3F);
     }
     else if (d < 0x200000)
     {
-      b[0] = 0xF0 | (d >> 18);
-      b[1] = 0x80 | ((d >> 12) & 0x3F);
-      b[2] = 0x80 | ((d >> 6) & 0x3F);
-      b[3] = 0x80 | (d & 0x3F);
-      str ~= b[0..4];
+      p[0] = 0xF0 | (d >> 18);
+      p[1] = 0x80 | ((d >> 12) & 0x3F);
+      p[2] = 0x80 | ((d >> 6) & 0x3F);
+      p[3] = 0x80 | (d & 0x3F);
     }
-    /+ // There are no 5 and 6 byte UTF-8 sequences yet.
-    else if (d < 0x4000000)
-    {
-      b[0] = 0xF8 | (d >> 24);
-      b[1] = 0x80 | ((d >> 18) & 0x3F);
-      b[2] = 0x80 | ((d >> 12) & 0x3F);
-      b[3] = 0x80 | ((d >> 6) & 0x3F);
-      b[4] = 0x80 | (d & 0x3F);
-      str ~= b[0..5];
-    }
-    else if (d < 0x80000000)
-    {
-      b[0] = 0xFC | (d >> 30);
-      b[1] = 0x80 | ((d >> 24) & 0x3F);
-      b[2] = 0x80 | ((d >> 18) & 0x3F);
-      b[3] = 0x80 | ((d >> 12) & 0x3F);
-      b[4] = 0x80 | ((d >> 6) & 0x3F);
-      b[5] = 0x80 | (d & 0x3F);
-      str ~= b[0..6];
-    }
-    +/
     else
      assert(0);
   }
