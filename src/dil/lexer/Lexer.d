@@ -1664,7 +1664,7 @@ class Lexer
     cstring err_arg;
 
     ++p; // Skip '\\'.
-    uint c = char2ev(*p); // Table lookup.
+    dchar c = char2ev(*p); // Table lookup.
     if (c)
     {
       ++p;
@@ -1680,30 +1680,21 @@ class Lexer
       digits = 2;
     case_Unicode:
       assert(c == 0 && digits.In(2, 4, 8));
-      while (1)
+      while (digits--)
       {
-        ++p;
-        if (ishexad(*p))
-        {
-          c *= 16;
-          if (*p <= '9')
-            c += *p - '0';
-          else
-            c += (*p|0x20) - 87; // ('a'-10) = 87
-
-          if (--digits == 0)
-          {
-            ++p;
-            if (isValidChar(c))
-              goto Lreturn; // Return valid escape value.
-
-            mid = MID.InvalidUnicodeEscapeSequence;
-            goto Lerr;
-          }
-          continue;
+        size_t x = *++p - '0'; // Try decimal digits first.
+        // Trick for converting to lower-case: 'A'|0x20 == 'a'
+        if (!(x < 10 || (x = (*p|0x20) - ('a'-10))-10 < 6))
+        { // Not a hexdigit.
+          mid = MID.InsufficientHexDigits;
+          goto Lerr;
         }
-
-        mid = MID.InsufficientHexDigits;
+        c = (c << 4) | x;
+      }
+      ++p;
+      if (!isValidChar(c))
+      {
+        mid = MID.InvalidUnicodeEscapeSequence;
         goto Lerr;
       }
       break;
@@ -1714,17 +1705,18 @@ class Lexer
       digits = 8;
       goto case_Unicode;
     default:
-      if (isoctal(*p))
+      size_t x = *p - '0';
+      if (x < 8)
       {
         isBinary = true;
         assert(c == 0);
-        c += *p++ - '0';
-        if (!isoctal(*p))
+        c = x;
+        if ((x = *++p - '0') >= 8)
           goto Lreturn;
-        c = c * 8 + *p++ - '0';
-        if (!isoctal(*p))
+        c = c * 8 + x;
+        if ((x = *++p - '0') >= 8)
           goto Lreturn;
-        c = c * 8 + *p++ - '0';
+        c = c * 8 + x;
         if (c <= 0xFF)
           goto Lreturn;
 
