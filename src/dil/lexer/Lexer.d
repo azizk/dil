@@ -1159,7 +1159,7 @@ class Lexer
         break;
       case 0, _Z_:
         error(tokenLine, t.start, MID.UnterminatedString);
-        goto Lerr;
+        goto Lerror;
       default:
         if (!isascii(*p) && isUnicodeNewlineChar(decodeUTF8(p)))
         {
@@ -1175,7 +1175,7 @@ class Lexer
       finalString = (value ~= finalString); // Append previous string.
     ++p; // Skip '"'.
     t.strval = lookupString(finalString, scanPostfix(p));
-  Lerr:
+  Lerror:
     t.end = this.p = p;
     setBuffer(value);
     return;
@@ -1268,7 +1268,7 @@ class Lexer
       case 0, _Z_:
         error(tokenLine, t.start, (delim == '"' ?
           MID.UnterminatedRawString : MID.UnterminatedBackQuoteString));
-        goto Lerr;
+        goto Lerror;
       default:
         if (!isascii(*p) && isUnicodeNewlineChar(decodeUTF8(p)))
         {
@@ -1284,7 +1284,7 @@ class Lexer
       finalString = (value ~= finalString); // Append previous string.
     ++p; // Skip '"' or '`'.
     t.strval = lookupString(finalString, scanPostfix(p));
-  Lerr:
+  Lerror:
     t.end = this.p = p;
     setBuffer(value);
     return;
@@ -1336,7 +1336,7 @@ class Lexer
           continue; // Skip spaces.
         else if (isEOF(c)) {
           error(tokenLine, t.start, MID.UnterminatedHexString);
-          goto Lerr;
+          goto Lerror;
         }
         else
         {
@@ -1350,7 +1350,7 @@ class Lexer
       error(tokenLine, t.start, MID.OddNumberOfDigitsInHexString);
     ++p;
     t.strval = lookupString(value, scanPostfix(p));
-  Lerr:
+  Lerror:
     t.end = this.p = p;
     setBuffer(value);
     return;
@@ -1401,7 +1401,7 @@ class Lexer
       if (isNewline(p))
       {
         error(p, MID.DelimiterIsMissing);
-        goto Lerr;
+        goto Lerror;
       }
 
       auto idbegin = p;
@@ -1450,7 +1450,7 @@ class Lexer
         break;
       case 0, _Z_:
         error(tokenLine, t.start, MID.UnterminatedDelimitedString);
-        goto Lerr;
+        goto Lerror;
       default:
         prev2 = p;
         if (!isascii(c))
@@ -1512,7 +1512,7 @@ class Lexer
       error(p, MID.ExpectedDblQuoteAfterDelim, str_delim);
     }
     t.strval = lookupString(finalString, postfix);
-  Lerr:
+  Lerror:
     t.end = this.p = p;
     setBuffer(value);
   } // version(D2)
@@ -1687,7 +1687,7 @@ class Lexer
         if (!(x < 10 || (x = (*p|0x20) - ('a'-10))-10 < 6))
         { // Not a hexdigit.
           mid = MID.InsufficientHexDigits;
-          goto Lerr;
+          goto Lerror;
         }
         c = (c << 4) | x;
       }
@@ -1695,7 +1695,7 @@ class Lexer
       if (!isValidChar(c))
       {
         mid = MID.InvalidUnicodeEscapeSequence;
-        goto Lerr;
+        goto Lerror;
       }
       break;
     case 'u':
@@ -1721,7 +1721,7 @@ class Lexer
           goto Lreturn;
 
         mid = MID.InvalidOctalEscapeSequence;
-        goto Lerr;
+        goto Lerror;
       }
       else if (*p == '&')
       {
@@ -1762,14 +1762,14 @@ class Lexer
         ++p;
         mid = MID.UndefinedEscapeSequence;
       }
-      goto Lerr;
+      goto Lerror;
     }
 
   Lreturn:
     ref_p = p;
     return c;
 
-  Lerr:
+  Lerror:
     if (!err_arg.length)
       err_arg = slice(ref_p, p);
     error(ref_p, mid, err_arg);
@@ -2163,7 +2163,7 @@ class Lexer
       {}
     // Decimal exponent is required.
     if (*p != 'p' && *p != 'P')
-      goto Lerr;
+      goto Lerror;
     // Scan exponent
     assert((*p).In('p', 'P'));
     ++p;
@@ -2172,7 +2172,7 @@ class Lexer
     if (!isdigit(*p))
     {
       mid = MID.HexFloatExpMustStartWithDigit;
-      goto Lerr;
+      goto Lerror;
     }
     while (isdigi_(*++p))
     {}
@@ -2180,7 +2180,7 @@ class Lexer
     this.p = p;
     finalizeFloat(t, copySansUnderscores(t.start, p));
     return;
-  Lerr:
+  Lerror:
     t.kind = T!"Float32";
     t.end = this.p = p;
     error(p, mid);
@@ -2241,7 +2241,7 @@ class Lexer
     if (*cast(uint*)p != chars_line)
     {
       mid = MID.ExpectedIdentifierSTLine;
-      goto Lerr;
+      goto Lerror;
     }
 
     p += 4;
@@ -2264,7 +2264,7 @@ class Lexer
         {
           errorAtColumn = p;
           mid = MID.ExpectedIntegerAfterSTLine;
-          goto Lerr;
+          goto Lerror;
         }
         auto newtok = new_!(Token);
         hlval.lineNum = newtok;
@@ -2275,7 +2275,7 @@ class Lexer
         {
           errorAtColumn = newtok.start;
           mid = MID.ExpectedIntegerAfterSTLine;
-          goto Lerr;
+          goto Lerror;
         }
         state = State.OptionalFilespec;
         continue;
@@ -2295,7 +2295,7 @@ class Lexer
           mid = MID.UnterminatedFilespec;
           fs.end = p;
           tokenEnd = p;
-          goto Lerr;
+          goto Lerror;
         }
         auto str = slice(fs.start + 1, p); // Get string excluding "".
         fs.strval = lookupString(str, '\0');
@@ -2307,7 +2307,7 @@ class Lexer
       {
         errorAtColumn = tokenEnd;
         mid = MID.UnterminatedSpecialToken;
-        goto Lerr;
+        goto Lerror;
       }
       ++p;
     }
@@ -2317,7 +2317,7 @@ class Lexer
     {
       errorAtColumn = p;
       mid = MID.ExpectedIntegerAfterSTLine;
-      goto Lerr;
+      goto Lerror;
     }
 
     // Evaluate #line only when not in token string.
@@ -2334,7 +2334,7 @@ class Lexer
     }
 
     if (0) // Only issue an error if jumped here.
-    Lerr:
+    Lerror:
       error(errorAtColumn, mid);
 
     t.kind = TOK.HashLine;
@@ -2479,7 +2479,7 @@ class Lexer
     ++p; // Move to second byte.
     // Error if second byte is not a trail byte.
     if (!isTrailByte(*p))
-      goto Lerr2;
+      goto Lerror2;
 
     // Check for overlong sequences.
     switch (d)
@@ -2489,14 +2489,14 @@ class Lexer
          0xF8, // 11111000 10000xxx
          0xFC: // 11111100 100000xx
       if ((*p & d) == 0x80)
-        goto Lerr;
+        goto Lerror;
     default:
       if ((d & 0xFE) == 0xC0) // 1100000x
-        goto Lerr;
+        goto Lerror;
     }
 
     const string checkNextByte = "if (!isTrailByte(*++p))"
-                                 "  goto Lerr2;";
+                                 "  goto Lerror2;";
     const string appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
 
     // See how many bytes need to be decoded.
@@ -2519,7 +2519,7 @@ class Lexer
       // 5 and 6 byte UTF-8 sequences are not allowed yet.
       // 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
       // 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
-      goto Lerr;
+      goto Lerror;
 
     // Decode the bytes now.
   L4Bytes:
@@ -2535,7 +2535,7 @@ class Lexer
 
     if (!isValidChar(d))
     {
-    Lerr:
+    Lerror:
       // Three cases:
       // *) the UTF-8 sequence was successfully decoded but the resulting
       //    character is invalid.
@@ -2551,7 +2551,7 @@ class Lexer
         ++p;
       --p;
       assert(!isTrailByte(p[1]) && p < this.endX());
-    Lerr2:
+    Lerror2:
       d = REPLACEMENT_CHAR;
       error(ref_p, MID.InvalidUTF8Sequence, formatBytes(ref_p, p));
     }

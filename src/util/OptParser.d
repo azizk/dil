@@ -38,13 +38,13 @@ class OptParser
         if (!hasArgs || parseOption())
           break;
         else if (error !is null)
-          goto Lerr;
+          goto Lerror;
       if (argv.length == n) // No arguments consumed?
         remArgs ~= popArg(); // Append to remaining args.
     }
     argv = remArgs;
     return true;
-  Lerr:
+  Lerror:
     argv = remArgs ~ argv;
     return false;
   }
@@ -82,7 +82,7 @@ class OptParser
       if (arg0.length == n) // arg0 == param
       { // Eg: -I /include/path
         if (argv.length <= 1)
-          goto Lerr;
+          goto Lerror;
         out_arg = argv[1];
         n = 2;
       }
@@ -96,7 +96,7 @@ class OptParser
       return true;
     }
     return false;
-  Lerr:
+  Lerror:
     error = Format(missingArgMessage, param);
     return false;
   }

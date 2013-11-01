@@ -985,13 +985,13 @@ override
   E visit(ArrayLiteralExpr e)
   {
     if (!e.values)
-      goto Lerr;
+      goto Lerror;
     Expression[] elems_dup; // Duplicate if the elements changed.
     foreach (i, elem; e.values)
     {
       auto newelem = visitE(elem);
       if (newelem is NAR)
-        goto Lerr;
+        goto Lerror;
       if (newelem !is elem)
       {
         if (!elems_dup)
@@ -1007,7 +1007,7 @@ override
       r.type = e.type;
     }
     return r;
-  Lerr:
+  Lerror:
     error(e, "cannot interpret array literal");
     return NAR;
   }

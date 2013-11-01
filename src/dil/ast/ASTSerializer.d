@@ -610,13 +610,13 @@ class ASTDeserializer : Visitor
         !read(kind) ||
         !read(begin) ||
         !read(end))
-      goto Lerr;
+      goto Lerror;
     n = dispatch(n, kind);
     if (n is null)
-      goto Lerr;
+      goto Lerror;
     n.setTokens(begin, end);
     return true;
-  Lerr:
+  Lerror:
     return false;
   }
 
@@ -699,12 +699,12 @@ class ASTDeserializer : Visitor
         StorageClass stcs;
         Protection prot;
         if (!read(stcs) || !read(prot))
-          goto Lerr;
+          goto Lerror;
         n.setStorageClass(stcs);
         n.setProtection(prot);
       }
       return mixin(generateCtorCall(N.CTTI_Members.length));
-    Lerr:
+    Lerror:
       return null;
     }
   }
@@ -712,9 +712,9 @@ class ASTDeserializer : Visitor
   /// Generates e.g.:
   /// ---
   /// Token* _0;
-  /// if (!read(_0)) goto Lerr;
+  /// if (!read(_0)) goto Lerror;
   /// Token*[] _1;
-  /// if (!read(_1)) goto Lerr;
+  /// if (!read(_1)) goto Lerror;
   /// ---
   static char[] generateReaders(string[] types)
   {
@@ -723,7 +723,7 @@ class ASTDeserializer : Visitor
     {
       const arg = "_" ~ itoa(i);
       code ~= t ~ " " ~ arg ~ ";\n" ~
-        "if (!read(" ~ arg ~ ")) goto Lerr;\n";
+        "if (!read(" ~ arg ~ ")) goto Lerror;\n";
     }
     return code;
   }

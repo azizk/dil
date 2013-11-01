@@ -215,7 +215,7 @@ body
 
   // Error if: end of string or second byte is not a trail byte.
   if (!(++p < end && isTrailByte(c2 = *p)))
-    goto Lerr;
+    goto Lerror;
 
   // Check for overlong sequences.
   switch (c)
@@ -225,14 +225,14 @@ body
        0xF8, // c=11111000 c2=10000xxx
        0xFC: // c=11111100 c2=100000xx
     if ((c & c2) == 0x80)
-      goto Lerr;
+      goto Lerror;
   default:
     if ((c & 0xFE) == 0xC0) // c=1100000x
-      goto Lerr;
+      goto Lerror;
   }
 
   immutable checkNextByte = "if (!isTrailByte(c2 = *++p))"
-                               "  goto Lerr;";
+                               "  goto Lerror;";
   immutable appendSixBits = "c = (c << 6) | c2 & 0b0011_1111;";
 
   // See how many bytes need to be decoded.
@@ -259,7 +259,7 @@ body
     // 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
     // 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
   }
-  goto Lerr;
+  goto Lerror;
 
   // Decode the bytes now.
 L4Bytes:
@@ -273,12 +273,12 @@ L2Bytes:
 
   assert(isTrailByte(c2));
   if (!isValidChar(c)) // Final check for validity.
-    goto Lerr;
+    goto Lerror;
 Lreturn:
   ref_p = p+1; // Character is valid. Advance the pointer.
 LreturnError:
   return c;
-Lerr:
+Lerror:
   c = ERROR_CHAR;
   goto LreturnError;
 }

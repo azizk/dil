@@ -226,7 +226,7 @@ class ConfigLoader : SettingsLoader
     {
       diag ~= new GeneralError(new Location("", 0),
         "the language file ‘"~langFile~"’ does not exist.");
-      goto Lerr;
+      goto Lerror;
     }
 
     // 1. Load language file.
@@ -234,7 +234,7 @@ class ConfigLoader : SettingsLoader
     mod.parse();
 
     if (mod.hasErrors)
-      goto Lerr;
+      goto Lerror;
 
     auto pass1 = new SemanticPass1(mod, cc);
     pass1.run();
@@ -270,7 +270,7 @@ class ConfigLoader : SettingsLoader
     rb.langCode = langCode;
 
     return rb;
-  Lerr:
+  Lerror:
     return new ResourceBundle();
   }
 
