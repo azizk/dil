@@ -1319,13 +1319,8 @@ class Lexer
         continue;
       default:
         dchar c = *p;
-        if (ishexad(c))
+        if (hex2val(c))
         {
-          if (c <= '9')
-            c -= '0';
-          else
-            c = (c|0x20) - 87; // ('a'-10) = 87
-
           if (odd)
             value ~= cast(ubyte)(h << 4 | c);
           else
@@ -1671,25 +1666,26 @@ class Lexer
       goto Lreturn;
     }
 
-    uint digits = void;
+    uint loopCounter = void;
 
     switch (*p)
     {
     case 'x':
       isBinary = true;
-      digits = 2;
+      loopCounter = 1;
     case_Unicode:
-      assert(c == 0 && digits.In(2, 4, 8));
-      while (digits--)
-      {
-        size_t x = *++p - '0'; // Try decimal digits first.
-        // Trick for converting to lower-case: 'A'|0x20 == 'a'
-        if (!(x < 10 || (x = (*p|0x20) - ('a'-10))-10 < 6))
-        { // Not a hexdigit.
-          mid = MID.InsufficientHexDigits;
+      assert(c == 0 && loopCounter.In(1, 2, 4));
+      mid = MID.InsufficientHexDigits;
+      while (loopCounter--)
+      { // Decode two hex digits.
+        dchar x = *++p;
+        if (!hex2val(x))
+          goto Lerror; // Not a hexdigit.
+        c = c << 4 | x;
+        x = *++p;
+        if (!hex2val(x))
           goto Lerror;
-        }
-        c = (c << 4) | x;
+        c = c << 4 | x;
       }
       ++p;
       if (!isValidChar(c))
@@ -1699,29 +1695,28 @@ class Lexer
       }
       break;
     case 'u':
-      digits = 4;
+      loopCounter = 2;
       goto case_Unicode;
     case 'U':
-      digits = 8;
+      loopCounter = 4;
       goto case_Unicode;
     default:
       size_t x = *p - '0';
       if (x < 8)
-      {
+      { // Octal sequence.
         isBinary = true;
         assert(c == 0);
         c = x;
         if ((x = *++p - '0') >= 8)
-          goto Lreturn;
+          break;
         c = c * 8 + x;
         if ((x = *++p - '0') >= 8)
-          goto Lreturn;
+          break;
         c = c * 8 + x;
+        ++p;
         if (c <= 0xFF)
-          goto Lreturn;
-
+          break;
         mid = MID.InvalidOctalEscapeSequence;
-        goto Lerror;
       }
       else if (*p == '&')
       {
@@ -1790,11 +1785,13 @@ class Lexer
   /// Invalid: "0b_", "0x_", "._" etc.
   void scanNumber(Token* t)
   {
+    assert(isdigit(*p));
     auto p = this.p;
     ulong ulong_; // The integer value.
-    bool overflow;
-    bool isDecimal;
-    size_t digits;
+    bool overflow; // True if an overflow was detected.
+    bool isDecimal; // True for Dec literals.
+    size_t digits; // Used to detect overflow in hex/bin numbers.
+    size_t x; // Current digit value.
 
     if (*p != '0')
       goto LscanInteger;
@@ -1820,45 +1817,36 @@ class Lexer
     default:
       if (*p == '_')
         goto LscanOctal; // 0_
-      else if (isdigit(*p))
-      {
-        if (*p == '8' || *p == '9')
+      else if ((x = *p - '0') < 10)
+        if (x > 7)
           goto Loctal_hasDecimalDigits; // 08 or 09
         else
-          goto Loctal_enter_loop; // 0[0-7]
-      }
+          goto Loctal_scannedFirstDigit; // 0[0-7]
     }
 
     // Number 0
-    assert(p[-1] == '0');
-    assert(!isdigi_(*p));
-    assert(ulong_ == 0);
+    assert(p[-1] == '0' && !isdigi_(*p) && ulong_ == 0);
     isDecimal = true;
     goto Lfinalize;
 
   LscanInteger:
-    assert(*p != 0 && isdigit(*p));
+    assert(*p != '0' && isdigit(*p));
     isDecimal = true;
-    goto Lenter_loop_int;
-    while (1)
-    {
-      if (*++p == '_')
-        continue;
-      if (!isdigit(*p))
-        break;
-    Lenter_loop_int:
-      if (ulong_ < ulong.max/10 || (ulong_ == ulong.max/10 && *p <= '5'))
+    for (; 1; ++p)
+      if ((x = *p - '0') < 10)
       {
-        ulong_ *= 10;
-        ulong_ += *p - '0';
-        continue;
+        if (ulong_ < ulong.max/10 || (ulong_ == ulong.max/10 && x < 6))
+          ulong_ = ulong_ * 10 + x;
+        else
+        { // Overflow: skip following digits.
+          overflow = true;
+          while (isdigit(*++p))
+          {}
+          break;
+        }
       }
-      // Overflow: skip following digits.
-      overflow = true;
-      while (isdigit(*++p))
-      {}
-      break;
-    }
+      else if (*p != '_')
+        break;
 
     // The number could be a float, so check overflow below.
     switch (*p)
@@ -1886,16 +1874,14 @@ class Lexer
     assert((*p).In('x', 'X'));
     while (1)
     {
-      if (*++p == '_')
-        continue;
-      if (!ishexad(*p))
+      x = *++p;
+      if (hex2val(x))
+      {
+        ulong_ = ulong_ << 4 | x;
+        ++digits;
+      }
+      else if (*p != '_')
         break;
-      ++digits;
-      ulong_ *= 16;
-      if (*p <= '9')
-        ulong_ += *p - '0';
-      else
-        ulong_ += (*p|0x20) - 87; // ('a'-10) = 87
     }
 
     assert((ishexa_(p[-1]) || p[-1].In('x', 'X')) && !ishexa_(*p));
@@ -1921,23 +1907,13 @@ class Lexer
     assert(digits == 0);
     assert((*p).In('b', 'B'));
     while (1)
-    {
-      if (*++p == '0')
+      if ((x = *++p - '0') < 2)
       {
         ++digits;
-        ulong_ *= 2;
+        ulong_ = ulong_ * 2 + x;
       }
-      else if (*p == '1')
-      {
-        ++digits;
-        ulong_ *= 2;
-        ulong_ += *p - '0';
-      }
-      else if (*p == '_')
-        continue;
-      else
+      else if (*p != '_')
         break;
-    }
 
     if (digits == 0 || digits > 64)
       error(t.start,
@@ -1950,24 +1926,21 @@ class Lexer
   LscanOctal:
     assert(*p == '_');
     while (1)
-    {
-      if (*++p == '_')
-        continue;
-      if (!isoctal(*p))
-        break;
-    Loctal_enter_loop:
-      if (ulong_ < ulong.max/2 || (ulong_ == ulong.max/2 && *p <= '1'))
+      if ((x = *++p - '0') < 8)
       {
-        ulong_ *= 8;
-        ulong_ += *p - '0';
-        continue;
+        if (ulong_ < ulong.max/2 || (ulong_ == ulong.max/2 && x < 2))
+        Loctal_scannedFirstDigit:
+          ulong_ = ulong_ * 8 + x;
+        else
+        { // Overflow: skip following digits.
+          overflow = true;
+          while (isoctal(*++p))
+          {}
+          break;
+        }
       }
-      // Overflow: skip following digits.
-      overflow = true;
-      while (isoctal(*++p))
-      {}
-      break;
-    }
+      else if (*p != '_')
+        break;
 
     bool hasDecimalDigits;
     if (isdigit(*p))
