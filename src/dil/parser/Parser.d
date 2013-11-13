@@ -3354,35 +3354,32 @@ class Parser
       set(e, begin, begin);
       return e;
     case T!"String":
-      cbinstr str = token.strval.str;
+      auto buffer = lexer.getBuffer();
       char postfix = token.strval.pf;
       nT();
       // Concatenate adjacent string literals.
       while (tokenIs!"String")
       {
-        auto strval = token.strval;
-        if (auto pf = strval.pf) // If the string has a postfix char.
+        if (auto pf = token.strval.pf) // If the string has a postfix char.
         {
           if (pf != postfix)
             error(token, MID.StringPostfixMismatch);
           postfix = pf;
         }
-        str ~= strval.str;
+        buffer ~= cast(cstring)token.strval.str;
         nT();
       }
+      cbinstr str = cast(cbinstr)buffer[];
+      lexer.setBuffer(buffer);
 
-      void check(cbinstr function(cstring) convert)
-      { // Check for invalid UTF-8 sequences and then convert.
-        if (!hasInvalidUTF8(str, begin))
-          str = convert(cast(cstring)str);
-      }
-
-      switch (postfix)
+      if (postfix)
       {
-      case 'c': check(x => cast(cbinstr)x); break;
-      case 'w': check(x => cast(cbinstr)dil.Unicode.toUTF16(x)); break;
-      case 'd': check(x => cast(cbinstr)dil.Unicode.toUTF32(x)); break;
-      default:
+        cbinstr function(cstring) conversionFunction =
+          (postfix == 'c') ? x => cast(cbinstr)x :
+          (postfix == 'w') ? x => cast(cbinstr)dil.Unicode.toUTF16(x) :
+                             x => cast(cbinstr)dil.Unicode.toUTF32(x);
+        if (!hasInvalidUTF8(str, begin))
+          str = conversionFunction(cast(cstring)str);
       }
 
       // Did the value change due to conversion or multiple string literals?

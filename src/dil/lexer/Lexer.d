@@ -38,7 +38,7 @@ class Lexer
   Token* tail;  /// The tail of the linked list. Set in scan().
   Token* token; /// Points to the current token in the token list.
   LexerTables tables; /// Used to look up token values.
-  char[] buffer; /// A buffer for string values.
+  CharArray buffer; /// A buffer for string values.
 
   /// Groups line information.
   static struct LineLoc
@@ -270,18 +270,18 @@ class Lexer
 
   // FIXME: doesn't work, must be replaced with a custom Array.
   /// Acquires the current buffer.
-  char[] getBuffer()
+  CharArray getBuffer()
   {
     auto buffer = this.buffer;
-    this.buffer = null;
+    this.buffer = buffer.init;
     return buffer;
   }
 
   /// Takes over buffer if its capacity is greater than the current one.
-  void setBuffer(char[] buffer)
+  void setBuffer(CharArray buffer)
   {
-    buffer.length = 0;
-    if (buffer.capacity > this.buffer.capacity)
+    buffer.len = 0;
+    if (buffer.cap > this.buffer.cap)
       this.buffer = buffer;
   }
 
@@ -1141,7 +1141,7 @@ class Lexer
         bool isBinary;
         auto c = scanEscapeSequence(p, isBinary);
         if (isascii(c) || isBinary)
-          value ~= c;
+          value ~= cast(char)c;
         else
           encodeUTF8(value, c);
         prev = p;
@@ -1152,7 +1152,7 @@ class Lexer
           ++p;
       LconvertNewline:
         value ~= slice(prev, prev2 + 1); // +1 is for '\n'.
-        value[$-1] = '\n'; // Convert Newline to '\n'.
+        *(value.cur-1) = '\n'; // Convert Newline to '\n'.
         prev = p+1;
       case '\n':
         setLineBegin(++p);
@@ -1171,8 +1171,8 @@ class Lexer
     assert(*p == '"');
 
     auto finalString = slice(prev, p);
-    if (value.length)
-      finalString = (value ~= finalString); // Append previous string.
+    if (value.len)
+      finalString = ((value ~= finalString), value[]); // Append previous string.
     ++p; // Skip '"'.
     t.strval = lookupString(finalString, scanPostfix(p));
   Lerror:
@@ -1195,7 +1195,7 @@ class Lexer
       bool isBinary;
       auto c = scanEscapeSequence(p, isBinary);
       if (isascii(c) || isBinary)
-        value ~= c;
+        value ~= cast(char)c;
       else
         encodeUTF8(value, c);
     } while (*p == '\\');
@@ -1212,9 +1212,8 @@ class Lexer
   void scanCharacter(Token* t)
   {
     assert(*p == '\'');
-    ++p;
     t.kind = T!"Character";
-    switch (*p)
+    switch (*++p)
     {
     case '\\':
       bool notused;
@@ -1260,7 +1259,7 @@ class Lexer
           ++p;
       LconvertNewline:
         value ~= slice(prev, prev2 + 1);
-        value[$-1] = '\n'; // Convert Newline to '\n'.
+        *(value.cur-1) = '\n'; // Convert Newline to '\n'.
         prev = p+1;
       case '\n':
         setLineBegin(++p);
@@ -1280,8 +1279,8 @@ class Lexer
     assert((*p).In('"', '`'));
 
     auto finalString = slice(prev, p);
-    if (value.length)
-      finalString = (value ~= finalString); // Append previous string.
+    if (value.len)
+      finalString = ((value ~= finalString), value[]); // Append previous string.
     ++p; // Skip '"' or '`'.
     t.strval = lookupString(finalString, scanPostfix(p));
   Lerror:
@@ -1344,7 +1343,7 @@ class Lexer
     if (odd)
       error(tokenLine, t.start, MID.OddNumberOfDigitsInHexString);
     ++p;
-    t.strval = lookupString(value, scanPostfix(p));
+    t.strval = lookupString(value[], scanPostfix(p));
   Lerror:
     t.end = this.p = p;
     setBuffer(value);
@@ -1438,7 +1437,7 @@ class Lexer
           ++p;
       LconvertNewline:
         value ~= slice(prev, prev2 + 1); // +1 is for '\n'.
-        value[$-1] = '\n'; // Convert Newline to '\n'.
+        *(value.cur-1) = '\n'; // Convert Newline to '\n'.
         prev = p+1;
       case '\n':
         setLineBegin(p+1);
@@ -1490,8 +1489,8 @@ class Lexer
     ++p; // Skip closing delimiter.
   Lreturn2: // String delimiter.
     auto finalString = slice(prev, prev2);
-    if (value.length)
-      finalString = (value ~= finalString); // Append previous string.
+    if (value.len)
+      finalString = ((value ~= finalString), value[]); // Append previous string.
 
     char postfix;
     if (*p == '"')
@@ -1597,7 +1596,7 @@ class Lexer
     if (convertNewlines)
     { // Copy the value and convert the newlines.
       auto tmp = getBuffer();
-      tmp.length = value.length;
+      tmp.len = value.length;
       auto q = str_begin; // Reader.
       auto s = tmp.ptr; // Writer.
       for (; q < str_end; ++q)
@@ -1618,8 +1617,8 @@ class Lexer
           }
           *s++ = *q; // Copy current character.
         }
-      tmp.length = s - tmp.ptr;
-      value = tmp;
+      tmp.len = s - tmp.ptr;
+      value = tmp[];
       setBuffer(tmp);
     }
 
@@ -1747,12 +1746,9 @@ class Lexer
       }
       else
       {
-        auto tmp = `\`.dup;
+        auto tmp = "\\".dup;
         // TODO: check for non-printable character?
-        if (isascii(*p))
-          tmp ~= *p;
-        else
-          encodeUTF8(tmp, decodeUTF8(p));
+        encode(tmp, isascii(*p) ? *p : decodeUTF8(p));
         err_arg = tmp;
         ++p;
         mid = MID.UndefinedEscapeSequence;
@@ -2534,14 +2530,16 @@ class Lexer
   }
 
   /// Encodes the character d and appends it to str.
-  static void encodeUTF8(ref char[] str, dchar d)
+  static void encodeUTF8(ref CharArray str, dchar d)
   {
     assert(!isascii(d), "check for ASCII char before calling encodeUTF8().");
     assert(isValidChar(d), "cannot encode invalid char in encodeUTF8().");
 
-    auto len = str.length;
-    str.length += d < 0x800 ? 2 : (d < 0x10000 ? 3 : 4); // Make room first.
-    auto p = str.ptr + len; // Only then get the pointer.
+    auto count = d < 0x800 ? 2 : (d < 0x10000 ? 3 : 4);
+    if (count > str.rem) // Not enough space?
+      str.rem = count;
+    auto p = str.cur;
+    str.cur += count;
     if (d < 0x800)
     {
       p[0] = 0xC0 | cast(char)(d >> 6);

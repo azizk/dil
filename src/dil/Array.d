@@ -165,6 +165,8 @@ struct DArray(E)
   }
 }
 
+alias CharArray = DArray!char;
+
 /// Fast, mutable, resizable array implementation.
 struct Array
 {
