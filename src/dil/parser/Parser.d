@@ -3354,26 +3354,28 @@ class Parser
       set(e, begin, begin);
       return e;
     case T!"String":
-      auto buffer = lexer.getBuffer();
+      auto str = token.strval.str;
       char postfix = token.strval.pf;
       nT();
-      // Concatenate adjacent string literals.
-      while (tokenIs!"String")
-      {
-        if (auto pf = token.strval.pf) // If the string has a postfix char.
+      if (tokenIs!"String")
+      { // Concatenate adjacent string literals.
+        auto buffer = lexer.getBuffer();
+        do
         {
-          if (pf != postfix)
-            error(token, MID.StringPostfixMismatch);
-          postfix = pf;
-        }
-        buffer ~= cast(cstring)token.strval.str;
-        nT();
+          if (auto pf = token.strval.pf) // If the string has a postfix char.
+          {
+            if (pf != postfix)
+              error(token, MID.StringPostfixMismatch);
+            postfix = pf;
+          }
+          buffer ~= cast(cstring)token.strval.str;
+        } while (consumed!"String");
+        str = cast(cbinstr)buffer[].dup; // Copy final string.
+        lexer.setBuffer(buffer);
       }
-      cbinstr str = cast(cbinstr)buffer[];
-      lexer.setBuffer(buffer);
 
       if (postfix)
-      {
+      { // Check for UTF8 errors and if needed convert to UTF16 or UTF32.
         cbinstr function(cstring) conversionFunction =
           (postfix == 'c') ? x => cast(cbinstr)x :
           (postfix == 'w') ? x => cast(cbinstr)dil.Unicode.toUTF16(x) :
