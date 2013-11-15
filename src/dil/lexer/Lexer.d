@@ -61,45 +61,14 @@ class Lexer
 
   alias T = S2T; /// Converts, e.g., T!"+" to TOK.Plus.
 
-  /// CTF: Casts a string literal to an integer.
-  static size_t toUint(string s)
-  {
-    assert(s.length <= size_t.sizeof);
-    size_t x;
-    for (size_t i; i < s.length;)
-      x = x << 8 | s[i++];
-    return x;
-  }
-  static assert(toUint("\xAA\xBB\xCC\xDD") == 0xAABBCCDD);
-  static assert(toUint("\xAB\xCD\xEF") == 0xABCDEF);
-
-  /// CTF: Like toUint(), but reverses the value for little-endian CPUs.
-  /// Allows for fast string comparison using integers:
-  /// *cast(uint*)"\xAA\xBB\xCC\xDD".ptr == toUintE("\xAA\xBB\xCC\xDD")
-  static size_t toUintE(cstring s)
-  {
-    version(BigEndian)
-    return toUint(s);
-    else
-    {
-    assert(s.length <= size_t.sizeof);
-    size_t x;
-    for (auto i = s.length; i;)
-      x = x << 8 | s[--i];
-    return x;
-    }
-  }
-  version(LittleEndian)
-  static assert(toUintE("\xAA\xBB\xCC\xDD") == 0xDDCCBBAA);
-
   static
   {
-  const ushort chars_r = toUintE(`r"`); /// `r"` as a ushort.
-  const ushort chars_x = toUintE(`x"`); /// `x"` as a ushort.
-  const ushort chars_q = toUintE(`q"`); /// `q"` as a ushort.
-  const ushort chars_q2 = toUintE(`q{`); /// `q{` as a ushort.
-  const ushort chars_shebang = toUintE("#!"); /// `#!` as a ushort.
-  const uint chars_line = toUintE("line"); /// `line` as a uint.
+  const ushort chars_r = castInt(`r"`); /// `r"` as a ushort.
+  const ushort chars_x = castInt(`x"`); /// `x"` as a ushort.
+  const ushort chars_q = castInt(`q"`); /// `q"` as a ushort.
+  const ushort chars_q2 = castInt(`q{`); /// `q{` as a ushort.
+  const ushort chars_shebang = castInt("#!"); /// `#!` as a ushort.
+  const uint chars_line = castInt("line"); /// `line` as a uint.
   }
 
   /// Constructs a Lexer object.
@@ -784,7 +753,7 @@ class Lexer
       char[] label_str = "Lcommon".dup;
       if (str.length != 1) // Append length as a suffix.
         label_str ~= '0' + cast(char)str.length;
-      result ~= `case toUintE("`~str~`"): kind = T!"`~str~`"; `~
+      result ~= `case castInt("`~str~`"): kind = T!"`~str~`"; `~
                 "goto "~label_str~";\n";
     }
     return result;
@@ -880,7 +849,7 @@ class Lexer
     {
     mixin(cases("<<=", ">>=", ">>>", "...",
       "!<=", "!>=", "!<>", "<>=", "^^="));
-    case toUintE(LS), toUintE(PS):
+    case castInt(LS), castInt(PS):
       p += 2;
       goto Lnewline;
     default:
@@ -894,13 +863,13 @@ class Lexer
     // 2 character tokens.
     switch (c)
     {
-    case toUintE("/+"):
+    case castInt("/+"):
       this.p = ++p; // Skip /
       return scanNestedComment(t);
-    case toUintE("/*"):
+    case castInt("/*"):
       this.p = ++p; // Skip /
       return scanBlockComment(t);
-    case toUintE("//"): // LineComment.
+    case castInt("//"): // LineComment.
       ++p; // Skip /
       assert(*p == '/');
       while (!isEndOfLine(++p))
@@ -911,7 +880,7 @@ class Lexer
     mixin(cases("<=", ">=", "<<", ">>", "==", "=>", "!=", "!<", "!>", "<>",
       "..", "&&", "&=", "||", "|=", "++", "+=", "--", "-=", "*=", "/=", "%=",
       "^=", "~=", "^^"));
-    case toUintE("\r\n"):
+    case castInt("\r\n"):
       ++p;
       goto Lnewline;
     default:

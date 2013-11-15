@@ -15,6 +15,27 @@ static assert(LS[0] == PS[0] && LS[1] == PS[1]);
 
 const dchar _Z_ = 26; /// Control+Z.
 
+/// Casts a string to an integer at compile-time.
+/// Allows for fast string comparison using integers:
+/// *cast(uint*)"\xAA\xBB\xCC\xDD".ptr == castInt("\xAA\xBB\xCC\xDD")
+static size_t castInt(cstring s)
+{
+  assert(s.length <= size_t.sizeof);
+  size_t x;
+  foreach (i, c; s)
+    version(BigEndian)
+      x = (x << 8) | c; // Add c as LSByte.
+    else
+      x |= (c << i*8); // Add c as MSByte.
+  return x;
+}
+version(LittleEndian)
+static assert(castInt("\xAA\xBB\xCC\xDD") == 0xDDCCBBAA &&
+  castInt("\xAB\xCD\xEF") == 0xEFCDAB && castInt("\xAB\xCD") == 0xCDAB);
+else
+static assert(castInt("\xAA\xBB\xCC\xDD") == 0xAABBCCDD &&
+  castInt("\xAB\xCD\xEF") == 0xABCDEF && castInt("\xAB\xCD") == 0xABCD);
+
 /// Returns: true if d is a Unicode line or paragraph separator.
 bool isUnicodeNewlineChar(dchar d)
 {
