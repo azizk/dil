@@ -3,8 +3,9 @@
 /// $(Maturity very high)
 module dil.lexer.Funcs;
 
-import dil.Unicode : scanUnicodeAlpha, isUnicodeAlpha, encode, isValidChar;
+import dil.Unicode;
 import dil.String : slice;
+import dil.Array;
 import common;
 
 const char[3] LS = "\u2028"; /// Unicode line separator.
@@ -181,12 +182,47 @@ bool isIdentifierStart(cchar* p, cchar* end)
   return isidbeg(*p) || isUnicodeAlpha(p, end);
 }
 
+/// Returns s with non-printable characters escaped.
+cstring escapeNonPrintable(cstring s)
+{
+  char[16] buffer;
+  CharArray s2;
+  size_t i, prev;
+  while (i < s.length)
+  {
+    auto j = i; // Remember index of the current character.
+    auto c = decode(s, i);
+    if (auto n = escapeNonPrintable(c, buffer.ptr))
+    {
+      if (!prev) // Reserve space when appending the first time.
+        s2.cap = s.length + n - (i-j);
+      s2 ~= s[prev..j]; // Previous unescaped string.
+      s2 ~= buffer[0..n]; // Escape sequence.
+      prev = i;
+    }
+  }
+  if (prev && prev != s.length)
+    s2 ~= s[prev..$];
+  return s2.ptr ? s2[] : s;
+}
+
 /// Returns an escape sequence if c is not printable.
 cstring escapeNonPrintable(dchar c)
 {
-  const H = "0123456789ABCDEF"; // Hex numerals.
-  char[] s;
-  if (c < 128)
+  char[16] buffer;
+  if (auto n = escapeNonPrintable(c, buffer.ptr))
+    return buffer[0..n].dup;
+  else
+    return encode(buffer.ptr, c).dup;
+}
+
+/// Writes an escape sequence to p if c is not printable.
+/// Returns the number of characters written.
+size_t escapeNonPrintable(dchar c, char* p)
+{
+  enum H = "0123456789ABCDEF"; // Hex numerals.
+  size_t n; // Number of bytes written.
+  if (isascii(c))
   { // ASCII
     switch (c)
     {
@@ -199,38 +235,35 @@ cstring escapeNonPrintable(dchar c)
     case '\t': c = 't'; goto Lcommon;
     case '\v': c = 'v'; goto Lcommon;
     Lcommon:
-      s = ['\\', cast(char)c];
+      p[0..n=2] = ['\\', cast(char)c];
       break;
     default:
-      if (c < 0x20 || c == 0x7F)
-        // Special non-printable characters.
-        s = ['\\', 'x', H[c>>4], H[c&0x0F]];
-      else // The rest is printable.
-        s ~= c;
+      if (c < 0x20 || c == 0x7F) // Special non-printable characters.
+        p[0..n=4] = ['\\', 'x', H[c>>4], H[c & 0x0F]];
     }
   }
   else
   { // UNICODE
     // TODO: write function isUniPrintable() similar to isUniAlpha().
     if (0x80 >= c && c <= 0x9F) // C1 control character set.
-      s = ['\\', 'u', '0', '0', H[c>>4], H[c&0x0F]];
+      p[0..n=6] = ['\\', 'u', '0', '0', H[c>>4], H[c & 0x0F]];
+    if (c == '\u2028' || c == '\u2029')
+      p[0..n=6] = ['\\', 'u', '2', '0', '2', H[c & 0x0F]];
     else if (!isValidChar(c))
     {
       if (c <= 0xFF)
-        s = ['\\', 'x', H[c>>4], H[c&0x0F]];
+        p[0..n=4] = ['\\', 'x', H[c>>4], H[c & 0x0F]];
       else if (c <= 0xFFFF)
-        s = ['\\', 'x', H[c>>12], H[c>>8&0x0F],
-             '\\', 'x', H[c>>4&0x0F], H[c&0x0F]];
+        p[0..n=8] = ['\\', 'x', H[c>>12], H[c>>8 & 0x0F],
+                     '\\', 'x', H[c>>4 & 0x0F], H[c & 0x0F]];
       else
-        s = ['\\', 'x', H[c>>28], H[c>>24&0x0F],
-             '\\', 'x', H[c>>20&0x0F], H[c>>16&0x0F],
-             '\\', 'x', H[c>>12&0x0F], H[c>>8&0x0F],
-             '\\', 'x', H[c>>4&0x0F], H[c&0x0F]];
+        p[0..n=16] = ['\\', 'x', H[c>>28], H[c>>24 & 0x0F],
+                      '\\', 'x', H[c>>20 & 0x0F], H[c>>16 & 0x0F],
+                      '\\', 'x', H[c>>12 & 0x0F], H[c>>8 & 0x0F],
+                      '\\', 'x', H[c>>4 & 0x0F], H[c & 0x0F]];
     }
-    else // Treat the rest as printable.
-      encode(s, c);
   }
-  return s;
+  return n;
 }
 
 
