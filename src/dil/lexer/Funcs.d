@@ -320,7 +320,7 @@ bool hex2val(Char)(ref Char c)
   if (c - '0' < 10)
     c -= '0';
   else if ((c|0x20) - 'a' < 6) // 'A'|0x20 == 'a'
-    c = (c|0x20) - 'a' + 10;
+    c = cast(Char)((c|0x20) - 'a' + 10);
   else
     return false;
   return true;
