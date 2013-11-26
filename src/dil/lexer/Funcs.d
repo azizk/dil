@@ -192,6 +192,8 @@ cstring escapeNonPrintable(cstring s)
   {
     auto j = i; // Remember index of the current character.
     auto c = decode(s, i);
+    if (i == j)
+      c = s[i++] | 1<<31; // Error decoding char: set special flag.
     if (auto n = escapeNonPrintable(c, buffer.ptr))
     {
       if (!prev) // Reserve space when appending the first time.
@@ -251,6 +253,8 @@ size_t escapeNonPrintable(dchar c, char* p)
       p[0..n=6] = ['\\', 'u', '2', '0', '2', H[c & 0x0F]];
     else if (!isValidChar(c))
     {
+      if (c & 1<<31) // Check for the flag that forces a \xYY encoding.
+        c &= 0xFF;
       if (c <= 0xFF)
         p[0..n=4] = ['\\', 'x', H[c>>4], H[c & 0x0F]];
       else if (c <= 0xFFFF)
