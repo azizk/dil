@@ -1319,12 +1319,19 @@ class Parser
 
     auto bases = consumed!":" ? parseBaseClasses() : null;
 
-    if (bases.length == 0 && consumed!";")
-    {}
-    else if (tokenIs!"{")
-      decls = parseDeclarationDefinitionsBody();
-    else
-      error2(MID.ExpectedClassBody, token);
+    version(D2)
+    if (bases.length && tokenIs!"if")
+    {
+      if (constraint)
+        error(MID.RedundantConstraint);
+      constraint = parseOptionalConstraint();
+    }
+
+    if (bases.length || !consumed!";")
+      if (tokenIs!"{")
+        decls = parseDeclarationDefinitionsBody();
+      else
+        error2(MID.ExpectedClassBody, token);
 
     Declaration d = new ClassDecl(name, /+tparams, +/bases, decls);
     if (tparams)
@@ -1384,12 +1391,19 @@ class Parser
 
     auto bases = consumed!":" ? parseBaseClasses() : null;
 
-    if (bases.length == 0 && consumed!";")
-    {}
-    else if (tokenIs!"{")
-      decls = parseDeclarationDefinitionsBody();
-    else
-      error2(MID.ExpectedInterfaceBody, token);
+    version(D2)
+    if (bases.length && tokenIs!"if")
+    {
+      if (constraint)
+        error(MID.RedundantConstraint);
+      constraint = parseOptionalConstraint();
+    }
+
+    if (bases.length || !consumed!";")
+      if (tokenIs!"{")
+        decls = parseDeclarationDefinitionsBody();
+      else
+        error2(MID.ExpectedInterfaceBody, token);
 
     Declaration d = new InterfaceDecl(name, bases, decls);
     if (tparams)
@@ -1423,13 +1437,12 @@ class Parser
       version(D2) constraint = parseOptionalConstraint();
     }
 
-    if (name && consumed!";")
-    {}
-    else if (tokenIs!"{")
-      decls = parseDeclarationDefinitionsBody();
-    else
-      error2(begin.kind == T!"struct" ?
-             MID.ExpectedStructBody : MID.ExpectedUnionBody, token);
+    if (!name || !consumed!";")
+      if (tokenIs!"{")
+        decls = parseDeclarationDefinitionsBody();
+      else
+        error2(begin.kind == T!"struct" ?
+               MID.ExpectedStructBody : MID.ExpectedUnionBody, token);
 
     Declaration d;
     if (begin.kind == T!"struct")

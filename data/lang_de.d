@@ -88,6 +88,7 @@ string[] messages = [
   "erwartete Funktionskörper, nicht ‚{}‘",
   "redundanter Anbindungstyp: ‚{}‘",
   "redundantes Zugriffsattribut: ‚{}‘",
+  "eine zweite Templatebedingung ist nicht erlaubt",
   "erwartete einen Pragma-Bezeichner, nicht ‚{}‘",
   "erwartete einen Alias-Modulnamen, nicht ‚{}‘",
   "erwartete einen Aliasnamen, nicht ‚{}‘",

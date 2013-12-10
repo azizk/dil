@@ -88,6 +88,7 @@ string[] messages = [
   "expected function body, not ‘{}’",
   "redundant linkage type: ‘{}’",
   "redundant protection attribute: ‘{}’",
+  "a second template constraint is not allowed",
   "expected pragma identifier, not ‘{}’",
   "expected alias module name, not ‘{}’",
   "expected alias name, not ‘{}’",

@@ -94,6 +94,7 @@ enum MID
   ExpectedFunctionBody,
   RedundantLinkageType,
   RedundantProtection,
+  RedundantConstraint,
   ExpectedPragmaIdentifier,
   ExpectedAliasModuleName,
   ExpectedAliasImportName,

@@ -91,6 +91,7 @@ string[] messages = [
   null,
   null,
   null,
+  "tek bir tane şablon sınırlaması belirtilenebilir",
   null,
   null,
   null,

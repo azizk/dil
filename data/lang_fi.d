@@ -133,6 +133,7 @@ string[] messages = [
   null,
   null,
   null,
+  null,
 
   // Semantic analysis:
   null,
