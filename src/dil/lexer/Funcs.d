@@ -241,7 +241,7 @@ size_t escapeNonPrintable(dchar c, char* p)
       break;
     default:
       if (c < 0x20 || c == 0x7F) // Special non-printable characters.
-        p[0..n=4] = ['\\', 'x', H[c>>4], H[c & 0x0F]];
+        goto LoneByte;
     }
   }
   else
@@ -256,6 +256,7 @@ size_t escapeNonPrintable(dchar c, char* p)
       if (c & 1<<31) // Check for the flag that forces a \xYY encoding.
         c &= 0xFF;
       if (c <= 0xFF)
+      LoneByte:
         p[0..n=4] = ['\\', 'x', H[c>>4], H[c & 0x0F]];
       else if (c <= 0xFFFF)
         p[0..n=8] = ['\\', 'x', H[c>>12], H[c>>8 & 0x0F],
