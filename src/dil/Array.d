@@ -150,6 +150,32 @@ struct DArray(E)
     assert(cur <= end);
   }
 
+  /// Sets: cap = next_pow_of_2(cap)
+  void growP2()
+  {
+    import core.bitop : bsr;
+    auto x = cap;
+    if (x & (x - 1))
+    { // Round up to the next power of 2.
+      x = 2 << bsr(x);
+      if (x == 0) // Did it overflow?
+        x = size_t.max / 2 + 1; // Set the highest bit.
+    }
+    cap = x;
+  }
+
+  /// Sets: cap *= 1.5
+  void growX1_5()
+  {
+    cap = (cap << 1) - (cap >> 1);
+  }
+
+  /// Sets: cap *= 2
+  void growX2()
+  {
+    cap = cap * 2;
+  }
+
   /// Returns a slice.
   E[] opSlice()
   {
