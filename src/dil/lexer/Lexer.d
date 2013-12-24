@@ -1758,6 +1758,11 @@ class Lexer
     size_t digits; // Used to detect overflow in hex/bin numbers.
     size_t x; // Current digit value.
 
+    bool isfloat(char c)
+    { // True if the decimal point '.' is not followed by:
+      return c != '.' && !isidbeg(c) && isascii(c);
+    }
+
     if (*p != '0')
       goto LscanInteger;
     ++p; // Skip zero.
@@ -1773,9 +1778,9 @@ class Lexer
         goto LscanFloat; // 0Li
       break; // 0L
     case '.':
-      if (p[1] == '.')
-        break; // 0..
-      // 0.
+      if (!isfloat(p[1]))
+        break;
+      // Fall through: 0.[0-9]
     case 'i','f','F', // Imaginary and float literal suffixes.
          'e', 'E':    // Float exponent.
       goto LscanFloat;
@@ -1817,7 +1822,7 @@ class Lexer
     switch (*p)
     {
     case '.':
-      if (p[1] != '.')
+      if (isfloat(p[1]))
         goto LscanFloat;
       break;
     case 'L':
@@ -1854,7 +1859,7 @@ class Lexer
     switch (*p)
     {
     case '.':
-      if (p[1] == '.')
+      if (!isfloat(p[1]))
         break;
     case 'p', 'P':
       this.p = p;
@@ -1920,7 +1925,7 @@ class Lexer
     switch (*p)
     {
     case '.':
-      if (p[1] != '.')
+      if (isfloat(p[1]))
         goto LscanFloat;
       break;
     case 'L':
