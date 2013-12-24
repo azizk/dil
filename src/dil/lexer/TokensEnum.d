@@ -81,9 +81,9 @@ enum TOK : ushort
 
   /// Keywords:
   /// NB.: Token.isKeyword() depends on this list being contiguous.
-  Abstract, Alias, Align, Asm, Assert, Auto, Body, Break, Case, Cast, Catch,
-  Class, Const, Continue, Debug, Default, Delegate, Delete, Deprecated, Do,
-  Else, Enum, Export, Extern, False, Final, Finally, For, Foreach,
+  Abstract, Alias, Align, ArgTypes, Asm, Assert, Auto, Body, Break, Case, Cast,
+  Catch, Class, Const, Continue, Debug, Default, Delegate, Delete, Deprecated,
+  Do, Else, Enum, Export, Extern, False, Final, Finally, For, Foreach,
   ForeachReverse, Function, Goto, Gshared, If, Immutable, Import, In, Inout,
   Interface, Invariant, Is, Lazy, Macro, Mixin, Module, New, Nothrow, Null,
   Out, OverloadSet, Override, Package, Parameters, Pragma, Private, Protected,
@@ -177,7 +177,7 @@ immutable string[TOK.MAX] tokToString = [
   "$",
   "@",
 
-  "abstract","alias","align","asm","assert","auto","body",
+  "abstract","alias","align","__argTypes","asm","assert","auto","body",
   "break","case","cast","catch",
   "class","const","continue",
   "debug","default","delegate","delete","deprecated","do",

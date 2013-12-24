@@ -52,9 +52,7 @@ class Parser
   ///   diag = Used for collecting error messages.
   this(SourceText srcText, LexerTables tables, Diagnostics diag = null)
   {
-    if (diag is null)
-      diag = new Diagnostics();
-    this.diag = diag;
+    this.diag = diag ? diag : new Diagnostics();
     this.lexer = new Lexer(srcText, tables, diag);
   }
 
@@ -3382,7 +3380,8 @@ class Parser
             postfix = pf;
           }
           buffer ~= cast(cstring)token.strval.str;
-        } while (consumed!"String");
+          nT();
+        } while(tokenIs!"String");
         str = cast(cbinstr)buffer[].dup; // Copy final string.
         lexer.setBuffer(buffer);
       }
@@ -3486,15 +3485,15 @@ class Parser
 
       auto type = parseDeclaratorOptId(ident);
 
-      switch (token.kind)
+      if (token.kind.Any!(":", "=="))
       {
-      case T!":", T!"==":
         opTok = token;
         nT();
         switch (token.kind)
         {
         case T!"typedef", T!"struct", T!"union", T!"class", T!"interface",
-             T!"enum", T!"function", T!"delegate", T!"super", T!"return":
+             T!"enum", T!"function", T!"delegate", T!"super", T!"return",
+             T!"__argTypes", T!"__parameters":
         case_Const_Immutable_Inout_Shared: // D2
           specTok = token;
           nT();
@@ -3509,16 +3508,14 @@ class Parser
         default:
           specType = parseType();
         }
-      default:
       }
 
       TemplateParameters tparams;
-      version(D2)
-      { // "is" "(" Type Identifier (":" | "==") TypeSpecialization ","
+      // "is" "(" DeclaratorOptId (":" | "==") TypeSpecialization ","
       //          TemplateParameterList ")"
-      if (ident && specType && tokenIs!",")
+      version(D2)
+      if (specType && tokenIs!",")
         tparams = parseTemplateParameterList2();
-      } // version(D2)
       requireClosing!")"(paren);
       e = new IsExpr(type, ident, opTok, specTok, specType, tparams);
       break;

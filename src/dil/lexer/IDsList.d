@@ -6,6 +6,7 @@ module dil.lexer.IDsList;
 /// The list of keywords in D.
 enum keywordIDs = (){
   enum words = [
+    "__argTypes", // D2
     "__gshared", // D2
     "__overloadset", // D2
     "__parameters", // D2
