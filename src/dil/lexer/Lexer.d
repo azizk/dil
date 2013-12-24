@@ -78,16 +78,13 @@ class Lexer
   ///   diag = Used for collecting error messages.
   this(SourceText srcText, LexerTables tables, Diagnostics diag = null)
   {
-    if (diag is null)
-      diag = new Diagnostics();
     version(gc_tokens)
     {}
     else
       this.allocator.initialize(PAGESIZE);
     this.srcText = srcText;
     this.tables = tables;
-    this.diag = diag;
-
+    this.diag = diag ? diag : new Diagnostics();
     assert(text.length >= 4 && text[$-4..$] == SourceText.sentinelString,
       "source text has no sentinel character");
     this.p = text.ptr;
@@ -141,7 +138,6 @@ class Lexer
     { // Some tokens need special handling:
     case T!"Newline":
       setLineBegin(t.end);
-      t.setWhitespaceFlag();
       t.nlval = lookupNewline();
       break;
     case T!"Character": // May have escape sequences.
@@ -172,9 +168,8 @@ class Lexer
         scanRawString(t); break;
       case '"':
         scanNormalString(t); break;
-      version(D2)
-      {}
-      else { // Only in D1.
+      version(D1)
+      { // Only in D1.
       case '\\':
         scanEscapeString(t); break;
       }
@@ -182,7 +177,6 @@ class Lexer
       }
       break;
     case T!"Comment": // Just rescan for newlines.
-      t.setWhitespaceFlag();
       if (t.isMultiline) // Mutliline tokens may have newlines.
         for (auto p = t.start, end = t.end; p < end;)
           if (scanNewline(p))
@@ -204,7 +198,6 @@ class Lexer
       scanSpecialTokenSequence(t); // Complicated. Let the method handle this.
       break;
     case T!"#!Shebang", T!"Empty": // Whitespace tokens.
-      t.setWhitespaceFlag();
       break;
     default:
     }
@@ -462,7 +455,6 @@ class Lexer
     assert(p[0..2] == "#!");
     auto t = new_!(Token);
     t.kind = T!"#!Shebang";
-    t.setWhitespaceFlag();
     t.start = p++;
     while (!isEndOfLine(++p))
       isascii(*p) || decodeUTF8(p);
@@ -590,7 +582,6 @@ class Lexer
           while (!isEndOfLine(++p))
             isascii(*p) || decodeUTF8(p);
           kind = T!"Comment";
-          t.setWhitespaceFlag();
           goto Lreturn;
         default:
           kind = T!"/";
@@ -717,7 +708,6 @@ class Lexer
       error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
       kind = T!"Illegal";
-      t.setWhitespaceFlag();
       t.dchar_ = c;
       goto Lcommon;
     }
@@ -732,7 +722,6 @@ class Lexer
   Lnewline:
     setLineBegin(++p);
     t.kind = T!"Newline";
-    t.setWhitespaceFlag();
     t.nlval = lookupNewline();
     t.end = this.p = p;
     return;
@@ -875,7 +864,6 @@ class Lexer
       while (!isEndOfLine(++p))
         isascii(*p) || decodeUTF8(p);
       kind = T!"Comment";
-      t.setWhitespaceFlag();
       goto Lreturn;
     mixin(cases("<=", ">=", "<<", ">>", "==", "=>", "!=", "!<", "!>", "<>",
       "..", "&&", "&=", "||", "|=", "++", "+=", "--", "-=", "*=", "/=", "%=",
@@ -955,7 +943,6 @@ class Lexer
     error(t.start, MID.IllegalCharacter, cast(dchar)c);
 
     kind = T!"Illegal";
-    t.setWhitespaceFlag();
     t.dchar_ = c;
     goto Lcommon;
 
@@ -974,10 +961,8 @@ class Lexer
 
   Lnewline:
     setLineBegin(++p);
-    kind = T!"Newline";
-    t.setWhitespaceFlag();
+    t.kind = T!"Newline";
     t.nlval = lookupNewline();
-    t.kind = kind;
     t.end = this.p = p;
     return;
   }
@@ -1019,7 +1004,6 @@ class Lexer
       }
     }
     t.kind = T!"Comment";
-    t.setWhitespaceFlag();
     t.end = this.p = p;
     return;
   }
@@ -1069,7 +1053,6 @@ class Lexer
       }
     }
     t.kind = T!"Comment";
-    t.setWhitespaceFlag();
     t.end = this.p = p;
     return;
   }
@@ -2228,7 +2211,6 @@ class Lexer
         auto fs = hlval.filespec = new_!(Token);
         fs.start = p;
         fs.kind = T!"Filespec";
-        fs.setWhitespaceFlag();
         // Skip until closing '"'.
         while (*++p != '"' && !isEndOfLine(p))
           isascii(*p) || decodeUTF8(p);
@@ -2281,7 +2263,6 @@ class Lexer
       error(errorAtColumn, mid);
 
     t.kind = TOK.HashLine;
-    t.setWhitespaceFlag();
     t.hlval = hlval;
     t.end = this.p = tokenEnd;
     return;

@@ -168,12 +168,6 @@ struct Token
     return text();
   }
 
-  /// Adds Flags.Whitespace to this.flags.
-  void setWhitespaceFlag()
-  {
-    assert(isWhitespace);
-  }
-
   /// Returns true if this is a token that can have newlines in it.
   ///
   /// These can be block and nested comments and any string literal
