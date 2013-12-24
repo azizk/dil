@@ -95,11 +95,12 @@ struct DArray(E)
   {
     auto len = this.len;
     len = (len < n ? len : n); // min(len, n)
-    if (!ptr || GC.extend(ptr, n, n) == 0)
+    auto bytes = n * E.sizeof;
+    if (!ptr || GC.extend(ptr, bytes, bytes) == 0)
     { // Couldn't extend. Allocate new memory.
-      auto newPtr = cast(E*)GC.malloc(n * E.sizeof, scanIfPtrs);
+      auto newPtr = cast(E*)GC.malloc(bytes, scanIfPtrs);
       if (len) // Copy to the new block if there are elements.
-         newPtr[0..len] = ptr[0..len];
+        newPtr[0..len] = ptr[0..len];
       ptr = newPtr;
     }
     cur = ptr + len;
