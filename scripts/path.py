@@ -48,12 +48,6 @@ class Path(unicode):
     else:
       return Path(path_s, self)
 
-  """ Like __div__ but also assigns (a new instance) to the variable.
-      p = Path('/home/a')
-      p /= 'bc.d'
-      p == '/home/a/bc.d' """
-  __idiv__ = __div__
-
   def __add__(self, path):
     """ Path('/home/a') + 'bc.d' == '/home/abc.d'
         or:
@@ -73,8 +67,6 @@ class Path(unicode):
       return Paths(p + self for p in path)
     else:
       return Path(unicode.__add__(unicode(path), self))
-
-  __iadd__ = __add__
 
   def __mod__(self, args):
     """ Path('/bin%d') % 32 == '/bin32' """
@@ -338,10 +330,10 @@ class Paths(list):
     list.__init__(self, (p if isinstance(p, Path) else Path(p) for p in paths))
 
   def __div__(self, path_s):
-    """ Paths('/a', 'b') / 'c.d' == Paths('/a/c.d', '/b/c.d')
+    """ Paths('/a', '/b') / 'c.d' == Paths('/a/c.d', '/b/c.d')
         or:
         Paths('a/b', 'c/d') / ['w.x', 'y.z'] == \
-        Paths('a/b/w.x', 'a/b/y.z', 'c/d/w.x', 'c/d/y.z') """
+          Paths('a/b/w.x', 'a/b/y.z', 'c/d/w.x', 'c/d/y.z') """
     if isiterable(path_s):
       return Paths(Path(p1, p2) for p1 in self for p2 in path_s)
     else:
@@ -350,32 +342,30 @@ class Paths(list):
   def __rdiv__(self, path_s):
     """ '/home' / Paths('a', 'b') == Paths('/home/a', '/home/b')
         or:
-        ['w.x', 'y.z'] / Paths('a/b', 'c/d') == \
-        Paths('w.x/a/b', 'w.x/c/d', 'y.z/a/b', 'y.z/c/d')"""
+        ['a/b', 'c/d'] / Paths('w.x', 'y.z') == \
+          Paths('a/b/w.x', 'a/b/y.z', 'c/d/w.x', 'c/d/y.z') """
     if isiterable(path_s):
       return Paths(Path(p1, p2) for p1 in path_s for p2 in self)
     else:
       return Paths(Path(path_s, p) for p in self)
 
-  def __idiv__(self, path_s):
-    self[:] = self.__div__(path_s)
-    return self
-
+  # NB: adding any iterable object always results in a Paths object
+  #     which may be unwanted or unexpected.
   def __add__(self, path_s):
+    """ Paths('/a', '/b') + '.c' == Paths('/a.c', 'b.c')
+        Paths('a', 'b') + ['c'] == Paths('a', 'b', 'c') """
     if isiterable(path_s):
       return Paths(list.__add__(self, path_s))
     else:
       return Paths(p + unicode(path_s) for p in self)
 
   def __radd__(self, path_s):
+    """ '/home/' + Paths('a', 'b') == Paths('/home/a', '/home/b')
+        ['a'] + Paths('b', 'c') == Paths('a', 'b', 'c') """
     if isiterable(path_s):
-      return Paths(list.__add__(self, path_s))
+      return Paths(list.__add__(path_s, self))
     else:
       return Paths(unicode(path_s) + p for p in self)
-
-  def __iadd__(self, path_s):
-    self[:] = self.__add__(path_s)
-    return self
 
   def __mod__(self, args):
     return Paths(p.__mod__(args) for p in self)
