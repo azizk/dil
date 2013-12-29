@@ -59,45 +59,6 @@ class ASTSerializer : Visitor2
     TokenArrays,
   }
 
-  /// Array of TypeInfos.
-  static TypeInfo[TID.max+1] arrayTIs = [
-    typeid(void[]),
-    typeid(typeof(null)),
-    typeid(char),
-    typeid(bool),
-    typeid(uint),
-    typeid(TOK),
-    typeid(Protection),
-    typeid(LinkageType),
-    typeid(StorageClass),
-    typeid(NodeKind),
-    typeid(Node),
-    typeid(Declaration),
-    typeid(Statement),
-    typeid(Expression),
-    typeid(TypeNode),
-    typeid(Parameter),
-    typeid(TemplateParam),
-    typeid(Node[]),
-    typeid(Declaration[]),
-    typeid(Statement[]),
-    typeid(Expression[]),
-    typeid(TypeNode[]),
-    typeid(Parameter[]),
-    typeid(TemplateParam[]),
-    typeid(EnumMemberDecl[]),
-    typeid(BaseClassType[]),
-    typeid(CatchStmt[]),
-    typeid(Token*),
-    typeid(Token*[]),
-    typeid(Token*[][]),
-  ];
-
-  static TypeInfo getTypeInfo(TID tid)
-  {
-    return arrayTIs[tid - TID.Array];
-  }
-
   this()
   {
   }
