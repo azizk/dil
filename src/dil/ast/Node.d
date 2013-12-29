@@ -108,9 +108,9 @@ abstract class Node
   }
 
   /// This string is mixed into the constructor of a class that inherits
-  /// from Node. It sets the member kind.
-  const string set_kind =
-    `this.kind = mixin("NodeKind." ~ typeof(this).stringof);`;
+  /// from Node. It sets the member kind. E.g.: this.kind = NodeKind.IfStmt;
+  static enum set_kind =
+    `this.kind = __traits(getMember, NodeKind, typeof(this).stringof);`;
 
   /// Returns true if Declaration.
   final bool isDeclaration()
