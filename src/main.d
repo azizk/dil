@@ -482,9 +482,9 @@ void main(cstring[] args)
   case "settings", "set":
     alias GS = GlobalSettings;
     cstring
-      versionIds = String(";").join(GS.versionIds).array,
-      importPaths = String(";").join(GS.importPaths).array,
-      ddocPaths = String(";").join(GS.ddocFilePaths).array;
+      versionIds = String(";").join(GS.versionIds)[],
+      importPaths = String(";").join(GS.importPaths)[],
+      ddocPaths = String(";").join(GS.ddocFilePaths)[];
 
     cstring[string] settings = [
       "DIL":config.executablePath,
@@ -506,7 +506,7 @@ void main(cstring[] args)
     if (retrieve_settings.length) // Print select settings.
       foreach (name; retrieve_settings)
       {
-        if (auto psetting = (name = String(name).toupper().array) in settings)
+        if (auto psetting = (name = String(name).toupper()[]) in settings)
           Printfln("{}={}", name, *psetting);
       }
     else // Print all settings.

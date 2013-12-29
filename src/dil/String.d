@@ -121,10 +121,10 @@ struct StringT(C)
       return S(t);
   }
 
-  /// Returns itself.
-  ref inout(S) opSlice() inout
+  /// Returns a character array.
+  inout(C)[] opSlice() inout
   {
-    return this;
+    return ptr[0..len];
   }
 
   /// Returns a pointer from an index number.
@@ -220,7 +220,7 @@ struct StringT(C)
   /// Concatenates x copies of this string.
   S times(size_t x) const
   {
-    auto str = array;
+    auto str = this[];
     auto slen = str.length;
     C[] result = new C[x * slen];
     for (size_t i, n; i < x; i++, (n += slen))
@@ -293,14 +293,13 @@ struct StringT(C)
   /// Concatenates another string array.
   S opBinary(string op : "~")(const S rhs) const
   {
-    return this ~ rhs.array;
+    return this ~ rhs[];
   }
 
   /// ditto
   S opBinary(string op : "~")(const C[] rhs) const
   {
-    C[] result = array ~ rhs.dup;
-    return S(result);
+    return S(cast(C[])(this[] ~ rhs));
   }
 
   /// Appends another String.
@@ -364,16 +363,10 @@ struct StringT(C)
     return ptr is end;
   }
 
-  /// Returns an array string.
-  @property inout(C)[] array() inout
-  {
-    return ptr[0..len];
-  }
-
   /// ditto
   immutable(C)[] toString()
   {
-    return array.idup;
+    return this[].idup;
   }
 
   /// Return true if lower-case.
@@ -807,7 +800,7 @@ struct StringT(C)
     if (alen == 0)
     {
       C[] result;
-      const bstr = b.array;
+      const bstr = b[];
       const(C)* p = ptr;
 
       while (p < end)
@@ -843,18 +836,18 @@ struct StringT(C)
       if (pa)
       {
         C[] result;
-        const bstr = b.array;
+        const bstr = b[];
         const(C)* p = ptr;
 
         do
         {
           if (pa) // Append previous string?
-            result ~= S(p, pa).array;
+            result ~= S(p, pa)[];
           result ~= bstr;
           p = pa + alen; // Skip a.
         } while ((pa = S(p, end).findp(a)) !is null);
         if (p < end)
-          result ~= S(p, end).array;
+          result ~= S(p, end)[];
         this = S(result);
       }
     }
@@ -913,10 +906,10 @@ struct StringT(C)
     C[] result;
     if (strs.length)
     {
-      const sep = this.array;
-      result = strs[0].array.dup;
+      const sep = this[];
+      result = strs[0][].dup;
       foreach (str; strs[1..$])
-        result ~= sep ~ str.array;
+        result ~= sep ~ str[];
     }
     return S(result);
   }
@@ -927,7 +920,7 @@ struct StringT(C)
     C[] result;
     if (strs.length)
     {
-      const sep = this.array;
+      const sep = this[];
       result = strs[0].dup;
       foreach (str; strs[1..$])
         result ~= sep ~ str;
@@ -939,9 +932,9 @@ struct StringT(C)
   S rjoin(const S[] strs) const
   {
      C[] result;
-     const sep = this.array;
+     const sep = this[];
      foreach (str; strs)
-       (result ~= str.array) ~= sep;
+       (result ~= str[]) ~= sep;
      return S(result);
   }
 
@@ -955,9 +948,9 @@ struct StringT(C)
   S ljoin(const S[] strs) const
   {
      C[] result;
-     const sep = this.array;
+     const sep = this[];
      foreach (str; strs)
-       (result ~= sep) ~= str.array;
+       (result ~= sep) ~= str[];
      return S(result);
   }
 
@@ -996,13 +989,13 @@ alias DString = StringT!(dchar); /// Instantiation for dchar.
 /// Returns a string array slice ranging from begin to end.
 inout(char)[] slice(inout(char)* begin, inout(char)* end)
 {
-  return String.inoutS(begin, end).array;
+  return String.inoutS(begin, end)[];
 }
 
 /// Returns a copy of str where a is replaced with b.
 cstring replace(cstring str, char a, char b)
 {
-  return String(str).sub_(a, b).array;
+  return String(str).sub_(a, b)[];
 }
 
 /// Converts x to a string array.
@@ -1017,7 +1010,7 @@ char[] itoa(ulong x)
     while (x /= 10);
     return buffer[i .. $];
   }
-  return String(x).array;
+  return String(x)[];
 }
 
 /// Returns a list of Strings from a list of char arrays.

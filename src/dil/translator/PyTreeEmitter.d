@@ -33,7 +33,7 @@ cstring escapeDblQuotes(cstring text)
     case '\\': esc = `\\`;  goto case_common;
     case_common:
       if (prev < p) // Copy previous piece.
-        result ~= String(prev, p).array;
+        result ~= slice(prev, p);
       result ~= esc;
       prev = p + 1;
     default:
@@ -41,7 +41,7 @@ cstring escapeDblQuotes(cstring text)
   if (prev == text.ptr)
     return text; // Nothing to escape.
   if (prev < end) // Copy last piece.
-    result ~= String(prev, p).array;
+    result ~= slice(prev, p);
   return result;
 }
 

@@ -138,7 +138,7 @@ override:
     }
     auto s = String(utf8str);
     // Finally append the mangled string.
-    text ~= mc ~ itoa(s.len) ~ "_" ~ s.tohex().array;
+    text ~= mc ~ itoa(s.len) ~ "_" ~ s.tohex()[];
   }
 
   void visit(ArrayLiteralExpr e)

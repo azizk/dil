@@ -2029,7 +2029,7 @@ class Lexer
   {
     auto s = String(begin, end + 1).dup;
     s[-1] = 0;
-    return s.sub('_', "").array;
+    return s.sub('_', "")[];
   }
 
   /// Scans a floating point number literal.

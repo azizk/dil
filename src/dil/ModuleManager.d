@@ -214,14 +214,14 @@ class ModuleManager
     out cstring prevFQN, out cstring lastName)
   {
     auto s = String(pckgFQN).rpartition(".");
-    prevFQN = s[0].array;
-    lastName = s[1].array;
+    prevFQN = s[0][];
+    lastName = s[1][];
   }
 
   /// Returns e.g. 'dil.ast' for 'dil/ast/Node'.
   static char[] getPackageFQN(cstring moduleFQNPath)
   {
-    return String(moduleFQNPath).sub(dirSep, '.').rpartition(".")[0].array;
+    return String(moduleFQNPath).sub(dirSep, '.').rpartition(".")[0][];
   }
 
   /// Searches for a module in the file system looking in importPaths.
