@@ -8,6 +8,11 @@ public import tango.io.Stdout;
 public import tango.text.convert.Layout : Layout;
 public import tango.core.Vararg;
 
+/// General int.
+alias int_t = sizediff_t;
+/// General uint.
+alias uint_t = size_t;
+
 /// Signed size type.
 alias ssize_t = sizediff_t;
 
