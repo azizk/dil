@@ -382,30 +382,17 @@ class Lexer
   /// Looks up a newline value.
   NewlineValue* lookupNewline()
   {
-    auto linnum = this.lineNum;
+    auto lineNum = this.lineNum;
     if (hlinfo)
     { // Don't insert into the table, when '#line' tokens are in the text.
       // This could be optimised with another table.
       auto nl = new_!(NewlineValue);
-      nl.lineNum = linnum;
+      nl.lineNum = lineNum;
       auto hlinfo = nl.hlinfo = new_!(Token.HashLineInfo);
       *hlinfo = *this.hlinfo;
       return nl;
     }
-
-    auto newlines = tables.newlines;
-    assert(linnum != 0);
-    auto i = linnum - 1;
-    if (i >= newlines.length)
-      (tables.newlines.length = linnum),
-      (newlines = tables.newlines);
-    auto nl = newlines[i];
-    if (!nl)
-    { // Insert a new NewlineValue.
-      newlines[i] = nl = new NewlineValue;
-      nl.lineNum = linnum;
-    }
-    return nl;
+    return tables.lookupNewline(lineNum);
   }
 
 

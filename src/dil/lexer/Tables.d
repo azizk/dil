@@ -27,7 +27,7 @@ class LexerTables
   Float[hash_t] floats; /// Maps float strings to Float values.
   IntegerValue*[ulong] ulongs; /// Maps a ulong to an IntegerValue.
   /// A list of newline values.
-  /// Only instances, where the 'hlinfo' member is null, are kept here.
+  /// Only instances where the 'hlinfo' member is null are kept here.
   NewlineValue*[] newlines;
 
   /// Contructs a LexerTables object.
@@ -90,5 +90,21 @@ class LexerTables
     iv.ulong_ = num;
     ulongs[num] = iv;
     return iv;
+  }
+
+  /// Looks up a newline value that can be shared among Lexer instances.
+  NewlineValue* lookupNewline(uint_t lineNum)
+  {
+    assert(lineNum != 0);
+    auto i = lineNum - 1;
+    if (i >= newlines.length)
+      newlines.length = lineNum;
+    auto nl = newlines[i];
+    if (!nl)
+    { // Insert a new NewlineValue.
+      newlines[i] = nl = new NewlineValue;
+      nl.lineNum = lineNum;
+    }
+    return nl;
   }
 }
