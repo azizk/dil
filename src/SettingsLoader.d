@@ -412,7 +412,7 @@ cstring GetExecutableFilePath(cstring arg0)
   char[] buffer = new char[1024];  // 1024 = PATH_MAX on Mac OS X 10.5
   if (!realpath(path.ptr, buffer.ptr))
     return arg0;
-  return String(buffer.ptr, '\0')[];
+  return MString(buffer.ptr, '\0')[];
   } // version(darwin)
 
   else

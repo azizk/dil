@@ -1,6 +1,6 @@
 /// Author: Aziz Köksal
 /// License: GPL3
-/// $(Maturity low)
+/// $(Maturity average)
 module dil.String;
 
 import common;
@@ -10,6 +10,8 @@ import common;
 struct StringT(C)
 {
   alias S = StringT; /// Shortcut to own type.
+  /// Explicit constness for construction.
+  alias CS = const S, IS = immutable S;
   alias inoutS = inout(S); /// Useful for explicit construction of inout Strings.
   C* ptr; /// Points to the beginning of the string.
   C* end; /// Points one past the end of the string.
@@ -49,48 +51,33 @@ struct StringT(C)
   // to be able to assign to the members.
 
   /// Constructs from start and end pointers.
-  //this(inout C* p, inout C* e) inout
-  this(const C* p, const C* e)
+  this(inout C* p, inout C* e) inout
   {
     assert(p <= e);
-    ptr = cast(C*)p;
-    end = cast(C*)e;
+    ptr = p;
+    end = e;
   }
 
-  /// Constructs from an array string.
-  //this(inout C[] str) inout
-  this(const C[] str)
+  /// Constructs from a start pointer and a length value.
+  /// NB: use 'u' suffix on int literals, e.g.: this(str.ptr, 13u)
+  this(inout C* p, const size_t length) inout
   {
-    this(str.ptr, str.ptr + str.length);
+    this(p, p + length);
   }
 
-  /// Constructs from a character terminated string.
-  //this(inout C* p, const C terminator) inout
-  this(const C* p, const C terminator)
+  /// Constructs from a character array.
+  this(inout C[] str) inout
   {
-    const(C)* q = p;
+    this(str.ptr, str.length);
+  }
+
+  /// Constructs from a character-terminated string.
+  this(inout C* p, const C terminator) inout
+  {
+    inout(C)* q = p;
     while (*q != terminator)
       q++;
     this(p, q);
-  }
-
-  /// Constructs from a single character.
-  //this(ref inout C c) inout
-  this(ref const C c)
-  {
-    this(&c, &c + 1);
-  }
-
-  /// Constructs from an unsigned long.
-  this(ulong x)
-  {
-    C[20] buffer; // ulong.max -> "18446744073709551615".len == 20
-    auto end = buffer.ptr + buffer.length;
-    auto p = end;
-    do
-      *--p = '0' + x % 10;
-    while (x /= 10);
-    this(S(p, end).array.dup);
   }
 
   /// Constructs from Strings by joining them with joinStr.
@@ -102,14 +89,32 @@ struct StringT(C)
   /// ditto
   this(const C[][] strs, const C[] joinStr)
   {
-    this = S(joinStr).join(strs);
+    this = CS(joinStr).join(strs);
+  }
+
+  /// Constructs from a single character.
+  this(const C c)
+  {
+    this = CS(&c, 1u).dup;
+  }
+
+  /// Constructs from an unsigned long.
+  /// NB: Not a regular constructor because "char" converts implicitly to ulong.
+  static S itoa(ulong x)
+  {
+    C[20] buffer; // ulong.max -> "18446744073709551615".len == 20
+    auto end = buffer.ptr + buffer.length;
+    auto p = end;
+    do
+      *--p = '0' + x % 10;
+    while (x /= 10);
+    return S(p, end).dup;
   }
 
   /// Checks pointers.
   invariant()
   {
-    assert(ptr <= end);
-    if (ptr is null) assert(end is null);
+    assert(ptr ? ptr <= end : !end);
   }
 
   /// Converts t to S in case it's a different type than S.
@@ -117,8 +122,14 @@ struct StringT(C)
   {
     static if (is(T : const(S)))
       return t;
-    else
+    else static if (is(typeof(IS(t))))
+      return IS(t);
+    else static if (is(typeof(CS(t))))
+      return CS(t);
+    else static if (is(typeof(S(t))))
       return S(t);
+    else
+      static assert(0, "no StringT constructor for " ~ T.stringof);
   }
 
   /// Returns a character array.
@@ -132,7 +143,7 @@ struct StringT(C)
   inout(C)* indexPtr(ssize_t x) inout
   {
     auto p = x < 0 ? end + x : ptr + x;
-    assert(ptr <= p && p < end);
+    assert(ptr <= p && p <= end);
     return p;
   }
 
@@ -161,52 +172,52 @@ struct StringT(C)
   }
 
   /// Compares the bytes of two Strings for exact equality.
-  int opEquals(const S s) const
+  bool opEquals(const S s) const
   {
     if (len != s.len)
-      return 0;
+      return false;
     const(C)* p = ptr, p2 = s.ptr;
     while (p < end)
       if (*p++ != *p2++)
-        return 0;
-    return 1;
+        return false;
+    return true;
   }
 
   /// Compares to a boolean value.
-  int opEquals(bool b) const
+  bool opEquals(bool b) const
   {
     return cast(bool)this == b;
   }
 
   /// Compares the chars of two Strings.
   /// Returns: 0 if both are equal.
-  ssize_t opCmp(const S s) const
+  int_t opCmp(const S s) const
   {
     auto n = (len <= s.len) ? len : s.len;
     const(C)* p = ptr, p2 = s.ptr;
     for (; n; n--, p++, p2++)
-      if (*p != *p2)
-        return *p - *p2;
+      if (int_t diff = *p - *p2)
+        return diff;
     if (len != s.len)
       n = len - s.len;
     return n;
   }
 
   /// Compares two Strings ignoring case (only ASCII.)
-  ssize_t icmp_(const S s) const
+  int_t icmp_(const S s) const
   {
     auto n = (len <= s.len) ? len : s.len;
     const(C)* p = ptr, p2 = s.ptr;
     for (; n; n--, p++, p2++)
-      if (tolower(*p) != tolower(*p2))
-        return *p - *p2;
+      if (int_t diff = tolower(*p) - tolower(*p2))
+        return diff;
     if (len != s.len)
       n = len - s.len;
     return n;
   }
 
   /// ditto
-  ssize_t icmp(T)(T s) const
+  int_t icmp(T)(T s) const
   {
     return icmp_(toS!T(s));
   }
@@ -218,31 +229,31 @@ struct StringT(C)
   }
 
   /// Concatenates x copies of this string.
-  S times(size_t x) const
+  S times(uint_t x) const
   {
     auto str = this[];
     auto slen = str.length;
     C[] result = new C[x * slen];
-    for (size_t i, n; i < x; i++, (n += slen))
+    for (uint_t i, n; i < x; i++, (n += slen))
       result[n .. n+slen] = str;
     return S(result);
   }
 
   /// ditto
-  S opBinary(string op : "*")(size_t rhs) const
+  S opBinary(string op : "*")(uint_t rhs) const
   {
     return times(rhs);
   }
 
   /// ditto
-  S opBinaryRight(string op : "*")(size_t lhs) const
+  S opBinaryRight(string op : "*")(uint_t lhs) const
   {
     return times(lhs);
   }
 
   /// Returns a list of Strings where each piece is of length n.
   /// The last piece may be shorter.
-  inout(S)[] pieces(size_t n) inout
+  inout(S)[] pieces(uint_t n) inout
   {
     if (n == 0)
       return null; // TODO: throw Exception?
@@ -264,7 +275,7 @@ struct StringT(C)
 
   /// Divides the String into num parts.
   /// The remainder is appended to the last piece.
-  inout(S)[] divide(size_t num) inout
+  inout(S)[] divide(uint_t num) inout
   {
     if (num == 0)
       return null; // TODO: throw Exception?
@@ -285,25 +296,19 @@ struct StringT(C)
   }
 
   /// ditto
-  inout(S)[] opBinary(string op : "/")(size_t rhs) inout
+  inout(S)[] opBinary(string op : "/")(uint_t rhs) inout
   {
     return divide(rhs);
   }
 
-  /// Concatenates another string array.
-  S opBinary(string op : "~")(const S rhs) const
+  /// Appends another string or character. Returns a new object.
+  S opBinary(string op : "~", T)(T rhs) const
   {
-    return this ~ rhs[];
+    return S(cast(C[])(this[] ~ toS!T(rhs)[]));
   }
 
-  /// ditto
-  S opBinary(string op : "~")(const C[] rhs) const
-  {
-    return S(cast(C[])(this[] ~ rhs));
-  }
-
-  /// Appends another String.
-  ref S opOpAssign(string op : "~")(const S rhs)
+  /// Appends another string or character. Returns itself.
+  ref S opOpAssign(string op : "~", T)(T rhs)
   {
     this = this ~ rhs;
     return this;
@@ -316,15 +321,9 @@ struct StringT(C)
   }
 
   /// Returns a pointer to the first character, if lhs is in this String.
-  inout(C)* opBinaryRight(string op : "in")(const S lhs) inout
+  inout(C)* opBinaryRight(string op : "in", T)(T lhs) inout
   {
-    return findp(lhs);
-  }
-
-  /// ditto
-  inout(C)* opBinaryRight(string op : "in")(const C[] lhs) inout
-  {
-    return findp(S(lhs));
+    return findp(toS!T(lhs));
   }
 
   /// Converts to bool.
@@ -411,8 +410,7 @@ struct StringT(C)
   /// Converts to upper-case (only ASCII.)
   ref S toupper()
   {
-    auto p = ptr;
-    for (; p < end; p++)
+    for (auto p = ptr; p < end; p++)
       *p = toupper(*p);
     return this;
   }
@@ -498,13 +496,13 @@ struct StringT(C)
   /// Returns true if this String starts with prefix.
   bool startsWith(const S prefix) const
   {
-    return prefix.len <= len && S(ptr, ptr + prefix.len) == prefix;
+    return prefix.len <= len && CS(ptr, prefix.len) == prefix;
   }
 
   /// ditto
   bool startsWith(const C[] prefix) const
   {
-    return startsWith(S(prefix));
+    return startsWith(CS(prefix));
   }
 
   /// Returns true if this String starts with one of the specified prefixes.
@@ -520,7 +518,7 @@ struct StringT(C)
   bool startsWith(const C[][] prefixes) const
   {
     foreach (prefix; prefixes)
-      if (startsWith(S(prefix)))
+      if (startsWith(CS(prefix)))
         return true;
     return false;
   }
@@ -528,13 +526,13 @@ struct StringT(C)
   /// Returns true if this String ends with suffix.
   bool endsWith(const S suffix) const
   {
-    return suffix.len <= len && S(end - suffix.len, end) == suffix;
+    return suffix.len <= len && CS(end - suffix.len, end) == suffix;
   }
 
   /// ditto
   bool endsWith(const C[] suffix) const
   {
-    return endsWith(S(suffix));
+    return endsWith(CS(suffix));
   }
 
   /// Returns true if this String ends with one of the specified suffixes.
@@ -550,7 +548,7 @@ struct StringT(C)
   bool endsWith(const C[][] suffixes) const
   {
     foreach (suffix; suffixes)
-      if (endsWith(S(suffix)))
+      if (endsWith(CS(suffix)))
         return true;
     return false;
   }
@@ -564,7 +562,7 @@ struct StringT(C)
   /// ditto
   bool slices(const C[] s) const
   {
-    return slices(S(s));
+    return slices(CS(s));
   }
 
   /// Searches for character c.
@@ -750,7 +748,7 @@ struct StringT(C)
     else
     {
       const(C)* ps;
-      while ((ps = S(p, end).findp(s)) !is null)
+      while ((ps = CS(p, end).findp(s)) !is null)
       {
         result ~= S2(p, ps);
         p = ps + slen;
@@ -764,13 +762,13 @@ struct StringT(C)
   /// ditto
   inout(S)[] split(const C c) inout
   {
-    return split(S(c));
+    return split(CS(c));
   }
 
   /// ditto
   inout(S)[] split(const C[] s) inout
   {
-    return split(S(s));
+    return split(CS(s));
   }
 
   /// Substitutes a with b.
@@ -781,12 +779,6 @@ struct StringT(C)
       if (*p == a)
         *p = b;
     return this;
-  }
-
-  /// ditto
-  S sub_(C a, C b) const
-  {
-    return dup.sub_(a, b);
   }
 
   /// ditto
@@ -817,7 +809,7 @@ struct StringT(C)
       C* pwriter = ptr;
       const(C)* preader = pwriter, pa;
 
-      while ((pa = S(preader, end).findp(a)) !is null)
+      while ((pa = CS(preader, end).findp(a)) !is null)
       {
         while (preader < pa) // Copy till beginning of a.
           *pwriter++ = *preader++;
@@ -842,12 +834,12 @@ struct StringT(C)
         do
         {
           if (pa) // Append previous string?
-            result ~= S(p, pa)[];
+            result ~= CS(p, pa)[];
           result ~= bstr;
           p = pa + alen; // Skip a.
-        } while ((pa = S(p, end).findp(a)) !is null);
+        } while ((pa = CS(p, end).findp(a)) !is null);
         if (p < end)
-          result ~= S(p, end)[];
+          result ~= CS(p, end)[];
         this = S(result);
       }
     }
@@ -855,21 +847,18 @@ struct StringT(C)
   }
 
   /// ditto
-  S sub_(const S a, const S b) const
-  {
-    return dup.sub_(a, b);
-  }
-
-  /// ditto
   ref S sub(A, B)(A a, B b)
   {
-    return sub_(toS!A(a), toS!B(b));
+    static if (is(typeof(sub_(a, b))))
+      return sub_(a, b);
+    else
+      return sub_(toS!A(a), toS!B(b));
   }
 
   /// ditto
   S sub(A, B)(A a, B b) const
   {
-    return dup.sub!(A, B)(a, b);
+    return dup.sub_(toS!A(a), toS!B(b));
   }
 
   /// Searches for sep and returns the part before and after that.
@@ -883,7 +872,7 @@ struct StringT(C)
   /// ditto
   inout(S)[2] partition(const C[] sep) inout
   {
-    return partition(S(sep));
+    return partition(CS(sep));
   }
 
   /// Searches for sep and returns the part before and after that.
@@ -897,7 +886,7 @@ struct StringT(C)
   /// ditto
   inout(S)[2] rpartition(const C[] sep) inout
   {
-    return rpartition(S(sep));
+    return rpartition(CS(sep));
   }
 
   /// Concatenates strs using this String as a separator.
@@ -981,10 +970,11 @@ struct StringT(C)
   }
 }
 
-alias String = StringT!(char) ;  /// Instantiation for char.
+alias MString = StringT!(char);    /// Mutable instantiation for char.
+alias String  = const MString;     /// Alias for const.
+alias IString = immutable MString; /// Alias for immutable.
 alias WString = StringT!(wchar); /// Instantiation for wchar.
 alias DString = StringT!(dchar); /// Instantiation for dchar.
-
 
 /// Returns a string array slice ranging from begin to end.
 inout(char)[] slice(inout(char)* begin, inout(char)* end)
@@ -995,7 +985,7 @@ inout(char)[] slice(inout(char)* begin, inout(char)* end)
 /// Returns a copy of str where a is replaced with b.
 cstring replace(cstring str, char a, char b)
 {
-  return String(str).sub_(a, b)[];
+  return String(str).sub(a, b)[];
 }
 
 /// Converts x to a string array.
@@ -1010,7 +1000,8 @@ char[] itoa(ulong x)
     while (x /= 10);
     return buffer[i .. $];
   }
-  return String(x)[];
+  else
+    return String.itoa(x)[];
 }
 
 /// Returns a list of Strings from a list of char arrays.
@@ -1066,10 +1057,12 @@ void testString()
   alias S = String;
 
   // Constructing.
-  assert(S("", 0) == S("")); // String literals are always zero terminated.
-  assert(S("abcd", 0) == S("abcd"));
-  assert(S("abcd", 'c') == S("ab"));
-  assert(S(0) == S("0") && S(1999) == S("1999"));
+  assert(S('a') == S("a"));
+  assert(S("".ptr, '\0') == S("")); // String literals are always zero terminated.
+  assert(S("abcd".ptr, '\0') == S("abcd"));
+  assert(S("abcd".ptr, 'c') == S("ab"));
+  assert(S("abcd".ptr, 2u) == S("ab"));
+  assert(S.itoa(0) == S("0") && S.itoa(1999) == S("1999"));
 
   // Boolean conversion.
   if (S("is cool")) {}
@@ -1080,8 +1073,8 @@ void testString()
 
   // Concatenation.
   {
-  auto s = S("xy".dup);
-  s ~= S("z");
+  auto s = MString("x".dup);
+  ((s ~= S()) ~= 'y') ~= "z";
   assert(s == S("x") ~ S("yz"));
   assert(S() ~ S() == S());
   }
@@ -1130,18 +1123,20 @@ void testString()
   assert(1 * S("mundo") == S("mundo"));
 
   // Slicing.
+  assert(S("rapido")[] == "rapido");
   assert(S("rapido")[0..0] == S(""));
   assert(S("rapido")[1..4] == S("api"));
   assert(S("rapido")[2..-3] == S("p"));
   assert(S("rapido")[-3..3] == S(""));
   assert(S("rapido")[-4..-1] == S("pid"));
-  //assert(S("rapido")[6..6] == S("")); // FIXME: Should this be allowed?
+  assert(S("rapido")[6..6] == S(""));
 
   {
     auto s = S("rebanada");
     assert(s.slices(s));
     assert(s[0..0].slices(s));
     assert(s[1..-1].slices(s));
+    assert(s[s.len..s.len].slices(s));
     assert(S(s.end, s.end).slices(s));
   }
 

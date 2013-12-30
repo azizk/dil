@@ -475,7 +475,7 @@ void main(cstring[] args)
     swatch.start;
 
     foreach (filePath; filePaths)
-      (new Lexer(new SourceText(filePath.array, true), tables)).scanAll();
+      (new Lexer(new SourceText(filePath[], true), tables)).scanAll();
 
     Printfln("Scanned in {:f10}s.", swatch.stop);
     break;

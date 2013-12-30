@@ -19,7 +19,7 @@ static:
     tango.stdc.time.time(&time_val);
     // ctime returns a pointer to a static array.
     char* timeStr = ctime(&time_val);
-    return String(timeStr, '\n')[];
+    return MString(timeStr, '\n')[];
   }
 
   /// Returns the time of timeStr: hh:mm:ss

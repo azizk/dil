@@ -532,23 +532,22 @@ class TagMap
 
 /// Returns the short class name of a class descending from Node.$(BR)
 /// E.g.: dil.ast.Declarations.ClassDecl -> Class
-cstring getShortClassName(Node node)
+string getShortClassName(Node node)
 {
-  static String[] name_table;
+  static string[] name_table;
   if (name_table is null)
-    name_table = new String[NodeKind.max+1]; // Create a new table.
+    name_table = new string[NodeKind.max+1]; // Create a new table.
   // Look up in table.
-  auto name = name_table[node.kind];
-  if (name.isNull)
+  auto pname = &name_table[node.kind];
+  if (!pname.ptr)
   { // Get fully qualified name of the class and extract just the name.
-    name = String(typeid(node).name).rpartition(".")[1].dup;
-    size_t suffixLength = 4; // Decl, Stmt, Expr, Type have length 4.
-    if (node.isParameter)
-      suffixLength = 0;
-    name = name[0 .. -suffixLength]; // Remove common suffix.
-    name_table[node.kind] = name; // Store the name in the table.
+    auto name = IString(typeid(node).name).rpartition(".")[1];
+    // Decl, Stmt, Expr, Type have length 4.
+    size_t suffixLength = node.isParameter ? 0 : 4;
+    // Remove common suffix and store.
+    *pname = IString(name.ptr, name.end-suffixLength)[];
   }
-  return name.array;
+  return *pname;
 }
 
 /// Extended token structure.
