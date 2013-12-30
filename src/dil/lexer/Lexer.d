@@ -26,19 +26,17 @@ import common;
 import tango.core.Vararg;
 
 /// The Lexer analyzes the characters of a source text and
-/// produces a doubly-linked list of tokens.
+/// produces an array of tokens.
 class Lexer
 {
   cchar* p; /// Points to the current character in the source text.
   cchar* end; /// Points one character past the end of the source text.
-  ChunkAllocator allocator; /// Allocates memory for tokens and other structs.
   SourceText srcText; /// The source text.
 
-  Token* head;  /// The head of the doubly linked token list.
-  Token* tail;  /// The tail of the linked list. Set in scan().
-  Token* token; /// Points to the current token in the token list.
+  TokenArray tokens; /// Array of Tokens.
   LexerTables tables; /// Used to look up token values.
   CharArray buffer; /// A buffer for string values.
+  ChunkAllocator allocator; /// Allocates memory for non-token structs.
 
   /// Groups line information.
   static struct LineLoc
@@ -52,8 +50,6 @@ class Lexer
   /// Holds the original file path and the modified one (by #line.)
   Token.HashLineInfo* hlinfo; /// Info set by "#line".
 
-  /// Tokens from a *.dlx file.
-  Token[] dlxTokens;
   // Members used for error messages:
   Diagnostics diag; /// For diagnostics.
   LexerError[] errors; /// List of errors.
@@ -91,34 +87,23 @@ class Lexer
     this.end = this.p + text.length; // Point past the sentinel string.
     this.lineLoc.p = this.p;
     this.lineLoc.n = 1;
-
-    this.head = new_!(Token);
-    this.head.kind = T!"HEAD";
-    this.head.start = this.head.end = this.p;
-    this.token = this.head;
-
-    // Add a newline as the first token after the head.
-    auto nl_tok = new_!(Token);
-    nl_tok.kind = T!"Newline";
-    nl_tok.setWhitespaceFlag();
-    nl_tok.start = nl_tok.end = this.p;
-    nl_tok.nlval = lookupNewline();
-    // Link in.
-    this.token.next = nl_tok;
-    nl_tok.prev = this.token;
-    this.token = nl_tok;
-
-    if (*cast(ushort*)p == chars_shebang)
-      scanShebang();
   }
 
-  /// The destructor deletes the doubly-linked token list.
   ~this()
   {
     allocator.destroy();
   }
 
-  /// Alocates a struct.
+  /// Returns the next free token from the array.
+  /// NB: The bytes are not zeroed out.
+  Token* newToken()
+  {
+    if (tokens.rem == 0)
+      tokens.growX1_5();
+    return tokens.cur++;
+  }
+
+  /// Allocates memory for T.
   T* new_(T)()
   {
     version (gc_tokens) // Use to test GC instead of custom allocator.
@@ -201,36 +186,40 @@ class Lexer
       break;
     default:
     }
-    // Link the token into the list.
-    this.token.next = t;
-    t.prev = this.token;
-    this.token = t;
     return true;
   }
 
   /// Loads the tokens from a dlx file.
   bool fromDLXFile(ubyte[] data)
   {
-    this.dlxTokens = TokenSerializer.deserialize(
+    auto dlxTokens = TokenSerializer.deserialize(
       data, this.text(), tables.idents, &dlxCallback);
     if (dlxTokens.length)
     {
-      this.p = this.token.end;
-      this.tail = this.token; // Set tail.
+      alias ts = dlxTokens;
+      ts[0] = Token.init; // NullToken
+      ts[1].kind = T!"HEAD";
+      ts[1].ws = null;
+      ts[1].start = ts[1].end = this.text.ptr;
+      ts[1].pvoid = null;
+      ts[2].kind = T!"Newline";
+      ts[2].ws = null;
+      ts[2].start = ts[2].end = this.text.ptr;
+      ts[2].nlval = lookupNewline();
+      ts[$-1] = Token.init; // NullToken
+      this.p = ts[$-2].end;
+      tokens.ptr = ts.ptr;
+      tokens.cur = tokens.end = ts.ptr + ts.length;
     }
     else
     { /// Function failed. Reset...
       this.p = this.text.ptr;
       this.lineLoc.p = this.p;
       this.lineLoc.n = 1;
-      if (*cast(ushort*)p == chars_shebang)
-        scanShebang();
     }
-    this.token = this.head.next; // Go to first newline token.
     return !!dlxTokens.length;
   }
 
-  // FIXME: doesn't work, must be replaced with a custom Array.
   /// Acquires the current buffer.
   CharArray getBuffer()
   {
@@ -261,10 +250,28 @@ class Lexer
 
   /// Returns the first token of the source text.
   /// This can be the EOF token.
-  /// Structure: HEAD -> Newline -> First Token
+  /// Structure: [NullToken, HEAD, Newline, FirstToken, ..., NullToken]
   Token* firstToken()
   {
-    return this.head.next.next;
+    return tokens.ptr + 3;
+  }
+
+  /// Returns the list of tokens excluding special beginning and end tokens.
+  Token[] tokenList()
+  {
+    return firstToken[0 .. tokens.len-4];
+  }
+
+  /// Returns the HEAD token.
+  Token* head()
+  {
+    return tokens.ptr + 1;
+  }
+
+  /// Returns the EOF token.
+  Token* lastToken()
+  {
+    return tokens.cur - 2;
   }
 
   /// Sets the value of the special token.
@@ -301,7 +308,6 @@ class Lexer
       break;
     case IDK.EOF:
       assert(t.text == "__EOF__");
-      tail = t;
       t.kind = T!"EOF"; // Convert to EOF token, so that the Parser will stop.
       break;
     default:
@@ -395,42 +401,47 @@ class Lexer
     return tables.lookupNewline(lineNum);
   }
 
-
-  /// Scans the next token in the source text.
-  ///
-  /// Creates a new token if t.next is null and appends it to the list.
-  private void scanNext(ref Token* t)
-  {
-    assert(t !is null);
-    if (t.next) // Simply go to the next token if there is one.
-      t = t.next;
-    else if (t !is this.tail)
-    { // Create a new token and pass it to the main scan() method.
-      Token* new_t = new_!(Token);
-      scan(new_t);
-      new_t.prev = t; // Link the token in.
-      t.next = new_t;
-      t = new_t;
-    }
-  }
-
   /// Advance t one token forward.
   void peek(ref Token* t)
   {
-    scanNext(t);
-  }
-
-  /// Advance to the next token in the source text.
-  TOK nextToken()
-  {
-    scanNext(this.token);
-    return this.token.kind;
+    t++;
+    assert(tokens.ptr <= t && t < tokens.cur);
   }
 
   /// Scans the whole source text until EOF is encountered.
   void scanAll()
-  {
-    while (nextToken() != T!"EOF")
+  { // The divisor 6 is an average measured by lexing large D projects.
+    auto estimatedNrOfTokens = text.length / 6;
+    tokens.cap = estimatedNrOfTokens;
+    if (tokens.cap < 5)
+      tokens.cap = 5; // Guarantee space for at least 5 tokens.
+    auto first = newToken();
+    *first = Token.init;
+    auto head = newToken();
+    head.kind = T!"HEAD";
+    head.ws = null;
+    head.start = head.end = this.p;
+    head.pvoid = null;
+    // Add a "virtual" newline as the first token after the head.
+    auto newline = newToken();
+    newline.kind = T!"Newline";
+    newline.ws = null;
+    newline.start = newline.end = this.p;
+    newline.nlval = lookupNewline();
+    // Scan optional shebang.
+    if (*cast(ushort*)this.p == chars_shebang)
+      scanShebang();
+    // Main loop scanning the whole text.
+    Token* t;
+    do
+      scan(t = newToken());
+    while (t.kind != T!"EOF");
+    // Add a terminating token, similar to 0 in C-like strings.
+    auto last = newToken();
+    *last = Token.init;
+
+    auto toks = tokenList;
+    foreach (x; toks)
     {}
   }
 
@@ -440,15 +451,13 @@ class Lexer
   {
     auto p = this.p;
     assert(p[0..2] == "#!");
-    auto t = new_!(Token);
+    auto t = newToken();
     t.kind = T!"#!Shebang";
     t.start = p++;
     while (!isEndOfLine(++p))
       isascii(*p) || decodeUTF8(p);
     t.end = this.p = p;
-    // Link it in.
-    this.token.next = t;
-    t.prev = this.token;
+    t.pvoid = null;
   }
 
   /// The main method which recognizes the characters that make up a token.
@@ -476,9 +485,12 @@ class Lexer
       while (isspace(*++p))
       {}
     }
+    else
+      t.ws = null;
+    t.pvoid = null;
 
     // Scan the text of the token.
-    uint c = *p;
+    dchar c = *p;
     {
       t.start = this.p = p;
 
@@ -680,7 +692,6 @@ class Lexer
       {
         assert(isEOF(*p), ""~*p);
         kind = T!"EOF";
-        tail = t;
         assert(t.start == p);
         goto Lreturn;
       }
@@ -760,6 +771,9 @@ class Lexer
       while (isspace(*++p))
       {}
     }
+    else
+      t.ws = null;
+    t.pvoid = null;
 
     // Scan a token.
     t.start = this.p = p;
@@ -919,7 +933,6 @@ class Lexer
     {
       assert(isEOF(*p), *p~"");
       kind = T!"EOF";
-      tail = t;
       assert(t.start == p);
       goto Lreturn;
     }
@@ -1463,30 +1476,23 @@ class Lexer
 
     auto tokenLine = this.lineLoc;
 
-    // A guard against changes to 'this.hlinfo'.
-    ++inTokenString;
-
-    auto lineNum = this.lineNum;
-    uint level = 1;
+    ++inTokenString; // A guard against changes to 'this.hlinfo'.
 
     ++p; ++p; // Skip q{
-    cchar* str_begin = p, str_end = void;
-    Token* inner_tokens; // The tokens inside this string.
+    cchar* str_begin = p, str_end; // Inner string.
+    TokenArray innerTokens; // The tokens inside this string.
+    innerTokens.cap = 1;
     // Set to true, if '\r', LS, PS, or multiline tokens are encountered.
     bool convertNewlines;
 
-    auto prev_t = t;
     Token* new_t;
+    uint level = 1; // Current nesting level of curly braces.
   Loop:
     while (1)
     {
-      new_t = new_!(Token);
-      scan(new_t);
-      // Save the tokens in a doubly linked list.
-      // Could be useful for various tools.
-      new_t.prev = prev_t;
-      prev_t.next = new_t;
-      prev_t = new_t;
+      if (innerTokens.rem == 0)
+        innerTokens.growX1_5();
+      scan(new_t = innerTokens.cur++);
       switch (new_t.kind)
       {
       case T!"{":
@@ -1494,11 +1500,7 @@ class Lexer
         break;
       case T!"}":
         if (--level == 0)
-        {
-          inner_tokens = t.next;
-          t.next = null;
           break Loop;
-        }
         break;
       case T!"String", T!"Comment":
         if (new_t.isMultiline())
@@ -1510,25 +1512,23 @@ class Lexer
         break;
       case T!"EOF":
         error(tokenLine, t.start, MID.UnterminatedTokenString);
-        inner_tokens = t.next;
-        t.next = new_t;
+        this.p = new_t.ws ? new_t.ws : new_t.start; // Reset.
         break Loop;
       default:
       }
     }
-    assert(new_t.kind == T!"}" && t.next is null ||
-           new_t.kind == T!"EOF" && t.next !is null);
+    assert(new_t.kind.In(T!"}", T!"EOF"));
 
     char postfix;
-    // new_t is "}" or EOF.
     if (new_t.kind == T!"EOF")
-      str_end = t.end = new_t.start;
+      str_end = t.end = p;
     else
     {
       str_end = p-1;
       postfix = scanPostfix(p);
       t.end = p;
     }
+    *new_t = Token.init; // Terminate with a "0-token".
 
     auto value = slice(str_begin, str_end);
     // Convert newlines to '\n'.
@@ -1564,7 +1564,7 @@ class Lexer
     auto strval = new_!(StringValue);
     strval.str = lookupString(cast(cbinstr)value);
     strval.pf = postfix;
-    strval.tok_str = inner_tokens;
+    strval.tokens = innerTokens.ptr;
     t.strval = strval;
 
     --inTokenString;
@@ -2255,28 +2255,6 @@ class Lexer
     return;
   }
 
-  /// Inserts an empty dummy token (TOK.Empty) before t.
-  ///
-  /// Useful in the parsing phase for representing a node in the AST
-  /// that doesn't consume an actual token from the source text.
-  Token* insertEmptyTokenBefore(Token* t)
-  {
-    assert(t !is null && t.prev !is null);
-    assert(text.ptr <= t.start && t.start < end, t.kind.toString);
-    assert(text.ptr <= t.end && t.end <= end, t.kind.toString);
-
-    auto prev_t = t.prev;
-    auto new_t = new_!(Token);
-    new_t.kind = T!"Empty";
-    new_t.start = new_t.end = prev_t.end;
-    // Link in new token.
-    prev_t.next = new_t;
-    new_t.prev = prev_t;
-    new_t.next = t;
-    t.prev = new_t;
-    return new_t;
-  }
-
   /// Returns the error line number.
   size_t errorLineNumber(size_t lineNum)
   {
@@ -2638,13 +2616,12 @@ void testLexer()
   foreach (e; lx.errors)
     Stdout.formatln("{}({},{})L: {}", e.filePath, e.loc, e.col, e.getMsg);
 
-  auto token = lx.firstToken();
+  auto token = lx.firstToken, last = lx.lastToken;
 
-  for (size_t i; i < pairs.length && token.kind != TOK.EOF;
-       ++i, (token = token.next))
+  for (size_t i; i < pairs.length && token < last; ++i, ++token)
     if (token.text != pairs[i].tokenText)
       assert(0, Format("Scanned ‘{0}’ but expected ‘{1}’",
-                       token.text, pairs[i].tokenText));
+                       escapeNonPrintable(token.text), pairs[i].tokenText));
 }
 
 /// Tests the Lexer's peek() method.
@@ -2654,6 +2631,7 @@ void testLexerPeek()
   auto tables = new LexerTables();
   auto sourceText = new SourceText("", "unittest { }");
   auto lx = new Lexer(sourceText, tables);
+  lx.scanAll();
 
   auto next = lx.head;
   lx.peek(next);
@@ -2668,6 +2646,7 @@ void testLexerPeek()
   assert(next.kind == TOK.EOF);
 
   lx = new Lexer(new SourceText("", ""), tables);
+  lx.scanAll();
   next = lx.head;
   lx.peek(next);
   assert(next.kind == TOK.Newline);

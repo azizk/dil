@@ -22,7 +22,7 @@ class ASTSerializer : Visitor2
 {
   immutable HEADER = "DIL1.0AST\x1A\x04\n"; /// Appears at the start.
   ubyte[] data; /// The binary text.
-  size_t[Token*] tokenIndex; /// Maps tokens to index numbers.
+  Token* firstToken; /// The first token in the token array.
 
   /// An enumeration of types that may appear in the data.
   enum TID : ubyte
@@ -67,28 +67,16 @@ class ASTSerializer : Visitor2
   ubyte[] serialize(Module mod)
   {
     data ~= HEADER;
-    tokenIndex = buildTokenIndex(mod.firstToken());
+    firstToken = mod.firstToken;
     visitN(mod.root);
     return data;
   }
 
-  /// Builds a token index from a linked list of Tokens.
-  /// The address of a token is mapped to its position index in the list.
-  static size_t[Token*] buildTokenIndex(Token* head)
-  {
-    size_t[Token*] map;
-    map[null] = size_t.max;
-    size_t index;
-    for (auto t = head; t; index++, t = t.next)
-      map[t] = index;
-    return map;
-  }
-
   /// Returns the index number of a token.
-  /// If token is null, 0 is returned.
+  /// If token is null, size_t.max is returned.
   size_t indexOf(Token* token)
   {
-    return tokenIndex[token];
+    return token ? token - firstToken : size_t.max;
   }
 
   /// Writes 1 byte.
@@ -532,7 +520,7 @@ class ASTDeserializer : Visitor
     size_t index;
     bool b = check(TID.Token) && readSB(index);
     if (b)
-      t = index < tokens.length ? tokens[index] : null;
+      t = index == size_t.max ? null : tokens[index];
     return b;
   }
 

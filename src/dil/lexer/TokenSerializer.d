@@ -39,9 +39,9 @@ struct TokenSerializer
 static:
   immutable string HEADER = "DIL1.0TOKS\x1A\x04\n";
 
-  ubyte[] serialize(Token* first_token)
+  ubyte[] serialize(Token[] tokens)
   {
-    ubyte[] data;
+    ubyte[] data; // TODO: Can be preallocated considering nr of tokens.
 
     void writeS(cstring x)
     {
@@ -63,13 +63,12 @@ static:
     Token*[] idents; // List of all unique ids in this file.
     size_t[hash_t] idtable; // Table of ids seen so far.
                             // Maps the id hash to an index into idents.
-    auto t = first_token; // Get first token.
-    auto prev_end = t.prev.end; // End of the previous token.
-    uint token_count; // The number of tokens in this file.
+    auto first = tokens[0];
+    auto text_begin = first.ws ? first.ws : first.start;
+    auto prev_end = text_begin;
 
-    for (; t; t = t.next)
+    foreach (ref t; tokens)
     {
-      token_count++;
       switch (t.kind)
       {
       case TOK.Identifier:
@@ -79,7 +78,7 @@ static:
         size_t id_index;
         if (!pindex)
           (id_index = idents.length),
-          (idents ~= t),
+          (idents ~= &t),
           (idtable[hash] = id_index);
         else
           id_index = *pindex;
@@ -109,13 +108,12 @@ static:
     writeS(HEADER);
     writeS("Ids:");
     write2B(cast(ushort)idents.length);
-    auto text_begin = first_token.prev.end;
     foreach (id; idents)
       write4B(cast(uint)(id.start - text_begin)),
       write2B(cast(ushort)(id.end - id.start));
     writeS("\n");
     writeS("Toks:");
-    write4B(token_count);
+    write4B(tokens.length);
     write4B(cast(uint)data_body.length);
     data ~= data_body;
     writeS("\n");
@@ -187,8 +185,8 @@ static:
     if (*(p + body_length) != '\n') goto Lerror; // Terminated with '\n'.
 
     // We can allocate the exact amount of tokens we need.
-    tokens = new Token[token_count];
-    Token* token = &tokens[0];
+    tokens = new Token[token_count+4]; // +4: see Lexer.scanAll().
+    Token* token = &tokens[3]; // First 3 are reserved.
     auto prev_end = srcText.ptr;
     auto src_end = srcText.ptr+srcText.length;
 
@@ -227,7 +225,7 @@ static:
       token++;
       token_count--;
     }
-    assert(token == tokens.ptr + tokens.length, "token pointer not at end");
+    assert(token == tokens.ptr + tokens.length - 1, "token pointer not at end");
     token--; // Go back to the last token.
 
     if (token.kind != TOK.EOF) // Last token must be EOF.

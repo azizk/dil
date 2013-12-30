@@ -168,8 +168,6 @@ Statistics getStatistics(CompilationContext cc, cstring filePath,
     lx.scanAll();
   }
 
-  auto token = lx.firstToken();
-
   // Count tokens.
   // Lexer creates HEAD + Newline, which are not in the source text.
   // No token left behind!
@@ -182,7 +180,7 @@ Statistics getStatistics(CompilationContext cc, cstring filePath,
   }
 
   // Traverse linked list.
-  for (; token.next; token = token.next)
+  foreach (token; lx.tokenList[0..$-1])
   {
     stats.tokenCount += 1;
 
@@ -215,6 +213,5 @@ Statistics getStatistics(CompilationContext cc, cstring filePath,
         stats.wsTokenCount++;
     }
   }
-  assert(token.kind == TOK.EOF);
   return stats;
 }

@@ -56,9 +56,11 @@ class Parser
     this.lexer = new Lexer(srcText, tables, diag);
   }
 
-  /// Moves to the first token.
+  /// Moves to the first non-whitespace token.
   protected void init()
   {
+    lexer.scanAll();
+    token = lexer.firstToken.prev;
     nT();
     prevToken = token;
   }
@@ -68,10 +70,8 @@ class Parser
   {
     prevToken = token;
     do
-    {
-      lexer.nextToken();
-      token = lexer.token;
-    } while (token.isWhitespace); // Skip whitespace
+      token++;
+    while (token.isWhitespace); // Skip whitespace.
   }
 
   /// Starts the parser and returns the parsed Declarations.
@@ -116,7 +116,6 @@ class Parser
     { // Restore members.
       token       = oldToken;
       prevToken   = oldPrevToken;
-      lexer.token = oldToken;
       errorCount  = oldCount;
     }
     else
@@ -131,10 +130,10 @@ class Parser
     errorCount++;
   }
 
-  /// Backtracks the Parser and the Lexer to the given token(s).
+  /// Backtracks the Parser to the given token(s).
   void backtrackTo(Token* newtok, Token* newprev = null)
   {
-    this.lexer.token = this.token = newtok;
+    this.token = newtok;
     this.prevToken = newprev ? newprev : newtok.prevNWS();
   }
 
@@ -2832,12 +2831,8 @@ class Parser
       break;
     default:
       error2(MID.ExpectedButFound, "Expression", token);
+      nT();
       e = new IllegalExpr();
-      if (!trying)
-      { // Insert a dummy token and don't consume current one.
-        begin = lexer.insertEmptyTokenBefore(token);
-        this.prevToken = begin;
-      }
     }
     set(e, begin);
     return e;
@@ -3572,12 +3567,8 @@ class Parser
       else
       {
         error2(MID.ExpectedButFound, "Expression", token);
+        nT();
         e = new IllegalExpr();
-        if (!trying)
-        { // Insert a dummy token and don't consume current one.
-          begin = lexer.insertEmptyTokenBefore(token);
-          this.prevToken = begin;
-        }
       }
     }
     set(e, begin);

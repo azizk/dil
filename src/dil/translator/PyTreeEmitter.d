@@ -102,19 +102,16 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   }
   // Gather all identifiers, comments, strings and numbers in this map.
   Tuple[hash_t] map;
-  for (auto token = first_token; token; token = token.next)
-    switch (token.kind)
+  for (auto token = first_token; token.kind; token++)
+    if (token.kind.In(TOK.Identifier, TOK.Comment, TOK.String, TOK.Character,
+        TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64,
+        TOK.Float32, TOK.Float64, TOK.Float80,
+        TOK.IFloat32, TOK.IFloat64, TOK.IFloat80))
     {
-    case TOK.Identifier, TOK.Comment, TOK.String, TOK.Character,
-         TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64,
-         TOK.Float32, TOK.Float64, TOK.Float80,
-         TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
       auto hash = hashOf(token.text);
       auto p = hash in map;
       if (p) p.count += 1;
       else map[hash] = new Tuple(1, token.text, token.kind);
-      break;
-    default:
     }
   // Create a sorted list. We want the strings that appear the most
   // in the source text to be at the beginning of the list.
@@ -162,7 +159,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
 
   // Print the list of all tokens, encoded with IDs and indices.
   uint index;
-  for (auto token = first_token; token; ++index, token = token.next)
+  for (auto token = first_token; token.kind; index++, token++)
   {
     indexMap[token] = index;
     line ~= '(' ~ itoa(token.kind) ~ ',';
@@ -243,7 +240,7 @@ class PyTreeEmitter : Visitor2
                   "date = '{}'\n\n",
                   d_version, Time.now());
 
-    text ~= writeTokenList(modul.firstToken(), index);
+    text ~= writeTokenList(modul.firstToken, index);
     text ~= "t = tokens = dil.token.create_tokens(token_list)\n\n";
     text ~= "def p(beg,end):\n"
             "  return (tokens[beg], tokens[beg+end])\n"

@@ -17,6 +17,7 @@ import dil.semantic.TypesEnum;
 import dil.Compilation;
 import dil.String;
 import dil.Enums;
+import dil.Array;
 import common;
 
 /// Converts expressions like "TokenList.XYZ" to "toToken(TOK.XYZ)".
@@ -32,10 +33,11 @@ static struct TokenList
 class ASTPrinter : Visitor2
 {
   char[] text;      /// The printed text.
-  Token*[] tokens;  /// The pre-built tokens of the text (Lexer not required.)
+  TokenArray tarray; /// The pre-built tokens of the text (Lexer not required.)
+  cchar* prevEnd;   /// End pointer of the previous token (t.end).
   bool buildTokens; /// True if the tokens should be built.
-  Token* Newline;   /// Provides a newline token (depends on the platform).
-  Token* wsToken;   /// Integer token with the current number of whitespaces.
+  uint_t lineNum;   /// Current line number.
+  Token  nlToken;   /// Provides a newline token (depends on the platform).
   cstring spaces;   /// The current whitespace string.
   cstring indent;   /// The current indendation string.
   cstring indentStep; /// The string used to increase the indentation level.
@@ -49,34 +51,49 @@ class ASTPrinter : Visitor2
   {
     this.buildTokens = buildTokens;
     this.cc = cc;
-    this.Newline = makeNewlineToken();
     this.indentStep = "  ";
-  }
-
-  /// Creates a newline token with a platform dependent string as its text.
-  Token* makeNewlineToken()
-  {
-    auto t = new Token;
-    t.kind = TOK.Newline;
+    // A newline token with a platform dependent string as its text.
+    nlToken.kind = TOK.Newline;
     version(Windows)
     const nl = "\r\n";
     else version(OSX)
     const nl = "\r";
     else
     const nl = "\n";
-    t.text = nl;
-    return t;
+    nlToken.text = nl;
+  }
+
+  /// Returns the tokens as a list.
+  Token[] tokens()
+  {
+    return tarray[][1..$-1]; // Exclude Newline and EOF.
+  }
+
+  /// Increments the line number and returns the newline token.
+  Token* Newline()
+  {
+    nlToken.nlval = cc.tables.lxtables.lookupNewline(++lineNum);
+    return &nlToken;
   }
 
   /// Starts the printer.
   char[] print(Node n)
   {
     text    = null;
-    tokens  = null;
-    wsToken = null;
+    tarray.len = 0;
+    tarray.cap = 2;
+    prevEnd = null;
     spaces  = null;
     indent  = null;
+    // First newline token.
+    auto t = *Newline;
+    t.text = null;
+    writeToken(&t);
+    // Start traversing the tree.
     visitN(n);
+    // Terminate with EOF.
+    t = Token(TOK.EOF, null, null, null, null);
+    writeToken(&t);
     fixTokens();
     return text;
   }
@@ -84,22 +101,16 @@ class ASTPrinter : Visitor2
   /// Constructs a new Token with the given parameters and pushes to an array.
   void pushToken(TOK k, size_t start, size_t end, void* value)
   { // Create new token and set its members.
-    cchar* prevEnd;
-    auto t = new Token;
-    if (tokens.length)
-    { // Link in, if not the first element.
-      Token* prev = tokens[$-1];
-      prev.next = t;
-      t.prev = prev;
-      prevEnd = prev.end;
-    }
+    if (tarray.rem == 0)
+      tarray.growX1_5();
+    assert(tarray.rem >= 1);
+    auto t = tarray.cur++;
     t.kind = k;
     t.ws = start ? prevEnd : null;
     t.start = prevEnd + start;
     t.end = prevEnd + end;
     t.pvoid = value;
-    // Push to array.
-    tokens ~= t;
+    prevEnd += end;
   }
 
   /// When the emitted text is complete, the pointers in the tokens
@@ -107,10 +118,10 @@ class ASTPrinter : Visitor2
   /// (Considering the text buffer might get relocated when appending to it.)
   void fixTokens()
   {
-    if (!buildTokens || !tokens.length)
+    if (!buildTokens || !tarray.len)
       return;
-    const offset = cast(ssize_t)text.ptr;
-    for (auto t = tokens[0]; t !is null; t = t.next)
+    const offset = cast(size_t)text.ptr;
+    foreach (ref t; tarray[])
     {
       if (t.ws)
         t.ws += offset;
@@ -153,10 +164,10 @@ class ASTPrinter : Visitor2
   {
     if (t.kind == TOK.Invalid)
     { // Special whitespace token?
-      spaces ~= t.text();
+      spaces ~= t.text;
       return;
     }
-    auto tokenText = t.text();
+    auto tokenText = t.text;
     if (buildTokens)
     {
       auto start = spaces.length;
@@ -171,13 +182,9 @@ class ASTPrinter : Visitor2
   /// Writes the tokens between b and e (inclusive.)
   void writeSpan(Token* b, Token* e)
   {
-    for (auto t = b; t; t = t.next)
-    {
+    for (auto t = b; t <= e; t++)
       if (!t.isWhitespace())
         writeToken(t);
-      if (t is e)
-        break;
-    }
   }
 
   /// Shortcuts.

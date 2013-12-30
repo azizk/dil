@@ -84,8 +84,8 @@ abstract class DDocEmitter : DefaultVisitor2
     auto lexer = modul.parser.lexer;
     symbolTree[0] = new DocSymbol(modul.moduleName, modul.getFQN(), K.Module,
       null,
-      locationOf(lexer.firstToken()),
-      locationOf(lexer.tail)
+      locationOf(lexer.firstToken),
+      locationOf(lexer.lastToken)
     ); // Root symbol.
 
     if (auto d = modul.moduleDecl)
@@ -565,14 +565,13 @@ abstract class DDocEmitter : DefaultVisitor2
   void write(Node n)
   {
     astPrinter.print(n);
-    auto ts = astPrinter.tokens;
-    writeHL(ts[0], ts[$-1]);
+    writeHL(astPrinter.tokens);
   }
 
   /// Write highlighted tokens to the buffer.
-  void writeHL(Token* begin, Token* end)
+  void writeHL(Token[] tokens)
   {
-    tokenHL.highlightTokens(text, begin, end, true);
+    tokenHL.highlightTokens(text, tokens, true);
   }
 
   /// Writes params to the text buffer.
@@ -590,7 +589,7 @@ abstract class DDocEmitter : DefaultVisitor2
         // Write storage class(es).
         auto lastSTC = param.tokenOfLastSTC();
         if (lastSTC) // Write storage classes.
-          writeHL(param.begin, lastSTC), write(" ");
+          writeHL(param.begin[0..lastSTC-param.begin]), write(" ");
         if (param.type)
           write(param.type); // Write the type.
         if (param.hasName)

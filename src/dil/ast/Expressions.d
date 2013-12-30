@@ -1069,7 +1069,7 @@ class StringExpr : Expression
   {
     assert(begin && end);
     Token*[] ts;
-    for (auto t = begin; t !is end; t = t.next)
+    for (auto t = begin; t <= end; t++)
       if (t.kind == TOK.String)
         ts ~= t;
     return ts ? ts : [begin];

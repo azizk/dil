@@ -105,28 +105,16 @@ static:
     // Get preceding comments.
     auto token = node.begin;
     // Scan backwards until we hit another declaration.
-  Loop:
-    for (; token; token = token.prev)
-    {
-      if (token.kind == TOK.LBrace ||
-          token.kind == TOK.RBrace ||
-          token.kind == TOK.Semicolon ||
-          /+token.kind == TOK.HEAD ||+/
+    while ((--token).kind == TOK.HEAD)
+      if (token.kind.In(TOK.LBrace, TOK.RBrace, TOK.Semicolon) ||
           (isEnumMember && token.kind == TOK.Comma))
         break;
-
-      if (token.kind == TOK.Comment)
-      { // Check that this comment doesn't belong to the previous declaration.
-        switch (token.prev.kind)
-        {
-        case TOK.Semicolon, TOK.RBrace, TOK.Comma:
-          break Loop;
-        default:
-          if (isDocComment(token))
-            comments = [token] ~ comments;
-        }
-      }
-    }
+      else if (token.kind == TOK.Comment)
+        // Check that this comment doesn't belong to the previous declaration.
+        if (token.prev.kind.In(TOK.Semicolon, TOK.RBrace, TOK.Comma))
+          break;
+        else if (isDocComment(token))
+          comments = [token] ~ comments;
     // Get single comment to the right.
     token = node.end.next;
     if (token.kind == TOK.Comment && isDocComment(token))
@@ -135,11 +123,8 @@ static:
     {
       token = node.end.nextNWS;
       if (token.kind == TOK.Comma)
-      {
-        token = token.next;
-        if (token.kind == TOK.Comment && isDocComment(token))
+        if ((++token).kind == TOK.Comment && isDocComment(token))
           comments ~= token;
-      }
     }
     return comments;
   }

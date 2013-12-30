@@ -66,7 +66,7 @@ class Highlighter
     auto lx = new Lexer(src, cc.tables.lxtables, cc.diag);
     lx.scanAll();
     lines = lx.lineNum;
-    highlightTokens(lx.firstToken(), lx.tail);
+    highlightTokens(lx.tokenList);
     return getText();
   }
 
@@ -74,27 +74,24 @@ class Highlighter
   /// Returns: A string with the highlighted tokens.
   /// Params:
   ///   skipWS = Skips whitespace tokens (e.g. comments) if true.
-  void highlightTokens(Token* begin, Token* end, bool skipWS = false)
+  void highlightTokens(Token[] tokens, bool skipWS = false)
   {
     // Traverse linked list and print tokens.
-    for (auto token = begin; token; token = token.next)
+    foreach (token; tokens)
     {
-      if (skipWS && token.isWhitespace())
+      if (skipWS && token.isWhitespace)
         continue;
       token.ws && print(token.wsChars); // Print preceding whitespace.
-      printToken(token);
-      if (token is end)
-        break;
+      printToken(&token);
     }
   }
 
   /// ditto
-  void highlightTokens(ref Array buffer, Token* begin, Token* end,
-    bool skipWS = false)
+  void highlightTokens(ref Array buffer, Token[] tokens, bool skipWS = false)
   {
     auto buffer_saved = this.buffer;
     this.buffer = buffer;
-    highlightTokens(begin, end, skipWS);
+    highlightTokens(tokens, skipWS);
     buffer = this.buffer; // Update callers instance.
     this.buffer = buffer_saved;
   }
@@ -123,9 +120,9 @@ class Highlighter
 
     print(tags["SourceBegin"]);
     // Traverse linked list and print tokens.
-    for (auto token = lx.firstToken(); token; token = token.next) {
+    foreach (token; lx.tokenList) {
       token.ws && print(token.wsChars); // Print preceding whitespace.
-      printToken(token);
+      printToken(&token);
     }
     print(tags["SourceEnd"]);
     print(tags["DocEnd"]);
@@ -144,8 +141,8 @@ class Highlighter
   {
     auto parser = modul.parser;
     auto lx = parser.lexer;
-    auto builder = new TokenExBuilder();
-    auto tokenExList = builder.build(modul.root, lx.firstToken());
+    auto tokens = lx.tokenList;
+    auto tokenExList = new TokenExBuilder().build(modul.root, tokens);
 
     printf(tags["DocHead"], modul.getFQN());
     if (lx.errors.length || parser.errors.length)
@@ -169,10 +166,9 @@ class Highlighter
     auto tagNodeEnd = tags["NodeEnd"];
 
     // Iterate over list of tokens.
-    foreach (ref tokenEx; tokenExList)
+    foreach (i, ref tokenEx; tokenExList)
     {
-      auto token = tokenEx.token;
-
+      auto token = &tokens[i];
       token.ws && print(token.wsChars); // Print preceding whitespace.
       if (token.isWhitespace) {
         printToken(token);
@@ -246,15 +242,16 @@ class Highlighter
         auto buffer_saved = this.buffer; // Save;
         this.buffer = Array(text.length);
         print("q{");
-        // Traverse linked list and print tokens.
-        for (auto t = token.strval.tok_str; t; t = t.next)
+        // Traverse and print inner tokens.
+        Token* last; // Remember last token.
+        for (auto t = token.strval.tokens; t.kind; t++)
         {
           t.ws && print(t.wsChars); // Print preceding whitespace.
           printToken(t);
+          last = t;
         }
-        auto postfix = token.strval.pf;
-        if (postfix != 0)
-          print(postfix); // Postfix character.
+        if (last) // Print: Whitespace? "}" Postfix?
+          print(slice(last.end, token.end));
         text = getText();
         this.buffer = buffer_saved; // Restore
       }
@@ -553,7 +550,7 @@ string getShortClassName(Node node)
 /// Extended token structure.
 struct TokenEx
 {
-  Token* token; /// The lexer token.
+  //Token* token; /// The lexer token.
   Node[] beginNodes; /// beginNodes[n].begin == token
   Node[] endNodes; /// endNodes[n].end == token
 }
@@ -561,49 +558,29 @@ struct TokenEx
 /// Builds an array of TokenEx items.
 class TokenExBuilder : DefaultVisitor
 {
-  private TokenEx*[Token*] tokenTable;
+  TokenEx[] tokenExs; /// Extended tokens.
+  Token[] tokens; /// Original tokens.
 
-  TokenEx[] build(Node root, Token* first)
-  {
-    auto token = first;
-
-    uint count; // Count tokens.
-    for (; token; token = token.next)
-      count++;
-    // Creat the exact number of TokenEx instances.
-    auto toks = new TokenEx[count];
-    token = first;
-    foreach (ref tokEx; toks)
-    {
-      tokEx.token = token;
-      if (!token.isWhitespace)
-        tokenTable[token] = &tokEx;
-      token = token.next;
-    }
-
+  TokenEx[] build(Node root, Token[] tokens)
+  { // Creat the exact number of TokenEx instances.
+    this.tokens = tokens;
+    tokenExs = new TokenEx[tokens.length];
     super.visitN(root);
-    tokenTable = null;
-    return toks;
+    return tokenExs;
   }
 
-  TokenEx* getTokenEx()(Token* t)
+  TokenEx* getTokenEx(Token* t)
   {
-    auto p = t in tokenTable;
-    assert(p, t.text~" is not in tokenTable");
-    return *p;
+    assert(tokens.ptr <= t && t < tokens.ptr+tokens.length);
+    return &tokenExs[t - tokens.ptr];
   }
 
-  // Override dispatch function.
+  /// Override dispatch function.
   override Node dispatch(Node n)
-  { assert(n !is null);
-    auto begin = n.begin;
-    if (begin)
-    { assert(n.end);
-      auto txbegin = getTokenEx(begin);
-      auto txend = getTokenEx(n.end);
-      txbegin.beginNodes ~= n;
-      txend.endNodes ~= n;
-    }
+  {
+    assert(n && n.begin && n.end);
+    getTokenEx(n.begin).beginNodes ~= n;
+    getTokenEx(n.end).endNodes ~= n;
     return super.dispatch(n);
   }
 }

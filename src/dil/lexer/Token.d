@@ -7,6 +7,7 @@ import dil.lexer.Identifier,
        dil.lexer.Funcs;
 import dil.Location;
 import dil.Float;
+import dil.Array;
 import common;
 
 import tango.stdc.stdlib : malloc, free;
@@ -28,12 +29,8 @@ public import dil.lexer.TokensEnum;
 ///   Identifier = $(SYMLINK2 dil.lexer.Identifier, Identifier)
 struct Token
 {
-  TOK kind; /// The token kind.
-  /// Pointers to the next and previous tokens (doubly-linked list.)
-  Token* next, prev;
-
-  /// Start of whitespace characters before token. Null if no WS.
-  cchar* ws;
+  TOK kind;     /// The token kind.
+  cchar* ws;    /// Points to the preceding whitespace characters if present.
   cchar* start; /// Points to the first character of the token.
   cchar* end;   /// Points one character past the end of the token.
 
@@ -44,9 +41,8 @@ struct Token
     cbinstr str;    /// The typeless string value.
     char pf = 0;    /// Postfix: 'c', 'w', 'd'. '\0' for none.
     version(D2)
-    Token* tok_str; /// Points to the contents of a token string stored as a
-                    /// doubly linked list. The last token is always '}' or
-                    /// EOF in case the string is not closed properly.
+    Token* tokens; /// Points to the contents of a token string stored
+                   /// as a zero-terminated array.
   }
 
   /// Represents the long/ulong value of a number literal.
@@ -108,14 +104,14 @@ struct Token
 //   static assert(TokenValue.sizeof == (void*).sizeof);
 
   /// Returns the text of the token.
-  @property cstring text()
+  cstring text()
   {
     assert(start <= end);
     return start[0 .. end - start];
   }
 
   /// Sets the text of the token.
-  @property void text(cstring s)
+  void text(cstring s)
   {
     start = s.ptr;
     end = s.ptr + s.length;
@@ -128,37 +124,39 @@ struct Token
     return ws[0 .. start - ws];
   }
 
-  /// Finds the next non-whitespace token.
-  /// Returns: 'this' token if the next token is inexistant or TOK.EOF.
-  Token* nextNWS()
-  out(token)
+  /// Returns the next token.
+  Token* next()
   {
-    assert(token !is null);
+    assert(kind != TOK.Invalid);
+    return &this + 1;
   }
-  body
+
+  /// Returns the previous token.
+  Token* prev()
   {
-    auto token = next;
-    while (token !is null && token.isWhitespace)
-      token = token.next;
-    if (token is null || token.kind == TOK.EOF)
-      return &this;
+    assert(kind != TOK.Invalid);
+    return &this - 1;
+  }
+
+  /// Finds the next non-whitespace token. Does not go past TOK.EOF.
+  Token* nextNWS()
+  {
+    assert(kind != TOK.Invalid);
+    auto token = &this;
+    if (kind != TOK.EOF)
+      while ((++token).isWhitespace)
+      {}
     return token;
   }
 
-  /// Finds the previous non-whitespace token.
-  /// Returns: 'this' token if the previous token is inexistent or TOK.HEAD.
+  /// Finds the previous non-whitespace token. Does not go past TOK.HEAD.
   Token* prevNWS()
-  out(token)
   {
-    assert(token !is null);
-  }
-  body
-  {
-    auto token = prev;
-    while (token !is null && token.isWhitespace)
-      token = token.prev;
-    if (token is null || token.kind == TOK.HEAD)
-      return &this;
+    assert(kind != TOK.Invalid);
+    auto token = &this;
+    if (kind != TOK.HEAD)
+      while ((--token).isWhitespace)
+      {}
     return token;
   }
 
@@ -245,24 +243,21 @@ version(D2)
   /// Returns the Location of this token.
   Location getLocation(bool realLocation)(cstring filePath)
   {
-    auto search_t = this.prev;
+    auto search_t = &this;
     // Find previous newline token.
-    while (search_t.kind != TOK.Newline)
-      search_t = search_t.prev;
-
+    while ((--search_t).kind != TOK.Newline)
+    {}
     auto newline = search_t.nlval;
     auto lineNum = newline.lineNum;
-    static if (realLocation)
-    {}
-    else
-    if (auto hlinfo = newline.hlinfo)
-    { // Change file path and line number.
-      filePath = hlinfo.path;
-      lineNum  = hlinfo.getLineNum(newline.lineNum);
-    }
+    static if (!realLocation)
+      if (auto hlinfo = newline.hlinfo)
+      { // Change file path and line number.
+        filePath = hlinfo.path;
+        lineNum  = hlinfo.getLineNum(newline.lineNum);
+      }
     auto lineBegin = search_t.end;
     // Determine actual line begin and line number.
-    for (; search_t != &this; search_t = search_t.next)
+    while (++search_t < &this)
       // Multiline tokens must be rescanned for newlines.
       if (search_t.isMultiline)
         for (auto p = search_t.start, end = search_t.end; p < end;)
@@ -317,6 +312,8 @@ version(D2)
     return textSpan(&this, right);
   }
 }
+
+alias TokenArray = DArray!Token;
 
 /// Returns true if this token starts a DeclarationDefinition.
 bool isDeclDefStartToken(TOK tok)

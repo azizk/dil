@@ -337,8 +337,7 @@ void main(cstring[] args)
         if (cc.diag.hasInfo())
           return;
 
-        auto token = lx.firstToken();
-        for (; token.kind != TOK.EOF; token = token.next)
+        foreach (token; lx.tokenList[0..$-1])
         {
           if (token.kind == TOK.Newline || ignoreWSToks && token.isWhitespace)
             continue;
@@ -386,7 +385,7 @@ void main(cstring[] args)
         if (cc.diag.hasInfo())
           return;
 
-        auto data = TokenSerializer.serialize(lx.firstToken());
+        auto data = TokenSerializer.serialize(lx.tokenList);
         if (outFilePath.length)
         {
           scope file = new File(outFilePath, File.WriteCreate);
