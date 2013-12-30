@@ -3368,20 +3368,20 @@ class Parser
       auto str = token.strval.str;
       char postfix = token.strval.pf;
       nT();
-      if (tokenIs!"String")
+      if (auto t = consumedToken!"String")
       { // Concatenate adjacent string literals.
         auto buffer = lexer.getBuffer();
+        buffer ~= cast(cstring)str;
         do
         {
-          if (auto pf = token.strval.pf) // If the string has a postfix char.
+          if (auto pf = t.strval.pf) // If the string has a postfix char.
           {
             if (pf != postfix)
-              error(token, MID.StringPostfixMismatch);
+              error(t, MID.StringPostfixMismatch);
             postfix = pf;
           }
-          buffer ~= cast(cstring)token.strval.str;
-          nT();
-        } while(tokenIs!"String");
+          buffer ~= cast(cstring)t.strval.str;
+        } while((t = consumedToken!"String") !is null);
         str = cast(cbinstr)buffer[].dup; // Copy final string.
         lexer.setBuffer(buffer);
       }
