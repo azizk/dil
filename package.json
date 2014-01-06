@@ -1,0 +1,23 @@
+{
+  "name": "DIL",
+  "description": "A compiler for D written in D.",
+  "authors": ["Aziz Köksal"],
+  "homepage": "http://code.google.com/p/dil/",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "tango": "~d2port"
+  },
+  "configurations": [
+    {
+      "name": "dil",
+      "targetType": "executable",
+      "versions": ["D2"],
+    },
+    {
+      "name": "dil",
+      "targetType": "library",
+      "versions": ["D2"],
+      "excludedSourceFiles": "src/main.d",
+    }
+  ]
+}
