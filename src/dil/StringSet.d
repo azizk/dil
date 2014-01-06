@@ -73,8 +73,7 @@ struct StringSet
       {
         auto node = getNode(*pindex);
         int_t diff;
-        if (node.str.ptr is str.ptr ||
-            (diff = node.hash - hash) == 0 &&
+        if ((diff = node.hash - hash) == 0 &&
             (diff = node.str.length - str.length) == 0 &&
             (diff = memcmp(node.str.ptr, str.ptr, str.length)) == 0)
           assert(0, "can't have two equal nodes in the same set");
@@ -95,8 +94,7 @@ struct StringSet
     {
       auto node = getNode(*pindex);
       int_t diff;
-      if (node.str.ptr is str.ptr ||
-          (diff = node.hash - hash) == 0 &&
+      if ((diff = node.hash - hash) == 0 &&
           (diff = node.str.length - str.length) == 0 &&
           (diff = memcmp(node.str.ptr, str.ptr, str.length)) == 0)
         break; // If equal in hash, length and content.
