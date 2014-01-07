@@ -180,7 +180,7 @@ string[] messages = [
 
   // HelpMain
   `DIL v{0}
-Copyright (c) 2007-2013, Aziz Köksal. Lisans GPL3.
+Copyright (c) 2007-2014, Aziz Köksal. Lisans GPL3.
 
 Komutlar:
 {1}

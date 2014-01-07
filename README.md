@@ -1,6 +1,6 @@
 DIL
 ===
-Copyright (c) 2007-2013 by Aziz Köksal <aziz.koeksal@gmail.com>
+Copyright (c) 2007-2014 by Aziz Köksal <aziz.koeksal@gmail.com>
 This program is free software, licensed under the GPL3.
 Please, read the license file "COPYING" for further information.
 
@@ -48,9 +48,9 @@ How To Compile DIL
 ==================
 In order to compile DIL you must have:
 
-  * [DMD 2.061](http://dlang.org/changelog.html#new2_061)
+  * [DMD 2.064.2](http://dlang.org/changelog.html#new2_064)
   * [Tango D2](https://github.com/SiegeLord/Tango-D2/)
-  * [Python 2.7.3](http://www.python.org/getit/releases/2.7.3/)
+  * [Python 2.7.5](http://www.python.org/getit/releases/2.7.5/)
     (older versions might work, too.)
 
 Newer versions of these tools may not compile DIL. The newest version of DMD

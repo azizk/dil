@@ -122,7 +122,7 @@ string[] messages = [
   "expected name for ‘this’ template parameter, not ‘{}’",
   "expected an identifier or an integer, not ‘{}’",
   "try statement is missing a catch or finally body",
-  "expected closing ‘{}’ (‘{}’ @{},{}), not ‘{}’",
+  "expected matching ‘{}’ to ‘{}’ @({},{}), not ‘{}’",
   "initializers are not allowed for alias types",
   "expected a variable declaration in alias, not ‘{}’",
   "expected a variable declaration in typedef, not ‘{}’",
@@ -177,7 +177,7 @@ string[] messages = [
 
   // HelpMain
   `DIL v{0}
-Copyright (c) 2007-2013 by Aziz Köksal. Licensed under the GPL3.
+Copyright (c) 2007-2014 by Aziz Köksal. Licensed under the GPL3.
 
 Subcommands:
 {1}
