@@ -46,9 +46,6 @@ struct StringT(C)
     }
   }
 
-  // FIXME: due to a bug in DMD, inout constructors don't work anymore.
-  // As a workaround, all parameters have been made const and a cast is used
-  // to be able to assign to the members.
 
   /// Constructs from start and end pointers.
   this(inout C* p, inout C* e) inout
@@ -172,15 +169,9 @@ struct StringT(C)
   }
 
   /// Compares the bytes of two Strings for exact equality.
-  bool opEquals(const S s) const
+  bool opEquals(T)(T x) const
   {
-    if (len != s.len)
-      return false;
-    const(C)* p = ptr, p2 = s.ptr;
-    while (p < end)
-      if (*p++ != *p2++)
-        return false;
-    return true;
+    return this[] == toS!T(x)[];
   }
 
   /// Compares to a boolean value.
@@ -204,8 +195,9 @@ struct StringT(C)
   }
 
   /// Compares two Strings ignoring case (only ASCII.)
-  int_t icmp_(const S s) const
+  int_t icmp(T)(T x) const
   {
+    auto s = toS!T(x);
     auto n = (len <= s.len) ? len : s.len;
     const(C)* p = ptr, p2 = s.ptr;
     for (; n; n--, p++, p2++)
@@ -216,16 +208,10 @@ struct StringT(C)
     return n;
   }
 
-  /// ditto
-  int_t icmp(T)(T s) const
-  {
-    return icmp_(toS!T(s));
-  }
-
   /// Compares two Strings ignoring case for equality (only ASCII.)
-  bool ieql(T)(T s) const
+  bool ieql(T)(T x) const
   {
-    return icmp_(toS!T(s)) == 0;
+    return icmp(x) == 0;
   }
 
   /// Concatenates x copies of this string.
@@ -234,9 +220,10 @@ struct StringT(C)
     auto str = this[];
     auto slen = str.length;
     C[] result = new C[x * slen];
-    for (uint_t i, n; i < x; i++, (n += slen))
-      result[n .. n+slen] = str;
-    return S(result);
+    auto p = result.ptr;
+    for (; x--; p += slen)
+      p[0..slen] = str;
+    return S(result.ptr, p);
   }
 
   /// ditto
@@ -339,25 +326,25 @@ struct StringT(C)
   }
 
   /// Returns the byte length.
-  @property size_t len() const
+  size_t len() const
   {
     return end - ptr;
   }
 
   /// Returns a copy.
-  @property S dup() const
+  S dup() const
   {
     return S(ptr[0..len].dup);
   }
 
   /// Returns true if pointers are null.
-  @property bool isNull() const
+  bool isNull() const
   {
     return ptr is null;
   }
 
   /// Returns true if the string is empty.
-  @property bool isEmpty() const
+  bool isEmpty() const
   {
     return ptr is end;
   }
@@ -716,8 +703,9 @@ struct StringT(C)
   alias findrp = findrS!(inout(C)*);
 
   /// Splits by String s and returns a list of slices.
-  inout(S)[] split(const S s) inout
+  inout(S)[] split(T)(T x) inout
   {
+    auto s = toS!T(x);
     S2[] result;
     const(C)* p = ptr, prev = p;
     auto slen = s.len;
@@ -759,20 +747,8 @@ struct StringT(C)
     return cast(inout(S)[])result;
   }
 
-  /// ditto
-  inout(S)[] split(const C c) inout
-  {
-    return split(CS(c));
-  }
-
-  /// ditto
-  inout(S)[] split(const C[] s) inout
-  {
-    return split(CS(s));
-  }
-
   /// Substitutes a with b.
-  ref S sub_(C a, C b)
+  ref S sub_(const C a, const C b)
   {
     auto p = ptr;
     for (; p < end; p++)
@@ -862,31 +838,37 @@ struct StringT(C)
   }
 
   /// Searches for sep and returns the part before and after that.
-  inout(S)[2] partition(const S sep) inout
+  inout(S)[2] partition(T)(T sep) inout
   {
-    auto psep = findp(sep);
-    return psep ?
-      [inoutS(ptr, psep), inoutS(psep + sep.len, end)] :
-      [this, inoutS()];
-  }
-  /// ditto
-  inout(S)[2] partition(const C[] sep) inout
-  {
-    return partition(CS(sep));
+    static if (is(sep : C))
+    {
+      if (auto psep = findp(sep))
+        return [inoutS(ptr, psep), inoutS(psep + 1, end)];
+    }
+    else
+    {
+      auto sep_ = toS!T(sep);
+      if (auto psep = findp(sep_))
+        return [inoutS(ptr, psep), inoutS(psep + sep_.len, end)];
+    }
+    return [this, inoutS()];
   }
 
   /// Searches for sep and returns the part before and after that.
-  inout(S)[2] rpartition(const S sep) inout
+  inout(S)[2] rpartition(T)(T sep) inout
   {
-    auto psep = findrp(sep);
-    return psep ?
-      [inoutS(ptr, psep), inoutS(psep + sep.len, end)] :
-      [inoutS(), this];
-  }
-  /// ditto
-  inout(S)[2] rpartition(const C[] sep) inout
-  {
-    return rpartition(CS(sep));
+    static if (is(sep : C))
+    {
+      if (auto psep = findrp(sep))
+        return [inoutS(ptr, psep), inoutS(psep + 1, end)];
+    }
+    else
+    {
+      auto sep_ = toS!T(sep);
+      if (auto psep = findrp(sep_))
+        return [inoutS(ptr, psep), inoutS(psep + sep_.len, end)];
+    }
+    return [inoutS(), this];
   }
 
   /// Concatenates strs using this String as a separator.
@@ -1057,8 +1039,10 @@ void testString()
   alias S = String;
 
   // Constructing.
-  assert(S('a') == S("a"));
-  assert(S("".ptr, '\0') == S("")); // String literals are always zero terminated.
+  assert(S("") == "");
+  assert(S("a"[0]) == "a");
+  assert(S(['a'][0]) == "a");
+  assert(S("".ptr, '\0') == ""); // String literals are always zero terminated.
   assert(S("abcd".ptr, '\0') == S("abcd"));
   assert(S("abcd".ptr, 'c') == S("ab"));
   assert(S("abcd".ptr, 2u) == S("ab"));
@@ -1080,18 +1064,18 @@ void testString()
   }
 
   // Substitution.
-  assert(S("abce").sub('e', 'd') == S("abcd"));
-  assert(S("abc ef").sub(' ', 'd') == S("abcdef"));
-  assert(S("abc f").sub(' ', "de") == S("abcdef"));
-  assert(S("abcd").sub("", " ") == S(" a b c d "));
-  assert(S("").sub("", "a") == S("a"));
-  assert(S(" a b c d ").sub(" ", "") == S("abcd"));
-  assert(S("ab_cd").sub("_", "") == S("abcd"));
-  assert(S("abcd").sub("abcd", "") == S(""));
-  assert(S("aaaa").sub("a", "") == S(""));
-  assert(S("").sub(S(""), "") == S(""));
-  assert(S("").sub("", S("")) == S(""));
-  assert(S("").sub(S(""), S("")) == S(""));
+  assert(S("abce").sub('e', 'd') == "abcd");
+  assert(S("abc ef").sub(' ', 'd') == "abcdef");
+  assert(S("abc f").sub(' ', "de") == "abcdef");
+  assert(S("abcd").sub("", " ") == " a b c d ");
+  assert(S("").sub("", "a") == "a");
+  assert(S(" a b c d ").sub(" ", "") == "abcd");
+  assert(S("ab_cd").sub("_", "") == "abcd");
+  assert(S("abcd").sub("abcd", "") == "");
+  assert(S("aaaa").sub("a", "") == "");
+  assert(S("").sub(S(""), "") == "");
+  assert(S("").sub("", S("")) == "");
+  assert(S("").sub(S(""), S("")) == "");
 
   // Duplication.
   assert(S("chica").dup == S("chica"));
@@ -1106,8 +1090,8 @@ void testString()
   assert(S("a") == S("a"));
   assert(S("a") != S("b"));
   assert(S("abcd") == S("abcd"));
-  assert(S("") == S(""));
-  assert(S() == S());
+  assert(S("") == S());
+  assert(S() == "");
   assert(S() == S("") && "" == null);
   assert(S("ABC").ieql("abc"));
   assert(S("XYZ").ieql(S("xyz")));
@@ -1116,20 +1100,14 @@ void testString()
   assert(S("B").icmp("a") > 0);
   assert(S("Y").icmp(S("x")) > 0);
 
-  // Multiplication.
-  assert(S("ha") * 6 == S("hahahahahaha"));
-  assert(S("oi") * 3 == S("oioioi"));
-  assert(S("palabra") * 0 == S());
-  assert(1 * S("mundo") == S("mundo"));
-
   // Slicing.
   assert(S("rapido")[] == "rapido");
-  assert(S("rapido")[0..0] == S(""));
-  assert(S("rapido")[1..4] == S("api"));
-  assert(S("rapido")[2..-3] == S("p"));
-  assert(S("rapido")[-3..3] == S(""));
-  assert(S("rapido")[-4..-1] == S("pid"));
-  assert(S("rapido")[6..6] == S(""));
+  assert(S("rapido")[0..0] == "");
+  assert(S("rapido")[1..4] == "api");
+  assert(S("rapido")[2..-3] == "p");
+  assert(S("rapido")[-3..3] == "");
+  assert(S("rapido")[-4..-1] == "pid");
+  assert(S("rapido")[6..6] == "");
 
   {
     auto s = S("rebanada");
@@ -1145,6 +1123,13 @@ void testString()
   assert(S("abcd")[2] == 'c');
   assert(S("abcd")[-1] == 'd');
 
+  // Multiplying.
+  assert(S("ha") * 6 == "hahahahahaha");
+  assert(S("oi") * 3 == "oioioi");
+  assert(S("palabra") * 0 == "");
+  assert(1 * S("mundo") == "mundo");
+  assert(S("") * 4 == "");
+
   // Dividing.
   assert(S("abcd") / 1 == [S("abcd")]);
   assert(S("abcd") / 2 == [S("ab"), S("cd")]);
@@ -1156,10 +1141,10 @@ void testString()
   assert(S("abcdef").pieces(4) == [S("abcd"), S("ef")]);
 
   // Splitting.
-  assert(S("") == S(""));
   assert(S("").split("") == [S(""), S("")]);
   assert(S("abc").split("") == [S(""), S("a"), S("b"), S("c"), S("")]);
   assert(S("abc").split("b") == [S("a"), S("c")]);
+  assert(S("abc").split('b') == [S("a"), S("c")]);
 
   // Searching.
   assert("Mundo" in S("¡Hola Mundo!"));
@@ -1181,12 +1166,12 @@ void testString()
   assert(S("abcd").findr(S("cd")) == 2);
 
   // Reversing.
-  assert(S("").reverse() == S(""));
-  assert(S("a").reverse() == S("a"));
-  assert(S("abc").reverse() == S("cba"));
-  assert(S("abcd").reverse() == S("dcba"));
-  assert(S("abc").reverse() == S("cba"));
-  assert(S("abc").reverse().reverse() == S("abc"));
+  assert(S().reverse() == "");
+  assert(S("").reverse() == "");
+  assert(S("a").reverse() == "a");
+  assert(S("abc").reverse() == "cba");
+  assert(S("abcd").reverse() == "dcba");
+  assert(S("abc").reverse().reverse() == "abc");
 
   // Matching prefixes and suffixes.
   assert(S("abcdefg").startsWith("abc"));
@@ -1210,22 +1195,22 @@ void testString()
   assert(S("abcd").rpartition("") == [S("abcd"), S("")]);
 
   // Converting to hex string.
-  assert(S("äöü").tohex() == S("c3a4c3b6c3bc"));
-  assert(S("äöü").toHEX() == S("C3A4C3B6C3BC"));
+  assert(S("äöü").tohex() == "c3a4c3b6c3bc");
+  assert(S("äöü").toHEX() == "C3A4C3B6C3BC");
 
   // Case conversion.
-  assert(S("^agmtz$").toupper() == S("^AGMTZ$"));
-  assert(S("^AGMTZ$").tolower() == S("^agmtz$"));
+  assert(S("^agmtz$").toupper() == "^AGMTZ$");
+  assert(S("^AGMTZ$").tolower() == "^agmtz$");
 
   // Joining.
-  assert(S(["a","b","c","d"], ".") == S("a.b.c.d"));
-  assert(S(["a","b","c","d"], "") == S("abcd"));
-  assert(S(["a"], ".") == S("a"));
-  assert(S(",").rjoin(["a"]) == S("a,"));
-  assert(S(",").ljoin(["a"]) == S(",a"));
-  assert(S(",").rjoin(["a", "b"]) == S("a,b,"));
-  assert(S(",").ljoin(["a", "b"]) == S(",a,b"));
+  assert(S(["a","b","c","d"], ".") == "a.b.c.d");
+  assert(S(["a","b","c","d"], "") == "abcd");
+  assert(S(["a"], ".") == "a");
+  assert(S(",").rjoin(["a"]) == "a,");
+  assert(S(",").ljoin(["a"]) == ",a");
+  assert(S(",").rjoin(["a", "b"]) == "a,b,");
+  assert(S(",").ljoin(["a", "b"]) == ",a,b");
   string[] strs;
-  assert(S(",").rjoin(strs) == S());
-  assert(S(",").ljoin(strs) == S());
+  assert(S(",").rjoin(strs) == "");
+  assert(S(",").ljoin(strs) == "");
 }
