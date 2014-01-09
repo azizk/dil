@@ -680,16 +680,7 @@ struct StringT(C)
     }
     else
     if (slen == 1)
-    {
-      const c = *s.ptr;
-      for (; p < end; p++)
-        if (*p == c)
-        {
-          result ~= S2(prev, p);
-          prev = p+1;
-        }
-      result ~= S2(prev, end);
-    }
+      return split(*s.ptr);
     else
     {
       const(C)* ps;
@@ -701,6 +692,21 @@ struct StringT(C)
       }
       result ~= S2(p, end);
     }
+    return cast(inout(S)[])result;
+  }
+
+  /// ditto
+  inout(S)[] split(T : C)(T c) inout
+  {
+    S2[] result;
+    const(C)* p = ptr, prev = p;
+    for (; p < end; p++)
+      if (*p == c)
+      {
+        result ~= S2(prev, p);
+        prev = p+1;
+      }
+    result ~= S2(prev, end);
     return cast(inout(S)[])result;
   }
 
@@ -1160,14 +1166,16 @@ void testString()
   assert(S("^AGMTZ$").tolower() == "^agmtz$");
 
   // Joining.
-  assert(S(["a","b","c","d"], ".") == "a.b.c.d");
-  assert(S(["a","b","c","d"], "") == "abcd");
-  assert(S(["a"], ".") == "a");
-  assert(S(",").rjoin(["a"]) == "a,");
-  assert(S(",").ljoin(["a"]) == ",a");
-  assert(S(",").rjoin(["a", "b"]) == "a,b,");
-  assert(S(",").ljoin(["a", "b"]) == ",a,b");
+  {
   string[] strs;
-  assert(S(",").rjoin(strs) == "");
+  assert(S(strs=["a","b","c","d"], ".") == "a.b.c.d");
+  assert(S(strs, "") == "abcd");
+  assert(S(strs=["a"], ".") == "a");
+  assert(S(",").rjoin(strs) == "a,");
+  assert(S(",").ljoin(strs) == ",a");
+  assert(S(",").rjoin(strs=["a", "b"]) == "a,b,");
+  assert(S(",").ljoin(strs) == ",a,b");
+  assert(S(",").rjoin(strs=null) == "");
   assert(S(",").ljoin(strs) == "");
+  }
 }
