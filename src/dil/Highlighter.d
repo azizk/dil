@@ -542,7 +542,7 @@ string getShortClassName(Node node)
     // Decl, Stmt, Expr, Type have length 4.
     size_t suffixLength = node.isParameter ? 0 : 4;
     // Remove common suffix and store.
-    *pname = IString(name.ptr, name.end-suffixLength)[];
+    *pname = name[0..Neg(suffixLength)][];
   }
   return *pname;
 }

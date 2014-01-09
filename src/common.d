@@ -41,6 +41,13 @@ static this()
   Printfln = &Stdout.formatln;
 }
 
+/// Full range negative integer.
+struct Neg
+{
+  uint_t n;
+  alias n this;
+}
+
 /// Writes a message to stdout.
 scope class UnittestMsg
 {

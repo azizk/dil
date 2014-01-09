@@ -2015,7 +2015,7 @@ class Lexer
   static char[] copySansUnderscores(cchar* begin, cchar* end)
   {
     auto s = String(begin, end + 1).dup;
-    s[-1] = 0;
+    s[Neg(1)] = 0;
     return s.sub('_', "")[];
   }
 

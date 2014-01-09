@@ -137,9 +137,12 @@ struct StringT(C)
 
   /// Returns a pointer from an index number.
   /// When x is negative it is subtracted from the end pointer.
-  inout(C)* indexPtr(ssize_t x) inout
+  inout(C)* indexPtr(T)(T x) inout
   {
-    auto p = x < 0 ? end + x : ptr + x;
+    static if (is(T : Neg))
+      auto p = end - x.n;
+    else
+      auto p = ptr + x;
     assert(ptr <= p && p <= end);
     return p;
   }
@@ -148,23 +151,23 @@ struct StringT(C)
   /// Params:
   ///   x = Start index. Negative values are subtracted from the end.
   ///   y = End index. Negative values are subtracted from the end.
-  inout(S) opSlice(ssize_t x, ssize_t y) inout
+  inout(S) opSlice(T1, T2)(T1 x, T2 y) inout
   {
-    return inoutS(indexPtr(x), indexPtr(y));
+    return inoutS(indexPtr!T1(x), indexPtr!T2(y));
   }
 
   /// Returns the character at position x.
   /// Params:
   ///   x = Character index. Negative values are subtracted from the end.
-  inout(C) opIndex(ssize_t x) inout
+  inout(C) opIndex(T)(T x) inout
   {
-    return *indexPtr(x);
+    return *indexPtr!T(x);
   }
 
   /// Assigns c at position x.
-  ref S opIndexAssign(C c, ssize_t x)
+  ref S opIndexAssign(T)(C c, T x)
   {
-    *indexPtr(x) = c;
+    *indexPtr!T(x) = c;
     return this;
   }
 
@@ -1104,16 +1107,16 @@ void testString()
   assert(S("rapido")[] == "rapido");
   assert(S("rapido")[0..0] == "");
   assert(S("rapido")[1..4] == "api");
-  assert(S("rapido")[2..-3] == "p");
-  assert(S("rapido")[-3..3] == "");
-  assert(S("rapido")[-4..-1] == "pid");
+  assert(S("rapido")[2..Neg(3)] == "p");
+  assert(S("rapido")[Neg(3)..3] == "");
+  assert(S("rapido")[Neg(4)..Neg(1)] == "pid");
   assert(S("rapido")[6..6] == "");
 
   {
     auto s = S("rebanada");
     assert(s.slices(s));
     assert(s[0..0].slices(s));
-    assert(s[1..-1].slices(s));
+    assert(s[1..Neg(1)].slices(s));
     assert(s[s.len..s.len].slices(s));
     assert(S(s.end, s.end).slices(s));
   }
@@ -1121,7 +1124,7 @@ void testString()
   // Indexing.
   assert(S("abcd")[0] == 'a');
   assert(S("abcd")[2] == 'c');
-  assert(S("abcd")[-1] == 'd');
+  assert(S("abcd")[Neg(1)] == 'd');
 
   // Multiplying.
   assert(S("ha") * 6 == "hahahahahaha");
