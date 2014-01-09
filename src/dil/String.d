@@ -555,61 +555,43 @@ struct StringT(C)
     return slices(CS(s));
   }
 
+  /// Returns 'a' if RT is of type size_t, otherwise 'b'.
+  static auto choice(RT, A, B)(A a, B b)
+  {
+    static if (is(RT == size_t))
+      return a;
+    else
+      return b;
+  }
+
   /// Searches for character c.
-  RT findChar(RT, string pred = q{*p == c})(const C c) inout
+  RT findC(RT, string pred = q{*p == c})(const C c) inout
   {
     inout(C)* p = ptr;
     for (; p < end; p++)
       if (mixin(pred))
-      {
-        static if (is(RT == ssize_t))
-          return p - ptr;
-        else
-          return p;
-      }
-    static if (is(RT == ssize_t))
-      return -1;
-    else
-      return null;
+        return choice!RT(p - ptr, p);
+    return choice!RT(-1, null);
   }
 
   /// Searches for character c starting from the end.
-  RT findrChar(RT, string pred = q{*p == c})(const C c) inout
+  RT findrC(RT, string pred = q{*p == c})(const C c) inout
   {
     inout(C)* p = end;
     while (--p >= ptr)
       if (mixin(pred))
-      {
-        static if (is(RT == ssize_t))
-          return p - ptr;
-        else
-          return p;
-      }
-    static if (is(RT == ssize_t))
-      return -1;
-    else
-      return null;
+        return choice!RT(p - ptr, p);
+    return choice!RT(-1, null);
   }
 
   /// Searches for s.
   RT findS(RT)(const S s) inout
   {
-    enum is_ssize_t = is(RT : ssize_t);
     if (s.len == 0)
-    {
-      static if (is_ssize_t)
-        return 0;
-      else
-        return ptr;
-    }
+      return choice!RT(0, ptr);
     else
     if (s.len == 1)
-    {
-      static if (is_ssize_t)
-        return find(s[0]);
-      else
-        return findp(s[0]);
-    }
+      return choice!RT(find(s[0]), findp(s[0]));
     else
     if (s.len <= len) // Return when the argument string is longer.
     {
@@ -623,39 +605,20 @@ struct StringT(C)
           inout(C)* matchBegin = p;
           while (p < end && *p++ == *p2++)
             if (p2 is s.end) // If at the end, we have a match.
-            {
-              static if (is_ssize_t)
-                return matchBegin - ptr;
-              else
-                return matchBegin;
-            }
+              return choice!RT(matchBegin - ptr, matchBegin);
         }
     }
-    static if (is_ssize_t)
-      return -1;
-    else
-      return null;
+    return choice!RT(-1, null);
   }
 
   /// Searches for s starting from the end.
   RT findrS(RT)(const S s) inout
   {
-    enum is_ssize_t = is(RT : ssize_t);
     if (s.len == 0)
-    {
-      static if (is_ssize_t)
-        return len;
-      else
-        return end;
-    }
+      return choice!RT(len, end);
     else
     if (s.len == 1)
-    {
-      static if (is_ssize_t)
-        return findr(s[0]);
-      else
-        return findrp(s[0]);
-    }
+      return choice!RT(findr(s[0]), findrp(s[0]));
     else
     if (s.len <= len) // Return when the argument string is longer.
     {
@@ -669,39 +632,30 @@ struct StringT(C)
           while (--p >= ptr)
             if (*p != *--p2)
               break;
-            else
-            if (p2 is s.ptr) // If at the start, we have a match.
-            {
-              static if (is_ssize_t)
-                return p - ptr;
-              else
-                return p;
-            }
+            else if (p2 is s.ptr) // If at the start, we have a match.
+              return choice!RT(p - ptr, p);
         }
     }
-    static if (is_ssize_t)
-      return -1;
-    else
-      return null;
+    return choice!RT(-1, null);
   }
 
   /// Searches for character c.
-  alias find = findChar!(ssize_t);
+  alias find = findC!(size_t);
   /// Searches for character c.
   /// Returns: A pointer to c, or null if not found.
-  alias findp = findChar!(inout(C)*);
+  alias findp = findC!(inout(C)*);
   /// Searches for character c starting from the end.
-  alias findr = findrChar!(ssize_t);
+  alias findr = findrC!(size_t);
   /// Searches for character c, returning a pointer.
-  alias findrp = findrChar!(inout(C)*);
+  alias findrp = findrC!(inout(C)*);
   /// Searches for s.
   /// Returns: The position index, or -1 if not found.
-  alias find = findS!(ssize_t);
+  alias find = findS!(size_t);
   /// Searches for s.
   /// Returns: A pointer to the beginning of s, or null if not found.
   alias findp = findS!(inout(C)*);
   /// Searches for s starting from the end, returning the index.
-  alias findr = findrS!(ssize_t);
+  alias findr = findrS!(size_t);
   /// Searches for s starting from the end, returning a pointer.
   alias findrp = findrS!(inout(C)*);
 
