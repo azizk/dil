@@ -382,31 +382,32 @@ class PDFGenerator:
     generate_pdf(*args)
 
 def main():
-  from optparse import OptionParser
   import json
+  from argparse import ArgumentParser
 
-  usage = "Usage: %s SOURCE_DIR PDF_FILE" % __file__
-  parser = OptionParser(usage=usage)
-  parser.add_option("--params", dest="params", metavar="JSON", default=None,
+  parser = ArgumentParser()
+  addarg = parser.add_argument
+  addarg("src_dir", metavar="SOURCE_DIR", nargs=1,
+    help="source dir of the generated HTML files")
+  addarg("pdf_file", metavar="PDF_FILE", nargs=1,
+    help="destination path of the PDF file")
+  addarg("--params", "-p", dest="params", metavar="JSON",
     help="pass parameters to the generator as a JSON string")
 
-  (opts, args) = parser.parse_args(sys.uargv[1:])
+  opts = args = parser.parse_args(sys.uargv[1:])
 
-  if not opts.params:
-    parser.error("missing argument --params")
-  if len(args) < 1:
-    parser.error("missing argument SOURCE_DIR")
-  if len(args) < 2:
-    parser.error("missing argument PDF_FILE")
+  params = {}
+  if opts.params:
+    try:
+      params = json.loads(opts.params)
+    except ValueError as e:
+      parser.error("--params=JSON: %s" % e)
+  else:
+    print("Warning: no --params argument defined; using defaults.")
 
-  try:
-    params = json.loads(opts.params)
-  except ValueError as e:
-    parser.error("--params=JSON: %s" % e)
-
-  SRC = Path(args[0])
+  SRC = Path(args.src_dir)
   DIL = dil_path()
-  DEST_PDF = doc_path(args[1])
+  DEST_PDF = doc_path(args.pdf_file)
   TMP = (DEST_PDF.folder/"pdf_tmp").mkdir()
 
   pdf_gen = PDFGenerator()

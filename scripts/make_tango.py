@@ -45,15 +45,18 @@ def make_Windows(TANGO):
     (TANGO/lib).move(DEST/"libtango-dmd-dbg.lib")
 
 def main():
-  from optparse import OptionParser
+  from argparse import ArgumentParser
 
-  usage = "Usage: %s TANGO_DIR" % __file__
-  parser = OptionParser(usage=usage)
-  (opts, args) = parser.parse_args(sys.uargv[1:])
-  if len(args) < 1:
-    parser.error("missing argument TANGO_DIR")
+  parser = ArgumentParser(description=desc)
+  addarg = parser.add_argument
+  addarg("tango_dir", metavar="TANGO_DIR", nargs=1,
+    help="the source dir of Tango")
+  args = parser.parse_args(sys.uargv[1:])
 
-  TANGO = Path(args[0])
+  TANGO = Path(args.tango_dir)
+
+  if not TANGO.exists:
+    parser.error("‘%s’ does not exist" % TANGO)
 
   make_Linux(TANGO)
   make_Windows(TANGO)

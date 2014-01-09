@@ -103,31 +103,31 @@ def get_tango_path(path):
   return path
 
 def main():
-  from optparse import OptionParser
+  from argparse import ArgumentParser
 
-  usage = "Usage: %s TANGO_DIR [DESTINATION_DIR]" % __file__
-  parser = OptionParser(usage=usage)
-  parser.add_option("--rev", dest="revision", metavar="REVISION", default=None,
-    type="int", help="set the repository REVISION to use in symbol links"
-                     " (unused atm)")
-  parser.add_option("--docs", dest="docs", default=False, action="store_true",
+  parser = ArgumentParser()
+  addarg = parser.add_argument
+  addarg("tango_dir", metavar="TANGO_DIR", nargs=1,
+    help="the source dir of Tango")
+  addarg("dest_dir", metavar="DESTINATION_DIR", nargs='?',
+    help="destination dir of the generated docs")
+  addarg("--rev", dest="revision", metavar="REVISION", type=int,
+    help="set the repository REVISION to use in symbol links (unused atm)")
+  addarg("--docs", dest="docs", action="store_true",
     help="also generate docs if --7z/--pdf specified")
-  parser.add_option("--posix", dest="posix", default=False, action="store_true",
+  addarg("--posix", dest="posix", action="store_true",
     help="define version Posix instead of Win32 and Windows")
-  parser.add_option("--7z", dest="_7z", default=False, action="store_true",
+  addarg("--7z", dest="_7z", action="store_true",
     help="create a 7z archive")
-  parser.add_option("--pdf", dest="pdf", default=False, action="store_true",
+  addarg("--pdf", dest="pdf", action="store_true",
     help="create a PDF document")
-  parser.add_option("--pykandil", dest="pykandil", default=False, action="store_true",
+  addarg("--pykandil", dest="pykandil", action="store_true",
     help="use Python code to handle Kandil, don't pass --kandil to DIL")
 
-  (options, args) = parser.parse_args(sys.uargv[1:])
+  options = args = parser.parse_args(sys.uargv[1:])
 
-  if len(args) < 1:
-    return parser.print_help()
-
-  if not Path(args[0]).exists:
-    return print("The path '%s' doesn't exist." % args[0])
+  if not Path(args.tango_dir).exists:
+    return print("The path '%s' doesn't exist." % args.tango_dir)
 
   # True if --docs is given, or neither of --pdf and --7z is true.
   options.docs = options.docs or not (options.pdf or options._7z)
@@ -139,9 +139,9 @@ def main():
   # The version of Tango we're dealing with.
   VERSION   = ""
   # Root of the Tango source code (either svn or zip.)
-  TANGO     = get_tango_path(Path(args[0]).abspath)
+  TANGO     = get_tango_path(Path(args.tango_dir).abspath)
   # Destination of doc files.
-  DEST      = doc_path(getitem(args, 1) or 'tangodoc')
+  DEST      = doc_path(args.dest_dir or 'tangodoc')
   # Temporary directory, deleted in the end.
   TMP       = (DEST/"tmp").abspath
   # Some DDoc macros for Tango.

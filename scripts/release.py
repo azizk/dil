@@ -231,56 +231,52 @@ def build_binaries(TARGETS, COMPILER, V_MAJOR, FILES, DEST):
 
 def main():
   from functools import partial as func_partial
-  from optparse import OptionParser, SUPPRESS_HELP
+  from argparse import ArgumentParser, SUPPRESS
 
-  usage = "Usage: %s VERSION [Options]" % __file__
-  parser = OptionParser(usage=usage)
-  add_option = func_partial(parser.add_option, action="store_true",
-                            default=False)
-  add_option("-s", "--dsymbols", dest="debug_symbols",
+  parser = ArgumentParser()
+  addarg = parser.add_argument
+  addflag = func_partial(addarg, action="store_true")
+  addarg("version", metavar="VERSION", nargs=1,
+    help="the version to be released")
+  addflag("-s", "--dsymbols", dest="debug_symbols",
     help="generate debug symbols for debug builds")
-  add_option("-d", "--docs", dest="docs", help="generate documentation")
-  add_option("-n", "--no-bin", dest="no_binaries", help="don't compile code")
-  add_option("--7z", dest="_7z", help="create a 7z archive")
-  add_option("--gz", dest="tar_gz", help="create a tar.gz archive")
-  add_option("--bz2", dest="tar_bz2", help="create a tar.bz2 archive")
-  add_option("--zip", dest="zip", help="create a zip archive")
-  add_option("--deb", dest="deb", help="create deb files")
-  add_option("--pdf", dest="pdf", help="create a PDF document")
-  #add_option("--chm", dest="chm", help="create a CHM file")
-  add_option("-m", dest="copy_modified",
+  addflag("-d", "--docs", dest="docs", help="generate documentation")
+  addflag("-n", "--no-bin", dest="no_binaries", help="don't compile code")
+  addflag("--7z", dest="_7z", help="create a 7z archive")
+  addflag("--gz", dest="tar_gz", help="create a tar.gz archive")
+  addflag("--bz2", dest="tar_bz2", help="create a tar.bz2 archive")
+  addflag("--zip", dest="zip", help="create a zip archive")
+  addflag("--deb", dest="deb", help="create deb files")
+  addflag("--pdf", dest="pdf", help="create a PDF document")
+  addflag("--chm", dest="chm", help=SUPPRESS) # "create a CHM file"
+  addflag("-m", dest="copy_modified",
     help="copy modified files from the (git) working directory")
-  parser.add_option("--src", dest="src", metavar="SRC", default=None,
+  addflag("--ldc", dest="ldc", help="use ldc instead of dmd")
+  addarg("--src", dest="src", metavar="SRC",
     help="use SRC folder instead of checking out code with git")
-  parser.add_option("--cmp-exe", dest="cmp_exe", metavar="EXE_PATH",
+  addarg("--cmp-exe", dest="cmp_exe", metavar="EXE_PATH",
     help="specify EXE_PATH if dmd/ldc is not in your PATH")
-  add_option("--ldc", dest="ldc", help="use ldc instead of dmd")
-  parser.add_option("--builddir", dest="builddir", metavar="DIR", default=None,
+  addarg("--builddir", dest="builddir", metavar="DIR",
     help="where to build the release and archives (default is build/)")
-  parser.add_option("--winpath", dest="winpath", metavar="P", default=None,
+  addarg("--winpath", dest="winpath", metavar="P",
     help="permanently append P to PATH in the Windows (or wine's) registry. "
          "Exits the script.")
-  parser.add_option("--debm", dest="deb_mntnr", metavar="MTR", default=None,
-    help=SUPPRESS_HELP) # Sets the maintainer info of the package.
-  parser.add_option("--debnum", dest="deb_num", metavar="NUM", default=1,
-    help=SUPPRESS_HELP) # Sets the package number.
+  addarg("--debm", dest="deb_mntnr", metavar="MTR",
+    help=SUPPRESS) # Sets the maintainer info of the package.
+  addarg("--debnum", dest="deb_num", metavar="NUM", default=1,
+    help=SUPPRESS) # Sets the package number.
 
-  (options, args) = parser.parse_args(sys.uargv[1:])
+  options = args = parser.parse_args(sys.uargv[1:])
 
   if options.winpath != None:
     from env_path import append2PATH
     append2PATH(options.winpath)
     return
 
-  if len(args) < 1:
-    return parser.print_help()
-  if len(args) > 1:
-    print("Warning! Arguments ignored: " + " ".join(args[1:]))
-
   change_cwd(__file__)
 
   # Validate the version argument.
-  m = re.match(r"^((\d)\.(\d{3})(?:-(\w+))?)(?:\+(\w+))?$", args[0])
+  m = re.match(r"^((\d)\.(\d{3})(?:-(\w+))?)(?:\+(\w+))?$", args.version)
   if not m:
     parser.error("invalid VERSION format: /\d.\d\d\d(-\w+)?/ E.g.: 1.123")
   # The version of DIL to be built.

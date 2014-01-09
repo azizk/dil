@@ -142,37 +142,32 @@ def build_dil_debug(**kwargs):
   return build_dil(dict(kwargs, **options))
 
 def main():
-  from optparse import OptionParser
+  from argparse import ArgumentParser
   import sys
 
-  usage = """Usage: %s [Options]
-
-    Options after the string '--' are forwarded to the compiler.""" % __file__
-  parser = OptionParser(usage=usage)
-  parser.add_option("--tango", dest="tango", metavar="PATH", default=None,
+  desc = "Options after the string '--' are forwarded to the compiler."
+  parser = ArgumentParser(description=desc)
+  addarg = parser.add_argument
+  addarg("--tango", dest="tango", metavar="PATH",
     help="set the root PATH to Tango for source and lib files")
-  parser.add_option(
-    "--release", dest="release", action="store_true", default=False,
+  addarg("--release", dest="release", action="store_true",
     help="build a release version (default)")
-  parser.add_option(
-    "--debug", dest="debug", action="store_true", default=False,
+  addarg("--debug", dest="debug", action="store_true",
     help="build a debug version")
-  parser.add_option("-1", dest="d1", action="store_true", default=False,
+  addarg("-1", dest="d1", action="store_true",
     help="build with -version=D1")
-  parser.add_option("--ldc", dest="ldc", action="store_true", default=False,
+  addarg("--ldc", dest="ldc", action="store_true",
     help="use ldc instead of dmd")
-  parser.add_option(
-    "--unittest", dest="unittest", action="store_true", default=False,
+  addarg("--unittest", dest="unittest", action="store_true",
     help="build unit tests (recommended for first run)")
-  parser.add_option("--wine", dest="wine", action="store_true", default=False,
+  addarg("--wine", dest="wine", action="store_true",
     help="use wine to build a Windows binary on Linux")
 
-  args, other_args = sys.uargv[1:], []
-  if "--" in args:
-    i = args.index("--")
-    args, other_args = args[:i], args[i+1:]
+  args = sys.uargv[1:]
+  i = args.index("--") if "--" in args else len(args)
+  args, other_args = args[:i], args[i+1:]
 
-  (options, args) = parser.parse_args(args)
+  options = parser.parse_args(args)
 
   change_cwd(__file__)
 

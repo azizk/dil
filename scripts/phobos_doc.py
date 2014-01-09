@@ -127,28 +127,31 @@ def write_PDF(DIL, SRC, VERSION, TMP):
   pdf_gen.run(html_files, dest, TMP, params)
 
 def main():
-  from optparse import OptionParser
+  from argparse import ArgumentParser
 
-  usage = "Usage: %s VERSION PHOBOS_DIR [DESTINATION_DIR]" % __file__
-  parser = OptionParser(usage=usage)
-  #parser.add_option("--rev", dest="revision", metavar="REVISION", default=None,
-    #type="int", help="set the repository REVISION to use in symbol links")
-  parser.add_option("--7z", dest="_7z", default=False, action="store_true",
+  parser = ArgumentParser()
+  addarg = parser.add_argument
+  addarg("version", metavar="VERSION", nargs=1,
+    help="the version of Phobos, e.g. 2.064")
+  addarg("phobos_dir", metavar="PHOBOS_DIR", nargs=1,
+    help="the source dir of Phobos")
+  addarg("dest_dir", metavar="DESTINATION_DIR", nargs='?',
+    help="destination dir of the generated docs")
+  # addarg("--rev", dest="revision", metavar="REVISION", type=int,
+  #   help="set the repository REVISION to use in symbol links")
+  addarg("--7z", dest="_7z", action="store_true",
     help="create a 7z archive")
-  parser.add_option("--pdf", dest="pdf", default=False, action="store_true",
+  addarg("--pdf", dest="pdf", action="store_true",
     help="create a PDF document")
-  parser.add_option("--kandil", dest="use_kandil", action="store_true",
-    default=False, help="use kandil as the documentation front-end")
+  addarg("--kandil", dest="use_kandil", action="store_true",
+    help="use kandil as the documentation front-end")
 
-  (options, args) = parser.parse_args(sys.uargv[1:])
-
-  if len(args) < 2:
-    return parser.print_help()
+  options = args = parser.parse_args(sys.uargv[1:])
 
   change_cwd(__file__)
 
   # Validate the version argument.
-  m = re.match(r"((\d)\.(\d\d\d))", args[0])
+  m = re.match(r"((\d)\.(\d\d\d))", args.version)
   if not m:
     parser.error("invalid VERSION; format: /\d.\d\d\d/ E.g.: 1.123")
   # Extract the version strings.
@@ -159,11 +162,11 @@ def main():
   # Path to DIL's root folder.
   DIL         = dil_path()
   # The source code folder of Phobos.
-  PHOBOS_SRC  = Path(args[1])
+  PHOBOS_SRC  = Path(args.phobos_dir)
   # Path to the html folder of Phobos.
   PHOBOS_SRC.HTML = PHOBOS_SRC/".."/".."/"html"/"d"/"phobos"
   # Destination of doc files.
-  DEST        = doc_path(getitem(args, 2) or 'phobosdoc')
+  DEST        = doc_path(args.dest_dir or 'phobosdoc')
   # Temporary directory, deleted in the end.
   TMP         = DEST/"tmp"
   # The list of module files (with info) that have been processed.
