@@ -177,13 +177,44 @@ struct DArray(E)
     cap = cap * 2;
   }
 
+  /// Adds x to ptr or subtracts from end.
+  inout(E)* indexPtr(T)(T x) inout
+  {
+    static if (is(T : Neg))
+      auto p = cur - x;
+    else
+      auto p = ptr + x;
+    assert(ptr <= p && p <= cur);
+    return p;
+  }
+
   /// Returns a slice.
-  E[] opSlice()
+  inout(E)[] opSlice() inout
   {
     return ptr[0..len];
   }
-
+  /// ditto
   alias array = opSlice;
+
+  /// Returns a slice from x to y.
+  inout(E)[] opSlice(X, Y)(X x, Y y) inout
+  {
+    auto p = indexPtr!X(x), cur = indexPtr!Y(y);
+    return p[0..cur-p];
+  }
+
+  /// Returns the character at position x.
+  inout(E) opIndex(T)(T x) inout
+  {
+    return *indexPtr!T(x);
+  }
+
+  /// Assigns e at position x.
+  ref DArray opIndexAssign(T)(E e, T x)
+  {
+    *indexPtr!T(x) = e;
+    return this;
+  }
 
   /// Returns a copy.
   E[] dup()
