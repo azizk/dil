@@ -38,11 +38,11 @@ class Macro
   /// Converts a macro text to the internal format.
   static cstring convert(cstring text)
   {
-    Array result;
+    CharArray result;
     auto p = text.ptr;
     auto end = p + text.length;
     auto prev = p;
-    char[] parens; // Stack of parentheses and markers.
+    CharArray parens; // Stack of parentheses and markers.
     for (; p < end; p++)
       switch (*p)
       {
@@ -50,32 +50,33 @@ class Macro
         auto p2 = p+2;
         if (p2 < end && p[1] == '(' && isIdentifierStart(p2, end)) // IdStart
         { // Scanned: "$(IdStart"
+          if (!result.ptr)
+            result.cap = text.length; // Reserve space the first time.
           if (prev != p)
             result ~= slice(prev, p); // Copy previous text.
           parens ~= Macro.Marker.Opening;
-          result ~= cast(char)Macro.Marker.Opening; // Relace "$(".
+          result ~= Macro.Marker.Opening; // Relace "$(".
           prev = p = p2; // Move to IdStart.
         }
         break;
       case '(': // Only push on the stack, when inside a macro.
-        if (parens.length)
+        if (parens.len)
           parens ~= '(';
         break;
       case ')':
-        if (!parens.length)
+        if (!parens.len)
           break; // Ignore parentheses outside macro.
-        if (parens[$-1] == Macro.Marker.Opening)
+        if (parens[Neg(1)] == Macro.Marker.Opening)
         { // Found matching closing parenthesis.
           if (prev != p) {
             result ~= slice(prev, p);
             prev = p+1;
           }
-          result ~= cast(char)Macro.Marker.Closing; // Replace ')'.
+          result ~= Macro.Marker.Closing; // Replace ')'.
         }
         else
-          assert(parens[$-1] == '(');
-        parens.length--;
-        //parens = parens[0..$-1];
+          assert(parens[Neg(1)] == '(');
+        parens.cur--;
         break;
       default:
       }
@@ -83,13 +84,10 @@ class Macro
       return text; // No macros found. Return original text.
     if (prev < end)
       result ~= slice(prev, end);
-    foreach_reverse (c; parens)
+    foreach (c; parens[])
       if (c == Macro.Marker.Opening) // Unclosed macros?
-        result ~= cast(char)Macro.Marker.Unclosed; // Add marker for errors.
-      //else
-      //  result ~= ')';
-    result.compact();
-    return result.get!(char[]);
+        result ~= Macro.Marker.Unclosed; // Add marker for errors.
+    return result[];
   }
 }
 
@@ -197,7 +195,7 @@ struct MacroExpander
   MacroTable mtable; /// Used to look up macros.
   Diagnostics diag; /// Collects warning messages.
   cstring filePath; /// Used in warning messages.
-  Array buffer; /// Text buffer.
+  CharArray buffer; /// Text buffer.
   cstring[10] margs; /// Currently parsed macro arguments.
 
   /// Starts expanding the macros.
@@ -209,7 +207,7 @@ struct MacroExpander
     me.diag = diag;
     me.filePath = filePath;
     me.expandMacros(text);
-    return me.buffer.get!(char[]);
+    return me.buffer[];
   }
 
   /// Reports a warning message.
@@ -391,7 +389,7 @@ struct MacroExpander
   in { assert(args.length != 1, "zero or more than 1 args expected"); }
   body
   {
-    Array buffer;
+    CharArray buffer;
     auto p = text.ptr;
     auto textEnd = p + text.length;
     auto placeholderEnd = p;
@@ -433,6 +431,6 @@ struct MacroExpander
       return text;
     if (placeholderEnd < textEnd)
       buffer ~= slice(placeholderEnd, textEnd);
-    return buffer.get!(char[]);
+    return buffer[];
   }
 }
