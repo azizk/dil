@@ -38,7 +38,7 @@ struct DArray(E)
   this(size_t n = 0)
   {
     if (n)
-      if (auto p = cast(E*)GC.malloc(n, scanIfPtrs))
+      if (auto p = cast(E*)GC.malloc(n * E.sizeof, scanIfPtrs))
         end = (ptr = cur = p) + n;
   }
 
