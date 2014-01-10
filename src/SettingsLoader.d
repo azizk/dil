@@ -371,12 +371,10 @@ cstring GetExecutableFilePath(cstring arg0)
     count = GetModuleFileNameW(null, buffer.ptr, buffer.length);
     if (count == 0)
       return arg0;
-    if (buffer.length != count && buffer[count] == 0)
+    if (buffer.length != count && buffer[count] == '\0')
       break;
-    // Increase size of buffer
     buffer.length = buffer.length * 2;
   }
-  assert(buffer[count] == 0);
   // Reduce buffer to the actual length of the string (excluding '\0'.)
   buffer.length = count;
   return toUTF8(buffer);
@@ -384,27 +382,27 @@ cstring GetExecutableFilePath(cstring arg0)
 
   else version(linux)
   {
-  auto buffer = Array(256);
+  auto buffer = CharArray(256);
   size_t count;
 
   while (1)
   { // This won't work on very old Linux systems.
-    count = readlink("/proc/self/exe".ptr, cast(char*)buffer.ptr, buffer.cap);
+    count = readlink("/proc/self/exe".ptr, buffer.ptr, buffer.cap);
     if (count == -1)
       return arg0;
     if (count < buffer.cap)
       break;
-    buffer.growcap();
+    buffer.cap = buffer.cap * 2;
   }
   buffer.len = count;
-  return buffer.get!(char[]);
+  return buffer[];
   } // version(linux)
 
   else version(darwin)
   {
   // First, get the executable path.
-  uint size = 256;
-  char[] path = new char[size];
+  uint size;
+  char[] path; // The first time .ptr needs to be null and size to be 0.
   while (_NSGetExecutablePath(path.ptr, &size) == -1)
     path = new char[size];
 
@@ -417,7 +415,8 @@ cstring GetExecutableFilePath(cstring arg0)
 
   else
   {
-  pragma(msg, "Warning: GetExecutableFilePath() is not implemented on this platform.");
+  pragma(msg,
+    "Warning: GetExecutableFilePath() is not implemented on this platform.");
   return arg0;
   }
 }
