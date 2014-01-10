@@ -538,7 +538,7 @@ string getShortClassName(Node node)
   auto pname = &name_table[node.kind];
   if (!pname.ptr)
   { // Get fully qualified name of the class and extract just the name.
-    auto name = IString(typeid(node).name).rpartition(".")[1];
+    auto name = IString(typeid(node).name).rpartition('.')[1];
     // Decl, Stmt, Expr, Type have length 4.
     size_t suffixLength = node.isParameter ? 0 : 4;
     // Remove common suffix and store.

@@ -1145,13 +1145,17 @@ void testString()
   assert(!S("fg").endsWith("efg"));
 
   // Partitioning.
+  assert(S("").partition("") == [S(), S()]);
   assert(S("ab.cd").partition(".") == [S("ab"), S("cd")]);
+  assert(S("ab.cd").partition('.') == [S("ab"), S("cd")]);
   assert(S("abcd").partition(".") == [S("abcd"), S("")]);
   assert(S("abcd.").partition(".") == [S("abcd"), S("")]);
   assert(S(".abcd").partition(".") == [S(""), S("abcd")]);
   assert(S("abcd").partition("") == [S(""), S("abcd")]);
 
+  assert(S("").rpartition("") == [S(), S()]);
   assert(S("ab.cd").rpartition(".") == [S("ab"), S("cd")]);
+  assert(S("ab.cd").rpartition('.') == [S("ab"), S("cd")]);
   assert(S("abcd").rpartition(".") == [S(""), S("abcd")]);
   assert(S("abcd.").rpartition(".") == [S("abcd"), S("")]);
   assert(S(".abcd").rpartition(".") == [S(""), S("abcd")]);
