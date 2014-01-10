@@ -47,6 +47,7 @@ def make_Windows(TANGO):
 def main():
   from argparse import ArgumentParser
 
+  desc = "builds debug and release versions of Tango"
   parser = ArgumentParser(description=desc)
   addarg = parser.add_argument
   addarg("tango_dir", metavar="TANGO_DIR", nargs=1,
