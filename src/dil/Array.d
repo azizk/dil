@@ -236,7 +236,7 @@ struct DArray(E)
   }
 
   /// Returns the contents and clears this DArray.
-  inout(E)[] take() inout
+  E[] take()
   {
     auto contents = this[];
     ptr = cur = end = null;
