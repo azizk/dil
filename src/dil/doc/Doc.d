@@ -105,7 +105,7 @@ static:
     // Get preceding comments.
     auto token = node.begin;
     // Scan backwards until we hit another declaration.
-    while ((--token).kind == TOK.HEAD)
+    while ((--token).kind)
       if (token.kind.In(TOK.LBrace, TOK.RBrace, TOK.Semicolon) ||
           (isEnumMember && token.kind == TOK.Comma))
         break;
@@ -114,7 +114,8 @@ static:
         if (token.prev.kind.In(TOK.Semicolon, TOK.RBrace, TOK.Comma))
           break;
         else if (isDocComment(token))
-          comments = [token] ~ comments;
+          comments ~= token; // Comments are appended in reverse order.
+    comments.reverse; // Reverse the list when finished.
     // Get single comment to the right.
     token = node.end.next;
     if (token.kind == TOK.Comment && isDocComment(token))
