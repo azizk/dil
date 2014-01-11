@@ -107,6 +107,13 @@ struct DArray(E)
     end = ptr + n;
   }
 
+  /// Calls the GC to free the memory and clears this DArray.
+  void free()
+  {
+    GC.free(ptr);
+    ptr = cur = end = null;
+  }
+
   /// Appends x to the array.
   /// Appends the elements if X itself is an array.
   void opOpAssign(string op : "~", X)(const X x)
@@ -114,15 +121,13 @@ struct DArray(E)
     static if (is(typeof(cur[0] == x[0])))
     {
       auto n = x.length;
-      if (cur + n >= end)
-        rem = n;
+      ensureOrGrow(n);
       cur[0..n] = x;
       cur += n;
     }
     else
     {
-      if (cur + 1 >= end)
-        rem = 1;
+      ensureOrGrow(1);
       *cur++ = x;
     }
     assert(cur <= end);
@@ -163,6 +168,14 @@ struct DArray(E)
         x = size_t.max / 2 + 1; // Set the highest bit.
     }
     cap = x;
+  }
+
+  /// Ensure space for 'ne' number of elements or grow by 1.5.
+  void ensureOrGrow(size_t ne)
+  {
+    auto mincap = len + ne;
+    if (mincap > cap)
+      cap = (mincap << 1) - (mincap >> 1);
   }
 
   /// Sets: cap *= 1.5
@@ -220,6 +233,14 @@ struct DArray(E)
   E[] dup()
   {
     return this[].dup;
+  }
+
+  /// Returns the contents and clears this DArray.
+  inout(E)[] take() inout
+  {
+    auto contents = this[];
+    ptr = cur = end = null;
+    return contents;
   }
 }
 
