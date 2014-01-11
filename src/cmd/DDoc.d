@@ -164,7 +164,7 @@ class DDocCommand : Command
     lzy(log("hl > {}", filePath.toString()));
     auto file = new File(filePath.toString(), File.WriteCreate);
     hl.highlightSyntax(mod, !writeXML, true);
-    file.write(hl.getText());
+    file.write(hl.takeText());
     file.close();
   }
 
@@ -435,16 +435,12 @@ version(unused)
     {
       auto p = cast(DDocProblem)info;
       auto mod = ModuleData.get(p.filePath);
-      final switch (p.kind)
-      { alias P = DDocProblem;
-      case P.Kind.UndocumentedSymbol:
-        kind1Total++; mod.kind1 ~= p; break;
-      case P.Kind.EmptyComment:
-        kind2Total++; mod.kind2 ~= p; break;
-      case P.Kind.NoParamsSection:
-        kind3Total++; mod.kind3 ~= p; break;
-      case P.Kind.UndocumentedParam:
-        kind4Total++; mod.kind4 ~= p; break;
+      final switch (p.kind) with (DDocProblem.Kind)
+      {
+      case UndocumentedSymbol: kind1Total++; mod.kind1 ~= p; break;
+      case EmptyComment:       kind2Total++; mod.kind2 ~= p; break;
+      case NoParamsSection:    kind3Total++; mod.kind3 ~= p; break;
+      case UndocumentedParam:  kind4Total++; mod.kind4 ~= p; break;
       }
     }
 

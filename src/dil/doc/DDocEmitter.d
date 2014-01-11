@@ -29,7 +29,7 @@ import common;
 /// Traverses the syntax tree and writes DDoc macros to a string buffer.
 abstract class DDocEmitter : DefaultVisitor2
 {
-  Array text; /// The buffer that is written to.
+  CharArray text; /// The buffer that is written to.
   bool includeUndocumented; /// Include undocumented symbols?
   bool includePrivate; /// Include symbols with private protection?
   MacroTable mtable; /// The macro table.
@@ -75,7 +75,7 @@ abstract class DDocEmitter : DefaultVisitor2
         }
         else
           write(s.wholeText);
-      return text.get!(char[]);
+      return text[];
     }
 
     // Handle as a normal D module with declarations:
@@ -97,7 +97,7 @@ abstract class DDocEmitter : DefaultVisitor2
       }
     // Start traversing the tree and emitting macro text.
     MEMBERS("MODULE", "", modul.root);
-    return text.get!(char[]);
+    return text[];
   }
 
   /// Returns the location of t.
@@ -683,7 +683,7 @@ abstract class DDocEmitter : DefaultVisitor2
     { // The declaration has a ditto comment.
       alias offs = prevDeclOffset;
       assert(offs != 0);
-      auto savedEnd = text.ptr[offs..text.len].dup; // Copy text past offset.
+      auto savedEnd = text[offs..Neg(0)].dup; // Copy text past offset.
       text.len = offs;
       writeDECL();
       text ~= savedEnd; // Append the snippet.

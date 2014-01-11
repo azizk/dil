@@ -64,7 +64,7 @@ class HighlightCommand : Command
     else
       hl.highlightTokens(filePathSrc, printLines);
 
-    auto text = hl.getText();
+    auto text = hl.takeText();
 
     if (filePathDest.length)
     {

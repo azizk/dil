@@ -24,7 +24,7 @@ import common;
 class Highlighter
 {
   TagMap tags; /// Which tag map to use.
-  Array buffer; /// Buffer that receives the text.
+  CharArray buffer; /// Buffer that receives the text.
   CompilationContext cc; /// The compilation context.
 
   /// Constructs a TokenHighlighter object.
@@ -35,9 +35,9 @@ class Highlighter
   }
 
   /// Empties the buffer and returns its contents.
-  char[] getText()
+  char[] takeText()
   {
-    return buffer.get!(char[]);
+    return buffer.take();
   }
 
   /// Writes arguments formatted to the buffer.
@@ -67,7 +67,7 @@ class Highlighter
     lx.scanAll();
     lines = lx.lineNum;
     highlightTokens(lx.tokenList);
-    return getText();
+    return takeText();
   }
 
   /// Highlights the tokens from begin to end (both included).
@@ -87,7 +87,8 @@ class Highlighter
   }
 
   /// ditto
-  void highlightTokens(ref Array buffer, Token[] tokens, bool skipWS = false)
+  void highlightTokens(ref CharArray buffer, Token[] tokens,
+    bool skipWS = false)
   {
     auto buffer_saved = this.buffer;
     this.buffer = buffer;
@@ -240,7 +241,7 @@ class Highlighter
       version(D2)
       {
         auto buffer_saved = this.buffer; // Save;
-        this.buffer = Array(text.length);
+        this.buffer = CharArray(text.length);
         print("q{");
         // Traverse and print inner tokens.
         Token* last; // Remember last token.
@@ -252,7 +253,7 @@ class Highlighter
         }
         if (last) // Print: Whitespace? "}" Postfix?
           print(slice(last.end, token.end));
-        text = getText();
+        text = takeText();
         this.buffer = buffer_saved; // Restore
       }
       }
@@ -331,7 +332,7 @@ class Highlighter
   {
     auto p = text.ptr, end = p + text.length;
     auto prev = p; // Remembers the end of the previous escape sequence.
-    Array result;
+    CharArray result;
     cstring escape_str;
 
     while (p < end)
@@ -410,8 +411,7 @@ class Highlighter
       return text; // Nothing escaped. Return original, unchanged text.
     if (prev < end)
       result ~= slice(prev, end);
-    result.compact();
-    return result.get!(char[]);
+    return result[];
   }
 }
 
@@ -422,7 +422,7 @@ cstring xml_escape(cstring text)
   auto p = text.ptr, end = p + text.length;
   auto prev = p; // Points to the end of the previous escape char.
   string entity; // Current entity to be appended.
-  Array result;
+  CharArray result;
   while (p < end)
     switch (*p)
     {
@@ -444,8 +444,7 @@ cstring xml_escape(cstring text)
     return text; // Nothing escaped. Return original, unchanged text.
   if (prev < end)
     result ~= slice(prev, end);
-  result.compact();
-  return result.get!(char[]);
+  return result[];
 }
 
 /// Maps tokens to (format) strings.
