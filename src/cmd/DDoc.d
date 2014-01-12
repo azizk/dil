@@ -24,15 +24,16 @@ import dil.ModuleManager,
        dil.Converter,
        dil.SourceText,
        dil.Enums,
-       dil.Time;
+       dil.Time,
+       dil.Array;
 import util.Path;
 import SettingsLoader;
 import Settings;
 import common;
 
+import std.file;
 import tango.text.Regex : Regex;
 import tango.time.Clock : Clock;
-import tango.io.device.File;
 
 /// The ddoc command.
 class DDocCommand : Command
@@ -158,14 +159,11 @@ class DDocCommand : Command
   /// Writes a syntax highlighted file for mod.
   void writeSyntaxHighlightedFile(Module mod)
   {
-    auto filePath = Path(destDirPath);
-    (filePath /= "htmlsrc") /= mod.getFQN();
-    filePath ~= outFileExtension;
-    lzy(log("hl > {}", filePath.toString()));
-    auto file = new File(filePath.toString(), File.WriteCreate);
+    auto filePath = (((Path(destDirPath) /= "htmlsrc") /= mod.getFQN())
+      ~= outFileExtension).toString();
+    lzy(log("hl > {}", filePath));
     hl.highlightSyntax(mod, !writeXML, true);
-    file.write(hl.takeText());
-    file.close();
+    filePath.write(hl.takeText());
   }
 
   /// Writes the documentation for a module to the disk.
@@ -214,19 +212,15 @@ class DDocCommand : Command
       MacroExpander.expand(mtable, DDOC, mod.filePath, dg);
 
     // Finally write the XML/XHTML file out to the harddisk.
-    auto file = new File(destPath.toString(), File.WriteCreate);
-    file.write(fileText);
-    file.close();
+    destPath.toString().write(fileText);
 
     // Write the documented symbols in this module to a json file.
     if (ddocEmitter.symbolTree.length && useKandil)
     {
-      auto filePath = Path(destDirPath);
-      ((filePath /= "symbols") /= modFQN) ~= ".json";
-      file = new File(filePath.toString(), File.WriteCreate);
+      auto filePath = ((Path(destDirPath) /= "symbols") /= modFQN) ~= ".json";
       char[] text;
-      file.write(symbolsToJSON(ddocEmitter.symbolTree[0], text));
-      file.close();
+      symbolsToJSON(ddocEmitter.symbolTree[0], text);
+      filePath.toString().write(text);
     }
   }
 
@@ -236,11 +230,15 @@ class DDocCommand : Command
   ///   mm = Has the list of modules.
   void writeModuleLists()
   {
+    CharArray buffer;
+
+    auto write = (cstring s) => buffer ~= s;
+
     if (modsTxtPath.length)
     {
-      scope file = new File(modsTxtPath, File.WriteCreate);
       foreach (modul; mm.loadedModules)
-        file.write(modul.filePath() ~ ", " ~ modul.getFQN() ~ "\n");
+        buffer.put(modul.filePath(), ", ", modul.getFQN(), "\n");
+      modsTxtPath.write(buffer.take());
     }
 
     if (!useKandil)
@@ -248,11 +246,9 @@ class DDocCommand : Command
 
     copyKandilFiles();
 
-    auto filePath = Path(destDirPath);
-    (filePath /= "js") /= "modules.js";
-    scope file = new File(filePath.toString(), File.WriteCreate);
+    auto filePath = ((Path(destDirPath) /= "js") /= "modules.js").toString();
 
-    file.write("var g_moduleList = [\n "); // Write a flat list of FQNs.
+    write("var g_moduleList = [\n "); // Write a flat list of FQNs.
     size_t max_line_len = 80;
     size_t line_len;
     foreach (modul; mm.loadedModules)
@@ -262,19 +258,21 @@ class DDocCommand : Command
       if (line_len >= max_line_len) // See if we have to start a new line.
       {
         line_len = fragment.length + 1; // +1 for the space in "\n ".
-        fragment = "\n " ~ fragment;
+        write("\n ");
       }
-      file.write(fragment);
+      write(fragment);
     }
-    file.write("\n];\n\n"); // Closing ].
+    write("\n];\n\n"); // Closing ].
 
-    file.write("var g_packageTree = new PackageTree(P('', [\n");
-    writePackage(file, mm.rootPackage);
-    file.write("])\n);\n");
+    write("var g_packageTree = new PackageTree(P('', [\n");
+    writePackage(buffer, mm.rootPackage);
+    write("])\n);\n");
 
     // Write a timestamp. Checked by kandil to clear old storage.
     auto stamp = Clock().now().unix().seconds();
-    file.write(Format("\nvar g_creationTime = {};\n", stamp));
+    write(Format("\nvar g_creationTime = {};\n", stamp));
+
+    filePath.write(buffer[]);
   }
 
   /// Creates sub-folders and copies kandil's files into them.
@@ -305,16 +303,16 @@ class DDocCommand : Command
   }
 
   /// Writes the sub-packages and sub-modules of a package to the disk.
-  static void writePackage(File f, Package pckg, cstring indent = "  ")
+  static void writePackage(CharArray a, Package pckg, cstring indent = "  ")
   {
     foreach (p; pckg.packages)
     {
-      f.write(Format("{}P('{}',[\n", indent, p.getFQN()));
-      writePackage(f, p, indent~"  ");
-      f.write(indent~"]),\n");
+      a.put(Format("{}P('{}',[\n", indent, p.getFQN()));
+      writePackage(a, p, indent~"  ");
+      a.put(indent, "]),\n");
     }
     foreach (m; pckg.modules)
-      f.write(Format("{}M('{}'),\n", indent, m.getFQN()));
+      a.put(Format("{}M('{}'),\n", indent, m.getFQN()));
   }
 
   /// Converts the symbol tree into JSON.
@@ -419,12 +417,11 @@ version(unused)
   void writeDDocReport()
   {
     assert(writeReport);
-    auto filePath = Path(destDirPath);
-    filePath /= "report.txt";
-    scope file = new File(filePath.toString(), File.WriteCreate);
-    file.write("");
+    CharArray buffer;
 
-    Stdout.formatln("Writing report to '{}'.", filePath.toString());
+    auto filePath = (Path(destDirPath) /= "report.txt").toString();
+
+    lzy(log("Writing report to ‘{}’.", filePath));
 
     auto titles = ["Undocumented symbols"[], "Empty comments",
                    "No params section", "Undocumented parameters"];
@@ -447,9 +444,9 @@ version(unused)
     ModuleData.sort(mm);
 
     // Write the legend.
-    file.write(Format("US = {}\nEC = {}\nNP = {}\nUP = {}\n",
+    buffer ~= Format("US = {}\nEC = {}\nNP = {}\nUP = {}\n",
       titles[0], titles[1], titles[2], titles[3]
-    ));
+    );
 
     // Calculate the maximum module name length.
     size_t maxNameLength;
@@ -457,47 +454,48 @@ version(unused)
       if (maxNameLength < mod.name.length)
         maxNameLength = mod.name.length;
 
-    auto maxStr = Format("{}", maxNameLength);
-    auto rowFormat = "{,-"~maxStr~"} | {,6} {,6} {,6} {,6}\n";
+    auto rowFormat = "{,-"~maxNameLength.itoa()~"} | {,6} {,6} {,6} {,6}\n";
     // Write the headers.
-    file.write(Format(rowFormat, "Module", "US", "EC", "NP", "UP"));
+    buffer.put(Format(rowFormat, "Module", "US", "EC", "NP", "UP"));
     auto ruler = new char[maxNameLength+2+4*7];
     foreach (ref c; ruler)
       c = '-';
-    file.write(ruler~"\n");
+    buffer.put(ruler, "\n");
     // Write the table rows.
     foreach (mod; ModuleData.sortedList)
-      file.write(Format(rowFormat, mod.name,
+      buffer.put(Format(rowFormat, mod.name,
         mod.kind1.length, mod.kind2.length, mod.kind3.length, mod.kind4.length
       ));
-    file.write(ruler~"\n");
+    buffer.put(ruler, "\n");
     // Write the totals.
-    file.write(Format(rowFormat, "Totals",
+    buffer.put(Format(rowFormat, "Totals",
       kind1Total, kind2Total, kind3Total, kind4Total
     ));
 
     // Write the list of locations.
-    file.write("\nList of locations:\n");
+    buffer.put("\nList of locations:\n");
     foreach (i, title; titles)
     {
-      file.write("\n***** "~title~" ******\n");
+      buffer.put("\n***** ", title, " ******\n");
       foreach (mod; ModuleData.sortedList)
       {
         // Print list of locations.
         auto kind = ([mod.kind1, mod.kind2, mod.kind3, mod.kind4])[i];
         if (!kind.length)
           continue; // Nothing to print for this module.
-        file.write(mod.name ~ ":\n"); // Module name:
+        buffer.put(mod.name, ":\n"); // Module name:
         char[] line;
         foreach (p; kind)
         { // (x,y) (x,y) etc.
           line ~= p.location.str("({},{}) ");
           if (line.length > 80)
-            file.write("  "~line[0..$-1]~"\n"), (line = null);
+            buffer.put("  ", line[0..$-1], "\n"), (line = null);
         }
         if (line.length)
-          file.write("  "~line[0..$-1]~"\n");
+          buffer.put("  ", line[0..$-1], "\n");
       }
     }
+
+    filePath.write(buffer[]);
   }
 }

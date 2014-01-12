@@ -19,8 +19,8 @@ import dil.Compilation,
 import util.Path;
 import common;
 
-import tango.io.model.IFile,
-       tango.io.device.File;
+import std.file;
+import tango.io.model.IFile;
 
 alias dirSep = FileConst.PathSeparatorChar;
 
@@ -109,7 +109,7 @@ class Module : ModuleSymbol
       this.parser = new Parser(sourceText, cc.tables.lxtables, cc.diag);
 
     if (this.dlxFilePath.length)
-      this.parser.lexer.fromDLXFile(cast(ubyte[])File.get(dlxFilePath));
+      this.parser.lexer.fromDLXFile(cast(ubyte[])dlxFilePath.read());
 
     this.root = parser.start();
     this.imports = parser.imports;

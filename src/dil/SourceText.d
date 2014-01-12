@@ -9,7 +9,7 @@ import dil.Converter,
 import util.Path;
 import common;
 
-import tango.io.device.File;
+import std.file;
 
 /// Represents D source code.
 ///
@@ -71,7 +71,7 @@ final class SourceText
     }
 
     // Read the file.
-    auto rawdata = cast(ubyte[]) File.get(filePath);
+    auto rawdata = cast(ubyte[])filePath.read();
     // Convert the data.
     auto converter = Converter(filePath, diag);
     cstring text = converter.data2UTF8(rawdata);

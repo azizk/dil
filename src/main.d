@@ -42,8 +42,8 @@ import Settings,
        SettingsLoader,
        common;
 
+import std.file;
 import Integer = tango.text.convert.Integer;
-import tango.io.device.File;
 import tango.text.Regex : Regex;
 import tango.time.StopWatch;
 import tango.core.Array : sort;
@@ -187,8 +187,7 @@ void main(cstring[] args)
           auto fileName = Format(format, modFQN, pckgName, modName);
           auto destPath = (dest/fileName).toString;
           lzy(log("emit:  {}", destPath));
-          auto f = new File(destPath, File.WriteCreate);
-          f.write(py.emit());
+          destPath.write(py.emit());
         }
       }
     }
@@ -387,11 +386,7 @@ void main(cstring[] args)
 
         auto data = TokenSerializer.serialize(lx.tokenList);
         if (outFilePath.length)
-        {
-          scope file = new File(outFilePath, File.WriteCreate);
-          file.write(data);
-          file.close();
-        }
+          outFilePath.write(data);
         else
           Stdout(cast(cstring)data);
       }
@@ -436,11 +431,7 @@ void main(cstring[] args)
         const data = astWriter.serialize(mod);
 
         if (outFilePath.length)
-        {
-          scope file = new File(outFilePath, File.WriteCreate);
-          file.write(data);
-          file.close();
-        }
+          outFilePath.write(data);
         else
           Stdout(cast(cstring)data);
       }
@@ -464,7 +455,7 @@ void main(cstring[] args)
       break;
     const(String)[] filePaths;
     if (args[2] == "dstress")
-      filePaths = String(cast(cstring)File.get("dstress_files")).split('\0');
+      filePaths = String(cast(cstring)"dstress_files".read()).split('\0');
     else
       filePaths = toStrings(args[2..$]);
 

@@ -11,7 +11,7 @@ import SettingsLoader;
 import Settings;
 import common;
 
-import tango.io.device.File;
+import std.file;
 
 /// The highlight command.
 class HighlightCommand : Command
@@ -67,11 +67,7 @@ class HighlightCommand : Command
     auto text = hl.takeText();
 
     if (filePathDest.length)
-    {
-      auto f = new File(filePathDest, File.WriteCreate);
-      f.write(text);
-      f.close();
-    }
+      filePathDest.write(text);
     else
       Stdout(text);
   }
