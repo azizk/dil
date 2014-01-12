@@ -303,16 +303,22 @@ class DDocCommand : Command
   }
 
   /// Writes the sub-packages and sub-modules of a package to the disk.
-  static void writePackage(CharArray a, Package pckg, cstring indent = "  ")
+  static void writePackage(ref CharArray a, Package pckg, uint_t indent = 2)
   {
+    void writeIndented(Args...)(Args args)
+    {
+      a.len = a.len + indent; // Reserve.
+      a[Neg(indent)..Neg(0)][] = ' '; // Write spaces.
+      a.put(args);
+    }
     foreach (p; pckg.packages)
     {
-      a.put(Format("{}P('{}',[\n", indent, p.getFQN()));
-      writePackage(a, p, indent~"  ");
-      a.put(indent, "]),\n");
+      writeIndented("P('", p.getFQN(), "',[\n");
+      writePackage(a, p, indent + 2);
+      writeIndented("]),\n");
     }
     foreach (m; pckg.modules)
-      a.put(Format("{}M('{}'),\n", indent, m.getFQN()));
+      writeIndented("M('", m.getFQN(), "'),\n");
   }
 
   /// Converts the symbol tree into JSON.
@@ -423,7 +429,7 @@ version(unused)
 
     lzy(log("Writing report to ‘{}’.", filePath));
 
-    auto titles = ["Undocumented symbols"[], "Empty comments",
+    auto titles = ["Undocumented symbols", "Empty comments",
                    "No params section", "Undocumented parameters"];
 
     // Sort problems.
@@ -444,9 +450,8 @@ version(unused)
     ModuleData.sort(mm);
 
     // Write the legend.
-    buffer ~= Format("US = {}\nEC = {}\nNP = {}\nUP = {}\n",
-      titles[0], titles[1], titles[2], titles[3]
-    );
+    buffer.put("US = ", titles[0], "\nEC = ", titles[1],
+             "\nNP = ", titles[2], "\nUP = ", titles[3], "\n");
 
     // Calculate the maximum module name length.
     size_t maxNameLength;
@@ -458,22 +463,20 @@ version(unused)
     // Write the headers.
     buffer.put(Format(rowFormat, "Module", "US", "EC", "NP", "UP"));
     auto ruler = new char[maxNameLength+2+4*7];
-    foreach (ref c; ruler)
-      c = '-';
+    ruler[] = '-';
     buffer.put(ruler, "\n");
     // Write the table rows.
     foreach (mod; ModuleData.sortedList)
-      buffer.put(Format(rowFormat, mod.name,
+      buffer ~= Format(rowFormat, mod.name,
         mod.kind1.length, mod.kind2.length, mod.kind3.length, mod.kind4.length
-      ));
+      );
     buffer.put(ruler, "\n");
     // Write the totals.
-    buffer.put(Format(rowFormat, "Totals",
-      kind1Total, kind2Total, kind3Total, kind4Total
-    ));
+    buffer ~= Format(rowFormat, "Totals",
+      kind1Total, kind2Total, kind3Total, kind4Total);
 
     // Write the list of locations.
-    buffer.put("\nList of locations:\n");
+    buffer ~= "\nList of locations:\n";
     foreach (i, title; titles)
     {
       buffer.put("\n***** ", title, " ******\n");
