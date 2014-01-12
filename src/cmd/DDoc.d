@@ -218,9 +218,9 @@ class DDocCommand : Command
     if (ddocEmitter.symbolTree.length && useKandil)
     {
       auto filePath = ((Path(destDirPath) /= "symbols") /= modFQN) ~= ".json";
-      char[] text;
+      CharArray text;
       symbolsToJSON(ddocEmitter.symbolTree[0], text);
-      filePath.toString().write(text);
+      filePath.toString().write(text[]);
     }
   }
 
@@ -322,22 +322,21 @@ class DDocCommand : Command
   }
 
   /// Converts the symbol tree into JSON.
-  static char[] symbolsToJSON(DocSymbol symbol, ref char[] text)
+  static char[] symbolsToJSON(DocSymbol symbol, ref CharArray text)
   {
     auto locbeg = symbol.begin.lineNum, locend = symbol.end.lineNum;
-    text ~= Format(`["{}",{},{},[{},{}],[`,
-      symbol.name, symbol.kind,
-      symbol.formatAttrsAsIDs(), locbeg, locend);
+    text.put(`["`, symbol.name, `",`, symbol.kind.itoa, ",",
+      symbol.formatAttrsAsIDs(), ",[", locbeg.itoa, ",", locend.itoa, "],[");
     foreach (s; symbol.members)
     {
-      text ~= "\n";
+      text ~= '\n';
       symbolsToJSON(s, text);
-      text ~= ",";
+      text ~= ',';
     }
-    if (text[$-1] == ',')
-      text = text[0..$-1]; // Remove last comma.
+    if (text[Neg(1)] == ',')
+      text.cur--; // Remove last comma.
     text ~= "]]";
-    return text;
+    return text[];
   }
 
 version(unused)
