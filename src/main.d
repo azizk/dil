@@ -42,14 +42,16 @@ import Settings,
        SettingsLoader,
        common;
 
-import std.file;
-import Integer = tango.text.convert.Integer;
+import std.file,
+       std.conv,
+       std.datetime,
+       std.algorithm;
 import tango.text.Regex : Regex;
-import tango.time.StopWatch;
-import tango.core.Array : sort;
 
 debug
 import tango.core.tools.TraceExceptions;
+
+alias toInt = to!int;
 
 /// Entry function of DIL.
 void main(cstring[] args)
@@ -279,7 +281,7 @@ void main(cstring[] args)
     op.add({ return parseDebugOrVersion(op, cmd.context); });
     op.add("-I", value, { cmd.context.importPaths ~= value; });
     op.add("-x", value, { cmd.regexps ~= value; });
-    op.add("-l", value, { cmd.levels = Integer.toInt(value); });
+    op.add("-l", value, { cmd.levels = toInt(value); });
     op.add("-si", value, { cmd.siStyle = value; });
     op.add("-pi", value, { cmd.piStyle = value; });
     op.add("--dot", dummy,   { cmd.add(IO.PrintDot); });
@@ -453,21 +455,18 @@ void main(cstring[] args)
   case "profile":
     if (!op.hasArgs)
       break;
-    const(String)[] filePaths;
-    if (args[2] == "dstress")
-      filePaths = String(cast(cstring)"dstress_files".read()).split('\0');
-    else
-      filePaths = toStrings(args[2..$]);
+    const(String)[] filePaths = (args[2] == "dstress") ?
+      String(cast(cstring)"dstress_files".read()).split('\0') :
+      toStrings(args[2..$]);
 
     auto tables = globalCC.tables.lxtables;
 
-    StopWatch swatch;
-    swatch.start;
+    auto mt = measureTime!((swatch){
+      Printfln("Scanned in {}ms.", swatch.msecs);
+    });
 
     foreach (filePath; filePaths)
-      (new Lexer(new SourceText(filePath[], true), tables)).scanAll();
-
-    Printfln("Scanned in {:f10}s.", swatch.stop);
+      new Lexer(new SourceText(filePath[], true), tables).scanAll();
     break;
   case "settings", "set":
     alias GS = GlobalSettings;
@@ -500,12 +499,8 @@ void main(cstring[] args)
           Printfln("{}={}", name, *psetting);
       }
     else // Print all settings.
-    {
-      auto names = settings.keys;
-      names.sort((string a, string b){ return a < b; });
-      foreach (name; names)
+      foreach (name; settings.keys.sort)
         Printfln("{}={}", name, settings[name]);
-    }
     break;
   case "?", "h", "help":
     printHelp(op.hasArgs ? op.popArg() : "", diag);
@@ -591,14 +586,14 @@ bool parseDebugOrVersion(ref OptParser op, CompilationContext context)
   else if (op.parse("-debug", val))
   {
     if (val.length && isdigit(val[0]))
-      context.debugLevel = Integer.toInt(val);
+      context.debugLevel = toInt(val);
     else if (context.tables.idents.isValidUnreservedIdentifier(val))
       context.addDebugId(val);
   }
   else if (op.parse("-version", val))
   {
     if (val.length && isdigit(val[0]))
-      context.versionLevel = Integer.toInt(val);
+      context.versionLevel = toInt(val);
     else if (context.tables.idents.isValidUnreservedIdentifier(val))
       context.addVersionId(val);
   }
