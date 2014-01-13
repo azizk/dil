@@ -31,8 +31,8 @@ import SettingsLoader;
 import Settings;
 import common;
 
-import std.file;
-import tango.text.Regex : Regex;
+import std.file,
+       std.regex;
 import tango.time.Clock : Clock;
 
 /// The ddoc command.
@@ -43,7 +43,7 @@ class DDocCommand : Command
   cstring[] filePaths;  /// Module file paths.
   cstring modsTxtPath;  /// Write list of modules to this file if specified.
   cstring outFileExtension;  /// The extension of the output files.
-  Regex[] regexps; /// Regular expressions.
+  Regex!char[] regexps; /// Regular expressions.
   bool includeUndocumented; /// Whether to include undocumented symbols.
   bool includePrivate; /// Whether to include private symbols.
   bool writeReport;  /// Whether to write a problem report.
@@ -381,7 +381,7 @@ version(unused)
   Diagnostics getReportDiag(cstring moduleName)
   {
     foreach (rx; regexps)
-      if (rx.test(moduleName))
+      if (!matchFirst(moduleName, rx).empty)
         return null;
     return reportDiag;
   }

@@ -45,8 +45,7 @@ import Settings,
 import std.file,
        std.conv,
        std.datetime,
-       std.algorithm;
-import tango.text.Regex : Regex;
+       std.regex;
 
 debug
 import tango.core.tools.TraceExceptions;
@@ -228,7 +227,7 @@ void main(cstring[] args)
     op.add("-v", cmd.verbose);
     op.add("--kandil", cmd.useKandil);
     op.add("--report", cmd.writeReport);
-    op.add("-rx", value, { cmd.regexps ~= new Regex(value); });
+    op.add("-rx", value, { cmd.regexps ~= regex(value); });
     op.add("-m", cmd.modsTxtPath);
     if (!op.parseArgs())
       return op.printUsageError();

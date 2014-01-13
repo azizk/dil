@@ -18,7 +18,8 @@ import util.Path;
 import Settings;
 import common;
 
-import tango.text.Regex : RegExp = Regex;
+import std.regex;
+
 import tango.io.model.IFile;
 
 alias dirSep = FileConst.PathSeparatorChar;
@@ -61,9 +62,9 @@ class IGraphCommand : Command
   override void run()
   {
     // Init regular expressions.
-    RegExp[] regexps;
+    Regex!char[] regexps;
     foreach (strRegexp; this.regexps)
-      regexps ~= new RegExp(strRegexp);
+      regexps ~= regex(strRegexp);
 
     // Add the directory of the file to the import paths.
     auto filePath = Path(this.filePath);
@@ -75,7 +76,7 @@ class IGraphCommand : Command
     gbuilder.filterPredicate = (cstring moduleFQNPath) {
       foreach (rx; regexps)
         // Replace slashes: dil/ast/Node -> dil.ast.Node
-        if (rx.test(moduleFQNPath.replace(dirSep, '.')))
+        if (!matchFirst(moduleFQNPath.replace(dirSep, '.'), rx).empty)
           return true;
       return false;
     };
