@@ -19,6 +19,7 @@ import dil.Compilation,
        dil.Diagnostics,
        dil.ModuleManager,
        dil.String;
+import util.Path;
 import common;
 
 /// The compile command.

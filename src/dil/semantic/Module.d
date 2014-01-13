@@ -20,9 +20,6 @@ import util.Path;
 import common;
 
 import std.file;
-import tango.io.model.IFile;
-
-alias dirSep = FileConst.PathSeparatorChar;
 
 /// Represents a semantic D module and a source file.
 class Module : ModuleSymbol

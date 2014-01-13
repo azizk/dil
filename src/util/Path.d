@@ -3,8 +3,12 @@
 /// $(Maturity average)
 module util.Path;
 
-import tango.io.FilePath;
 import common;
+
+import tango.io.FilePath;
+import std.path;
+
+enum dirSep = dirSeparator[0]; /// Dir separator character.
 
 /// This class is like FilePath, but adds additional
 /// operators to make things easier.

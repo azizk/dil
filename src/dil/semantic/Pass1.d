@@ -21,10 +21,8 @@ import dil.i18n.Messages;
 import dil.Compilation,
        dil.Diagnostics,
        dil.Enums;
+import util.Path;
 import common;
-
-import tango.io.model.IFile;
-alias dirSep = FileConst.PathSeparatorChar;
 
 /// The first pass is the declaration pass.
 ///

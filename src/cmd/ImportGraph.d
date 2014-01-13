@@ -20,10 +20,6 @@ import common;
 
 import std.regex;
 
-import tango.io.model.IFile;
-
-alias dirSep = FileConst.PathSeparatorChar;
-
 /// The importgraph command.
 class IGraphCommand : Command
 {

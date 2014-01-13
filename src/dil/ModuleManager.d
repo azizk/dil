@@ -14,12 +14,9 @@ import dil.Compilation,
 import util.Path;
 import common;
 
-import tango.io.model.IFile;
 import tango.io.Path : pathNormalize = normalize, isFolder;
 import tango.core.Array : lbound, sort;
 import tango.sys.Environment;
-
-alias dirSep = FileConst.PathSeparatorChar;
 
 /// Manages loaded modules in various tables.
 class ModuleManager
