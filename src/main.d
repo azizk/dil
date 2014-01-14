@@ -47,7 +47,7 @@ import std.file,
        std.datetime,
        std.regex;
 
-debug
+version(TangoTrace) debug
 import tango.core.tools.TraceExceptions;
 
 alias toInt = to!int;

@@ -19,8 +19,6 @@ import dil.Diagnostics,
        dil.Unicode;
 import common;
 
-import tango.core.Vararg;
-
 /// The Parser produces a full parse tree by examining
 /// the list of tokens provided by the Lexer.
 class Parser

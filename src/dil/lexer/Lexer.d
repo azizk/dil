@@ -23,8 +23,6 @@ import dil.Float : Float;
 import util.uni : isUniAlpha;
 import common;
 
-import tango.core.Vararg;
-
 /// The Lexer analyzes the characters of a source text and
 /// produces an array of tokens.
 class Lexer

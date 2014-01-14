@@ -16,8 +16,6 @@ import dil.Time,
        dil.String;
 import common;
 
-import tango.core.Array : sort;
-
 /// Replaces \ with \\ and " with \".
 cstring escapeDblQuotes(cstring text)
 {
@@ -85,19 +83,19 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   char[] line;
   class Tuple
   {
-    size_t count;
+    uint_t count;
     cstring str;
     TOK kind;
     alias pos = count;
-    this(uint count, cstring str, TOK kind)
+    this(uint_t count, cstring str, TOK kind)
     {
       this.count = count;
       this.str = str;
       this.kind = kind;
     }
-    static bool compare(Tuple a, Tuple b)
+    override int opCmp(Object o)
     {
-      return a.count > b.count;
+      return count > (cast(Tuple)cast(void*)o).count;
     }
   }
   // Gather all identifiers, comments, strings and numbers in this map.
@@ -117,8 +115,7 @@ char[] writeTokenList(Token* first_token, ref uint[Token*] indexMap)
   // in the source text to be at the beginning of the list.
   // That way less space is taken up by index numbers in the emitted text.
   // NB.: First tests showed, that this only saves about 3% of characters.
-  auto list = map.values;
-  list.sort(&Tuple.compare);
+  auto list = map.values.sort;
   result ~= "(";
   // Print the sorted string list.
   foreach (i, item; list)

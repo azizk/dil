@@ -9,8 +9,6 @@ import common;
 
 public import dil.Information;
 
-import tango.core.Vararg;
-
 /// Collects diagnostic information about the compilation process.
 class Diagnostics
 {

@@ -29,8 +29,6 @@ import dil.Compilation,
        dil.Enums;
 import common;
 
-import tango.core.Vararg;
-
 /// Some handy aliases.
 private alias D = Declaration;
 private alias E = Expression; /// ditto

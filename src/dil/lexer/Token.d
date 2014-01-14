@@ -10,9 +10,6 @@ import dil.Float;
 import dil.Array;
 import common;
 
-import tango.stdc.stdlib : malloc, free;
-import tango.core.Exception;
-
 public import dil.lexer.TokensEnum;
 
 /// A Token is a sequence of characters recognized by the lexical analyzer.
