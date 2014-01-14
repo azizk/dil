@@ -14,9 +14,7 @@ import dil.Compilation,
 import util.Path;
 import common;
 
-import tango.io.Path : pathNormalize = normalize, isFolder;
 import tango.core.Array : lbound, sort;
-import tango.sys.Environment;
 
 /// Manages loaded modules in various tables.
 class ModuleManager
@@ -71,7 +69,7 @@ class ModuleManager
     if (auto existingModule = moduleByPath(moduleFilePath))
       return existingModule;
 
-    if (isFolder(moduleFilePath))
+    if (Path(moduleFilePath).isFolder)
     {
       auto msg = cc.diag.formatMsg(MID.ModulePathIsFolder, moduleFilePath);
       cc.diag ~= new LexerError(new Location(moduleFilePath, 0), msg);
@@ -266,8 +264,7 @@ class ModuleManager
   /// Returns a normalized, absolute path.
   static cstring absolutePath(cstring path)
   {
-    auto p = Environment.toAbsolute(path.dup);
-    return pathNormalize(p); // Remove './' and '../' parts.
+    return Path(path).absolute().normalize().toString();
   }
 
   /// Reports an error.

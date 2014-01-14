@@ -23,9 +23,6 @@ import util.Path;
 import Settings,
        common;
 
-import tango.sys.Environment;
-import tango.io.Path : normalize;
-
 /// Loads settings from a D module file.
 abstract class SettingsLoader
 {
@@ -146,6 +143,12 @@ class ConfigLoader : SettingsLoader
     if (pieceBegin < end) // Copy end piece.
       result ~= slice(pieceBegin, end);
     return result;
+  }
+
+  /// Returns a normalized path.
+  cstring normalize(cstring path)
+  {
+    return Path(path).normalize().toString();
   }
 
   /// Loads the configuration file.

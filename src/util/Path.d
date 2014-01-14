@@ -6,9 +6,11 @@ module util.Path;
 import common;
 
 import tango.io.FilePath;
+import tango.sys.Environment;
 import std.path;
 
 enum dirSep = dirSeparator[0]; /// Dir separator character.
+alias Environment = tango.sys.Environment.Environment;
 
 /// This class is like FilePath, but adds additional
 /// operators to make things easier.
@@ -19,11 +21,7 @@ class Path : FilePath
   {
     super(s.dup);
   }
-  /// Constructs from a FilePath.
-  this(FilePath s)
-  {
-    super(s.toString().dup);
-  }
+
   /// Constructs an empty Path.
   this()
   {
@@ -35,11 +33,7 @@ class Path : FilePath
   {
     return new Path(s);
   }
-  /// ditto
-  static Path opCall(FilePath p)
-  {
-    return new Path(p);
-  }
+
   /// ditto
   static Path opCall()
   {
@@ -82,6 +76,20 @@ class Path : FilePath
   {
     auto ext_len = this.suffix().length;
     return Path(toString()[0..$-ext_len]);
+  }
+
+  /// Returns a normalized path, removing parts like "./" and "../".
+  Path normalize()
+  {
+    //import tango.io.Path : normalize;
+    //return Path(normalize(toString()));
+    return Path(buildNormalizedPath(toString()));
+  }
+
+  /// Returns an absolute path relative to the current working directory.
+  Path absolute()
+  {
+    return Path(Environment.toAbsolute(toString().dup));
   }
 
   cstring name()
