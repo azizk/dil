@@ -68,28 +68,28 @@ class Path : FilePath
 
   Path dup()
   {
-    return Path(toString());
+    return Path(this[]);
   }
 
   /// The path without its extension. Returns a copy.
   Path noext()
   {
     auto ext_len = this.suffix().length;
-    return Path(toString()[0..$-ext_len]);
+    return Path(this[][0..$-ext_len]);
   }
 
   /// Returns a normalized path, removing parts like "./" and "../".
   Path normalize()
   {
     //import tango.io.Path : normalize;
-    //return Path(normalize(toString()));
-    return Path(buildNormalizedPath(toString()));
+    //return Path(normalize(this[]));
+    return Path(buildNormalizedPath(this[]));
   }
 
   /// Returns an absolute path relative to the current working directory.
   Path absolute()
   {
-    return Path(Environment.toAbsolute(toString().dup));
+    return Path(Environment.toAbsolute(this[].dup));
   }
 
   cstring name()
@@ -111,7 +111,7 @@ class Path : FilePath
   /// ditto
   Path opDivAssign(Path p)
   {
-    return this.append(p.toString());
+    return this.append(p[]);
   }
 
   /// Concatenate s. path ~= s
@@ -123,7 +123,7 @@ class Path : FilePath
   /// ditto
   Path opCatAssign(Path p)
   {
-    return this.cat(p.toString());
+    return this.cat(p[]);
   }
 
   /// Append s. Returns a copy.
@@ -134,7 +134,7 @@ class Path : FilePath
   /// ditto
   Path opDiv(Path p)
   {
-    return this.dup().append(p.toString());
+    return this.dup().append(p[]);
   }
 
   /// Concatenate s. Returns a copy.
@@ -145,6 +145,12 @@ class Path : FilePath
   /// ditto
   Path opCat(Path p)
   {
-    return this.dup().cat(p.toString());
+    return this.dup().cat(p[]);
+  }
+
+  /// Returns the path as a string.
+  inout(char)[] opSlice() inout
+  {
+    return cString()[0..$-1];
   }
 }

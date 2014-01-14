@@ -186,7 +186,7 @@ void main(cstring[] args)
           auto pckgName = modul.packageName.replace('.', '_');
           auto modName = modul.moduleName;
           auto fileName = Format(format, modFQN, pckgName, modName);
-          auto destPath = (dest/fileName).toString;
+          auto destPath = (dest/fileName)[];
           lzy(log("emit:  {}", destPath));
           destPath.write(py.emit());
         }

@@ -148,7 +148,7 @@ class ConfigLoader : SettingsLoader
   /// Returns a normalized path.
   cstring normalize(cstring path)
   {
-    return Path(path).normalize().toString();
+    return Path(path).normalize()[];
   }
 
   /// Loads the configuration file.
@@ -296,7 +296,7 @@ class ConfigLoader : SettingsLoader
         exists(executableDir~"/"~configFileName) ||
         // 5. Look in /etc/.
         exists("/etc/"~configFileName))
-      return normalize(path.toString());
+      return normalize(path[]);
     else
       return null;
   }
@@ -350,7 +350,7 @@ cstring resolvePath(cstring execPath, cstring filePath)
   if (path.isAbsolute())
     return filePath;
   path.set(execPath).append(filePath);
-  return path.toString();
+  return path[];
 }
 
 extern(Windows) uint GetModuleFileNameW(void*, wchar*, uint);

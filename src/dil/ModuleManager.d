@@ -228,7 +228,7 @@ class ModuleManager
     { // E.g.: "path/to/src" ~ "/" ~ "dil/ast/Node" ~ ".d"
       (filePath.set(importPath) /= moduleFQNPath) ~= ".d";
       if (filePath.exists() || (filePath~="i").exists()) // E.g.: src/dil/ast/Node.di
-        return filePath.toString();
+        return filePath[];
     }
     return null;
   }
@@ -264,7 +264,7 @@ class ModuleManager
   /// Returns a normalized, absolute path.
   static cstring absolutePath(cstring path)
   {
-    return Path(path).absolute().normalize().toString();
+    return Path(path).absolute().normalize()[];
   }
 
   /// Reports an error.

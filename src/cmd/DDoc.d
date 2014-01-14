@@ -84,8 +84,7 @@ class DDocCommand : Command
     cstring[] macroPaths = GlobalSettings.ddocFilePaths.dup;
 
     if (useKandil)
-      macroPaths ~=
-        (Path(GlobalSettings.kandilDir) /= "kandil.ddoc").toString();
+      macroPaths ~= (Path(GlobalSettings.kandilDir) /= "kandil.ddoc")[];
     macroPaths ~= this.macroPaths; // Add files from the cmd line arguments.
 
     // Parse macro files and build macro table hierarchy.
@@ -160,7 +159,7 @@ class DDocCommand : Command
   void writeSyntaxHighlightedFile(Module mod)
   {
     auto filePath = (((Path(destDirPath) /= "htmlsrc") /= mod.getFQN())
-      ~= outFileExtension).toString();
+      ~= outFileExtension)[];
     lzy(log("hl > {}", filePath));
     hl.highlightSyntax(mod, !writeXML, true);
     filePath.write(hl.takeText());
@@ -212,7 +211,7 @@ class DDocCommand : Command
       MacroExpander.expand(mtable, DDOC, mod.filePath, dg);
 
     // Finally write the XML/XHTML file out to the harddisk.
-    destPath.toString().write(fileText);
+    destPath[].write(fileText);
 
     // Write the documented symbols in this module to a json file.
     if (ddocEmitter.symbolTree.length && useKandil)
@@ -220,7 +219,7 @@ class DDocCommand : Command
       auto filePath = ((Path(destDirPath) /= "symbols") /= modFQN) ~= ".json";
       CharArray text;
       symbolsToJSON(ddocEmitter.symbolTree[0], text);
-      filePath.toString().write(text[]);
+      filePath[].write(text[]);
     }
   }
 
@@ -246,7 +245,7 @@ class DDocCommand : Command
 
     copyKandilFiles();
 
-    auto filePath = ((Path(destDirPath) /= "js") /= "modules.js").toString();
+    auto filePath = ((Path(destDirPath) /= "js") /= "modules.js")[];
 
     write("var g_moduleList = [\n "); // Write a flat list of FQNs.
     size_t max_line_len = 80;
@@ -424,7 +423,7 @@ version(unused)
     assert(writeReport);
     CharArray buffer;
 
-    auto filePath = (Path(destDirPath) /= "report.txt").toString();
+    auto filePath = (Path(destDirPath) /= "report.txt")[];
 
     lzy(log("Writing report to ‘{}’.", filePath));
 
