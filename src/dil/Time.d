@@ -6,7 +6,7 @@ module dil.Time;
 import dil.String;
 import common;
 
-import tango.stdc.time : time_t, time, ctime;
+import core.stdc.time : time_t, time, ctime;
 
 /// Some convenience functions for dealing with C's time functions.
 struct Time
@@ -16,7 +16,7 @@ static:
   char[] now()
   {
     time_t time_val;
-    tango.stdc.time.time(&time_val);
+    core.stdc.time.time(&time_val);
     // ctime returns a pointer to a static array.
     char* timeStr = ctime(&time_val);
     return MString(timeStr, '\n')[];

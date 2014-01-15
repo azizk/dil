@@ -14,7 +14,8 @@ import dil.Compilation,
 import util.Path;
 import common;
 
-import tango.core.Array : lbound, sort;
+import std.algorithm : sort;
+import std.range : assumeSorted;
 
 /// Manages loaded modules in various tables.
 class ModuleManager
@@ -169,7 +170,8 @@ class ModuleManager
   /// Insert a module into the ordered list.
   void insertOrdered(Module newModule)
   {
-    auto i = orderedModules.lbound(newModule, &compareImports);
+    auto sorted = orderedModules.assumeSorted!compareImports();
+    auto i = sorted.lowerBound(newModule).length;
     if (i == orderedModules.length)
       orderedModules ~= newModule;
     else
@@ -227,7 +229,8 @@ class ModuleManager
     foreach (importPath; importPaths)
     { // E.g.: "path/to/src" ~ "/" ~ "dil/ast/Node" ~ ".d"
       (filePath.set(importPath) /= moduleFQNPath) ~= ".d";
-      if (filePath.exists() || (filePath~="i").exists()) // E.g.: src/dil/ast/Node.di
+      // or: "src/dil/ast/Node.di"
+      if (filePath.exists() || (filePath~="i").exists())
         return filePath[];
     }
     return null;
@@ -249,8 +252,8 @@ class ModuleManager
   /// Sorts the the subpackages and submodules of pckg.
   void sortPackageTree(Package pckg)
   {
-    pckg.packages.sort(&compareSymbolNames);
-    pckg.modules.sort(&compareSymbolNames);
+    pckg.packages.sort!(compareSymbolNames)();
+    pckg.modules.sort!(compareSymbolNames)();
     foreach (subpckg; pckg.packages)
       sortPackageTree(subpckg);
   }

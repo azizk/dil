@@ -33,7 +33,7 @@ import common;
 
 import std.file,
        std.regex;
-import tango.time.Clock : Clock;
+import std.datetime : Clock;
 
 /// The ddoc command.
 class DDocCommand : Command
@@ -268,7 +268,7 @@ class DDocCommand : Command
     write("])\n);\n");
 
     // Write a timestamp. Checked by kandil to clear old storage.
-    auto stamp = Clock().now().unix().seconds();
+    auto stamp = Clock.currTime.toUnixTime();
     write(Format("\nvar g_creationTime = {};\n", stamp));
 
     filePath.write(buffer[]);
