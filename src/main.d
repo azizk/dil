@@ -460,9 +460,10 @@ void main(cstring[] args)
 
     auto tables = globalCC.tables.lxtables;
 
-    auto mt = measureTime!((swatch){
+    static void printSecs(TickDuration swatch) {
       Printfln("Scanned in {}ms.", swatch.msecs);
-    });
+    }
+    auto mt = measureTime!(printSecs);
 
     foreach (filePath; filePaths)
       new Lexer(new SourceText(filePath[], true), tables).scanAll();
