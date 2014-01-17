@@ -193,7 +193,8 @@ class Parser
   /// Consumes the current token and returns it.
   Token* consume()()
   {
-    return (nT(), prevToken);
+    nT();
+    return prevToken;
   }
 
   /// Consumes the current token if its kind matches T!str and returns true.
@@ -212,7 +213,8 @@ class Parser
   /// and then moves to the next token.
   void skip(string str)()
   {
-    assert(consumed!str, token.text);
+    assert(tokenIs!str);
+    consume();
   }
 
   /// Returns true if the token after the closing parenthesis
@@ -1238,32 +1240,31 @@ class Parser
     auto enumName = optionalIdentifier();
     auto baseType = consumed!":" ? parseBasicType() : null;
 
-    if (enumName && consumed!";")
-    {}
-    else if (auto brace = consumedToken!"{")
-    {
-      while (!tokenIs!"}")
+    if (!enumName || !consumed!";")
+      if (auto brace = consumedToken!"{")
       {
-        auto begin = token;
-        Type type; // Optional member type.
+        while (!tokenIs!"}")
+        {
+          auto begin = token;
+          Type type; // Optional member type.
 
-        version(D2)
-        if (!peekNext().Any!("=", ",", "}"))
-          type = parseType();
+          version(D2)
+          if (!peekNext().Any!("=", ",", "}"))
+            type = parseType();
 
-        auto name = requireIdentifier(MID.ExpectedEnumMember);
-        // "=" AssignExpr
-        auto value = consumed!"=" ? parseAssignExpr() : null;
-        auto member = new EnumMemberDecl(type, name, value);
-        members ~= set(member, begin);
+          auto name = requireIdentifier(MID.ExpectedEnumMember);
+          // "=" AssignExpr
+          auto value = consumed!"=" ? parseAssignExpr() : null;
+          auto member = new EnumMemberDecl(type, name, value);
+          members ~= set(member, begin);
 
-        if (!consumed!",")
-          break;
+          if (!consumed!",")
+            break;
+        }
+        requireClosing!"}"(brace);
       }
-      requireClosing!"}"(brace);
-    }
-    else
-      error2(MID.ExpectedEnumBody, token);
+      else
+        error2(MID.ExpectedEnumBody, token);
 
     return new EnumDecl(enumName, baseType, members);
   }
