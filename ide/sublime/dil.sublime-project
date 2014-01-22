@@ -36,15 +36,27 @@
   "build_systems":
   [
     { // Debug version (Ctrl+B.)
-      "name": "Build DIL Debug",
+      "name": "Build DIL (Debug)",
       "cmd": ["scripts/build.py", "--debug"],
       "file_regex": "^(.*?)\\(([0-9]+)\\):()(.+)$",
       "working_dir": "$project_path/../..",
       "selector": "source.d",
       "variants":
       [
-        { // Release version (Ctrl+Shift+B.)
-          "cmd": ["scripts/build.py", "--release"],
+        {
+          "name": "DIL Release",
+          "cmd": ["scripts/build.py", "--release"]
+        },
+        {
+          "name": "DIL Release ProfileCode",
+          "cmd": ["scripts/build.py", "--release", "--", "-profile"]
+        },
+        {
+          "name": "DIL Release Coverage Analysis",
+          "cmd": ["scripts/build.py", "--release", "--", "-cov"]
+        },
+        { // Run binary. (Ctrl+Shift+B.)
+          "cmd": ["bin/dil"],
           "name": "Run"
         }
       ]
