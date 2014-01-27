@@ -39,9 +39,9 @@ abstract class DeclarationSymbol : Symbol
       {
       case LinkageType.D:
         break;
-      case LinkageType.C:
-      case LinkageType.Windows:
-      case LinkageType.Pascal:
+      case LinkageType.C,
+           LinkageType.Windows,
+           LinkageType.Pascal:
         m = s.name.str;
         break;
       case LinkageType.Cpp:

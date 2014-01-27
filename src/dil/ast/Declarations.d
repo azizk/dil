@@ -327,14 +327,10 @@ class TemplateDecl : Declaration
     this.decls = decls;
 
     auto list = decls.decls;
-    if (list.length == 1)
-      switch (list[0].kind) with (NodeKind)
-      {
-      case FunctionDecl, ClassDecl, InterfaceDecl,
-           StructDecl, UnionDecl, ConstructorDecl:
-        this.isWrapper = true;
-      default:
-      }
+    alias NK = NodeKind;
+    if (list.length == 1 && list[0].kind.In(NK.FunctionDecl, NK.ClassDecl,
+          NK.InterfaceDecl, NK.StructDecl, NK.UnionDecl, NK.ConstructorDecl))
+      this.isWrapper = true;
   }
 
   /// Returns the Identifier of this template.

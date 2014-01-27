@@ -342,17 +342,18 @@ class Parser
     Declaration decl;
     switch (token.kind)
     {
+    version(D2)
+    { // T!"shared", T!"immutable", T!"inout"
+    case T!"__gshared", T!"ref", T!"pure", T!"nothrow", T!"@":
+      goto case;
+    }
     case T!"align", T!"pragma",
          // Protection attributes
          T!"export", T!"private", T!"package", T!"protected", T!"public",
          // Storage classes
+         //T!"static", T!"const",
          T!"extern", T!"deprecated", T!"override", T!"abstract",
          T!"synchronized", T!"auto", T!"scope", T!"final":
-         //T!"static", T!"const"
-    version(D2)
-    { // T!"shared", T!"immutable", T!"inout"
-    case T!"__gshared", T!"ref", T!"pure", T!"nothrow", T!"@":
-    }
     case_parseAttributes:
       return parseAttributes();
     case T!"alias":
@@ -452,6 +453,7 @@ class Parser
     version(D2)
     {
     case T!"super"/*, T!"this"*/:
+      goto case_Declaration;
     }
     case T!"Identifier", T!".", T!"typeof":
     case_Declaration:
@@ -508,7 +510,7 @@ class Parser
       break;
     case T!";":
       error(MID.ExpectedNonEmptyDeclaration, token);
-      // goto default;
+      goto default;
     default:
       d = parseDeclarationDefinition();
     }
@@ -982,12 +984,9 @@ class Parser
       case T!"abstract":     stc = StorageClass.Abstract;     goto Lcommon;
       case T!"synchronized": stc = StorageClass.Synchronized; goto Lcommon;
       case T!"static":
-        switch (peekNext())
-        { // Avoid parsing static import, static this etc.
-        case T!"import", T!"this", T!"~", T!"if", T!"assert":
+        // Avoid parsing static import, static this etc.
+        if (peekNext().Any!("import", "this", "~", "if", "assert"))
           break Loop;
-        default:
-        }
                              stc = StorageClass.Static;       goto Lcommon;
       case T!"final":        stc = StorageClass.Final;        goto Lcommon;
       version(D2)
@@ -1773,12 +1772,13 @@ class Parser
 
     case T!"extern", T!"const", T!"auto":
          //T!"final", T!"scope", T!"static":
+      goto case_parseAttribute;
     version(D2)
     {
     case T!"immutable", T!"inout", T!"pure", T!"shared", T!"__gshared",
          T!"ref", T!"nothrow", T!"@":
-    }
       goto case_parseAttribute;
+    }
 
     case T!"Identifier":
       if (nextIs!":")
@@ -1791,6 +1791,7 @@ class Parser
     version(D2)
     {
     case T!"this", T!"super":
+      goto case T!".";
     }
     case T!".", T!"typeof":
       bool success;
@@ -2203,7 +2204,7 @@ class Parser
         stcs = StorageClass.Ref;
         stctok = token;
         nT();
-        // fall through
+        goto case T!"Identifier";
       }
       case T!"Identifier":
         if (peekNext().Any!(",", ";", ")"))
@@ -2211,7 +2212,7 @@ class Parser
           name = requireIdentifier(MID.ExpectedVariableName);
           break;
         }
-        // fall through
+        goto default;
       default: // (ref|const|...)? Declarator
         type = parseDeclarator(name);
       }
@@ -2324,20 +2325,13 @@ class Parser
     skip!"goto";
     auto ident = token;
     Expression caseExpr;
-    switch (token.kind)
+    if (consumed!"case")
     {
-    case T!"case":
-      nT();
-      if (tokenIs!";")
-        break;
-      caseExpr = parseExpression();
-      break;
-    case T!"default":
-      nT();
-      break;
-    default:
-      ident = requireIdentifier(MID.ExpectedAnIdentifier);
+      if (!tokenIs!";")
+        caseExpr = parseExpression();
     }
+    else if (!consumed!"default")
+      ident = requireIdentifier(MID.ExpectedAnIdentifier);
     require2!";";
     return new GotoStmt(ident, caseExpr);
   }
@@ -3141,8 +3135,8 @@ class Parser
       nT();
       e = new DerefExpr(parseUnaryExpr());
       break;
-    case T!"-":
-    case T!"+":
+    case T!"-",
+         T!"+":
       nT();
       e = new SignExpr(parseUnaryExpr());
       break;
@@ -3762,6 +3756,7 @@ class Parser
     version (D2)
     {
     case T!"this", T!"super":
+      goto case T!"Identifier";
     }
     case T!"Identifier", T!"typeof", T!".":
       t = parseQualifiedType();
@@ -3968,7 +3963,7 @@ class Parser
         case T!"out":    stc = StorageClass.Out;    goto Lcommon;
         version (D1)
         {
-        case T!"inout":
+        case T!"inout":  goto case T!"ref";
         }
         case T!"ref":    stc = StorageClass.Ref;    goto Lcommon;
         case T!"lazy":   stc = StorageClass.Lazy;   goto Lcommon;

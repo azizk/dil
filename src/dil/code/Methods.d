@@ -143,14 +143,8 @@ class EMethods
   /// Returns true if e is a constant expression.
   static bool isConst(Expression e)
   {
-    switch (e.kind)
-    {
-    case NK.IntExpr, NK.FloatExpr, NK.ComplexExpr, NK.CharExpr,
-         NK.BoolExpr, NK.StringExpr, NK.NullExpr:
-      return true;
-    default:
-    }
-    return false;
+    return e.kind.In(NK.IntExpr, NK.FloatExpr, NK.ComplexExpr, NK.CharExpr,
+      NK.BoolExpr, NK.StringExpr, NK.NullExpr);
   }
 
   /// Checks if e has a boolean value.
@@ -260,6 +254,7 @@ class EMethods
       break;
     case NK.CommaExpr:
       e = toLValue(e.to!(CommaExpr).rhs); // (lhs, rhs)
+      break;
     case NK.CondExpr:
       break;
     case NK.CallExpr:

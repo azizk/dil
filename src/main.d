@@ -83,8 +83,8 @@ void main(cstring[] args)
 
   switch (command)
   {
-  case "c2":
-  case "c", "compile":
+  case "c2",
+       "c", "compile":
     if (!op.hasArgs)
       return printHelp(command, diag);
     bool useCommand2 = command == "c2";

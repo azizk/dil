@@ -94,6 +94,7 @@ body
   case '\r':
     if (p[1] == '\n')
       ++p;
+    goto case;
   case '\n':
     ++p;
     break;
@@ -117,6 +118,7 @@ body
   case '\r':
     if (p+1 < end && p[1] == '\n')
       ++p;
+    goto case;
   case '\n':
     ++p;
     break;
@@ -139,6 +141,7 @@ bool scanNewlineReverse(cchar* begin, ref cchar* end)
   case '\n':
     if (begin <= end-1 && end[-1] == '\r')
       end--;
+    goto case;
   case '\r':
     break;
   case LS[2], PS[2]:
@@ -146,7 +149,7 @@ bool scanNewlineReverse(cchar* begin, ref cchar* end)
       end -= 2;
       break;
     }
-  // fall through
+    goto default;
   default:
     return false;
   }

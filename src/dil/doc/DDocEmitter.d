@@ -536,7 +536,7 @@ abstract class DDocEmitter : DefaultVisitor2
             p++;
           continue;
         }
-        //goto default;
+        goto default;
       default:
         write(*p);
       }

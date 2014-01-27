@@ -147,6 +147,7 @@ class ImportParser : Parser
       if (peekNext() == T!"(")
         goto case_Declaration;
     }
+      goto case;
     case T!"override",
          T!"deprecated",
          T!"abstract",
@@ -214,8 +215,7 @@ class ImportParser : Parser
       else
         skipToTokenAfterClosingBrace();
       break;
-    case T!"class":
-    case T!"interface":
+    case T!"class", T!"interface":
       nT(), skip(T!"Identifier"); // class Identifier
       token.kind == T!"(" && skipToTokenAfterClosingParen(); // Skip template params.
       if (token.kind == T!":")
@@ -242,6 +242,7 @@ class ImportParser : Parser
       break;
     case T!"~":
       nT();
+      goto case;
     case T!"this":
       nT(); nT(); nT(); // this ( )
       skipFunctionBody();

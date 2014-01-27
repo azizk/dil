@@ -189,7 +189,7 @@ static
 
     char[] text;
 
-    switch (tellBOM(data))
+    final switch (tellBOM(data))
     {
     case BOM.None:
       // No BOM found. According to the specs the first character
@@ -237,8 +237,6 @@ static
     case BOM.UTF32LE:
       text = UTF32LEtoUTF8(data[4..$]);
       break;
-    default:
-      assert(0);
     }
     return text;
   }

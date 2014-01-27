@@ -975,7 +975,6 @@ class Lexer
     auto tokenLine = this.lineLoc;
   Loop:
     while (1)
-    {
       switch (*++p)
       {
       case '*':
@@ -986,6 +985,7 @@ class Lexer
       case '\r':
         if (p[1] == '\n')
           ++p;
+        goto case;
       case '\n':
         setLineBegin(p+1);
         break;
@@ -1000,7 +1000,6 @@ class Lexer
           break Loop;
         }
       }
-    }
     t.kind = T!"Comment";
     t.end = this.p = p;
     return;
@@ -1017,7 +1016,6 @@ class Lexer
     uint level = 1;
   Loop:
     while (1)
-    {
       switch (*++p)
       {
       case '/':
@@ -1035,6 +1033,7 @@ class Lexer
       case '\r':
         if (p[1] == '\n')
           ++p;
+        goto case;
       case '\n':
         setLineBegin(p+1);
         break;
@@ -1049,7 +1048,6 @@ class Lexer
           break Loop;
         }
       }
-    }
     t.kind = T!"Comment";
     t.end = this.p = p;
     return;
@@ -1061,13 +1059,7 @@ class Lexer
   static char scanPostfix(ref cchar* p)
   {
     assert(p[-1].In('"', '`', '}'));
-    switch (*p)
-    {
-    case 'c', 'w', 'd':
-      return *p++;
-    default:
-    }
-    return '\0';
+    return (*p).In('c', 'w', 'd') ? *p++ : '\0';
   }
 
   /// Scans a normal string literal.
@@ -1104,6 +1096,7 @@ class Lexer
         value ~= slice(prev, prev2 + 1); // +1 is for '\n'.
         *(value.cur-1) = '\n'; // Convert Newline to '\n'.
         prev = p+1;
+        goto case;
       case '\n':
         setLineBegin(++p);
         break;
@@ -1211,6 +1204,7 @@ class Lexer
         value ~= slice(prev, prev2 + 1);
         *(value.cur-1) = '\n'; // Convert Newline to '\n'.
         prev = p+1;
+        goto case;
       case '\n':
         setLineBegin(++p);
         break;
@@ -1263,6 +1257,7 @@ class Lexer
       case '\r':
         if (p[1] == '\n')
           ++p;
+        goto case;
       case '\n':
         setLineBegin(p+1);
         continue;
@@ -1389,6 +1384,7 @@ class Lexer
         value ~= slice(prev, prev2 + 1); // +1 is for '\n'.
         *(value.cur-1) = '\n'; // Convert Newline to '\n'.
         prev = p+1;
+        goto case;
       case '\n':
         setLineBegin(p+1);
         break;
@@ -1542,6 +1538,7 @@ class Lexer
         case '\r':
           if (q[1] == '\n')
             ++q;
+          goto case;
         case '\n':
           assert(isNewlineEnd(q));
           *s++ = '\n'; // Convert Newline to '\n'.
@@ -1748,7 +1745,7 @@ class Lexer
     case '.':
       if (!isfloat(p[1]))
         break;
-      // Fall through: 0.[0-9]
+      goto LscanFloat; // 0.[0-9]
     case 'i','f','F', // Imaginary and float literal suffixes.
          'e', 'E':    // Float exponent.
       goto LscanFloat;
@@ -1796,6 +1793,7 @@ class Lexer
     case 'L':
       if (p[1] != 'i')
         break;
+      goto LscanFloat;
     case 'i', 'f', 'F', 'e', 'E':
       goto LscanFloat;
     default:
@@ -1829,6 +1827,7 @@ class Lexer
     case '.':
       if (!isfloat(p[1]))
         break;
+      goto case;
     case 'p', 'P':
       this.p = p;
       return scanHexFloat(t);
@@ -1899,6 +1898,7 @@ class Lexer
     case 'L':
       if (p[1] != 'i')
         break;
+      goto LscanFloat;
     case 'i', 'f', 'F', 'e', 'E':
       goto LscanFloat;
     default:
@@ -2311,15 +2311,9 @@ class Lexer
     if (!isTrailByte(*p))
       return false;
     // Check for overlong sequences.
-    switch (d)
-    {
-    case 0xE0, 0xF0, 0xF8, 0xFC:
-      if ((*p & d) == 0x80)
-        return false;
-    default:
-      if ((d & 0xFE) == 0xC0) // 1100000x
-        return false;
-    }
+    if (d.In(0xE0, 0xF0, 0xF8, 0xFC) && (*p & d) == 0x80 ||
+        (d & 0xFE) == 0xC0) // 1100000x
+      return false;
     const string checkNextByte = "if (!isTrailByte(*++p))"
                                  "  return false;";
     const string appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
@@ -2369,18 +2363,9 @@ class Lexer
       goto Lerror2;
 
     // Check for overlong sequences.
-    switch (d)
-    {
-    case 0xE0, // 11100000 100xxxxx
-         0xF0, // 11110000 1000xxxx
-         0xF8, // 11111000 10000xxx
-         0xFC: // 11111100 100000xx
-      if ((*p & d) == 0x80)
-        goto Lerror;
-    default:
-      if ((d & 0xFE) == 0xC0) // 1100000x
-        goto Lerror;
-    }
+    if (d.In(0xE0, 0xF0, 0xF8, 0xFC) && (*p & d) == 0x80 ||
+        (d & 0xFE) == 0xC0) // 1100000x
+      goto Lerror;
 
     const string checkNextByte = "if (!isTrailByte(*++p))"
                                  "  goto Lerror2;";

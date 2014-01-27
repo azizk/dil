@@ -94,15 +94,9 @@ body
   assert(c >= 0x80);
   if (!(++p < end && isTrailByte(*p)))
     return UTF8Error.TrailByte;
-  switch (c)
-  {
-  case 0xE0, 0xF0, 0xF8, 0xFC:
-    if ((c & *p) == 0x80)
-      return UTF8Error.Overlong;
-  default:
-    if ((c & 0xFE) == 0xC0)
-      return UTF8Error.Overlong;
-  }
+  if (c.In(0xE0, 0xF0, 0xF8, 0xFC) && (c & *p) == 0x80 ||
+      (c & 0xFE) == 0xC0) // 1100000x
+    return UTF8Error.Overlong;
   if ((c & 0b1110_0000) == 0b1100_0000)
   {}
   else if ((c & 0b1111_0000) == 0b1110_0000)
@@ -218,18 +212,13 @@ body
     goto Lerror;
 
   // Check for overlong sequences.
-  switch (c)
-  {
-  case 0xE0, // c=11100000 c2=100xxxxx
-       0xF0, // c=11110000 c2=1000xxxx
-       0xF8, // c=11111000 c2=10000xxx
-       0xFC: // c=11111100 c2=100000xx
-    if ((c & c2) == 0x80)
-      goto Lerror;
-  default:
-    if ((c & 0xFE) == 0xC0) // c=1100000x
-      goto Lerror;
-  }
+  // 0xE0: c=11100000 c2=100xxxxx
+  // 0xF0: c=11110000 c2=1000xxxx
+  // 0xF8: c=11111000 c2=10000xxx
+  // 0xFC: c=11111100 c2=100000xx
+  if (c.In(0xE0, 0xF0, 0xF8, 0xFC) && (c & c2) == 0x80 ||
+      (c & 0xFE) == 0xC0) // 1100000x
+    goto Lerror;
 
   immutable checkNextByte = "if (!isTrailByte(c2 = *++p))"
                                "  goto Lerror;";

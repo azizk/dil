@@ -1712,14 +1712,9 @@ override:
 
   void visit(IntExpr n)
   {
-    if (auto t = n.begin)
-      switch (t.kind)
-      { // Write the original Token if available.
-      case TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64:
-        w(t);
-        return;
-      default:
-      }
+    if (auto t = n.begin) // Write the original Token if available.
+      if (t.kind.In(TOK.Int32, TOK.Int64, TOK.UInt32, TOK.UInt64))
+        return w(t);
 
     void writeCast(TOK k)
     {
@@ -1784,15 +1779,10 @@ override:
 
   void visit(FloatExpr n)
   {
-    if (auto t = n.begin)
-      switch (t.kind)
-      { // Write the original Token if available.
-      case TOK.Float32, TOK.Float64, TOK.Float80,
-           TOK.IFloat32, TOK.IFloat64, TOK.IFloat80:
-        w(t);
-        return;
-      default:
-      }
+    if (auto t = n.begin) // Write the original Token if available.
+      if (t.kind.In(TOK.Float32, TOK.Float64, TOK.Float80,
+                    TOK.IFloat32, TOK.IFloat64, TOK.IFloat80))
+        return w(t);
 
     cstring txt;
     TOK k = TOK.Float64;
