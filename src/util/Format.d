@@ -3,7 +3,7 @@
 /// $(Maturity average)
 module util.Format;
 
-import std.format : FormatSpec;
+import std.format : FormatSpec, formatValue;
 
 alias FSpec = FormatSpec!char;
 
@@ -35,7 +35,7 @@ const(C)[] parseFmt(C=char)(const(C)[] fmt, ref FSpec fs)
     return null;
 
   if (isnumber())
-    fs.indexStart = cast(ubyte)(number + 1);
+    fs.indexStart = fs.indexEnd = cast(ubyte)(number + 1);
 
   loopUntil(!current(' '));
 
@@ -80,4 +80,68 @@ const(C)[] parseFmt(C=char)(const(C)[] fmt, ref FSpec fs)
 
   skipped('}');
   return begin[0..p-begin];
+}
+
+void formatTango(C=char, Writer)(ref Writer w, const(C)[] fmt,
+                                 void function(FormatSpec!C)[] fmtFuncs)
+{
+  ubyte index; // 0-based.
+  while (fmt.length)
+  {
+    FSpec fs;
+    auto fmtSlice = parseFmt(fmt, fs);
+
+    if (fmtSlice is null)
+      break;
+    if (fs.indexStart) // 1-based.
+      index = cast(ubyte)(fs.indexStart - 1);
+    else
+      fs.indexStart = cast(ubyte)(index + 1);
+
+    auto fmtIndex = fmtSlice.ptr - fmt.ptr;
+    if (fmtIndex)
+      w ~= fmt[0..fmtIndex]; // Append previous non-format string.
+
+    fmtFuncs[index](fs); // Write the formatted value.
+
+    fmt = fmt[fmtIndex+fmtSlice.length .. $];
+
+    index++;
+  }
+  if (fmt.length)
+    w ~= fmt;
+}
+
+void formatTango(C=char, Writer, AS...)(ref Writer w, const(C)[] fmt, AS as)
+{
+  void delegate(FormatSpec!C)[AS.length] fmtFuncs;
+  foreach (i, A; AS)
+    fmtFuncs[i] = fs => formatValue(w, as[i], fs);
+  formatTango(w, fmt, fmtFuncs);
+}
+
+// FIXME: running the function causes a segfault:
+// Segmentation fault encountered at:
+// __pthread_mutex_lock
+// /lib/i386-linux-gnu/libpthread.so.0:0
+
+void testFormatTango()
+{
+  struct CharArrayWriter
+  {
+    import dil.Array;
+    import dil.Unicode : encode;
+    CharArray a;
+    alias a this;
+    void put(dchar dc)
+    {
+      ensureOrGrow(4);
+      auto utf8Chars = encode(a.cur, dc);
+      a.cur += utf8Chars.length;
+      assert(utf8Chars.length <= 4);
+    }
+  }
+  CharArrayWriter w;
+  formatTango(w, "test{}", 1);
+  assert(w[] == "test1");
 }
