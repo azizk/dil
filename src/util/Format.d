@@ -82,8 +82,8 @@ const(C)[] parseFmt(C=char)(const(C)[] fmt, ref FSpec fs)
   return begin[0..p-begin];
 }
 
-void formatTango(C=char, Writer)(ref Writer w, const(C)[] fmt,
-                                 void function(FormatSpec!C)[] fmtFuncs)
+void formatTangoActual(C=char, Writer)(ref Writer w, const(C)[] fmt,
+                                       void delegate(FormatSpec!C)[] fmtFuncs)
 {
   ubyte index; // 0-based.
   while (fmt.length)
@@ -102,7 +102,10 @@ void formatTango(C=char, Writer)(ref Writer w, const(C)[] fmt,
     if (fmtIndex)
       w ~= fmt[0..fmtIndex]; // Append previous non-format string.
 
-    fmtFuncs[index](fs); // Write the formatted value.
+    if (index < fmtFuncs.length)
+      fmtFuncs[index](fs); // Write the formatted value.
+    else
+    {} // TODO: emit error string?
 
     fmt = fmt[fmtIndex+fmtSlice.length .. $];
 
@@ -117,13 +120,8 @@ void formatTango(C=char, Writer, AS...)(ref Writer w, const(C)[] fmt, AS as)
   void delegate(FormatSpec!C)[AS.length] fmtFuncs;
   foreach (i, A; AS)
     fmtFuncs[i] = fs => formatValue(w, as[i], fs);
-  formatTango(w, fmt, fmtFuncs);
+  formatTangoActual(w, fmt, fmtFuncs);
 }
-
-// FIXME: running the function causes a segfault:
-// Segmentation fault encountered at:
-// __pthread_mutex_lock
-// /lib/i386-linux-gnu/libpthread.so.0:0
 
 void testFormatTango()
 {
