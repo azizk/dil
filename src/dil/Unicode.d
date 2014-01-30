@@ -332,6 +332,61 @@ void encode(ref char[] str, dchar c)
     assert(0);
 }
 
+char[] encode(char[] s, dchar c)
+{
+  assert(s.length <= 4);
+  return encode(s.ptr, c);
+}
+
+char[] encode(char* p, dchar c)
+{
+  assert(isValidChar(c), "check for valid character before calling encode().");
+
+  auto p0 = p;
+  if (c < 0x80)
+    *p++ = cast(char)c;
+  else if (c < 0x800)
+  {
+    *p++ = 0xC0 | cast(char)(c >> 6);
+    *p++ = 0x80 | (c & 0x3F);
+  }
+  else if (c < 0x10000)
+  {
+    *p++ = 0xE0 | cast(char)(c >> 12);
+    *p++ = 0x80 | ((c >> 6) & 0x3F);
+    *p++ = 0x80 | (c & 0x3F);
+  }
+  else if (c < 0x200000)
+  {
+    *p++ = 0xF0 | (c >> 18);
+    *p++ = 0x80 | ((c >> 12) & 0x3F);
+    *p++ = 0x80 | ((c >> 6) & 0x3F);
+    *p++ = 0x80 | (c & 0x3F);
+  }
+  /+ // There are no 5 and 6 byte UTF-8 sequences yet.
+  else if (c < 0x4000000)
+  {
+    *p++ = 0xF8 | (c >> 24);
+    *p++ = 0x80 | ((c >> 18) & 0x3F);
+    *p++ = 0x80 | ((c >> 12) & 0x3F);
+    *p++ = 0x80 | ((c >> 6) & 0x3F);
+    *p++ = 0x80 | (c & 0x3F);
+  }
+  else if (c < 0x80000000)
+  {
+    *p++ = 0xFC | (c >> 30);
+    *p++ = 0x80 | ((c >> 24) & 0x3F);
+    *p++ = 0x80 | ((c >> 18) & 0x3F);
+    *p++ = 0x80 | ((c >> 12) & 0x3F);
+    *p++ = 0x80 | ((c >> 6) & 0x3F);
+    *p++ = 0x80 | (c & 0x3F);
+  }
+  +/
+  else
+    assert(0);
+  return p0[0 .. p-p0];
+}
+
 /// Encodes c and appends it to str.
 void encode(ref wchar[] str, dchar c)
 in { assert(isValidChar(c)); }
