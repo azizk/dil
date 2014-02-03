@@ -16,7 +16,7 @@ const(C)[] parseFmt(C=char)(const(C)[] fmt, ref FSpec fs)
 
   auto inc = () => (assert(p < end), ++p, true);
   bool loop(lazy bool pred) { return pred() && loop(pred); }
-  auto loopUntil = (lazy bool pred) => loop(!pred() && inc());
+  auto loopUntil = (lazy bool pred) => loop(!pred() && p < end && inc());
   auto current = (C c) => p < end && *p == c;
   auto next = (C c) => p+1 < end && p[1] == c;
   auto skipped = (C c) => current(c) && inc();
@@ -31,7 +31,7 @@ const(C)[] parseFmt(C=char)(const(C)[] fmt, ref FSpec fs)
 
   auto begin = p-1;
 
-  if (p == end)
+  if (p >= end)
     return null;
 
   if (isnumber())
@@ -43,12 +43,14 @@ const(C)[] parseFmt(C=char)(const(C)[] fmt, ref FSpec fs)
   {
     C minmaxChar = *(p-1);
     loopUntil(!current(' '));
-    auto negate = skipped('-');
+    fs.flDash = skipped('-');
     if (isnumber())
+    {
       if (minmaxChar == ',')
-        fs.width = negate ? -number : number;
+        fs.width = number;
       else // TODO: '.'
       {}
+    }
     loopUntil(!current(' '));
   }
 
@@ -82,10 +84,10 @@ const(C)[] parseFmt(C=char)(const(C)[] fmt, ref FSpec fs)
   return begin[0..p-begin];
 }
 
-void formatTangoActual(C=char, Writer)(ref Writer w, const(C)[] fmt,
-                                       void delegate(FormatSpec!C)[] fmtFuncs)
+void formatTangoActual(C=char, Writer)
+  (ref Writer w, const(C)[] fmt, void delegate(ref FormatSpec!C)[] fmtFuncs)
 {
-  ubyte index; // 0-based.
+  ubyte argIndex; // 0-based.
   while (fmt.length)
   {
     FSpec fs;
@@ -94,22 +96,20 @@ void formatTangoActual(C=char, Writer)(ref Writer w, const(C)[] fmt,
     if (fmtSlice is null)
       break;
     if (fs.indexStart) // 1-based.
-      index = cast(ubyte)(fs.indexStart - 1);
-    else
-      fs.indexStart = cast(ubyte)(index + 1);
+      argIndex = cast(ubyte)(fs.indexStart - 1);
 
     auto fmtIndex = fmtSlice.ptr - fmt.ptr;
     if (fmtIndex)
       w ~= fmt[0..fmtIndex]; // Append previous non-format string.
 
-    if (index < fmtFuncs.length)
-      fmtFuncs[index](fs); // Write the formatted value.
+    if (argIndex < fmtFuncs.length)
+      fmtFuncs[argIndex](fs); // Write the formatted value.
     else
     {} // TODO: emit error string?
 
     fmt = fmt[fmtIndex+fmtSlice.length .. $];
 
-    index++;
+    argIndex++;
   }
   if (fmt.length)
     w ~= fmt;
@@ -117,20 +117,26 @@ void formatTangoActual(C=char, Writer)(ref Writer w, const(C)[] fmt,
 
 void formatTango(C=char, Writer, AS...)(ref Writer w, const(C)[] fmt, AS as)
 {
-  void delegate(FormatSpec!C)[AS.length] fmtFuncs;
+  void delegate(ref FormatSpec!C)[AS.length] fmtFuncs;
   foreach (i, A; AS)
-    fmtFuncs[i] = fs => formatValue(w, as[i], fs);
+    fmtFuncs[i] = (ref fs) => formatValue(w, as[i], fs);
   formatTangoActual(w, fmt, fmtFuncs);
 }
 
 void testFormatTango()
 {
+  import std.stdio;
+  import dil.Array;
+  CharArray a;
   struct CharArrayWriter
   {
-    import dil.Array;
     import dil.Unicode : encode;
-    CharArray a;
-    alias a this;
+    CharArray* a;
+    ref CharArray a_ref()
+    {
+      return *a;
+    }
+    alias a_ref  this;
     void put(dchar dc)
     {
       ensureOrGrow(4);
@@ -139,7 +145,8 @@ void testFormatTango()
       assert(utf8Chars.length <= 4);
     }
   }
-  CharArrayWriter w;
-  formatTango(w, "test{}", 1);
-  assert(w[] == "test1");
+  auto w = CharArrayWriter(&a);
+  formatTango(w, "test{}a{{0}>{,6}<", 12345, "läla");
+  assert(a[] == "test12345a{{0}> läla<");
+  writefln("a[]='%s'", a[]);
 }
