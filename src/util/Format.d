@@ -9,6 +9,7 @@ alias FSpec = FormatSpec!char;
 
 /// Parses a Tango-style format string fragment.
 /// Regex: \{(\d*)\s*([,.]\s*-?\d*\s*)?(:[^}]*)?\}
+/// Returns: null if not found, an escaped "{{", or a format string "{...}".
 const(C)[] parseFmt(C=char)(const(C)[] fmt, ref FSpec fs)
 {
   auto p = fmt.ptr;
@@ -27,9 +28,11 @@ const(C)[] parseFmt(C=char)(const(C)[] fmt, ref FSpec fs)
   auto isnumber = () => isdigit() && ((number = digit), loop(adddigit()), true);
 
   // Start scanning.
-  loopUntil(skipped('{') && !current('{')); // Find { but skip {{.
+  loopUntil(current('{'));
+  if (next('{'))
+    return p[0..2]; // "{{"
 
-  auto begin = p-1;
+  auto begin = p++;
 
   if (p >= end)
     return null;
@@ -93,8 +96,16 @@ void formatTangoActual(C=char, Writer)
     FSpec fs;
     auto fmtSlice = parseFmt(fmt, fs);
 
+    if (fmtSlice == "{{")
+    {
+      auto fmtIndex = fmtSlice.ptr - fmt.ptr + 1; // +1 includes first '{'.
+      w ~= fmt[0..fmtIndex];
+      fmt = fmt[fmtIndex+1 .. $]; // +1 skips second '{'.
+      continue;
+    }
     if (fmtSlice is null)
       break;
+
     if (fs.indexStart) // 1-based.
       argIndex = cast(ubyte)(fs.indexStart - 1);
 
@@ -130,15 +141,15 @@ void testFormatTango()
   CharArray a;
   struct CharArrayWriter
   {
-    import dil.Unicode : encode;
     CharArray* a;
     ref CharArray a_ref()
     {
       return *a;
     }
-    alias a_ref  this;
+    alias a_ref this;
     void put(dchar dc)
     {
+      import dil.Unicode : encode;
       ensureOrGrow(4);
       auto utf8Chars = encode(a.cur, dc);
       a.cur += utf8Chars.length;
@@ -146,7 +157,7 @@ void testFormatTango()
     }
   }
   auto w = CharArrayWriter(&a);
-  formatTango(w, "test{}a{{0}>{,6}<", 12345, "läla");
-  assert(a[] == "test12345a{{0}> läla<");
+  formatTango(w, "test{}a{{0}}>{,6}<", 12345, "läla");
+  assert(a[] == "test12345a{0}}> läla<");
   writefln("a[]='%s'", a[]);
 }
