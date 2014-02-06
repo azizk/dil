@@ -332,12 +332,7 @@ void encode(ref char[] str, dchar c)
     assert(0);
 }
 
-char[] encode(char[] s, dchar c)
-{
-  assert(s.length <= 4);
-  return encode(s.ptr, c);
-}
-
+/// Writes the encoded character to a buffer that must be of sufficient length.
 char[] encode(char* p, dchar c)
 {
   assert(isValidChar(c), "check for valid character before calling encode().");
