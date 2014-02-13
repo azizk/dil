@@ -265,17 +265,9 @@ L2Bytes:
     goto Lerror;
 Lreturn:
   ref_p = p+1; // Character is valid. Advance the pointer.
-LreturnError:
   return c;
 Lerror:
-  c = ERROR_CHAR;
-  goto LreturnError;
-}
-
-/// ditto
-dchar decode(ref char* ref_p, cchar* end)
-{
-  return decode(*cast(cchar**)&ref_p, end);
+  return ERROR_CHAR;
 }
 
 /// Encodes c and appends it to str.
