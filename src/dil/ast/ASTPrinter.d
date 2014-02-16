@@ -2005,8 +2005,11 @@ override:
 
   void visit(LambdaExpr n)
   {
-    if (n.params.length == 1) // FIXME: single param can have type modifier.
-      w(n.params.items[0].name);
+    if (n.params.length == 1 &&
+        !n.params.items[0].stcs && // No STCs.
+        !n.params.items[0].type && // No type.
+        !n.params.items[0].defValue) // No default value.
+      w(n.params.items[0].name); // Single argument.
     else
       v(n.params);
     w(ws, T.EqlGreater, ws);
