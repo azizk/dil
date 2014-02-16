@@ -1981,23 +1981,31 @@ override:
   {
     if (n.tok)
       w(n.tok, ws);
-    if (n.returnType) {
-      v(n.returnType);
-      w(ws);
-    }
+    if (n.returnType)
+      v(n.returnType), w(ws);
     if (n.params)
-      v(n.params);
-    w(T.LBrace, Newline);
+      v(n.params), w(ws);
+    // TODO: print n.params.postSTCs
+    if (auto fb = n.funcBody.Is!FuncBodyStmt)
     {
-      scope il = new IndentLevel;
-      v(n.funcBody.funcBody);
+      w(T.LBrace, Newline);
+      {
+        scope il = new IndentLevel;
+        v(fb.funcBody); // FIXME: fb can have in/out contracts.
+      }
+      w(ind, T.RBrace);
     }
-    w(ind, T.RBrace);
+    else
+    {
+      assert(n.funcBody.isExpression);
+      w(T.EqlGreater, ws);
+      w(cast(Expression)n.funcBody, PREC.Assignment);
+    }
   }
 
   void visit(LambdaExpr n)
   {
-    if (n.params.length == 1)
+    if (n.params.length == 1) // FIXME: single param can have type modifier.
       w(n.params.items[0].name);
     else
       v(n.params);

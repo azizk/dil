@@ -3434,7 +3434,7 @@ class Parser
         version(D2)
         parameters.postSTCs = parseFunctionPostfix();
       }
-      auto funcBody = parseFunctionBody();
+      auto funcBody = consumed!"=>" ? parseAssignExpr() : parseFunctionBody();
       e = new FuncLiteralExpr(begin, returnType, parameters, funcBody);
       break;
     case T!"assert":
