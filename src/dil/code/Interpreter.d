@@ -986,6 +986,7 @@ override
   {
     if (!e.values)
       goto Lerror;
+    {
     Expression[] elems_dup; // Duplicate if the elements changed.
     foreach (i, elem; e.values)
     {
@@ -1007,6 +1008,7 @@ override
       r.type = e.type;
     }
     return r;
+    }
   Lerror:
     error(e, "cannot interpret array literal");
     return NAR;

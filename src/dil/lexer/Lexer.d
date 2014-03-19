@@ -1113,11 +1113,13 @@ class Lexer
       }
     assert(*p == '"');
 
+    {
     auto finalString = slice(prev, p);
     if (value.len)
       finalString = ((value ~= finalString), value[]); // Append previous string.
     ++p; // Skip '"'.
     t.strval = lookupString(finalString, scanPostfix(p));
+    }
   Lerror:
     t.end = this.p = p;
     setBuffer(value);
@@ -1222,11 +1224,13 @@ class Lexer
       }
     assert((*p).In('"', '`'));
 
+    {
     auto finalString = slice(prev, p);
     if (value.len)
       finalString = ((value ~= finalString), value[]); // Append previous string.
     ++p; // Skip '"' or '`'.
     t.strval = lookupString(finalString, scanPostfix(p));
+    }
   Lerror:
     t.end = this.p = p;
     setBuffer(value);
@@ -1434,6 +1438,7 @@ class Lexer
     assert(level == 0);
     ++p; // Skip closing delimiter.
   Lreturn2: // String delimiter.
+    {
     auto finalString = slice(prev, prev2);
     if (value.len)
       finalString = ((value ~= finalString), value[]); // Append previous string.
@@ -1452,6 +1457,7 @@ class Lexer
       error(p, MID.ExpectedDblQuoteAfterDelim, str_delim);
     }
     t.strval = lookupString(finalString, postfix);
+    }
   Lerror:
     t.end = this.p = p;
     setBuffer(value);
@@ -1599,10 +1605,10 @@ class Lexer
       goto Lreturn;
     }
 
-    uint loopCounter = void;
-
     switch (*p)
     {
+    uint loopCounter;
+
     case 'x':
       isBinary = true;
       loopCounter = 1;
@@ -1720,6 +1726,7 @@ class Lexer
     ulong ulong_; // The integer value.
     bool overflow; // True if an overflow was detected.
     bool isDecimal; // True for Dec literals.
+    bool hasDecimalDigits; // To check for 8s and 9s in octal numbers.
     size_t digits; // Used to detect overflow in hex/bin numbers.
     size_t x; // Current digit value.
 
@@ -1879,7 +1886,6 @@ class Lexer
       else if (*p != '_')
         break;
 
-    bool hasDecimalDigits;
     if (isdigit(*p))
     {
     Loctal_hasDecimalDigits:
@@ -1919,6 +1925,7 @@ class Lexer
     //goto Lfinalize;
 
   Lfinalize:
+    {
     enum Suffix
     {
       None     = 0,
@@ -2001,6 +2008,7 @@ class Lexer
       t.uint_ = cast(uint)ulong_;
     t.end = this.p = p;
     return;
+    }
 
   LscanFloat:
     this.p = p;
@@ -2155,6 +2163,7 @@ class Lexer
       goto Lerror;
     }
 
+    { // Start of scanning code block.
     p += 4;
     tokenEnd = p;
 
@@ -2229,6 +2238,7 @@ class Lexer
       mid = MID.ExpectedIntegerAfterSTLine;
       goto Lerror;
     }
+    } // End of scanning code block.
 
     // Evaluate #line only when not in token string.
     if (!inTokenString && hlval.lineNum)
@@ -2367,9 +2377,9 @@ class Lexer
         (d & 0xFE) == 0xC0) // 1100000x
       goto Lerror;
 
-    const string checkNextByte = "if (!isTrailByte(*++p))"
+    enum checkNextByte = "if (!isTrailByte(*++p))"
                                  "  goto Lerror2;";
-    const string appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
+    enum appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
 
     // See how many bytes need to be decoded.
     if ((d & 0b1110_0000) == 0b1100_0000)

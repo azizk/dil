@@ -220,9 +220,9 @@ body
       (c & 0xFE) == 0xC0) // 1100000x
     goto Lerror;
 
-  immutable checkNextByte = "if (!isTrailByte(c2 = *++p))"
+  enum checkNextByte = "if (!isTrailByte(c2 = *++p))"
                                "  goto Lerror;";
-  immutable appendSixBits = "c = (c << 6) | c2 & 0b0011_1111;";
+  enum appendSixBits = "c = (c << 6) | c2 & 0b0011_1111;";
 
   // See how many bytes need to be decoded.
   assert(p == ref_p+1, "p doesn't point to the second byte");

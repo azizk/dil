@@ -239,6 +239,7 @@ class ConfigLoader : SettingsLoader
     if (mod.hasErrors)
       goto Lerror;
 
+    {
     auto pass1 = new SemanticPass1(mod, cc);
     pass1.run();
 
@@ -269,10 +270,11 @@ class ConfigLoader : SettingsLoader
     auto parentRB = parentLangFile ? loadResource(parentLangFile) : null;
 
     // 4. Return a new bundle.
-    auto rb =  new ResourceBundle(messages, parentRB);
+    auto rb = new ResourceBundle(messages, parentRB);
     rb.langCode = langCode;
 
     return rb;
+    }
   Lerror:
     return new ResourceBundle();
   }

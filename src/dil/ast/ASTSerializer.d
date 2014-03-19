@@ -20,7 +20,7 @@ import common;
 /// Serializes a complete parse tree.
 class ASTSerializer : Visitor2
 {
-  immutable HEADER = "DIL1.0AST\x1A\x04\n"; /// Appears at the start.
+  static immutable HEADER = "DIL1.0AST\x1A\x04\n"; /// Appears at the start.
   ubyte[] data; /// The binary text.
   Token* firstToken; /// The first token in the token array.
 
@@ -559,14 +559,12 @@ class ASTDeserializer : Visitor
         !read(kind) ||
         !read(begin) ||
         !read(end))
-      goto Lerror;
+      return false; // Error
     n = dispatch(n, kind);
     if (n is null)
-      goto Lerror;
+      return false; // Error
     n.setTokens(begin, end);
     return true;
-  Lerror:
-    return false;
   }
 
   bool read(out CompoundDecl n)
@@ -648,22 +646,20 @@ class ASTDeserializer : Visitor
         StorageClass stcs;
         Protection prot;
         if (!read(stcs) || !read(prot))
-          goto Lerror;
+          return null;
         n.setStorageClass(stcs);
         n.setProtection(prot);
       }
       return mixin(generateCtorCall(N.CTTI_Members.length));
-    Lerror:
-      return null;
     }
   }
 
   /// Generates e.g.:
   /// ---
   /// Token* _0;
-  /// if (!read(_0)) goto Lerror;
+  /// if (!read(_0)) return null;
   /// Token*[] _1;
-  /// if (!read(_1)) goto Lerror;
+  /// if (!read(_1)) return null;
   /// ---
   static char[] generateReaders(string[] types)
   {
@@ -672,7 +668,7 @@ class ASTDeserializer : Visitor
     {
       const arg = "_" ~ itoa(i);
       code ~= t ~ " " ~ arg ~ ";\n" ~
-        "if (!read(" ~ arg ~ ")) goto Lerror;\n";
+        "if (!read(" ~ arg ~ ")) return null;\n";
     }
     return code;
   }

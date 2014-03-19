@@ -991,7 +991,7 @@ override
   |                                Expressions                                |
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+/
 
-  immutable binaryExpr = `
+  enum binaryExpr = `
     begin(e);
     visitE(e.lhs);
     write(",");
@@ -1000,7 +1000,7 @@ override
     write(indexOf(e.optok));
     end(e);`;
 
-  immutable unaryExpr = `
+  enum unaryExpr = `
     begin(e);
     visitE(e.una);
     end(e);`;

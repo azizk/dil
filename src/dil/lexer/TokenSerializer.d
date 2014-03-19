@@ -155,34 +155,34 @@ static:
       return idtable.lookup(id_str);
     }
 
-    if (srcText.length == 0) goto Lerror;
+    if (srcText.length == 0) return null;
 
     Token[] tokens;
     Identifier*[] idents;
 
-    if (!match(HEADER)) goto Lerror;
+    if (!match(HEADER)) return null;
 
-    if (!match("Ids:")) goto Lerror;
+    if (!match("Ids:")) return null;
 
     uint id_count = void;
-    if (!read2B(id_count)) goto Lerror;
+    if (!read2B(id_count)) return null;
     idents = new Identifier*[id_count];
 
     for (uint i; i < id_count; i++)
       if (auto id = readID())
         idents[i] = id;
       else
-        goto Lerror;
+        return null;
 
-    if (!match("\nToks:")) goto Lerror;
+    if (!match("\nToks:")) return null;
 
     uint token_count = void;
-    if (!read4B(token_count)) goto Lerror;
+    if (!read4B(token_count)) return null;
 
     uint body_length = void;
-    if (!read4B(body_length)) goto Lerror;
-    if (p + body_length + 1 != end) goto Lerror;
-    if (*(p + body_length) != '\n') goto Lerror; // Terminated with '\n'.
+    if (!read4B(body_length)) return null;
+    if (p + body_length + 1 != end) return null;
+    if (*(p + body_length) != '\n') return null; // Terminated with '\n'.
 
     // We can allocate the exact amount of tokens we need.
     tokens = new Token[token_count+4]; // +4: see Lexer.scanAll().
@@ -194,33 +194,33 @@ static:
     while (p < end && token_count)
     {
       token.kind = cast(TOK)*p++;
-      if (token.kind >= TOK.MAX) goto Lerror;
+      if (token.kind >= TOK.MAX) return null;
 
       uint offs_start = void;
-      if (!read2B(offs_start)) goto Lerror;
+      if (!read2B(offs_start)) return null;
       if (offs_start)
         token.ws = prev_end;
       token.start = prev_end + offs_start;
-      if (token.start >= src_end) goto Lerror;
+      if (token.start >= src_end) return null;
 
       uint token_len = void;
       switch (token.kind)
       {
       case TOK.Identifier:
         uint index = void;
-        if (!read2B(index) && index < idents.length) goto Lerror;
+        if (!read2B(index) && index < idents.length) return null;
         token.ident = idents[index];
         token_len = cast(uint)token.ident.str.length;
         break;
       default:
-        if (!read2B(token_len)) goto Lerror;
+        if (!read2B(token_len)) return null;
       }
       // Set token.end.
       token.end = prev_end = token.start + token_len;
-      if (prev_end > src_end) goto Lerror;
+      if (prev_end > src_end) return null;
       // Pass the token back to the client.
       if (!callback(token))
-        goto Lerror;
+        return null;
       // Advance the pointer to the next token in the array.
       token++;
       token_count--;
@@ -229,13 +229,8 @@ static:
     token--; // Go back to the last token.
 
     if (token.kind != TOK.EOF) // Last token must be EOF.
-      goto Lerror;
+      return null;
 
     return tokens;
-  Lerror:
-    delete tokens;
-    delete idents;
-    // delete data; // Not owned by this function.
-    return null;
   }
 }

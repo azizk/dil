@@ -459,16 +459,18 @@ struct StringT(C)
     auto slen = len;
 
     auto rem_len = slen % hash_t.sizeof; // Remainder.
+    auto hptr = cast(const(hash_t)*)sptr;
     if (slen == rem_len)
       goto Lonly_remainder;
 
-    auto hptr = cast(const(hash_t)*)sptr;
-    // Divide the length by 4 or 8 (x86 vs. x86_64).
-    auto hlen = slen / hash_t.sizeof;
-    assert(hlen, "can't be zero");
+    {
+      // Divide the length by 4 or 8 (x86 vs. x86_64).
+      auto hlen = slen / hash_t.sizeof;
+      assert(hlen, "can't be zero");
 
-    while (hlen--) // Main loop.
-      hash = hash * 11 + *hptr++;
+      while (hlen--) // Main loop.
+        hash = hash * 11 + *hptr++;
+    }
 
     if (rem_len)
     { // Calculate the hash of the remaining characters.

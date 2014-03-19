@@ -513,7 +513,7 @@ body
 {
   alias table = uniAlphaTable;
   if (u < 0xAA && ('A' <= u && u <= 'Z' || 'a' <= u && u <= 'z'))
-    goto Lis; // Quick path for ASCII letters.
+    return 1; // Quick path for ASCII letters.
   // Binary search the table:
   size_t mid = void,
          low = 0,
@@ -528,12 +528,10 @@ body
     else if (u > range[1]) // The char is above the range.
       low = mid + 1;
     else // The char is inside the range.
-      goto Lis;
+      return 1;
   }
   assert(high == low);
   return 0;
-Lis:
-  return 1;
 }
 
 void testIsUniAlpha()
