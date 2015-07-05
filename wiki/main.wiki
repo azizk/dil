@@ -1,7 +1,7 @@
 =Purpose=
 DIL is a hand-crafted compiler implementation for the D programming language written in D v2 using the [http://dsource.org/projects/tango Tango] standard library. The lexer and the parser are fully implemented. Semantic analysis is being worked on. The backend will most probably be [http://llvm.org LLVM].
 
-<wiki:gadget url="http://www.ohloh.net/p/8880/widgets/project_partner_badge.xml" height="53" border="0"/>
+https://www.openhub.net/p/dil?ref=sample
 
 =Status=
   * DIL shines at generating documentation from source files.
@@ -9,6 +9,8 @@ DIL is a hand-crafted compiler implementation for the D programming language wri
   * Binaries cannot be generated yet.
 
 =News=
+  * 2014/01/12: Next release is being prepared. The license may change from GPL3 to something like BSD or MIT.
+  * 2012/09/23: First release announced at [http://forum.dlang.org/thread/op.wk3tjdhg5ob47t@vaio]!
   * 2012/04/15: Finished porting DIL to D version 2. The code just compiles, but I couldn't run it because the linker keeps complaining about missing symbols although it is able to find all necessary libraries.
   * 2011/09/21: First merge of a [https://github.com/azizk/dil/commit/570329e6e2a0173d8904c66ce2a59fd234c29c84 pull request] made by [https://github.com/klickverbot klickverbot]. Thanks for the contribution!
   * 2011/07/14: The project is still [http://www.youtube.com/watch?v=Y6ljFaKRTrI still alive]. Just busy with life in general, especially with [http://www.reddit.com/r/running running] and weight training. ;-)
@@ -37,15 +39,8 @@ DIL is a hand-crafted compiler implementation for the D programming language wri
 
   * DIL is fully internationalized.<br>It can output compiler messages in English, German, Turkish and Finnish. You can determine which language to use with a setting in the [http://dil.googlecode.com/svn/doc/dil/dilconf.html#LANG_FILE configuration file].
 
-  * DIL can parse [http://code.google.com/p/dil/wiki/D2Syntax the syntax changes in D2].
-
 == Help ==
-Writing a fully functional compiler is a huge undertaking and can therefore take months and years for a single person. Perhaps you would like to give a hand and speed up the development of this project. Here are some of the things you could do for DIL and the D community:
-
-  * Document the inner workings of DMD's front-end, specifically semantic analysis (SA.) This would help me immensely to implement SA for DIL and be as close to the official D compiler as possible. Or you could:
-  * Lobby for better and clearer D language specifications.
-  * Learn git and start writing code for DIL. The code you write will be credited to you, even if I commit the patches (as git distinguishes between author and submitter of revisions.)
-  * Any kind of interesting feedback is always welcome.
+Writing a fully functional compiler is a huge undertaking and can therefore take months and years for a single person. Perhaps you would like to give a hand and speed up the development of this project. If you're interested head over to github and let me know if you need a little tour through the code.
 
 == Planned Features ==
   * Refactoring (renaming symbols, modules; changing the type of a symbol etc.)
@@ -54,12 +49,7 @@ Writing a fully functional compiler is a huge undertaking and can therefore take
   * Code analysis (lint-like).
   * Code formatting.
   * Translate D code to other languages.
-  * Port D 1.0 code to D 2.0.
-
-*Meaning:*
-
-The word 'dil' comes from the Turkish language and means among other things a) tongue or b) language.
-It is a very fitting name for this project because of its meaning and because it starts with the letter D and for the reason that the project owner has Turkish origins.
+  * Port D 1.0 code to D 2.0 (low-priority if at all).
 
 ===Contact===
 Feel free to join my IRC channel, #dil, which I've set up on freenode.net.
@@ -71,13 +61,11 @@ In fact, it could be off-putting for some programmers who would like to contribu
 However, please keep in mind that a lot of hours were spent in order to come up with a compiler that is well documented and has a solid design.
 It is not unlikely that the author will put the project under a less restrictive license one time or another.
 It could be LGPL3 or even BSD.
-It very much depends on how many cookies and apple pies somebody is willing to stuff the author with. :P
-
-==Download==
-There are no downloadable binaries yet.
-Go to the [http://code.google.com/p/dil/wiki/Git?tm=4 Source] page to find out how to get the code using Git.
-If you have [http://dsource.org/projects/dsss DSSS] you can use the fetch command, "`dsss net fetch dil.zip`", to get the latest revision of the source code.
 
 ==Statistics==
 <wiki:gadget url="http://www.ohloh.net/p/8880/widgets/project_languages.xml" height="200" width="370" border="1"/>
 <wiki:gadget url="http://www.ohloh.net/p/8880/widgets/project_basic_stats.xml" height="260" border="1"/>
+
+====Meaning:====
+
+The word 'dil' originates from the Turkish language and means among other things a) tongue or b) language. DIL was chosen by the project founder as a fitting name because of its meaning and because it starts with the letter D.
