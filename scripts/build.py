@@ -20,6 +20,7 @@ class Command:
     if self.use_wine:
       args = [exe] + args
       exe = "wine"
+    retcode = None
     try:
       retcode = call_proc(exe, *args)
     except OSError as e:
