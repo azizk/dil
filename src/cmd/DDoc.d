@@ -346,7 +346,7 @@ version(unused)
     char[] text;
     auto locbeg = symbol.begin.lineNum, locend = symbol.end.lineNum;
     text ~= Format(
-      "{{\n"`{}"name":"{}","fqn":"{}","kind":"{}","loc":[{},{}],`"\n",
+      "{{\n" ~ `{}"name":"{}","fqn":"{}","kind":"{}","loc":[{},{}],` ~ "\n",
       indent, symbol.name, symbol.fqn, symbol.kind, locbeg, locend);
     text ~= indent~`"sub":[`;
     foreach (s; symbol.members)

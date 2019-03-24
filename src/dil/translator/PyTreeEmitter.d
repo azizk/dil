@@ -226,21 +226,21 @@ class PyTreeEmitter : Visitor2
     string d_version = "1.0";
     version(D2)
       d_version = "2.0";
-    text = Format("# -*- coding: utf-8 -*-\n"
-                  "from __future__ import unicode_literals\n"
-                  "import dil.token\n"
-                  "from dil.module import Module\n"
-                  "from dil.nodes import *\n\n"
-                  "generated_by = 'dil'\n"
-                  "format_version = '1.0'\n"
-                  "d_version= '{}'\n"
+    text = Format("# -*- coding: utf-8 -*-\n" ~
+                  "from __future__ import unicode_literals\n" ~
+                  "import dil.token\n" ~
+                  "from dil.module import Module\n" ~
+                  "from dil.nodes import *\n\n" ~
+                  "generated_by = 'dil'\n" ~
+                  "format_version = '1.0'\n" ~
+                  "d_version= '{}'\n" ~
                   "date = '{}'\n\n",
                   d_version, Time.now());
 
     text ~= writeTokenList(modul.firstToken, index);
     text ~= "t = tokens = dil.token.create_tokens(token_list)\n\n";
-    text ~= "def p(beg,end):\n"
-            "  return (tokens[beg], tokens[beg+end])\n"
+    text ~= "def p(beg,end):\n" ~
+            "  return (tokens[beg], tokens[beg+end])\n" ~
             /+"def tl(*args):\n"
             "  return [tokens[i] for i in args]\n"
             "  #return map(tokens.__getitem__, args)\n"+/
@@ -248,7 +248,7 @@ class PyTreeEmitter : Visitor2
             /+"def N(id, *args):\n"+/
             /+"  return NodeTable[id](*args)\n\n"+/;
     text ~= `module = Module(tokens=tokens, fqn="` ~ modul.getFQN() ~
-            `",ext="` ~ modul.fileExtension() ~ `",root=`"\n";
+            `",ext="` ~ modul.fileExtension() ~ `",root=` ~ "\n";
 
     visitD(modul.root);
     if (line.length)

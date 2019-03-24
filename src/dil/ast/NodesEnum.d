@@ -227,10 +227,10 @@ char[] generateNodeKindMembers()
 
 version(DDoc)
   /// The node kind identifies every class that inherits from Node.
-  enum NodeKind : ushort;
+  enum NodeKind : ushort {}
 else
 mixin(
-  "enum NodeKind : ushort"
+  "enum NodeKind : ushort" ~
   "{"
     ~ generateNodeKindMembers ~
   "}"

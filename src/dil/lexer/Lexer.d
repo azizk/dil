@@ -2324,7 +2324,7 @@ class Lexer
     if (d.In(0xE0, 0xF0, 0xF8, 0xFC) && (*p & d) == 0x80 ||
         (d & 0xFE) == 0xC0) // 1100000x
       return false;
-    const string checkNextByte = "if (!isTrailByte(*++p))"
+    const string checkNextByte = "if (!isTrailByte(*++p))" ~
                                  "  return false;";
     const string appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
     // Decode
@@ -2377,8 +2377,8 @@ class Lexer
         (d & 0xFE) == 0xC0) // 1100000x
       goto Lerror;
 
-    enum checkNextByte = "if (!isTrailByte(*++p))"
-                                 "  goto Lerror2;";
+    enum checkNextByte = "if (!isTrailByte(*++p))" ~
+                         "  goto Lerror2;";
     enum appendSixBits = "d = (d << 6) | *p & 0b0011_1111;";
 
     // See how many bytes need to be decoded.

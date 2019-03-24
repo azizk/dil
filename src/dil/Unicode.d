@@ -220,8 +220,8 @@ body
       (c & 0xFE) == 0xC0) // 1100000x
     goto Lerror;
 
-  enum checkNextByte = "if (!isTrailByte(c2 = *++p))"
-                               "  goto Lerror;";
+  enum checkNextByte = "if (!isTrailByte(c2 = *++p))" ~
+                       "  goto Lerror;";
   enum appendSixBits = "c = (c << 6) | c2 & 0b0011_1111;";
 
   // See how many bytes need to be decoded.

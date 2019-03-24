@@ -380,7 +380,7 @@ abstract class DDocEmitter : DefaultVisitor2
           continue;
         }
         else
-          write("\n\1DDOC_SECTION "
+          write("\n\1DDOC_SECTION " ~
             "\1DDOC_SECTION_H ", s.name.replace('_', ' '), ":\2");
         write("\1DIL_CMT ");
         writeCommentText(s.text);

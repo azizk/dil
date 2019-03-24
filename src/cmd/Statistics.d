@@ -34,15 +34,15 @@ class StatsCommand : Command
     {
       total += stat;
       Stdout.formatln(
-        "----\n"
-        "File: {}\n"
-        "Whitespace character count: {}\n"
-        "Whitespace token count: {}\n"
-        "Keyword count: {}\n"
-        "Identifier count: {}\n"
-        "Number count: {}\n"
-        "Comment count: {}\n"
-        "All tokens count: {}\n"
+        "----\n" ~
+        "File: {}\n" ~
+        "Whitespace character count: {}\n" ~
+        "Whitespace token count: {}\n" ~
+        "Keyword count: {}\n" ~
+        "Identifier count: {}\n" ~
+        "Number count: {}\n" ~
+        "Comment count: {}\n" ~
+        "All tokens count: {}\n" ~
         "Lines of code: {}",
         filePaths[i],
         stat.whitespaceCount,
@@ -59,15 +59,15 @@ class StatsCommand : Command
     if (filePaths.length > 1)
     {
       Stdout.formatln(
-        "--------------------------------------------------------------------------------\n"
-        "Total of {} files:\n"
-        "Whitespace character count: {}\n"
-        "Whitespace token count: {}\n"
-        "Keyword count: {}\n"
-        "Identifier count: {}\n"
-        "Number count: {}\n"
-        "Comment count: {}\n"
-        "All tokens count: {}\n"
+        "--------------------------------------------------------------------------------\n" ~
+        "Total of {} files:\n" ~
+        "Whitespace character count: {}\n" ~
+        "Whitespace token count: {}\n" ~
+        "Keyword count: {}\n" ~
+        "Identifier count: {}\n" ~
+        "Number count: {}\n" ~
+        "Comment count: {}\n" ~
+        "All tokens count: {}\n" ~
         "Lines of code: {}",
         filePaths.length,
         total.whitespaceCount,
